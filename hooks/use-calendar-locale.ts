@@ -24,6 +24,7 @@ import {
   isSameMonth,
 } from "date-fns";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
+import { formatDateRange, intlLocaleOf } from "@/lib/format-date-range";
 
 /**
  * Unified calendar-locale hook.
@@ -119,10 +120,8 @@ export function useCalendarLocale() {
       const { jy, jm } = toJalali(date);
       return `${JALALI_MONTHS[jm - 1]} ${jy}`;
     }
-    const month = date.toLocaleString(locale === "en" ? "en-US" : locale, {
-      month: "long",
-    });
-    return `${month} ${date.getFullYear()}`;
+    // The language's order: "2026年11月" in Japanese, not "11月 2026".
+    return date.toLocaleString(intlLocaleOf(locale), { month: "long", year: "numeric" });
   };
 
   /** Short month + year for mobile. */
@@ -132,10 +131,7 @@ export function useCalendarLocale() {
       const short = JALALI_MONTHS[jm - 1].slice(0, 3);
       return `${short} ${jy}`;
     }
-    const month = date.toLocaleString(locale === "en" ? "en-US" : locale, {
-      month: "short",
-    });
-    return `${month} ${date.getFullYear()}`;
+    return date.toLocaleString(intlLocaleOf(locale), { month: "short", year: "numeric" });
   };
 
   /** Week range label (e.g. "6 – 12 Farvardin 1404"). */
@@ -150,16 +146,12 @@ export function useCalendarLocale() {
       }
       return `${start.jd} ${JALALI_MONTHS[start.jm - 1]} – ${end.jd} ${JALALI_MONTHS[end.jm - 1]} ${end.jy}`;
     }
-    const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
-    const s = weekStart.toLocaleString(locale === "en" ? "en-US" : locale, {
+    // The language's own range (pim-13): "2.–8. Nov. 2026", not "2. Nov. – 8, 2026".
+    return formatDateRange(intlLocaleOf(locale), weekStart, weekEnd, {
+      day: "numeric",
       month: "short",
-      day: "numeric",
+      year: "numeric",
     });
-    const e = weekEnd.toLocaleString(locale === "en" ? "en-US" : locale, {
-      month: sameMonth ? undefined : "short",
-      day: "numeric",
-    });
-    return `${s} – ${e}, ${weekEnd.getFullYear()}`;
   };
 
   /** Short week range for mobile. */
@@ -171,15 +163,18 @@ export function useCalendarLocale() {
       const end = toJalali(weekEnd);
       return `${start.jd}/${start.jm} – ${end.jd}/${end.jm}`;
     }
-    const s = weekStart.toLocaleString(locale === "en" ? "en-US" : locale, {
+    return formatDateRange(intlLocaleOf(locale), weekStart, weekEnd, {
+      day: "numeric",
       month: "short",
-      day: "numeric",
     });
-    const e = weekEnd.toLocaleString(locale === "en" ? "en-US" : locale, {
-      day: "numeric",
-    });
-    return `${s} – ${e}`;
   };
+
+  /**
+   * Any date range in the language's own pattern (pim-13), e.g. a multi-day
+   * event: Intl's formatRange, in the Persian calendar for Jalali.
+   */
+  const formatDateRangeLabel = (start: Date, end: Date, options: Intl.DateTimeFormatOptions): string =>
+    formatDateRange(intlLocaleOf(locale, { persianCalendar: isJalali }), start, end, options);
 
   /** Full date label for accessibility / tooltips. */
   const formatFullDate = (date: Date): string => {
@@ -258,6 +253,7 @@ export function useCalendarLocale() {
     formatMonthYearShort,
     formatWeekRange,
     formatWeekRangeShort,
+    formatDateRangeLabel,
     formatFullDate,
     formatDayShort,
     getMonth,

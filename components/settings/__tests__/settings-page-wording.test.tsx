@@ -84,7 +84,7 @@ describe('server default names', () => {
     expect(screen.getByText('default_calendar')).toBeInTheDocument();
     expect(screen.queryByText(/Stalwart Calendar/)).toBeNull();
 
-    fireEvent.click(screen.getByTitle('edit'));
+    fireEvent.click(screen.getByText('edit_calendar'));
     fireEvent.click(screen.getByText('save'));
     await vi.waitFor(() => expect(updateCalendar).toHaveBeenCalledTimes(1));
     expect(updateCalendar.mock.calls[0][2]).toEqual({ name: 'Stalwart Calendar (me@example.org)' });

@@ -33,7 +33,8 @@ describe('CalendarManagementSettings rename', () => {
 
   function openEditor() {
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByTitle('edit'));
+    // One visible "Edit…" per row (pim-20).
+    fireEvent.click(screen.getByRole('button', { name: 'edit_calendar' }));
   }
 
   it('sends the new name without the colour it did not change, for Stalwart 1.0', async () => {
@@ -73,6 +74,25 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
     const url = await screen.findByText('https://host.example/stalwart/.well-known/caldav');
     // Left to right in Arabic too: the start of the address stays in view.
     expect(url).toHaveAttribute('dir', 'ltr');
+    // Once for the account, not under each calendar (pim-26).
+    expect(screen.getAllByText('https://host.example/stalwart/.well-known/caldav')).toHaveLength(1);
+    vi.restoreAllMocks();
+  });
+
+  // pim-26: the account's address repeated under every calendar.
+  it('shows the account address once, not under each calendar', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 502 }));
+    useAuthStore.setState({
+      client: { getAccountId: () => 'acct-1' }, serverUrl: 'https://host.example', username: 'alice@example.com',
+    } as never);
+    const second = { ...appleColored, id: 'cal-2', name: 'Work', isDefault: false } as Calendar;
+    useCalendarStore.setState({ calendars: [appleColored, second], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    fireEvent.click(await screen.findByTestId('calendar-use-in-other-apps'));
+    await screen.findByText('https://host.example/.well-known/caldav');
+    expect(screen.getAllByText('https://host.example/.well-known/caldav')).toHaveLength(1);
     vi.restoreAllMocks();
   });
 
@@ -88,9 +108,10 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
   });
 });
 
-// Phone: seven icons in a row hid the calendar names. The row actions are
-// also in a ⋮ menu (right-click too), the same list as the icons, and every
-// icon is a named button with the touch hit area.
+// Seven icons on hover hid what they did and pushed the names aside on a
+// phone (pim-20). Each row shows "Edit…" (name, colour, then reminders and
+// sharing) and a ⋮ (right-click too) with the order and the destructive
+// actions.
 describe('CalendarManagementSettings row actions', () => {
   const work = {
     id: 'work', name: 'Work', color: '#ff0000', isDefault: false, isShared: false, shareWith: null, sortOrder: 1,
@@ -111,9 +132,9 @@ describe('CalendarManagementSettings row actions', () => {
     fireEvent.click(more[1]); // Work, not the default calendar
     const menu = await screen.findByRole('menu');
     const items = Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent);
-    expect(items).toEqual(['edit', 'default_alerts', 'share', 'clear_events', 'move_up', 'move_down', 'delete']);
+    expect(items).toEqual(['edit_calendar', 'move_up', 'move_down', 'clear_all_events', 'delete_calendar']);
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'delete' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'delete_calendar' }));
     expect(await screen.findByRole('alertdialog')).toBeTruthy();
   });
 
@@ -121,13 +142,22 @@ describe('CalendarManagementSettings row actions', () => {
     render(<CalendarManagementSettings />);
     fireEvent.click(screen.getAllByRole('button', { name: 'row_actions' })[0]);
     const menu = await screen.findByRole('menu');
-    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent)).not.toContain('delete');
+    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((el) => el.textContent)).not.toContain('delete_calendar');
   });
 
-  it('names every row icon', () => {
+  it('shows one Edit button per row and no arrows or hover icons', () => {
     render(<CalendarManagementSettings />);
-    for (const name of ['move_up', 'move_down', 'edit', 'default_alerts', 'share', 'clear_events', 'delete', 'change_color']) {
-      expect(screen.getAllByRole('button', { name }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'edit_calendar' })).toHaveLength(2);
+    for (const name of ['move_up', 'move_down', 'edit', 'default_alerts', 'share', 'clear_events', 'delete']) {
+      expect(screen.queryAllByRole('button', { name })).toHaveLength(0);
     }
+    expect(screen.getAllByRole('button', { name: 'change_color' }).length).toBeGreaterThan(0);
+  });
+
+  it('opens reminders and sharing from the Edit form', () => {
+    render(<CalendarManagementSettings />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'edit_calendar' })[1]);
+    expect(screen.getByRole('button', { name: 'default_alerts_open' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'share_open' })).toBeInTheDocument();
   });
 });

@@ -29,7 +29,7 @@ import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
 import { CalendarDayView } from "@/components/calendar/calendar-day-view";
 import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
-import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
+import { TaskListView, filterTasksForList, defaultTaskList } from "@/components/calendar/task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
 import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
@@ -58,6 +58,7 @@ import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { descriptionWithNote } from "@/lib/calendar-description";
@@ -69,7 +70,7 @@ import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
-import { canCreateEventsIn, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
+import { canCreateEventsIn, canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { TASKS_LOAD_ERROR, useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -228,6 +229,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     ),
     [participantIdentities, identities, accountEmails]
   );
+  // An event of another signed-in login is answered as that login (pim-12).
+  const userEmailsFor = useEventUserEmails(currentUserEmails);
   const resolveContactName = useContactNameResolver();
 
   const [showEventModal, setShowEventModal] = useState(false);
@@ -573,12 +576,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
   }, [client, calendars.length, dateRange, fetchEvents, isEmbedded, proInterfaceActive]);
 
-  // Pro shell only: aggregate calendars and events from every connected
-  // account so the sidebar lists them all (and the views render their
-  // events together). The hook is a no-op outside the embedded shell.
+  // Aggregate calendars and events from every connected account so the
+  // sidebar lists them all (and the views render their events together):
+  // in the Pro shell, and with two or more signed-in logins (pim-12). The
+  // standard instance behind the Pro shell leaves the loading to the shell.
   const { enabled: multiAccountEnabled, accountClients } = useProMultiAccountCalendars(
-    isEmbedded ? dateRange?.start ?? null : null,
-    isEmbedded ? dateRange?.end ?? null : null,
+    isEmbedded || !proInterfaceActive ? dateRange?.start ?? null : null,
+    isEmbedded || !proInterfaceActive ? dateRange?.end ?? null : null,
   );
   const fetchAllAccountsCalendarsFn = useCalendarStore((s) => s.fetchAllAccountsCalendars);
   const fetchAllAccountsEventsFn = useCalendarStore((s) => s.fetchAllAccountsEvents);
@@ -870,9 +874,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     closeContextMenu: closeEventContextMenu,
     menuRef: eventContextMenuRef,
   } = useContextMenu<CalendarEvent>();
+  // The grid's "?" / "Reply" marker opens the answers alone (pim-9).
+  const [answersOnlyMenu, setAnswersOnlyMenu] = useState(false);
 
   const handleContextMenuEvent = useCallback((e: React.MouseEvent, event: CalendarEvent) => {
     closeDetail();
+    setAnswersOnlyMenu(false);
     openEventContextMenu(e, event);
   }, [closeDetail, openEventContextMenu]);
 
@@ -1358,7 +1365,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // One event: asked here, from every place Delete is offered (R3). A
     // series gets the scope question above instead.
     const title = eventToDelete?.title || t("events.no_title");
-    const cancels = !!sendSchedulingMessages && !!eventToDelete && userOrganizes(eventToDelete, currentUserEmails);
+    const cancels = !!sendSchedulingMessages && !!eventToDelete && userOrganizes(eventToDelete, userEmailsFor(eventToDelete));
     const ok = await confirmAction({
       title: t("delete_dialog.event_title"),
       message: cancels
@@ -1378,7 +1385,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_delete_error")));
     }
-  }, [client, deleteEvent, events, editEvent, showEventModal, confirmAction, currentUserEmails, describeError, t]);
+  }, [client, deleteEvent, events, editEvent, showEventModal, confirmAction, userEmailsFor, describeError, t]);
 
   const submitRsvp = useCallback(async (
     eventId: string,
@@ -1423,7 +1430,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           updates,
           editor,
           sendScheduling,
-          userEmails: currentUserEmails,
+          userEmails: userEmailsFor(event),
           resolveName: resolveContactName,
         }, { client, updateEvent, createEvent, findMasterEvent });
         done = saved !== "stopped";
@@ -1438,7 +1445,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         const deleted = await deleteOccurrence(scope, {
           event,
           sendScheduling,
-          userEmails: currentUserEmails,
+          userEmails: userEmailsFor(event),
         }, { client, updateEvent, deleteEvent, findMasterEvent });
         done = deleted !== "stopped";
         if (!deleted) {
@@ -1461,7 +1468,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       }
       toast.error(describeError(error, t(type === "delete" ? "notifications.event_delete_error" : "notifications.event_error")));
     }
-  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, currentUserEmails, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
+  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, userEmailsFor, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
 
   // A drag or resize. A series asks which occurrences it covers, as the
   // editor does; one event moves at once and can be moved back.
@@ -1609,11 +1616,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (!detailEvent || !client) return;
     // A target names the event and participant: the owner's in a calendar
     // shared with the user, or the user's own copy (lib/calendar-delegate.ts).
-    const participantId = target?.participantId ?? getUserParticipantId(detailEvent, currentUserEmails);
+    const participantId = target?.participantId ?? getUserParticipantId(detailEvent, userEmailsFor(detailEvent));
     if (!participantId) return;
     closeDetail();
     await handleRsvp(target?.eventId ?? detailEvent.id, participantId, status, target?.sentBy);
-  }, [detailEvent, client, currentUserEmails, closeDetail, handleRsvp]);
+  }, [detailEvent, client, userEmailsFor, closeDetail, handleRsvp]);
 
   // `/` and the palette's "Search events" go to the search box.
   const openSearch = useCallback(() => {
@@ -1673,6 +1680,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   useAppCommands({
     "new-event": () => openCreateModal(),
     "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
+    "import-calendar": () => { if (!demoMode) setShowImportModal(true); },
   }, true);
   // Its View menu's Day, Week, Month and Agenda, and Edit > Search events.
   const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
@@ -1689,6 +1697,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "view.calendar.agenda": { enabled: true, checked: normalizedViewMode === "agenda" },
     "edit.search": normalizedViewMode !== "tasks",
     "file.newTask": enableCalendarTasks,
+    "file.importCalendar": !demoMode,
   });
 
   useRegisterCommands(tSidebar("calendar"), [
@@ -1795,6 +1804,26 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     [editabilityContext],
   );
 
+  // Answering an invitation from the grid (pim-9), as the login the event is
+  // in, the popover's way (handleRsvp: a series asks "this event or all").
+  const gridAnswerFor = useCallback((event: CalendarEvent) => {
+    const emails = userEmailsFor(event);
+    if (!canUserRsvp(event, { ...editabilityContext, userCalendarAddresses: emails })) return null;
+    const participantId = getUserParticipantId(event, emails);
+    return participantId ? { participantId, status: event.participants?.[participantId]?.participationStatus ?? null } : null;
+  }, [userEmailsFor, editabilityContext]);
+  const handleRespondFromGrid = useCallback((event: CalendarEvent, status: CalendarParticipant['participationStatus']) => {
+    const answer = gridAnswerFor(event);
+    if (answer) void handleRsvp(event.id, answer.participantId, status);
+  }, [gridAnswerFor, handleRsvp]);
+  const handleReplyEvent = useCallback((anchor: HTMLElement, event: CalendarEvent) => {
+    closeDetail();
+    // Nothing to answer here (no right to): the event's card says why.
+    if (!gridAnswerFor(event)) { handleSelectEvent(event, anchor.getBoundingClientRect()); return; }
+    setAnswersOnlyMenu(true);
+    openEventContextMenuFrom(anchor, event, "end");
+  }, [closeDetail, gridAnswerFor, handleSelectEvent, openEventContextMenuFrom]);
+
   // The event the user opened, marked in the grid (APP.md: the selected
   // event gets the primary ring).
   const selectedEventId = detailPinned ? detailEvent?.id ?? null : showEventModal ? editEvent?.id ?? null : null;
@@ -1819,10 +1848,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   // The plugin drawing the task view's list, if one offers it.
   const pluginTaskView = usePluginTaskView();
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   // The tasks the task list shows; plugin buttons in its toolbar act on them.
   const listedTaskIds = useMemo(
-    () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter).map((task) => task.id),
-    [taskStore.tasks, selectedCalendarIds, taskStore.filter],
+    () => filterTasksForList(taskStore.tasks, hiddenTaskListIds, taskStore.filter).map((task) => task.id),
+    [taskStore.tasks, hiddenTaskListIds, taskStore.filter],
   );
 
   // Tasks on the month, week and day grids follow the calendar filter like
@@ -1953,6 +1983,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAllDay={handleGridCreateAllDay}
               firstDayOfWeek={firstDayOfWeek}
               isMobile={isMobile}
@@ -1980,6 +2011,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAtTime={handleGridCreate}
               onCreateAllDay={handleGridCreateAllDay}
               firstDayOfWeek={firstDayOfWeek}
@@ -2008,6 +2040,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAtTime={handleGridCreate}
               timeFormat={timeFormat}
               isMobile={isMobile}
@@ -2032,6 +2065,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverEvent={handleHoverEvent}
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
+              onReplyEvent={handleReplyEvent}
               timeFormat={timeFormat}
               currentUserEmails={currentUserEmails}
               onCreateEvent={() => openCreateModal()}
@@ -2042,20 +2076,19 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             <TaskListView
               tasks={taskStore.tasks}
               calendars={displayCalendars}
-              selectedCalendarIds={selectedCalendarIds}
               filter={taskStore.filter}
               onSelectTask={openEditTaskModal}
               onToggleComplete={handleToggleTaskComplete}
               selectedTaskId={taskStore.selectedTaskId}
-              onQuickCreate={(title) => {
-                // Into a calendar that takes it: the default one, else the
-                // first the user may write to.
-                const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
+              onQuickCreate={(title, due) => {
+                // Into the first task-only list, else the default calendar,
+                // else the first the user may write to (pim-8).
+                const target = defaultTaskList(writableTaskCalendars);
                 if (!client || !target) {
                   toast.error(t("notifications.task_save_error"));
                   return;
                 }
-                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
+                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true }, ...(due ? { due, showWithoutTime: true } : {}) })
                   .then((created) => { if (created) toast.success(t("notifications.task_created")); })
                   .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
               }}
@@ -2383,9 +2416,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             {renderView()}
           </div>
 
-          {/* Desktop event panel */}
+          {/* Desktop event panel: a sheet over the grid from the right, as
+              on small screens, so the week keeps its width (pim-25). Above
+              the views' sticky headers (z-50) inside this isolated row. */}
           {!isMobile && showEventModal && (
-            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
+            <div data-testid="event-panel" className="absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden">
               <EventModal
                 key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
                 event={editEvent}
@@ -2404,7 +2439,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onDirtyChange={setEventEditorDirty}
                 onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
                 onPreviewChange={setPendingPreview}
-                currentUserEmails={currentUserEmails}
+                currentUserEmails={userEmailsFor(editEvent)}
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 maxParticipants={maxParticipants}
                 isMobile={false}
@@ -2477,6 +2512,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onDelete={() => handleDeleteContextMenu(eventContextMenu.data!)}
           onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: eventContextMenu.data! }); }}
           editable={canEditEvent(eventContextMenu.data)}
+          onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
+          responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
+          answersOnly={answersOnlyMenu}
         />
       )}
 
@@ -2541,7 +2579,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRsvp={handleRsvpFromDetail}
           onMouseEnter={() => { if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}
           onMouseLeave={handleHoverLeave}
-          currentUserEmails={currentUserEmails}
+          currentUserEmails={userEmailsFor(detailEvent)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           timeFormat={timeFormat}
           isMobile={isMobile}
@@ -2567,7 +2605,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
           onDirtyChange={setEventEditorDirty}
           onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
-          currentUserEmails={currentUserEmails}
+          currentUserEmails={userEmailsFor(editEvent)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           maxParticipants={maxParticipants}
           isMobile={true}
@@ -2650,7 +2688,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         isOpen={!!pendingScopeAction}
         actionType={pendingScopeAction?.type || "edit"}
         note={pendingScopeAction?.type === "delete" && pendingScopeAction.sendScheduling
-          && userOrganizes(pendingScopeAction.event, currentUserEmails)
+          && userOrganizes(pendingScopeAction.event, userEmailsFor(pendingScopeAction.event))
           ? t("participants.cancel_notification")
           : undefined}
         eventTitle={pendingScopeAction?.event.title || t("events.no_title")}

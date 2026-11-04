@@ -7,6 +7,7 @@ import { debug } from "@/lib/debug";
 import { formatIsoInTimeZone, getEventStartDate } from "@/lib/calendar-utils";
 import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
 import { movedEventUpdates } from "@/lib/calendar-participants";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import type { Calendar, CalendarEvent } from "@/lib/jmap/types";
 
 /** Saves a dragged or resized event; `kind` says which, for the message. */
@@ -90,6 +91,8 @@ export function useTimeGridInteractions({
   gridEndMinutes = 1440,
   onMoveEvent,
 }: UseTimeGridInteractionsOptions) {
+  // A move of another signed-in login's event: that login's addresses (pim-12).
+  const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
   const snapToMinutes = useCallback((clientY: number, containerTop: number): number => {
     const raw = gridStartMinutes + ((clientY - containerTop) / hourHeight) * 60;
     return Math.max(gridStartMinutes, Math.min(gridEndMinutes, Math.round(raw / 15) * 15));
@@ -285,7 +288,7 @@ export function useTimeGridInteractions({
       if (dur === "PT") dur = "PT0M";
       const updates: { start?: string; duration: string } = { duration: dur };
       if (start) updates.start = start;
-      const moved = movedEventUpdates(event, updates, currentUserEmails ?? []);
+      const moved = movedEventUpdates(event, updates, userEmailsFor(event));
       if (event && onMoveEvent) await onMoveEvent(event, moved.updates, moved.sendSchedulingMessages, "resize");
       else await useCalendarStore.getState().updateEvent(client, resize.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {
@@ -294,7 +297,7 @@ export function useTimeGridInteractions({
     } finally {
       setResizeVisual(null);
     }
-  }, [computeResize, errorMessages.resize, describeError, currentUserEmails, onMoveEvent]);
+  }, [computeResize, errorMessages.resize, describeError, userEmailsFor, onMoveEvent]);
 
   // --- Click / Double-click / Quick-create ---
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -422,13 +425,13 @@ export function useTimeGridInteractions({
         toast.error(errorMessages.move);
         return;
       }
-      const moved = movedEventUpdates(event, { start: newStartISO }, currentUserEmails ?? []);
+      const moved = movedEventUpdates(event, { start: newStartISO }, userEmailsFor(event));
       if (event && onMoveEvent) await onMoveEvent(event, moved.updates, moved.sendSchedulingMessages, "move");
       else await useCalendarStore.getState().updateEvent(client, data.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {
       toast.error(describeError ? describeError(error, errorMessages.move) : errorMessages.move);
     }
-  }, [snapDragMinutes, errorMessages.move, describeError, currentUserEmails, onMoveEvent]);
+  }, [snapDragMinutes, errorMessages.move, describeError, userEmailsFor, onMoveEvent]);
 
   return {
     dragCreate,

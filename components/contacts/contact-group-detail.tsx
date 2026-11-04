@@ -135,12 +135,9 @@ export function ContactGroupDetail({
                       )}
                     </div>
                   </button>
+                  {/* Always shown: this list is where members are managed (#pim-18). */}
                   <IconButton
                     label={t("groups.remove_member", { name: mName })}
-                    className={cn(
-                      "transition-opacity",
-                      isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
-                    )}
                     onClick={() => onRemoveMember(member.id)}
                   >
                     <UserMinus className="text-muted-foreground" />
