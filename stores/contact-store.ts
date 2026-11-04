@@ -27,6 +27,8 @@ export interface MergeUndo {
   others: ContactCard[];
   /** The groups' members before the merge. */
   groups: Array<{ groupId: string; members: Record<string, boolean> }>;
+  /** Some step after the kept card's update failed or was stopped: not all cards are gone. */
+  incomplete?: boolean;
 }
 
 /** A contact that is about to be created, projected for plugins (no id yet). */
@@ -1745,20 +1747,30 @@ export const useContactStore = create<ContactStore>()(
         }
         const groups: MergeUndo['groups'] = [];
         const moves = planGroupMoves(get().contacts.filter(c => c.kind === 'group'), keep, others);
-        for (const { group, members } of moves) {
-          if (sync) {
-            const accountId = group.isShared ? group.accountId : undefined;
-            await resolveAccountClient(client!, group.localAccountId)
-              .updateContact(group.originalId || group.id, { members }, accountId);
+        try {
+          for (const { group, members } of moves) {
+            if (sync) {
+              const accountId = group.isShared ? group.accountId : undefined;
+              await resolveAccountClient(client!, group.localAccountId)
+                .updateContact(group.originalId || group.id, { members }, accountId);
+            }
+            groups.push({ groupId: group.id, members: { ...(group.members ?? {}) } });
+            set((state) => ({
+              contacts: state.contacts.map(c => c.id === group.id ? { ...c, members } : c),
+            }));
+            void contactHooks.onContactGroupMemberChange.emit({ groupId: group.id, added: [keep.id], removed: others.map(o => o.id) });
           }
-          groups.push({ groupId: group.id, members: { ...(group.members ?? {}) } });
-          set((state) => ({
-            contacts: state.contacts.map(c => c.id === group.id ? { ...c, members } : c),
-          }));
-          void contactHooks.onContactGroupMemberChange.emit({ groupId: group.id, added: [keep.id], removed: others.map(o => o.id) });
+        } catch (error) {
+          // The kept card is changed already: hand back what Undo needs, delete nothing.
+          console.error('Failed to move group members while merging:', error);
+          return { keepId: keep.id, before, others: [], groups, incomplete: true };
         }
         await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id));
-        return { keepId: keep.id, before, others, groups };
+        // A failed delete, or a plugin that stopped it, leaves cards in place:
+        // Undo must not create those again.
+        const left = new Set(get().contacts.map(c => c.id));
+        const deleted = others.filter(o => !left.has(o.id));
+        return { keepId: keep.id, before, others: deleted, groups, ...(deleted.length < others.length ? { incomplete: true } : {}) };
       },
 
       undoMergeContacts: async (client, undo) => {

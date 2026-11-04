@@ -108,6 +108,29 @@ describe('mergeContacts', () => {
     expect(contacts.find((c) => c.uid === 'urn:uuid:old')).toBeTruthy();
   });
 
+  // A delete the server refused left the card in place while the toast said
+  // merged, and Undo then created it a second time.
+  it('says when a card could not be deleted, and Undo does not create it again', async () => {
+    useContactStore.setState({ contacts: [older, newer, team] });
+    const client = makeClient();
+    client.deleteContact.mockRejectedValueOnce(new Error('server said no'));
+    const undo = await useContactStore.getState().mergeContacts(client as unknown as IJMAPClient, planMerge([older, newer]));
+    expect(undo?.incomplete).toBe(true);
+    expect(undo?.others).toEqual([]);
+    expect(useContactStore.getState().contacts.some((c) => c.id === 'c-old')).toBe(true);
+    await useContactStore.getState().undoMergeContacts(client as unknown as IJMAPClient, undo!);
+    expect(client.createContact).not.toHaveBeenCalled();
+  });
+
+  it('deletes nothing and still hands back Undo when moving a group member fails', async () => {
+    useContactStore.setState({ contacts: [older, newer, team] });
+    const client = makeClient();
+    client.updateContact.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('group write failed'));
+    const undo = await useContactStore.getState().mergeContacts(client as unknown as IJMAPClient, planMerge([older, newer]));
+    expect(undo).toMatchObject({ keepId: 'c-new', incomplete: true, others: [] });
+    expect(client.deleteContact).not.toHaveBeenCalled();
+  });
+
   it('deletes nothing when the kept card cannot be written', async () => {
     useContactStore.setState({ contacts: [older, newer, team] });
     const client = makeClient();

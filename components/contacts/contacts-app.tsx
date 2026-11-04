@@ -743,7 +743,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
         setSelectedContact(plan.keep.id);
         setView("detail");
       }
-      toast.success(tMerge("merged"), {
+      // Not every card went: say so, and still offer Undo for what changed.
+      (undo.incomplete ? toast.error : toast.success)(tMerge(undo.incomplete ? "merge_failed" : "merged"), {
         action: {
           label: tMerge("undo"),
           onClick: () => {
