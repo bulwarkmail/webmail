@@ -3170,10 +3170,6 @@
         "label": "Læsemaske",
         "description": "Gør alt i en besked mørkt undtagen nogle få linjer omkring markøren, så du ikke mister pladsen."
       },
-      "plain_language": {
-        "label": "Letforståeligt sprog",
-        "description": "Enklere formuleringer i indstillinger og fejlmeddelelser og korte forklaringer af tekniske begreber. Findes på engelsk og tysk."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Mere kontrast gør tekst, kanter og fokusramme mørkere eller lysere i ethvert tema og understreger links. System følger din enhed.",

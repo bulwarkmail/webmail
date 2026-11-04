@@ -3170,10 +3170,6 @@
         "label": "Masque de lecture",
         "description": "Assombrit tout le message sauf quelques lignes autour du pointeur, pour vous aider à ne pas perdre votre place."
       },
-      "plain_language": {
-        "label": "Langage simple",
-        "description": "Formulations plus simples pour les paramètres et les messages d'erreur, avec de courtes explications des termes techniques. Disponible en anglais et en allemand."
-      },
       "contrast": {
         "label": "Contraste",
         "description": "Plus de contraste rend le texte, les bordures et le contour de focus plus sombres ou plus clairs avec n'importe quel thème, et souligne les liens. Système suit votre appareil.",

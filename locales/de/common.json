@@ -3170,10 +3170,6 @@
         "label": "Lesemaske",
         "description": "Blendet in einer Nachricht alles außer ein paar Zeilen um den Zeiger ab, damit Sie die Stelle nicht verlieren."
       },
-      "plain_language": {
-        "label": "Einfache Sprache",
-        "description": "Einfachere Formulierungen in Einstellungen und Fehlermeldungen und kurze Erklärungen zu Fachbegriffen. Auf Deutsch und Englisch verfügbar."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Mehr Kontrast macht Text, Rahmen und den Fokusrahmen bei jedem Design dunkler oder heller und unterstreicht Links. System folgt Ihrem Gerät.",

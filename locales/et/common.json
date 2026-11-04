@@ -3170,10 +3170,6 @@
         "label": "Lugemismask",
         "description": "Tumendab kirjas kõik peale mõne rea osuti ümber, et sa ei kaotaks kohta silmist."
       },
-      "plain_language": {
-        "label": "Lihtsas keeles",
-        "description": "Lihtsamad sõnastused seadetes ja veateadetes ning lühikesed selgitused tehnilistele terminitele. Saadaval inglise ja saksa keeles."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Suurem kontrast muudab teksti, äärised ja fookusraami igas teemas tumedamaks või heledamaks ning joonib lingid alla. Süsteem järgib sinu seadet.",

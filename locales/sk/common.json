@@ -3170,10 +3170,6 @@
         "label": "Maska na čítanie",
         "description": "V správe zatemní všetko okrem niekoľkých riadkov okolo ukazovateľa, aby ste nestratili miesto."
       },
-      "plain_language": {
-        "label": "Jednoduchý jazyk",
-        "description": "Jednoduchšie formulácie v nastaveniach a chybových hláseniach a krátke vysvetlenia odborných pojmov. K dispozícii v angličtine a nemčine."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Vyšší kontrast zvýrazní text, orámovanie a rámik zamerania tmavšie alebo svetlejšie v každom motíve a podčiarkne odkazy. Systém sleduje vaše zariadenie.",

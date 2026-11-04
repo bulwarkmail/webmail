@@ -3170,10 +3170,6 @@
         "label": "Lesemaske",
         "description": "Demper alt i en melding unntatt noen få linjer rundt pekeren, slik at du holder styr på hvor du er."
       },
-      "plain_language": {
-        "label": "Enkelt språk",
-        "description": "Enklere ord i innstillinger og feilmeldinger, og korte forklaringer av tekniske uttrykk. Tilgjengelig på engelsk og tysk."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Mer kontrast gjør tekst, kantlinjer og fokusrammen mørkere eller lysere i alle temaer, og understreker lenker. System følger enheten din.",

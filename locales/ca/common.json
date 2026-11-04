@@ -3170,10 +3170,6 @@
         "label": "Màscara de lectura",
         "description": "Enfosqueix tot el missatge excepte unes quantes línies al voltant del punter, perquè no perdis el lloc."
       },
-      "plain_language": {
-        "label": "Llenguatge senzill",
-        "description": "Textos més simples a les opcions i als missatges d'error, i explicacions breus dels termes tècnics. Disponible en anglès i alemany."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Més contrast fa que el text, les vores i el contorn de focus siguin més foscos o més clars amb qualsevol tema, i subratlla els enllaços. Sistema segueix el teu dispositiu.",

@@ -3170,10 +3170,6 @@
         "label": "Mască de citire",
         "description": "Estompează tot ce este în mesaj, în afară de câteva rânduri din jurul cursorului, ca să nu pierdeți locul."
       },
-      "plain_language": {
-        "label": "Limbaj simplu",
-        "description": "Formulări mai simple în setări și în mesajele de eroare și explicații scurte pentru termenii tehnici. Disponibil în engleză și germană."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Mai mult contrast face textul, marginile și conturul de focalizare mai închise sau mai deschise la orice temă și subliniază linkurile. Sistem urmează dispozitivul dvs.",

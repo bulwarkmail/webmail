@@ -3182,10 +3182,6 @@
         "label": "Vùng tập trung khi đọc",
         "description": "Làm mờ mọi thứ trong thư ngoại trừ một vài dòng xung quanh con trỏ để giúp bạn giữ nguyên vị trí của mình."
       },
-      "plain_language": {
-        "label": "Ngôn ngữ đơn giản",
-        "description": "Từ ngữ đơn giản hơn cho các cài đặt và thông báo lỗi cũng như giải thích ngắn gọn về các thuật ngữ kỹ thuật. Có sẵn bằng tiếng Anh và tiếng Đức."
-      },
       "contrast": {
         "label": "Độ tương phản",
         "description": "Độ tương phản cao hơn làm cho văn bản, đường viền và đường viền tiêu điểm tối hơn hoặc sáng hơn trên bất kỳ giao diện nào và gạch chân các liên kết. Hệ thống theo dõi thiết bị của bạn.",

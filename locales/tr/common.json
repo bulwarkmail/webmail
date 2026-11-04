@@ -3170,10 +3170,6 @@
         "label": "Okuma maskesi",
         "description": "İletide işaretçinin çevresindeki birkaç satır dışındaki her şeyi karartır, böylece okuduğunuz yeri kaybetmezsiniz."
       },
-      "plain_language": {
-        "label": "Sade dil",
-        "description": "Ayarlarda ve hata iletilerinde daha basit ifadeler ve teknik terimler için kısa açıklamalar. İngilizce ve Almanca dillerinde kullanılabilir."
-      },
       "contrast": {
         "label": "Karşıtlık",
         "description": "Daha fazla karşıtlık, her temada metni, kenarlıkları ve odak çerçevesini daha koyu ya da daha açık yapar ve bağlantıların altını çizer. Sistem, cihazınızı izler.",

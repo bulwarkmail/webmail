@@ -3170,10 +3170,6 @@
         "label": "Čtecí maska",
         "description": "Ve zprávě ztlumí vše kromě několika řádků kolem ukazatele, abyste neztratili místo, kde čtete."
       },
-      "plain_language": {
-        "label": "Jednoduchý jazyk",
-        "description": "Jednodušší formulace v nastavení a chybových hlášeních a krátké vysvětlivky odborných výrazů. K dispozici v angličtině a němčině."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Vyšší kontrast zesvětlí nebo ztmaví text, okraje a obrys zaměření v jakémkoli motivu a podtrhne odkazy. Systém se řídí vaším zařízením.",

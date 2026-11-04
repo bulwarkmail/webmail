@@ -108,7 +108,6 @@ export const ACCESSIBILITY_POLICY_SETTINGS: readonly PresettableSetting[] = [
       options: [{ value: 'full', label: 'Full width' }, { value: 'comfortable', label: 'About 80 characters' }],
     },
     { key: 'readingMask', label: 'Reading mask', type: 'boolean', labelKey: `${A}.reading_mask.label` },
-    { key: 'plainLanguage', label: 'Plain language', type: 'boolean', labelKey: `${A}.plain_language.label` },
   ]),
   ...group('Colour and contrast', [
     {

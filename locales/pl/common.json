@@ -3170,10 +3170,6 @@
         "label": "Maska czytania",
         "description": "Przyciemnia wszystko w wiadomości poza kilkoma wierszami wokół wskaźnika, żeby łatwiej było nie zgubić miejsca."
       },
-      "plain_language": {
-        "label": "Prosty język",
-        "description": "Prostsze sformułowania w ustawieniach i komunikatach o błędach oraz krótkie wyjaśnienia terminów technicznych. Dostępne po angielsku i niemiecku."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Większy kontrast przyciemnia lub rozjaśnia tekst, obramowania i ramkę fokusu w każdym motywie oraz podkreśla linki. System korzysta z ustawień urządzenia.",

@@ -3170,10 +3170,6 @@
         "label": "Máscara de leitura",
         "description": "Escurece tudo em uma mensagem, exceto algumas linhas ao redor do ponteiro, para ajudar a não perder o ponto da leitura."
       },
-      "plain_language": {
-        "label": "Linguagem simples",
-        "description": "Textos mais simples nas configurações e nas mensagens de erro, com explicações curtas de termos técnicos. Disponível em inglês e alemão."
-      },
       "contrast": {
         "label": "Contraste",
         "description": "Mais contraste deixa texto, bordas e o contorno de foco mais escuros ou mais claros em qualquer tema, e sublinha os links. Sistema segue o seu dispositivo.",

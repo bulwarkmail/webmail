@@ -3170,10 +3170,6 @@
         "label": "Olvasómaszk",
         "description": "Az üzenetben a mutató körüli néhány sor kivételével mindent elhomályosít, hogy ne veszítse el a helyét."
       },
-      "plain_language": {
-        "label": "Egyszerű nyelv",
-        "description": "Egyszerűbb megfogalmazás a beállításokban és a hibaüzenetekben, valamint rövid magyarázatok a szakkifejezésekhez. Angolul és németül érhető el."
-      },
       "contrast": {
         "label": "Kontraszt",
         "description": "A nagyobb kontraszt minden témán sötétebbé vagy világosabbá teszi a szöveget, a kereteket és a fókuszkeretet, és aláhúzza a hivatkozásokat. A Rendszer az eszköze beállítását követi.",

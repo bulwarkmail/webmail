@@ -356,7 +356,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('paragraphSpacing', 'accessibility', `${A}paragraph_spacing.label`, opts(`${A}spacing.`, allowed('paragraphSpacing'))),
   choice('readingWidth', 'accessibility', `${A}reading_width.label`, opts(`${A}reading_width.`, allowed('readingWidth'))),
   bool('readingMask', 'accessibility', `${A}reading_mask.label`),
-  bool('plainLanguage', 'accessibility', `${A}plain_language.label`),
   choice('contrast', 'accessibility', `${A}contrast.label`, [
     { value: 'system', label: `${A}system` },
     { value: 'more', label: `${A}contrast.more` },

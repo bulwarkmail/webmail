@@ -3170,10 +3170,6 @@
         "label": "Leesmasker",
         "description": "Dimt alles in een bericht behalve een paar regels rond de aanwijzer, zodat je je plek niet kwijtraakt."
       },
-      "plain_language": {
-        "label": "Makkelijke taal",
-        "description": "Eenvoudigere formuleringen bij instellingen en foutmeldingen, en korte uitleg bij technische termen. Beschikbaar in het Engels en Duits."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Meer contrast maakt tekst, randen en de focusrand donkerder of lichter in elk thema en onderstreept links. Systeem volgt je apparaat.",

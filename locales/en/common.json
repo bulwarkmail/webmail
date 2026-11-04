@@ -3170,10 +3170,6 @@
         "label": "Reading mask",
         "description": "Dims everything in a message except a few lines around the pointer, to help you keep your place."
       },
-      "plain_language": {
-        "label": "Plain language",
-        "description": "Simpler wording for settings and error messages, and short explanations of technical terms. Available in English and German."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "More contrast makes text, borders and the focus outline darker or lighter on any theme, and underlines links. System follows your device.",

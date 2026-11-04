@@ -3170,10 +3170,6 @@
         "label": "Lasīšanas maska",
         "description": "Aptumšo visu ziņā, izņemot dažas rindas ap rādītāju, lai nepazaudētu vietu, kur lasāt."
       },
-      "plain_language": {
-        "label": "Vienkārša valoda",
-        "description": "Vienkāršāki formulējumi iestatījumos un kļūdu ziņojumos un īsi skaidrojumi tehniskiem terminiem. Pieejama angļu un vācu valodā."
-      },
       "contrast": {
         "label": "Kontrasts",
         "description": "Lielāks kontrasts padara tekstu, apmales un fokusa apvadījumu tumšāku vai gaišāku jebkurā motīvā un pasvītro saites. Sistēma seko jūsu ierīcei.",

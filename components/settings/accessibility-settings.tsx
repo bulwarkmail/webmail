@@ -268,9 +268,6 @@ export function AccessibilitySettings() {
         <SettingItem label={t('reading_mask.label')} description={t('reading_mask.description')}>
           <ToggleSwitch checked={settings.readingMask} onChange={(checked) => set('readingMask', checked)} />
         </SettingItem>
-        <SettingItem label={t('plain_language.label')} description={t('plain_language.description')}>
-          <ToggleSwitch checked={settings.plainLanguage} onChange={(checked) => set('plainLanguage', checked)} />
-        </SettingItem>
         {!isSettingHidden('density') && (
           <SettingItem label={tAppearance('list_density.label')} description={tAppearance('list_density.description')} locked={isSettingLocked('density')}>
             <Select
