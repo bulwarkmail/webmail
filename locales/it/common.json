@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Cambiare il modo in cui Bulwark si connette?",
+      "message": "Bulwark si riavvia e chiede come connettersi: con il tuo indirizzo email o tramite il Bulwark della tua organizzazione. I tuoi account su questo computer restano connessi.",
+      "confirm": "Cambia",
+      "org_link": "Usa invece il Bulwark della mia organizzazione",
+      "add_account": "Aggiungi account…"
+    },
     "picture": {
       "button": "Immagine",
       "title": "Inserisci immagine",
@@ -7541,6 +7548,10 @@
       "description": "Descrizione",
       "invalid": "Inserisci un indirizzo web che inizi con https://.",
       "insert": "Inserisci"
+    },
+    "sign_in_page": {
+      "open_app": "Apri Bulwark",
+      "done_as": "Accesso eseguito come {address}. Puoi chiudere questa scheda."
     }
   },
   "desktop_updates": {

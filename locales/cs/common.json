@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} nenabízí JMAP, způsob, jakým Bulwark komunikuje s poštovními servery, takže se k němu Bulwark zatím nemůže připojit přímo."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Změnit, jak se Bulwark připojuje?",
+      "message": "Bulwark se restartuje a zeptá se, jak se připojit: pomocí vaší e-mailové adresy, nebo přes Bulwark vaší organizace. Vaše účty na tomto počítači zůstanou přihlášené.",
+      "confirm": "Změnit",
+      "org_link": "Místo toho použít Bulwark mé organizace",
+      "add_account": "Přidat účet…"
+    },
     "picture": {
       "button": "Obrázek",
       "title": "Vložit obrázek",
@@ -7541,6 +7548,10 @@
       "description": "Popis",
       "invalid": "Zadejte webovou adresu, která začíná https://.",
       "insert": "Vložit"
+    },
+    "sign_in_page": {
+      "open_app": "Otevřít Bulwark",
+      "done_as": "Přihlášeno jako {address}. Tuto kartu můžete zavřít."
     }
   },
   "desktop_updates": {

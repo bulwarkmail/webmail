@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Change how Bulwark connects?",
+      "message": "Bulwark restarts and asks how to connect: with your email address, or through your organisation's Bulwark. Your accounts on this computer stay signed in.",
+      "confirm": "Change",
+      "org_link": "Use my organisation's Bulwark instead",
+      "add_account": "Add account…"
+    },
     "picture": {
       "button": "Picture",
       "title": "Insert picture",
@@ -7541,6 +7548,10 @@
       "description": "Description",
       "invalid": "Enter a web address that starts with https://.",
       "insert": "Insert"
+    },
+    "sign_in_page": {
+      "open_app": "Open Bulwark",
+      "done_as": "Signed in as {address}. You can close this tab."
     }
   },
   "desktop_updates": {

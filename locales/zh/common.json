@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} 不支持 JMAP（Bulwark 与邮件服务器通信的方式），所以 Bulwark 暂时无法直接连接它。"
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "要更改 Bulwark 的连接方式吗？",
+      "message": "Bulwark 会重新启动并询问连接方式：使用你的电子邮件地址，或通过你所在组织的 Bulwark。此计算机上的账户会保持登录。",
+      "confirm": "更改",
+      "org_link": "改用我所在组织的 Bulwark",
+      "add_account": "添加账户…"
+    },
     "picture": {
       "button": "图片",
       "title": "插入图片",
@@ -7541,6 +7548,10 @@
       "description": "说明",
       "invalid": "请输入以 https:// 开头的网址。",
       "insert": "插入"
+    },
+    "sign_in_page": {
+      "open_app": "打开 Bulwark",
+      "done_as": "已以 {address} 登录。你可以关闭此标签页。"
     }
   },
   "desktop_updates": {

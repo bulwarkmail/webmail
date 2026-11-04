@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Vil du endre hvordan Bulwark kobler til?",
+      "message": "Bulwark starter på nytt og spør hvordan det skal koble til: med e-postadressen din eller via organisasjonens Bulwark. Kontoene dine på denne datamaskinen forblir pålogget.",
+      "confirm": "Endre",
+      "org_link": "Bruk organisasjonens Bulwark i stedet",
+      "add_account": "Legg til konto…"
+    },
     "picture": {
       "button": "Bilde",
       "title": "Sett inn bilde",
@@ -7541,6 +7548,10 @@
       "description": "Beskrivelse",
       "invalid": "Skriv inn en nettadresse som begynner med https://.",
       "insert": "Sett inn"
+    },
+    "sign_in_page": {
+      "open_app": "Åpne Bulwark",
+      "done_as": "Logget på som {address}. Du kan lukke denne fanen."
     }
   },
   "desktop_updates": {

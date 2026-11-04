@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Schimbați modul în care se conectează Bulwark?",
+      "message": "Bulwark repornește și întreabă cum să se conecteze: cu adresa dvs. de e-mail sau prin Bulwark-ul organizației dvs. Conturile dvs. de pe acest computer rămân conectate.",
+      "confirm": "Schimbă",
+      "org_link": "Folosește în schimb Bulwark-ul organizației mele",
+      "add_account": "Adaugă cont…"
+    },
     "picture": {
       "button": "Imagine",
       "title": "Inserează imagine",
@@ -7541,6 +7548,10 @@
       "description": "Descriere",
       "invalid": "Introduceți o adresă web care începe cu https://.",
       "insert": "Inserează"
+    },
+    "sign_in_page": {
+      "open_app": "Deschide Bulwark",
+      "done_as": "Conectat ca {address}. Puteți închide această filă."
     }
   },
   "desktop_updates": {

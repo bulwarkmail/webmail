@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Bulwark'ın bağlanma şekli değiştirilsin mi?",
+      "message": "Bulwark yeniden başlar ve nasıl bağlanacağını sorar: e-posta adresinizle ya da kuruluşunuzun Bulwark'ı üzerinden. Bu bilgisayardaki hesaplarınızda oturum açık kalır.",
+      "confirm": "Değiştir",
+      "org_link": "Bunun yerine kuruluşumun Bulwark'ını kullan",
+      "add_account": "Hesap ekle…"
+    },
     "picture": {
       "button": "Resim",
       "title": "Resim ekle",
@@ -7541,6 +7548,10 @@
       "description": "Açıklama",
       "invalid": "https:// ile başlayan bir web adresi girin.",
       "insert": "Ekle"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark'ı aç",
+      "done_as": "{address} olarak oturum açıldı. Bu sekmeyi kapatabilirsiniz."
     }
   },
   "desktop_updates": {

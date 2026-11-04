@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Bulwark の接続方法を変更しますか？",
+      "message": "Bulwark が再起動し、接続方法を尋ねます。メールアドレスで接続するか、組織の Bulwark 経由で接続するかを選べます。このコンピューター上のアカウントはサインインしたままです。",
+      "confirm": "変更",
+      "org_link": "代わりに組織の Bulwark を使う",
+      "add_account": "アカウントを追加…"
+    },
     "picture": {
       "button": "画像",
       "title": "画像を挿入",
@@ -7541,6 +7548,10 @@
       "description": "説明",
       "invalid": "https:// で始まるウェブアドレスを入力してください。",
       "insert": "挿入"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark を開く",
+      "done_as": "{address} としてサインインしました。このタブは閉じてかまいません。"
     }
   },
   "desktop_updates": {

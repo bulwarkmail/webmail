@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} nepiedāvā JMAP, veidu, kā Bulwark sazinās ar pasta serveriem, tāpēc Bulwark tam vēl nevar pieslēgties tieši."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Mainīt, kā Bulwark savienojas?",
+      "message": "Bulwark tiek restartēts un jautā, kā savienoties: ar jūsu e-pasta adresi vai caur jūsu organizācijas Bulwark. Jūsu konti šajā datorā paliek pierakstīti.",
+      "confirm": "Mainīt",
+      "org_link": "Tā vietā izmantot manas organizācijas Bulwark",
+      "add_account": "Pievienot kontu…"
+    },
     "picture": {
       "button": "Attēls",
       "title": "Ievietot attēlu",
@@ -7541,6 +7548,10 @@
       "description": "Apraksts",
       "invalid": "Ievadiet tīmekļa adresi, kas sākas ar https://.",
       "insert": "Ievietot"
+    },
+    "sign_in_page": {
+      "open_app": "Atvērt Bulwark",
+      "done_as": "Pierakstījies kā {address}. Varat aizvērt šo cilni."
     }
   },
   "desktop_updates": {

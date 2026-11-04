@@ -50,6 +50,7 @@ import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
 import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
 import { loginHintFrom, serverOfSignedInDomain } from "@/lib/auth/login-hint";
+import { askAndChangeConnection, changeConnectionAvailable } from "@/lib/desktop/change-connection";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -211,6 +212,11 @@ function LoginPageContent() {
   const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
   const tLogin = useTranslations("uxs_login");
+  const tP3 = useTranslations("ux_p3_settings");
+  const tCommonP3 = useTranslations("common");
+  // Read after mount: the bridge isn't there during the server render.
+  const [orgLinkOffered, setOrgLinkOffered] = useState(false);
+  useEffect(() => setOrgLinkOffered(changeConnectionAvailable()), []);
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
@@ -694,6 +700,20 @@ function LoginPageContent() {
     // sign-in of its own, and the mailbox would strand the user in the app's
     // sign-in sheet. handleSubmit offers the hand-off after they sign in
     // (isAuthenticated stays true, so this effect doesn't run again).
+    // The first screen's address after File > Change connection…: open that account if
+    // it's here, else the form to add it with the address filled in (desktop-p3-2).
+    if (action === "mailbox" && loginHint && !isAddAccountMode) {
+      const wanted = loginHint.toLowerCase();
+      const accounts = useAccountStore.getState().accounts;
+      const match = accounts.find((a) => a.email?.toLowerCase() === wanted || a.username.toLowerCase() === wanted);
+      if (!match) {
+        router.replace(`/login?mode=add-account&login_hint=${encodeURIComponent(loginHint)}`);
+        return;
+      }
+      if (match.id !== useAuthStore.getState().activeAccountId) void useAuthStore.getState().switchAccount(match.id);
+      router.push('/');
+      return;
+    }
     if (action === "mailbox") {
       let redirectTo = '/';
       try {
@@ -705,7 +725,7 @@ function LoginPageContent() {
       } catch { /* ignore */ }
       router.push(toRouterPath(redirectTo));
     }
-  }, [isAuthenticated, router, isAddAccountMode, isMobileHandoff, offerMobileHandoff]);
+  }, [isAuthenticated, router, isAddAccountMode, isMobileHandoff, offerMobileHandoff, loginHint]);
 
   useEffect(() => {
     clearError();
@@ -2297,6 +2317,28 @@ function LoginPageContent() {
                   </div>
                 )}
               </form>
+            )}
+
+            {/* The desktop app on its own, first sign-in: the way back to "My organisation
+                gave me a Bulwark web address" (settings-p3-1). It asks before the restart. */}
+            {IS_DESKTOP_BUILD && customServerMode && !isAddAccountMode && orgLinkOffered && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  data-testid="login-use-organisation"
+                  className="underline hover:text-foreground"
+                  onClick={() => {
+                    void askAndChangeConnection({
+                      title: tP3("connection.title"),
+                      message: tP3("connection.message"),
+                      confirm: tP3("connection.confirm"),
+                      cancel: tCommonP3("cancel"),
+                    });
+                  }}
+                >
+                  {tP3("connection.org_link")}
+                </button>
+              </p>
             )}
 
             {isAddAccountMode && (

@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Voleu canviar com es connecta Bulwark?",
+      "message": "Bulwark es reinicia i pregunta com connectar-se: amb la vostra adreça electrònica o a través del Bulwark de la vostra organització. Els vostres comptes d'aquest ordinador continuen amb la sessió iniciada.",
+      "confirm": "Canvia",
+      "org_link": "Fes servir el Bulwark de la meva organització",
+      "add_account": "Afegeix un compte…"
+    },
     "picture": {
       "button": "Imatge",
       "title": "Insereix una imatge",
@@ -7541,6 +7548,10 @@
       "description": "Descripció",
       "invalid": "Introduïu una adreça web que comenci per https://.",
       "insert": "Insereix"
+    },
+    "sign_in_page": {
+      "open_app": "Obre Bulwark",
+      "done_as": "Heu iniciat la sessió com a {address}. Podeu tancar aquesta pestanya."
     }
   },
   "desktop_updates": {

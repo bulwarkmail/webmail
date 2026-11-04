@@ -7545,6 +7545,13 @@
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Thay đổi cách Bulwark kết nối?",
+      "message": "Bulwark khởi động lại và hỏi cách kết nối: bằng địa chỉ email của bạn hoặc qua Bulwark của tổ chức bạn. Các tài khoản của bạn trên máy tính này vẫn được đăng nhập.",
+      "confirm": "Thay đổi",
+      "org_link": "Dùng Bulwark của tổ chức tôi thay thế",
+      "add_account": "Thêm tài khoản…"
+    },
     "picture": {
       "button": "Hình ảnh",
       "title": "Chèn hình ảnh",
@@ -7553,6 +7560,10 @@
       "description": "Mô tả",
       "invalid": "Nhập địa chỉ web bắt đầu bằng https://.",
       "insert": "Chèn"
+    },
+    "sign_in_page": {
+      "open_app": "Mở Bulwark",
+      "done_as": "Đã đăng nhập với {address}. Bạn có thể đóng thẻ này."
     }
   },
   "desktop_updates": {

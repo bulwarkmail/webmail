@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Kas muuta, kuidas Bulwark ühendub?",
+      "message": "Bulwark taaskäivitub ja küsib, kuidas ühenduda: teie e-posti aadressiga või teie organisatsiooni Bulwarki kaudu. Teie kontod selles arvutis jäävad sisselogituks.",
+      "confirm": "Muuda",
+      "org_link": "Kasuta hoopis minu organisatsiooni Bulwarki",
+      "add_account": "Lisa konto…"
+    },
     "picture": {
       "button": "Pilt",
       "title": "Lisa pilt",
@@ -7541,6 +7548,10 @@
       "description": "Kirjeldus",
       "invalid": "Sisestage veebiaadress, mis algab https://.",
       "insert": "Lisa"
+    },
+    "sign_in_page": {
+      "open_app": "Ava Bulwark",
+      "done_as": "Sisse logitud kui {address}. Võite selle vahekaardi sulgeda."
     }
   },
   "desktop_updates": {

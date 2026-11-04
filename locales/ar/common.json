@@ -7533,6 +7533,13 @@
     "provider_unsupported": "لا يوفّر {provider} بروتوكول JMAP الذي يتواصل به Bulwark مع خوادم البريد، لذلك لا يستطيع Bulwark الاتصال به مباشرة بعد."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "تغيير طريقة اتصال Bulwark؟",
+      "message": "يُعاد تشغيل Bulwark ويسأل عن طريقة الاتصال: بعنوان بريدك الإلكتروني أو عبر Bulwark الخاص بمؤسستك. تبقى حساباتك على هذا الكمبيوتر مسجّلة الدخول.",
+      "confirm": "تغيير",
+      "org_link": "استخدام Bulwark الخاص بمؤسستي بدلاً من ذلك",
+      "add_account": "إضافة حساب…"
+    },
     "picture": {
       "button": "صورة",
       "title": "إدراج صورة",
@@ -7541,6 +7548,10 @@
       "description": "الوصف",
       "invalid": "أدخل عنوان ويب يبدأ بـ https://.",
       "insert": "إدراج"
+    },
+    "sign_in_page": {
+      "open_app": "فتح Bulwark",
+      "done_as": "تم تسجيل الدخول باسم {address}. يمكنك إغلاق علامة التبويب هذه."
     }
   },
   "desktop_updates": {

@@ -7534,6 +7534,13 @@
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "לשנות את אופן החיבור של Bulwark?",
+      "message": "Bulwark יופעל מחדש וישאל איך להתחבר: עם כתובת הדוא״ל שלך או דרך ה-Bulwark של הארגון שלך. החשבונות שלך במחשב הזה יישארו מחוברים.",
+      "confirm": "שינוי",
+      "org_link": "להשתמש ב-Bulwark של הארגון שלי במקום",
+      "add_account": "הוספת חשבון…"
+    },
     "picture": {
       "button": "תמונה",
       "title": "הוספת תמונה",
@@ -7542,6 +7549,10 @@
       "description": "תיאור",
       "invalid": "יש להזין כתובת אינטרנט שמתחילה ב-https://.",
       "insert": "הוספה"
+    },
+    "sign_in_page": {
+      "open_app": "פתיחת Bulwark",
+      "done_as": "התחברת בתור {address}. אפשר לסגור את הכרטיסייה הזו."
     }
   },
   "desktop_updates": {

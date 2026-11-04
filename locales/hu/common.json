@@ -7533,6 +7533,13 @@
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "Módosítja, hogyan csatlakozik a Bulwark?",
+      "message": "A Bulwark újraindul, és megkérdezi, hogyan csatlakozzon: az e-mail-címével vagy a szervezete Bulwarkján keresztül. A fiókjai ezen a számítógépen bejelentkezve maradnak.",
+      "confirm": "Módosítás",
+      "org_link": "Inkább a szervezetem Bulwarkját használom",
+      "add_account": "Fiók hozzáadása…"
+    },
     "picture": {
       "button": "Kép",
       "title": "Kép beszúrása",
@@ -7541,6 +7548,10 @@
       "description": "Leírás",
       "invalid": "Adjon meg egy https:// kezdetű webcímet.",
       "insert": "Beszúrás"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark megnyitása",
+      "done_as": "Bejelentkezve mint {address}. Ezt a lapot bezárhatja."
     }
   },
   "desktop_updates": {

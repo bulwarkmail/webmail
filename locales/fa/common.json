@@ -7533,6 +7533,13 @@
     "provider_unsupported": "{provider} از JMAP، روشی که Bulwark با سرورهای ایمیل صحبت می‌کند، پشتیبانی نمی‌کند؛ پس Bulwark هنوز نمی‌تواند مستقیم به آن وصل شود."
   },
   "ux_p3_settings": {
+    "connection": {
+      "title": "نحوهٔ اتصال Bulwark تغییر کند؟",
+      "message": "Bulwark دوباره راه‌اندازی می‌شود و می‌پرسد چگونه وصل شود: با نشانی ایمیل شما یا از طریق Bulwark سازمانتان. حساب‌های شما در این رایانه وارد شده باقی می‌مانند.",
+      "confirm": "تغییر",
+      "org_link": "به‌جای آن از Bulwark سازمانم استفاده کن",
+      "add_account": "افزودن حساب…"
+    },
     "picture": {
       "button": "تصویر",
       "title": "درج تصویر",
@@ -7541,6 +7548,10 @@
       "description": "توضیح",
       "invalid": "نشانی وبی وارد کنید که با https:// شروع شود.",
       "insert": "درج"
+    },
+    "sign_in_page": {
+      "open_app": "باز کردن Bulwark",
+      "done_as": "با {address} وارد شدید. می‌توانید این زبانه را ببندید."
     }
   },
   "desktop_updates": {
