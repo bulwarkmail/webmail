@@ -1112,7 +1112,7 @@
     "link_url_prompt": "URL eingeben",
     "sending": "Wird gesendet...",
     "schedule_send": "Senden planen",
-    "schedule_send_description": "Wählen Sie, wann der Server diese Nachricht freigeben soll.",
+    "schedule_send_description": "Wählen Sie, wann gesendet werden soll.",
     "schedule_preset": {
       "this_morning": "Heute früh",
       "this_afternoon": "Heute Nachmittag",
@@ -4058,6 +4058,9 @@
     "sending": "Wird gesendet…",
     "sent": "Gesendet",
     "view": "Anzeigen",
+    "template_saved": "Vorlage gespeichert",
+    "schedule_anyway": "Trotzdem planen",
+    "schedule_warnings_title": "Diese Nachricht trotzdem planen?",
     "picker_button": "Aus Kontakten hinzufügen",
     "picker_title": "Empfänger hinzufügen",
     "tab_contacts": "Kontakte",

@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "Programează trimiterea",
-    "schedule_send_description": "Alegeți momentul în care serverul ar trebui să transmită acest mesaj.",
+    "schedule_send_description": "Alegeți când să fie trimis.",
     "schedule_preset": {
       "this_morning": "Azi dimineață",
       "this_afternoon": "Azi după-amiază",
@@ -4058,6 +4058,9 @@
     "sending": "Se trimite…",
     "sent": "Trimis",
     "view": "Vezi",
+    "template_saved": "Șablon salvat",
+    "schedule_anyway": "Programează oricum",
+    "schedule_warnings_title": "Programați totuși acest mesaj?",
     "picker_button": "Adaugă din contacte",
     "picker_title": "Adaugă destinatari",
     "tab_contacts": "Contacte",

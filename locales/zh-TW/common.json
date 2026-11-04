@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "排程寄送",
-    "schedule_send_description": "選擇伺服器要在何時送出這封郵件。",
+    "schedule_send_description": "選擇寄送時間。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -4058,6 +4058,9 @@
     "sending": "正在傳送…",
     "sent": "已傳送",
     "view": "檢視",
+    "template_saved": "範本已儲存",
+    "schedule_anyway": "仍然排程",
+    "schedule_warnings_title": "仍然排程這封郵件？",
     "picker_button": "從聯絡人新增",
     "picker_title": "新增收件者",
     "tab_contacts": "聯絡人",

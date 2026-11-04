@@ -1112,7 +1112,7 @@
     "link_url_prompt": "URL을 입력하세요",
     "sending": "전송 중...",
     "schedule_send": "보내기 예약",
-    "schedule_send_description": "서버가 이 메시지를 보낼 시간을 선택하세요.",
+    "schedule_send_description": "보낼 시간을 고르세요.",
     "schedule_preset": {
       "this_morning": "오늘 아침",
       "this_afternoon": "오늘 오후",
@@ -4058,6 +4058,9 @@
     "sending": "보내는 중…",
     "sent": "보냈어요",
     "view": "보기",
+    "template_saved": "템플릿을 저장했습니다",
+    "schedule_anyway": "그래도 예약하기",
+    "schedule_warnings_title": "이 메일을 그래도 예약할까요?",
     "picker_button": "연락처에서 추가",
     "picker_title": "받는 사람 추가",
     "tab_contacts": "연락처",

@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Введите URL",
     "sending": "Отправка...",
     "schedule_send": "Запланировать отправку",
-    "schedule_send_description": "Выберите, когда сервер должен отправить это сообщение.",
+    "schedule_send_description": "Выберите, когда отправить.",
     "schedule_preset": {
       "this_morning": "Сегодня утром",
       "this_afternoon": "Сегодня днём",
@@ -4058,6 +4058,9 @@
     "sending": "Отправка…",
     "sent": "Отправлено",
     "view": "Открыть",
+    "template_saved": "Шаблон сохранён",
+    "schedule_anyway": "Всё равно запланировать",
+    "schedule_warnings_title": "Всё равно запланировать это письмо?",
     "picker_button": "Добавить из контактов",
     "picker_title": "Добавить получателей",
     "tab_contacts": "Контакты",

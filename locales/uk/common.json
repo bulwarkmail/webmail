@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Введіть URL",
     "sending": "Надсилання...",
     "schedule_send": "Запланувати надсилання",
-    "schedule_send_description": "Виберіть, коли сервер має надіслати це повідомлення.",
+    "schedule_send_description": "Виберіть, коли надіслати.",
     "schedule_preset": {
       "this_morning": "Сьогодні вранці",
       "this_afternoon": "Сьогодні вдень",
@@ -4058,6 +4058,9 @@
     "sending": "Надсилання…",
     "sent": "Надіслано",
     "view": "Переглянути",
+    "template_saved": "Шаблон збережено",
+    "schedule_anyway": "Усе одно запланувати",
+    "schedule_warnings_title": "Усе одно запланувати цей лист?",
     "picker_button": "Додати з контактів",
     "picker_title": "Додати одержувачів",
     "tab_contacts": "Контакти",

@@ -1055,7 +1055,7 @@
       "unfinished": []
     },
     "schedule_send": "תזמן שליחה",
-    "schedule_send_description": "בחר מתי השרת צריך לשחרר הודעה זו.",
+    "schedule_send_description": "בחר מתי לשלוח אותה.",
     "schedule_preset": {
       "this_morning": "הבוקר",
       "this_afternoon": "היום אחר הצהריים",
@@ -3951,6 +3951,9 @@
     "sending": "שולח…",
     "sent": "נשלח",
     "view": "הצג",
+    "template_saved": "התבנית נשמרה",
+    "schedule_anyway": "תזמן בכל זאת",
+    "schedule_warnings_title": "לתזמן את ההודעה בכל זאת?",
     "picker_button": "הוסף מאנשי הקשר",
     "picker_title": "הוספת נמענים",
     "tab_contacts": "אנשי קשר",

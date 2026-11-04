@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "Programa l'enviament",
-    "schedule_send_description": "Trieu quan ha d'alliberar el servidor aquest missatge.",
+    "schedule_send_description": "Tria quan s'ha d'enviar.",
     "schedule_preset": {
       "this_morning": "Aquest matí",
       "this_afternoon": "Aquesta tarda",
@@ -4058,6 +4058,9 @@
     "sending": "S'està enviant…",
     "sent": "Enviat",
     "view": "Mostra",
+    "template_saved": "Plantilla desada",
+    "schedule_anyway": "Programa igualment",
+    "schedule_warnings_title": "Vols programar aquest missatge igualment?",
     "picker_button": "Afegeix des dels contactes",
     "picker_title": "Afegeix destinataris",
     "tab_contacts": "Contactes",

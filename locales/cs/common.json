@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Zadejte URL",
     "sending": "Odesílání...",
     "schedule_send": "Naplánovat odeslání",
-    "schedule_send_description": "Vyberte, kdy má server tuto zprávu odeslat.",
+    "schedule_send_description": "Vyberte, kdy se má odeslat.",
     "schedule_preset": {
       "this_morning": "Dnes ráno",
       "this_afternoon": "Dnes odpoledne",
@@ -4058,6 +4058,9 @@
     "sending": "Odesílání…",
     "sent": "Odesláno",
     "view": "Zobrazit",
+    "template_saved": "Šablona uložena",
+    "schedule_anyway": "Přesto naplánovat",
+    "schedule_warnings_title": "Přesto tuto zprávu naplánovat?",
     "picker_button": "Přidat z kontaktů",
     "picker_title": "Přidat příjemce",
     "tab_contacts": "Kontakty",

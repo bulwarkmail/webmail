@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Ievadiet URL",
     "sending": "Sūta...",
     "schedule_send": "Ieplānot sūtīšanu",
-    "schedule_send_description": "Izvēlieties, kad serverim jānosūta šis ziņojums.",
+    "schedule_send_description": "Izvēlieties, kad to nosūtīt.",
     "schedule_preset": {
       "this_morning": "Šorīt",
       "this_afternoon": "Šodien pēcpusdienā",
@@ -4058,6 +4058,9 @@
     "sending": "Sūta…",
     "sent": "Nosūtīts",
     "view": "Skatīt",
+    "template_saved": "Veidne saglabāta",
+    "schedule_anyway": "Ieplānot tik un tā",
+    "schedule_warnings_title": "Vai tomēr ieplānot šo vēstuli?",
     "picker_button": "Pievienot no kontaktiem",
     "picker_title": "Pievienot saņēmējus",
     "tab_contacts": "Kontakti",

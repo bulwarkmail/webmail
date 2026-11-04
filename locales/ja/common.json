@@ -1112,7 +1112,7 @@
     "link_url_prompt": "URLを入力してください",
     "sending": "送信中...",
     "schedule_send": "送信を予約",
-    "schedule_send_description": "サーバーがこのメッセージを送信する日時を選択します。",
+    "schedule_send_description": "送信する日時を選んでください。",
     "schedule_preset": {
       "this_morning": "今朝",
       "this_afternoon": "今日の午後",
@@ -4058,6 +4058,9 @@
     "sending": "送信中…",
     "sent": "送信しました",
     "view": "表示",
+    "template_saved": "テンプレートを保存しました",
+    "schedule_anyway": "そのまま予約",
+    "schedule_warnings_title": "このメッセージをそのまま予約しますか？",
     "picker_button": "連絡先から追加",
     "picker_title": "宛先を追加",
     "tab_contacts": "連絡先",

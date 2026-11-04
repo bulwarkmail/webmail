@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Saisissez l'URL",
     "sending": "Envoi...",
     "schedule_send": "Planifier l’envoi",
-    "schedule_send_description": "Choisissez quand le serveur doit libérer ce message.",
+    "schedule_send_description": "Choisissez quand l’envoyer.",
     "schedule_preset": {
       "this_morning": "Ce matin",
       "this_afternoon": "Cet après-midi",
@@ -4058,6 +4058,9 @@
     "sending": "Envoi…",
     "sent": "Envoyé",
     "view": "Afficher",
+    "template_saved": "Modèle enregistré",
+    "schedule_anyway": "Planifier quand même",
+    "schedule_warnings_title": "Planifier ce message quand même ?",
     "picker_button": "Ajouter depuis les contacts",
     "picker_title": "Ajouter des destinataires",
     "tab_contacts": "Contacts",

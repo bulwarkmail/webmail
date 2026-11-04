@@ -309,6 +309,23 @@ describe('PopoutHost', () => {
     expect(useToastStore.getState().toasts).toHaveLength(1);
   });
 
+  // compose-p2-13: the Scheduled count kept a pop-out's undo-held send
+  // until the page was reloaded, since nothing reports the release.
+  it('asks for the Scheduled count again once a send held in a pop-out has gone', async () => {
+    const refreshScheduledMetadata = vi.fn(async () => {});
+    useEmailStore.setState({ refreshScheduledMetadata: refreshScheduledMetadata as never });
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'sent', requestId: 'r1', notice: { accountId: 'alice', scheduled: true, releasesAt: new Date(Date.now() + 100).toISOString() } });
+    popout.post({ type: 'sent', requestId: 'r2', notice: { accountId: 'alice', scheduled: true, releasesAt: '2030-01-01T00:00:00Z' } });
+    await settle();
+    expect(refreshScheduledMetadata).not.toHaveBeenCalled();
+    await settle(700);
+    // Once, for the held one; the one scheduled for 2030 stays in the count.
+    expect(refreshScheduledMetadata).toHaveBeenCalledTimes(1);
+    expect(refreshScheduledMetadata).toHaveBeenCalledWith(client);
+  });
+
   it('says once that a closed pop-out kept its draft, with Discard', async () => {
     render(<><PopoutHost /><PopoutHost /></>);
     await settle();

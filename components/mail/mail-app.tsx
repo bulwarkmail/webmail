@@ -46,7 +46,7 @@ import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { findReplyDraft, threadDrafts } from "@/lib/reply-drafts";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { startSendProgress } from "@/lib/outgoing/send-progress-toast";
+import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
@@ -3081,10 +3081,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     // A message scheduled for later says when it goes, and offers Cancel
     // where a send-delay window offers Undo send.
-    toast.success(isUndoWindow
+    const undoToastId = toast.success(isUndoWindow
       ? t('email_viewer.sending_in', { seconds: Math.round(remainingMs / 1000) })
       : t('compose_send.scheduled_for', { when: formatScheduledSendAt(pending.sendAt, useSettingsStore.getState().timeFormat) }), {
-      duration: undoDurationMs,
+      // An undo window turns into "Sent" as Undo ends (runUndoSendCountdown).
+      duration: isUndoWindow ? undoDurationMs + UNDO_TOAST_SLACK_MS : undoDurationMs,
       pauseOnHover: false,
       secondaryAction: (pending.emailId && pending.identityId)
         ? {
@@ -3155,6 +3156,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         },
       },
     });
+
+    // Counts down, then "Sent" with View (compose-p2-12).
+    if (isUndoWindow) {
+      const sentId = pending.emailId;
+      const viewable = sentId && undoClient === client;
+      const ownerAccountId = pending.submissionAccountId && pending.submissionAccountId !== client.getAccountId() ? pending.submissionAccountId : undefined;
+      runUndoSendCountdown(undoToastId, {
+        sendAt: Date.parse(pending.sendAt),
+        undoEndsAt: Date.now() + undoDurationMs,
+        maxSeconds: sendDelaySeconds,
+        sendingIn: (seconds) => t('email_viewer.sending_in', { seconds }),
+        sent: t('compose_send.sent'),
+        view: viewable
+          ? { label: t('compose_send.view'), onClick: () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId }) }
+          : undefined,
+      });
+    }
 
     const timer = setTimeout(() => {
       const current = useEmailStore.getState().pendingUndoSend;
