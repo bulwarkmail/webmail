@@ -638,7 +638,10 @@ export function CalendarMonthView({
                   onDragLeave={handleCellDragLeave}
                   onDrop={(e) => handleCellDrop(e, day)}
                   className={cn(
-                    "relative @container/day border-e border-border last:border-e-0 p-1 cursor-pointer transition-colors touch-manipulation",
+                    // No container query or anything else that makes the cell a stacking
+                    // context: a bar over several days is drawn from its first cell, and
+                    // the next cells would paint over it.
+                    "relative border-e border-border last:border-e-0 p-1 cursor-pointer transition-colors touch-manipulation",
                     !inMonth && "bg-muted/30",
                     "hover:bg-muted/50",
                     selected && isMobile && "bg-primary/10",

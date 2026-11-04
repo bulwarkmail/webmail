@@ -57,4 +57,11 @@ describe('month view: as many entries as fit (pim-p3-3)', () => {
     const bar = screen.getByText('Just made');
     expect(bar.closest('[data-just-saved]')).not.toBeNull();
   });
+
+  it('keeps day cells out of their own stacking context, so the next day can not paint over a long bar', () => {
+    const { container } = renderView({ events: [allDay('long', '2026-09-08', 3)] });
+    const cells = Array.from(container.querySelectorAll('[data-day-button]')).map((b) => b.closest('[class*="border-e"]')!);
+    expect(cells.length).toBeGreaterThan(20);
+    for (const cell of cells) expect(cell.className).not.toMatch(/@container|isolate|(^|\s)z-[0-9]|contain-/);
+  });
 });
