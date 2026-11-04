@@ -44,6 +44,18 @@ export async function offerToTurnOnPlugins(
   }
 }
 
+/** Whether plugins are off for users; null when the policy can't be read. */
+export async function pluginsOffForUsers(): Promise<boolean | null> {
+  try {
+    const res = await apiFetch('/api/admin/policy');
+    if (!res.ok) return null;
+    const policy = (await res.json()) as SettingsPolicy;
+    return !policy.features?.pluginsEnabled;
+  } catch {
+    return null;
+  }
+}
+
 /** The line added to the "installed" message for each outcome. */
 export function turnOnNote(outcome: TurnOnOutcome): string {
   switch (outcome) {

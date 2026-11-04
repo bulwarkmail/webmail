@@ -21,10 +21,11 @@ import { EmptyState } from '@/components/admin/empty-state';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ConfigNote, inputClass } from '@/components/admin/config-items';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogBadges, ChangelogEntries, anyFlag, type ChangelogEntry, type ChangelogFlags } from '@/components/admin/changelog';
 import { PluginPermissionList } from '@/components/plugins/plugin-permission-list';
-import { offerToTurnOnPlugins, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
+import { offerToTurnOnPlugins, pluginsOffForUsers, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
 import { pluginTypeLabel } from './plugin-type-label';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
@@ -176,6 +177,16 @@ export function MarketplacePage() {
   const [updatesLoading, setUpdatesLoading] = useState(true);
   // A plugin's quick install asks first, with what it may do (themes don't).
   const [quickInstall, setQuickInstall] = useState<MarketplaceListing | null>(null);
+  // Whether plugins are off for users, so the one quick-install dialog can offer to
+  // turn them on too instead of asking again after installing. null: not known yet.
+  const [quickPluginsOff, setQuickPluginsOff] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!quickInstall) return;
+    let current = true;
+    setQuickPluginsOff(null);
+    void pluginsOffForUsers().then((off) => { if (current) setQuickPluginsOff(off); });
+    return () => { current = false; };
+  }, [quickInstall]);
 
   const fetchExtensions = useCallback(async () => {
     setLoading(true);
@@ -238,7 +249,8 @@ export function MarketplacePage() {
     return next;
   });
 
-  async function install(ext: { slug: string; name: string; type: 'plugin' | 'theme' }, version: string, isUpdate: boolean) {
+  /** `turnOn`: the admin already said whether to turn plugins on for users; otherwise they're asked after installing. */
+  async function install(ext: { slug: string; name: string; type: 'plugin' | 'theme' }, version: string, isUpdate: boolean, turnOn?: boolean) {
     markInstalling(ext.slug, true);
     setMessage(null);
     const result = await installVersion({ slug: ext.slug, version, type: ext.type }, confirm);
@@ -249,7 +261,9 @@ export function MarketplacePage() {
     }
     const warnings = result.warnings.length ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'})` : '';
     const signed = result.signature === 'verified' ? ', signed by the directory' : '';
-    const outcome: TurnOnOutcome = !isUpdate && ext.type === 'plugin' ? await offerToTurnOnPlugins(confirm) : 'already-on';
+    const outcome: TurnOnOutcome = !isUpdate && ext.type === 'plugin'
+      ? await offerToTurnOnPlugins(turnOn === undefined ? confirm : () => turnOn)
+      : 'already-on';
     setMessage({
       type: 'success',
       text: isUpdate
@@ -305,24 +319,50 @@ export function MarketplacePage() {
       />
 
       <ConfirmDialog {...confirmProps} />
-      <ConfirmDialog
+      <Dialog
         isOpen={quickInstall !== null}
         onClose={() => setQuickInstall(null)}
-        onConfirm={() => {
-          const ext = quickInstall;
-          setQuickInstall(null);
-          if (ext?.latestVersion) void install(ext, ext.latestVersion, false);
-        }}
+        role="alertdialog"
+        showClose={false}
         title={`Install ${quickInstall?.name ?? ''}?`}
-        message={`${quickInstall?.author ? `By ${quickInstall.author.displayName}. ` : ''}It is installed for every user and turned on for them; they can turn it off in their settings. What it may do in each mailbox:`}
-        details={quickInstall ? (
+        description={`${quickInstall?.author ? `By ${quickInstall.author.displayName}. ` : ''}${quickPluginsOff
+          ? 'It is installed for every user. Plugins are off for users, so it only runs once you turn them on.'
+          : 'It is installed for every user and turned on for them; they can turn it off in their settings.'} What it may do in each mailbox:`}
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => setQuickInstall(null)}>Cancel</Button>
+            {quickPluginsOff && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const ext = quickInstall;
+                  setQuickInstall(null);
+                  if (ext?.latestVersion) void install(ext, ext.latestVersion, false, false);
+                }}
+              >
+                Install only
+              </Button>
+            )}
+            <Button
+              disabled={quickPluginsOff === null}
+              onClick={() => {
+                const ext = quickInstall;
+                const turnOn = quickPluginsOff ?? false;
+                setQuickInstall(null);
+                if (ext?.latestVersion) void install(ext, ext.latestVersion, false, turnOn);
+              }}
+            >
+              {quickPluginsOff ? 'Install and turn on plugins' : 'Install'}
+            </Button>
+          </>
+        )}
+      >
+        {quickInstall && (
           <div className="mt-3 max-h-64 overflow-y-auto" data-testid="quick-install-permissions">
             <PluginPermissionList permissions={quickInstall.permissions ?? []} compact />
           </div>
-        ) : null}
-        confirmText="Install"
-        cancelText="Cancel"
-      />
+        )}
+      </Dialog>
 
       <div className="space-y-10">
         {updates && noticeCount > 0 && (
