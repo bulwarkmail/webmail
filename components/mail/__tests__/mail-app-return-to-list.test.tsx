@@ -318,7 +318,7 @@ describe('Archive with the list beside the reading pane', () => {
     fireEvent.click(await screen.findByText('stub archive', {}, { timeout: 5000 }));
     await waitFor(() => expect(selectedId()).toBe('m2'));
     const archived = await waitFor(() => {
-      const found = useToastStore.getState().toasts.find((toast) => toast.title === 'notifications.email_archived');
+      const found = useToastStore.getState().toasts.find((toast) => toast.title === 'mail_list_extra.archived');
       expect(found?.action).toBeTruthy();
       return found!;
     });
