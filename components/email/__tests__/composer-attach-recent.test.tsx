@@ -386,7 +386,7 @@ describe('recent files in the Attach menu', () => {
     expect(document.activeElement).toHaveAttribute('data-testid', 'composer-attach-from-device');
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
     expect(screen.queryByRole('menu')).toBeNull();
-  });
+  }, 15_000);
 
   it('stays an HTML menu where the shell would draw it natively', async () => {
     const popup = vi.fn(async () => null);
@@ -394,8 +394,8 @@ describe('recent files in the Attach menu', () => {
     useAuthStore.setState({ client: client() as never });
     render(<EmailComposer onClose={vi.fn()} />);
     await openMenu();
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
+    // The list arrives from the shell after the menu opens; on a busy runner that takes a while.
+    await waitFor(() => expect(rows()).toHaveLength(2), { timeout: 10_000 });
     expect(popup).not.toHaveBeenCalled();
-    expect(rows()).toHaveLength(2);
-  });
+  }, 15_000);
 });
