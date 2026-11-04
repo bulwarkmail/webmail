@@ -3380,7 +3380,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     try {
       // false: a plugin stopped it and said why, so no "deleted" here.
       if (await deleteEmail(client, emailToDelete.id, isInTrash, emailKeyFor(emailToDelete))) {
-        toastWithUndo(t('notifications.email_deleted'), undoMoveAction(client, restore, undo));
+        toastWithUndo(permanent ? t('notifications.email_deleted') : t('mail_list_extra.moved_to_trash'), undoMoveAction(client, restore, undo));
       }
     } catch (error) {
       console.error("Failed to delete email:", error);
@@ -3491,7 +3491,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails([]);
       }
 
-      toastWithUndo(t('notifications.email_archived'), undoMoveAction(client, restore, undo));
+      toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(client, restore, undo));
       void refreshMailboxes();
     } catch (error) {
       console.error("Failed to archive email:", error);
@@ -3522,12 +3522,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (email) leaveIfOpen(email);
     try {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
+      // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        t('notifications.email_moved'),
-        undoMoveAction(client, restore, undo, receipts),
         destination && destinationList
-          ? t('notifications.moved_to_mailbox', { mailbox: getMailboxPath(destination, destinationList) })
-          : undefined,
+          ? t('mail_list_extra.moved_to', { mailbox: getMailboxPath(destination, destinationList) })
+          : t('notifications.email_moved'),
+        undoMoveAction(client, restore, undo, receipts),
       );
     } catch (error) {
       console.error("Failed to move email:", error);
@@ -4044,7 +4044,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_subfolder'),
+      title: tCtxMenu('mail_list_extra.new_subfolder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_subfolder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),
@@ -4060,7 +4060,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateFolderFromContextMenu = async (accountId?: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_folder'),
+      title: tCtxMenu('mail_list_extra.new_folder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_folder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),

@@ -726,6 +726,7 @@ function MailboxTreeItem({
   renderAfterChild?: (child: MailboxNode) => React.ReactNode;
 }) {
   const tNotifications = useTranslations('notifications');
+  const tListExtra = useTranslations('mail_list_extra');
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
@@ -760,10 +761,12 @@ function MailboxTreeItem({
     mailbox: node,
     accountId: dragAccountId ?? undefined,
     onSuccess: (count, mailboxName, restore, receipts) => {
+      // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        count === 1 ? tNotifications('email_moved') : tNotifications('emails_moved', { count }),
+        count === 1
+          ? tListExtra('moved_to', { mailbox: mailboxName })
+          : tListExtra('moved_count_to', { count, mailbox: mailboxName }),
         undoMoveAction(useAuthStore.getState().client, restore, undoLabels(tNotifications), receipts),
-        tNotifications('moved_to_mailbox', { mailbox: mailboxName }),
       );
     },
     onError: () => {
