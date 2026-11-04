@@ -917,6 +917,8 @@ export interface CalendarTask {
   originalId?: string;
   accountId?: string;
   isShared?: boolean;
+  /** Client-only: the login the task belongs to while the calendar shows several (pim-12). */
+  localAccountId?: string;
 }
 
 /**

@@ -58,6 +58,7 @@ import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { descriptionWithNote } from "@/lib/calendar-description";
@@ -225,6 +226,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     ),
     [participantIdentities, identities, accountEmails]
   );
+  // An event of another signed-in login is answered as that login (pim-12).
+  const userEmailsFor = useEventUserEmails(currentUserEmails);
   const resolveContactName = useContactNameResolver();
 
   const [showEventModal, setShowEventModal] = useState(false);
@@ -570,12 +573,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
   }, [client, calendars.length, dateRange, fetchEvents, isEmbedded, proInterfaceActive]);
 
-  // Pro shell only: aggregate calendars and events from every connected
-  // account so the sidebar lists them all (and the views render their
-  // events together). The hook is a no-op outside the embedded shell.
+  // Aggregate calendars and events from every connected account so the
+  // sidebar lists them all (and the views render their events together):
+  // in the Pro shell, and with two or more signed-in logins (pim-12). The
+  // standard instance behind the Pro shell leaves the loading to the shell.
   const { enabled: multiAccountEnabled, accountClients } = useProMultiAccountCalendars(
-    isEmbedded ? dateRange?.start ?? null : null,
-    isEmbedded ? dateRange?.end ?? null : null,
+    isEmbedded || !proInterfaceActive ? dateRange?.start ?? null : null,
+    isEmbedded || !proInterfaceActive ? dateRange?.end ?? null : null,
   );
   const fetchAllAccountsCalendarsFn = useCalendarStore((s) => s.fetchAllAccountsCalendars);
   const fetchAllAccountsEventsFn = useCalendarStore((s) => s.fetchAllAccountsEvents);
@@ -1606,11 +1610,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (!detailEvent || !client) return;
     // A target names the event and participant: the owner's in a calendar
     // shared with the user, or the user's own copy (lib/calendar-delegate.ts).
-    const participantId = target?.participantId ?? getUserParticipantId(detailEvent, currentUserEmails);
+    const participantId = target?.participantId ?? getUserParticipantId(detailEvent, userEmailsFor(detailEvent));
     if (!participantId) return;
     closeDetail();
     await handleRsvp(target?.eventId ?? detailEvent.id, participantId, status, target?.sentBy);
-  }, [detailEvent, client, currentUserEmails, closeDetail, handleRsvp]);
+  }, [detailEvent, client, userEmailsFor, closeDetail, handleRsvp]);
 
   // `/` and the palette's "Search events" go to the search box.
   const openSearch = useCallback(() => {
@@ -2379,7 +2383,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onDirtyChange={setEventEditorDirty}
                 onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
                 onPreviewChange={setPendingPreview}
-                currentUserEmails={currentUserEmails}
+                currentUserEmails={userEmailsFor(editEvent)}
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 maxParticipants={maxParticipants}
                 isMobile={false}
@@ -2516,7 +2520,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRsvp={handleRsvpFromDetail}
           onMouseEnter={() => { if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}
           onMouseLeave={handleHoverLeave}
-          currentUserEmails={currentUserEmails}
+          currentUserEmails={userEmailsFor(detailEvent)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           timeFormat={timeFormat}
           isMobile={isMobile}
@@ -2542,7 +2546,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
           onDirtyChange={setEventEditorDirty}
           onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
-          currentUserEmails={currentUserEmails}
+          currentUserEmails={userEmailsFor(editEvent)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           maxParticipants={maxParticipants}
           isMobile={true}
