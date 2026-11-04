@@ -859,15 +859,15 @@ const PAGE_POLICY_KEYS: readonly PolicyKey[] = [
 /**
  * The policies as a page gets them. A page can be any server someone chose, and the auth
  * lists and certificate rules name an organisation's internal hosts, so those stay at their
- * defaults. Nor does it get a bad value's text, or the address of a server: only whether
- * one is forced.
+ * defaults. Nor does it get a bad value's text, or a recommended server's address: a forced
+ * one is the only server such a page can be on.
  */
 export function pagePolicySnapshot(snapshot: PolicySnapshot): PolicySnapshot {
   const page = { ...DEFAULT_POLICY_SNAPSHOT } as Record<PolicyKey, PolicyEntry>;
   for (const key of PAGE_POLICY_KEYS) {
     const entry: PolicyEntry = { ...snapshot[key] };
     delete entry.raw;
-    if (key === 'InstanceUrl') (entry as { value: unknown }).value = null;
+    if (key === 'InstanceUrl' && !entry.locked) (entry as { value: unknown }).value = null;
     page[key] = entry;
   }
   return page as PolicySnapshot;
