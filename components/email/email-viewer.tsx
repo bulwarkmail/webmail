@@ -49,7 +49,7 @@ import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
 import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
-import { itemsToHide } from "@/lib/toolbar-overflow";
+import { itemsToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { emailDisplayDate } from "@/lib/email-date";
@@ -210,8 +210,19 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '7': 'spam',
   '8': 'read',
   '9': 'print',
+  '10': 'open_window',
   '11': 'extra:view_mode',
+  '12': 'extra:fullscreen',
 };
+/**
+ * The reader toolbar's buttons that stay: Reply (1), Reply all (2), Forward
+ * (3), Archive (4, or what stands in its place in Spam and Trash) and Move
+ * (5), with Delete, which never gives way. Only a reader too narrow for their
+ * icons hides them, in this order.
+ */
+const REQUIRED_TOOLBAR_PRIORITIES = [5, 3, 2, 4, 1] as const;
+/** Set on the toolbar while it shows icons without their labels. */
+const TOOLBAR_COMPACT_ATTRIBUTE = 'data-toolbar-compact';
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
 const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 
@@ -1156,6 +1167,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onExport={options.onExport}
       onPrint={options.onPrint}
       onViewSource={options.onViewSource}
+      onOpenInWindow={options.onOpenInWindow}
       omit={options.omit}
       extras={options.extras}
       rowPlugins={false}
@@ -1802,7 +1814,7 @@ export function EmailViewer({
   // looked like (see layoutKey), and the width it last had: an open that
   // brings back a toolbar already measured at this width needs no measuring.
   // A loading message and a loaded one can differ, so a few are kept.
-  const measuredToolbarRef = useRef(new Map<string, Set<number>>());
+  const measuredToolbarRef = useRef(new Map<string, { hidden: Set<number>; compact: boolean }>());
   const toolbarWidthRef = useRef<number | undefined>(undefined);
   const currentTagIds = getEmailTagIds(email?.keywords);
   const sortedTagIds = sortTagIds(currentTagIds);
@@ -2060,17 +2072,14 @@ export function EmailViewer({
       const key = layoutKey(items);
       const known = toolbarWidthRef.current !== undefined ? measuredToolbarRef.current.get(key) : undefined;
       if (known) {
-        for (const item of items) item.style.display = known.has(Number(item.dataset.overflowPriority)) ? 'none' : '';
-        applyHidden(known);
+        el.toggleAttribute(TOOLBAR_COMPACT_ATTRIBUTE, known.compact);
+        for (const item of items) item.style.display = known.hidden.has(Number(item.dataset.overflowPriority)) ? 'none' : '';
+        applyHidden(known.hidden);
         return;
       }
-      // Sort descending by priority so highest number (least important) is hidden first
-      items.sort((a, b) =>
-        Number(b.dataset.overflowPriority || 0) - Number(a.dataset.overflowPriority || 0)
-      );
-      // Show all items to measure their natural widths
+      // Show all items, with their labels, to measure their natural widths
       items.forEach(item => { item.style.display = ''; });
-      const containerWidth = el.clientWidth;
+      el.removeAttribute(TOOLBAR_COMPACT_ATTRIBUTE);
       const leftGroup = el.firstElementChild as HTMLElement;
       const rightGroup = el.lastElementChild as HTMLElement;
       const mainGap = parseFloat(getComputedStyle(el).gap) || 0;
@@ -2078,25 +2087,37 @@ export function EmailViewer({
       leftGroup.style.flexShrink = '0';
       rightGroup.style.flexShrink = '0';
       el.style.overflow = 'hidden';
-      // Measure every width in one pass and decide from the numbers (see
-      // itemsToHide) rather than hiding items one by one and re-reading.
-      const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
-      const groupOf = (item: HTMLElement) => {
-        const parent = item.parentElement;
-        if (!parent) return '';
-        if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
-        return groupIds.get(parent)!;
-      };
-      const measured = items.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
-      const overflow = leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
-      const gapOf = {
-        left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
-        right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
-      };
+      const containerWidth = el.clientWidth;
+      const overflowNow = () => leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
+      let overflow = overflowNow();
+      // The labels go before any button does (icons keep their tooltips).
+      const compact = overflow > 0;
+      if (compact) {
+        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, '');
+        overflow = overflowNow();
+      }
       const hidden = new Set<number>();
-      for (const i of itemsToHide(measured, overflow, gapOf)) {
-        items[i].style.display = 'none';
-        hidden.add(Number(items[i].dataset.overflowPriority));
+      if (overflow > 0) {
+        // Measure every width in one pass and decide from the numbers (see
+        // itemsToHide) rather than hiding items one by one and re-reading.
+        const order = toolbarHideOrder(items.map((item) => Number(item.dataset.overflowPriority || 0)), REQUIRED_TOOLBAR_PRIORITIES);
+        const ordered = order.map((i) => items[i]);
+        const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
+        const groupOf = (item: HTMLElement) => {
+          const parent = item.parentElement;
+          if (!parent) return '';
+          if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
+          return groupIds.get(parent)!;
+        };
+        const measured = ordered.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
+        const gapOf = {
+          left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
+          right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
+        };
+        for (const i of itemsToHide(measured, overflow, gapOf)) {
+          ordered[i].style.display = 'none';
+          hidden.add(Number(ordered[i].dataset.overflowPriority));
+        }
       }
       // Restore layout
       leftGroup.style.flexShrink = '';
@@ -2104,7 +2125,7 @@ export function EmailViewer({
       el.style.overflow = '';
       const answers = measuredToolbarRef.current;
       if (answers.size >= 8) answers.delete(answers.keys().next().value!);
-      answers.set(key, hidden);
+      answers.set(key, { hidden, compact });
       applyHidden(hidden);
     };
 
@@ -4267,6 +4288,10 @@ ${printWatermark ? printWatermark.html : ''}
     ...(onShowShortcuts && !isMobile
       ? [{ kind: 'item' as const, key: 'extra:shortcuts' as const, icon: Keyboard, label: t('keyboard_shortcuts'), run: onShowShortcuts }]
       : []),
+    // Only while the toolbar has no room for its button (see toolbarShownActions).
+    ...(onToggleFullscreen && !isFullscreen && !mvViewer && !isMobile
+      ? [{ kind: 'item' as const, key: 'extra:fullscreen' as const, icon: Maximize2, label: t('fullscreen'), run: onToggleFullscreen }]
+      : []),
   ];
   const readerActionOptions: MessageActionOptions = {
     email,
@@ -4290,6 +4315,8 @@ ${printWatermark ? printWatermark.html : ''}
     onExport: devices.noExport ? undefined : () => void handleExportEmail(),
     onPrint: devices.noPrint ? undefined : () => handlePrint(),
     onViewSource: devices.noExport ? undefined : () => setShowSourceModal(true),
+    // Only while the toolbar has no room for its button (see toolbarShownActions).
+    onOpenInWindow: onOpenInWindow && !mvViewer && !isMobile ? onOpenInWindow : undefined,
     omit: readerMenuOmit,
     extras: readerExtras.filter((entry) => entry.kind !== 'item' || !readerMenuOmit.has(entry.key)),
   };
@@ -4358,16 +4385,16 @@ ${printWatermark ? printWatermark.html : ''}
               title={t('reschedule_send')}
             >
               <CalendarClock className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
+              {showToolbarLabels && <span data-toolbar-label="" className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
             </Button>
             <Button variant="ghost" size="sm" onClick={onCancelScheduledForEdit} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}>
               <Pencil className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
+              {showToolbarLabels && <span data-toolbar-label="" className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
             </Button>
             {onCancelScheduledSend && !email.isSmimeScheduled && (
               <Button variant="ghost" size="sm" onClick={onCancelScheduledSend} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={t('cancel_scheduled_send')} data-testid="cancel-scheduled-send">
                 <CalendarX className="w-4 h-4" />
-                {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
+                {showToolbarLabels && <span data-toolbar-label="" className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
               </Button>
             )}
           </>
@@ -4396,7 +4423,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply')}
         >
           <Reply className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4408,7 +4435,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4420,7 +4447,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.forward')}
         >
           <Forward className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
@@ -4452,7 +4479,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('tooltips.archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4464,7 +4491,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -4484,7 +4511,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+              {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-56 max-h-72 overflow-y-auto">
@@ -4516,7 +4543,7 @@ ${printWatermark ? printWatermark.html : ''}
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('tag')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('tag')}</span>}
           </Button>
           <ContextMenu ref={tagMenu.menuRef} isOpen={tagMenuOpen} position={tagMenu.contextMenu.position} onClose={closeTagMenu} label={t('tag')}>
             <div className="w-56">
@@ -4551,7 +4578,7 @@ ${printWatermark ? printWatermark.html : ''}
             ) : (
               <ShieldAlert className={cn("h-4 w-4", !mvViewer && "text-red-600 dark:text-red-400")} />
             )}
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
           </Button>
         )}
 
@@ -4573,7 +4600,7 @@ ${printWatermark ? printWatermark.html : ''}
         >
           {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
           {showToolbarLabels && (
-            <span className="grid text-center text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">
+            <span data-toolbar-label="" className="grid text-center text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">
               <span className={cn("col-start-1 row-start-1", !isUnread && "invisible")} aria-hidden={!isUnread}>{t('read')}</span>
               <span className={cn("col-start-1 row-start-1", isUnread && "invisible")} aria-hidden={isUnread}>{t('unread')}</span>
             </span>
@@ -4593,7 +4620,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('print')}
         >
           <Printer className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('print')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="hidden sm:inline text-sm whitespace-nowrap">{t('print')}</span>}
         </Button>
         )}
 
@@ -4620,6 +4647,8 @@ ${printWatermark ? printWatermark.html : ''}
           variant="ghost"
           size="sm"
           onClick={onOpenInWindow}
+          data-overflow-item
+          data-overflow-priority="10"
           className="hidden sm:inline-flex h-8 gap-1.5"
           title={tWindows('open_in_window')}
           aria-label={tWindows('open_in_window')}
@@ -4630,13 +4659,14 @@ ${printWatermark ? printWatermark.html : ''}
         )}
 
         {/* Fullscreen toggle - hidden on mobile (already fullscreen there).
-            Never overflows into the More menu: in fullscreen this button is
-            the way back out, so it must stay visible. */}
+            The first to give way to the More menu, but never in fullscreen:
+            there this button is the way back out, so it must stay visible. */}
         {onToggleFullscreen && !mvViewer && (
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleFullscreen}
+          {...(isFullscreen ? {} : { 'data-overflow-item': '', 'data-overflow-priority': '12' })}
           className="hidden sm:inline-flex h-8 gap-1.5"
           title={isFullscreen ? t('exit_fullscreen') : t('fullscreen')}
           aria-label={isFullscreen ? t('exit_fullscreen') : t('fullscreen')}

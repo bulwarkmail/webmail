@@ -566,6 +566,11 @@ optgroup {
   animation: toast-exit 0.28s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
 }
 
+/* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips. */
+[data-toolbar-compact] [data-toolbar-label] {
+  display: none !important;
+}
+
 /* Mobile Responsive Utilities */
 
 /*
