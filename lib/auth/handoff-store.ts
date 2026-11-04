@@ -59,9 +59,41 @@ export function isHandoffCode(value: unknown): value is string {
   return typeof value === 'string' && CODE_RE.test(value);
 }
 
+/**
+ * What the desktop app's sign-in parks (app/api/auth/desktop-handoff). The app's redeem
+ * writes its own cookies from this, so these fields never go to anyone else: the mobile
+ * redeem route refuses them.
+ */
+export type DesktopHandoffBundle =
+  | {
+      flow: 'desktop-password';
+      server_url: string;
+      server_id: string | null;
+      /** The user's own server, which a device's policy may refuse. */
+      custom: boolean;
+      username: string;
+      password: string;
+    }
+  | {
+      flow: 'desktop-tokens';
+      server_url: string;
+      server_id: string | null;
+      custom: boolean;
+      /** From a typed password, not a provider's page: a password account, as the user knows it. */
+      password_login?: boolean;
+      username?: string;
+      access_token: string;
+      refresh_token?: string;
+      id_token?: string;
+      expires_in: number;
+      signed_in_at: number;
+    };
+
+export type ParkedHandoff = RedeemBundle | DesktopHandoffBundle;
+
 interface HandoffRecord {
   /** Null once redeemed (or tried) or expired. */
-  bundle: RedeemBundle | null;
+  bundle: ParkedHandoff | null;
   state: string;
   challenge: string;
   /** Whether the user confirmed the hand-off; only confirmed codes redeem. */
@@ -72,7 +104,7 @@ interface HandoffRecord {
 }
 
 export type HandoffRedeemResult =
-  | { ok: true; bundle: RedeemBundle; state: string }
+  | { ok: true; bundle: ParkedHandoff; state: string }
   | { ok: false; reason: 'invalid' | 'expired' | 'verifier_mismatch' };
 
 const STORE_KEY = '__bulwarkMobileHandoffStore';
@@ -83,8 +115,9 @@ function store(): Map<string, HandoffRecord> {
   return g[STORE_KEY];
 }
 
-// Wipe sign-ins past their expiry and forget tombstones past theirs. Called
-// on every operation, so memory stays bounded without a timer.
+// Wipe sign-ins past their expiry and forget tombstones past theirs. Called on
+// every operation, and by a timer at each record's expiry: a sign-in nobody asks
+// about again must not stay in memory until someone happens to call in.
 function sweep(now: number): void {
   const codes = store();
   for (const [code, record] of codes) {
@@ -93,12 +126,17 @@ function sweep(now: number): void {
   }
 }
 
+function wipeWhenDue(expiresAt: number, now: number): void {
+  const timer = setTimeout(() => sweep(Date.now()), Math.max(expiresAt - now, 0) + 1);
+  timer.unref?.();
+}
+
 function s256(verifier: string): string {
   return createHash('sha256').update(verifier, 'ascii').digest('base64url');
 }
 
 function newRecord(
-  bundle: RedeemBundle,
+  bundle: ParkedHandoff,
   options: { challenge: string; state: string; awaitConfirm?: boolean },
   now: number,
 ): HandoffRecord {
@@ -121,7 +159,7 @@ function confirmed(record: HandoffRecord, now: number): HandoffRecord {
 }
 
 /** What a redeem attempt of `record` (spent by the attempt) gets. */
-function redeemOutcome(record: HandoffRecord, bundle: RedeemBundle | null, verifier: string, now: number): HandoffRedeemResult {
+function redeemOutcome(record: HandoffRecord, bundle: ParkedHandoff | null, verifier: string, now: number): HandoffRedeemResult {
   if (!bundle) return { ok: false, reason: record.expiresAt <= now ? 'expired' : 'invalid' };
   if (!record.confirmed) return { ok: false, reason: 'invalid' };
   const expected = Buffer.from(record.challenge, 'ascii');
@@ -129,7 +167,7 @@ function redeemOutcome(record: HandoffRecord, bundle: RedeemBundle | null, verif
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
     return { ok: false, reason: 'verifier_mismatch' };
   }
-  if (bundle.flow === 'oauth' && typeof bundle.expires_in === 'number') {
+  if ((bundle.flow === 'oauth' || bundle.flow === 'desktop-tokens') && typeof bundle.expires_in === 'number') {
     const elapsed = Math.floor((now - record.issuedAt) / 1000);
     return { ok: true, bundle: { ...bundle, expires_in: Math.max(0, bundle.expires_in - elapsed) }, state: record.state };
   }
@@ -139,6 +177,8 @@ function redeemOutcome(record: HandoffRecord, bundle: RedeemBundle | null, verif
 // ─── shared store ──────────────────────────────────────────────────────────
 
 const sharedKey = (code: string) => `handoff:${createHash('sha256').update(code).digest('hex')}`;
+/** Holds no sign-in, only when it runs out. So a code past that, with its record gone, is told "expired". */
+const issuedKey = (code: string) => `handoff-issued:${createHash('sha256').update(code).digest('hex')}`;
 
 function seal(record: HandoffRecord): string {
   return encryptPayload({ r: record }, 'handoff-store');
@@ -153,6 +193,8 @@ function open(sealed: string | null, now: number): HandoffRecord | null {
 }
 
 const ttl = (record: HandoffRecord, now: number) => Math.max(record.forgetAt - now, 0) + CLEANUP_MS;
+/** A record with a sign-in in it stays no longer than the sign-in is good for. */
+const secretTtl = (record: HandoffRecord, now: number) => Math.max(record.expiresAt - now, 1);
 
 // ─── API ───────────────────────────────────────────────────────────────────
 
@@ -161,7 +203,7 @@ const ttl = (record: HandoffRecord, now: number) => Math.max(record.forgetAt - n
  * `awaitConfirm` the code only becomes redeemable through confirmHandoff.
  */
 export async function stashHandoff(
-  bundle: RedeemBundle,
+  bundle: ParkedHandoff,
   options: { challenge: string; state: string; awaitConfirm?: boolean },
   now = Date.now(),
 ): Promise<string> {
@@ -170,7 +212,8 @@ export async function stashHandoff(
   if (isSharedMode()) {
     // Each code is spent by a single redeem and dies on its own; the create
     // budget bounds how many one client parks.
-    await getStore().kv.set(sharedKey(code), seal(record), { ttlMs: ttl(record, now) });
+    await getStore().kv.set(sharedKey(code), seal(record), { ttlMs: secretTtl(record, now) });
+    await getStore().kv.set(issuedKey(code), String(record.expiresAt), { ttlMs: ttl(record, now) });
     return code;
   }
   sweep(now);
@@ -182,6 +225,7 @@ export async function stashHandoff(
     codes.delete(oldest);
   }
   codes.set(code, record);
+  wipeWhenDue(record.expiresAt, now);
   return code;
 }
 
@@ -199,14 +243,42 @@ export async function confirmHandoff(code: string, now = Date.now()): Promise<bo
       if (!record || !record.bundle || record.expiresAt <= now || record.confirmed) return undefined;
       result.ok = true;
       return seal(confirmed(record, now));
-    }, { ttlMs: HANDOFF_TTL_MS + TOMBSTONE_MS + CLEANUP_MS });
+    }, { ttlMs: HANDOFF_TTL_MS });
+    if (result.ok) await getStore().kv.set(issuedKey(code), String(now + HANDOFF_TTL_MS), { ttlMs: HANDOFF_TTL_MS + TOMBSTONE_MS + CLEANUP_MS });
     return result.ok;
   }
   sweep(now);
   const record = store().get(code);
   if (!record || !record.bundle || record.confirmed) return false;
-  store().set(code, confirmed(record, now));
+  const live = confirmed(record, now);
+  store().set(code, live);
+  wipeWhenDue(live.expiresAt, now);
   return true;
+}
+
+/**
+ * The user said no to the desktop app, or left. The sign-in goes now, and what it held comes
+ * back once, so a refresh token can be revoked. Only the desktop's: the phone's flow has its own.
+ */
+export async function discardDesktopHandoff(code: string, now = Date.now()): Promise<ParkedHandoff | null> {
+  const isDesktop = (bundle: ParkedHandoff | null) => bundle?.flow === 'desktop-password' || bundle?.flow === 'desktop-tokens';
+  if (isSharedMode()) {
+    let taken: ParkedHandoff | null = null;
+    await getStore().kv.update(sharedKey(code), (current) => {
+      taken = null;
+      const record = open(current, now);
+      if (!record || !isDesktop(record.bundle)) return undefined;
+      taken = record.bundle;
+      return seal({ ...record, bundle: null });
+    }, { ttlMs: TOMBSTONE_MS + CLEANUP_MS });
+    return taken as ParkedHandoff | null;
+  }
+  sweep(now);
+  const record = store().get(code);
+  if (!record || !isDesktop(record.bundle)) return null;
+  const taken = record.bundle;
+  record.bundle = null;
+  return taken;
 }
 
 /**
@@ -219,7 +291,10 @@ export async function redeemHandoff(code: string, verifier: string, now = Date.n
     const kv = getStore().kv;
     // Taken in one step: of two attempts, only one sees the sign-in.
     const record = open(await kv.take(sharedKey(code)), now);
-    if (!record) return { ok: false, reason: 'invalid' };
+    if (!record) {
+      const until = await kv.get(issuedKey(code));
+      return { ok: false, reason: until !== null && Number(until) <= now ? 'expired' : 'invalid' };
+    }
     const bundle = record.expiresAt > now ? record.bundle : null;
     // A tombstone goes back, so a late attempt is told "expired". The code is
     // spent already: if the tombstone can't be written, the answer stands.
@@ -249,10 +324,19 @@ export function resetHandoffStoreForTests(): void {
 // filling the store or hammering the redeem route.
 const createBudget = createFailureBudget({ name: 'handoff-create', clientMax: 10, globalMax: Infinity });
 const redeemBudget = createFailureBudget({ name: 'handoff-redeem', clientMax: 10, globalMax: Infinity });
+const desktopParkBudget = createFailureBudget({ name: 'desktop-handoff-park', clientMax: 10, globalMax: Infinity });
 
 /** Count one parked sign-in for `client`; false when it is over its limit. */
 export async function reserveHandoffCreate(client: string, now = Date.now()): Promise<boolean> {
   return (await createBudget.reserve(client, now)) !== null;
+}
+
+/**
+ * One park for the desktop app, reserved before anything goes upstream: null when `client` is
+ * over. Only failures count, so everyone behind one office address can sign in.
+ */
+export function reserveDesktopHandoffPark(client: string, now = Date.now()): Promise<BudgetRefund | null> {
+  return desktopParkBudget.reserve(client, now);
 }
 
 /**

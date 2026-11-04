@@ -190,16 +190,46 @@ export interface DesktopLifecycleBridge {
   onFlushRequest: (handler: () => Promise<DesktopFlushAnswer | unknown>) => () => void;
 }
 
-export type DesktopBrowserSignInResult =
-  | { ok: true; code: string; state: string }
+/** Standalone: a mail server's own OAuth. Instance: the instance's own login page. */
+export type DesktopBrowserSignInRequest = { kind: 'oauth'; serverUrl: string } | { kind: 'instance' };
+
+export type DesktopBrowserSignInBegin =
+  | { ok: true; flowId: string; redirectUri: string; state: string }
   | { ok: false; error: string };
 
+export type DesktopBrowserSignInResult =
+  | { ok: true; code: string; state: string; iss?: string }
+  | { ok: false; error: string };
+
+export type DesktopPasswordSignInStart = { ok: true; host: string } | { ok: false; error: string };
+
+export type DesktopPasswordSignInAttempt =
+  | { ok: true; username: string; password: string; totp?: string }
+  | { ok: false; error: string };
+
+export type DesktopPasswordSignInAnswer =
+  | { ok: true }
+  | { ok: false; error: 'invalid_credentials' | 'totp_required' | 'other' };
+
+/** Sign-in through the system browser. See lib/desktop/browser-sign-in.ts. */
+export interface DesktopBrowserSignInControls {
+  /** A short-lived loopback listener for one sign-in. Only from a click. */
+  begin: (request: DesktopBrowserSignInRequest) => Promise<DesktopBrowserSignInBegin>;
+  /** Opens the system browser on `url` and waits for the redirect. */
+  complete: (flowId: string, url: string) => Promise<DesktopBrowserSignInResult>;
+  /** The server refused loopback and took the `bulwark:` scheme. */
+  useScheme: (flowId: string) => Promise<string | null>;
+  cancel: (flowId: string) => void;
+  /** The server has no OAuth: a page main serves on a stable loopback port. */
+  beginPassword: (flowId: string) => Promise<DesktopPasswordSignInStart>;
+  nextPassword: (flowId: string) => Promise<DesktopPasswordSignInAttempt>;
+  answerPassword: (flowId: string, answer: DesktopPasswordSignInAnswer) => void;
+  outcome: (flowId: string) => Promise<DesktopBrowserSignInResult>;
+}
+
 export interface DesktopAuthBridge {
-  /** Starts a short-lived loopback listener for one sign-in. */
-  beginBrowserSignIn: () => Promise<{ flowId: string; redirectUri: string }>;
-  /** Opens the system browser on `authorizeUrl` and waits for the redirect. */
-  completeBrowserSignIn: (flowId: string, authorizeUrl: string) => Promise<DesktopBrowserSignInResult>;
-  cancelBrowserSignIn: (flowId: string) => void;
+  /** Once per document, in the first render: a same-origin frame can reach this bridge. */
+  claim: () => DesktopBrowserSignInControls | null;
 }
 
 export type DesktopPluginInstallResult =
@@ -642,6 +672,99 @@ export interface DesktopPrivacyBridge {
   onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
 }
 
+/** An attachment copied to a private folder and open in its default program. */
+export interface DesktopEditSession {
+  id: string;
+  name: string;
+  type: string;
+  /** The local account it belongs to. */
+  account: string;
+  /** What the page said it came from. Main only keeps it. */
+  source: string;
+  /** Saved differently from what the page last took. */
+  changed: boolean;
+  /** Goes up with each save. */
+  version: number;
+  /** What the file holds now: a chip holding this version has nothing to update. */
+  hash: string;
+  /** A composer has it and offers the update itself. */
+  claimed: boolean;
+  /** Wanted gone, and another program has it open. */
+  held: boolean;
+  /** Saved under a new name in that program. */
+  savedAs: boolean;
+  /** Not used for 30 days: this offer is the last. */
+  lastChance: boolean;
+}
+
+/** What couldn't be deleted because another program has it open, by file name. `refused`: nothing happened. */
+export interface DesktopEditClearResult {
+  held: string[];
+  refused?: boolean;
+}
+
+export interface DesktopEditFile {
+  /** One session per key: Edit on the same attachment opens the same file. */
+  key: string;
+  name: string;
+  type: string;
+  data: Uint8Array;
+  account: string;
+  source: string;
+}
+
+export type DesktopEditBeginResult =
+  /** One click, one ticket, for that key. A session for it exists: reopen this one. */
+  | { ok: true; ticket: string; open?: string }
+  | { ok: false; reason: 'locked' | 'gesture' };
+
+export type DesktopEditOpenResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'locked' | 'ticket' | 'type' | 'too-large' | 'full' | 'no-app' | 'failed' };
+
+export type DesktopEditReadResult =
+  | { ok: true; name: string; type: string; data: Uint8Array; hash: string }
+  | { ok: false; reason: 'locked' | 'missing' | 'busy' | 'too-large' };
+
+/**
+ * Edit on an attachment: a private copy opened in its default program, watched for saves.
+ * Main refuses file types that run something and anything while locked. It can't know the
+ * organisation's rules, so lib/desktop/edit-attachments.ts asks those at each step.
+ */
+export interface DesktopEditBridge {
+  /** Whether this file may go through Edit at all: the same rule main enforces. */
+  canEdit: (name: string) => boolean;
+  /** Straight from the click: main spends it. The ticket lasts long enough to fetch the bytes, for this key only. */
+  begin: (key: string) => Promise<DesktopEditBeginResult>;
+  open: (ticket: string, file: DesktopEditFile) => Promise<DesktopEditOpenResult>;
+  reopen: (ticket: string, id: string) => Promise<DesktopEditOpenResult>;
+  /** Empty while locked. */
+  list: () => Promise<DesktopEditSession[]>;
+  /** The list after looking at each file now, for a decision that can't wait for the watcher. */
+  settle: () => Promise<DesktopEditSession[]>;
+  read: (id: string) => Promise<DesktopEditReadResult>;
+  /** This version is where it should be, so it's no longer a change. */
+  taken: (id: string, hash: string) => Promise<void>;
+  /** The draft it was on has gone: deleted, unless it holds a save nobody took. Main decides, as it knows. */
+  release: (id: string, source: string) => Promise<void>;
+  /** Asks natively if it holds edits. */
+  discard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The organisation said no: no question. */
+  forceDiscard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The question before a sign-out, native, naming what a program has open. A yes covers the `clear` that follows. */
+  askClear: (account: string) => Promise<boolean>;
+  /** An account's copies, or with null all of this origin's. Asks natively about edits, without that yes. */
+  clear: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** A wipe: no question. */
+  wipe: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** The page has shown a last offer. */
+  shown: (id: string) => void;
+  setSource: (id: string, source: string) => void;
+  /** A composer holds it, or stopped. Ends by itself with the page. */
+  claim: (id: string, on: boolean) => void;
+  onChange: (listener: (sessions: DesktopEditSession[]) => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -666,6 +789,7 @@ export interface BulwarkDesktopBridge {
   appLock?: DesktopAppLockBridge;
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
+  edit?: DesktopEditBridge;
 }
 
 declare global {

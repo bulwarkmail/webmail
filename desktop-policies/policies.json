@@ -26,6 +26,7 @@
   "KeystoreAllowedOrigins": [
     "https://mail.example.com"
   ],
+  "BrowserSignIn": true,
   "Recommended": {
     "UpdateChannel": "stable"
   }

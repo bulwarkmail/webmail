@@ -66,6 +66,11 @@ export function usePhishingReport(emails: ReadonlyArray<Email | null | undefined
  * in this session (a view that holds its own copy of the message, like a
  * Pro tab, doesn't see the new keyword until it loads the message again).
  */
+/** The same, once, for what isn't drawing a message: a forward taking its attachments along. */
+export function phishingMarkedNow(email: Email | null | undefined): boolean {
+  return !!email && (isPhishingMarked(email) || usePhishingReportStore.getState().reported[emailKeyFor(email)] === true);
+}
+
 export function usePhishingMarked(email: Email | null | undefined): boolean {
   const reported = usePhishingReportStore((s) => (email ? s.reported[emailKeyFor(email)] === true : false));
   return isPhishingMarked(email) || reported;

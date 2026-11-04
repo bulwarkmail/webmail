@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { IS_LITE } from "@/lib/lite";
 import { apiFetch } from "@/lib/browser-navigation";
+import { useAuthStore } from "@/stores/auth-store";
 
 /**
  * Whether a WOPI document editor is configured for this deployment and which
- * file extensions it handles (#425). Fetched once per page load and shared
- * across consumers via a module-level promise.
+ * file extensions it handles (#425). The answer is the same for every account,
+ * so the first real one is kept for the page load and shared across consumers.
  */
 export interface WopiStatus {
   enabled: boolean;
@@ -19,41 +20,61 @@ export interface WopiStatus {
 
 const DISABLED: WopiStatus = { enabled: false, editExtensions: [], viewExtensions: [], newExtensions: [] };
 
-let statusPromise: Promise<WopiStatus> | null = null;
+let known: WopiStatus | null = null;
+let pending: Promise<WopiStatus> | null = null;
+let pendingClient: unknown = null;
 
-function fetchWopiStatus(): Promise<WopiStatus> {
+function fetchWopiStatus(client: unknown): Promise<WopiStatus> {
   // The WOPI bridge is a server feature; the static build never has an editor.
   if (IS_LITE) return Promise.resolve(DISABLED);
-  if (!statusPromise) {
-    statusPromise = apiFetch("/api/wopi/status")
-      .then((res) => (res.ok ? res.json() : DISABLED))
-      .then((data) => ({
+  if (known) return Promise.resolve(known);
+  // A request sent for an earlier client may be refused for lack of the sign-in
+  // context this one brought, so only the same client shares it.
+  if (pending && pendingClient === client) return pending;
+
+  const request: Promise<WopiStatus> = apiFetch("/api/wopi/status")
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      known = {
         enabled: !!data?.enabled,
         editExtensions: Array.isArray(data?.editExtensions) ? data.editExtensions : [],
         viewExtensions: Array.isArray(data?.viewExtensions) ? data.viewExtensions : [],
         newExtensions: Array.isArray(data?.newExtensions) ? data.newExtensions : [],
-      }))
-      .catch(() => {
-        statusPromise = null; // allow a retry on the next mount
-        return DISABLED;
-      });
-  }
-  return statusPromise;
+      };
+      return known;
+    })
+    // A refusal or an outage says nothing about the editor (#1518): show no
+    // editor for now and ask again on the next mount or client.
+    .catch(() => DISABLED)
+    .finally(() => {
+      if (pending === request) pending = null;
+    });
+  pending = request;
+  pendingClient = client;
+  return request;
 }
 
 export function useWopiStatus(enabled: boolean): WopiStatus | null {
   const [status, setStatus] = useState<WopiStatus | null>(null);
+  // The route needs the sign-in context cookie, which is written before the
+  // store holds a connected client. `isAuthenticated` alone comes back from
+  // storage on load, and a local copy's client gives way to the real one once
+  // the restore wrote the cookie, so this follows the client itself (#1518).
+  const client = useAuthStore((state) => (state.isAuthenticated ? state.client : null));
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !client) return;
     let cancelled = false;
-    fetchWopiStatus().then((s) => {
+    fetchWopiStatus(client).then((s) => {
       if (!cancelled) setStatus(s);
     });
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, client]);
 
   return status;
 }

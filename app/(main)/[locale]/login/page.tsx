@@ -6,7 +6,7 @@ import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
 import { customServerAllowedByDesktopPolicy, jmapServerAllowedByDesktopPolicy, useDesktopPolicy } from "@/lib/desktop/policy";
 import { accountRefusedByDesktopPolicy } from "@/lib/desktop/refused-accounts";
-import { browserSignInAvailable, runDesktopBrowserSignIn } from "@/lib/desktop/browser-sign-in";
+import { browserSignInAvailable, cancelBrowserSignIn, runDesktopBrowserSignIn, runInstanceBrowserSignIn, type DesktopBrowserSignInOutcome } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -43,8 +43,8 @@ import {
 } from "@/lib/auth/lite-oauth";
 import { toAsciiDomain } from "@/lib/idn";
 import { usePrefetchMailView } from "@/hooks/use-prefetch-mail-view";
-import { buildMobileHandoffUrl, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
-import { requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
+import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
+import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
@@ -194,11 +194,14 @@ function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
   const tDesktop = useTranslations("desktop_sign_in");
+  const tBrowser = useTranslations("desktop_browser_sign_in");
   const tDesktopPolicy = useTranslations("desktop_policy");
   const desktopPolicy = useDesktopPolicy();
   // Only the desktop build sets these; a browser never shows them.
   const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
   const [desktopWaiting, setDesktopWaiting] = useState(false);
+  // Leaving the page ends a sign-in it's waiting for: the verifier goes with it.
+  useEffect(() => () => cancelBrowserSignIn(), []);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
   const tOfflineWipe = useTranslations("offlineWipe");
@@ -230,9 +233,16 @@ function LoginPageContent() {
   // server to park the sign-in on and keeps handing over in the fragment.
   const rawMobileCodeChallenge = IS_LITE ? "" : searchParams.get("mobile_code_challenge") ?? "";
   const mobileChallenge = mobileCodeChallenge(rawMobileCodeChallenge);
-  const mobileRedirectUri = rawMobileCodeChallenge && !mobileChallenge
+  // The desktop app's loopback listener is the other target, only ever with a code and a
+  // state, and the desktop build itself has no hand-off routes (lib/desktop/blocked-routes.ts).
+  const { desktopBrowserSignIn: desktopSignInEnabled } = useConfig();
+  const desktopTarget = !IS_DESKTOP_BUILD && desktopSignInEnabled && mobileChallenge && rawMobileState
+    ? desktopHandoffTarget(searchParams.get("mobile_redirect_uri"))
+    : "";
+  const isDesktopHandoff = Boolean(desktopTarget);
+  const mobileRedirectUri = desktopTarget || (rawMobileCodeChallenge && !mobileChallenge
     ? ""
-    : mobileHandoffTarget(searchParams.get("mobile_redirect_uri"));
+    : mobileHandoffTarget(searchParams.get("mobile_redirect_uri")));
   const mobileState = mobileRedirectUri ? rawMobileState : "";
   const isMobileHandoff = Boolean(mobileRedirectUri);
   const [pendingHandoff, setPendingHandoff] = useState<{
@@ -392,7 +402,8 @@ function LoginPageContent() {
   const canRememberSession = rememberMeEnabled && (!IS_LITE || liteTokenLoginSupported !== false);
   // Sign-ins are remembered without asking unless the admin offers the box
   // (LOGIN_SHOW_REMEMBER_ME).
-  const showRememberMe = canRememberSession && loginShowRememberMe;
+  // Not in the browser the desktop app opened: nothing stays in this browser to remember.
+  const showRememberMe = canRememberSession && loginShowRememberMe && !isDesktopHandoff;
   const persistSession = canRememberSession && (!loginShowRememberMe || rememberMe);
   // A provider sign-in follows the box whenever it is shown, the automatic
   // one included (it starts unticked), and is remembered otherwise. Lite
@@ -679,7 +690,8 @@ function LoginPageContent() {
           locale: params.locale,
           server_id: selectedServer?.id,
           remember: persistProviderSession,
-          ...(freshLoginRequired() ? { fresh_login: true } : {}),
+          // In the browser the desktop app opened, its word counts: the flag is in the app.
+          ...(freshLoginRequired() || (isDesktopHandoff && searchParams.get("fresh_login") === "1") ? { fresh_login: true } : {}),
           ...(isMobileHandoff
             ? {
                 mobile_redirect_uri: mobileRedirectUri,
@@ -692,6 +704,8 @@ function LoginPageContent() {
 
       if (!res.ok) {
         setOauthLoading(false);
+        // The app is waiting on this tab, so it can't just stay quiet here.
+        if (isDesktopHandoff) setHandoffError("server_error");
         return;
       }
 
@@ -713,7 +727,7 @@ function LoginPageContent() {
     } catch {
       setOauthLoading(false);
     }
-  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, mobileRedirectUri, mobileState, mobileChallenge]);
+  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge]);
 
   useEffect(() => {
     // After signing out, show the login page rather than signing straight
@@ -1041,37 +1055,90 @@ function LoginPageContent() {
     window.location.href = authUrl.toString();
   };
 
-  /** The desktop build: the server's own sign-in page in the system browser. */
-  // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
-  // builds' bundles, which Lite's check on API strings relies on.
-  const handleDesktopBrowserSignIn = async () => {
+  /** What the user sees when a browser sign-in ends without one. Cancelling says nothing. */
+  const showBrowserSignInOutcome = (outcome: DesktopBrowserSignInOutcome) => {
+    setDesktopWaiting(false);
+    if (outcome.kind === "policy") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    else if (outcome.kind === "denied") setDesktopNotice(tBrowser("declined"));
+    else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
+    else if (outcome.kind === "invalid") setDesktopNotice(tDesktop("server_invalid"));
+    else if (outcome.kind === "timeout") setDesktopNotice(tBrowser("timed_out"));
+    else if (outcome.kind === "no_browser") setDesktopNotice(tBrowser("no_browser"));
+    else if (outcome.kind === "failed") setDesktopNotice(tBrowser("failed"));
+  };
+
+  /** The server's or the instance's own sign-in page in the system browser. */
+  const handleBrowserSignIn = async () => {
+    setDesktopNotice(null);
+    setDesktopPolicyNotice(null);
+    // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
+    // builds' bundles, which Lite's check on API strings relies on.
     if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
       const target = jmapEndpoint.trim();
       if (!target) {
         setDesktopNotice(tDesktop("server_needed"));
         return;
       }
-      setDesktopNotice(null);
+      if (!jmapServerAllowedByDesktopPolicy(target, desktopPolicy)) {
+        setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+        return;
+      }
       setDesktopWaiting(true);
-      const prefix = getPathPrefix(params.locale as string);
       const outcome = await runDesktopBrowserSignIn({
         serverUrl: target,
-        callbackPath: `${prefix}/${params.locale}/auth/callback`,
         slot: useAccountStore.getState().getNextCookieSlot(),
         remember: persistProviderSession,
         addAccount: isAddAccountMode,
+        fresh: freshLoginRequired(),
+        redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
+        tryPassword: async ({ username, password, totp }) => {
+          if (await useAuthStore.getState().login(target, username, password, totp, persistSession)) {
+            if (!rememberMeEnabled || persistSession) saveUsername(username);
+            return { ok: true };
+          }
+          const failed = useAuthStore.getState().error;
+          return { ok: false, error: failed === "invalid_credentials" || failed === "totp_required" ? failed : "other" };
+        },
       });
-      if (outcome.kind === "callback") {
-        window.location.href = outcome.callbackUrl;
+      if (outcome.kind === "signed-in") {
+        setDesktopWaiting(false);
+        router.push('/');
         return;
       }
-      setDesktopWaiting(false);
       forgetDesktopServer(target, "failed");
-      if (outcome.kind === "unavailable") setDesktopNotice(tDesktop("browser_unavailable"));
-      else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
-      else if (outcome.kind === "failed") setDesktopNotice(tDesktop("browser_failed"));
+      showBrowserSignInOutcome(outcome);
+      return;
     }
+    // A server the device's OS policy refuses, where it's known up front. With a list of
+    // servers the browser picks, and the redeem below is what checks.
+    if (!hasServerList && serverUrl && !jmapServerAllowedByDesktopPolicy(serverUrl, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
+    setDesktopWaiting(true);
+    const outcome = await runInstanceBrowserSignIn({
+      base: `${window.location.origin}${getPathPrefix(params.locale as string)}`,
+      locale: params.locale as string,
+      fresh: freshLoginRequired(),
+    });
+    if (outcome.kind !== "code") {
+      showBrowserSignInOutcome(outcome);
+      return;
+    }
+    const redeemed = await useAuthStore.getState().loginWithDesktopHandoff(outcome.code, outcome.verifier, {
+      remember: persistProviderSession,
+      rememberPassword: persistSession,
+      allowedServers: desktopPolicy.AllowedJmapServers.value,
+      // The same rule as the field for a server of one's own on this page.
+      customServersAllowed: customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl,
+    });
+    setDesktopWaiting(false);
+    if (redeemed === "ok") router.push('/');
+    else if (redeemed === "blocked") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    else setDesktopNotice(tBrowser("failed"));
   };
+
+  const browserSignInShown = browserSignInAvailable() && desktopSignInEnabled;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1080,6 +1147,54 @@ function LoginPageContent() {
     // when the admin hasn't configured a server list.
     const effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    // The desktop app opened this page in the user's browser. Nothing leaves this page until
+    // the user says yes: the password is only checked, and a two-factor code can't be, as it
+    // works once. This browser gets no session of its own out of any of it.
+    if (isDesktopHandoff) {
+      const failed = (reason: string) => {
+        useAuthStore.setState({
+          isLoading: false,
+          error: reason === "invalid_credentials" || reason === "totp_required" ? reason : reason === "too_many_attempts" ? null : "server_error",
+        });
+        setDesktopNotice(reason === "too_many_attempts" ? tBrowser("too_many") : null);
+      };
+      const { username, password } = formData;
+      const totp = totpCode || undefined;
+      useAuthStore.setState({ isLoading: true, error: null });
+      setHandoffError(null);
+      setDesktopNotice(null);
+      if (!totp) {
+        const checked = await checkDesktopSignIn({ serverUrl: effectiveServerUrl, serverId: selectedServer?.id, username, password });
+        if ("error" in checked) {
+          failed(checked.error);
+          return;
+        }
+      }
+      useAuthStore.setState({ isLoading: false });
+      const prefix = getPathPrefix(params.locale as string);
+      setPendingHandoff({
+        url: null,
+        resolveUrl: async () => {
+          const parked = await parkDesktopSignIn({
+            challenge: mobileChallenge,
+            state: mobileState,
+            serverUrl: effectiveServerUrl,
+            serverId: selectedServer?.id,
+            username,
+            password,
+            totp,
+            redirectUri: `${window.location.origin}${prefix}/${params.locale}/auth/callback`,
+          });
+          if ("error" in parked) {
+            failed(parked.error);
+            return null;
+          }
+          return buildMobileHandoffCodeUrl(mobileRedirectUri, parked.code, mobileState);
+        },
+        username,
+      });
+      return;
+    }
     // The device's OS policy, also on an instance: nothing is sent to a server it refuses.
     setDesktopPolicyNotice(null);
     if (!jmapServerAllowedByDesktopPolicy(effectiveServerUrl, desktopPolicy)) {
@@ -1193,6 +1308,53 @@ function LoginPageContent() {
   // has to pick which one SSO targets before the button starts the flow, since
   // the selection drives OAuth discovery and the server_id sent to the callback
   // (issue #799).
+  // In the app: the main way in, above the form, which stays as the other choice.
+  const browserSignInOption = browserSignInShown && (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+        onClick={handleBrowserSignIn}
+        disabled={desktopWaiting || isLoading}
+        data-testid="desktop-browser-sign-in"
+      >
+        {desktopWaiting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <LogIn className="w-4 h-4 me-2" />}
+        {desktopWaiting ? tBrowser("waiting") : tBrowser("button")}
+      </Button>
+      {desktopWaiting && (
+        <p role="status" data-testid="desktop-browser-waiting" className="text-center text-xs text-muted-foreground leading-relaxed">
+          {tBrowser("waiting_hint")}{" "}
+          <button
+            type="button"
+            className="underline hover:text-foreground"
+            data-testid="desktop-browser-cancel"
+            onClick={() => {
+              cancelBrowserSignIn();
+              setDesktopWaiting(false);
+            }}
+          >
+            {tBrowser("cancel")}
+          </button>
+        </p>
+      )}
+      <div className="relative py-1">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/60" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-background/80 px-3 text-muted-foreground">{tBrowser("or_here")}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // The desktop app's sign-in, in the browser: says what this page is for.
+  const desktopHandoffBanner = isDesktopHandoff && (
+    <p data-testid="desktop-handoff-banner" className="mb-4 text-center text-sm text-muted-foreground leading-relaxed">
+      {tBrowser("handoff_banner")}
+    </p>
+  );
+
   const desktopPolicyAlert = desktopPolicyNotice && (
     <p role="alert" data-testid="desktop-policy-notice" className="mt-2 text-sm text-warning leading-relaxed">
       {desktopPolicyNotice}
@@ -1426,13 +1588,17 @@ function LoginPageContent() {
         url={pendingHandoff?.url ?? null}
         resolveUrl={pendingHandoff?.resolveUrl ?? null}
         username={pendingHandoff?.username ?? ""}
+        desktopPort={isDesktopHandoff ? desktopHandoffPort(desktopTarget) : undefined}
         onCancel={() => {
           setPendingHandoff(null);
-          router.push('/');
+          // Ends the flow at the app, which isn't left waiting. Nothing was parked.
+          if (isDesktopHandoff) window.location.replace(desktopHandoffDeclineUrl(desktopTarget, mobileState));
+          else router.push('/');
         }}
         onError={() => {
           setPendingHandoff(null);
-          setHandoffError("server_error");
+          // The desktop's answer has said what went wrong, on the form.
+          if (!isDesktopHandoff) setHandoffError("server_error");
         }}
       />
       {/* Theme toggle - top right, dropdown style; hidden while the theme policy locks the mode (#1280) */}
@@ -1598,6 +1764,8 @@ function LoginPageContent() {
               </div>
             )}
 
+            {desktopHandoffBanner}
+
             {/* Dev Mode: One-click login */}
             {devMode ? (
               <div className="space-y-4">
@@ -1629,10 +1797,14 @@ function LoginPageContent() {
                 {serverPicker}
                 {desktopPolicyAlert}
                 {oauthMetadata && showRememberMe && rememberMeBox}
+                {browserSignInOption}
                 {oauthMetadata ? (
                   <Button
                     type="button"
-                    className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+                    variant={browserSignInShown ? "outline" : undefined}
+                    className={browserSignInShown
+                      ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+                      : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
                     onClick={() => handleOAuthLogin()}
                     disabled={oauthLoading}
                   >
@@ -1663,6 +1835,11 @@ function LoginPageContent() {
                   // Where the sign-in button goes once the provider answers.
                   <Block className="w-full h-11 rounded-xl" />
                 )}
+                {desktopNotice && (
+                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                    {desktopNotice}
+                  </p>
+                )}
               </div>
             ) : (
               /* Login Form */
@@ -1689,6 +1866,8 @@ function LoginPageContent() {
                       </p>
                     </div>
                   )}
+
+                  {browserSignInOption}
 
                   {/* Username field. The access token names the account, so
                       token sign-in has none. */}
@@ -1897,7 +2076,10 @@ function LoginPageContent() {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+                  variant={browserSignInShown ? "outline" : undefined}
+                  className={browserSignInShown
+                    ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+                    : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
                   disabled={isLoading || (liteSsoRequired && oauthLoading)}
                 >
                   {isLoading || (liteSsoRequired && oauthLoading) ? (
@@ -1944,21 +2126,8 @@ function LoginPageContent() {
                   </>
                 )}
 
-                {process.env.NEXT_PUBLIC_BULWARK_DESKTOP === "1" && !hasServerList && browserSignInAvailable() && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-3 w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
-                    onClick={handleDesktopBrowserSignIn}
-                    disabled={desktopWaiting || isLoading}
-                    data-testid="desktop-browser-sign-in"
-                  >
-                    {desktopWaiting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <LogIn className="w-4 h-4 me-2" />}
-                    {desktopWaiting ? tDesktop("browser_waiting") : tDesktop("browser_button")}
-                  </Button>
-                )}
                 {desktopPolicyAlert}
-                {IS_DESKTOP_BUILD && desktopNotice && (
+                {desktopNotice && (
                   <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
                     {desktopNotice}
                   </p>

@@ -58,6 +58,12 @@ interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
    * has on an attachment; a browser has its own menu there and never gets this one.
    */
   onCopyFile?: (attachment: T) => void;
+  /**
+   * The desktop app's Edit: opens the file in its program. `canEdit` says no where the file
+   * type or the organisation's rules keep it out.
+   */
+  onEdit?: (attachment: T) => void;
+  canEdit?: (attachment: T) => boolean;
   /** Whether a click on the attachment previews it instead of downloading it. */
   opensPreview: (attachment: T) => boolean;
   onOpen: (attachment: T) => void;
@@ -106,6 +112,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   onDownloadAll,
   onSaveAllToFolder,
   onCopyFile,
+  onEdit,
+  canEdit,
   downloadingAll,
   downloadsOff = false,
   onSaveToFiles,
@@ -118,6 +126,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const tDevice = useTranslations("device_policy");
   const tWindows = useTranslations("pwaWindows");
   const tDesktop = useTranslations("desktopUi.attachment");
+  const tEdit = useTranslations("desktopEdit");
   const menu = useContextMenu<T>();
   const [desktopMenu, setDesktopMenu] = useState(false);
   useEffect(() => setDesktopMenu(nativeMenusAvailable()), []);
@@ -350,6 +359,9 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           )}
           {!downloadsOff && (
             <ContextMenuItem label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
+          )}
+          {!downloadsOff && onEdit && canEdit?.(menuTarget) && (
+            <ContextMenuItem label={tEdit("edit")} onClick={() => { menu.closeContextMenu(); onEdit(menuTarget); }} />
           )}
           {!downloadsOff && onCopyFile && (
             <ContextMenuItem label={tDesktop("copy")} onClick={() => { menu.closeContextMenu(); onCopyFile(menuTarget); }} />

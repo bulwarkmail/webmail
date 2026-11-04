@@ -77,6 +77,7 @@ export interface PolicyValues {
   AutoSelectCertificateForUrls: CertificateRule[];
   KeystoreEnabled: boolean;
   KeystoreAllowedOrigins: string[];
+  BrowserSignIn: boolean;
   WipeOfflineData: string | null;
 }
 
@@ -396,6 +397,18 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     description: {
       en: 'The Bulwark servers, by https address, whose plugins may sign and decrypt with the certificates in the operating system\'s store, without the user being asked for each site. One per line.',
       de: 'Die Bulwark-Server, nach https-Adresse, deren Plugins mit den Zertifikaten im Speicher des Betriebssystems signieren und entschlüsseln dürfen, ohne dass der Benutzer für jede Website gefragt wird. Eine pro Zeile.',
+    },
+  },
+  BrowserSignIn: {
+    category: 'signIn',
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    sample: true,
+    title: { en: 'Offer sign-in through the browser', de: 'Anmeldung über den Browser anbieten' },
+    description: {
+      en: 'When enabled or not configured, the login page offers "Sign in with your browser", so people can use their password manager, passkeys and your single sign-on there. When disabled, the button is gone and the app refuses the flow. The form in the app stays, unless the server only allows OAuth.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, bietet die Anmeldeseite „Mit Ihrem Browser anmelden“ an, damit Benutzer dort ihren Passwort-Manager, Passkeys und Ihr Single Sign-on verwenden können. Wenn deaktiviert, fehlt die Schaltfläche und die App lehnt den Vorgang ab. Das Formular in der App bleibt, sofern der Server nicht nur OAuth erlaubt.',
     },
   },
   WipeOfflineData: {
@@ -843,6 +856,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   AutoSelectCertificateForUrls: { repo: 'shell', file: 'src/main/features/client-certificates.ts' },
   KeystoreEnabled: { repo: 'shell', file: 'src/main/features/policies.ts' },
   KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
+  BrowserSignIn: { repo: 'shell', file: 'src/main/features/browser-sign-in.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */

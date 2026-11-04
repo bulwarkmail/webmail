@@ -110,6 +110,11 @@ interface AuthState {
   loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
+  /**
+   * The desktop app on an instance: the one-time code from its browser sign-in, with the
+   * verifier it kept. `blocked` is the device's own list of servers saying no.
+   */
+  loginWithDesktopHandoff: (code: string, verifier: string, options: { remember: boolean; rememberPassword: boolean; allowedServers: string[] | null; customServersAllowed: boolean }) => Promise<'ok' | 'blocked' | 'failed'>;
   loginDemo: () => Promise<boolean>;
   /**
    * Obtain a usable access token for `accountId`, or the active account.
@@ -1625,6 +1630,118 @@ function notifySignedIn(state: { activeAccountId: string | null; username: strin
   void authHooks.onLogin.emit({ accountId: state.activeAccountId, username: state.username ?? '' });
 }
 
+/**
+ * A provider's tokens are in, with the refresh token already in the slot's cookie: the
+ * rest of a sign-in. Server-side SSO, and the desktop app's sign-in on an instance.
+ */
+async function adoptProviderSession(
+  set: (state: Partial<AuthState>) => void,
+  get: () => AuthState,
+  session: {
+    serverUrl: string;
+    accessToken: string;
+    expiresIn: number;
+    remember: boolean | undefined;
+    slot: number;
+    /**
+     * Tokens from a typed password, not a provider's page: the account the user knows, under
+     * the name they typed. It has the same id as any other password sign-in with that name, so
+     * what its last sign-out kept comes back, and its password settings stay (#1432).
+     */
+    typedUsername?: string;
+  },
+): Promise<void> {
+  const { serverUrl: ssoServerUrl, accessToken: access_token, expiresIn: expires_in, remember, slot } = session;
+  const typed = session.typedUsername ? toAsciiEmail(session.typedUsername) : '';
+  const accountStore = useAccountStore.getState();
+  let boundAccountId: string | undefined;
+  const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }));
+  await client.connect();
+
+  const jmapUsername = client.getUsername();
+  const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), typed || jmapUsername);
+  // For SSO/OIDC, the JMAP session account name may be the
+  // preferred_username claim rather than the real email address.
+  // Prefer the email from the primary identity when available.
+  const username = typed || primaryIdentity?.email || jmapUsername;
+  initializeFeatureStores(client);
+
+  const accountId = generateAccountId(username, ssoServerUrl);
+  boundAccountId = accountId;
+
+  const prevAccountId = get().activeAccountId;
+  if (prevAccountId && prevAccountId !== accountId) {
+    snapshotAccount(prevAccountId);
+    clearAllStores();
+  }
+
+  holdClient(accountId, client);
+  bindClientStatusHandlers(client, set, get, accountId);
+
+  accountStore.addAccount({
+    label: primaryIdentity?.name || username,
+    serverUrl: ssoServerUrl,
+    username,
+    authMode: 'oauth',
+    rememberMe: remember !== false,
+    displayName: primaryIdentity?.name || username,
+    email: primaryIdentity?.email || username,
+    lastLoginAt: Date.now(),
+    isConnected: true,
+    hasError: false,
+    isDefault: accountStore.accounts.length === 0,
+  });
+  // The refresh-token cookie was written to `slot` by /api/auth/sso/complete.
+  // Force the stored cookieSlot to match - see loginWithOAuth above for the
+  // re-add and concurrent-tab cases this guards against.
+  accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: !typed });
+  if (typed) {
+    const serverIdentifiers = buildServerIdentifiers(client.getSessionUsername(), primaryIdentity?.email, ssoServerUrl);
+    if (serverIdentifiers.length > 0) accountStore.updateAccount(accountId, { serverIdentifiers });
+  }
+  accountStore.setActiveAccount(accountId);
+
+  await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
+  void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
+
+  set({
+    isAuthenticated: true,
+    isLoading: false,
+    serverUrl: ssoServerUrl,
+    username,
+    client,
+    ...getClientRateLimitState(client),
+    identities,
+    primaryIdentity,
+    authMode: 'oauth',
+    accessToken: access_token,
+    tokenExpiresAt: Date.now() + expires_in * 1000,
+    connectionLost: false,
+    error: null,
+    activeAccountId: accountId,
+  });
+
+  import('@/stores/email-store').then(({ useEmailStore }) => {
+    useEmailStore.getState().prefetchInitialData(client).catch((err) => {
+      debug.error('Initial data prefetch failed:', err);
+    });
+  }).catch(() => {});
+
+  scheduleRefresh(expires_in, () => get().refreshAccessToken({ accountId }), accountId);
+
+  notifyParent('sso:auth-success', { username });
+
+  fetchConfig().then(cfg => {
+    if (!cfg.settingsSyncEnabled) return;
+    useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
+      useSettingsStore.getState().enableSync(username, ssoServerUrl);
+      applyPreferredIdentity(accountId);
+    });
+  }).catch(() => {});
+
+  notifySignedIn(get());
+}
+
 function beforeLogoutHooks(accountId: string, options: SignOutCleanupOptions = {}): Promise<void> {
   return Promise.race([
     Promise.all([authHooks.onBeforeLogout.emit({ accountId }), runBeforeSignOut(accountId, options)]).then(() => {}),
@@ -2291,88 +2408,7 @@ export const useAuthStore = create<AuthState>()(
             throw new Error('Server URL not configured');
           }
 
-          let boundAccountId: string | undefined;
-          const client = JMAPClient.withBearer(ssoServerUrl, access_token, '', () => get().refreshAccessToken({ accountId: boundAccountId }));
-          await client.connect();
-
-          const jmapUsername = client.getUsername();
-          const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
-          // For SSO/OIDC, the JMAP session account name may be the
-          // preferred_username claim rather than the real email address.
-          // Prefer the email from the primary identity when available.
-          const username = primaryIdentity?.email || jmapUsername;
-          initializeFeatureStores(client);
-
-          const accountId = generateAccountId(username, ssoServerUrl);
-          boundAccountId = accountId;
-
-          const prevAccountId = get().activeAccountId;
-          if (prevAccountId && prevAccountId !== accountId) {
-            snapshotAccount(prevAccountId);
-            clearAllStores();
-          }
-
-          holdClient(accountId, client);
-          bindClientStatusHandlers(client, set, get, accountId);
-
-          accountStore.addAccount({
-            label: primaryIdentity?.name || username,
-            serverUrl: ssoServerUrl,
-            username,
-            authMode: 'oauth',
-            rememberMe: remember !== false,
-            displayName: primaryIdentity?.name || username,
-            email: primaryIdentity?.email || username,
-            lastLoginAt: Date.now(),
-            isConnected: true,
-            hasError: false,
-            isDefault: accountStore.accounts.length === 0,
-          });
-          // The refresh-token cookie was written to `slot` by /api/auth/sso/complete.
-          // Force the stored cookieSlot to match - see loginWithOAuth above for the
-          // re-add and concurrent-tab cases this guards against.
-          accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: true });
-          accountStore.setActiveAccount(accountId);
-
-          await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
-          void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
-
-          set({
-            isAuthenticated: true,
-            isLoading: false,
-            serverUrl: ssoServerUrl,
-            username,
-            client,
-            ...getClientRateLimitState(client),
-            identities,
-            primaryIdentity,
-            authMode: 'oauth',
-            accessToken: access_token,
-            tokenExpiresAt: Date.now() + expires_in * 1000,
-            connectionLost: false,
-            error: null,
-            activeAccountId: accountId,
-          });
-
-          import('@/stores/email-store').then(({ useEmailStore }) => {
-            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
-              debug.error('Initial data prefetch failed:', err);
-            });
-          }).catch(() => {});
-
-          scheduleRefresh(expires_in, () => get().refreshAccessToken({ accountId }), accountId);
-
-          notifyParent('sso:auth-success', { username });
-
-          fetchConfig().then(cfg => {
-            if (!cfg.settingsSyncEnabled) return;
-            useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
-              useSettingsStore.getState().enableSync(username, ssoServerUrl);
-              applyPreferredIdentity(accountId);
-            });
-          }).catch(() => {});
-
-          notifySignedIn(get());
+          await adoptProviderSession(set, get, { serverUrl: ssoServerUrl, accessToken: access_token, expiresIn: expires_in, remember, slot });
           return true;
         } catch (error) {
           debug.error('Server SSO login error:', error);
@@ -2387,6 +2423,49 @@ export const useAuthStore = create<AuthState>()(
             client: null,
           });
           return false;
+        }
+      },
+
+      loginWithDesktopHandoff: async (code, verifier, { remember, rememberPassword, allowedServers, customServersAllowed }) => {
+        if (IS_LITE) return 'failed';
+        set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
+        try {
+          const slot = useAccountStore.getState().getNextCookieSlot();
+          const res = await apiFetch('/api/auth/desktop-handoff/redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, code_verifier: verifier, slot, remember, allowed_servers: allowedServers, custom_servers_allowed: customServersAllowed }),
+          }).then((answer) => noteSessionAnswer(answer, slot));
+          if (!res.ok) {
+            const refusal = (await res.json().catch(() => null)) as { error?: string } | null;
+            set({ isLoading: false, error: null });
+            return refusal?.error === 'blocked_by_policy' ? 'blocked' : 'failed';
+          }
+          const parked = await res.json();
+          if (parked.flow === 'password') {
+            // A password the browser checked a moment ago, down the same path as a typed one.
+            return (await get().login(parked.server_url, parked.username, parked.password, undefined, rememberPassword)) ? 'ok' : 'failed';
+          }
+          await adoptProviderSession(set, get, {
+            serverUrl: parked.server_url,
+            accessToken: parked.access_token,
+            expiresIn: parked.expires_in,
+            remember: parked.remember,
+            slot,
+            ...(parked.password_login ? { typedUsername: parked.username } : {}),
+          });
+          return 'ok';
+        } catch (error) {
+          debug.error('Desktop hand-off login error:', error);
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'generic',
+            isAuthenticated: false,
+            isRateLimited: false,
+            rateLimitUntil: null,
+            client: null,
+          });
+          return 'failed';
         }
       },
 

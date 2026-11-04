@@ -215,6 +215,18 @@
       <list id="KeystoreAllowedOrigins_Value" valuePrefix=""/>
     </elements>
   </policy>
+  <policy name="BrowserSignIn" class="Both" displayName="$(string.BrowserSignIn)" explainText="$(string.BrowserSignIn_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="BrowserSignIn">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="BrowserSignIn_Recommended" class="Both" displayName="$(string.BrowserSignIn)" explainText="$(string.BrowserSignIn_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="BrowserSignIn">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
   <policy name="WipeOfflineData" class="Both" displayName="$(string.WipeOfflineData)" explainText="$(string.WipeOfflineData_Explain)" presentation="$(presentation.WipeOfflineData)" key="Software\Policies\Bulwark\Desktop">
     <parentCategory ref="Bulwark_Desktop_security"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>

@@ -47,6 +47,14 @@ describe('oauth/discovery', () => {
     }
   });
 
+  it('keeps a registration endpoint the server names, for the desktop app, and only a string', async () => {
+    const answer = (extra: Record<string, unknown>) => ({ status: 200, ok: true, headers: new Headers(), json: async () => ({ ...VALID_METADATA, ...extra }) });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer({ registration_endpoint: 'https://auth.example.com/register' })));
+    expect((await discoverOAuth('https://a.example.com', { validateEndpoint }))?.registration_endpoint).toBe('https://auth.example.com/register');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer({ registration_endpoint: 7 })));
+    expect((await discoverOAuth('https://b.example.com', { validateEndpoint }))?.registration_endpoint).toBeUndefined();
+  });
+
   it('follows one redirect that stays on the same host', async () => {
     const redirect = { status: 301, ok: false, headers: new Headers({ location: '/auth/.well-known/openid-configuration' }), json: async () => ({}) };
     const document = { status: 200, ok: true, headers: new Headers(), json: async () => VALID_METADATA };

@@ -63,6 +63,8 @@
       <array>
         <string>https://mail.example.com</string>
       </array>
+      <key>BrowserSignIn</key>
+      <true/>
       <key>Recommended</key>
       <dict>
         <key>UpdateChannel</key>
