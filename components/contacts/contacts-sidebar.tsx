@@ -10,7 +10,7 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
-import { getContactDisplayName } from "@/stores/contact-store";
+import { getContactDisplayName, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
 
 export type ContactCategory = "all" | "directory" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
@@ -90,10 +90,18 @@ function saveCollapsed(state: Record<string, boolean>) {
   } catch { /* ignore */ }
 }
 
+/**
+ * The app's own "Trusted Senders" book: the senders whose images load, kept
+ * and managed in Settings, not a list of people. The sidebar leaves it out.
+ */
+export function isTrustedSendersBook(book: AddressBook): boolean {
+  return !book.isShared && book.name === TRUSTED_SENDERS_BOOK_NAME;
+}
+
 export function ContactsSidebar({
   groups,
   individuals,
-  addressBooks,
+  addressBooks: allAddressBooks,
   activeCategory,
   onSelectCategory,
   onCreateGroup,
@@ -119,6 +127,7 @@ export function ContactsSidebar({
   const t = useTranslations("contacts");
   const tx = useTranslations("ux_pim_contact");
   const router = useRouter();
+  const addressBooks = useMemo(() => allAddressBooks.filter(b => !isTrustedSendersBook(b)), [allAddressBooks]);
   const { contextMenu: groupContextMenu, openContextMenu: openGroupContextMenu, openContextMenuFrom: openGroupMenuFrom, closeContextMenu: closeGroupContextMenu, menuRef: groupMenuRef } = useContextMenu<ContactCard>();
   const { contextMenu: bookContextMenu, openContextMenu: openBookContextMenu, openContextMenuFrom: openBookMenuFrom, closeContextMenu: closeBookContextMenu, menuRef: bookMenuRef } = useContextMenu<AddressBook>();
   const hasBookMenu = !!(onRenameAddressBook || onShareAddressBook || onSetDefaultAddressBook || onCreateContactInBook || onDeleteAddressBook);

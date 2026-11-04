@@ -84,6 +84,24 @@ function renderSidebar(addressBooks: AddressBook[]) {
   );
 }
 
+describe('pim-22: the Contacts sidebar', () => {
+  it("leaves out the app's own Trusted Senders book, which Settings manages", () => {
+    const { unmount } = renderSidebar([
+      { id: 'b1', name: 'Contacts', isDefault: true } as AddressBook,
+      { id: 'b2', name: 'Trusted Senders', isDefault: false } as AddressBook,
+    ]);
+    expect(screen.getByText('Contacts')).toBeInTheDocument();
+    expect(screen.queryByText('Trusted Senders')).toBeNull();
+    unmount();
+    // Someone else's book with that name is theirs, not the app's list.
+    renderSidebar([
+      { id: 'b1', name: 'Contacts', isDefault: true } as AddressBook,
+      { id: 'b3', name: 'Trusted Senders', isShared: true, accountId: 'acc-b', accountName: 'b@example.org' } as AddressBook,
+    ]);
+    expect(screen.getByText('Trusted Senders')).toBeInTheDocument();
+  });
+});
+
 describe('pim-26: the Contacts menus', () => {
   it('ends "Import contacts" and "New address book" in "…", as they open a dialog', () => {
     renderSidebar([{ id: 'b1', name: 'Contacts', isDefault: true } as AddressBook]);
