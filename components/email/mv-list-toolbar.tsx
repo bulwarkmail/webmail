@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Fish,
 } from "@/components/icons";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
@@ -200,7 +201,7 @@ export function MvListToolbar({
   const isInJunk = currentRole === "junk";
   const isInTrash = currentRole === "trash";
   // Marking your own drafts or sent mail as spam is meaningless.
-  const spamApplicable = !["sent", "drafts", "scheduled"].includes(currentRole ?? "");
+  const spamApplicable = spamApplicableIn(currentRole);
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionForPhishing = useEmailStore(useShallow((state) => resolveSelectedEmails(state)));
   const phishing = usePhishingReport(selectionForPhishing, currentRole);

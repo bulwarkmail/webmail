@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
@@ -100,7 +101,7 @@ import {
   Minus,
   ShieldCheck,
   ShieldAlert,
-  RotateCcw,
+  Undo,
   Copy,
   Brain,
   Keyboard,
@@ -146,7 +147,6 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
 import { trashRestoreTarget } from "@/lib/trash-restore-target";
-import { localizeMailboxName } from "@/lib/mailbox-label";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
@@ -1491,14 +1491,13 @@ export function EmailViewer({
   // destroys the mail, Delete says "Delete forever".
   const isInTrashFolder = currentMailboxRole === 'trash';
   const tActions = useTranslations('reader_actions');
-  const tSidebarNames = useTranslations('sidebar');
   // Read for the re-render: bulkDeleteIsPermanent reads them from the store.
   useSettingsStore((state) => state.deleteAction);
   useSettingsStore((state) => state.permanentlyDeleteJunk);
   const deleteIsPermanent = bulkDeleteIsPermanent({ role: currentMailboxRole });
   // Marking your own outgoing mail as spam makes no sense - hide the action
   // in Sent, Drafts and Scheduled.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
+  const spamApplicable = spamApplicableIn(currentMailboxRole);
 
   // Detect if the email is a draft
   const isDraft = email?.keywords?.['$draft'] === true;
@@ -4548,9 +4547,10 @@ ${printWatermark ? printWatermark.html : ''}
             data-overflow-action=""
             data-testid="reader-restore"
             className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
-            title={tActions('restore_to', { folder: localizeMailboxName(restoreTarget.role, restoreTarget.name, (key) => tSidebarNames(`mailboxes.${key}`)) })}
+            title={tActions('restore')}
+            aria-label={tActions('restore')}
           >
-            <RotateCcw className="w-4 h-4" />
+            <Undo className="w-4 h-4" />
             {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
