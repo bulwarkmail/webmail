@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "سازمان"
   },
+  "ux_pim_grid": {
+    "search_short": "جستجو",
+    "reply": "پاسخ",
+    "reply_to_invitation": "پاسخ به دعوت"
+  },
   "vacation_calendar": {
     "label": "مسدود کردن تقویم من",
     "description": "برای مدت غیبت شما یک رویداد مشغول اضافه می‌کند تا کسی در آن زمان جلسه نگذارد.",

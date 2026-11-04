@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organizácia"
   },
+  "ux_pim_grid": {
+    "search_short": "Hľadať",
+    "reply": "Odpovedať",
+    "reply_to_invitation": "Odpovedať na pozvánku"
+  },
   "vacation_calendar": {
     "label": "Zablokovať môj kalendár",
     "description": "Pridá obsadenú udalosť na čas vašej neprítomnosti, aby vám vtedy nikto neplánoval stretnutia.",

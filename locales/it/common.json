@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organizzazione"
   },
+  "ux_pim_grid": {
+    "search_short": "Cerca",
+    "reply": "Rispondi",
+    "reply_to_invitation": "Rispondi all’invito"
+  },
   "vacation_calendar": {
     "label": "Blocca il mio calendario",
     "description": "Aggiunge un evento occupato per il periodo di assenza, così nessuno ti fissa riunioni in quei giorni.",

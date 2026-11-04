@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organisatie"
   },
+  "ux_pim_grid": {
+    "search_short": "Zoeken",
+    "reply": "Reageren",
+    "reply_to_invitation": "Op uitnodiging reageren"
+  },
   "vacation_calendar": {
     "label": "Mijn agenda blokkeren",
     "description": "Zet een bezette afspraak in je agenda voor de tijd dat je weg bent, zodat niemand dan vergaderingen met je plant.",

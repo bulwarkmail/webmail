@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organizācija"
   },
+  "ux_pim_grid": {
+    "search_short": "Meklēt",
+    "reply": "Atbildēt",
+    "reply_to_invitation": "Atbildēt uz ielūgumu"
+  },
   "vacation_calendar": {
     "label": "Bloķēt manu kalendāru",
     "description": "Pievieno aizņemtu notikumu prombūtnes laikam, lai tad neviens neplānotu ar jums sapulces.",

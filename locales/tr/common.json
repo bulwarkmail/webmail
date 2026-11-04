@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Kuruluş"
   },
+  "ux_pim_grid": {
+    "search_short": "Ara",
+    "reply": "Yanıtla",
+    "reply_to_invitation": "Davete yanıt ver"
+  },
   "vacation_calendar": {
     "label": "Takvimimi kapat",
     "description": "Uzakta olduğunuz süre için meşgul bir etkinlik ekler, böylece o sırada kimse sizinle toplantı ayarlamaz.",

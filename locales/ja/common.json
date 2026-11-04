@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "組織"
   },
+  "ux_pim_grid": {
+    "search_short": "検索",
+    "reply": "返信",
+    "reply_to_invitation": "招待に返信"
+  },
   "vacation_calendar": {
     "label": "カレンダーをブロック",
     "description": "不在の期間に予定ありの予定を追加し、その間に会議を入れられないようにします。",

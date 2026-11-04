@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Організація"
   },
+  "ux_pim_grid": {
+    "search_short": "Пошук",
+    "reply": "Відповісти",
+    "reply_to_invitation": "Відповісти на запрошення"
+  },
   "vacation_calendar": {
     "label": "Заблокувати мій календар",
     "description": "Додає подію «зайнято» на час вашої відсутності, щоб вам тоді не призначали зустрічей.",

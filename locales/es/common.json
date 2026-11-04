@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organización"
   },
+  "ux_pim_grid": {
+    "search_short": "Buscar",
+    "reply": "Responder",
+    "reply_to_invitation": "Responder a la invitación"
+  },
   "vacation_calendar": {
     "label": "Bloquear mi calendario",
     "description": "Añade un evento ocupado mientras estás fuera, para que nadie te convoque a reuniones entonces.",

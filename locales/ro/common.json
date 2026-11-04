@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organizație"
   },
+  "ux_pim_grid": {
+    "search_short": "Caută",
+    "reply": "Răspunde",
+    "reply_to_invitation": "Răspunde la invitație"
+  },
   "vacation_calendar": {
     "label": "Blochează-mi calendarul",
     "description": "Adaugă un eveniment ocupat pe durata absenței, ca nimeni să nu vă programeze ședințe atunci.",

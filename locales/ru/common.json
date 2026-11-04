@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Организация"
   },
+  "ux_pim_grid": {
+    "search_short": "Поиск",
+    "reply": "Ответить",
+    "reply_to_invitation": "Ответить на приглашение"
+  },
   "vacation_calendar": {
     "label": "Занять мой календарь",
     "description": "Добавляет событие «занят» на время отсутствия, чтобы вам не назначали встречи.",

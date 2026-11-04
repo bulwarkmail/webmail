@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organizace"
   },
+  "ux_pim_grid": {
+    "search_short": "Hledat",
+    "reply": "Odpovědět",
+    "reply_to_invitation": "Odpovědět na pozvánku"
+  },
   "vacation_calendar": {
     "label": "Zablokovat můj kalendář",
     "description": "Přidá obsazenou událost na dobu vaší nepřítomnosti, aby vám tehdy nikdo neplánoval schůzky.",

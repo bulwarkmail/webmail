@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organizacja"
   },
+  "ux_pim_grid": {
+    "search_short": "Szukaj",
+    "reply": "Odpowiedz",
+    "reply_to_invitation": "Odpowiedz na zaproszenie"
+  },
   "vacation_calendar": {
     "label": "Zablokuj mój kalendarz",
     "description": "Dodaje zajęte wydarzenie na czas Twojej nieobecności, żeby nikt nie umawiał wtedy z Tobą spotkań.",

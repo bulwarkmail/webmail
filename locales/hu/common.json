@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Szervezet"
   },
+  "ux_pim_grid": {
+    "search_short": "Keresés",
+    "reply": "Válasz",
+    "reply_to_invitation": "Válasz a meghívásra"
+  },
   "vacation_calendar": {
     "label": "Naptáram foglalása",
     "description": "Foglalt eseményt tesz a távollét idejére, hogy addig senki ne szervezzen Önnel megbeszélést.",

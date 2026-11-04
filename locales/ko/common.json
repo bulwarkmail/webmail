@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "조직"
   },
+  "ux_pim_grid": {
+    "search_short": "검색",
+    "reply": "응답",
+    "reply_to_invitation": "초대에 응답"
+  },
   "vacation_calendar": {
     "label": "내 캘린더 차단",
     "description": "부재 기간에 바쁨 일정을 추가해 그동안 회의가 잡히지 않게 합니다.",

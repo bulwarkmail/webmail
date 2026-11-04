@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "المؤسسة"
   },
+  "ux_pim_grid": {
+    "search_short": "بحث",
+    "reply": "رد",
+    "reply_to_invitation": "الرد على الدعوة"
+  },
   "vacation_calendar": {
     "label": "حجز تقويمي",
     "description": "يضيف حدثًا مشغولًا لمدة غيابك، حتى لا يحجز أحد اجتماعات معك خلالها.",

@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Байгууллага"
   },
+  "ux_pim_grid": {
+    "search_short": "Хайх",
+    "reply": "Хариулах",
+    "reply_to_invitation": "Урилгад хариулах"
+  },
   "vacation_calendar": {
     "label": "Миний хуанлийг хаах",
     "description": "Таныг байхгүй үед завгүй арга хэмжээ нэмж, тэр үед хэн ч уулзалт товлохгүй болгоно.",

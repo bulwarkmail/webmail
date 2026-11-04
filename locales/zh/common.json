@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "组织"
   },
+  "ux_pim_grid": {
+    "search_short": "搜索",
+    "reply": "回复",
+    "reply_to_invitation": "回复邀请"
+  },
   "vacation_calendar": {
     "label": "占用我的日历",
     "description": "在你外出期间添加一个忙碌活动，这样别人不会在这段时间约你开会。",

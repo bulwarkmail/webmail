@@ -5153,6 +5153,11 @@
   "company_calendars": {
     "section": "Tổ chức"
   },
+  "ux_pim_grid": {
+    "search_short": "Tìm",
+    "reply": "Trả lời",
+    "reply_to_invitation": "Trả lời lời mời"
+  },
   "vacation_calendar": {
     "label": "Chặn lịch của tôi",
     "description": "Thêm một sự kiện bận trong thời gian bạn vắng mặt để không ai đặt cuộc họp với bạn lúc đó.",

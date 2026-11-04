@@ -5551,6 +5551,11 @@
   "company_calendars": {
     "section": "ארגון"
   },
+  "ux_pim_grid": {
+    "search_short": "חיפוש",
+    "reply": "מענה",
+    "reply_to_invitation": "מענה להזמנה"
+  },
   "vacation_calendar": {
     "label": "חסום את היומן שלי",
     "description": "מוסיף אירוע תפוס לזמן ההיעדרות, כדי שאף אחד לא יקבע איתך פגישות אז.",

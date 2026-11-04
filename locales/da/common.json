@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organisation"
   },
+  "ux_pim_grid": {
+    "search_short": "Søg",
+    "reply": "Svar",
+    "reply_to_invitation": "Svar på invitationen"
+  },
   "vacation_calendar": {
     "label": "Bloker min kalender",
     "description": "Tilføjer en optaget begivenhed, mens du er væk, så ingen booker møder med dig imens.",

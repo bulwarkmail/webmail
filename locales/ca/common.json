@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organització"
   },
+  "ux_pim_grid": {
+    "search_short": "Cerca",
+    "reply": "Respon",
+    "reply_to_invitation": "Respon a la invitació"
+  },
   "vacation_calendar": {
     "label": "Bloca el meu calendari",
     "description": "Afegeix un esdeveniment ocupat mentre sou fora, perquè ningú us convoqui a reunions aleshores.",

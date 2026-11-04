@@ -2736,6 +2736,11 @@
   "company_calendars": {
     "section": "องค์กร"
   },
+  "ux_pim_grid": {
+    "search_short": "ค้นหา",
+    "reply": "ตอบกลับ",
+    "reply_to_invitation": "ตอบกลับคำเชิญ"
+  },
   "vacation_calendar": {
     "label": "บล็อกปฏิทินของฉัน",
     "description": "เพิ่มกิจกรรมไม่ว่างในช่วงที่คุณไม่อยู่ เพื่อไม่ให้ใครนัดประชุมกับคุณในเวลานั้น",

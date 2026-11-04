@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organisatsioon"
   },
+  "ux_pim_grid": {
+    "search_short": "Otsi",
+    "reply": "Vasta",
+    "reply_to_invitation": "Vasta kutsele"
+  },
   "vacation_calendar": {
     "label": "Blokeeri minu kalender",
     "description": "Lisab äraoleku ajaks hõivatud sündmuse, et keegi sel ajal sulle koosolekuid ei paneks.",

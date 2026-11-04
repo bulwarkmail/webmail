@@ -5732,6 +5732,11 @@
   "company_calendars": {
     "section": "Organisation"
   },
+  "ux_pim_grid": {
+    "search_short": "Rechercher",
+    "reply": "Répondre",
+    "reply_to_invitation": "Répondre à l’invitation"
+  },
   "vacation_calendar": {
     "label": "Bloquer mon calendrier",
     "description": "Ajoute un événement occupé pendant votre absence, pour que personne ne vous invite à une réunion à ce moment-là.",

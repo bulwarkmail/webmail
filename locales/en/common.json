@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organisation"
   },
+  "ux_pim_grid": {
+    "search_short": "Search",
+    "reply": "Reply",
+    "reply_to_invitation": "Answer the invitation"
+  },
   "vacation_calendar": {
     "label": "Block my calendar",
     "description": "Adds a busy event for the time you’re away, so nobody books meetings with you then.",

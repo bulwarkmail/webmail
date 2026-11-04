@@ -5141,6 +5141,11 @@
   "company_calendars": {
     "section": "Organisasjon"
   },
+  "ux_pim_grid": {
+    "search_short": "Søk",
+    "reply": "Svar",
+    "reply_to_invitation": "Svar på invitasjonen"
+  },
   "vacation_calendar": {
     "label": "Blokker kalenderen min",
     "description": "Legger inn en opptatt-hendelse mens du er borte, så ingen booker møter med deg da.",
