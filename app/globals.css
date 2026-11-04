@@ -1562,3 +1562,14 @@ html[data-window-controls-left] [data-window-rail] {
     width: var(--mv-rail-peek-w);
   }
 }
+
+/* A list row while its right-click menu is open (components/ui/context-menu.tsx). */
+[data-menu-row][data-menu-opener] {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+
+/* A menu opened under the pointer: the item there isn't hovered until the pointer moves. */
+[data-pointer-unarmed] :is([role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]):hover {
+  background-color: transparent;
+}

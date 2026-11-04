@@ -73,11 +73,13 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
 
     const target = e.currentTarget instanceof HTMLElement ? e.currentTarget : null;
     const trigger = target ? focusReturnTarget(target) : null;
-    const position = target && openedByKeyboard(e)
+    const position: ContextMenuPosition = target && openedByKeyboard(e)
       ? { ...anchorPosition(target), trigger }
       // At the pointer as it is: the menu places itself once it knows its size,
       // opening up or to the side where there's no room (lib/menu-placement.ts).
-      : { x: e.clientX, y: e.clientY, trigger };
+      : { x: e.clientX, y: e.clientY, trigger, fromPointer: true };
+    // The row it's for stays marked while it's open (a ⋮ inside the row counts as the row).
+    if (target) position.opener = target.closest<HTMLElement>("[data-menu-row]") ?? target;
 
     setContextMenu({
       isOpen: true,
