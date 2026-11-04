@@ -12,7 +12,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
 import { toast } from "@/stores/toast-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { secondsUntilSend } from "@/lib/outgoing/send-progress-toast";
+import { secondsUntilSend, undoEndsAt } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
@@ -56,8 +56,6 @@ const RESCUE_ANSWER_MS = 2000;
 
 /** A send held this long or less is an undo window ("Sending in 5 s"), not a message scheduled for later. */
 const UNDO_WINDOW_MS = 120_000;
-/** Undo goes this long before the server lets the message go, as in the main window. */
-const UNDO_MARGIN_MS = 1000;
 /** What the plugins are told when the hold runs out gets this long before the window goes. */
 const RELEASE_WAIT_MS = 1000;
 
@@ -97,7 +95,9 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const sendAt = Date.parse(held.sendAt);
-  const over = !Number.isFinite(sendAt) || now >= sendAt - UNDO_MARGIN_MS;
+  // The whole delay from now, as the main window's toast counts it (compose-p3-8).
+  const [undoEnd] = useState(() => undoEndsAt(sendAt, Date.now(), useSettingsStore.getState().sendDelaySeconds));
+  const over = !Number.isFinite(sendAt) || now >= undoEnd;
 
   useEffect(() => {
     if (over) return;
@@ -138,7 +138,7 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   };
 
   // As the main window's toast counts: never past the delay the user picked.
-  const seconds = secondsUntilSend(sendAt, now, useSettingsStore.getState().sendDelaySeconds);
+  const seconds = secondsUntilSend(undoEnd, now, useSettingsStore.getState().sendDelaySeconds);
   // Once Undo is over, "Sent" for the moment before the window goes, as the
   // main window's toast says it.
   return (

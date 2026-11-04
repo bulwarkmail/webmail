@@ -9,7 +9,7 @@ import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
 import { isStandInId, standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
 import { isLocalBlobId } from '@/lib/store/outbox/items';
-import { undoDelaySeconds } from '@/lib/outgoing/undo-delay';
+import { UNDO_HOLD_MARGIN_SECONDS, undoDelaySeconds } from '@/lib/outgoing/undo-delay';
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PrincipalAvailability, PrincipalListing, PushSubscription, EmailPushConfig, DeliveryStatus, EmailSubmission, RejectedRecipient, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
@@ -6944,7 +6944,7 @@ export class JMAPClient implements IJMAPClient {
       if (!this.hasDelayedSend(accountId) || maxDelayedSend <= 0) {
         throw new Error('Scheduled send is not supported for this account');
       }
-      return Math.max(1, Math.min(undoSeconds, maxDelayedSend));
+      return Math.max(1, Math.min(undoSeconds + UNDO_HOLD_MARGIN_SECONDS, maxDelayedSend));
     }
     const time = new Date(delayedUntil).getTime();
     if (!Number.isFinite(time)) {

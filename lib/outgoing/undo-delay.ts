@@ -13,6 +13,13 @@
  * as it is.
  */
 
+/**
+ * The server holds an Undo send this much longer than the delay, so an Undo
+ * clicked as the toast's count reaches its end still reaches it in time; the
+ * toast counts the delay itself (send-progress-toast.ts undoEndsAt).
+ */
+export const UNDO_HOLD_MARGIN_SECONDS = 1;
+
 /** At most this many Undo times are remembered; older ones are long submitted. */
 const REMEMBERED = 50;
 

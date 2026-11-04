@@ -501,8 +501,9 @@ describe('destroying the record of an immediate send', () => {
     expect(result.scheduled).toBe(true);
     const create = server.requests.flat().find(([method, args]) => method === 'EmailSubmission/set' && args.create);
     const submission = Object.values(create![1].create as Record<string, { envelope: { mailFrom: { parameters: { HOLDFOR: string } } } }>)[0];
-    expect(submission.envelope.mailFrom.parameters.HOLDFOR).toBe('5');
-    expect(Date.parse(result.sendAt!)).toBe(clickedAt + 10_000 + 5_000);
+    // The delay and a second's margin, so a last-moment Undo still reaches the server.
+    expect(submission.envelope.mailFrom.parameters.HOLDFOR).toBe('6');
+    expect(Date.parse(result.sendAt!)).toBe(clickedAt + 10_000 + 6_000);
   });
 
   it('still refuses a picked time that has passed', async () => {

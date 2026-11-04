@@ -59,7 +59,7 @@ import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { findReplyDraft, threadDrafts } from "@/lib/reply-drafts";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS } from "@/lib/outgoing/send-progress-toast";
+import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS, undoEndsAt } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
@@ -3290,19 +3290,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Undo: without this, the draft's next save would run through the new
     // active login and remove its old version by id in the wrong account.
     const undoLogin = pending.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined;
-    // A send-delay window (seconds away) closes the toast a second before the
-    // server releases the message, so Undo is never offered once it is too
-    // late. A message scheduled for later keeps the toast up a short while.
-    const remainingMs = Date.parse(pending.sendAt) - Date.now();
+    // A send-delay window (seconds away) offers Undo for the whole delay from
+    // now, and the server holds the message a moment longer, so Undo is never
+    // offered once it is too late (undoEndsAt). A message scheduled for later
+    // keeps the toast up a short while.
+    const shownAt = Date.now();
+    const remainingMs = Date.parse(pending.sendAt) - shownAt;
     const isUndoWindow = Number.isFinite(remainingMs) && remainingMs <= 120_000;
     const undoDurationMs = isUndoWindow
-      ? Math.max(remainingMs - 1000, 1000)
+      ? Math.max(undoEndsAt(Date.parse(pending.sendAt), shownAt, sendDelaySeconds) - shownAt, 1000)
       : Math.max(sendDelaySeconds, 8) * 1000;
 
     // A message scheduled for later says when it goes, and offers Cancel
     // where a send-delay window offers Undo send.
     const undoToastId = toast.success(isUndoWindow
-      ? t('email_viewer.sending_in', { seconds: Math.round(remainingMs / 1000) })
+      ? t('email_viewer.sending_in', { seconds: Math.ceil(undoDurationMs / 1000) })
       : t('compose_send.scheduled_for', { when: formatScheduledSendAt(pending.sendAt, useSettingsStore.getState().timeFormat) }), {
       // An undo window turns into "Sent" as Undo ends (runUndoSendCountdown).
       duration: isUndoWindow ? undoDurationMs + UNDO_TOAST_SLACK_MS : undoDurationMs,
@@ -3390,7 +3392,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const ownerAccountId = pending.submissionAccountId && pending.submissionAccountId !== client.getAccountId() ? pending.submissionAccountId : undefined;
       runUndoSendCountdown(undoToastId, {
         sendAt: Date.parse(pending.sendAt),
-        undoEndsAt: Date.now() + undoDurationMs,
+        undoEndsAt: shownAt + undoDurationMs,
         maxSeconds: sendDelaySeconds,
         sendingIn: (seconds) => t('email_viewer.sending_in', { seconds }),
         sent: t('compose_send.sent'),
