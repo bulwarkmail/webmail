@@ -56,6 +56,8 @@ interface ContextMenuProps {
   children: React.ReactNode;
   /** The menu's accessible name, e.g. the label of the ⋮ button that opens it. */
   label?: string;
+  /** Opened from inside a dialog: drawn above it (dialogs are at z-[60]). */
+  overDialog?: boolean;
 }
 
 const VIEWPORT_MARGIN = 10;
@@ -273,7 +275,7 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
  * reach the app's shortcut handlers.
  */
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
-  ({ isOpen, position, onClose, children, label }, ref) => {
+  ({ isOpen, position, onClose, children, label, overDialog = false }, ref) => {
     // In the browser after hydration: a portal needs document.body. True from
     // the first render for a menu mounted later, so a closed menu that comes
     // with a row or a toolbar costs no second render pass.
@@ -553,7 +555,8 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           // left there. Clamped by that narrower width, it then grows and
           // jumps left (the ⋮ menu slid in).
           className={cn(
-            "fixed z-50 w-max min-w-[200px] outline-none",
+            "fixed w-max min-w-[200px] outline-none",
+            overDialog ? "z-[70]" : "z-50",
             CONTEXT_MENU_PANEL_CLASS
           )}
           style={{

@@ -61,7 +61,7 @@ import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
-import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
+import { getRuleAccountAddresses, resolveQuickRuleTarget } from "@/lib/filters/quick-rule-target";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -391,7 +391,8 @@ export function EmailList({
     if (selectedEmailKeys.has(emailKeyFor(contextMenuEmail)) && selectedEmailKeys.size > 1) {
       return emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
     }
-    const own = getOwnAddresses();
+    // The account's own addresses only: another signed-in account's mail is a sender here.
+    const own = getRuleAccountAddresses(resolveQuickRuleTarget(contextMenuEmail)).own;
     const isOwn = (email: Email) =>
       (email.from ?? []).length > 0 && (email.from ?? []).every((f) => own.has(normalizeAddress(f.email)));
     if (!isOwn(contextMenuEmail)) return undefined;
