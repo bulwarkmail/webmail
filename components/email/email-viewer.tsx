@@ -6260,8 +6260,8 @@ ${printWatermark ? printWatermark.html : ''}
 
         <div className="grow shrink-0 flex flex-col">
 
-          {/* Email Body */}
-          <div ref={bodyWrapRef} className={cn(
+          {/* Email Body. data-reader-body: a reply dock keeps some of it in view (compose-p3-7). */}
+          <div ref={bodyWrapRef} data-reader-body="" className={cn(
             "email-content-wrapper overflow-x-auto relative",
             // Folded, the body stays mounted so unfolding does not reload it.
             (mvOpenFolded || mvAwaitingConversation) && "hidden",
