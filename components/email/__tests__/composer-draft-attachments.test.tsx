@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
+import { UNDO_TOAST_DURATION } from '@/lib/email-action-toast';
 
 // ─── Heavy component mocks (mirrors composer-close-guard.test.tsx) ────────────
 
@@ -129,6 +130,7 @@ vi.mock('@/stores/template-store', () => {
 
 vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
+  useToastStore: { getState: () => ({ toasts: [] }) },
 }));
 
 vi.mock('@/lib/plugin-hooks', () => ({
@@ -352,7 +354,7 @@ describe('a re-opened draft that lives in a group account', () => {
     fireEvent.click(screen.getAllByTestId('composer-send')[0]);
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
 
-    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'eaaaaab', draftAccountId: 'c' }));
+    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'eaaaaab', draftAccountId: 'c' }), expect.anything());
   });
 
   it('sends a version saved on the way without the group account', async () => {
@@ -366,7 +368,7 @@ describe('a re-opened draft that lives in a group account', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
 
     expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBe('c');
-    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-v2', draftAccountId: undefined }));
+    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-v2', draftAccountId: undefined }), expect.anything());
   });
 
   it('tells the host where the draft lives when it is discarded', async () => {
@@ -376,9 +378,11 @@ describe('a re-opened draft that lives in a group account', () => {
     render(<EmailComposer initialData={GROUP_DRAFT} onDiscardDraft={onDiscardDraft} requestCloseRef={requestCloseRef} onClose={vi.fn()} />);
 
     fireEvent.change(screen.getByDisplayValue('Quarterly numbers'), { target: { value: 'Quarterly numbers v2' } });
-    // Closing keeps the draft now; Discard is the way to delete it.
+    // Closing keeps the draft now; Discard is the way to delete it, once its Undo is over.
     fireEvent.click(screen.getAllByTestId('composer-discard')[0]);
-    fireEvent.click(within(screen.getByRole('alertdialog')).getByText('discard'));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onDiscardDraft).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(UNDO_TOAST_DURATION); });
 
     expect(onDiscardDraft).toHaveBeenCalledWith('eaaaaab', { accountId: 'c', localAccountId: undefined });
   });
@@ -394,9 +398,10 @@ describe('a re-opened draft that lives in a group account', () => {
     expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBeUndefined();
 
     fireEvent.change(screen.getByDisplayValue('Quarterly numbers v2'), { target: { value: 'Quarterly numbers v3' } });
-    // Closing keeps the draft now; Discard is the way to delete it.
+    // Closing keeps the draft now; Discard is the way to delete it, once its Undo is over.
     fireEvent.click(screen.getAllByTestId('composer-discard')[0]);
-    fireEvent.click(within(screen.getByRole('alertdialog')).getByText('discard'));
+    expect(onDiscardDraft).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(UNDO_TOAST_DURATION); });
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-v2', { accountId: undefined, localAccountId: undefined });
   });
 });
@@ -450,6 +455,6 @@ describe('send while a draft save is in flight', () => {
     expect(createDraft).toHaveBeenCalledTimes(2);
     expect(createDraft.mock.calls[1][7]).toBe('draft-v2');
     expect(onSend).toHaveBeenCalledTimes(1);
-    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-v3', subject: 'Quarterly numbers v3' }));
+    expect(onSend).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-v3', subject: 'Quarterly numbers v3' }), expect.anything());
   });
 });

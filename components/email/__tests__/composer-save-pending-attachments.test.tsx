@@ -230,8 +230,9 @@ describe('Save and close with attachment uploads', () => {
   });
   it('can discard during the wait without a later save or close follow-up', async () => {
     const c = await openComposer(); await c.add(file()); await c.chooseSave();
+    // The bin asks nothing: the composer goes at once, with Undo on a toast.
     fireEvent.click(screen.getAllByTestId('composer-discard')[0]);
-    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /^Discard$/ }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
     await complete(0); await new Promise(resolve => setTimeout(resolve, 200));
     expect(creations).toEqual([]); expect(c.closed).toHaveBeenCalledOnce();
   });
