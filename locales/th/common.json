@@ -2839,6 +2839,11 @@
     "cancelled": "{name} ยกเลิกกิจกรรม “{title}”",
     "untitled": "กิจกรรมที่ไม่มีชื่อ"
   },
+  "calendar_month_select": {
+    "selected_range": "เลือก {start} ถึง {end} แล้ว",
+    "selected_day": "เลือก {day} แล้ว",
+    "enter_hint": "กด Enter เพื่อสร้างกิจกรรม"
+  },
   "company_calendars": {
     "section": "องค์กร"
   },

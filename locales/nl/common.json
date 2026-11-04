@@ -5905,6 +5905,11 @@
     "cancelled": "{name} heeft \"{title}\" geannuleerd",
     "untitled": "Afspraak zonder titel"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} tot {end} geselecteerd.",
+    "selected_day": "{day} geselecteerd.",
+    "enter_hint": "Druk op Enter om een afspraak te maken."
+  },
   "company_calendars": {
     "section": "Organisatie"
   },

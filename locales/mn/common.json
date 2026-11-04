@@ -5279,6 +5279,11 @@
     "cancelled": "{name} \"{title}\"-г цуцаллаа",
     "untitled": "Нэргүй арга хэмжээ"
   },
+  "calendar_month_select": {
+    "selected_range": "{start}-с {end} хүртэл сонгосон.",
+    "selected_day": "{day} сонгосон.",
+    "enter_hint": "Үйл явдал үүсгэхийн тулд Enter дарна уу."
+  },
   "company_calendars": {
     "section": "Байгууллага"
   },

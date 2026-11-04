@@ -5905,6 +5905,11 @@
     "cancelled": "{name} zrušil(a) „{title}“",
     "untitled": "Událost bez názvu"
   },
+  "calendar_month_select": {
+    "selected_range": "Vybráno {start} až {end}.",
+    "selected_day": "Vybráno {day}.",
+    "enter_hint": "Stisknutím klávesy Enter vytvoříte událost."
+  },
   "company_calendars": {
     "section": "Organizace"
   },

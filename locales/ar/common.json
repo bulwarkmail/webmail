@@ -5279,6 +5279,11 @@
     "cancelled": "ألغى {name} \"{title}\"",
     "untitled": "حدث بدون عنوان"
   },
+  "calendar_month_select": {
+    "selected_range": "تم تحديد {start} إلى {end}.",
+    "selected_day": "تم تحديد {day}.",
+    "enter_hint": "اضغط Enter لإنشاء حدث."
+  },
   "company_calendars": {
     "section": "المؤسسة"
   },

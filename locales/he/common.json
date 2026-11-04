@@ -5724,6 +5724,11 @@
     "cancelled": "{name} ביטל/ה את \"{title}\"",
     "untitled": "אירוע ללא כותרת"
   },
+  "calendar_month_select": {
+    "selected_range": "נבחרו {start} עד {end}.",
+    "selected_day": "נבחר {day}.",
+    "enter_hint": "הקישו Enter כדי ליצור אירוע."
+  },
   "company_calendars": {
     "section": "ארגון"
   },

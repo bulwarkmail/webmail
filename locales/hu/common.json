@@ -5279,6 +5279,11 @@
     "cancelled": "{name} lemondta a(z) „{title}” eseményt",
     "untitled": "Névtelen esemény"
   },
+  "calendar_month_select": {
+    "selected_range": "Kijelölve: {start} – {end}.",
+    "selected_day": "Kijelölve: {day}.",
+    "enter_hint": "Esemény létrehozásához nyomja meg az Entert."
+  },
   "company_calendars": {
     "section": "Szervezet"
   },

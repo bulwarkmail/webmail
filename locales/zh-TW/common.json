@@ -5279,6 +5279,11 @@
     "cancelled": "{name} 取消了「{title}」",
     "untitled": "未命名活動"
   },
+  "calendar_month_select": {
+    "selected_range": "已選取 {start} 至 {end}。",
+    "selected_day": "已選取 {day}。",
+    "enter_hint": "按 Enter 鍵建立活動。"
+  },
   "company_calendars": {
     "section": "組織"
   },

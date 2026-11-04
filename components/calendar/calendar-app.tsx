@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Plus, ListTodo, CalendarDays, Upload, Globe, RefreshCw, Search } from "@/components/icons";
 import {
   addMonths, subMonths, addWeeks, subWeeks, addDays, subDays,
-  format, parseISO, startOfWeek,
+  differenceInCalendarDays, format, parseISO, startOfWeek,
 } from "date-fns";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { isCalendarViewMode, type CalendarViewMode } from "@/stores/calendar-store";
@@ -1267,6 +1267,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     handleGridCreate(start, start, true);
   }, [handleGridCreate]);
 
+  // Days picked in the month view: an all-day event from the first to the
+  // last, in the same quick editor. Not offered without a calendar that can
+  // take it (read-only and subscribed ones only).
+  const canCreateEvents = writableCalendars.length > 0;
+  const handleGridCreateDays = useCallback((first: Date, last: Date) => {
+    const start = new Date(first);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(last);
+    end.setHours(0, 0, 0, 0);
+    handleGridCreate(start, end, true);
+  }, [handleGridCreate]);
+
   const closeQuickCreate = useCallback(() => setQuickDraft(null), []);
 
   // The create button and `n` make what the view shows: a task in Tasks.
@@ -1293,11 +1305,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     const title = quickDraft.title.trim() || t("events.no_title");
     if (allDay) {
       setQuickDraft(null);
+      // Every day from the first to the last one picked (a drag in the month view).
+      const days = Math.max(1, differenceInCalendarDays(end, start) + 1);
       await handleSaveEvent({
         uid: generateUUID(),
         title,
         start: format(start, "yyyy-MM-dd'T'00:00:00"),
-        duration: "P1D",
+        duration: `P${days}D`,
         timeZone: null,
         showWithoutTime: true,
         calendarIds: { [calendarId]: true },
@@ -1985,7 +1999,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
               onReplyEvent={handleReplyEvent}
-              onCreateAllDay={handleGridCreateAllDay}
+              onCreateAllDay={canCreateEvents ? handleGridCreateAllDay : undefined}
+              onCreateRange={canCreateEvents ? handleGridCreateDays : undefined}
               firstDayOfWeek={firstDayOfWeek}
               isMobile={isMobile}
               pendingPreview={gridPreview}

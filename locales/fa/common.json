@@ -5279,6 +5279,11 @@
     "cancelled": "{name} «{title}» را لغو کرد",
     "untitled": "رویداد بدون عنوان"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} تا {end} انتخاب شد.",
+    "selected_day": "{day} انتخاب شد.",
+    "enter_hint": "برای ساختن رویداد، Enter را بزنید."
+  },
   "company_calendars": {
     "section": "سازمان"
   },

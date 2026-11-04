@@ -5905,6 +5905,11 @@
     "cancelled": "{name} 取消了“{title}”",
     "untitled": "无标题活动"
   },
+  "calendar_month_select": {
+    "selected_range": "已选择 {start} 至 {end}。",
+    "selected_day": "已选择 {day}。",
+    "enter_hint": "按 Enter 键创建活动。"
+  },
   "company_calendars": {
     "section": "组织"
   },

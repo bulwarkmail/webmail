@@ -5279,6 +5279,11 @@
     "cancelled": "{name} har aflyst \"{title}\"",
     "untitled": "Unavngivet begivenhed"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} til {end} valgt.",
+    "selected_day": "{day} valgt.",
+    "enter_hint": "Tryk på Enter for at oprette en begivenhed."
+  },
   "company_calendars": {
     "section": "Organisation"
   },

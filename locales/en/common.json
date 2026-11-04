@@ -5279,6 +5279,11 @@
     "cancelled": "{name} cancelled \"{title}\"",
     "untitled": "Untitled event"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} to {end} selected.",
+    "selected_day": "{day} selected.",
+    "enter_hint": "Press Enter to create an event."
+  },
   "company_calendars": {
     "section": "Organisation"
   },

@@ -5905,6 +5905,11 @@
     "cancelled": "{name} atcēla “{title}”",
     "untitled": "Notikums bez nosaukuma"
   },
+  "calendar_month_select": {
+    "selected_range": "Atlasīts no {start} līdz {end}.",
+    "selected_day": "Atlasīts {day}.",
+    "enter_hint": "Nospiediet Enter, lai izveidotu notikumu."
+  },
   "company_calendars": {
     "section": "Organizācija"
   },

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Clock, X } from "@/components/icons";
@@ -58,8 +58,9 @@ export function computePosition(anchor: DOMRect | null, height: number, width = 
 }
 
 /**
- * Compact editor that opens next to an empty slot clicked in the week or
- * day view: a title, the time that was picked, the calendar, and a way into
+ * Compact editor that opens next to an empty slot clicked or dragged over in
+ * the week or day view, or days picked in the month view: a title, the time
+ * that was picked, the calendar, and a way into
  * the full editor. Enter saves, Escape or a click elsewhere discards.
  */
 export function QuickCreatePopover({
@@ -156,7 +157,11 @@ export function QuickCreatePopover({
   }, [canSave, onSave]);
 
   const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
-  const dateLabel = intlFormatter.dateTime(draft.start, { weekday: "long", month: "long", day: "numeric" });
+  const dayFormat = { weekday: "long", month: "long", day: "numeric" } as const;
+  // Days picked by a drag in the month view: the first and the last.
+  const dateLabel = draft.allDay && !isSameDay(draft.start, draft.end)
+    ? `${intlFormatter.dateTime(draft.start, dayFormat)} – ${intlFormatter.dateTime(draft.end, dayFormat)}`
+    : intlFormatter.dateTime(draft.start, dayFormat);
   const timeLabel = draft.allDay ? t("events.all_day") : `${format(draft.start, timeFmt)} – ${format(draft.end, timeFmt)}`;
 
   return createPortal(

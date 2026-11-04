@@ -5279,6 +5279,11 @@
     "cancelled": "{name} har avlyst «{title}»",
     "untitled": "Hendelse uten tittel"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} til {end} er valgt.",
+    "selected_day": "{day} er valgt.",
+    "enter_hint": "Trykk Enter for å opprette en hendelse."
+  },
   "company_calendars": {
     "section": "Organisasjon"
   },

@@ -5279,6 +5279,11 @@
     "cancelled": "{name} zrušil(a) „{title}“",
     "untitled": "Udalosť bez názvu"
   },
+  "calendar_month_select": {
+    "selected_range": "Vybraté {start} až {end}.",
+    "selected_day": "Vybraté {day}.",
+    "enter_hint": "Stlačením klávesu Enter vytvoríte udalosť."
+  },
   "company_calendars": {
     "section": "Organizácia"
   },
