@@ -118,6 +118,11 @@ export const LITE_API_STRING_ALLOWLIST = [
   // the fragment.
   "/api/auth/handoff/create",
   "/api/auth/handoff/confirm",
+  // The desktop app's sign-in on an instance: no bridge in a browser, and IS_LITE guards.
+  "/api/auth/desktop-handoff/check",
+  "/api/auth/desktop-handoff/discard",
+  "/api/auth/desktop-handoff/park",
+  "/api/auth/desktop-handoff/redeem",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",

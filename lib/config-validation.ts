@@ -56,6 +56,7 @@ const configValidators = {
   loginShowSubtitle: isBoolean,
   loginShowTotp: isBoolean,
   loginShowTokenLogin: isBoolean,
+  desktopBrowserSignIn: isBoolean,
   loginShowRememberMe: isBoolean,
   loginShowVersion: isBoolean,
   demoMode: isBoolean,

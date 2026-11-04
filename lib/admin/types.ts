@@ -300,6 +300,9 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // password. For JMAP servers that hand out API tokens, such as Fastmail,
   // whose API accepts no passwords at all.
   loginShowTokenLogin: { envVar: 'LOGIN_SHOW_TOKEN_LOGIN', type: 'boolean', defaultValue: false },
+  // The desktop app's "Sign in with your browser". Turn off on a terminal server: another
+  // user there can bind a loopback port and send a link that asks for someone's sign-in.
+  desktopBrowserSignIn: { envVar: 'DESKTOP_BROWSER_SIGN_IN', type: 'boolean', defaultValue: true },
   // Show the "Remember me" box on the login form. Off (the default) remembers
   // every sign-in, as long as a SESSION_SECRET makes that possible.
   loginShowRememberMe: { envVar: 'LOGIN_SHOW_REMEMBER_ME', type: 'boolean', defaultValue: false },
