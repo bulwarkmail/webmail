@@ -24,12 +24,12 @@ const env = {
   LOGIN_LOGO_LIGHT_URL: '/branding/memail/mark.svg',
   LOGIN_LOGO_DARK_URL: '/branding/memail/mark-dark.svg',
   LOGIN_COMPANY_NAME: 'Memail by Saivra',
-  LOGIN_WEBSITE_URL: 'https://github.com/Saivra/memail',
+  LOGIN_WEBSITE_URL: 'https://github.com/Saivra/memail-webmail',
   FAVICON_URL: '/branding/memail/mark.svg',
   PWA_ICON_URL: '/branding/memail/mark.svg',
   PWA_THEME_COLOR: '#263b32',
   PWA_BACKGROUND_COLOR: '#ffffff',
-  SOURCE_CODE_URL: `https://github.com/Saivra/memail/tree/${commit}`,
+  SOURCE_CODE_URL: `https://github.com/Saivra/memail-webmail/tree/${commit}`,
   // Synthetic mailbox only. Never reuse a production session secret here.
   SESSION_SECRET: randomBytes(32).toString('hex'),
 };

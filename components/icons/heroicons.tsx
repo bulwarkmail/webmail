@@ -1,5 +1,5 @@
 // Application glyphs use Heroicons with legacy names and SVG props preserved.
-import {forwardRef} from 'react';
+import {forwardRef, memo} from 'react';
 import type {IconProps, TablerIcon} from '@tabler/icons-react';
 import {default as AdjustmentsHorizontalIcon} from '@heroicons/react/24/outline/AdjustmentsHorizontalIcon';
 import {default as ArchiveBoxIcon} from '@heroicons/react/24/outline/ArchiveBoxIcon';
@@ -196,7 +196,9 @@ function glyph(Icon: typeof InboxIcon, name: string, filled = false): TablerIcon
       data-memail-glyph="" data-memail-icon-set="heroicons" data-memail-icon={name} {...props}/>;
   });
   Component.displayName = `Memail${name}`;
-  return Component;
+  // Glyph props are usually stable across mailbox updates. Avoid rendering
+  // both the compatibility wrapper and vendor SVG again for unchanged props.
+  return memo(Component);
 }
 export const Accessibility = /* @__PURE__ */ glyph(UserCircleIcon, "Accessibility");
 export const Activity = /* @__PURE__ */ glyph(ChartBarIcon, "Activity");

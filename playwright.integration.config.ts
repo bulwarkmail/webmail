@@ -23,6 +23,9 @@ const VIDEO: VideoMode = VIDEO_MODES.includes(process.env.IT_VIDEO as VideoMode)
 
 export default defineConfig({
   testDir: './integration/tests',
+  // The enterprise rig uses separate ent-* accounts and admin credentials.
+  // Do not collect it in the disposable alice/bob/carol Docker stack.
+  testIgnore: process.env.IT_ENT_SUITE === '1' ? [] : ['**/22-ent-*.spec.ts'],
   // next dev compiles routes lazily and each test logs in fresh, so give
   // individual tests and their polling assertions generous headroom.
   timeout: 90_000,

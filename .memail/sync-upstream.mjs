@@ -27,7 +27,7 @@ const top = git('rev-parse', '--show-toplevel');
 process.chdir(top);
 if (git('status', '--porcelain')) throw new Error('Working tree must be clean, including untracked files. Commit or preserve your changes first.');
 const expected = {
-  origin: ['https://github.com/Saivra/memail.git', 'https://github.com/Saivra/memail', 'git@github.com:Saivra/memail.git'],
+  origin: ['https://github.com/Saivra/memail-webmail.git', 'https://github.com/Saivra/memail-webmail', 'git@github.com:Saivra/memail-webmail.git'],
   upstream: ['https://github.com/bulwarkmail/webmail.git', 'https://github.com/bulwarkmail/webmail', 'git@github.com:bulwarkmail/webmail.git'],
 };
 for (const [remote, urls] of Object.entries(expected)) {
@@ -59,7 +59,7 @@ if (publish) {
   try {
     const body = join(directory, 'pr.md');
     writeFileSync(body, `Integrates Bulwark ref \`${ref}\` at \`${sha}\`, preserving upstream ancestry.\n\nReview the upstream changes and complete the checks in .memail/UPSTREAM.md before merging. Application validation has not been run by this helper.\n\nMerge with a merge commit; do not squash or rebase this update.\n`);
-    console.log(run('gh', ['pr', 'create', '--repo', 'Saivra/memail', '--base', 'main', '--head', branch, '--draft', '--title', `chore(upstream): merge Bulwark ${ref}`, '--body-file', body]));
+    console.log(run('gh', ['pr', 'create', '--repo', 'Saivra/memail-webmail', '--base', 'main', '--head', branch, '--draft', '--title', `chore(upstream): merge Bulwark ${ref}`, '--body-file', body]));
   } finally {
     const body = join(directory, 'pr.md');
     if (existsSync(body)) unlinkSync(body);

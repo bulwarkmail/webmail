@@ -37,7 +37,7 @@ test('sync helper preserves both histories and refuses unsafe starting states', 
     git(checkout, 'remote', 'add', 'upstream', upstream);
     const source = readFileSync(fileURLToPath(new URL('./sync-upstream.mjs', import.meta.url)), 'utf8');
     const helper = join(directory, 'helper.mjs');
-    writeFileSync(helper, source.replace("'https://github.com/Saivra/memail.git'", JSON.stringify(origin)).replace("'https://github.com/bulwarkmail/webmail.git'", JSON.stringify(upstream)));
+    writeFileSync(helper, source.replace("'https://github.com/Saivra/memail-webmail.git'", JSON.stringify(origin)).replace("'https://github.com/bulwarkmail/webmail.git'", JSON.stringify(upstream)));
     const invoke = (...args) => spawnSync(process.execPath, [helper, ...args], {cwd: checkout, encoding:'utf8'});
     assert.match(invoke().stdout, /No update needed/);
     writeFileSync(join(checkout, 'dirty.txt'), 'keep me');

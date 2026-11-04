@@ -161,6 +161,13 @@ because the UI behaviour is currently incomplete. Worth a look:
 
 ## Environment knobs
 
+The `22-ent-*` specs target a separately provisioned enterprise rig, not this
+disposable Docker stack. They are excluded by default. On that rig, opt in
+with `IT_ENT_SUITE=1` when invoking Playwright directly, alongside its required
+`IT_ENT_PASSWORD`, `IT_ADMIN_PASSWORD`, `IT_ACCOUNT_USERS` and endpoint settings.
+The suite still refuses to run without those credentials; the normal CI job
+does not claim enterprise acceptance.
+
 | Var             | Default            | Effect                                                     |
 | --------------- | ------------------ | ---------------------------------------------------------- |
 | `IT_NO_DOCKER`  | unset              | `1` = don't manage docker in global-setup (stack already up) |
