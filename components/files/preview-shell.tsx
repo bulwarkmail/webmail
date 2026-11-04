@@ -69,6 +69,11 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // A dialog opened from the preview (Import to a mail folder…) sits on top
+        // and closes first; the preview stays.
+        const target = e.target instanceof Element ? e.target : null;
+        const above = target?.closest('[role="dialog"], [role="alertdialog"]');
+        if (above && shellRef.current && !shellRef.current.contains(above)) return;
         e.stopPropagation();
         onClose();
         return;
