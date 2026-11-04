@@ -136,7 +136,7 @@ import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
+import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog } from "@/components/email/move-to-dialog";
 import { ResizeHandle } from "@/components/layout/resize-handle";
@@ -4812,6 +4812,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       id: 'mark-read', label: t('context_menu.mark_read'), icon: MailOpen, shortcut: 'Shift + I',
       when: () => !!paletteEmail && !paletteEmail.keywords?.$seen,
       run: () => { if (client && paletteEmail) void markReadWithUndo(paletteEmail, true).catch(toastUpdateFailure); },
+    },
+    {
+      id: 'star', label: paletteEmail?.keywords?.$flagged ? t('context_menu.unstar') : t('context_menu.star'), icon: Star, shortcut: 's',
+      when: hasPaletteEmail, run: () => void handleToggleStar(),
     },
     {
       id: 'spam', label: conversationInJunk ? t('context_menu.not_spam') : t('context_menu.mark_as_spam'),
