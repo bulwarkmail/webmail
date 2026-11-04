@@ -28,7 +28,7 @@ import { FilesSidebar, type CreateKind } from "@/components/files/files-sidebar"
 import { FilesHeader, type Crumb, type SortDir, type SortKey, type ViewMode } from "@/components/files/files-header";
 import { FileGridView, FileListView, type FileItemHandlers } from "@/components/files/file-views";
 import { FileDetailsPanel } from "@/components/files/file-details-panel";
-import { INTERNAL_DRAG_TYPE, anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { INTERNAL_DRAG_TYPE, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
@@ -880,6 +880,7 @@ export function FileBrowser({
 
   // ---- Context menu ----------------------------------------------------------
   const openMenu = menu.openContextMenu;
+  const openMenuFrom = menu.openContextMenuFrom;
   const openItemMenu = useCallback((e: React.MouseEvent, resource: FileResource) => {
     // Acting on an item outside the selection makes it the selection, like a
     // desktop file manager.
@@ -891,9 +892,9 @@ export function FileBrowser({
     setKeyboardNav(false);
     const target = e.currentTarget as HTMLElement | null;
     // The "..." button opens the menu under itself; a right-click at the pointer.
-    if (e.type === "click" && target) openMenu(anchorEvent(target, "end"), { kind: "item", resource });
+    if (e.type === "click" && target) openMenuFrom(target, { kind: "item", resource }, "end");
     else openMenu(e, { kind: "item", resource });
-  }, [selectedResources, onSetSelection, openMenu]);
+  }, [selectedResources, onSetSelection, openMenu, openMenuFrom]);
 
   const closeMenu = menu.closeContextMenu;
   const menuData = menu.contextMenu.data;
@@ -1417,7 +1418,7 @@ export function FileBrowser({
               size="icon-lg"
               className="absolute bottom-4 end-4 z-20 rounded-full shadow-lg"
               aria-label={t("new")}
-              onClick={(e) => menu.openContextMenu(anchorEvent(e.currentTarget, "end"), { kind: "new" })}
+              onClick={(e) => menu.openContextMenuFrom(e.currentTarget, { kind: "new" }, "end")}
             >
               <Plus className="w-5 h-5" />
             </Button>

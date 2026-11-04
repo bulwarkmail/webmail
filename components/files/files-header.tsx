@@ -15,7 +15,7 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
 import { cn } from "@/lib/utils";
-import { anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import type { FileResourceView } from "@/lib/plugin-types";
 
@@ -303,7 +303,7 @@ export function FilesHeader({
                 className="px-1.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
                 aria-label={t("show_path")}
                 aria-haspopup="menu"
-                onClick={(e) => overflowMenu.openContextMenu(anchorEvent(e.currentTarget), hidden)}
+                onClick={(e) => overflowMenu.openContextMenuFrom(e.currentTarget, hidden)}
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -347,7 +347,7 @@ export function FilesHeader({
             onMouseDown={(e) => { if (sortMenu.contextMenu.isOpen) e.stopPropagation(); }}
             onClick={(e) => {
               if (sortMenu.contextMenu.isOpen) sortMenu.closeContextMenu();
-              else sortMenu.openContextMenu(anchorEvent(e.currentTarget, "end"), null);
+              else sortMenu.openContextMenuFrom(e.currentTarget, null, "end");
             }}
           >
             <ArrowUpDown />
@@ -384,7 +384,7 @@ export function FilesHeader({
             below="md"
             menuItems={(close) => (
               <>
-                {narrow && <ContextMenuItem icon={ArrowUpDown} label={t("sort_by")} onClick={() => { close(); if (toolsRef.current) sortMenu.openContextMenu(anchorEvent(toolsRef.current, "end"), null); }} />}
+                {narrow && <ContextMenuItem icon={ArrowUpDown} label={t("sort_by")} onClick={() => { close(); if (toolsRef.current) sortMenu.openContextMenuFrom(toolsRef.current, null, "end"); }} />}
                 {narrow && (viewMode === "list"
                   ? <ContextMenuItem icon={LayoutGrid} label={t("grid_view")} onClick={() => { close(); onViewModeChange("grid"); }} />
                   : <ContextMenuItem icon={LayoutList} label={t("list_view")} onClick={() => { close(); onViewModeChange("list"); }} />)}
