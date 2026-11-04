@@ -40,6 +40,7 @@ import { EmailContextMenu } from "./email-context-menu";
 import { rememberedTrashOrigin } from "@/lib/trash-origin";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
 import { useMessageActionShortcut } from "./message-action-shortcuts";
+import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
 import { turnOffLinks } from "@/lib/phishing-links";
 import { usePhishingMarked } from "@/hooks/use-phishing-report";
@@ -819,7 +820,7 @@ function conversationFullDate(date: Date | string, timeFormat: '12h' | '24h'): s
 export function conversationOpenPlan(conversation: Email[], openId: string): { expanded: string[]; foldOpen: boolean; newestId: string | null } {
   const expanded = conversation.filter((e) => e.id !== openId && !e.keywords?.$seen).map((e) => e.id);
   const open = conversation.find((e) => e.id === openId);
-  const candidates = conversation.filter((e) => !e.keywords?.$draft && !e.isScheduled);
+  const candidates = conversation.filter((e) => !e.keywords?.$draft && !e.isScheduled && !e.sentEcho);
   const newest = candidates[candidates.length - 1];
   if (!open || !newest || newest.id === openId) return { expanded, foldOpen: false, newestId: null };
   if (!expanded.includes(newest.id)) expanded.push(newest.id);
@@ -1646,6 +1647,17 @@ export function EmailViewer({
     });
     return () => cancelAnimationFrame(frame);
   }, [mvNewestToShow]);
+  // A reply just sent joins the end of the conversation, folded like the
+  // others: bring it into view so it's seen to be there (mail-p2-1).
+  const lastEchoId = mvConversation?.filter((e) => e.sentEcho).at(-1)?.id ?? null;
+  useEffect(() => {
+    if (!lastEchoId) return;
+    const frame = requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-mv-conversation-card][data-email-id="${CSS.escape(lastEchoId)}"]`)
+        ?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [lastEchoId]);
   const toggleMvExpanded = useCallback((target: Email) => {
     emitThreadExpand(target.threadId, [target], !mvExpandedIdsRef.current.has(target.id));
     setMvExpandedIds((prev) => {
@@ -2500,6 +2512,23 @@ export function EmailViewer({
     setEmbeddedEmailText(null);
     setEmbeddedEmailAttachments(NO_POSTAL_ATTACHMENTS);
   }, [email?.id, externalContentPolicy]);
+
+  // Undo send on a quick reply puts its text back here, where it was
+  // written (mail-p2-8). After the reset above, which runs on the same open.
+  const quickReplyRestoreWaiting = useQuickReplyRestoreStore((s) => !!email && s.pending?.emailId === email.id);
+  useEffect(() => {
+    if (!quickReplyRestoreWaiting || !email) return;
+    const text = useQuickReplyRestoreStore.getState().take(email.id);
+    if (text === null) return;
+    setQuickReplyText(text);
+    setIsQuickReplyFocused(true);
+    requestAnimationFrame(() => {
+      const box = quickReplyRef.current;
+      if (!box) return;
+      box.focus();
+      box.setSelectionRange(box.value.length, box.value.length);
+    });
+  }, [quickReplyRestoreWaiting, email]);
 
   // Crypto-plugin body takeover (S/MIME, PGP, …). A privileged crypto plugin
   // can fetch the raw message via api.jmap.fetchBlob, decrypt/verify it, and

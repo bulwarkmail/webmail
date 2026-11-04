@@ -385,7 +385,10 @@ interface EmailComposerProps {
     labelHeaders?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
-  }) => void | false | Promise<void | false>;
+  },
+  /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
+  state?: ComposerDraftData,
+  ) => void | false | Promise<void | false>;
   /**
    * onSend failed. A host that closes the composer as soon as onSend starts
    * gets the message back here, to open it again: it must never vanish.
@@ -4380,7 +4383,7 @@ export function EmailComposer({
           labelHeaders: labelled.labelHeaders,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
-        });
+        }, handedToHost);
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
 

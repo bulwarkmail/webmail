@@ -63,6 +63,22 @@ describe('quick reply', () => {
   });
 });
 
+// mail-p2-8: Undo send on a quick reply brings its text back into this box.
+describe('quick reply after Undo send', () => {
+  it('takes the undone text back into the box of the message it answered', async () => {
+    const { useQuickReplyRestoreStore } = await import('@/stores/quick-reply-restore-store');
+    useQuickReplyRestoreStore.setState({ pending: null });
+    render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+    const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
+    act(() => { useQuickReplyRestoreStore.getState().restore('other', 'Not for this one'); });
+    expect(box.value).toBe('');
+    act(() => { useQuickReplyRestoreStore.getState().restore('m1', 'My answer'); });
+    await waitFor(() => expect(box.value).toBe('My answer'));
+    expect(useQuickReplyRestoreStore.getState().pending).toBeNull();
+  });
+});
+
 describe('automatic sign-out while the external recipient question is open', () => {
   it('answers Back and keeps the typed reply as a draft, without asking again', async () => {
     const { useExternalRecipientConfirmStore } = await import('@/stores/external-recipient-confirm-store');

@@ -11,6 +11,18 @@ import { productName } from "@/lib/product-name";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
+import { addEcho, isUndoWindow, mergeEchoes, sentEcho, withoutHeldSend } from "@/lib/held-send";
+import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
+
+/** What waits with a send in its Undo window (mail-p2-8). */
+type HeldSendExtras = {
+  emailId?: string;
+  /** Marks the answered message; runs once the message really goes. */
+  answer?: () => Promise<void>;
+  origin?:
+    | { kind: 'quick-reply'; emailId: string; text: string }
+    | { kind: 'composer'; state: ComposerDraftData; sourceEmailId?: string };
+};
 
 // Neither the viewer (5k+ lines, postal-mime/dompurify) nor the composer (the
 // entire TipTap/ProseMirror stack) is needed to paint the mail list, and both
@@ -2627,7 +2639,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     headers?: Record<string, string>;
     labelHeaders?: Record<string, string>;
     composerId?: string;
-  }) => {
+  }, composerState?: ComposerDraftData) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
 
@@ -2707,13 +2719,29 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // This runs before the scheduled early-return: the undo-send delay is a
       // HOLDFOR submission, so `scheduled` is true for every delayed send and
       // the flag was never set. (#985)
-      if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
+      // In the Undo window the flag waits until the message really goes, and
+      // Undo brings the composer back as it was, where it was (mail-p2-8).
+      const answeredSource = answeredEmailSource;
+      const markAnswered = async () => {
+        if (!originalEmailId || !(effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) return;
         const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
         try {
-          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword, answeredEmailSource);
+          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword, answeredSource);
         } catch (e) {
           debug.error(`Failed to set ${keyword} keyword:`, e);
         }
+      };
+      const held = holdSend(result, {
+        answer: markAnswered,
+        origin: composerState ? { kind: 'composer', state: composerState, sourceEmailId: originalEmailId } : undefined,
+      });
+      if (!held) await markAnswered();
+      if (effectiveMode === 'reply' || effectiveMode === 'replyAll') {
+        const replied = composerSourceEmail?.id === originalEmailId ? composerSourceEmail : null;
+        echoSentReply(replied, {
+          emailId: result.emailId, to: data.to, cc: data.cc, subject: data.subject, text: data.body,
+          fromEmail: data.fromEmail, fromName: data.fromName,
+        });
       }
 
       const refreshRepliedThreadAfterSend = async (emailId: string | undefined) => {
@@ -3033,6 +3061,69 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     );
   };
 
+  // A send in its Undo window (mail-p2-8): what waits until it really goes
+  // (the answered flag), and where Undo puts it back. Keyed by submission.
+  const heldSendsRef = useRef(new Map<string, HeldSendExtras>());
+  const releaseHeldSend = (submissionId: string) => {
+    const held = heldSendsRef.current.get(submissionId);
+    if (!held) return;
+    heldSendsRef.current.delete(submissionId);
+    void held.answer?.();
+  };
+  /** True when the send waits in its Undo window; `extras` then wait with it. */
+  const holdSend = (result: SendEmailResult, extras: Omit<HeldSendExtras, 'emailId'>): boolean => {
+    if (!result.scheduled || !result.emailSubmissionId || !isUndoWindow(result.sendAt)) return false;
+    const submissionId = result.emailSubmissionId;
+    heldSendsRef.current.set(submissionId, { ...extras, emailId: result.emailId });
+    const remainingMs = Math.max(Date.parse(result.sendAt!) - Date.now(), 0);
+    setTimeout(() => releaseHeldSend(submissionId), remainingMs);
+    return true;
+  };
+  // Undo: the message goes back where it was written, as it was.
+  const restoreUndoneSend = async (
+    held: HeldSendExtras | undefined,
+    restored: Email | null | undefined,
+    pending: { submissionAccountId?: string },
+    undoLogin: string | undefined,
+    undoClient: NonNullable<typeof client>,
+  ): Promise<boolean> => {
+    const origin = held?.origin;
+    if (!origin || !restored) return false;
+    const openNow = useEmailStore.getState().selectedEmail;
+    const reopen = async (emailId: string): Promise<boolean> => {
+      if (openNow?.id === emailId) return true;
+      const listed = useEmailStore.getState().emails.find((e) => e.id === emailId);
+      if (!listed) return false;
+      return (await handleEmailSelect(listed)) === 'opened';
+    };
+    if (origin.kind === 'quick-reply') {
+      if (!(await reopen(origin.emailId))) return false;
+      // Back in the quick reply box, so the draft the server made of it goes.
+      try {
+        await undoClient.deleteEmail(restored.id, pending.submissionAccountId);
+      } catch (error) {
+        debug.error('Undid a quick reply, but removing its draft failed:', error);
+      }
+      useQuickReplyRestoreStore.getState().restore(origin.emailId, origin.text);
+      return true;
+    }
+    const state: ComposerDraftData = {
+      ...origin.state,
+      draftId: restored.id,
+      draftAccountId: pending.submissionAccountId,
+      draftLocalAccountId: undoLogin,
+    };
+    // A reply docks under its message again; with that message gone from
+    // view it opens in the pane, still as a reply.
+    if (origin.sourceEmailId && state.mode !== 'compose' && !(await reopen(origin.sourceEmailId))) selectEmail(null);
+    startFreshComposerSession();
+    setPendingDraft(state);
+    setComposerMode(state.mode);
+    setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
+    return true;
+  };
+
   useEffect(() => {
     if (!pendingUndoSend || !client) return;
     if (lastUndoToastSubmissionRef.current === pendingUndoSend.submissionId) return;
@@ -3084,6 +3175,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     pending.submissionAccountId,
                   );
                   clearPendingUndoSend();
+                  releaseHeldSend(pending.submissionId);
                   // The recipients are checked again for the release.
                   const refused = partlyRefusedWarning(result, tComposer);
                   if (refused) toast.warning(refused);
@@ -3121,10 +3213,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             }
             // The send is undone; opening the draft or refreshing the list
             // failing is no reason to say otherwise.
+            const held = heldSendsRef.current.get(pending.submissionId);
+            heldSendsRef.current.delete(pending.submissionId);
+            dropEcho(pending.emailId);
             try {
               // Never left the server: plugins don't hear about it.
               cancelAnnouncedSend(pending.submissionId);
-              if (restored && !pending.isSmime) {
+              if (!pending.isSmime && await restoreUndoneSend(held, restored, pending, undoLogin, undoClient)) {
+                // Back where it was written.
+              } else if (restored && !pending.isSmime) {
                 // Back in the Drafts of the account it was sent from, through
                 // the login that sent it.
                 await handleEditDraft(restored, { accountId: pending.submissionAccountId, localAccountId: undoLogin });
@@ -4644,13 +4741,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // account so the flag lands on shared/group-mailbox messages instead of
     // being dropped against the reaching account. (#281) Runs before the
     // scheduled early-return so a delayed (undo-send) reply is flagged too. (#985)
-    {
+    // In the Undo window it waits until the reply really goes (mail-p2-8).
+    const markAnswered = async () => {
       try {
         await useEmailStore.getState().markEmailKeyword(client, originalEmailId, '$answered', originalSource);
       } catch (e) {
         debug.error('Failed to set $answered keyword:', e);
       }
-    }
+    };
+    const held = holdSend(result, {
+      answer: markAnswered,
+      origin: { kind: 'quick-reply', emailId: originalEmailId, text: body },
+    });
+    if (!held) await markAnswered();
+    echoSentReply(selectedEmail, {
+      emailId: result.emailId, to: recipients, subject: labelled.subject, text: finalBody,
+      fromEmail: headerFromEmail, fromName: headerFromName,
+    });
 
     const refreshInlineRepliedThread = async () => {
       const emailState = useEmailStore.getState();
@@ -4778,6 +4885,43 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return () => { cancelled = true; ++mvConversationOpenSeqRef.current; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the open message, not on every list refresh
   }, [mvConversationThreadId, mvConversationRef?.id, mvBlobSource.client, mvBlobSource.accountId, client]);
+
+  // mail-p2-1: a reply that went out shows at the end of the open
+  // conversation at once, then the server's reading of the thread replaces
+  // it (a moment later, and again after a few seconds for a server that
+  // threads new mail late).
+  const confirmConversation = async (ref: Email) => {
+    if (!client || useEmailStore.getState().selectedEmail?.threadId !== ref.threadId) return;
+    mvConversationLoadRef.current = null;
+    const fresh = await loadMvConversation(ref, client);
+    if (!fresh || useEmailStore.getState().selectedEmail?.threadId !== ref.threadId) return;
+    setMvConversationResult((prev) => prev && prev.threadId === ref.threadId
+      ? { ...prev, emails: mergeEchoes(fresh, prev.emails) }
+      : prev);
+  };
+  const echoSentReply = (replied: Email | null | undefined, sent: {
+    emailId?: string; to: string[]; cc?: string[]; subject: string; text: string; fromEmail?: string; fromName?: string;
+  }) => {
+    if (!replied || !client || !readerConversationView) return;
+    const open = useEmailStore.getState().selectedEmail;
+    if (!open || open.threadId !== replied.threadId) return;
+    const echo = sentEcho({ ...sent, threadId: replied.threadId });
+    setMvConversationResult((prev) => {
+      if (prev && prev.threadId === replied.threadId) return { ...prev, emails: addEcho(prev.emails, echo) };
+      if (prev) return prev;
+      // A message alone so far: it becomes a conversation of two.
+      return { emails: [open, echo], source: resolveEmailBlobContext(open, client), threadId: replied.threadId };
+    });
+    for (const delay of [2000, 8000]) setTimeout(() => { void confirmConversation(open); }, delay);
+  };
+  const dropEcho = (emailId: string | undefined) => {
+    if (!emailId) return;
+    setMvConversationResult((prev) => {
+      if (!prev || !prev.emails.some((e) => e.id === emailId)) return prev;
+      const emails = prev.emails.filter((e) => e.id !== emailId);
+      return emails.length > 1 ? { ...prev, emails } : null;
+    });
+  };
 
   const patchMvConversation = (id: string, patch: (e: Email) => Email) =>
     setMvConversationResult(prev => prev ? {
@@ -4944,6 +5088,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           ? localizeMailboxName(mb.role, mb.name, (k) => t(`sidebar.mailboxes.${k}`))
           : "Inbox";
       })();
+  // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8).
+  const heldSendView = withoutHeldSend(mailboxes, scheduledTotal, pendingUndoSend);
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile;
   // Under Mountain View on desktop the composer floats over the list in a
@@ -5366,8 +5512,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
           setPendingDraft(data);
         }}
-        onSend={async (data) => {
-          const outcome = await handleEmailSend(data);
+        onSend={async (data, state) => {
+          const outcome = await handleEmailSend(data, state);
           setPendingDraft(null);
           setComposerPrefill(null);
           return outcome;
@@ -5550,10 +5696,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         >
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
-              mailboxes={mailboxes}
+              mailboxes={heldSendView.mailboxes}
               selectedMailbox={selectedMailbox}
               selectedKeyword={selectedKeyword}
-              scheduledTotal={scheduledTotal}
+              scheduledTotal={heldSendView.scheduledTotal}
               scheduledTotalByAccount={scheduledTotalByAccount}
               scheduledAccountScope={scheduledAccountScope}
               showScheduledMailbox={delayedSendSupported}
