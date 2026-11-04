@@ -191,6 +191,12 @@
   * {
     border-color: var(--color-border);
   }
+
+  /* A placeholder or value too long for a narrow field ends in "…" instead of
+     stopping mid-word ("Termine durchs"), so it's clear there's more. */
+  input {
+    text-overflow: ellipsis;
+  }
 }
 
 body {
