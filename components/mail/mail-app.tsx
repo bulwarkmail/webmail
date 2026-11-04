@@ -145,7 +145,7 @@ import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-ident
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
-import { MoveToDialog, MoveToDialogHost } from "@/components/email/move-to-dialog";
+import { MoveToDialog, MoveToDialogHost, useMoveDialogStore } from "@/components/email/move-to-dialog";
 import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
@@ -1366,7 +1366,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The desktop app's menu bar: the same handlers as the keys, and what's enabled
   // from what's on screen (lib/desktop/commands.ts).
   const desktopTarget = !showComposer && (!!selectedEmail || selectedEmailKeys.size > 0);
-  const desktopSingle = !showComposer && !!selectedEmail;
+  // With several selected, a menu line acts on all of them or isn't offered: Reply to one
+  // of seven, or Move for the open one only, would act on mail nobody picked.
+  const desktopMulti = selectedEmailKeys.size > 1;
+  const desktopSingle = !showComposer && !!selectedEmail && !desktopMulti;
+  const tListExtra = useTranslations('mail_list_extra');
+  /** Message > Move to… on the selection, as the selection bar's Move does: one toast with the count. */
+  const moveSelectionTo = async (mailboxId: string) => {
+    if (!client) return;
+    const count = selectedEmailKeys.size;
+    const restore = restoreBatchesForSelection(client);
+    const receipts: CrossAccountMoveReceipt[] = [];
+    const destination = mailboxes.find((m) => m.id === mailboxId);
+    await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
+      success: destination
+        ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
+        : tNotifications('emails_moved', { count }),
+      error: tNotifications('move_failed'),
+      undo: undoMoveAction(client, restore, undo, receipts),
+    });
+  };
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
   // A shared folder you may only read from: nothing can leave it.
@@ -1384,7 +1403,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': () => void keyboardHandlers.onMarkAsRead?.(),
     'message.markUnread': () => void keyboardHandlers.onMarkAsUnread?.(),
     'message.star': () => void keyboardHandlers.onToggleStar?.(),
-    'message.move': () => { if (selectedEmail) setMoveDialogEmail(selectedEmail); },
+    'message.move': () => {
+      if (shortcutsTargetSelection) {
+        const state = useEmailStore.getState();
+        const picked = resolveSelectedEmails({ emails: state.emails, threadEmailsCache: state.threadEmailsCache, selectedEmailKeys });
+        if (picked.length > 0) useMoveDialogStore.getState().open({ emails: picked, onMove: (mailboxId) => void moveSelectionTo(mailboxId) });
+      } else if (selectedEmail) {
+        setMoveDialogEmail(selectedEmail);
+      }
+    },
     'message.archive': keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
     'message.spam': () => void keyboardHandlers.onToggleSpam?.(),
     'message.delete': () => void keyboardHandlers.onDelete?.(),
@@ -1408,7 +1435,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
     'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
     'message.star': desktopSingle,
-    'message.move': desktopSingle && desktopMayRemove,
+    'message.move': desktopTarget && desktopMayRemove,
     'message.archive': desktopTarget && archiveActionEnabled && desktopMayRemove,
     'message.spam': desktopTarget && desktopMayRemove,
     'message.delete': desktopTarget && desktopMayRemove,
