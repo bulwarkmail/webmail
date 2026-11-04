@@ -3202,10 +3202,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (restored === undefined) return;
     // The store closed it in the reader; on a phone the list comes back.
     if (wasOpen && isMobile) handleMobileBack();
-    toast.success(
-      tViewer('send_cancelled'),
-      t('notifications.moved_to_mailbox', { mailbox: t('sidebar.mailboxes.drafts') }),
-    );
+    // Where it went, with Open, as Gmail's "Send cancelled" (compose-p3-10).
+    toast.success(t('notifications.moved_to_mailbox', { mailbox: t('sidebar.mailboxes.drafts') }), {
+      message: tViewer('send_cancelled'),
+      action: restored ? {
+        label: t('offlineDrafts.open'),
+        onClick: () => {
+          void handleEditDraft(restored, {
+            accountId: email.scheduledAccountId,
+            localAccountId: email.sourceClientAccountId ?? activeAccountId ?? undefined,
+          }).catch(reportDraftOpenFailure);
+        },
+      } : undefined,
+    });
   };
 
   // A send in its Undo window (mail-p2-8): what waits until it really goes
