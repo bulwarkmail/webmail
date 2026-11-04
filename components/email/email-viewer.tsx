@@ -3527,8 +3527,9 @@ export function EmailViewer({
   // Toasts sit above the quick reply box, as above a composer's footer
   // (compose-p2-17): its height for toast.tsx, as it grows when focused.
   useEffect(() => {
+    // The reply draft's card takes the box's place, and its ref.
     const box = quickReplyBoxRef.current;
-    if (!showQuickReply || !box || typeof ResizeObserver === 'undefined') return;
+    if (!(showQuickReply || showReplyDraft) || !box || typeof ResizeObserver === 'undefined') return;
     const root = document.documentElement;
     const update = () => root.style.setProperty('--quick-reply-height', `${box.offsetHeight}px`);
     update();
@@ -3538,7 +3539,7 @@ export function EmailViewer({
       observer.disconnect();
       root.style.removeProperty('--quick-reply-height');
     };
-  }, [showQuickReply]);
+  }, [showQuickReply, showReplyDraft]);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
   // Read aloud (browser speech): the body as shown, HTML frame or plain text.
@@ -6215,7 +6216,7 @@ ${printWatermark ? printWatermark.html : ''}
 
           {/* The reply already started on this message, as Gmail shows it. */}
           {showReplyDraft && replyDraft && (
-            <div data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+            <div ref={quickReplyBoxRef} data-quick-reply-box="" data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive shrink-0">
                   <File className="w-4 h-4" />

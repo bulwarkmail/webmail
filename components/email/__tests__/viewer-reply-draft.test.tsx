@@ -68,6 +68,12 @@ describe('a reply draft under its message', () => {
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 
+  // compose-p2-17: toasts lift over it as over the quick reply box.
+  it('counts as the quick reply box for the toasts', async () => {
+    await renderViewer({ preview: 'my answer', onEdit: vi.fn(), onDiscard: vi.fn() });
+    expect(screen.getByTestId('reply-draft')).toHaveAttribute('data-quick-reply-box');
+  });
+
   it('keeps the quick reply box when there is none', async () => {
     await renderViewer(null);
     expect(screen.queryByTestId('reply-draft')).toBeNull();
