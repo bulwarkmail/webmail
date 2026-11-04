@@ -119,7 +119,12 @@
     "sounds_link_app": "Zvuky upozornení a počet neprečítaných na ikone na paneli úloh nastavíte na stránke Upozornenia.",
     "writing_language_app": "Jazyk, v ktorom zvyčajne píšete. Používa ho korektúra aj kontrola pravopisu.",
     "badge_all_app": "Číslo na ikone na paneli úloh a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov.",
-    "badge_all_browser": "Číslo na karte a na ikone aplikácie sčítava doručenú poštu všetkých prihlásených účtov."
+    "badge_all_browser": "Číslo na karte a na ikone aplikácie sčítava doručenú poštu všetkých prihlásených účtov.",
+    "dnd_title": "Nerušiť",
+    "pause_label": "Pozastaviť upozornenia",
+    "pause_description": "Bez zvukov, vyskakovacích okien a hlasových hlásení o nových e-mailoch, kým to znova nevypnete.",
+    "dnd_link_app": "Upozornenia pozastavíte a čas pokoja nastavíte na stránke Upozornenia.",
+    "dnd_link_browser": "Upozornenia pozastavíte na stránke Upozornenia."
   },
   "sidebar": {
     "unified_mailbox": "Zjednotená schránka",

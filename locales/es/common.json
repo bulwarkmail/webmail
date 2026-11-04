@@ -119,7 +119,12 @@
     "sounds_link_app": "Los sonidos de notificación y el número de no leídos en el icono de la barra de tareas se ajustan en la página Notificaciones.",
     "writing_language_app": "El idioma en el que sueles escribir. La revisión y el corrector ortográfico lo usan.",
     "badge_all_app": "El número del icono de la barra de tareas y de la bandeja del sistema suma las bandejas de entrada de todas las cuentas con sesión iniciada.",
-    "badge_all_browser": "El número de la pestaña y del icono de la aplicación suma las bandejas de entrada de todas las cuentas con sesión iniciada."
+    "badge_all_browser": "El número de la pestaña y del icono de la aplicación suma las bandejas de entrada de todas las cuentas con sesión iniciada.",
+    "dnd_title": "No molestar",
+    "pause_label": "Pausar notificaciones",
+    "pause_description": "Sin sonidos, ventanas emergentes ni anuncios por voz para el correo nuevo hasta que lo vuelvas a desactivar.",
+    "dnd_link_app": "Pausa las notificaciones y define las horas de silencio en la página Notificaciones.",
+    "dnd_link_browser": "Pausa las notificaciones en la página Notificaciones."
   },
   "sidebar": {
     "close": "Cerrar",

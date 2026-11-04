@@ -119,7 +119,12 @@
     "sounds_link_app": "Paziņojumu skaņas un nelasīto skaitu uzdevumjoslas ikonā iestatāt lapā Paziņojumi.",
     "writing_language_app": "Valoda, kurā parasti rakstāt. To izmanto korektūra un pareizrakstības pārbaude.",
     "badge_all_app": "Skaitlis uzdevumjoslas ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes.",
-    "badge_all_browser": "Skaitlis cilnē un lietotnes ikonā saskaita visu pierakstīto kontu iesūtnes."
+    "badge_all_browser": "Skaitlis cilnē un lietotnes ikonā saskaita visu pierakstīto kontu iesūtnes.",
+    "dnd_title": "Netraucēt",
+    "pause_label": "Apturēt paziņojumus",
+    "pause_description": "Nav skaņu, uznirstošo logu vai balss paziņojumu par jaunu pastu, līdz to atkal izslēdzat.",
+    "dnd_link_app": "Paziņojumus apturat un klusuma stundas iestatāt lapā Paziņojumi.",
+    "dnd_link_browser": "Paziņojumus apturat lapā Paziņojumi."
   },
   "sidebar": {
     "close": "Aizvērt",

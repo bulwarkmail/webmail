@@ -35,7 +35,8 @@ import { FONT_SIZES as COMPOSE_FONT_SIZES } from '@/components/email/font-size';
 type SettingKey = Parameters<ReturnType<typeof useSettingsStore.getState>['updateSetting']>[0];
 
 /** What Reset gives back: the settings only this page has. */
-const RESET_KEYS: SettingKey[] = [...ACCESSIBILITY_KEYS, 'fontSize', 'plainTextFont', 'sendConfirmation'];
+// Do not disturb lives on Notifications now (settings-p3-6): this page's Reset leaves it.
+const RESET_KEYS: SettingKey[] = [...ACCESSIBILITY_KEYS.filter((key) => key !== 'doNotDisturb'), 'fontSize', 'plainTextFont', 'sendConfirmation'];
 
 /** Opens another settings page (and section) the way deep links do. */
 function goToSettings(tab: string, section?: string) {
@@ -496,8 +497,9 @@ export function AccessibilitySettings() {
             ]}
           />
         </SettingItem>
-        <SettingItem label={t('do_not_disturb.label')} description={t('do_not_disturb.description')}>
-          <ToggleSwitch checked={settings.doNotDisturb} onChange={(checked) => set('doNotDisturb', checked)} />
+        {/* The switch is on Notifications, next to quiet hours (settings-p3-6). */}
+        <SettingItem label={tWords('dnd_title')} description={wordingFor({ app: tWords('dnd_link_app'), browser: tWords('dnd_link_browser') })}>
+          <LinkButton label={tRoot('settings.tabs.notifications')} onClick={() => goToSettings('notifications', 'pause')} />
         </SettingItem>
         <SettingItem label={tLinks('sounds.label')} description={wordingFor({ app: tWords('sounds_link_app'), browser: tLinks('sounds.description') })}>
           <LinkButton label={tRoot('settings.tabs.notifications')} onClick={() => goToSettings('notifications', 'sound')} />

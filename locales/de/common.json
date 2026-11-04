@@ -119,7 +119,12 @@
     "sounds_link_app": "Benachrichtigungstöne und die Zahl ungelesener E-Mails am Taskleistensymbol stellen Sie auf der Seite Benachrichtigungen ein.",
     "writing_language_app": "Die Sprache, in der Sie meistens schreiben. Korrekturlesen und Rechtschreibprüfung verwenden sie.",
     "badge_all_app": "Die Zahl am Taskleistensymbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen.",
-    "badge_all_browser": "Die Zahl am Tab und am App-Symbol zählt die Posteingänge aller angemeldeten Konten zusammen."
+    "badge_all_browser": "Die Zahl am Tab und am App-Symbol zählt die Posteingänge aller angemeldeten Konten zusammen.",
+    "dnd_title": "Nicht stören",
+    "pause_label": "Benachrichtigungen pausieren",
+    "pause_description": "Keine Töne, Pop-ups oder Ansagen für neue E-Mails, bis Sie das wieder ausschalten.",
+    "dnd_link_app": "Benachrichtigungen pausieren und Ruhezeiten festlegen können Sie auf der Seite Benachrichtigungen.",
+    "dnd_link_browser": "Benachrichtigungen pausieren können Sie auf der Seite Benachrichtigungen."
   },
   "sidebar": {
     "close": "Schließen",

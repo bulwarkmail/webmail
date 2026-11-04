@@ -119,7 +119,12 @@
     "sounds_link_app": "Âm thanh thông báo và số thư chưa đọc trên biểu tượng thanh tác vụ được đặt trên trang Thông báo.",
     "writing_language_app": "Ngôn ngữ bạn thường viết. Hiệu đính và kiểm tra chính tả dùng ngôn ngữ này.",
     "badge_all_app": "Con số trên biểu tượng thanh tác vụ và trong khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
-    "badge_all_browser": "Con số trên tab và biểu tượng ứng dụng cộng hộp thư đến của mọi tài khoản đã đăng nhập."
+    "badge_all_browser": "Con số trên tab và biểu tượng ứng dụng cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
+    "dnd_title": "Không làm phiền",
+    "pause_label": "Tạm dừng thông báo",
+    "pause_description": "Không có âm thanh, cửa sổ bật lên hoặc thông báo bằng giọng nói cho thư mới cho đến khi bạn tắt lại.",
+    "dnd_link_app": "Tạm dừng thông báo và đặt giờ yên tĩnh trên trang Thông báo.",
+    "dnd_link_browser": "Tạm dừng thông báo trên trang Thông báo."
   },
   "sidebar": {
     "close": "Đóng",

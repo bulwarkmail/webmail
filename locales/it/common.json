@@ -119,7 +119,12 @@
     "sounds_link_app": "I suoni delle notifiche e il numero di non letti sull'icona della barra delle applicazioni si impostano nella pagina Notifiche.",
     "writing_language_app": "La lingua in cui scrivi di solito. La revisione e il controllo ortografico la usano.",
     "badge_all_app": "Il numero sull'icona della barra delle applicazioni e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati.",
-    "badge_all_browser": "Il numero sulla scheda e sull'icona dell'app somma le caselle di posta in arrivo di tutti gli account collegati."
+    "badge_all_browser": "Il numero sulla scheda e sull'icona dell'app somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "dnd_title": "Non disturbare",
+    "pause_label": "Sospendi le notifiche",
+    "pause_description": "Nessun suono, finestra a comparsa o annuncio vocale per la nuova posta finché non lo disattivi di nuovo.",
+    "dnd_link_app": "Sospendi le notifiche e imposta le ore di silenzio nella pagina Notifiche.",
+    "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche."
   },
   "sidebar": {
     "close": "Chiudi",

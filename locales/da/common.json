@@ -119,7 +119,12 @@
     "sounds_link_app": "Notifikationslyde og antallet af ulæste på ikonet på proceslinjen indstilles på siden Notifikationer.",
     "writing_language_app": "Det sprog, du normalt skriver på. Korrektur og stavekontrol bruger det.",
     "badge_all_app": "Tallet på ikonet på proceslinjen og i meddelelsesområdet lægger indbakkerne for alle loggede-ind konti sammen.",
-    "badge_all_browser": "Tallet på fanen og appikonet lægger indbakkerne for alle loggede-ind konti sammen."
+    "badge_all_browser": "Tallet på fanen og appikonet lægger indbakkerne for alle loggede-ind konti sammen.",
+    "dnd_title": "Forstyr ikke",
+    "pause_label": "Sæt notifikationer på pause",
+    "pause_description": "Ingen lyde, pop op-vinduer eller oplæste beskeder om nye mails, indtil du slår det fra igen.",
+    "dnd_link_app": "Sæt notifikationer på pause, og indstil stille timer på siden Notifikationer.",
+    "dnd_link_browser": "Sæt notifikationer på pause på siden Notifikationer."
   },
   "sidebar": {
     "close": "Luk",

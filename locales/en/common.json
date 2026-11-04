@@ -119,7 +119,12 @@
     "sounds_link_app": "Notification sounds and the unread count on the taskbar icon are set on the Notifications page.",
     "writing_language_app": "The language you usually write in. Proofreading and spell check use it.",
     "badge_all_app": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
-    "badge_all_browser": "The number on the tab and the app icon adds up the inboxes of every signed-in account."
+    "badge_all_browser": "The number on the tab and the app icon adds up the inboxes of every signed-in account.",
+    "dnd_title": "Do not disturb",
+    "pause_label": "Pause notifications",
+    "pause_description": "No sounds, pop-ups or spoken announcements for new mail until you turn this off again.",
+    "dnd_link_app": "Pause notifications and set quiet hours on the Notifications page.",
+    "dnd_link_browser": "Pause notifications on the Notifications page."
   },
   "sidebar": {
     "close": "Close",

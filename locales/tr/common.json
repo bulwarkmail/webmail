@@ -119,7 +119,12 @@
     "sounds_link_app": "Bildirim sesleri ve görev çubuğu simgesindeki okunmamış sayısı Bildirimler sayfasında ayarlanır.",
     "writing_language_app": "Genellikle yazdığınız dil. Yazım denetimi ve düzeltme bunu kullanır.",
     "badge_all_app": "Görev çubuğu simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar.",
-    "badge_all_browser": "Sekmedeki ve uygulama simgesindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
+    "badge_all_browser": "Sekmedeki ve uygulama simgesindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar.",
+    "dnd_title": "Rahatsız etmeyin",
+    "pause_label": "Bildirimleri duraklat",
+    "pause_description": "Siz yeniden kapatana kadar yeni e-postalar için ses, açılır pencere veya sesli duyuru olmaz.",
+    "dnd_link_app": "Bildirimleri duraklatma ve sessiz saatleri ayarlama Bildirimler sayfasındadır.",
+    "dnd_link_browser": "Bildirimleri duraklatma Bildirimler sayfasındadır."
   },
   "sidebar": {
     "close": "Kapat",

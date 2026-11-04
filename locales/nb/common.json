@@ -119,7 +119,12 @@
     "sounds_link_app": "Varsellyder og antall uleste på ikonet på oppgavelinjen stiller du inn på siden Varsler.",
     "writing_language_app": "Språket du vanligvis skriver på. Korrektur og stavekontroll bruker det.",
     "badge_all_app": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
-    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer."
+    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer.",
+    "dnd_title": "Ikke forstyrr",
+    "pause_label": "Sett varsler på pause",
+    "pause_description": "Ingen lyder, hurtigvinduer eller opplest informasjon om ny e-post før du slår dette av igjen.",
+    "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
+    "dnd_link_browser": "Sett varsler på pause på siden Varsler."
   },
   "sidebar": {
     "close": "Lukk",

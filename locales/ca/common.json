@@ -119,7 +119,12 @@
     "sounds_link_app": "Els sons de notificació i el nombre de no llegits a la icona de la barra de tasques es configuren a la pàgina Notificacions.",
     "writing_language_app": "L'idioma en què escriviu normalment. La revisió i el corrector ortogràfic el fan servir.",
     "badge_all_app": "El número de la icona de la barra de tasques i de la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
-    "badge_all_browser": "El número de la pestanya i de la icona de l'aplicació suma les safates d'entrada de tots els comptes amb la sessió iniciada."
+    "badge_all_browser": "El número de la pestanya i de la icona de l'aplicació suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
+    "dnd_title": "No molestis",
+    "pause_label": "Posa en pausa les notificacions",
+    "pause_description": "Sense sons, finestres emergents ni anuncis per veu per al correu nou fins que ho torneu a desactivar.",
+    "dnd_link_app": "Poseu en pausa les notificacions i definiu les hores de silenci a la pàgina Notificacions.",
+    "dnd_link_browser": "Poseu en pausa les notificacions a la pàgina Notificacions."
   },
   "sidebar": {
     "close": "Tanca",

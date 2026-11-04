@@ -119,7 +119,12 @@
     "sounds_link_app": "Sunetele notificărilor și numărul de necitite de pe pictograma din bara de activități se setează pe pagina Notificări.",
     "writing_language_app": "Limba în care scrieți de obicei. Corectura și verificarea ortografică o folosesc.",
     "badge_all_app": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
-    "badge_all_browser": "Numărul de pe filă și de pe pictograma aplicației adună căsuțele de primire ale tuturor conturilor conectate."
+    "badge_all_browser": "Numărul de pe filă și de pe pictograma aplicației adună căsuțele de primire ale tuturor conturilor conectate.",
+    "dnd_title": "Nu deranjați",
+    "pause_label": "Întrerupeți notificările",
+    "pause_description": "Fără sunete, ferestre pop-up sau anunțuri vocale pentru e-mailurile noi, până când opriți din nou această opțiune.",
+    "dnd_link_app": "Întrerupeți notificările și setați orele de liniște pe pagina Notificări.",
+    "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări."
   },
   "sidebar": {
     "close": "Închide",

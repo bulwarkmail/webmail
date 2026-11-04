@@ -119,7 +119,12 @@
     "sounds_link_app": "通知音效和工作列圖示上的未讀數，在「通知」頁面設定。",
     "writing_language_app": "您平常寫作使用的語言。校對和拼字檢查會使用它。",
     "badge_all_app": "工作列圖示和系統匣上的數字會合計所有已登入帳號的收件匣。",
-    "badge_all_browser": "分頁和應用程式圖示上的數字會合計所有已登入帳號的收件匣。"
+    "badge_all_browser": "分頁和應用程式圖示上的數字會合計所有已登入帳號的收件匣。",
+    "dnd_title": "勿擾",
+    "pause_label": "暫停通知",
+    "pause_description": "新郵件不發出聲音、不跳出視窗、不語音播報，直到您再次關閉此項。",
+    "dnd_link_app": "在「通知」頁面暫停通知並設定勿擾時段。",
+    "dnd_link_browser": "在「通知」頁面暫停通知。"
   },
   "sidebar": {
     "close": "關閉",

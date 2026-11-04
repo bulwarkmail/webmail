@@ -119,7 +119,12 @@
     "sounds_link_app": "Zvuky oznámení a počet nepřečtených na ikoně na hlavním panelu nastavíte na stránce Oznámení.",
     "writing_language_app": "Jazyk, ve kterém obvykle píšete. Používá ho korektura i kontrola pravopisu.",
     "badge_all_app": "Číslo na ikoně na hlavním panelu a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů.",
-    "badge_all_browser": "Číslo na kartě a na ikoně aplikace sčítá doručené složky všech přihlášených účtů."
+    "badge_all_browser": "Číslo na kartě a na ikoně aplikace sčítá doručené složky všech přihlášených účtů.",
+    "dnd_title": "Nerušit",
+    "pause_label": "Pozastavit oznámení",
+    "pause_description": "Žádné zvuky, vyskakovací okna ani hlasová hlášení o nové poště, dokud to znovu nevypnete.",
+    "dnd_link_app": "Oznámení pozastavíte a dobu klidu nastavíte na stránce Oznámení.",
+    "dnd_link_browser": "Oznámení pozastavíte na stránce Oznámení."
   },
   "sidebar": {
     "close": "Zavřít",

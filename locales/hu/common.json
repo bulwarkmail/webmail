@@ -119,7 +119,12 @@
     "sounds_link_app": "Az értesítési hangokat és a tálca ikonján látható olvasatlan számot az Értesítések oldalon állíthatja be.",
     "writing_language_app": "A nyelv, amelyen általában ír. A nyelvi ellenőrzés és a helyesírás-ellenőrzés ezt használja.",
     "badge_all_app": "A tálca ikonján és az értesítési területen látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
-    "badge_all_browser": "A lapon és az alkalmazásikonon látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze."
+    "badge_all_browser": "A lapon és az alkalmazásikonon látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
+    "dnd_title": "Ne zavarjanak",
+    "pause_label": "Értesítések szüneteltetése",
+    "pause_description": "Nincsenek hangok, felugró ablakok vagy felolvasott közlemények az új levelekről, amíg újra ki nem kapcsolja.",
+    "dnd_link_app": "Az értesítéseket szüneteltetheti és a csendes órákat beállíthatja az Értesítések oldalon.",
+    "dnd_link_browser": "Az értesítéseket szüneteltetheti az Értesítések oldalon."
   },
   "sidebar": {
     "close": "Bezárás",

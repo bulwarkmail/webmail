@@ -119,7 +119,12 @@
     "sounds_link_app": "Meldingsgeluiden en het aantal ongelezen op het taakbalkpictogram stelt u in op de pagina Meldingen.",
     "writing_language_app": "De taal waarin u meestal schrijft. Proeflezen en spellingcontrole gebruiken die.",
     "badge_all_app": "Het getal op het taakbalkpictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op.",
-    "badge_all_browser": "Het getal op het tabblad en het app-pictogram telt de inboxen van alle aangemelde accounts bij elkaar op."
+    "badge_all_browser": "Het getal op het tabblad en het app-pictogram telt de inboxen van alle aangemelde accounts bij elkaar op.",
+    "dnd_title": "Niet storen",
+    "pause_label": "Meldingen pauzeren",
+    "pause_description": "Geen geluiden, pop-ups of gesproken aankondigingen voor nieuwe e-mail totdat u dit weer uitzet.",
+    "dnd_link_app": "Meldingen pauzeren en stille uren instellen doet u op de pagina Meldingen.",
+    "dnd_link_browser": "Meldingen pauzeren doet u op de pagina Meldingen."
   },
   "sidebar": {
     "close": "Sluiten",

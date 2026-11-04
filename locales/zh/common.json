@@ -119,7 +119,12 @@
     "sounds_link_app": "通知声音和任务栏图标上的未读数，在“通知”页面设置。",
     "writing_language_app": "您平时写作使用的语言。校对和拼写检查会使用它。",
     "badge_all_app": "任务栏图标和托盘上的数字会合计所有已登录账户的收件箱。",
-    "badge_all_browser": "标签页和应用图标上的数字会合计所有已登录账户的收件箱。"
+    "badge_all_browser": "标签页和应用图标上的数字会合计所有已登录账户的收件箱。",
+    "dnd_title": "勿扰",
+    "pause_label": "暂停通知",
+    "pause_description": "新邮件不发出声音、不弹出窗口、不语音播报，直到您再次关闭此项。",
+    "dnd_link_app": "在“通知”页面暂停通知并设置免打扰时段。",
+    "dnd_link_browser": "在“通知”页面暂停通知。"
   },
   "sidebar": {
     "close": "关闭",

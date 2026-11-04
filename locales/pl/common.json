@@ -119,7 +119,12 @@
     "sounds_link_app": "Dźwięki powiadomień i liczbę nieprzeczytanych na ikonie na pasku zadań ustawisz na stronie Powiadomienia.",
     "writing_language_app": "Język, w którym zwykle piszesz. Korzystają z niego korekta i sprawdzanie pisowni.",
     "badge_all_app": "Liczba na ikonie na pasku zadań i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
-    "badge_all_browser": "Liczba na karcie i ikonie aplikacji sumuje skrzynki odbiorcze wszystkich zalogowanych kont."
+    "badge_all_browser": "Liczba na karcie i ikonie aplikacji sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "dnd_title": "Nie przeszkadzać",
+    "pause_label": "Wstrzymaj powiadomienia",
+    "pause_description": "Bez dźwięków, wyskakujących okien i komunikatów głosowych o nowej poczcie, dopóki znów tego nie wyłączysz.",
+    "dnd_link_app": "Powiadomienia wstrzymasz i godziny ciszy ustawisz na stronie Powiadomienia.",
+    "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia."
   },
   "sidebar": {
     "close": "Zamknij",

@@ -119,7 +119,12 @@
     "sounds_link_app": "Teavitushelid ja lugemata kirjade arvu tegumiriba ikoonil seadistad lehel Teavitused.",
     "writing_language_app": "Keel, milles tavaliselt kirjutad. Seda kasutavad keelekontroll ja õigekirjakontroll.",
     "badge_all_app": "Tegumiriba ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid.",
-    "badge_all_browser": "Vahekaardi ja rakenduse ikooni arv liidab kokku kõigi sisselogitud kontode postkastid."
+    "badge_all_browser": "Vahekaardi ja rakenduse ikooni arv liidab kokku kõigi sisselogitud kontode postkastid.",
+    "dnd_title": "Ära sega",
+    "pause_label": "Peata teavitused",
+    "pause_description": "Uute kirjade kohta ei anta helisid, hüpikaknaid ega häälteateid, kuni selle uuesti välja lülitad.",
+    "dnd_link_app": "Teavitused saad peatada ja vaikse aja määrata lehel Teavitused.",
+    "dnd_link_browser": "Teavitused saad peatada lehel Teavitused."
   },
   "sidebar": {
     "close": "Sulge",

@@ -119,7 +119,12 @@
     "sounds_link_app": "Les sons de notification et le nombre de non lus sur l'icône de la barre des tâches se règlent sur la page Notifications.",
     "writing_language_app": "La langue dans laquelle vous écrivez le plus souvent. La relecture et le correcteur orthographique l'utilisent.",
     "badge_all_app": "Le nombre sur l'icône de la barre des tâches et dans la zone de notification additionne les boîtes de réception de tous les comptes connectés.",
-    "badge_all_browser": "Le nombre sur l'onglet et l'icône de l'application additionne les boîtes de réception de tous les comptes connectés."
+    "badge_all_browser": "Le nombre sur l'onglet et l'icône de l'application additionne les boîtes de réception de tous les comptes connectés.",
+    "dnd_title": "Ne pas déranger",
+    "pause_label": "Suspendre les notifications",
+    "pause_description": "Aucun son, aucune fenêtre contextuelle ni annonce vocale pour les nouveaux messages, jusqu'à ce que vous le désactiviez.",
+    "dnd_link_app": "Suspendez les notifications et définissez les heures calmes sur la page Notifications.",
+    "dnd_link_browser": "Suspendez les notifications sur la page Notifications."
   },
   "sidebar": {
     "close": "Fermer",
