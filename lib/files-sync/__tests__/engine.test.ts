@@ -241,7 +241,7 @@ describe('deletes', () => {
     const s = await setup({ seed: many });
     s.disk.deleteUser('r1', 'bulk');
     await s.sync();
-    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, side: 'remote' } });
+    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, deletedOn: 'this-computer' } });
     expect(remoteUnder(s.server)).toContain('bulk/f0.txt');
     expect(s.kinds()).toContain('mass-delete  (61)');
     s.engine.confirmMassDelete('r1', false);
@@ -264,7 +264,7 @@ describe('deletes', () => {
     const s = await setup({ seed: many });
     s.server.destroyTree(s.server.find('Sync/bulk')!.id);
     await s.sync();
-    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, side: 'local' } });
+    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, deletedOn: 'files' } });
     expect(s.disk.trashed).toEqual([]);
     s.engine.confirmMassDelete('r1', false);
     await s.engine.settled();

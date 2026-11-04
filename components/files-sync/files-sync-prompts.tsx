@@ -37,13 +37,17 @@ export function useInlineMassDeleteQuestions(): void {
   }, []);
 }
 
-/** The question's text, for a root in `confirm-delete`. */
+/**
+ * The question's text, for a root in `confirm-delete`. `deletedOn` is where the items were
+ * deleted (MassDeleteOrigin); the question is about the other side. The drive is "Files drive"
+ * on both sides, never the address it's registered with.
+ */
 export function useMassDeleteText(root: FilesRoot, massDelete: NonNullable<FilesSyncRootStatus["massDelete"]>): string {
   const t = useTranslations("files_sync");
-  // The side the items went from: this computer's folder, or the Files folder.
-  return massDelete.side === "local"
-    ? t("mass_delete.local", { count: massDelete.count, folder: rootName(root, t("drive.root_name")) })
-    : t("mass_delete.remote", { count: massDelete.count, folder: root.remoteLabel || t("drive.root_name") });
+  const driveName = t("drive.root_name");
+  return massDelete.deletedOn === "this-computer"
+    ? t("mass_delete.local", { count: massDelete.count, folder: rootName(root, driveName) })
+    : t("mass_delete.remote", { count: massDelete.count, folder: root.kind === "drive" ? driveName : root.remoteLabel || driveName });
 }
 
 interface AnswerButtonsProps {
@@ -80,7 +84,7 @@ export function MassDeleteAnswers({ rootId, count, onAnswered }: AnswerButtonsPr
 
 /** The question inside a folder's row on the settings page. */
 export function MassDeleteQuestion({ root, status }: { root: FilesRoot; status: FilesSyncRootStatus }) {
-  const massDelete = status.massDelete ?? { count: 0, side: "local" as const };
+  const massDelete = status.massDelete ?? { count: 0, deletedOn: "this-computer" as const };
   const text = useMassDeleteText(root, massDelete);
   return (
     <div role="group" aria-label={text} className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 space-y-3" data-files-sync-question={root.id}>
@@ -138,7 +142,7 @@ export function FilesSyncPrompts() {
   const [later, setLater] = useState<ReadonlySet<string>>(() => new Set());
 
   if (!available || !controller || pageAsks) return null;
-  const keyOf = (s: FilesSyncRootStatus) => `${s.rootId}:${s.massDelete?.side}:${s.massDelete?.count}`;
+  const keyOf = (s: FilesSyncRootStatus) => `${s.rootId}:${s.massDelete?.deletedOn}:${s.massDelete?.count}`;
   const root = roots.find((r) => {
     const s = status[r.id];
     return s?.state === "confirm-delete" && !!s.massDelete && !later.has(keyOf(s));

@@ -56,7 +56,7 @@ import {
 } from './names';
 import type { FilesRemote, RemoteNode, RemoteTree } from './remote';
 import { emptyRecord, parseRecord, serializeRecord, type BaseItem, type RootRecord } from './state';
-import type { FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus } from './types';
+import type { FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus, MassDeleteOrigin } from './types';
 
 const MAX_ROUNDS = 12;
 /** Both sides have a file of this size or less under one name: compare the bytes before calling it a conflict. */
@@ -100,7 +100,8 @@ export interface RootHost {
 
 interface PendingDelete {
   count: number;
-  side: 'local' | 'remote';
+  /** Where they were deleted. The question is whether to delete them on the other side. */
+  deletedOn: MassDeleteOrigin;
   /** Base ids whose deletion waits for the answer. */
   ids: string[];
 }
@@ -332,7 +333,7 @@ export class RootSync {
       return 'idle';
     }
     if (this.massDelete) {
-      this.setStatus({ state: 'confirm-delete', massDelete: { count: this.massDelete.count, side: this.massDelete.side } });
+      this.setStatus({ state: 'confirm-delete', massDelete: { count: this.massDelete.count, deletedOn: this.massDelete.deletedOn } });
       return 'idle';
     }
     this.failed.clear();
@@ -360,7 +361,7 @@ export class RootSync {
     // round() may have set it: TypeScript can't see that.
     const asking = this.massDelete as PendingDelete | null;
     if (asking) {
-      this.setStatus({ state: 'confirm-delete', massDelete: { count: asking.count, side: asking.side }, pending: asking.count });
+      this.setStatus({ state: 'confirm-delete', massDelete: { count: asking.count, deletedOn: asking.deletedOn }, pending: asking.count });
       return 'idle';
     }
     this.updateItems();
@@ -438,11 +439,12 @@ export class RootSync {
     if (deletes.local.count + deletes.remote.count > 0) {
       const total = this.base.size;
       const over = (count: number) => count > MASS_DELETE_COUNT || (total >= MASS_DELETE_MIN_ROOT && count * 2 > total);
-      const side = deletes.remote.count >= deletes.local.count ? 'remote' : 'local';
+      // `deletes.remote` are to be deleted in Files: they were deleted on this computer.
+      const deletedOn: MassDeleteOrigin = deletes.remote.count >= deletes.local.count ? 'this-computer' : 'files';
       if (!this.allowDeletes && (over(deletes.local.count) || over(deletes.remote.count))) {
         const count = deletes.local.count + deletes.remote.count;
-        this.massDelete = { count, side, ids: [...deletes.local.ids, ...deletes.remote.ids] };
-        this.log('mass-delete', side === 'remote' ? 'up' : 'down', '', { detail: String(count) });
+        this.massDelete = { count, deletedOn, ids: [...deletes.local.ids, ...deletes.remote.ids] };
+        this.log('mass-delete', deletedOn === 'this-computer' ? 'up' : 'down', '', { detail: String(count) });
         await this.save();
         return 'confirm';
       }

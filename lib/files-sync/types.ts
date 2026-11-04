@@ -35,9 +35,18 @@ export interface FilesSyncRootStatus {
   lastSyncedAt: number | null;
   /** For `error`: a key in the `files_sync` namespace saying what went wrong. */
   errorKey?: string;
-  /** For `confirm-delete`: how many items would go, and where. */
-  massDelete?: { count: number; side: 'local' | 'remote' };
+  /** For `confirm-delete`: how many items were deleted, and where (MassDeleteOrigin). */
+  massDelete?: { count: number; deletedOn: MassDeleteOrigin };
 }
+
+/**
+ * Where the items of a mass delete WERE deleted, by the user or someone else. The question
+ * asks whether to delete them on the other side too. One type for the engine and the UI, so
+ * nobody reads it the other way round again (pass-3 files-p3-1).
+ * - `this-computer`: deleted in the folder or the drive here; "yes" deletes them in Files.
+ * - `files`: deleted in Files (another device, a colleague); "yes" deletes them here.
+ */
+export type MassDeleteOrigin = 'this-computer' | 'files';
 
 export type FilesSyncActivityKind =
   | 'uploaded'

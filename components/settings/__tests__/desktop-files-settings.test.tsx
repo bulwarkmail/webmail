@@ -297,8 +297,8 @@ describe('Files on this computer settings page', () => {
     setup({
       roots: [folderRoot(), folderRoot({ id: 'r2', path: '/home/ann/Photos', remoteLabel: 'Photos' })],
       status: {
-        r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 120, side: 'local' } },
-        r2: { rootId: 'r2', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 64, side: 'remote' } },
+        r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 120, deletedOn: 'this-computer' } },
+        r2: { rootId: 'r2', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 64, deletedOn: 'files' } },
       },
     });
     renderPage();

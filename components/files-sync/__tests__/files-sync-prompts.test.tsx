@@ -17,14 +17,14 @@ const ROOT: FilesRoot = {
   id: 'r1', kind: 'folder', account: 'acc', path: 'C:\\Users\\ann\\Projects', remoteId: 'n1', remoteLabel: 'Work / Projects', paused: false, createdAt: 1,
 };
 
-function setup(count = 80, side: 'local' | 'remote' = 'local') {
+function setup(count = 80, deletedOn: 'this-computer' | 'files' = 'this-computer') {
   const controller = { confirmMassDelete: vi.fn(async () => {}) } as unknown as FilesSyncController & { confirmMassDelete: ReturnType<typeof vi.fn> };
   useFilesSyncStore.setState({
     available: true,
     account: 'acc',
     controller,
     roots: [ROOT],
-    status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count, side } } },
+    status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count, deletedOn } } },
   });
   return controller;
 }
@@ -35,7 +35,7 @@ afterEach(() => useFilesSyncStore.getState().reset());
 
 describe('mass-delete prompt, app-wide', () => {
   it('asks with the count and the side, and deletes on yes', () => {
-    const controller = setup(80, 'local');
+    const controller = setup(80, 'this-computer');
     render(wrap(<FilesSyncPrompts />));
     const dialog = screen.getByRole('alertdialog', { name: 'Delete 80 items?' });
     expect(dialog).toHaveTextContent('80 items were deleted from Projects on this computer. Delete them in Files too?');
@@ -44,7 +44,7 @@ describe('mass-delete prompt, app-wide', () => {
   });
 
   it('brings them back on no, naming the Files folder when they went there', () => {
-    const controller = setup(51, 'remote');
+    const controller = setup(51, 'files');
     render(wrap(<FilesSyncPrompts />));
     const dialog = screen.getByRole('alertdialog');
     expect(dialog).toHaveTextContent('51 items were deleted from Work / Projects in Files. Delete them on this computer too?');
@@ -59,7 +59,7 @@ describe('mass-delete prompt, app-wide', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(controller.confirmMassDelete).not.toHaveBeenCalled();
     act(() => useFilesSyncStore.setState({
-      status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 95, side: 'local' } } },
+      status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 95, deletedOn: 'this-computer' } } },
     }));
     expect(screen.getByRole('alertdialog', { name: 'Delete 95 items?' })).toBeInTheDocument();
   });
