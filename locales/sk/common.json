@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Aby ste videli novú poštu, aj keď pracujete v inej aplikácii.",
     "tip_compose_keys": "Stlačte {keys} a napíšte novú správu",
     "tip_palette_keys": "Stlačte {keys} a nájdite akýkoľvek príkaz"
+  },
+  "selectionView": {
+    "starred": "Označené hviezdičkou",
+    "unstarred": "Hviezdička odstránená"
   }
 }

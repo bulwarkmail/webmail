@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Så du ser ny mail, mens du arbejder i en anden app.",
     "tip_compose_keys": "Tryk på {keys} for at skrive en ny besked",
     "tip_palette_keys": "Tryk på {keys} for at finde en kommando"
+  },
+  "selectionView": {
+    "starred": "Stjernemarkeret",
+    "unstarred": "Stjerne fjernet"
   }
 }

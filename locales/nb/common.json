@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Slik ser du ny e-post mens du jobber i en annen app.",
     "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
     "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
+  },
+  "selectionView": {
+    "starred": "Stjernemerket",
+    "unstarred": "Stjerne fjernet"
   }
 }

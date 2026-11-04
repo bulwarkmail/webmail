@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Өөр апп дээр ажиллаж байхдаа шинэ шуудангаа харахын тулд.",
     "tip_compose_keys": "Шинэ зурвас бичихийн тулд {keys} дарна уу",
     "tip_palette_keys": "Ямар ч тушаал олохын тулд {keys} дарна уу"
+  },
+  "selectionView": {
+    "starred": "Одоор тэмдэглэсэн",
+    "unstarred": "Од хассан"
   }
 }

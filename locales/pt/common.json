@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Para ver novos e-mails enquanto trabalha noutra aplicação.",
     "tip_compose_keys": "Prima {keys} para escrever uma nova mensagem",
     "tip_palette_keys": "Prima {keys} para encontrar qualquer comando"
+  },
+  "selectionView": {
+    "starred": "Com estrela",
+    "unstarred": "Estrela removida"
   }
 }

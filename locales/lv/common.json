@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Lai redzētu jaunu pastu, kamēr strādājat citā lietotnē.",
     "tip_compose_keys": "Nospiediet {keys}, lai rakstītu jaunu ziņojumu",
     "tip_palette_keys": "Nospiediet {keys}, lai atrastu jebkuru komandu"
+  },
+  "selectionView": {
+    "starred": "Atzīmēts ar zvaigznīti",
+    "unstarred": "Zvaigznīte noņemta"
   }
 }

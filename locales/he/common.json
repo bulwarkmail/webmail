@@ -7718,5 +7718,9 @@
     "unread_badge_description": "כדי לראות דואר חדש בזמן שאתם עובדים באפליקציה אחרת.",
     "tip_compose_keys": "הקישו {keys} כדי לכתוב הודעה חדשה",
     "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
+  },
+  "selectionView": {
+    "starred": "סומן בכוכב",
+    "unstarred": "הכוכב הוסר"
   }
 }

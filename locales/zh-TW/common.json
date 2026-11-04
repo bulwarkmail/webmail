@@ -7717,5 +7717,9 @@
     "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
     "tip_compose_keys": "按 {keys} 撰寫新郵件",
     "tip_palette_keys": "按 {keys} 尋找任何指令"
+  },
+  "selectionView": {
+    "starred": "已加星號",
+    "unstarred": "已移除星號"
   }
 }

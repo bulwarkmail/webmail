@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Pour voir les nouveaux messages pendant que vous travaillez dans une autre application.",
     "tip_compose_keys": "Appuyez sur {keys} pour écrire un nouveau message",
     "tip_palette_keys": "Appuyez sur {keys} pour trouver n'importe quelle commande"
+  },
+  "selectionView": {
+    "starred": "Suivi",
+    "unstarred": "Suivi retiré"
   }
 }

@@ -373,6 +373,37 @@ describe('read, star and keyword hooks', () => {
     expect(after).toHaveBeenCalledWith({ emailIds: ['e1'], starred: true });
   });
 
+  it('stars a selection in one write, asks once and reports once', async () => {
+    openFolder('inbox', [makeEmail('a'), makeEmail('b', { keywords: { $seen: true, $flagged: true } }), makeEmail('c')]);
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b', 'c']) });
+    const before = vi.fn(() => true);
+    const after = vi.fn();
+    emailHooks.onBeforeEmailStarToggle.register('t', before);
+    emailHooks.onEmailStarToggle.register('t', after);
+
+    expect(await useEmailStore.getState().batchSetStarred(client, true)).toBe(true);
+
+    // b has its star already: left alone.
+    expect(client.batchUpdateKeywords).toHaveBeenCalledTimes(1);
+    expect(client.batchUpdateKeywords).toHaveBeenCalledWith(['a', 'c'], { 'keywords/$flagged': true }, undefined);
+    expect(before).toHaveBeenCalledWith({ emailIds: ['a', 'c'], starred: true });
+    expect(after).toHaveBeenCalledWith({ emailIds: ['a', 'c'], starred: true });
+    expect(useEmailStore.getState().emails.every((e) => e.keywords.$flagged)).toBe(true);
+
+    await useEmailStore.getState().batchSetStarred(client, false);
+    expect(client.batchUpdateKeywords).toHaveBeenLastCalledWith(['a', 'b', 'c'], { 'keywords/$flagged': null }, undefined);
+    expect(useEmailStore.getState().emails.some((e) => e.keywords.$flagged)).toBe(false);
+  });
+
+  it('writes nothing for a selection a plugin stops', async () => {
+    openFolder('inbox', [makeEmail('a'), makeEmail('b')]);
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) });
+    emailHooks.onBeforeEmailStarToggle.register('t', () => false);
+    await useEmailStore.getState().batchSetStarred(client, true);
+    expect(client.batchUpdateKeywords).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails.some((e) => e.keywords.$flagged)).toBe(false);
+  });
+
   it('names a group mailbox\'s account on a star toggle', async () => {
     const groupInbox = makeMailbox({ id: 'vertrieb:inbox', originalId: 'inbox', role: 'inbox', isShared: true, accountId: 'vertrieb' });
     openFolder('vertrieb:inbox', [makeEmail('e1', { mailboxIds: { 'vertrieb:inbox': true } })]);

@@ -597,6 +597,12 @@ interface EmailStore {
    */
   /** `target`: these messages (target.emails) instead of the selection. */
   batchSetTag: (client: IJMAPClient, tagId: string, add: boolean, target?: BatchActionTarget) => Promise<boolean>;
+  /**
+   * Star every selected message, or take the star off every one. Written per account,
+   * as toggleStar writes one; the star hooks hear each account's messages. Rejects when
+   * a write fails.
+   */
+  batchSetStarred: (client: IJMAPClient, starred: boolean) => Promise<boolean>;
   batchDelete:(client: IJMAPClient, permanent?: boolean) => Promise<boolean>;
   /**
    * Acts on the selection, or on `target`'s messages when given; with a
@@ -6032,6 +6038,60 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
 
     const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (failed) throw failed.reason;
+    return true;
+  },
+
+  batchSetStarred: async (client, starred): Promise<boolean> => {
+    if (get().selectedEmailKeys.size === 0) return true;
+    // By the account each message lives in, as toggleStar routes one.
+    const groups = new Map<IJMAPClient, Map<string | undefined, Email[]>>();
+    for (const email of resolveSelectedEmails(get())) {
+      if (!!email.keywords?.$flagged === starred) continue;
+      const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+      const byAccount = groups.get(actionClient) ?? new Map<string | undefined, Email[]>();
+      groups.set(actionClient, byAccount);
+      byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), email]);
+    }
+    if (groups.size === 0) return true;
+
+    const writes = [...groups].flatMap(([actionClient, byAccount]) =>
+      [...byAccount].map(async ([accountId, group]) => {
+        const hookAccountId = accountId && accountId !== actionClient.getAccountId?.() ? accountId : undefined;
+        const payload = { emailIds: group.map(e => e.id), starred, ...(hookAccountId ? { accountId: hookAccountId } : {}) };
+        if (emailHooks.onBeforeEmailStarToggle.size > 0 && !(await emailHooks.onBeforeEmailStarToggle.intercept(payload))) return [];
+        await actionClient.batchUpdateKeywords(payload.emailIds, { [keywordPointer('$flagged')]: starred ? true : null }, accountId);
+        void emailHooks.onEmailStarToggle.emit(payload);
+        return group;
+      }),
+    );
+    const settled = await Promise.allSettled(writes);
+    const written = new Set(settled.flatMap(result => result.status === 'fulfilled' ? result.value.map(emailKeyFor) : []));
+    const restar = (keywords: Record<string, boolean> | undefined) => {
+      const next = { ...keywords };
+      if (starred) next.$flagged = true;
+      else delete next.$flagged;
+      return next;
+    };
+    set((state) => {
+      let retained = state.retainedInViewIds;
+      // In the starred cross view an un-starred row stays until the view is opened again.
+      if (retainingCrossView(state) === 'starred') {
+        for (const e of state.emails) {
+          if (written.has(emailKeyFor(e))) retained = updateRetainedForView(retained, starred ? 'remove' : 'add', e.id);
+        }
+      }
+      return {
+        emails: state.emails.map(e => written.has(emailKeyFor(e)) ? { ...e, keywords: restar(e.keywords) } : e),
+        selectedEmail: state.selectedEmail && written.has(emailKeyFor(state.selectedEmail))
+          ? { ...state.selectedEmail, keywords: restar(state.selectedEmail.keywords) }
+          : state.selectedEmail,
+        retainedInViewIds: retained,
+      };
+    });
+    if (written.size > 0) refillAfterKeywordChange(get, client, ['$flagged']);
+
+    const failed = settled.find((result): result is PromiseRejectedResult => result.status === 'rejected');
     if (failed) throw failed.reason;
     return true;
   },

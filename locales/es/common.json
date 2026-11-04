@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Para ver el correo nuevo mientras trabaja en otra aplicación.",
     "tip_compose_keys": "Pulse {keys} para escribir un mensaje nuevo",
     "tip_palette_keys": "Pulse {keys} para buscar cualquier comando"
+  },
+  "selectionView": {
+    "starred": "Destacado",
+    "unstarred": "Estrella quitada"
   }
 }

@@ -7717,5 +7717,9 @@
     "unread_badge_description": "Ca să vedeți e-mailurile noi în timp ce lucrați în altă aplicație.",
     "tip_compose_keys": "Apăsați {keys} pentru a scrie un mesaj nou",
     "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
+  },
+  "selectionView": {
+    "starred": "Marcat cu stea",
+    "unstarred": "Stea eliminată"
   }
 }

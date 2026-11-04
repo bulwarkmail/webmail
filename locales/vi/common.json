@@ -7729,5 +7729,9 @@
     "unread_badge_description": "Để bạn thấy thư mới khi đang làm việc trong ứng dụng khác.",
     "tip_compose_keys": "Nhấn {keys} để viết thư mới",
     "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
+  },
+  "selectionView": {
+    "starred": "Đã gắn dấu sao",
+    "unstarred": "Đã bỏ dấu sao"
   }
 }

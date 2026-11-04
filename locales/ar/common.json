@@ -7717,5 +7717,9 @@
     "unread_badge_description": "لترى البريد الجديد أثناء عملك في تطبيق آخر.",
     "tip_compose_keys": "اضغط {keys} لكتابة رسالة جديدة",
     "tip_palette_keys": "اضغط {keys} للعثور على أي أمر"
+  },
+  "selectionView": {
+    "starred": "تمت إضافة النجمة",
+    "unstarred": "تمت إزالة النجمة"
   }
 }
