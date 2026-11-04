@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Du er frakoblet. Meldingen er lagret i Utkast.",
     "offline_send_unsaved": "Du er frakoblet. Meldingen blir her og lagres i Utkast når du er på nett igjen."
   },
+  "composer_panel": {
+    "show_panel": "Vis {name}",
+    "hide_panel": "Skjul {name}"
+  },
   "desktopDevTools": {
     "section_title": "Feilsøking",
     "label": "Utviklerverktøy ({shortcut})",

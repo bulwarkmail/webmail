@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Sei offline. Il messaggio è salvato nelle Bozze.",
     "offline_send_unsaved": "Sei offline. Il messaggio resta qui e viene salvato nelle Bozze quando torni online."
   },
+  "composer_panel": {
+    "show_panel": "Mostra {name}",
+    "hide_panel": "Nascondi {name}"
+  },
   "desktopDevTools": {
     "section_title": "Risoluzione dei problemi",
     "label": "Strumenti per sviluppatori ({shortcut})",

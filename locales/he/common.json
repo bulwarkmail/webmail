@@ -7682,6 +7682,10 @@
     "offline_send_saved": "אין חיבור. ההודעה שמורה בטיוטות.",
     "offline_send_unsaved": "אין חיבור. ההודעה נשארת כאן ותישמר בטיוטות כשתחזרו לרשת."
   },
+  "composer_panel": {
+    "show_panel": "הצגת {name}",
+    "hide_panel": "הסתרת {name}"
+  },
   "desktopDevTools": {
     "section_title": "פתרון בעיות",
     "label": "כלים למפתחים ({shortcut})",

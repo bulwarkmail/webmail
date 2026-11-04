@@ -7681,6 +7681,10 @@
     "offline_send_saved": "You're offline. The message is saved in Drafts.",
     "offline_send_unsaved": "You're offline. The message stays here and is saved in Drafts when you're back online."
   },
+  "composer_panel": {
+    "show_panel": "Show {name}",
+    "hide_panel": "Hide {name}"
+  },
   "desktopDevTools": {
     "section_title": "Troubleshooting",
     "label": "Developer tools ({shortcut})",

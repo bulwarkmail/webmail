@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Çevrimdışısınız. İleti Taslaklar'a kaydedildi.",
     "offline_send_unsaved": "Çevrimdışısınız. İleti burada kalır ve yeniden çevrimiçi olduğunuzda Taslaklar'a kaydedilir."
   },
+  "composer_panel": {
+    "show_panel": "{name} panelini göster",
+    "hide_panel": "{name} panelini gizle"
+  },
   "desktopDevTools": {
     "section_title": "Sorun giderme",
     "label": "Geliştirici araçları ({shortcut})",

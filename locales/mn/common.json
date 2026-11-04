@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Та офлайн байна. Мессеж нооргонд хадгалагдсан.",
     "offline_send_unsaved": "Та офлайн байна. Мессеж энд үлдэж, онлайн болмогц нооргонд хадгалагдана."
   },
+  "composer_panel": {
+    "show_panel": "{name} харуулах",
+    "hide_panel": "{name} нуух"
+  },
   "desktopDevTools": {
     "section_title": "Алдаа засах",
     "label": "Хөгжүүлэгчийн хэрэгсэл ({shortcut})",

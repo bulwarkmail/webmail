@@ -7681,6 +7681,10 @@
     "offline_send_saved": "No tienes conexión. El mensaje está guardado en Borradores.",
     "offline_send_unsaved": "No tienes conexión. El mensaje se queda aquí y se guarda en Borradores cuando vuelvas a tener conexión."
   },
+  "composer_panel": {
+    "show_panel": "Mostrar {name}",
+    "hide_panel": "Ocultar {name}"
+  },
   "desktopDevTools": {
     "section_title": "Solución de problemas",
     "label": "Herramientas para desarrolladores ({shortcut})",

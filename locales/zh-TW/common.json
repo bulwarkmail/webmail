@@ -7681,6 +7681,10 @@
     "offline_send_saved": "你已離線。郵件已儲存在草稿中。",
     "offline_send_unsaved": "你已離線。郵件會留在這裡，恢復連線後儲存到草稿。"
   },
+  "composer_panel": {
+    "show_panel": "顯示{name}",
+    "hide_panel": "隱藏{name}"
+  },
   "desktopDevTools": {
     "section_title": "疑難排解",
     "label": "開發人員工具（{shortcut}）",

@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Oled võrguta. Kiri on salvestatud mustanditesse.",
     "offline_send_unsaved": "Oled võrguta. Kiri jääb siia ja salvestatakse mustanditesse, kui oled jälle võrgus."
   },
+  "composer_panel": {
+    "show_panel": "Kuva {name}",
+    "hide_panel": "Peida {name}"
+  },
   "desktopDevTools": {
     "section_title": "Tõrkeotsing",
     "label": "Arendaja tööriistad ({shortcut})",

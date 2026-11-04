@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Jesteś offline. Wiadomość jest zapisana w Szkicach.",
     "offline_send_unsaved": "Jesteś offline. Wiadomość zostaje tutaj i zostanie zapisana w Szkicach, gdy wrócisz do sieci."
   },
+  "composer_panel": {
+    "show_panel": "Pokaż: {name}",
+    "hide_panel": "Ukryj: {name}"
+  },
   "desktopDevTools": {
     "section_title": "Rozwiązywanie problemów",
     "label": "Narzędzia dla deweloperów ({shortcut})",

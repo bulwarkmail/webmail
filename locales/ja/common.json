@@ -7681,6 +7681,10 @@
     "offline_send_saved": "オフラインです。メッセージは下書きに保存されています。",
     "offline_send_unsaved": "オフラインです。メッセージはここに残り、オンラインに戻ると下書きに保存されます。"
   },
+  "composer_panel": {
+    "show_panel": "{name}を表示",
+    "hide_panel": "{name}を非表示"
+  },
   "desktopDevTools": {
     "section_title": "トラブルシューティング",
     "label": "デベロッパー ツール ({shortcut})",

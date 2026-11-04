@@ -7681,6 +7681,10 @@
     "offline_send_saved": "No teniu connexió. El missatge està desat a Esborranys.",
     "offline_send_unsaved": "No teniu connexió. El missatge es queda aquí i es desa a Esborranys quan torneu a tenir connexió."
   },
+  "composer_panel": {
+    "show_panel": "Mostra {name}",
+    "hide_panel": "Amaga {name}"
+  },
   "desktopDevTools": {
     "section_title": "Resolució de problemes",
     "label": "Eines per a desenvolupadors ({shortcut})",

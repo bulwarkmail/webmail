@@ -7681,6 +7681,10 @@
     "offline_send_saved": "Je bent offline. Het bericht is opgeslagen in Concepten.",
     "offline_send_unsaved": "Je bent offline. Het bericht blijft hier en wordt in Concepten opgeslagen zodra je weer online bent."
   },
+  "composer_panel": {
+    "show_panel": "{name} tonen",
+    "hide_panel": "{name} verbergen"
+  },
   "desktopDevTools": {
     "section_title": "Probleemoplossing",
     "label": "Ontwikkelaarstools ({shortcut})",

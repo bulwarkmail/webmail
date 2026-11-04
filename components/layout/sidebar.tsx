@@ -1,7 +1,7 @@
 "use client";
 
 import { hoverOpens } from "@/lib/open-on-hover";
-import { memo, useState, useEffect, useMemo, useCallback, useRef, useId, Fragment, ReactNode } from "react";
+import { memo, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, useId, Fragment, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -396,6 +396,9 @@ interface SidebarRowProps {
   testName?: string;
   testMailboxId?: string;
   testShared?: boolean;
+  /** Names the row the same folded and unfolded, so the drawer opened by a
+   *  hover can put the hovered item back under the pointer. */
+  railKey?: string;
 }
 
 function SidebarRow({
@@ -420,6 +423,7 @@ function SidebarRow({
   testName,
   testMailboxId,
   testShared,
+  railKey,
 }: SidebarRowProps) {
   const t = useTranslations('sidebar');
   const tShell = useTranslations('shell');
@@ -436,6 +440,8 @@ function SidebarRow({
     unread, total, role: testRole, mode: countMode, showTotalGlobally: showFolderTotalCount, mountainView,
   }).unread;
   const accessibleName = unreadForName > 0 ? tShell('name_unread', { name: label, count: unreadForName }) : undefined;
+  // The default layout's folded column: one grid of square items.
+  const railItem = isCollapsed && !mountainView;
   const [labelRef, shortenedLabel] = useShortenedText(labelCandidates ?? [label]);
   // Touch has no right-click: a long-press opens the same menu (R7), and a
   // ⋮ shows it too.
@@ -473,21 +479,31 @@ function SidebarRow({
       data-shared={testShared ? 'true' : undefined}
       data-selected={isSelected ? 'true' : undefined}
       data-has-unread={(unread ?? 0) > 0 && testRole !== 'drafts' ? '' : undefined}
-      style={{ paddingBlock: 'var(--density-sidebar-py)' }}
+      data-rail-key={railKey ?? testMailboxId ?? undefined}
+      style={railItem ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "group w-full flex items-center tap:min-h-[44px] text-sm transition-colors duration-150",
-        isCollapsed ? "justify-center px-1" : "pe-2",
+        // Folded, every item is the same square on one grid, as in Outlook's
+        // folded pane: the button carries the hover and the selection, and a
+        // bar at the column's edge marks the open one.
+        // Mountain View's 72px rail keeps its own pill rows (globals.css).
+        railItem ? "relative justify-center py-px" : isCollapsed ? "justify-center px-1" : "pe-2",
         openFromRow && "cursor-pointer select-none",
-        isVirtual
-          ? "text-muted-foreground"
-          : isSelected
-            ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
-            : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
+        railItem
+          ? (isVirtual ? "text-muted-foreground" : isSelected ? "text-accent-foreground font-semibold" : "text-foreground")
+          : isVirtual
+            ? "text-muted-foreground"
+            : isSelected
+              ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
+              : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
         // Only a folder that takes the drop lights up. Elsewhere the pointer
         // says no (dropEffect none), as in a native mail client.
         isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset"
       )}
     >
+      {railItem && isSelected && (
+        <span aria-hidden="true" data-testid="folded-selected" className="absolute z-10 start-0 top-1/2 -translate-y-1/2 h-5 w-[0.1875rem] rounded-e-full bg-primary" />
+      )}
       {!isCollapsed && (
         <div
           className="flex items-center flex-shrink-0"
@@ -528,28 +544,36 @@ function SidebarRow({
         aria-describedby={muted && !isCollapsed ? mutedId : undefined}
         className={cn(
           "flex items-center gap-2 min-w-0 transition-colors",
-          isCollapsed ? "justify-center" : "flex-1 text-start",
+          railItem
+            ? cn(
+                // 36px high: the icon sits 10px down, under the counter's
+                // 12px, so the counter never covers the glyph.
+                "relative justify-center w-full max-w-10 h-9 rounded-md focus-visible:outline-2 focus-visible:outline-ring focus-visible:-outline-offset-2",
+                !isVirtual && (isSelected ? "bg-accent" : "hover:bg-muted/60"),
+              )
+            : isCollapsed ? "relative justify-center w-10 h-8" : "flex-1 text-start",
           isVirtual && "cursor-default select-none"
         )}
-        title={isCollapsed ? label : undefined}
+        // Folded, the name and count are only in the tooltip.
+        title={isCollapsed ? (accessibleName ?? label) : undefined}
       >
         <span className="relative flex items-center justify-center flex-shrink-0 w-4 h-4">
           {icon}
-          {/* Folded to icons, the count rides on the icon (p2-9); the name says it already. */}
-          {isCollapsed && unreadForName > 0 && (
-            unreadCountStyle === 'dot' ? (
-              <span aria-hidden="true" data-testid="folded-unread" className="absolute -top-0.5 -end-1 w-2 h-2 rounded-full bg-primary ring-2 ring-secondary" />
-            ) : (
-              <span
-                aria-hidden="true"
-                data-testid="folded-unread"
-                className="absolute -top-2 -end-3 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[0.625rem] leading-4 font-semibold tabular-nums text-center ring-2 ring-secondary"
-              >
-                {unreadForName > 99 ? '99+' : unreadForName}
-              </span>
-            )
-          )}
         </span>
+        {/* Folded to icons, a small counter at the icon's top corner (p2-9); the name says it already. */}
+        {isCollapsed && unreadForName > 0 && (
+          unreadCountStyle === 'dot' ? (
+            <span aria-hidden="true" data-testid="folded-unread" className="absolute top-1.5 end-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+          ) : (
+            <span
+              aria-hidden="true"
+              data-testid="folded-unread"
+              className="absolute top-0 end-0 min-w-3 h-3 px-[0.1875rem] rounded-full bg-primary text-primary-foreground text-[0.5625rem] leading-3 font-semibold tabular-nums text-center"
+            >
+              {unreadForName > 99 ? '99+' : unreadForName}
+            </span>
+          )
+        )}
         {!isCollapsed && (
           <>
             <span
@@ -598,19 +622,51 @@ function SidebarRow({
   );
 }
 
-/** A folder of one's own on the folded strip: its first letter in a small box. */
+/**
+ * A folder of one's own on the folded strip, when there are several: the
+ * folder glyph the other rows use, same size and stroke, with the folder's
+ * first letter inside it. A letter in a box of its own looked like no other
+ * icon in the column.
+ */
 function FolderInitial({ name, className }: { name: string; className?: string }) {
   const initial = Array.from(name.trim())[0]?.toLocaleUpperCase() ?? '?';
   return (
-    <span
+    <svg
       aria-hidden="true"
-      data-testid="folder-initial"
-      className={cn(className, "grid place-items-center rounded-[0.25rem] border border-current text-[0.625rem] font-semibold leading-none")}
+      data-testid="folder-initial-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
     >
-      {initial}
-    </span>
+      {/* Lucide's folder outline. */}
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+      <text
+        data-testid="folder-initial"
+        x="12"
+        y="13"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="currentColor"
+        stroke="none"
+        fontSize="10"
+        fontWeight="700"
+      >
+        {initial}
+      </text>
+    </svg>
   );
 }
+
+/** Whether the folder `id` is this node or below it. */
+const subtreeHas = (node: MailboxNode, id: string): boolean =>
+  node.id === id || node.children.some((child) => subtreeHas(child, id));
+/** Unread mail in the folders below a node (a shared account counts nothing itself). */
+const subtreeUnread = (node: MailboxNode): number =>
+  node.children.reduce((sum, child) => sum + (child.unreadEmails ?? 0) + subtreeUnread(child), 0);
 
 /** A folder the server gave a role (inbox, sent, trash...), as opposed to one the user made. */
 const isSystemFolder = (node: MailboxNode) => !!node.role;
@@ -634,6 +690,7 @@ function SidebarSectionHeader({
   status,
   onAdd,
   addTitle,
+  railKey,
 }: {
   label: string;
   expanded: boolean;
@@ -650,9 +707,14 @@ function SidebarSectionHeader({
   onContextMenu?: (event: React.MouseEvent) => void;
   /** A short note after the label, e.g. how many accounts have loaded. */
   status?: ReactNode;
+  /** The folded column's item for the same thing (see SidebarRow). */
+  railKey?: string;
 }) {
   if (isCollapsed) {
-    return first ? null : <div className="h-px bg-border/50 mx-2 my-2" aria-hidden />;
+    // One thin rule between sections. A sub-section (a shared account, the
+    // folders inside a Pro account group) draws none: under a section's own
+    // rule they stacked into a ladder of lines.
+    return first || sub ? null : <div className="h-px bg-border mx-2.5 my-1.5" data-rail-separator="" aria-hidden />;
   }
 
   const paddingY = sub ? "pt-2" : first ? "pt-3" : "pt-5";
@@ -670,6 +732,7 @@ function SidebarSectionHeader({
   return (
     <div
       onContextMenu={onContextMenu}
+      data-rail-key={railKey}
       className={cn(
         "group w-full flex items-center pb-1 select-none rounded-sm hover:bg-muted/40 transition-colors",
         paddingX,
@@ -740,6 +803,7 @@ function MailboxTreeItem({
   pickOnly = false,
   sharedAccountName,
   renderAfterChild,
+  initials = false,
 }: {
   node: MailboxNode;
   selectedMailbox: string;
@@ -763,19 +827,23 @@ function MailboxTreeItem({
   /** Rendered after each direct child's subtree, e.g. the Scheduled row after
    *  Drafts. Not passed further down. */
   renderAfterChild?: (child: MailboxNode) => React.ReactNode;
+  /** Folded: several folders of one's own are listed, so each carries its
+   *  first letter. One alone is a plain folder. */
+  initials?: boolean;
 }) {
   const tNotifications = useTranslations('notifications');
   const tListExtra = useTranslations('mail_list_extra');
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
-  const Icon = sharedAccountName ? User : getIconForMailbox(node.role, hasChildren, isExpanded, node.id);
+  // Folded, no subfolders show, so no folder is drawn open.
+  const Icon = sharedAccountName ? User : getIconForMailbox(node.role, hasChildren, isExpanded && !isCollapsed, node.id);
   const isVirtualNode = node.id.startsWith('shared-');
   const isSelected = selectedMailbox === node.id;
   const label = sharedAccountName ?? localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
   // Folded to icons, eight folders of one's own were eight identical folder
-  // icons (p2-9): each shows its first letter instead.
-  const letterIcon = isCollapsed && !node.role && !sharedAccountName && !isVirtualNode;
+  // icons (p2-9): each carries its first letter inside the folder glyph.
+  const letterIcon = isCollapsed && initials && !node.role && !sharedAccountName && !isVirtualNode;
   // Only for the active login's folders: its client tells a missing
   // accountId (own mailbox) apart.
   const muted = useMutedMailbox(isVirtualNode || dragAccountId || pickOnly ? null : node);
@@ -969,6 +1037,7 @@ function TagItem({
         isCollapsed={isCollapsed}
         dropHandlers={globalDragging ? (dropHandlers as Record<string, unknown>) : undefined}
         isValidDropTarget={isValidDropTarget}
+        railKey={`tag:${node.id}`}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
@@ -1299,9 +1368,26 @@ function SidebarImpl({
   }, [railOpen]);
   // The pointer resting on the folders floats the tree out; on the header
   // (expand, compose) it doesn't, so the expand button can still be clicked.
-  const armRailHover = useCallback((target: EventTarget | null) => {
+  const navRef = useRef<HTMLElement>(null);
+  // The item the pointer rests on in the folded column, and where on screen.
+  const hoveredRailItem = useRef<{ key: string; top: number } | null>(null);
+  const lastPointer = useRef<{ x: number; y: number; target: EventTarget | null }>({ x: 0, y: 0, target: null });
+  // Read when the tree floats out, not when the pointer arrived: the column
+  // may have been scrolled under a resting pointer in between.
+  const noteHoveredRailItem = useCallback(() => {
+    const { x, y, target } = lastPointer.current;
+    const under = typeof document.elementFromPoint === 'function' ? document.elementFromPoint(x, y) : null;
+    const from = under ?? (target instanceof Element ? target : null);
+    const item = from?.closest<HTMLElement>('[data-rail-key]');
+    hoveredRailItem.current = item?.dataset.railKey && navRef.current?.contains(item)
+      ? { key: item.dataset.railKey, top: item.getBoundingClientRect().top }
+      : null;
+  }, []);
+  const armRailHover = useCallback((e: React.MouseEvent) => {
     if (!hoverOpens()) return;
-    if (mvShell) { setRailHovered(true); return; }
+    const target = e.target;
+    lastPointer.current = { x: e.clientX, y: e.clientY, target };
+    if (mvShell) { noteHoveredRailItem(); setRailHovered(true); return; }
     if (target instanceof Element && target.closest('[data-sidebar-head]')) {
       if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
       railHoverTimer.current = null;
@@ -1310,9 +1396,59 @@ function SidebarImpl({
     if (railHoverTimer.current) return;
     railHoverTimer.current = setTimeout(() => {
       railHoverTimer.current = null;
+      noteHoveredRailItem();
       setRailHovered(true);
     }, RAIL_HOVER_DELAY_MS);
-  }, [mvShell]);
+  }, [mvShell, noteHoveredRailItem]);
+  // The folded column and the tree floated out of it share one scrolling
+  // list. Scrolled down the column, the tree opened at that same offset, which
+  // in the longer tree was somewhere else: a hover now puts the hovered item
+  // back under the pointer, All folders starts at the top (and the focus
+  // brings the open folder into view), and folding back returns the column
+  // to where it was.
+  const railScrollTop = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    if (hoverExpanded) {
+      if (railScrollTop.current !== null) return;
+      railScrollTop.current = nav.scrollTop;
+      const hovered = railOpen ? null : hoveredRailItem.current;
+      const item = hovered
+        ? Array.from(nav.querySelectorAll<HTMLElement>('[data-rail-key]')).find((el) => el.dataset.railKey === hovered.key)
+        : null;
+      nav.scrollTop = item && hovered ? nav.scrollTop + item.getBoundingClientRect().top - hovered.top : 0;
+      return;
+    }
+    if (railScrollTop.current === null) return;
+    const railTop = railScrollTop.current;
+    railScrollTop.current = null;
+    // Unfolded meanwhile: the full list keeps its own place.
+    if (!isCollapsed) return;
+    nav.scrollTop = railTop;
+    // A folder picked in the tree is shown in the column too.
+    const current = nav.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!current) return;
+    const view = nav.getBoundingClientRect();
+    const box = current.getBoundingClientRect();
+    if (box.top < view.top) nav.scrollTop += box.top - view.top;
+    else if (box.bottom > view.bottom) nav.scrollTop += box.bottom - view.bottom;
+  }, [hoverExpanded, railOpen, isCollapsed]);
+  // Folded, the arrows, Home and End go from item to item, Enter opens.
+  const moveInRail = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[data-testid="folder-row"] > button:not(:disabled)'));
+    if (items.length === 0) return;
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    const next = e.key === 'Home' ? 0
+      : e.key === 'End' ? items.length - 1
+      : at < 0 ? 0
+      : e.key === 'ArrowDown' ? Math.min(at + 1, items.length - 1) : Math.max(at - 1, 0);
+    e.preventDefault();
+    e.stopPropagation();
+    items[next].focus();
+  }, []);
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
@@ -1681,6 +1817,7 @@ function SidebarImpl({
             colorful={colorfulSidebarIcons}
             onContextMenu={active ? handleMailboxContextMenu : undefined}
             dragAccountId={dragAccountId}
+            initials={tree.length > 1}
           />
         ))}
       </div>
@@ -1770,6 +1907,31 @@ function SidebarImpl({
                   </div>
                 );
               }
+              if (isCollapsed) {
+                // Folded, a shared account is one item: its inbox opens, or
+                // without one the drawer with the account unfolded. It was
+                // left out, and only its heading's rule stayed behind.
+                const inbox = account.children.find((child) => child.role === 'inbox');
+                const selectedHere = !!selected && subtreeHas(account, selected);
+                return (
+                  <SidebarRow
+                    key={account.id}
+                    icon={<User className={getIconClass(selectedHere, false, false)} />}
+                    label={account.name}
+                    isSelected={selectedHere}
+                    unread={subtreeUnread(account)}
+                    onClick={() => {
+                      if (inbox) { onSelect?.(inbox.id); return; }
+                      if (!expanded) onToggle();
+                      if (!accountExpanded) toggleSharedAccount(account.id);
+                      setRailOpen(true);
+                    }}
+                    isCollapsed
+                    testShared
+                    railKey={account.id}
+                  />
+                );
+              }
               return (
                 <div key={account.id}>
                   <SidebarSectionHeader
@@ -1780,6 +1942,7 @@ function SidebarImpl({
                     sub
                     icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
                     testId="section-shared-account"
+                    railKey={account.id}
                     onContextMenu={active && menuAccountId
                       ? (e) => handleSharedAccountContextMenu(e, menuAccountId)
                       : undefined}
@@ -2067,8 +2230,8 @@ function SidebarImpl({
     <div
       ref={rootRef}
       // The peek of the collapsed rail; not with hover opening turned off.
-      onMouseEnter={sidebarCollapsed && !isDrawer ? (e) => armRailHover(e.target) : undefined}
-      onMouseMove={sidebarCollapsed && !isDrawer && !mvShell && !railHovered ? (e) => armRailHover(e.target) : undefined}
+      onMouseEnter={sidebarCollapsed && !isDrawer ? armRailHover : undefined}
+      onMouseMove={sidebarCollapsed && !isDrawer && !mvShell && !railHovered ? armRailHover : undefined}
       onMouseLeave={sidebarCollapsed && !isDrawer ? () => {
         if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
         railHoverTimer.current = null;
@@ -2211,7 +2374,19 @@ function SidebarImpl({
       {!isCollapsed && <VacationBanner />}
 
       {/* Mailbox List */}
-      <nav aria-label={t("folders")} className="flex-1 overflow-y-auto" data-tour="sidebar" data-folder-nav="" data-pane="folders">
+      <nav
+        ref={navRef}
+        aria-label={t("folders")}
+        // Folded, the column scrolls on its own, never sideways, with a thin
+        // scrollbar (globals.css) and the same gutter on both sides so the
+        // icons stay centred under the buttons above and below it.
+        className={cn("flex-1 min-h-0 overflow-y-auto", isCollapsed && "overflow-x-hidden py-1 [scrollbar-gutter:stable_both-edges]")}
+        data-tour="sidebar"
+        data-folder-nav=""
+        data-folder-rail={isCollapsed && !mvShell ? "" : undefined}
+        data-pane="folders"
+        onKeyDown={isCollapsed ? moveInRail : undefined}
+      >
         {unifiedSectionShown && (
           <div>
             <SidebarSectionHeader
