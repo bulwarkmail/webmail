@@ -407,6 +407,13 @@ export interface DesktopAppLockControls {
   pinStep?: (data: Uint8Array) => Promise<DesktopPinStepAnswer>;
   /** Ends this page's renderer and loads the page in a new one. Only while main says locked. */
   replaceRenderer?: () => void;
+  /**
+   * What only main can delete. `account` null: everything on this device, and then `finishLocalWipe`.
+   * `failed` names what didn't go, and the wipe isn't reported as done. Absent on an older shell.
+   */
+  localWipe?: (request: { reason: 'remote' | 'settings'; account: string | null }) => Promise<{ failed: string[] }>;
+  /** Clears what the page still stood on, and restarts the app. */
+  finishLocalWipe?: (options: { keepLocalStorage: boolean }) => Promise<void>;
 }
 
 export interface DesktopAppLockBridge {

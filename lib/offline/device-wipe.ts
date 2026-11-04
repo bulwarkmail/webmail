@@ -47,6 +47,7 @@ import { SW_SCOPE } from '@/lib/app-update';
 import { devicesForAccount, devicesForNoOne } from '@/lib/device-policy';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { shellControls } from '@/lib/app-lock/shell';
 import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { isAppLockedNow } from '@/lib/app-lock/state';
 import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
@@ -104,6 +105,8 @@ const TICK_MS = 60 * 1000;
 const REPORT_BUDGET_MS = 3_000;
 /** How long a wipe waits for the desktop app's main process: the keys come after this. */
 const SHELL_FILES_BUDGET_MS = 10_000;
+/** How long a wipe waits for main's own steps. Past that they count as not done. */
+export const MAIN_WIPE_BUDGET_MS = 60_000;
 /** How long a wipe waits for one database a running plugin frame holds open. */
 const DATABASE_BUDGET_MS = 2_000;
 
@@ -338,6 +341,34 @@ async function flushConfirmations(finished?: string): Promise<void> {
   }));
 }
 
+/**
+ * The desktop app's main process deletes what no page can reach: every partition, the HTTP cache,
+ * copies of edited files, crash files, import jobs, the servers it knows and its copy of the lock
+ * key. `account`: that account's part only. False when a step didn't finish, and then the wipe is
+ * neither reported nor over: it's tried again at the next start. An older shell has none of it.
+ */
+async function wipeInMain(reason: WipeReason, account: string | null): Promise<boolean> {
+  const run = shellControls()?.localWipe;
+  if (!run) return true;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const answer = await Promise.race([
+      run({ reason: reason === 'user' ? 'settings' : 'remote', account }),
+      new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), MAIN_WIPE_BUDGET_MS); }),
+    ]);
+    return answer !== null && answer.failed.length === 0;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The last of it: this page goes, and the app starts anew. A confirmation still queued has to outlive that. */
+async function finishInMain(): Promise<void> {
+  await shellControls()?.finishLocalWipe?.({ keepLocalStorage: readWipeConfirmations().length > 0 }).catch(() => {});
+}
+
 function signalSignedOut(): void {
   // The login page would otherwise sign straight back in through a provider session.
   try {
@@ -436,6 +467,9 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   await deleteDeviceRecord(account).catch(() => {});
   await putRowsBack(records, account);
 
+  // A refused login takes what's the account's own, also when it was the last one.
+  const nobodyLeft = !ownOnly && !useAccountStore.getState().accounts.some((entry) => entry.id !== account);
+  if (!(await wipeInMain(reason, nobodyLeft ? null : account))) deleted = false;
   await flushConfirmations(deleted ? account : undefined);
   const wasLocked = isAppLockedNow();
   if (!ownOnly) {
@@ -445,6 +479,10 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   }
   if (deleted) clearWipePending(account);
   tellOtherWindows(account, 'end');
+  if (deleted && nobodyLeft && shellControls()?.finishLocalWipe) {
+    await finishInMain();
+    return;
+  }
   // Heard at the lock screen: signing out may have started the next account here, and with
   // nobody left a new page is what takes the lock screen away.
   if (wasLocked && !ownOnly) reloadPage();
@@ -498,6 +536,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   await wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);
+  if (!(await wipeInMain(reason, null))) deleted = false;
   await flushConfirmations(deleted ? WHOLE_DEVICE : undefined);
   signalSignedOut();
   await forgetLockIfNobodyStays(null).catch(() => {});
@@ -505,6 +544,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   await endWebPushIfNobodyLeft().catch(() => {});
   if (deleted) clearWipePending(WHOLE_DEVICE);
   tellOtherWindows(null, 'end');
+  if (deleted) await finishInMain();
 }
 
 // ---- A sign-out: the row has nothing left to look after ----
