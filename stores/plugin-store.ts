@@ -14,6 +14,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { requestConsent } from '@/lib/plugin-sandbox/consent';
+import { keystoreCouldReach } from '@/lib/plugin-sandbox/host-api-keystore';
 import { packageHash, type ValidatedPluginManifest } from '@/lib/extension-package';
 import JSZip from 'jszip';
 import { sha256Hex } from '@/lib/plugin-sandbox/bundle-integrity';
@@ -249,7 +250,9 @@ export const usePluginStore = create<PluginStoreState>()(
 
         // Per-user consent gate: prompt for any permission the user has not
         // explicitly approved yet. Managed plugins (admin-pushed) skip this -
-        // the admin has already approved them at install time.
+        // the admin has already approved them at install time - but for what
+        // an admin can't approve for someone else (askManagedKeystore).
+        await askManagedKeystore(plugin, set);
         const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
         const granted = new Set<string>(plugin.grantedPermissions ?? []);
         const missing = (plugin.permissions ?? [])
@@ -401,6 +404,17 @@ export const usePluginStore = create<PluginStoreState>()(
           await Promise.allSettled(enabledPlugins.filter((_, i) => allowed[i]).map(plugin => loadPlugin(plugin)));
 
           set({ initialized: true });
+
+          // After the start, which doesn't wait for anyone to answer. A plugin runs without
+          // the keystore until then, and starts again to see what it was given.
+          for (const plugin of get().plugins.filter(p => p.managed && p.enabled && p.status !== 'error')) {
+            void askManagedKeystore(plugin, set).then((granted) => {
+              const latest = get().plugins.find(p => p.id === plugin.id);
+              if (!granted || !latest?.enabled) return;
+              deactivatePlugin(plugin.id);
+              return loadPlugin(latest);
+            }).catch(() => {});
+          }
         })();
 
         try {
@@ -461,6 +475,25 @@ function removePluginData(id: string): void {
 }
 
 /** Give the loader its way back into the store. */
+/**
+ * An admin's install doesn't cover the certificates on this person's computer, so they're
+ * asked for that alone, also when an update adds it. Runs with or without it, as with any
+ * optional permission. Says whether this added a grant.
+ */
+async function askManagedKeystore(
+  plugin: InstalledPlugin,
+  set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
+): Promise<boolean> {
+  if (!plugin.managed || !plugin.permissions?.includes('keystore') || !keystoreCouldReach(plugin)) return false;
+  if (plugin.grantedPermissions?.includes('keystore') || plugin.declinedPermissions?.includes('keystore')) return false;
+  const accepted = await requestConsent(plugin.id, plugin.name, ['keystore' as Permission]);
+  const field = accepted ? 'grantedPermissions' : 'declinedPermissions';
+  set(state => ({
+    plugins: state.plugins.map(p => (p.id === plugin.id ? { ...p, [field]: [...new Set([...(p[field] ?? []), 'keystore'])] } : p)),
+  }));
+  return accepted;
+}
+
 function wireLoader(
   get: () => PluginStoreState,
   set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
@@ -870,7 +903,8 @@ usePluginStore.subscribe((state, prev) => {
 // A plugin the user installed runs on that user's consent and settings. Once
 // everyone has signed out, the next person at this browser must be asked
 // again: the code stays, the grants and settings go, and it is left off.
-// The admin's plugins are the admin's choice and stay as they are.
+// The admin's plugins are the admin's choice and stay as they are, but for
+// what that person answered about their own certificates.
 onFullSignOut(() => {
   const { plugins } = usePluginStore.getState();
   for (const plugin of plugins) {
@@ -878,7 +912,10 @@ onFullSignOut(() => {
   }
   usePluginStore.setState({
     plugins: plugins.map((plugin) => {
-      if (plugin.managed) return plugin;
+      if (plugin.managed) {
+        const { grantedPermissions: _kept, declinedPermissions: _declined, ...kept } = plugin;
+        return kept;
+      }
       const { grantedPermissions: _granted, ...rest } = plugin;
       return { ...rest, enabled: false, status: 'disabled' as PluginStatus, error: undefined, settings: {} };
     }),

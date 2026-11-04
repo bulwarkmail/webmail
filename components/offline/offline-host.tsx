@@ -27,6 +27,9 @@ export function OfflineHost() {
   const tStorage = useTranslations('offlineStorage');
   const tStorageRef = useRef(tStorage);
   tStorageRef.current = tStorage;
+  const tKey = useTranslations('keyProtection');
+  const tKeyRef = useRef(tKey);
+  tKeyRef.current = tKey;
   const router = useRouter();
   const routerRef = useRef(router);
   routerRef.current = router;
@@ -88,6 +91,12 @@ export function OfflineHost() {
           break;
         case 'store-unavailable':
           toast.warning(tConflictsRef.current('store_unavailable'), { duration: 0 });
+          break;
+        case 'key-unprotected':
+          toast.warning(tKeyRef.current('wrap_failed'), { duration: 0 });
+          break;
+        case 'rekey-failed':
+          toast.warning(tKeyRef.current('rekey_failed'), { duration: 0 });
           break;
         case 'refused-delete':
           toast.warning(tr('toast.refused_delete'));

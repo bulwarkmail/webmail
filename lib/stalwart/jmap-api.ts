@@ -17,6 +17,7 @@
  * this process — see calendar-agenda's session handling).
  */
 
+import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
 import { fetchJmapServer } from '@/lib/stalwart/server-fetch';
 import { UPSTREAM_JSON_MAX_BYTES, readJsonCapped } from '@/lib/security/capped-body';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
@@ -88,7 +89,7 @@ export async function postJmap(
     if (!location) return response;
 
     const next = new URL(location, url);
-    if (!isTrustedRedirect(url, next)) {
+    if (!isTrustedRedirect(url, next) || desktopRedirectRefused(url, next, options.trusted !== false)) {
       throw new JmapRedirectError(
         `JMAP endpoint redirected to an untrusted host: ${next.host}`,
       );

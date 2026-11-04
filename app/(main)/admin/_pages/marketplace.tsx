@@ -45,6 +45,7 @@ interface InstalledEntry {
 interface UpdatesResult {
   installed: InstalledEntry[];
   updates: Array<{
+    addedPermissions?: string[];
     slug: string; currentVersion: string; version: string; channel: 'stable' | 'beta'; publishedAt: string | null;
     changelog: string | null; notes?: ChangelogFlags; changelogs?: ChangelogEntry[];
   }>;
@@ -95,7 +96,9 @@ const pillClass = (active: boolean) => cn(
  * Installs one version of an extension. A version the publisher withdrew,
  * or one older than the installed version, comes back as 409; the admin is
  * asked (in the page's ConfirmDialog), and the install is repeated with
- * `force` if they insist. Returns the error text to show, or null.
+ * `force` if they insist. An update that asks for more permissions comes back
+ * the same way, and is repeated with the ones the admin saw. "Update all" goes
+ * through here too, so it asks about each. Returns the error text to show, or null.
  */
 export interface InstallQuestion {
   title: string;
@@ -108,28 +111,39 @@ export async function installVersion(
   body: { slug: string; version: string; type: 'plugin' | 'theme' },
   confirm: (question: InstallQuestion) => boolean | Promise<boolean>,
 ): Promise<{ ok: true; warnings: string[]; signature: string | null; updated: boolean } | { ok: false; error: string }> {
-  const send = (force: boolean) => apiFetch('/api/admin/marketplace', {
+  let force = false;
+  let acceptPermissions: string[] | undefined;
+  const send = () => apiFetch('/api/admin/marketplace', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(force ? { ...body, force: true } : body),
+    body: JSON.stringify({ ...body, ...(force ? { force: true } : {}), ...(acceptPermissions ? { acceptPermissions } : {}) }),
   });
   try {
-    let res = await send(false);
-    if (res.status === 409) {
+    let res = await send();
+    // At most one of each question: withdrawn or older, then permissions.
+    for (let asked = 0; res.status === 409 && asked < 3; asked += 1) {
       const data = await res.json().catch(() => ({}));
-      if (data.yanked) {
+      if (Array.isArray(data.permissionsAdded) && !acceptPermissions) {
+        const names = (data.permissionsAdded as string[]).join(', ');
+        const message = `${body.slug} ${body.version} asks for new permissions that the installed version doesn't have: ${names}.`;
+        if (!(await confirm({ title: 'Allow the new permissions?', message, confirmText: 'Update', cancelText: 'Cancel' }))) {
+          return { ok: false, error: 'Not installed.' };
+        }
+        acceptPermissions = data.permissionsAdded;
+      } else if (data.yanked && !force) {
         if (!(await confirm({ title: 'Install it anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        res = await send(true);
-      } else if (data.downgrade) {
+        force = true;
+      } else if (data.downgrade && !force) {
         if (!(await confirm({ title: 'Install the older version anyway?', message: data.error, confirmText: 'Install', cancelText: 'Cancel' }))) {
           return { ok: false, error: 'Not installed.' };
         }
-        res = await send(true);
+        force = true;
       } else {
         return { ok: false, error: data.error || 'Installation failed' };
       }
+      res = await send();
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data.error || 'Installation failed' };
@@ -463,6 +477,11 @@ function UpdatesSection({
                       {u.channel === 'beta' && <Badge tone="info">beta</Badge>}
                       <ChangelogBadges flags={{ security: anyFlag(entries, 'security'), breaking: anyFlag(entries, 'breaking') }} />
                     </div>
+                    {(u.addedPermissions?.length ?? 0) > 0 && (
+                      <p className="mt-1 text-xs text-amber-800 dark:text-amber-300" data-testid={`update-permissions-${u.slug}`}>
+                        New permissions: <span className="font-mono">{u.addedPermissions!.join(', ')}</span>
+                      </p>
+                    )}
                     {withNotes.length > 0 ? (
                       <details className="mt-1" data-testid={`update-notes-${u.slug}`}>
                         <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">

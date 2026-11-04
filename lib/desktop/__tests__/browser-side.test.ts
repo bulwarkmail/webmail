@@ -144,79 +144,212 @@ describe('JMAPClient on an approved http server', () => {
 });
 
 describe('runDesktopBrowserSignIn', () => {
-  const ENDPOINTS = { authorization_endpoint: 'https://mail.example/authorize', client_id: 'registered-client', scope: 'openid email' };
+  const ENDPOINTS = { authorization_endpoint: 'https://mail.example/authorize', client_id: 'registered-client', scope: 'openid email', issuer: 'https://mail.example' };
+  const REDIRECT = 'http://127.0.0.1:51234/bulwark-desktop/callback';
 
   function authBridge(result: unknown) {
-    const completeBrowserSignIn = vi.fn(async (_flowId: string, url: string) => (
-      typeof result === 'function' ? (result as (u: string) => unknown)(url) : result
-    ));
-    const bridge = {
-      version: 1,
-      platform: 'win32',
-      servers: { prepare: vi.fn(async () => ({ ok: true, approved: false })), noteSession: vi.fn() },
-      auth: {
-        beginBrowserSignIn: vi.fn(async () => ({ flowId: 'f1', redirectUri: 'http://127.0.0.1:51234/bulwark-desktop/callback' })),
-        completeBrowserSignIn,
-        cancelBrowserSignIn: vi.fn(),
-      },
-    } as unknown as BulwarkDesktopBridge;
-    setBridge(bridge);
-    return bridge;
+    const controls = {
+      begin: vi.fn(async (): Promise<unknown> => ({ ok: true, flowId: 'f1', redirectUri: REDIRECT, state: 'main-state' })),
+      complete: vi.fn(async (_flowId: string, url: string) => (
+        typeof result === 'function' ? (result as (u: string) => unknown)(url) : result
+      )),
+      useScheme: vi.fn(async () => 'bulwark://sign-in/callback'),
+      cancel: vi.fn(),
+      beginPassword: vi.fn(async (): Promise<unknown> => ({ ok: true, host: 'mail.example' })),
+      nextPassword: vi.fn(async (): Promise<unknown> => ({ ok: false, error: 'timeout' })),
+      answerPassword: vi.fn(),
+      outcome: vi.fn(async (): Promise<unknown> => ({ ok: true, code: '', state: 'main-state' })),
+    };
+    setBridge({ version: 1, platform: 'win32', auth: { claim: () => controls } } as unknown as BulwarkDesktopBridge);
+    return controls;
   }
 
-  const options = { serverUrl: 'https://mail.example', callbackPath: '/en/auth/callback', slot: 1, remember: true, addAccount: false };
+  const redeem = vi.fn(async () => true);
+  const tryPassword = vi.fn(async (): Promise<{ ok: true } | { ok: false; error: 'invalid_credentials' | 'totp_required' | 'other' }> => ({ ok: true }));
+  const options = { serverUrl: 'https://mail.example', slot: 1, remember: true, addAccount: false, fresh: false, redeem, tryPassword };
 
   beforeEach(() => {
+    redeem.mockClear();
+    tryPassword.mockClear();
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(ENDPOINTS), { status: 200 })));
   });
 
-  it('runs PKCE with the loopback redirect and parks what the callback page needs', async () => {
+  it('runs PKCE with state from main and the loopback redirect, and redeems here, with nothing in an address', async () => {
     const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
     let authorize = new URL('https://x');
     authBridge((url: string) => {
       authorize = new URL(url);
-      return { ok: true, code: 'the-code', state: authorize.searchParams.get('state') };
+      return { ok: true, code: 'the-code', state: 'main-state' };
+    });
+    let readBack = {};
+    redeem.mockImplementationOnce(async () => {
+      readBack = { client: sessionStorage.getItem('oauth_client_id'), slot: sessionStorage.getItem('oauth_cookie_slot'), remember: sessionStorage.getItem('oauth_remember') };
+      return true;
     });
     const outcome = await runDesktopBrowserSignIn(options);
-    expect(outcome.kind).toBe('callback');
+    expect(outcome).toEqual({ kind: 'signed-in' });
     expect(authorize.origin + authorize.pathname).toBe('https://mail.example/authorize');
     expect(authorize.searchParams.get('client_id')).toBe('registered-client');
-    expect(authorize.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:51234/bulwark-desktop/callback');
+    expect(authorize.searchParams.get('redirect_uri')).toBe(REDIRECT);
+    expect(authorize.searchParams.get('state')).toBe('main-state');
     expect(authorize.searchParams.get('code_challenge_method')).toBe('S256');
     expect(authorize.searchParams.get('code_challenge')).toBeTruthy();
-    expect(sessionStorage.getItem('oauth_redirect_uri')).toBe('http://127.0.0.1:51234/bulwark-desktop/callback');
-    expect(sessionStorage.getItem('oauth_client_id')).toBe('registered-client');
-    expect(sessionStorage.getItem('oauth_server_url')).toBe('https://mail.example');
-    expect(sessionStorage.getItem('oauth_cookie_slot')).toBe('1');
-    expect(sessionStorage.getItem('oauth_code_verifier')).toBeTruthy();
-  });
-
-  it('rejects an answer with another state', async () => {
-    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
-    authBridge({ ok: true, code: 'c', state: 'forged' });
-    const outcome = await runDesktopBrowserSignIn(options);
-    expect(outcome).toEqual({ kind: 'failed', error: 'state_mismatch' });
+    expect(readBack).toEqual({ client: 'registered-client', slot: '1', remember: 'true' });
+    const [server, code, verifier, redirect] = redeem.mock.calls[0] as unknown as string[];
+    expect([server, code, redirect]).toEqual(['https://mail.example', 'the-code', REDIRECT]);
+    // The verifier behind the challenge, kept in this function and nowhere else.
+    expect(verifier.length).toBeGreaterThanOrEqual(43);
+    expect(authorize.toString()).not.toContain(verifier);
     expect(sessionStorage.getItem('oauth_code_verifier')).toBeNull();
+    expect(sessionStorage.getItem('oauth_client_id')).toBeNull();
   });
 
-  it('sends nothing to a server the user declined', async () => {
+  it('refuses an answer another issuer signed', async () => {
     const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
-    const bridge = authBridge({ ok: false, error: 'cancelled' });
-    bridge.servers!.prepare = vi.fn(async () => ({ ok: false as const, reason: 'declined' as const }));
-    const outcome = await runDesktopBrowserSignIn(options);
-    expect(outcome.kind).toBe('declined');
-    expect(bridge.auth!.beginBrowserSignIn).not.toHaveBeenCalled();
+    authBridge({ ok: true, code: 'c', state: 'main-state', iss: 'https://evil.example' });
+    expect(await runDesktopBrowserSignIn(options)).toEqual({ kind: 'failed', error: 'issuer_mismatch' });
+    expect(redeem).not.toHaveBeenCalled();
+  });
+
+  it('asks the provider for a new login when the app says one is due', async () => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    let authorize = new URL('https://x');
+    authBridge((url: string) => {
+      authorize = new URL(url);
+      return { ok: false, error: 'cancelled' };
+    });
+    await runDesktopBrowserSignIn({ ...options, fresh: true });
+    expect(authorize.searchParams.get('prompt')).toBe('login');
+  });
+
+  it.each(['declined', 'policy', 'invalid'])('takes the no from main: %s, and nothing is asked of the server', async (error) => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    const controls = authBridge({ ok: false, error: 'cancelled' });
+    controls.begin.mockResolvedValueOnce({ ok: false, error });
+    expect((await runDesktopBrowserSignIn(options)).kind).toBe(error);
+    expect(controls.complete).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('says so when the server has no OAuth, and closes the listener', async () => {
+  it('a timeout is its own answer, so the page can say try again', async () => {
     const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 404 })));
-    const bridge = authBridge({ ok: true });
-    const outcome = await runDesktopBrowserSignIn(options);
-    expect(outcome.kind).toBe('unavailable');
-    expect(bridge.auth!.cancelBrowserSignIn).toHaveBeenCalledWith('f1');
-    expect(bridge.auth!.completeBrowserSignIn).not.toHaveBeenCalled();
+    authBridge({ ok: false, error: 'timeout' });
+    expect((await runDesktopBrowserSignIn(options)).kind).toBe('timeout');
+  });
+
+  it('a discovery outage is a failure, not the password page', async () => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 503 })));
+    const controls = authBridge({ ok: true });
+    expect((await runDesktopBrowserSignIn(options)).kind).toBe('failed');
+    expect(controls.cancel).toHaveBeenCalledWith('f1');
+    expect(controls.beginPassword).not.toHaveBeenCalled();
+  });
+
+  it('a server with no OAuth gets the page main serves, and each post goes through the login of the app', async () => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'no_oauth' }), { status: 404 })));
+    const controls = authBridge({ ok: true });
+    controls.nextPassword
+      .mockResolvedValueOnce({ ok: true, username: 'a', password: 'wrong' })
+      .mockResolvedValueOnce({ ok: true, username: 'a', password: 'right', totp: '123456' });
+    tryPassword.mockResolvedValueOnce({ ok: false, error: 'invalid_credentials' }).mockResolvedValueOnce({ ok: true });
+    expect(await runDesktopBrowserSignIn(options)).toEqual({ kind: 'signed-in' });
+    expect(controls.complete).not.toHaveBeenCalled();
+    expect(tryPassword.mock.calls.map((call) => (call as unknown[])[0])).toEqual([
+      { ok: true, username: 'a', password: 'wrong' },
+      { ok: true, username: 'a', password: 'right', totp: '123456' },
+    ]);
+    expect(controls.answerPassword.mock.calls).toEqual([
+      ['f1', { ok: false, error: 'invalid_credentials' }],
+      ['f1', { ok: true }],
+    ]);
+  });
+
+  it('a server that refuses loopback goes by the scheme', async () => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ...ENDPOINTS, use_scheme: true }), { status: 200 })));
+    let authorize = new URL('https://x');
+    const controls = authBridge((url: string) => {
+      authorize = new URL(url);
+      return { ok: true, code: 'c', state: 'main-state' };
+    });
+    await runDesktopBrowserSignIn(options);
+    expect(controls.useScheme).toHaveBeenCalledWith('f1');
+    expect(authorize.searchParams.get('redirect_uri')).toBe('bulwark://sign-in/callback');
+    expect((redeem.mock.calls[0] as unknown as string[])[3]).toBe('bulwark://sign-in/callback');
+  });
+});
+
+describe('runInstanceBrowserSignIn', () => {
+  const REDIRECT = 'http://127.0.0.1:51234/bulwark-desktop/callback';
+
+  function bridgeWith(complete: (flowId: string, url: string) => unknown) {
+    const controls = {
+      begin: vi.fn(async () => ({ ok: true, flowId: 'f1', redirectUri: REDIRECT, state: 'main-state' })),
+      complete: vi.fn(async (flowId: string, url: string) => complete(flowId, url)),
+      cancel: vi.fn(),
+    };
+    setBridge({ version: 1, platform: 'win32', auth: { claim: () => controls } } as unknown as BulwarkDesktopBridge);
+    return controls;
+  }
+
+  it('opens the login page of the instance with no secret in the address, and hands back the verifier', async () => {
+    const { runInstanceBrowserSignIn } = await import('../browser-sign-in');
+    let opened = new URL('https://x');
+    bridgeWith((_flow, url) => {
+      opened = new URL(url);
+      return { ok: true, code: 'the-code', state: 'main-state' };
+    });
+    const outcome = await runInstanceBrowserSignIn({ base: 'https://bulwark.example/mail', locale: 'de', fresh: false });
+    expect(opened.origin + opened.pathname).toBe('https://bulwark.example/mail/de/login');
+    expect(opened.searchParams.get('mobile_redirect_uri')).toBe(REDIRECT);
+    expect(opened.searchParams.get('mobile_state')).toBe('main-state');
+    expect(opened.searchParams.get('mobile_code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(opened.searchParams.has('fresh_login')).toBe(false);
+    if (outcome.kind !== 'code') throw new Error(outcome.kind);
+    expect(outcome.code).toBe('the-code');
+    expect(opened.toString()).not.toContain(outcome.verifier);
+    const challenge = Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(outcome.verifier))).toString('base64url');
+    expect(opened.searchParams.get('mobile_code_challenge')).toBe(challenge);
+  });
+
+  it('passes on that a new login is due, and takes a timeout as a timeout', async () => {
+    const { runInstanceBrowserSignIn } = await import('../browser-sign-in');
+    let opened = new URL('https://x');
+    bridgeWith((_flow, url) => {
+      opened = new URL(url);
+      return { ok: false, error: 'timeout' };
+    });
+    expect((await runInstanceBrowserSignIn({ base: 'https://b.example', locale: 'en', fresh: true })).kind).toBe('timeout');
+    expect(opened.searchParams.get('fresh_login')).toBe('1');
+  });
+});
+
+describe('who gets the sign-in calls', () => {
+  it('claims them once per bridge, whatever asks after that', async () => {
+    const { claimBrowserSignIn } = await import('../browser-sign-in');
+    const controls = {};
+    const claim = vi.fn(() => controls);
+    setBridge({ version: 1, platform: 'win32', auth: { claim } } as unknown as BulwarkDesktopBridge);
+    expect(claimBrowserSignIn()).toBe(controls);
+    expect(claimBrowserSignIn()).toBe(controls);
+    expect(claim).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers nothing in a browser, under an older shell, or with the policy off', async () => {
+    const { browserSignInAvailable } = await import('../browser-sign-in');
+    setBridge(undefined);
+    expect(browserSignInAvailable()).toBe(false);
+    setBridge({ version: 1, platform: 'win32' } as unknown as BulwarkDesktopBridge);
+    expect(browserSignInAvailable()).toBe(false);
+    const claim = () => ({});
+    setBridge({ version: 1, platform: 'win32', auth: { claim } } as unknown as BulwarkDesktopBridge);
+    expect(browserSignInAvailable()).toBe(true);
+    const { EMPTY_POLICY_LAYERS, resolvePolicies } = await import('../policy-schema');
+    const snapshot = resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { BrowserSignIn: false } });
+    setBridge({ version: 1, platform: 'win32', auth: { claim }, policy: { get: () => snapshot, onChange: () => () => {} } } as unknown as BulwarkDesktopBridge);
+    expect(browserSignInAvailable()).toBe(false);
   });
 });
 

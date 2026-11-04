@@ -55,6 +55,12 @@ export function useDesktopPolicy(): PolicySnapshot {
   return useSyncExternalStore(onDesktopPolicyChange, getDesktopPolicy, serverSnapshot);
 }
 
+/** Policy has the OS certificate store off: by its own switch, or with all plugins. */
+export function keystoreOffByDesktopPolicy(): boolean {
+  const policy = getDesktopPolicy();
+  return !policy.KeystoreEnabled.value || policy.PluginsMode.value === 'off';
+}
+
 export function desktopPolicyEntry<K extends PolicyKey>(key: K): PolicyEntry<K> {
   return getDesktopPolicy()[key];
 }

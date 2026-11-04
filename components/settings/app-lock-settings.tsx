@@ -24,6 +24,7 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
 import { IS_LITE } from "@/lib/lite";
 import { toast } from "@/stores/toast-store";
+import { KeyProtectionNotes } from "@/components/offline/key-protection-notes";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
 
 type Pending = "enable" | "disable" | "change" | "passkey" | "os" | null;
@@ -39,6 +40,8 @@ function useLockFacts() {
 /** The app lock's section on the General page: it has to exist on any server. */
 export function AppLockSettings() {
   const t = useTranslations("appLock");
+  const tKey = useTranslations("keyProtection");
+  const tEdit = useTranslations("desktopEdit");
   const { appName } = useConfig();
   const { on, required, timeout, update } = useLockFacts();
   const [pending, setPending] = useState<Pending>(null);
@@ -94,7 +97,12 @@ export function AppLockSettings() {
     event.preventDefault();
     if (busy) return;
     if (pending === "enable" && newPinReady(pin, repeat)) void run(() => enableAppLock(pin));
-    if (pending === "change" && current && newPinReady(pin, repeat)) void run(() => changeAppLockPin(current, pin));
+    if (pending === "change" && current && newPinReady(pin, repeat)) {
+      void run(async () => {
+        const { reenroll } = await changeAppLockPin(current, pin);
+        if (reenroll) toast.info(tKey("reenroll_note"), { duration: 0 });
+      });
+    }
     if (pending === "disable" && current) void run(() => disableAppLock(current));
     if (pending === "passkey" && current) {
       void run(async () => {
@@ -129,6 +137,7 @@ export function AppLockSettings() {
         <ToggleSwitch checked={on || required} onChange={(next) => setPending(next ? "enable" : "disable")} testId="app-lock-switch" />
       </SettingItem>
       <p className="text-xs text-muted-foreground" data-testid="app-lock-protects">{t("protects_desc")}</p>
+      <KeyProtectionNotes />
 
       {on && (
         <>
@@ -176,6 +185,10 @@ export function AppLockSettings() {
             </SettingItem>
           )}
         </>
+      )}
+
+      {on && getDesktopBridge()?.edit && (
+        <p className="text-xs text-muted-foreground" data-testid="app-lock-edit-note">{tEdit("lock_note")}</p>
       )}
 
       <Dialog

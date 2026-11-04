@@ -22,7 +22,7 @@
  *   messages a sign-out deletes without the user's word are named (lost.ts).
  */
 
-import { appLockKeyLayers, onStoreKeyMissing } from '@/lib/app-lock/controller';
+import { onStoreKeyMissing, storeKeyLayers } from '@/lib/app-lock/controller';
 import { IS_LITE } from '@/lib/lite';
 import { desktopJmapBase } from '@/lib/desktop/jmap-route';
 import { devicesForAccount, devicesForNoOne, signedInAccountIds } from '@/lib/device-policy';
@@ -63,6 +63,7 @@ import { clearHandoffs } from '@/lib/launch-handoff';
 import {
   clearEvicted,
   EVICTED_KEEP_MS,
+  onStoreOwnerChanged,
   forgetAccountState,
   forgetAllAccountState,
   forgetMailSnapshot,
@@ -110,6 +111,8 @@ export type OfflineNotice =
   | { kind: 'draft-conflict'; subject: string }
   | { kind: 'storage-failed' }
   | { kind: 'store-unavailable' }
+  | { kind: 'key-unprotected' }
+  | { kind: 'rekey-failed' }
   | { kind: 'store-reset'; lost?: number }
   | { kind: 'legacy-stranded' }
   | { kind: 'default-on' }
@@ -223,7 +226,16 @@ function noteStoreUnavailable(): void {
 }
 
 const storeHooks: StorePageHooks = {
-  keyLayers: appLockKeyLayers,
+  keyLayers: storeKeyLayers,
+  onKeyWrapFailed() {
+    if (useOfflineStore.getState().keyUnprotected) return;
+    useOfflineStore.setState({ keyUnprotected: true });
+    notify({ kind: 'key-unprotected' });
+  },
+  onRekeyFailed(account) {
+    useOfflineStore.setState((s) => ({ rekey: { ...s.rekey, [account]: 'failed' } }));
+    notify({ kind: 'rekey-failed' });
+  },
   onKeyLocked: onStoreKeyMissing,
   inputs(account) {
     const client = onlineClientFor(account);
@@ -276,6 +288,12 @@ const storeHooks: StorePageHooks = {
       void refreshUsage();
       // A pass also sends what the calendar and contacts have waiting.
       void refreshQueueState();
+    }
+    if (event.type === 'rekey') {
+      useOfflineStore.setState((s) => {
+        const { [event.account]: _before, ...rest } = s.rekey;
+        return { rekey: event.percent >= 100 ? rest : { ...rest, [event.account]: event.percent } };
+      });
     }
     if (event.type === 'progress') {
       useOfflineStore.setState((s) => ({ progress: { ...s.progress, [event.account]: nextProgress(s.progress[event.account], event, Date.now()) } }));
@@ -1246,6 +1264,7 @@ const cleanups: Array<() => void> = [];
 export function registerOfflineHooks(): void {
   if (!offlineSupported()) return;
   configureStore(storeHooks);
+  onStoreOwnerChanged((account) => wipeAccount(account));
   setOfflineHooks(hooks);
   setOutboxHooks(outbox);
   void moveLegacyOutbox();
@@ -1336,6 +1355,9 @@ export function startOfflineMode(): () => void {
     if (reason === 'explicit') void wipeAccount(id);
   }));
   void sweepAccountsGone();
+  // Also for an app that stays open past the 30 days.
+  const sweeping = setInterval(() => void sweepAccountsGone(), EVICTED_SWEEP_MS);
+  cleanups.push(() => clearInterval(sweeping));
   void checkStorageAccess();
 
   // Session, then a sync, for every account signed in with offline mode on.
@@ -1404,6 +1426,9 @@ export function startOfflineMode(): () => void {
   };
 }
 
+/** How often a running app looks whether a dropped account's 30 days are over. */
+export const EVICTED_SWEEP_MS = 60 * 60 * 1000;
+
 /**
  * Data no signed-in account vouches for. A dropped account's waits 30 days. One
  * that left the registry on purpose before this ran (a login without "remember
@@ -1466,6 +1491,7 @@ onFullSignOut(({ keepLocalStore }) => {
     health: keepLocalStore ? s.health : {},
     outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], localDrafts: [], usageBytes: 0, usage: {},
     storageFull: {}, progress: {}, syncing: [], lastSyncedAt: {}, startedOffline: false,
+    keyUnprotected: false, rekey: {},
   }));
 });
 

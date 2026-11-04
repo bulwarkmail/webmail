@@ -15,16 +15,16 @@ function parseTarget(target: string) {
 
 describe('push click keeps the owning mailbox (#1491)', () => {
   for (const owner of ['personal', 'team']) {
-    for (const unreadTotal of [1, 3]) {
+    for (const onScreen of [0, 2]) {
       for (const warm of [false, true]) {
-        it(`${owner}, ${unreadTotal} unread, ${warm ? 'existing' : 'new'} window`, async () => {
+        it(`${owner}, ${onScreen} announced already, ${warm ? 'existing' : 'new'} window`, async () => {
           const target = await pushClick(owner, async (url) => {
             expect(new URL(url, 'https://mail.example.test').searchParams.get('accountId')).toBe(owner);
-            return { slot: 0, unreadTotal, email: { id: 'same-id', threadId: 't', subject: 'Mail' } };
-          }, { warm });
+            return { slot: 0, unreadTotal: 3, email: { id: 'same-id', threadId: 't', subject: 'Mail' } };
+          }, { warm, onScreen: Array.from({ length: onScreen }, (_, i) => `earlier-${i}`) });
           const link = parseTarget(target);
           expect(link?.slot).toBe(0);
-          if (unreadTotal === 1) {
+          if (onScreen === 0) {
             expect(link).toMatchObject({ kind: 'message', id: 'same-id', ownerAccountId: owner });
           } else {
             expect(link).toMatchObject({ kind: 'folder', ref: 'inbox', ownerAccountId: owner });
@@ -42,7 +42,7 @@ describe('push click keeps the owning mailbox (#1491)', () => {
   });
 
   it('keeps the login slot and owner with a mount prefix and legacy payload', async () => {
-    const target = await pushClick('team', async () => ({ slot: 2, unreadTotal: 3, email: { id: 'same-id' } }), { basePath: '/webmail', legacy: true });
+    const target = await pushClick('team', async () => ({ slot: 2, unreadTotal: 3, email: { id: 'same-id' } }), { basePath: '/webmail', legacy: true, onScreen: ['earlier'] });
     expect(target).toMatch(/^\/webmail\/mail\/folder\/inbox\?/);
     expect(parseTarget(target)).toMatchObject({ kind: 'folder', ownerAccountId: 'team', slot: 2 });
   });

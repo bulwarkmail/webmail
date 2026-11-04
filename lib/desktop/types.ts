@@ -190,16 +190,46 @@ export interface DesktopLifecycleBridge {
   onFlushRequest: (handler: () => Promise<DesktopFlushAnswer | unknown>) => () => void;
 }
 
-export type DesktopBrowserSignInResult =
-  | { ok: true; code: string; state: string }
+/** Standalone: a mail server's own OAuth. Instance: the instance's own login page. */
+export type DesktopBrowserSignInRequest = { kind: 'oauth'; serverUrl: string } | { kind: 'instance' };
+
+export type DesktopBrowserSignInBegin =
+  | { ok: true; flowId: string; redirectUri: string; state: string }
   | { ok: false; error: string };
 
+export type DesktopBrowserSignInResult =
+  | { ok: true; code: string; state: string; iss?: string }
+  | { ok: false; error: string };
+
+export type DesktopPasswordSignInStart = { ok: true; host: string } | { ok: false; error: string };
+
+export type DesktopPasswordSignInAttempt =
+  | { ok: true; username: string; password: string; totp?: string }
+  | { ok: false; error: string };
+
+export type DesktopPasswordSignInAnswer =
+  | { ok: true }
+  | { ok: false; error: 'invalid_credentials' | 'totp_required' | 'other' };
+
+/** Sign-in through the system browser. See lib/desktop/browser-sign-in.ts. */
+export interface DesktopBrowserSignInControls {
+  /** A short-lived loopback listener for one sign-in. Only from a click. */
+  begin: (request: DesktopBrowserSignInRequest) => Promise<DesktopBrowserSignInBegin>;
+  /** Opens the system browser on `url` and waits for the redirect. */
+  complete: (flowId: string, url: string) => Promise<DesktopBrowserSignInResult>;
+  /** The server refused loopback and took the `bulwark:` scheme. */
+  useScheme: (flowId: string) => Promise<string | null>;
+  cancel: (flowId: string) => void;
+  /** The server has no OAuth: a page main serves on a stable loopback port. */
+  beginPassword: (flowId: string) => Promise<DesktopPasswordSignInStart>;
+  nextPassword: (flowId: string) => Promise<DesktopPasswordSignInAttempt>;
+  answerPassword: (flowId: string, answer: DesktopPasswordSignInAnswer) => void;
+  outcome: (flowId: string) => Promise<DesktopBrowserSignInResult>;
+}
+
 export interface DesktopAuthBridge {
-  /** Starts a short-lived loopback listener for one sign-in. */
-  beginBrowserSignIn: () => Promise<{ flowId: string; redirectUri: string }>;
-  /** Opens the system browser on `authorizeUrl` and waits for the redirect. */
-  completeBrowserSignIn: (flowId: string, authorizeUrl: string) => Promise<DesktopBrowserSignInResult>;
-  cancelBrowserSignIn: (flowId: string) => void;
+  /** Once per document, in the first render: a same-origin frame can reach this bridge. */
+  claim: () => DesktopBrowserSignInControls | null;
 }
 
 export type DesktopPluginInstallResult =
@@ -301,23 +331,32 @@ export type DesktopKeystoreDecryptScheme =
   /** MGF1 on the same hash. */
   | { scheme: 'rsa-oaep'; hash: DesktopKeystoreHash; label?: Uint8Array };
 
+/** `quiet`: answer from what's already allowed, with keystore:ask-first in place of a dialog. */
+export interface DesktopKeystoreUseOptions {
+  quiet?: boolean;
+}
+
 /**
  * The OS certificate store and smart cards. Present only where the native helper
- * loaded and the OS has one. Failures reject with a bare code as the message:
- * keystore:cancelled, not-found, unsupported, locked, invalid, failed. The shell asks the
- * user in a native dialog before any of this, on top of which the OS has its own prompts,
- * so a call may take a while. On an instance it stays off until policy or the user allows
- * it. The key never leaves the OS.
+ * loaded, the OS has one and policy allows it. Failures reject with a bare code as the
+ * message: keystore:cancelled, ask-first, not-found, unsupported, locked, invalid, failed.
+ * The shell asks the user in a native dialog before any of this, on top of which the OS
+ * has its own prompts, so a call may take a while. On an instance it stays off until
+ * policy or the user allows it. The key never leaves the OS.
  */
 export interface DesktopKeystoreBridge {
   /** Certificates fit for mail that have a private key. The OS doesn't prompt. */
-  list: () => Promise<DesktopKeystoreCertificate[]>;
-  /** RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value. */
-  sign: (id: string, digest: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
+  list: (options?: DesktopKeystoreUseOptions) => Promise<DesktopKeystoreCertificate[]>;
+  /**
+   * Signs a CMS message's signed attributes, given as their DER (a SET): content type,
+   * message digest and signing time at least. The shell checks them and hashes them itself,
+   * and asks at every call. RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value.
+   */
+  sign: (id: string, signedAttributes: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
   /** Unwraps a CMS content key. */
-  decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme) => Promise<Uint8Array>;
+  decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme, options?: DesktopKeystoreUseOptions) => Promise<Uint8Array>;
   /** The raw shared secret, big-endian. The peer's key is an EC SubjectPublicKeyInfo. */
-  agree: (id: string, peerPublicKey: Uint8Array) => Promise<Uint8Array>;
+  agree: (id: string, peerPublicKey: Uint8Array, options?: DesktopKeystoreUseOptions) => Promise<Uint8Array>;
   accessState: () => Promise<DesktopKeystoreAccessState>;
   /** Takes back a stored yes and this session's grants. Only ever narrows. */
   revokeAccess: () => Promise<void>;
@@ -355,10 +394,32 @@ export type DesktopOsUnlockAnswer = { ok: true; key: Uint8Array } | { ok: false;
  * this through `parent`, so that has to hold on a call alone. What it mustn't reach at all,
  * `lock` and `osUnlock`, the page takes once with `claim` before any frame exists.
  */
+/** A PIN guess through main. Blocked: too many wrong ones. Neither: main can't open its secret here. */
+export type DesktopPinStepAnswer = { ok: true; bytes: Uint8Array } | { ok: false; blockedUntil?: number };
+
+export interface DesktopAppLockControls {
+  lock: () => void;
+  osUnlock: () => Promise<DesktopOsUnlockAnswer>;
+  /** Through safeStorage, for this origin only. Null where the OS has no real key store. Absent on an older shell. */
+  wrap?: (data: Uint8Array) => Promise<Uint8Array | null>;
+  unwrap?: (data: Uint8Array) => Promise<Uint8Array | null>;
+  /** The key under the PIN takes a secret only main has, and every trip is counted there. */
+  pinStep?: (data: Uint8Array) => Promise<DesktopPinStepAnswer>;
+  /** Ends this page's renderer and loads the page in a new one. Only while main says locked. */
+  replaceRenderer?: () => void;
+  /**
+   * What only main can delete. `account` null: everything on this device, and then `finishLocalWipe`.
+   * `failed` names what didn't go, and the wipe isn't reported as done. Absent on an older shell.
+   */
+  localWipe?: (request: { reason: 'remote' | 'settings'; account: string | null }) => Promise<{ failed: string[] }>;
+  /** Clears what the page still stood on, and restarts the app. */
+  finishLocalWipe?: (options: { keepLocalStorage: boolean }) => Promise<void>;
+}
+
 export interface DesktopAppLockBridge {
   status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean }>;
   /** Once per document: the calls only the page itself may make. Null for whoever comes second. */
-  claim: () => { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null;
+  claim: () => DesktopAppLockControls | null;
   /** Sets up the proof. False when one exists. */
   enroll: (proof: Uint8Array) => Promise<boolean>;
   /** Lifts the lock when the proof is the right one. */
@@ -367,9 +428,8 @@ export interface DesktopAppLockBridge {
   disable: (proof: Uint8Array) => Promise<boolean>;
   /** The PIN is lost, or everyone signed out. With no proof, main asks the user natively. */
   forget: (proof?: Uint8Array) => Promise<boolean>;
-  /** Through safeStorage, for this origin only. Null where the OS has no real key store. */
-  wrap: (data: Uint8Array) => Promise<Uint8Array | null>;
-  unwrap: (data: Uint8Array) => Promise<Uint8Array | null>;
+  /** Main keeps a lock and this profile has no PIN for it. Main asks the user natively, once a run. */
+  clearOrphan?: () => Promise<boolean>;
   /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
   osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
   osRemove: () => Promise<void>;
@@ -633,6 +693,99 @@ export interface DesktopPrivacyBridge {
   onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
 }
 
+/** An attachment copied to a private folder and open in its default program. */
+export interface DesktopEditSession {
+  id: string;
+  name: string;
+  type: string;
+  /** The local account it belongs to. */
+  account: string;
+  /** What the page said it came from. Main only keeps it. */
+  source: string;
+  /** Saved differently from what the page last took. */
+  changed: boolean;
+  /** Goes up with each save. */
+  version: number;
+  /** What the file holds now: a chip holding this version has nothing to update. */
+  hash: string;
+  /** A composer has it and offers the update itself. */
+  claimed: boolean;
+  /** Wanted gone, and another program has it open. */
+  held: boolean;
+  /** Saved under a new name in that program. */
+  savedAs: boolean;
+  /** Not used for 30 days: this offer is the last. */
+  lastChance: boolean;
+}
+
+/** What couldn't be deleted because another program has it open, by file name. `refused`: nothing happened. */
+export interface DesktopEditClearResult {
+  held: string[];
+  refused?: boolean;
+}
+
+export interface DesktopEditFile {
+  /** One session per key: Edit on the same attachment opens the same file. */
+  key: string;
+  name: string;
+  type: string;
+  data: Uint8Array;
+  account: string;
+  source: string;
+}
+
+export type DesktopEditBeginResult =
+  /** One click, one ticket, for that key. A session for it exists: reopen this one. */
+  | { ok: true; ticket: string; open?: string }
+  | { ok: false; reason: 'locked' | 'gesture' };
+
+export type DesktopEditOpenResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'locked' | 'ticket' | 'type' | 'too-large' | 'full' | 'no-app' | 'failed' };
+
+export type DesktopEditReadResult =
+  | { ok: true; name: string; type: string; data: Uint8Array; hash: string }
+  | { ok: false; reason: 'locked' | 'missing' | 'busy' | 'too-large' };
+
+/**
+ * Edit on an attachment: a private copy opened in its default program, watched for saves.
+ * Main refuses file types that run something and anything while locked. It can't know the
+ * organisation's rules, so lib/desktop/edit-attachments.ts asks those at each step.
+ */
+export interface DesktopEditBridge {
+  /** Whether this file may go through Edit at all: the same rule main enforces. */
+  canEdit: (name: string) => boolean;
+  /** Straight from the click: main spends it. The ticket lasts long enough to fetch the bytes, for this key only. */
+  begin: (key: string) => Promise<DesktopEditBeginResult>;
+  open: (ticket: string, file: DesktopEditFile) => Promise<DesktopEditOpenResult>;
+  reopen: (ticket: string, id: string) => Promise<DesktopEditOpenResult>;
+  /** Empty while locked. */
+  list: () => Promise<DesktopEditSession[]>;
+  /** The list after looking at each file now, for a decision that can't wait for the watcher. */
+  settle: () => Promise<DesktopEditSession[]>;
+  read: (id: string) => Promise<DesktopEditReadResult>;
+  /** This version is where it should be, so it's no longer a change. */
+  taken: (id: string, hash: string) => Promise<void>;
+  /** The draft it was on has gone: deleted, unless it holds a save nobody took. Main decides, as it knows. */
+  release: (id: string, source: string) => Promise<void>;
+  /** Asks natively if it holds edits. */
+  discard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The organisation said no: no question. */
+  forceDiscard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The question before a sign-out, native, naming what a program has open. A yes covers the `clear` that follows. */
+  askClear: (account: string) => Promise<boolean>;
+  /** An account's copies, or with null all of this origin's. Asks natively about edits, without that yes. */
+  clear: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** A wipe: no question. */
+  wipe: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** The page has shown a last offer. */
+  shown: (id: string) => void;
+  setSource: (id: string, source: string) => void;
+  /** A composer holds it, or stopped. Ends by itself with the page. */
+  claim: (id: string, on: boolean) => void;
+  onChange: (listener: (sessions: DesktopEditSession[]) => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -655,8 +808,11 @@ export interface BulwarkDesktopBridge {
   /** Absent on older shells. */
   certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
+  /** Absent on an older shell. */
+  httpCache?: { clear: () => Promise<void> };
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
+  edit?: DesktopEditBridge;
 }
 
 declare global {

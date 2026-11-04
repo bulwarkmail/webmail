@@ -14,6 +14,7 @@ import { useMailReading } from "@/hooks/use-mail-reading";
 import { useReadAloud } from "@/hooks/use-read-aloud";
 import { ReadAloudBar } from "./read-aloud-bar";
 import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachments";
+import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
@@ -3171,6 +3172,8 @@ export function EmailViewer({
   const attachmentCardsRef = useRef<HTMLDivElement>(null);
   const desktopClipboard = getDesktopBridge()?.clipboard;
   const tDesktopUi = useTranslations('desktopUi.attachment');
+  const editAccount = editAccountOf(email);
+  const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
   const readerAttachmentProps = {
     attachments: effectiveAttachments,
     thumbUrls: imageThumbUrls,
@@ -3179,6 +3182,20 @@ export function EmailViewer({
     onDownload: handleEffectiveAttachmentDownload,
     onDownloadAll: handleDownloadAllAttachments,
     onSaveAllToFolder: canPickFolder() ? () => void handleSaveAllToFolder() : undefined,
+    onEdit: (attachment: EffectiveAttachment) => {
+      if (!attachment.blobId || !blobClient || !email) return;
+      const { blobId } = attachment;
+      void editAttachment({
+        key: `mail:${editAccount}:${email.id}:${blobId}`,
+        name: resolveAttachmentName(attachment),
+        type: attachment.type,
+        account: editAccount,
+        source: { kind: 'mail', emailId: email.id, ownerAccountId: blobAccountId },
+        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, blobAccountId),
+      });
+    },
+    // Decrypted parts have no blob: they never go on disk this way. A message marked as phishing doesn't get opened in other programs.
+    canEdit: (attachment: EffectiveAttachment) => !!attachment.blobId && !!blobClient && !phishingMarked && canEditAttachment(resolveAttachmentName(attachment)),
     onCopyFile: desktopClipboard && blobClient ? (attachment: EffectiveAttachment) => {
       if (!attachment.blobId || !downloadAllowed('attachment', email)) return;
       void blobClient.fetchBlobArrayBuffer(attachment.blobId, undefined, undefined, blobAccountId)

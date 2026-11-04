@@ -35,6 +35,21 @@ function transportWith(respond: (init: RequestInit) => Response | Promise<Respon
 
 afterEach(() => vi.useRealTimers());
 
+describe('the HTTP cache', () => {
+  // Stalwart answers a download with `private, immutable, max-age=31536000`, and the browser's
+  // cache isn't encrypted: without this, a whole message sits in it in the clear for a year.
+  it('never gets a download or an answer', async () => {
+    const seen: Array<RequestInit> = [];
+    const transport = transportWith((init) => {
+      seen.push(init);
+      return new Response('{"methodResponses":[]}', { status: 200 });
+    });
+    await transport.download('a', 'b', 'message/rfc822', 'message.eml');
+    await transport.request([], []);
+    expect(seen.map((init) => init.cache)).toEqual(['no-store', 'no-store']);
+  });
+});
+
 describe('downloads', () => {
   it('gives a body piece by piece and adds them up for a plain download', async () => {
     const parts = [new Uint8Array([1, 2]), new Uint8Array([3])];

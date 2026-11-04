@@ -44,7 +44,7 @@ import { requestWindowSession, type SharedAccountSession } from '@/lib/popout/ch
 import { closePopoutWindow, isPopoutWindow, mainWindowStorage } from '@/lib/popout/window-role';
 import { noteCredentialsRejected, type ForcedSignOutKind } from '@/lib/offline/credentials-rejected';
 import { CREDENTIALS_REFUSED_CONFIRM_MS, markLoginRefused, wipeWorkWaiting } from '@/lib/devices/wipe-state';
-import { markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
+import { checkStoreOwner, markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
 import { toAsciiEmail } from '@/lib/idn';
 import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
@@ -110,6 +110,11 @@ interface AuthState {
   loginWithToken: (serverUrl: string, token: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithOAuth: (serverUrl: string, code: string, codeVerifier: string, redirectUri: string, serverId?: string) => Promise<boolean>;
   loginWithServerSso: (code: string, state: string) => Promise<boolean>;
+  /**
+   * The desktop app on an instance: the one-time code from its browser sign-in, with the
+   * verifier it kept. `blocked` is the device's own list of servers saying no.
+   */
+  loginWithDesktopHandoff: (code: string, verifier: string, options: { remember: boolean; rememberPassword: boolean; allowedServers: string[] | null; customServersAllowed: boolean }) => Promise<'ok' | 'blocked' | 'failed'>;
   loginDemo: () => Promise<boolean>;
   /**
    * Obtain a usable access token for `accountId`, or the active account.
@@ -1625,11 +1630,140 @@ function notifySignedIn(state: { activeAccountId: string | null; username: strin
   void authHooks.onLogin.emit({ accountId: state.activeAccountId, username: state.username ?? '' });
 }
 
+/**
+ * A provider's tokens are in, with the refresh token already in the slot's cookie: the
+ * rest of a sign-in. Server-side SSO, and the desktop app's sign-in on an instance.
+ */
+async function adoptProviderSession(
+  set: (state: Partial<AuthState>) => void,
+  get: () => AuthState,
+  session: {
+    serverUrl: string;
+    accessToken: string;
+    expiresIn: number;
+    remember: boolean | undefined;
+    slot: number;
+    /**
+     * Tokens from a typed password, not a provider's page: the account the user knows, under
+     * the name they typed. It has the same id as any other password sign-in with that name, so
+     * what its last sign-out kept comes back, and its password settings stay (#1432).
+     */
+    typedUsername?: string;
+  },
+): Promise<void> {
+  const { serverUrl: ssoServerUrl, accessToken: access_token, expiresIn: expires_in, remember, slot } = session;
+  const typed = session.typedUsername ? toAsciiEmail(session.typedUsername) : '';
+  const accountStore = useAccountStore.getState();
+  let boundAccountId: string | undefined;
+  const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }));
+  await client.connect();
+
+  const jmapUsername = client.getUsername();
+  const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), typed || jmapUsername);
+  // For SSO/OIDC, the JMAP session account name may be the
+  // preferred_username claim rather than the real email address.
+  // Prefer the email from the primary identity when available.
+  const username = typed || primaryIdentity?.email || jmapUsername;
+  initializeFeatureStores(client);
+
+  const accountId = generateAccountId(username, ssoServerUrl);
+  boundAccountId = accountId;
+
+  const prevAccountId = get().activeAccountId;
+  if (prevAccountId && prevAccountId !== accountId) {
+    snapshotAccount(prevAccountId);
+    clearAllStores();
+  }
+
+  await checkStoreOwner(accountId, client.getAccountId(), ssoServerUrl);
+  holdClient(accountId, client);
+  bindClientStatusHandlers(client, set, get, accountId);
+
+  accountStore.addAccount({
+    label: primaryIdentity?.name || username,
+    serverUrl: ssoServerUrl,
+    username,
+    authMode: 'oauth',
+    rememberMe: remember !== false,
+    displayName: primaryIdentity?.name || username,
+    email: primaryIdentity?.email || username,
+    lastLoginAt: Date.now(),
+    isConnected: true,
+    hasError: false,
+    isDefault: accountStore.accounts.length === 0,
+  });
+  // The refresh-token cookie was written to `slot` by /api/auth/sso/complete.
+  // Force the stored cookieSlot to match - see loginWithOAuth above for the
+  // re-add and concurrent-tab cases this guards against.
+  accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: !typed });
+  if (typed) {
+    const serverIdentifiers = buildServerIdentifiers(client.getSessionUsername(), primaryIdentity?.email, ssoServerUrl);
+    if (serverIdentifiers.length > 0) accountStore.updateAccount(accountId, { serverIdentifiers });
+  }
+  accountStore.setActiveAccount(accountId);
+
+  await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
+  void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
+
+  set({
+    isAuthenticated: true,
+    isLoading: false,
+    serverUrl: ssoServerUrl,
+    username,
+    client,
+    ...getClientRateLimitState(client),
+    identities,
+    primaryIdentity,
+    authMode: 'oauth',
+    accessToken: access_token,
+    tokenExpiresAt: Date.now() + expires_in * 1000,
+    connectionLost: false,
+    error: null,
+    activeAccountId: accountId,
+  });
+
+  import('@/stores/email-store').then(({ useEmailStore }) => {
+    useEmailStore.getState().prefetchInitialData(client).catch((err) => {
+      debug.error('Initial data prefetch failed:', err);
+    });
+  }).catch(() => {});
+
+  scheduleRefresh(expires_in, () => get().refreshAccessToken({ accountId }), accountId);
+
+  notifyParent('sso:auth-success', { username });
+
+  fetchConfig().then(cfg => {
+    if (!cfg.settingsSyncEnabled) return;
+    useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
+      useSettingsStore.getState().enableSync(username, ssoServerUrl);
+      applyPreferredIdentity(accountId);
+    });
+  }).catch(() => {});
+
+  notifySignedIn(get());
+}
+
+/** Within the sign-out's budget: an unreachable server doesn't hold it up. */
+function endPushForSignOut(signingOut: Iterable<IJMAPClient>): Promise<void> {
+  return Promise.race([
+    (async () => {
+      const { endWebPushForSignOut } = await import('@/lib/web-push');
+      for (const client of signingOut) await endWebPushForSignOut(client);
+    })().catch(() => undefined),
+    new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
+  ]);
+}
+
 function beforeLogoutHooks(accountId: string, options: SignOutCleanupOptions = {}): Promise<void> {
   return Promise.race([
     Promise.all([authHooks.onBeforeLogout.emit({ accountId }), runBeforeSignOut(accountId, options)]).then(() => {}),
     new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
   ]);
+}
+
+/** Test helper: the store's own clients come from signing in. */
+export function setClientForTests(accountId: string, client: JMAPClient): void {
+  clients.set(accountId, client);
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -1805,6 +1939,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
           initializeFeatureStores(client);
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           // Store client in multi-account map
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
@@ -1947,6 +2082,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
           initializeFeatureStores(client);
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2163,6 +2299,7 @@ export const useAuthStore = create<AuthState>()(
             clearAllStores();
           }
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2291,88 +2428,7 @@ export const useAuthStore = create<AuthState>()(
             throw new Error('Server URL not configured');
           }
 
-          let boundAccountId: string | undefined;
-          const client = JMAPClient.withBearer(ssoServerUrl, access_token, '', () => get().refreshAccessToken({ accountId: boundAccountId }));
-          await client.connect();
-
-          const jmapUsername = client.getUsername();
-          const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
-          // For SSO/OIDC, the JMAP session account name may be the
-          // preferred_username claim rather than the real email address.
-          // Prefer the email from the primary identity when available.
-          const username = primaryIdentity?.email || jmapUsername;
-          initializeFeatureStores(client);
-
-          const accountId = generateAccountId(username, ssoServerUrl);
-          boundAccountId = accountId;
-
-          const prevAccountId = get().activeAccountId;
-          if (prevAccountId && prevAccountId !== accountId) {
-            snapshotAccount(prevAccountId);
-            clearAllStores();
-          }
-
-          holdClient(accountId, client);
-          bindClientStatusHandlers(client, set, get, accountId);
-
-          accountStore.addAccount({
-            label: primaryIdentity?.name || username,
-            serverUrl: ssoServerUrl,
-            username,
-            authMode: 'oauth',
-            rememberMe: remember !== false,
-            displayName: primaryIdentity?.name || username,
-            email: primaryIdentity?.email || username,
-            lastLoginAt: Date.now(),
-            isConnected: true,
-            hasError: false,
-            isDefault: accountStore.accounts.length === 0,
-          });
-          // The refresh-token cookie was written to `slot` by /api/auth/sso/complete.
-          // Force the stored cookieSlot to match - see loginWithOAuth above for the
-          // re-add and concurrent-tab cases this guards against.
-          accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: true });
-          accountStore.setActiveAccount(accountId);
-
-          await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
-          void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
-
-          set({
-            isAuthenticated: true,
-            isLoading: false,
-            serverUrl: ssoServerUrl,
-            username,
-            client,
-            ...getClientRateLimitState(client),
-            identities,
-            primaryIdentity,
-            authMode: 'oauth',
-            accessToken: access_token,
-            tokenExpiresAt: Date.now() + expires_in * 1000,
-            connectionLost: false,
-            error: null,
-            activeAccountId: accountId,
-          });
-
-          import('@/stores/email-store').then(({ useEmailStore }) => {
-            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
-              debug.error('Initial data prefetch failed:', err);
-            });
-          }).catch(() => {});
-
-          scheduleRefresh(expires_in, () => get().refreshAccessToken({ accountId }), accountId);
-
-          notifyParent('sso:auth-success', { username });
-
-          fetchConfig().then(cfg => {
-            if (!cfg.settingsSyncEnabled) return;
-            useSettingsStore.getState().loadFromServer(username, ssoServerUrl).finally(() => {
-              useSettingsStore.getState().enableSync(username, ssoServerUrl);
-              applyPreferredIdentity(accountId);
-            });
-          }).catch(() => {});
-
-          notifySignedIn(get());
+          await adoptProviderSession(set, get, { serverUrl: ssoServerUrl, accessToken: access_token, expiresIn: expires_in, remember, slot });
           return true;
         } catch (error) {
           debug.error('Server SSO login error:', error);
@@ -2387,6 +2443,49 @@ export const useAuthStore = create<AuthState>()(
             client: null,
           });
           return false;
+        }
+      },
+
+      loginWithDesktopHandoff: async (code, verifier, { remember, rememberPassword, allowedServers, customServersAllowed }) => {
+        if (IS_LITE) return 'failed';
+        set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
+        try {
+          const slot = useAccountStore.getState().getNextCookieSlot();
+          const res = await apiFetch('/api/auth/desktop-handoff/redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, code_verifier: verifier, slot, remember, allowed_servers: allowedServers, custom_servers_allowed: customServersAllowed }),
+          }).then((answer) => noteSessionAnswer(answer, slot));
+          if (!res.ok) {
+            const refusal = (await res.json().catch(() => null)) as { error?: string } | null;
+            set({ isLoading: false, error: null });
+            return refusal?.error === 'blocked_by_policy' ? 'blocked' : 'failed';
+          }
+          const parked = await res.json();
+          if (parked.flow === 'password') {
+            // A password the browser checked a moment ago, down the same path as a typed one.
+            return (await get().login(parked.server_url, parked.username, parked.password, undefined, rememberPassword)) ? 'ok' : 'failed';
+          }
+          await adoptProviderSession(set, get, {
+            serverUrl: parked.server_url,
+            accessToken: parked.access_token,
+            expiresIn: parked.expires_in,
+            remember: parked.remember,
+            slot,
+            ...(parked.password_login ? { typedUsername: parked.username } : {}),
+          });
+          return 'ok';
+        } catch (error) {
+          debug.error('Desktop hand-off login error:', error);
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'generic',
+            isAuthenticated: false,
+            isRateLimited: false,
+            rateLimitUntil: null,
+            client: null,
+          });
+          return 'failed';
         }
       },
 
@@ -2541,6 +2640,8 @@ export const useAuthStore = create<AuthState>()(
         if (userInitiated && !(await passSignOutGates(accountId ?? 'all'))) return;
 
         await beforeLogoutHooks(accountId ?? 'all', { keepLocalStore: keepLocalData });
+        // A session that only ran out comes back with the next sign-in, push included.
+        if (state.client && !wasDemoMode && !keepLocalData) await endPushForSignOut([state.client]);
 
         // From here on nothing may renew this slot's session; the cleanup
         // below reopens it once the credentials are gone.
@@ -2690,16 +2791,19 @@ export const useAuthStore = create<AuthState>()(
         if (!account) return;
         const slot = account.cookieSlot ?? 0;
         const wasOAuth = account.authMode === 'oauth';
-
-        // Started first: the cleanup marks the slot closing right away, so a
-        // renewal in flight cannot bring the session back.
-        void clearSlotCredentials(slot, wasOAuth);
-        clearRefreshTimer(accountId);
         const client = clients.get(accountId);
-        if (client) {
-          forgetCalendarSubscriptions(client);
-          try { client.disconnect(); } catch { /* noop */ }
-        }
+        // The slot is closing from here on: a renewal in flight cannot bring the
+        // session back.
+        closingSlots.add(slot);
+        clearRefreshTimer(accountId);
+        if (client) forgetCalendarSubscriptions(client);
+        // The login's push goes first: a client that disconnected has no account
+        // id and no API left to reach the server with.
+        const pushEnded = client && reason === 'explicit' ? endPushForSignOut([client]) : Promise.resolve();
+        void pushEnded.finally(() => {
+          try { client?.disconnect(); } catch { /* noop */ }
+          return clearSlotCredentials(slot, wasOAuth);
+        });
         clients.delete(accountId);
         evictAccount(accountId);
         forgetAccountRows(accountId, get().client);
@@ -2717,6 +2821,15 @@ export const useAuthStore = create<AuthState>()(
           for (const account of useAccountStore.getState().accounts) noteRefusedLogin(account.id, true, 'session');
         }
         await beforeLogoutHooks('all', { keepLocalStore: keepLocalData });
+        if (!get().isDemoMode && !keepLocalData) {
+          // Each connected login first, on a budget that one unreachable server can
+          // use up. What's left, and whoever had no connection, only needs the relay.
+          await endPushForSignOut(clients.values());
+          await Promise.race([
+            import('@/lib/web-push').then((push) => push.dropAllWebPushRegistrations()).catch(() => undefined),
+            new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
+          ]);
+        }
 
         const accountStore = useAccountStore.getState();
         const allAccounts = [...accountStore.accounts];
@@ -3900,8 +4013,10 @@ useAuthStore.subscribe((state, prev) => {
   const wasReady = prev.isAuthenticated && !!prev.client && !!prev.activeAccountId;
   if (ready && !wasReady) void authHooks.onAuthReady.emit({ accountId: state.activeAccountId });
   if (state.activeAccountId !== prev.activeAccountId) noteDesktopCertificateAccount(state.activeAccountId);
+  // Whenever the account in use goes, not only at a sign-out: an expired or refused session
+  // ends with no account, and the next person at this computer has to be asked.
+  if (prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) clearKeystoreGrants();
   if (state.activeAccountId && prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) {
-    clearKeystoreGrants();
     clearDesktopCrashFiles();
     void authHooks.onAccountSwitch.emit({ accountId: state.activeAccountId, previousAccountId: prev.activeAccountId });
   }

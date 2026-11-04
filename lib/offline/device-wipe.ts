@@ -47,11 +47,13 @@ import { SW_SCOPE } from '@/lib/app-update';
 import { devicesForAccount, devicesForNoOne } from '@/lib/device-policy';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { shellControls } from '@/lib/app-lock/shell';
 import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { isAppLockedNow } from '@/lib/app-lock/state';
 import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
 import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
+import { shownNotifications } from '@/lib/notifications/shown';
 import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
 import { ACCOUNT_STORAGE_KEYS, onBeforeSignOut } from '@/lib/sign-out-cleanup';
 import {
@@ -101,6 +103,10 @@ export const CHECK_IN_EVERY_MS = 60 * 60 * 1000;
 const TICK_MS = 60 * 1000;
 /** How long a wipe waits to tell the instance before it goes on: it tries again at the next contact. */
 const REPORT_BUDGET_MS = 3_000;
+/** How long a wipe waits for the desktop app's main process: the keys come after this. */
+const SHELL_FILES_BUDGET_MS = 10_000;
+/** How long a wipe waits for main's own steps. Past that they count as not done. */
+export const MAIN_WIPE_BUDGET_MS = 60_000;
 /** How long a wipe waits for one database a running plugin frame holds open. */
 const DATABASE_BUDGET_MS = 2_000;
 
@@ -206,9 +212,14 @@ async function clearShellFiles(): Promise<void> {
   const bridge = getDesktopBridge() as unknown as {
     os?: { clearSurfaces?: () => void };
     clipboard?: { clearFiles?: () => void | Promise<void> };
+    httpCache?: { clear?: () => Promise<void> };
   } | null;
   bridge?.os?.clearSurfaces?.();
-  await bridge?.clipboard?.clearFiles?.();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    Promise.all([bridge?.clipboard?.clearFiles?.(), bridge?.httpCache?.clear?.()]),
+    new Promise((resolve) => { timer = setTimeout(resolve, SHELL_FILES_BUDGET_MS); }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 /** A running frame is gone at the next load. Before any plugin starts again. */
@@ -256,7 +267,8 @@ async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
 /** A sender and a subject can sit on screen long after the mail is gone. */
 async function closeShownNotifications(): Promise<void> {
   const registration = await pushRegistration();
-  for (const notification of await registration?.getNotifications?.() ?? []) notification.close();
+  if (!registration?.getNotifications) return;
+  for (const notification of await shownNotifications(registration) ?? []) notification.close();
 }
 
 /** The subscription is the browser's, shared by every account on this origin. */
@@ -265,6 +277,7 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
   const registration = await pushRegistration();
   const subscription = await registration?.pushManager?.getSubscription();
   await subscription?.unsubscribe();
+  removeLocalKeys([], ['bulwark.push.']);
 }
 
 /** With nobody left after this there's nothing to lock for, and a next person shouldn't meet it. */
@@ -274,12 +287,13 @@ async function forgetLockIfNobodyStays(leaving: string | null): Promise<void> {
 }
 
 /** What's the account's own: a deletion after a refused login goes no further than this. */
-async function scrubAccount(account: string): Promise<void> {
-  await runWipeCleaners(account);
+async function scrubAccount(account: string): Promise<boolean> {
+  const complete = await runWipeCleaners(account);
   await forgetLocalImportOf(account).catch(() => {});
   await forgetPluginAccounts(account).catch(() => {});
   clearPluginStorageForAccount(account);
   forgetMailSnapshot(account);
+  return complete;
 }
 
 /** Everything accounts share, or that can't be told apart by account. */
@@ -325,6 +339,34 @@ async function flushConfirmations(finished?: string): Promise<void> {
   await Promise.all(ready.map(async (entry) => {
     if (await reportWipeToInstance(entry, AbortSignal.timeout(REPORT_BUDGET_MS))) dropWipeConfirmation(entry.id);
   }));
+}
+
+/**
+ * The desktop app's main process deletes what no page can reach: every partition, the HTTP cache,
+ * copies of edited files, crash files, import jobs, the servers it knows and its copy of the lock
+ * key. `account`: that account's part only. False when a step didn't finish, and then the wipe is
+ * neither reported nor over: it's tried again at the next start. An older shell has none of it.
+ */
+async function wipeInMain(reason: WipeReason, account: string | null): Promise<boolean> {
+  const run = shellControls()?.localWipe;
+  if (!run) return true;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const answer = await Promise.race([
+      run({ reason: reason === 'user' ? 'settings' : 'remote', account }),
+      new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), MAIN_WIPE_BUDGET_MS); }),
+    ]);
+    return answer !== null && answer.failed.length === 0;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The last of it: this page goes, and the app starts anew. A confirmation still queued has to outlive that. */
+async function finishInMain(): Promise<void> {
+  await shellControls()?.finishLocalWipe?.({ keepLocalStorage: readWipeConfirmations().length > 0 }).catch(() => {});
 }
 
 function signalSignedOut(): void {
@@ -418,12 +460,16 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   }
   clearEvicted(account);
   dropRefusedLogin(account);
-  await scrubAccount(account).catch(() => {});
+  // A copy a program still holds: tried again at the next start, like the store.
+  if (!(await scrubAccount(account).catch(() => true))) deleted = false;
   if (!ownOnly) await scrubShared().catch(() => {});
 
   await deleteDeviceRecord(account).catch(() => {});
   await putRowsBack(records, account);
 
+  // A refused login takes what's the account's own, also when it was the last one.
+  const nobodyLeft = !ownOnly && !useAccountStore.getState().accounts.some((entry) => entry.id !== account);
+  if (!(await wipeInMain(reason, nobodyLeft ? null : account))) deleted = false;
   await flushConfirmations(deleted ? account : undefined);
   const wasLocked = isAppLockedNow();
   if (!ownOnly) {
@@ -433,6 +479,10 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   }
   if (deleted) clearWipePending(account);
   tellOtherWindows(account, 'end');
+  if (deleted && nobodyLeft && shellControls()?.finishLocalWipe) {
+    await finishInMain();
+    return;
+  }
   // Heard at the lock screen: signing out may have started the next account here, and with
   // nobody left a new page is what takes the lock screen away.
   if (wasLocked && !ownOnly) reloadPage();
@@ -478,14 +528,15 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   }
 
   confirmLoss('all');
-  await runWipeCleaners(null);
+  const cleaned = await runWipeCleaners(null);
   await forgetPluginAccounts(null).catch(() => {});
   clearAllPluginStorage();
   await scrubShared().catch(() => {});
-  let deleted = true;
+  let deleted = cleaned;
   await wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);
+  if (!(await wipeInMain(reason, null))) deleted = false;
   await flushConfirmations(deleted ? WHOLE_DEVICE : undefined);
   signalSignedOut();
   await forgetLockIfNobodyStays(null).catch(() => {});
@@ -493,6 +544,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   await endWebPushIfNobodyLeft().catch(() => {});
   if (deleted) clearWipePending(WHOLE_DEVICE);
   tellOtherWindows(null, 'end');
+  if (deleted) await finishInMain();
 }
 
 // ---- A sign-out: the row has nothing left to look after ----

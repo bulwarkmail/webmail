@@ -28,6 +28,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
 import type { MarketplaceListing } from '@/lib/admin/marketplace-directory';
 import { adminPath } from '@/lib/admin/admin-nav';
+import { declaredPermissions, HIGH_RISK_PERMISSIONS } from '@/lib/plugin-sandbox/permission-text';
 import { cn } from '@/lib/utils';
 import { SettingsSection } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
@@ -97,6 +98,8 @@ interface PreviewData {
   requestedVersionMissing: string | null;
   bundle: {
     manifest: Record<string, unknown> | null;
+    /** What this version asks for that the installed one doesn't. */
+    addedPermissions?: string[];
     source: { name: string; content: string; truncated: boolean } | null;
     size: number;
     error: string | null;
@@ -307,8 +310,10 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const bundle = data.bundle;
   const preview = data.preview;
   const isPlugin = ext.type === 'plugin';
-  const manifestPerms = (bundle.manifest?.permissions as string[] | undefined) || preview && ext.versions.find((v) => v.version === preview.version)?.permissions || ext.permissions || [];
+  // Optional permissions are granted like the others, so they count here too.
+  const manifestPerms = bundle.manifest ? declaredPermissions(bundle.manifest) : (preview && ext.versions.find((v) => v.version === preview.version)?.permissions) || ext.permissions || [];
   const permissionText = new Map(ext.permissionDetails.map((p) => [p.id, p]));
+  const addedPermissions = new Set(bundle.addedPermissions ?? []);
   const frameOrigins = (bundle.manifest?.frameOrigins as string[] | undefined) || [];
   const settingsSchema = bundle.manifest?.settingsSchema as Record<string, { type: string; label: string; description?: string; default?: unknown }> | undefined;
 
@@ -705,7 +710,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
               <ul className="space-y-1.5">
                 {manifestPerms.map(perm => {
                   const text = permissionText.get(perm);
-                  const risky = text?.highRisk || RISKY_PERMISSIONS.has(perm);
+                  const risky = text?.highRisk || RISKY_PERMISSIONS.has(perm) || HIGH_RISK_PERMISSIONS.has(perm);
                   return (
                     <li
                       key={perm}
@@ -721,6 +726,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
                         <div className="flex flex-wrap items-center gap-2">
                           {text && <span className="font-medium">{text.title}</span>}
                           <code className="font-mono text-xs opacity-80">{perm}</code>
+                          {addedPermissions.has(perm) && <Badge tone="warning">New in this version</Badge>}
                         </div>
                         {text?.body && <p className="mt-0.5 text-xs opacity-90">{text.body}</p>}
                       </div>

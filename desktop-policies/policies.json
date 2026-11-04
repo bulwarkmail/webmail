@@ -22,9 +22,11 @@
   "AutoSelectCertificateForUrls": [
     "{\"pattern\":\"https://[*.]example.com\",\"filter\":{\"ISSUER\":{\"CN\":\"Example CA\"}}}"
   ],
+  "KeystoreEnabled": true,
   "KeystoreAllowedOrigins": [
     "https://mail.example.com"
   ],
+  "BrowserSignIn": true,
   "Recommended": {
     "UpdateChannel": "stable"
   }

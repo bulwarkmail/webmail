@@ -7,8 +7,9 @@
  * or the environment can write it, so script in a page can't aim the login
  * routes at the LAN.
  *
- * Callers guard this with IS_DESKTOP_BUILD, so a server build compiles the
- * whole thing away. scripts/standalone-guard.mjs checks that it did.
+ * Callers check the flag too, but Turbopack keeps an imported export after the
+ * call is gone. So the check also starts here, spelled out: every bundler then
+ * drops the body from a server build. scripts/standalone-guard.mjs checks it did.
  */
 
 type TrustedOrigins = ReadonlySet<string>;
@@ -25,6 +26,7 @@ function originOf(url: string): string | null {
 }
 
 export function isDesktopTrustedServer(url: string | null | undefined): boolean {
+  if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP !== '1') return false;
   if (!url) return false;
   const origin = originOf(url);
   if (!origin) return false;

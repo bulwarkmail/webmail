@@ -1868,7 +1868,8 @@ export class JMAPClient implements IJMAPClient {
     const stopWatching = onConnectionsReset(giveUp);
 
     try {
-      const response = await fetch(url, { ...withJmapCredentials(init), headers, signal: controller.signal });
+      // The browser's cache isn't encrypted, and Stalwart lets it keep a download for a year.
+      const response = await fetch(url, { ...withJmapCredentials(init), cache: 'no-store', headers, signal: controller.signal });
       if (stopWatching) setTimeout(stopWatching, timeoutMs);
       return response;
     } catch (error) {
@@ -2022,6 +2023,7 @@ export class JMAPClient implements IJMAPClient {
     if (response.redirected && response.status === 401) {
       return fetch(response.url, withJmapCredentials({
         method: 'GET',
+        cache: 'no-store',
         headers: { 'Authorization': this.authHeader },
       }));
     }
@@ -2034,6 +2036,7 @@ export class JMAPClient implements IJMAPClient {
 
     return fetch(response.url, withJmapCredentials({
       method: 'GET',
+      cache: 'no-store',
       headers: { 'Authorization': this.authHeader },
     }));
   }
