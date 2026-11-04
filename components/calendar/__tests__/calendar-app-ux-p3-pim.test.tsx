@@ -158,3 +158,15 @@ describe('a sideways scroll in Day view (pim-p3-9)', () => {
     expect(document.querySelector('[data-mini-day="2026-10-15"]')?.closest('[role="gridcell"]')?.getAttribute('aria-selected')).toBe('true');
   });
 });
+
+describe('an event without a title (pim-p3-12)', () => {
+  it('saves from the full editor too, with an empty title', async () => {
+    renderApp();
+    fireEvent.keyDown(document.body, { key: 'n', code: 'KeyN' });
+    const save = await screen.findByRole('button', { name: 'form.save' });
+    expect(save).toBeEnabled();
+    fireEvent.click(save);
+    await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
+    expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: '' });
+  });
+});

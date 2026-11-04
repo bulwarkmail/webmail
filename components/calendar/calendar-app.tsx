@@ -1363,9 +1363,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const handleQuickCreateSave = useCallback(async () => {
     if (!quickDraft) return;
     const { start, end, calendarId, allDay } = quickDraft;
-    // Saving without a title is allowed, as in Google Calendar: the event
-    // is called "(No title)" in the user's language.
-    const title = quickDraft.title.trim() || t("events.no_title");
+    // Saving without a title is allowed, as in Google Calendar. The title
+    // stays empty on the server, and only the screen says "(No title)", in
+    // each reader's language: other apps and attendees saw the words
+    // (pim-p3-12).
+    const title = quickDraft.title.trim();
     if (allDay) {
       setQuickDraft(null);
       // Every day from the first to the last one picked (a drag in the month view).
@@ -1403,7 +1405,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       freeBusyStatus: "busy",
       privacy: "public",
     });
-  }, [quickDraft, handleSaveEvent, t]);
+  }, [quickDraft, handleSaveEvent]);
 
   // While the quick editor is open its placeholder takes the preview slot.
   const gridPreview = useMemo<PendingEventPreview | null>(() => {

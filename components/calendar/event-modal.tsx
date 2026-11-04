@@ -802,8 +802,9 @@ export function EventModal({
   }, []);
 
   const handleSave = useCallback(async () => {
+    // No title is fine, as in the quick editor: the screen says "(No title)" (pim-p3-12).
     const trimmedTitle = title.trim();
-    if (!trimmedTitle || isSaving || savingRef.current) return;
+    if (isSaving || savingRef.current) return;
     if (trimmedTitle.length > 500 || description.trim().length > 10000 || location.trim().length > 500) {
       // This guard returned silently, so a rejected save was indistinguishable from a dead
       // button. The fields also enforce their limits via maxLength, so this is a backstop —
@@ -1745,7 +1746,7 @@ export function EventModal({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!title.trim() || isSaving}
+            disabled={isSaving}
             className="whitespace-nowrap"
           >
             {/* While a save is in flight the button was disabled with no visible change, so a
