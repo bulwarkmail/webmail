@@ -38,6 +38,7 @@ import {
   Minimize2,
   Trash2,
   ExternalLink,
+  LogIn,
   ReplyAll,
   Reply,
   Forward,
@@ -4682,7 +4683,8 @@ export function EmailComposer({
       title={popOutToMainLabel ?? tWindows('open_in_window')}
       data-testid={popOutToMainLabel ? "composer-back-to-main" : "composer-open-in-window"}
     >
-      {popOutToMainLabel ? <Minimize2 className={iconClassName} /> : <ExternalLink className={iconClassName} />}
+      {/* Into the main window: an arrow going in, not the inward arrows of leaving full screen. */}
+      {popOutToMainLabel ? <LogIn className={iconClassName} /> : <ExternalLink className={iconClassName} />}
     </button>
   );
 
