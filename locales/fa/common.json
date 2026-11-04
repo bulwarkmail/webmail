@@ -7618,7 +7618,11 @@
     "due_next_week": "هفتهٔ بعد",
     "due_none": "بدون موعد",
     "due_pick": "انتخاب تاریخ…",
-    "move_to_list": "انتقال به فهرست"
+    "move_to_list": "انتقال به فهرست",
+    "dupes_legend": "{count, plural, one {۱ مورد از قبل در مخاطبان است:} other {# مورد از قبل در مخاطبان است:}}",
+    "dupes_skip": "رد کردن",
+    "dupes_update": "به‌روزرسانی مخاطبان موجود",
+    "dupes_updates": "مخاطب را به‌روز می‌کند"
   },
   "desktopEdit": {
     "edit": "ویرایش",

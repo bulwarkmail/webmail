@@ -7618,7 +7618,11 @@
     "due_next_week": "Nächste Woche",
     "due_none": "Kein Fälligkeitsdatum",
     "due_pick": "Datum wählen…",
-    "move_to_list": "In Liste verschieben"
+    "move_to_list": "In Liste verschieben",
+    "dupes_legend": "{count, plural, one {1 ist schon in Kontakte:} other {# sind schon in Kontakte:}}",
+    "dupes_skip": "Überspringen",
+    "dupes_update": "Vorhandene Kontakte aktualisieren",
+    "dupes_updates": "Aktualisiert den Kontakt"
   },
   "desktopEdit": {
     "edit": "Bearbeiten",

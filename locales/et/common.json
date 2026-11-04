@@ -7618,7 +7618,11 @@
     "due_next_week": "Järgmisel nädalal",
     "due_none": "Tähtajata",
     "due_pick": "Vali kuupäev…",
-    "move_to_list": "Teisalda loendisse"
+    "move_to_list": "Teisalda loendisse",
+    "dupes_legend": "{count, plural, one {1 on juba kontaktides:} other {# on juba kontaktides:}}",
+    "dupes_skip": "Jäta vahele",
+    "dupes_update": "Uuenda olemasolevaid kontakte",
+    "dupes_updates": "Uuendab kontakti"
   },
   "desktopEdit": {
     "edit": "Muuda",

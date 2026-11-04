@@ -7619,7 +7619,11 @@
     "due_next_week": "בשבוע הבא",
     "due_none": "ללא תאריך יעד",
     "due_pick": "בחירת תאריך…",
-    "move_to_list": "העברה לרשימה"
+    "move_to_list": "העברה לרשימה",
+    "dupes_legend": "{count, plural, one {אחד כבר נמצא באנשי הקשר:} other {# כבר נמצאים באנשי הקשר:}}",
+    "dupes_skip": "לדלג עליהם",
+    "dupes_update": "לעדכן את אנשי הקשר הקיימים",
+    "dupes_updates": "מעדכן את איש הקשר"
   },
   "desktopEdit": {
     "edit": "עריכה",

@@ -7618,7 +7618,11 @@
     "due_next_week": "다음 주",
     "due_none": "마감일 없음",
     "due_pick": "날짜 선택…",
-    "move_to_list": "목록으로 이동"
+    "move_to_list": "목록으로 이동",
+    "dupes_legend": "{count, plural, other {#개는 이미 연락처에 있음:}}",
+    "dupes_skip": "건너뛰기",
+    "dupes_update": "기존 연락처 업데이트",
+    "dupes_updates": "연락처 업데이트"
   },
   "desktopEdit": {
     "edit": "편집",

@@ -7618,7 +7618,11 @@
     "due_next_week": "Nākamnedēļ",
     "due_none": "Bez termiņa",
     "due_pick": "Izvēlēties datumu…",
-    "move_to_list": "Pārvietot uz sarakstu"
+    "move_to_list": "Pārvietot uz sarakstu",
+    "dupes_legend": "{count, plural, one {# jau ir kontaktos:} other {# jau ir kontaktos:}}",
+    "dupes_skip": "Izlaist",
+    "dupes_update": "Atjaunināt esošos kontaktus",
+    "dupes_updates": "Atjaunina kontaktu"
   },
   "desktopEdit": {
     "edit": "Rediģēt",

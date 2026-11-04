@@ -7618,7 +7618,11 @@
     "due_next_week": "La setmana vinent",
     "due_none": "Sense data de venciment",
     "due_pick": "Tria una data…",
-    "move_to_list": "Mou a la llista"
+    "move_to_list": "Mou a la llista",
+    "dupes_legend": "{count, plural, one {1 ja és a Contactes:} other {# ja són a Contactes:}}",
+    "dupes_skip": "Omet-los",
+    "dupes_update": "Actualitza els contactes existents",
+    "dupes_updates": "Actualitza el contacte"
   },
   "desktopEdit": {
     "edit": "Edita",

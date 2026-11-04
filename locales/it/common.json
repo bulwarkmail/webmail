@@ -7618,7 +7618,11 @@
     "due_next_week": "La prossima settimana",
     "due_none": "Nessuna scadenza",
     "due_pick": "Scegli una data…",
-    "move_to_list": "Sposta nell’elenco"
+    "move_to_list": "Sposta nell’elenco",
+    "dupes_legend": "{count, plural, one {1 è già in Contatti:} other {# sono già in Contatti:}}",
+    "dupes_skip": "Saltali",
+    "dupes_update": "Aggiorna i contatti esistenti",
+    "dupes_updates": "Aggiorna il contatto"
   },
   "desktopEdit": {
     "edit": "Modifica",

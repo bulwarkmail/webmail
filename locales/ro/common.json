@@ -7618,7 +7618,11 @@
     "due_next_week": "Săptămâna viitoare",
     "due_none": "Fără termen",
     "due_pick": "Alege o dată…",
-    "move_to_list": "Mută în listă"
+    "move_to_list": "Mută în listă",
+    "dupes_legend": "{count, plural, one {1 este deja în Contacte:} few {# sunt deja în Contacte:} other {# sunt deja în Contacte:}}",
+    "dupes_skip": "Omite-le",
+    "dupes_update": "Actualizează contactele existente",
+    "dupes_updates": "Actualizează contactul"
   },
   "desktopEdit": {
     "edit": "Editează",

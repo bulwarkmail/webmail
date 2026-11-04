@@ -20,7 +20,7 @@ import { ContactsSidebar, type ContactCategory } from "@/components/contacts/con
 import { ContactImportDialog } from "@/components/contacts/contact-import-dialog";
 import { ContactMergeDialog } from "@/components/contacts/contact-merge-dialog";
 import { ContactDuplicatesView } from "@/components/contacts/contact-duplicates-view";
-import { findDuplicateGroups, ownerKey, type MergePlan } from "@/lib/contacts/merge";
+import { findDuplicateGroups, ownerKey, planMerge, type MergePlan } from "@/lib/contacts/merge";
 import { AddressBookPickerDialog } from "@/components/contacts/address-book-picker-dialog";
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
@@ -607,6 +607,23 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       addressBookId,
     );
   }, [supportsSync, client, importContacts]);
+  // "Update the existing contacts" in the import (pim-p3-15): what the file has is merged
+  // into the card it matched, as Merge does, so nothing on that card is lost.
+  const handleUpdateFromImport = useCallback(async (pairs: Array<{ existingId: string; card: ContactCard }>) => {
+    let updated = 0;
+    for (const { existingId, card } of pairs) {
+      const existing = useContactStore.getState().contacts.find((c) => c.id === existingId);
+      if (!existing || isContactReadOnly(existing)) continue;
+      const { patch } = planMerge([existing, { ...card, updated: undefined } as ContactCard]);
+      if (Object.keys(patch).length === 0) { updated++; continue; }
+      const ok = supportsSync && client
+        ? await updateContact(client, existingId, patch)
+        : await updateLocalContact(existingId, patch);
+      if (ok) updated++;
+    }
+    return updated;
+  }, [isContactReadOnly, supportsSync, client, updateContact, updateLocalContact]);
+
   // Done importing: a toast instead of a dialog page, and Show opens where they went.
   const handleImported = useCallback((count: number, addressBookId?: string) => {
     if (count <= 0) return;
@@ -1727,6 +1744,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
           onImported={handleImported}
+          onUpdateExisting={handleUpdateFromImport}
         />
       )}
       {showImportDialog && (
@@ -1737,6 +1755,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
           onImported={handleImported}
+          onUpdateExisting={handleUpdateFromImport}
         />
       )}
       {(mergeCards || mergePickFor) && (

@@ -7618,7 +7618,11 @@
     "due_next_week": "Budúci týždeň",
     "due_none": "Bez termínu",
     "due_pick": "Vybrať dátum…",
-    "move_to_list": "Presunúť do zoznamu"
+    "move_to_list": "Presunúť do zoznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktoch:} few {# už sú v Kontaktoch:} other {# už je v Kontaktoch:}}",
+    "dupes_skip": "Preskočiť",
+    "dupes_update": "Aktualizovať existujúce kontakty",
+    "dupes_updates": "Aktualizuje kontakt"
   },
   "desktopEdit": {
     "edit": "Upraviť",

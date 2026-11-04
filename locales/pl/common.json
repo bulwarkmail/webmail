@@ -7618,7 +7618,11 @@
     "due_next_week": "W przyszłym tygodniu",
     "due_none": "Bez terminu",
     "due_pick": "Wybierz datę…",
-    "move_to_list": "Przenieś do listy"
+    "move_to_list": "Przenieś do listy",
+    "dupes_legend": "{count, plural, one {1 jest już w Kontaktach:} few {# są już w Kontaktach:} other {# jest już w Kontaktach:}}",
+    "dupes_skip": "Pomiń je",
+    "dupes_update": "Zaktualizuj istniejące kontakty",
+    "dupes_updates": "Aktualizuje kontakt"
   },
   "desktopEdit": {
     "edit": "Edytuj",

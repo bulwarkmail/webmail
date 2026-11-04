@@ -7618,7 +7618,11 @@
     "due_next_week": "下週",
     "due_none": "無截止日期",
     "due_pick": "選擇日期…",
-    "move_to_list": "移到清單"
+    "move_to_list": "移到清單",
+    "dupes_legend": "{count, plural, other {# 位已在聯絡人中：}}",
+    "dupes_skip": "略過",
+    "dupes_update": "更新現有聯絡人",
+    "dupes_updates": "更新聯絡人"
   },
   "desktopEdit": {
     "edit": "編輯",

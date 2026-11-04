@@ -7618,7 +7618,11 @@
     "due_next_week": "الأسبوع القادم",
     "due_none": "بلا تاريخ استحقاق",
     "due_pick": "اختيار تاريخ…",
-    "move_to_list": "نقل إلى قائمة"
+    "move_to_list": "نقل إلى قائمة",
+    "dupes_legend": "{count, plural, one {واحدة موجودة في جهات الاتصال:} other {# موجودة في جهات الاتصال:}}",
+    "dupes_skip": "تخطيها",
+    "dupes_update": "تحديث جهات الاتصال الموجودة",
+    "dupes_updates": "يحدّث جهة الاتصال"
   },
   "desktopEdit": {
     "edit": "تعديل",

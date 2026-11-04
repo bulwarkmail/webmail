@@ -7618,7 +7618,11 @@
     "due_next_week": "Neste uke",
     "due_none": "Ingen forfallsdato",
     "due_pick": "Velg en dato…",
-    "move_to_list": "Flytt til liste"
+    "move_to_list": "Flytt til liste",
+    "dupes_legend": "{count, plural, one {1 finnes allerede i Kontakter:} other {# finnes allerede i Kontakter:}}",
+    "dupes_skip": "Hopp over",
+    "dupes_update": "Oppdater de eksisterende kontaktene",
+    "dupes_updates": "Oppdaterer kontakten"
   },
   "desktopEdit": {
     "edit": "Rediger",

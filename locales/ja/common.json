@@ -7618,7 +7618,11 @@
     "due_next_week": "来週",
     "due_none": "期限なし",
     "due_pick": "日付を選択…",
-    "move_to_list": "リストへ移動"
+    "move_to_list": "リストへ移動",
+    "dupes_legend": "{count, plural, other {#件は連絡先に登録済み:}}",
+    "dupes_skip": "スキップ",
+    "dupes_update": "既存の連絡先を更新",
+    "dupes_updates": "連絡先を更新"
   },
   "desktopEdit": {
     "edit": "編集",
