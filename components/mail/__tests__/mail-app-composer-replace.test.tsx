@@ -22,6 +22,9 @@ const stub = vi.hoisted(() => ({
   closes: [] as string[],
   mounts: [] as string[],
   restore: null as null | ((data: Record<string, unknown>) => void),
+  // A slow runner: the mount is counted a task after the composer is on
+  // screen, as when React runs its effects late (CI, compose-p2-1).
+  lateMount: false,
 }));
 
 vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
@@ -42,7 +45,8 @@ vi.mock('@/components/email/email-composer', async () => {
     }) => {
       const closed = useRef(false);
       useEffect(() => {
-        stub.mounts.push(mode);
+        if (stub.lateMount) setTimeout(() => stub.mounts.push(mode), 0);
+        else stub.mounts.push(mode);
         stub.restore = onRestoreDiscarded ?? null;
         // The old host moved the composer between dock and pane for ever
         // (React error 185 in the browser); stop it here instead of hanging.
@@ -122,6 +126,7 @@ beforeEach(() => {
   stub.closes = [];
   stub.mounts = [];
   stub.restore = null;
+  stub.lateMount = false;
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Unexpected network request')));
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   usePluginStore.setState({ initializePlugins: vi.fn().mockResolvedValue(undefined) });
@@ -157,24 +162,39 @@ afterEach(() => {
 
 const composerMode = () => screen.getByTestId('stub-composer').getAttribute('data-mode');
 
-describe('Compose while a reply is docked (compose-p2-1)', () => {
-  for (const action of ['stub reply', 'stub forward']) {
-    it(`opens a new message in the pane after ${action}`, async () => {
-      render(<MailApp />);
-      fireEvent.click(await screen.findByText(action));
-      const reply = await screen.findByTestId('stub-composer');
-      expect(reply.closest('[data-reply-dock]')).not.toBeNull();
+// Compose opens after an await, outside the click's act(): the composer is on
+// screen before React runs its mount effect. Count mounts once they ran, and
+// tell a remount by the element on screen, which a remount replaces.
+async function composeOverDockedReply(action: string, first: string) {
+  render(<MailApp />);
+  fireEvent.click(await screen.findByText(action));
+  const reply = await screen.findByTestId('stub-composer');
+  expect(reply.closest('[data-reply-dock]')).not.toBeNull();
+  await waitFor(() => expect(stub.mounts).toEqual([first]));
 
-      fireEvent.click(screen.getByText('stub compose'));
-      await waitFor(() => expect(composerMode()).toBe('compose'));
-      // The new message takes the pane, not the dock, and stays put.
-      expect(screen.getByTestId('stub-composer').closest('[data-reply-dock]')).toBeNull();
-      const mounted = stub.mounts.length;
-      await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
-      expect(stub.mounts.length).toBe(mounted);
-      expect(composerMode()).toBe('compose');
+  fireEvent.click(screen.getByText('stub compose'));
+  await waitFor(() => expect(composerMode()).toBe('compose'));
+  // The new message takes the pane, not the dock, and stays put.
+  const composer = screen.getByTestId('stub-composer');
+  expect(composer.closest('[data-reply-dock]')).toBeNull();
+  await waitFor(() => expect(stub.mounts).toEqual([first, 'compose']));
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  expect(stub.mounts).toEqual([first, 'compose']);
+  expect(screen.getByTestId('stub-composer')).toBe(composer);
+  expect(composerMode()).toBe('compose');
+}
+
+describe('Compose while a reply is docked (compose-p2-1)', () => {
+  for (const [action, first] of [['stub reply', 'reply'], ['stub forward', 'forward']] as const) {
+    it(`opens a new message in the pane after ${action}`, async () => {
+      await composeOverDockedReply(action, first);
     });
   }
+
+  it('counts one mount when the composer mounts late, as on a slow runner', async () => {
+    stub.lateMount = true;
+    await composeOverDockedReply('stub reply', 'reply');
+  });
 });
 
 describe('another composer while one is open (compose-p2-2)', () => {
@@ -182,7 +202,7 @@ describe('another composer while one is open (compose-p2-2)', () => {
     stub.close = 'saves';
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub reply'));
-    await screen.findByTestId('stub-composer');
+    await waitFor(() => expect(stub.mounts).toEqual(['reply']));
 
     fireEvent.click(screen.getByText('stub compose'));
     await waitFor(() => expect(composerMode()).toBe('compose'));
@@ -194,7 +214,7 @@ describe('another composer while one is open (compose-p2-2)', () => {
       stub.close = 'saves';
       render(<MailApp />);
       fireEvent.click(await screen.findByText('stub reply'));
-      await screen.findByTestId('stub-composer');
+      await waitFor(() => expect(stub.mounts).toEqual(['reply']));
 
       fireEvent.click(screen.getByText(action));
       await waitFor(() => expect(composerMode()).toBe(mode));
@@ -206,11 +226,10 @@ describe('another composer while one is open (compose-p2-2)', () => {
     stub.close = 'saves';
     render(<MailApp />);
     fireEvent.click(screen.getByText('stub compose'));
-    await screen.findByTestId('stub-composer');
-    const mounted = stub.mounts.length;
+    await waitFor(() => expect(stub.mounts).toEqual(['compose']));
 
     fireEvent.click(screen.getByText('stub compose'));
-    await waitFor(() => expect(stub.mounts.length).toBe(mounted + 1));
+    await waitFor(() => expect(stub.mounts).toEqual(['compose', 'compose']));
     expect(stub.closes).toEqual(['compose']);
   });
 
@@ -218,13 +237,14 @@ describe('another composer while one is open (compose-p2-2)', () => {
     stub.close = 'fails';
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub reply'));
-    await screen.findByTestId('stub-composer');
-    const mounted = stub.mounts.length;
+    await waitFor(() => expect(stub.mounts).toEqual(['reply']));
+    const composer = screen.getByTestId('stub-composer');
 
     fireEvent.click(screen.getByText('stub compose'));
     await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     expect(stub.closes).toEqual(['reply']);
-    expect(stub.mounts.length).toBe(mounted);
+    expect(stub.mounts).toEqual(['reply']);
+    expect(screen.getByTestId('stub-composer')).toBe(composer);
     expect(composerMode()).toBe('reply');
   });
 });
@@ -235,7 +255,7 @@ describe('Undo after the bin', () => {
     stub.close = 'saves';
     render(<MailApp />);
     fireEvent.click(screen.getByText('stub compose'));
-    await screen.findByTestId('stub-composer');
+    await waitFor(() => expect(stub.mounts).toEqual(['compose']));
     const restore = stub.restore!;
 
     act(() => restore({ to: 'bob@example.org', cc: '', bcc: '', subject: 'Back', body: 'kept', mode: 'forward', draftId: 'd1' }));
