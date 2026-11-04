@@ -7665,6 +7665,14 @@
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
   },
+  "desktopAttachRecent": {
+    "heading": "Ostatnie pliki",
+    "browse": "Przeglądaj ten komputer…",
+    "from_files": "Z Plików…",
+    "missing": "„{name}” już nie istnieje.",
+    "too_large": "„{name}” jest większy niż {max} i nie można go dołączyć.",
+    "failed": "Nie udało się dołączyć „{name}”. Spróbuj ponownie."
+  },
   "compose_windows": {
     "more_formatting": "Więcej formatowania",
     "offline": "Offline",

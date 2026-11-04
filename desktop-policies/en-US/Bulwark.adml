@@ -67,6 +67,8 @@
       <string id="OpenWithEnabled_Explain">When enabled or not configured, the app adds itself to the &quot;Open with&quot; list for common documents and pictures and to the &quot;Send to&quot; menu on Windows, so people can attach a file to a new message from the file manager. It never becomes the default program for those files. When disabled, the app removes these entries for the user. Mail links and .eml, .ics and .vcf files are not affected.</string>
       <string id="DeveloperToolsAvailability">Developer tools</string>
       <string id="DeveloperToolsAvailability_Explain">The same values as Chrome&apos;s policy of this name. 2: developer tools are off and the setting is locked. 0 or 1, or not configured: people can turn them on under Settings, after a warning. Developer tools let anyone at the keyboard read everything the app holds, mail and passwords in memory included.</string>
+      <string id="RecentFilesInAttach">Show recent files in the Attach menu</string>
+      <string id="RecentFilesInAttach_Explain">When enabled or not configured, the Attach button in a new message lists the files the user opened recently, as the operating system records them, so one click attaches one. The list is read when the menu opens and stays on the device. When disabled, the list is gone and the app refuses to read it. Attaching through the file dialog is not affected.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>

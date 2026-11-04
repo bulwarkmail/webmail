@@ -7665,6 +7665,14 @@
     "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
     "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
+  "desktopAttachRecent": {
+    "heading": "Fitxers recents",
+    "browse": "Explora aquest ordinador…",
+    "from_files": "Des de Fitxers…",
+    "missing": "«{name}» ja no hi és.",
+    "too_large": "«{name}» supera {max} i no es pot adjuntar.",
+    "failed": "No s'ha pogut adjuntar «{name}». Torneu-ho a provar."
+  },
   "compose_windows": {
     "more_formatting": "Més format",
     "offline": "Sense connexió",

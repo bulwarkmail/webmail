@@ -7665,6 +7665,14 @@
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
   },
+  "desktopAttachRecent": {
+    "heading": "Recente bestanden",
+    "browse": "Deze computer doorzoeken…",
+    "from_files": "Uit Bestanden…",
+    "missing": "\"{name}\" bestaat niet meer.",
+    "too_large": "\"{name}\" is groter dan {max} en kan niet worden bijgevoegd.",
+    "failed": "\"{name}\" kon niet worden bijgevoegd. Probeer het opnieuw."
+  },
   "compose_windows": {
     "more_formatting": "Meer opmaak",
     "offline": "Offline",

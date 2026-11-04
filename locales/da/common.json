@@ -7665,6 +7665,14 @@
     "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
     "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
   },
+  "desktopAttachRecent": {
+    "heading": "Seneste filer",
+    "browse": "Gennemse denne computer…",
+    "from_files": "Fra Filer…",
+    "missing": "\"{name}\" findes ikke længere.",
+    "too_large": "\"{name}\" er større end {max} og kan ikke vedhæftes.",
+    "failed": "\"{name}\" kunne ikke vedhæftes. Prøv igen."
+  },
   "compose_windows": {
     "more_formatting": "Mere formatering",
     "offline": "Offline",

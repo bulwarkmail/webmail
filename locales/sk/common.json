@@ -7665,6 +7665,14 @@
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
+  "desktopAttachRecent": {
+    "heading": "Nedávne súbory",
+    "browse": "Prehľadávať tento počítač…",
+    "from_files": "Zo Súborov…",
+    "missing": "„{name}“ už neexistuje.",
+    "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
+    "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
+  },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",
     "offline": "Offline",
