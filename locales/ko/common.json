@@ -7665,6 +7665,14 @@
     "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
   },
+  "desktopAttachRecent": {
+    "heading": "최근 파일",
+    "browse": "이 컴퓨터 찾아보기…",
+    "from_files": "파일에서…",
+    "missing": "\"{name}\"이(가) 더 이상 없어요.",
+    "too_large": "\"{name}\"이(가) {max}보다 커서 첨부할 수 없어요.",
+    "failed": "\"{name}\"을(를) 첨부하지 못했어요. 다시 시도해 주세요."
+  },
   "compose_windows": {
     "more_formatting": "추가 서식",
     "offline": "오프라인",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "지금 보내는 메일은 보낼편지함에서 기다리다가 다시 온라인이 되면 전송됩니다.",
     "offline_send_saved": "오프라인 상태입니다. 메시지는 임시보관함에 저장되어 있습니다.",
     "offline_send_unsaved": "오프라인 상태입니다. 메시지는 여기에 남아 있으며 다시 온라인이 되면 임시보관함에 저장됩니다."
+  },
+  "composer_panel": {
+    "show_panel": "{name} 표시",
+    "hide_panel": "{name} 숨기기"
   },
   "desktopDevTools": {
     "section_title": "문제 해결",

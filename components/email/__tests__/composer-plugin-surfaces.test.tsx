@@ -585,6 +585,7 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     Element.prototype.getBoundingClientRect = function (this: Element) {
       if (this.matches('[data-testid="email-composer"]')) return rect(100, 800);
       if (this.matches('[data-composer-header]')) return rect(100, 156);
+      if (this.matches('[data-composer-panels]')) return rect(156, 800);
       if (this.matches('[data-composer-footer]')) return rect(740, 800);
       return original.call(this);
     };
@@ -593,7 +594,9 @@ describe('composer-sidebar and composer-sidebar-right', () => {
       render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
       fireEvent.click(document.querySelector('[data-composer-panel-toggle="right"]')!);
       expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
-      expect(panel('right').style.top).toBe('56px');
+      // The header is above the row the panel is laid over: the panel starts at that row's top.
+      expect(document.querySelector('[data-composer-panels]')!.contains(document.querySelector('[data-composer-header]'))).toBe(false);
+      expect(panel('right').style.top).toBe('0px');
       expect(panel('right').style.bottom).toBe('60px');
     } finally {
       Element.prototype.getBoundingClientRect = original;
@@ -718,7 +721,7 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     // Opened once: it stays open for the next composer.
     render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
     expect(panel('right').dataset.composerSidebarMode).toBe('docked');
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_hide' }));
+    fireEvent.click(screen.getByRole('button', { name: 'hide_panel' }));
     expect(panel('right').dataset.composerSidebarMode).toBe('folded');
   });
 
@@ -742,11 +745,134 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     offerSlots('p1', ['composer-sidebar-right']);
     render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_show' }));
+    fireEvent.click(screen.getByRole('button', { name: 'show_panel' }));
     expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
     expect(panel('right').className).toContain('absolute');
 
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_hide' }));
+    fireEvent.click(screen.getByRole('button', { name: 'hide_panel' }));
     expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+  });
+});
+
+// With a panel open, the composer's header runs over it: Full screen, Pop out
+// and Close end the whole composer, not the message column in the middle of
+// it. The panel's head (the header above it) has its own Hide button.
+describe('the composer header with a plugin panel open', () => {
+  function stubWidth(width: number) {
+    class FixedWidthObserver {
+      constructor(private cb: ResizeObserverCallback) {}
+      observe(el: Element) {
+        if ((el as HTMLElement).dataset.testid !== 'email-composer') return;
+        this.cb([{ target: el, contentRect: { width, height: 700 } } as unknown as ResizeObserverEntry], this as unknown as ResizeObserver);
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal('ResizeObserver', FixedWidthObserver);
+  }
+  const panel = (side: 'left' | 'right') => document.querySelector<HTMLElement>(`[data-composer-sidebar="${side}"]`)!;
+  const header = () => document.querySelector<HTMLElement>('[data-composer-header]')!;
+  const head = (side: 'left' | 'right') => document.querySelector<HTMLElement>(`[data-composer-panel-head="${side}"]`);
+  const buttons = (el: HTMLElement) => Array.from(el.querySelectorAll<HTMLElement>('button'));
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    for (const side of ['left', 'right']) {
+      localStorage.removeItem(`composerPluginSidebarCollapsed:${side}`);
+      localStorage.removeItem(`composerPluginSidebarWidth:${side}`);
+    }
+  });
+
+  it('keeps Close the last control, at the end of the row over the open panel', () => {
+    stubWidth(1400);
+    offerSlots('p1', ['composer-sidebar-right']);
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+    expect(panel('right').dataset.composerSidebarMode).toBe('docked');
+
+    // One row over the message and the panel: the panel is not beside the header.
+    expect(header().parentElement).toBe(screen.getByTestId('email-composer'));
+    expect(header().compareDocumentPosition(panel('right')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The part of it above the panel is as wide as the panel...
+    const right = head('right')!;
+    expect(header()).toContainElement(right);
+    expect(right.style.minWidth).toBe('260px');
+    // ...and ends with Full screen, Pop out and Close, Close last.
+    const all = buttons(header());
+    expect(all[all.length - 1]).toBe(screen.getByTestId('composer-close'));
+    expect(right).toContainElement(screen.getByTestId('composer-close'));
+    expect(right).toContainElement(screen.getByTestId('composer-maximize'));
+  });
+
+  it('gives the open panel a Hide button in its head, and the header a Show button while it is folded', () => {
+    stubWidth(1400);
+    offerSlots('p1', ['composer-sidebar', 'composer-sidebar-right']);
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+
+    for (const side of ['left', 'right'] as const) {
+      const hide = head(side)!.querySelector<HTMLElement>(`[data-composer-panel-hide="${side}"]`)!;
+      expect(hide).toBeTruthy();
+      expect(hide).toHaveAccessibleName('hide_panel');
+      expect(hide.getAttribute('title')).toBe('hide_panel');
+      expect(hide.getAttribute('aria-expanded')).toBe('true');
+    }
+    // At the panel's inner edge, where it meets the message: last in the left head, first in the right one.
+    expect(buttons(head('left')!).at(-1)!.dataset.composerPanelHide).toBe('left');
+    expect(buttons(head('right')!)[0].dataset.composerPanelHide).toBe('right');
+
+    fireEvent.click(head('right')!.querySelector('[data-composer-panel-hide]')!);
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+    expect(head('right')).toBeNull();
+    // Folded: one Show button in the header, before the window buttons; Close still last.
+    const show = screen.getByRole('button', { name: 'show_panel' });
+    expect(header()).toContainElement(show);
+    expect(show.getAttribute('aria-expanded')).toBe('false');
+    const all = buttons(header());
+    expect(all[all.length - 1]).toBe(screen.getByTestId('composer-close'));
+    expect(all.indexOf(show)).toBeLessThan(all.indexOf(screen.getByTestId('composer-maximize')));
+
+    fireEvent.click(show);
+    expect(panel('right').dataset.composerSidebarMode).toBe('docked');
+    expect(head('right')).toContainElement(screen.getByTestId('composer-close'));
+  });
+
+  it('hides the panel with Hide and closes the composer only with Close', () => {
+    stubWidth(1400);
+    offerSlots('p1', ['composer-sidebar-right']);
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={DRAFT} onClose={onClose} />);
+
+    const hide = head('right')!.querySelector<HTMLElement>('[data-composer-panel-hide]')!;
+    const close = screen.getByTestId('composer-close');
+    expect(hide).not.toBe(close);
+    expect(hide).not.toHaveAccessibleName(close.getAttribute('aria-label')!);
+
+    fireEvent.click(hide);
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(screen.getByTestId('email-composer')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('composer-close'));
+    expect(onClose.mock.calls.length > 0 || screen.queryByRole('alertdialog') !== null).toBe(true);
+  });
+
+  it('gives a panel laid over a narrow composer the same head', () => {
+    stubWidth(700);
+    offerSlots('p1', ['composer-sidebar-right']);
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'show_panel' }));
+    expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
+    expect(head('right')).toContainElement(screen.getByTestId('composer-close'));
+    fireEvent.click(screen.getByRole('button', { name: 'hide_panel' }));
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+  });
+
+  it('keeps Close last in a composer that is its own window', () => {
+    stubWidth(1400);
+    offerSlots('p1', ['composer-sidebar-right']);
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} ownWindow={{}} />);
+    const all = buttons(header());
+    expect(all[all.length - 1]).toBe(screen.getByTestId('composer-close'));
+    expect(head('right')).toContainElement(screen.getByTestId('composer-close'));
   });
 });

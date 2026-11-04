@@ -366,6 +366,53 @@ describe('FileBrowser', () => {
     expect(drawer).not.toHaveAttribute('inert');
   });
 
+  // The same drawer as Mail's folders (usability test 2026-11-04): it opened
+  // beside the app rail with only the file list dimmed, ignored Escape and
+  // left the focus on the page.
+  it("opens the folder drawer from the window's edge, with the whole window dimmed", () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const classes = drawer.className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
+    expect(classes).not.toContain('absolute');
+    tree();
+    expect(screen.getByTestId('drawer-scrim').className.split(/\s+/)).toEqual(expect.arrayContaining(['fixed', 'inset-0']));
+  });
+
+  it('takes the focus into the folder drawer, keeps Tab there and gives it back on Escape without clearing the search', () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const menu = screen.getByRole('button', { name: 'open_folder_tree' });
+    fireEvent.change(screen.getAllByRole('searchbox')[0], { target: { value: 'notes' } });
+    menu.focus();
+    fireEvent.click(menu);
+    // The folder on screen.
+    expect(drawer.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).toHaveAttribute('aria-current', 'page');
+    const stops = Array.from(drawer.querySelectorAll<HTMLElement>('button:not(:disabled)'));
+    stops.at(-1)!.focus();
+    fireEvent.keyDown(stops.at(-1)!, { key: 'Tab' });
+    expect(document.activeElement).toBe(stops[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(drawer).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
+    expect(screen.getAllByRole('searchbox')[0]).toHaveValue('notes');
+  });
+
+  it('closes the folder drawer on a click on the dimmed window and gives the focus back to the menu button', () => {
+    renderBrowser();
+    const drawer = screen.getByTestId('files-sidebar-drawer');
+    const menu = screen.getByRole('button', { name: 'open_folder_tree' });
+    menu.focus();
+    fireEvent.click(menu);
+    // A press on the scrim drops the focus to the page.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.click(screen.getByTestId('drawer-scrim'));
+    expect(drawer).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
+  });
+
   it("renames in a dialog that selects the name without its extension and closes on Escape", async () => {
     renderBrowser({ props: { selectedResources: new Set(['notes.txt']) } });
     fireEvent.keyDown(window, { key: 'F2' });

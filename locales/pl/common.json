@@ -7665,6 +7665,14 @@
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
   },
+  "desktopAttachRecent": {
+    "heading": "Ostatnie pliki",
+    "browse": "Przeglądaj ten komputer…",
+    "from_files": "Z Plików…",
+    "missing": "„{name}” już nie istnieje.",
+    "too_large": "„{name}” jest większy niż {max} i nie można go dołączyć.",
+    "failed": "Nie udało się dołączyć „{name}”. Spróbuj ponownie."
+  },
   "compose_windows": {
     "more_formatting": "Więcej formatowania",
     "offline": "Offline",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "To, co teraz wyślesz, czeka w skrzynce nadawczej i wyjdzie, gdy wrócisz do sieci.",
     "offline_send_saved": "Jesteś offline. Wiadomość jest zapisana w Szkicach.",
     "offline_send_unsaved": "Jesteś offline. Wiadomość zostaje tutaj i zostanie zapisana w Szkicach, gdy wrócisz do sieci."
+  },
+  "composer_panel": {
+    "show_panel": "Pokaż: {name}",
+    "hide_panel": "Ukryj: {name}"
   },
   "desktopDevTools": {
     "section_title": "Rozwiązywanie problemów",

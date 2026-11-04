@@ -7665,6 +7665,14 @@
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
+  "desktopAttachRecent": {
+    "heading": "Legutóbbi fájlok",
+    "browse": "A számítógép tallózása…",
+    "from_files": "A Fájlokból…",
+    "missing": "A(z) „{name}” már nem létezik.",
+    "too_large": "A(z) „{name}” nagyobb, mint {max}, ezért nem csatolható.",
+    "failed": "A(z) „{name}” csatolása nem sikerült. Próbálja újra."
+  },
   "compose_windows": {
     "more_formatting": "További formázás",
     "offline": "Offline",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "Amit most elküld, a postázandók között vár, és elmegy, amint újra online lesz.",
     "offline_send_saved": "Offline állapotban van. Az üzenet a Piszkozatok között van mentve.",
     "offline_send_unsaved": "Offline állapotban van. Az üzenet itt marad, és a Piszkozatok közé kerül, amint újra online lesz."
+  },
+  "composer_panel": {
+    "show_panel": "{name} megjelenítése",
+    "hide_panel": "{name} elrejtése"
   },
   "desktopDevTools": {
     "section_title": "Hibaelhárítás",

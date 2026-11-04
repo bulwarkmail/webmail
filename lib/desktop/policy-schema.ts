@@ -82,6 +82,7 @@ export interface PolicyValues {
   WipeOfflineData: string | null;
   OpenWithEnabled: boolean;
   DeveloperToolsAvailability: number | null;
+  RecentFilesInAttach: boolean;
 }
 
 export type PolicyKey = keyof PolicyValues;
@@ -464,6 +465,19 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     description: {
       en: 'The same values as Chrome\'s policy of this name. 2: developer tools are off and the setting is locked. 0 or 1, or not configured: people can turn them on under Settings, after a warning. Developer tools let anyone at the keyboard read everything the app holds, mail and passwords in memory included.',
       de: 'Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.',
+    },
+  },
+  RecentFilesInAttach: {
+    category: 'privacy',
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    forcedOnly: true,
+    sample: true,
+    title: { en: 'Show recent files in the Attach menu', de: 'Zuletzt verwendete Dateien im Menü „Anfügen“ anzeigen' },
+    description: {
+      en: 'When enabled or not configured, the Attach button in a new message lists the files the user opened recently, as the operating system records them, so one click attaches one. The list is read when the menu opens and stays on the device. When disabled, the list is gone and the app refuses to read it. Attaching through the file dialog is not affected.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, listet die Schaltfläche „Anfügen“ in einer neuen Nachricht die Dateien auf, die der Benutzer zuletzt geöffnet hat, so wie das Betriebssystem sie erfasst. Ein Klick fügt eine davon an. Die Liste wird beim Öffnen des Menüs gelesen und bleibt auf dem Gerät. Wenn deaktiviert, fehlt die Liste und die App lehnt es ab, sie zu lesen. Das Anfügen über den Dateidialog ist nicht betroffen.',
     },
   },
 };
@@ -916,6 +930,7 @@ const PAGE_POLICY_KEYS: readonly PolicyKey[] = [
   'AppLockRequired',
   'AppLockTimeoutMinutes',
   'CrashReportsAllowed',
+  'RecentFilesInAttach',
 ];
 
 /**
@@ -965,6 +980,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   BrowserSignIn: { repo: 'shell', file: 'src/main/features/browser-sign-in.ts' },
   OpenWithEnabled: { repo: 'shell', file: 'src/main/features/os-default-app.ts' },
   DeveloperToolsAvailability: { repo: 'shell', file: 'src/main/features/dev-tools.ts' },
+  RecentFilesInAttach: { repo: 'shell', file: 'src/main/features/os-recent.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */

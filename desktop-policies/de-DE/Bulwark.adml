@@ -67,6 +67,8 @@
       <string id="OpenWithEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, trägt sich die App unter Windows in die Liste „Öffnen mit“ für gängige Dokumente und Bilder und in das Menü „Senden an“ ein, damit Benutzer eine Datei aus dem Dateimanager an eine neue Nachricht anhängen können. Sie wird nie zum Standardprogramm für diese Dateien. Wenn deaktiviert, entfernt die App diese Einträge für den Benutzer. Mail-Links und .eml-, .ics- und .vcf-Dateien sind nicht betroffen.</string>
       <string id="DeveloperToolsAvailability">Entwicklertools</string>
       <string id="DeveloperToolsAvailability_Explain">Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.</string>
+      <string id="RecentFilesInAttach">Zuletzt verwendete Dateien im Menü „Anfügen“ anzeigen</string>
+      <string id="RecentFilesInAttach_Explain">Wenn aktiviert oder nicht konfiguriert, listet die Schaltfläche „Anfügen“ in einer neuen Nachricht die Dateien auf, die der Benutzer zuletzt geöffnet hat, so wie das Betriebssystem sie erfasst. Ein Klick fügt eine davon an. Die Liste wird beim Öffnen des Menüs gelesen und bleibt auf dem Gerät. Wenn deaktiviert, fehlt die Liste und die App lehnt es ab, sie zu lesen. Das Anfügen über den Dateidialog ist nicht betroffen.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>

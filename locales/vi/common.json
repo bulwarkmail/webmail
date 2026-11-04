@@ -7677,6 +7677,14 @@
     "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
     "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
   },
+  "desktopAttachRecent": {
+    "heading": "Tệp gần đây",
+    "browse": "Duyệt máy tính này…",
+    "from_files": "Từ Tệp…",
+    "missing": "\"{name}\" không còn nữa.",
+    "too_large": "\"{name}\" lớn hơn {max} nên không thể đính kèm.",
+    "failed": "Không thể đính kèm \"{name}\". Hãy thử lại."
+  },
   "compose_windows": {
     "more_formatting": "Thêm định dạng",
     "offline": "Ngoại tuyến",
@@ -7684,6 +7692,10 @@
     "offline_hint_outbox": "Thư bạn gửi bây giờ sẽ chờ trong Hộp thư đi và được gửi khi bạn trực tuyến trở lại.",
     "offline_send_saved": "Bạn đang ngoại tuyến. Thư đã được lưu trong Bản nháp.",
     "offline_send_unsaved": "Bạn đang ngoại tuyến. Thư vẫn ở đây và sẽ được lưu vào Bản nháp khi bạn trực tuyến trở lại."
+  },
+  "composer_panel": {
+    "show_panel": "Hiện {name}",
+    "hide_panel": "Ẩn {name}"
   },
   "desktopDevTools": {
     "section_title": "Khắc phục sự cố",

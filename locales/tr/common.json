@@ -7665,6 +7665,14 @@
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
+  "desktopAttachRecent": {
+    "heading": "Son dosyalar",
+    "browse": "Bu bilgisayara göz at…",
+    "from_files": "Dosyalar'dan…",
+    "missing": "\"{name}\" artık yok.",
+    "too_large": "\"{name}\" {max} boyutundan büyük ve eklenemez.",
+    "failed": "\"{name}\" eklenemedi. Yeniden deneyin."
+  },
   "compose_windows": {
     "more_formatting": "Daha fazla biçimlendirme",
     "offline": "Çevrimdışı",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "Şimdi gönderdikleriniz giden kutusunda bekler ve yeniden çevrimiçi olduğunuzda gönderilir.",
     "offline_send_saved": "Çevrimdışısınız. İleti Taslaklar'a kaydedildi.",
     "offline_send_unsaved": "Çevrimdışısınız. İleti burada kalır ve yeniden çevrimiçi olduğunuzda Taslaklar'a kaydedilir."
+  },
+  "composer_panel": {
+    "show_panel": "{name} panelini göster",
+    "hide_panel": "{name} panelini gizle"
   },
   "desktopDevTools": {
     "section_title": "Sorun giderme",

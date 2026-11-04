@@ -7666,6 +7666,14 @@
     "types_character": "המקשים האלה מקלידים תו במקלדת שלכם, והוא יפסיק לעבוד בכל האפליקציות. נסו מקשים אחרים.",
     "reserved": "המערכת או רוב האפליקציות משתמשות במקשים האלה. נסו מקשים אחרים."
   },
+  "desktopAttachRecent": {
+    "heading": "קבצים אחרונים",
+    "browse": "עיון במחשב הזה…",
+    "from_files": "מקבצים…",
+    "missing": "\"{name}\" כבר לא קיים.",
+    "too_large": "\"{name}\" גדול מ־{max} ולא ניתן לצרף אותו.",
+    "failed": "לא ניתן היה לצרף את \"{name}\". נסו שוב."
+  },
   "compose_windows": {
     "more_formatting": "עוד עיצוב",
     "offline": "אין חיבור",
@@ -7673,6 +7681,10 @@
     "offline_hint_outbox": "מה ששולחים עכשיו ממתין בתיבת הדואר היוצא ונשלח כשחוזרים לרשת.",
     "offline_send_saved": "אין חיבור. ההודעה שמורה בטיוטות.",
     "offline_send_unsaved": "אין חיבור. ההודעה נשארת כאן ותישמר בטיוטות כשתחזרו לרשת."
+  },
+  "composer_panel": {
+    "show_panel": "הצגת {name}",
+    "hide_panel": "הסתרת {name}"
   },
   "desktopDevTools": {
     "section_title": "פתרון בעיות",

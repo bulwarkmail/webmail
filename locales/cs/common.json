@@ -7665,6 +7665,14 @@
     "types_character": "Tyto klávesy na vaší klávesnici píší znak, který by pak nefungoval v žádné aplikaci. Zkuste jiné klávesy.",
     "reserved": "Tyto klávesy používá systém nebo většina aplikací. Zkuste jiné klávesy."
   },
+  "desktopAttachRecent": {
+    "heading": "Poslední soubory",
+    "browse": "Procházet tento počítač…",
+    "from_files": "Ze Souborů…",
+    "missing": "„{name}“ už neexistuje.",
+    "too_large": "„{name}“ je větší než {max} a nelze ho připojit.",
+    "failed": "„{name}“ se nepodařilo připojit. Zkuste to znovu."
+  },
   "compose_windows": {
     "more_formatting": "Další formátování",
     "offline": "Offline",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "Co teď odešlete, počká mezi zprávami k odeslání a odejde, až budete znovu online.",
     "offline_send_saved": "Jste offline. Zpráva je uložená v Konceptech.",
     "offline_send_unsaved": "Jste offline. Zpráva tu zůstane a uloží se do Konceptů, až budete znovu online."
+  },
+  "composer_panel": {
+    "show_panel": "Zobrazit {name}",
+    "hide_panel": "Skrýt {name}"
   },
   "desktopDevTools": {
     "section_title": "Řešení potíží",

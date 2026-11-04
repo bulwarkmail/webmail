@@ -7665,6 +7665,14 @@
     "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
     "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
   },
+  "desktopAttachRecent": {
+    "heading": "File recenti",
+    "browse": "Sfoglia questo computer…",
+    "from_files": "Da File…",
+    "missing": "\"{name}\" non esiste più.",
+    "too_large": "\"{name}\" supera {max} e non può essere allegato.",
+    "failed": "Impossibile allegare \"{name}\". Riprova."
+  },
   "compose_windows": {
     "more_formatting": "Altre opzioni di formattazione",
     "offline": "Offline",
@@ -7672,6 +7680,10 @@
     "offline_hint_outbox": "Quello che invii ora aspetta nella posta in uscita e parte quando torni online.",
     "offline_send_saved": "Sei offline. Il messaggio è salvato nelle Bozze.",
     "offline_send_unsaved": "Sei offline. Il messaggio resta qui e viene salvato nelle Bozze quando torni online."
+  },
+  "composer_panel": {
+    "show_panel": "Mostra {name}",
+    "hide_panel": "Nascondi {name}"
   },
   "desktopDevTools": {
     "section_title": "Risoluzione dei problemi",
