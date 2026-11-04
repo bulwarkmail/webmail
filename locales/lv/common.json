@@ -1805,7 +1805,7 @@
         "error_not_granted": "Paziņojumi netika atļauti, tāpēc push paliek izslēgts.",
         "error_verification_timeout": "Pasta serveris laikus neapstiprināja šo ierīci, tāpēc push paliek izslēgts. Mēģiniet vēlreiz pēc minūtes.",
         "error_relay": "Push releju pašlaik nevar sasniegt, tāpēc push paliek izslēgts. Mēģiniet vēlreiz vēlāk.",
-        "error_teardown": "Push šajā pārlūkā ir izslēgts, bet pasta serveri vai releju nevarēja sasniegt. Paziņojumi vēl dažas dienas var turpināt pienākt. Kad atkal būsiet tiešsaistē, atsauciet šo ierīci zemāk."
+        "error_teardown": "Push šajā pārlūkā ir izslēgts, bet pasta serveri vai releju nevarēja sasniegt. Paziņojumi vēl dažas dienas var turpināt pienākt. Lai tos apturētu ātrāk, kad atkal būsiet tiešsaistē, ieslēdziet papildu iestatījumus un atsauciet šo ierīci sadaļā Reģistrētās ierīces."
       }
     },
     "language_region": {

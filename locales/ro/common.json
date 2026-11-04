@@ -1772,7 +1772,7 @@
         "error_not_granted": "Notificările nu au fost permise, deci push rămâne dezactivat.",
         "error_verification_timeout": "Serverul de e-mail nu a confirmat la timp acest dispozitiv, deci push rămâne dezactivat. Încearcă din nou peste un minut.",
         "error_relay": "Releul push nu poate fi accesat acum, deci push rămâne dezactivat. Încearcă din nou mai târziu.",
-        "error_teardown": "Push este dezactivat în acest browser, dar serverul de e-mail sau releul nu au putut fi accesate. Notificările pot continua să sosească câteva zile. Revocă acest dispozitiv mai jos când ești din nou online."
+        "error_teardown": "Push este dezactivat în acest browser, dar serverul de e-mail sau releul nu au putut fi accesate. Notificările pot continua să sosească câteva zile. Pentru a le opri mai devreme, când ești din nou online activează setările avansate și revocă acest dispozitiv la Dispozitive înregistrate."
       },
       "push_all": {
           "title": "All accounts",

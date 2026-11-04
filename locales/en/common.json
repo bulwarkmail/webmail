@@ -1772,7 +1772,7 @@
         "error_not_granted": "Notifications weren't allowed, so push stays off.",
         "error_verification_timeout": "The mail server didn't confirm this device in time, so push stays off. Try again in a minute.",
         "error_relay": "The push relay can't be reached right now, so push stays off. Try again later.",
-        "error_teardown": "Push is off in this browser, but the mail server or the relay couldn't be reached. Notifications may keep arriving for a few days. Revoke this device below once you're back online."
+        "error_teardown": "Push is off in this browser, but the mail server or the relay couldn't be reached. Notifications may keep arriving for a few days. To stop them sooner, turn on advanced settings once you're back online and revoke this device under Registered devices."
       },
       "push_all": {
         "title": "All accounts",

@@ -1772,7 +1772,7 @@
         "error_not_granted": "No s'han permès les notificacions, així que les notificacions push continuen desactivades.",
         "error_verification_timeout": "El servidor de correu no ha confirmat aquest dispositiu a temps, així que les notificacions push continuen desactivades. Torna-ho a provar d'aquí a un minut.",
         "error_relay": "Ara mateix no es pot accedir al repetidor de notificacions, així que les notificacions push continuen desactivades. Torna-ho a provar més tard.",
-        "error_teardown": "Les notificacions push estan desactivades en aquest navegador, però no s'ha pogut accedir al servidor de correu o al repetidor. Encara poden arribar notificacions durant uns dies. Revoca aquest dispositiu aquí sota quan tornis a tenir connexió."
+        "error_teardown": "Les notificacions push estan desactivades en aquest navegador, però no s'ha pogut accedir al servidor de correu o al repetidor. Encara poden arribar notificacions durant uns dies. Per aturar-les abans, activa la configuració avançada quan tornis a tenir connexió i revoca aquest dispositiu a Dispositius registrats."
       },
       "push_all": {
           "title": "All accounts",

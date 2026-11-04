@@ -1805,7 +1805,7 @@
         "error_not_granted": "Bildirimlere izin verilmedi, bu yüzden anlık bildirim kapalı kalıyor.",
         "error_verification_timeout": "Posta sunucusu bu cihazı zamanında onaylamadı, bu yüzden anlık bildirim kapalı kalıyor. Bir dakika sonra yeniden deneyin.",
         "error_relay": "Anlık bildirim aktarıcısına şu anda ulaşılamıyor, bu yüzden anlık bildirim kapalı kalıyor. Daha sonra yeniden deneyin.",
-        "error_teardown": "Anlık bildirim bu tarayıcıda kapatıldı, ancak posta sunucusuna veya aktarıcıya ulaşılamadı. Bildirimler birkaç gün daha gelebilir. Yeniden çevrimiçi olduğunuzda bu cihazı aşağıdan iptal edin."
+        "error_teardown": "Anlık bildirim bu tarayıcıda kapatıldı, ancak posta sunucusuna veya aktarıcıya ulaşılamadı. Bildirimler birkaç gün daha gelebilir. Daha erken durdurmak için yeniden çevrimiçi olduğunuzda gelişmiş ayarları açın ve bu cihazı Kayıtlı cihazlar bölümünden iptal edin."
       }
     },
     "language_region": {

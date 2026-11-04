@@ -1805,7 +1805,7 @@
         "error_not_granted": "Nie zezwolono na powiadomienia, więc push pozostaje wyłączony.",
         "error_verification_timeout": "Serwer poczty nie potwierdził tego urządzenia na czas, więc push pozostaje wyłączony. Spróbuj ponownie za minutę.",
         "error_relay": "Przekaźnik push jest teraz niedostępny, więc push pozostaje wyłączony. Spróbuj ponownie później.",
-        "error_teardown": "Push jest wyłączony w tej przeglądarce, ale serwer poczty lub przekaźnik był niedostępny. Powiadomienia mogą przychodzić jeszcze przez kilka dni. Gdy znów będziesz online, unieważnij to urządzenie poniżej."
+        "error_teardown": "Push jest wyłączony w tej przeglądarce, ale serwer poczty lub przekaźnik był niedostępny. Powiadomienia mogą przychodzić jeszcze przez kilka dni. Aby zatrzymać je wcześniej, gdy znów będziesz online, włącz ustawienia zaawansowane i unieważnij to urządzenie w sekcji Zarejestrowane urządzenia."
       }
     },
     "language_region": {

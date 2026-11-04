@@ -1772,7 +1772,7 @@
         "error_not_granted": "Teavitusi ei lubatud, seega jääb tõuketeavitus välja.",
         "error_verification_timeout": "E-posti server ei kinnitanud seda seadet õigel ajal, seega jääb tõuketeavitus välja. Proovi minuti pärast uuesti.",
         "error_relay": "Tõuketeavituste releed ei saa praegu kätte, seega jääb tõuketeavitus välja. Proovi hiljem uuesti.",
-        "error_teardown": "Tõuketeavitus on selles brauseris väljas, kuid e-posti serverit või releed ei saadud kätte. Teavitusi võib veel mõne päeva tulla. Tühista see seade allpool, kui oled taas võrgus."
+        "error_teardown": "Tõuketeavitus on selles brauseris väljas, kuid e-posti serverit või releed ei saadud kätte. Teavitusi võib veel mõne päeva tulla. Et need varem lõpetada, lülita võrku naastes sisse täpsemad seaded ja tühista see seade jaotises Registreeritud seadmed."
       },
       "push_all": {
         "title": "Kõik kontod",

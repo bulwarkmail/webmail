@@ -1805,7 +1805,7 @@
         "error_not_granted": "Benachrichtigungen wurden nicht erlaubt, Push bleibt deshalb aus.",
         "error_verification_timeout": "Der Mailserver hat dieses Gerät nicht rechtzeitig bestätigt, Push bleibt deshalb aus. Versuchen Sie es in einer Minute erneut.",
         "error_relay": "Das Push-Relay ist gerade nicht erreichbar, Push bleibt deshalb aus. Versuchen Sie es später erneut.",
-        "error_teardown": "Push ist in diesem Browser aus, aber der Mailserver oder das Relay waren nicht erreichbar. Benachrichtigungen können noch einige Tage ankommen. Widerrufen Sie dieses Gerät unten, sobald Sie wieder online sind."
+        "error_teardown": "Push ist in diesem Browser aus, aber der Mailserver oder das Relay waren nicht erreichbar. Benachrichtigungen können noch einige Tage ankommen. Um sie früher zu beenden, schalten Sie die erweiterten Einstellungen ein, sobald Sie wieder online sind, und widerrufen Sie dieses Gerät unter „Registrierte Geräte“."
       }
     },
     "language_region": {

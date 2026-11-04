@@ -1805,7 +1805,7 @@
         "error_not_granted": "Les notifications n'ont pas été autorisées, les notifications push restent donc désactivées.",
         "error_verification_timeout": "Le serveur de messagerie n'a pas confirmé cet appareil à temps, les notifications push restent donc désactivées. Réessayez dans une minute.",
         "error_relay": "Le relais de notifications est injoignable pour le moment, les notifications push restent donc désactivées. Réessayez plus tard.",
-        "error_teardown": "Les notifications push sont désactivées dans ce navigateur, mais le serveur de messagerie ou le relais n'a pas pu être joint. Des notifications peuvent encore arriver pendant quelques jours. Révoquez cet appareil ci-dessous une fois de nouveau en ligne."
+        "error_teardown": "Les notifications push sont désactivées dans ce navigateur, mais le serveur de messagerie ou le relais n'a pas pu être joint. Des notifications peuvent encore arriver pendant quelques jours. Pour les arrêter plus tôt, activez les paramètres avancés une fois de nouveau en ligne et révoquez cet appareil sous Appareils enregistrés."
       }
     },
     "language_region": {

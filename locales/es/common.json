@@ -1805,7 +1805,7 @@
         "error_not_granted": "No se permitieron las notificaciones, así que las notificaciones push siguen desactivadas.",
         "error_verification_timeout": "El servidor de correo no confirmó este dispositivo a tiempo, así que las notificaciones push siguen desactivadas. Inténtalo de nuevo en un minuto.",
         "error_relay": "No se puede acceder al relé de notificaciones en este momento, así que las notificaciones push siguen desactivadas. Inténtalo más tarde.",
-        "error_teardown": "Las notificaciones push están desactivadas en este navegador, pero no se pudo acceder al servidor de correo o al relé. Es posible que sigan llegando notificaciones durante unos días. Revoca este dispositivo abajo cuando vuelvas a tener conexión."
+        "error_teardown": "Las notificaciones push están desactivadas en este navegador, pero no se pudo acceder al servidor de correo o al relé. Es posible que sigan llegando notificaciones durante unos días. Para detenerlas antes, activa los ajustes avanzados cuando vuelvas a tener conexión y revoca este dispositivo en Dispositivos registrados."
       }
     },
     "language_region": {
