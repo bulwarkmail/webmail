@@ -4811,6 +4811,8 @@ export function EmailComposer({
 
     if (isPlainEscape) {
       if (activeAutoField) return;
+      // A selected recipient: Escape only lets go of it (its own handler).
+      if (e.target instanceof Element && e.target.closest('[data-recipient-chip]')) return;
       // Same for the "@" recipient list in the body: this handler runs in the
       // capture phase, before the editor could close the list itself.
       if (isRecipientMentionActive(editorRef.current)) return;
@@ -6283,6 +6285,9 @@ export function RecipientChipInput({
   // one by default: Shift+Tab from the input lands next to it.
   const [rovingChip, setRovingChip] = useState<number | null>(null);
   const chipRefs = useRef<Array<HTMLElement | null>>([]);
+  // The chip a Backspace in the empty input selected: a second one removes it
+  // and goes back to typing.
+  const backspaceChipRef = useRef<number | null>(null);
   const errorId = `${labelId}-error`;
   const chipHintId = `${labelId}-chip-hint`;
   const fieldNames: Record<'to' | 'cc' | 'bcc', string> = { to: t('to'), cc: t('cc'), bcc: t('bcc') };
@@ -6316,6 +6321,25 @@ export function RecipientChipInput({
 
   const handleChipKeyDown = (e: React.KeyboardEvent<HTMLElement>, index: number) => {
     if (e.target !== e.currentTarget) return;
+    const fromInput = backspaceChipRef.current === index;
+    backspaceChipRef.current = null;
+    // Escape lets go of the chip (the composer stays open); typing goes on in the input.
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      inputRef.current?.focus();
+      return;
+    }
+    if (fromInput && (e.key === 'Backspace' || e.key === 'Delete')) {
+      e.preventDefault();
+      onChipsChange(chips.filter((_, i) => i !== index));
+      setRovingChip(null);
+      inputRef.current?.focus();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && e.key !== ' ') {
+      inputRef.current?.focus();
+      return;
+    }
     const rtl = typeof window !== 'undefined' && getComputedStyle(e.currentTarget).direction === 'rtl';
     const back = rtl ? 'ArrowRight' : 'ArrowLeft';
     const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
@@ -6500,14 +6524,13 @@ export function RecipientChipInput({
       return;
     }
 
-    // Backspace on an empty input pulls the last chip back into the input for
-    // quick editing.
+    // Backspace on an empty input selects the last chip; the next one removes
+    // it whole. It used to put the address back as text, so a few presses
+    // left half an address behind. Editing is a double-click, Enter or F2.
     if (e.key === 'Backspace' && !inputText && chips.length > 0) {
-      // Or the key goes on to delete the closing ">" of what was just put back.
       e.preventDefault();
-      const lastChip = chips[chips.length - 1];
-      onChipsChange(chips.slice(0, -1));
-      onInputChange(formatRecipient(lastChip.name, lastChip.email));
+      backspaceChipRef.current = chips.length - 1;
+      focusChip(chips.length - 1);
       return;
     }
   };
@@ -6702,12 +6725,15 @@ export function RecipientChipInput({
                   : ( customColor && colorStyles[customColor]
                       ? `${colorStyles[customColor]} cursor-grab active:cursor-grabbing`
                       :  "bg-secondary text-secondary-foreground hover:bg-accent cursor-grab active:cursor-grabbing"),
-                !isEditing && draggingIndex === i && "opacity-50"
+                !isEditing && draggingIndex === i && "opacity-50",
+                // Selected: by Backspace in the field, arrows or Tab.
+                !isEditing && "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
               data-invalid={isInvalid || undefined}
               title={isInvalid ? t('invalid_recipient') : undefined}
               role="listitem"
+              data-recipient-chip=""
               ref={(el) => { chipRefs.current[i] = el; }}
               tabIndex={isEditing ? undefined : i === tabChip ? 0 : -1}
               aria-describedby={isEditing ? undefined : chipHintId}

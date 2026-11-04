@@ -541,12 +541,14 @@ describe('composer with the @ recipient list', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('pulls the last recipient back whole on Backspace, without the key deleting its last character', async () => {
+  // The first Backspace selects the last recipient, it doesn't turn it into text.
+  it('selects the last recipient on Backspace, without the key deleting anything', async () => {
     await renderComposer({ to: 'Sarah Kim <sarah@example.com>' });
     const to = within(screen.getByTestId('composer-to')).getByRole('combobox') as HTMLInputElement;
     // fireEvent returns false when the handler stopped the key's default action.
     expect(fireEvent.keyDown(to, { key: 'Backspace' })).toBe(false);
-    expect(to.value).toBe('Sarah Kim <sarah@example.com>');
+    expect(to.value).toBe('');
+    expect(document.activeElement).toHaveAttribute('data-recipient-chip');
   });
 
   // compose-17: the button was there only with a server directory, so
