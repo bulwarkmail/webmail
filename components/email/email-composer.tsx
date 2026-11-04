@@ -92,7 +92,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { ComposerPanelToggle, ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
+import { ComposerPanelHead, ComposerPanelToggle, ComposerPluginSidebar, isPanelOpen, useComposerSidebars } from "./composer-plugin-sidebars";
 import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
@@ -188,7 +188,11 @@ import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
-import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
+import { askInWindow } from "@/lib/desktop/dialog-window";
+import { readRecentFile, RECENT_FILE_MAX_BYTES, useRecentFilesOffered } from "@/lib/desktop/recent-files";
+import type { DesktopRecentFile } from "@/lib/desktop/types";
+import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
@@ -650,6 +654,7 @@ export function EmailComposer({
   const tEdit = useTranslations('desktopEdit');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
+  const tRecent = useTranslations('desktopAttachRecent');
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
@@ -2778,6 +2783,20 @@ export function EmailComposer({
     void addFiles(initialFiles, { handedIn: true });
   }, [client, initialFiles, addFiles]);
 
+  // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
+  // shell reads the file; from there it's a file like one from the file dialog.
+  const recentOffered = useRecentFilesOffered();
+  const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
+    const result = await readRecentFile(file.id);
+    if (result.ok) {
+      await addFiles([result.file]);
+      return;
+    }
+    if (result.reason === 'missing') toast.error(tRecent('missing', { name: file.name }));
+    else if (result.reason === 'too-large') toast.error(tRecent('too_large', { name: file.name, max: formatFileSize(RECENT_FILE_MAX_BYTES) }));
+    else if (result.reason === 'failed') toast.error(tRecent('failed', { name: file.name }));
+  }, [addFiles, tRecent]);
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
     await addFiles(Array.from(event.target.files));
@@ -3621,13 +3640,28 @@ export function EmailComposer({
     [pluginDraft, pluginSelection, pluginComposerId, pluginSidebars.focusRequests.right],
   );
 
-  // The buttons that show and hide the plugin panels, in the header.
-  const leftPanelToggle = pluginSidebars.modes.left
-    ? <ComposerPanelToggle side="left" mode={pluginSidebars.modes.left} onToggle={() => pluginSidebars.toggle('left')} />
+  // The plugin panels in the header row: a folded one's Show button, and an
+  // open one's head with its Hide button (see composer-plugin-sidebars.tsx).
+  const leftPanelToggle = pluginSidebars.modes.left === 'folded'
+    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} onToggle={() => pluginSidebars.toggle('left')} />
     : null;
-  const rightPanelToggle = pluginSidebars.modes.right
-    ? <ComposerPanelToggle side="right" mode={pluginSidebars.modes.right} onToggle={() => pluginSidebars.toggle('right')} />
+  const rightPanelToggle = pluginSidebars.modes.right === 'folded'
+    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} onToggle={() => pluginSidebars.toggle('right')} />
     : null;
+  const rightPanelOpen = isPanelOpen(pluginSidebars.modes.right);
+  const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode, childrenClassName?: string) => (
+    <ComposerPanelHead
+      side={side}
+      mode={pluginSidebars.modes[side]}
+      width={pluginSidebars.widths[side]}
+      name={pluginSidebars.names[side]}
+      onToggle={() => pluginSidebars.toggle(side)}
+      className={className}
+      childrenClassName={childrenClassName}
+    >
+      {children}
+    </ComposerPanelHead>
+  );
 
   // The right-click menu on selected text, when a plugin put entries in it.
   const selectionMenu = useComposerSelectionMenu();
@@ -4737,6 +4771,86 @@ export function EmailComposer({
     </button>
   );
 
+  // What ends the header row: the window buttons, Close last. With the right
+  // panel open they end its head instead, at the far end of the composer.
+  const windowButtons = (
+    <>
+      {canMaximize && (
+        <button
+          type="button"
+          onClick={() => setMaximized((v) => !v)}
+          className="hidden md:grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={maximized ? t('restore') : t('maximize')}
+          title={maximized ? t('restore') : t('maximize')}
+          data-testid="composer-maximize"
+        >
+          {maximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+      )}
+      {popOutButton(cn(phoneLayout ? "hidden md:grid" : "grid", "h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"), "w-4 h-4")}
+      {!closeBesideControls && composerCloseButton}
+    </>
+  );
+  const mvInlineButtons = mvWindow && (
+    <>
+      {mvWindow.popOut && (
+        <button
+          type="button"
+          onClick={mvWindow.popOut}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={t('pop_out')}
+          title={t('pop_out')}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </button>
+      )}
+      {popOutButton("grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground", "h-4 w-4")}
+      <button
+        type="button"
+        onClick={() => handleClose()}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        aria-label={tCommon('close')}
+        title={tCommon('close')}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </>
+  );
+  const mvWindowButtons = mvWindow && (
+    <>
+      {mvWindow.state !== "minimized" && popOutButton("grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground", "h-4 w-4")}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
+        title={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "maximized" ? "normal" : "maximized"); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
+        title={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
+      >
+        {mvWindow.state === "maximized" ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); handleClose(); }}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+        aria-label={tCommon('close')}
+        title={tCommon('close')}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </>
+  );
+  // Files dropped on the header attach, as on the rest of the message.
+  const headerDropProps = { onDragEnter: handleDragEnter, onDragLeave: handleDragLeave, onDragOver: handleDragOver, onDrop: handleDrop };
+
   // `keepDraft`: the bin's discard, which deletes the draft once its Undo is
   // over, not here.
   const handleDiscardAndClose = ({ keepDraft = false }: { keepDraft?: boolean } = {}) => {
@@ -4767,15 +4881,39 @@ export function EmailComposer({
     emitClose();
   };
 
-  /** The question before closing or discarding: the OS's own in the desktop app. */
+  /**
+   * The question before closing or discarding. In the desktop app it is a window of its
+   * own; an older shell asks with the OS's message box.
+   */
   const openCloseDialog = (kind: 'discard' | 'close') => {
-    const dialogs = getDesktopBridge()?.dialogs;
-    if (!dialogs) {
+    const inPage = () => {
       setCloseDialogKind(kind);
       setShowCloseDialog(true);
+    };
+    const discarding = kind === 'discard';
+    const asked = askInWindow({
+      title: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      message: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
+      buttons: discarding
+        ? [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }]
+        : [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }, { label: tUx('try_again') }],
+      defaultIndex: discarding ? 0 : 2,
+    });
+    if (asked) {
+      void asked.answer.then((answer) => {
+        const button = answer && answer !== 'failed' && 'button' in answer ? answer.button : -1;
+        if (answer === 'failed') inPage();
+        else if (button === 1) handleDiscardAndClose();
+        else if (button === 2) void handleSaveDraftAndClose({ fromClose: true });
+        else afterCloseRef.current = null;
+      });
       return;
     }
-    const discarding = kind === 'discard';
+    const dialogs = getDesktopBridge()?.dialogs;
+    if (!dialogs) {
+      inPage();
+      return;
+    }
     const buttons = discarding ? [t('discard'), t('cancel')] : [tUx('try_again'), t('discard'), t('cancel')];
     void dialogs.confirm({
       type: 'warning',
@@ -5019,8 +5157,11 @@ export function EmailComposer({
       data-testid="email-composer"
       // Edits made while the draft moves wouldn't move with it.
       inert={isPoppingOut || undefined}
+      // The header row on top, across the plugin panels too, so the window
+      // buttons and Close end the whole composer; panels and message below.
+      data-tour="composer"
       className={cn(
-        "flex h-full bg-background relative",
+        "flex flex-col h-full bg-background relative",
         className,
         // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
         // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
@@ -5039,112 +5180,57 @@ export function EmailComposer({
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-testid="composer-live-region">
         {liveMessage && <span key={liveMessage.n}>{liveMessage.text}</span>}
       </div>
-      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
-      {/* Right-side composer sidebar slot is rendered after the main content div below. */}
-    <div
-      className="flex flex-col h-full bg-background relative flex-1 min-w-0"
-      data-tour="composer"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
-      {/* Drag overlay */}
-      {isDraggingOver && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 border-2 border-dashed border-primary rounded-lg pointer-events-none">
-          <div className="flex flex-col items-center gap-2 text-primary">
-            <Paperclip className="w-8 h-8" />
-            <span className="text-sm font-medium">{t('drop_files')}</span>
-          </div>
-        </div>
-      )}
       {/* Header - mobile: clean bar with close/send, desktop: title bar.
           In Mountain View's window it is the window's title bar instead. */}
       {mvWindow?.variant === "inline" ? (
-        <div className="flex items-center gap-2 h-10 ps-4 pe-1.5 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="">
-          {mode === 'replyAll'
-            ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            : mode === 'forward'
-              ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-          <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
-            {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
-          </h3>
-          {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
-          {leftPanelToggle}
-          {rightPanelToggle}
-          {mvWindow.popOut && (
-            <button
-              type="button"
-              onClick={mvWindow.popOut}
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label={t('pop_out')}
-              title={t('pop_out')}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </button>
-          )}
-          {popOutButton("grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground", "h-4 w-4")}
-          <button
-            type="button"
-            onClick={() => handleClose()}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={tCommon('close')}
-            title={tCommon('close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <div className="flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
+          {panelHead('left', 'px-1.5')}
+          <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
+            {mode === 'replyAll'
+              ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              : mode === 'forward'
+                ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+            <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
+              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
+            </h3>
+            {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            {leftPanelToggle}
+            {rightPanelToggle}
+            {!rightPanelOpen && mvInlineButtons}
+          </div>
+          {panelHead('right', 'ps-1.5 pe-1.5', mvInlineButtons, 'gap-2')}
         </div>
       ) : mvWindow ? (
         <div
           className={cn(
-            "flex items-center gap-1 h-10 ps-4 pe-1.5 shrink-0 bg-[var(--mv-search-bg)]",
+            "flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
             mvWindow.state === "minimized" && "cursor-pointer",
           )}
           data-mv-compose-titlebar=""
           onClick={mvWindow.state === "minimized" ? () => mvWindow.setState("normal") : undefined}
+          {...headerDropProps}
         >
-          <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
-            {mode === 'reply' || mode === 'replyAll' || mode === 'forward'
-              ? (subject || t('new_message'))
-              : t('new_message')}
-          </h3>
-          {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
-          {mvWindow.state !== "minimized" && leftPanelToggle}
-          {mvWindow.state !== "minimized" && rightPanelToggle}
-          {mvWindow.state !== "minimized" && popOutButton("grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground", "h-4 w-4")}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
-            title={mvWindow.state === "minimized" ? t("restore") : t("minimize")}
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "maximized" ? "normal" : "maximized"); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
-            title={mvWindow.state === "maximized" ? t("restore") : t("maximize")}
-          >
-            {mvWindow.state === "maximized" ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
-            className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-            aria-label={tCommon('close')}
-            title={tCommon('close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {mvWindow.state !== "minimized" && panelHead('left', 'px-1.5')}
+          <div className="flex-1 min-w-0 flex items-center gap-1 ps-4 pe-1.5">
+            <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
+              {mode === 'reply' || mode === 'replyAll' || mode === 'forward'
+                ? (subject || t('new_message'))
+                : t('new_message')}
+            </h3>
+            {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            {mvWindow.state !== "minimized" && leftPanelToggle}
+            {mvWindow.state !== "minimized" && rightPanelToggle}
+            {(mvWindow.state === "minimized" || !rightPanelOpen) && mvWindowButtons}
+          </div>
+          {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
         </div>
       ) : (
-      <div ref={setComposerHeader} className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+      <div ref={setComposerHeader} className="flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
+        {panelHead('left', 'px-2')}
+        <div className="flex-1 min-w-0 flex items-center gap-3 px-4 py-2 md:py-0">
         {closeBesideControls && composerCloseButton}
-        {/* The left panel's button at the start, the right one's at the end: where each panel is. */}
+        {/* A folded panel's Show button where the panel goes: the left one's at the start, the right one's before the window buttons. */}
         {leftPanelToggle && <div className="hidden md:flex -ms-2">{leftPanelToggle}</div>}
         <div className="flex-1 min-w-0 flex items-center gap-3">
           <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
@@ -5214,23 +5300,31 @@ export function EmailComposer({
           </Button>
         ))}
         {rightPanelToggle}
-        {canMaximize && (
-          <button
-            type="button"
-            onClick={() => setMaximized((v) => !v)}
-            className="hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={maximized ? t('restore') : t('maximize')}
-            title={maximized ? t('restore') : t('maximize')}
-            data-testid="composer-maximize"
-          >
-            {maximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-        )}
-        {popOutButton(cn(phoneLayout ? "hidden md:grid" : "grid", "h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"), "w-4 h-4")}
-        {!closeBesideControls && composerCloseButton}
+        {!rightPanelOpen && windowButtons}
+        </div>
+        {panelHead('right', 'ps-1.5 pe-4', windowButtons, 'gap-3')}
       </div>
       )}
 
+      {/* The left panel, the message and the right panel, under the header. */}
+      <div className="flex flex-1 min-h-0 relative" data-composer-panels="">
+      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
+    <div
+      className="flex flex-col h-full bg-background relative flex-1 min-w-0"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 border-2 border-dashed border-primary rounded-lg pointer-events-none">
+          <div className="flex flex-col items-center gap-2 text-primary">
+            <Paperclip className="w-8 h-8" />
+            <span className="text-sm font-medium">{t('drop_files')}</span>
+          </div>
+        </div>
+      )}
       {/* Fields + body. While pinFields holds, the fields sit outside the
           body's scroll container so From/To/Cc/Bcc/Subject stay reachable
           while scrolling long bodies, matching the pinned formatting toolbar
@@ -5890,14 +5984,19 @@ export function EmailComposer({
               className="hidden"
               accept="*/*"
             />
-            {(filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
+            {recentOffered || (filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
               <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
                 {(close) => <>
+                  {/* As Outlook's: the recent files first, one click attaches one and closes. */}
+                  {recentOffered && (
+                    <RecentFilesMenuSection onPick={(file) => { close(); void attachRecentFile(file); }} />
+                  )}
                   <ComposerToolbarMenuItem
                     icon={Upload}
                     onSelect={() => { close(); fileInputRef.current?.click(); }}
+                    testId="composer-attach-from-device"
                   >
-                    {t('attach_from_device')}
+                    {isDesktopApp() ? tRecent('browse') : t('attach_from_device')}
                   </ComposerToolbarMenuItem>
                   {filesEnabled && composerClient?.supportsFiles?.() && (
                     <ComposerToolbarMenuItem
@@ -5905,7 +6004,7 @@ export function EmailComposer({
                       onSelect={() => { close(); setFilesPicker({ client: composerClient, accountId: composerAccountId }); }}
                       testId="composer-attach-from-files"
                     >
-                      {t('attach_from_files')}
+                      {isDesktopApp() ? tRecent('from_files') : t('attach_from_files')}
                     </ComposerToolbarMenuItem>
                   )}
                   <ComposerPluginMenuItems surface="composer-attach-menu" context={composerActionContext} onSelect={close} separator />
@@ -6305,6 +6404,7 @@ export function EmailComposer({
       )}
     </div>
       <ComposerPluginSidebar side="right" mode={pluginSidebars.modes.right} extraProps={pluginSidebarRightProps} width={pluginSidebars.widths.right} onWidthChange={(w) => pluginSidebars.setSideWidth('right', w)} />
+      </div>
       <ComposerSelectionMenu menu={selectionMenu} composerId={pluginComposerId} onClipboard={clipboardFromMenu} />
     </div>
   );

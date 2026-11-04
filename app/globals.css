@@ -313,6 +313,18 @@ optgroup {
   background-color: var(--color-muted-foreground);
 }
 
+/* The folded folder column (components/layout/sidebar.tsx) leaves its 48px
+   to the icons: a 4px scrollbar, in a gutter kept on both sides. */
+:root:not([data-native-scrollbars="on"]) [data-folder-rail]::-webkit-scrollbar {
+  width: 4px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  :root:not([data-native-scrollbars="on"]) [data-folder-rail] {
+    scrollbar-width: thin;
+  }
+}
+
 /* Enhanced Email Content Styling */
 
 .email-content-wrapper {
@@ -626,6 +638,17 @@ optgroup {
 /* A skeleton's row that will hold the controls has them from the first frame. */
 html[data-window-controls] [data-window-row-right] {
   padding-right: calc(var(--titlebar-right-inset) + 0.5rem) !important;
+}
+
+/*
+ * The composer's header runs over its plugin panels. The head above the panel at the
+ * window's right takes that room inside itself, so it stays as wide as the panel and
+ * its Hide button stays at the panel's edge, with its window buttons left of the controls.
+ */
+html[data-window-controls]:not([dir="rtl"]) [data-window-row-right] > [data-composer-panel-head="right"],
+html[data-window-controls][dir="rtl"] [data-window-row-right] > [data-composer-panel-head="left"] {
+  margin-right: calc(-1 * (var(--titlebar-right-inset) + 0.5rem));
+  padding-right: calc(var(--titlebar-right-inset) + 0.5rem);
 }
 
 /* Something floating at the top end of a page with no row: next to the controls, lined up. */

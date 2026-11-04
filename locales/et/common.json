@@ -7655,6 +7655,112 @@
     "signout_changed": "Veel lisamata ja salvestamata ning nüüd kustutatud: {names}.",
     "signout_held": "Endiselt teises programmis avatud, seega kustutatakse alles pärast sulgemist: {names}."
   },
+  "files_sync": {
+    "title": "Failid selles arvutis",
+    "drive": {
+      "title": "Failide draiv",
+      "label": "Näita Faile draivina",
+      "description": "Sinu Failid on Failihalduris näha draivina. Fail laaditakse alla, kui selle avad.",
+      "unsupported": "Vajab Windows 10 versiooni 1809 või uuemat.",
+      "root_name": "Failide draiv",
+      "letter_label": "Draivitäht",
+      "letter_description": "Annab draivile Failihalduris oma tähe.",
+      "letter_none": "Täheta"
+    },
+    "folders": {
+      "title": "Sünkroonitud kaustad",
+      "description": "Kaust selles arvutis ja kaust Failides hoitakse ühesugused, muudatused liiguvad mõlemas suunas.",
+      "empty": "Ühtegi kausta pole veel sünkroonitud.",
+      "forced_off": "Sinu organisatsioon lülitas kaustade sünkroonimise välja. Nendes olevad failid jäävad sellesse arvutisse.",
+      "add": "Lisa kaust…",
+      "loading": "Sinu kaustade laadimine…",
+      "load_failed": "Sinu kaustu Failides ei õnnestunud laadida. Proovi uuesti.",
+      "pick_title": "Milline kaust Failides?",
+      "pick_confirm": "Vali kaust selles arvutis…",
+      "paired_with": "Koos kaustaga {folder} Failides",
+      "pause": "Peata",
+      "resume": "Jätka",
+      "remove": "Eemalda…",
+      "remove_title": "Kas lõpetada selle kausta sünkroonimine?",
+      "remove_message": "Selle arvuti failid jäävad oma kohale, samuti failid Failides. Muudatused ei liigu enam ühest teise.",
+      "remove_confirm": "Lõpeta sünkroonimine",
+      "add_failed": {
+        "overlap": "See kaust asub sünkroonitud kaustas, sisaldab sellist kausta või on süsteemikaust. Vali mõni teine.",
+        "denied": "Rakendus ei saa seda kausta kasutada. Vali mõni teine.",
+        "policy": "Sinu organisatsioon ei luba seda.",
+        "failed": "Kausta ei õnnestunud lisada. Proovi uuesti."
+      }
+    },
+    "status": {
+      "starting": "Käivitamine…",
+      "idle": "Ajakohane. Viimati sünkroonitud {time}",
+      "idle_never": "Ajakohane",
+      "syncing": "Sünkroonimine: {done} tehtud, {pending} jäänud",
+      "paused": "Peatatud",
+      "offline": "Võrguühenduseta. {count, plural, =0 {Muudatused ootavad serverit} one {# muudatus ootab serverit} other {# muudatust ootab serverit}}",
+      "error": "Peatunud: {reason}",
+      "confirm_delete": "Peatatud, kuni vastad allolevale küsimusele",
+      "blocked": "Sinu organisatsioon lülitas selle välja"
+    },
+    "mass_delete": {
+      "title": "Kas kustutada {count, plural, one {# üksus} other {# üksust}}?",
+      "local": "{count, plural, one {# üksus kustutati} other {# üksust kustutati}} selle arvuti kaustast {folder}. Kas kustutada {count, plural, one {see} other {need}} ka Failides?",
+      "remote": "{count, plural, one {# üksus kustutati} other {# üksust kustutati}} Failide kaustast {folder}. Kas kustutada {count, plural, one {see} other {need}} ka selles arvutis?",
+      "allow": "{count, plural, one {Kustuta see} other {Kustuta need}}",
+      "restore": "{count, plural, one {Too see tagasi} other {Too need tagasi}}",
+      "later": "Otsusta hiljem"
+    },
+    "activity": {
+      "title": "Viimased tegevused",
+      "empty": "Midagi pole veel juhtunud.",
+      "clear": "Tühjenda",
+      "to_files": "Failidesse",
+      "to_computer": "Sellesse arvutisse",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Viga",
+      "mark_question": "Ootab sinu vastust",
+      "uploaded": "Üles laaditud: {path}",
+      "downloaded": "Alla laaditud: {path}",
+      "folder-created": "Loodud kaust {path}",
+      "renamed": "Ümber nimetatud: {detail} → {path}",
+      "moved": "Teisaldatud: {detail} → {path}",
+      "deleted": "Kustutatud: {path}",
+      "trashed": "Prügikasti teisaldatud: {path}",
+      "conflict": "{path} muutus mõlemas kohas. Teine versioon on alles nimega {detail}",
+      "renamed-for-disk": "{path} on selles arvutis nimega {detail}, sest selle nimi pole siin lubatud",
+      "too-large": "{path} on suurem, kui Failid lubavad ({detail}). See jääb ainult sellesse arvutisse",
+      "waiting": "{path} ootab serverit",
+      "mass-delete": "Peatatud enne paljude üksuste kustutamist",
+      "error": "{path} sünkroonimine ebaõnnestus"
+    },
+    "errors": {
+      "offline": "Server pole kättesaadav",
+      "server_refused": "Server lükkas muudatuse tagasi",
+      "too_large": "Fail on Failide jaoks liiga suur",
+      "name_invalid": "See nimi pole lubatud",
+      "disk_full": "Ketas on täis",
+      "denied": "Pole lubatud",
+      "busy": "Mõni teine programm kasutab seda",
+      "quota": "Sinu salvestusruum Failides on täis",
+      "not_found": "Seda pole enam olemas",
+      "policy": "Sinu organisatsioon ei luba seda",
+      "failed": "Midagi läks valesti"
+    },
+    "item": {
+      "label": "Selles arvutis",
+      "synced": "Sünkroonitud",
+      "syncing": "Sünkroonimine",
+      "pending": "Ootab sünkroonimist",
+      "error": "Sünkroonimine ebaõnnestus",
+      "online-only": "Ainult Failides, laaditakse avamisel alla"
+    },
+    "show_in": {
+      "explorer": "Kuva Failihalduris",
+      "finder": "Kuva Finderis",
+      "file_manager": "Kuva failihalduris",
+      "failed": "Kausta ei õnnestunud avada."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Kiirkiri",
     "menu": "Kiirkiri",
@@ -7670,6 +7776,14 @@
     "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
   },
+  "desktopAttachRecent": {
+    "heading": "Viimati kasutatud failid",
+    "browse": "Sirvi seda arvutit…",
+    "from_files": "Failidest…",
+    "missing": "„{name}” pole enam olemas.",
+    "too_large": "„{name}” on suurem kui {max} ja seda ei saa lisada.",
+    "failed": "Faili „{name}” ei saanud lisada. Proovi uuesti."
+  },
   "compose_windows": {
     "more_formatting": "Rohkem vormindust",
     "offline": "Võrguta",
@@ -7677,6 +7791,10 @@
     "offline_hint_outbox": "Mida praegu saadad, ootab väljuvate kirjade kastis ja läheb teele, kui oled jälle võrgus.",
     "offline_send_saved": "Oled võrguta. Kiri on salvestatud mustanditesse.",
     "offline_send_unsaved": "Oled võrguta. Kiri jääb siia ja salvestatakse mustanditesse, kui oled jälle võrgus."
+  },
+  "composer_panel": {
+    "show_panel": "Kuva {name}",
+    "hide_panel": "Peida {name}"
   },
   "desktopDevTools": {
     "section_title": "Tõrkeotsing",

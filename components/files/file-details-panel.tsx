@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import type { FileResource } from "@/stores/file-store";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { FilesSyncDetailsRow, ShowInFolderButton } from "@/components/files-sync/files-sync-item";
 import {
   FileSize, ResourceIcon, Thumbnail, canShowThumbnail, formatFullDate, type IconOptions,
 } from "@/components/files/file-item-parts";
@@ -157,6 +158,7 @@ export function FileDetailsPanel({
             {isStarred ? t("unstar") : t("star")}
           </Button>
         )}
+        <ShowInFolderButton nodeId={resource.id} />
       </div>
       <dl className="space-y-3 text-sm">
         <Row
@@ -167,6 +169,7 @@ export function FileDetailsPanel({
         {resource.lastModified && <Row label={t("modified")} value={formatFullDate(resource.lastModified)} />}
         <Row label={t("sharing")} value={sharing} />
         <Row label={t("path")} value={path} mono />
+        <FilesSyncDetailsRow nodeId={resource.id} />
       </dl>
       {pluginProps && <PluginSlot name="file-preview-section" className="w-full" extraProps={pluginProps} />}
     </div>,

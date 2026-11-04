@@ -7655,6 +7655,112 @@
     "signout_changed": "Zatiaľ nepripojené ani neuložené, a teraz odstránené: {names}.",
     "signout_held": "Stále otvorené v inom programe, takže sa odstránia až po zatvorení: {names}."
   },
+  "files_sync": {
+    "title": "Súbory v tomto počítači",
+    "drive": {
+      "title": "Jednotka Súbory",
+      "label": "Zobraziť Súbory ako jednotku",
+      "description": "Vaše Súbory sa v Prieskumníkovi zobrazia ako jednotka. Súbor sa stiahne, keď ho otvoríte.",
+      "unsupported": "Vyžaduje Windows 10 verzie 1809 alebo novší.",
+      "root_name": "Jednotka Súbory",
+      "letter_label": "Písmeno jednotky",
+      "letter_description": "Pridelí jednotke vlastné písmeno v Prieskumníkovi.",
+      "letter_none": "Bez písmena"
+    },
+    "folders": {
+      "title": "Synchronizované priečinky",
+      "description": "Priečinok v tomto počítači a priečinok v Súboroch zostávajú rovnaké, zmeny idú oboma smermi.",
+      "empty": "Zatiaľ sa nesynchronizujú žiadne priečinky.",
+      "forced_off": "Vaša organizácia vypla synchronizáciu priečinkov. Súbory v nich zostanú v tomto počítači.",
+      "add": "Pridať priečinok…",
+      "loading": "Načítavajú sa vaše priečinky…",
+      "load_failed": "Vaše priečinky v Súboroch sa nepodarilo načítať. Skúste to znova.",
+      "pick_title": "Ktorý priečinok v Súboroch?",
+      "pick_confirm": "Vybrať priečinok v tomto počítači…",
+      "paired_with": "S priečinkom {folder} v Súboroch",
+      "pause": "Pozastaviť",
+      "resume": "Pokračovať",
+      "remove": "Odstrániť…",
+      "remove_title": "Prestať synchronizovať tento priečinok?",
+      "remove_message": "Súbory v tomto počítači zostanú, kde sú, a rovnako aj súbory v Súboroch. Zmeny sa medzi nimi už nebudú prenášať.",
+      "remove_confirm": "Prestať synchronizovať",
+      "add_failed": {
+        "overlap": "Tento priečinok je v synchronizovanom priečinku, taký priečinok obsahuje alebo je to systémový priečinok. Vyberte iný.",
+        "denied": "Aplikácia tento priečinok nemôže používať. Vyberte iný.",
+        "policy": "Vaša organizácia to nepovoľuje.",
+        "failed": "Priečinok sa nepodarilo pridať. Skúste to znova."
+      }
+    },
+    "status": {
+      "starting": "Spúšťa sa…",
+      "idle": "Aktuálne. Naposledy synchronizované {time}",
+      "idle_never": "Aktuálne",
+      "syncing": "Synchronizácia: hotovo {done}, zostáva {pending}",
+      "paused": "Pozastavené",
+      "offline": "Offline. {count, plural, =0 {Zmeny čakajú na server} one {# zmena čaká na server} few {# zmeny čakajú na server} many {# zmeny čaká na server} other {# zmien čaká na server}}",
+      "error": "Zastavené: {reason}",
+      "confirm_delete": "Pozastavené, kým neodpoviete na otázku nižšie",
+      "blocked": "Vypnuté vašou organizáciou"
+    },
+    "mass_delete": {
+      "title": "Odstrániť {count, plural, one {# položku} few {# položky} many {# položky} other {# položiek}}?",
+      "local": "{count, plural, one {# položka bola odstránená} few {# položky boli odstránené} many {# položky bolo odstránených} other {# položiek bolo odstránených}} z priečinka {folder} v tomto počítači. Odstrániť {count, plural, one {ju} few {ich} many {ich} other {ich}} aj v Súboroch?",
+      "remote": "{count, plural, one {# položka bola odstránená} few {# položky boli odstránené} many {# položky bolo odstránených} other {# položiek bolo odstránených}} z priečinka {folder} v Súboroch. Odstrániť {count, plural, one {ju} few {ich} many {ich} other {ich}} aj v tomto počítači?",
+      "allow": "{count, plural, one {Odstrániť ju} few {Odstrániť ich} many {Odstrániť ich} other {Odstrániť ich}}",
+      "restore": "{count, plural, one {Vrátiť ju späť} few {Vrátiť ich späť} many {Vrátiť ich späť} other {Vrátiť ich späť}}",
+      "later": "Rozhodnúť neskôr"
+    },
+    "activity": {
+      "title": "Nedávna aktivita",
+      "empty": "Zatiaľ sa nič nestalo.",
+      "clear": "Vymazať",
+      "to_files": "Do Súborov",
+      "to_computer": "Do tohto počítača",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Chyba",
+      "mark_question": "Čaká na vašu odpoveď",
+      "uploaded": "Nahrané: {path}",
+      "downloaded": "Stiahnuté: {path}",
+      "folder-created": "Vytvorený priečinok {path}",
+      "renamed": "Premenované: {detail} na {path}",
+      "moved": "Presunuté: {detail} do {path}",
+      "deleted": "Odstránené: {path}",
+      "trashed": "Presunuté do koša: {path}",
+      "conflict": "{path} sa zmenilo na oboch miestach. Druhá verzia je uložená ako {detail}",
+      "renamed-for-disk": "{path} sa v tomto počítači volá {detail}, pretože tento názov tu nie je povolený",
+      "too-large": "{path} je väčšie, než Súbory povoľujú ({detail}). Zostáva len v tomto počítači",
+      "waiting": "{path} čaká na server",
+      "mass-delete": "Pozastavené pred odstránením mnohých položiek",
+      "error": "{path} sa nepodarilo synchronizovať"
+    },
+    "errors": {
+      "offline": "Server nie je dostupný",
+      "server_refused": "Server zmenu odmietol",
+      "too_large": "Súbor je pre Súbory príliš veľký",
+      "name_invalid": "Tento názov nie je povolený",
+      "disk_full": "Disk je plný",
+      "denied": "Nepovolené",
+      "busy": "Používa ho iný program",
+      "quota": "Vaše úložisko v Súboroch je plné",
+      "not_found": "Už neexistuje",
+      "policy": "Vaša organizácia to nepovoľuje",
+      "failed": "Niečo sa pokazilo"
+    },
+    "item": {
+      "label": "V tomto počítači",
+      "synced": "Synchronizované",
+      "syncing": "Synchronizuje sa",
+      "pending": "Čaká na synchronizáciu",
+      "error": "Nepodarilo sa synchronizovať",
+      "online-only": "Len v Súboroch, stiahne sa pri otvorení"
+    },
+    "show_in": {
+      "explorer": "Zobraziť v Prieskumníkovi",
+      "finder": "Zobraziť vo Finderi",
+      "file_manager": "Zobraziť v správcovi súborov",
+      "failed": "Priečinok sa nepodarilo otvoriť."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rýchla správa",
     "menu": "Rýchla správa",
@@ -7670,6 +7776,14 @@
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
+  "desktopAttachRecent": {
+    "heading": "Nedávne súbory",
+    "browse": "Prehľadávať tento počítač…",
+    "from_files": "Zo Súborov…",
+    "missing": "„{name}“ už neexistuje.",
+    "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
+    "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
+  },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",
     "offline": "Offline",
@@ -7677,6 +7791,10 @@
     "offline_hint_outbox": "Čo teraz odošlete, počká medzi správami na odoslanie a odíde, keď budete znova online.",
     "offline_send_saved": "Ste offline. Správa je uložená v Konceptoch.",
     "offline_send_unsaved": "Ste offline. Správa tu zostane a uloží sa do Konceptov, keď budete znova online."
+  },
+  "composer_panel": {
+    "show_panel": "Zobraziť {name}",
+    "hide_panel": "Skryť {name}"
   },
   "desktopDevTools": {
     "section_title": "Riešenie problémov",

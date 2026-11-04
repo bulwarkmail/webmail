@@ -8,6 +8,7 @@ import {
   Calendar,
   Filter,
   FolderOpen,
+  FolderSync,
   HardDrive,
   BookUser,
   Bell,
@@ -48,6 +49,7 @@ export const SETTINGS_TAB_ICONS: Record<SettingsSearchTab, AppIcon> = {
   calendar: Calendar,
   contacts: BookUser,
   files: HardDrive,
+  files_sync: FolderSync,
   addons: Puzzle,
   offline: CloudOff,
   privacy: EyeOff,
@@ -66,6 +68,6 @@ export type SettingsTabGroup = 'top' | 'mail' | 'apps' | 'bottom';
 export const SETTINGS_NAV_GROUPS: readonly { group: SettingsTabGroup; tabs: readonly SettingsSearchTab[] }[] = [
   { group: 'top', tabs: ['account', 'security', 'privacy', 'sharing', 'notifications', 'general', 'offline', 'appearance', 'accessibility'] },
   { group: 'mail', tabs: ['message_list', 'reading', 'composing', 'organize', 'filters', 'vacation', 'recovery'] },
-  { group: 'apps', tabs: ['calendar', 'contacts', 'files', 'addons'] },
+  { group: 'apps', tabs: ['calendar', 'contacts', 'files', 'files_sync', 'addons'] },
   { group: 'bottom', tabs: ['backup', 'about'] },
 ];

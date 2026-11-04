@@ -36,6 +36,7 @@ const { useCalendarStore } = await import('@/stores/calendar-store');
 const { useContactStore } = await import('@/stores/contact-store');
 const { useEmailStore } = await import('@/stores/email-store');
 const { useAccountStore } = await import('@/stores/account-store');
+const { useFilesSyncStore } = await import('@/stores/files-sync-store');
 const { TourProvider } = await import('@/components/tour/tour-provider');
 const { AdvancedSettingsProvider } = await import('../settings-section');
 const { tabSearchEntries, getByPath, withAppName, settingsTabLabelKey } = await import('@/lib/settings-search');
@@ -60,6 +61,7 @@ const pages = {
   contacts: (await import('../contacts-settings')).ContactsSettings,
   contacts2: (await import('../address-book-management-settings')).AddressBookManagementSettings,
   files: (await import('../files-settings')).FilesSettingsComponent,
+  files_sync: (await import('../desktop-files-settings')).DesktopFilesSettings,
   addons: (await import('../addons-settings')).AddonsSettings,
   backup: (await import('../about-data-settings')).AboutDataSettings,
   offline: (await import('@/components/offline/offline-settings')).OfflineSettings,
@@ -76,7 +78,7 @@ const OVERRIDES: Record<string, () => unknown> = {
   getPrincipals: async () => [], listArchivedEmails: async () => ({ items: [], nextPosition: null }),
 };
 /** Pages with rows of the desktop app's own, or browser rows it hides. */
-const DESKTOP_PAGES = new Set(['general', 'notifications', 'privacy', 'backup']);
+const DESKTOP_PAGES = new Set(['general', 'notifications', 'privacy', 'backup', 'files_sync']);
 
 /** The desktop app's bridge, answering as Windows does, with every switch off. */
 const DESKTOP_BRIDGE = {
@@ -121,7 +123,7 @@ const TAB_PAGES: Record<string, string[]> = {
   accessibility: ['accessibility'],
   message_list: ['message_list'], reading: ['reading'], composing: ['composing'], vacation: ['vacation'],
   filters: ['filters'], organize: ['organize'], security: ['security'], sharing: ['sharing'], recovery: ['recovery'], calendar: ['calendar', 'calendar2'],
-  contacts: ['contacts', 'contacts2'], files: ['files'], addons: ['addons'], backup: ['backup'],
+  contacts: ['contacts', 'contacts2'], files: ['files'], files_sync: ['files_sync'], addons: ['addons'], backup: ['backup'],
   offline: ['offline'], privacy: ['privacy'], about: ['about'],
 };
 
@@ -141,7 +143,15 @@ describe('settings search index', () => {
     const realMatchMedia = window.matchMedia;
     const variants: Record<string, () => void> = {
       base: () => {},
-      desktop: () => { window.bulwarkDesktop = DESKTOP_BRIDGE as never; },
+      desktop: () => {
+        window.bulwarkDesktop = DESKTOP_BRIDGE as never;
+        // Files on this computer: the engine runs, on Windows, with the drive on offer.
+        useFilesSyncStore.setState({
+          available: true,
+          account: 'acc',
+          drive: { supported: true, forcedOff: false, wanted: [], letter: { letter: null, chosen: null, locked: false, available: ['Z'] } },
+        });
+      },
       touch: () => {
         window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('coarse') })) as typeof window.matchMedia;
       },
@@ -160,6 +170,7 @@ describe('settings search index', () => {
     useAccountStore.setState(accountsInitial, true);
     window.matchMedia = realMatchMedia;
     window.bulwarkDesktop = undefined;
+    useFilesSyncStore.getState().reset();
     apply();
     out[variant] = {};
     for (const [tab, Page] of Object.entries(pages)) {
