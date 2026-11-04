@@ -353,6 +353,80 @@ describe('PopoutHost', () => {
     expect(client.deleteEmail).toHaveBeenCalledWith('d1', undefined);
   });
 
+  // desktop-p3-1: quick compose is used with this window in the tray, where its toast goes unseen.
+  describe('in the desktop app, a composer window thrown away', () => {
+    const RESTORE = {
+      mode: 'compose' as const,
+      initialData: { to: 'sam@example.test', cc: '', bcc: '', subject: 'Budget', body: '<p>Numbers</p>', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', mode: 'compose' as const, draftId: 'd1', attachments: [{ blobId: 'b1', name: 'q3.pdf', size: 10 }] },
+    };
+    let notify: ReturnType<typeof vi.fn>;
+    let opened: { url: string; options: Record<string, unknown> }[];
+
+    beforeEach(() => {
+      opened = [];
+      notify = vi.fn(async () => ({ shown: true, playSound: false }));
+      window.bulwarkDesktop = {
+        version: 1,
+        platform: 'win32',
+        windows: { open: (url: string, options: Record<string, unknown>) => { opened.push({ url, options }); } },
+        os: { notify },
+      } as never;
+    });
+
+    it('deletes the draft now and asks the OS for "Draft discarded" with Undo; the toast here has none', async () => {
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k3', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      expect(client.deleteEmail).toHaveBeenCalledWith('d1', undefined);
+      expect(notify).toHaveBeenCalledTimes(1);
+      const request = notify.mock.calls[0][0] as { title: string; body: string; kind: string; actions: { id: string; label: string }[]; context: string };
+      expect(request).toEqual(expect.objectContaining({ title: 'compose_ux.draft_discarded', body: 'Budget', kind: 'undo' }));
+      expect(request.actions).toEqual([{ id: 'undo', label: 'compose_ux.undo' }]);
+      expect(JSON.parse(request.context).discardedDraft).toEqual(expect.any(String));
+      const toasts = useToastStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].title).toBe('compose_ux.draft_discarded');
+      expect(toasts[0].action).toBeUndefined();
+    });
+
+    it('says it also for text never saved, and Undo opens quick compose with it, attachments included, as a new draft', async () => {
+      const { reopenDiscarded } = await import('@/lib/popout/discarded-undo');
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k4', notice: { localAccountId: 'alice', discarded: true, restore: { ...RESTORE, initialData: { ...RESTORE.initialData, draftId: null } } } });
+      await settle();
+      expect(client.deleteEmail).not.toHaveBeenCalled();
+      expect(notify).toHaveBeenCalledTimes(1);
+      const token = JSON.parse((notify.mock.calls[0][0] as { context: string }).context).discardedDraft as string;
+
+      expect(reopenDiscarded(token)).toBe(true);
+      expect(opened).toHaveLength(1);
+      expect(opened[0].url).toContain('/popout/compose?handoff=');
+      expect(opened[0].options.quick).toBe(true);
+      // The new window asks for its draft, as a real one does.
+      const handoffId = new URL(opened[0].url, 'https://x.test').searchParams.get('handoff')!;
+      const got: PopoutMessage[] = [];
+      const window2 = openPopoutChannel((message) => got.push(message))!;
+      window2.post({ type: 'handoff-request', handoffId });
+      await settle();
+      const answer = got.find((message) => message.type === 'handoff-answer') as Extract<PopoutMessage, { type: 'handoff-answer' }>;
+      expect(answer.payload?.initialData).toEqual(expect.objectContaining({ subject: 'Budget', body: '<p>Numbers</p>', draftId: null, unsaved: true, attachments: [{ blobId: 'b1', name: 'q3.pdf', size: 10 }] }));
+      window2.close();
+    });
+
+    it('offers Undo here when the OS did not show it', async () => {
+      notify.mockResolvedValue({ shown: false, reason: 'failed', playSound: false });
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k5', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      const toasts = useToastStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].action?.label).toBe('compose_ux.undo');
+    });
+  });
+
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {
     render(<PopoutHost />);
     await settle();

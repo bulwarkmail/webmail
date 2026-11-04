@@ -521,8 +521,15 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     onDraftKept: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
       announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined });
     },
-    onDraftDiscarded: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
-      announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined, discarded: true });
+    onDraftDiscarded: (draftId: string | null, where: { accountId?: string; localAccountId?: string }, state?: ComposerDraftData) => {
+      announceDraftKept({
+        ...(draftId ? { draftId } : {}),
+        ...where,
+        localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined,
+        discarded: true,
+        // What Undo brings back in a new window, saved or not (desktop-p3-1).
+        ...(state ? { restore: { ...payload, mode: state.mode, replyTo: state.replyTo, initialData: state, initialDraftText: undefined, prefill: null, initialFiles: undefined } } : {}),
+      });
     },
     onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
       const active = useAuthStore.getState().activeAccountId;

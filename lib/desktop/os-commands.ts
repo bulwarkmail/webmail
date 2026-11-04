@@ -11,6 +11,7 @@ import type { DesktopOsCommand } from '@/lib/desktop/types';
 import { openMailLink } from '@/lib/desktop/mail-links';
 import { requestFileChoice } from '@/lib/file-drop/choice';
 import { handleReminderCommand } from '@/lib/desktop/reminder-notifications';
+import { reopenDiscarded } from '@/lib/popout/discarded-undo';
 import type { MailNotificationContext } from '@/lib/desktop/mail-notifications';
 import { handOffDraft, handOffFiles, handOffNewMessage, kindForFile } from '@/lib/launch-handoff';
 import { parseMailto } from '@/lib/protocol-handlers/mailto';
@@ -105,6 +106,12 @@ async function handleNotification(action: string, rawContext: string, reply: str
   // A saved file's toast: the offer is on the main window, wherever it was.
   if (context.editedFile) {
     showWindow();
+    return;
+  }
+  // "Draft discarded": Undo opens quick compose again with what was thrown away.
+  // A click on the toast itself has brought the main window up already.
+  if (context.discardedDraft) {
+    if (action === 'undo' && !reopenDiscarded(context.discardedDraft)) showWindow();
     return;
   }
   if (action === 'reply') {

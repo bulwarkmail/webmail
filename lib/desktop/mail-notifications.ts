@@ -47,6 +47,8 @@ export interface MailNotificationContext {
   login?: string;
   /** Not mail: an attachment saved in another program (components/desktop/edited-files-host.tsx). */
   editedFile?: boolean;
+  /** Not mail: a draft thrown away in a composer window, for Undo (lib/popout/discarded-undo.ts). */
+  discardedDraft?: string;
 }
 
 /** True where this module plays the new-mail sound, so useNewMailAlerts doesn't as well. */

@@ -250,6 +250,22 @@ describe('PopoutComposeApp', () => {
     expect(screen.getByTestId('composer').textContent).toBe('Moving');
   });
 
+  // desktop-p3-1: the bin in a window of its own hands the main window what Undo brings back.
+  it('the bin hands the main window the composer as it was, also before the first save', async () => {
+    const handoff = createComposeHandoff()!;
+    openAt(handoff.id);
+    await settle();
+    await Promise.all([handoff.complete(PAYLOAD), settle()]);
+    const own = (composer as unknown as { ownWindow: { onDraftDiscarded: (id: string | null, where: object, state: object) => void } }).ownWindow;
+    const state = { subject: 'Moving', body: '<p>Typed</p>', mode: 'compose', draftId: null };
+    act(() => own.onDraftDiscarded(null, {}, state));
+    await settle();
+    const kept = heard.find((message) => message.type === 'draft-kept') as Extract<PopoutMessage, { type: 'draft-kept' }>;
+    expect(kept.notice).toEqual(expect.objectContaining({ discarded: true, localAccountId: 'alice' }));
+    expect(kept.notice.draftId).toBeUndefined();
+    expect(kept.notice.restore).toEqual(expect.objectContaining({ mode: 'compose', initialData: state }));
+  });
+
   it('does not while it has no session, so the opening window keeps its copy', async () => {
     useAuthStore.setState({ client: null });
     const handoff = createComposeHandoff()!;

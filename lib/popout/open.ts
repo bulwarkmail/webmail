@@ -29,10 +29,10 @@ export function popoutFeatures(kind: PopoutKind): string {
 const openedWindows = new Map<string, Window>();
 
 /** Whether a window opened. False when a pop-up blocker said no: the caller stays as it is. */
-function openWindow(url: string, name: string, kind: PopoutKind): Window | boolean {
+function openWindow(url: string, name: string, kind: PopoutKind, quick = false): Window | boolean {
   const bridge = window.bulwarkDesktop?.windows;
   if (bridge?.open) {
-    bridge.open(url, { name, ...SIZES[kind] });
+    bridge.open(url, { name, ...SIZES[kind], ...(quick ? { quick: true } : {}) });
     return true;
   }
   const existing = openedWindows.get(name);
@@ -99,11 +99,12 @@ export interface ComposerWindow {
  * from the click: a browser only opens a window for a user action. Null when
  * no window opened.
  */
-export function openComposerWindow(localAccountId?: string | null): ComposerWindow | null {
+export function openComposerWindow(localAccountId?: string | null, { quick = false }: { quick?: boolean } = {}): ComposerWindow | null {
   const handoff: ComposeHandoff | null = createComposeHandoff();
   if (!handoff) return null;
   const url = appPath('/popout/compose') + query({ handoff: handoff.id, account: localAccountId });
-  const opened = openWindow(url, `bulwark-compose-${handoff.id}`, 'compose');
+  // `quick`: the desktop app's quick compose size, for a new message from outside the main window.
+  const opened = openWindow(url, `bulwark-compose-${handoff.id}`, 'compose', quick);
   if (!focused(opened)) {
     handoff.cancel();
     return null;

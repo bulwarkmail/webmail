@@ -466,8 +466,11 @@ interface EmailComposerProps {
      * this one is gone before a toast here could be read.
      */
     onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
-    /** The bin closed the window: another window says "Draft discarded" with Undo, and deletes it after. */
-    onDraftDiscarded?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /**
+     * The bin closed the window: another window says "Draft discarded" with Undo. `draftId` is
+     * null before the first save; `state` is the composer as it was, for Undo to bring back.
+     */
+    onDraftDiscarded?: (draftId: string | null, where: { accountId?: string; localAccountId?: string }, state: ComposerDraftData) => void;
   };
   /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
   onSubjectChange?: (subject: string) => void;
@@ -4962,8 +4965,9 @@ export function EmailComposer({
     const restore = onRestoreDiscarded;
     const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
     handleDiscardAndClose({ keepDraft: true });
+    // Also before the first save: the text must not go without an Undo (desktop-p3-1).
     if (windowDiscarded) {
-      if (draftId) windowDiscarded(draftId, where);
+      windowDiscarded(draftId, where, snapshot);
       return;
     }
     discardWithUndo(

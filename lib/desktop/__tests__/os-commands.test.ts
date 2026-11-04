@@ -280,6 +280,31 @@ describe('a toast\'s buttons', () => {
     stop();
   });
 
+  // desktop-p3-1: Undo on "Draft discarded" opens quick compose with the text, not the Inbox.
+  it('Undo on a discarded draft opens quick compose again with what was in it', async () => {
+    const { FakeBroadcastChannel } = await import('@/lib/__tests__/fixtures/fake-broadcast-channel');
+    vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
+    const open = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus, open } } as unknown as BulwarkDesktopBridge;
+    const { keepDiscarded } = await import('@/lib/popout/discarded-undo');
+    const token = keepDiscarded({ mode: 'compose', initialData: { subject: 'Budget' } as never }, 'alice@one');
+    const { setMailLinkOpener } = await import('../mail-links');
+    const opener = vi.fn();
+    const stop = setMailLinkOpener(opener);
+    await run({ type: 'notification', action: 'undo', context: JSON.stringify({ discardedDraft: token }) });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open.mock.calls[0][0]).toContain('/popout/compose?handoff=');
+    expect(open.mock.calls[0][0]).toContain('account=alice%40one');
+    expect(open.mock.calls[0][1]).toEqual(expect.objectContaining({ quick: true }));
+    expect(opener).not.toHaveBeenCalled();
+    // Once: a second Undo on the same toast has nothing left and brings the app up instead.
+    await run({ type: 'notification', action: 'undo', context: JSON.stringify({ discardedDraft: token }) });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(focus).toHaveBeenCalled();
+    stop();
+    vi.unstubAllGlobals();
+  });
+
   it('a click on a summary toast opens the Inbox of that login', async () => {
     const { setMailLinkOpener } = await import('../mail-links');
     const opener = vi.fn();

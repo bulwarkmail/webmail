@@ -31,7 +31,8 @@ export interface DesktopWindowsBridge {
    * window.open with a features string, which the shell's window-open handler
    * sees too.
    */
-  open?: (url: string, options: { name: string; width: number; height: number }) => void;
+  /** `quick`: a composer at quick compose's size and place (a new message from outside, an Undo). */
+  open?: (url: string, options: { name: string; width: number; height: number; quick?: boolean }) => void;
   /** One window per message: opening it again focuses it. */
   openMessage?: (target: { url: string; emailId: string }) => void;
   openComposer?: (target: { url: string; name?: string }) => void;
@@ -690,8 +691,11 @@ export interface DesktopOsNotification {
   sound?: boolean;
   /** New mail: flash the taskbar or bounce the dock if that's on. */
   attention?: boolean;
-  /** What a locked app says instead: new mail unless this says otherwise. */
-  kind?: 'mail' | 'reminder';
+  /**
+   * What a locked app says instead: new mail unless this says otherwise. `undo`: the answer
+   * to the user's own click (a discarded draft's Undo), shown past pause, quiet hours and focus.
+   */
+  kind?: 'mail' | 'reminder' | 'undo';
 }
 
 export interface DesktopOsNotifyResult {
