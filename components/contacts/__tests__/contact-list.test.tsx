@@ -90,6 +90,15 @@ describe('ContactList', () => {
     expect(avatars().some((el) => el.classList.contains('hidden'))).toBe(false);
   });
 
+  it('puts a banner at the top of the scrolling list, so its arrival moves nothing on screen', () => {
+    const { rerender } = render(<ContactList {...defaultProps} contacts={[]} isLoading />);
+    const scroller = screen.getByRole('listbox').parentElement!;
+    rerender(<ContactList {...defaultProps} banner={<button type="button">Possible duplicates (1)</button>} />);
+    // The same scroll area as with the loading rows, and the banner inside it.
+    expect(screen.getByRole('listbox').parentElement).toBe(scroller);
+    expect(scroller.firstElementChild).toBe(screen.getByRole('button', { name: 'Possible duplicates (1)' }));
+  });
+
   it('shows the contacts as soon as they are there, even while loading', () => {
     render(<ContactList {...defaultProps} isLoading />);
     expect(screen.queryByTestId('contact-list-skeleton')).toBeNull();
