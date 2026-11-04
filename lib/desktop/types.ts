@@ -367,6 +367,8 @@ export interface DesktopAppLockBridge {
   disable: (proof: Uint8Array) => Promise<boolean>;
   /** The PIN is lost, or everyone signed out. With no proof, main asks the user natively. */
   forget: (proof?: Uint8Array) => Promise<boolean>;
+  /** Main keeps a lock and this profile has no PIN for it. Main asks the user natively, once a run. */
+  clearOrphan?: () => Promise<boolean>;
   /** Through safeStorage, for this origin only. Null where the OS has no real key store. */
   wrap: (data: Uint8Array) => Promise<Uint8Array | null>;
   unwrap: (data: Uint8Array) => Promise<Uint8Array | null>;
