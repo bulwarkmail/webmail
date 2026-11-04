@@ -7519,6 +7519,18 @@
     "import_calendar": "Naptár…",
     "import_contacts": "Névjegyek…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Frissítés",
+    "menu_today": "Ma",
+    "menu_next_period": "Következő időszak",
+    "menu_previous_period": "Előző időszak",
+    "account_scope_label": "Látható: {address}. Fiókváltás",
+    "account_scope_menu": "Fiókváltás",
+    "merge_links": "Hivatkozások",
+    "merge_photo": "Fénykép",
+    "merge_kept": "Megmarad",
+    "import_show": "Megjelenítés"
+  },
   "desktopEdit": {
     "edit": "Szerkesztés",
     "edit_named": "{name} szerkesztése",

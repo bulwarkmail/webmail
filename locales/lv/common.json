@@ -7519,6 +7519,18 @@
     "import_calendar": "Kalendārs…",
     "import_contacts": "Kontakti…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Atsvaidzināt",
+    "menu_today": "Šodien",
+    "menu_next_period": "Nākamais periods",
+    "menu_previous_period": "Iepriekšējais periods",
+    "account_scope_label": "Rāda {address}. Pārslēgt kontu",
+    "account_scope_menu": "Pārslēgt kontu",
+    "merge_links": "Saites",
+    "merge_photo": "Foto",
+    "merge_kept": "Saglabājas",
+    "import_show": "Rādīt"
+  },
   "desktopEdit": {
     "edit": "Rediģēt",
     "edit_named": "Rediģēt {name}",

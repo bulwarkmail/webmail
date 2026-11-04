@@ -7519,6 +7519,18 @@
     "import_calendar": "التقويم…",
     "import_contacts": "جهات الاتصال…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "تحديث",
+    "menu_today": "اليوم",
+    "menu_next_period": "الفترة التالية",
+    "menu_previous_period": "الفترة السابقة",
+    "account_scope_label": "يعرض {address}. تبديل الحساب",
+    "account_scope_menu": "تبديل الحساب",
+    "merge_links": "روابط",
+    "merge_photo": "صورة",
+    "merge_kept": "محفوظ",
+    "import_show": "عرض"
+  },
   "desktopEdit": {
     "edit": "تعديل",
     "edit_named": "تعديل {name}",

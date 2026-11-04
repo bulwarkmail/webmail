@@ -7519,6 +7519,18 @@
     "import_calendar": "Kalendár…",
     "import_contacts": "Kontakty…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Obnoviť",
+    "menu_today": "Dnes",
+    "menu_next_period": "Ďalšie obdobie",
+    "menu_previous_period": "Predchádzajúce obdobie",
+    "account_scope_label": "Zobrazuje sa {address}. Prepnúť účet",
+    "account_scope_menu": "Prepnúť účet",
+    "merge_links": "Odkazy",
+    "merge_photo": "Fotka",
+    "merge_kept": "Zostane",
+    "import_show": "Zobraziť"
+  },
   "desktopEdit": {
     "edit": "Upraviť",
     "edit_named": "Upraviť {name}",

@@ -7519,6 +7519,18 @@
     "import_calendar": "Calendari…",
     "import_contacts": "Contactes…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualitza",
+    "menu_today": "Avui",
+    "menu_next_period": "Període següent",
+    "menu_previous_period": "Període anterior",
+    "account_scope_label": "Es mostra {address}. Canvia de compte",
+    "account_scope_menu": "Canvia de compte",
+    "merge_links": "Enllaços",
+    "merge_photo": "Foto",
+    "merge_kept": "Es conserva",
+    "import_show": "Mostra"
+  },
   "desktopEdit": {
     "edit": "Edita",
     "edit_named": "Edita {name}",

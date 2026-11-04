@@ -7519,6 +7519,18 @@
     "import_calendar": "تقویم…",
     "import_contacts": "مخاطبین…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "بازخوانی",
+    "menu_today": "امروز",
+    "menu_next_period": "بازه بعدی",
+    "menu_previous_period": "بازه قبلی",
+    "account_scope_label": "نمایش {address}. تغییر حساب",
+    "account_scope_menu": "تغییر حساب",
+    "merge_links": "پیوندها",
+    "merge_photo": "عکس",
+    "merge_kept": "حفظ می‌شود",
+    "import_show": "نمایش"
+  },
   "desktopEdit": {
     "edit": "ویرایش",
     "edit_named": "ویرایش {name}",

@@ -7519,6 +7519,18 @@
     "import_calendar": "캘린더…",
     "import_contacts": "연락처…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "새로 고침",
+    "menu_today": "오늘",
+    "menu_next_period": "다음 기간",
+    "menu_previous_period": "이전 기간",
+    "account_scope_label": "{address} 표시 중. 계정 전환",
+    "account_scope_menu": "계정 전환",
+    "merge_links": "링크",
+    "merge_photo": "사진",
+    "merge_kept": "유지됨",
+    "import_show": "보기"
+  },
   "desktopEdit": {
     "edit": "편집",
     "edit_named": "{name} 편집",

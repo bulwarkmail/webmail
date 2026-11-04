@@ -7519,6 +7519,18 @@
     "import_calendar": "Calendar…",
     "import_contacts": "Contacte…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Reîmprospătează",
+    "menu_today": "Astăzi",
+    "menu_next_period": "Perioada următoare",
+    "menu_previous_period": "Perioada anterioară",
+    "account_scope_label": "Se afișează {address}. Schimbă contul",
+    "account_scope_menu": "Schimbă contul",
+    "merge_links": "Linkuri",
+    "merge_photo": "Fotografie",
+    "merge_kept": "Se păstrează",
+    "import_show": "Afișează"
+  },
   "desktopEdit": {
     "edit": "Editează",
     "edit_named": "Editează {name}",

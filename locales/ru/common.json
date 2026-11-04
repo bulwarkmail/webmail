@@ -7519,6 +7519,18 @@
     "import_calendar": "Календарь…",
     "import_contacts": "Контакты…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Обновить",
+    "menu_today": "Сегодня",
+    "menu_next_period": "Следующий период",
+    "menu_previous_period": "Предыдущий период",
+    "account_scope_label": "Показан {address}. Сменить учётную запись",
+    "account_scope_menu": "Сменить учётную запись",
+    "merge_links": "Ссылки",
+    "merge_photo": "Фото",
+    "merge_kept": "Сохранится",
+    "import_show": "Показать"
+  },
   "desktopEdit": {
     "edit": "Изменить",
     "edit_named": "Изменить {name}",
