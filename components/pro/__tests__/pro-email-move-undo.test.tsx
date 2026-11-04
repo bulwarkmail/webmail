@@ -23,6 +23,9 @@ vi.mock('@/components/error', () => ({
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key, useLocale: () => 'en' }));
 vi.mock('@/stores/toast-store', () => ({ toast: { error: () => {}, success: () => {} } }));
 vi.mock('@/lib/mail-removal-confirm', () => ({ confirmMailRemoval: async () => true }));
+// A delete for good asks first (mail-p3-1); here the answer is yes.
+vi.mock('@/hooks/use-confirm-dialog', () => ({ useConfirmDialog: () => ({ dialogProps: {}, confirm: async () => true }) }));
+vi.mock('@/components/ui/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 
 const calls = vi.hoisted(() => ({ order: [] as string[], offer: [] as unknown[][] }));
 vi.mock('@/lib/popout/moved-undo', () => ({
