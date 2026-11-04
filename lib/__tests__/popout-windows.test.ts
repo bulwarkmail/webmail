@@ -132,6 +132,53 @@ describe('popoutsAvailable', () => {
   });
 });
 
+describe('composerPopoutsAvailable', () => {
+  async function available() {
+    const { composerPopoutsAvailable } = await import('@/lib/popout/support');
+    return composerPopoutsAvailable();
+  }
+
+  it('is on in a browser tab on a computer: a composer opens as a popup window, as in Gmail', async () => {
+    stubDisplay({ standalone: false });
+    expect(await available()).toBe(true);
+  });
+
+  it('is off in a browser tab on a phone or tablet, where window.open makes a tab', async () => {
+    stubDisplay({ standalone: false, fine: false });
+    expect(await available()).toBe(false);
+  });
+
+  it('is on wherever a message can move out too', async () => {
+    stubDisplay();
+    expect(await available()).toBe(true);
+    stubDisplay({ standalone: false, fine: false });
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} };
+    expect(await available()).toBe(true);
+  });
+
+  it('is off in an installed app on a touch device', async () => {
+    stubDisplay({ fine: false });
+    expect(await available()).toBe(false);
+  });
+
+  it('is off in a tab without what keeps a shared session safe', async () => {
+    stubDisplay({ standalone: false });
+    vi.stubGlobal('BroadcastChannel', undefined);
+    expect(await available()).toBe(false);
+    vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
+    vi.stubGlobal('crypto', {});
+    expect(await available()).toBe(false);
+  });
+
+  it('lets the hook offer a composer its own window from a tab, and still not a message', async () => {
+    stubDisplay({ standalone: false });
+    const { renderHook } = await import('@testing-library/react');
+    const { usePopoutsAvailable } = await import('@/hooks/use-popouts-available');
+    expect(renderHook(() => usePopoutsAvailable()).result.current).toBe(true);
+    expect(renderHook(() => usePopoutsAvailable('message')).result.current).toBe(false);
+  }, 60_000);
+});
+
 describe('opening windows', () => {
   it('opens a message as a popup in the app, with its login and account', async () => {
     const { openMessageWindow } = await import('@/lib/popout/open');

@@ -60,8 +60,9 @@ function claimOnce(name: string, work: () => void | Promise<void>): void {
 /**
  * The main window's side of pop-outs: lends them its session and renews it
  * for them, passes on that mail changed, and takes over what a pop-out can't
- * say any more once it has closed. Only where pop-outs are on offer: an
- * ordinary browser tab runs none of this.
+ * say any more once it has closed. Only where pop-outs are on offer: a
+ * browser tab on a computer runs it for composers popped out of it, one on a
+ * phone or tablet runs none of this.
  */
 export function PopoutHost() {
   const available = usePopoutsAvailable();
