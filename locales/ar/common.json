@@ -1163,6 +1163,7 @@
       "edit_link": "تعديل الرابط",
       "remove_link": "إزالة الرابط",
       "link_address": "عنوان الرابط",
+      "link_text": "النص",
       "link_invalid": "يجب ألا يحتوي العنوان على مسافات",
       "table": "جدول",
       "clear_formatting": "مسح التنسيق",

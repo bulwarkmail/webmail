@@ -1163,6 +1163,7 @@
       "edit_link": "Hivatkozás szerkesztése",
       "remove_link": "Hivatkozás eltávolítása",
       "link_address": "Hivatkozás címe",
+      "link_text": "Szöveg",
       "link_invalid": "A cím nem tartalmazhat szóközt",
       "table": "Táblázat",
       "clear_formatting": "Formázás törlése",

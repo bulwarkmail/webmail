@@ -1106,6 +1106,7 @@
       "edit_link": "עריכת קישור",
       "remove_link": "הסרת קישור",
       "link_address": "כתובת הקישור",
+      "link_text": "טקסט",
       "link_invalid": "הכתובת לא יכולה להכיל רווחים",
       "table": "טבלה",
       "clear_formatting": "ניקוי עיצוב",

@@ -1163,6 +1163,7 @@
       "edit_link": "编辑链接",
       "remove_link": "移除链接",
       "link_address": "链接地址",
+      "link_text": "文本",
       "link_invalid": "地址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",

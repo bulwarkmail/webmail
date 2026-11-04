@@ -1163,6 +1163,7 @@
       "edit_link": "Link bearbeiten",
       "remove_link": "Link entfernen",
       "link_address": "Linkadresse",
+      "link_text": "Text",
       "link_invalid": "Die Adresse darf keine Leerzeichen enthalten",
       "table": "Tabelle",
       "clear_formatting": "Formatierung löschen",

@@ -1163,6 +1163,7 @@
       "edit_link": "Link bewerken",
       "remove_link": "Link verwijderen",
       "link_address": "Linkadres",
+      "link_text": "Tekst",
       "link_invalid": "Het adres mag geen spaties bevatten",
       "table": "Tabel",
       "clear_formatting": "Opmaak wissen",

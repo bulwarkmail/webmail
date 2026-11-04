@@ -1552,6 +1552,7 @@
       "edit_link": "แก้ไขลิงก์",
       "remove_link": "นำลิงก์ออก",
       "link_address": "ที่อยู่ลิงก์",
+      "link_text": "ข้อความ",
       "link_invalid": "ที่อยู่ต้องไม่มีช่องว่าง",
       "table": "ตาราง",
       "clear_formatting": "ล้างการจัดรูปแบบ",

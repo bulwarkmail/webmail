@@ -1163,6 +1163,7 @@
       "edit_link": "Rediger link",
       "remove_link": "Fjern link",
       "link_address": "Linkadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen må ikke indeholde mellemrum",
       "table": "Tabel",
       "clear_formatting": "Ryd formatering",

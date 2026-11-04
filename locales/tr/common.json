@@ -1163,6 +1163,7 @@
       "edit_link": "Bağlantıyı düzenle",
       "remove_link": "Bağlantıyı kaldır",
       "link_address": "Bağlantı adresi",
+      "link_text": "Metin",
       "link_invalid": "Adres boşluk içeremez",
       "table": "Tablo",
       "clear_formatting": "Biçimlendirmeyi temizle",

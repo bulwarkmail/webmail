@@ -1163,6 +1163,7 @@
       "edit_link": "링크 편집",
       "remove_link": "링크 제거",
       "link_address": "링크 주소",
+      "link_text": "텍스트",
       "link_invalid": "주소에 공백을 넣을 수 없어요",
       "table": "표",
       "clear_formatting": "서식 지우기",

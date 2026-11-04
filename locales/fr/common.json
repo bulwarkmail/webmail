@@ -1163,6 +1163,7 @@
       "edit_link": "Modifier le lien",
       "remove_link": "Retirer le lien",
       "link_address": "Adresse du lien",
+      "link_text": "Texte",
       "link_invalid": "L'adresse ne peut pas contenir d'espaces",
       "table": "Tableau",
       "clear_formatting": "Effacer la mise en forme",

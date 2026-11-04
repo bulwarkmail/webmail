@@ -1163,6 +1163,7 @@
       "edit_link": "Upraviť odkaz",
       "remove_link": "Odstrániť odkaz",
       "link_address": "Adresa odkazu",
+      "link_text": "Text",
       "link_invalid": "Adresa nesmie obsahovať medzery",
       "table": "Tabuľka",
       "clear_formatting": "Vymazať formátovanie",

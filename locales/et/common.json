@@ -1163,6 +1163,7 @@
       "edit_link": "Muuda linki",
       "remove_link": "Eemalda link",
       "link_address": "Lingi aadress",
+      "link_text": "Tekst",
       "link_invalid": "Aadressis ei tohi olla tühikuid",
       "table": "Tabel",
       "clear_formatting": "Eemalda vormindus",

@@ -1163,6 +1163,7 @@
       "edit_link": "リンクを編集",
       "remove_link": "リンクを解除",
       "link_address": "リンク先のアドレス",
+      "link_text": "テキスト",
       "link_invalid": "アドレスに空白は使えません",
       "table": "表",
       "clear_formatting": "書式をクリア",

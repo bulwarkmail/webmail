@@ -1165,6 +1165,7 @@
       "edit_link": "Edit link",
       "remove_link": "Remove link",
       "link_address": "Link address",
+      "link_text": "Text",
       "link_invalid": "The address can't contain spaces",
       "table": "Table",
       "clear_formatting": "Clear formatting",

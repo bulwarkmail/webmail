@@ -1163,6 +1163,7 @@
       "edit_link": "Edita l'enllaç",
       "remove_link": "Treu l'enllaç",
       "link_address": "Adreça de l'enllaç",
+      "link_text": "Text",
       "link_invalid": "L'adreça no pot tenir espais",
       "table": "Taula",
       "clear_formatting": "Neteja el format",
