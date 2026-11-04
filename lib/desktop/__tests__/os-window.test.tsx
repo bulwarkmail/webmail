@@ -590,7 +590,24 @@ describe('the settings section', () => {
   it('macOS gets its own word for the bounce', async () => {
     const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
     setBridge(bridgeFor(status()) as never, 'darwin');
-    render(<DesktopOsSettings />);
+    render(<DesktopOsSettings part="notifications" />);
     expect(await screen.findByText('attention_mac_label')).toBeInTheDocument();
+  });
+
+  it('the taskbar flash and quiet hours are with the notifications, not on General', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    const general = render(<DesktopOsSettings />);
+    expect(await screen.findByText('close_to_tray_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
+    general.unmount();
+    render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
+    expect(screen.getByText('attention_label')).toBeInTheDocument();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    fireEvent.click(screen.getAllByRole('switch')[1]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ quietHoursEnabled: true }));
   });
 });
