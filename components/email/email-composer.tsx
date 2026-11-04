@@ -3679,10 +3679,10 @@ export function EmailComposer({
   // The plugin panels in the header row: a folded one's Show button, and an
   // open one's head with its Hide button (see composer-plugin-sidebars.tsx).
   const leftPanelToggle = pluginSidebars.modes.left === 'folded'
-    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} onToggle={() => pluginSidebars.toggle('left')} />
+    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} shortcut={pluginSidebars.shortcuts.left} onToggle={() => pluginSidebars.toggle('left')} />
     : null;
   const rightPanelToggle = pluginSidebars.modes.right === 'folded'
-    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} onToggle={() => pluginSidebars.toggle('right')} />
+    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} shortcut={pluginSidebars.shortcuts.right} onToggle={() => pluginSidebars.toggle('right')} />
     : null;
   const rightPanelOpen = isPanelOpen(pluginSidebars.modes.right);
   const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode, childrenClassName?: string) => (
@@ -3691,6 +3691,7 @@ export function EmailComposer({
       mode={pluginSidebars.modes[side]}
       width={pluginSidebars.widths[side]}
       name={pluginSidebars.names[side]}
+      shortcut={pluginSidebars.shortcuts[side]}
       onToggle={() => pluginSidebars.toggle(side)}
       className={className}
       childrenClassName={childrenClassName}

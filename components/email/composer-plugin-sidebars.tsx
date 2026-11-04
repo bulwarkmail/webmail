@@ -22,6 +22,7 @@ import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { get as getActivePlugin } from "@/lib/plugin-sandbox/registry";
+import { panelShortcutOf } from "@/components/plugins/app-side-panel";
 import { onPanelRequest, type PanelRequest } from "@/lib/plugin-sandbox/panel-requests";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { cn } from "@/lib/utils";
@@ -226,10 +227,16 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
   const nameOf = (offers: readonly { pluginId: string }[]) =>
     offers.map((o) => getActivePlugin(o.pluginId)?.plugin.name).filter((n): n is string => !!n).join(", ") || null;
   const names: Record<ComposerSidebarSide, string | null> = { left: nameOf(leftOffers), right: nameOf(rightOffers) };
+  // Their panel shortcut ("Alt+A"), on the one button that shows and hides
+  // the panel: it was only on the plugin's own footer button (compose-p3-12).
+  const shortcuts: Record<ComposerSidebarSide, string | null> = {
+    left: panelShortcutOf(leftOffers.map((o) => o.pluginId)),
+    right: panelShortcutOf(rightOffers.map((o) => o.pluginId)),
+  };
 
   // The widths the panels are shown at: a docked one may be narrower than
   // the user's, to leave the composer its room.
-  return { modes, open, close, toggle, focusRequests, widths: shownWidths, setSideWidth, names };
+  return { modes, open, close, toggle, focusRequests, widths: shownWidths, setSideWidth, names, shortcuts };
 }
 
 /** Open beside the composer or over it: on screen, with a head in the header row. */
@@ -238,10 +245,11 @@ export function isPanelOpen(mode: ComposerSidebarMode | null): boolean {
 }
 
 /** The Show or Hide button of one panel. */
-function PanelButton({ side, open, name, onToggle, className }: {
+function PanelButton({ side, open, name, shortcut = null, onToggle, className }: {
   side: ComposerSidebarSide;
   open: boolean;
   name: string | null;
+  shortcut?: string | null;
   onToggle: () => void;
   className?: string;
 }) {
@@ -250,14 +258,16 @@ function PanelButton({ side, open, name, onToggle, className }: {
   const label = name
     ? t(open ? "hide_panel" : "show_panel", { name })
     : tViewer(open ? "plugin_panel_hide" : "plugin_panel_show");
+  const tip = shortcut ? `${label} (${shortcut})` : label;
   const Icon = side === "left" ? (open ? PanelLeftClose : PanelLeftOpen) : (open ? PanelRightClose : PanelRightOpen);
   return (
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className={cn("hidden md:grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", className)}
-      title={label}
+      title={tip}
       aria-label={label}
+      aria-keyshortcuts={shortcut ?? undefined}
       aria-expanded={open}
       data-composer-panel-toggle={side}
       data-composer-panel-hide={open ? side : undefined}
@@ -276,17 +286,19 @@ export function ComposerPanelToggle({
   side,
   mode,
   name = null,
+  shortcut = null,
   onToggle,
   className,
 }: {
   side: ComposerSidebarSide;
   mode: ComposerSidebarMode | null;
   name?: string | null;
+  shortcut?: string | null;
   onToggle: () => void;
   className?: string;
 }) {
   if (mode !== "folded") return null;
-  return <PanelButton side={side} open={false} name={name} onToggle={onToggle} className={className} />;
+  return <PanelButton side={side} open={false} name={name} shortcut={shortcut} onToggle={onToggle} className={className} />;
 }
 
 /**
@@ -300,6 +312,7 @@ export function ComposerPanelHead({
   mode,
   width = COMPOSER_SIDEBAR_WIDTH,
   name = null,
+  shortcut = null,
   onToggle,
   className,
   childrenClassName,
@@ -309,6 +322,7 @@ export function ComposerPanelHead({
   mode: ComposerSidebarMode | null;
   width?: number;
   name?: string | null;
+  shortcut?: string | null;
   onToggle: () => void;
   /** Padding of the row it is part of. */
   className?: string;
@@ -317,7 +331,7 @@ export function ComposerPanelHead({
   children?: ReactNode;
 }) {
   if (!isPanelOpen(mode)) return null;
-  const hide = <PanelButton side={side} open name={name} onToggle={onToggle} />;
+  const hide = <PanelButton side={side} open name={name} shortcut={shortcut} onToggle={onToggle} />;
   return (
     <div
       className={cn(

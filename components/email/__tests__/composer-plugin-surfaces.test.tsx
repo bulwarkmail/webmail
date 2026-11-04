@@ -8,6 +8,7 @@ import { clearOffers, lastSlotProps, offerSlots, slotProps } from '@/components/
 import { useSettingsStore } from '@/stores/settings-store';
 import { SLOT_CATALOG } from '@/lib/plugin-slot-catalog';
 import { requestPanel, resetPanelRequests } from '@/lib/plugin-sandbox/panel-requests';
+import { registerShortcuts } from '@/lib/plugin-sandbox/shortcuts';
 
 // Plugin surfaces of the composer: frames above and below the message text
 // (fed the draft, at most every 2 seconds), and entries in the Send and
@@ -839,6 +840,23 @@ describe('the composer header with a plugin panel open', () => {
     expect(all[all.length - 1]).toBe(screen.getByTestId('composer-close'));
     expect(right).toContainElement(screen.getByTestId('composer-close'));
     expect(right).toContainElement(screen.getByTestId('composer-maximize'));
+  });
+
+  // compose-p3-12: the assistant's Alt+A was only on its own footer button.
+  it('shows the panel shortcut on the panel’s Show and Hide button', () => {
+    const unregister = registerShortcuts({ pluginId: 'p1' } as never, [{ id: 'toggle-panel', keys: 'Alt+A', label: 'Assistant' }]);
+    try {
+      stubWidth(1400);
+      offerSlots('p1', ['composer-sidebar-right']);
+      render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+      const hide = head('right')!.querySelector<HTMLElement>('[data-composer-panel-hide="right"]')!;
+      expect(hide.getAttribute('title')).toBe('hide_panel (Alt+A)');
+      expect(hide.getAttribute('aria-keyshortcuts')).toBe('Alt+A');
+      fireEvent.click(hide);
+      expect(screen.getByRole('button', { name: 'show_panel' }).getAttribute('title')).toBe('show_panel (Alt+A)');
+    } finally {
+      unregister();
+    }
   });
 
   it('gives the open panel a Hide button in its head, and the header a Show button while it is folded', () => {
