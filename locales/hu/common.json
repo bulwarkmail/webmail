@@ -912,6 +912,11 @@
     "read_aloud_stop": "Felolvasás leállítása",
     "reader_view": "Olvasó nézet"
   },
+  "reader_actions": {
+    "restore": "Visszaállítás",
+    "restore_to": "Visszahelyezés ide: {folder}",
+    "delete_forever": "Végleges törlés"
+  },
   "external_mail": {
     "sender_label": "Külső",
     "sender_tooltip": "Innen: {domain}, a szervezeteden kívülről",

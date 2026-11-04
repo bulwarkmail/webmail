@@ -912,6 +912,11 @@
     "read_aloud_stop": "Stop reading",
     "reader_view": "Reader view"
   },
+  "reader_actions": {
+    "restore": "Restore",
+    "restore_to": "Move back to {folder}",
+    "delete_forever": "Delete forever"
+  },
   "external_mail": {
     "sender_label": "External",
     "sender_tooltip": "From {domain}, outside your organisation",

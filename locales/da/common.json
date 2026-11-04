@@ -912,6 +912,11 @@
     "read_aloud_stop": "Stop oplæsning",
     "reader_view": "Læsevisning"
   },
+  "reader_actions": {
+    "restore": "Gendan",
+    "restore_to": "Flyt tilbage til {folder}",
+    "delete_forever": "Slet permanent"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, uden for din organisation",

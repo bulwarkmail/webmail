@@ -2008,6 +2008,11 @@
     "read_aloud_stop": "หยุดอ่าน",
     "reader_view": "มุมมองการอ่าน"
   },
+  "reader_actions": {
+    "restore": "กู้คืน",
+    "restore_to": "ย้ายกลับไปที่ {folder}",
+    "delete_forever": "ลบถาวร"
+  },
   "external_mail": {
     "sender_label": "ภายนอก",
     "sender_tooltip": "จาก {domain} ซึ่งอยู่นอกองค์กรของคุณ",

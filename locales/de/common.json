@@ -912,6 +912,11 @@
     "read_aloud_stop": "Vorlesen beenden",
     "reader_view": "Leseansicht"
   },
+  "reader_actions": {
+    "restore": "Wiederherstellen",
+    "restore_to": "Zurück nach {folder} verschieben",
+    "delete_forever": "Endgültig löschen"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Von {domain}, außerhalb Ihrer Organisation",

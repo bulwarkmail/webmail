@@ -912,6 +912,11 @@
     "read_aloud_stop": "Interrompi la lettura",
     "reader_view": "Modalità lettura"
   },
+  "reader_actions": {
+    "restore": "Ripristina",
+    "restore_to": "Riporta in {folder}",
+    "delete_forever": "Elimina definitivamente"
+  },
   "external_mail": {
     "sender_label": "Esterno",
     "sender_tooltip": "Da {domain}, fuori dalla tua organizzazione",

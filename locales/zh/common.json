@@ -912,6 +912,11 @@
     "read_aloud_stop": "停止朗读",
     "reader_view": "阅读视图"
   },
+  "reader_actions": {
+    "restore": "恢复",
+    "restore_to": "移回 {folder}",
+    "delete_forever": "永久删除"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "来自 {domain}，位于您的组织之外",

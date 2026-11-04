@@ -912,6 +912,11 @@
     "read_aloud_stop": "Voorlezen stoppen",
     "reader_view": "Leesweergave"
   },
+  "reader_actions": {
+    "restore": "Terugzetten",
+    "restore_to": "Terugzetten naar {folder}",
+    "delete_forever": "Definitief verwijderen"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Van {domain}, buiten je organisatie",

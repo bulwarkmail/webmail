@@ -912,6 +912,11 @@
     "read_aloud_stop": "إيقاف القراءة",
     "reader_view": "عرض القراءة"
   },
+  "reader_actions": {
+    "restore": "استعادة",
+    "restore_to": "إعادة النقل إلى {folder}",
+    "delete_forever": "حذف نهائي"
+  },
   "external_mail": {
     "sender_label": "خارجي",
     "sender_tooltip": "من {domain}، من خارج مؤسستك",

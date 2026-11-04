@@ -912,6 +912,11 @@
     "read_aloud_stop": "Остановить чтение",
     "reader_view": "Режим чтения"
   },
+  "reader_actions": {
+    "restore": "Восстановить",
+    "restore_to": "Вернуть в папку {folder}",
+    "delete_forever": "Удалить навсегда"
+  },
   "external_mail": {
     "sender_label": "Внешнее",
     "sender_tooltip": "С домена {domain}, вне вашей организации",

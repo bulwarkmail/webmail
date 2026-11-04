@@ -912,6 +912,11 @@
     "read_aloud_stop": "Opriți citirea",
     "reader_view": "Vizualizare pentru citire"
   },
+  "reader_actions": {
+    "restore": "Restaurează",
+    "restore_to": "Mută înapoi în {folder}",
+    "delete_forever": "Șterge definitiv"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De la {domain}, din afara organizației dvs.",

@@ -912,6 +912,11 @@
     "read_aloud_stop": "Zastaviť čítanie",
     "reader_view": "Zobrazenie na čítanie"
   },
+  "reader_actions": {
+    "restore": "Obnoviť",
+    "restore_to": "Presunúť späť do priečinka {folder}",
+    "delete_forever": "Odstrániť natrvalo"
+  },
   "external_mail": {
     "sender_label": "Externé",
     "sender_tooltip": "Z {domain}, mimo vašej organizácie",

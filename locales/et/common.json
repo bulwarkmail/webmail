@@ -912,6 +912,11 @@
     "read_aloud_stop": "Lõpeta ettelugemine",
     "reader_view": "Lugemisvaade"
   },
+  "reader_actions": {
+    "restore": "Taasta",
+    "restore_to": "Teisalda tagasi kausta {folder}",
+    "delete_forever": "Kustuta jäädavalt"
+  },
   "external_mail": {
     "sender_label": "Väline",
     "sender_tooltip": "Domeenilt {domain}, väljastpoolt sinu organisatsiooni",

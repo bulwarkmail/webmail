@@ -912,6 +912,11 @@
     "read_aloud_stop": "読み上げを停止",
     "reader_view": "リーダー表示"
   },
+  "reader_actions": {
+    "restore": "元に戻す",
+    "restore_to": "{folder} に戻す",
+    "delete_forever": "完全に削除"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "{domain} から（組織外）",
