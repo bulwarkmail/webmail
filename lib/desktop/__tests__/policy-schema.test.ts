@@ -32,7 +32,7 @@ describe('the schema', () => {
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
-      'OpenWithEnabled', 'DeveloperToolsAvailability',
+      'OpenWithEnabled', 'DeveloperToolsAvailability', 'FilesDriveEnabled', 'FilesFolderSyncEnabled', 'FilesDriveLetter',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
@@ -55,6 +55,28 @@ describe('developer tools and Open with', () => {
     expect(resolvePolicies(layers({ recommendedUser: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: true, locked: false });
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 'maybe' } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
+  });
+});
+
+describe('Files on this computer', () => {
+  it('turn the drive and folder sync off only by force, and a value nobody can read leaves them off', () => {
+    for (const key of ['FilesDriveEnabled', 'FilesFolderSyncEnabled'] as const) {
+      expect(resolvePolicies(layers({}))[key]).toMatchObject({ value: true, locked: false });
+      expect(resolvePolicies(layers({ recommendedUser: { [key]: 0 } }))[key]).toMatchObject({ value: true, locked: false });
+      expect(resolvePolicies(layers({ forcedUser: { [key]: 0 } }))[key]).toMatchObject({ value: false, locked: true });
+      expect(resolvePolicies(layers({ forcedMachine: { [key]: 'perhaps' } }))[key]).toMatchObject({ value: false, locked: true });
+    }
+  });
+
+  it('takes a drive letter from D to Z or none, forced only, and a value nobody can read means no letter', () => {
+    expect(parsePolicyValue('FilesDriveLetter', 'x')).toEqual({ ok: true, value: 'X' });
+    expect(parsePolicyValue('FilesDriveLetter', ' Q: ')).toEqual({ ok: true, value: 'Q' });
+    expect(parsePolicyValue('FilesDriveLetter', 'NONE')).toEqual({ ok: true, value: 'none' });
+    for (const bad of ['C', 'A:', 'B', 'QQ', 'Q:\\', '', 4, null]) expect(parsePolicyValue('FilesDriveLetter', bad).ok, String(bad)).toBe(false);
+    expect(resolvePolicies(layers({})).FilesDriveLetter).toMatchObject({ value: null, locked: false });
+    expect(resolvePolicies(layers({ recommendedMachine: { FilesDriveLetter: 'R' } })).FilesDriveLetter).toMatchObject({ value: null, locked: false });
+    expect(resolvePolicies(layers({ forcedMachine: { FilesDriveLetter: 'r' } })).FilesDriveLetter).toMatchObject({ value: 'R', locked: true });
+    expect(resolvePolicies(layers({ forcedUser: { FilesDriveLetter: 'C' } })).FilesDriveLetter).toMatchObject({ value: 'none', locked: true });
   });
 });
 

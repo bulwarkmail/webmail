@@ -224,5 +224,24 @@
       <decimal id="DeveloperToolsAvailability_Value" valueName="DeveloperToolsAvailability" required="true" minValue="0" maxValue="2"/>
     </elements>
   </policy>
+  <policy name="FilesDriveEnabled" class="Both" displayName="$(string.FilesDriveEnabled)" explainText="$(string.FilesDriveEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="FilesDriveEnabled">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="FilesFolderSyncEnabled" class="Both" displayName="$(string.FilesFolderSyncEnabled)" explainText="$(string.FilesFolderSyncEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="FilesFolderSyncEnabled">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="FilesDriveLetter" class="Both" displayName="$(string.FilesDriveLetter)" explainText="$(string.FilesDriveLetter_Explain)" presentation="$(presentation.FilesDriveLetter)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="FilesDriveLetter_Value" valueName="FilesDriveLetter" required="true" maxLength="8"/>
+    </elements>
+  </policy>
   </policies>
 </policyDefinitions>

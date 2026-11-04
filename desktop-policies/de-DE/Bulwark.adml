@@ -67,6 +67,12 @@
       <string id="OpenWithEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, trägt sich die App unter Windows in die Liste „Öffnen mit“ für gängige Dokumente und Bilder und in das Menü „Senden an“ ein, damit Benutzer eine Datei aus dem Dateimanager an eine neue Nachricht anhängen können. Sie wird nie zum Standardprogramm für diese Dateien. Wenn deaktiviert, entfernt die App diese Einträge für den Benutzer. Mail-Links und .eml-, .ics- und .vcf-Dateien sind nicht betroffen.</string>
       <string id="DeveloperToolsAvailability">Entwicklertools</string>
       <string id="DeveloperToolsAvailability_Explain">Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.</string>
+      <string id="FilesDriveEnabled">Dateien als Laufwerk zulassen</string>
+      <string id="FilesDriveEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer ihre Dateien im Dateimanager als Laufwerk anzeigen. Dateien werden beim Öffnen heruntergeladen. Vorerst nur unter Windows. Wenn deaktiviert, wird das Laufwerk nicht angeboten, und ein vorhandenes Laufwerk wird mit den Kopien der Dateien darin entfernt. Die Dateien auf dem Server sind davon nicht betroffen.</string>
+      <string id="FilesFolderSyncEnabled">Synchronisieren von Ordnern mit Dateien zulassen</string>
+      <string id="FilesFolderSyncEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer einen Ordner auf dem Computer und einen Ordner in Dateien in beide Richtungen gleich halten. Wenn deaktiviert, wird dies nicht angeboten, und Ordner, die gerade synchronisiert werden, hören damit auf. Die Dateien in diesen Ordnern bleiben, wo sie sind.</string>
+      <string id="FilesDriveLetter">Laufwerksbuchstabe für Dateien</string>
+      <string id="FilesDriveLetter_Explain">Nur unter Windows. Ein Buchstabe von D bis Z gibt dem Laufwerk Dateien für jeden Benutzer diesen Buchstaben, und Benutzer können ihn nicht ändern. Geben Sie none ein, damit es nie einen Buchstaben bekommt. Wenn nicht konfiguriert, wählen Benutzer in den Einstellungen, und bis dahin gibt es keinen Buchstaben. Ein Wert, den die App nicht lesen kann, gilt als none.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>
@@ -86,6 +92,7 @@
       <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Adressen</listBox></presentation>
       <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Löschcode</label></textBox></presentation>
       <presentation id="DeveloperToolsAvailability"><decimalTextBox refId="DeveloperToolsAvailability_Value" defaultValue="2">Wert (0, 1 oder 2)</decimalTextBox></presentation>
+      <presentation id="FilesDriveLetter"><textBox refId="FilesDriveLetter_Value"><label>Laufwerksbuchstabe</label></textBox></presentation>
     </presentationTable>
   </resources>
 </policyDefinitionResources>

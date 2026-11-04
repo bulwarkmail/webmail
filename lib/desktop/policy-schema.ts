@@ -82,6 +82,9 @@ export interface PolicyValues {
   WipeOfflineData: string | null;
   OpenWithEnabled: boolean;
   DeveloperToolsAvailability: number | null;
+  FilesDriveEnabled: boolean;
+  FilesFolderSyncEnabled: boolean;
+  FilesDriveLetter: string | null;
 }
 
 export type PolicyKey = keyof PolicyValues;
@@ -128,7 +131,7 @@ export type PolicyDefinition = PolicyBase &
       }
     | {
         type: 'string';
-        format: 'instanceUrl' | 'shortcut' | 'hostList' | 'nonce';
+        format: 'instanceUrl' | 'shortcut' | 'hostList' | 'nonce' | 'driveLetter';
         default: null;
         maxLength: number;
         label: PolicyText;
@@ -466,6 +469,47 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
       de: 'Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.',
     },
   },
+  FilesDriveEnabled: {
+    category: 'system',
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    forcedOnly: true,
+    sample: true,
+    title: { en: 'Allow Files as a drive', de: 'Dateien als Laufwerk zulassen' },
+    description: {
+      en: 'When enabled or not configured, people can show their Files in the file manager as a drive, with files downloaded when opened. Windows only for now. When disabled, the drive is not offered, and a drive that is already there is removed with the copies of files in it. Files on the server are not affected.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, können Benutzer ihre Dateien im Dateimanager als Laufwerk anzeigen. Dateien werden beim Öffnen heruntergeladen. Vorerst nur unter Windows. Wenn deaktiviert, wird das Laufwerk nicht angeboten, und ein vorhandenes Laufwerk wird mit den Kopien der Dateien darin entfernt. Die Dateien auf dem Server sind davon nicht betroffen.',
+    },
+  },
+  FilesFolderSyncEnabled: {
+    category: 'system',
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    forcedOnly: true,
+    sample: true,
+    title: { en: 'Allow syncing folders with Files', de: 'Synchronisieren von Ordnern mit Dateien zulassen' },
+    description: {
+      en: 'When enabled or not configured, people can keep a folder on the computer and a folder in Files the same, in both directions. When disabled, this is not offered and folders that sync now stop. The files in those folders stay where they are.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, können Benutzer einen Ordner auf dem Computer und einen Ordner in Dateien in beide Richtungen gleich halten. Wenn deaktiviert, wird dies nicht angeboten, und Ordner, die gerade synchronisiert werden, hören damit auf. Die Dateien in diesen Ordnern bleiben, wo sie sind.',
+    },
+  },
+  FilesDriveLetter: {
+    category: 'system',
+    forcedOnly: true,
+    type: 'string',
+    format: 'driveLetter',
+    default: null,
+    maxLength: 8,
+    sample: 'none',
+    label: { en: 'Drive letter', de: 'Laufwerksbuchstabe' },
+    title: { en: 'Drive letter for Files', de: 'Laufwerksbuchstabe für Dateien' },
+    description: {
+      en: 'Windows only. A letter from D to Z gives the Files drive that letter for every user, and they can\'t change it. Enter none to never give it a letter. When not configured, people choose under Settings, and there is no letter until they do. A value the app can\'t read counts as none.',
+      de: 'Nur unter Windows. Ein Buchstabe von D bis Z gibt dem Laufwerk Dateien für jeden Benutzer diesen Buchstaben, und Benutzer können ihn nicht ändern. Geben Sie none ein, damit es nie einen Buchstaben bekommt. Wenn nicht konfiguriert, wählen Benutzer in den Einstellungen, und bis dahin gibt es keinen Buchstaben. Ein Wert, den die App nicht lesen kann, gilt als none.',
+    },
+  },
 };
 
 export const POLICY_KEYS = Object.keys(POLICY_SCHEMA) as PolicyKey[];
@@ -616,6 +660,16 @@ export function pluginAllowedByPolicy(mode: PluginsMode, allowlist: readonly str
 }
 
 const SHORTCUT = /^(?:(?:Command|Cmd|Control|Ctrl|CommandOrControl|CmdOrCtrl|Alt|Option|AltGr|Shift|Super|Meta)\+){1,4}(?:[A-Z0-9]|F[1-9]|F1[0-9]|F2[0-4]|Space|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|Up|Down|Left|Right|Plus|[-=,./;'`[\]\\])$/i;
+
+/** A drive letter from D to Z, upper case, or `none`. */
+function parseDriveLetter(raw: unknown): Parsed<string> {
+  if (typeof raw !== 'string') return fail('not_text');
+  const text = raw.trim();
+  if (text.toLowerCase() === 'none') return { ok: true, value: 'none' };
+  const match = /^([D-Za-z]):?$/.exec(text);
+  if (!match || !/^[D-Z]$/i.test(match[1])) return fail('invalid_drive_letter');
+  return { ok: true, value: match[1].toUpperCase() };
+}
 
 function parseShortcut(raw: unknown): Parsed<string> {
   if (typeof raw !== 'string') return fail('not_text');
@@ -796,6 +850,8 @@ export function parsePolicyValue(key: PolicyKey, raw: unknown, allowInsecure = f
           return parseHostList(raw);
         case 'nonce':
           return parseNonce(raw);
+        case 'driveLetter':
+          return parseDriveLetter(raw);
       }
       break;
     case 'list':
@@ -821,6 +877,8 @@ function failClosedValue(key: PolicyKey): PolicyValues[PolicyKey] {
   if (definition.type === 'list') return [] as PolicyValues[PolicyKey];
   // A shortcut nobody can read doesn't get the built-in one instead.
   if (definition.type === 'string' && definition.format === 'shortcut') return 'off' as PolicyValues[PolicyKey];
+  // A drive letter nobody can read means no letter, not the user's own.
+  if (definition.type === 'string' && definition.format === 'driveLetter') return 'none' as PolicyValues[PolicyKey];
   // A limit nobody can read is the tightest one, not the user's own.
   if (definition.type === 'integer') return (definition.onInvalid !== undefined ? definition.onInvalid : definition.min) as PolicyValues[PolicyKey];
   return definition.default as PolicyValues[PolicyKey];
@@ -965,6 +1023,9 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   BrowserSignIn: { repo: 'shell', file: 'src/main/features/browser-sign-in.ts' },
   OpenWithEnabled: { repo: 'shell', file: 'src/main/features/os-default-app.ts' },
   DeveloperToolsAvailability: { repo: 'shell', file: 'src/main/features/dev-tools.ts' },
+  FilesDriveEnabled: { repo: 'shell', file: 'src/main/features/files-drive.ts' },
+  FilesFolderSyncEnabled: { repo: 'shell', file: 'src/main/features/files-folders.ts' },
+  FilesDriveLetter: { repo: 'shell', file: 'src/main/features/files-drive.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */

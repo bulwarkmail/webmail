@@ -29,6 +29,9 @@
   "BrowserSignIn": true,
   "OpenWithEnabled": true,
   "DeveloperToolsAvailability": 2,
+  "FilesDriveEnabled": true,
+  "FilesFolderSyncEnabled": true,
+  "FilesDriveLetter": "none",
   "Recommended": {
     "UpdateChannel": "stable"
   }
