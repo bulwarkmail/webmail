@@ -1772,7 +1772,7 @@
         "error_not_granted": "Varsler ble ikke tillatt, så push forblir av.",
         "error_verification_timeout": "E-postserveren bekreftet ikke denne enheten i tide, så push forblir av. Prøv igjen om et minutt.",
         "error_relay": "Push-reléet kan ikke nås akkurat nå, så push forblir av. Prøv igjen senere.",
-        "error_teardown": "Push er av i denne nettleseren, men e-postserveren eller reléet kunne ikke nås. Varsler kan fortsette å komme i noen dager. Tilbakekall denne enheten nedenfor når du er på nett igjen."
+        "error_teardown": "Push er av i denne nettleseren, men e-postserveren eller reléet kunne ikke nås. Varsler kan fortsette å komme i noen dager. For å stoppe dem tidligere, slå på avanserte innstillinger når du er på nett igjen, og tilbakekall denne enheten under Registrerte enheter."
       },
       "push_all": {
           "title": "All accounts",

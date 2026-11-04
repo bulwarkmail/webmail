@@ -1784,7 +1784,7 @@
         "error_not_granted": "Thông báo không được cho phép nên push vẫn tắt.",
         "error_verification_timeout": "Máy chủ thư không xác nhận thiết bị này kịp thời nên push vẫn tắt. Hãy thử lại sau một phút.",
         "error_relay": "Hiện không thể kết nối với relay push nên push vẫn tắt. Hãy thử lại sau.",
-        "error_teardown": "Push đã tắt trong trình duyệt này nhưng không thể kết nối với máy chủ thư hoặc relay. Thông báo có thể tiếp tục đến trong vài ngày. Hãy thu hồi thiết bị này bên dưới khi bạn có mạng trở lại."
+        "error_teardown": "Push đã tắt trong trình duyệt này nhưng không thể kết nối với máy chủ thư hoặc relay. Thông báo có thể tiếp tục đến trong vài ngày. Để dừng sớm hơn, khi có mạng trở lại hãy bật cài đặt nâng cao và thu hồi thiết bị này trong Thiết bị đã đăng ký."
       },
       "push_all": {
         "title": "Tất cả tài khoản",

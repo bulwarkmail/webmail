@@ -1772,7 +1772,7 @@
         "error_not_granted": "Notifikationer blev ikke tilladt, så push forbliver slået fra.",
         "error_verification_timeout": "Mailserveren bekræftede ikke denne enhed i tide, så push forbliver slået fra. Prøv igen om et minut.",
         "error_relay": "Push-relayet kan ikke nås lige nu, så push forbliver slået fra. Prøv igen senere.",
-        "error_teardown": "Push er slået fra i denne browser, men mailserveren eller relayet kunne ikke nås. Der kan stadig komme notifikationer i nogle dage. Tilbagekald denne enhed nedenfor, når du er online igen."
+        "error_teardown": "Push er slået fra i denne browser, men mailserveren eller relayet kunne ikke nås. Der kan stadig komme notifikationer i nogle dage. Vil du stoppe dem før, så slå avancerede indstillinger til, når du er online igen, og tilbagekald denne enhed under Registrerede enheder."
       },
       "push_all": {
           "title": "All accounts",

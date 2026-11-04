@@ -1805,7 +1805,7 @@
         "error_not_granted": "Le notifiche non sono state consentite, quindi le notifiche push restano disattivate.",
         "error_verification_timeout": "Il server di posta non ha confermato questo dispositivo in tempo, quindi le notifiche push restano disattivate. Riprova tra un minuto.",
         "error_relay": "Il relay delle notifiche non è raggiungibile in questo momento, quindi le notifiche push restano disattivate. Riprova più tardi.",
-        "error_teardown": "Le notifiche push sono disattivate in questo browser, ma il server di posta o il relay non erano raggiungibili. Potrebbero arrivare notifiche ancora per qualche giorno. Revoca questo dispositivo qui sotto quando torni online."
+        "error_teardown": "Le notifiche push sono disattivate in questo browser, ma il server di posta o il relay non erano raggiungibili. Potrebbero arrivare notifiche ancora per qualche giorno. Per fermarle prima, quando torni online attiva le impostazioni avanzate e revoca questo dispositivo in Dispositivi registrati."
       }
     },
     "language_region": {

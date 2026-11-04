@@ -1805,7 +1805,7 @@
         "error_not_granted": "Meldingen zijn niet toegestaan, dus push blijft uit.",
         "error_verification_timeout": "De mailserver heeft dit apparaat niet op tijd bevestigd, dus push blijft uit. Probeer het over een minuut opnieuw.",
         "error_relay": "De pushrelay is nu niet bereikbaar, dus push blijft uit. Probeer het later opnieuw.",
-        "error_teardown": "Push staat uit in deze browser, maar de mailserver of de relay was niet bereikbaar. Er kunnen nog een paar dagen meldingen binnenkomen. Trek dit apparaat hieronder in zodra u weer online bent."
+        "error_teardown": "Push staat uit in deze browser, maar de mailserver of de relay was niet bereikbaar. Er kunnen nog een paar dagen meldingen binnenkomen. Wilt u ze eerder stoppen, zet dan de geavanceerde instellingen aan zodra u weer online bent en trek dit apparaat in onder Geregistreerde apparaten."
       }
     },
     "language_region": {

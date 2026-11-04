@@ -1805,7 +1805,7 @@
         "error_not_granted": "Oznámení nebyla povolena, takže push zůstává vypnutý.",
         "error_verification_timeout": "Poštovní server toto zařízení včas nepotvrdil, takže push zůstává vypnutý. Zkuste to znovu za minutu.",
         "error_relay": "Push relay teď není dostupné, takže push zůstává vypnutý. Zkuste to později.",
-        "error_teardown": "Push je v tomto prohlížeči vypnutý, ale poštovní server nebo relay nebyly dostupné. Oznámení mohou ještě několik dní přicházet. Až budete online, odvolejte toto zařízení níže."
+        "error_teardown": "Push je v tomto prohlížeči vypnutý, ale poštovní server nebo relay nebyly dostupné. Oznámení mohou ještě několik dní přicházet. Chcete-li je zastavit dříve, až budete online, zapněte pokročilá nastavení a odvolejte toto zařízení v části Registrovaná zařízení."
       }
     },
     "language_region": {

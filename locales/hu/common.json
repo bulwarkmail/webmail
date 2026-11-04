@@ -1772,7 +1772,7 @@
         "error_not_granted": "Az értesítések nem lettek engedélyezve, ezért a push kikapcsolva marad.",
         "error_verification_timeout": "A levelezőszerver nem erősítette meg időben ezt az eszközt, ezért a push kikapcsolva marad. Próbáld újra egy perc múlva.",
         "error_relay": "A push relay most nem érhető el, ezért a push kikapcsolva marad. Próbáld újra később.",
-        "error_teardown": "A push ki van kapcsolva ebben a böngészőben, de a levelezőszerver vagy a relay nem volt elérhető. Néhány napig még érkezhetnek értesítések. Ha újra online vagy, vond vissza lent ezt az eszközt."
+        "error_teardown": "A push ki van kapcsolva ebben a böngészőben, de a levelezőszerver vagy a relay nem volt elérhető. Néhány napig még érkezhetnek értesítések. Ha hamarabb le szeretnéd állítani őket, amint újra online vagy, kapcsold be a speciális beállításokat, és vond vissza ezt az eszközt a Regisztrált eszközök résznél."
       },
       "push_all": {
           "title": "All accounts",
