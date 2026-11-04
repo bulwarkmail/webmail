@@ -5218,7 +5218,10 @@ export function EmailComposer({
         className,
         // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
         // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
-        maximized && "fixed inset-0 z-50 h-auto pt-[var(--titlebar-row-height)]",
+        // Its header is the window's top row, beside the controls, as the inline composer's
+        // is: an empty band for the controls stood above it (compose-p3-16). Below the
+        // desktop app's menu bar when that shows.
+        maximized && "fixed inset-0 top-[var(--titlebar-inset)] z-50 h-auto",
       )}
       data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
