@@ -114,6 +114,8 @@ export type PolicyDefinition = PolicyBase &
         default: number | null;
         min: number;
         max: number;
+        /** What a forced value nobody can read means, where the lowest number isn't the strict side. */
+        onInvalid?: number | null;
         unit: PolicyText;
         sample: number;
       }
@@ -453,6 +455,8 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     default: null,
     min: 0,
     max: 2,
+    // 0 allows them, so the lowest value would be the open side: not set, locked, reads as off.
+    onInvalid: null,
     forcedOnly: true,
     unit: { en: 'Value (0, 1 or 2)', de: 'Wert (0, 1 oder 2)' },
     sample: 2,
@@ -818,7 +822,7 @@ function failClosedValue(key: PolicyKey): PolicyValues[PolicyKey] {
   // A shortcut nobody can read doesn't get the built-in one instead.
   if (definition.type === 'string' && definition.format === 'shortcut') return 'off' as PolicyValues[PolicyKey];
   // A limit nobody can read is the tightest one, not the user's own.
-  if (definition.type === 'integer') return definition.min as PolicyValues[PolicyKey];
+  if (definition.type === 'integer') return (definition.onInvalid !== undefined ? definition.onInvalid : definition.min) as PolicyValues[PolicyKey];
   return definition.default as PolicyValues[PolicyKey];
 }
 
