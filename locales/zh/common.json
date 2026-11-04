@@ -5590,6 +5590,12 @@
     "import_contacts": "导入到联系人…",
     "add_to_calendar": "添加到日历…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "已编辑的文件",
+    "hide": "隐藏",
+    "discard_detail_file": "你对此副本的编辑将被删除。文件中的文件不会改变。",
+    "saved_auto": "{name} 已保存到文件。以后从其程序保存时会自动保存到那里。"
+  },
   "smime": {
     "your_certificates": "您的证书",
     "your_certificates_desc": "导入和管理您的 S/MIME 证书以对邮件进行签名和加密",

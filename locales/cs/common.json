@@ -5590,6 +5590,12 @@
     "import_contacts": "Importovat do kontaktů…",
     "add_to_calendar": "Přidat do kalendáře…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené soubory",
+    "hide": "Skrýt",
+    "discard_detail_file": "Vaše úpravy této kopie se smažou. Soubor v Souborech se nezmění.",
+    "saved_auto": "{name} uložen do Souborů. Další uložení z jeho programu tam půjdou sama."
+  },
   "smime": {
     "your_certificates": "Vaše certifikáty",
     "your_certificates_desc": "Importujte a spravujte své certifikáty S/MIME pro podepisování a šifrování e-mailů",

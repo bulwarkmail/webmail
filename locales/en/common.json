@@ -5857,6 +5857,12 @@
     "import_contacts": "Import into contacts…",
     "add_to_calendar": "Add to calendar…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Edited files",
+    "hide": "Hide",
+    "discard_detail_file": "Your edits to this copy are deleted. The file in Files doesn't change.",
+    "saved_auto": "{name} saved to Files. Later saves from its program go there on their own."
+  },
   "smime": {
     "your_certificates": "Your Certificates",
     "your_certificates_desc": "Import and manage your S/MIME certificates for signing and encrypting emails",

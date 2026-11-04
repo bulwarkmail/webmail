@@ -5857,6 +5857,12 @@
     "import_contacts": "匯入到聯絡人…",
     "add_to_calendar": "加入行事曆…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "已編輯的檔案",
+    "hide": "隱藏",
+    "discard_detail_file": "你對此副本的編輯將被刪除。檔案中的檔案不會改變。",
+    "saved_auto": "{name} 已儲存到檔案。之後從其程式儲存時會自動存到那裡。"
+  },
   "smime": {
     "your_certificates": "您的憑證",
     "your_certificates_desc": "匯入與管理用於郵件簽章與加密的 S/MIME 憑證",

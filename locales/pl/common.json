@@ -5590,6 +5590,12 @@
     "import_contacts": "Importuj do kontaktów…",
     "add_to_calendar": "Dodaj do kalendarza…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Edytowane pliki",
+    "hide": "Ukryj",
+    "discard_detail_file": "Twoje zmiany w tej kopii zostaną usunięte. Plik w Plikach się nie zmieni.",
+    "saved_auto": "Zapisano {name} w Plikach. Kolejne zapisy z jego programu trafią tam same."
+  },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
     "your_certificates_desc": "Importuj i zarządzaj swoimi certyfikatami S/MIME do podpisywania i szyfrowania wiadomości e-mail",

@@ -5590,6 +5590,12 @@
     "import_contacts": "Importar para os contactos…",
     "add_to_calendar": "Adicionar ao calendário…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Ficheiros editados",
+    "hide": "Ocultar",
+    "discard_detail_file": "As suas alterações a esta cópia são eliminadas. O ficheiro em Ficheiros não muda.",
+    "saved_auto": "{name} guardado em Ficheiros. As próximas gravações a partir do programa vão para lá sozinhas."
+  },
   "smime": {
     "your_certificates": "Seus certificados",
     "your_certificates_desc": "Importe e gerencie seus certificados S/MIME para assinar e criptografar e-mails",

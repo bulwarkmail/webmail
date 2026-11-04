@@ -5590,6 +5590,12 @@
     "import_contacts": "Importa nei contatti…",
     "add_to_calendar": "Aggiungi al calendario…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "File modificati",
+    "hide": "Nascondi",
+    "discard_detail_file": "Le modifiche a questa copia vengono eliminate. Il file in File non cambia.",
+    "saved_auto": "{name} salvato in File. I salvataggi successivi dal suo programma ci finiscono da soli."
+  },
   "smime": {
     "your_certificates": "I tuoi certificati",
     "your_certificates_desc": "Importa e gestisci i tuoi certificati S/MIME per firmare e cifrare le email",

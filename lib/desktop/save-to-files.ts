@@ -8,6 +8,7 @@
  * Keep both (a numbered copy beside it) or Replace.
  */
 
+import { TRASH_FOLDER_NAME } from '@/lib/files-trash';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFileStore } from '@/stores/file-store';
@@ -58,10 +59,25 @@ function sourceOf(source: NodeEditSource, node: NodeState, fallbackBlobId: strin
   };
 }
 
+/**
+ * Whether the node sits in Files' trash: deleted there, so a save that goes back by itself
+ * mustn't land in it (pim-p3-6). Walks up its folders; the trash is a folder at the top.
+ */
+async function inTrash(client: IJMAPClient, parentId: string | null | undefined): Promise<boolean> {
+  let at = parentId ?? null;
+  for (let depth = 0; at && depth < 32; depth++) {
+    const [folder] = await client.getFileNodes([at], ['id', 'name', 'parentId']).catch(() => []);
+    if (!folder) return false;
+    if ((folder.parentId ?? null) === null) return folder.name === TRASH_FOLDER_NAME && !folder.id.includes(':');
+    at = folder.parentId;
+  }
+  return false;
+}
+
 /** Puts the file into its node. `force`: also when it changed on the server (Replace). */
 export async function saveBackToNode(client: IJMAPClient, source: NodeEditSource, file: File, force = false): Promise<SaveBackResult> {
   const [node] = await client.getFileNodes([source.nodeId], STATE_PROPERTIES);
-  if (!node) return { status: 'gone' };
+  if (!node || await inTrash(client, node.parentId)) return { status: 'gone' };
   if (!force && !nodeUnchanged(source, node)) return { status: 'changed' };
   const { blobId } = await client.uploadBlob(file);
   await client.replaceFileNodeBlob(source.nodeId, blobId);

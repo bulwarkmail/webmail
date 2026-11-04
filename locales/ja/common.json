@@ -5590,6 +5590,12 @@
     "import_contacts": "連絡先にインポート…",
     "add_to_calendar": "カレンダーに追加…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "編集したファイル",
+    "hide": "非表示",
+    "discard_detail_file": "このコピーへの編集は削除されます。ファイル内のファイルは変わりません。",
+    "saved_auto": "{name} をファイルに保存しました。今後このプログラムで保存すると自動でそこに保存されます。"
+  },
   "smime": {
     "your_certificates": "あなたの証明書",
     "your_certificates_desc": "メールの署名と暗号化のために S/MIME 証明書をインポートして管理します",

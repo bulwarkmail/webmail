@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // pim-p2-1: a document opened from Files in its program goes back into Files
@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // the server meanwhile, the card asks Keep both or Replace.
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
-const files = vi.hoisted(() => ({ client: null as unknown, refresh: vi.fn() }));
+const files = vi.hoisted(() => ({ client: null as unknown, refresh: vi.fn(async () => {}), resources: [] as unknown[], trashCount: 0 }));
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -32,9 +32,12 @@ vi.mock('@/stores/auth-store', () => {
   useAuthStore.getState = () => ({ activeAccountId: 'acct', client: null, getClientForAccount: () => undefined });
   return { useAuthStore };
 });
-vi.mock('@/stores/file-store', () => ({
-  useFileStore: { getState: () => ({ client: files.client, currentAccountId: 'acct', refresh: files.refresh }) },
-}));
+vi.mock('@/stores/file-store', () => {
+  const state = () => ({ client: files.client, currentAccountId: 'acct', refresh: files.refresh, resources: files.resources, trashCount: files.trashCount });
+  const useFileStore = (select: (s: ReturnType<typeof state>) => unknown) => select(state());
+  useFileStore.getState = state;
+  return { useFileStore };
+});
 
 import { EditedFilesHost } from '../edited-files-host';
 import { parseEditSource, resetEditSessions, useEditSessions } from '@/lib/desktop/edit-attachments';
@@ -50,6 +53,7 @@ let client: {
   uploadBlob: ReturnType<typeof vi.fn>;
   replaceFileNodeBlob: ReturnType<typeof vi.fn>;
   createFileNode: ReturnType<typeof vi.fn>;
+  listAllFileNodes: ReturnType<typeof vi.fn>;
 };
 
 function show() {
@@ -60,16 +64,25 @@ function show() {
 }
 
 let serverBlob = 'b-old';
+let serverParent = 'p1';
 
 beforeEach(() => {
   vi.clearAllMocks();
   serverBlob = 'b-old';
+  serverParent = 'p1';
   client = {
     // The server keeps a new content under a blob id of its own, as Stalwart 1.0 does (pim-p3-1).
-    getFileNodes: vi.fn(async (ids: string[]) => ids.includes('n1') ? [{ id: 'n1', blobId: serverBlob, name: 'budget-2026.xlsx', parentId: 'p1' }] : []),
+    getFileNodes: vi.fn(async (ids: string[]) => {
+      if (ids.includes('n1')) return [{ id: 'n1', blobId: serverBlob, name: 'budget-2026.xlsx', parentId: serverParent }];
+      // A delete in Files moves the node into a folder in the trash.
+      if (ids.includes('batch')) return [{ id: 'batch', name: '1~p1', parentId: 'trash' }];
+      if (ids.includes('trash')) return [{ id: 'trash', name: '.Trash', parentId: null }];
+      return [];
+    }),
     uploadBlob: vi.fn(async () => ({ blobId: 'b-new', size: 1, type: 'x/y' })),
     replaceFileNodeBlob: vi.fn(async () => { serverBlob = 'b-server'; }),
     createFileNode: vi.fn(async () => ({ id: 'n2', name: 'budget-2026 (2).xlsx', parentId: 'p1' })),
+    listAllFileNodes: vi.fn(async () => [{ id: 'p1', name: 'Budgets', parentId: null, type: 'd', blobId: null }, { id: 'n1', name: 'budget-2026.xlsx', parentId: serverParent, type: 'x/y', blobId: serverBlob }]),
   };
   files.client = client;
   edit = {
@@ -117,9 +130,9 @@ describe('Save to Files (pim-p2-1)', () => {
     fireEvent.click(screen.getByText('save_to_files'));
     await waitFor(() => expect(client.replaceFileNodeBlob).toHaveBeenCalledWith('n1', 'b-new'));
     expect(client.createFileNode).not.toHaveBeenCalled();
-    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n1', blobId: 'b-server', parentId: 'p1' }));
+    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n1', blobId: 'b-server', parentId: 'p1', auto: true }));
     expect(edit.taken).toHaveBeenCalledWith('s1', 'h2');
-    expect(toast.success).toHaveBeenCalledWith('saved');
+    expect(toast.success).toHaveBeenCalledWith('saved_auto');
     expect(files.refresh).toHaveBeenCalled();
   });
 
@@ -134,7 +147,7 @@ describe('Save to Files (pim-p2-1)', () => {
     fireEvent.click(screen.getByText('keep_both'));
     await waitFor(() => expect(client.createFileNode).toHaveBeenCalledWith('budget-2026.xlsx', 'b-new', 'x/y', 2, 'p1'));
     expect(client.replaceFileNodeBlob).not.toHaveBeenCalled();
-    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n2', blobId: 'b-new', parentId: 'p1' }));
+    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n2', blobId: 'b-new', parentId: 'p1', auto: true }));
     expect(edit.taken).toHaveBeenCalledWith('s1', 'h2');
     expect(toast.success).toHaveBeenCalledWith('saved_copy');
   });
@@ -153,6 +166,79 @@ describe('Save to Files (pim-p2-1)', () => {
     fireEvent.click(screen.getByText('save_to_files'));
     await waitFor(() => expect(screen.getByTestId('edited-file-conflict').textContent).toBe('gone_on_server'));
     expect(screen.queryByText('replace')).toBeNull();
+    expect(screen.getByText('save_as_new')).toBeTruthy();
+  });
+});
+
+// pim-p3-6: once the user chose Save to Files, later saves from the program go
+// back by themselves with a quiet toast; the card comes back only for a real
+// conflict, sits in the toast corner and goes when the file is deleted.
+describe('later saves of a file sent to Files once (pim-p3-6)', () => {
+  const AUTO_SOURCE = JSON.stringify({ kind: 'node', nodeId: 'n1', blobId: 'b-old', parentId: 'p1', auto: true });
+
+  function showSessions(...list: ReturnType<typeof session>[]) {
+    edit.list.mockResolvedValue(list);
+    useEditSessions.setState({ sessions: list });
+    return render(<EditedFilesHost />);
+  }
+
+  it('saves by itself, with a quiet toast and no card', async () => {
+    showSessions(session({ source: AUTO_SOURCE, version: 3 }));
+    await waitFor(() => expect(client.replaceFileNodeBlob).toHaveBeenCalledWith('n1', 'b-new'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('saved'));
+    expect(edit.taken).toHaveBeenCalledWith('s1', 'h2');
+    expect(screen.queryByTestId('edited-file')).toBeNull();
+  });
+
+  it('saves each new version once', async () => {
+    const view = showSessions(session({ source: AUTO_SOURCE, version: 3 }));
+    await waitFor(() => expect(client.replaceFileNodeBlob).toHaveBeenCalledTimes(1));
+    // Main keeps the source the save set: the node as the server holds it now.
+    await waitFor(() => expect(edit.setSource).toHaveBeenCalled());
+    const next = [session({ source: edit.setSource.mock.calls[0][1], version: 4, hash: 'h4' })];
+    edit.list.mockResolvedValue(next);
+    act(() => useEditSessions.setState({ sessions: next }));
+    view.rerender(<EditedFilesHost />);
+    await waitFor(() => expect(client.replaceFileNodeBlob).toHaveBeenCalledTimes(2));
+  });
+
+  it('asks on its card when someone else changed it, and Cancel closes the card', async () => {
+    serverBlob = 'b-someone-else';
+    showSessions(session({ source: AUTO_SOURCE, version: 3 }));
+    await waitFor(() => expect(screen.getByTestId('edited-file-conflict').textContent).toBe('changed_on_server'));
+    expect(client.replaceFileNodeBlob).not.toHaveBeenCalled();
+    expect(screen.getByText('keep_both')).toBeTruthy();
+    fireEvent.click(screen.getByText('cancel'));
+    expect(screen.queryByTestId('edited-file')).toBeNull();
+    // Not tried again until the program saves again.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(client.getFileNodes.mock.calls.filter(([ids]) => ids.includes('n1'))).toHaveLength(1);
+  });
+
+  it('puts the cards in the toast corner, above which toasts stack', () => {
+    show();
+    const section = screen.getByTestId('edited-files');
+    expect(section.getAttribute('data-toast-avoid')).toBe('bottom');
+    expect(section.className).toContain('end-4');
+    expect(section.className).not.toContain('mx-auto');
+  });
+
+  it('takes the card away when the file is moved to the trash in Files', async () => {
+    client.listAllFileNodes.mockResolvedValue([
+      { id: 'trash', name: '.Trash', parentId: null, type: 'd', blobId: null },
+      { id: 'batch', name: '1~p1', parentId: 'trash', type: 'd', blobId: null },
+      { id: 'n1', name: 'budget-2026.xlsx', parentId: 'batch', type: 'x/y', blobId: 'b-old' },
+    ]);
+    show();
+    expect(screen.getByTestId('edited-file')).toBeTruthy();
+    await waitFor(() => expect(screen.queryByTestId('edited-file')).toBeNull());
+  });
+
+  it('doesn\'t save into a file that is in the trash', async () => {
+    serverParent = 'batch';
+    showSessions(session({ source: AUTO_SOURCE, version: 3 }));
+    await waitFor(() => expect(screen.getByTestId('edited-file-conflict').textContent).toBe('gone_on_server'));
+    expect(client.replaceFileNodeBlob).not.toHaveBeenCalled();
     expect(screen.getByText('save_as_new')).toBeTruthy();
   });
 });

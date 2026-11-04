@@ -5857,6 +5857,12 @@
     "import_contacts": "Kişilere aktar…",
     "add_to_calendar": "Takvime ekle…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Düzenlenen dosyalar",
+    "hide": "Gizle",
+    "discard_detail_file": "Bu kopyadaki düzenlemeleriniz silinir. Dosyalar'daki dosya değişmez.",
+    "saved_auto": "{name} Dosyalar'a kaydedildi. Programından sonraki kayıtlar oraya kendiliğinden gider."
+  },
   "smime": {
     "your_certificates": "Sertifikalarınız",
     "your_certificates_desc": "E-postaları imzalamak ve şifrelemek için S/MIME sertifikalarınızı içe aktarın ve yönetin",

@@ -5857,6 +5857,12 @@
     "import_contacts": "Importa als contactes…",
     "add_to_calendar": "Afegeix al calendari…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Fitxers editats",
+    "hide": "Amaga",
+    "discard_detail_file": "Es suprimeixen els canvis d'aquesta còpia. El fitxer de Fitxers no canvia.",
+    "saved_auto": "{name} s'ha desat a Fitxers. Els desaments posteriors des del seu programa hi aniran sols."
+  },
   "smime": {
     "your_certificates": "Els vostres certificats",
     "your_certificates_desc": "Importeu i gestioneu els certificats S/MIME per signar i xifrar correus",

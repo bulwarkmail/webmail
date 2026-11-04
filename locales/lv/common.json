@@ -5590,6 +5590,12 @@
     "import_contacts": "Importēt kontaktos…",
     "add_to_calendar": "Pievienot kalendāram…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Rediģētie faili",
+    "hide": "Paslēpt",
+    "discard_detail_file": "Jūsu labojumi šajā kopijā tiek dzēsti. Fails sadaļā Faili nemainās.",
+    "saved_auto": "{name} saglabāts sadaļā Faili. Turpmākās saglabāšanas no tā programmas nonāks tur pašas."
+  },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
     "your_certificates_desc": "Importējiet un pārvaldiet savus S/MIME sertifikātus parakstīšanai un šifrēšanai",

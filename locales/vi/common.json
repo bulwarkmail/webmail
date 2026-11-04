@@ -5869,6 +5869,12 @@
     "import_contacts": "Nhập vào danh bạ…",
     "add_to_calendar": "Thêm vào lịch…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Tệp đã chỉnh sửa",
+    "hide": "Ẩn",
+    "discard_detail_file": "Các chỉnh sửa của bạn trên bản sao này sẽ bị xóa. Tệp trong Tệp không thay đổi.",
+    "saved_auto": "Đã lưu {name} vào Tệp. Những lần lưu sau từ chương trình của nó sẽ tự vào đó."
+  },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
     "your_certificates_desc": "Nhập và quản lý chứng chỉ S/MIME của bạn để ký và mã hóa email",

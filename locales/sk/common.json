@@ -5857,6 +5857,12 @@
     "import_contacts": "Importovať do kontaktov…",
     "add_to_calendar": "Pridať do kalendára…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené súbory",
+    "hide": "Skryť",
+    "discard_detail_file": "Vaše úpravy tejto kópie sa odstránia. Súbor v Súboroch sa nezmení.",
+    "saved_auto": "{name} uložený do Súborov. Ďalšie uloženia z jeho programu tam pôjdu samy."
+  },
   "smime": {
     "your_certificates": "Vaše certifikáty",
     "your_certificates_desc": "Importujte a spravujte svoje certifikáty S/MIME na podpisovanie a šifrovanie e-mailov",

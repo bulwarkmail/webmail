@@ -5590,6 +5590,12 @@
     "import_contacts": "Importeren in contacten…",
     "add_to_calendar": "Aan agenda toevoegen…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Bewerkte bestanden",
+    "hide": "Verbergen",
+    "discard_detail_file": "Je wijzigingen in deze kopie worden verwijderd. Het bestand in Bestanden verandert niet.",
+    "saved_auto": "{name} opgeslagen in Bestanden. Latere opslagen vanuit het programma gaan er vanzelf heen."
+  },
   "smime": {
     "your_certificates": "Uw certificaten",
     "your_certificates_desc": "Importeer en beheer uw S/MIME-certificaten voor het ondertekenen en versleutelen van e-mails",

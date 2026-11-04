@@ -5857,6 +5857,12 @@
     "import_contacts": "Importați în contacte…",
     "add_to_calendar": "Adăugați în calendar…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Fișiere editate",
+    "hide": "Ascunde",
+    "discard_detail_file": "Modificările din această copie se șterg. Fișierul din Fișiere nu se schimbă.",
+    "saved_auto": "{name} a fost salvat în Fișiere. Salvările următoare din programul lui ajung acolo singure."
+  },
   "smime": {
     "your_certificates": "Certificatele dvs.",
     "your_certificates_desc": "Importați și gestionați certificatele S/MIME pentru semnarea și criptarea e-mailurilor",

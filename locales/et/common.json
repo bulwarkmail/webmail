@@ -5857,6 +5857,12 @@
     "import_contacts": "Impordi kontaktidesse…",
     "add_to_calendar": "Lisa kalendrisse…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Muudetud failid",
+    "hide": "Peida",
+    "discard_detail_file": "Selle koopia muudatused kustutatakse. Fail jaotises Failid ei muutu.",
+    "saved_auto": "{name} salvestati jaotisesse Failid. Hilisemad salvestused selle programmist lähevad sinna ise."
+  },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
     "your_certificates_desc": "Impordi ja halda oma S/MIME sertifikaate e-kirjade allkirjastamiseks ja krüpteerimiseks",

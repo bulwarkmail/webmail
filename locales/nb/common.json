@@ -5857,6 +5857,12 @@
     "import_contacts": "Importer til kontakter…",
     "add_to_calendar": "Legg til i kalenderen…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerte filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Endringene dine i denne kopien slettes. Filen i Filer endres ikke.",
+    "saved_auto": "{name} er lagret i Filer. Senere lagringer fra programmet havner der av seg selv."
+  },
   "smime": {
     "your_certificates": "Dine sertifikater",
     "your_certificates_desc": "Importer og administrer S/MIME-sertifikatene dine for signering og kryptering av e-post",

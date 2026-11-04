@@ -5590,6 +5590,12 @@
     "import_contacts": "연락처로 가져오기…",
     "add_to_calendar": "캘린더에 추가…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "편집한 파일",
+    "hide": "숨기기",
+    "discard_detail_file": "이 사본의 편집 내용이 삭제됩니다. 파일에 있는 파일은 바뀌지 않습니다.",
+    "saved_auto": "{name}을(를) 파일에 저장했습니다. 이후 해당 프로그램에서 저장하면 자동으로 그곳에 저장됩니다."
+  },
   "smime": {
     "your_certificates": "내 인증서",
     "your_certificates_desc": "이메일 서명과 암호화를 위한 S/MIME 인증서를 가져오고 관리해요",

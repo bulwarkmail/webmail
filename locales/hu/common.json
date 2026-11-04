@@ -5857,6 +5857,12 @@
     "import_contacts": "Importálás a névjegyekbe…",
     "add_to_calendar": "Hozzáadás a naptárhoz…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "Szerkesztett fájlok",
+    "hide": "Elrejtés",
+    "discard_detail_file": "A másolaton végzett módosításai törlődnek. A Fájlokban lévő fájl nem változik.",
+    "saved_auto": "{name} mentve a Fájlokba. A programjából későbbi mentések maguktól oda kerülnek."
+  },
   "smime": {
     "your_certificates": "Tanúsítványaid",
     "your_certificates_desc": "S/MIME tanúsítványok importálása és kezelése e-mailek aláírásához és titkosításához",
