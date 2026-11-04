@@ -378,9 +378,8 @@ describe('composer empty subject warning', () => {
     );
     fireEvent.change(screen.getByDisplayValue('Lunch'), { target: { value: '' } });
 
+    // Closing saves the draft; no question unless the save fails.
     act(() => requestCloseRef.current!(vi.fn()));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByText('save'));
 
     await waitFor(() => expect(createDraft).toHaveBeenCalled());
     expect(createDraft.mock.calls[0][1]).toBe('');
