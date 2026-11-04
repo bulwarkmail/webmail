@@ -78,25 +78,29 @@ function getQueryValue(searchParams: QueryParam[], key: string): string {
   return values.join(",");
 }
 
-function decodePathname(pathname: string): string | null {
+/**
+ * Percent-decoding that never gives up on a link. Links written by hand or by older
+ * programs carry a stray "%" ("50% off") or a cut-off UTF-8 sequence; Outlook and
+ * Thunderbird open those, so each run of valid escapes is decoded and anything else
+ * stays as it is. Bytes that aren't UTF-8 become U+FFFD. RFC 6068 uses
+ * percent-encoding, not form encoding: a literal '+' stays a '+'.
+ */
+function decodeLenient(value: string): string {
   try {
-    return decodeURIComponent(pathname || "");
-  } catch {
-    return null;
-  }
-}
-
-function decodeQueryPart(value: string): string | null {
-  try {
-    // RFC 6068 uses percent-encoding for mailto query fields; unlike form
-    // encoding, a literal '+' is part of the value and must not become space.
     return decodeURIComponent(value);
   } catch {
-    return null;
+    return value.replace(/(?:%[0-9a-f]{2})+/gi, (run) => {
+      try {
+        return decodeURIComponent(run);
+      } catch {
+        const bytes = Uint8Array.from(run.slice(1).split("%"), (hex) => parseInt(hex, 16));
+        return new TextDecoder().decode(bytes);
+      }
+    });
   }
 }
 
-function parseQuery(query: string): QueryParam[] | null {
+function parseQuery(query: string): QueryParam[] {
   if (!query) return [];
 
   const params: QueryParam[] = [];
@@ -105,10 +109,7 @@ function parseQuery(query: string): QueryParam[] | null {
     const separatorIndex = part.indexOf("=");
     const rawKey = separatorIndex >= 0 ? part.slice(0, separatorIndex) : part;
     const rawValue = separatorIndex >= 0 ? part.slice(separatorIndex + 1) : "";
-    const key = decodeQueryPart(rawKey);
-    const value = decodeQueryPart(rawValue);
-    if (key === null || value === null) return null;
-    params.push({ key, value });
+    params.push({ key: decodeLenient(rawKey), value: decodeLenient(rawValue) });
   }
 
   return params;
@@ -122,10 +123,8 @@ export function parseMailto(raw: string): ParsedMailto | null {
   const rawPathname = queryIndex >= 0 ? addressAndQuery.slice(0, queryIndex) : addressAndQuery;
   const rawQuery = queryIndex >= 0 ? addressAndQuery.slice(queryIndex + 1) : "";
 
-  const decodedPathname = decodePathname(rawPathname);
-  if (decodedPathname === null) return null;
+  const decodedPathname = decodeLenient(rawPathname);
   const searchParams = parseQuery(rawQuery);
-  if (searchParams === null) return null;
 
   const to = [
     ...splitRecipients(decodedPathname),
