@@ -7797,7 +7797,10 @@
       "off_note": "با خاموش کردن، درایو از کاوشگر فایل حذف می‌شود. فایل‌های شما در فایل‌ها می‌مانند.",
       "rescued": "فایل‌های بارگذاری‌نشده ({count}) اکنون در {folder} هستند.",
       "rescued_open": "باز کردن پوشه",
-      "rescued_dismiss": "بستن"
+      "rescued_dismiss": "بستن",
+      "start_at_login": "اجرای Bulwark هنگام ورود به Windows",
+      "start_at_login_why": "درایو مانند OneDrive به اجرای Bulwark نیاز دارد.",
+      "closed_warning": "تا وقتی Bulwark بسته است، فایل‌های درایو باز نمی‌شوند."
     }
   },
   "desktopQuickCompose": {

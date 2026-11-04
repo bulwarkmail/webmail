@@ -7805,7 +7805,10 @@
       "off_note": "การปิดจะนำไดรฟ์ออกจากตัวสำรวจไฟล์ ไฟล์ของคุณยังอยู่ในไฟล์",
       "rescued": "ไฟล์ที่ยังไม่ได้อัปโหลด ({count}) อยู่ใน {folder} แล้ว",
       "rescued_open": "เปิดโฟลเดอร์",
-      "rescued_dismiss": "ปิด"
+      "rescued_dismiss": "ปิด",
+      "start_at_login": "เริ่ม Bulwark เมื่อลงชื่อเข้าใช้ Windows",
+      "start_at_login_why": "ไดรฟ์ต้องให้ Bulwark ทำงานอยู่ เช่นเดียวกับ OneDrive",
+      "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่"
     }
   },
   "desktopQuickCompose": {

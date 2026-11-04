@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import {
   AlertCircle, AlertTriangle, ArrowDown, ArrowUp, FolderSync, HardDrive, HelpCircle, Loader2, Trash2, type AppIcon,
@@ -14,7 +14,8 @@ import { filesSyncErrorKey, rootName, syncTimeOptions } from "@/components/files
 import { fileNodeKind } from "@/lib/jmap/filenode-kind";
 import { findTrashFolder, trashSubtreeIds } from "@/lib/files-trash";
 import { cn, formatFileSize } from "@/lib/utils";
-import type { FilesDriveState, FilesError, FilesRoot } from "@/lib/desktop/types";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
+import type { DesktopOsStatus, FilesDriveState, FilesError, FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncActivity, FilesSyncActivityKind } from "@/lib/files-sync/types";
 import { filesQuotaLevel } from "@/lib/files-sync/drive-status";
 import { requestFlush } from "@/lib/files-sync/flush-requests";
@@ -99,6 +100,23 @@ function StorageSection() {
   );
 }
 
+/** The app's own settings (start at login), as main has them now. Null until it answered, or outside the app. */
+function useOsStatus(): DesktopOsStatus | null {
+  const os = getDesktopBridge()?.os;
+  const [status, setStatus] = useState<DesktopOsStatus | null>(null);
+  useEffect(() => {
+    if (!os) return;
+    let stale = false;
+    void os.getStatus().then((next) => { if (!stale) setStatus(next); }, () => {});
+    const stop = os.onStatusChange(setStatus);
+    return () => {
+      stale = true;
+      stop();
+    };
+  }, [os]);
+  return status;
+}
+
 /** What went wrong turning something on, in words. */
 function addErrorKey(error: FilesError): string | null {
   if (error === "cancelled") return null;
@@ -110,6 +128,12 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   const t = useTranslations("files_sync");
   const tx = useTranslations("files_sync_extra.drive");
   const rescued = useFilesSyncStore((s) => s.rescued);
+  const osStatus = useOsStatus();
+  const startAtLogin = osStatus?.settings.startAtLogin ?? null;
+  // Turning it on needs the click it came from, as the drive does: called in the same handler.
+  const setStartAtLogin = (on: boolean) => {
+    void getDesktopBridge()?.os?.setSettings({ startAtLogin: on }).catch(() => null);
+  };
   const account = useFilesSyncStore((s) => s.account);
   const roots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);
@@ -133,6 +157,8 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
       (result) => { if (!result.ok) setError(addErrorKey(result.error)); },
       () => setError("folders.add_failed.failed"),
     );
+    // The drive needs the app running, as OneDrive does: it starts with Windows from now on (files-p3-4).
+    if (next && startAtLogin === false) setStartAtLogin(true);
     const done = next || !driveRoot
       ? apply()
       : requestFlush({ rootId: driveRoot.id, kind: "drive", purpose: "turn-off" }).then((go) => (go ? apply() : undefined));
@@ -162,6 +188,29 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
         />
       </SettingItem>
       {on && driveRoot && <FilesSyncStatusLine status={status[driveRoot.id]} paused={driveRoot.paused} />}
+      {on && startAtLogin !== null && (
+        <div className="ms-4 ps-3 border-s-2 border-s-border py-1 space-y-1">
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+              checked={startAtLogin}
+              onChange={(event) => setStartAtLogin(event.target.checked)}
+              data-testid="files-sync-start-at-login"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm text-foreground">{tx("start_at_login")}</span>
+              <span className="block text-xs text-muted-foreground">{tx("start_at_login_why")}</span>
+            </span>
+          </label>
+          {!startAtLogin && (
+            <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400" data-testid="files-sync-closed-warning">
+              <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" aria-hidden="true" />
+              <span>{tx("closed_warning")}</span>
+            </p>
+          )}
+        </div>
+      )}
       {on && <p className="text-xs text-muted-foreground" data-testid="files-sync-drive-off-note">{tx("off_note")}</p>}
       {rescued && (
         <div role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 space-y-2" data-testid="files-sync-rescued">

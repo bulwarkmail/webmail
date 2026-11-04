@@ -7797,7 +7797,10 @@
       "off_note": "Wenn Sie dies ausschalten, verschwindet das Laufwerk aus dem Explorer. Ihre Dateien bleiben in Dateien.",
       "rescued": "Nicht hochgeladene Dateien ({count}) liegen jetzt in {folder}.",
       "rescued_open": "Ordner öffnen",
-      "rescued_dismiss": "Ausblenden"
+      "rescued_dismiss": "Ausblenden",
+      "start_at_login": "Bulwark bei der Anmeldung an Windows starten",
+      "start_at_login_why": "Das Laufwerk braucht Bulwark im Hintergrund, wie OneDrive.",
+      "closed_warning": "Dateien im Laufwerk lassen sich nicht öffnen, solange Bulwark geschlossen ist."
     }
   },
   "desktopQuickCompose": {

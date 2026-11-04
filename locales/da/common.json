@@ -7797,7 +7797,10 @@
       "off_note": "Når du slår dette fra, forsvinder drevet fra Stifinder. Dine filer bliver i Filer.",
       "rescued": "Filer, der ikke blev uploadet ({count}), ligger nu i {folder}.",
       "rescued_open": "Åbn mappe",
-      "rescued_dismiss": "Luk"
+      "rescued_dismiss": "Luk",
+      "start_at_login": "Start Bulwark, når du logger på Windows",
+      "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
+      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket."
     }
   },
   "desktopQuickCompose": {

@@ -7797,7 +7797,10 @@
       "off_note": "Vypnutím jednotka zmizí z Průzkumníka souborů. Vaše soubory zůstanou v Souborech.",
       "rescued": "Nenahrané soubory ({count}) jsou teď v {folder}.",
       "rescued_open": "Otevřít složku",
-      "rescued_dismiss": "Skrýt"
+      "rescued_dismiss": "Skrýt",
+      "start_at_login": "Spouštět Bulwark po přihlášení do Windows",
+      "start_at_login_why": "Jednotka potřebuje spuštěný Bulwark, stejně jako OneDrive.",
+      "closed_warning": "Soubory na jednotce nejdou otevřít, když je Bulwark zavřený."
     }
   },
   "desktopQuickCompose": {

@@ -7797,7 +7797,10 @@
       "off_note": "Bunu kapatmak sürücüyü Dosya Gezgini'nden kaldırır. Dosyalarınız Dosyalar'da kalır.",
       "rescued": "Yüklenmeyen dosyalar ({count}) artık {folder} konumunda.",
       "rescued_open": "Klasörü aç",
-      "rescued_dismiss": "Kapat"
+      "rescued_dismiss": "Kapat",
+      "start_at_login": "Windows'ta oturum açınca Bulwark'ı başlat",
+      "start_at_login_why": "Sürücü, OneDrive gibi Bulwark'ın çalışmasına ihtiyaç duyar.",
+      "closed_warning": "Bulwark kapalıyken sürücüdeki dosyalar açılmaz."
     }
   },
   "desktopQuickCompose": {

@@ -7797,7 +7797,10 @@
       "off_note": "Väljalülitamisel kaob draiv Failihaldurist. Teie failid jäävad Failidesse.",
       "rescued": "Üles laadimata failid ({count}) on nüüd kaustas {folder}.",
       "rescued_open": "Ava kaust",
-      "rescued_dismiss": "Peida"
+      "rescued_dismiss": "Peida",
+      "start_at_login": "Käivita Bulwark Windowsi sisselogimisel",
+      "start_at_login_why": "Draiv vajab töötavat Bulwarki, nagu OneDrive.",
+      "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud."
     }
   },
   "desktopQuickCompose": {

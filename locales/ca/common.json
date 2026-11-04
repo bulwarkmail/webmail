@@ -7797,7 +7797,10 @@
       "off_note": "En desactivar-ho, la unitat desapareix de l'Explorador de fitxers. Els fitxers es queden a Fitxers.",
       "rescued": "Els fitxers que no s'han pujat ({count}) ara són a {folder}.",
       "rescued_open": "Obre la carpeta",
-      "rescued_dismiss": "Descarta"
+      "rescued_dismiss": "Descarta",
+      "start_at_login": "Inicia Bulwark en iniciar la sessió al Windows",
+      "start_at_login_why": "La unitat necessita que Bulwark s'executi, com OneDrive.",
+      "closed_warning": "Els fitxers de la unitat no s'obren mentre Bulwark està tancat."
     }
   },
   "desktopQuickCompose": {

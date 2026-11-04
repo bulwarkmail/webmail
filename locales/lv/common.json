@@ -7797,7 +7797,10 @@
       "off_note": "Izslēdzot disks pazūd no failu pārlūka. Jūsu faili paliek sadaļā Faili.",
       "rescued": "Neaugšupielādētie faili ({count}) tagad ir šeit: {folder}.",
       "rescued_open": "Atvērt mapi",
-      "rescued_dismiss": "Nerādīt"
+      "rescued_dismiss": "Nerādīt",
+      "start_at_login": "Startēt Bulwark, piesakoties sistēmā Windows",
+      "start_at_login_why": "Diskam vajadzīgs, lai Bulwark darbotos, tāpat kā OneDrive.",
+      "closed_warning": "Diska failus nevar atvērt, kamēr Bulwark ir aizvērts."
     }
   },
   "desktopQuickCompose": {

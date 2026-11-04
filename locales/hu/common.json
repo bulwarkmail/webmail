@@ -7797,7 +7797,10 @@
       "off_note": "Kikapcsoláskor a meghajtó eltűnik a Fájlkezelőből. A fájljai a Fájlokban maradnak.",
       "rescued": "A fel nem töltött fájlok ({count}) most itt vannak: {folder}.",
       "rescued_open": "Mappa megnyitása",
-      "rescued_dismiss": "Elrejtés"
+      "rescued_dismiss": "Elrejtés",
+      "start_at_login": "A Bulwark indítása a Windowsba való bejelentkezéskor",
+      "start_at_login_why": "A meghajtóhoz futnia kell a Bulwarknak, ahogy a OneDrive-nál is.",
+      "closed_warning": "A meghajtón lévő fájlok nem nyílnak meg, amíg a Bulwark be van zárva."
     }
   },
   "desktopQuickCompose": {

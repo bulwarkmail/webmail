@@ -7797,7 +7797,10 @@
       "off_note": "Disattivandolo, l'unità sparisce da Esplora file. I tuoi file restano in File.",
       "rescued": "I file non caricati ({count}) ora si trovano in {folder}.",
       "rescued_open": "Apri cartella",
-      "rescued_dismiss": "Ignora"
+      "rescued_dismiss": "Ignora",
+      "start_at_login": "Avvia Bulwark all'accesso a Windows",
+      "start_at_login_why": "L'unità ha bisogno che Bulwark sia in esecuzione, come OneDrive.",
+      "closed_warning": "I file dell'unità non si aprono quando Bulwark è chiuso."
     }
   },
   "desktopQuickCompose": {

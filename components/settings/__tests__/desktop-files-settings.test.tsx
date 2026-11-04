@@ -388,6 +388,56 @@ describe('Files on this computer settings page', () => {
   });
 });
 
+describe('the drive and starting with Windows (files-p3-4)', () => {
+  function osBridge(startAtLogin: boolean) {
+    let settings = { closeToTray: true, startAtLogin, startMinimized: false, attentionOnNewMail: true, quietHoursEnabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00', showShortcut: null };
+    const listeners = new Set<(status: unknown) => void>();
+    const status = () => ({ settings, pausedUntil: null, shortcutActive: false });
+    const os = {
+      getStatus: vi.fn(async () => status()),
+      onStatusChange: vi.fn((listener: (status: unknown) => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      }),
+      setSettings: vi.fn(async (patch: Record<string, unknown>) => {
+        settings = { ...settings, ...patch };
+        const next = status();
+        for (const listener of listeners) listener(next);
+        return next;
+      }),
+    };
+    (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', os };
+    return os;
+  }
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+  });
+
+  it('turning the drive on also starts Bulwark with Windows, from the same click', async () => {
+    const os = osBridge(false);
+    setup({ drive: drive() });
+    renderPage();
+    await waitFor(() => expect(os.getStatus).toHaveBeenCalled());
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: true });
+    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true);
+  });
+
+  it('shows the option checked under the drive, says why, and warns once the user unticks it', async () => {
+    const os = osBridge(true);
+    setup({ drive: drive({ wanted: ['acc'] }) });
+    renderPage();
+    const box = await screen.findByRole('checkbox', { name: /Start Bulwark when you sign in to Windows/ });
+    expect(box).toBeChecked();
+    expect(screen.getByText('The drive needs Bulwark running, as OneDrive does.')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-sync-closed-warning')).toBeNull();
+    fireEvent.click(box);
+    expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: false });
+    expect(await screen.findByTestId('files-sync-closed-warning')).toHaveTextContent("Files in the drive can't open while Bulwark is closed.");
+  });
+});
+
 describe('storage on the Files on this computer page', () => {
   it("shows the server's limit with a bar, and says when it is full", () => {
     setup({ quota: { used: 95 * 1048576, total: 100 * 1048576, source: 'server' } });

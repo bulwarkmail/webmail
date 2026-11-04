@@ -7797,7 +7797,10 @@
       "off_note": "關閉後，磁碟機會從檔案總管中移除。你的檔案仍在檔案中。",
       "rescued": "未上傳的檔案（{count}）現在位於 {folder}。",
       "rescued_open": "開啟資料夾",
-      "rescued_dismiss": "關閉"
+      "rescued_dismiss": "關閉",
+      "start_at_login": "登入 Windows 時啟動 Bulwark",
+      "start_at_login_why": "和 OneDrive 一樣，磁碟機需要 Bulwark 在執行。",
+      "closed_warning": "Bulwark 關閉時，無法開啟磁碟機中的檔案。"
     }
   },
   "desktopQuickCompose": {

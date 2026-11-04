@@ -7797,7 +7797,10 @@
       "off_note": "オフにすると、ドライブはエクスプローラーから消えます。ファイルはファイルに残ります。",
       "rescued": "アップロードされなかったファイル ({count}) は {folder} にあります。",
       "rescued_open": "フォルダーを開く",
-      "rescued_dismiss": "閉じる"
+      "rescued_dismiss": "閉じる",
+      "start_at_login": "Windows にサインインしたら Bulwark を起動する",
+      "start_at_login_why": "OneDrive と同じく、ドライブには Bulwark の実行が必要です。",
+      "closed_warning": "Bulwark を閉じている間は、ドライブのファイルを開けません。"
     }
   },
   "desktopQuickCompose": {

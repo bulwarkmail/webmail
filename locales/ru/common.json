@@ -7797,7 +7797,10 @@
       "off_note": "Если отключить, диск исчезнет из Проводника. Ваши файлы останутся в «Файлах».",
       "rescued": "Незагруженные файлы ({count}) теперь в {folder}.",
       "rescued_open": "Открыть папку",
-      "rescued_dismiss": "Скрыть"
+      "rescued_dismiss": "Скрыть",
+      "start_at_login": "Запускать Bulwark при входе в Windows",
+      "start_at_login_why": "Диску нужен запущенный Bulwark, как OneDrive.",
+      "closed_warning": "Файлы на диске не откроются, пока Bulwark закрыт."
     }
   },
   "desktopQuickCompose": {

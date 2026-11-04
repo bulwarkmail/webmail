@@ -7797,7 +7797,10 @@
       "off_note": "Унтраавал диск Файл судлаачаас алга болно. Таны файлууд Файл хэсэгт үлдэнэ.",
       "rescued": "Байршуулаагүй файлууд ({count}) одоо {folder} хавтаст байна.",
       "rescued_open": "Хавтас нээх",
-      "rescued_dismiss": "Хаах"
+      "rescued_dismiss": "Хаах",
+      "start_at_login": "Windows-д нэвтрэхэд Bulwark-ыг эхлүүлэх",
+      "start_at_login_why": "OneDrive шиг диск ажиллахад Bulwark асаалттай байх хэрэгтэй.",
+      "closed_warning": "Bulwark хаалттай үед дискний файлуудыг нээх боломжгүй."
     }
   },
   "desktopQuickCompose": {

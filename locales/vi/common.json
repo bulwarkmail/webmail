@@ -7809,7 +7809,10 @@
       "off_note": "Tắt sẽ gỡ ổ đĩa khỏi Trình khám phá Tệp. Tệp của bạn vẫn ở trong Tệp.",
       "rescued": "Các tệp chưa tải lên ({count}) hiện nằm trong {folder}.",
       "rescued_open": "Mở thư mục",
-      "rescued_dismiss": "Bỏ qua"
+      "rescued_dismiss": "Bỏ qua",
+      "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
+      "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
+      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng."
     }
   },
   "desktopQuickCompose": {

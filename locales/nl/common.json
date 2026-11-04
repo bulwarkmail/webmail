@@ -7797,7 +7797,10 @@
       "off_note": "Als u dit uitzet, verdwijnt het station uit Verkenner. Uw bestanden blijven in Bestanden.",
       "rescued": "Niet-geüploade bestanden ({count}) staan nu in {folder}.",
       "rescued_open": "Map openen",
-      "rescued_dismiss": "Sluiten"
+      "rescued_dismiss": "Sluiten",
+      "start_at_login": "Bulwark starten bij aanmelden bij Windows",
+      "start_at_login_why": "Het station heeft Bulwark nodig, net als OneDrive.",
+      "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is."
     }
   },
   "desktopQuickCompose": {

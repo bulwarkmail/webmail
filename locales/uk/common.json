@@ -7797,7 +7797,10 @@
       "off_note": "Якщо вимкнути, диск зникне з Провідника. Ваші файли залишаться у «Файлах».",
       "rescued": "Невивантажені файли ({count}) тепер у {folder}.",
       "rescued_open": "Відкрити папку",
-      "rescued_dismiss": "Приховати"
+      "rescued_dismiss": "Приховати",
+      "start_at_login": "Запускати Bulwark під час входу у Windows",
+      "start_at_login_why": "Диску потрібен запущений Bulwark, як OneDrive.",
+      "closed_warning": "Файли на диску не відкриються, поки Bulwark закритий."
     }
   },
   "desktopQuickCompose": {

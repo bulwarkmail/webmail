@@ -7798,7 +7798,10 @@
       "off_note": "כיבוי מסיר את הכונן מסייר הקבצים. הקבצים שלך נשארים בקבצים.",
       "rescued": "קבצים שלא הועלו ({count}) נמצאים עכשיו ב-{folder}.",
       "rescued_open": "פתיחת התיקייה",
-      "rescued_dismiss": "סגירה"
+      "rescued_dismiss": "סגירה",
+      "start_at_login": "להפעיל את Bulwark בכניסה ל-Windows",
+      "start_at_login_why": "הכונן צריך ש-Bulwark יפעל, כמו OneDrive.",
+      "closed_warning": "קבצים בכונן לא נפתחים כש-Bulwark סגור."
     }
   },
   "desktopQuickCompose": {

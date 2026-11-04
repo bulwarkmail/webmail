@@ -7797,7 +7797,10 @@
       "off_note": "关闭后，驱动器会从文件资源管理器中移除。你的文件仍在文件中。",
       "rescued": "未上传的文件（{count}）现在位于 {folder}。",
       "rescued_open": "打开文件夹",
-      "rescued_dismiss": "关闭"
+      "rescued_dismiss": "关闭",
+      "start_at_login": "登录 Windows 时启动 Bulwark",
+      "start_at_login_why": "和 OneDrive 一样，驱动器需要 Bulwark 在运行。",
+      "closed_warning": "Bulwark 关闭时，无法打开驱动器中的文件。"
     }
   },
   "desktopQuickCompose": {

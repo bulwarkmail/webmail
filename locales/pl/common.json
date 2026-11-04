@@ -7797,7 +7797,10 @@
       "off_note": "Wyłączenie usuwa dysk z Eksploratora plików. Twoje pliki zostają w Plikach.",
       "rescued": "Niewysłane pliki ({count}) są teraz w {folder}.",
       "rescued_open": "Otwórz folder",
-      "rescued_dismiss": "Ukryj"
+      "rescued_dismiss": "Ukryj",
+      "start_at_login": "Uruchamiaj Bulwark po zalogowaniu do Windows",
+      "start_at_login_why": "Dysk potrzebuje działającego Bulwark, tak jak OneDrive.",
+      "closed_warning": "Pliki na dysku nie otworzą się, gdy Bulwark jest zamknięty."
     }
   },
   "desktopQuickCompose": {

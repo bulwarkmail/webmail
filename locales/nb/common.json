@@ -7797,7 +7797,10 @@
       "off_note": "Når du slår av dette, forsvinner stasjonen fra Filutforsker. Filene dine blir i Filer.",
       "rescued": "Filer som ikke ble lastet opp ({count}), ligger nå i {folder}.",
       "rescued_open": "Åpne mappe",
-      "rescued_dismiss": "Lukk"
+      "rescued_dismiss": "Lukk",
+      "start_at_login": "Start Bulwark når du logger på Windows",
+      "start_at_login_why": "Stasjonen trenger at Bulwark kjører, slik som OneDrive.",
+      "closed_warning": "Filer på stasjonen kan ikke åpnes mens Bulwark er lukket."
     }
   },
   "desktopQuickCompose": {

@@ -7797,7 +7797,10 @@
       "off_note": "Désactiver ceci retire le lecteur de l'Explorateur de fichiers. Vos fichiers restent dans Fichiers.",
       "rescued": "Les fichiers non envoyés ({count}) sont maintenant dans {folder}.",
       "rescued_open": "Ouvrir le dossier",
-      "rescued_dismiss": "Masquer"
+      "rescued_dismiss": "Masquer",
+      "start_at_login": "Démarrer Bulwark à l'ouverture de session Windows",
+      "start_at_login_why": "Le lecteur a besoin que Bulwark tourne, comme OneDrive.",
+      "closed_warning": "Les fichiers du lecteur ne s'ouvrent pas quand Bulwark est fermé."
     }
   },
   "desktopQuickCompose": {

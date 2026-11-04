@@ -7797,7 +7797,10 @@
       "off_note": "Dacă dezactivați, unitatea dispare din Explorer. Fișierele rămân în Fișiere.",
       "rescued": "Fișierele neîncărcate ({count}) sunt acum în {folder}.",
       "rescued_open": "Deschide folderul",
-      "rescued_dismiss": "Ascunde"
+      "rescued_dismiss": "Ascunde",
+      "start_at_login": "Pornește Bulwark la conectarea în Windows",
+      "start_at_login_why": "Unitatea are nevoie ca Bulwark să ruleze, ca OneDrive.",
+      "closed_warning": "Fișierele din unitate nu se deschid cât timp Bulwark este închis."
     }
   },
   "desktopQuickCompose": {

@@ -7797,7 +7797,10 @@
       "off_note": "끄면 파일 탐색기에서 드라이브가 사라집니다. 파일은 파일에 그대로 있습니다.",
       "rescued": "업로드되지 않은 파일({count})은 이제 {folder}에 있습니다.",
       "rescued_open": "폴더 열기",
-      "rescued_dismiss": "닫기"
+      "rescued_dismiss": "닫기",
+      "start_at_login": "Windows에 로그인하면 Bulwark 시작",
+      "start_at_login_why": "OneDrive처럼 드라이브는 Bulwark가 실행 중이어야 합니다.",
+      "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다."
     }
   },
   "desktopQuickCompose": {

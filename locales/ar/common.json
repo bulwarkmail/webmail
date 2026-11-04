@@ -7797,7 +7797,10 @@
       "off_note": "إيقاف هذا يزيل محرك الأقراص من مستكشف الملفات. تبقى ملفاتك في الملفات.",
       "rescued": "الملفات التي لم تُرفع ({count}) موجودة الآن في {folder}.",
       "rescued_open": "فتح المجلد",
-      "rescued_dismiss": "تجاهل"
+      "rescued_dismiss": "تجاهل",
+      "start_at_login": "تشغيل Bulwark عند تسجيل الدخول إلى Windows",
+      "start_at_login_why": "يحتاج محرك الأقراص إلى تشغيل Bulwark، كما في OneDrive.",
+      "closed_warning": "لا تُفتح ملفات محرك الأقراص ما دام Bulwark مغلقًا."
     }
   },
   "desktopQuickCompose": {

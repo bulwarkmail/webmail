@@ -7797,7 +7797,10 @@
       "off_note": "Al desactivarlo, la unidad desaparece del Explorador de archivos. Tus archivos siguen en Archivos.",
       "rescued": "Los archivos que no se subieron ({count}) están ahora en {folder}.",
       "rescued_open": "Abrir carpeta",
-      "rescued_dismiss": "Descartar"
+      "rescued_dismiss": "Descartar",
+      "start_at_login": "Iniciar Bulwark al iniciar sesión en Windows",
+      "start_at_login_why": "La unidad necesita que Bulwark esté abierto, como OneDrive.",
+      "closed_warning": "Los archivos de la unidad no se abren mientras Bulwark esté cerrado."
     }
   },
   "desktopQuickCompose": {
