@@ -9,16 +9,19 @@
  * way, which is why a PIN has a minimum length, letters are allowed and the obvious
  * ones are refused.
  *
- * In the desktop app the PIN's wrap goes through main's safeStorage as well, so a copy of
- * the disk can't be guessed at without this user's OS login. A browser has nothing like
- * that, and the settings page says so. A shell whose storage only obfuscates (Linux with
- * no secret service) says no, and the wrap stays as it is.
+ * In the desktop app the PIN's wrap goes through main's safeStorage as well, and the key under
+ * the PIN takes a secret only main has, one counted trip per guess. So neither a copy of the disk
+ * without this user's OS login nor script in this page's storage can guess at it elsewhere. A
+ * browser has nothing like that, and the settings page says so. A shell whose storage only
+ * obfuscates (Linux with no secret service) says no, and the wrap stays as it is, which settings
+ * say too. Main refusing is another thing: that stops the setup rather than go on without.
  */
 
 import { VAULT_DB } from './state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { shellControls, shellHasWrap, shellUnwrapCall, shellWrapCall } from './shell';
 import { sealFor, createSessionOpener, type SealedAnswer } from '@/lib/popout/sealed';
-import { keyFromPin, keyFromPrf, ObviousPinError, open, PBKDF2_ITERATIONS, pinIsObvious, randomBytes, seal, type WrappedBytes } from './crypto';
+import { bitsFromPin, keyFromPin, keyFromPinStep, keyFromPrf, mainProof, ObviousPinError, open, PBKDF2_ITERATIONS, pinIsObvious, randomBytes, seal, type WrappedBytes } from './crypto';
 
 export { VAULT_DB };
 const DB_VERSION = 1;
@@ -32,6 +35,8 @@ export interface PinWrap extends WrappedBytes {
   iterations: number;
   /** `data` is wrapped once more by the desktop app's main process. */
   shell?: true;
+  /** The key takes main's secret as well: each guess is a trip through main. */
+  pepper?: true;
 }
 
 export interface PrfWrap extends WrappedBytes {
@@ -46,6 +51,11 @@ export interface VaultRecord {
   prf?: PrfWrap;
   /** For sealing drafts in tabs with no key: anyone may seal, only the lock key opens. */
   sealing: { publicKey: JsonWebKey; privateKey: WrappedBytes };
+  /**
+   * The lock key before a changed PIN, under the new one, until every store key has moved over.
+   * Gone again in the same breath, unless the app stopped right then.
+   */
+  previous?: WrappedBytes;
 }
 
 export interface AttemptsRecord {
@@ -131,27 +141,41 @@ export class VaultShellError extends Error {
   }
 }
 
+async function hasShell(): Promise<boolean> {
+  return shellHasWrap().catch(() => {
+    throw new VaultShellError();
+  });
+}
+
+/** With no key store on this computer it stays as it is. A store that's there and says no stops here. */
 async function throughShell(data: Uint8Array): Promise<{ data: Uint8Array; shell?: true }> {
-  const member = getDesktopBridge()?.appLock;
-  if (!member?.wrap) return { data };
-  const status = await member.status().catch(() => null);
-  if (!status?.wrap) return { data };
-  const wrapped = await member.wrap(data).catch(() => null);
-  return wrapped ? { data: wrapped, shell: true } : { data };
+  if (!(await hasShell())) return { data };
+  const wrapped = await shellWrapCall()?.(data).catch(() => null);
+  if (!wrapped) throw new VaultShellError();
+  return { data: wrapped, shell: true };
+}
+
+/** One guess at the PIN through main, which counts it. */
+async function keyThroughMain(pin: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
+  const answer = await shellControls()?.pinStep?.(await bitsFromPin(pin, salt, iterations)).catch(() => null);
+  if (answer?.ok) return keyFromPinStep(answer.bytes);
+  if (answer?.blockedUntil) throw new PinBlockedError(answer.blockedUntil);
+  throw new VaultShellError();
 }
 
 async function outOfShell(pin: PinWrap): Promise<Uint8Array> {
   if (!pin.shell) return pin.data;
-  const data = await getDesktopBridge()?.appLock?.unwrap?.(pin.data).catch(() => null);
+  const data = await shellUnwrapCall()?.(pin.data).catch(() => null);
   if (!data) throw new VaultShellError();
   return data;
 }
 
 async function pinWrapOf(pin: string, raw: Uint8Array): Promise<PinWrap> {
   const salt = randomBytes(32);
-  const key = await keyFromPin(pin, salt, PBKDF2_ITERATIONS);
+  const pepper = Boolean(shellControls()?.pinStep) && await hasShell();
+  const key = pepper ? await keyThroughMain(pin, salt, PBKDF2_ITERATIONS) : await keyFromPin(pin, salt, PBKDF2_ITERATIONS);
   const sealed = await seal(key, raw);
-  return { salt, iterations: PBKDF2_ITERATIONS, iv: sealed.iv, ...(await throughShell(sealed.data)) };
+  return { salt, iterations: PBKDF2_ITERATIONS, iv: sealed.iv, ...(await throughShell(sealed.data)), ...(pepper ? { pepper: true as const } : {}) };
 }
 
 /** A new lock key under this PIN. The caller holds the bytes only long enough to use them. */
@@ -212,31 +236,70 @@ export async function openVaultWithPin(pin: string, now = Date.now()): Promise<U
   if (!vault) throw new WrongPinError();
   const attempts = (await readRecord<AttemptsRecord>(ATTEMPTS_ID)) ?? { id: ATTEMPTS_ID, failures: 0, blockedUntil: 0 };
   if (attempts.blockedUntil > now) throw new PinBlockedError(attempts.blockedUntil);
-  // Before the count: main saying no costs nobody a try.
+  // Before the count: main saying no costs nobody a try. With main's secret it counts there too.
   const data = await outOfShell(vault.pin);
+  const fromMain = vault.pin.pepper ? await keyThroughMain(pin, vault.pin.salt, vault.pin.iterations) : null;
   const failures = attempts.failures + 1;
   await writeRecord({ id: ATTEMPTS_ID, failures, blockedUntil: now + waitAfter(failures) });
+  let raw: Uint8Array;
   try {
-    const key = await keyFromPin(pin, vault.pin.salt, vault.pin.iterations);
-    const raw = await open(key, { iv: vault.pin.iv, data });
-    await writeRecord({ id: ATTEMPTS_ID, failures: 0, blockedUntil: 0 });
-    return raw;
+    const key = fromMain ?? await keyFromPin(pin, vault.pin.salt, vault.pin.iterations);
+    raw = await open(key, { iv: vault.pin.iv, data });
   } catch {
     throw new WrongPinError();
   }
+  await writeRecord({ id: ATTEMPTS_ID, failures: 0, blockedUntil: 0 });
+  await peppered(vault, pin, raw);
+  return raw;
 }
 
-/** Only ever the PIN's own wrap: the lock key and everything under it stay. */
-export async function changeVaultPin(currentPin: string, newPin: string): Promise<void> {
-  if (pinIsObvious(newPin)) throw new ObviousPinError();
-  const raw = await openVaultWithPin(currentPin);
-  try {
-    const vault = await readVault();
-    if (!vault) throw new WrongPinError();
-    await writeRecord({ ...vault, pin: await pinWrapOf(newPin, raw) });
-  } finally {
-    raw.fill(0);
+/** Main clears its count on the proof, and a record from before gets its secret now. */
+async function peppered(vault: VaultRecord, pin: string, raw: Uint8Array): Promise<void> {
+  if (!shellControls()?.pinStep) return;
+  if (!vault.pin.pepper) {
+    try {
+      await writeRecord({ ...vault, pin: await pinWrapOf(pin, raw) });
+    } catch {
+      // Tried again at the next right PIN.
+    }
   }
+  await getDesktopBridge()?.appLock?.prove(await mainProof(raw)).catch(() => false);
+}
+
+/**
+ * A new PIN takes a new lock key. The record under the old PIN can stay in the browser's own files
+ * long after it was overwritten, and with the same key under it the old PIN would go on opening
+ * everything. A passkey's wrap is under the old key and only its authenticator could make a new
+ * one, so it goes. The old key waits under the new one for the store keys to move over.
+ */
+export async function rotateVaultKey(newPin: string, oldRaw: Uint8Array, newRaw: Uint8Array = randomBytes(32)): Promise<Uint8Array> {
+  if (pinIsObvious(newPin)) throw new ObviousPinError();
+  const vault = await readVault();
+  if (!vault) throw new WrongPinError();
+  const importAes = (raw: Uint8Array) => crypto.subtle.importKey('raw', raw.slice().buffer as ArrayBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
+  const oldKey = await importAes(oldRaw);
+  const newKey = await importAes(newRaw);
+  const { prf: _gone, ...rest } = vault;
+  await writeRecord({
+    ...rest,
+    pin: await pinWrapOf(newPin, newRaw),
+    sealing: { publicKey: vault.sealing.publicKey, privateKey: await seal(newKey, await open(oldKey, vault.sealing.privateKey)) },
+    previous: await seal(newKey, oldRaw),
+  });
+  return newRaw;
+}
+
+/** The lock key from before a changed PIN, if the store keys haven't all moved over. */
+export async function openVaultPrevious(lockKey: CryptoKey): Promise<Uint8Array | null> {
+  const vault = await readVault();
+  return vault?.previous ? open(lockKey, vault.previous) : null;
+}
+
+export async function clearVaultPrevious(): Promise<void> {
+  const vault = await readVault();
+  if (!vault?.previous) return;
+  const { previous: _done, ...rest } = vault;
+  await writeRecord(rest);
 }
 
 /** The passkey's way in. `prfOutput` is what the authenticator gave for `salt`. */

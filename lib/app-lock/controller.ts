@@ -21,6 +21,7 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { setAppLockCheck } from '@/lib/desktop/app-lock-state';
 import { restoreUrlFor } from '@/lib/desktop/window-restore';
 import { IS_LITE } from '@/lib/lite';
+import { useOfflineStore } from '@/lib/offline/state';
 import { keepRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { closePopoutWindow, isPopoutWindow } from '@/lib/popout/window-role';
 import { getStore, type StoreBackend } from '@/lib/store/client/api';
@@ -28,13 +29,13 @@ import { forgetAccountKey, listAccountRecords, rewrapAccountKey, StoreKeyLayerMi
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
 import { OWNER_LOCK } from '@/lib/store/worker/protocol';
-import type { DesktopOsUnlockAnswer } from '@/lib/desktop/types';
 import type { ComposerDraftData } from '@/components/email/email-composer';
-import { importLockKey, LOCK_LAYER, lockLayer, mainProof, SHELL_LAYER } from './crypto';
+import { importLockKey, LOCK_LAYER, lockLayer, mainProof, ObviousPinError, pinIsObvious, randomBytes, SHELL_LAYER } from './crypto';
 import { watchIdle } from './idle';
 import { createPasskey, passkeyPrf, PasskeyNoPrfError } from './passkey';
 import { appLockRequired, effectiveTimeout, onLockPolicyChange } from './policy';
 import { reloadSealedStores, restoreSealedStorage, scrubBrowserStorage } from './scrub';
+import { shellControls, shellHasWrap, shellUnwrapCall, shellWrapCall, resetShellForTests } from './shell';
 import { clearPendingCookies, markCookiesToClear, rememberMainProof, requireFreshLogin } from './sign-out';
 import {
   APP_LOCK_CHANNEL,
@@ -51,14 +52,16 @@ import {
 } from './state';
 import {
   addVaultPrf,
-  changeVaultPin,
+  clearVaultPrevious,
   createVault,
   deleteVault,
   openSealedDrafts,
+  openVaultPrevious,
   openVaultWithPin,
   openVaultWithPrf,
   readVault,
   removeVaultPrf,
+  rotateVaultKey,
   sealDraft,
   vaultExists,
 } from './vault';
@@ -105,18 +108,10 @@ let stopStay: (() => void) | null = null;
 let enabling = false;
 /** Main's wrap for the keys, when it has a real one. Known once asked: unlocking and enabling ask first. */
 let shellWraps = false;
+let shellAsked = false;
 
-/**
- * The two calls a same-origin frame mustn't reach: a frame can get at the parent's bridge, and
- * main can't tell those calls apart (the shell's ipc.ts). The preload hands them out once per
- * document, and this takes them in the first render, before any frame exists.
- */
-let controls: { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null | undefined;
-
-function desktopControls() {
-  if (controls === undefined) controls = getDesktopBridge()?.appLock?.claim() ?? null;
-  return controls;
-}
+/** See lib/app-lock/shell.ts. Taken in the first render, before any frame exists. */
+const desktopControls = shellControls;
 
 function setPhase(next: AppLockPhase): void {
   if (phase === next) return;
@@ -452,8 +447,18 @@ async function outboxAtRest(): Promise<void> {
 
 let reloadSeam: (() => void) | null = null;
 
+/**
+ * In the desktop app in a new renderer process: what JS can't overwrite is only gone with the
+ * process it's in, and a reload stays in the same one. A browser gives a page no such thing, so
+ * there the old heap is unreachable, not gone.
+ */
 function reloadPage(): void {
-  if (reloadSeam) reloadSeam();
+  if (reloadSeam) {
+    reloadSeam();
+    return;
+  }
+  const replace = desktopControls()?.replaceRenderer;
+  if (replace) replace();
   else window.location.reload();
 }
 
@@ -568,7 +573,8 @@ async function proveToMain(proof: Uint8Array): Promise<void> {
 
 async function askShell(): Promise<void> {
   const member = getDesktopBridge()?.appLock;
-  shellWraps = member?.wrap ? Boolean((await member.status().catch(() => null))?.wrap) : false;
+  shellWraps = member ? await shellHasWrap() : false;
+  shellAsked = true;
 }
 
 async function holdAndOpen(raw: Uint8Array): Promise<void> {
@@ -584,6 +590,7 @@ async function holdAndOpen(raw: Uint8Array): Promise<void> {
   await askShell();
   await becomeHolder();
   const key = heldKey!;
+  await moveFromPreviousKey(key);
   await addLayerWhereMissing(key);
   await storeBackend().unlock?.(OWNER_WAIT_MS);
   // Before the app below starts, and before the others hear: they read it again when they do.
@@ -632,33 +639,61 @@ export async function unlockWithOs(): Promise<boolean> {
 
 // ---- The account keys ----
 
-/** A store record made when the lock was off, or before a crash: it gets the layer now. */
+/**
+ * A store record made when the lock was off, or before a crash: it gets the layer now. Whatever
+ * wraps it already has to come off to get at the key, and goes back on under the lock. One that
+ * can't (a copied profile) doesn't keep the others shut, and the app says so.
+ */
 async function addLayerWhereMissing(key: CryptoKey): Promise<void> {
   const layer = lockLayer(key);
   const shell = shellLayer();
+  const wanted = shell ? [shell, layer] : [layer];
   for (const record of await listAccountRecords().catch(() => [] as AccountRecord[])) {
-    if (record.layers.includes(LOCK_LAYER)) continue;
-    // Whatever wraps it already has to come off to get at the key, and goes back on under the lock.
-    await rewrapAccountKey(record.account, shell ? [shell] : [], shell ? [shell, layer] : [layer]).catch((error: unknown) => {
-      // One account's record that can't open here (a copied profile) doesn't keep the others shut.
+    if (record.layers.join() === wanted.map((entry) => entry.name).join()) continue;
+    await rewrapAccountKey(record.account, wanted, wanted).catch((error: unknown) => {
       console.warn('[app-lock] A record stays without the layer:', (error as Error)?.name);
+      useOfflineStore.setState({ keyUnprotected: true });
     });
   }
 }
 
-/** Off again, and main's wrap with it: with the lock off nothing asks main, and a start must not need it. */
+/** Off again. The OS's layer stays: it's there with the lock off as well. */
 async function removeLayerEverywhere(key: CryptoKey): Promise<void> {
   const layer = lockLayer(key);
   const shell = shellLayer();
   for (const record of await listAccountRecords().catch(() => [] as AccountRecord[])) {
-    if (record.layers.length > 0) await rewrapAccountKey(record.account, shell ? [shell, layer] : [layer], []);
+    if (record.layers.includes(LOCK_LAYER)) await rewrapAccountKey(record.account, shell ? [shell, layer] : [layer], shell ? [shell] : []);
   }
 }
 
-/** The desktop's safeStorage around the database key (the build prompt's second layer), while the lock is on. */
+/** A changed PIN made a new lock key. Every store key moves over before the old one goes. */
+async function moveFromPreviousKey(key: CryptoKey): Promise<void> {
+  const old = await openVaultPrevious(key).catch(() => null);
+  if (!old) return;
+  const oldKey = await importLockKey(old);
+  old.fill(0);
+  const shell = shellLayer();
+  const layers = (lock: CryptoKey) => (shell ? [shell, lockLayer(lock)] : [lockLayer(lock)]);
+  let allMoved = true;
+  for (const record of await listAccountRecords().catch(() => [] as AccountRecord[])) {
+    if (!record.layers.includes(LOCK_LAYER)) continue;
+    try {
+      await rewrapAccountKey(record.account, layers(oldKey), layers(key), { rekey: true });
+    } catch {
+      // Under the new key already, from a try that stopped halfway? Then this goes through.
+      await rewrapAccountKey(record.account, layers(key), layers(key), { rekey: true }).catch(() => {
+        allMoved = false;
+      });
+    }
+  }
+  if (allMoved) await clearVaultPrevious();
+}
+
+/** The desktop's safeStorage around the database key (the build prompt's second layer), lock or no lock. */
 function shellLayer(): WrapLayer | null {
-  const member = getDesktopBridge()?.appLock;
-  if (!shellWraps || !member?.wrap || !member.unwrap) return null;
+  const wrap = shellWrapCall();
+  const unwrap = shellUnwrapCall();
+  if (!shellWraps || !wrap || !unwrap) return null;
   const through = async (run: (data: Uint8Array) => Promise<Uint8Array | null>, data: Uint8Array) => {
     const out = await run(data);
     if (!out) throw new StoreKeyLayerMissingError(SHELL_LAYER);
@@ -666,17 +701,23 @@ function shellLayer(): WrapLayer | null {
   };
   return {
     name: SHELL_LAYER,
-    wrap: (data) => through(member.wrap, data),
-    unwrap: (data) => through(member.unwrap, data),
+    wrap: (data) => through(wrap, data),
+    unwrap: (data) => through(unwrap, data),
   };
 }
 
 /** What the store's key handling uses. Throws while this tab has no key, so nothing opens or gets written unwrapped. */
 export function appLockKeyLayers(): readonly WrapLayer[] {
-  if (!readAppLockFile().on) return [];
-  if (!heldKey) throw new StoreKeyLayerMissingError(LOCK_LAYER);
   const shell = shellLayer();
+  if (!readAppLockFile().on) return shell ? [shell] : [];
+  if (!heldKey) throw new StoreKeyLayerMissingError(LOCK_LAYER);
   return shell ? [shell, lockLayer(heldKey)] : [lockLayer(heldKey)];
+}
+
+/** The same, for a start that hasn't asked main yet whether it has a real key store. */
+export async function storeKeyLayers(): Promise<readonly WrapLayer[]> {
+  if (!shellAsked) await askShell();
+  return appLockKeyLayers();
 }
 
 /** This tab inherited the store and has no key for it. */
@@ -732,6 +773,7 @@ async function enable(pin: string): Promise<void> {
   openUp();
   // Another tab has the store open and no key for what comes next. Everyone starts over.
   if (await ownerIsElsewhere()) lockEverywhere();
+  else void storeBackend().rekeyPending?.();
 }
 
 /** Off again. The PIN proves it's the owner of the lock, in this tab or any other. */
@@ -778,8 +820,44 @@ function afterOff(): void {
   hold = null;
 }
 
-export function changeAppLockPin(currentPin: string, newPin: string): Promise<void> {
-  return changeVaultPin(currentPin, newPin);
+/**
+ * A new PIN takes a new lock key and, in the background, new store keys: the old PIN's record can
+ * stay in the browser's files, and must not open anything any more. Main hears first, so that
+ * wherever this stops the vault can still be opened. `reenroll`: the passkey and the OS's unlock
+ * held the old key, and have to be set up again.
+ */
+export async function changeAppLockPin(currentPin: string, newPin: string): Promise<{ reenroll: boolean }> {
+  if (pinIsObvious(newPin)) throw new ObviousPinError();
+  const member = getDesktopBridge()?.appLock;
+  const hadOther = Boolean((await readVault())?.prf) || Boolean((await member?.status().catch(() => null))?.osEnrolled);
+  const oldRaw = await openVaultWithPin(currentPin);
+  const newRaw = randomBytes(32);
+  try {
+    const hadKey = heldKey !== null;
+    const newProof = await mainProof(newRaw);
+    if (member) {
+      await letMainGo(await mainProof(oldRaw));
+      if (!(await member.enroll(newProof))) throw new Error('The desktop app refused the lock');
+    }
+    await rotateVaultKey(newPin, oldRaw, newRaw);
+    // Setting the new PIN went through main's count too.
+    await member?.prove(newProof).catch(() => false);
+    const key = await importLockKey(newRaw);
+    await askShell();
+    await moveFromPreviousKey(key);
+    if (!hadKey) {
+      // Another tab holds the old key: everyone starts over with the new one.
+      lockEverywhere();
+      return { reenroll: hadOther };
+    }
+    heldKey = key;
+    rememberMainProof(newProof);
+    void storeBackend().rekeyPending?.();
+    return { reenroll: hadOther };
+  } finally {
+    oldRaw.fill(0);
+    newRaw.fill(0);
+  }
 }
 
 export function setAppLockTimeout(minutes: number): void {
@@ -986,9 +1064,10 @@ export function resetAppLockForTests(): void {
   stopIdle?.();
   stopIdle = null;
   stopStay?.();
-  controls = undefined;
+  resetShellForTests();
   enabling = false;
   shellWraps = false;
+  shellAsked = false;
   rememberMainProof(null);
   listeners.clear();
   setLockedHere(false);

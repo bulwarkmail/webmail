@@ -5908,6 +5908,14 @@
     "usage_label": "Bu cihazın tuttukları",
     "pin_not_ready": "Bu dosya henüz bu cihazın listesinde değil. Biraz sonra yeniden deneyin."
   },
+  "keyProtection": {
+    "browser_note": "Tarayıcıda bu postanın anahtarı, postayla aynı tarayıcı profilinde durur. Profil dosyalarını kopyalayan biri postayı okuyabilir, bu yüzden disk şifrelemesi kullanın.",
+    "no_secure_storage": "Bu bilgisayarda uygulamanın kullanabileceği güvenli bir anahtar deposu yok, bu yüzden bu postanın anahtarı diskte yalnızca gizlenmiş durumda. Disk şifrelemesi kullanın.",
+    "wrap_failed": "Bu bilgisayarın güvenli anahtar deposu bu postanın anahtarını kabul etmedi, bu yüzden anahtar olması gerektiği gibi korunmuyor. Uygulamayı yeniden başlatın ve disk şifrelemesi kullanın.",
+    "rekey_progress": "Bu cihazdaki posta yeniden şifreleniyor: %{percent}. Çalışmaya devam edebilirsiniz.",
+    "rekey_failed": "Bu cihazdaki postanın yeniden şifrelenmesi bitmedi, bu yüzden eski anahtar onu hâlâ açabilir. Uygulama bir sonraki başlangıçta yeniden dener.",
+    "reenroll_note": "Geçiş anahtarı ve sistem kilidi açma eski PIN'in anahtarını kullanıyordu, bu yüzden kaldırıldı. Kullanıyorsanız yeniden ayarlayın."
+  },
   "offlineDrafts": {
     "title": "Bu cihazdaki taslaklar",
     "description": "Bu taslaklar bu cihaza kaydedildi. Sunucuya ulaşılır ulaşılmaz kendiliğinden gönderilir.",
@@ -6849,10 +6857,10 @@
   },
   "appLock": {
     "section_title": "Uygulama kilidi",
-    "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken bu cihazdaki e-postalar şifreli kalır ve uygulamada anahtarı olmaz.",
+    "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
     "enable_label": "PIN ile kilitle",
     "enable_desc": "Varsayılan olarak kapalı. PIN bu cihazda kalır.",
-    "protects_desc": "Neye karşı korur: Tarayıcıda PIN, bu cihazın başındaki birini uygulamadan uzak tutar ve burada saklanan postayı şifreli tutar. Bu bilgisayarda çalışan bir programı, yüklediğiniz bir tarayıcı uzantısını veya tarayıcının dosyalarını kopyalayıp çok sayıda PIN deneyecek zamanı olan birini durduramaz, bu yüzden daha uzun bir PIN'e değer. Masaüstü uygulamasında PIN, bu bilgisayardaki oturumunuza da bağlıdır. Sunucudaki hesabınız etkilenmez.",
+    "protects_desc": "Neye karşı korur: PIN, bu cihazın başındaki birini uygulamanın dışında tutar. Burada saklanan posta, kilidi açtığınızda veya PIN'i değiştirdiğinizde yeni bir anahtar alır; bu biraz sürebilir. Bu bilgisayarda çalışan bir programı, yüklediğiniz bir tarayıcı uzantısını veya uygulamanın dosyalarını kopyalayıp çok sayıda PIN deneyecek zamanı olan birini durduramaz, bu yüzden daha uzun bir PIN'e değer. Masaüstü uygulamasında PIN denemek için bu bilgisayardaki oturumunuz da gerekir. Sunucudaki hesabınız bundan etkilenmez.",
     "enable_body": "Bir PIN seçin. Uygulama her kilitlendiğinde ve yeniden yükleme ya da yeni başlatma sonrasında gerekir.",
     "set_pin_title": "PIN seçin",
     "change_pin": "PIN'i değiştir…",

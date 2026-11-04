@@ -18,6 +18,7 @@ export const MIN_PIN_LENGTH = 6;
 const AES = { name: 'AES-GCM', length: 256 } as const;
 const PRF_INFO = new TextEncoder().encode('bulwark-app-lock-prf-v1');
 const PROOF_INFO = new TextEncoder().encode('bulwark-app-lock-main-proof-v1');
+const PIN_STEP_INFO = new TextEncoder().encode('bulwark-app-lock-pin-step-v1');
 
 export interface WrappedBytes {
   iv: Uint8Array;
@@ -82,6 +83,24 @@ export async function keyFromPin(pin: string, salt: Uint8Array, iterations: numb
   const base = await crypto.subtle.importKey('raw', buffer(pinBytes(pin)), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
     { name: 'PBKDF2', hash: 'SHA-256', salt: buffer(salt), iterations },
+    base,
+    AES,
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+/** What goes to main for a PIN guess: the slow part, done here. Nobody needs to see the PIN itself. */
+export async function bitsFromPin(pin: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
+  const base = await crypto.subtle.importKey('raw', buffer(pinBytes(pin)), 'PBKDF2', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: buffer(salt), iterations }, base, 256));
+}
+
+/** The key under the PIN from what main made of a guess, with a secret only it has. */
+export async function keyFromPinStep(bytes: Uint8Array): Promise<CryptoKey> {
+  const base = await crypto.subtle.importKey('raw', buffer(bytes), 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'HKDF', hash: 'SHA-256', salt: new ArrayBuffer(0), info: PIN_STEP_INFO },
     base,
     AES,
     false,

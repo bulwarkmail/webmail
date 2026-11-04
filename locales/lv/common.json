@@ -5908,6 +5908,14 @@
     "usage_label": "Ko glabā šī ierīce",
     "pin_not_ready": "Šī faila vēl nav šīs ierīces sarakstā. Mēģiniet vēlreiz pēc brīža."
   },
+  "keyProtection": {
+    "browser_note": "Pārlūkā šī pasta atslēga atrodas tajā pašā pārlūka profilā, kur pasts. Kas nokopē profila failus, var to izlasīt, tāpēc izmantojiet diska šifrēšanu.",
+    "no_secure_storage": "Šajā datorā nav drošas atslēgu krātuves, ko lietotne varētu izmantot, tāpēc šī pasta atslēga diskā ir tikai aizmiglota. Izmantojiet diska šifrēšanu.",
+    "wrap_failed": "Šī datora drošā atslēgu krātuve nepieņēma šī pasta atslēgu, tāpēc tā nav aizsargāta, kā vajadzētu. Restartējiet lietotni un izmantojiet diska šifrēšanu.",
+    "rekey_progress": "Šīs ierīces pasts tiek šifrēts no jauna: {percent}%. Varat turpināt darbu.",
+    "rekey_failed": "Šīs ierīces pasta jaunā šifrēšana netika pabeigta, tāpēc vecā atslēga to joprojām var atvērt. Lietotne mēģinās vēlreiz nākamajā startā.",
+    "reenroll_note": "Piekļuves atslēga un sistēmas atbloķēšana izmantoja vecā PIN atslēgu, tāpēc tās ir noņemtas. Ja tās izmantojat, iestatiet tās no jauna."
+  },
   "offlineDrafts": {
     "title": "Melnraksti šajā ierīcē",
     "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",
@@ -6849,10 +6857,10 @@
   },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
-    "section_desc": "Pēc laika bez lietošanas prasa PIN kodu katrā logā un cilnē. Kamēr lietotne ir bloķēta, e-pasts šajā ierīcē paliek šifrēts, un lietotnei nav tā atslēgas.",
+    "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
     "enable_label": "Bloķēt ar PIN kodu",
     "enable_desc": "Pēc noklusējuma izslēgts. PIN kods paliek šajā ierīcē.",
-    "protects_desc": "No kā tas aizsargā: pārlūkā PIN neļauj kādam pie šīs ierīces iekļūt lietotnē, un šeit saglabātais pasts paliek šifrēts. Tas nevar apturēt programmu šajā datorā, jūsu instalētu pārlūka paplašinājumu vai kādu, kas nokopē pārlūka failus un var izmēģināt daudz PIN, tāpēc garāks PIN ir tā vērts. Darbvirsmas lietotnē PIN ir saistīts arī ar jūsu pieteikšanos šajā datorā. Jūsu kontu serverī tas neietekmē.",
+    "protects_desc": "No kā tas aizsargā: PIN neielaiž lietotnē to, kurš ir pie šīs ierīces. Šeit glabātais pasts saņem jaunu atslēgu, kad ieslēdzat bloķēšanu vai maināt PIN, un tas var aizņemt brīdi. Tas nevar apturēt programmu, kas darbojas šajā datorā, jūsu instalētu pārlūka paplašinājumu vai kādu, kurš nokopē lietotnes failus un kuram ir laiks izmēģināt daudzus PIN, tāpēc garāks PIN ir tā vērts. Darbvirsmas lietotnē PIN izmēģināšanai vajag arī jūsu pieteikšanos šajā datorā. Jūsu konts serverī netiek ietekmēts.",
     "enable_body": "Izvēlieties PIN kodu. Tas būs vajadzīgs katru reizi, kad lietotne bloķējas, un pēc pārlādes vai jaunas palaišanas.",
     "set_pin_title": "Izvēlieties PIN kodu",
     "change_pin": "Mainīt PIN kodu…",

@@ -5908,6 +5908,14 @@
     "usage_label": "Dette beholder enheten",
     "pin_not_ready": "Denne filen er ikke på listen til denne enheten ennå. Prøv igjen om litt."
   },
+  "keyProtection": {
+    "browser_note": "I en nettleser ligger nøkkelen til denne e-posten i den samme nettleserprofilen som e-posten. Den som kopierer profilens filer, kan lese den, så bruk diskkryptering.",
+    "no_secure_storage": "Denne datamaskinen har ikke et sikkert nøkkellager appen kan bruke, så nøkkelen til denne e-posten er bare tilslørt på disken. Bruk diskkryptering.",
+    "wrap_failed": "Det sikre nøkkellageret på denne datamaskinen tok ikke imot nøkkelen til denne e-posten, så den er ikke beskyttet slik den skal være. Start appen på nytt, og bruk diskkryptering.",
+    "rekey_progress": "E-posten på denne enheten krypteres på nytt: {percent} %. Du kan jobbe videre.",
+    "rekey_failed": "Den nye krypteringen av e-posten på denne enheten ble ikke ferdig, så den gamle nøkkelen kan fortsatt åpne den. Appen prøver igjen ved neste start.",
+    "reenroll_note": "Tilgangsnøkkelen og systemopplåsingen brukte nøkkelen til den gamle PIN-koden, så de er fjernet. Sett dem opp igjen hvis du bruker dem."
+  },
   "offlineDrafts": {
     "title": "Utkast på denne enheten",
     "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
@@ -6849,10 +6857,10 @@
   },
   "appLock": {
     "section_title": "Applås",
-    "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, forblir e-post på denne enheten kryptert, og appen har ingen nøkkel til den.",
+    "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
     "enable_label": "Lås med en PIN-kode",
     "enable_desc": "Av som standard. PIN-koden blir på denne enheten.",
-    "protects_desc": "Hva dette beskytter mot: I en nettleser holder PIN-koden andre ved denne enheten ute av appen og holder e-posten som er lagret her kryptert. Den kan ikke stoppe et program på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer nettleserens filer og har tid til å prøve mange koder, så en lengre PIN-kode er verdt det. I skrivebordsappen er PIN-koden også knyttet til påloggingen din på denne datamaskinen. Kontoen din på serveren påvirkes ikke.",
+    "protects_desc": "Dette beskytter mot: PIN-koden holder folk ved denne enheten ute av appen. E-posten som er lagret her, får en ny nøkkel når du slår på låsen eller endrer PIN-koden, og det kan ta et øyeblikk. Den kan ikke stoppe et program som kjører på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer appens filer og har tid til å prøve mange PIN-koder, så en lengre PIN-kode lønner seg. I skrivebordsappen krever det også påloggingen din på denne datamaskinen å prøve PIN-koder. Kontoen din på serveren berøres ikke.",
     "enable_body": "Velg en PIN-kode. Du trenger den hver gang appen låses, og etter en ny lasting eller ny start.",
     "set_pin_title": "Velg en PIN-kode",
     "change_pin": "Endre PIN-kode…",

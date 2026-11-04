@@ -131,6 +131,14 @@ scope.addEventListener('message', async (event) => {
         replyError(message.id, error);
       }
       break;
+    case 'rekey':
+      try {
+        await requireHost().rekey(message.account, message.file, message.keyHex);
+        reply(message.id);
+      } catch (error) {
+        replyError(message.id, error);
+      }
+      break;
     case 'set-auth':
       host?.setAuth(message.account, message.auth);
       break;

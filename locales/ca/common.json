@@ -5908,6 +5908,14 @@
     "usage_label": "Què desa aquest dispositiu",
     "pin_not_ready": "Aquest fitxer encara no és a la llista d'aquest dispositiu. Torneu-ho a provar d'aquí a un moment."
   },
+  "keyProtection": {
+    "browser_note": "En un navegador, la clau d'aquest correu és al mateix perfil del navegador que el correu. Qui copiï els fitxers del perfil el pot llegir, així que feu servir el xifratge del disc.",
+    "no_secure_storage": "Aquest ordinador no té un magatzem segur de claus que l'aplicació pugui fer servir, així que la clau d'aquest correu només està ofuscada al disc. Feu servir el xifratge del disc.",
+    "wrap_failed": "El magatzem segur de claus d'aquest ordinador no ha acceptat la clau d'aquest correu, així que no està protegida com caldria. Reinicieu l'aplicació i feu servir el xifratge del disc.",
+    "rekey_progress": "S'està tornant a xifrar el correu d'aquest dispositiu: {percent} %. Podeu continuar treballant.",
+    "rekey_failed": "El nou xifratge del correu d'aquest dispositiu no ha acabat, així que la clau antiga encara el pot obrir. L'aplicació ho tornarà a provar en el proper inici.",
+    "reenroll_note": "La clau d'accés i el desbloqueig del sistema feien servir la clau del PIN antic, així que s'han eliminat. Torneu-los a configurar si els feu servir."
+  },
   "offlineDrafts": {
     "title": "Esborranys en aquest dispositiu",
     "description": "Aquests esborranys estan desats en aquest dispositiu. Aniran al servidor sols tan bon punt s'hi pugui connectar.",
@@ -6849,10 +6857,10 @@
   },
   "appLock": {
     "section_title": "Bloqueig de l'app",
-    "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, el correu d'aquest dispositiu continua xifrat i l'app no en té la clau.",
+    "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
     "enable_label": "Bloqueja amb un PIN",
     "enable_desc": "Desactivat per defecte. El PIN es queda en aquest dispositiu.",
-    "protects_desc": "De què protegeix: en un navegador, el PIN impedeix que algú davant d'aquest dispositiu entri a l'aplicació i manté xifrat el correu desat aquí. No pot aturar un programa que s'executi en aquest ordinador, una extensió del navegador que hàgiu instal·lat o algú que copiï els fitxers del navegador i tingui temps de provar molts PIN, així que val la pena un PIN més llarg. A l'aplicació d'escriptori, el PIN també queda lligat al vostre inici de sessió en aquest ordinador. El vostre compte al servidor no es veu afectat.",
+    "protects_desc": "De què protegeix: el PIN impedeix que algú davant d'aquest dispositiu entri a l'aplicació. El correu desat aquí rep una clau nova quan activeu el bloqueig o canvieu el PIN, cosa que pot trigar una estona. No pot aturar un programa que s'executi en aquest ordinador, una extensió del navegador que hàgiu instal·lat ni algú que copiï els fitxers de l'aplicació i tingui temps de provar molts PIN, així que val la pena un PIN més llarg. A l'aplicació d'escriptori, provar PIN també requereix la vostra sessió en aquest ordinador. El vostre compte al servidor no es veu afectat.",
     "enable_body": "Trieu un PIN. El necessitareu cada vegada que l'app es bloquegi, i després de recarregar o tornar a iniciar.",
     "set_pin_title": "Trieu un PIN",
     "change_pin": "Canvia el PIN…",

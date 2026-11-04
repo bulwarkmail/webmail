@@ -82,6 +82,8 @@ export type PageToWorker =
   | { kind: 'set-auth'; account: string; auth: string | null }
   | { kind: 'set-inverted'; account: string; inverted: boolean }
   | { kind: 'set-session'; account: string; session: StoreSession }
+  /** Copies an open account into this file under this key. It ends with the account closed. */
+  | { kind: 'rekey'; id: string; account: string; file: string; keyHex: string }
   | { kind: 'release'; id: string };
 
 export type WorkerToPage =

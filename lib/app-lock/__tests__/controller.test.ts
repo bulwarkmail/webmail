@@ -19,15 +19,19 @@ import {
   setReloadForTests,
   startAppLock,
   STAY_RETRY_MS,
+  storeKeyLayers,
   unlockWithOs,
   unlockWithPin,
 } from '../controller';
-import { LOCK_LAYER } from '../crypto';
+import { importLockKey, LOCK_LAYER, lockLayer } from '../crypto';
 import { appLockRequired, effectiveTimeout } from '../policy';
 import { APP_LOCK_KEY, appLockBootScript, isAppLockedNow, readAppLockFile, setLockedHere } from '../state';
-import { createVault, deleteVault, readVault, sealDraft, VaultExistsError } from '../vault';
+import { createVault, deleteVault, openVaultWithPin, readVault, rotateVaultKey, sealDraft, VaultExistsError, WrongPinError } from '../vault';
 
 const PIN = 'correct-pin';
+
+// Setting a PIN and unlocking each run PBKDF2 at 600,000 rounds: over 5 s on a busy machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 class FakeChannel {
   static open = new Set<FakeChannel>();
@@ -439,6 +443,101 @@ describe('the store when a tab inherits it without the key', () => {
   });
 });
 
+describe('the desktop app\'s safeStorage on the store\'s key', () => {
+  const shellBridge = () => bridge({
+    status: vi.fn(async () => ({ locked: false, enrolled: true, os: null, osEnrolled: false, wrap: true })),
+    wrap: vi.fn(async (data: Uint8Array) => Uint8Array.from([9, ...data])),
+    unwrap: vi.fn(async (data: Uint8Array) => (data[0] === 9 ? data.slice(1) : null)),
+  });
+
+  it('wraps with the lock off too', async () => {
+    shellBridge();
+    const layers = await storeKeyLayers();
+    expect(layers.map((layer) => layer.name)).toEqual(['safeStorage']);
+    await openAccountKey('off', layers);
+    expect((await getAccountRecord('off'))?.layers).toEqual(['safeStorage']);
+  });
+
+  it('a browser has no such layer', async () => {
+    expect(await storeKeyLayers()).toEqual([]);
+  });
+
+  it('a shell whose storage only obfuscates has none either', async () => {
+    bridge({ status: vi.fn(async () => ({ locked: false, enrolled: false, os: null, osEnrolled: false, wrap: false })) });
+    expect(await storeKeyLayers()).toEqual([]);
+  });
+
+  it('turning the lock on asks for the mail to be re-encrypted; off again keeps the OS\'s layer', async () => {
+    shellBridge();
+    await openAccountKey('acc', await storeKeyLayers());
+    await enableAppLock(PIN);
+    let stored = await getAccountRecord('acc');
+    expect(stored?.layers).toEqual(['safeStorage', 'applock']);
+    expect(stored?.rekey).toBe(true);
+    await disableAppLock(PIN);
+    stored = await getAccountRecord('acc');
+    expect(stored?.layers).toEqual(['safeStorage']);
+  });
+});
+
+describe('changing the PIN', () => {
+  it('makes a new lock key, so what an old copy of the PIN record opens opens nothing now', async () => {
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    const before = await readVault();
+    const oldKey = await importLockKey(await openVaultWithPin(PIN));
+    await changeAppLockPin(PIN, 'next-pin-5521');
+    const record = await getAccountRecord('acc');
+    expect(record?.layers).toEqual(['applock']);
+    expect(record?.rekey).toBe(true);
+    // Under the old lock key the record opens no more.
+    await expect(lockLayer(oldKey).unwrap(record!.wrapped)).rejects.toBeDefined();
+    expect((await readVault())?.pin.data).not.toEqual(before?.pin.data);
+    expect((await readVault())?.previous).toBeUndefined();
+    await expect(openVaultWithPin(PIN)).rejects.toBeInstanceOf(WrongPinError);
+    // The store still opens, in this tab, with the key it holds now.
+    await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ fresh: false });
+  });
+
+  it('survives a crash halfway: a record under the old key moves over at the next unlock', async () => {
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    const oldRaw = await openVaultWithPin(PIN);
+    await rotateVaultKey('next-pin-5521', oldRaw);
+    await lockedAndReloaded();
+    await unlockWithPin('next-pin-5521');
+    expect((await readVault())?.previous).toBeUndefined();
+    await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ fresh: false });
+    expect((await getAccountRecord('acc'))?.rekey).toBe(true);
+  });
+
+  it('the passkey and the OS\'s unlock wrapped the old key: they go, and the caller hears', async () => {
+    const appLock = bridge({ status: vi.fn(async () => ({ locked: false, enrolled: true, os: 'hello', osEnrolled: true, wrap: false })) });
+    await enableAppLock(PIN);
+    const { reenroll } = await changeAppLockPin(PIN, 'next-pin-5521');
+    expect(reenroll).toBe(true);
+    expect((await readVault())?.prf).toBeUndefined();
+    expect(appLock.disable).toHaveBeenCalledTimes(1);
+    expect(appLock.enroll).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('the renderer at a lock', () => {
+  it('is replaced in the desktop app: a reload stays in the process with the old heap', async () => {
+    const replaceRenderer = vi.fn();
+    const appLock = bridge();
+    appLock.claim = vi.fn(() => ({ lock: appLock.lock, osUnlock: appLock.osUnlock, replaceRenderer })) as never;
+    setReloadForTests(null);
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...window.location, reload, href: window.location.href, origin: window.location.origin } });
+    await enableAppLock(PIN);
+    stopTab = startAppLock();
+    lockEverywhere();
+    await vi.waitFor(() => expect(replaceRenderer).toHaveBeenCalledTimes(1));
+    expect(reload).not.toHaveBeenCalled();
+  });
+});
+
 describe('the desktop app', () => {
   const settled = () => new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -649,9 +748,9 @@ describe('the desktop app', () => {
     await enableAppLock(PIN);
     expect((await getAccountRecord('acc'))?.layers).toEqual(['safeStorage', LOCK_LAYER]);
     await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ keyHex });
-    // Off, nothing asks main at a start, so main's wrap goes too.
+    // Off, only the lock's own layer goes: the OS's stays on with no lock too.
     await disableAppLock(PIN);
-    expect((await getAccountRecord('acc'))?.layers).toEqual([]);
+    expect((await getAccountRecord('acc'))?.layers).toEqual(['safeStorage']);
   });
 
   it('forgetting asks main first: a no changes nothing', async () => {

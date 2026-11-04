@@ -429,10 +429,32 @@ export type DesktopOsUnlockAnswer = { ok: true; key: Uint8Array } | { ok: false;
  * this through `parent`, so that has to hold on a call alone. What it mustn't reach at all,
  * `lock` and `osUnlock`, the page takes once with `claim` before any frame exists.
  */
+/** A PIN guess through main. Blocked: too many wrong ones. Neither: main can't open its secret here. */
+export type DesktopPinStepAnswer = { ok: true; bytes: Uint8Array } | { ok: false; blockedUntil?: number };
+
+export interface DesktopAppLockControls {
+  lock: () => void;
+  osUnlock: () => Promise<DesktopOsUnlockAnswer>;
+  /** Through safeStorage, for this origin only. Null where the OS has no real key store. Absent on an older shell. */
+  wrap?: (data: Uint8Array) => Promise<Uint8Array | null>;
+  unwrap?: (data: Uint8Array) => Promise<Uint8Array | null>;
+  /** The key under the PIN takes a secret only main has, and every trip is counted there. */
+  pinStep?: (data: Uint8Array) => Promise<DesktopPinStepAnswer>;
+  /** Ends this page's renderer and loads the page in a new one. Only while main says locked. */
+  replaceRenderer?: () => void;
+  /**
+   * What only main can delete. `account` null: everything on this device, and then `finishLocalWipe`.
+   * `failed` names what didn't go, and the wipe isn't reported as done. Absent on an older shell.
+   */
+  localWipe?: (request: { reason: 'remote' | 'settings'; account: string | null }) => Promise<{ failed: string[] }>;
+  /** Clears what the page still stood on, and restarts the app. */
+  finishLocalWipe?: (options: { keepLocalStorage: boolean }) => Promise<void>;
+}
+
 export interface DesktopAppLockBridge {
   status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean }>;
   /** Once per document: the calls only the page itself may make. Null for whoever comes second. */
-  claim: () => { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null;
+  claim: () => DesktopAppLockControls | null;
   /** Sets up the proof. False when one exists. */
   enroll: (proof: Uint8Array) => Promise<boolean>;
   /** Lifts the lock when the proof is the right one. */
@@ -443,9 +465,6 @@ export interface DesktopAppLockBridge {
   forget: (proof?: Uint8Array) => Promise<boolean>;
   /** Main keeps a lock and this profile has no PIN for it. Main asks the user natively, once a run. */
   clearOrphan?: () => Promise<boolean>;
-  /** Through safeStorage, for this origin only. Null where the OS has no real key store. */
-  wrap: (data: Uint8Array) => Promise<Uint8Array | null>;
-  unwrap: (data: Uint8Array) => Promise<Uint8Array | null>;
   /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
   osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
   osRemove: () => Promise<void>;
@@ -824,6 +843,8 @@ export interface BulwarkDesktopBridge {
   /** Absent on older shells. */
   certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
+  /** Absent on an older shell. */
+  httpCache?: { clear: () => Promise<void> };
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
   edit?: DesktopEditBridge;
