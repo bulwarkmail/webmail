@@ -30,6 +30,9 @@ import { createVault, deleteVault, openVaultWithPin, readVault, rotateVaultKey, 
 
 const PIN = 'correct-pin';
 
+// Setting a PIN and unlocking each run PBKDF2 at 600,000 rounds: over 5 s on a busy machine.
+vi.setConfig({ testTimeout: 30_000 });
+
 class FakeChannel {
   static open = new Set<FakeChannel>();
   onmessage: ((event: MessageEvent) => void) | null = null;
