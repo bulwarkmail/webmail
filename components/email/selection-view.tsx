@@ -82,10 +82,14 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
       if (width <= 0) return;
       let need = MIN_BUTTON_WIDTH;
       for (const button of Array.from(grid.querySelectorAll<HTMLElement>("button"))) {
-        const label = button.querySelector<HTMLElement>("[data-selection-label]");
-        if (!label) continue;
-        // The label's whole text, plus what the button has around it (padding, icons).
-        need = Math.max(need, label.scrollWidth + button.clientWidth - label.clientWidth + 2);
+        // Its icons, the label's whole text, the gaps between them, padding and border:
+        // what it needs whatever width it has now.
+        const style = getComputedStyle(button);
+        const parts = Array.from(button.children) as HTMLElement[];
+        const content = parts.reduce((sum, part) => sum + (part.hasAttribute("data-selection-label") ? part.scrollWidth : part.getBoundingClientRect().width), 0);
+        const gaps = (parseFloat(style.columnGap) || 0) * Math.max(0, parts.length - 1);
+        const frame = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0) + (parseFloat(style.borderLeftWidth) || 0) + (parseFloat(style.borderRightWidth) || 0);
+        need = Math.max(need, Math.ceil(content + gaps + frame) + 2);
       }
       setPerLine(Math.max(1, Math.floor((width + GAP) / (need + GAP))));
     };
