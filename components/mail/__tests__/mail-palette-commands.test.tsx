@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useToastStore } from '@/stores/toast-store';
+import { useMailTransferStore } from '@/stores/mail-transfer-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { clearAllHooks } from '@/lib/plugin-hooks';
 import type { CommandGroup } from '@/lib/command-registry';
@@ -106,6 +107,18 @@ describe('Mail in the command palette', () => {
     expect(ids).toEqual(expect.arrayContaining(['reply', 'archive', 'delete', 'move', 'mark-unread', 'spam', 'go-trash', 'go-work']));
     expect(ids).not.toContain('go-inbox');
     expect(ids).not.toContain('mark-read');
+  });
+
+  it("offers Import mail into the open folder, which left the reader's ⋮ menu", async () => {
+    let groups: CommandGroup[] = [];
+    render(<><MailApp /><Palette onGroups={(g) => { groups = g; }} /></>);
+    await screen.findByText('viewer', {}, { timeout: 5000 });
+    await waitFor(() => expect(groups.find((g) => g.label === 'sidebar.mail')).toBeDefined());
+    const importMail = groups.find((g) => g.label === 'sidebar.mail')!.commands.find((c) => c.id === 'import');
+    expect(importMail?.label).toBe('mail_import.menu_import');
+    act(() => importMail!.run());
+    expect(useMailTransferStore.getState().request).toMatchObject({ kind: 'import', mailboxId: 'inbox' });
+    act(() => useMailTransferStore.setState({ request: null, visible: false }));
   });
 
   it("says whose a shared folder is and where a subfolder is, so two Inboxes don't look the same", async () => {

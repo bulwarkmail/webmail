@@ -85,9 +85,11 @@ export function PopoutShell({ kind, accountId, children }: {
         <PopoutNotice title={t("session_ended_title")} body={t("session_ended_body")}>{actions}</PopoutNotice>
       )}
       {status === "no-session" && kind === "compose" && (
-        <div role="alert" data-popout-session-ended="" className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-muted px-4 py-2 text-sm text-foreground">
+        // The window's top row: room for the window's controls, and no second close beside its own.
+        <div role="alert" data-popout-session-ended="" data-window-top-row="" className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-muted px-4 py-2 text-sm text-foreground">
           <span className="min-w-0 flex-1">{t("session_ended_title")}. {t("session_ended_body")}</span>
-          {actions}
+          <Button onClick={() => window.location.replace(withBasePath("/"))}>{t("open_app")}</Button>
+          <Button variant="ghost" onClick={closePopoutWindow} data-own-window-close="">{t("close_window")}</Button>
         </div>
       )}
       {/* One place in the tree, so a composer stays mounted, text and all, when the session ends. */}

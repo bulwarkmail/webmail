@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AlertCircle, AlertTriangle, Info, X } from '@/components/icons';
 import { usePolicyRefresh } from '@/hooks/use-policy-refresh';
+import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
 import {
   announcementActive,
   announcementKey,
@@ -93,6 +94,9 @@ export function OrgAnnouncement() {
   const announcement = usePolicyStore((s) => s.policy.organisation?.announcement);
   const accountId = useAuthStore((s) => s.activeAccountId);
   const [dismissedKey, setDismissedKey] = useState<string | null>(null);
+  // At the window's top, its close goes to the start when the window's own close is at its end.
+  const [row, setRow] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(row);
 
   const text = announcement ? announcementText(announcement, locale) : '';
   const now = useClock(text ? nextAnnouncementChange(announcement, Date.now()) : null);
@@ -113,14 +117,33 @@ export function OrgAnnouncement() {
   const Icon = ICONS[severity];
   const severityLabel = t(`severity_${severity}`);
 
+  const dismiss = announcement.dismissible && (
+    <button
+      type="button"
+      onClick={() => {
+        dismissAnnouncement(announcement, accountId);
+        setDismissedKey(`${accountId}|${key}`);
+      }}
+      aria-label={t('dismiss')}
+      title={t('dismiss')}
+      data-testid="org-announcement-dismiss"
+      className={cn(closeFirst ? '-ms-2' : '-me-2', 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-offset-[-2px]')}
+    >
+      <X className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+
   return (
     <div
+      ref={setRow}
       role="region"
       aria-label={t('label')}
       data-testid="org-announcement"
       data-severity={severity}
+      data-window-top-row=""
       className={cn('flex shrink-0 items-start gap-2 border-b px-3 text-sm sm:px-4', STYLES[severity])}
     >
+      {closeFirst && dismiss}
       {firstShow && <LiveOnce text={`${severityLabel}: ${text}`} assertive={severity === 'critical'} />}
       <Icon className="mt-3 h-4 w-4 shrink-0" aria-hidden="true" />
       <p className="min-w-0 flex-1 whitespace-pre-line break-words py-2.5 leading-snug [overflow-wrap:anywhere]">
@@ -141,21 +164,7 @@ export function OrgAnnouncement() {
           <span key={index}>{part.text}</span>
         ))}
       </p>
-      {announcement.dismissible && (
-        <button
-          type="button"
-          onClick={() => {
-            dismissAnnouncement(announcement, accountId);
-            setDismissedKey(`${accountId}|${key}`);
-          }}
-          aria-label={t('dismiss')}
-          title={t('dismiss')}
-          data-testid="org-announcement-dismiss"
-          className="-me-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
-        >
-          <X className="h-4 w-4" aria-hidden="true" />
-        </button>
-      )}
+      {!closeFirst && dismiss}
     </div>
   );
 }

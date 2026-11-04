@@ -56,6 +56,7 @@ export function FileDetailsPanel({
   iconOptions, getImageUrl, onClose, onOpen, onEdit, onDownload, onShare, onToggleStar, className, pluginFile,
 }: FileDetailsPanelProps) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const pluginProps = useMemo(() => (pluginFile ? { file: pluginFile } : null), [pluginFile]);
 
   const header = (
@@ -147,7 +148,7 @@ export function FileDetailsPanel({
         )}
         {canShare && (
           <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onShare}>
-            <Share2 className="w-4 h-4" />{t("share")}
+            <Share2 className="w-4 h-4" />{tMenu("files_share_button")}
           </Button>
         )}
         {resource.isDirectory && !resource.isShared && (

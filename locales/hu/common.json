@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "{name} e-mailjeinek keresése"
   },
+  "menuMove": {
+    "filter_placeholder": "Mappa keresése",
+    "recent": "Legutóbbiak",
+    "no_match": "Nincs ilyen mappa",
+    "choose_folder": "Mappa kiválasztása…",
+    "current_folder": "Már itt van: {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mappa olvasottnak jelölése",
     "mark_folder_tree_read": "Mappa és almappák olvasottnak jelölése",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "További lehetőségek"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline értesítés elrejtése"
+  },
   "shell": {
     "resize": "Átméretezés",
     "update_available": "Frissítés érhető el",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Bővítmények",
     "group_account": "Fiók",
     "switch_to": "Váltás erre: {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Nincs kapcsolat. Néhány művelethez kapcsolat kell.",
+    "files_new_folder": "Új mappa…",
+    "files_new_file": "Új fájl…",
+    "files_new_text_file": "Új szöveges fájl…",
+    "files_upload_files": "Fájlok feltöltése…",
+    "files_upload_folder": "Mappa feltöltése…",
+    "files_share": "Megosztás…",
+    "files_share_button": "Megosztás",
+    "contacts_add_to_group": "Hozzáadás a csoporthoz…",
+    "contacts_bulk_add_to_group": "Hozzáadás a csoporthoz…",
+    "schedule_send": "Késleltetett küldés…"
   },
   "notification_center": {
     "title": "Értesítések",
@@ -6936,6 +6959,23 @@
       "close": "Bezárás"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menüsor mindig látható",
+    "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",
+    "exit": "Kilépés",
+    "tray_pause": "Értesítések szüneteltetése",
+    "tray_pause_hour": "1 órára",
+    "tray_pause_tomorrow": "Holnapig",
+    "tray_resume": "Értesítések visszakapcsolása",
+    "tray_open": "Bulwark megnyitása",
+    "tray_quit": "Kilépés a Bulwarkból",
+    "tray_exit": "Kilépés a Bulwarkból"
+  },
+  "desktopMenus": {
+    "save_draft": "Piszkozat mentése",
+    "attach_files": "Fájlok csatolása…",
+    "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
     "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
+  },
+  "desktopDevTools": {
+    "section_title": "Hibaelhárítás",
+    "label": "Fejlesztői eszközök ({shortcut})",
+    "description": "A(z) {shortcut} és az F12 megnyitja a fejlesztői eszközöket abban az ablakban, ahol éppen van. Kikapcsol, amikor az alkalmazás zárolódik.",
+    "forced_off": "A szervezete kikapcsolta.",
+    "locked": "A módosításhoz oldja fel az alkalmazást.",
+    "menu_toggle": "Fejlesztői eszközök megjelenítése vagy elrejtése"
+  },
+  "fileDrop": {
+    "overlay_label": "Fájlok ejtése",
+    "overlay_title": "Hová kerüljenek a fájlok?",
+    "overlay_hint": "A megszakításhoz engedje el a lehetőségeken kívül, vagy nyomja meg az Esc billentyűt.",
+    "files_unknown": "Fájlok",
+    "files_summary": "{count, plural, one {# fájl} other {# fájl}}",
+    "files_summary_size": "{count, plural, one {# fájl} other {# fájl}}, {size}",
+    "zone_attach_here": "Csatolás ehhez az üzenethez",
+    "zone_insert_inline": "Beszúrás az üzenetbe",
+    "zone_new_message": "Csatolás új üzenethez",
+    "zone_upload_files": "Feltöltés a Fájlokba",
+    "zone_upload_folder": "Feltöltés ide: {folder}",
+    "zone_calendar": "Hozzáadás a naptárhoz",
+    "zone_contacts": "Hozzáadás a névjegyekhez",
+    "zone_open_eml": "Üzenet megnyitása",
+    "zone_import_eml": "Importálás ide: {folder}",
+    "note_limit_message": "Legfeljebb {size} üzenetenként",
+    "note_limit_file": "Legfeljebb {size} fájlonként",
+    "note_kept_offline": "Ezen az eszközön marad, amíg újra online nem lesz",
+    "note_needs_connection": "Kapcsolat szükséges",
+    "announce": "{files, plural, =0 {Fájlok} one {# fájl} other {# fájl}} behúzva. Lehetőségek: {choices}.",
+    "choose_title": "{count, plural, one {Hová kerüljön ez a fájl?} other {Hová kerüljenek ezek a fájlok?}}",
+    "save_first_failed": "A megnyitott üzenetet nem sikerült menteni, ezért az alkalmazás ott maradt, ahol volt.",
+    "import_done": "{count, plural, one {# üzenet importálva ide: {folder}.} other {# üzenet importálva ide: {folder}.}}",
+    "import_failed": "{name} nem importálható.",
+    "too_large_file": "{name} túl nagy. A korlát {max} fájlonként.",
+    "too_large_message": "Ezek a fájlok együtt túl nagyok egy üzenethez. A korlát {max}.",
+    "folders_left_out": "Mappák csak a Fájlokba kerülhetnek, ezért kimaradtak.",
+    "nothing_here": "Ezek a fájlok itt nem használhatók."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",

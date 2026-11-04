@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Caută un folder",
+    "recent": "Recente",
+    "no_match": "Niciun folder nu se potrivește",
+    "choose_folder": "Alege folderul…",
+    "current_folder": "Deja în {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",
     "mark_folder_tree_read": "Marcați folderul și subfolderele ca citite",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "Mai multe opțiuni"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ascunde notificarea offline"
+  },
   "shell": {
     "resize": "Redimensionează",
     "update_available": "Actualizare disponibilă",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Pluginuri",
     "group_account": "Cont",
     "switch_to": "Comută la {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Sunteți offline. Unele acțiuni au nevoie de conexiune.",
+    "files_new_folder": "Dosar nou…",
+    "files_new_file": "Fișier nou…",
+    "files_new_text_file": "Fișier text nou…",
+    "files_upload_files": "Încărcați fișiere…",
+    "files_upload_folder": "Încărcare folder…",
+    "files_share": "Distribuie…",
+    "files_share_button": "Distribuie",
+    "contacts_add_to_group": "Adaugă la grup…",
+    "contacts_bulk_add_to_group": "Adaugă la grup…",
+    "schedule_send": "Programează trimiterea…"
   },
   "notification_center": {
     "title": "Notificări",
@@ -6936,6 +6959,23 @@
       "close": "Închidere"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Afișează mereu bara de meniu",
+    "always_show_description": "Altfel apare la apăsarea tastei Alt.",
+    "exit": "Ieșire",
+    "tray_pause": "Întrerupe notificările",
+    "tray_pause_hour": "Pentru 1 oră",
+    "tray_pause_tomorrow": "Până mâine",
+    "tray_resume": "Reactivează notificările",
+    "tray_open": "Deschide Bulwark",
+    "tray_quit": "Închide Bulwark",
+    "tray_exit": "Ieșire din Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvează ciorna",
+    "attach_files": "Atașează fișiere…",
+    "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici.",
     "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
+  },
+  "desktopDevTools": {
+    "section_title": "Depanare",
+    "label": "Instrumente pentru dezvoltatori ({shortcut})",
+    "description": "Permite ca {shortcut} și F12 să deschidă instrumentele pentru dezvoltatori în fereastra în care sunteți. Se oprește când aplicația se blochează.",
+    "forced_off": "Oprit de organizația dvs.",
+    "locked": "Deblocați aplicația pentru a schimba asta.",
+    "menu_toggle": "Afișați sau ascundeți instrumentele pentru dezvoltatori"
+  },
+  "fileDrop": {
+    "overlay_label": "Plasați fișiere",
+    "overlay_title": "Unde merg fișierele?",
+    "overlay_hint": "Plasați în afara opțiunilor sau apăsați Esc pentru a anula.",
+    "files_unknown": "Fișiere",
+    "files_summary": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}",
+    "files_summary_size": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}, {size}",
+    "zone_attach_here": "Atașați la acest mesaj",
+    "zone_insert_inline": "Inserați în mesaj",
+    "zone_new_message": "Atașați la un mesaj nou",
+    "zone_upload_files": "Încărcați în Fișiere",
+    "zone_upload_folder": "Încărcați în {folder}",
+    "zone_calendar": "Adăugați în calendar",
+    "zone_contacts": "Adăugați la contacte",
+    "zone_open_eml": "Deschideți mesajul",
+    "zone_import_eml": "Importați în {folder}",
+    "note_limit_message": "Până la {size} pe mesaj",
+    "note_limit_file": "Până la {size} pe fișier",
+    "note_kept_offline": "Rămâne pe acest dispozitiv până reveniți online",
+    "note_needs_connection": "Necesită conexiune",
+    "announce": "{files, plural, =0 {Fișiere trase} one {# fișier tras} few {# fișiere trase} other {# de fișiere trase}}. Opțiuni: {choices}.",
+    "choose_title": "{count, plural, one {Unde merge acest fișier?} few {Unde merg aceste fișiere?} other {Unde merg aceste fișiere?}}",
+    "save_first_failed": "Mesajul deschis nu a putut fi salvat, așa că aplicația a rămas unde era.",
+    "import_done": "{count, plural, one {# mesaj importat în {folder}.} few {# mesaje importate în {folder}.} other {# de mesaje importate în {folder}.}}",
+    "import_failed": "{name} nu a putut fi importat.",
+    "too_large_file": "{name} este prea mare. Limita este {max} pe fișier.",
+    "too_large_message": "Aceste fișiere sunt prea mari pentru un mesaj. Limita este {max}.",
+    "folders_left_out": "Dosarele pot merge doar în Fișiere, așa că au fost lăsate deoparte.",
+    "nothing_here": "Aceste fișiere nu pot fi folosite aici."
   },
   "desktopReminders": {
     "generic_title": "Memento",

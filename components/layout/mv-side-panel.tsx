@@ -28,6 +28,7 @@ import { readableTextOn } from "@/lib/color-transform";
 import { Avatar } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { PluginSidePanelBody, SidePanelButton, usePluginSidePanel } from "@/components/plugins/plugin-side-panels";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
@@ -146,8 +147,23 @@ function PanelHeader({ title, subtitle, href, onClose, children }: {
 }) {
   const t = useTranslations("sidebar");
   const tCommon = useTranslations("common");
+  // Right under the window's own close, at the window's end: this one goes to the start.
+  const [head, setHead] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(head);
+  const close = (
+    <button
+      type="button"
+      onClick={onClose}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+      title={tCommon("close")}
+      aria-label={tCommon("close")}
+    >
+      <X className="h-[18px] w-[18px]" />
+    </button>
+  );
   return (
-    <div className="flex items-start gap-1 px-4 pt-4 pb-2">
+    <div ref={setHead} data-window-pane-head="" className={cn("flex items-start gap-1 pt-4 pb-2", closeFirst ? "ps-2 pe-4" : "px-4")}>
+      {closeFirst && close}
       <div className="min-w-0 flex-1">
         <div className={cn(subtitle ? "text-[0.6875rem] font-medium text-muted-foreground" : "text-[1.375rem] leading-7")}>{title}</div>
         {subtitle && <div className="text-sm font-medium text-primary">{subtitle}</div>}
@@ -161,15 +177,7 @@ function PanelHeader({ title, subtitle, href, onClose, children }: {
       >
         <ExternalLink className="h-[18px] w-[18px]" />
       </Link>
-      <button
-        type="button"
-        onClick={onClose}
-        className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-        title={tCommon("close")}
-        aria-label={tCommon("close")}
-      >
-        <X className="h-[18px] w-[18px]" />
-      </button>
+      {!closeFirst && close}
     </div>
   );
 }

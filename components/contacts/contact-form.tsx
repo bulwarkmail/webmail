@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -220,6 +221,9 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
 export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
   const t = useTranslations("contacts.form");
   const isEditing = !!contact;
+  // The header's close goes to its start when the window's own close is at its end.
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(header);
   // Ids that tie each visible label to its field.
   const fieldIdBase = useId();
   const fieldId = (key: string) => `${fieldIdBase}-${key}`;
@@ -700,17 +704,22 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
   const previewName = (isOrg ? "" : [givenName, surname].filter(Boolean).join(" ").trim()) || organization.trim();
   const previewEmail = emails.find(e => e.address.trim())?.address.trim() || "";
 
+  const close = (
+    <IconButton label={t("close")} onClick={onCancel}>
+      <X />
+    </IconButton>
+  );
+
   return (
     // The app checks the fields itself and says what is wrong inline; the
     // browser's own bubble covered that message.
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-background">
-      <div data-window-top-row="" className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
-        <h2 className="text-lg font-semibold">
+      <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+        {closeFirst && close}
+        <h2 className="min-w-0 flex-1 text-lg font-semibold">
           {isEditing ? t("edit_title") : t("create_title")}
         </h2>
-        <IconButton label={t("close")} onClick={onCancel}>
-          <X />
-        </IconButton>
+        {!closeFirst && close}
       </div>
 
       <div className="flex-1 overflow-y-auto">

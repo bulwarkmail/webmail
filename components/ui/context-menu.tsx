@@ -18,7 +18,8 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import { nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { estimateNativeMenuWidth, nativeMenuPoint, nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { placeMenu } from "@/lib/menu-placement";
 import { toast } from "@/stores/toast-store";
 
 interface Position {
@@ -41,7 +42,14 @@ export interface ContextMenuPosition extends Position {
   anchor?: ContextMenuAnchor;
   /** Gets the focus back when the menu closes. Default: what had the focus when it opened. */
   trigger?: HTMLElement | null;
+  /** What it's for: marked `data-menu-opener` while it's open, so a list row shows it. */
+  opener?: HTMLElement | null;
+  /** Opened by a right-click: the pointer sits on it, and only counts once it moves. */
+  fromPointer?: boolean;
 }
+
+/** How far the pointer moves before a menu opened under it answers it. */
+const POINTER_SLOP = 3;
 
 interface ContextMenuProps {
   isOpen: boolean;
@@ -241,7 +249,7 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
   ({ isOpen, position, onClose, children, label }, ref) => {
     const [mounted, setMounted] = useState(false);
-    const [adjustedPosition, setAdjustedPosition] = useState<Position | null>(null);
+    const [adjustedPosition, setAdjustedPosition] = useState<(Position & { maxHeight?: number }) | null>(null);
     const localRef = useRef<HTMLDivElement | null>(null);
     const onCloseRef = useRef(onClose);
     useEffect(() => {
@@ -282,8 +290,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         }
         const { anchor: at } = positionRef.current;
         // From a right-click it opens at the pointer, which the OS knows best.
+        // From a button: under it, lined up with the edge the HTML menu would
+        // use. The hidden copy is as wide as its widest submenu row, not as the
+        // native menu, so the native menu's own width is estimated.
         const place = at
-          ? { x: at.align === "end" ? Math.max(0, at.right - root.getBoundingClientRect().width) : at.left, y: at.bottom + ANCHOR_GAP }
+          ? nativeMenuPoint(at, estimateNativeMenuWidth(read.items), getComputedStyle(root).direction === "rtl", ANCHOR_GAP)
           : undefined;
         const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
         if (cancelled) return;
@@ -322,34 +333,25 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
       const clamp = () => {
         const rect = node.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
+        // The height it would have uncapped: a cap set last time mustn't decide the next.
+        const list = node.firstElementChild as HTMLElement | null;
+        const height = list && list.scrollHeight > list.clientHeight
+          ? rect.height + list.scrollHeight - list.clientHeight
+          : rect.height;
+        // Next to the button it opened from, or at the pointer (lib/menu-placement.ts).
+        const { x, y, maxHeight } = placeMenu({
+          point: { x: position.x, y: position.y },
+          anchor,
+          size: { width: rect.width, height },
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          rtl: getComputedStyle(node).direction === "rtl",
+          margin: VIEWPORT_MARGIN,
+          gap: ANCHOR_GAP,
+        });
 
-        let x = position.x;
-        let y = position.y;
-
-        if (anchor) {
-          // Under the anchor, lined up with its start edge (end edge for
-          // align="end"); above it when there is no room below.
-          const rtl = getComputedStyle(node).direction === "rtl";
-          const alignEnd = (anchor.align === "end") !== rtl;
-          x = alignEnd ? anchor.right - rect.width : anchor.left;
-          y = anchor.bottom + ANCHOR_GAP;
-          if (y + rect.height > vh - VIEWPORT_MARGIN && anchor.top - ANCHOR_GAP - rect.height >= VIEWPORT_MARGIN) {
-            y = anchor.top - ANCHOR_GAP - rect.height;
-          }
-        }
-
-        if (x + rect.width > vw - VIEWPORT_MARGIN) {
-          x = vw - rect.width - VIEWPORT_MARGIN;
-        }
-        if (y + rect.height > vh - VIEWPORT_MARGIN) {
-          y = vh - rect.height - VIEWPORT_MARGIN;
-        }
-        x = Math.max(VIEWPORT_MARGIN, x);
-        y = Math.max(VIEWPORT_MARGIN, y);
-
-        setAdjustedPosition((prev) => (prev && prev.x === x && prev.y === y ? prev : { x, y }));
+        setAdjustedPosition((prev) =>
+          prev && prev.x === x && prev.y === y && prev.maxHeight === maxHeight ? prev : { x, y, maxHeight }
+        );
       };
       clamp();
       if (typeof ResizeObserver === "undefined") return;
@@ -361,6 +363,40 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     }, [isOpen, mounted, position.x, position.y, anchorKey]);
 
     const isPositioned = adjustedPosition !== null;
+
+    // Opened by a right-click, the menu comes up under the pointer: the item
+    // there isn't hovered, and its submenu doesn't open, until the pointer
+    // moves. A tap or a key counts at once.
+    const [pointerArmed, setPointerArmed] = useState(true);
+    const fromPointer = isOpen && position.fromPointer === true;
+    useLayoutEffect(() => {
+      if (!fromPointer) {
+        setPointerArmed(true);
+        return;
+      }
+      setPointerArmed(false);
+      const start = { x: position.x, y: position.y };
+      const arm = () => setPointerArmed(true);
+      const onMove = (e: PointerEvent) => {
+        if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > POINTER_SLOP) arm();
+      };
+      document.addEventListener("pointermove", onMove, true);
+      document.addEventListener("pointerdown", arm, true);
+      document.addEventListener("keydown", arm, true);
+      return () => {
+        document.removeEventListener("pointermove", onMove, true);
+        document.removeEventListener("pointerdown", arm, true);
+        document.removeEventListener("keydown", arm, true);
+      };
+    }, [fromPointer, position.x, position.y]);
+
+    // The row the menu is for stays marked while it's open (app/globals.css).
+    const opener = isOpen ? position.opener ?? null : null;
+    useEffect(() => {
+      if (!opener) return;
+      opener.setAttribute("data-menu-opener", "");
+      return () => opener.removeAttribute("data-menu-opener");
+    }, [opener]);
 
     // Where the focus goes back to: the trigger the opener named, else what
     // had the focus when the menu opened. Read in a layout effect, before
@@ -535,12 +571,20 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           aria-label={label}
           aria-orientation="vertical"
           tabIndex={-1}
+          data-pointer-unarmed={pointerArmed ? undefined : ""}
           onPointerDownCapture={(e) => {
             if (e.pointerType === "touch" || e.pointerType === "pen") lastTouchAt.current = Date.now();
           }}
         >
           {/* Taller than the window: scroll inside the menu. */}
-          <div className="py-1 overflow-y-auto" style={{ maxHeight: `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)` }}>
+          <div
+            className="py-1 overflow-y-auto"
+            style={{
+              maxHeight: adjustedPosition?.maxHeight !== undefined
+                ? `${Math.max(0, adjustedPosition.maxHeight - 2)}px`
+                : `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)`,
+            }}
+          >
             {children}
           </div>
         </div>
@@ -574,7 +618,10 @@ interface ContextMenuItemProps {
   onClick: () => void;
   disabled?: boolean;
   destructive?: boolean;
+  /** The key that does the same, shown apart from the label. */
   shortcut?: string;
+  /** A count at the end of the row, e.g. unread notifications. Not a key. */
+  badge?: string;
   /** Stable hook for integration tests (not user-visible). */
   testId?: string;
   /** Tooltip, e.g. the address behind a display name. */
@@ -590,6 +637,7 @@ export function ContextMenuItem({
   disabled = false,
   destructive = false,
   shortcut,
+  badge,
   testId,
   title,
   hint,
@@ -636,11 +684,38 @@ export function ContextMenuItem({
       ) : (
         <span className="flex-1 min-w-0 [overflow-wrap:anywhere]" data-menu-label="">{label}</span>
       )}
-      {/* Key hints mean nothing without a keyboard: hidden on touch (R8). */}
-      {shortcut && (
-        <span className="text-xs text-muted-foreground ms-auto pointer-coarse:hidden">{shortcut}</span>
-      )}
+      {shortcut && <MenuShortcut keys={shortcut} />}
+      {badge && <MenuBadge text={badge} />}
     </button>
+  );
+}
+
+/**
+ * The key that does what a menu row does, at the row's end, muted, as a keycap. The
+ * desktop app's native menu shows it as the item's accelerator, apart from the label
+ * (lib/desktop/native-menu.ts reads `data-menu-shortcut`). Key hints mean nothing
+ * without a keyboard: hidden on touch (R8).
+ */
+export function MenuShortcut({ keys, className }: { keys: string; className?: string }) {
+  return (
+    <kbd
+      data-menu-shortcut=""
+      className={cn(
+        "ms-auto shrink-0 rounded border border-border px-1.5 font-sans text-[0.6875rem] leading-4 text-muted-foreground pointer-coarse:hidden",
+        className
+      )}
+    >
+      {keys}
+    </kbd>
+  );
+}
+
+/** A count at a row's end ("3" unread). Not a key: a native menu puts it after the label. */
+export function MenuBadge({ text }: { text: string }) {
+  return (
+    <span data-menu-badge="" className="ms-auto shrink-0 text-xs tabular-nums text-muted-foreground">
+      {text}
+    </span>
   );
 }
 
@@ -725,9 +800,10 @@ export function ContextMenuSubMenu({
   return (
     <div
       className="relative"
-      onMouseEnter={() => {
+      onMouseEnter={(e) => {
         // Settings > Accessibility can make submenus open on click or
-        // Enter only.
+        // Enter only. Not under the pointer that just opened the menu.
+        if (e.currentTarget.closest("[data-pointer-unarmed]")) return;
         if (!disabled && hoverOpens()) setOpen(true);
       }}
     >
@@ -781,7 +857,8 @@ export function ContextMenuSubMenu({
             className="min-w-[180px] max-w-[min(20rem,calc(100vw-20px))] bg-background rounded-md shadow-lg border border-border"
             role="menu"
           >
-            <div className="py-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
+            {/* As tall as the window allows (it's moved up to fit), then it scrolls. */}
+            <div className="py-1 max-h-[calc(100vh-22px)] overflow-y-auto">
               {children}
             </div>
           </SubMenuPanel>

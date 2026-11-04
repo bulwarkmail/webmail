@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Finn en mappe",
+    "recent": "Nylig brukt",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Velg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",
     "mark_folder_tree_read": "Merk mappe og undermapper som lest",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "Flere alternativer"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul frakoblet-melding"
+  },
   "shell": {
     "resize": "Endre størrelse",
     "update_available": "Oppdatering tilgjengelig",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Tillegg",
     "group_account": "Konto",
     "switch_to": "Bytt til {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Du er frakoblet. Noen handlinger trenger tilkobling.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Last opp filer…",
+    "files_upload_folder": "Last opp mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Legg til i gruppe…",
+    "contacts_bulk_add_to_group": "Legg til i gruppe…",
+    "schedule_send": "Planlegg sending…"
   },
   "notification_center": {
     "title": "Varsler",
@@ -6936,6 +6959,23 @@
       "close": "Lukk"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vis alltid menylinjen",
+    "always_show_description": "Ellers vises den når du trykker på Alt.",
+    "exit": "Avslutt",
+    "tray_pause": "Sett varsler på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Til i morgen",
+    "tray_resume": "Slå på varsler igjen",
+    "tray_open": "Åpne Bulwark",
+    "tray_quit": "Avslutt Bulwark",
+    "tray_exit": "Avslutt Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lagre utkast",
+    "attach_files": "Legg ved filer…",
+    "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
+  },
+  "desktopDevTools": {
+    "section_title": "Feilsøking",
+    "label": "Utviklerverktøy ({shortcut})",
+    "description": "Lar {shortcut} og F12 åpne utviklerverktøyene for vinduet du er i. Slås av igjen når appen låses.",
+    "forced_off": "Slått av av organisasjonen din.",
+    "locked": "Lås opp appen for å endre dette.",
+    "menu_toggle": "Vis eller skjul utviklerverktøy"
+  },
+  "fileDrop": {
+    "overlay_label": "Slipp filer",
+    "overlay_title": "Hvor skal filene?",
+    "overlay_hint": "Slipp utenfor valgene eller trykk på Esc for å avbryte.",
+    "files_unknown": "Filer",
+    "files_summary": "{count, plural, one {# fil} other {# filer}}",
+    "files_summary_size": "{count, plural, one {# fil} other {# filer}}, {size}",
+    "zone_attach_here": "Legg ved denne meldingen",
+    "zone_insert_inline": "Sett inn i meldingen",
+    "zone_new_message": "Legg ved en ny melding",
+    "zone_upload_files": "Last opp til Filer",
+    "zone_upload_folder": "Last opp til {folder}",
+    "zone_calendar": "Legg til i kalenderen",
+    "zone_contacts": "Legg til i kontakter",
+    "zone_open_eml": "Åpne melding",
+    "zone_import_eml": "Importer til {folder}",
+    "note_limit_message": "Opptil {size} per melding",
+    "note_limit_file": "Opptil {size} per fil",
+    "note_kept_offline": "Blir på denne enheten til du er på nett igjen",
+    "note_needs_connection": "Trenger tilkobling",
+    "announce": "{files, plural, =0 {Filer} one {# fil} other {# filer}} dratt inn. Valg: {choices}.",
+    "choose_title": "{count, plural, one {Hvor skal denne filen?} other {Hvor skal disse filene?}}",
+    "save_first_failed": "Den åpne meldingen kunne ikke lagres, så appen ble der den var.",
+    "import_done": "{count, plural, one {# melding importert til {folder}.} other {# meldinger importert til {folder}.}}",
+    "import_failed": "{name} kunne ikke importeres.",
+    "too_large_file": "{name} er for stor. Grensen er {max} per fil.",
+    "too_large_message": "Disse filene er for store for én melding. Grensen er {max}.",
+    "folders_left_out": "Mapper kan bare gå til Filer, så de ble utelatt.",
+    "nothing_here": "Disse filene kan ikke brukes her."
   },
   "desktopReminders": {
     "generic_title": "Påminnelse",

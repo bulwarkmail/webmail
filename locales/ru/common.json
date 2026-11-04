@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "Найти письма от {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Найти папку",
+    "recent": "Недавние",
+    "no_match": "Подходящих папок нет",
+    "choose_folder": "Выбрать папку…",
+    "current_folder": "Уже в папке {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Отметить папку как прочитанную",
     "mark_folder_tree_read": "Отметить папку и вложенные папки как прочитанные",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "Другие действия"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Скрыть уведомление об офлайн-режиме"
+  },
   "shell": {
     "resize": "Изменить размер",
     "update_available": "Доступно обновление",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Плагины",
     "group_account": "Аккаунт",
     "switch_to": "Переключиться на {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Нет подключения. Для некоторых действий нужна сеть.",
+    "files_new_folder": "Новая папка…",
+    "files_new_file": "Новый файл…",
+    "files_new_text_file": "Новый текстовый файл…",
+    "files_upload_files": "Загрузить файлы…",
+    "files_upload_folder": "Загрузить папку…",
+    "files_share": "Поделиться…",
+    "files_share_button": "Поделиться",
+    "contacts_add_to_group": "Добавить в группу…",
+    "contacts_bulk_add_to_group": "Добавить в группу…",
+    "schedule_send": "Запланировать отправку…"
   },
   "notification_center": {
     "title": "Уведомления",
@@ -6936,6 +6959,23 @@
       "close": "Закрыть"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Всегда показывать строку меню",
+    "always_show_description": "Иначе она появляется при нажатии Alt.",
+    "exit": "Выход",
+    "tray_pause": "Приостановить уведомления",
+    "tray_pause_hour": "На 1 час",
+    "tray_pause_tomorrow": "До завтра",
+    "tray_resume": "Снова включить уведомления",
+    "tray_open": "Открыть Bulwark",
+    "tray_quit": "Закрыть Bulwark",
+    "tray_exit": "Выйти из Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Сохранить черновик",
+    "attach_files": "Прикрепить файлы…",
+    "shortcut_apps": "Перейти в Почту, Календарь, Контакты или Файлы"
+  },
   "appLock": {
     "section_title": "Блокировка приложения",
     "section_desc": "Запрашивает PIN-код после периода бездействия во всех окнах и вкладках. Пока приложение заблокировано, оно не может читать почту, сохранённую на этом устройстве, пока кто-нибудь не введёт PIN-код.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "Главное окно не ответило. Ваше письмо остаётся здесь.",
     "types_character": "На вашей клавиатуре эти клавиши вводят символ, и он перестал бы работать во всех приложениях. Попробуйте другие клавиши.",
     "reserved": "Эти клавиши использует система или большинство приложений. Попробуйте другие клавиши."
+  },
+  "desktopDevTools": {
+    "section_title": "Устранение неполадок",
+    "label": "Инструменты разработчика ({shortcut})",
+    "description": "{shortcut} и F12 открывают инструменты разработчика для окна, в котором вы находитесь. Выключается при блокировке приложения.",
+    "forced_off": "Отключено вашей организацией.",
+    "locked": "Разблокируйте приложение, чтобы изменить это.",
+    "menu_toggle": "Показать или скрыть инструменты разработчика"
+  },
+  "fileDrop": {
+    "overlay_label": "Перетащите файлы",
+    "overlay_title": "Куда отправить файлы?",
+    "overlay_hint": "Чтобы отменить, отпустите вне вариантов или нажмите Esc.",
+    "files_unknown": "Файлы",
+    "files_summary": "{count, plural, one {# файл} few {# файла} many {# файлов} other {# файла}}",
+    "files_summary_size": "{count, plural, one {# файл} few {# файла} many {# файлов} other {# файла}}, {size}",
+    "zone_attach_here": "Прикрепить к этому письму",
+    "zone_insert_inline": "Вставить в текст письма",
+    "zone_new_message": "Прикрепить к новому письму",
+    "zone_upload_files": "Загрузить в Файлы",
+    "zone_upload_folder": "Загрузить в {folder}",
+    "zone_calendar": "Добавить в календарь",
+    "zone_contacts": "Добавить в контакты",
+    "zone_open_eml": "Открыть письмо",
+    "zone_import_eml": "Импортировать в {folder}",
+    "note_limit_message": "До {size} на письмо",
+    "note_limit_file": "До {size} на файл",
+    "note_kept_offline": "Хранится на этом устройстве, пока вы снова не будете в сети",
+    "note_needs_connection": "Нужно подключение",
+    "announce": "{files, plural, =0 {Перетащены файлы} one {Перетащен # файл} few {Перетащено # файла} many {Перетащено # файлов} other {Перетащено # файла}}. Варианты: {choices}.",
+    "choose_title": "{count, plural, one {Куда отправить этот файл?} few {Куда отправить эти файлы?} many {Куда отправить эти файлы?} other {Куда отправить эти файлы?}}",
+    "save_first_failed": "Открытое письмо не удалось сохранить, поэтому приложение осталось на месте.",
+    "import_done": "{count, plural, one {# письмо импортировано в {folder}.} few {# письма импортировано в {folder}.} many {# писем импортировано в {folder}.} other {# письма импортировано в {folder}.}}",
+    "import_failed": "Не удалось импортировать {name}.",
+    "too_large_file": "{name} слишком большой. Ограничение: {max} на файл.",
+    "too_large_message": "Эти файлы слишком большие для одного письма. Ограничение: {max}.",
+    "folders_left_out": "Папки можно отправить только в Файлы, поэтому они пропущены.",
+    "nothing_here": "Эти файлы здесь нельзя использовать."
   },
   "desktopReminders": {
     "generic_title": "Напоминание",

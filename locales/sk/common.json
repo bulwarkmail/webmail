@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "Nájsť e-maily od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Nájsť priečinok",
+    "recent": "Nedávne",
+    "no_match": "Žiadny priečinok nevyhovuje",
+    "choose_folder": "Vybrať priečinok…",
+    "current_folder": "Už je v priečinku {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Označiť priečinok ako prečítaný",
     "mark_folder_tree_read": "Označiť priečinok a podpriečinky ako prečítané",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "Ďalšie možnosti"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skryť upozornenie na režim offline"
+  },
   "shell": {
     "resize": "Zmeniť veľkosť",
     "update_available": "K dispozícii je aktualizácia",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Doplnky",
     "group_account": "Účet",
     "switch_to": "Prepnúť na {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Ste offline. Niektoré akcie potrebujú pripojenie.",
+    "files_new_folder": "Nový priečinok…",
+    "files_new_file": "Nový súbor…",
+    "files_new_text_file": "Nový textový súbor…",
+    "files_upload_files": "Nahrať súbory…",
+    "files_upload_folder": "Nahrať priečinok…",
+    "files_share": "Zdieľať…",
+    "files_share_button": "Zdieľať",
+    "contacts_add_to_group": "Pridať do skupiny…",
+    "contacts_bulk_add_to_group": "Pridať do skupiny…",
+    "schedule_send": "Naplánovať odoslanie…"
   },
   "notification_center": {
     "title": "Oznámenia",
@@ -6936,6 +6959,23 @@
       "close": "Zavrieť"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vždy zobrazovať panel ponúk",
+    "always_show_description": "Inak sa zobrazí po stlačení klávesu Alt.",
+    "exit": "Koniec",
+    "tray_pause": "Pozastaviť upozornenia",
+    "tray_pause_hour": "Na 1 hodinu",
+    "tray_pause_tomorrow": "Do zajtra",
+    "tray_resume": "Znova zapnúť upozornenia",
+    "tray_open": "Otvoriť Bulwark",
+    "tray_quit": "Ukončiť Bulwark",
+    "tray_exit": "Ukončiť Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Uložiť koncept",
+    "attach_files": "Priložiť súbory…",
+    "shortcut_apps": "Prejsť na Poštu, Kalendár, Kontakty alebo Súbory"
+  },
   "appLock": {
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase nečinnosti žiada PIN v každom okne a na každej karte. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "Hlavné okno neodpovedalo. Vaša správa zostáva tu.",
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
+  },
+  "desktopDevTools": {
+    "section_title": "Riešenie problémov",
+    "label": "Nástroje pre vývojárov ({shortcut})",
+    "description": "Umožní, aby {shortcut} a F12 otvorili nástroje pre vývojárov v okne, kde ste. Vypne sa, keď sa aplikácia zamkne.",
+    "forced_off": "Vypnuté vašou organizáciou.",
+    "locked": "Na zmenu aplikáciu odomknite.",
+    "menu_toggle": "Zobraziť alebo skryť nástroje pre vývojárov"
+  },
+  "fileDrop": {
+    "overlay_label": "Pustiť súbory",
+    "overlay_title": "Kam majú súbory ísť?",
+    "overlay_hint": "Na zrušenie pustite mimo volieb alebo stlačte Esc.",
+    "files_unknown": "Súbory",
+    "files_summary": "{count, plural, one {# súbor} few {# súbory} many {# súboru} other {# súborov}}",
+    "files_summary_size": "{count, plural, one {# súbor} few {# súbory} many {# súboru} other {# súborov}}, {size}",
+    "zone_attach_here": "Priložiť k tejto správe",
+    "zone_insert_inline": "Vložiť do správy",
+    "zone_new_message": "Priložiť k novej správe",
+    "zone_upload_files": "Nahrať do Súborov",
+    "zone_upload_folder": "Nahrať do {folder}",
+    "zone_calendar": "Pridať do kalendára",
+    "zone_contacts": "Pridať do kontaktov",
+    "zone_open_eml": "Otvoriť správu",
+    "zone_import_eml": "Importovať do {folder}",
+    "note_limit_message": "Až {size} na správu",
+    "note_limit_file": "Až {size} na súbor",
+    "note_kept_offline": "Zostane v tomto zariadení, kým nebudete online",
+    "note_needs_connection": "Vyžaduje pripojenie",
+    "announce": "{files, plural, =0 {Pretiahnuté súbory} one {Pretiahnutý # súbor} few {Pretiahnuté # súbory} many {Pretiahnutého # súboru} other {Pretiahnutých # súborov}}. Voľby: {choices}.",
+    "choose_title": "{count, plural, one {Kam má tento súbor ísť?} few {Kam majú tieto súbory ísť?} many {Kam majú tieto súbory ísť?} other {Kam majú tieto súbory ísť?}}",
+    "save_first_failed": "Otvorenú správu sa nepodarilo uložiť, preto aplikácia zostala, kde bola.",
+    "import_done": "{count, plural, one {# správa importovaná do {folder}.} few {# správy importované do {folder}.} many {# správy importovanej do {folder}.} other {# správ importovaných do {folder}.}}",
+    "import_failed": "{name} sa nepodarilo importovať.",
+    "too_large_file": "{name} je príliš veľký. Limit je {max} na súbor.",
+    "too_large_message": "Tieto súbory sú na jednu správu príliš veľké. Limit je {max}.",
+    "folders_left_out": "Priečinky môžu ísť len do Súborov, preto boli vynechané.",
+    "nothing_here": "Tieto súbory sa tu nedajú použiť."
   },
   "desktopReminders": {
     "generic_title": "Pripomienka",

@@ -3684,6 +3684,13 @@
     },
     "find_emails_from": "חיפוש הודעות מ{name}"
   },
+  "menuMove": {
+    "filter_placeholder": "חיפוש תיקייה",
+    "recent": "אחרונות",
+    "no_match": "אין תיקייה תואמת",
+    "choose_folder": "בחירת תיקייה…",
+    "current_folder": "כבר בתיקייה {folder}"
+  },
   "shortcuts": {
     "title": "קיצורי מקלדת",
     "tip": "לחץ על? בכל עת כדי להראות את העזרה הזו",
@@ -6537,6 +6544,9 @@
   "top_bar": {
     "more": "אפשרויות נוספות"
   },
+  "windowChrome": {
+    "hide_offline_notice": "הסתרת ההודעה על מצב לא מקוון"
+  },
   "shell": {
     "resize": "שינוי גודל",
     "update_available": "יש עדכון",
@@ -6581,6 +6591,19 @@
     "group_plugins": "תוספים",
     "group_account": "חשבון",
     "switch_to": "מעבר אל {account}"
+  },
+  "menuAudit": {
+    "offline_header": "אין חיבור. חלק מהפעולות צריכות חיבור.",
+    "files_new_folder": "תיקיה חדשה…",
+    "files_new_file": "קובץ חדש…",
+    "files_new_text_file": "קובץ טקסט חדש…",
+    "files_upload_files": "העלה קבצים…",
+    "files_upload_folder": "העלה תיקייה…",
+    "files_share": "שתף…",
+    "files_share_button": "שתף",
+    "contacts_add_to_group": "הוסף לקבוצה…",
+    "contacts_bulk_add_to_group": "הוסף לקבוצה…",
+    "schedule_send": "תזמן שליחה…"
   },
   "notification_center": {
     "title": "התראות",
@@ -6937,6 +6960,23 @@
       "close": "סגירה"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "תמיד להציג את סרגל התפריטים",
+    "always_show_description": "אחרת הוא מופיע בלחיצה על Alt.",
+    "exit": "יציאה",
+    "tray_pause": "השהיית התראות",
+    "tray_pause_hour": "לשעה אחת",
+    "tray_pause_tomorrow": "עד מחר",
+    "tray_resume": "הפעלת ההתראות מחדש",
+    "tray_open": "פתיחת Bulwark",
+    "tray_quit": "סגירת Bulwark",
+    "tray_exit": "יציאה מ-Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "שמירת טיוטה",
+    "attach_files": "צירוף קבצים…",
+    "shortcut_apps": "מעבר לדואר, ליומן, לאנשי הקשר או לקבצים"
+  },
   "appLock": {
     "section_title": "נעילת אפליקציה",
     "section_desc": "מבקש PIN אחרי זמן ללא שימוש, בכל חלון ולשונית. בזמן הנעילה האפליקציה לא יכולה לקרוא את הדואר השמור במכשיר הזה עד שמישהו מזין את ה-PIN.",
@@ -7212,6 +7252,44 @@
     "back_no_answer": "החלון הראשי לא ענה. ההודעה שלכם נשארת כאן.",
     "types_character": "המקשים האלה מקלידים תו במקלדת שלכם, והוא יפסיק לעבוד בכל האפליקציות. נסו מקשים אחרים.",
     "reserved": "המערכת או רוב האפליקציות משתמשות במקשים האלה. נסו מקשים אחרים."
+  },
+  "desktopDevTools": {
+    "section_title": "פתרון בעיות",
+    "label": "כלים למפתחים ({shortcut})",
+    "description": "מאפשר ל־{shortcut} ול־F12 לפתוח את הכלים למפתחים בחלון שבו אתם נמצאים. נכבה שוב כשהאפליקציה ננעלת.",
+    "forced_off": "הארגון שלכם כיבה את זה.",
+    "locked": "בטלו את נעילת האפליקציה כדי לשנות זאת.",
+    "menu_toggle": "הצגה או הסתרה של הכלים למפתחים"
+  },
+  "fileDrop": {
+    "overlay_label": "שחררו קבצים",
+    "overlay_title": "לאן הקבצים ילכו?",
+    "overlay_hint": "כדי לבטל, שחררו מחוץ לאפשרויות או הקישו Esc.",
+    "files_unknown": "קבצים",
+    "files_summary": "{count, plural, one {קובץ אחד} two {שני קבצים} other {# קבצים}}",
+    "files_summary_size": "{count, plural, one {קובץ אחד} two {שני קבצים} other {# קבצים}}, {size}",
+    "zone_attach_here": "צירוף להודעה הזו",
+    "zone_insert_inline": "הוספה לגוף ההודעה",
+    "zone_new_message": "צירוף להודעה חדשה",
+    "zone_upload_files": "העלאה לקבצים",
+    "zone_upload_folder": "העלאה אל {folder}",
+    "zone_calendar": "הוספה ללוח השנה",
+    "zone_contacts": "הוספה לאנשי הקשר",
+    "zone_open_eml": "פתיחת ההודעה",
+    "zone_import_eml": "ייבוא אל {folder}",
+    "note_limit_message": "עד {size} להודעה",
+    "note_limit_file": "עד {size} לקובץ",
+    "note_kept_offline": "נשמר במכשיר הזה עד שתחזרו לרשת",
+    "note_needs_connection": "נדרש חיבור",
+    "announce": "{files, plural, =0 {קבצים נגררו} one {קובץ אחד נגרר} two {שני קבצים נגררו} other {# קבצים נגררו}}. אפשרויות: {choices}.",
+    "choose_title": "{count, plural, one {לאן הקובץ הזה ילך?} two {לאן הקבצים האלה ילכו?} other {לאן הקבצים האלה ילכו?}}",
+    "save_first_failed": "לא ניתן היה לשמור את ההודעה הפתוחה, לכן האפליקציה נשארה במקומה.",
+    "import_done": "{count, plural, one {הודעה אחת יובאה אל {folder}.} two {שתי הודעות יובאו אל {folder}.} other {# הודעות יובאו אל {folder}.}}",
+    "import_failed": "לא ניתן היה לייבא את {name}.",
+    "too_large_file": "{name} גדול מדי. המגבלה היא {max} לקובץ.",
+    "too_large_message": "הקבצים האלה גדולים מדי להודעה אחת. המגבלה היא {max}.",
+    "folders_left_out": "תיקיות יכולות ללכת רק לקבצים, לכן הן הושמטו.",
+    "nothing_here": "אי אפשר להשתמש בקבצים האלה כאן."
   },
   "desktopReminders": {
     "generic_title": "תזכורת",

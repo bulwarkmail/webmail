@@ -14,6 +14,7 @@ import { PlayCircle } from '@/components/icons';
 import { IS_LITE } from '@/lib/lite';
 import { DesktopUpdateSettings } from './desktop-update-settings';
 import { DesktopWindowSettings } from './desktop-window-settings';
+import { DesktopDevToolsSettings } from './desktop-devtools-settings';
 
 /**
  * The General page: language and time, which links the browser hands to
@@ -61,6 +62,7 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
       </SettingsSection>
 
       {!IS_LITE && <DesktopUpdateSettings />}
+      <DesktopDevToolsSettings />
     </div>
   );
 }

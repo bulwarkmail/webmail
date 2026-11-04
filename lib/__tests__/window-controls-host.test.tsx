@@ -1,9 +1,11 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { WindowMenuBar } from '@/components/layout/window-menu-bar';
+import { menuKeyText } from '@/lib/desktop/menu-bar';
+import { desktopBootScript } from '@/lib/desktop/boot';
 import { CONTROLS_ATTRIBUTE, CONTROLS_LEFT_ATTRIBUTE, ROW_ATTRIBUTE, ROW_LEFT_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, TITLEBAR_RIGHT_VAR, TITLEBAR_ROW_VAR, markWindowRows, readTitlebarArea, watchWindowRows } from '@/lib/window-controls-overlay';
 
 class FakeOverlay extends EventTarget {
@@ -34,32 +36,56 @@ afterEach(() => {
   root.removeAttribute(CONTROLS_LEFT_ATTRIBUTE);
 });
 
-describe('the menu strip in the desktop app', () => {
-  type BarEvent = { visible: boolean; open?: string };
+describe('the menu bar in the desktop app', () => {
+  type BarEvent = { visible: boolean; open?: string; pinned?: boolean };
+  type Line = { key: string; label: string; type: string; enabled: boolean; checked?: boolean; accelerator?: string; mnemonic?: number; items?: Line[] };
 
-  function withBar() {
+  const line = (key: string, label: string, extra: Partial<Line> = {}): Line => ({ key, label, type: 'normal', enabled: true, mnemonic: 0, ...extra });
+  const MENUS = [
+    { id: 'file', label: 'File', mnemonic: 'f', items: [
+      line('0/0', 'New message', { accelerator: 'CmdOrCtrl+N' }),
+      line('0/1', 'Print…', { enabled: false, mnemonic: 0 }),
+      { key: '0/2', label: '', type: 'separator', enabled: false },
+      line('0/3', 'Exit', { mnemonic: 1, accelerator: 'Ctrl+Q' }),
+    ] },
+    { id: 'view', label: 'View', mnemonic: 'v', items: [
+      line('1/0', 'Reading pane', { type: 'submenu', items: [line('1/0/0', 'On the right', { type: 'radio', checked: true }), line('1/0/1', 'Off', { type: 'radio', mnemonic: 1 })] }),
+      line('1/1', 'Always show the menu bar', { type: 'checkbox', checked: false }),
+      line('1/2', 'Zoom in', { mnemonic: 0, accelerator: 'CmdOrCtrl+Plus' }),
+    ] },
+    { id: 'help', label: 'Help', mnemonic: 'h', items: [line('2/0', 'Keyboard shortcuts', { mnemonic: 0, accelerator: '?' })] },
+  ];
+
+  function withBar(options: { legacy?: boolean; platform?: string } = {}) {
     let send: (event: BarEvent) => void = () => {};
     const open = vi.fn();
+    const run = vi.fn();
+    const report = vi.fn();
+    const setPinned = vi.fn();
     window.bulwarkDesktop = {
       version: 1,
-      platform: 'win32',
+      platform: options.platform ?? 'win32',
       menu: {
         setState: () => {},
         bar: {
-          entries: async () => [{ id: 'file', label: 'File', mnemonic: 'f' }, { id: 'edit', label: 'Edit', mnemonic: 'e' }],
+          entries: async () => MENUS.map(({ id, label, mnemonic }) => ({ id, label, mnemonic })),
           open,
           onEvent: (listener: (event: BarEvent) => void) => {
             send = listener;
             return () => {};
           },
+          ...(options.legacy ? {} : { menus: async () => MENUS, run, report, setPinned }),
         },
       },
     } as never;
-    return { open, send: (event: BarEvent) => send(event) };
+    return { open, run, report, setPinned, send: (event: BarEvent) => act(async () => send(event)) };
   }
 
   afterEach(() => {
     window.bulwarkDesktop = undefined;
+    document.documentElement.removeAttribute('data-menu-bar');
+    document.documentElement.removeAttribute('data-desktop');
+    localStorage.removeItem('bulwark-menu-bar');
   });
 
   const overlayOn = () => {
@@ -73,55 +99,184 @@ describe('the menu strip in the desktop app', () => {
     delete (navigator as unknown as { windowControlsOverlay?: unknown }).windowControlsOverlay;
   });
 
-  it('Alt shows the names with the focus on the first, and Escape gives it back', async () => {
-    overlayOn();
-    const bar = withBar();
-    const before = document.createElement('button');
+  const typed = () => {
+    const before = document.createElement('input');
     document.body.appendChild(before);
     before.focus();
+    return before;
+  };
+
+  it('Alt shows a row that moves the app down, with the keys on the first name, and Escape gives them back', async () => {
+    overlayOn();
+    const bar = withBar();
+    const before = typed();
     render(<WindowMenuBar />);
-    await act(async () => bar.send({ visible: true }));
+    await bar.send({ visible: true });
     const file = await screen.findByRole('menuitem', { name: 'File' });
     await waitFor(() => expect(document.activeElement).toBe(file));
+    expect(document.documentElement.hasAttribute('data-menu-bar')).toBe(true);
+    expect(screen.getByRole('menubar').hasAttribute('data-window-top-row')).toBe(true);
+    expect(bar.report).toHaveBeenLastCalledWith(expect.objectContaining({ active: true }));
+    // The letter that opens it is underlined while the keys are on the bar.
+    expect(file.querySelector('.underline')?.textContent).toBe('F');
     fireEvent.keyDown(file, { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Edit' }));
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'View' }));
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('menubar')).toBeNull();
+    expect(document.documentElement.hasAttribute('data-menu-bar')).toBe(false);
+    expect(bar.report).toHaveBeenLastCalledWith({ height: 0, active: false });
+    expect(document.activeElement).toBe(before);
+    before.remove();
+  });
+
+  it('draws the menu with its keys apart from the names, skips what is off, and runs a line where the keys were', async () => {
+    overlayOn();
+    const bar = withBar();
+    const before = typed();
+    render(<WindowMenuBar />);
+    await bar.send({ visible: true });
+    const file = await screen.findByRole('menuitem', { name: 'File' });
+    await waitFor(() => expect(document.activeElement).toBe(file));
+    fireEvent.keyDown(file, { key: 'ArrowDown' });
+    const menu = await screen.findByRole('menu', { name: 'File' });
+    const newMessage = within(menu).getByRole('menuitem', { name: /New message/ });
+    await waitFor(() => expect(document.activeElement).toBe(newMessage));
+    expect(newMessage.querySelector('[data-menu-label]')?.textContent).toBe('New message');
+    expect(newMessage.querySelector('[data-menu-keys]')?.textContent).toBe('Ctrl+N');
+    expect(within(menu).getByRole('menuitem', { name: /Print/ }).getAttribute('aria-disabled')).toBe('true');
+    // Down skips the line that's off.
+    fireEvent.keyDown(newMessage, { key: 'ArrowDown' });
+    expect(document.activeElement?.textContent).toContain('Exit');
+    fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
+    expect(bar.run).toHaveBeenCalledWith('0/3', 'Exit');
     expect(screen.queryByRole('menubar')).toBeNull();
     expect(document.activeElement).toBe(before);
     before.remove();
   });
 
-  it('a name opens that menu natively', async () => {
+  it('the arrows go across to the next menu and into a submenu', async () => {
     overlayOn();
     const bar = withBar();
     render(<WindowMenuBar />);
-    await act(async () => bar.send({ visible: true }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
-    expect(bar.open).toHaveBeenCalledWith('edit', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+    await bar.send({ visible: true, open: 'file' });
+    const menu = await screen.findByRole('menu', { name: 'File' });
+    await waitFor(() => expect(menu.contains(document.activeElement)).toBe(true));
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    const view = await screen.findByRole('menu', { name: 'View' });
+    await waitFor(() => expect(document.activeElement?.textContent).toContain('Reading pane'));
+    expect(screen.queryByRole('menu', { name: 'File' })).toBeNull();
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    const sub = await screen.findByRole('menu', { name: 'Reading pane' });
+    await waitFor(() => expect(sub.contains(document.activeElement)).toBe(true));
+    expect(within(sub).getByRole('menuitemradio', { name: /On the right/ }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+    expect(screen.queryByRole('menu', { name: 'Reading pane' })).toBeNull();
+    expect(document.activeElement?.textContent).toContain('Reading pane');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+    await screen.findByRole('menu', { name: 'File' });
+    expect(view.isConnected).toBe(false);
+    // Escape closes the menu and leaves the keys on its name.
+    await waitFor(() => expect(screen.getByRole('menu', { name: 'File' }).contains(document.activeElement)).toBe(true));
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'File' }));
   });
 
-  it('Alt and a letter opens that one right away', async () => {
+  it('Alt and a letter opens that menu, and a line\'s letter runs it', async () => {
     overlayOn();
     const bar = withBar();
     render(<WindowMenuBar />);
-    await act(async () => bar.send({ visible: true, open: 'file' }));
-    await waitFor(() => expect(bar.open).toHaveBeenCalledWith('file', expect.anything()));
+    await bar.send({ visible: true, open: 'view' });
+    const view = await screen.findByRole('menu', { name: 'View' });
+    await waitFor(() => expect(view.contains(document.activeElement)).toBe(true));
+    fireEvent.keyDown(document.activeElement!, { key: 'z' });
+    expect(bar.run).toHaveBeenCalledWith('1/2', 'Zoom in');
+  });
+
+  it('a click elsewhere puts it away', async () => {
+    overlayOn();
+    const bar = withBar();
+    render(<WindowMenuBar />);
+    await bar.send({ visible: true });
+    fireEvent.pointerDown(await screen.findByRole('menuitem', { name: 'Help' }), { button: 0 });
+    await screen.findByRole('menu', { name: 'Help' });
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole('menubar')).toBeNull();
+  });
+
+  it('always shown, it is there without Alt and takes no keys, and a click on a name opens that menu', async () => {
+    overlayOn();
+    const bar = withBar();
+    const before = typed();
+    render(<WindowMenuBar />);
+    await bar.send({ visible: false, pinned: true });
+    const help = await screen.findByRole('menuitem', { name: 'Help' });
+    expect(document.activeElement).toBe(before);
+    expect(help.querySelector('.underline')).toBeNull();
+    expect(document.documentElement.hasAttribute('data-menu-bar')).toBe(true);
+    expect(localStorage.getItem('bulwark-menu-bar')).toBe('pinned');
+    fireEvent.pointerDown(help, { button: 0 });
+    const menu = await screen.findByRole('menu', { name: 'Help' });
+    fireEvent.click(within(menu).getByRole('menuitem', { name: /Keyboard shortcuts/ }));
+    expect(bar.run).toHaveBeenCalledWith('2/0', 'Keyboard shortcuts');
+    // Still there: it's always shown.
+    expect(screen.getByRole('menubar')).toBeTruthy();
+    expect(document.activeElement).toBe(before);
+    await bar.send({ visible: false, pinned: false });
+    expect(screen.queryByRole('menubar')).toBeNull();
+    expect(localStorage.getItem('bulwark-menu-bar')).toBeNull();
+    before.remove();
+  });
+
+  it('an older shell opens the menu natively', async () => {
+    overlayOn();
+    const bar = withBar({ legacy: true });
+    render(<WindowMenuBar />);
+    await bar.send({ visible: true });
+    fireEvent.pointerDown(await screen.findByRole('menuitem', { name: 'View' }), { button: 0 });
+    expect(bar.open).toHaveBeenCalledWith('view', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
   });
 
   it('the shell can take it away again', async () => {
     overlayOn();
     const bar = withBar();
     render(<WindowMenuBar />);
-    await act(async () => bar.send({ visible: true }));
+    await bar.send({ visible: true });
     await screen.findByRole('menubar');
-    await act(async () => bar.send({ visible: false }));
+    await bar.send({ visible: false });
     expect(screen.queryByRole('menubar')).toBeNull();
   });
 
-  it('with no bridge there is none, and the title stays', async () => {
+  it('with no bridge there is none, and none on a Mac, which has the system bar', async () => {
     overlayOn();
-    render(<WindowMenuBar />);
+    const { unmount } = render(<WindowMenuBar />);
     expect(screen.queryByRole('menubar')).toBeNull();
+    unmount();
+    const bar = withBar({ platform: 'darwin' });
+    render(<WindowMenuBar />);
+    await bar.send({ visible: true });
+    expect(screen.queryByRole('menubar')).toBeNull();
+  });
+
+  it('an always-shown bar has its row from the first frame, before any script of the app', () => {
+    overlayOn();
+    localStorage.setItem('bulwark-menu-bar', 'pinned');
+    window.bulwarkDesktop = { version: 1, platform: 'darwin' } as never;
+    new Function(desktopBootScript())();
+    expect(document.documentElement.hasAttribute('data-menu-bar'), 'a Mac has the system bar').toBe(false);
+    window.bulwarkDesktop = { version: 1, platform: 'win32' } as never;
+    new Function(desktopBootScript())();
+    expect(document.documentElement.hasAttribute('data-menu-bar')).toBe(true);
+  });
+
+  it('menu keys read the way Windows writes them', () => {
+    expect(menuKeyText('CmdOrCtrl+N', 'win32')).toBe('Ctrl+N');
+    expect(menuKeyText('CmdOrCtrl+Plus', 'win32')).toBe('Ctrl++');
+    expect(menuKeyText('Alt+Left', 'win32')).toBe('Alt+←');
+    expect(menuKeyText('Shift+R', 'linux')).toBe('Shift+R');
+    expect(menuKeyText('Delete', 'win32')).toBe('Del');
+    expect(menuKeyText('?', 'win32')).toBe('?');
+    expect(menuKeyText('CommandOrControl+Shift+Z', 'win32')).toBe('Ctrl+Shift+Z');
   });
 });
 

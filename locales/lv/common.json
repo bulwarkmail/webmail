@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "Atrast e-pastus no {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Meklēt mapi",
+    "recent": "Nesen izmantotās",
+    "no_match": "Neviena mape neatbilst",
+    "choose_folder": "Izvēlēties mapi…",
+    "current_folder": "Jau mapē {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Atzīmēt mapi kā lasītu",
     "mark_folder_tree_read": "Atzīmēt mapi un apakšmapes kā lasītas",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "Citas iespējas"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Paslēpt bezsaistes paziņojumu"
+  },
   "shell": {
     "resize": "Mainīt izmēru",
     "update_available": "Pieejams atjauninājums",
@@ -6580,6 +6590,19 @@
     "group_plugins": "Spraudņi",
     "group_account": "Konts",
     "switch_to": "Pārslēgties uz {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Jūs esat bezsaistē. Dažām darbībām vajag savienojumu.",
+    "files_new_folder": "Jauna mape…",
+    "files_new_file": "Jauns fails…",
+    "files_new_text_file": "Jauns teksta fails…",
+    "files_upload_files": "Augšupielādēt failus…",
+    "files_upload_folder": "Augšupielādēt mapi…",
+    "files_share": "Kopīgot…",
+    "files_share_button": "Kopīgot",
+    "contacts_add_to_group": "Pievienot grupai…",
+    "contacts_bulk_add_to_group": "Pievienot grupai…",
+    "schedule_send": "Ieplānot sūtīšanu…"
   },
   "notification_center": {
     "title": "Paziņojumi",
@@ -6936,6 +6959,23 @@
       "close": "Aizvērt"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vienmēr rādīt izvēļņu joslu",
+    "always_show_description": "Citādi tā parādās, nospiežot Alt.",
+    "exit": "Iziet",
+    "tray_pause": "Pauzēt paziņojumus",
+    "tray_pause_hour": "Uz 1 stundu",
+    "tray_pause_tomorrow": "Līdz rītdienai",
+    "tray_resume": "Atkal ieslēgt paziņojumus",
+    "tray_open": "Atvērt Bulwark",
+    "tray_quit": "Aizvērt Bulwark",
+    "tray_exit": "Iziet no Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Saglabāt melnrakstu",
+    "attach_files": "Pievienot failus…",
+    "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "Galvenais logs neatbildēja. Jūsu ziņa paliek šeit.",
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
+  },
+  "desktopDevTools": {
+    "section_title": "Problēmu novēršana",
+    "label": "Izstrādātāju rīki ({shortcut})",
+    "description": "Ļauj {shortcut} un F12 atvērt izstrādātāju rīkus logā, kurā esat. Izslēdzas, kad lietotne tiek bloķēta.",
+    "forced_off": "Jūsu organizācija to ir izslēgusi.",
+    "locked": "Atbloķējiet lietotni, lai to mainītu.",
+    "menu_toggle": "Rādīt vai paslēpt izstrādātāju rīkus"
+  },
+  "fileDrop": {
+    "overlay_label": "Nometiet failus",
+    "overlay_title": "Kur likt failus?",
+    "overlay_hint": "Lai atceltu, nometiet ārpus izvēlēm vai nospiediet Esc.",
+    "files_unknown": "Faili",
+    "files_summary": "{count, plural, zero {# failu} one {# fails} other {# faili}}",
+    "files_summary_size": "{count, plural, zero {# failu} one {# fails} other {# faili}}, {size}",
+    "zone_attach_here": "Pievienot šim ziņojumam",
+    "zone_insert_inline": "Ievietot ziņojumā",
+    "zone_new_message": "Pievienot jaunam ziņojumam",
+    "zone_upload_files": "Augšupielādēt failos",
+    "zone_upload_folder": "Augšupielādēt mapē {folder}",
+    "zone_calendar": "Pievienot kalendāram",
+    "zone_contacts": "Pievienot kontaktiem",
+    "zone_open_eml": "Atvērt ziņojumu",
+    "zone_import_eml": "Importēt mapē {folder}",
+    "note_limit_message": "Līdz {size} vienam ziņojumam",
+    "note_limit_file": "Līdz {size} vienam failam",
+    "note_kept_offline": "Paliek šajā ierīcē, līdz atkal būsit tiešsaistē",
+    "note_needs_connection": "Vajadzīgs savienojums",
+    "announce": "{files, plural, =0 {Ievilkti faili} zero {Ievilkts # failu} one {Ievilkts # fails} other {Ievilkti # faili}}. Izvēles: {choices}.",
+    "choose_title": "{count, plural, zero {Kur likt šos failus?} one {Kur likt šo failu?} other {Kur likt šos failus?}}",
+    "save_first_failed": "Atvērto ziņojumu neizdevās saglabāt, tāpēc lietotne palika, kur bija.",
+    "import_done": "{count, plural, zero {# ziņojumu importēts mapē {folder}.} one {# ziņojums importēts mapē {folder}.} other {# ziņojumi importēti mapē {folder}.}}",
+    "import_failed": "{name} neizdevās importēt.",
+    "too_large_file": "{name} ir pārāk liels. Ierobežojums ir {max} vienam failam.",
+    "too_large_message": "Šie faili ir pārāk lieli vienam ziņojumam. Ierobežojums ir {max}.",
+    "folders_left_out": "Mapes var likt tikai failos, tāpēc tās tika izlaistas.",
+    "nothing_here": "Šos failus šeit nevar izmantot."
   },
   "desktopReminders": {
     "generic_title": "Atgādinājums",

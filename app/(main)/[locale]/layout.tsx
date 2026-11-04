@@ -32,6 +32,7 @@ import { OfflineHost } from "@/components/offline/offline-host";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { NotificationActionsHost } from "@/components/providers/notification-actions-host";
 import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
+import { FileDropHost } from "@/components/file-drop/file-drop-host";
 import { EditedFilesHost } from "@/components/desktop/edited-files-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
@@ -105,6 +106,7 @@ export default async function LocaleLayout({
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
                   {children}
+                  <FileDropHost />
                   <PluginDialogHost />
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />

@@ -3740,6 +3740,13 @@
     },
     "find_emails_from": "尋找來自 {name} 的郵件"
   },
+  "menuMove": {
+    "filter_placeholder": "尋找資料夾",
+    "recent": "最近使用",
+    "no_match": "沒有符合的資料夾",
+    "choose_folder": "選擇資料夾…",
+    "current_folder": "已在「{folder}」中"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",
     "mark_folder_tree_read": "將信件匣與子信件匣標示為已讀",
@@ -6536,6 +6543,9 @@
   "top_bar": {
     "more": "更多選項"
   },
+  "windowChrome": {
+    "hide_offline_notice": "隱藏離線提示"
+  },
   "shell": {
     "resize": "調整大小",
     "update_available": "有可用的更新",
@@ -6580,6 +6590,19 @@
     "group_plugins": "外掛程式",
     "group_account": "帳戶",
     "switch_to": "切換到 {account}"
+  },
+  "menuAudit": {
+    "offline_header": "您已離線。部分操作需要連線。",
+    "files_new_folder": "新增資料夾…",
+    "files_new_file": "新增檔案…",
+    "files_new_text_file": "新增文字檔案…",
+    "files_upload_files": "上傳檔案…",
+    "files_upload_folder": "上傳資料夾…",
+    "files_share": "分享…",
+    "files_share_button": "分享",
+    "contacts_add_to_group": "新增至群組…",
+    "contacts_bulk_add_to_group": "新增至群組…",
+    "schedule_send": "排程寄送…"
   },
   "notification_center": {
     "title": "通知",
@@ -6936,6 +6959,23 @@
       "close": "關閉"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "永遠顯示選單列",
+    "always_show_description": "否則按 Alt 鍵時顯示。",
+    "exit": "結束",
+    "tray_pause": "暫停通知",
+    "tray_pause_hour": "1 小時",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新開啟通知",
+    "tray_open": "開啟 Bulwark",
+    "tray_quit": "結束 Bulwark",
+    "tray_exit": "結束 Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "儲存草稿",
+    "attach_files": "附加檔案…",
+    "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
+  },
   "appLock": {
     "section_title": "應用程式鎖定",
     "section_desc": "在一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,在有人輸入 PIN 之前,應用程式無法讀取儲存在此裝置上的郵件。",
@@ -7211,6 +7251,44 @@
     "back_no_answer": "主視窗沒有回應。您的郵件仍在這裡。",
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
+  },
+  "desktopDevTools": {
+    "section_title": "疑難排解",
+    "label": "開發人員工具（{shortcut}）",
+    "description": "允許 {shortcut} 和 F12 為您所在的視窗開啟開發人員工具。應用程式鎖定時會再次關閉。",
+    "forced_off": "您的組織已關閉此功能。",
+    "locked": "請解除鎖定應用程式以變更此設定。",
+    "menu_toggle": "顯示或隱藏開發人員工具"
+  },
+  "fileDrop": {
+    "overlay_label": "放開檔案",
+    "overlay_title": "要把檔案放到哪裡？",
+    "overlay_hint": "在選項外放開或按 Esc 取消。",
+    "files_unknown": "檔案",
+    "files_summary": "{count, plural, other {# 個檔案}}",
+    "files_summary_size": "{count, plural, other {# 個檔案}}, {size}",
+    "zone_attach_here": "附加到此郵件",
+    "zone_insert_inline": "插入到郵件內文",
+    "zone_new_message": "附加到新郵件",
+    "zone_upload_files": "上傳到檔案",
+    "zone_upload_folder": "上傳到 {folder}",
+    "zone_calendar": "加入行事曆",
+    "zone_contacts": "加入聯絡人",
+    "zone_open_eml": "開啟郵件",
+    "zone_import_eml": "匯入到 {folder}",
+    "note_limit_message": "每封郵件最多 {size}",
+    "note_limit_file": "每個檔案最多 {size}",
+    "note_kept_offline": "在您重新連線前保留在此裝置上",
+    "note_needs_connection": "需要連線",
+    "announce": "{files, plural, =0 {已拖入檔案} other {已拖入 # 個檔案}}。選項：{choices}。",
+    "choose_title": "{count, plural, other {要把這些檔案放到哪裡？}}",
+    "save_first_failed": "無法儲存開啟的郵件，因此應用程式停留在原處。",
+    "import_done": "{count, plural, other {已將 # 封郵件匯入到 {folder}。}}",
+    "import_failed": "無法匯入 {name}。",
+    "too_large_file": "{name} 太大。每個檔案的上限為 {max}。",
+    "too_large_message": "這些檔案對一封郵件來說太大。上限為 {max}。",
+    "folders_left_out": "資料夾只能放到檔案中，因此已略過。",
+    "nothing_here": "這些檔案無法在此使用。"
   },
   "desktopReminders": {
     "generic_title": "提醒",
