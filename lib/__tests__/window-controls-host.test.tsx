@@ -38,12 +38,12 @@ afterEach(() => {
 
 describe('the menu bar in the desktop app', () => {
   type BarEvent = { visible: boolean; open?: string; pinned?: boolean };
-  type Line = { key: string; label: string; type: string; enabled: boolean; checked?: boolean; accelerator?: string; mnemonic?: number; items?: Line[] };
+  type Line = { key: string; id?: string; label: string; type: string; enabled: boolean; checked?: boolean; accelerator?: string; mnemonic?: number; items?: Line[] };
 
   const line = (key: string, label: string, extra: Partial<Line> = {}): Line => ({ key, label, type: 'normal', enabled: true, mnemonic: 0, ...extra });
   const MENUS = [
     { id: 'file', label: 'File', mnemonic: 'f', items: [
-      line('0/0', 'New message', { accelerator: 'CmdOrCtrl+N' }),
+      line('0/0', 'New message', { accelerator: 'CmdOrCtrl+N', id: 'file.newMessage' }),
       line('0/1', 'Print…', { enabled: false, mnemonic: 0 }),
       { key: '0/2', label: '', type: 'separator', enabled: false },
       line('0/3', 'Exit', { mnemonic: 1, accelerator: 'Ctrl+Q' }),
@@ -143,6 +143,9 @@ describe('the menu bar in the desktop app', () => {
     await waitFor(() => expect(document.activeElement).toBe(newMessage));
     expect(newMessage.querySelector('[data-menu-label]')?.textContent).toBe('New message');
     expect(newMessage.querySelector('[data-menu-keys]')?.textContent).toBe('Ctrl+N');
+    // Drawn as every menu's rows: its icon (by the shell's id) and the key as a keycap.
+    expect(newMessage.querySelector('svg')).not.toBeNull();
+    expect(newMessage.querySelector('[data-menu-keys]')?.hasAttribute('data-menu-shortcut')).toBe(true);
     expect(within(menu).getByRole('menuitem', { name: /Print/ }).getAttribute('aria-disabled')).toBe('true');
     // Down skips the line that's off.
     fireEvent.keyDown(newMessage, { key: 'ArrowDown' });

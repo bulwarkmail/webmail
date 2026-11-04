@@ -11,11 +11,15 @@ import type { LoadListAttachments } from "@/lib/list-attachments";
 import { listRowShowsChips } from "./attachment-chips";
 import { listVerificationCode } from "@/lib/verification-code";
 import { EmailContextMenu } from "./email-context-menu";
+import { SelectionView } from "./selection-view";
+import { restoreTargetForAll } from "@/lib/trash-origin";
+import { useSelectionActionList } from "./message-actions";
+import { useMessageActionShortcut } from "./message-action-shortcuts";
 import { ViewSourceDialog } from "./view-source-dialog";
 import { useCopyToAccount, useEmailExport, requestPrint } from "@/hooks/use-message-file-actions";
 import { BatchTagButton } from "./batch-tag-button";
 import { cn, cleanPreview } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish, FolderInput, CheckSquare } from "@/components/icons";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish, FolderInput } from "@/components/icons";
 import { createPortal } from "react-dom";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
@@ -51,7 +55,7 @@ import { useTranslations } from "next-intl";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
-import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
+import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionStarredWithUndo, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
@@ -208,6 +212,7 @@ export function EmailList({
   const openInWindow = useOpenEmailInWindow();
   const tSpam = useTranslations('email_viewer.spam');
   const tNotifications = useTranslations('notifications');
+  const tSelection = useTranslations('selectionView');
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
   const tListExtra = useTranslations('mail_list_extra');
@@ -407,6 +412,11 @@ export function EmailList({
   const [sourceEmail, setSourceEmail] = useState<Email | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  // The selection view's More actions opens only that part of the selection's menu.
+  const [menuSection, setMenuSection] = useState<'all' | 'more'>('all');
+  useEffect(() => {
+    if (!contextMenu.isOpen) setMenuSection('all');
+  }, [contextMenu.isOpen]);
   const later = useTimeoutWhileMounted();
   const parentRef = useRef<HTMLDivElement>(null);
   const batchToolbarRef = useRef<HTMLDivElement>(null);
@@ -654,6 +664,20 @@ export function EmailList({
     }
   };
 
+  const handleBatchSetStarred = async (starred: boolean) => {
+    if (!client || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await setSelectionStarredWithUndo(client, starred, {
+        success: tSelection(starred ? 'starred' : 'unstarred'),
+        error: tNotifications('error_updating'),
+        labels: undo,
+      });
+    } finally {
+      later(() => setIsProcessing(false), 500);
+    }
+  };
+
   const handleBatchUndoSpam = async () => {
     if (!client || isProcessing) return;
     setIsProcessing(true);
@@ -777,33 +801,45 @@ export function EmailList({
   // One read/unread button: "Mark as read" while any selected message is unread.
   const selectionHasUnread = selectedEmailsForRemoval.some((email) => !email.keywords?.$seen);
 
-  // Archive, Delete, Move, Mark read/unread and Tag, on the bar and in the
-  // reading pane. The pane's copies get their own test ids.
-  const selectionButtons = (where: 'bar' | 'pane') => {
-    const testId = (id: string) => (where === 'bar' ? id : `pane-${id}`);
-    // The pane has room: its buttons say what they do (mail-p2-15). The
-    // bar beside the list stays icons with tooltips.
-    const labelled = where === 'pane';
-    const shape = labelled ? { size: 'sm' as const, title: '', className: 'gap-1.5' } : {};
-    const name = (label: string) => (labelled ? <span data-selection-label="">{label}</span> : null);
-    return (
+  // The selection view's buttons: the selection menu's top level (useSelectionActionList).
+  const shortcutOf = useMessageActionShortcut();
+  const selectionUnread = selectedEmailsForRemoval.filter((email) => !email.keywords?.$seen).length;
+  const selectionRestoreTo = effectiveMailboxRole === 'trash' && hasSelection
+    ? restoreTargetForAll(selectedEmailsForRemoval, mailboxes, selectedMailbox)
+    : undefined;
+  const selectionActions = useSelectionActionList({
+    emails: selectedEmailsForRemoval,
+    currentMailboxRole: effectiveMailboxRole,
+    canMove: !moveMenuIsEmpty(selectionMoveModel),
+    canRemoveFromFolder: selectionCanLeaveFolder,
+    canTag: !isScheduledView,
+    onRestore: selectionRestoreTo ? () => void handleBatchMoveToMailbox(selectionRestoreTo) : undefined,
+    onArchive: () => void handleBatchArchive(),
+    onDelete: () => void handleBatchDelete(),
+    onMarkAsRead: (read) => void handleBatchMarkAsRead(read),
+    onSetStarred: (starred) => void handleBatchSetStarred(starred),
+    onMarkAsSpam: () => void handleBatchMarkAsSpam(),
+    onUndoSpam: () => void handleBatchUndoSpam(),
+    onRemoveFromFolder: () => void handleBatchRemoveFromFolder(),
+  });
+
+  // Archive, Delete, Move, Mark read/unread and Tag, as icons on the bar beside the
+  // list. The reading pane has the selection view.
+  const selectionButtons = () => (
       <>
         {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
-          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')} {...shape}>
+          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid="batch-archive">
             <Archive />
-            {name(tContextMenu('archive'))}
           </IconButton>
         )}
         <IconButton
           label={t('batch_actions.delete')}
           onClick={handleBatchDelete}
           disabled={isProcessing}
-          data-testid={testId('batch-delete')}
-          {...shape}
-          className={cn("text-destructive hover:text-destructive hover:bg-destructive/10", labelled && "gap-1.5")}
+          data-testid="batch-delete"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 />
-          {name(t('batch_actions.delete'))}
         </IconButton>
         {!moveMenuIsEmpty(selectionMoveModel) && (
           <IconButton
@@ -812,25 +848,20 @@ export function EmailList({
             aria-expanded={moveMenu.contextMenu.isOpen}
             onClick={(e) => moveMenu.openContextMenuFrom(e.currentTarget, null, 'end')}
             disabled={isProcessing}
-            data-testid={testId('batch-move')}
-            {...shape}
+            data-testid="batch-move"
           >
             <FolderInput />
-            {name(tContextMenu('move_to'))}
           </IconButton>
         )}
         <IconButton
           label={selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread')}
           onClick={() => handleBatchMarkAsRead(selectionHasUnread)}
           disabled={isProcessing}
-          data-testid={testId('batch-mark-read')}
-          {...shape}
+          data-testid="batch-mark-read"
         >
           {selectionHasUnread ? <MailOpen /> : <Mail />}
-          {name(selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread'))}
         </IconButton>
         <BatchTagButton
-          showLabel={labelled}
           key={hasSelection ? 'selection' : 'none'}
           title={tContextMenu('tag')}
           selectedIds={selectionTags.all}
@@ -839,11 +870,11 @@ export function EmailList({
           onToggle={handleBatchToggleTag}
           active={hasSelection && !isScheduledView}
           disabled={isProcessing}
-          testId={testId('batch-tag')}
+          testId="batch-tag"
         />
       </>
-    );
-  };
+  );
+
   // What the bar and the pane call the selection: conversations, as the list
   // shows them, or emails when conversations are off.
   const selectionTitle = disableThreading
@@ -1195,7 +1226,7 @@ export function EmailList({
             {/* Archive, Delete, Move, Mark read/unread, Tag, then what
                 fits a wide bar. The rest is in its ⋮, the selection's
                 context menu (R6). */}
-            {selectionButtons('bar')}
+            {selectionButtons()}
             {selectionCanLeaveFolder && !batchNarrow && (
               <IconButton
                 label={tContextMenu('remove_from_folder')}
@@ -1509,32 +1540,24 @@ export function EmailList({
         </ContextMenu>
       )}
 
-      {/* The reading pane for a selection: its count and the bar's buttons (mail-10). */}
+      {/* The reading pane for a selection: the selection menu's actions as buttons. */}
       {selectionPaneHost && hasSelection && !isScheduledView && createPortal(
-        <section aria-label={selectionTitle} className="text-center" data-testid="selection-pane">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
-            <CheckSquare className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-4">{selectionTitle}</h2>
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            {selectionButtons('pane')}
-            <IconButton
-              label={t('batch_actions.more')}
-              aria-haspopup="menu"
-              data-testid="pane-batch-more"
-              disabled={isProcessing || selectedEmailsForRemoval.length === 0}
-              onClick={(e) => {
-                const anchor = selectedEmailsForRemoval[0];
-                if (anchor) openContextMenuFrom(e.currentTarget, anchor, 'end');
-              }}
-            >
-              <MoreVertical />
-            </IconButton>
-          </div>
-          <Button variant="ghost" size="sm" onClick={clearSelection} disabled={isProcessing} className="mt-4 text-muted-foreground hover:text-foreground">
-            {t('batch_actions.clear_selection')}
-          </Button>
-        </section>,
+        <SelectionView
+          title={selectionTitle}
+          unread={selectionUnread}
+          entries={selectionActions.top}
+          shortcutOf={(entry) => (entry.key === 'star' ? undefined : shortcutOf(entry.key, entry.testId === 'ctx-mark-read'))}
+          onMove={(button) => moveMenu.openContextMenuFrom(button, null, 'start')}
+          onMore={(button) => {
+            const anchor = selectedEmailsForRemoval[0];
+            if (!anchor) return;
+            setMenuSection('more');
+            openContextMenuFrom(button, anchor, 'start');
+          }}
+          onClear={clearSelection}
+          tags={{ selectedIds: selectionTags.all, partialIds: selectionTags.some, scope: selectionTags.scope, onToggle: handleBatchToggleTag }}
+          disabled={isProcessing || selectedEmailsForRemoval.length === 0}
+        />,
         selectionPaneHost,
       )}
 
@@ -1600,6 +1623,8 @@ export function EmailList({
           } : undefined}
           onViewSource={contextMenuEmail && !canExport(contextMenuEmail) ? undefined : () => setSourceEmail(contextMenuEmail)}
           onBatchMarkAsRead={(read) => markSelectionRead(read)}
+          onBatchSetStarred={(starred) => void handleBatchSetStarred(starred)}
+          section={menuSection}
           batchTagIds={selectionTags.all}
           batchPartialTagIds={selectionTags.some}
           batchTagScope={selectionTags.scope}

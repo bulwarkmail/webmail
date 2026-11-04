@@ -69,6 +69,14 @@
       <true/>
       <key>DeveloperToolsAvailability</key>
       <integer>2</integer>
+      <key>RecentFilesInAttach</key>
+      <true/>
+      <key>FilesDriveEnabled</key>
+      <true/>
+      <key>FilesFolderSyncEnabled</key>
+      <true/>
+      <key>FilesDriveLetter</key>
+      <string>none</string>
       <key>Recommended</key>
       <dict>
         <key>UpdateChannel</key>

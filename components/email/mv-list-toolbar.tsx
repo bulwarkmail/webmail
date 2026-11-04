@@ -17,6 +17,7 @@ import {
   Trash2,
   RefreshCw,
   Fish,
+  Plus,
 } from "@/components/icons";
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
@@ -546,6 +547,7 @@ export function MvListToolbar({
                     <>
                       <ContextMenuSeparator />
                       <ContextMenuItem
+                        icon={Plus}
                         label={tSidebar("create_label")}
                         onClick={() => { closeMove(); onCreateFolder(); }}
                       />

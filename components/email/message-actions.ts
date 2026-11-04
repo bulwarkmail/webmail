@@ -17,6 +17,7 @@ import {
   Mail,
   MailOpen,
   Star,
+  StarOff,
   Pin,
   PinOff,
   Trash2,
@@ -319,4 +320,156 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   }
   if (o.extras && o.extras.length > 0) list = [...list, SEPARATOR, ...o.extras];
   return tidySeparators(list);
+}
+
+/**
+ * What a message's right-click and long-press menu shows at its top level, in the
+ * browser and in the desktop app alike: answer, file away, mark, spam, open. The rest
+ * goes under "More actions" (rowMenuSections). Restore in Trash, Not spam in Spam and a
+ * draft's or a scheduled message's own entries stay at the top.
+ */
+export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActionKey>([
+  "reschedule", "cancel_and_edit", "cancel_send", "edit_draft",
+  "reply", "reply_all", "forward",
+  "restore", "archive", "delete", "move",
+  "read", "star", "tag",
+  "spam",
+  "open_window",
+]);
+
+/**
+ * "More actions", in groups with a line between: forwarding, links, filing and marks,
+ * then save, print and source. Keys not named here (a host's own entries) go before
+ * the last group.
+ */
+const MORE_GROUPS: MessageActionKey[][] = [
+  ["forward_as_attachment"],
+  ["copy_message_link", "copy_conversation_link"],
+  ["copy_to_account", "rules", "remove_from_folder", "pin", "report_phishing", "find_from_sender"],
+  ["export", "print", "view_source"],
+];
+
+function moreGroupOf(key: MessageActionKey): number {
+  const at = MORE_GROUPS.findIndex((group) => group.includes(key));
+  return at >= 0 ? at : MORE_GROUPS.length - 1.5;
+}
+
+/** Splits one message's actions into the row menu's top level and its "More actions". */
+export function rowMenuSections(list: MessageActionEntry[]): { top: MessageActionEntry[]; more: MessageActionEntry[] } {
+  const top = tidySeparators(list.filter((entry) => entry.kind === "separator" || ROW_MENU_KEYS.has(entry.key)));
+  const rest = list.filter(
+    (entry): entry is Exclude<MessageActionEntry, { kind: "separator" }> => entry.kind !== "separator" && !ROW_MENU_KEYS.has(entry.key),
+  );
+  // Stable: within a group the list's own order stays.
+  const sorted = rest
+    .map((entry, index) => ({ entry, index, group: moreGroupOf(entry.key) }))
+    .sort((a, b) => a.group - b.group || a.index - b.index);
+  const more: MessageActionEntry[] = [];
+  sorted.forEach(({ entry, group }, i) => {
+    if (i > 0 && sorted[i - 1].group !== group) more.push(SEPARATOR);
+    more.push(entry);
+  });
+  return { top, more };
+}
+
+export interface SelectionActionOptions {
+  /** The selected messages. */
+  emails: Email[];
+  currentMailboxRole?: string;
+  canMove?: boolean;
+  canRemoveFromFolder?: boolean;
+  canCopyToAccount?: boolean;
+  /** Offer the Tag submenu. */
+  canTag?: boolean;
+  /** In Trash: puts every selected message back. */
+  onRestore?: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
+  onMarkAsRead?: (read: boolean) => void;
+  onSetStarred?: (starred: boolean) => void;
+  onMarkAsSpam?: () => void;
+  onUndoSpam?: () => void;
+  onForwardAsAttachment?: () => void;
+  onRemoveFromFolder?: () => void;
+}
+
+/**
+ * The actions for a selection of several messages. The selection's right-click menu
+ * and the reading pane's selection view both show these, in this order: the same
+ * structure as one message's row menu, without what needs a single message (answering,
+ * its own window, links, saving, printing, its source).
+ */
+export function useSelectionActionList(o: SelectionActionOptions): { top: MessageActionEntry[]; more: MessageActionEntry[] } {
+  const t = useTranslations("context_menu");
+  const tPhishing = useTranslations("phishing_report");
+  const tRecover = useTranslations("recover_deleted");
+  const tActions = useTranslations("reader_actions");
+  const archiveEnabled = useArchiveActionEnabled();
+  const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
+  const phishing = usePhishingReport(o.emails, o.currentMailboxRole);
+  const role = o.currentMailboxRole;
+  const inJunk = role === "junk";
+  const deleteForever = bulkDeleteIsPermanent({ role });
+  const someUnread = o.emails.some((e) => !e.keywords?.$seen);
+  const someRead = o.emails.some((e) => !!e.keywords?.$seen);
+  const allStarred = o.emails.length > 0 && o.emails.every((e) => !!e.keywords?.$flagged);
+
+  const item = (
+    key: MessageActionKey,
+    icon: Icon,
+    label: string,
+    run: (() => void) | undefined,
+    extra: { destructive?: boolean; testId?: string } = {},
+  ): MessageActionEntry => ({ kind: "item", key, icon, label, run: () => run?.(), disabled: !run, ...extra });
+
+  const restore = role === "trash" && o.onRestore
+    ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
+    : [];
+  // In Archive there's nowhere further to archive it to.
+  const archive = archiveEnabled && role !== "archive" ? [item("archive", Archive, t("archive"), o.onArchive, { testId: "ctx-archive" })] : [];
+  const del = item("delete", Trash2, deleteForever ? tActions("delete_forever") : t("delete"), o.onDelete, {
+    destructive: !mountainView,
+    testId: "ctx-delete",
+  });
+  const move: MessageActionEntry[] = o.canMove ? [{ kind: "submenu", key: "move", icon: FolderInput, label: t("move_to"), testId: "ctx-move-to" }] : [];
+  // A selection of read and unread mail gets both.
+  const read = [
+    ...(someUnread ? [item("read", MailOpen, t("mark_read"), () => o.onMarkAsRead?.(true), { testId: "ctx-mark-read" })] : []),
+    ...(someRead ? [item("read", Mail, t("mark_unread"), () => o.onMarkAsRead?.(false), { testId: "ctx-mark-unread" })] : []),
+  ];
+  // Takes the star off when every one has it, else stars them all.
+  const star = o.onSetStarred
+    ? [item("star", allStarred ? StarOff : Star, allStarred ? t("unstar") : t("star"), () => o.onSetStarred?.(!allStarred), {
+        testId: allStarred ? "ctx-unstar" : "ctx-star",
+      })]
+    : [];
+  const tag: MessageActionEntry[] = o.canTag ? [{ kind: "submenu", key: "tag", icon: Tag, label: t("tag"), testId: "ctx-tag" }] : [];
+  const spam = spamApplicableIn(role)
+    ? [item("spam", inJunk ? ShieldCheck : ShieldAlert, inJunk ? t("not_spam") : t("mark_as_spam"), inJunk ? o.onUndoSpam : o.onMarkAsSpam, {
+        destructive: !inJunk && !mountainView,
+        testId: inJunk ? "ctx-not-spam" : "ctx-spam",
+      })]
+    : [];
+
+  // The row menu's order in each layout (useMessageActionList).
+  const top = tidySeparators(mountainView
+    ? [...restore, ...archive, del, ...read, SEPARATOR, ...move, ...tag, SEPARATOR, ...star, ...spam]
+    : [...restore, ...archive, del, SEPARATOR, ...move, SEPARATOR, ...read, ...star, ...tag, SEPARATOR, ...spam]);
+
+  const copy: MessageActionEntry[] = o.canCopyToAccount
+    ? [{ kind: "submenu", key: "copy_to_account", icon: Copy, label: t("copy_to_account"), testId: "ctx-copy-to" }]
+    : [];
+  const more = tidySeparators([
+    item("forward_as_attachment", Paperclip, t("forward_as_attachments"), o.onForwardAsAttachment, { testId: "ctx-batch-forward-as-attachment" }),
+    SEPARATOR,
+    ...copy,
+    { kind: "submenu", key: "rules", icon: Filter, label: t("rules.title"), testId: "ctx-rules" },
+    ...(o.canRemoveFromFolder && o.onRemoveFromFolder
+      ? [item("remove_from_folder", FolderX, t("remove_from_folder"), o.onRemoveFromFolder, { testId: "ctx-remove-from-folder" })]
+      : []),
+    ...(phishing.available
+      ? [SEPARATOR, item("report_phishing", Fish, tPhishing("action"), phishing.report, { testId: "ctx-batch-report-phishing" })]
+      : []),
+  ]);
+  return { top, more };
 }

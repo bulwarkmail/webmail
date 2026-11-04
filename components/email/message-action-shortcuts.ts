@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { MessageActionKey } from "./message-actions";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
 /**
  * The keys the mail list runs a message's actions with (hooks/use-keyboard-shortcuts.ts),
@@ -32,8 +33,14 @@ export function messageActionShortcut(
   return entry.key;
 }
 
-/** `messageActionShortcut` with the user's single-key setting. */
+/**
+ * `messageActionShortcut` with the user's single-key setting, in the app's language as
+ * Windows writes the keys ("Umschalt + I" in German), for menus and tooltips.
+ */
 export function useMessageActionShortcut(): (key: MessageActionKey, unread?: boolean) => string | undefined {
   const singleKeys = useSettingsStore((state) => state.singleKeyShortcuts !== false);
-  return useCallback((key, unread) => messageActionShortcut(key, { unread, singleKeys }), [singleKeys]);
+  return useCallback((key, unread) => {
+    const hint = messageActionShortcut(key, { unread, singleKeys });
+    return hint && formatShortcutCombo(hint);
+  }, [singleKeys]);
 }

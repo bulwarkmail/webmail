@@ -5905,6 +5905,11 @@
     "cancelled": "{name} heeft \"{title}\" geannuleerd",
     "untitled": "Afspraak zonder titel"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} tot {end} geselecteerd.",
+    "selected_day": "{day} geselecteerd.",
+    "enter_hint": "Druk op Enter om een afspraak te maken."
+  },
   "company_calendars": {
     "section": "Organisatie"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "Nog niet bijgevoegd of opgeslagen, en nu verwijderd: {names}.",
     "signout_held": "Nog geopend in een ander programma, dus pas verwijderd als u ze daar sluit: {names}."
   },
+  "files_sync": {
+    "title": "Bestanden op deze computer",
+    "drive": {
+      "title": "Station Bestanden",
+      "label": "Bestanden als station tonen",
+      "description": "Je Bestanden verschijnen in Verkenner als een station. Een bestand wordt gedownload als je het opent.",
+      "unsupported": "Vereist Windows 10 versie 1809 of nieuwer.",
+      "root_name": "Station Bestanden",
+      "letter_label": "Stationsletter",
+      "letter_description": "Geeft het station een eigen letter in Verkenner.",
+      "letter_none": "Geen letter"
+    },
+    "folders": {
+      "title": "Gesynchroniseerde mappen",
+      "description": "Een map op deze computer en een map in Bestanden blijven gelijk, in beide richtingen.",
+      "empty": "Er worden nog geen mappen gesynchroniseerd.",
+      "forced_off": "Je organisatie heeft het synchroniseren van mappen uitgezet. De bestanden erin blijven op deze computer.",
+      "add": "Map toevoegen…",
+      "loading": "Je mappen worden geladen…",
+      "load_failed": "Je mappen in Bestanden konden niet worden geladen. Probeer het opnieuw.",
+      "pick_title": "Welke map in Bestanden?",
+      "pick_confirm": "Map op deze computer kiezen…",
+      "paired_with": "Met {folder} in Bestanden",
+      "pause": "Pauzeren",
+      "resume": "Hervatten",
+      "remove": "Verwijderen…",
+      "remove_title": "Deze map niet meer synchroniseren?",
+      "remove_message": "De bestanden op deze computer blijven waar ze zijn, en die in Bestanden ook. Wijzigingen gaan niet meer van de een naar de ander.",
+      "remove_confirm": "Synchronisatie stoppen",
+      "add_failed": {
+        "overlap": "Deze map staat in een gesynchroniseerde map, bevat er een of is een systeemmap. Kies een andere.",
+        "denied": "De app kan deze map niet gebruiken. Kies een andere.",
+        "policy": "Je organisatie staat dit niet toe.",
+        "failed": "De map kon niet worden toegevoegd. Probeer het opnieuw."
+      }
+    },
+    "status": {
+      "starting": "Bezig met starten…",
+      "idle": "Bijgewerkt. Laatst gesynchroniseerd {time}",
+      "idle_never": "Bijgewerkt",
+      "syncing": "Synchroniseren: {done} klaar, {pending} te gaan",
+      "paused": "Gepauzeerd",
+      "offline": "Offline. {count, plural, =0 {Wijzigingen wachten op de server} one {# wijziging wacht op de server} other {# wijzigingen wachten op de server}}",
+      "error": "Gestopt: {reason}",
+      "confirm_delete": "Gepauzeerd tot je de vraag hieronder beantwoordt",
+      "blocked": "Uitgezet door je organisatie"
+    },
+    "mass_delete": {
+      "title": "{count, plural, one {# item} other {# items}} verwijderen?",
+      "local": "{count, plural, one {# item is} other {# items zijn}} verwijderd uit {folder} op deze computer. {count, plural, one {Het} other {Ze}} ook in Bestanden verwijderen?",
+      "remote": "{count, plural, one {# item is} other {# items zijn}} verwijderd uit {folder} in Bestanden. {count, plural, one {Het} other {Ze}} ook op deze computer verwijderen?",
+      "allow": "{count, plural, one {Verwijderen} other {Alle verwijderen}}",
+      "restore": "{count, plural, one {Terugzetten} other {Alle terugzetten}}",
+      "later": "Later beslissen"
+    },
+    "activity": {
+      "title": "Recente activiteit",
+      "empty": "Er is nog niets gebeurd.",
+      "clear": "Wissen",
+      "to_files": "Naar Bestanden",
+      "to_computer": "Naar deze computer",
+      "mark_conflict": "Versieconflict",
+      "mark_error": "Fout",
+      "mark_question": "Wacht op je antwoord",
+      "uploaded": "{path} geüpload",
+      "downloaded": "{path} gedownload",
+      "folder-created": "Map {path} gemaakt",
+      "renamed": "{detail} hernoemd naar {path}",
+      "moved": "{detail} verplaatst naar {path}",
+      "deleted": "{path} verwijderd",
+      "trashed": "{path} naar de prullenbak verplaatst",
+      "conflict": "{path} is op beide plekken gewijzigd. De andere versie is bewaard als {detail}",
+      "renamed-for-disk": "{path} heet {detail} op deze computer, omdat de naam hier niet is toegestaan",
+      "too-large": "{path} is groter dan Bestanden toestaat ({detail}). Het blijft alleen op deze computer",
+      "waiting": "{path} wacht op de server",
+      "mass-delete": "Gepauzeerd voor het verwijderen van veel items",
+      "error": "{path} kon niet worden gesynchroniseerd"
+    },
+    "errors": {
+      "offline": "De server is niet bereikbaar",
+      "server_refused": "De server heeft de wijziging geweigerd",
+      "too_large": "Het bestand is te groot voor Bestanden",
+      "name_invalid": "De naam is niet toegestaan",
+      "disk_full": "De schijf is vol",
+      "denied": "Geen toegang",
+      "busy": "Een ander programma gebruikt het",
+      "quota": "Je opslag in Bestanden is vol",
+      "not_found": "Het bestaat niet meer",
+      "policy": "Je organisatie staat dit niet toe",
+      "failed": "Er ging iets mis"
+    },
+    "item": {
+      "label": "Op deze computer",
+      "synced": "Gesynchroniseerd",
+      "syncing": "Bezig met synchroniseren",
+      "pending": "Wacht op synchronisatie",
+      "error": "Niet gesynchroniseerd",
+      "online-only": "Alleen in Bestanden, wordt gedownload bij openen"
+    },
+    "show_in": {
+      "explorer": "Weergeven in Verkenner",
+      "finder": "Weergeven in Finder",
+      "file_manager": "Weergeven in bestandsbeheer",
+      "failed": "De map kon niet worden geopend."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Snel opstellen",
     "menu": "Snel opstellen",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier.",
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
+  },
+  "desktopAttachRecent": {
+    "heading": "Recente bestanden",
+    "browse": "Deze computer doorzoeken…",
+    "from_files": "Uit Bestanden…",
+    "missing": "\"{name}\" bestaat niet meer.",
+    "too_large": "\"{name}\" is groter dan {max} en kan niet worden bijgevoegd.",
+    "failed": "\"{name}\" kon niet worden bijgevoegd. Probeer het opnieuw."
   },
   "compose_windows": {
     "more_formatting": "Meer opmaak",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "Zo ziet u nieuwe mail terwijl u in een andere app werkt.",
     "tip_compose_keys": "Druk op {keys} om een nieuw bericht te schrijven",
     "tip_palette_keys": "Druk op {keys} om elke opdracht te vinden"
+  },
+  "selectionView": {
+    "starred": "Met ster gemarkeerd",
+    "unstarred": "Ster verwijderd"
   }
 }

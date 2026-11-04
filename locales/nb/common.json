@@ -5279,6 +5279,11 @@
     "cancelled": "{name} har avlyst «{title}»",
     "untitled": "Hendelse uten tittel"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} til {end} er valgt.",
+    "selected_day": "{day} er valgt.",
+    "enter_hint": "Trykk Enter for å opprette en hendelse."
+  },
   "company_calendars": {
     "section": "Organisasjon"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "Ikke lagt ved eller lagret ennå, og slettet nå: {names}.",
     "signout_held": "Fortsatt åpne i et annet program, så de slettes først når du lukker dem der: {names}."
   },
+  "files_sync": {
+    "title": "Filer på denne datamaskinen",
+    "drive": {
+      "title": "Filer-stasjon",
+      "label": "Vis Filer som en stasjon",
+      "description": "Filer vises i Filutforsker som en stasjon. En fil lastes ned når du åpner den.",
+      "unsupported": "Krever Windows 10 versjon 1809 eller nyere.",
+      "root_name": "Filer-stasjon",
+      "letter_label": "Stasjonsbokstav",
+      "letter_description": "Gir stasjonen sin egen bokstav i Filutforsker.",
+      "letter_none": "Ingen bokstav"
+    },
+    "folders": {
+      "title": "Synkroniserte mapper",
+      "description": "En mappe på denne datamaskinen og en mappe i Filer holdes like, i begge retninger.",
+      "empty": "Ingen mapper synkroniseres ennå.",
+      "forced_off": "Organisasjonen din har slått av synkronisering av mapper. Filene i dem blir værende på denne datamaskinen.",
+      "add": "Legg til mappe…",
+      "loading": "Laster inn mappene dine…",
+      "load_failed": "Mappene dine i Filer kunne ikke lastes inn. Prøv igjen.",
+      "pick_title": "Hvilken mappe i Filer?",
+      "pick_confirm": "Velg mappe på denne datamaskinen…",
+      "paired_with": "Med {folder} i Filer",
+      "pause": "Sett på pause",
+      "resume": "Fortsett",
+      "remove": "Fjern…",
+      "remove_title": "Slutte å synkronisere denne mappen?",
+      "remove_message": "Filene på denne datamaskinen blir der de er, og det samme gjør filene i Filer. Endringer går ikke lenger fra den ene til den andre.",
+      "remove_confirm": "Slutt å synkronisere",
+      "add_failed": {
+        "overlap": "Denne mappen ligger i en synkronisert mappe, inneholder en, eller er en systemmappe. Velg en annen.",
+        "denied": "Appen kan ikke bruke denne mappen. Velg en annen.",
+        "policy": "Organisasjonen din tillater ikke dette.",
+        "failed": "Mappen kunne ikke legges til. Prøv igjen."
+      }
+    },
+    "status": {
+      "starting": "Starter…",
+      "idle": "Oppdatert. Sist synkronisert {time}",
+      "idle_never": "Oppdatert",
+      "syncing": "Synkroniserer: {done} ferdig, {pending} gjenstår",
+      "paused": "På pause",
+      "offline": "Frakoblet. {count, plural, =0 {Endringer venter på serveren} one {# endring venter på serveren} other {# endringer venter på serveren}}",
+      "error": "Stoppet: {reason}",
+      "confirm_delete": "På pause til du svarer på spørsmålet nedenfor",
+      "blocked": "Slått av av organisasjonen din"
+    },
+    "mass_delete": {
+      "title": "Slette {count, plural, one {# element} other {# elementer}}?",
+      "local": "{count, plural, one {# element ble} other {# elementer ble}} slettet fra {folder} på denne datamaskinen. Slette {count, plural, one {det} other {dem}} i Filer også?",
+      "remote": "{count, plural, one {# element ble} other {# elementer ble}} slettet fra {folder} i Filer. Slette {count, plural, one {det} other {dem}} på denne datamaskinen også?",
+      "allow": "{count, plural, one {Slett det} other {Slett dem}}",
+      "restore": "{count, plural, one {Gjenopprett det} other {Gjenopprett dem}}",
+      "later": "Bestem senere"
+    },
+    "activity": {
+      "title": "Nylig aktivitet",
+      "empty": "Ingenting har skjedd ennå.",
+      "clear": "Tøm",
+      "to_files": "Til Filer",
+      "to_computer": "Til denne datamaskinen",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Feil",
+      "mark_question": "Venter på svaret ditt",
+      "uploaded": "Lastet opp {path}",
+      "downloaded": "Lastet ned {path}",
+      "folder-created": "Opprettet mappen {path}",
+      "renamed": "Endret navnet på {detail} til {path}",
+      "moved": "Flyttet {detail} til {path}",
+      "deleted": "Slettet {path}",
+      "trashed": "Flyttet {path} til papirkurven",
+      "conflict": "{path} ble endret begge steder. Den andre versjonen er beholdt som {detail}",
+      "renamed-for-disk": "{path} heter {detail} på denne datamaskinen, fordi navnet ikke er tillatt her",
+      "too-large": "{path} er større enn Filer tillater ({detail}). Den blir bare på denne datamaskinen",
+      "waiting": "{path} venter på serveren",
+      "mass-delete": "Satt på pause før sletting av mange elementer",
+      "error": "{path} kunne ikke synkroniseres"
+    },
+    "errors": {
+      "offline": "Serveren kan ikke nås",
+      "server_refused": "Serveren avviste endringen",
+      "too_large": "Filen er for stor for Filer",
+      "name_invalid": "Navnet er ikke tillatt",
+      "disk_full": "Disken er full",
+      "denied": "Ingen tilgang",
+      "busy": "Et annet program bruker den",
+      "quota": "Lagringsplassen din i Filer er full",
+      "not_found": "Den finnes ikke lenger",
+      "policy": "Organisasjonen din tillater ikke dette",
+      "failed": "Noe gikk galt"
+    },
+    "item": {
+      "label": "På denne datamaskinen",
+      "synced": "Synkronisert",
+      "syncing": "Synkroniserer",
+      "pending": "Venter på synkronisering",
+      "error": "Kunne ikke synkronisere",
+      "online-only": "Bare i Filer, lastes ned når den åpnes"
+    },
+    "show_in": {
+      "explorer": "Vis i Filutforsker",
+      "finder": "Vis i Finder",
+      "file_manager": "Vis i filbehandler",
+      "failed": "Mappen kunne ikke åpnes."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rask skriving",
     "menu": "Rask skriving",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
+  },
+  "desktopAttachRecent": {
+    "heading": "Nylige filer",
+    "browse": "Bla gjennom denne datamaskinen…",
+    "from_files": "Fra Filer…",
+    "missing": "«{name}» finnes ikke lenger.",
+    "too_large": "«{name}» er større enn {max} og kan ikke legges ved.",
+    "failed": "Kunne ikke legge ved «{name}». Prøv igjen."
   },
   "compose_windows": {
     "more_formatting": "Mer formatering",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "Slik ser du ny e-post mens du jobber i en annen app.",
     "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
     "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
+  },
+  "selectionView": {
+    "starred": "Stjernemerket",
+    "unstarred": "Stjerne fjernet"
   }
 }

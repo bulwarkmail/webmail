@@ -167,6 +167,7 @@ describe('the row menu', () => {
   it('reports a whole selection, one message each', () => {
     setAddress('soc@example.org');
     rowMenu('inbox', { isMultiSelect: true, selectedCount: 2, batchEmails: [email, other], onBatchMarkAsSpam: vi.fn() });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     fireEvent.click(screen.getByTestId('ctx-batch-report-phishing'));
     expect(usePhishingReportStore.getState().pending?.emails.map((e) => e.id)).toEqual(['e1', 'e2']);
   });

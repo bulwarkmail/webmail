@@ -64,7 +64,7 @@ interface MoveFolderListProps {
    * `panel`: the phone's full-width panel (44px rows).
    */
   variant?: "menu" | "dialog" | "panel";
-  /** Opens the Move dialog. Offered at the end of a long list, since a native menu has no filter field. */
+  /** Opens the Move dialog, which has the filter. Offered at the end of a long list. */
   onChooseFolder?: () => void;
   /** Always show the filter field (the dialog). */
   alwaysFilter?: boolean;
@@ -80,9 +80,8 @@ interface MoveFolderListProps {
  * greyed, other reachable accounts under their names, and a filter field
  * once the list is long.
  *
- * Each folder with subfolders is wrapped in `data-native-submenu`: the
- * desktop app's native copy of the menu makes it a submenu there, the folder
- * itself first (lib/desktop/native-menu.ts).
+ * Each folder with subfolders is wrapped in `data-native-submenu`, which keeps
+ * the folder and its subfolders together as one group.
  */
 export function MoveFolderList({
   model,

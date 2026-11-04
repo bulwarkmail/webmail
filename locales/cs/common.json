@@ -5905,6 +5905,11 @@
     "cancelled": "{name} zrušil(a) „{title}“",
     "untitled": "Událost bez názvu"
   },
+  "calendar_month_select": {
+    "selected_range": "Vybráno {start} až {end}.",
+    "selected_day": "Vybráno {day}.",
+    "enter_hint": "Stisknutím klávesy Enter vytvoříte událost."
+  },
   "company_calendars": {
     "section": "Organizace"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "Zatím nepřipojené ani neuložené, a teď smazané: {names}.",
     "signout_held": "Stále otevřené v jiném programu, takže se smažou až po zavření: {names}."
   },
+  "files_sync": {
+    "title": "Soubory v tomto počítači",
+    "drive": {
+      "title": "Jednotka Soubory",
+      "label": "Zobrazit Soubory jako jednotku",
+      "description": "Vaše Soubory se v Průzkumníkovi souborů zobrazí jako jednotka. Soubor se stáhne, až ho otevřete.",
+      "unsupported": "Vyžaduje Windows 10 verze 1809 nebo novější.",
+      "root_name": "Jednotka Soubory",
+      "letter_label": "Písmeno jednotky",
+      "letter_description": "Přidělí jednotce vlastní písmeno v Průzkumníkovi souborů.",
+      "letter_none": "Bez písmene"
+    },
+    "folders": {
+      "title": "Synchronizované složky",
+      "description": "Složka v tomto počítači a složka v Souborech zůstávají stejné, změny jdou oběma směry.",
+      "empty": "Zatím se nesynchronizují žádné složky.",
+      "forced_off": "Vaše organizace vypnula synchronizaci složek. Soubory v nich zůstanou v tomto počítači.",
+      "add": "Přidat složku…",
+      "loading": "Načítání vašich složek…",
+      "load_failed": "Vaše složky v Souborech se nepodařilo načíst. Zkuste to znovu.",
+      "pick_title": "Kterou složku v Souborech?",
+      "pick_confirm": "Vybrat složku v tomto počítači…",
+      "paired_with": "Se složkou {folder} v Souborech",
+      "pause": "Pozastavit",
+      "resume": "Pokračovat",
+      "remove": "Odebrat…",
+      "remove_title": "Přestat synchronizovat tuto složku?",
+      "remove_message": "Soubory v tomto počítači zůstanou, kde jsou, a stejně tak soubory v Souborech. Změny se mezi nimi už nebudou přenášet.",
+      "remove_confirm": "Přestat synchronizovat",
+      "add_failed": {
+        "overlap": "Tato složka leží v synchronizované složce, takovou složku obsahuje nebo je to systémová složka. Vyberte jinou.",
+        "denied": "Aplikace tuto složku nemůže používat. Vyberte jinou.",
+        "policy": "Vaše organizace to nepovoluje.",
+        "failed": "Složku se nepodařilo přidat. Zkuste to znovu."
+      }
+    },
+    "status": {
+      "starting": "Spouštění…",
+      "idle": "Aktuální. Naposledy synchronizováno {time}",
+      "idle_never": "Aktuální",
+      "syncing": "Synchronizace: hotovo {done}, zbývá {pending}",
+      "paused": "Pozastaveno",
+      "offline": "Offline. {count, plural, =0 {Změny čekají na server} one {# změna čeká na server} few {# změny čekají na server} many {# změny čeká na server} other {# změn čeká na server}}",
+      "error": "Zastaveno: {reason}",
+      "confirm_delete": "Pozastaveno, dokud neodpovíte na otázku níže",
+      "blocked": "Vypnuto vaší organizací"
+    },
+    "mass_delete": {
+      "title": "Smazat {count, plural, one {# položku} few {# položky} many {# položky} other {# položek}}?",
+      "local": "{count, plural, one {# položka byla smazána} few {# položky byly smazány} many {# položky bylo smazáno} other {# položek bylo smazáno}} ze složky {folder} v tomto počítači. Smazat {count, plural, one {ji} few {je} many {je} other {je}} i v Souborech?",
+      "remote": "{count, plural, one {# položka byla smazána} few {# položky byly smazány} many {# položky bylo smazáno} other {# položek bylo smazáno}} ze složky {folder} v Souborech. Smazat {count, plural, one {ji} few {je} many {je} other {je}} i v tomto počítači?",
+      "allow": "{count, plural, one {Smazat ji} few {Smazat je} many {Smazat je} other {Smazat je}}",
+      "restore": "{count, plural, one {Vrátit ji zpět} few {Vrátit je zpět} many {Vrátit je zpět} other {Vrátit je zpět}}",
+      "later": "Rozhodnout později"
+    },
+    "activity": {
+      "title": "Nedávná aktivita",
+      "empty": "Zatím se nic nestalo.",
+      "clear": "Vymazat",
+      "to_files": "Do Souborů",
+      "to_computer": "Do tohoto počítače",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Chyba",
+      "mark_question": "Čeká na vaši odpověď",
+      "uploaded": "Nahráno: {path}",
+      "downloaded": "Staženo: {path}",
+      "folder-created": "Vytvořena složka {path}",
+      "renamed": "Přejmenováno: {detail} na {path}",
+      "moved": "Přesunuto: {detail} do {path}",
+      "deleted": "Smazáno: {path}",
+      "trashed": "Přesunuto do koše: {path}",
+      "conflict": "{path} se změnilo na obou místech. Druhá verze je uložena jako {detail}",
+      "renamed-for-disk": "{path} se v tomto počítači jmenuje {detail}, protože tento název tu není povolený",
+      "too-large": "{path} je větší, než Soubory povolují ({detail}). Zůstává jen v tomto počítači",
+      "waiting": "{path} čeká na server",
+      "mass-delete": "Pozastaveno před smazáním mnoha položek",
+      "error": "{path} se nepodařilo synchronizovat"
+    },
+    "errors": {
+      "offline": "Server není dostupný",
+      "server_refused": "Server změnu odmítl",
+      "too_large": "Soubor je pro Soubory příliš velký",
+      "name_invalid": "Tento název není povolený",
+      "disk_full": "Disk je plný",
+      "denied": "Nepovoleno",
+      "busy": "Používá ho jiný program",
+      "quota": "Vaše úložiště v Souborech je plné",
+      "not_found": "Už neexistuje",
+      "policy": "Vaše organizace to nepovoluje",
+      "failed": "Něco se pokazilo"
+    },
+    "item": {
+      "label": "V tomto počítači",
+      "synced": "Synchronizováno",
+      "syncing": "Synchronizuje se",
+      "pending": "Čeká na synchronizaci",
+      "error": "Nepodařilo se synchronizovat",
+      "online-only": "Jen v Souborech, stáhne se při otevření"
+    },
+    "show_in": {
+      "explorer": "Zobrazit v Průzkumníkovi souborů",
+      "finder": "Zobrazit ve Finderu",
+      "file_manager": "Zobrazit ve správci souborů",
+      "failed": "Složku se nepodařilo otevřít."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rychlá zpráva",
     "menu": "Rychlá zpráva",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "Hlavní okno neodpovědělo. Vaše zpráva zůstává tady.",
     "types_character": "Tyto klávesy na vaší klávesnici píší znak, který by pak nefungoval v žádné aplikaci. Zkuste jiné klávesy.",
     "reserved": "Tyto klávesy používá systém nebo většina aplikací. Zkuste jiné klávesy."
+  },
+  "desktopAttachRecent": {
+    "heading": "Poslední soubory",
+    "browse": "Procházet tento počítač…",
+    "from_files": "Ze Souborů…",
+    "missing": "„{name}“ už neexistuje.",
+    "too_large": "„{name}“ je větší než {max} a nelze ho připojit.",
+    "failed": "„{name}“ se nepodařilo připojit. Zkuste to znovu."
   },
   "compose_windows": {
     "more_formatting": "Další formátování",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "Abyste viděli novou poštu, i když pracujete v jiné aplikaci.",
     "tip_compose_keys": "Stiskněte {keys} a napište novou zprávu",
     "tip_palette_keys": "Stiskněte {keys} a najděte jakýkoli příkaz"
+  },
+  "selectionView": {
+    "starred": "Označeno hvězdičkou",
+    "unstarred": "Hvězdička odebrána"
   }
 }

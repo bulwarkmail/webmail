@@ -16,11 +16,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "@/components/icons";
-import { useTranslations } from "next-intl";
-import { estimateNativeMenuWidth, nativeMenuPoint, nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { Check, ChevronRight } from "@/components/icons";
 import { placeMenu } from "@/lib/menu-placement";
-import { toast } from "@/stores/toast-store";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
 interface Position {
   x: number;
@@ -63,6 +61,10 @@ interface ContextMenuProps {
 const VIEWPORT_MARGIN = 10;
 const ANCHOR_GAP = 4;
 const HOVER_CLOSE_DELAY = 150;
+/** Letters typed within this many ms make one type-ahead word. */
+const TYPE_AHEAD_MS = 700;
+/** Every menu and submenu is at most this wide; longer labels wrap. */
+const MENU_MAX_WIDTH = `min(22rem, calc(100vw - ${2 * 10}px))`;
 
 // ─── Which menu is open ────────────────────────────────────────
 
@@ -131,6 +133,29 @@ export function menuLevelItems(level: HTMLElement): HTMLElement[] {
   );
   // A control inside a menu item (a plugin entry's button) is not a stop of its own.
   return all.filter((el) => !all.some((other) => other !== el && other.contains(el)) && isUsable(level, el));
+}
+
+/** A row's words for type-ahead: its label, else its text. */
+function itemText(el: HTMLElement): string {
+  return (el.querySelector<HTMLElement>("[data-menu-label]")?.textContent ?? el.textContent ?? "").trim().toLowerCase();
+}
+
+/**
+ * Type-ahead: the next row after `from` whose words start with `typed`, going round.
+ * A repeated single letter steps through the rows that start with it.
+ */
+export function typeAheadTarget(items: HTMLElement[], from: HTMLElement | null, typed: string): HTMLElement | undefined {
+  if (!typed || items.length === 0) return undefined;
+  const start = from ? items.indexOf(from) : -1;
+  const repeated = typed.length > 1 && [...typed].every((c) => c === typed[0]);
+  const prefix = repeated ? typed[0] : typed;
+  // Typing on (more letters): the current row may still match; one letter moves on.
+  const offset = typed.length > 1 && !repeated ? 0 : 1;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[(start + offset + i + items.length) % items.length];
+    if (itemText(item).startsWith(prefix)) return item;
+  }
+  return undefined;
 }
 
 /** Single-line text fields keep ←/→/Home/End; ↑/↓ still move through the menu. */
@@ -210,9 +235,6 @@ interface MenuLevel {
 const MenuLevelContext = createContext<MenuLevel | null>(null);
 const neverTouched = () => false;
 
-/** The desktop app shows this menu natively: it renders hidden, submenus and all, to be read. */
-const NativeMenuContext = createContext(false);
-
 function useMenuLevel(recentTouch: () => boolean): MenuLevel {
   const [openId, setOpenId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -259,57 +281,15 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const recentTouch = useCallback(() => Date.now() - lastTouchAt.current < 800, []);
     const level = useMenuLevel(recentTouch);
     const { request: requestLevel } = level;
-    const [nativeRefused, setNativeRefused] = useState(false);
-    const nativeMode = isOpen && mounted && !nativeRefused && nativeMenusAvailable();
-    const positionRef = useRef(position);
-    positionRef.current = position;
-    const tDesktop = useTranslations("desktopUi.menu");
-    const tDesktopRef = useRef(tDesktop);
-    tDesktopRef.current = tDesktop;
+    // Type-ahead: what was typed, and when.
+    const typed = useRef("");
+    const typedAt = useRef(0);
 
+    // The desktop app shows this same menu, not a native copy: a native menu
+    // has no icons, and writes keys with Chromium's names rather than Windows'.
     useEffect(() => {
       setMounted(true);
     }, []);
-
-    useEffect(() => {
-      if (!isOpen) setNativeRefused(false);
-    }, [isOpen]);
-
-    // In the desktop app: read what rendered and show that natively. See lib/desktop/native-menu.ts.
-    useEffect(() => {
-      if (!nativeMode) return;
-      const root = localRef.current;
-      if (!root) return;
-      let cancelled = false;
-      void (async () => {
-        const read = await readSettledMenu(root, () => cancelled);
-        if (cancelled) return;
-        if (read.unsupported) {
-          setNativeRefused(true);
-          return;
-        }
-        const { anchor: at } = positionRef.current;
-        // From a right-click it opens at the pointer, which the OS knows best.
-        // From a button: under it, lined up with the edge the HTML menu would
-        // use. The hidden copy is as wide as its widest submenu row, not as the
-        // native menu, so the native menu's own width is estimated.
-        const place = at
-          ? nativeMenuPoint(at, estimateNativeMenuWidth(read.items), getComputedStyle(root).direction === "rtl", ANCHOR_GAP)
-          : undefined;
-        const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
-        if (cancelled) return;
-        // "More from plugins": the menu itself, with what only it can show.
-        if (outcome === "html") {
-          setNativeRefused(true);
-          return;
-        }
-        if (outcome === "gone") toast.warning(tDesktopRef.current("pick_gone"));
-        onCloseRef.current();
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [nativeMode]);
 
     const anchor = position.anchor;
     const anchorKey = anchor ? `${anchor.left},${anchor.top},${anchor.right},${anchor.bottom},${anchor.align ?? ""}` : "";
@@ -506,8 +486,20 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             if (!text) consume(false);
             return;
           default:
-            // Letters and the rest: the app's shortcuts are suspended.
-            if (!text) consume(false);
+            // Letters and the rest: the app's shortcuts are suspended. A letter
+            // goes to the next row that starts with it (type-ahead).
+            if (text) return;
+            consume(false);
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.trim()) {
+              const now = Date.now();
+              typed.current = now - typedAt.current < TYPE_AHEAD_MS ? typed.current + e.key.toLowerCase() : e.key.toLowerCase();
+              typedAt.current = now;
+              const target = typeAheadTarget(menuLevelItems(current), active, typed.current);
+              if (target) {
+                e.preventDefault();
+                focusEl(target);
+              }
+            }
         }
       };
 
@@ -529,11 +521,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     // Once placed (it is invisible, and can't take the focus, before), the
     // first item gets the focus.
     useEffect(() => {
-      if (!isOpen || !isPositioned || nativeMode) return;
+      if (!isOpen || !isPositioned) return;
       const root = localRef.current;
       if (!root || root.contains(document.activeElement)) return;
       return focusFirstItem(root);
-    }, [isOpen, isPositioned, nativeMode]);
+    }, [isOpen, isPositioned]);
 
     const setRefs = (node: HTMLDivElement | null) => {
       localRef.current = node;
@@ -549,7 +541,6 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const renderPosition = adjustedPosition ?? position;
 
     return createPortal(
-      <NativeMenuContext.Provider value={nativeMode}>
       <MenuLevelContext.Provider value={level}>
         <div
           ref={setRefs}
@@ -564,8 +555,8 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           style={{
             left: renderPosition.x,
             top: renderPosition.y,
-            maxWidth: `calc(100vw - ${2 * VIEWPORT_MARGIN}px)`,
-            visibility: isPositioned && !nativeMode ? "visible" : "hidden",
+            maxWidth: MENU_MAX_WIDTH,
+            visibility: isPositioned ? "visible" : "hidden",
           }}
           role="menu"
           aria-label={label}
@@ -588,8 +579,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             {children}
           </div>
         </div>
-      </MenuLevelContext.Provider>
-      </NativeMenuContext.Provider>,
+      </MenuLevelContext.Provider>,
       document.body
     );
   }
@@ -657,7 +647,7 @@ export function ContextMenuItem({
         "focus:outline-none focus-visible:bg-muted",
         disabled && "opacity-50 cursor-not-allowed",
         !disabled && "hover:bg-muted cursor-pointer",
-        destructive && !disabled && "text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10"
+        destructive && !disabled && "hover:bg-destructive/10 hover:text-destructive focus-visible:bg-destructive/10 focus-visible:text-destructive"
       )}
       // Hovering another entry closes an open submenu of this level, after
       // a moment, so a diagonal move into the submenu doesn't.
@@ -675,7 +665,7 @@ export function ContextMenuItem({
         onClick();
       }}
     >
-      {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
+      {Icon && <Icon className={cn("w-4 h-4 flex-shrink-0", destructive && !disabled && "text-destructive")} />}
       {hint ? (
         <span className="flex-1 min-w-0">
           <span className="block" data-menu-label="">{label}</span>
@@ -690,22 +680,86 @@ export function ContextMenuItem({
   );
 }
 
+interface ContextMenuCheckItemProps {
+  /** With an icon, it takes the icon column and the tick goes to the row's end. */
+  icon?: React.ComponentType<{ className?: string }>;
+  label: string;
+  checked: boolean;
+  onClick: () => void;
+  /** "radio": one of a group (a sort order, a view); "checkbox": on or off. */
+  kind?: "checkbox" | "radio";
+  disabled?: boolean;
+  shortcut?: string;
+  testId?: string;
+  title?: string;
+  hint?: string;
+}
+
 /**
- * The key that does what a menu row does, at the row's end, muted, as a keycap. The
- * desktop app's native menu shows it as the item's accelerator, apart from the label
- * (lib/desktop/native-menu.ts reads `data-menu-shortcut`). Key hints mean nothing
- * without a keyboard: hidden on touch (R8).
+ * A row that is on or off, or one of a group: the tick sits in the icon column, so its
+ * label lines up with the rows that have icons.
  */
-export function MenuShortcut({ keys, className }: { keys: string; className?: string }) {
+export function ContextMenuCheckItem({ icon: Icon, label, checked, onClick, kind = "checkbox", disabled = false, shortcut, testId, title, hint }: ContextMenuCheckItemProps) {
+  const level = useContext(MenuLevelContext);
+  return (
+    <button
+      type="button"
+      role={kind === "radio" ? "menuitemradio" : "menuitemcheckbox"}
+      aria-checked={checked}
+      data-testid={testId}
+      disabled={disabled}
+      title={title}
+      className={cn(CONTEXT_MENU_ITEM_CLASS, !disabled && "hover:bg-muted")}
+      onMouseEnter={() => {
+        if (!hoverOpens()) return;
+        if (level && level.openId !== null && !level.recentTouch()) level.request(null, HOVER_CLOSE_DELAY);
+      }}
+      onFocus={() => {
+        if (level && level.openId !== null) level.request(null);
+      }}
+      onClick={(e) => {
+        if (disabled) return;
+        e.stopPropagation();
+        onClick();
+      }}
+    >
+      {Icon ? (
+        <Icon className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <span className="w-4 h-4 shrink-0 flex items-center justify-center" aria-hidden="true">
+          {checked && <Check className="w-4 h-4" />}
+        </span>
+      )}
+      {hint ? (
+        <span className="flex-1 min-w-0">
+          <span className="block" data-menu-label="">{label}</span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+      ) : (
+        <span className="flex-1 min-w-0 [overflow-wrap:anywhere]" data-menu-label="">{label}</span>
+      )}
+      {shortcut && <MenuShortcut keys={shortcut} />}
+      {Icon && <Check className={cn("w-4 h-4 shrink-0", !checked && "invisible")} aria-hidden="true" />}
+    </button>
+  );
+}
+
+/**
+ * The key that does what a menu row does, at the row's end, muted, as a keycap, in the
+ * app's language as Windows writes it ("Umschalt + R", "Entf" in German). Key hints mean
+ * nothing without a keyboard: hidden on touch (R8).
+ */
+export function MenuShortcut({ keys, className, ...rest }: { keys: string; className?: string } & Omit<React.HTMLAttributes<HTMLElement>, "children">) {
   return (
     <kbd
+      {...rest}
       data-menu-shortcut=""
       className={cn(
         "ms-auto shrink-0 rounded border border-border px-1.5 font-sans text-[0.6875rem] leading-4 text-muted-foreground pointer-coarse:hidden",
         className
       )}
     >
-      {keys}
+      {formatShortcutCombo(keys)}
     </kbd>
   );
 }
@@ -752,7 +806,6 @@ export function ContextMenuSubMenu({
   hint,
 }: ContextMenuSubMenuProps) {
   const parent = useContext(MenuLevelContext);
-  const native = useContext(NativeMenuContext);
   const id = useId();
   // Outside a ContextMenu (a host's own panel) it keeps its own state.
   const [localOpen, setLocalOpen] = useState(false);
@@ -842,19 +895,15 @@ export function ContextMenuSubMenu({
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
 
-      {native && !disabled && (
-        <div data-submenu-panel="" role="menu" aria-label={label} hidden={false}>
-          {children}
-        </div>
-      )}
-      {!native && isOpen && !disabled && (
+      {isOpen && !disabled && (
         <MenuLevelContext.Provider value={ownLevel}>
           <SubMenuPanel
             ref={panelRef}
             data-submenu-panel=""
             aria-label={label}
             onPlaced={onPanelPlaced}
-            className="min-w-[180px] max-w-[min(20rem,calc(100vw-20px))] bg-background rounded-md shadow-lg border border-border"
+            className={cn("min-w-[180px]", CONTEXT_MENU_PANEL_CLASS)}
+            style={{ maxWidth: MENU_MAX_WIDTH }}
             role="menu"
           >
             {/* As tall as the window allows (it's moved up to fit), then it scrolls. */}

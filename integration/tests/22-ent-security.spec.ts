@@ -392,6 +392,8 @@ test('item 2: the ARF format arrives as a feedback report', async ({ browser }) 
   await deliverAndWait({ from: ENT.bob, to: [ENT.alice], subject, text: 'Click here' });
   const alice = await userPage(browser, ENT.alice);
   await alice.locator(`[data-testid="email-list-item"][data-subject="${subject}"]`).first().click({ button: 'right', timeout: 60_000 });
+  // A row's menu has it under More actions.
+  await alice.getByTestId('ctx-more').click();
   await alice.getByTestId('ctx-report-phishing').click();
   await alice.getByTestId('phishing-report-confirm').click();
   await expect(alice.getByText(`Reported to ${ENT.sec} and moved to Junk.`).first()).toBeVisible({ timeout: 30_000 });

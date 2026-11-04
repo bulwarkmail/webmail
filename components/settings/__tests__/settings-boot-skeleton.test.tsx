@@ -35,6 +35,7 @@ const { useSettingsStore } = await import('@/stores/settings-store');
 const { SETTINGS_NAV_GROUPS } = await import('../settings-tab-icons');
 const { BOOT_HINTS_KEY } = await import('@/lib/boot-skeleton/keys');
 const { resetRailHintsMemo } = await import('@/lib/boot-skeleton/hints');
+const { useFilesSyncStore } = await import('@/stores/files-sync-store');
 
 /** A client that supports everything it is asked about. */
 const fullClient = new Proxy({}, {
@@ -91,9 +92,23 @@ describe('Settings while the session restores', () => {
     expect(skeleton()).toBeNull();
     const shown = [...document.querySelectorAll('[data-testid^="settings-tab-"]')]
       .map((el) => el.getAttribute('data-testid')!.slice('settings-tab-'.length));
-    // Recovery waits for a server probe this test doesn't answer.
-    const drawn = SETTINGS_NAV_GROUPS.flatMap((g) => g.tabs).filter((tab) => tab !== 'recovery');
+    // Recovery waits for a server probe this test doesn't answer; Files on
+    // this computer for the desktop app's sync engine.
+    const drawn = SETTINGS_NAV_GROUPS.flatMap((g) => g.tabs).filter((tab) => tab !== 'recovery' && tab !== 'files_sync');
     expect(shown).toEqual(drawn);
+  });
+
+  it('lists Files on this computer after Files only while the desktop sync engine runs', () => {
+    useAuthStore.setState({ isAuthenticated: true, isLoading: false, client: fullClient as never });
+    useFilesSyncStore.setState({ available: true });
+    try {
+      render(<SettingsApp linkSegments={[]} />);
+      const shown = [...document.querySelectorAll('[data-testid^="settings-tab-"]')]
+        .map((el) => el.getAttribute('data-testid')!.slice('settings-tab-'.length));
+      expect(shown.slice(shown.indexOf('files'), shown.indexOf('files') + 2)).toEqual(['files', 'files_sync']);
+    } finally {
+      useFilesSyncStore.getState().reset();
+    }
   });
 
   it('leaves the next load the pages this account has', () => {
