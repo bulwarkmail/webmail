@@ -418,10 +418,18 @@ describe('composer close guard with a follow-up', () => {
     const subject = screen.getByDisplayValue('Half-written more');
     expect(fireEvent.keyDown(subject, { key: 's', ctrlKey: true })).toBe(false);
     await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1));
+
+    // Nothing new to save: it still says so.
+    await waitFor(() => expect(screen.getByTestId('composer-save-status')).toHaveAttribute('data-status', 'idle'), { timeout: 4000 });
+    fireEvent.keyDown(subject, { key: 's', ctrlKey: true });
+    await waitFor(() => expect(screen.getByTestId('composer-save-status')).toHaveAttribute('data-status', 'saved'));
+    expect(createDraft).toHaveBeenCalledTimes(1);
   });
 
   it('shows Cc on Ctrl+Shift+C and Bcc on Ctrl+Shift+B, and puts the cursor there', async () => {
     renderWithCloseRef();
+    // A new message puts the cursor in To shortly after it opens; let that pass.
+    await act(async () => { await new Promise((r) => setTimeout(r, 250)); });
     const subject = screen.getByDisplayValue('Half-written more');
     expect(fireEvent.keyDown(subject, { key: 'C', ctrlKey: true, shiftKey: true })).toBe(false);
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'cc_label' })));

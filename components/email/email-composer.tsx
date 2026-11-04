@@ -4846,7 +4846,14 @@ export function EmailComposer({
       const key = e.key.toLowerCase();
       if (hasPrimaryModifier && !e.altKey && !e.shiftKey && key === 's') {
         e.preventDefault();
-        if (!isSavingAndClosing) void saveDraft({ announce: true });
+        // Says "Draft saved" also when autosave already had everything.
+        if (!isSavingAndClosing) {
+          void saveDraft({ announce: true }).then((id) => {
+            if (!id || saveFailedRef.current) return;
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus((status) => (status === 'saved' ? 'idle' : status)), 2000);
+          });
+        }
         return;
       }
       if (hasPrimaryModifier && !e.altKey && e.shiftKey && (key === 'c' || key === 'b')) {
