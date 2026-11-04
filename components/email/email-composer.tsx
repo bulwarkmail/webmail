@@ -72,7 +72,7 @@ import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
-import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-block";
 import {
@@ -412,6 +412,11 @@ interface EmailComposerProps {
   onDiscardDraft?: (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   onSaveState?: (data: ComposerDraftData) => void;
   /**
+   * Undo after the bin: opens a composer again with what this one held. The
+   * draft on the server is still there then.
+   */
+  onRestoreDiscarded?: (data: ComposerDraftData) => void;
+  /**
    * Offers "Open in new window". Called in the click, since a browser only
    * opens a window for a user action: the host opens it and answers with what
    * takes the draft, or null when no window opened. The composer then saves,
@@ -444,6 +449,8 @@ interface EmailComposerProps {
      * this one is gone before a toast here could be read.
      */
     onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /** The bin closed the window: another window says "Draft discarded" with Undo, and deletes it after. */
+    onDraftDiscarded?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
   };
   /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
   onSubjectChange?: (subject: string) => void;
@@ -606,6 +613,7 @@ export function EmailComposer({
   requestCloseRef,
   onDiscardDraft,
   onSaveState,
+  onRestoreDiscarded,
   popOut,
   popOutToMainLabel,
   ownWindow,
@@ -4699,7 +4707,9 @@ export function EmailComposer({
     </button>
   );
 
-  const handleDiscardAndClose = () => {
+  // `keepDraft`: the bin's discard, which deletes the draft once its Undo is
+  // over, not here.
+  const handleDiscardAndClose = ({ keepDraft = false }: { keepDraft?: boolean } = {}) => {
     cancelSaveAndClose();
     sendCancelledRef.current = true;
     explicitCloseRef.current = true;
@@ -4717,7 +4727,7 @@ export function EmailComposer({
     // From belongs to: switching From doesn't move the draft until it is
     // saved again, and the same id names another message on another server.
     const discardedDraftId = draftIdRef.current;
-    if (discardedDraftId && onDiscardDraft) {
+    if (discardedDraftId && onDiscardDraft && !keepDraft) {
       onDiscardDraft(discardedDraftId, {
         accountId: draftAccountIdRef.current,
         localAccountId: draftLocalAccountIdRef.current,
@@ -4753,6 +4763,11 @@ export function EmailComposer({
   // Discard deletes the draft, also one that has no unsaved changes, such as
   // a scheduled message reopened with "Cancel and edit". It used to share the
   // X button's path, which closed such a composer and kept the draft.
+  // It asks nothing (compose-p2-10): the composer goes at once with "Draft
+  // discarded · Undo", as Discard on the "Draft saved" toast does, and the
+  // draft is deleted once Undo is no longer offered. Undo brings the composer
+  // back with its text where the host can; elsewhere the last saved draft
+  // stays in Drafts. A window of its own has the main window say it.
   const handleDiscardClick = () => {
     if (saveCloseAttemptRef.current?.saving) return;
     cancelSaveAndClose();
@@ -4761,7 +4776,22 @@ export function EmailComposer({
       return;
     }
     afterCloseRef.current = null;
-    openCloseDialog('discard');
+    const draftId = draftIdRef.current;
+    const where = { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current };
+    const snapshot = snapshotStateRef.current();
+    const discard = onDiscardDraft;
+    const restore = onRestoreDiscarded;
+    const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
+    handleDiscardAndClose({ keepDraft: true });
+    if (windowDiscarded) {
+      if (draftId) windowDiscarded(draftId, where);
+      return;
+    }
+    discardWithUndo(
+      () => { if (draftId) discard?.(draftId, where); },
+      { discarded: tUx('draft_discarded'), undo: tUx('undo') },
+      restore ? () => restore(snapshot) : undefined,
+    );
   };
 
   // X, Escape, another message, a host's tab: one rule, as drafts save
@@ -6215,7 +6245,7 @@ export function EmailComposer({
             <Button variant="outline" onClick={() => dismissCloseDialog()}>
               {t('cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleDiscardAndClose}>
+            <Button variant="destructive" onClick={() => handleDiscardAndClose()}>
               {t('discard')}
             </Button>
             {closeDialogKind === 'close' && (

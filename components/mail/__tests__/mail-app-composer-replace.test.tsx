@@ -21,6 +21,7 @@ const stub = vi.hoisted(() => ({
   close: 'none' as 'none' | 'saves' | 'fails',
   closes: [] as string[],
   mounts: [] as string[],
+  restore: null as null | ((data: Record<string, unknown>) => void),
 }));
 
 vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
@@ -32,8 +33,9 @@ vi.mock('@/components/layout/sidebar', () => ({
 vi.mock('@/components/email/email-composer', async () => {
   const { useEffect, useRef } = await import('react');
   return {
-    EmailComposer: ({ mode, onSaveState, onClose, requestCloseRef }: {
+    EmailComposer: ({ mode, onSaveState, onClose, requestCloseRef, onRestoreDiscarded }: {
       mode: string;
+      onRestoreDiscarded?: (data: Record<string, unknown>) => void;
       onSaveState: (data: Record<string, unknown>) => void;
       onClose: () => void;
       requestCloseRef?: { current: unknown };
@@ -41,6 +43,7 @@ vi.mock('@/components/email/email-composer', async () => {
       const closed = useRef(false);
       useEffect(() => {
         stub.mounts.push(mode);
+        stub.restore = onRestoreDiscarded ?? null;
         // The old host moved the composer between dock and pane for ever
         // (React error 185 in the browser); stop it here instead of hanging.
         if (stub.mounts.length > 40) throw new Error('composer remount loop');
@@ -118,6 +121,7 @@ beforeEach(() => {
   stub.close = 'none';
   stub.closes = [];
   stub.mounts = [];
+  stub.restore = null;
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Unexpected network request')));
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   usePluginStore.setState({ initializePlugins: vi.fn().mockResolvedValue(undefined) });
@@ -222,5 +226,20 @@ describe('another composer while one is open (compose-p2-2)', () => {
     expect(stub.closes).toEqual(['reply']);
     expect(stub.mounts.length).toBe(mounted);
     expect(composerMode()).toBe('reply');
+  });
+});
+
+// compose-p2-10: Undo after the bin brings the composer back.
+describe('Undo after the bin', () => {
+  it('opens the discarded text again, closing whatever is open first', async () => {
+    stub.close = 'saves';
+    render(<MailApp />);
+    fireEvent.click(screen.getByText('stub compose'));
+    await screen.findByTestId('stub-composer');
+    const restore = stub.restore!;
+
+    act(() => restore({ to: 'bob@example.org', cc: '', bcc: '', subject: 'Back', body: 'kept', mode: 'forward', draftId: 'd1' }));
+    await waitFor(() => expect(composerMode()).toBe('forward'));
+    expect(stub.closes).toEqual(['compose']);
   });
 });

@@ -320,6 +320,18 @@ describe('PopoutHost', () => {
     expect(toasts[0].action?.label).toBe('email_composer.discard');
   });
 
+  // compose-p2-10: the window's bin.
+  it('says a pop-out discarded its draft, with Undo', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'draft-kept', requestId: 'k2', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true } });
+    await settle();
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].title).toBe('compose_ux.draft_discarded');
+    expect(toasts[0].action?.label).toBe('compose_ux.undo');
+  });
+
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {
     render(<PopoutHost />);
     await settle();

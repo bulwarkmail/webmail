@@ -5362,7 +5362,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         requestCloseRef={composerRequestCloseRef}
         onDiscardDraft={(draftId, draft) => {
           handleDiscardDraft(draftId, draft);
-          setPendingDraft(null);
+          // The bin and the toasts' Discard delete once their Undo is over,
+          // when another composer may be open: its draft stays.
+          if (composerSessionRef.current === composerSessionId) setPendingDraft(null);
+        }}
+        onRestoreDiscarded={(data) => {
+          void closeOpenComposer().then(() => {
+            startFreshComposerSession();
+            setPendingDraft(data);
+            setComposerMode(data.mode);
+            setShowComposer(true);
+            if (isMobile) setActiveView('viewer');
+          });
         }}
         popOut={popoutsOn && !isEmbedded ? composerPopOut : undefined}
       />

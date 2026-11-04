@@ -487,6 +487,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     onDraftKept: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
       announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined });
     },
+    onDraftDiscarded: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
+      announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined, discarded: true });
+    },
     onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
       const active = useAuthStore.getState().activeAccountId;
       announceMailChanged(active);

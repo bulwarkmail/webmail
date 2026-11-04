@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -7,6 +7,8 @@ import { EmailComposer } from '../email-composer';
 
 const editorKeyDown = vi.hoisted(() => vi.fn());
 const toastError = vi.hoisted(() => vi.fn());
+const discardWithUndo = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/compose/draft-close-toast', () => ({ discardWithUndo, showDraftSavedToast: vi.fn() }));
 
 vi.mock('@/components/email/rich-text-editor', () => ({
   RichTextEditor: () => React.createElement('div', {
@@ -209,25 +211,54 @@ const REOPENED_DRAFT = {
 
 describe('composer Discard button', () => {
   beforeEach(() => {
+    discardWithUndo.mockClear();
     toastError.mockClear();
     updateSetting.mockClear();
     editorKeyDown.mockClear();
   });
 
-  it('deletes a reopened draft without unsaved changes after confirming', async () => {
+  // compose-p2-10: no question; "Draft discarded" with Undo, as the toast's Discard.
+  it('closes at once and deletes a reopened draft once Undo is over', () => {
     const onDiscardDraft = vi.fn();
     const onClose = vi.fn();
     render(<EmailComposer initialData={REOPENED_DRAFT} onDiscardDraft={onDiscardDraft} onClose={onClose} />);
 
     fireEvent.click(screen.getByText('discard'));
-    const dialog = await screen.findByRole('alertdialog');
-    expect(within(dialog).getByText('discard_draft_title')).toBeInTheDocument();
-    // The user already chose to discard; there is nothing to save.
-    expect(within(dialog).queryByText('save')).toBeNull();
 
-    fireEvent.click(within(dialog).getByText('discard'));
-
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(discardWithUndo).toHaveBeenCalledTimes(1);
+    const [commit, labels] = discardWithUndo.mock.calls[0];
+    expect(labels).toEqual({ discarded: 'draft_discarded', undo: 'undo' });
+    // Not before the Undo time is over.
+    expect(onDiscardDraft).not.toHaveBeenCalled();
+    commit();
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-1', { accountId: undefined, localAccountId: undefined });
+  });
+
+  it('brings the text back on Undo, and deletes nothing', () => {
+    const onDiscardDraft = vi.fn();
+    const onRestoreDiscarded = vi.fn();
+    render(<EmailComposer initialData={REOPENED_DRAFT} onDiscardDraft={onDiscardDraft} onRestoreDiscarded={onRestoreDiscarded} onClose={() => {}} />);
+
+    fireEvent.click(screen.getByText('discard'));
+    const restore = discardWithUndo.mock.calls[0][2] as () => void;
+    restore();
+
+    expect(onRestoreDiscarded).toHaveBeenCalledWith(expect.objectContaining({ subject: 'Lunch', draftId: 'draft-1', to: 'bob@example.com' }));
+    expect(onDiscardDraft).not.toHaveBeenCalled();
+  });
+
+  it('has the main window say it for a composer in its own window', () => {
+    const onDraftDiscarded = vi.fn();
+    const onDiscardDraft = vi.fn();
+    render(<EmailComposer initialData={REOPENED_DRAFT} onDiscardDraft={onDiscardDraft} ownWindow={{ onDraftDiscarded }} onClose={() => {}} />);
+
+    fireEvent.click(screen.getByText('discard'));
+
+    expect(onDraftDiscarded).toHaveBeenCalledWith('draft-1', { accountId: undefined, localAccountId: undefined });
+    expect(discardWithUndo).not.toHaveBeenCalled();
+    expect(onDiscardDraft).not.toHaveBeenCalled();
   });
 
   it('closes an empty, never saved composer without asking', () => {

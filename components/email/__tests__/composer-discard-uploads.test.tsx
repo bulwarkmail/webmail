@@ -1,5 +1,5 @@
 import React, { StrictMode, useState } from 'react';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextIntlClientProvider } from 'next-intl';
 import { EmailComposer, type ComposerDraftData } from '@/components/email/email-composer';
@@ -134,9 +134,10 @@ async function openComposer(strict = false) {
     add: async (...files: File[]) => {
       fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files } }); await advance();
     },
-    dialog: (control: Control) => {
+    // The bin asks nothing (compose-p2-10).
+    discard: (control: Control) => {
       fireEvent.click(screen.getByTestId(control === 'toolbar' ? 'composer-discard' : 'composer-close'));
-      return within(screen.getByRole('alertdialog'));
+      expect(screen.queryByRole('alertdialog')).toBeNull();
     },
     reopen: async () => { act(() => reopen()); await advance(); },
   };
@@ -167,7 +168,7 @@ describe('explicit Discard with pending attachment uploads', () => {
       void upload.mock.results[0].value.then(settled, settled);
       expect([...resources.files.values()].map(f => f.name)).toEqual(['A.txt']);
       expect(resources.progress.size).toBe(1);
-      fireEvent.click(c.dialog(control).getByRole('button', { name: /^Discard$/ })); await advance();
+      c.discard(control); await advance();
       await c.reopen(); await c.add(file('B.txt')); await complete(1);
       expectNewComposer();
 
@@ -197,17 +198,6 @@ describe('explicit Discard with pending attachment uploads', () => {
       expect(resources.files.size).toBe(0); expect(resources.progress.size).toBe(0);
       expectNewComposer(); expect(c.closed).toHaveBeenCalledOnce();
     });
-
-    it('keeps active and queued uploads when the close/discard dialog is cancelled', async () => {
-      const uploaded = vi.spyOn(emailHooks.onAfterAttachmentUpload, 'emit');
-      const c = await openComposer(strict); await c.add(file('A.txt'), file('C.txt'));
-      const dialog = c.dialog(control);
-      expect(UploadXHR.instances[0].abort).not.toHaveBeenCalled();
-      fireEvent.click(dialog.getByRole('button', { name: /^Cancel$/ })); await advance();
-      await complete(0); expect(UploadXHR.instances[1].body?.name).toBe('C.txt'); await complete(1);
-      expect(uploaded.mock.calls.map(([attachment]) => attachment.name)).toEqual(['A.txt', 'C.txt']);
-      expect(c.closed).not.toHaveBeenCalled(); expect(resources.files.size).toBe(0); expect(resources.progress.size).toBe(0);
-    });
   });
 
   it.each(['saveFile', 'getFile', 'deleteFile'] as const)('cancels while asynchronous %s is pending', async method => {
@@ -234,7 +224,7 @@ describe('explicit Discard with pending attachment uploads', () => {
     await c.add(file('A.txt'), file('C.txt'));
     if (method === 'deleteFile') await complete(0);
     expect(entered).toHaveBeenCalledOnce();
-    fireEvent.click(c.dialog('toolbar').getByRole('button', { name: /^Discard$/ })); await advance();
+    c.discard('toolbar'); await advance();
     await c.reopen();
     await act(async () => { gate.resolve(); }); await advance();
     await c.add(file('B.txt')); await complete(UploadXHR.instances.findIndex(xhr => xhr.body?.name === 'B.txt'));

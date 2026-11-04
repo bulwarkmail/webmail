@@ -127,6 +127,8 @@ export interface DraftKeptNotice {
   accountId?: string;
   /** The login it was saved through. */
   localAccountId?: string;
+  /** Thrown away with the bin: "Draft discarded" with Undo, deleted after. */
+  discarded?: boolean;
 }
 
 export interface PopoutChannel {

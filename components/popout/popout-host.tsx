@@ -8,7 +8,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
-import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { takeOverMoved } from "@/lib/popout/moved-undo";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
@@ -180,10 +180,10 @@ export function PopoutHost() {
           break;
         case "draft-kept": {
           // Said here, as the pop-out closes with its Escape or X.
-          const { draftId, accountId, localAccountId } = message.notice;
+          const { draftId, accountId, localAccountId, discarded } = message.notice;
           claimOnce(`bulwark-popout-kept:${message.requestId}`, () => {
             const tr = tRef.current;
-            showDraftSavedToast(() => {
+            const discard = () => {
               const auth = useAuthStore.getState();
               const login = localAccountId ? auth.getClientForAccount(localAccountId) : auth.client;
               if (!login) {
@@ -191,12 +191,16 @@ export function PopoutHost() {
                 return;
               }
               void login.deleteEmail(draftId, accountId).catch((error: unknown) => console.error("Failed to discard draft:", error));
-            }, {
+            };
+            const labels = {
               saved: tr("email_composer.draft_saved"),
               discard: tr("email_composer.discard"),
               discarded: tr("compose_ux.draft_discarded"),
               undo: tr("compose_ux.undo"),
-            });
+            };
+            // The window's bin: Undo leaves the draft in Drafts.
+            if (discarded) discardWithUndo(discard, labels);
+            else showDraftSavedToast(discard, labels);
           });
           break;
         }
