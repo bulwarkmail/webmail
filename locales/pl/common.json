@@ -7863,6 +7863,13 @@
     "join_host": "Dołącz ({host})",
     "join_named": "Dołącz: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Narzędzia deweloperskie",
+    "updates_label": "Sprawdź aktualizacje",
+    "search": {
+      "quick_compose": "szybkie pisanie nowa wiadomość z dowolnego miejsca skrót globalny"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",
     "plugin_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu, więc nie działa. Jej ustawienia i dane zostają zachowane.",

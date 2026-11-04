@@ -7875,6 +7875,13 @@
     "join_host": "Tham gia ({host})",
     "join_named": "Tham gia: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Công cụ nhà phát triển",
+    "updates_label": "Kiểm tra bản cập nhật",
+    "search": {
+      "quick_compose": "soạn nhanh thư mới từ mọi nơi phím tắt toàn cục"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",
     "plugin_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này nên tiện ích không chạy. Cài đặt và dữ liệu của tiện ích vẫn được giữ lại.",

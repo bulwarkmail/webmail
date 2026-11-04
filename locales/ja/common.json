@@ -7863,6 +7863,13 @@
     "join_host": "参加 ({host})",
     "join_named": "参加: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "開発者ツール",
+    "updates_label": "アップデートを確認",
+    "search": {
+      "quick_compose": "クイック作成 どこからでも新規メッセージ グローバルショートカット"
+    }
+  },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",
     "plugin_refused": "組織はこのデバイスでこのプラグインを許可していないため、実行されません。設定とデータは保持されます。",

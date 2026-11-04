@@ -7863,6 +7863,13 @@
     "join_host": "Připojit se ({host})",
     "join_named": "Připojit se: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Vývojářské nástroje",
+    "updates_label": "Zkontrolovat aktualizace",
+    "search": {
+      "quick_compose": "rychlé psaní nová zpráva odkudkoli globální zkratka"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",
     "plugin_refused": "Vaše organizace tento plugin na tomto zařízení nepovoluje, proto neběží. Jeho nastavení a data zůstávají zachována.",

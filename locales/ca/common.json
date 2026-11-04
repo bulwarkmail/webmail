@@ -7863,6 +7863,13 @@
     "join_host": "Uneix-te ({host})",
     "join_named": "Uneix-te: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Eines per a desenvolupadors",
+    "updates_label": "Cerca actualitzacions",
+    "search": {
+      "quick_compose": "redacció ràpida missatge nou des de qualsevol lloc drecera global"
+    }
+  },
   "desktop_policy": {
     "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",
     "plugin_refused": "La teva organització no permet aquest connector en aquest dispositiu, per tant no s'executa. Se'n conserven la configuració i les dades.",

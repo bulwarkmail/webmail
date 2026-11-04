@@ -7863,6 +7863,13 @@
     "join_host": "Join ({host})",
     "join_named": "Join: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Developer tools",
+    "updates_label": "Check for updates",
+    "search": {
+      "quick_compose": "quick compose new message from anywhere global shortcut hotkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",
     "plugin_refused": "Your organisation doesn't allow this plugin on this device, so it doesn't run. Its settings and data are kept.",

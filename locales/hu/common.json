@@ -7863,6 +7863,13 @@
     "join_host": "Csatlakozás ({host})",
     "join_named": "Csatlakozás: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Fejlesztői eszközök",
+    "updates_label": "Frissítések keresése",
+    "search": {
+      "quick_compose": "gyors írás új üzenet bárhonnan globális billentyűparancs"
+    }
+  },
   "desktop_policy": {
     "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",
     "plugin_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt, ezért nem fut. A beállításai és adatai megmaradnak.",

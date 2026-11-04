@@ -7863,6 +7863,13 @@
     "join_host": "Katıl ({host})",
     "join_named": "Katıl: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Geliştirici araçları",
+    "updates_label": "Güncellemeleri denetle",
+    "search": {
+      "quick_compose": "hızlı yazma her yerden yeni ileti genel kısayol"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",
     "plugin_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor, bu yüzden çalışmıyor. Ayarları ve verileri korunur.",

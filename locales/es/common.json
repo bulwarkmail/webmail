@@ -7863,6 +7863,13 @@
     "join_host": "Unirse ({host})",
     "join_named": "Unirse: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Herramientas de desarrollo",
+    "updates_label": "Buscar actualizaciones",
+    "search": {
+      "quick_compose": "redacción rápida mensaje nuevo desde cualquier lugar atajo global"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Tu organización no permite este servidor en este dispositivo.",
     "plugin_refused": "Tu organización no permite este complemento en este dispositivo, por lo que no se ejecuta. Se conservan sus ajustes y datos.",

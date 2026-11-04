@@ -7863,6 +7863,13 @@
     "join_host": "加入 ({host})",
     "join_named": "加入: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "開發人員工具",
+    "updates_label": "檢查更新",
+    "search": {
+      "quick_compose": "快速撰寫 隨處新增郵件 全域快速鍵"
+    }
+  },
   "desktop_policy": {
     "server_refused": "您的組織不允許在此裝置上使用此伺服器。",
     "plugin_refused": "您的組織不允許在此裝置上使用此外掛程式，因此不會執行。其設定和資料會保留。",

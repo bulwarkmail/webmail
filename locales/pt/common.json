@@ -7863,6 +7863,13 @@
     "join_host": "Entrar ({host})",
     "join_named": "Entrar: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Ferramentas de programador",
+    "updates_label": "Procurar atualizações",
+    "search": {
+      "quick_compose": "escrita rápida nova mensagem de qualquer lugar atalho global"
+    }
+  },
   "desktop_policy": {
     "server_refused": "A sua organização não permite este servidor neste dispositivo.",
     "plugin_refused": "A sua organização não permite este plugin neste dispositivo, por isso não é executado. As suas definições e dados são mantidos.",

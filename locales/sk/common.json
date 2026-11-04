@@ -7863,6 +7863,13 @@
     "join_host": "Pripojiť sa ({host})",
     "join_named": "Pripojiť sa: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Vývojárske nástroje",
+    "updates_label": "Skontrolovať aktualizácie",
+    "search": {
+      "quick_compose": "rýchle písanie nová správa odkiaľkoľvek globálna skratka"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Vaša organizácia tento server na tomto zariadení nepovoľuje.",
     "plugin_refused": "Vaša organizácia tento plugin na tomto zariadení nepovoľuje, preto nebeží. Jeho nastavenia a údaje zostávajú zachované.",

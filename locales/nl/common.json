@@ -7863,6 +7863,13 @@
     "join_host": "Deelnemen ({host})",
     "join_named": "Deelnemen: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Ontwikkelaarstools",
+    "updates_label": "Naar updates zoeken",
+    "search": {
+      "quick_compose": "snel opstellen nieuw bericht overal sneltoets"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",
     "plugin_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat, dus hij draait niet. De instellingen en gegevens blijven bewaard.",

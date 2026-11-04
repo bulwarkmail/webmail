@@ -7863,6 +7863,13 @@
     "join_host": "Pievienoties ({host})",
     "join_named": "Pievienoties: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Izstrādātāja rīki",
+    "updates_label": "Meklēt atjauninājumus",
+    "search": {
+      "quick_compose": "ātrā rakstīšana jauna vēstule no jebkuras vietas globālais īsinājumtaustiņš"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Jūsu organizācija šajā ierīcē neatļauj šo serveri.",
     "plugin_refused": "Jūsu organizācija šajā ierīcē neatļauj šo spraudni, tāpēc tas nedarbojas. Tā iestatījumi un dati tiek saglabāti.",

@@ -7863,6 +7863,13 @@
     "join_host": "Teilnehmen ({host})",
     "join_named": "Teilnehmen: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Entwicklertools",
+    "updates_label": "Nach Updates suchen",
+    "search": {
+      "quick_compose": "Schnell schreiben neue Nachricht von überall Tastenkürzel Hotkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Ihre Organisation erlaubt diesen Server auf diesem Gerät nicht.",
     "plugin_refused": "Ihre Organisation erlaubt dieses Plugin auf diesem Gerät nicht, daher läuft es nicht. Seine Einstellungen und Daten bleiben erhalten.",

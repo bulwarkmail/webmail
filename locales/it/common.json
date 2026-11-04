@@ -7863,6 +7863,13 @@
     "join_host": "Partecipa ({host})",
     "join_named": "Partecipa: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Strumenti per sviluppatori",
+    "updates_label": "Cerca aggiornamenti",
+    "search": {
+      "quick_compose": "scrittura rapida nuovo messaggio da ovunque scorciatoia globale"
+    }
+  },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",
     "plugin_refused": "La tua organizzazione non consente questo plugin su questo dispositivo, quindi non viene eseguito. Le sue impostazioni e i suoi dati restano conservati.",

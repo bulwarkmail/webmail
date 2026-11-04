@@ -7863,6 +7863,13 @@
     "join_host": "Deltag ({host})",
     "join_named": "Deltag: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Udviklerværktøjer",
+    "updates_label": "Søg efter opdateringer",
+    "search": {
+      "quick_compose": "hurtig skrivning ny besked hvor som helst global genvej"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Din organisation tillader ikke denne server på denne enhed.",
     "plugin_refused": "Din organisation tillader ikke dette plugin på denne enhed, så det kører ikke. Dets indstillinger og data bevares.",

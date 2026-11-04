@@ -7863,6 +7863,13 @@
     "join_host": "Liitu ({host})",
     "join_named": "Liitu: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Arendaja tööriistad",
+    "updates_label": "Otsi uuendusi",
+    "search": {
+      "quick_compose": "kiirkirjutamine uus kiri kõikjalt kiirklahv"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",
     "plugin_refused": "Sinu organisatsioon ei luba seda pistikprogrammi selles seadmes, seega see ei tööta. Selle seaded ja andmed säilivad.",

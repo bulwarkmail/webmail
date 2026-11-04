@@ -248,6 +248,15 @@ export interface SettingsAppProps {
 /** Settings pages that share their name with an app in the palette's Go to group. */
 const APP_SETTINGS_TABS = new Set(['calendar', 'contacts', 'files']);
 
+/** A search result for a row the page shows only with Advanced on: opening it shows the row anyway. */
+function SearchResultAdvancedBadge({ label }: { label: string }) {
+  return (
+    <span data-testid="settings-result-advanced" className="shrink-0 text-[0.625rem] px-1.5 py-0.5 rounded bg-accent text-accent-foreground font-medium">
+      {label}
+    </span>
+  );
+}
+
 export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('settings', routeSegments);
@@ -487,8 +496,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Scroll to the section a link or event asked for once the page has it.
   // Pages fetch and render their sections after a loading state, so retry;
   // an advanced section stays hidden until the switch is on, so after a
-  // short wait turn it on rather than give up.
-  const updateSetting = useSettingsStore((s) => s.updateSetting);
+  // short wait the page shows that section alone, once, and the switch stays
+  // as it is (settings-p3-7).
   // The page itself rather than its skeleton (see the gate below).
   const pageShown = isAuthenticated && !!client;
   useEffect(() => {
@@ -499,12 +508,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const started = Date.now();
-    const deadline = started + 2000;
+    const deadline = started + 2400;
+    let asked = false;
     const attempt = () => {
       if (cancelled) return;
       if (scrollToSettingsSection(pendingSection.id)) { setPendingSection(null); return; }
-      if (Date.now() - started > 400 && !useSettingsStore.getState().showAdvancedSettings) {
-        updateSetting('showAdvancedSettings', true);
+      if (!asked && Date.now() - started > 400) {
+        asked = true;
+        window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { section: pendingSection.id, advanced: true } }));
       }
       if (Date.now() < deadline) timer = setTimeout(attempt, 80);
       else setPendingSection(null);
@@ -515,7 +526,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       window.cancelAnimationFrame(raf);
       if (timer) clearTimeout(timer);
     };
-  }, [pendingSection, activeTab, updateSetting, pageShown]);
+  }, [pendingSection, activeTab, pageShown]);
 
   // Leaving the settings panel drops any shared-account scope so it never
   // leaks into the next visit or another session.
@@ -581,8 +592,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         new CustomEvent('settings-plugin-expand', { detail: { pluginId: pendingHighlight.pluginId } })
       );
     }
-    // Collapsed lists (the theme gallery) open when the result is inside them.
-    window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { label: pendingHighlight.label } }));
+    // Collapsed lists (the theme gallery) open when the result is inside them,
+    // and an advanced row shows by itself, the Advanced switch left as it is
+    // (settings-p3-7). Only a row known to be advanced: any other stays as it is.
+    window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { label: pendingHighlight.label, advanced: pendingHighlight.advanced } }));
 
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -591,17 +604,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
     const escaped = pendingHighlight.label.replace(/"/g, '\\"');
     const selector = `[data-search-label="${escaped}"]`;
-    const deadline = Date.now() + 2000;
+    const deadline = Date.now() + 2400;
 
     const tryHighlight = () => {
       if (cancelled) return;
       const el = document.querySelector<HTMLElement>(selector);
       if (!el) {
-        // An advanced row the switch hides: reveal it, then keep looking.
-        // Only for a row known to be advanced; any other stays as it is.
-        if (pendingHighlight.advanced && !useSettingsStore.getState().showAdvancedSettings) {
-          useSettingsStore.getState().updateSetting('showAdvancedSettings', true);
-        }
         if (Date.now() < deadline) {
           retryTimer = setTimeout(tryHighlight, 80);
         }
@@ -1075,9 +1083,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         <button
                           key={`${tab.id}:${sub.label}`}
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full flex items-center ps-12 pe-5 py-2 pointer-coarse:min-h-11 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
+                          className="w-full flex items-center gap-2 ps-12 pe-5 py-2 pointer-coarse:min-h-11 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
                         >
                           <span className="truncate" title={sub.label}>{sub.label}</span>
+                          {sub.advanced && <SearchResultAdvancedBadge label={t('advanced_switch.badge')} />}
                         </button>
                       ))}
                     </div>
@@ -1243,9 +1252,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         <button
                           key={`${tab.id}:${sub.label}`}
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 flex items-center gap-2"
                         >
                           <span className="truncate block" title={sub.label}>{sub.label}</span>
+                          {sub.advanced && <SearchResultAdvancedBadge label={t('advanced_switch.badge')} />}
                         </button>
                       ))}
                     </div>

@@ -7863,6 +7863,13 @@
     "join_host": "Rejoindre ({host})",
     "join_named": "Rejoindre: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Outils de développement",
+    "updates_label": "Rechercher des mises à jour",
+    "search": {
+      "quick_compose": "rédaction rapide nouveau message depuis partout raccourci global"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Votre organisation n'autorise pas ce serveur sur cet appareil.",
     "plugin_refused": "Votre organisation n'autorise pas ce plugin sur cet appareil, il ne s'exécute donc pas. Ses réglages et ses données sont conservés.",

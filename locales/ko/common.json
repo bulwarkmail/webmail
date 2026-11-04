@@ -7863,6 +7863,13 @@
     "join_host": "참가 ({host})",
     "join_named": "참가: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "개발자 도구",
+    "updates_label": "업데이트 확인",
+    "search": {
+      "quick_compose": "빠른 작성 어디서나 새 메시지 전역 단축키"
+    }
+  },
   "desktop_policy": {
     "server_refused": "조직에서 이 기기의 이 서버 사용을 허용하지 않습니다.",
     "plugin_refused": "조직에서 이 기기의 이 플러그인 사용을 허용하지 않아 실행되지 않습니다. 설정과 데이터는 유지됩니다.",

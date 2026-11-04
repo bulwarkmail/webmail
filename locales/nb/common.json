@@ -7863,6 +7863,13 @@
     "join_host": "Bli med ({host})",
     "join_named": "Bli med: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Utviklerverktøy",
+    "updates_label": "Se etter oppdateringer",
+    "search": {
+      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",
     "plugin_refused": "Organisasjonen din tillater ikke dette programtillegget på denne enheten, så det kjører ikke. Innstillingene og dataene beholdes.",

@@ -38,6 +38,7 @@ const { useEmailStore } = await import('@/stores/email-store');
 const { useAccountStore } = await import('@/stores/account-store');
 const { useFilesSyncStore } = await import('@/stores/files-sync-store');
 const { TourProvider } = await import('@/components/tour/tour-provider');
+const { SETTINGS_TAB_IDS } = await import('@/lib/settings-tabs');
 const { AdvancedSettingsProvider } = await import('../settings-section');
 const { tabSearchEntries, getByPath, withAppName, settingsTabLabelKey } = await import('@/lib/settings-search');
 const { setStoreBackend } = await import('@/lib/store/client/api');
@@ -95,6 +96,7 @@ const DESKTOP_BRIDGE = {
       },
       pausedUntil: null,
       shortcutActive: false,
+      quickCompose: { shortcut: null, active: false, locked: false, builtIn: 'Ctrl+Alt+M' },
     }),
     defaultAppStatus: async () => ({ registered: true, mailto: false, webcal: false }),
     onStatusChange: () => () => {},
@@ -127,8 +129,8 @@ const TAB_PAGES: Record<string, string[]> = {
   offline: ['offline'], privacy: ['privacy'], about: ['about'],
 };
 
-describe('settings search index', () => {
-  it('has a row for every entry on its page', { timeout: 180_000 }, async () => {
+/** The stores every page reads, answering as a signed-in account with every feature. */
+function setUpStores() {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no network')));
     useAuthStore.setState({ isAuthenticated: true, authMode: 'basic', client: CLIENT, activeAccountId: 'acc' } as never);
     useVacationStore.setState({ isSupported: true, isLoading: false, forwardAvailable: true, fetchVacationResponse: vi.fn(async () => {}) } as never);
@@ -139,19 +141,27 @@ describe('settings search index', () => {
     useEmailStore.setState({ fetchMailboxes: vi.fn(async () => {}) } as never);
     // jsdom has no OPFS: the store says it's there, as a browser would, so Offline draws its rows.
     setStoreBackend({ supported: () => true } as never);
+}
+
+/** The desktop app's variant: its bridge, and the Files engine running on Windows. */
+function applyDesktopBridge() {
+  window.bulwarkDesktop = DESKTOP_BRIDGE as never;
+  useFilesSyncStore.setState({
+    available: true,
+    account: 'acc',
+    drive: { supported: true, forcedOff: false, wanted: [], letter: { letter: null, chosen: null, locked: false, available: ['Z'] } },
+  });
+}
+
+describe('settings search index', () => {
+  it('has a row for every entry on its page', { timeout: 180_000 }, async () => {
+    setUpStores();
     const out: Record<string, Record<string, { on: string[]; off: string[]; sections: string[]; error?: string }>> = {};
     const realMatchMedia = window.matchMedia;
     const variants: Record<string, () => void> = {
       base: () => {},
-      desktop: () => {
-        window.bulwarkDesktop = DESKTOP_BRIDGE as never;
-        // Files on this computer: the engine runs, on Windows, with the drive on offer.
-        useFilesSyncStore.setState({
-          available: true,
-          account: 'acc',
-          drive: { supported: true, forcedOff: false, wanted: [], letter: { letter: null, chosen: null, locked: false, available: ['Z'] } },
-        });
-      },
+      // Files on this computer: the engine runs, on Windows, with the drive on offer.
+      desktop: applyDesktopBridge,
       touch: () => {
         window.matchMedia = ((q: string) => ({ ...realMatchMedia(q), matches: q.includes('coarse') })) as typeof window.matchMedia;
       },
@@ -254,6 +264,74 @@ describe('settings search index', () => {
         }
       }
     }
+    expect([...new Set(problems)]).toEqual([]);
+  });
+});
+
+// settings-p3-7: a result for an advanced row opens that row with "Show advanced
+// settings" off, alone, and leaves the switch off. Every advanced entry, on its own
+// page, in the browser and in the desktop app.
+describe('settings search results for advanced rows', () => {
+  it('every one lands on its row without turning the Advanced switch on', { timeout: 300_000 }, async () => {
+    setUpStores();
+    const problems: string[] = [];
+    // Every page a result names is a settings page.
+    for (const tab of Object.keys(tabSearchEntries)) {
+      if (!SETTINGS_TAB_IDS.includes(tab as never)) problems.push(`${tab}: no such settings page`);
+      if (!TAB_PAGES[tab]) problems.push(`${tab}: no component for the page`);
+    }
+    const settingsInitial = useSettingsStore.getState();
+    for (const [tab, entries] of Object.entries(tabSearchEntries)) {
+      const advanced = entries.filter((entry) => entry.advanced && entry.when !== 'desktopMac' && entry.when !== 'touch' && entry.when !== 'mountainView' && entry.when !== 'multiAccount');
+      for (const entry of advanced) {
+        useSettingsStore.setState(settingsInitial, true);
+        useSettingsStore.setState({ showAdvancedSettings: false });
+        window.bulwarkDesktop = undefined;
+        useFilesSyncStore.getState().reset();
+        if (entry.when?.startsWith('desktop')) applyDesktopBridge();
+        const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
+        const others = advanced
+          .filter((other) => other !== entry)
+          .map((other) => withAppName(getByPath(en, other.label), 'Bulwark') as string);
+        const views = TAB_PAGES[tab].map((page) => {
+          const Page = pages[page as keyof typeof pages];
+          return render(
+            <NextIntlClientProvider locale="en" messages={en}>
+              <TourProvider>
+                <AdvancedSettingsProvider>
+                  <Page supportsCalendar />
+                </AdvancedSettingsProvider>
+              </TourProvider>
+            </NextIntlClientProvider>,
+          );
+        });
+        await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+        const selector = `[data-search-label="${text.replace(/"/g, '\\"')}"]`;
+        const before = document.querySelector(selector);
+        // What settings-app.tsx sends when the result is clicked.
+        act(() => { window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { label: text, advanced: true } })); });
+        let found: Element | null = null;
+        for (let i = 0; i < 30 && !found; i++) {
+          await act(async () => { await new Promise((resolve) => setTimeout(resolve, 80)); });
+          found = document.querySelector(selector);
+        }
+        if (before) problems.push(`${tab}: ${entry.label} shows with Advanced off`);
+        if (!found) problems.push(`${tab}: ${entry.label} ("${text}") does not show after its result is opened`);
+        if (useSettingsStore.getState().showAdvancedSettings) problems.push(`${tab}: ${entry.label} turned the Advanced switch on`);
+        // Only the row and what holds it: another advanced block of the page stays hidden.
+        // A row that sits in the same advanced section comes with it, as the page has no
+        // smaller part to show.
+        for (const other of others) {
+          const el = document.querySelector(`[data-search-label="${other.replace(/"/g, '\\"')}"]`);
+          if (!el || !found) continue;
+          const block = el.closest('[data-advanced-id]');
+          const sameBlock = !!block && (block.contains(found) || found.contains(block));
+          if (!sameBlock && !el.contains(found)) problems.push(`${tab}: opening ${entry.label} also showed "${other}"`);
+        }
+        views.forEach((view) => view.unmount());
+      }
+    }
+    window.bulwarkDesktop = undefined;
     expect([...new Set(problems)]).toEqual([]);
   });
 });

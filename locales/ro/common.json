@@ -7863,6 +7863,13 @@
     "join_host": "Participă ({host})",
     "join_named": "Participă: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Instrumente pentru dezvoltatori",
+    "updates_label": "Caută actualizări",
+    "search": {
+      "quick_compose": "scriere rapidă mesaj nou de oriunde comandă rapidă globală"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
     "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",

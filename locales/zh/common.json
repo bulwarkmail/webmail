@@ -7863,6 +7863,13 @@
     "join_host": "加入 ({host})",
     "join_named": "加入: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "开发者工具",
+    "updates_label": "检查更新",
+    "search": {
+      "quick_compose": "快速撰写 随处新建邮件 全局快捷键"
+    }
+  },
   "desktop_policy": {
     "server_refused": "您的组织不允许在此设备上使用此服务器。",
     "plugin_refused": "您的组织不允许在此设备上使用此插件，因此它不会运行。其设置和数据会保留。",
