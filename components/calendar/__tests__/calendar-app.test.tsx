@@ -539,6 +539,8 @@ describe('CalendarApp dragging', () => {
       expect(found).toBeTruthy();
       return found!;
     });
+    // The toast keeps clear of the event it is about (pim-p3-17).
+    await waitFor(() => expect(document.querySelector(`[data-event-id="${makeEvent().id}"]`)).toHaveAttribute('data-toast-avoid', 'bottom'));
     moved.action!.onClick();
     await waitFor(() => expect(store.updateEvent).toHaveBeenCalledTimes(2));
     expect(store.updateEvent.mock.calls[1][2]).toMatchObject({ start: '2026-10-12T10:00:00', duration: 'PT1H' });

@@ -17,7 +17,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useAccountStore } from "@/stores/account-store";
 import { usePolicyStore } from "@/stores/policy-store";
-import { toast } from "@/stores/toast-store";
+import { toast, useToastStore } from "@/stores/toast-store";
 import { useIsFullDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails";
 import { Button } from "@/components/ui/button";
@@ -147,6 +147,24 @@ type PendingScopeAction =
 const VISIBLE_DATE_SETTLE_MS = 300;
 /** How long a just-created event stays marked. */
 const JUST_SAVED_MARK_MS = 3000;
+
+/**
+ * While the toast about a moved event shows, the event's blocks count as something docked
+ * at the bottom (lib/toast-placement), so the toast stands above the event instead of over
+ * it (pim-p3-17).
+ */
+function keepEventClearOfToast(eventId: string, toastId: string): void {
+  const selector = `[data-event-id="${CSS.escape(eventId)}"]`;
+  const blocks = () => Array.from(document.querySelectorAll<HTMLElement>(selector));
+  requestAnimationFrame(() => {
+    for (const el of blocks()) if (!el.hasAttribute("data-toast-avoid")) el.setAttribute("data-toast-avoid", "bottom");
+  });
+  const stop = useToastStore.subscribe((state) => {
+    if (state.toasts.some((t) => t.id === toastId)) return;
+    stop();
+    for (const el of blocks()) if (el.getAttribute("data-toast-avoid") === "bottom") el.removeAttribute("data-toast-avoid");
+  });
+}
 
 function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
@@ -1631,7 +1649,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
     const before: Partial<CalendarEvent> = { start: event.start, duration: event.duration };
     if (updates.timeZone !== undefined) before.timeZone = event.timeZone;
-    toast.success(t(kind === "resize" ? "notifications.event_updated" : "notifications.event_moved"), {
+    const shown = toast.success(t(kind === "resize" ? "notifications.event_updated" : "notifications.event_moved"), {
       action: {
         label: t("notifications.undo"),
         onClick: () => {
@@ -1641,6 +1659,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         },
       },
     });
+    keepEventClearOfToast(event.id, shown);
   }, [client, updateEvent, resolveContactName, describeError, t]);
 
   const handleRsvp = useCallback(async (eventId: string, participantId: string, status: CalendarParticipant['participationStatus'], sentBy?: string) => {
