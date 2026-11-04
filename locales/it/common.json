@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Inserisci l'URL",
     "sending": "Invio in corso...",
     "schedule_send": "Programma invio",
-    "schedule_send_description": "Scegli quando il server deve rilasciare questo messaggio.",
+    "schedule_send_description": "Scegli quando inviarlo.",
     "schedule_preset": {
       "this_morning": "Stamattina",
       "this_afternoon": "Oggi pomeriggio",
@@ -4057,6 +4057,8 @@
     "sending": "Invio in corso…",
     "sent": "Inviato",
     "view": "Visualizza",
+    "schedule_anyway": "Programma comunque",
+    "schedule_warnings_title": "Programmare comunque questo messaggio?",
     "picker_button": "Aggiungi dai contatti",
     "picker_title": "Aggiungi destinatari",
     "tab_contacts": "Contatti",

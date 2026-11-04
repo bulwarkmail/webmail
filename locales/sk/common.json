@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "Naplánovať odoslanie",
-    "schedule_send_description": "Vyberte, kedy má server túto správu odoslať.",
+    "schedule_send_description": "Vyberte, kedy sa má odoslať.",
     "schedule_preset": {
       "this_morning": "Dnes ráno",
       "this_afternoon": "Dnes popoludní",
@@ -4057,6 +4057,8 @@
     "sending": "Odosielanie…",
     "sent": "Odoslané",
     "view": "Zobraziť",
+    "schedule_anyway": "Naplánovať aj tak",
+    "schedule_warnings_title": "Naplánovať túto správu aj tak?",
     "picker_button": "Pridať z kontaktov",
     "picker_title": "Pridať príjemcov",
     "tab_contacts": "Kontakty",

@@ -1259,7 +1259,9 @@ export function EmailComposer({
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
   // What the checks before sending found (no subject, no text, placeholders,
   // a missing attachment, open proofreading issues), asked about in one dialog.
-  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string } | null>(null);
+  // `schedule`: asked before the schedule dialog, which opens on "Schedule anyway".
+  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string; schedule?: boolean } | null>(null);
+  const checkThenScheduleRef = useRef<() => void>(() => {});
   // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
@@ -1545,9 +1547,11 @@ export function EmailComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision, autoSignatureEnabled]);
 
+  // The send checks run first, so they don't open on top of the picked time
+  // saying "Send anyway" when nothing is sent now (compose-p2-14).
   const openScheduleDialog = useCallback(() => {
-    setShowScheduleDialog(true);
     closeSendMenu();
+    checkThenScheduleRef.current();
   }, [closeSendMenu]);
 
   // `autoSelectReplyIdentity` fused two behaviours: matching one of the user's
@@ -3836,10 +3840,12 @@ export function EmailComposer({
     else editor.commands.focus();
   };
 
-  const handleSend = async ({ warningsConfirmed = false, delayedUntil }: {
+  const handleSend = async ({ warningsConfirmed = false, delayedUntil, checkOnly = false }: {
     /** "Send anyway" in the warnings dialog: don't check those again. */
     warningsConfirmed?: boolean;
     delayedUntil?: string;
+    /** Only the checks, then the schedule dialog instead of a send. */
+    checkOnly?: boolean;
   } = {}) => {
     if (isSendingRef.current) return;
 
@@ -3986,9 +3992,13 @@ export function EmailComposer({
       }
 
       if (warnings.length > 0) {
-        setSendWarnings({ items: warnings, delayedUntil });
+        setSendWarnings({ items: warnings, delayedUntil, ...(checkOnly ? { schedule: true } : {}) });
         return;
       }
+    }
+    if (checkOnly) {
+      setShowScheduleDialog(true);
+      return;
     }
 
     // Checks other features register (lib/outgoing/send-pipeline.ts), such
@@ -4473,6 +4483,8 @@ export function EmailComposer({
     }
   };
 
+
+  checkThenScheduleRef.current = () => void handleSend({ checkOnly: true });
 
   // A host can hand a follow-up to requestCloseRef - "close this session, then
   // do that". It runs only once the composer really closes, never when the
@@ -6143,7 +6155,8 @@ export function EmailComposer({
       <ScheduleSendDialog
         isOpen={showScheduleDialog}
         onClose={() => setShowScheduleDialog(false)}
-        onSchedule={(delayedUntil) => handleSend({ delayedUntil })}
+        // Checked before the dialog opened (openScheduleDialog).
+        onSchedule={(delayedUntil) => handleSend({ delayedUntil, warningsConfirmed: true })}
         supported={!!composerClient?.hasDelayedSend()}
         maxDelayedSend={composerClient?.getMaxDelayedSend() ?? 0}
         disabled={!canSend || isSending || isSavingAndClosing}
@@ -6154,6 +6167,7 @@ export function EmailComposer({
 
       <SendWarningsDialog
         warnings={sendWarnings?.items ?? null}
+        scheduling={sendWarnings?.schedule === true}
         onBack={() => {
           const first = sendWarnings?.items[0];
           setSendWarnings(null);
@@ -6171,7 +6185,7 @@ export function EmailComposer({
         }}
         onSendAnyway={(dontAskAgain) => {
           if (!sendWarnings) return;
-          const { items, delayedUntil } = sendWarnings;
+          const { items, delayedUntil, schedule } = sendWarnings;
           for (const warning of items) {
             if (warning.kind === 'subject') {
               emptySubjectConfirmedRef.current = true;
@@ -6186,7 +6200,8 @@ export function EmailComposer({
             }
           }
           setSendWarnings(null);
-          handleSend({ warningsConfirmed: true, delayedUntil });
+          if (schedule) setShowScheduleDialog(true);
+          else handleSend({ warningsConfirmed: true, delayedUntil });
         }}
       />
 

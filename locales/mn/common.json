@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "Хуваарь илгээх",
-    "schedule_send_description": "Сервер энэ мессежийг хэзээ гаргахыг сонгоно уу.",
+    "schedule_send_description": "Хэзээ илгээхээ сонгоно уу.",
     "schedule_preset": {
       "this_morning": "Өнөө өглөө",
       "this_afternoon": "Өнөөдөр үдээс хойш",
@@ -4057,6 +4057,8 @@
     "sending": "Илгээж байна…",
     "sent": "Илгээгдлээ",
     "view": "Харах",
+    "schedule_anyway": "Ямар ч байсан хуваарьт оруулах",
+    "schedule_warnings_title": "Энэ захиаг ямар ч байсан хуваарьт оруулах уу?",
     "picker_button": "Харилцагчдаас нэмэх",
     "picker_title": "Хүлээн авагч нэмэх",
     "tab_contacts": "Харилцагчид",

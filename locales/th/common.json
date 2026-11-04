@@ -1233,6 +1233,8 @@
     "sending": "กำลังส่ง…",
     "sent": "ส่งแล้ว",
     "view": "ดู",
+    "schedule_anyway": "กำหนดเวลาต่อไป",
+    "schedule_warnings_title": "กำหนดเวลาส่งข้อความนี้ต่อไปหรือไม่",
     "picker_button": "เพิ่มจากผู้ติดต่อ",
     "picker_title": "เพิ่มผู้รับ",
     "tab_contacts": "ผู้ติดต่อ",
@@ -1501,7 +1503,7 @@
       "unfinished": []
     },
     "schedule_send": "กำหนดเวลาส่ง",
-    "schedule_send_description": "เลือกเวลาที่ต้องการให้เซิร์ฟเวอร์ส่งข้อความนี้",
+    "schedule_send_description": "เลือกเวลาที่จะส่ง",
     "schedule_preset": {
       "this_morning": "เช้านี้",
       "this_afternoon": "บ่ายนี้",

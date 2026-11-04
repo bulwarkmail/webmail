@@ -1114,7 +1114,7 @@
       "unfinished": ["TODO", "TBD", "TBA", "TBC", "FIXME", "XXX"]
     },
     "schedule_send": "Schedule send",
-    "schedule_send_description": "Choose when the server should release this message.",
+    "schedule_send_description": "Pick when to send it.",
     "schedule_preset": {
       "this_morning": "This morning",
       "this_afternoon": "This afternoon",
@@ -4057,6 +4057,8 @@
     "sending": "Sending…",
     "sent": "Sent",
     "view": "View",
+    "schedule_anyway": "Schedule anyway",
+    "schedule_warnings_title": "Schedule this message anyway?",
     "picker_button": "Add from contacts",
     "picker_title": "Add recipients",
     "tab_contacts": "Contacts",

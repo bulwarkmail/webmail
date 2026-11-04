@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "زمان‌بندی ارسال",
-    "schedule_send_description": "زمان انتشار پیام توسط سرور را انتخاب کنید.",
+    "schedule_send_description": "زمان ارسال را انتخاب کنید.",
     "schedule_preset": {
       "this_morning": "امروز صبح",
       "this_afternoon": "امروز بعدازظهر",
@@ -4057,6 +4057,8 @@
     "sending": "در حال ارسال…",
     "sent": "ارسال شد",
     "view": "مشاهده",
+    "schedule_anyway": "زمان‌بندی به هر حال",
+    "schedule_warnings_title": "این پیام به هر حال زمان‌بندی شود؟",
     "picker_button": "افزودن از مخاطبین",
     "picker_title": "افزودن گیرندگان",
     "tab_contacts": "مخاطبین",

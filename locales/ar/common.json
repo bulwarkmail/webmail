@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "جدولة الإرسال",
-    "schedule_send_description": "اختر متى يجب على الخادم إرسال هذه الرسالة.",
+    "schedule_send_description": "اختر متى يتم إرسالها.",
     "schedule_preset": {
       "this_morning": "هذا الصباح",
       "this_afternoon": "بعد ظهر اليوم",
@@ -4057,6 +4057,8 @@
     "sending": "جارٍ الإرسال…",
     "sent": "تم الإرسال",
     "view": "عرض",
+    "schedule_anyway": "الجدولة على أي حال",
+    "schedule_warnings_title": "هل تريد جدولة هذه الرسالة على أي حال؟",
     "picker_button": "إضافة من جهات الاتصال",
     "picker_title": "إضافة مستلمين",
     "tab_contacts": "جهات الاتصال",

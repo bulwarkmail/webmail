@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "Késleltetett küldés",
-    "schedule_send_description": "Válaszd ki, mikor küldje el a szerver az üzenetet.",
+    "schedule_send_description": "Válaszd ki, mikor menjen el.",
     "schedule_preset": {
       "this_morning": "Ma reggel",
       "this_afternoon": "Ma délután",
@@ -4057,6 +4057,8 @@
     "sending": "Küldés…",
     "sent": "Elküldve",
     "view": "Megtekintés",
+    "schedule_anyway": "Időzítés így is",
+    "schedule_warnings_title": "Időzíti így is ezt az üzenetet?",
     "picker_button": "Hozzáadás a névjegyekből",
     "picker_title": "Címzettek hozzáadása",
     "tab_contacts": "Névjegyek",

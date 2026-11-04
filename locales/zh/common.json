@@ -1112,7 +1112,7 @@
     "link_url_prompt": "输入 URL",
     "sending": "发送中...",
     "schedule_send": "计划发送",
-    "schedule_send_description": "选择服务器应何时发送此邮件。",
+    "schedule_send_description": "选择发送时间。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -4057,6 +4057,8 @@
     "sending": "正在发送…",
     "sent": "已发送",
     "view": "查看",
+    "schedule_anyway": "仍然计划发送",
+    "schedule_warnings_title": "仍然计划发送这封邮件？",
     "picker_button": "从联系人添加",
     "picker_title": "添加收件人",
     "tab_contacts": "联系人",
