@@ -7109,6 +7109,14 @@
     "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
     "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
   },
+  "compose_windows": {
+    "more_formatting": "Mere formatering",
+    "offline": "Offline",
+    "offline_hint": "Det kræver forbindelse at sende.",
+    "offline_hint_outbox": "Det, du sender nu, venter i udbakken og sendes, når du er online igen.",
+    "offline_send_saved": "Du er offline. Beskeden er gemt i Kladder.",
+    "offline_send_unsaved": "Du er offline. Beskeden bliver her og gemmes i Kladder, når du er online igen."
+  },
   "desktopReminders": {
     "generic_title": "Påmindelse",
     "snooze": "Udsæt {count} min.",

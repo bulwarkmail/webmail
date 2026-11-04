@@ -92,9 +92,20 @@ afterEach(() => {
 
 const answers = () => heard.filter((message) => message.type === 'session-answer');
 
-describe('in an ordinary browser tab', () => {
+/** A browser tab: not installed, with or without a mouse. */
+function stubTab(fine: boolean) {
+  delete window.bulwarkDesktop;
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('pointer: fine') ? fine : false,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+  window.matchMedia = globalThis.matchMedia;
+}
+
+describe('in a browser tab on a phone or tablet', () => {
   it('runs nothing: no channel and no lock', async () => {
-    delete window.bulwarkDesktop;
+    stubTab(false);
     const opened = FakeBroadcastChannel.open.size;
     render(<PopoutHost />);
     await settle();
@@ -103,6 +114,18 @@ describe('in an ordinary browser tab', () => {
     popout.post({ type: 'main-ping' });
     await settle();
     expect(heard).toEqual([]);
+  });
+});
+
+describe('in a browser tab on a computer', () => {
+  it('lends its session to a composer popped out of it', async () => {
+    stubTab(true);
+    render(<PopoutHost />);
+    await settle();
+    await expect(requestWindowSession({}, 2000)).resolves.toMatchObject({
+      activeAccountId: 'alice',
+      sessions: [{ accountId: 'alice', authMode: 'oauth' }],
+    });
   });
 });
 

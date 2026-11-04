@@ -42,6 +42,7 @@ import {
   Forward,
   BookUser,
   Lock,
+  CloudOff,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
@@ -100,6 +101,9 @@ import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { isStandInId } from "@/lib/jmap/stand-in-ids";
 import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
+import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
+import { useBrowserOnline } from "@/hooks/use-browser-online";
+import { appPath, buildSettingsPath } from "@/lib/deep-links";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -1215,6 +1219,13 @@ export function EmailComposer({
   // bar folded away behind "Aa" until asked for.
   const mvWindow = useMvComposeWindow();
   const [mvShowFormatting, setMvShowFormatting] = useState(false);
+  // A pop-out or quick compose window is narrower than a tablet, but it is a
+  // window on a computer: it keeps the main window's layout, not the phone's.
+  const phoneLayout = !ownWindow;
+  // Full screen: the composer over the whole window, as Gmail has it. The same
+  // button or Escape puts it back. Not in a window of its own, which is all composer.
+  const [maximized, setMaximized] = useState(false);
+  const canMaximize = !ownWindow && !mvWindow;
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
@@ -4654,6 +4665,35 @@ export function EmailComposer({
     };
   });
 
+  // Offline. With "Keep mail on this device" on, a send waits in the outbox
+  // and goes out once the server answers again. Without it there is nowhere
+  // safe to keep a message for later: Send says so and the text stays here.
+  const tComposeWindows = useTranslations('compose_windows');
+  const browserOnline = useBrowserOnline();
+  const [offlineSendNotice, setOfflineSendNotice] = useState<'saved' | 'unsaved' | null>(null);
+  const sendOrSayOffline = () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false && !offlineActive(composingAccountId ?? null)) {
+      const saved = !!draftIdRef.current && changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current;
+      setOfflineSendNotice(saved ? 'saved' : 'unsaved');
+      announceStatus(tComposeWindows(saved ? 'offline_send_saved' : 'offline_send_unsaved'));
+      return;
+    }
+    handleSend();
+  };
+  // Back online: the notice goes, and what couldn't be saved meanwhile is saved now.
+  const wasOnlineRef = useRef(browserOnline);
+  useEffect(() => {
+    const cameBack = browserOnline && !wasOnlineRef.current;
+    wasOnlineRef.current = browserOnline;
+    if (!cameBack) return;
+    setOfflineSendNotice(null);
+    if (saveCloseAttemptRef.current || sentRef.current || isSendingRef.current || !isDirtyRef.current) return;
+    if (changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current) return;
+    void saveDraftRef.current({ auto: true });
+  }, [browserOnline]);
+  // Only asked while offline: it reads the organisation's policy and the store's support.
+  const offlineHint = browserOnline ? '' : tComposeWindows(offlineActive(composingAccountId ?? null) ? 'offline_hint_outbox' : 'offline_hint');
+
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
     // Keys from a dialog the composer opened (Insert link, ...) reach here
@@ -4698,6 +4738,11 @@ export function EmailComposer({
       // And for proofreading's popup and panel: Escape closes only them.
       if (proofreading.popup || proofreading.panel) return;
       e.preventDefault();
+      // Full screen first goes back to where the composer was.
+      if (maximized) {
+        setMaximized(false);
+        return;
+      }
       handleClose();
       return;
     }
@@ -4715,7 +4760,7 @@ export function EmailComposer({
       }
 
       e.preventDefault();
-      handleSend();
+      sendOrSayOffline();
       return;
     }
 
@@ -4731,7 +4776,13 @@ export function EmailComposer({
       data-testid="email-composer"
       // Edits made while the draft moves wouldn't move with it.
       inert={isPoppingOut || undefined}
-      className={cn("flex h-full bg-background relative", className)}
+      className={cn(
+        "flex h-full bg-background relative",
+        className,
+        // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
+        maximized && "fixed inset-0 z-40 h-auto pt-[var(--titlebar-row-height)]",
+      )}
+      data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
       // Bubble phase, in the same batch as the field's own onChange. A state
       // change in the capture phase renders first and puts the old value back.
@@ -4858,28 +4909,28 @@ export function EmailComposer({
             {saveStatus === 'saving' && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Save className="w-3 h-3 animate-pulse" />
-                <span className="hidden md:inline">{t('saving')}</span>
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{t('saving')}</span>
               </div>
             )}
             {saveStatus === 'saved' && (
               <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                 <Check className="w-3 h-3" />
-                <span className="hidden md:inline">{savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved')}</span>
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved')}</span>
               </div>
             )}
             {saveStatus === 'error' && (
               <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
                 <X className="w-3 h-3" />
-                <span className="hidden md:inline">{t('save_failed')}</span>
+                <span className={phoneLayout ? "hidden md:inline" : undefined}>{t('save_failed')}</span>
               </div>
             )}
           </div>
         </div>
         {/* Mobile: keep scheduled send reachable without consuming footer space. */}
-        {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
+        {phoneLayout && (composerClient?.hasDelayedSend() || hasSendMenuActions ? (
           <div className="relative inline-flex md:hidden">
             <Button
-              onClick={() => handleSend()}
+              onClick={() => sendOrSayOffline()}
               disabled={!canSend || isSending || isSavingAndClosing}
               title={getSendTooltip()}
               size="sm"
@@ -4906,7 +4957,7 @@ export function EmailComposer({
           </div>
         ) : (
           <Button
-            onClick={() => handleSend()}
+            onClick={() => sendOrSayOffline()}
             disabled={!canSend || isSending || isSavingAndClosing}
             title={getSendTooltip()}
             size="sm"
@@ -4916,14 +4967,26 @@ export function EmailComposer({
             <Send className="w-4 h-4 me-1.5" />
             {t('send')}
           </Button>
-        )}
+        ))}
         {rightPanelToggle}
-        {popOutButton("hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", "w-4 h-4")}
+        {canMaximize && (
+          <button
+            type="button"
+            onClick={() => setMaximized((v) => !v)}
+            className="hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={maximized ? t('restore') : t('maximize')}
+            title={maximized ? t('restore') : t('maximize')}
+            data-testid="composer-maximize"
+          >
+            {maximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+        )}
+        {popOutButton(cn(phoneLayout ? "hidden md:grid" : "grid", "h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"), "w-4 h-4")}
         {/* Close at the top end (R4). On a phone it moves to the start, as
             the phone's mail apps have it, with Send at the end. */}
         <IconButton
           onClick={() => handleClose()}
-          className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
+          className={phoneLayout ? "-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11" : "-me-2"}
           label={tCommon('close')}
           data-testid="composer-close"
           data-own-window-close={ownWindow ? "" : undefined}
@@ -5333,7 +5396,7 @@ export function EmailComposer({
               ariaInvalid={validationErrors.body}
               ariaDescribedBy={`${fieldIdBase}-body-error`}
               defaultTextStyle={composeStyle}
-              collapseToolbarOnMobile={!showFormattingOnMobile}
+              collapseToolbarOnMobile={phoneLayout && !showFormattingOnMobile}
               toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : 'top'}
               onEditorReady={handleEditorReady}
               mentionCandidates={recipientMentionsEnabled ? mentionCandidates : undefined}
@@ -5544,6 +5607,23 @@ export function EmailComposer({
           </div>
         )}
 
+        {offlineSendNotice && !browserOnline && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted px-4 py-2 text-sm text-foreground" data-testid="composer-offline-notice">
+            <CloudOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0">{tComposeWindows(offlineSendNotice === 'saved' ? 'offline_send_saved' : 'offline_send_unsaved')}</span>
+            {offlineAllowed(composingAccountId ?? null) && (
+              <a
+                href={appPath(buildSettingsPath('backup', 'offline'))}
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                {tOffline('settings.keep_label')}
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Bottom toolbar. In Mountain View's window both halves fold into
             one row (see [data-mv-compose-footer] in globals.css): Send first,
             the tools after it, and Discard as a bin at the far end. */}
@@ -5598,7 +5678,7 @@ export function EmailComposer({
                 <span className="hidden @[40rem]/composer-bar:inline text-sm">{t('attach')}</span>
               </Button>
             )}
-            {!plainTextMode && (
+            {!plainTextMode && (mvWindow || phoneLayout) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -5732,6 +5812,13 @@ export function EmailComposer({
 
           {/* Right side - Discard + Send (desktop) */}
           <div className="flex shrink-0 items-center gap-2">
+            {!browserOnline && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground" title={offlineHint} data-testid="composer-offline">
+                <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+                {tComposeWindows('offline')}
+                <span className="sr-only">{offlineHint}</span>
+              </span>
+            )}
             {mvWindow ? (
               <button
                 type="button"
@@ -5752,17 +5839,17 @@ export function EmailComposer({
                 data-testid="composer-discard"
                 aria-label={t('discard')}
                 title={t('discard')}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 md:@max-[26rem]/composer-bar:px-2.5 max-md:@max-[23rem]/composer-bar:px-2.5"
+                className="px-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 max-md:h-11 max-md:w-11"
               >
-                {/* Next to Send in a narrow composer the word runs over the tools on the left. */}
-                <Trash2 className="hidden w-4 h-4 max-md:@max-[23rem]/composer-bar:block md:block md:@[26rem]/composer-bar:hidden" aria-hidden="true" />
-                <span className="max-md:@max-[23rem]/composer-bar:hidden md:hidden md:@[26rem]/composer-bar:inline">{t('discard')}</span>
+                {/* A bin left of Send in every composer: the word ran over the tools in a narrow one. */}
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                <span className="sr-only">{t('discard')}</span>
               </Button>
             )}
             {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
-              <div data-mv-send={mvWindow ? "" : undefined} className="relative hidden md:inline-flex">
+              <div data-mv-send={mvWindow ? "" : undefined} className={cn("relative", phoneLayout ? "hidden md:inline-flex" : "inline-flex")}>
                 <Button
-                  onClick={() => handleSend()}
+                  onClick={() => sendOrSayOffline()}
                   disabled={!canSend || isSending || isSavingAndClosing}
                   title={getSendTooltip()}
                   data-testid="composer-send"
@@ -5787,12 +5874,12 @@ export function EmailComposer({
               </div>
             ) : (
               <Button
-                onClick={() => handleSend()}
+                onClick={() => sendOrSayOffline()}
                 disabled={!canSend || isSending || isSavingAndClosing}
                 title={getSendTooltip()}
                 data-testid="composer-send"
                 data-mv-send={mvWindow ? "" : undefined}
-                className="hidden md:inline-flex"
+                className={phoneLayout ? "hidden md:inline-flex" : "inline-flex"}
               >
                 <Send className="w-4 h-4 me-2" />
                 {t('send')}

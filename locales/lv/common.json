@@ -7109,6 +7109,14 @@
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
+  "compose_windows": {
+    "more_formatting": "Vairāk formatēšanas",
+    "offline": "Bezsaistē",
+    "offline_hint": "Sūtīšanai vajadzīgs savienojums.",
+    "offline_hint_outbox": "Ko sūtāt tagad, gaida izsūtnē un tiek nosūtīts, kad atkal esat tiešsaistē.",
+    "offline_send_saved": "Jūs esat bezsaistē. Ziņojums ir saglabāts melnrakstos.",
+    "offline_send_unsaved": "Jūs esat bezsaistē. Ziņojums paliek šeit un tiks saglabāts melnrakstos, kad atkal būsiet tiešsaistē."
+  },
   "desktopReminders": {
     "generic_title": "Atgādinājums",
     "snooze": "Atlikt par {count} min",

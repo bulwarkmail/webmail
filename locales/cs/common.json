@@ -7109,6 +7109,14 @@
     "types_character": "Tyto klávesy na vaší klávesnici píší znak, který by pak nefungoval v žádné aplikaci. Zkuste jiné klávesy.",
     "reserved": "Tyto klávesy používá systém nebo většina aplikací. Zkuste jiné klávesy."
   },
+  "compose_windows": {
+    "more_formatting": "Další formátování",
+    "offline": "Offline",
+    "offline_hint": "Odeslání potřebuje připojení.",
+    "offline_hint_outbox": "Co teď odešlete, počká mezi zprávami k odeslání a odejde, až budete znovu online.",
+    "offline_send_saved": "Jste offline. Zpráva je uložená v Konceptech.",
+    "offline_send_unsaved": "Jste offline. Zpráva tu zůstane a uloží se do Konceptů, až budete znovu online."
+  },
   "desktopReminders": {
     "generic_title": "Připomenutí",
     "snooze": "Odložit o {count} min",

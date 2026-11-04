@@ -7109,6 +7109,14 @@
     "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
     "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
+  "compose_windows": {
+    "more_formatting": "Plus de mise en forme",
+    "offline": "Hors ligne",
+    "offline_hint": "L'envoi nécessite une connexion.",
+    "offline_hint_outbox": "Ce que vous envoyez maintenant attend dans la boîte d'envoi et part dès que vous êtes de nouveau en ligne.",
+    "offline_send_saved": "Vous êtes hors ligne. Le message est enregistré dans les Brouillons.",
+    "offline_send_unsaved": "Vous êtes hors ligne. Le message reste ici et sera enregistré dans les Brouillons dès que vous serez de nouveau en ligne."
+  },
   "desktopReminders": {
     "generic_title": "Rappel",
     "snooze": "Reporter de {count} min",

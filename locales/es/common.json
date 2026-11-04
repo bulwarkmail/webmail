@@ -7109,6 +7109,14 @@
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
   },
+  "compose_windows": {
+    "more_formatting": "Más formato",
+    "offline": "Sin conexión",
+    "offline_hint": "Para enviar hace falta conexión.",
+    "offline_hint_outbox": "Lo que envíes ahora espera en la bandeja de salida y se envía cuando vuelvas a tener conexión.",
+    "offline_send_saved": "No tienes conexión. El mensaje está guardado en Borradores.",
+    "offline_send_unsaved": "No tienes conexión. El mensaje se queda aquí y se guarda en Borradores cuando vuelvas a tener conexión."
+  },
   "desktopReminders": {
     "generic_title": "Recordatorio",
     "snooze": "Posponer {count} min",

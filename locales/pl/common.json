@@ -7109,6 +7109,14 @@
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
   },
+  "compose_windows": {
+    "more_formatting": "Więcej formatowania",
+    "offline": "Offline",
+    "offline_hint": "Do wysłania potrzebne jest połączenie.",
+    "offline_hint_outbox": "To, co teraz wyślesz, czeka w skrzynce nadawczej i wyjdzie, gdy wrócisz do sieci.",
+    "offline_send_saved": "Jesteś offline. Wiadomość jest zapisana w Szkicach.",
+    "offline_send_unsaved": "Jesteś offline. Wiadomość zostaje tutaj i zostanie zapisana w Szkicach, gdy wrócisz do sieci."
+  },
   "desktopReminders": {
     "generic_title": "Przypomnienie",
     "snooze": "Odłóż o {count} min",

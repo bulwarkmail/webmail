@@ -7121,6 +7121,14 @@
     "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
     "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
   },
+  "compose_windows": {
+    "more_formatting": "Thêm định dạng",
+    "offline": "Ngoại tuyến",
+    "offline_hint": "Cần có kết nối để gửi.",
+    "offline_hint_outbox": "Thư bạn gửi bây giờ sẽ chờ trong Hộp thư đi và được gửi khi bạn trực tuyến trở lại.",
+    "offline_send_saved": "Bạn đang ngoại tuyến. Thư đã được lưu trong Bản nháp.",
+    "offline_send_unsaved": "Bạn đang ngoại tuyến. Thư vẫn ở đây và sẽ được lưu vào Bản nháp khi bạn trực tuyến trở lại."
+  },
   "desktopReminders": {
     "generic_title": "Lời nhắc",
     "snooze": "Báo lại sau {count} phút",

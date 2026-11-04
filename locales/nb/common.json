@@ -7109,6 +7109,14 @@
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
+  "compose_windows": {
+    "more_formatting": "Mer formatering",
+    "offline": "Frakoblet",
+    "offline_hint": "Du må ha tilkobling for å sende.",
+    "offline_hint_outbox": "Det du sender nå, venter i utboksen og sendes når du er på nett igjen.",
+    "offline_send_saved": "Du er frakoblet. Meldingen er lagret i Utkast.",
+    "offline_send_unsaved": "Du er frakoblet. Meldingen blir her og lagres i Utkast når du er på nett igjen."
+  },
   "desktopReminders": {
     "generic_title": "Påminnelse",
     "snooze": "Utsett {count} min",

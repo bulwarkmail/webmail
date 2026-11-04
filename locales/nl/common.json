@@ -7109,6 +7109,14 @@
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
   },
+  "compose_windows": {
+    "more_formatting": "Meer opmaak",
+    "offline": "Offline",
+    "offline_hint": "Voor verzenden is een verbinding nodig.",
+    "offline_hint_outbox": "Wat je nu verstuurt, wacht in Postvak UIT en gaat weg zodra je weer online bent.",
+    "offline_send_saved": "Je bent offline. Het bericht is opgeslagen in Concepten.",
+    "offline_send_unsaved": "Je bent offline. Het bericht blijft hier en wordt in Concepten opgeslagen zodra je weer online bent."
+  },
   "desktopReminders": {
     "generic_title": "Herinnering",
     "snooze": "{count} min uitstellen",

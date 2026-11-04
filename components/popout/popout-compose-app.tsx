@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { EmailComposer, type ComposerDraftData } from "@/components/email/email-composer";
 import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
@@ -13,8 +13,9 @@ import { toast } from "@/stores/toast-store";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
-import { announceSent } from "@/lib/plugin-after-send";
-import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type RescuedDraft } from "@/lib/popout/channel";
+import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend } from "@/lib/plugin-after-send";
+import { cancelFailureToast } from "@/lib/send-failure-message";
+import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type PopoutSentNotice, type RescuedDraft } from "@/lib/popout/channel";
 import { acknowledgeComposeHandoff, forgetComposePayload, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { returnComposerToMain, type ReturnResult } from "@/lib/popout/return-to-main";
@@ -30,6 +31,7 @@ import { emailHooks } from "@/lib/plugin-hooks";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { useIdentityStore } from "@/stores/identity-store";
 import type { Email } from "@/lib/jmap/types";
+import { Send } from "@/components/icons";
 import { PopoutNotice, PopoutShell, PopoutSkeleton } from "./popout-shell";
 
 /** A warning with no main window left to show it stays this long before the window goes. */
@@ -48,6 +50,91 @@ const MAIN_CHECK_MS = 1000;
 
 /** How long a reloaded window waits to hear what became of the text it handed over on the way out. */
 const RESCUE_ANSWER_MS = 2000;
+
+/** A send held this long or less is an undo window ("Sending in 5 s"), not a message scheduled for later. */
+const UNDO_WINDOW_MS = 120_000;
+/** Undo goes this long before the server lets the message go, as in the main window. */
+const UNDO_MARGIN_MS = 1000;
+/** What the plugins are told when the hold runs out gets this long before the window goes. */
+const RELEASE_WAIT_MS = 1000;
+
+type HeldSend = NonNullable<PopoutSentNotice["pendingUndoSend"]>;
+
+/** A draft to open again in this window, after Undo brought the message back to Drafts. */
+interface ReopenTarget {
+  draftId: string;
+  accountId: string;
+  ownerAccountId?: string;
+}
+
+/**
+ * A send held for undo, shown in the window it was sent from: that's where the
+ * user is looking, and quick compose is used with the main window out of sight.
+ * The window stays until the hold runs out, then goes.
+ */
+function SendingWithUndo({ held, onUndone, onGone }: {
+  held: HeldSend;
+  /** The send was taken back; the message, back in Drafts, when there is one to open. */
+  onUndone: (restored: Email | null) => void;
+  onGone: () => void;
+}) {
+  const tViewer = useTranslations("email_viewer");
+  const [now, setNow] = useState(() => Date.now());
+  const [busy, setBusy] = useState(false);
+  const sendAt = Date.parse(held.sendAt);
+  const over = !Number.isFinite(sendAt) || now >= sendAt - UNDO_MARGIN_MS;
+
+  useEffect(() => {
+    if (over) return;
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [over]);
+
+  // Too late to undo: the plugins hear of the send now, and the window goes.
+  useEffect(() => {
+    if (!over || busy) return;
+    releaseAnnouncedSend(held.submissionId);
+    const timer = setTimeout(onGone, RELEASE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [over, busy, held.submissionId, onGone]);
+
+  const undo = async () => {
+    const auth = useAuthStore.getState();
+    // Never another login: the submission id names another submission there.
+    const client = held.localAccountId ? auth.getClientForAccount(held.localAccountId) : auth.client;
+    if (!client) {
+      toast.error(tViewer("undo_send_signed_out"));
+      return;
+    }
+    setBusy(true);
+    let restored: Email | null;
+    try {
+      restored = await useEmailStore.getState().cancelUndoSend(client, held);
+    } catch (error) {
+      debug.error("Failed to undo the send:", error);
+      const { title, message } = cancelFailureToast(error, tViewer, tViewer("undo_send_failed"));
+      toast.error(title, message ? { message } : undefined);
+      setBusy(false);
+      return;
+    }
+    // Never left the server: plugins don't hear about it.
+    cancelAnnouncedSend(held.submissionId);
+    onUndone(held.isSmime ? null : restored);
+  };
+
+  const seconds = Math.max(0, Math.ceil((sendAt - now) / 1000));
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending">
+      <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+      <p role="status" className="text-sm text-foreground">{tViewer("sending_in", { seconds })}</p>
+      {!over && (
+        <Button onClick={() => void undo()} disabled={busy} data-testid="popout-undo-send">
+          {tViewer("undo_send")}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function readLaunch(): { handoffId: string | null; accountId?: string; draftId?: string; ownerAccountId?: string } {
   if (typeof window === "undefined") return { handoffId: null };
@@ -214,7 +301,12 @@ function NewMessageGate({ onReady }: { onReady: (payload: ComposePopoutPayload) 
 }
 
 /** The composer alone, in its own window: sending, autosave and discard go through the shared stores, as in a Pro tab. */
-function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload; handoffId: string | null }) {
+function PopoutComposer({ payload, handoffId, onReopen }: {
+  payload: ComposePopoutPayload;
+  handoffId: string | null;
+  /** Undo brought the message back to Drafts: open it again here. */
+  onReopen: (target: ReopenTarget) => void;
+}) {
   const t = useTranslations();
   const tQuick = useTranslations("desktopQuickCompose");
   const client = useAuthStore((s) => s.client);
@@ -267,6 +359,16 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
 
     const accountId = data.localAccountId ?? useAuthStore.getState().activeAccountId;
     const pending = useEmailStore.getState().pendingUndoSend;
+    const withLogin = pending ? { ...pending, localAccountId: pending.localAccountId ?? accountId ?? undefined } : null;
+    // An undo window stays here, where Send was pressed: the window shows it
+    // and closes when it runs out. A message scheduled for later goes to the
+    // main window as before.
+    const remaining = withLogin ? Date.parse(withLogin.sendAt) - Date.now() : NaN;
+    const keepHere = result.scheduled && withLogin && Number.isFinite(remaining) && remaining <= UNDO_WINDOW_MS ? withLogin : null;
+    if (keepHere) {
+      heldRef.current = keepHere;
+      useEmailStore.setState({ pendingUndoSend: null });
+    }
     const rejectedRecipients = result.rejectedRecipients?.length ? formatRejectedRecipients(result.rejectedRecipients) : undefined;
     const taken = await announceSentToMainWindow({
       accountId,
@@ -274,7 +376,7 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
       queued: !!result.queued,
       filingError: !!result.filingError,
       rejectedRecipients,
-      pendingUndoSend: pending ? { ...pending, localAccountId: pending.localAccountId ?? accountId ?? undefined } : null,
+      pendingUndoSend: keepHere ? null : withLogin,
     });
     // No main window to say so, and this is the only notice these get (#1123).
     if (!taken && (result.filingError || rejectedRecipients)) {
@@ -301,10 +403,35 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
     }
   }, [client, t]);
 
+  // A send held for undo, kept in this window until it runs out.
+  const heldRef = useRef<HeldSend | null>(null);
+  const [held, setHeld] = useState<HeldSend | null>(null);
+
   const handleClose = useCallback(() => {
+    announceMailChanged(useAuthStore.getState().activeAccountId);
+    if (heldRef.current) {
+      setHeld(heldRef.current);
+      return;
+    }
+    closePopoutWindow();
+  }, []);
+
+  const heldGone = useCallback(() => {
     announceMailChanged(useAuthStore.getState().activeAccountId);
     closePopoutWindow();
   }, []);
+
+  const heldUndone = useCallback((restored: Email | null) => {
+    const sent = heldRef.current;
+    heldRef.current = null;
+    const login = sent?.localAccountId ?? useAuthStore.getState().activeAccountId;
+    announceMailChanged(login);
+    if (!restored || !login) {
+      closePopoutWindow();
+      return;
+    }
+    onReopen({ draftId: restored.id, accountId: login, ownerAccountId: sent?.submissionAccountId });
+  }, [onReopen]);
 
   const [mainWindow] = useState(watchMainWindow);
   useEffect(() => () => mainWindow.stop(), [mainWindow]);
@@ -373,6 +500,8 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
     },
   }), [handoffId, mainWindow, payload]);
 
+  if (held) return <SendingWithUndo held={held} onUndone={heldUndone} onGone={heldGone} />;
+
   return (
     <ErrorBoundary fallback={ComposerErrorFallback}>
       <EmailComposer
@@ -405,6 +534,26 @@ export function PopoutComposeApp() {
   // draft is the newest there is. An ordinary reload remembers as it unloads.
   const [handoffId] = useState(() => (named && draftId && !rememberedComposePayload(named) ? null : named));
   const [payload, setPayload] = useState<ComposePopoutPayload | null>(null);
+  // After Undo: the message back in Drafts, opened again in a new composer here.
+  const [reopen, setReopen] = useState<ReopenTarget | null>(null);
+  const [generation, setGeneration] = useState(0);
+  const handleReopen = useCallback((target: ReopenTarget) => {
+    // A reload starts from the draft, as after a save.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("handoff");
+    url.searchParams.set("draft", target.draftId);
+    url.searchParams.set("account", target.accountId);
+    if (target.ownerAccountId) url.searchParams.set("owner", target.ownerAccountId);
+    else url.searchParams.delete("owner");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    setPayload(null);
+    setReopen(target);
+  }, []);
+  const reopened = useCallback((next: ComposePopoutPayload) => {
+    setReopen(null);
+    setGeneration((n) => n + 1);
+    setPayload(next);
+  }, []);
 
   useEffect(() => {
     if (!handoffId) return;
@@ -438,7 +587,8 @@ export function PopoutComposeApp() {
 
   return (
     <PopoutShell kind="compose" accountId={accountId}>
-      {payload ? <PopoutComposer payload={payload} handoffId={handoffId} />
+      {payload ? <PopoutComposer key={generation} payload={payload} handoffId={generation === 0 ? handoffId : null} onReopen={handleReopen} />
+        : reopen ? <RestoredDraft draftId={reopen.draftId} accountId={reopen.accountId} ownerAccountId={reopen.ownerAccountId} onReady={reopened} />
         : handoffId ? <PopoutSkeleton label={t("opening")} />
         : draftId ? <RestoredDraft draftId={draftId} accountId={accountId} ownerAccountId={ownerAccountId} onReady={setPayload} />
         : <NewMessageGate onReady={setPayload} />}
