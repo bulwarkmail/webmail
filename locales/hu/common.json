@@ -953,6 +953,13 @@
     "restore_to": "Visszahelyezés ide: {folder}",
     "delete_forever": "Végleges törlés"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Áthelyezés a Beérkező levelekbe",
+    "delete_forever_title": "Véglegesen törlöd ezt az üzenetet?",
+    "delete_forever_batch_title": "{count, plural, one {Véglegesen törlöd ezt az üzenetet?} other {Véglegesen törlöd ezt a(z) # üzenetet?}}",
+    "delete_forever_message": "Nem tudod visszahozni.",
+    "delete_forever_batch_message": "{count, plural, one {Nem tudod visszahozni.} other {Nem tudod visszahozni őket.}}"
+  },
   "external_mail": {
     "sender_label": "Külső",
     "sender_tooltip": "Innen: {domain}, a szervezeteden kívülről",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
     "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nincs találat} one {# beszélgetés található} other {# beszélgetés található}}",
+    "name_unread_sub": "{name}, {count} olvasatlan, további {sub} az almappákban",
+    "name_unread_only_sub": "{name}, {sub} olvasatlan az almappákban",
+    "sub_unread": "{sub} olvasatlan az almappákban"
+  },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",
     "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
     "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "A fiókváltó a mappák fölött jelenik meg, alatta az Új levél gombbal. Kikapcsolva az Új levél gomb kerül a helyére."
   },
   "mail_p2_conv": {
     "show_message": "Üzenet megjelenítése",

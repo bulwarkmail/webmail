@@ -953,6 +953,13 @@
     "restore_to": "Flyt tilbage til {folder}",
     "delete_forever": "Slet permanent"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flyt til Indbakke",
+    "delete_forever_title": "Slet denne besked permanent?",
+    "delete_forever_batch_title": "{count, plural, one {Slet denne besked permanent?} other {Slet disse # beskeder permanent?}}",
+    "delete_forever_message": "Du kan ikke få den tilbage.",
+    "delete_forever_batch_message": "{count, plural, one {Du kan ikke få den tilbage.} other {Du kan ikke få dem tilbage.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, uden for din organisation",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} i alle konti)",
     "title_all_accounts_only": "{name} ({total} i alle konti)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ingen resultater fundet} one {# samtale fundet} other {# samtaler fundet}}",
+    "name_unread_sub": "{name}, {count} ulæste, {sub} mere i undermapper",
+    "name_unread_only_sub": "{name}, {sub} ulæste i undermapper",
+    "sub_unread": "{sub} ulæste i undermapper"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer konti…",
     "apply_to_existing": "{count, plural, one {Anvend på # eksisterende besked i {folder}} other {Anvend på # eksisterende beskeder i {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Vis # ældre besked} other {Vis # ældre beskeder}}",
     "return_to_list_follows_layout": "Indtil du ændrer det, følger det layoutet: fra, når listen og beskeden står side om side, ellers til."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontoskifteren over mapperne med Ny besked under den. Slå det fra for at sætte Ny besked i stedet for den."
   },
   "mail_p2_conv": {
     "show_message": "Vis beskeden",

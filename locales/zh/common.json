@@ -953,6 +953,13 @@
     "restore_to": "移回 {folder}",
     "delete_forever": "永久删除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "移到收件箱",
+    "delete_forever_title": "要永久删除这封邮件吗？",
+    "delete_forever_batch_title": "{count, plural, one {要永久删除这封邮件吗？} other {要永久删除这 # 封邮件吗？}}",
+    "delete_forever_message": "删除后无法恢复。",
+    "delete_forever_batch_message": "{count, plural, one {删除后无法恢复。} other {删除后无法恢复。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "来自 {domain}，位于您的组织之外",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、所有账户共 {total})",
     "title_all_accounts_only": "{name} (所有账户共 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {未找到结果} other {找到 # 个会话}}",
+    "name_unread_sub": "{name}，{count} 封未读，子文件夹中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子文件夹中有 {sub} 封未读",
+    "sub_unread": "子文件夹中有 {sub} 封未读"
+  },
   "uxs_folders": {
     "manage_accounts": "管理账户…",
     "apply_to_existing": "{count, plural, other {应用于{folder}中的 # 封已有邮件}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“撰写邮件”。关闭后，“撰写邮件”会显示在账户切换器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "显示邮件",

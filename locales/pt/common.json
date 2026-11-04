@@ -953,6 +953,13 @@
     "restore_to": "Mover de volta para {folder}",
     "delete_forever": "Eliminar para sempre"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mover para a Caixa de Entrada",
+    "delete_forever_title": "Eliminar esta mensagem para sempre?",
+    "delete_forever_batch_title": "{count, plural, one {Eliminar esta mensagem para sempre?} other {Eliminar estas # mensagens para sempre?}}",
+    "delete_forever_message": "Não poderá recuperá-la.",
+    "delete_forever_batch_message": "{count, plural, one {Não poderá recuperá-la.} other {Não poderá recuperá-las.}}"
+  },
   "external_mail": {
     "sender_label": "Externo",
     "sender_tooltip": "De {domain}, fora da sua organização",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} em todas as contas)",
     "title_all_accounts_only": "{name} ({total} em todas as contas)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nenhum resultado encontrado} one {# conversa encontrada} other {# conversas encontradas}}",
+    "name_unread_sub": "{name}, {count} não lidas, mais {sub} nas subpastas",
+    "name_unread_only_sub": "{name}, {sub} não lidas nas subpastas",
+    "sub_unread": "{sub} não lidas nas subpastas"
+  },
   "uxs_folders": {
     "manage_accounts": "Gerir contas…",
     "apply_to_existing": "{count, plural, one {Aplicar a # mensagem existente em {folder}} other {Aplicar a # mensagens existentes em {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostrar # mensagem anterior} other {Mostrar # mensagens anteriores}}",
     "return_to_list_follows_layout": "Enquanto não alterar, segue o layout: desligado quando a lista e a mensagem estão lado a lado, ligado nos outros casos."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra o seletor de conta acima das pastas, com Escrever por baixo. Desative para colocar Escrever no lugar dele."
   },
   "mail_p2_conv": {
     "show_message": "Mostrar a mensagem",

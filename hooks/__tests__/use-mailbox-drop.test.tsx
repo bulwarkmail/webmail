@@ -5,6 +5,7 @@ import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useSettingsStore } from '@/stores/settings-store';
 
 const drag = vi.hoisted(() => ({
   isDragging: true,
@@ -127,5 +128,23 @@ describe('useMailboxDrop', () => {
 
     expect(moveEmailsToMailbox).toHaveBeenCalledWith(client016, ['m1'], 'f');
     expect(crossAccountMoveEmails).not.toHaveBeenCalled();
+  });
+
+  // mail-p3-7: the toast counts what the list shows, conversations when it groups them.
+  it('counts the conversations dropped, or the emails with conversations off', async () => {
+    drag.draggedEmails = [
+      email({ id: 'a1', threadId: 'ta' }), email({ id: 'a2', threadId: 'ta' }),
+      email({ id: 'b1', threadId: 'tb' }), email({ id: 'b2', threadId: 'tb' }),
+    ];
+    const counts: number[] = [];
+    const dropCounting = async () => {
+      const { result } = renderHook(() => useMailboxDrop({ mailbox: mailbox({}), onSuccess: (count) => { counts.push(count); }, onError: () => {} }));
+      await act(async () => { result.current.dropHandlers.onDrop(dropEvent(['a1', 'a2', 'b1', 'b2'])); });
+    };
+    useSettingsStore.setState({ disableThreading: false });
+    await dropCounting();
+    useSettingsStore.setState({ disableThreading: true });
+    await dropCounting();
+    expect(counts).toEqual([2, 4]);
   });
 });

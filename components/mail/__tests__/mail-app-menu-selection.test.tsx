@@ -114,7 +114,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login-a', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split', proInterface: false } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split', proInterface: false, disableThreading: false } as never);
   batchMoveToMailbox = vi.fn().mockResolvedValue(true);
   useEmailStore.setState({
     emails: [a, b, c], selectedEmail: a, selectedMailbox: 'inbox', selectedKeyword: null, mailboxes: [inbox, later],
@@ -159,7 +159,17 @@ describe('the Message menu with three messages selected', () => {
     expect(request?.emails.map((email) => email.id)).toEqual(['a', 'b', 'c']);
     await act(async () => { request!.onMove('later'); });
     await waitFor(() => expect(batchMoveToMailbox).toHaveBeenCalledWith(expect.anything(), 'later', undefined, expect.any(Array)));
-    await waitFor(() => expect(useToastStore.getState().toasts.map((toast) => toast.title)).toContain('moved_count_to'));
+    // Three conversations are selected, so the toast counts conversations (mail-p3-7).
+    await waitFor(() => expect(useToastStore.getState().toasts.map((toast) => toast.title)).toContain('mail_p2_list.conversations_moved_to'));
+  });
+
+  it('with conversations off, Move to… counts emails', async () => {
+    useSettingsStore.setState({ disableThreading: true } as never);
+    render(<MailApp />);
+    await waitFor(() => expect(reported['message.move']).toBe(true));
+    act(() => { runDesktopCommand('message.move'); });
+    await act(async () => { useMoveDialogStore.getState().request!.onMove('later'); });
+    await waitFor(() => expect(useToastStore.getState().toasts.map((toast) => toast.title)).toContain('mail_list_extra.moved_count_to'));
   });
 
   it('with one message open and none selected, Reply and Move are for that one', async () => {

@@ -953,6 +953,13 @@
     "restore_to": "Přesunout zpět do složky {folder}",
     "delete_forever": "Smazat natrvalo"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Přesunout do Doručených",
+    "delete_forever_title": "Smazat tuto zprávu natrvalo?",
+    "delete_forever_batch_title": "{count, plural, one {Smazat tuto zprávu natrvalo?} other {Smazat tyto zprávy (#) natrvalo?}}",
+    "delete_forever_message": "Nepůjde ji obnovit.",
+    "delete_forever_batch_message": "{count, plural, one {Nepůjde ji obnovit.} other {Nepůjde je obnovit.}}"
+  },
   "external_mail": {
     "sender_label": "Externí",
     "sender_tooltip": "Z {domain}, mimo vaši organizaci",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} ve všech účtech)",
     "title_all_accounts_only": "{name} ({total} ve všech účtech)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nenalezeny žádné výsledky} one {Nalezena # konverzace} few {Nalezeny # konverzace} many {Nalezeno # konverzace} other {Nalezeno # konverzací}}",
+    "name_unread_sub": "{name}, nepřečtené: {count}, v podsložkách dalších {sub}",
+    "name_unread_only_sub": "{name}, nepřečtené v podsložkách: {sub}",
+    "sub_unread": "Nepřečtené v podsložkách: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovat účty…",
     "apply_to_existing": "{count, plural, one {Použít na # existující zprávu ve složce {folder}} few {Použít na # existující zprávy ve složce {folder}} many {Použít na # existující zprávy ve složce {folder}} other {Použít na # existujících zpráv ve složce {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobrazit # starší zprávu} few {Zobrazit # starší zprávy} many {Zobrazit # starší zprávy} other {Zobrazit # starších zpráv}}",
     "return_to_list_follows_layout": "Dokud to nezměníte, řídí se to rozvržením: vypnuto, když jsou seznam a zpráva vedle sebe, jinak zapnuto."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zobrazí přepínač účtů nad složkami a pod ním tlačítko Napsat. Po vypnutí bude na jeho místě tlačítko Napsat."
   },
   "mail_p2_conv": {
     "show_message": "Zobrazit zprávu",

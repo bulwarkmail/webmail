@@ -953,6 +953,13 @@
     "restore_to": "Zurück nach {folder} verschieben",
     "delete_forever": "Endgültig löschen"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "In den Posteingang verschieben",
+    "delete_forever_title": "Diese Nachricht endgültig löschen?",
+    "delete_forever_batch_title": "{count, plural, one {Diese Nachricht endgültig löschen?} other {Diese # Nachrichten endgültig löschen?}}",
+    "delete_forever_message": "Sie können sie nicht zurückholen.",
+    "delete_forever_batch_message": "{count, plural, one {Sie können sie nicht zurückholen.} other {Sie können sie nicht zurückholen.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Von {domain}, außerhalb Ihrer Organisation",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} in allen Konten)",
     "title_all_accounts_only": "{name} ({total} in allen Konten)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Keine Ergebnisse gefunden} one {# Unterhaltung gefunden} other {# Unterhaltungen gefunden}}",
+    "name_unread_sub": "{name}, {count} ungelesen, {sub} weitere in Unterordnern",
+    "name_unread_only_sub": "{name}, {sub} ungelesen in Unterordnern",
+    "sub_unread": "{sub} ungelesen in Unterordnern"
+  },
   "uxs_folders": {
     "manage_accounts": "Konten verwalten…",
     "apply_to_existing": "{count, plural, one {Auf # vorhandene Nachricht in {folder} anwenden} other {Auf # vorhandene Nachrichten in {folder} anwenden}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
     "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zeigt den Kontoumschalter über den Ordnern, darunter „Verfassen“. Ausgeschaltet steht „Verfassen“ an seiner Stelle."
   },
   "mail_p2_conv": {
     "show_message": "Nachricht anzeigen",

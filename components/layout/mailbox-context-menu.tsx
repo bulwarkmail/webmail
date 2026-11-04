@@ -255,6 +255,9 @@ export function MailboxContextMenu({
   // Emptying is offered where people expect it, as "Empty Trash" and "Empty
   // Spam"; rules and notifications mean nothing there (mail-20, pass 2 p2-14).
   const isTrashOrJunk = mailbox.role === "trash" || mailbox.role === "junk";
+  // Nothing arrives in Sent, Drafts or Scheduled, so no rule or notification
+  // applies there either (mail-p3-12).
+  const noIncomingMail = isTrashOrJunk || mailbox.role === "sent" || mailbox.role === "drafts" || mailbox.role === "scheduled";
   const isSystem =
     !!mailbox.role &&
     ["inbox", "sent", "drafts", "trash", "junk", "archive"].includes(mailbox.role);
@@ -301,13 +304,16 @@ export function MailboxContextMenu({
 
       <ContextMenuSeparator />
 
-      <ContextMenuItem
-        icon={FolderPlus}
-        label={t("new_subfolder")}
-        onClick={() => handleAction(() => onCreateSubfolder?.(mailbox.id))}
-        disabled={!onCreateSubfolder || !canCreateChild || offline}
-        testId="mailbox-new-subfolder"
-      />
+      {/* Trash and Spam hold mail on its way out: no subfolders, no imports (mail-p3-12). */}
+      {!isTrashOrJunk && (
+        <ContextMenuItem
+          icon={FolderPlus}
+          label={t("new_subfolder")}
+          onClick={() => handleAction(() => onCreateSubfolder?.(mailbox.id))}
+          disabled={!onCreateSubfolder || !canCreateChild || offline}
+          testId="mailbox-new-subfolder"
+        />
+      )}
       {/* The server's own folders can't be renamed or deleted: not shown greyed out. */}
       {!isSystem && (
         <ContextMenuItem
@@ -327,8 +333,8 @@ export function MailboxContextMenu({
           testId="mailbox-share"
         />
       )}
-      {!isTrashOrJunk && <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} disabled={offline} />}
-      {notifications && !isTrashOrJunk && (() => {
+      {!noIncomingMail && <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} disabled={offline} />}
+      {notifications && !noIncomingMail && (() => {
         const muted = notifications.isMailboxMuted(mailbox);
         return (
           <ContextMenuItem
@@ -356,12 +362,15 @@ export function MailboxContextMenu({
 
       <ContextMenuSeparator />
 
-      <ContextMenuItem
-        icon={Upload}
-        label={tImport("menu_import")}
-        onClick={() => handleAction(() => onImportEmail?.(mailbox.id))}
-        disabled={!onImportEmail || !canAddItems || offline}
-      />
+      {!isTrashOrJunk && (
+        <ContextMenuItem
+          icon={Upload}
+          label={tImport("menu_import")}
+          onClick={() => handleAction(() => onImportEmail?.(mailbox.id))}
+          disabled={!onImportEmail || !canAddItems || offline}
+          testId="mailbox-import"
+        />
+      )}
       {!exportOff && (
         <ContextMenuItem
           icon={Download}

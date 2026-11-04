@@ -69,3 +69,18 @@ describe('EmailList empty-folder banner', () => {
     expect(screen.getByText('empty_hint {"folder":"mailboxes.trash"}')).toBeTruthy();
   });
 });
+
+// mail-p3-5: the banner's button said "Empty folder" while the folder menu
+// said "Empty Trash"; now both say "Empty Trash" / "Empty Spam".
+describe('EmailList empty-folder button', () => {
+  it('says Empty Trash in Trash', () => {
+    show('trash');
+    expect(screen.getByRole('button', { name: 'mail_p2_folders.empty_trash' })).toBeTruthy();
+    expect(screen.queryByText('empty_folder.button')).toBeNull();
+  });
+
+  it('says Empty Spam in Spam', () => {
+    show('junk');
+    expect(screen.getByRole('button', { name: 'mail_p2_folders.empty_spam' })).toBeTruthy();
+  });
+});

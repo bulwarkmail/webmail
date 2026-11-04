@@ -953,6 +953,13 @@
     "restore_to": "{folder} に戻す",
     "delete_forever": "完全に削除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "受信トレイに移動",
+    "delete_forever_title": "このメッセージを完全に削除しますか？",
+    "delete_forever_batch_title": "{count, plural, one {このメッセージを完全に削除しますか？} other {これら # 件のメッセージを完全に削除しますか？}}",
+    "delete_forever_message": "元に戻すことはできません。",
+    "delete_forever_batch_message": "{count, plural, one {元に戻すことはできません。} other {元に戻すことはできません。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "{domain} から（組織外）",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
     "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {結果が見つかりません} other {#件の会話が見つかりました}}",
+    "name_unread_sub": "{name}、未読 {count} 件、サブフォルダーにさらに {sub} 件",
+    "name_unread_only_sub": "{name}、サブフォルダーに未読 {sub} 件",
+    "sub_unread": "サブフォルダーに未読 {sub} 件"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
     "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "フォルダの上にアカウント切替を表示し、その下に「作成」を表示します。オフにすると、アカウント切替の代わりに「作成」が表示されます。"
   },
   "mail_p2_conv": {
     "show_message": "メッセージを表示",

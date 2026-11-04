@@ -68,9 +68,15 @@ describe('FilterRuleModal header names', () => {
 // corner of the window.
 describe('FilterRuleModal incomplete action', () => {
   const mailboxes = [
-    { id: 'inbox', name: 'Inbox', role: 'inbox', sortOrder: 0 },
-    { id: 'news', name: 'News', sortOrder: 1 },
+    { id: 'inbox', name: 'Inbox', role: 'inbox', sortOrder: 0, myRights: { mayAddItems: true } },
+    { id: 'news', name: 'News', sortOrder: 1, myRights: { mayAddItems: true } },
   ] as never;
+  // The folder field is a button that opens the Move list (mail-p3-9).
+  const folderFields = () => screen.getAllByRole('button', { name: 'move_to_folder' });
+  const pickFolder = (field: HTMLElement, id: string) => {
+    fireEvent.click(field);
+    fireEvent.click(screen.getByTestId(`rule-folder:${id}`));
+  };
 
   it('points at the folder field when no folder was chosen', async () => {
     vi.mocked(toast.error).mockClear();
@@ -84,10 +90,10 @@ describe('FilterRuleModal incomplete action', () => {
     expect(toast.error).not.toHaveBeenCalled();
     // The row is there; what it misses is the folder, not "an action".
     expect(screen.getByRole('alert').textContent).toBe('validation_action_folder');
-    const folder = screen.getByRole('combobox', { name: 'move_to_folder' });
+    const folder = folderFields()[0];
     expect(folder.getAttribute('aria-invalid')).toBe('true');
 
-    fireEvent.change(folder, { target: { value: 'news' } });
+    pickFolder(folder, 'news');
     expect(screen.queryByRole('alert')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
     expect(onSave.mock.calls[0][0].actions).toEqual([{ type: 'move', mailboxId: 'news', value: 'News' }]);
@@ -100,7 +106,7 @@ describe('FilterRuleModal incomplete action', () => {
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     const value = screen.getByRole('textbox', { name: 'condition_value' });
-    const folder = screen.getByRole('combobox', { name: 'move_to_folder' });
+    const folder = folderFields()[0];
     expect(value.getAttribute('aria-invalid')).toBe('true');
     expect(folder.getAttribute('aria-invalid')).toBe('true');
     expect(screen.getAllByRole('alert').map((a) => a.textContent)).toEqual([
@@ -121,12 +127,12 @@ describe('FilterRuleModal incomplete action', () => {
     render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
     fireEvent.change(screen.getByPlaceholderText('filter_value_placeholder'), { target: { value: 'news@example.com' } });
-    fireEvent.change(screen.getByRole('combobox', { name: 'move_to_folder' }), { target: { value: 'news' } });
+    pickFolder(folderFields()[0], 'news');
     fireEvent.click(screen.getByText('add_action'));
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     expect(onSave).not.toHaveBeenCalled();
-    const folders = screen.getAllByRole('combobox', { name: 'move_to_folder' });
+    const folders = folderFields();
     expect(folders.map((f) => f.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
     expect(screen.getByRole('alert').textContent).toBe('validation_action_folder');
   });
@@ -134,6 +140,6 @@ describe('FilterRuleModal incomplete action', () => {
   it('starts a changed action without a folder too, like a new row', () => {
     render(<FilterRuleModal mailboxes={mailboxes} onSave={vi.fn()} onClose={() => {}} />);
     fireEvent.change(screen.getByRole('combobox', { name: 'actions' }), { target: { value: 'copy' } });
-    expect((screen.getByRole('combobox', { name: 'move_to_folder' }) as HTMLSelectElement).value).toBe('');
+    expect(folderFields()[0].getAttribute('data-value')).toBe('');
   });
 });

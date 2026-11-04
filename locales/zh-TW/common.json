@@ -953,6 +953,13 @@
     "restore_to": "移回 {folder}",
     "delete_forever": "永久刪除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "移到收件匣",
+    "delete_forever_title": "要永久刪除這封郵件嗎？",
+    "delete_forever_batch_title": "{count, plural, one {要永久刪除這封郵件嗎？} other {要永久刪除這 # 封郵件嗎？}}",
+    "delete_forever_message": "刪除後無法復原。",
+    "delete_forever_batch_message": "{count, plural, one {刪除後無法復原。} other {刪除後無法復原。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "來自 {domain}，位於您的組織之外",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、所有帳號共 {total})",
     "title_all_accounts_only": "{name} (所有帳號共 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {找不到結果} other {找到 # 個對話串}}",
+    "name_unread_sub": "{name}，{count} 封未讀，子資料夾中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子資料夾中有 {sub} 封未讀",
+    "sub_unread": "子資料夾中有 {sub} 封未讀"
+  },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",
     "apply_to_existing": "{count, plural, other {套用到{folder}中的 # 封既有郵件}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {顯示 # 封較早的郵件}}",
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「撰寫郵件」。關閉後，「撰寫郵件」會顯示在帳號切換器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "顯示郵件",

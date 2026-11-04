@@ -953,6 +953,13 @@
     "restore_to": "Move back to {folder}",
     "delete_forever": "Delete forever"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Move to Inbox",
+    "delete_forever_title": "Delete this message forever?",
+    "delete_forever_batch_title": "{count, plural, one {Delete this message forever?} other {Delete these # messages forever?}}",
+    "delete_forever_message": "You can't get it back.",
+    "delete_forever_batch_message": "{count, plural, one {You can't get it back.} other {You can't get them back.}}"
+  },
   "external_mail": {
     "sender_label": "External",
     "sender_tooltip": "From {domain}, outside your organisation",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} in all accounts)",
     "title_all_accounts_only": "{name} ({total} in all accounts)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No results found} one {# conversation found} other {# conversations found}}",
+    "name_unread_sub": "{name}, {count} unread, {sub} more in subfolders",
+    "name_unread_only_sub": "{name}, {sub} unread in subfolders",
+    "sub_unread": "{sub} unread in subfolders"
+  },
   "uxs_folders": {
     "manage_accounts": "Manage accounts…",
     "apply_to_existing": "{count, plural, one {Apply to # existing message in {folder}} other {Apply to # existing messages in {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
     "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Show the account switcher above the folders, with Compose under it. Turn this off to put Compose in its place."
   },
   "mail_p2_conv": {
     "show_message": "Show the message",

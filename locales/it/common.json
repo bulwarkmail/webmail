@@ -953,6 +953,13 @@
     "restore_to": "Riporta in {folder}",
     "delete_forever": "Elimina definitivamente"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Sposta in Posta in arrivo",
+    "delete_forever_title": "Eliminare per sempre questo messaggio?",
+    "delete_forever_batch_title": "{count, plural, one {Eliminare per sempre questo messaggio?} other {Eliminare per sempre questi # messaggi?}}",
+    "delete_forever_message": "Non potrai recuperarlo.",
+    "delete_forever_batch_message": "{count, plural, one {Non potrai recuperarlo.} other {Non potrai recuperarli.}}"
+  },
   "external_mail": {
     "sender_label": "Esterno",
     "sender_tooltip": "Da {domain}, fuori dalla tua organizzazione",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
     "title_all_accounts_only": "{name} ({total} in tutti gli account)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nessun risultato trovato} one {# conversazione trovata} other {# conversazioni trovate}}",
+    "name_unread_sub": "{name}, {count} da leggere, altri {sub} nelle sottocartelle",
+    "name_unread_only_sub": "{name}, {sub} da leggere nelle sottocartelle",
+    "sub_unread": "{sub} da leggere nelle sottocartelle"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestisci account…",
     "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
     "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra il selettore account sopra le cartelle, con Scrivi sotto. Disattivalo per mettere Scrivi al suo posto."
   },
   "mail_p2_conv": {
     "show_message": "Mostra il messaggio",

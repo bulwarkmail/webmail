@@ -606,7 +606,8 @@ optgroup {
 }
 
 /* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips.
-   "secondary" first keeps the names of Reply, Archive, Delete and Move (mail-p2-15). */
+   "secondary" keeps the names of Reply, Reply all, Forward, Archive, Delete and Move; the
+   other buttons go into the More menu before those names go (mail-p2-15). */
 [data-toolbar-compact="secondary"] [data-toolbar-label]:not([data-toolbar-label="primary"]),
 [data-toolbar-compact="all"] [data-toolbar-label] {
   display: none !important;
@@ -1661,6 +1662,14 @@ html[data-window-controls-left] [data-window-rail] {
 [data-menu-row][data-menu-opener] {
   outline: 2px solid var(--color-ring);
   outline-offset: -2px;
+}
+
+/* Right to left, a row's hover actions sit at its left end, where an English
+   subject starts: its text keeps clear of them while they show, by the strip's
+   width (set by components/email/email-hover-actions.tsx) and the room the
+   strip keeps off the edge, instead of lying under them (mail-p3-10). */
+html[dir="rtl"] [data-menu-row][data-hover-actions-shown] > [data-row-text] {
+  padding-inline-end: calc(var(--row-actions-w, 0px) + var(--focus-ring-width, 2px));
 }
 
 /* A menu opened under the pointer: the item there isn't hovered until the pointer moves. */

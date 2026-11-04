@@ -953,6 +953,13 @@
     "restore_to": "Volver a mover a {folder}",
     "delete_forever": "Eliminar para siempre"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mover a la bandeja de entrada",
+    "delete_forever_title": "¿Eliminar este mensaje para siempre?",
+    "delete_forever_batch_title": "{count, plural, one {¿Eliminar este mensaje para siempre?} other {¿Eliminar estos # mensajes para siempre?}}",
+    "delete_forever_message": "No podrás recuperarlo.",
+    "delete_forever_batch_message": "{count, plural, one {No podrás recuperarlo.} other {No podrás recuperarlos.}}"
+  },
   "external_mail": {
     "sender_label": "Externo",
     "sender_tooltip": "De {domain}, fuera de tu organización",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} en todas las cuentas)",
     "title_all_accounts_only": "{name} ({total} en todas las cuentas)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No se encontraron resultados} one {# conversación encontrada} other {# conversaciones encontradas}}",
+    "name_unread_sub": "{name}, {count} sin leer, {sub} más en subcarpetas",
+    "name_unread_only_sub": "{name}, {sub} sin leer en subcarpetas",
+    "sub_unread": "{sub} sin leer en subcarpetas"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionar cuentas…",
     "apply_to_existing": "{count, plural, one {Aplicar a # mensaje existente en {folder}} other {Aplicar a # mensajes existentes en {folder}}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostrar # mensaje anterior} other {Mostrar # mensajes anteriores}}",
     "return_to_list_follows_layout": "Mientras no lo cambies, sigue el diseño: desactivado cuando la lista y el mensaje están uno al lado del otro, activado en los demás casos."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Muestra el selector de cuentas encima de las carpetas, con Redactar debajo. Desactívelo para poner Redactar en su lugar."
   },
   "mail_p2_conv": {
     "show_message": "Mostrar el mensaje",

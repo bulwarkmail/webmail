@@ -26,6 +26,9 @@ import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list
 import { useChooseMoveFolder } from "./move-to-dialog";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { getMailboxPath } from "@/lib/utils";
+import { emptyFolderLabelKey, emptyFolderPrompt } from "@/lib/empty-folder-text";
+import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
+import { useAccountStore } from "@/stores/account-store";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +64,7 @@ import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
-import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
+import { getRuleAccountAddresses, resolveQuickRuleTarget } from "@/lib/filters/quick-rule-target";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -221,7 +224,6 @@ export function EmailList({
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const isDesktopPane = useIsDesktop();
   const isEmbeddedList = useIsEmbedded();
-  const sidebarAccountSwitcher = useSettingsStore((state) => state.sidebarAccountSwitcher);
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
@@ -391,7 +393,8 @@ export function EmailList({
     if (selectedEmailKeys.has(emailKeyFor(contextMenuEmail)) && selectedEmailKeys.size > 1) {
       return emails.filter((email) => selectedEmailKeys.has(emailKeyFor(email)));
     }
-    const own = getOwnAddresses();
+    // The account's own addresses only: another signed-in account's mail is a sender here.
+    const own = getRuleAccountAddresses(resolveQuickRuleTarget(contextMenuEmail)).own;
     const isOwn = (email: Email) =>
       (email.from ?? []).length > 0 && (email.from ?? []).every((f) => own.has(normalizeAddress(f.email)));
     if (!isOwn(contextMenuEmail)) return undefined;
@@ -413,7 +416,7 @@ export function EmailList({
 
   const [isProcessing, setIsProcessing] = useState(false);
   // The selection view's More actions opens only that part of the selection's menu.
-  const [menuSection, setMenuSection] = useState<'all' | 'more'>('all');
+  const [menuSection, setMenuSection] = useState<'all' | 'more' | 'rules'>('all');
   useEffect(() => {
     if (!contextMenu.isOpen) setMenuSection('all');
   }, [contextMenu.isOpen]);
@@ -759,14 +762,15 @@ export function EmailList({
 
     if (shouldConfirmBulkDelete(currentMailbox)) {
       const confirmed = await confirmDialog({
+        // One wording for a delete for good (mail-p3-5).
         title: isInTrash
-          ? t('permanent_delete_confirm_batch_title')
+          ? tRoot('mail_p3_actions.delete_forever_batch_title', { count: selectedEmailKeys.size })
           : t('batch_actions.delete_confirm_title'),
         message: isInTrash
-          ? t('permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+          ? tRoot('mail_p3_actions.delete_forever_batch_message', { count: selectedEmailKeys.size })
           : t('batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
         confirmText: isInTrash
-          ? t('permanent_delete')
+          ? tRoot('reader_actions.delete_forever')
           : t('batch_actions.delete'),
         variant: "destructive",
       });
@@ -821,7 +825,14 @@ export function EmailList({
     onMarkAsSpam: () => void handleBatchMarkAsSpam(),
     onUndoSpam: () => void handleBatchUndoSpam(),
     onRemoveFromFolder: () => void handleBatchRemoveFromFolder(),
+    onForwardAsAttachment: onBatchForwardAsAttachment,
   });
+  // What "More actions" holds, as the pane's own buttons when that's two
+  // things or fewer (mail-p3-8). Another signed-in account adds Copy to
+  // account, and plugins can add entries: then More stays.
+  const otherAccounts = useAccountStore((state) => state.accounts.filter((account) => account.isConnected).length > 1);
+  const menuPlugins = usePluginSlotOffers('context-menu-email').length > 0;
+  const selectionMoreInline = !otherAccounts && !menuPlugins ? selectionActions.more : null;
 
   // Archive, Delete, Move, Mark read/unread and Tag, as icons on the bar beside the
   // list. The reading pane has the selection view.
@@ -938,10 +949,12 @@ export function EmailList({
   const handleEmptyFolder = async () => {
     if (!client || isProcessing || !currentMailbox) return;
 
+    // "Empty Trash" / "Empty Spam" with the count, as the folder menu asks (mail-p3-5).
+    const prompt = emptyFolderPrompt(currentMailbox, false);
     const confirmed = await confirmDialog({
-      title: t('empty_folder.confirm_title'),
-      message: t('empty_folder.confirm_message'),
-      confirmText: t('empty_folder.confirm_button'),
+      title: tRoot(prompt.title),
+      message: tRoot(prompt.message, prompt.values),
+      confirmText: tRoot(prompt.confirm),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -1192,12 +1205,12 @@ export function EmailList({
   );
 
   // Room under the last row for the round Compose button, which would otherwise
-  // sit on that row's actions (Mountain View has no such button, and a desktop
-  // can have Compose in the folder sidebar instead, sidebarAccountSwitcher
-  // off). A spacer and not padding on the list: padding is a minimum height
-  // the list can't go under, and on a short screen it pushed the rows over
-  // the tab bar.
-  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList || sidebarAccountSwitcher) ? <div aria-hidden="true" className="h-20" /> : null;
+  // sit on that row's actions. Only phones and Pro panes have that button:
+  // Mountain View and the desktop have Compose in the folder sidebar
+  // (mail-p3-11). A spacer and not padding on the list: padding is a minimum
+  // height the list can't go under, and on a short screen it pushed the rows
+  // over the tab bar.
+  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
 
   return (
     <TagDisplayContext.Provider value={tagDisplay}>
@@ -1360,7 +1373,7 @@ export function EmailList({
             ) : (
               <Trash2 className="w-3 h-3 me-1" />
             )}
-            {t('empty_folder.button')}
+            {tRoot(emptyFolderLabelKey(currentMailbox?.role) ?? 'email_list.empty_folder.button')}
           </Button>
         </div>
       )}
@@ -1546,6 +1559,13 @@ export function EmailList({
           title={selectionTitle}
           unread={selectionUnread}
           entries={selectionActions.top}
+          more={selectionMoreInline}
+          onOpenRules={(button) => {
+            const anchor = selectedEmailsForRemoval[0];
+            if (!anchor) return;
+            setMenuSection('rules');
+            openContextMenuFrom(button, anchor, 'start');
+          }}
           shortcutOf={(entry) => (entry.key === 'star' ? undefined : shortcutOf(entry.key, entry.testId === 'ctx-mark-read'))}
           onMove={(button) => moveMenu.openContextMenuFrom(button, null, 'start')}
           onMore={(button) => {

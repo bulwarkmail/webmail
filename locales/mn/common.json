@@ -953,6 +953,13 @@
     "restore_to": "{folder} руу буцаах",
     "delete_forever": "Бүрмөсөн устгах"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Ирсэн имэйл рүү зөөх",
+    "delete_forever_title": "Энэ зурвасыг бүрмөсөн устгах уу?",
+    "delete_forever_batch_title": "{count, plural, one {Энэ зурвасыг бүрмөсөн устгах уу?} other {Эдгээр # зурвасыг бүрмөсөн устгах уу?}}",
+    "delete_forever_message": "Үүнийг буцааж авах боломжгүй.",
+    "delete_forever_batch_message": "{count, plural, one {Үүнийг буцааж авах боломжгүй.} other {Тэдгээрийг буцааж авах боломжгүй.}}"
+  },
   "external_mail": {
     "sender_label": "Гадаад",
     "sender_tooltip": "{domain}-аас, таны байгууллагаас гадуур",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
     "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Үр дүн олдсонгүй} one {# харилцан яриа олдлоо} other {# харилцан яриа олдлоо}}",
+    "name_unread_sub": "{name}, уншаагүй: {count}, дэд хавтаст дахиад {sub}",
+    "name_unread_only_sub": "{name}, дэд хавтаст уншаагүй: {sub}",
+    "sub_unread": "Дэд хавтаст уншаагүй: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Данснуудыг удирдах…",
     "apply_to_existing": "{count, plural, one {{folder} доторх байгаа # захианд хэрэглэх} other {{folder} доторх байгаа # захианд хэрэглэх}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Өмнөх # захиа харуулах} other {Өмнөх # захиа харуулах}}",
     "return_to_list_follows_layout": "Та өөрчлөхөөс нааш энэ нь байрлалаас хамаарна: жагсаалт ба захиа зэрэгцэн байвал унтраалттай, бусад үед асаалттай."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Хавтаснуудын дээр бүртгэл солигчийг, түүний доор Бичилэх товчийг харуулна. Унтраавал Бичилэх товч түүний оронд гарна."
   },
   "mail_p2_conv": {
     "show_message": "Захидлыг харах",

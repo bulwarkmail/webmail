@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { Email, Mailbox } from "@/lib/jmap/types";
 import {
@@ -27,7 +28,7 @@ import { useMessageActionShortcut } from "./message-action-shortcuts";
 import { useConnectionState } from "@/hooks/use-connection-state";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
-import { RulesContextSubMenu } from "./rules-menu";
+import { RulesContextList, RulesContextSubMenu } from "./rules-menu";
 
 interface Position {
   x: number;
@@ -72,6 +73,8 @@ interface EmailContextMenuProps {
   onTogglePinned?: () => void;
   onDelete?: () => void;
   onArchive?: () => void;
+  /** In Archive: what takes Archive's place, when the host knows better than the browsed folder (a message window). */
+  onMoveToInbox?: () => void;
   onSetTag?: (tagId: string | null) => void;
   onMoveToMailbox?: (mailboxId: string) => void;
   /**
@@ -141,7 +144,7 @@ interface EmailContextMenuProps {
    * "more": only what a selection's menu has under "More actions", for the
    * selection view's More actions button.
    */
-  section?: "all" | "more";
+  section?: "all" | "more" | "rules";
 }
 
 /** Entries that change the message on the server, or queue the change offline. */
@@ -172,6 +175,7 @@ export function EmailContextMenu({
   onTogglePinned,
   onDelete,
   onArchive,
+  onMoveToInbox,
   onSetTag,
   onMoveToMailbox,
   onRemoveFromFolder,
@@ -286,6 +290,8 @@ export function EmailContextMenu({
   const batchRestoreTo = inTrash && onBatchMoveToMailbox && showBatchActions
     ? restoreTargetForAll(batchEmails ?? [], mailboxes, selectedMailbox)
     : undefined;
+  // In Archive: back to the Inbox in Archive's place (mail-p3-4).
+  const inboxTo = onMoveToMailbox ? archiveInboxTarget(mailboxes, selectedMailbox) : undefined;
 
   // One message: the shared action list (R6), the same the reader's ⋮ and
   // the phone panel show.
@@ -317,6 +323,7 @@ export function EmailContextMenu({
     onPrint,
     onViewSource,
     onRestore: restoreTo ? () => onMoveToMailbox?.(restoreTo) : undefined,
+    onMoveToInbox: onMoveToInbox ?? (inboxTo ? () => onMoveToMailbox?.(inboxTo.id) : undefined),
     omit,
     views,
     extras,
@@ -456,7 +463,9 @@ export function EmailContextMenu({
 
   let body: React.ReactNode;
   if (showBatchActions) {
-    body = isScheduled ? null : section === "more" ? (
+    body = isScheduled ? null : section === "rules" ? (
+      <RulesContextList anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} />
+    ) : section === "more" ? (
       <>
         {renderEntries(selectionLists.more, "more-", true)}
         {pluginEntries}
@@ -495,7 +504,7 @@ export function EmailContextMenu({
       isOpen={isOpen}
       position={position}
       onClose={onClose}
-      label={label ?? (section === "more" ? tViewer("more_actions") : undefined)}
+      label={label ?? (section === "more" ? tViewer("more_actions") : section === "rules" ? t("rules.title") : undefined)}
     >
       {offline && <ContextMenuHeader>{tMenu("offline_header")}</ContextMenuHeader>}
       {body}

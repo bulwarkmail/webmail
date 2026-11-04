@@ -953,6 +953,13 @@
     "restore_to": "{folder} klasörüne geri taşı",
     "delete_forever": "Kalıcı olarak sil"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Gelen Kutusu'na taşı",
+    "delete_forever_title": "Bu ileti kalıcı olarak silinsin mi?",
+    "delete_forever_batch_title": "{count, plural, one {Bu ileti kalıcı olarak silinsin mi?} other {Bu # ileti kalıcı olarak silinsin mi?}}",
+    "delete_forever_message": "Geri alamazsınız.",
+    "delete_forever_batch_message": "{count, plural, one {Geri alamazsınız.} other {Geri alamazsınız.}}"
+  },
   "external_mail": {
     "sender_label": "Harici",
     "sender_tooltip": "{domain} adresinden, kuruluşunuzun dışından",
@@ -3934,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
     "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Sonuç bulunamadı} one {# konuşma bulundu} other {# konuşma bulundu}}",
+    "name_unread_sub": "{name}, {count} okunmamış, alt klasörlerde {sub} tane daha",
+    "name_unread_only_sub": "{name}, alt klasörlerde {sub} okunmamış",
+    "sub_unread": "Alt klasörlerde {sub} okunmamış"
+  },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",
     "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"
@@ -4012,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
     "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hesap değiştiriciyi klasörlerin üstünde, Yeni E-posta düğmesini de onun altında gösterir. Kapatırsanız Yeni E-posta onun yerinde yer alır."
   },
   "mail_p2_conv": {
     "show_message": "İletiyi göster",

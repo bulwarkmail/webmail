@@ -666,6 +666,9 @@
     "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
     "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "แสดงตัวสลับบัญชีเหนือโฟลเดอร์ และปุ่มเขียนจดหมายอยู่ด้านล่าง ปิดตัวเลือกนี้เพื่อให้ปุ่มเขียนจดหมายอยู่แทนที่ตัวสลับบัญชี"
+  },
   "mail_p2_conv": {
     "show_message": "แสดงข้อความ",
     "back_to_reply": "กลับไปที่คำตอบของคุณ"
@@ -1083,6 +1086,12 @@
     "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้",
     "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
     "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}",
+    "name_unread_sub": "{name}, ยังไม่อ่าน {count}, ในโฟลเดอร์ย่อยอีก {sub}",
+    "name_unread_only_sub": "{name}, ยังไม่อ่านในโฟลเดอร์ย่อย {sub}",
+    "sub_unread": "ยังไม่อ่านในโฟลเดอร์ย่อย {sub}"
   },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
@@ -2163,6 +2172,13 @@
     "restore": "กู้คืน",
     "restore_to": "ย้ายกลับไปที่ {folder}",
     "delete_forever": "ลบถาวร"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "ย้ายไปที่กล่องข้อความ",
+    "delete_forever_title": "ลบข้อความนี้อย่างถาวรหรือไม่",
+    "delete_forever_batch_title": "{count, plural, one {ลบข้อความนี้อย่างถาวรหรือไม่} other {ลบข้อความ # ฉบับนี้อย่างถาวรหรือไม่}}",
+    "delete_forever_message": "คุณจะกู้คืนไม่ได้",
+    "delete_forever_batch_message": "{count, plural, one {คุณจะกู้คืนไม่ได้} other {คุณจะกู้คืนไม่ได้}}"
   },
   "external_mail": {
     "sender_label": "ภายนอก",
