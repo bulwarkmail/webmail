@@ -134,6 +134,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const selectedId = () => useEmailStore.getState().selectedEmail?.id ?? null;
 const press = (key: string) => act(() => { fireEvent.keyDown(window, { key }); });
 
 describe('The reading pane in the default layout', () => {
@@ -170,5 +171,48 @@ describe('The reading pane in the default layout', () => {
     await screen.findByTestId('reader', {}, { timeout: 5000 });
     await press('x');
     expect(useEmailStore.getState().expandedThreadIds.size).toBe(0);
+  });
+});
+
+describe('j and k after Escape', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ interfaceLayout: 'default', mailLayout: 'split' } as never);
+    useEmailStore.setState({ listRows: null } as never);
+  });
+
+  it('j opens the message after the one that was open, not the first', async () => {
+    render(<MailApp />);
+    await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await press('j');
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+    await press('Escape');
+    await waitFor(() => expect(selectedId()).toBeNull());
+    await press('j');
+    await waitFor(() => expect(selectedId()).toBe('m3'));
+  });
+
+  it('k opens the message before it', async () => {
+    useEmailStore.setState({ selectedEmail: inbox()[2] } as never);
+    render(<MailApp />);
+    await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await press('Escape');
+    await waitFor(() => expect(selectedId()).toBeNull());
+    await press('k');
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+  });
+
+  it('steps by conversation, in the order of the list', async () => {
+    useEmailStore.setState({
+      listRows: [{ key: 'm1', members: ['m1', 'm3'] }, { key: 'm2', members: ['m2'] }],
+    } as never);
+    render(<MailApp />);
+    await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await press('j');
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+    await press('j');
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    expect(selectedId()).toBe('m2');
+    await press('k');
+    await waitFor(() => expect(selectedId()).toBe('m1'));
   });
 });

@@ -80,6 +80,7 @@ import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcement
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { stepListEmail } from "@/lib/list-step";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -978,23 +979,33 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     );
   };
 
+  // The open message's list key, kept after the reader closes.
+  const lastOpenedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedEmail) lastOpenedKeyRef.current = emailKeyFor(selectedEmail);
+  }, [selectedEmail]);
   // Keyboard shortcuts handlers
+  // j / k go on from the open message, or from the last one opened once the
+  // reader is closed (Escape), not from the top. With the conversation in the
+  // reading pane they step by conversation, as the list's rows do.
+  const stepFrom = (direction: 1 | -1) => stepListEmail(
+    activeEmails,
+    selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
+    direction,
+    paneConversationView ? useEmailStore.getState().listRows : null,
+  );
   const keyboardHandlers = useMemo(() => ({
     onNextEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : -1;
-      const nextIndex = currentIndex < activeEmails.length - 1 ? currentIndex + 1 : currentIndex;
-      if (nextIndex >= 0 && nextIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[nextIndex]);
+      const next = stepFrom(1);
+      if (next) {
+        void handleEmailSelect(next);
         if (mvShell) setCursorOnly(true);
       }
     },
     onPreviousEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : activeEmails.length;
-      const prevIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-      if (prevIndex >= 0 && prevIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[prevIndex]);
+      const previous = stepFrom(-1);
+      if (previous) {
+        void handleEmailSelect(previous);
         if (mvShell) setCursorOnly(true);
       }
     },
