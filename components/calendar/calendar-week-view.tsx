@@ -39,6 +39,8 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onContextMenuEmpty?: (e: React.MouseEvent, date: Date, hour?: number, allDayArea?: boolean) => void;
+  /** The "?" / "Reply" marker of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   onCreateAtTime: (date: Date, endDate?: Date) => void;
   /** A click on a day in the all-day row: a new all-day event there. */
   onCreateAllDay?: (date: Date) => void;
@@ -91,6 +93,7 @@ export function CalendarWeekView({
   onHoverLeave,
   onContextMenuEvent,
   onContextMenuEmpty,
+  onReplyEvent,
   onCreateAtTime,
   onCreateAllDay,
   firstDayOfWeek = 1,
@@ -581,6 +584,7 @@ export function CalendarWeekView({
                           onMouseEnter={(rect) => onHoverEvent?.(segment.event, rect)}
                           onMouseLeave={onHoverLeave}
                           onContextMenu={onContextMenuEvent}
+                          onReply={onReplyEvent}
                           currentUserEmails={currentUserEmails}
                           tabbable={spanInView(segment.startIndex, segment.span)}
                         />
@@ -724,6 +728,7 @@ export function CalendarWeekView({
                           onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                           onMouseLeave={onHoverLeave}
                           onContextMenu={onContextMenuEvent}
+                          onReply={onReplyEvent}
                           currentUserEmails={currentUserEmails}
                           draggable={editable}
                           continuesBefore={clip.clippedStart}

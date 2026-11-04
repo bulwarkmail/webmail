@@ -34,6 +34,8 @@ interface CalendarDayViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onContextMenuEmpty?: (e: React.MouseEvent, date: Date, hour?: number, allDayArea?: boolean) => void;
+  /** The "?" / "Reply" marker of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   onCreateAtTime: (date: Date, endDate?: Date) => void;
   timeFormat?: "12h" | "24h";
   isMobile?: boolean;
@@ -80,6 +82,7 @@ export function CalendarDayView({
   onHoverLeave,
   onContextMenuEvent,
   onContextMenuEmpty,
+  onReplyEvent,
   onCreateAtTime,
   timeFormat = "24h",
   isMobile,
@@ -448,6 +451,7 @@ export function CalendarDayView({
                                       onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                                       onMouseLeave={onHoverLeave}
                                       onContextMenu={onContextMenuEvent}
+                                      onReply={onReplyEvent}
                                       currentUserEmails={currentUserEmails}
                                       tabbable={key === visibleKey}
                                     />
@@ -579,6 +583,7 @@ export function CalendarDayView({
                             onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
                             onMouseLeave={onHoverLeave}
                             onContextMenu={onContextMenuEvent}
+                            onReply={onReplyEvent}
                             currentUserEmails={currentUserEmails}
                             tabbable={key === visibleKey}
                             draggable={editable}

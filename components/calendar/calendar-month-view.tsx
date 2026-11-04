@@ -25,6 +25,7 @@ import { PluginDayLabel } from "./plugin-day-label";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 
 interface CalendarMonthViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -36,6 +37,8 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onContextMenuEmpty?: (e: React.MouseEvent, date: Date, hour?: number, allDayArea?: boolean) => void;
+  /** The "?" / "Reply" marker of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   /** A click on a day's empty space: a new all-day event there (wide screens). */
   onCreateAllDay?: (date: Date) => void;
   /** Open a day in the day view (its date number, or its "N more" link). */
@@ -96,6 +99,7 @@ export function CalendarMonthView({
   onHoverLeave,
   onContextMenuEvent,
   onContextMenuEmpty,
+  onReplyEvent,
   onCreateAllDay,
   onOpenDay,
   isMobile,
@@ -111,6 +115,8 @@ export function CalendarMonthView({
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const describeError = useCalendarErrorMessage();
+  // An event of another signed-in login is read with that login's addresses.
+  const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
   const showTimeInMonthView = useSettingsStore((state) => state.showTimeInMonthView);
   const timedStyle = useSettingsStore((state) => state.calendarMonthTimedEvents);
   // On mobile the month view collapses events to dots unless the user opted
@@ -400,13 +406,13 @@ export function CalendarMonthView({
       if (newStartISO === data.originalStart) return;
       const client = useAuthStore.getState().client;
       if (!client) return;
-      const moved = movedEventUpdates(event, { start: newStartISO }, currentUserEmails ?? []);
+      const moved = movedEventUpdates(event, { start: newStartISO }, userEmailsFor(event));
       if (event && onMoveEvent) await onMoveEvent(event, moved.updates, moved.sendSchedulingMessages, "move");
       else await useCalendarStore.getState().updateEvent(client, data.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_move_error")));
     }
-  }, [t, describeError, currentUserEmails, onMoveEvent]);
+  }, [t, describeError, userEmailsFor, onMoveEvent]);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}>
@@ -534,7 +540,7 @@ export function CalendarMonthView({
                         const calId = getPrimaryCalendarId(ev);
                         const cal = calId ? calendarMap.get(calId) : undefined;
                         const evColor = paint(ev.color || cal?.color || "#3b82f6");
-                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
+                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, userEmailsFor(ev));
                         return (
                           <span
                             key={ev.id}
@@ -592,6 +598,7 @@ export function CalendarMonthView({
                       onHoverEvent={onHoverEvent}
                       onHoverLeave={onHoverLeave}
                       onContextMenuEvent={onContextMenuEvent}
+                      onReplyEvent={onReplyEvent}
                       onToggleTaskComplete={onToggleTaskComplete}
                       onSelectTask={onSelectTask}
                       onShowMore={() => (onOpenDay ?? onSelectDate)(week[dayIndex])}
@@ -625,7 +632,7 @@ type WeekSegment = ReturnType<typeof buildWeekSegments>[number];
 function MonthCellEntries({
   dayIndex, week, segments, rowLimit, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
   isMobile, calendarMap, pendingPreview, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
-  onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, paint,
+  onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onReplyEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, paint,
 }: {
   dayIndex: number;
   week: Date[];
@@ -653,6 +660,7 @@ function MonthCellEntries({
   onHoverEvent?: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   onToggleTaskComplete?: (task: CalendarTask) => void;
   onSelectTask?: (task: CalendarTask) => void;
   onShowMore: () => void;
@@ -703,6 +711,7 @@ function MonthCellEntries({
               onMouseEnter={(rect) => onHoverEvent?.(segment.event, rect)}
               onMouseLeave={onHoverLeave}
               onContextMenu={onContextMenuEvent}
+              onReply={onReplyEvent}
               currentUserEmails={currentUserEmails}
               draggable={canEditEvent(segment.event)}
               tabbable={spanDays.some(inView)}

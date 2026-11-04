@@ -70,7 +70,7 @@ import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
-import { canCreateEventsIn, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
+import { canCreateEventsIn, canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { TASKS_LOAD_ERROR, useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -874,9 +874,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     closeContextMenu: closeEventContextMenu,
     menuRef: eventContextMenuRef,
   } = useContextMenu<CalendarEvent>();
+  // The grid's "?" / "Reply" marker opens the answers alone (pim-9).
+  const [answersOnlyMenu, setAnswersOnlyMenu] = useState(false);
 
   const handleContextMenuEvent = useCallback((e: React.MouseEvent, event: CalendarEvent) => {
     closeDetail();
+    setAnswersOnlyMenu(false);
     openEventContextMenu(e, event);
   }, [closeDetail, openEventContextMenu]);
 
@@ -1799,6 +1802,26 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     [editabilityContext],
   );
 
+  // Answering an invitation from the grid (pim-9), as the login the event is
+  // in, the popover's way (handleRsvp: a series asks "this event or all").
+  const gridAnswerFor = useCallback((event: CalendarEvent) => {
+    const emails = userEmailsFor(event);
+    if (!canUserRsvp(event, { ...editabilityContext, userCalendarAddresses: emails })) return null;
+    const participantId = getUserParticipantId(event, emails);
+    return participantId ? { participantId, status: event.participants?.[participantId]?.participationStatus ?? null } : null;
+  }, [userEmailsFor, editabilityContext]);
+  const handleRespondFromGrid = useCallback((event: CalendarEvent, status: CalendarParticipant['participationStatus']) => {
+    const answer = gridAnswerFor(event);
+    if (answer) void handleRsvp(event.id, answer.participantId, status);
+  }, [gridAnswerFor, handleRsvp]);
+  const handleReplyEvent = useCallback((anchor: HTMLElement, event: CalendarEvent) => {
+    closeDetail();
+    // Nothing to answer here (no right to): the event's card says why.
+    if (!gridAnswerFor(event)) { handleSelectEvent(event, anchor.getBoundingClientRect()); return; }
+    setAnswersOnlyMenu(true);
+    openEventContextMenuFrom(anchor, event, "end");
+  }, [closeDetail, gridAnswerFor, handleSelectEvent, openEventContextMenuFrom]);
+
   // The event the user opened, marked in the grid (APP.md: the selected
   // event gets the primary ring).
   const selectedEventId = detailPinned ? detailEvent?.id ?? null : showEventModal ? editEvent?.id ?? null : null;
@@ -1958,6 +1981,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAllDay={handleGridCreateAllDay}
               firstDayOfWeek={firstDayOfWeek}
               isMobile={isMobile}
@@ -1985,6 +2009,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAtTime={handleGridCreate}
               onCreateAllDay={handleGridCreateAllDay}
               firstDayOfWeek={firstDayOfWeek}
@@ -2013,6 +2038,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
               onContextMenuEmpty={handleContextMenuEmpty}
+              onReplyEvent={handleReplyEvent}
               onCreateAtTime={handleGridCreate}
               timeFormat={timeFormat}
               isMobile={isMobile}
@@ -2037,6 +2063,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onHoverEvent={handleHoverEvent}
               onHoverLeave={handleHoverLeave}
               onContextMenuEvent={handleContextMenuEvent}
+              onReplyEvent={handleReplyEvent}
               timeFormat={timeFormat}
               currentUserEmails={currentUserEmails}
               onCreateEvent={() => openCreateModal()}
@@ -2483,6 +2510,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onDelete={() => handleDeleteContextMenu(eventContextMenu.data!)}
           onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: eventContextMenu.data! }); }}
           editable={canEditEvent(eventContextMenu.data)}
+          onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
+          responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
+          answersOnly={answersOnlyMenu}
         />
       )}
 
