@@ -138,7 +138,7 @@ import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-ident
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
-import { MoveToDialog } from "@/components/email/move-to-dialog";
+import { MoveToDialog, MoveToDialogHost } from "@/components/email/move-to-dialog";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
@@ -6224,8 +6224,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <ConfirmDialog {...confirmDialogProps} />
+        <MoveToDialogHost mailboxes={mailboxes} selectedMailbox={selectedMailbox} />
         {moveDialogEmail && <MoveToDialog
-          email={moveDialogEmail}
+          emails={[moveDialogEmail]}
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           onClose={() => setMoveDialogEmail(null)}

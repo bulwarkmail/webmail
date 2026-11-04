@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
 import { useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
@@ -30,10 +30,10 @@ import {
   Fish,
 } from "@/components/icons";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
-import { buildMailboxTree, MailboxNode } from "@/lib/utils";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
-import { localizeMailboxName } from "@/lib/mailbox-label";
-import { moveMailboxIcon } from "./move-target-list";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextSubMenu } from "./rules-menu";
@@ -200,7 +200,6 @@ export function EmailContextMenu({
   const t = useTranslations("context_menu");
   const archiveActionEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
-  const tSidebar = useTranslations("sidebar");
   const isUnread = !email.keywords?.$seen;
   const currentTagIds = getEmailTagIds(email.keywords);
   // The row's account names its tags; a selection uses batchTagScope.
@@ -221,68 +220,49 @@ export function EmailContextMenu({
     ? !!onBatchRemoveFromFolder && !!batchEmails?.length && batchEmails.every((e) => canRemoveFromFolder(e, folderToLeave))
     : !!onRemoveFromFolder && canRemoveFromFolder(email, folderToLeave);
 
-  // Move-to submenu: the message's own account first (#1149)
-  const { tree: moveTree, targetIds: moveTargetIds } = buildMoveTargets(mailboxes, {
+  // Move-to submenu: the message's own account first (#1149), shared with
+  // every other Move list (lib/move-menu.ts).
+  const movedEmails = useMemo(
+    () => (showBatchActions ? batchEmails ?? [] : [email]),
+    [showBatchActions, batchEmails, email],
+  );
+  const moveModel = useMoveMenu(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
-    emails: showBatchActions ? batchEmails : [email],
+    emails: movedEmails,
   });
-
-  // Filter tree to only include branches that contain valid targets
-  const filterTree = (nodes: MailboxNode[], targetIds: Set<string>): MailboxNode[] => {
-    return nodes.reduce<MailboxNode[]>((acc, node) => {
-      const filteredChildren = filterTree(node.children, targetIds);
-      if (targetIds.has(node.id) || filteredChildren.length > 0) {
-        acc.push({ ...node, children: filteredChildren });
-      }
-      return acc;
-    }, []);
-  };
+  const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
+  const chooseMoveFolder = useChooseMoveFolder();
 
   // Folders of the other connected accounts a copy can land in.
-  const copyTrees = (copyTargets ?? [])
-    .map((target) => {
-      const targetIds = new Set(
-        target.mailboxes
-          .filter((m) => !m.isShared && m.role !== "drafts" && m.myRights?.mayAddItems)
-          .map((m) => m.id)
-      );
-      return { ...target, targetIds, tree: filterTree(buildMailboxTree(target.mailboxes), targetIds) };
-    })
-    .filter((target) => target.tree.length > 0);
+  const locale = useLocale();
+  const copyTrees = useMemo(
+    () => (copyTargets ?? [])
+      .map((target) => ({
+        ...target,
+        model: buildMoveMenu(target.mailboxes.filter((m) => !m.isShared), { locale }),
+      }))
+      .filter((target) => target.model.targetCount > 0),
+    [copyTargets, locale],
+  );
 
-  const renderMailboxNodes = (
-    nodes: MailboxNode[],
-    targetIds: Set<string>,
-    testIdPrefix: string,
-    onPick: (mailboxId: string) => void,
-  ): React.ReactNode =>
-    nodes.map((node) => {
-      const Icon = moveMailboxIcon(node.role);
-      const nodeLabel = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
-      return (
-        <div key={node.id}>
-          {targetIds.has(node.id) ? (
-            <ContextMenuItem
-              icon={Icon}
-              label={nodeLabel}
-              testId={`${testIdPrefix}${node.id}`}
-              onClick={() => handleAction(() => onPick(node.id))}
-            />
-          ) : (
-            <div className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground">
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span>{nodeLabel}</span>
-            </div>
-          )}
-          {node.children.length > 0 && (
-            <div className="ps-4">
-              {renderMailboxNodes(node.children, targetIds, testIdPrefix, onPick)}
-            </div>
-          )}
-        </div>
-      );
-    });
+  const renderMoveList = (onPick?: (mailboxId: string) => void) => (
+    <MoveFolderList
+      model={moveModel}
+      onPick={(mailboxId) => handleAction(() => onPick?.(mailboxId))}
+      onChooseFolder={chooseMoveFolder && onPick
+        ? () => handleAction(() => chooseMoveFolder({ emails: movedEmails, onMove: onPick }))
+        : undefined}
+    />
+  );
+  const renderCopyList = (target: { accountId: string; model: MoveMenuModel }) => (
+    <MoveFolderList
+      model={target.model}
+      noRecent
+      testIdPrefix={`copy-to:${target.accountId}:`}
+      onPick={(mailboxId) => handleAction(() => onCopyToAccount?.(target.accountId, mailboxId))}
+    />
+  );
 
   const handleAction = (action: () => void) => {
     action();
@@ -294,7 +274,7 @@ export function EmailContextMenu({
   const singleEntries = useMessageActionList({
     email,
     currentMailboxRole,
-    canMove: moveTree.length > 0,
+    canMove: canMoveAnywhere,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     onReply,
@@ -388,9 +368,9 @@ export function EmailContextMenu({
   const moveItem = (
     <>
         {/* Move to submenu */}
-        {moveTree.length > 0 && (
+        {canMoveAnywhere && (
           <ContextMenuSubMenu icon={FolderInput} label={t("move_to")} testId="ctx-move-to">
-            {renderMailboxNodes(moveTree, moveTargetIds, "move-to:", (mailboxId) => onBatchMoveToMailbox?.(mailboxId))}
+            {renderMoveList(onBatchMoveToMailbox)}
           </ContextMenuSubMenu>
         )}
         {canRemove && (
@@ -407,9 +387,7 @@ export function EmailContextMenu({
     ? copyTrees.map((target) => (
         <div key={target.accountId}>
           <ContextMenuHeader>{target.label}</ContextMenuHeader>
-          {renderMailboxNodes(target.tree, target.targetIds, `copy-to:${target.accountId}:`, (mailboxId) =>
-            onCopyToAccount(target.accountId, mailboxId)
-          )}
+          {renderCopyList(target)}
         </div>
       ))
     : null;
@@ -478,7 +456,7 @@ export function EmailContextMenu({
       case "move":
         return (
           <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId}>
-            {renderMailboxNodes(moveTree, moveTargetIds, "move-to:", (mailboxId) => onMoveToMailbox?.(mailboxId))}
+            {renderMoveList(onMoveToMailbox)}
           </ContextMenuSubMenu>
         );
       case "copy_to_account":

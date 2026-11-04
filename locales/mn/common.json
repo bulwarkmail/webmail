@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name}-с ирсэн имэйлүүдийг хайх"
   },
+  "menuMove": {
+    "filter_placeholder": "Хавтас хайх",
+    "recent": "Сүүлд ашигласан",
+    "no_match": "Тохирох хавтас алга",
+    "choose_folder": "Хавтас сонгох…",
+    "current_folder": "Аль хэдийн {folder}-д байна"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Хавтсыг уншсан гэж тэмдэглэх",
     "mark_folder_tree_read": "Хавтас болон дэд хавтаснуудыг уншсан гэж тэмдэглэх",

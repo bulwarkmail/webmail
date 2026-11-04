@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Buscar correos de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Buscar una carpeta",
+    "recent": "Recientes",
+    "no_match": "Ninguna carpeta coincide",
+    "choose_folder": "Elegir carpeta…",
+    "current_folder": "Ya está en {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar carpeta como leída",
     "mark_folder_tree_read": "Marcar carpeta y subcarpetas como leídas",

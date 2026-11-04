@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} からのメールを検索"
   },
+  "menuMove": {
+    "filter_placeholder": "フォルダーを検索",
+    "recent": "最近使用",
+    "no_match": "一致するフォルダーはありません",
+    "choose_folder": "フォルダーを選択…",
+    "current_folder": "すでに {folder} にあります"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "フォルダーを既読にする",
     "mark_folder_tree_read": "フォルダーとサブフォルダーを既読にする",

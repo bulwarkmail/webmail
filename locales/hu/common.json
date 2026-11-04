@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} e-mailjeinek keresése"
   },
+  "menuMove": {
+    "filter_placeholder": "Mappa keresése",
+    "recent": "Legutóbbiak",
+    "no_match": "Nincs ilyen mappa",
+    "choose_folder": "Mappa kiválasztása…",
+    "current_folder": "Már itt van: {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mappa olvasottnak jelölése",
     "mark_folder_tree_read": "Mappa és almappák olvasottnak jelölése",

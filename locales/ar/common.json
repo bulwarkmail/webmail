@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "البحث عن رسائل من {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "ابحث عن مجلد",
+    "recent": "الأخيرة",
+    "no_match": "لا يوجد مجلد مطابق",
+    "choose_folder": "اختيار مجلد…",
+    "current_folder": "موجودة بالفعل في {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "تمييز المجلد كمقروء",
     "mark_folder_tree_read": "تمييز المجلد والمجلدات الفرعية كمقروءة",

@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} adlı kişiden gelen e-postaları bul"
   },
+  "menuMove": {
+    "filter_placeholder": "Klasör bul",
+    "recent": "Son kullanılanlar",
+    "no_match": "Eşleşen klasör yok",
+    "choose_folder": "Klasör seç…",
+    "current_folder": "Zaten {folder} içinde"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Klasörü okundu olarak işaretle",
     "mark_folder_tree_read": "Klasörü ve alt klasörleri okundu olarak işaretle",

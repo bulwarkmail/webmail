@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Найти письма от {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Найти папку",
+    "recent": "Недавние",
+    "no_match": "Подходящих папок нет",
+    "choose_folder": "Выбрать папку…",
+    "current_folder": "Уже в папке {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Отметить папку как прочитанную",
     "mark_folder_tree_read": "Отметить папку и вложенные папки как прочитанные",

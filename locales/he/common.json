@@ -3592,6 +3592,13 @@
     },
     "find_emails_from": "חיפוש הודעות מ{name}"
   },
+  "menuMove": {
+    "filter_placeholder": "חיפוש תיקייה",
+    "recent": "אחרונות",
+    "no_match": "אין תיקייה תואמת",
+    "choose_folder": "בחירת תיקייה…",
+    "current_folder": "כבר בתיקייה {folder}"
+  },
   "shortcuts": {
     "title": "קיצורי מקלדת",
     "tip": "לחץ על? בכל עת כדי להראות את העזרה הזו",

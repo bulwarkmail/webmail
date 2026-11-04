@@ -915,6 +915,13 @@
     },
     "find_emails_from": "ค้นหาอีเมลจาก {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "ค้นหาโฟลเดอร์",
+    "recent": "ล่าสุด",
+    "no_match": "ไม่มีโฟลเดอร์ที่ตรงกัน",
+    "choose_folder": "เลือกโฟลเดอร์…",
+    "current_folder": "อยู่ใน {folder} แล้ว"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "ทำเครื่องหมายโฟลเดอร์ว่าอ่านแล้ว",
     "mark_folder_tree_read": "ทำเครื่องหมายโฟลเดอร์และโฟลเดอร์ย่อยว่าอ่านแล้ว",

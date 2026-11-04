@@ -47,11 +47,12 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
+import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { itemsToHide } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
 import { TagPicker } from "./tag-picker";
@@ -63,7 +64,8 @@ import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndi
 import { emailToReadView } from "@/lib/plugin-projection";
 import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
-import { MoveTargetList } from "./move-target-list";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
 import { SaveToFilesDialog, type SaveableAttachment } from "./save-to-files-dialog";
 import { usePolicyStore } from "@/stores/policy-store";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
@@ -122,7 +124,7 @@ import {
   Paperclip,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
@@ -1172,8 +1174,7 @@ interface ReaderMorePanelBodyProps {
   openSub: (sub: MoreMenuSub) => void;
   close: () => void;
   entryRefs: React.MutableRefObject<Record<MoreMenuSub, HTMLButtonElement | null>>;
-  moveTree: MailboxNode[];
-  moveTargetIds: Set<string>;
+  moveModel: MoveMenuModel;
   onMoveToMailbox?: (mailboxId: string) => void;
   currentTagIds: string[];
   sortedTagIds: string[];
@@ -1197,8 +1198,7 @@ function ReaderMorePanelBody({
   openSub,
   close,
   entryRefs,
-  moveTree,
-  moveTargetIds,
+  moveModel,
   onMoveToMailbox,
   currentTagIds,
   sortedTagIds,
@@ -1209,6 +1209,7 @@ function ReaderMorePanelBody({
   pluginTarget,
 }: ReaderMorePanelBodyProps) {
   const { email } = options;
+  const locale = useLocale();
   const { tagColor } = useKeywordFormat(tagScope);
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   const entries = useMessageActionList({
@@ -1218,11 +1219,10 @@ function ReaderMorePanelBody({
   });
 
   if (sub === 'move') {
-    return moveTree.length > 0 && onMoveToMailbox ? (
-      <MoveTargetList
+    return !moveMenuIsEmpty(moveModel) && onMoveToMailbox ? (
+      <MoveFolderList
         variant="panel"
-        tree={moveTree}
-        targetIds={moveTargetIds}
+        model={moveModel}
         onPick={(mailboxId) => { onMoveToMailbox(mailboxId); close(); }}
       />
     ) : null;
@@ -1231,14 +1231,15 @@ function ReaderMorePanelBody({
     return (
       <>
         {copyTargets.map((target) => {
-          const { tree, targetIds } = buildMoveTargets(target.mailboxes.filter((m) => !m.isShared && m.role !== 'drafts'), {});
+          const model = buildMoveMenu(target.mailboxes.filter((m) => !m.isShared), { locale });
           return (
             <div key={target.accountId}>
               <div className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground truncate" title={target.label}>{target.label}</div>
-              <MoveTargetList
+              <MoveFolderList
                 variant="panel"
-                tree={tree}
-                targetIds={targetIds}
+                noRecent
+                model={model}
+                testIdPrefix={`copy-to:${target.accountId}:`}
                 onPick={(mailboxId) => { void copyToAccount([email], target.accountId, mailboxId); close(); }}
               />
             </div>
@@ -1978,14 +1979,14 @@ export function EmailViewer({
 
   // Move-to dropdown: the message's own account first (#1149)
   const moveOwnerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
-  const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
-    () => buildMoveTargets(mailboxes, {
-      currentMailboxId: selectedMailbox,
-      ownerAccountId: moveOwnerAccountId,
-      emails: email ? [email] : [],
-    }),
-    [mailboxes, selectedMailbox, moveOwnerAccountId, email],
-  );
+  const moveEmails = useMemo(() => (email ? [email] : []), [email]);
+  const moveModel = useMoveMenu(mailboxes, {
+    currentMailboxId: selectedMailbox,
+    ownerAccountId: moveOwnerAccountId,
+    emails: moveEmails,
+  });
+  const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
+  const chooseMoveFolder = useChooseMoveFolder();
 
   // Close dropdown menus on click outside
   useEffect(() => {
@@ -2164,7 +2165,7 @@ export function EmailViewer({
     email?.id,
     showToolbarLabels,
     isLoading,
-    moveTree.length,
+    canMoveAnywhere,
     emailKeywords.length,
     currentColor,
     isInJunkFolder,
@@ -4271,7 +4272,7 @@ ${printWatermark ? printWatermark.html : ''}
   const readerActionOptions: MessageActionOptions = {
     email,
     currentMailboxRole,
-    canMove: moveTree.length > 0 && !!onMoveToMailbox,
+    canMove: canMoveAnywhere && !!onMoveToMailbox,
     canRemoveFromFolder: !!onRemoveFromFolder,
     onReply: onReply ? () => onReply() : undefined,
     onReplyAll,
@@ -4467,7 +4468,7 @@ ${printWatermark ? printWatermark.html : ''}
           {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
-        {moveTree.length > 0 && onMoveToMailbox && (
+        {canMoveAnywhere && onMoveToMailbox && (
           <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
             <Button
               variant="ghost"
@@ -4487,11 +4488,11 @@ ${printWatermark ? printWatermark.html : ''}
               {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
-              <div className="w-56 max-h-72 overflow-y-auto">
-                <MoveTargetList
-                  tree={moveTree}
-                  targetIds={moveTargetIds}
+              <div className="w-64 max-w-full" data-reader-move-menu="">
+                <MoveFolderList
+                  model={moveModel}
                   onPick={(mailboxId) => { onMoveToMailbox(mailboxId); closeMoveMenu(); }}
+                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox }); } : undefined}
                 />
               </div>
             </ContextMenu>
@@ -4831,8 +4832,7 @@ ${printWatermark ? printWatermark.html : ''}
               openSub={setMoreMenuSub}
               close={closeMoreMenu}
               entryRefs={moreEntryRefs}
-              moveTree={moveTree}
-              moveTargetIds={moveTargetIds}
+              moveModel={moveModel}
               onMoveToMailbox={onMoveToMailbox}
               currentTagIds={currentTagIds}
               sortedTagIds={sortedTagIds}

@@ -3660,6 +3660,13 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Tìm thư mục",
+    "recent": "Gần đây",
+    "no_match": "Không có thư mục phù hợp",
+    "choose_folder": "Chọn thư mục…",
+    "current_folder": "Đã ở trong {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Đánh dấu thư mục là đã đọc",
     "mark_folder_tree_read": "Đánh dấu thư mục và thư mục con là đã đọc",

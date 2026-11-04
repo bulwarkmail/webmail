@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "尋找來自 {name} 的郵件"
   },
+  "menuMove": {
+    "filter_placeholder": "尋找資料夾",
+    "recent": "最近使用",
+    "no_match": "沒有符合的資料夾",
+    "choose_folder": "選擇資料夾…",
+    "current_folder": "已在「{folder}」中"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",
     "mark_folder_tree_read": "將信件匣與子信件匣標示為已讀",

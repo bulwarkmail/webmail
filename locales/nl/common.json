@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "E-mails van {name} zoeken"
   },
+  "menuMove": {
+    "filter_placeholder": "Map zoeken",
+    "recent": "Recent",
+    "no_match": "Geen map gevonden",
+    "choose_folder": "Map kiezen…",
+    "current_folder": "Staat al in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Map markeren als gelezen",
     "mark_folder_tree_read": "Map en submappen markeren als gelezen",

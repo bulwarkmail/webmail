@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "یافتن ایمیل‌های {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "یافتن پوشه",
+    "recent": "اخیر",
+    "no_match": "هیچ پوشه‌ای مطابق نیست",
+    "choose_folder": "انتخاب پوشه…",
+    "current_folder": "از قبل در {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "علامت‌گذاری پوشه خوانده شده",
     "mark_folder_tree_read": "علامت‌گذاری پوشه و زیرپوشه‌ها",

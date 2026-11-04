@@ -64,6 +64,19 @@ export function readMenu(root: HTMLElement): ReadMenu {
         continue;
       }
       if (child.dataset.submenuPanel !== undefined) continue;
+      if (child.dataset.nativeSubmenu !== undefined) {
+        // A folder with subfolders (a Move list): a native menu can't indent,
+        // so it's a submenu with the folder itself first, as Thunderbird has it.
+        const group: DesktopNativeMenuItem[] = [];
+        walk(child, group);
+        const [head, ...rest] = group;
+        if (head && rest.length && head.type !== 'separator' && head.label) {
+          into.push({ label: head.label, submenu: [head, { type: 'separator' }, ...rest] });
+        } else {
+          into.push(...group);
+        }
+        continue;
+      }
       if (child.dataset.contextMenuHeader !== undefined) {
         const label = labelOf(child);
         if (label) into.push({ id: `h${next++}`, label, enabled: false });

@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Cerca correus de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una carpeta",
+    "recent": "Recents",
+    "no_match": "Cap carpeta coincideix",
+    "choose_folder": "Tria una carpeta…",
+    "current_folder": "Ja és a {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
     "mark_folder_tree_read": "Marca la carpeta i les subcarpetes com a llegides",

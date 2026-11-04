@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Encontrar e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Procurar uma pasta",
+    "recent": "Recentes",
+    "no_match": "Nenhuma pasta corresponde",
+    "choose_folder": "Escolher pasta…",
+    "current_folder": "Já está em {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar pasta como lida",
     "mark_folder_tree_read": "Marcar pasta e subpastas como lidas",

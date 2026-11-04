@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name}님이 보낸 이메일 찾기"
   },
+  "menuMove": {
+    "filter_placeholder": "폴더 찾기",
+    "recent": "최근",
+    "no_match": "일치하는 폴더 없음",
+    "choose_folder": "폴더 선택…",
+    "current_folder": "이미 {folder}에 있음"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "폴더를 읽음으로 표시",
     "mark_folder_tree_read": "폴더 및 하위 폴더를 읽음으로 표시",

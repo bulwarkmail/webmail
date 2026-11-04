@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Nájsť e-maily od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Nájsť priečinok",
+    "recent": "Nedávne",
+    "no_match": "Žiadny priečinok nevyhovuje",
+    "choose_folder": "Vybrať priečinok…",
+    "current_folder": "Už je v priečinku {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Označiť priečinok ako prečítaný",
     "mark_folder_tree_read": "Označiť priečinok a podpriečinky ako prečítané",

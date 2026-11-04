@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Znajdź e-maile od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Znajdź folder",
+    "recent": "Ostatnie",
+    "no_match": "Brak pasującego folderu",
+    "choose_folder": "Wybierz folder…",
+    "current_folder": "Już w folderze {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Oznacz folder jako przeczytany",
     "mark_folder_tree_read": "Oznacz folder i podfoldery jako przeczytane",

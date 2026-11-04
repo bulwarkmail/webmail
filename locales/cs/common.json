@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Najít e-maily od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Najít složku",
+    "recent": "Nedávné",
+    "no_match": "Žádná složka neodpovídá",
+    "choose_folder": "Vybrat složku…",
+    "current_folder": "Už je ve složce {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Označit složku jako přečtenou",
     "mark_folder_tree_read": "Označit složku a podsložky jako přečtené",

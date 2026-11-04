@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Rechercher les e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Rechercher un dossier",
+    "recent": "Récents",
+    "no_match": "Aucun dossier ne correspond",
+    "choose_folder": "Choisir un dossier…",
+    "current_folder": "Déjà dans {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marquer le dossier comme lu",
     "mark_folder_tree_read": "Marquer le dossier et les sous-dossiers comme lus",

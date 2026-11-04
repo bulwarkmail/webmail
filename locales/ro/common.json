@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Caută un folder",
+    "recent": "Recente",
+    "no_match": "Niciun folder nu se potrivește",
+    "choose_folder": "Alege folderul…",
+    "current_folder": "Deja în {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",
     "mark_folder_tree_read": "Marcați folderul și subfolderele ca citite",

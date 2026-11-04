@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Finn en mappe",
+    "recent": "Nylig brukt",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Velg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",
     "mark_folder_tree_read": "Merk mappe og undermapper som lest",

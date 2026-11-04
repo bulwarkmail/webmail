@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Find e-mails fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find en mappe",
+    "recent": "Seneste",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Vælg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Markér mappe som læst",
     "mark_folder_tree_read": "Markér mappe & undermapper som læst",
