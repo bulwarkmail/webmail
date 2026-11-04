@@ -202,6 +202,12 @@
       <list id="AutoSelectCertificateForUrls_Value" valuePrefix=""/>
     </elements>
   </policy>
+  <policy name="KeystoreEnabled" class="Both" displayName="$(string.KeystoreEnabled)" explainText="$(string.KeystoreEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="KeystoreEnabled">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
   <policy name="KeystoreAllowedOrigins" class="Both" displayName="$(string.KeystoreAllowedOrigins)" explainText="$(string.KeystoreAllowedOrigins_Explain)" presentation="$(presentation.KeystoreAllowedOrigins)" key="Software\Policies\Bulwark\Desktop\KeystoreAllowedOrigins">
     <parentCategory ref="Bulwark_Desktop_signIn"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>

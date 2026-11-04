@@ -30,7 +30,7 @@ describe('the schema', () => {
       'InstanceUrl', 'AllowStandalone', 'AllowedJmapServers', 'AllowInsecureInstance', 'UpdateChannel', 'AutoUpdate',
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
-      'AutoSelectCertificateForUrls', 'KeystoreAllowedOrigins', 'WipeOfflineData',
+      'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'WipeOfflineData',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
