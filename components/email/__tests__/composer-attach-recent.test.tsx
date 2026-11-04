@@ -301,6 +301,22 @@ describe('recent files in the Attach menu', () => {
     expect(budget).toHaveTextContent('3 hours ago');
   });
 
+  // compose-p3-5: each row was 24rem in a menu of at most 22rem, so the dates
+  // were cut ("yester…") and the menu scrolled sideways.
+  it('fits the rows to the menu and never cuts the date', async () => {
+    desktop();
+    useAuthStore.setState({ client: client() as never });
+    render(<EmailComposer onClose={vi.fn()} />);
+    await openMenu();
+    for (const row of rows()) {
+      expect(row.className).toContain('w-full');
+      expect(row.className).not.toMatch(/w-\[min\(24rem/);
+      const when = row.querySelector('[data-testid="composer-recent-file-when"]')!;
+      expect(when.className).toContain('shrink-0');
+      expect(when.className).toContain('whitespace-nowrap');
+    }
+  });
+
   it('one click attaches that file through the composer\'s own checks and closes the menu', async () => {
     const { attach } = desktop();
     useAuthStore.setState({ client: client() as never });

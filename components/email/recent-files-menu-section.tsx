@@ -65,7 +65,9 @@ export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecen
                 title={file.path}
                 onClick={() => onPick(file)}
                 data-testid="composer-recent-file"
-                className={cn(CONTEXT_MENU_ITEM_CLASS, "w-[min(24rem,calc(100vw-3rem))] gap-2.5")}
+                // As wide as the menu and never wider: the row was 24rem in a menu of at
+                // most 22rem, so the dates were cut and the menu scrolled sideways (compose-p3-5).
+                className={cn(CONTEXT_MENU_ITEM_CLASS, "w-full min-w-[min(20rem,calc(100vw-3rem))] gap-2.5")}
               >
                 {file.icon && ICON_URL.test(file.icon) ? (
                   <img src={file.icon} alt="" aria-hidden="true" draggable={false} className="h-4 w-4 shrink-0" />
@@ -76,7 +78,7 @@ export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecen
                   <span className="block truncate">{file.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">{shortFolder(file.folder)}</span>
                 </span>
-                <span className="shrink-0 self-start pt-0.5 text-xs text-muted-foreground">{recentWhen(file.usedAt, now, locale)}</span>
+                <span className="shrink-0 self-start whitespace-nowrap pt-0.5 text-xs text-muted-foreground" data-testid="composer-recent-file-when">{recentWhen(file.usedAt, now, locale)}</span>
               </button>
             );
           })}
