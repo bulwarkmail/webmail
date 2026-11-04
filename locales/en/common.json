@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Undo send",
       "description": "Gives you a few seconds to take a message back after you press Send."
+    },
+    "reply_from_received": {
+      "label": "Reply from the address it was sent to",
+      "description": "Reply from the address the mail was sent to. Useful if you have several addresses."
     }
   },
   "plugin_list": {

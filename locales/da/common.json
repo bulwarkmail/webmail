@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Fortryd afsendelse",
       "description": "Giver dig et par sekunder til at tage en besked tilbage, efter du har trykket på Send."
+    },
+    "reply_from_received": {
+      "label": "Svar fra modtaget adresse",
+      "description": "Svar fra den adresse, mailen blev sendt til. Nyttigt, hvis du har flere adresser."
     }
   },
   "plugin_list": {

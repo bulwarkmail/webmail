@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Atsaukt sūtīšanu",
       "description": "Dod jums dažas sekundes, lai pēc Sūtīt nospiešanas paņemtu ziņojumu atpakaļ."
+    },
+    "reply_from_received": {
+      "label": "Automātiski izvēlēties atbildes adresi",
+      "description": "Atbildēt no adreses, uz kuru vēstule tika nosūtīta. Noder, ja jums ir vairākas adreses."
     }
   },
   "plugin_list": {

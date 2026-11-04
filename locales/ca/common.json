@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Desfés l'enviament",
       "description": "Us dona uns segons per recuperar un missatge després de prémer Envia."
+    },
+    "reply_from_received": {
+      "label": "Respon des de l'adreça de recepció",
+      "description": "Respon des de l'adreça a la qual es va enviar el correu. Útil si teniu diverses adreces."
     }
   },
   "plugin_list": {

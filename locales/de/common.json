@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Senden rückgängig machen",
       "description": "Gibt Ihnen ein paar Sekunden, um eine Nachricht nach dem Klick auf Senden zurückzuholen."
+    },
+    "reply_from_received": {
+      "label": "Antwortadresse automatisch wählen",
+      "description": "Die Antwort geht von der Adresse aus, an die die E-Mail ging. Nützlich, wenn Sie mehrere Adressen haben."
     }
   },
   "plugin_list": {

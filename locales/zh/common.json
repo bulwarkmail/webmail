@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "撤销发送",
       "description": "点击发送后，给您几秒钟时间撤回邮件。"
+    },
+    "reply_from_received": {
+      "label": "自动选择回复地址",
+      "description": "从邮件发往的地址回复。适合拥有多个地址的情况。"
     }
   },
   "plugin_list": {

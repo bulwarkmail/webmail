@@ -21,7 +21,7 @@ vi.mock('../settings-section', async (importOriginal) => ({
 
 const ROWS = {
   plainTextMode: 'plain_text_mode.label',
-  autoSelectReplyIdentity: 'auto_select_reply_identity.label',
+  autoSelectReplyIdentity: 'reply_from_received.label',
   replyIdentityMatch: 'reply_identity_match.label',
 } as const;
 

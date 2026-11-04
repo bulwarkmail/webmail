@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "送信取り消し",
       "description": "送信を押した後、数秒間メッセージを取り消せます。"
+    },
+    "reply_from_received": {
+      "label": "返信元アドレスを自動選択",
+      "description": "メールの宛先になったアドレスから返信します。複数のアドレスがある場合に便利です。"
     }
   },
   "plugin_list": {

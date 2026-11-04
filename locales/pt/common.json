@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Desfazer envio",
       "description": "Dá alguns segundos para você recuperar uma mensagem depois de clicar em Enviar."
+    },
+    "reply_from_received": {
+      "label": "Selecionar automaticamente o endereço de resposta",
+      "description": "Responder do endereço para o qual o e-mail foi enviado. Útil se você tiver vários endereços."
     }
   },
   "plugin_list": {

@@ -6400,6 +6400,10 @@
     "undo_send": {
       "label": "Hoàn tác gửi",
       "description": "Cho bạn vài giây để lấy lại thư sau khi nhấn Gửi."
+    },
+    "reply_from_received": {
+      "label": "Trả lời bằng địa chỉ nhận thư",
+      "description": "Trả lời từ địa chỉ mà thư đã được gửi đến. Hữu ích nếu bạn có nhiều địa chỉ."
     }
   },
   "plugin_list": {

@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Anulează trimiterea",
       "description": "Îți oferă câteva secunde să retragi un mesaj după ce apeși Trimite."
+    },
+    "reply_from_received": {
+      "label": "Răspunde de la adresa de la care a fost primit mesajul",
+      "description": "Răspunde de la adresa la care a fost trimis e-mailul. Util dacă ai mai multe adrese."
     }
   },
   "plugin_list": {

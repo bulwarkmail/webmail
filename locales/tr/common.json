@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Göndermeyi geri al",
       "description": "Gönder'e bastıktan sonra iletiyi geri almanız için birkaç saniye verir."
+    },
+    "reply_from_received": {
+      "label": "Yanıt Adresini Otomatik Seç",
+      "description": "Postanın gönderildiği adresten yanıtlayın. Birden çok adresiniz varsa kullanışlıdır."
     }
   },
   "plugin_list": {

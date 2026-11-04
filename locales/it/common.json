@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Annulla invio",
       "description": "Ti dà qualche secondo per riprendere un messaggio dopo aver premuto Invia."
+    },
+    "reply_from_received": {
+      "label": "Seleziona automaticamente l'indirizzo di risposta",
+      "description": "Rispondi dall'indirizzo a cui è stata inviata l'email. Utile se hai più indirizzi."
     }
   },
   "plugin_list": {

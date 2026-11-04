@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Vrátiť odoslanie",
       "description": "Dáva vám niekoľko sekúnd na to, aby ste správu po stlačení Odoslať vzali späť."
+    },
+    "reply_from_received": {
+      "label": "Odpovedať z prijatej adresy",
+      "description": "Odpovedať z adresy, na ktorú prišla správa. Hodí sa, ak máte viac adries."
     }
   },
   "plugin_list": {

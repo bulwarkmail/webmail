@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Vrátit odeslání",
       "description": "Dává vám několik sekund na to, abyste zprávu po stisknutí Odeslat vzali zpět."
+    },
+    "reply_from_received": {
+      "label": "Automaticky vybírat adresu pro odpověď",
+      "description": "Odpovídat z adresy, na kterou zpráva přišla. Hodí se, pokud máte více adres."
     }
   },
   "plugin_list": {

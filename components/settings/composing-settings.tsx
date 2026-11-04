@@ -104,7 +104,7 @@ export function ComposingSettings() {
         </SettingItem>
 
         {!isSettingHidden('autoSelectReplyIdentity') && (
-        <SettingItem label={t('auto_select_reply_identity.label')} description={t('auto_select_reply_identity.description')} locked={isSettingLocked('autoSelectReplyIdentity')}>
+        <SettingItem label={tWords('reply_from_received.label')} description={tWords('reply_from_received.description')} locked={isSettingLocked('autoSelectReplyIdentity')}>
           <ToggleSwitch
             checked={autoSelectReplyIdentity}
             onChange={(checked) => updateSetting('autoSelectReplyIdentity', checked)}

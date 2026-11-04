@@ -272,7 +272,7 @@ const ENTRIES: SettingSchemaEntry[] = [
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
-  bool('autoSelectReplyIdentity', 'composing', `${EB}auto_select_reply_identity.label`),
+  bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.
   choice('replyIdentityMatch', 'composing', `${EB}reply_identity_match.label`,
     opts(`${EB}reply_identity_match.`, ['exact', 'domain']), { gate: 'customFromEnabled' }),

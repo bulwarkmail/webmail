@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Saatmise tühistamine",
       "description": "Annab sulle pärast Saada vajutamist mõne sekundi, et kiri tagasi võtta."
+    },
+    "reply_from_received": {
+      "label": "Vasta kirja saanud aadressilt",
+      "description": "Vasta aadressilt, kuhu kiri saadeti. Kasulik, kui sul on mitu aadressi."
     }
   },
   "plugin_list": {

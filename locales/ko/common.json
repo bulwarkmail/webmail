@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "보내기 취소",
       "description": "보내기를 누른 후 몇 초 동안 메시지를 되돌릴 수 있습니다."
+    },
+    "reply_from_received": {
+      "label": "답장 시 보내는 사람 자동 선택",
+      "description": "메일을 받은 주소로 답장합니다. 주소가 여러 개일 때 유용합니다."
     }
   },
   "plugin_list": {

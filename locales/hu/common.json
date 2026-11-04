@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Küldés visszavonása",
       "description": "A Küldés megnyomása után néhány másodpercet ad az üzenet visszavonására."
+    },
+    "reply_from_received": {
+      "label": "Válasz a fogadott címről",
+      "description": "Válasz arról a címről, amelyre a levél érkezett. Hasznos, ha több címe van."
     }
   },
   "plugin_list": {

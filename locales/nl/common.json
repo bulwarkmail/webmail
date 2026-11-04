@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "Verzenden ongedaan maken",
       "description": "Geeft je een paar seconden om een bericht terug te halen nadat je op Verzenden hebt gedrukt."
+    },
+    "reply_from_received": {
+      "label": "Antwoordadres automatisch selecteren",
+      "description": "Antwoord vanaf het adres waar de mail naartoe is gestuurd. Handig als je meerdere adressen hebt."
     }
   },
   "plugin_list": {

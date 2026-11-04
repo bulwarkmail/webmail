@@ -6388,6 +6388,10 @@
     "undo_send": {
       "label": "取消傳送",
       "description": "按下傳送後，給您幾秒鐘撤回郵件。"
+    },
+    "reply_from_received": {
+      "label": "使用收件地址回覆",
+      "description": "從郵件寄達的地址回覆。適合擁有多個地址時使用。"
     }
   },
   "plugin_list": {
