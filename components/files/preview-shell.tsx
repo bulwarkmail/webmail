@@ -102,7 +102,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       window.removeEventListener("keydown", onKey, { capture: true });
       window.removeEventListener("keydown", onArrow);
     };
-  }, [onClose, neighbours]);
+  }, [onClose, neighbours, shellRef]);
 
   return (
     <div
