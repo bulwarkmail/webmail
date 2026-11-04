@@ -5272,6 +5272,12 @@
     "declined_many": "Odmietli ste {count} stretnutí tejto série.",
     "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobraziť celý týždeň",
+    "week_days_short": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
+    "print": "Tlačiť…"
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",

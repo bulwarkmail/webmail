@@ -5272,6 +5272,12 @@
     "declined_many": "您已拒绝此系列中的 {count} 次会议。",
     "answers_series": "您的回复适用于此系列的所有会议。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "至 {time}",
+    "week_all_days": "显示整周",
+    "week_days_short": "{count, plural, other {#天}}",
+    "print": "打印…"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",

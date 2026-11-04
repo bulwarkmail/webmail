@@ -5272,6 +5272,12 @@
     "declined_many": "Ви відхилили зустрічей цієї серії: {count}.",
     "answers_series": "Ваша відповідь стосується всіх зустрічей серії."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "до {time}",
+    "week_all_days": "Показати весь тиждень",
+    "week_days_short": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
+    "print": "Друк…"
+  },
   "advanced_search": {
     "title": "Розширений пошук",
     "from": "Від",

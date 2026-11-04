@@ -5272,6 +5272,12 @@
     "declined_many": "Du avslo {count} møter i denne serien.",
     "answers_series": "Svaret ditt gjelder alle møtene i serien."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele uken",
+    "week_days_short": "{count, plural, one {# dag} other {# dager}}",
+    "print": "Skriv ut…"
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",

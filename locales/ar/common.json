@@ -5272,6 +5272,12 @@
     "declined_many": "رفضت {count} من مواعيد هذه السلسلة.",
     "answers_series": "ينطبق ردك على كل مواعيد السلسلة."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "حتى {time}",
+    "week_all_days": "عرض الأسبوع كاملًا",
+    "week_days_short": "{count, plural, zero {# أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",
+    "print": "طباعة…"
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",

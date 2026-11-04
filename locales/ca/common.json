@@ -5272,6 +5272,12 @@
     "declined_many": "Has rebutjat {count} reunions d'aquesta sèrie.",
     "answers_series": "La teva resposta val per a totes les reunions de la sèrie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "fins a les {time}",
+    "week_all_days": "Mostra tota la setmana",
+    "week_days_short": "{count, plural, one {# dia} other {# dies}}",
+    "print": "Imprimeix…"
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",

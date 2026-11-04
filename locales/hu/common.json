@@ -5272,6 +5272,12 @@
     "declined_many": "A sorozat {count} alkalmát utasította el.",
     "answers_series": "A válasza a sorozat minden alkalmára vonatkozik."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "eddig: {time}",
+    "week_all_days": "Az egész hét megjelenítése",
+    "week_days_short": "{count, plural, one {# nap} other {# nap}}",
+    "print": "Nyomtatás…"
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",

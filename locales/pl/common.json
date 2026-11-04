@@ -5272,6 +5272,12 @@
     "declined_many": "Odrzucono {count} spotkań z tej serii.",
     "answers_series": "Twoja odpowiedź dotyczy wszystkich spotkań z serii."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Pokaż cały tydzień",
+    "week_days_short": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+    "print": "Drukuj…"
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",

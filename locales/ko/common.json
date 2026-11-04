@@ -5272,6 +5272,12 @@
     "declined_many": "이 시리즈의 일정 {count}개를 거절했습니다.",
     "answers_series": "답변은 시리즈의 모든 일정에 적용됩니다."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time}까지",
+    "week_all_days": "한 주 전체 보기",
+    "week_days_short": "{count, plural, other {#일}}",
+    "print": "인쇄…"
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",

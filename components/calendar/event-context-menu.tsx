@@ -81,7 +81,7 @@ export function EventContextMenu({
   const tP2 = useTranslations("ux_p2_pim_cal");
   const t = useTranslations("calendar");
   const tDeepLink = useTranslations("deep_link");
-  const tCommon = useTranslations("common");
+  const tP3 = useTranslations("ux_p3_pim_cal");
   const copyLink = useCopyLink();
 
   const handle = (fn: () => void) => () => {
@@ -164,7 +164,8 @@ export function EventContextMenu({
           }));
         })}
       />
-      {onPrint && <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={handle(onPrint)} />}
+      {/* It opens the print dialog: "Print…", as in the File menu (pim-p3-17). */}
+      {onPrint && <ContextMenuItem icon={Printer} label={tP3("print")} onClick={handle(onPrint)} />}
       {editable && (
         <>
           <ContextMenuSeparator />

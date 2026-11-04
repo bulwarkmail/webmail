@@ -5272,6 +5272,12 @@
     "declined_many": "Jūs atteicāt {count} šīs sērijas sapulces.",
     "answers_series": "Jūsu atbilde attiecas uz visām sērijas sapulcēm."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "līdz {time}",
+    "week_all_days": "Rādīt visu nedēļu",
+    "week_days_short": "{count, plural, zero {# dienas} one {# diena} other {# dienas}}",
+    "print": "Drukāt…"
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",

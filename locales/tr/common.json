@@ -5272,6 +5272,12 @@
     "declined_many": "Bu serideki {count} toplantıyı reddettiniz.",
     "answers_series": "Yanıtınız serideki tüm toplantılar için geçerlidir."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time} saatine kadar",
+    "week_all_days": "Haftanın tamamını göster",
+    "week_days_short": "{count, plural, one {# gün} other {# gün}}",
+    "print": "Yazdır…"
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
