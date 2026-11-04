@@ -55,12 +55,12 @@ COPY --from=builder /sourcemaps /
 
 FROM node:24-alpine AS runner
 
-LABEL org.opencontainers.image.title="Bulwark Webmail"
-LABEL org.opencontainers.image.description="Modern webmail client built with Next.js and the JMAP protocol"
-LABEL org.opencontainers.image.source="https://github.com/bulwarkmail/webmail"
-LABEL org.opencontainers.image.url="https://github.com/bulwarkmail/webmail"
+LABEL org.opencontainers.image.title="Memail"
+LABEL org.opencontainers.image.description="Open-source JMAP webmail for Stalwart: mail, calendar, contacts and files"
+LABEL org.opencontainers.image.source="https://github.com/Saivra/memail-webmail"
+LABEL org.opencontainers.image.url="https://github.com/Saivra/memail-webmail"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
-LABEL org.opencontainers.image.vendor="rbm.systems"
+LABEL org.opencontainers.image.vendor="Saivra"
 
 WORKDIR /app
 ENV NODE_ENV=production

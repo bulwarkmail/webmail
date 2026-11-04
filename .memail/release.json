@@ -1,0 +1,7 @@
+{
+  "name": "Memail",
+  "version": "0.2.0-preview.1",
+  "upstreamVersion": "1.19.1",
+  "repository": "https://github.com/Saivra/memail-webmail",
+  "channel": "preview"
+}

@@ -1,16 +1,16 @@
 {
-  "name": "bulwark-webmail",
-  "version": "1.19.1",
-  "description": "Bulwark Webmail: self-hosted webmail for mail, calendar, contacts and files, built on JMAP",
-  "author": "Bulwark Mail <dev@bulwarkmail.org>",
+  "name": "memail-webmail",
+  "version": "0.2.0-preview.1",
+  "description": "Memail: open-source JMAP webmail for Stalwart, with mail, calendar, contacts and files",
+  "author": "Saivra and Memail contributors",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bulwarkmail/webmail.git"
+    "url": "git+https://github.com/Saivra/memail-webmail.git"
   },
-  "homepage": "https://github.com/bulwarkmail/webmail",
+  "homepage": "https://github.com/Saivra/memail-webmail#readme",
   "bugs": {
-    "url": "https://github.com/bulwarkmail/webmail/issues"
+    "url": "https://github.com/Saivra/memail-webmail/issues"
   },
   "keywords": [
     "jmap",

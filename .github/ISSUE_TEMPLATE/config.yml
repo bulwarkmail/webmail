@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and setup help
+    url: https://github.com/Saivra/memail-webmail/discussions
+    about: Discuss Memail deployment and workflows.
+  - name: Private vulnerability report
+    url: https://github.com/Saivra/memail-webmail/security/advisories/new
+    about: Keep credentials and unpatched vulnerabilities out of public issues.

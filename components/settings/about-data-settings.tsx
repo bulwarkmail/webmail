@@ -107,7 +107,7 @@ export function AboutFooter() {
           <div className="min-w-0">
             <p className="text-xs font-medium text-foreground truncate">{branded ? appName : t('about.title')}</p>
             <p className="text-[0.6875rem] text-muted-foreground truncate">
-              v{APP_VERSION} <span className="text-muted-foreground">({GIT_COMMIT})</span>
+              {process.env.NEXT_PUBLIC_MEMAIL_VERSION ? `Memail v${process.env.NEXT_PUBLIC_MEMAIL_VERSION} · Bulwark ` : ""}v{APP_VERSION} <span className="text-muted-foreground">({GIT_COMMIT})</span>
               <VersionUpdateTag />
             </p>
           </div>

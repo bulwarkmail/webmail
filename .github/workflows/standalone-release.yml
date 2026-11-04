@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository_owner == 'bulwarkmail'
     name: Build (${{ matrix.arch }})
     strategy:
       fail-fast: false
@@ -90,7 +91,7 @@ jobs:
   release:
     name: Attach to release
     needs: build
-    if: github.event_name == 'release'
+    if: github.repository_owner == 'bulwarkmail' && (github.event_name == 'release')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

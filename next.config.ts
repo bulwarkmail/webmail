@@ -21,6 +21,9 @@ if (/^[0-9a-f]{40}$/i.test(gitCommitHash)) {
   gitCommitHash = gitCommitHash.slice(0, 7);
 }
 
+// Downstream product release; APP_VERSION remains the upstream compatibility version.
+const memailVersion = JSON.parse(readFileSync(join(import.meta.dirname, ".memail/release.json"), "utf-8")).version as string;
+
 let appVersion = "0.0.0";
 try {
   appVersion = readFileSync(join(import.meta.dirname, "VERSION"), "utf-8").trim();
@@ -117,7 +120,7 @@ const nextConfig: NextConfig = {
               // a scanner nothing about which fixes are missing.
               source: "/:path*",
               headers: [
-                { key: "X-Powered-By", value: "bulwarkmail.org" },
+                { key: "X-Powered-By", value: "Memail" },
                 // Which build answered (#523): the service worker files a page
                 // or a chunk under that build, not under its own.
                 { key: "X-Bulwark-Build", value: buildId },
@@ -175,6 +178,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_GIT_COMMIT: gitCommitHash,
     NEXT_PUBLIC_BUILD_ID: buildId,
     // A dev server may announce another version, e.g. to try a plugin that needs the next release.
+    NEXT_PUBLIC_MEMAIL_VERSION: memailVersion,
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || appVersion,
     NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_DEV_MOCK_JMAP: process.env.DEV_MOCK_JMAP ?? "",

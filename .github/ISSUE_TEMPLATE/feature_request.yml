@@ -1,0 +1,13 @@
+name: Workflow improvement
+description: Suggest an improvement to a real workflow
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What task is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired behavior and phone/accessibility considerations

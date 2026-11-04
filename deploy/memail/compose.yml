@@ -1,0 +1,20 @@
+name: memail
+services:
+  memail:
+    image: memail:0.2.0-preview.1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      APP_NAME: Memail
+      APP_SHORT_NAME: Memail
+      APP_DESCRIPTION: "Open-source JMAP webmail for Stalwart"
+      SOURCE_CODE_URL: "https://github.com/Saivra/memail-webmail/tree/v0.2.0-preview.1"
+    volumes:
+      - memail-data:/app/data
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  memail-data:

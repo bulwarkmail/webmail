@@ -37,6 +37,7 @@ on:
 
 jobs:
   e2e:
+    if: github.repository_owner == 'bulwarkmail'
     name: E2E (container)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -124,7 +125,7 @@ jobs:
   publish:
     name: Publish
     needs: e2e
-    if: github.event_name != 'pull_request'
+    if: github.repository_owner == 'bulwarkmail' && (github.event_name != 'pull_request')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

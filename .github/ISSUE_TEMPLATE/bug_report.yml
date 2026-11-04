@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible Memail problem
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Memail version or commit
+      description: Include Stalwart version and installation method.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Browser, device and relevant policy/plugin settings
+      description: Remove secrets and private mail.

@@ -48,6 +48,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository_owner == 'bulwarkmail'
     name: Build (${{ matrix.target }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -131,7 +132,7 @@ jobs:
     name: Attach to release
     # The only job with a write token, and it runs no checked-out code.
     needs: build
-    if: github.event_name == 'release'
+    if: github.repository_owner == 'bulwarkmail' && (github.event_name == 'release')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -169,7 +170,7 @@ jobs:
     # No JMAP server involved, so it is cheap and deterministic.
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.repository_owner == 'bulwarkmail' && (github.event_name == 'push' || github.event_name == 'pull_request')
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -214,7 +215,7 @@ jobs:
     # zip itself, under two prefixes.
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.repository_owner == 'bulwarkmail' && (github.event_name == 'push' || github.event_name == 'pull_request')
     steps:
       - name: Checkout
         uses: actions/checkout@v7

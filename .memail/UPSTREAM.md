@@ -4,7 +4,7 @@ Memail is a downstream fork of https://github.com/bulwarkmail/webmail. Keep upst
 
 ## Branches and remotes
 
-- `origin`: https://github.com/Saivra/memail.git — our product repository.
+- `origin`: https://github.com/Saivra/memail-webmail.git — our product repository.
 - `upstream`: https://github.com/bulwarkmail/webmail.git — fetch updates here; never push here as part of synchronization.
 - `main`: Bulwark plus reviewed Memail changes. Avoid force-pushes and published-history rebases.
 - `memail/<feature>`: one focused customization per branch/PR.
@@ -42,7 +42,7 @@ To prepare, push the branch, and open a draft PR in one invocation:
 node .memail/sync-upstream.mjs --ref vX.Y.Z --publish
 ```
 
-If a conflict occurs, Git leaves the sync branch and conflict markers in place. Resolve files, run `git add <resolved-files>` and `git commit`, then push the branch and open a draft PR with `gh pr create --repo Saivra/memail --base main --draft`. `git merge --abort` returns to the branch's pre-merge state. Do not silently prefer ours/theirs across the whole tree.
+If a conflict occurs, Git leaves the sync branch and conflict markers in place. Resolve files, run `git add <resolved-files>` and `git commit`, then push the branch and open a draft PR with `gh pr create --repo Saivra/memail-webmail --base main --draft`. `git merge --abort` returns to the branch's pre-merge state. Do not silently prefer ours/theirs across the whole tree.
 
 If the helper reports an existing local sync branch, inspect that branch and its PR; do not delete it blindly or rerun with a force option. Updates are manual. No scheduled synchronization, automatic merge, or automatic upstream contribution is configured.
 

@@ -16,6 +16,7 @@ env:
 
 jobs:
   build:
+    if: github.repository_owner == 'bulwarkmail'
     name: Build (${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }})
     strategy:
       fail-fast: false
@@ -102,6 +103,7 @@ jobs:
           retention-days: 1
 
   merge:
+    if: github.repository_owner == 'bulwarkmail'
     name: Merge manifest
     runs-on: ubuntu-latest
     needs: build
@@ -165,6 +167,7 @@ jobs:
           create-storage-record: false
 
   build-always:
+    if: github.repository_owner == 'bulwarkmail'
     name: Build locale-prefixed (${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }})
     strategy:
       fail-fast: false
@@ -252,6 +255,7 @@ jobs:
           retention-days: 1
 
   merge-always:
+    if: github.repository_owner == 'bulwarkmail'
     name: Merge locale-prefixed manifest
     runs-on: ubuntu-latest
     needs: build-always
