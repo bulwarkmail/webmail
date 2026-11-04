@@ -95,6 +95,7 @@ import {
   ARCHIVE_ACTION_SEARCH_PATHS,
 } from '@/lib/settings-search';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { useDesktopCommands } from '@/lib/desktop/commands';
 import { menuBarAvailable } from '@/lib/desktop/menu-bar';
 import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
@@ -243,6 +244,13 @@ const SCROLL_RESTORE_KEY = 'settings-scroll-restore';
 export interface SettingsAppProps {
   /** Path segments after `/settings` - `['<tabId>']`. */
   linkSegments?: string[];
+}
+
+/** A field, editor or list that takes typed characters itself. */
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
 }
 
 /** Settings pages that share their name with an app in the palette's Go to group. */
@@ -657,6 +665,38 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         : proInterfaceActive ? null : settingsLinkPath,
   );
 
+  // "/" (the mail search's key) and Ctrl+F (Cmd+F) go to "Search settings" on any
+  // settings page (settings-p3-18). "/" waits while someone types in a field; a
+  // second Ctrl+F in the search field is the browser's own find. In the desktop
+  // app the menu's Search and its Ctrl+F (edit.search) land here too.
+  const searchFieldRef = useRef<HTMLInputElement>(null);
+  const focusSettingsSearch = useCallback(() => {
+    const field = searchFieldRef.current;
+    if (!field) return false;
+    field.focus();
+    field.select();
+    return true;
+  }, []);
+  const searchKeysActive = isAuthenticated && (!isEmbedded || isFocusedProTab);
+  useEffect(() => {
+    if (!searchKeysActive) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return;
+      const slash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey;
+      const find = (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'f';
+      if (!slash && !find) return;
+      const field = searchFieldRef.current;
+      if (!field || document.activeElement === field) return;
+      if (slash && isTypingTarget(event.target)) return;
+      // A dialog on top keeps its keys.
+      if (document.querySelector('[role="dialog"][aria-modal="true"], [role="alertdialog"]')) return;
+      if (focusSettingsSearch()) event.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [searchKeysActive, focusSettingsSearch]);
+  useDesktopCommands({ 'edit.search': () => { focusSettingsSearch(); } }, { 'edit.search': true }, searchKeysActive);
+
   // Park the content-pane scroll offset when the Pro toggle flips (the flip
   // remounts this component - see parkedContentScroll above). The ref only
   // exists in the desktop layout, which is also the only place the remount
@@ -1035,12 +1075,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         >
           <div className="px-4 pt-3 pb-1">
             <ToolbarSearch
+              ref={searchFieldRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
+              aria-keyshortcuts="/ Control+F"
               autoComplete="off"
             />
           </div>
@@ -1200,12 +1242,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         <nav aria-label={t('title')} className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
           <div className="px-3 pt-1 pb-1">
             <ToolbarSearch
+              ref={searchFieldRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
+              aria-keyshortcuts="/ Control+F"
               autoComplete="off"
             />
           </div>

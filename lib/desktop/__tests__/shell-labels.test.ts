@@ -42,6 +42,12 @@ describe('the labels the desktop shell gets', () => {
     expect(labelsFor('en').labels.menuUnlock).toBe('Unlock');
   });
 
+  // settings-p3-18: Edit > Search on a settings page searches the settings.
+  it('names Edit > Search for a settings page', () => {
+    expect(labelsFor('en').labels.menuSearchSettings).toBe('Search settings');
+    expect(labelsFor('de').labels.menuSearchSettings).not.toBe(labelsFor('de').labels.menuSearch);
+  });
+
   it.each(LOCALES)('%s: leaves the shell its placeholders to fill in', (locale) => {
     const { labels } = labelsFor(locale);
     expect(labels.contextAddToDictionary).toContain('{word}');

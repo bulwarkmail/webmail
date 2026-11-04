@@ -90,6 +90,8 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuPaste: t('desktopUi.menu.paste'),
     menuSelectAll: t('desktopUi.menu.select_all'),
     menuSearch: t('desktopUi.menu.search'),
+    // Edit > Search on a settings page searches the settings (settings-p3-18).
+    menuSearchSettings: t('settings.search_placeholder'),
     menuRefresh: t('desktopUi.menu.refresh'),
     menuRefreshView: t('ux_p2_pim_cm.menu_refresh'),
     menuReadingPane: t('desktopUi.menu.reading_pane'),
