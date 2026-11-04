@@ -10450,6 +10450,21 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async getFileNodes(ids: string[] | null, properties?: string[]): Promise<FileNode[]> {
+    // A node of a shared drive is known as "accountId:nodeId" (namespaceFileNode):
+    // read it in its owner's account and hand it back under the same name.
+    const shared = ids && ids.length > 0 ? this.resolveFileNodeId(ids[0]) : null;
+    if (shared && shared.accountId !== this.getFilesAccountId()) {
+      const rawIds = ids!.map((id) => this.resolveFileNodeId(id)).filter((node) => node.accountId === shared.accountId).map((node) => node.id as string);
+      const response = await this.request(
+        [["FileNode/get", { accountId: shared.accountId, ids: rawIds, properties: properties || JMAPClient.FILE_NODE_PROPERTIES }, "fn0"]],
+        this.fileUsing(),
+      );
+      const result = response.methodResponses?.[0];
+      if (!result || result[0] === "error") {
+        throw new Error(result?.[1]?.description || "FileNode/get failed");
+      }
+      return ((result[1].list || []) as FileNode[]).map((node) => this.namespaceFileNode(fromWireFileNode(node), shared.accountId));
+    }
     const accountId = this.getFilesAccountId();
     const args: Record<string, unknown> = { accountId, ids, properties: properties || JMAPClient.FILE_NODE_PROPERTIES };
 
