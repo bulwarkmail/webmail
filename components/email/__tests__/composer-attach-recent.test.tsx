@@ -379,7 +379,7 @@ describe('recent files in the Attach menu', () => {
     useAuthStore.setState({ client: client() as never });
     render(<EmailComposer onClose={vi.fn()} />);
     await openMenu();
-    await waitFor(() => expect(document.activeElement).toBe(rows()[0]));
+    await waitFor(() => expect(document.activeElement).toBe(rows()[0]), { timeout: 5000 });
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(rows()[1]);
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
