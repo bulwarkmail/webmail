@@ -8,15 +8,15 @@ import { isAppLocked } from "@/lib/desktop/app-lock-state";
 import { contentHiddenFor, startMailNotifications, type MailNotificationLabels, type MailNotifications } from "@/lib/desktop/mail-notifications";
 import { startOsSummary } from "@/lib/desktop/os-summary";
 import { startPowerWatch } from "@/lib/desktop/power";
-import { startWindowFiles } from "@/lib/desktop/window-files";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 
 /**
  * The main window's end of the desktop app's OS integration: new mail as native
- * notifications, what the tray and jump list show, waking up after sleep, and files
- * dropped or pasted on the window. Renders nothing, and does nothing in a browser.
+ * notifications, what the tray and jump list show, and waking up after sleep. Files
+ * dropped or pasted on the window are the file drop overlay's (components/file-drop).
+ * Renders nothing, and does nothing in a browser.
  * Lives inside MainWindowOnly, so pop-outs don't do any of it a second time.
  */
 export function DesktopOsHost() {
@@ -55,12 +55,10 @@ export function DesktopOsHost() {
     const summary = startOsSummary(() => localeRef.current);
     summaryRef.current = summary;
     const stopPower = startPowerWatch();
-    const stopFiles = startWindowFiles();
     return () => {
       mail.stop();
       summary.stop();
       stopPower();
-      stopFiles();
       mailRef.current = null;
       summaryRef.current = null;
     };
