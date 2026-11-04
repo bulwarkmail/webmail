@@ -5841,7 +5841,7 @@ export function EmailComposer({
                 )}
                 {/* Encrypting is a crypto plugin's job (S/MIME, PGP). Without
                     one, say where to get it rather than offer nothing. */}
-                {emailHooks.onComposeSend.size === 0 && isFeatureEnabled('pluginsEnabled') && !ownWindow && (
+                {(emailHooks.onComposeSend?.size ?? 0) === 0 && isFeatureEnabled('pluginsEnabled') && !ownWindow && (
                   <ComposerToolbarMenuItem
                     icon={Lock}
                     muted
