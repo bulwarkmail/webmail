@@ -102,9 +102,12 @@ export function customServerAllowedByDesktopPolicy(snapshot: PolicySnapshot = ge
  * Whether accounts may keep mail on this device: `forced` when the policy says so
  * either way, `fallback` for the default where the user hasn't chosen. Forced off
  * feeds `noOffline` (lib/device-policy.ts), which also clears what's there already.
+ * `invalid`: forced to something that makes no sense. Nothing new is kept, and a typo
+ * deletes nothing.
  */
-export function desktopOfflinePolicy(snapshot: PolicySnapshot = getDesktopPolicy()): { forced: boolean | null; fallback: boolean | null } {
+export function desktopOfflinePolicy(snapshot: PolicySnapshot = getDesktopPolicy()): { forced: boolean | null; fallback: boolean | null; invalid?: true } {
   const { OfflineEnabled } = snapshot;
+  if (OfflineEnabled.locked && OfflineEnabled.invalid) return { forced: false, fallback: null, invalid: true };
   if (OfflineEnabled.locked) return { forced: OfflineEnabled.value, fallback: null };
   return { forced: null, fallback: OfflineEnabled.source === 'default' ? null : OfflineEnabled.value };
 }

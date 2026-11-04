@@ -770,6 +770,9 @@ describe('policy', () => {
   it('a forced timeout wins over the user\'s choice, a recommended one only over no choice', () => {
     withPolicy({ value: false, locked: false }, { value: 3, locked: true });
     expect(effectiveTimeout(60)).toEqual({ minutes: 3, locked: true });
+    // A value nobody could read: the user's choice was never what the admin meant.
+    (window.bulwarkDesktop as unknown as { policy: { get(): unknown } }).policy.get = () => ({ AppLockTimeoutMinutes: { value: null, locked: true, source: 'forced-machine', invalid: 'out_of_range' } });
+    expect(effectiveTimeout(60)).toEqual({ minutes: 1, locked: true });
     withPolicy({ value: false, locked: false }, { value: 3, locked: false });
     expect(effectiveTimeout(60)).toEqual({ minutes: 60, locked: false });
     expect(effectiveTimeout(undefined)).toEqual({ minutes: 3, locked: false });

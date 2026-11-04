@@ -5,7 +5,11 @@
  */
 
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { POLICY_SCHEMA } from '@/lib/desktop/policy-schema';
 import { DEFAULT_TIMEOUT_MINUTES } from './state';
+
+const timeoutDefinition = POLICY_SCHEMA.AppLockTimeoutMinutes;
+const SHORTEST_MINUTES = timeoutDefinition.type === 'integer' ? timeoutDefinition.min : 1;
 
 interface PolicyEntry<T> {
   value: T;
@@ -51,7 +55,9 @@ export interface EffectiveTimeout {
 export function effectiveTimeout(choice: number | undefined): EffectiveTimeout {
   const entry = read().AppLockTimeoutMinutes;
   const value = typeof entry?.value === 'number' && entry.value > 0 ? entry.value : null;
-  if (entry?.locked && value !== null) return { minutes: value, locked: true };
+  // Forced to something nobody can read, by a shell that hands that on as nothing: the
+  // tightest there is, since the user's choice was never meant to apply.
+  if (entry?.locked) return { minutes: value ?? SHORTEST_MINUTES, locked: true };
   return { minutes: choice ?? value ?? DEFAULT_TIMEOUT_MINUTES, locked: false };
 }
 

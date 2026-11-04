@@ -5,6 +5,7 @@ import {
   DEFAULT_POLICY_SNAPSHOT,
   EMPTY_POLICY_LAYERS,
   POLICY_KEYS,
+  policyProblems,
   POLICY_CONSUMERS,
   POLICY_MAX_LIST_ITEMS,
   POLICY_SCHEMA,
@@ -133,9 +134,9 @@ describe('hostile values fail closed', () => {
     expect(entry.raw!.length).toBeLessThanOrEqual(201);
   });
 
-  it('an out of range timeout falls to no value, not to a huge one', () => {
+  it('an out of range timeout falls to the shortest, not to a huge one or the user\'s own', () => {
     const entry = resolvePolicies(layers({ forcedMachine: { AppLockTimeoutMinutes: 999999 } })).AppLockTimeoutMinutes;
-    expect(entry).toMatchObject({ value: null, invalid: 'out_of_range' });
+    expect(entry).toMatchObject({ value: 1, invalid: 'out_of_range' });
   });
 });
 
@@ -322,6 +323,26 @@ describe('KeystoreAllowedOrigins', () => {
   });
 });
 
+describe('what a recommendation can do', () => {
+  it.each(['AppLockRequired', 'TelemetryAllowed', 'CrashReportsAllowed', 'AutoUpdate'] as const)('%s: nothing, and the templates do not offer one', (key) => {
+    expect(POLICY_SCHEMA[key].forcedOnly).toBe(true);
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, recommendedMachine: { [key]: 0 } })[key]).toMatchObject({ source: 'default', locked: false });
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { [key]: 0 } })[key]).toMatchObject({ value: false, locked: true });
+  });
+});
+
+describe('values that fail open', () => {
+  it('a lock timeout nobody can read is the shortest there is', () => {
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { AppLockTimeoutMinutes: '99999' } }).AppLockTimeoutMinutes).toMatchObject({ value: 1, locked: true, invalid: 'out_of_range' });
+  });
+
+  it('a wipe code too long to use is named as invalid', () => {
+    const snapshot = resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { WipeOfflineData: 'w'.repeat(200) } });
+    expect(snapshot.WipeOfflineData).toMatchObject({ value: null, invalid: 'too_long' });
+    expect(policyProblems(snapshot).map((problem) => problem.key)).toEqual(['WipeOfflineData']);
+  });
+});
+
 describe('every key has someone acting on it', () => {
   it('names a consumer or who owes one', () => {
     for (const key of POLICY_KEYS) {
@@ -338,9 +359,7 @@ describe('every key has someone acting on it', () => {
     }
   });
 
-  // The coordinator flips this when step 7 is done: then no key may be waiting.
-  const ALL_WIRED = false;
-  it.runIf(ALL_WIRED)('nobody is waiting any more', () => {
+  it('nobody is waiting any more', () => {
     expect(POLICY_KEYS.filter((key) => 'pendingConsumer' in POLICY_CONSUMERS[key])).toEqual([]);
   });
 });
