@@ -109,6 +109,18 @@
     "code_label": "인증 코드",
     "verify": "확인"
   },
+  "ux_p3_words": {
+    "appearance_description": "{appName}의 모양을 바꿔요.",
+    "text_size_app": "앱의 모든 글자 크기를 조절해요. 100%가 기본 크기예요.",
+    "scrollbars_app": "시스템 자체 스크롤 막대를 사용해요. 더 넓어서 잡기 쉬워요.",
+    "voice_app": "메시지를 소리 내어 읽는 목소리예요. 목록에는 이 컴퓨터에 있는 인터페이스 언어의 목소리가 표시돼요.",
+    "voice_default_app": "시스템 목소리",
+    "visual_alerts_app": "새 메일이나 알림이 오면 창 제목을 천천히 깜박이고, 알림은 닫을 때까지 화면에 남겨 둬요.",
+    "sounds_link_app": "알림 소리와 작업 표시줄 아이콘의 읽지 않은 개수는 알림 페이지에서 설정해요.",
+    "writing_language_app": "주로 쓰는 언어예요. 교정과 맞춤법 검사에 사용돼요.",
+    "badge_all_app": "작업 표시줄 아이콘과 알림 영역의 숫자에 로그인한 모든 계정의 받은편지함을 합산해 표시해요.",
+    "badge_all_browser": "탭과 앱 아이콘의 숫자에 로그인한 모든 계정의 받은편지함을 합산해 표시해요."
+  },
   "sidebar": {
     "close": "닫기",
     "compose": "메일 쓰기",

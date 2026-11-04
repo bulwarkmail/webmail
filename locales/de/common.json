@@ -109,6 +109,18 @@
     "code_label": "Authentifizierungscode",
     "verify": "Bestätigen"
   },
+  "ux_p3_words": {
+    "appearance_description": "Ändern Sie, wie {appName} aussieht.",
+    "text_size_app": "Skaliert den gesamten Text der App. 100 % ist die normale Größe.",
+    "scrollbars_app": "Verwendet die Bildlaufleisten des Systems, die breiter und leichter zu greifen sind.",
+    "voice_app": "Die Stimme, die Nachrichten vorliest. Die Liste zeigt die Stimmen dieses Computers für die Sprache der Oberfläche.",
+    "voice_default_app": "Systemstimme",
+    "visual_alerts_app": "Lässt den Fenstertitel langsam blinken, wenn neue E-Mails oder eine Erinnerung eintreffen, und lässt Erinnerungen sichtbar, bis Sie sie schließen.",
+    "sounds_link_app": "Benachrichtigungstöne und die Zahl ungelesener E-Mails am Taskleistensymbol stellen Sie auf der Seite Benachrichtigungen ein.",
+    "writing_language_app": "Die Sprache, in der Sie meistens schreiben. Korrekturlesen und Rechtschreibprüfung verwenden sie.",
+    "badge_all_app": "Die Zahl am Taskleistensymbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen.",
+    "badge_all_browser": "Die Zahl am Tab und am App-Symbol zählt die Posteingänge aller angemeldeten Konten zusammen."
+  },
   "sidebar": {
     "close": "Schließen",
     "compose": "Verfassen",

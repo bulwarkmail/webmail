@@ -109,6 +109,18 @@
     "code_label": "Authentication code",
     "verify": "Verify"
   },
+  "ux_p3_words": {
+    "appearance_description": "Change how {appName} looks.",
+    "text_size_app": "Scales all text in the app. 100% is the normal size.",
+    "scrollbars_app": "Uses the system's own scrollbars, which are wider and easier to grab.",
+    "voice_app": "The voice that reads messages aloud. The list shows the voices this computer has for the interface language.",
+    "voice_default_app": "System voice",
+    "visual_alerts_app": "Flashes the window title slowly when new mail or a reminder arrives, and keeps reminders on screen until you close them.",
+    "sounds_link_app": "Notification sounds and the unread count on the taskbar icon are set on the Notifications page.",
+    "writing_language_app": "The language you usually write in. Proofreading and spell check use it.",
+    "badge_all_app": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
+    "badge_all_browser": "The number on the tab and the app icon adds up the inboxes of every signed-in account."
+  },
   "sidebar": {
     "close": "Close",
     "compose": "Compose",

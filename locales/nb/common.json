@@ -109,6 +109,18 @@
     "code_label": "Autentiseringskode",
     "verify": "Bekreft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Endre hvordan {appName} ser ut.",
+    "text_size_app": "Skalerer all tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruker systemets egne rullefelt, som er bredere og lettere å ta tak i.",
+    "voice_app": "Stemmen som leser opp meldinger. Listen viser stemmene denne datamaskinen har for språket i grensesnittet.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vindustittelen til å blinke sakte når det kommer ny e-post eller en påminnelse, og holder påminnelser på skjermen til du lukker dem.",
+    "sounds_link_app": "Varsellyder og antall uleste på ikonet på oppgavelinjen stiller du inn på siden Varsler.",
+    "writing_language_app": "Språket du vanligvis skriver på. Korrektur og stavekontroll bruker det.",
+    "badge_all_app": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
+    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer."
+  },
   "sidebar": {
     "close": "Lukk",
     "compose": "Skriv",

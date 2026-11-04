@@ -109,6 +109,18 @@
     "code_label": "Cod de autentificare",
     "verify": "Verifică"
   },
+  "ux_p3_words": {
+    "appearance_description": "Schimbați aspectul {appName}.",
+    "text_size_app": "Scalează tot textul din aplicație. 100% este dimensiunea normală.",
+    "scrollbars_app": "Folosește barele de derulare ale sistemului, care sunt mai late și mai ușor de prins.",
+    "voice_app": "Vocea care citește mesajele cu voce tare. Lista arată vocile pe care le are acest computer pentru limba interfeței.",
+    "voice_default_app": "Vocea sistemului",
+    "visual_alerts_app": "Face să clipească încet titlul ferestrei când sosesc e-mailuri noi sau un memento și păstrează mementourile pe ecran până le închideți.",
+    "sounds_link_app": "Sunetele notificărilor și numărul de necitite de pe pictograma din bara de activități se setează pe pagina Notificări.",
+    "writing_language_app": "Limba în care scrieți de obicei. Corectura și verificarea ortografică o folosesc.",
+    "badge_all_app": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
+    "badge_all_browser": "Numărul de pe filă și de pe pictograma aplicației adună căsuțele de primire ale tuturor conturilor conectate."
+  },
   "sidebar": {
     "close": "Închide",
     "compose": "Compune",

@@ -109,6 +109,18 @@
     "code_label": "Doğrulama kodu",
     "verify": "Doğrula"
   },
+  "ux_p3_words": {
+    "appearance_description": "{appName} görünümünü değiştirin.",
+    "text_size_app": "Uygulamadaki tüm metni ölçekler. %100 normal boyuttur.",
+    "scrollbars_app": "Sistemin kendi kaydırma çubuklarını kullanır; bunlar daha geniştir ve tutması daha kolaydır.",
+    "voice_app": "İletileri sesli okuyan ses. Liste, bu bilgisayarda arayüz dili için bulunan sesleri gösterir.",
+    "voice_default_app": "Sistem sesi",
+    "visual_alerts_app": "Yeni e-posta veya hatırlatıcı geldiğinde pencere başlığını yavaşça yanıp söndürür ve hatırlatıcıları siz kapatana kadar ekranda tutar.",
+    "sounds_link_app": "Bildirim sesleri ve görev çubuğu simgesindeki okunmamış sayısı Bildirimler sayfasında ayarlanır.",
+    "writing_language_app": "Genellikle yazdığınız dil. Yazım denetimi ve düzeltme bunu kullanır.",
+    "badge_all_app": "Görev çubuğu simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar.",
+    "badge_all_browser": "Sekmedeki ve uygulama simgesindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
+  },
   "sidebar": {
     "close": "Kapat",
     "compose": "Yeni E-posta",

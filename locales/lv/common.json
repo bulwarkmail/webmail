@@ -109,6 +109,18 @@
     "code_label": "Autentifikācijas kods",
     "verify": "Apstiprināt"
   },
+  "ux_p3_words": {
+    "appearance_description": "Mainiet {appName} izskatu.",
+    "text_size_app": "Maina visa lietotnes teksta lielumu. 100% ir parastais lielums.",
+    "scrollbars_app": "Izmanto sistēmas ritjoslas, kas ir platākas un vieglāk satveramas.",
+    "voice_app": "Balss, kas nolasa vēstules. Sarakstā ir šī datora balsis saskarnes valodai.",
+    "voice_default_app": "Sistēmas balss",
+    "visual_alerts_app": "Kad pienāk jauna vēstule vai atgādinājums, lēni mirgo loga virsraksts, un atgādinājumi paliek ekrānā, līdz tos aizverat.",
+    "sounds_link_app": "Paziņojumu skaņas un nelasīto skaitu uzdevumjoslas ikonā iestatāt lapā Paziņojumi.",
+    "writing_language_app": "Valoda, kurā parasti rakstāt. To izmanto korektūra un pareizrakstības pārbaude.",
+    "badge_all_app": "Skaitlis uzdevumjoslas ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes.",
+    "badge_all_browser": "Skaitlis cilnē un lietotnes ikonā saskaita visu pierakstīto kontu iesūtnes."
+  },
   "sidebar": {
     "close": "Aizvērt",
     "compose": "Rakstīt",

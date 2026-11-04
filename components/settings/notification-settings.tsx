@@ -17,6 +17,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AccountPushSwitches, usePushAccounts } from './multi-account-push';
 import { isDesktopApp } from '@/lib/desktop/bridge';
+import { wordingFor } from '@/lib/desktop/wording';
 import { productName } from '@/lib/product-name';
 import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
@@ -64,6 +65,7 @@ export function NotificationSettings() {
   const tAppearance = useTranslations('settings.appearance');
   const tDesktopP2 = useTranslations('uxp2_desktop');
   const tUnread = useTranslations('account_unread');
+  const tWords = useTranslations('ux_p3_words');
   const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
   const tP2 = useTranslations('uxp2_settings');
@@ -374,8 +376,8 @@ export function NotificationSettings() {
 
         {/* The tab/app icon badge is a new-mail signal too; people look for it here. The desktop app has no tab: the taskbar icon. */}
         <SettingItem
-          label={isDesktopApp() ? tDesktopP2('unread_badge_label') : tAppearance('favicon_unread_badge.label')}
-          description={isDesktopApp() ? tDesktopP2('unread_badge_description') : tAppearance('favicon_unread_badge.description')}
+          label={wordingFor({ app: tDesktopP2('unread_badge_label'), browser: tAppearance('favicon_unread_badge.label') })}
+          description={wordingFor({ app: tDesktopP2('unread_badge_description'), browser: tAppearance('favicon_unread_badge.description') })}
         >
           <ToggleSwitch
             checked={faviconUnreadBadge}
@@ -385,7 +387,7 @@ export function NotificationSettings() {
 
         {/* Only means something with a second account. */}
         {severalAccounts && (
-        <SettingItem label={tUnread('badge_all_accounts.label')} description={tUnread('badge_all_accounts.description')}>
+        <SettingItem label={tUnread('badge_all_accounts.label')} description={wordingFor({ app: tWords('badge_all_app'), browser: tWords('badge_all_browser') })}>
           <ToggleSwitch
             checked={unreadBadgeAllAccounts}
             onChange={(checked) => updateSetting('unreadBadgeAllAccounts', checked)}

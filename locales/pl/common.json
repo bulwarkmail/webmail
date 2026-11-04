@@ -109,6 +109,18 @@
     "code_label": "Kod uwierzytelniający",
     "verify": "Zweryfikuj"
   },
+  "ux_p3_words": {
+    "appearance_description": "Zmień wygląd aplikacji {appName}.",
+    "text_size_app": "Skaluje cały tekst w aplikacji. 100% to normalny rozmiar.",
+    "scrollbars_app": "Używa pasków przewijania systemu, które są szersze i łatwiej je chwycić.",
+    "voice_app": "Głos, który czyta wiadomości na głos. Lista pokazuje głosy, które ten komputer ma dla języka interfejsu.",
+    "voice_default_app": "Głos systemowy",
+    "visual_alerts_app": "Powoli miga tytułem okna, gdy przychodzi nowa poczta lub przypomnienie, i zostawia przypomnienia na ekranie, dopóki ich nie zamkniesz.",
+    "sounds_link_app": "Dźwięki powiadomień i liczbę nieprzeczytanych na ikonie na pasku zadań ustawisz na stronie Powiadomienia.",
+    "writing_language_app": "Język, w którym zwykle piszesz. Korzystają z niego korekta i sprawdzanie pisowni.",
+    "badge_all_app": "Liczba na ikonie na pasku zadań i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "badge_all_browser": "Liczba na karcie i ikonie aplikacji sumuje skrzynki odbiorcze wszystkich zalogowanych kont."
+  },
   "sidebar": {
     "close": "Zamknij",
     "compose": "Napisz",

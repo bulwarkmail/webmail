@@ -109,6 +109,18 @@
     "code_label": "Godkendelseskode",
     "verify": "Bekræft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Skift udseendet af {appName}.",
+    "text_size_app": "Skalerer al tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruger systemets egne rullepaneler, som er bredere og lettere at gribe fat i.",
+    "voice_app": "Stemmen, der læser beskeder højt. Listen viser de stemmer, denne computer har til sproget i brugerfladen.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vinduets titel til at blinke langsomt, når der kommer ny mail eller en påmindelse, og holder påmindelser på skærmen, indtil du lukker dem.",
+    "sounds_link_app": "Notifikationslyde og antallet af ulæste på ikonet på proceslinjen indstilles på siden Notifikationer.",
+    "writing_language_app": "Det sprog, du normalt skriver på. Korrektur og stavekontrol bruger det.",
+    "badge_all_app": "Tallet på ikonet på proceslinjen og i meddelelsesområdet lægger indbakkerne for alle loggede-ind konti sammen.",
+    "badge_all_browser": "Tallet på fanen og appikonet lægger indbakkerne for alle loggede-ind konti sammen."
+  },
   "sidebar": {
     "close": "Luk",
     "compose": "Ny besked",

@@ -109,6 +109,18 @@
     "code_label": "Mã xác thực",
     "verify": "Xác minh"
   },
+  "ux_p3_words": {
+    "appearance_description": "Thay đổi giao diện của {appName}.",
+    "text_size_app": "Thay đổi cỡ toàn bộ chữ trong ứng dụng. 100% là cỡ bình thường.",
+    "scrollbars_app": "Dùng thanh cuộn của chính hệ thống, rộng hơn và dễ kéo hơn.",
+    "voice_app": "Giọng đọc to thư. Danh sách hiển thị các giọng mà máy tính này có cho ngôn ngữ giao diện.",
+    "voice_default_app": "Giọng hệ thống",
+    "visual_alerts_app": "Làm tiêu đề cửa sổ nhấp nháy chậm khi có thư mới hoặc lời nhắc, và giữ lời nhắc trên màn hình cho đến khi bạn đóng.",
+    "sounds_link_app": "Âm thanh thông báo và số thư chưa đọc trên biểu tượng thanh tác vụ được đặt trên trang Thông báo.",
+    "writing_language_app": "Ngôn ngữ bạn thường viết. Hiệu đính và kiểm tra chính tả dùng ngôn ngữ này.",
+    "badge_all_app": "Con số trên biểu tượng thanh tác vụ và trong khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
+    "badge_all_browser": "Con số trên tab và biểu tượng ứng dụng cộng hộp thư đến của mọi tài khoản đã đăng nhập."
+  },
   "sidebar": {
     "close": "Đóng",
     "compose": "Soạn thư",

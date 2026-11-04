@@ -109,6 +109,18 @@
     "code_label": "驗證碼",
     "verify": "驗證"
   },
+  "ux_p3_words": {
+    "appearance_description": "變更 {appName} 的外觀。",
+    "text_size_app": "縮放應用程式中的所有文字。100% 為正常大小。",
+    "scrollbars_app": "使用系統內建的捲軸，較寬，也較容易拖曳。",
+    "voice_app": "朗讀郵件的語音。清單會顯示這台電腦上適用於介面語言的語音。",
+    "voice_default_app": "系統語音",
+    "visual_alerts_app": "收到新郵件或提醒時，視窗標題會緩慢閃爍，提醒會一直留在畫面上，直到您關閉。",
+    "sounds_link_app": "通知音效和工作列圖示上的未讀數，在「通知」頁面設定。",
+    "writing_language_app": "您平常寫作使用的語言。校對和拼字檢查會使用它。",
+    "badge_all_app": "工作列圖示和系統匣上的數字會合計所有已登入帳號的收件匣。",
+    "badge_all_browser": "分頁和應用程式圖示上的數字會合計所有已登入帳號的收件匣。"
+  },
   "sidebar": {
     "close": "關閉",
     "compose": "撰寫郵件",

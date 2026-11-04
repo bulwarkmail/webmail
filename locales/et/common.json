@@ -109,6 +109,18 @@
     "code_label": "Autentimiskood",
     "verify": "Kinnita"
   },
+  "ux_p3_words": {
+    "appearance_description": "Muuda rakenduse {appName} välimust.",
+    "text_size_app": "Muudab kogu rakenduse teksti suurust. 100% on tavaline suurus.",
+    "scrollbars_app": "Kasutab süsteemi enda kerimisribasid, mis on laiemad ja kergemini haaratavad.",
+    "voice_app": "Hääl, mis loeb kirju ette. Loend näitab hääli, mis sellel arvutil on liidese keele jaoks.",
+    "voice_default_app": "Süsteemi hääl",
+    "visual_alerts_app": "Paneb akna pealkirja aeglaselt vilkuma, kui saabub uus kiri või meeldetuletus, ja hoiab meeldetuletusi ekraanil, kuni need sulged.",
+    "sounds_link_app": "Teavitushelid ja lugemata kirjade arvu tegumiriba ikoonil seadistad lehel Teavitused.",
+    "writing_language_app": "Keel, milles tavaliselt kirjutad. Seda kasutavad keelekontroll ja õigekirjakontroll.",
+    "badge_all_app": "Tegumiriba ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid.",
+    "badge_all_browser": "Vahekaardi ja rakenduse ikooni arv liidab kokku kõigi sisselogitud kontode postkastid."
+  },
   "sidebar": {
     "close": "Sulge",
     "compose": "Koosta",

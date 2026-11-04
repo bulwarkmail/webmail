@@ -14,9 +14,11 @@ import { checkerAccess, proofreadingAccess, PROOFREADING_KEY, type PolicyView } 
 import { writingLanguageOptions } from "@/lib/proofreading/languages";
 import { policySettled } from "@/components/email/proofreading/use-proofreading";
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from "./settings-section";
+import { wordingFor } from "@/lib/desktop/wording";
 
 export function ProofreadingSettings() {
   const t = useTranslations("proofreading.settings");
+  const tWords = useTranslations("ux_p3_words");
   const locale = useLocale();
   const checkers = useSyncExternalStore(subscribeCheckers, allCheckers, allCheckers);
   const proofreading = useSettingsStore((s) => s.proofreading);
@@ -80,7 +82,7 @@ export function ProofreadingSettings() {
       })}
 
       {!languageHidden && (
-        <SettingItem label={t("writing_language")} description={t("writing_language_description")} locked={languageLocked}>
+        <SettingItem label={t("writing_language")} description={wordingFor({ app: tWords("writing_language_app"), browser: t("writing_language_description") })} locked={languageLocked}>
           <Select
             value={writingLanguage}
             onChange={(value) => updateSetting("writingLanguage", value)}

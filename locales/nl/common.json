@@ -109,6 +109,18 @@
     "code_label": "Verificatiecode",
     "verify": "Bevestigen"
   },
+  "ux_p3_words": {
+    "appearance_description": "Wijzig hoe {appName} eruitziet.",
+    "text_size_app": "Schaalt alle tekst in de app. 100% is de normale grootte.",
+    "scrollbars_app": "Gebruikt de eigen schuifbalken van het systeem, die breder zijn en makkelijker vast te pakken.",
+    "voice_app": "De stem die berichten voorleest. De lijst toont de stemmen die deze computer heeft voor de taal van de interface.",
+    "voice_default_app": "Systeemstem",
+    "visual_alerts_app": "Laat de venstertitel langzaam knipperen als er nieuwe e-mail of een herinnering binnenkomt, en houdt herinneringen in beeld tot u ze sluit.",
+    "sounds_link_app": "Meldingsgeluiden en het aantal ongelezen op het taakbalkpictogram stelt u in op de pagina Meldingen.",
+    "writing_language_app": "De taal waarin u meestal schrijft. Proeflezen en spellingcontrole gebruiken die.",
+    "badge_all_app": "Het getal op het taakbalkpictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op.",
+    "badge_all_browser": "Het getal op het tabblad en het app-pictogram telt de inboxen van alle aangemelde accounts bij elkaar op."
+  },
   "sidebar": {
     "close": "Sluiten",
     "compose": "Nieuw bericht",

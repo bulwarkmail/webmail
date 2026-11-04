@@ -109,6 +109,18 @@
     "code_label": "Code d'authentification",
     "verify": "Vérifier"
   },
+  "ux_p3_words": {
+    "appearance_description": "Modifiez l'apparence de {appName}.",
+    "text_size_app": "Met à l'échelle tout le texte de l'application. 100 % correspond à la taille normale.",
+    "scrollbars_app": "Utilise les barres de défilement du système, plus larges et plus faciles à saisir.",
+    "voice_app": "La voix qui lit les messages à voix haute. La liste montre les voix de cet ordinateur pour la langue de l'interface.",
+    "voice_default_app": "Voix du système",
+    "visual_alerts_app": "Fait clignoter lentement le titre de la fenêtre à l'arrivée d'un nouveau message ou d'un rappel, et garde les rappels à l'écran jusqu'à ce que vous les fermiez.",
+    "sounds_link_app": "Les sons de notification et le nombre de non lus sur l'icône de la barre des tâches se règlent sur la page Notifications.",
+    "writing_language_app": "La langue dans laquelle vous écrivez le plus souvent. La relecture et le correcteur orthographique l'utilisent.",
+    "badge_all_app": "Le nombre sur l'icône de la barre des tâches et dans la zone de notification additionne les boîtes de réception de tous les comptes connectés.",
+    "badge_all_browser": "Le nombre sur l'onglet et l'icône de l'application additionne les boîtes de réception de tous les comptes connectés."
+  },
   "sidebar": {
     "close": "Fermer",
     "compose": "Composer",

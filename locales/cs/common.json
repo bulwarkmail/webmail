@@ -109,6 +109,18 @@
     "code_label": "Ověřovací kód",
     "verify": "Ověřit"
   },
+  "ux_p3_words": {
+    "appearance_description": "Změňte vzhled aplikace {appName}.",
+    "text_size_app": "Mění velikost veškerého textu v aplikaci. 100 % je běžná velikost.",
+    "scrollbars_app": "Používá posuvníky systému, které jsou širší a snáz se uchopí.",
+    "voice_app": "Hlas, který čte zprávy nahlas. Seznam ukazuje hlasy, které má tento počítač pro jazyk rozhraní.",
+    "voice_default_app": "Hlas systému",
+    "visual_alerts_app": "Při nové poště nebo připomínce pomalu bliká titulkem okna a nechává připomínky na obrazovce, dokud je nezavřete.",
+    "sounds_link_app": "Zvuky oznámení a počet nepřečtených na ikoně na hlavním panelu nastavíte na stránce Oznámení.",
+    "writing_language_app": "Jazyk, ve kterém obvykle píšete. Používá ho korektura i kontrola pravopisu.",
+    "badge_all_app": "Číslo na ikoně na hlavním panelu a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů.",
+    "badge_all_browser": "Číslo na kartě a na ikoně aplikace sčítá doručené složky všech přihlášených účtů."
+  },
   "sidebar": {
     "close": "Zavřít",
     "compose": "Napsat",

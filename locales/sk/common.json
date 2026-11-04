@@ -109,6 +109,18 @@
     "code_label": "Overovací kód",
     "verify": "Overiť"
   },
+  "ux_p3_words": {
+    "appearance_description": "Zmeňte vzhľad aplikácie {appName}.",
+    "text_size_app": "Mení veľkosť celého textu v aplikácii. 100 % je bežná veľkosť.",
+    "scrollbars_app": "Používa posúvače systému, ktoré sú širšie a ľahšie sa chytajú.",
+    "voice_app": "Hlas, ktorý číta správy nahlas. Zoznam ukazuje hlasy, ktoré má tento počítač pre jazyk rozhrania.",
+    "voice_default_app": "Hlas systému",
+    "visual_alerts_app": "Pri novej pošte alebo pripomienke pomaly bliká titulkom okna a necháva pripomienky na obrazovke, kým ich nezavriete.",
+    "sounds_link_app": "Zvuky upozornení a počet neprečítaných na ikone na paneli úloh nastavíte na stránke Upozornenia.",
+    "writing_language_app": "Jazyk, v ktorom zvyčajne píšete. Používa ho korektúra aj kontrola pravopisu.",
+    "badge_all_app": "Číslo na ikone na paneli úloh a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov.",
+    "badge_all_browser": "Číslo na karte a na ikone aplikácie sčítava doručenú poštu všetkých prihlásených účtov."
+  },
   "sidebar": {
     "unified_mailbox": "Zjednotená schránka",
     "close": "Zavrieť",

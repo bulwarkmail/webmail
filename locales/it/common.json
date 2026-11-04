@@ -109,6 +109,18 @@
     "code_label": "Codice di autenticazione",
     "verify": "Verifica"
   },
+  "ux_p3_words": {
+    "appearance_description": "Cambia l'aspetto di {appName}.",
+    "text_size_app": "Ridimensiona tutto il testo dell'app. 100% è la dimensione normale.",
+    "scrollbars_app": "Usa le barre di scorrimento del sistema, più larghe e facili da afferrare.",
+    "voice_app": "La voce che legge i messaggi ad alta voce. L'elenco mostra le voci di questo computer per la lingua dell'interfaccia.",
+    "voice_default_app": "Voce di sistema",
+    "visual_alerts_app": "Fa lampeggiare lentamente il titolo della finestra quando arriva nuova posta o un promemoria, e tiene i promemoria sullo schermo finché non li chiudi.",
+    "sounds_link_app": "I suoni delle notifiche e il numero di non letti sull'icona della barra delle applicazioni si impostano nella pagina Notifiche.",
+    "writing_language_app": "La lingua in cui scrivi di solito. La revisione e il controllo ortografico la usano.",
+    "badge_all_app": "Il numero sull'icona della barra delle applicazioni e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "badge_all_browser": "Il numero sulla scheda e sull'icona dell'app somma le caselle di posta in arrivo di tutti gli account collegati."
+  },
   "sidebar": {
     "close": "Chiudi",
     "compose": "Scrivi",

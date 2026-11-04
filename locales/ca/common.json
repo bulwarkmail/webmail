@@ -109,6 +109,18 @@
     "code_label": "Codi d'autenticació",
     "verify": "Verifica"
   },
+  "ux_p3_words": {
+    "appearance_description": "Canvieu l'aspecte de {appName}.",
+    "text_size_app": "Escala tot el text de l'aplicació. El 100% és la mida normal.",
+    "scrollbars_app": "Fa servir les barres de desplaçament del sistema, que són més amples i fàcils d'agafar.",
+    "voice_app": "La veu que llegeix els missatges en veu alta. La llista mostra les veus que té aquest ordinador per a l'idioma de la interfície.",
+    "voice_default_app": "Veu del sistema",
+    "visual_alerts_app": "Fa parpellejar lentament el títol de la finestra quan arriba correu nou o un recordatori, i manté els recordatoris a la pantalla fins que els tanqueu.",
+    "sounds_link_app": "Els sons de notificació i el nombre de no llegits a la icona de la barra de tasques es configuren a la pàgina Notificacions.",
+    "writing_language_app": "L'idioma en què escriviu normalment. La revisió i el corrector ortogràfic el fan servir.",
+    "badge_all_app": "El número de la icona de la barra de tasques i de la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
+    "badge_all_browser": "El número de la pestanya i de la icona de l'aplicació suma les safates d'entrada de tots els comptes amb la sessió iniciada."
+  },
   "sidebar": {
     "close": "Tanca",
     "compose": "Redacta",
