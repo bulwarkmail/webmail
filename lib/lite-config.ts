@@ -89,6 +89,7 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginShowSubtitle: bool(input.loginShowSubtitle, true),
     loginShowTotp: bool(input.loginShowTotp, true),
     loginShowTokenLogin: bool(input.loginShowTokenLogin, false),
+    desktopBrowserSignIn: false,
     loginShowRememberMe: bool(input.loginShowRememberMe, false),
     loginShowVersion: bool(input.loginShowVersion, true),
     demoMode: bool(input.demoMode, false),

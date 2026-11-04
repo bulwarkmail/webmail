@@ -1,8 +1,9 @@
 /**
  * Plugin secrets of an account the app dropped, in the desktop app, where they sit
- * on this device's own server. The account has no cookie left to ask with, so the
- * route takes who it was, from what was written down at the time. On an instance
- * they aren't the device's to remove, and nothing is written down.
+ * on this device's own server. The account has no session cookie left to ask with, so
+ * the route takes who it was, from what was written down at the time, with the proof
+ * the account got while it was signed in. On an instance they aren't the device's to
+ * remove, and nothing is written down.
  */
 
 import { apiFetch } from '@/lib/browser-navigation';

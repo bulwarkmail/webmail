@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationSettings } from '../notification-settings';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -133,6 +133,25 @@ describe('NotificationSettings - pushNotifyInboxOnly', () => {
 
     // Give any effect a chance to fire.
     await Promise.resolve();
+    expect(webPush.enableWebPush).not.toHaveBeenCalled();
+  });
+});
+
+describe('NotificationSettings - demo mode', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ client: fakeClient, username: 'me@example.com', isDemoMode: true });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    useAuthStore.setState({ isDemoMode: false });
+  });
+
+  it('says push is not available and offers no switch that would call the relay', async () => {
+    const { findByText, getAllByRole } = render(<NotificationSettings />);
+    await findByText('push.status_demo');
+    const pushSwitch = getAllByRole('switch').find((el) => (el as HTMLButtonElement).disabled);
+    expect(pushSwitch).toBeTruthy();
     expect(webPush.enableWebPush).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import { render, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useWopiStatus } from '@/hooks/use-wopi-status';
 import { WopiEditor } from '@/components/files/wopi-editor';
+import { useAuthStore } from '@/stores/auth-store';
 
 // Behind a reverse proxy at a sub-path (e.g. /webmail) a bare
 // fetch('/api/...') reaches the mail server instead of the webmail and comes
@@ -26,9 +27,9 @@ afterEach(() => {
 
 describe('WOPI requests under a sub-path mount', () => {
   it('probes the editor status under the mount prefix', async () => {
+    useAuthStore.setState({ isAuthenticated: true, client: {} as never });
     renderHook(() => useWopiStatus(true));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(fetchMock.mock.calls[0][0]).toBe('/webmail/api/wopi/status');
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/webmail/api/wopi/status', undefined));
   });
 
   it('launches the editor under the mount prefix', async () => {

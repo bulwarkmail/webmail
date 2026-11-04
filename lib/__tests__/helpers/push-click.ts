@@ -5,7 +5,7 @@ import vm from 'node:vm';
 export async function pushClick(
   accountId: string,
   preview: (url: string) => Promise<unknown>,
-  options: { warm?: boolean; basePath?: string; legacy?: boolean; emailId?: string; noParamsSize?: boolean } = {},
+  options: { warm?: boolean; basePath?: string; legacy?: boolean; emailId?: string; noParamsSize?: boolean; onScreen?: string[] } = {},
 ): Promise<string> {
   const source = readFileSync(resolve('public/sw.js'), 'utf8');
   let notification: { data: unknown } | undefined;
@@ -33,7 +33,7 @@ export async function pushClick(
       },
       registration: {
         showNotification: async (_title: string, data: { data: unknown }) => { notification = data; },
-        getNotifications: async () => [],
+        getNotifications: async () => (options.onScreen?.length ? [{ data: { ids: options.onScreen } }] : []),
       },
     },
     caches: { open: async () => ({

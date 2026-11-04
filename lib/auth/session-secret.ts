@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { configManager } from '@/lib/admin/config-manager';
+import { desktopServerSecret } from '@/lib/desktop/server-secrets';
 import { ensureStateDir, getStatePath } from '@/lib/admin/paths';
 import { readFileEnv } from '@/lib/read-file-env';
 import { getStore, isSharedMode } from '@/lib/shared-store';
@@ -25,6 +26,9 @@ function sharedSecret(): string {
 
 /** A secret the operator set: env, file, or the setup wizard's config. */
 function configuredSessionSecret(): string {
+  const fromShell = desktopServerSecret('sessionSecret');
+  if (fromShell) return fromShell;
+
   const fromEnv = process.env.SESSION_SECRET;
   if (fromEnv) return fromEnv;
 

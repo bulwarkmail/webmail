@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -118,6 +118,36 @@ describe('standalone guard check', () => {
     put(dir, 'worktrees/webmail/server.js');
     put(dir, 'worktrees/webmail/data/admin/plugin-signing.key');
     expect(findForbidden(dir)).toEqual(['worktrees/webmail/data/']);
+  });
+
+  it('goes by the name in any case, as a case-insensitive disk and Docker context would', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.ENV', 'SECRET=1');
+    put(dir, 'Plugin-Signing.KEY', 'SECRET=1');
+    put(dir, 'Data/admin.json');
+    put(dir, 'LOCAL-DATA/a');
+    put(dir, 'Repos/a');
+    expect(findForbidden(dir)).toEqual(['.ENV', 'Data/', 'LOCAL-DATA/', 'Plugin-Signing.KEY', 'Repos/']);
+  });
+
+  it('refuses a link: it would ship whatever it points at', () => {
+    const dir = tempDir();
+    const outside = tempDir();
+    put(outside, 'admin.json');
+    put(dir, 'server.js');
+    symlinkSync(outside, path.join(dir, 'state'), 'junction');
+    expect(findForbidden(dir)).toEqual(['state (link)']);
+  });
+
+  it('leaves the links of .next and node_modules alone: Turbopack makes those on purpose', () => {
+    const dir = tempDir();
+    const outside = tempDir();
+    put(dir, 'node_modules/a/index.js');
+    mkdirSync(path.join(dir, '.next', 'node_modules'), { recursive: true });
+    symlinkSync(path.join(dir, 'node_modules', 'a'), path.join(dir, '.next', 'node_modules', 'a-1234'), 'junction');
+    symlinkSync(outside, path.join(dir, 'node_modules', 'b'), 'junction');
+    expect(findForbidden(dir)).toEqual([]);
   });
 
   it('removes the .env files Next copies next to server.js, then passes', () => {

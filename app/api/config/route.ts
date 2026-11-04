@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
       loginShowSubtitle: configManager.get<boolean>('loginShowSubtitle', true),
       loginShowTotp: configManager.get<boolean>('loginShowTotp', true),
       loginShowTokenLogin: configManager.get<boolean>('loginShowTokenLogin', false),
+      desktopBrowserSignIn: configManager.get<boolean>('desktopBrowserSignIn', true),
       loginShowRememberMe: configManager.get<boolean>('loginShowRememberMe', false),
       loginShowVersion: configManager.get<boolean>('loginShowVersion', true),
       demoMode: configManager.get<boolean>('demoMode', false),

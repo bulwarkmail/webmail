@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { applyControlsArea, watchTitlebarArea, watchWindowRows, type TitlebarArea } from "@/lib/window-controls-overlay";
+import { claimBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 
 /**
  * The window's controls over the app, with no title bar row: see
@@ -10,6 +11,9 @@ import { applyControlsArea, watchTitlebarArea, watchWindowRows, type TitlebarAre
  * (admin, setup) get it too; there are no messages up there.
  */
 export function WindowControlsHost() {
+  // In the first render of every page, before any frame exists: a frame can reach the
+  // bridge, and whoever comes after this gets nothing.
+  if (typeof window !== "undefined") claimBrowserSignIn();
   const [area, setArea] = useState<TitlebarArea | null>(null);
 
   useEffect(() => watchTitlebarArea((next) => {

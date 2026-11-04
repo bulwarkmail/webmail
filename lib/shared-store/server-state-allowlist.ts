@@ -45,6 +45,7 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/auth/client-address.ts#NOT_A_CLIENT', class: 'per-process', why: 'a constant address list built once' },
   { site: 'lib/auth/handoff-store.ts#createBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/handoff-store.ts#redeemBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
+  { site: 'lib/auth/handoff-store.ts#desktopParkBudget', class: 'store-backed', why: 'createFailureBudget: shared counters in shared mode' },
   { site: 'lib/auth/session-age.ts#missingSecretLogged', class: 'per-process', why: 'log once per process' },
   { site: 'lib/auth/session-secret.ts#globalThis:SHARED_CACHE', class: 'store-backed', why: 'the generated secret read from the store at boot; it never changes' },
   { site: 'lib/auth/stalwart-password-login.ts#defaultClients', class: 'cache', why: 'Stalwart\'s public client id, 10 min; registration is deterministic' },

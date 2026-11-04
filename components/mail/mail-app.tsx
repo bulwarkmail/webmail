@@ -129,6 +129,7 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick-reply";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { isPhishingMarked } from "@/lib/phishing-links";
+import { phishingMarkedNow } from "@/hooks/use-phishing-report";
 import { automaticLabel, classifyOutgoing, labelSourceHeaders, reopenedLabelChoice } from "@/lib/outgoing/classification";
 import enMessages from "@/locales/en/common.json";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
@@ -1481,6 +1482,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       bcc: selectedEmail.bcc,
       deliveredTo: deliveryAddresses(selectedEmail.headers),
       subject: selectedEmail.subject,
+      phishingMarked: phishingMarkedNow(selectedEmail),
       ...getQuoteBodies(selectedEmail),
       receivedAt: selectedEmail.receivedAt,
       // The login that holds the message, so the reply defaults to that
@@ -3214,6 +3216,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         attachments: [payload.attachment],
         headers: labelSourceHeaders(email.headers),
         originalFrom: email.from,
+        // The login holding the message, whose blob this attachment is.
+        accountId: email.sourceClientAccountId ?? viewingAccountId ?? undefined,
       },
     });
     setComposerMode('forward');
@@ -5188,6 +5192,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           bcc: composerSourceEmail.bcc,
           deliveredTo: deliveryAddresses(composerSourceEmail.headers),
           subject: composerSourceEmail.subject,
+          phishingMarked: phishingMarkedNow(composerSourceEmail),
           ...getQuoteBodies(composerSourceEmail),
           receivedAt: composerSourceEmail.receivedAt,
           // The login that holds the message, so the reply

@@ -6,6 +6,7 @@ import {
 } from '@/lib/security/url-guard';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
 import { observeUpstream } from '@/lib/metrics/upstream';
+import { desktopRedirectRefused } from '@/lib/desktop/server-redirect';
 
 const VERIFY_TIMEOUT_MS = 10000;
 const MAX_REDIRECTS = 3;
@@ -453,7 +454,11 @@ async function fetchVerifiedSession(
         if (!location) {
           throw new JmapAuthVerificationError('Failed to verify JMAP session', 502);
         }
-        currentUrl = new URL(location, currentUrl).toString();
+        const next = new URL(location, currentUrl).toString();
+        if (desktopRedirectRefused(currentUrl, next, options.trusted === true)) {
+          throw new JmapAuthVerificationError('The mail server redirected to a server that has not been approved', 502);
+        }
+        currentUrl = next;
         continue;
       }
       break;

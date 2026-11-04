@@ -265,6 +265,7 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
   const registration = await pushRegistration();
   const subscription = await registration?.pushManager?.getSubscription();
   await subscription?.unsubscribe();
+  removeLocalKeys([], ['bulwark.push.']);
 }
 
 /** With nobody left after this there's nothing to lock for, and a next person shouldn't meet it. */
@@ -274,12 +275,13 @@ async function forgetLockIfNobodyStays(leaving: string | null): Promise<void> {
 }
 
 /** What's the account's own: a deletion after a refused login goes no further than this. */
-async function scrubAccount(account: string): Promise<void> {
-  await runWipeCleaners(account);
+async function scrubAccount(account: string): Promise<boolean> {
+  const complete = await runWipeCleaners(account);
   await forgetLocalImportOf(account).catch(() => {});
   await forgetPluginAccounts(account).catch(() => {});
   clearPluginStorageForAccount(account);
   forgetMailSnapshot(account);
+  return complete;
 }
 
 /** Everything accounts share, or that can't be told apart by account. */
@@ -418,7 +420,8 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   }
   clearEvicted(account);
   dropRefusedLogin(account);
-  await scrubAccount(account).catch(() => {});
+  // A copy a program still holds: tried again at the next start, like the store.
+  if (!(await scrubAccount(account).catch(() => true))) deleted = false;
   if (!ownOnly) await scrubShared().catch(() => {});
 
   await deleteDeviceRecord(account).catch(() => {});
@@ -478,11 +481,11 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   }
 
   confirmLoss('all');
-  await runWipeCleaners(null);
+  const cleaned = await runWipeCleaners(null);
   await forgetPluginAccounts(null).catch(() => {});
   clearAllPluginStorage();
   await scrubShared().catch(() => {});
-  let deleted = true;
+  let deleted = cleaned;
   await wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);

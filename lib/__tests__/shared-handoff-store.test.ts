@@ -109,3 +109,43 @@ describe('mobile hand-off with a shared store', () => {
     expect(await (await replica()).redeemHandoff(code, VERIFIER, T0 + 2)).toMatchObject({ ok: true });
   });
 });
+
+describe('what a shared store holds after a sign-in stops being any use', () => {
+  const key = (code: string) => 'handoff:' + createHash('sha256').update(code).digest('hex');
+  const DESKTOP = { flow: 'desktop-tokens' as const, server_url: 'https://mail.example.org', server_id: null, custom: false, access_token: 'a', refresh_token: 'r', expires_in: 60, signed_in_at: 1 };
+
+  it('a record with a sign-in in it is gone from the store at its real expiry, and a late code is still told so', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(T0);
+    const { stashHandoff, redeemHandoff, HANDOFF_TTL_MS } = await replica();
+    const code = await stashHandoff(PASSWORD_BUNDLE, { challenge: CHALLENGE, state: 's' }, T0);
+    expect(await getStore().kv.get(key(code))).not.toBeNull();
+    vi.setSystemTime(T0 + HANDOFF_TTL_MS + 1);
+    expect(await getStore().kv.get(key(code))).toBeNull();
+    expect(await redeemHandoff(code, VERIFIER, T0 + HANDOFF_TTL_MS + 1)).toEqual({ ok: false, reason: 'expired' });
+    vi.useRealTimers();
+  });
+
+  it('a confirmed code stays no longer than its 60 seconds', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(T0);
+    const { stashHandoff, confirmHandoff, HANDOFF_TTL_MS } = await replica();
+    const code = await stashHandoff(DESKTOP, { challenge: CHALLENGE, state: 's', awaitConfirm: true }, T0);
+    expect(await confirmHandoff(code, T0)).toBe(true);
+    vi.setSystemTime(T0 + HANDOFF_TTL_MS + 1);
+    expect(await getStore().kv.get(key(code))).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('a discard takes the sign-in out at once, gives it back once, and only the desktop\'s', async () => {
+    const { stashHandoff, discardDesktopHandoff, redeemHandoff } = await replica();
+    const code = await stashHandoff(DESKTOP, { challenge: CHALLENGE, state: 's', awaitConfirm: true });
+    const other = await replica();
+    expect(await other.discardDesktopHandoff(code)).toMatchObject({ refresh_token: 'r' });
+    expect(await discardDesktopHandoff(code)).toBeNull();
+    expect((await redeemHandoff(code, VERIFIER)).ok).toBe(false);
+    const phone = await stashHandoff(PASSWORD_BUNDLE, { challenge: CHALLENGE, state: 's' });
+    expect(await discardDesktopHandoff(phone)).toBeNull();
+    expect((await redeemHandoff(phone, VERIFIER)).ok).toBe(true);
+  });
+});
