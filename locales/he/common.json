@@ -7068,7 +7068,12 @@
     "reserved": "המערכת או רוב האפליקציות משתמשות במקשים האלה. נסו מקשים אחרים."
   },
   "compose_windows": {
-    "more_formatting": "עוד עיצוב"
+    "more_formatting": "עוד עיצוב",
+    "offline": "אין חיבור",
+    "offline_hint": "כדי לשלוח צריך חיבור.",
+    "offline_hint_outbox": "מה ששולחים עכשיו ממתין בתיבת הדואר היוצא ונשלח כשחוזרים לרשת.",
+    "offline_send_saved": "אין חיבור. ההודעה שמורה בטיוטות.",
+    "offline_send_unsaved": "אין חיבור. ההודעה נשארת כאן ותישמר בטיוטות כשתחזרו לרשת."
   },
   "desktopReminders": {
     "generic_title": "תזכורת",

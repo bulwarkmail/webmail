@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextIntlClientProvider } from 'next-intl';
 import { EmailComposer, type ComposerDraftData, type ComposerPopOut } from '../email-composer';
@@ -362,5 +362,24 @@ describe('a composer that is all its window shows', () => {
     const saved = creations.length;
     expect(unload().defaultPrevented).toBe(false);
     expect(creations).toHaveLength(saved);
+  });
+});
+
+describe('back online', () => {
+  it('saves what could not be saved while offline, so "saved in Drafts once you are back online" holds', async () => {
+    let onLine = true;
+    vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => onLine);
+    rejectSave = true;
+    mount({});
+    onLine = false;
+    act(() => { window.dispatchEvent(new Event('offline')); });
+    fireEvent.change(subjectField(), { target: { value: 'Written on a train' } });
+    await waitFor(() => expect(creations).toHaveLength(1), { timeout: 4000 });
+
+    rejectSave = false;
+    onLine = true;
+    act(() => { window.dispatchEvent(new Event('online')); });
+    await waitFor(() => expect(creations).toHaveLength(2));
+    expect(creations[1].subject).toBe('Written on a train');
   });
 });

@@ -41,6 +41,7 @@ import {
   Reply,
   Forward,
   BookUser,
+  CloudOff,
 } from "@/components/icons";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
@@ -95,6 +96,9 @@ import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { isStandInId } from "@/lib/jmap/stand-in-ids";
 import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
+import { offlineActive, offlineAllowed } from "@/lib/offline/offline-mode";
+import { useBrowserOnline } from "@/hooks/use-browser-online";
+import { appPath, buildSettingsPath } from "@/lib/deep-links";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -4626,6 +4630,35 @@ export function EmailComposer({
     };
   });
 
+  // Offline. With "Keep mail on this device" on, a send waits in the outbox
+  // and goes out once the server answers again. Without it there is nowhere
+  // safe to keep a message for later: Send says so and the text stays here.
+  const tComposeWindows = useTranslations('compose_windows');
+  const browserOnline = useBrowserOnline();
+  const [offlineSendNotice, setOfflineSendNotice] = useState<'saved' | 'unsaved' | null>(null);
+  const sendOrSayOffline = () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false && !offlineActive(composingAccountId ?? null)) {
+      const saved = !!draftIdRef.current && changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current;
+      setOfflineSendNotice(saved ? 'saved' : 'unsaved');
+      announceStatus(tComposeWindows(saved ? 'offline_send_saved' : 'offline_send_unsaved'));
+      return;
+    }
+    handleSend();
+  };
+  // Back online: the notice goes, and what couldn't be saved meanwhile is saved now.
+  const wasOnlineRef = useRef(browserOnline);
+  useEffect(() => {
+    const cameBack = browserOnline && !wasOnlineRef.current;
+    wasOnlineRef.current = browserOnline;
+    if (!cameBack) return;
+    setOfflineSendNotice(null);
+    if (saveCloseAttemptRef.current || sentRef.current || isSendingRef.current || !isDirtyRef.current) return;
+    if (changeVersionRef.current === savedVersionRef.current && !saveFailedRef.current) return;
+    void saveDraftRef.current({ auto: true });
+  }, [browserOnline]);
+  // Only asked while offline: it reads the organisation's policy and the store's support.
+  const offlineHint = browserOnline ? '' : tComposeWindows(offlineActive(composingAccountId ?? null) ? 'offline_hint_outbox' : 'offline_hint');
+
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
     // Keys from a dialog the composer opened (Insert link, ...) reach here
@@ -4694,7 +4727,7 @@ export function EmailComposer({
       }
 
       e.preventDefault();
-      handleSend();
+      sendOrSayOffline();
       return;
     }
 
@@ -4864,7 +4897,7 @@ export function EmailComposer({
         {phoneLayout && (composerClient?.hasDelayedSend() || hasSendMenuActions ? (
           <div className="relative inline-flex md:hidden">
             <Button
-              onClick={() => handleSend()}
+              onClick={() => sendOrSayOffline()}
               disabled={!canSend || isSending || isSavingAndClosing}
               title={getSendTooltip()}
               size="sm"
@@ -4891,7 +4924,7 @@ export function EmailComposer({
           </div>
         ) : (
           <Button
-            onClick={() => handleSend()}
+            onClick={() => sendOrSayOffline()}
             disabled={!canSend || isSending || isSavingAndClosing}
             title={getSendTooltip()}
             size="sm"
@@ -5541,6 +5574,23 @@ export function EmailComposer({
           </div>
         )}
 
+        {offlineSendNotice && !browserOnline && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted px-4 py-2 text-sm text-foreground" data-testid="composer-offline-notice">
+            <CloudOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="min-w-0">{tComposeWindows(offlineSendNotice === 'saved' ? 'offline_send_saved' : 'offline_send_unsaved')}</span>
+            {offlineAllowed(composingAccountId ?? null) && (
+              <a
+                href={appPath(buildSettingsPath('backup', 'offline'))}
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-primary underline underline-offset-2"
+              >
+                {tOffline('settings.keep_label')}
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Bottom toolbar. In Mountain View's window both halves fold into
             one row (see [data-mv-compose-footer] in globals.css): Send first,
             the tools after it, and Discard as a bin at the far end. */}
@@ -5714,6 +5764,13 @@ export function EmailComposer({
 
           {/* Right side - Discard + Send (desktop) */}
           <div className="flex shrink-0 items-center gap-2">
+            {!browserOnline && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground" title={offlineHint} data-testid="composer-offline">
+                <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+                {tComposeWindows('offline')}
+                <span className="sr-only">{offlineHint}</span>
+              </span>
+            )}
             {mvWindow ? (
               <button
                 type="button"
@@ -5744,7 +5801,7 @@ export function EmailComposer({
             {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
               <div data-mv-send={mvWindow ? "" : undefined} className={cn("relative", phoneLayout ? "hidden md:inline-flex" : "inline-flex")}>
                 <Button
-                  onClick={() => handleSend()}
+                  onClick={() => sendOrSayOffline()}
                   disabled={!canSend || isSending || isSavingAndClosing}
                   title={getSendTooltip()}
                   data-testid="composer-send"
@@ -5769,7 +5826,7 @@ export function EmailComposer({
               </div>
             ) : (
               <Button
-                onClick={() => handleSend()}
+                onClick={() => sendOrSayOffline()}
                 disabled={!canSend || isSending || isSavingAndClosing}
                 title={getSendTooltip()}
                 data-testid="composer-send"

@@ -7067,7 +7067,12 @@
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
   "compose_windows": {
-    "more_formatting": "Ďalšie formátovanie"
+    "more_formatting": "Ďalšie formátovanie",
+    "offline": "Offline",
+    "offline_hint": "Na odoslanie treba pripojenie.",
+    "offline_hint_outbox": "Čo teraz odošlete, počká medzi správami na odoslanie a odíde, keď budete znova online.",
+    "offline_send_saved": "Ste offline. Správa je uložená v Konceptoch.",
+    "offline_send_unsaved": "Ste offline. Správa tu zostane a uloží sa do Konceptov, keď budete znova online."
   },
   "desktopReminders": {
     "generic_title": "Pripomienka",

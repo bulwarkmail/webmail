@@ -7067,7 +7067,12 @@
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
   },
   "compose_windows": {
-    "more_formatting": "추가 서식"
+    "more_formatting": "추가 서식",
+    "offline": "오프라인",
+    "offline_hint": "보내려면 연결이 필요합니다.",
+    "offline_hint_outbox": "지금 보내는 메일은 보낼편지함에서 기다리다가 다시 온라인이 되면 전송됩니다.",
+    "offline_send_saved": "오프라인 상태입니다. 메시지는 임시보관함에 저장되어 있습니다.",
+    "offline_send_unsaved": "오프라인 상태입니다. 메시지는 여기에 남아 있으며 다시 온라인이 되면 임시보관함에 저장됩니다."
   },
   "desktopReminders": {
     "generic_title": "알림",

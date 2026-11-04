@@ -7067,7 +7067,12 @@
     "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
   },
   "compose_windows": {
-    "more_formatting": "更多格式"
+    "more_formatting": "更多格式",
+    "offline": "离线",
+    "offline_hint": "发送需要联网。",
+    "offline_hint_outbox": "你现在发送的邮件会在发件箱中等待，恢复联网后发出。",
+    "offline_send_saved": "你已离线。邮件已保存在草稿中。",
+    "offline_send_unsaved": "你已离线。邮件会留在这里，恢复联网后保存到草稿。"
   },
   "desktopReminders": {
     "generic_title": "提醒",

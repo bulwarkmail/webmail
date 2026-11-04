@@ -7067,7 +7067,12 @@
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
   "compose_windows": {
-    "more_formatting": "Mai multe opțiuni de formatare"
+    "more_formatting": "Mai multe opțiuni de formatare",
+    "offline": "Offline",
+    "offline_hint": "Pentru trimitere e nevoie de conexiune.",
+    "offline_hint_outbox": "Ce trimiteți acum așteaptă în Mesaje de trimis și pleacă atunci când sunteți din nou online.",
+    "offline_send_saved": "Sunteți offline. Mesajul este salvat în Ciorne.",
+    "offline_send_unsaved": "Sunteți offline. Mesajul rămâne aici și este salvat în Ciorne când sunteți din nou online."
   },
   "desktopReminders": {
     "generic_title": "Memento",

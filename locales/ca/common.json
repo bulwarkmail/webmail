@@ -7067,7 +7067,12 @@
     "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
   "compose_windows": {
-    "more_formatting": "Més format"
+    "more_formatting": "Més format",
+    "offline": "Sense connexió",
+    "offline_hint": "Per enviar cal connexió.",
+    "offline_hint_outbox": "El que envieu ara espera a la safata de sortida i s'envia quan torneu a tenir connexió.",
+    "offline_send_saved": "No teniu connexió. El missatge està desat a Esborranys.",
+    "offline_send_unsaved": "No teniu connexió. El missatge es queda aquí i es desa a Esborranys quan torneu a tenir connexió."
   },
   "desktopReminders": {
     "generic_title": "Recordatori",

@@ -7067,7 +7067,12 @@
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
   },
   "compose_windows": {
-    "more_formatting": "更多格式"
+    "more_formatting": "更多格式",
+    "offline": "離線",
+    "offline_hint": "寄出需要連線。",
+    "offline_hint_outbox": "你現在寄出的郵件會在寄件匣中等待，恢復連線後送出。",
+    "offline_send_saved": "你已離線。郵件已儲存在草稿中。",
+    "offline_send_unsaved": "你已離線。郵件會留在這裡，恢復連線後儲存到草稿。"
   },
   "desktopReminders": {
     "generic_title": "提醒",

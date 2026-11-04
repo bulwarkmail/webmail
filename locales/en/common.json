@@ -7067,7 +7067,12 @@
     "reserved": "Your system or most apps use these keys. Try other keys."
   },
   "compose_windows": {
-    "more_formatting": "More formatting"
+    "more_formatting": "More formatting",
+    "offline": "Offline",
+    "offline_hint": "Sending needs a connection.",
+    "offline_hint_outbox": "What you send now waits in the outbox and goes out when you're back online.",
+    "offline_send_saved": "You're offline. The message is saved in Drafts.",
+    "offline_send_unsaved": "You're offline. The message stays here and is saved in Drafts when you're back online."
   },
   "desktopReminders": {
     "generic_title": "Reminder",

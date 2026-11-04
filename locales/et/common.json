@@ -7067,7 +7067,12 @@
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
   },
   "compose_windows": {
-    "more_formatting": "Rohkem vormindust"
+    "more_formatting": "Rohkem vormindust",
+    "offline": "Võrguta",
+    "offline_hint": "Saatmiseks on vaja ühendust.",
+    "offline_hint_outbox": "Mida praegu saadad, ootab väljuvate kirjade kastis ja läheb teele, kui oled jälle võrgus.",
+    "offline_send_saved": "Oled võrguta. Kiri on salvestatud mustanditesse.",
+    "offline_send_unsaved": "Oled võrguta. Kiri jääb siia ja salvestatakse mustanditesse, kui oled jälle võrgus."
   },
   "desktopReminders": {
     "generic_title": "Meeldetuletus",

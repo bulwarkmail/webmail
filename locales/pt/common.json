@@ -7067,7 +7067,12 @@
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
   "compose_windows": {
-    "more_formatting": "Mais formatação"
+    "more_formatting": "Mais formatação",
+    "offline": "Offline",
+    "offline_hint": "Enviar precisa de ligação.",
+    "offline_hint_outbox": "O que enviar agora espera na caixa de saída e é enviado quando voltar a estar online.",
+    "offline_send_saved": "Está offline. A mensagem está guardada em Rascunhos.",
+    "offline_send_unsaved": "Está offline. A mensagem fica aqui e é guardada em Rascunhos quando voltar a estar online."
   },
   "desktopReminders": {
     "generic_title": "Lembrete",

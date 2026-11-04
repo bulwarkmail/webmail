@@ -7067,7 +7067,12 @@
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
   "compose_windows": {
-    "more_formatting": "Daha fazla biçimlendirme"
+    "more_formatting": "Daha fazla biçimlendirme",
+    "offline": "Çevrimdışı",
+    "offline_hint": "Göndermek için bağlantı gerekir.",
+    "offline_hint_outbox": "Şimdi gönderdikleriniz giden kutusunda bekler ve yeniden çevrimiçi olduğunuzda gönderilir.",
+    "offline_send_saved": "Çevrimdışısınız. İleti Taslaklar'a kaydedildi.",
+    "offline_send_unsaved": "Çevrimdışısınız. İleti burada kalır ve yeniden çevrimiçi olduğunuzda Taslaklar'a kaydedilir."
   },
   "desktopReminders": {
     "generic_title": "Anımsatıcı",

@@ -7067,7 +7067,12 @@
     "reserved": "このキーはシステムまたは多くのアプリが使用しています。別のキーをお試しください。"
   },
   "compose_windows": {
-    "more_formatting": "その他の書式"
+    "more_formatting": "その他の書式",
+    "offline": "オフライン",
+    "offline_hint": "送信には接続が必要です。",
+    "offline_hint_outbox": "今送信したものは送信トレイで待機し、オンラインに戻ると送信されます。",
+    "offline_send_saved": "オフラインです。メッセージは下書きに保存されています。",
+    "offline_send_unsaved": "オフラインです。メッセージはここに残り、オンラインに戻ると下書きに保存されます。"
   },
   "desktopReminders": {
     "generic_title": "リマインダー",

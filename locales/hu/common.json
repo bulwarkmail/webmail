@@ -7067,7 +7067,12 @@
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
   "compose_windows": {
-    "more_formatting": "További formázás"
+    "more_formatting": "További formázás",
+    "offline": "Offline",
+    "offline_hint": "A küldéshez kapcsolat kell.",
+    "offline_hint_outbox": "Amit most elküld, a postázandók között vár, és elmegy, amint újra online lesz.",
+    "offline_send_saved": "Offline állapotban van. Az üzenet a Piszkozatok között van mentve.",
+    "offline_send_unsaved": "Offline állapotban van. Az üzenet itt marad, és a Piszkozatok közé kerül, amint újra online lesz."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",
