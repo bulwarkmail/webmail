@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "زمان‌بندی ارسال",
-    "schedule_send_description": "زمان انتشار پیام توسط سرور را انتخاب کنید.",
+    "schedule_send_description": "زمان ارسال را انتخاب کنید.",
     "schedule_preset": {
       "this_morning": "امروز صبح",
       "this_afternoon": "امروز بعدازظهر",
@@ -1162,6 +1162,7 @@
       "edit_link": "ویرایش پیوند",
       "remove_link": "حذف پیوند",
       "link_address": "نشانی پیوند",
+      "link_text": "متن",
       "link_invalid": "نشانی نباید فاصله داشته باشد",
       "table": "جدول",
       "clear_formatting": "پاک کردن قالب‌بندی",
@@ -4056,6 +4057,9 @@
     "sending": "در حال ارسال…",
     "sent": "ارسال شد",
     "view": "مشاهده",
+    "template_saved": "الگو ذخیره شد",
+    "schedule_anyway": "زمان‌بندی به هر حال",
+    "schedule_warnings_title": "این پیام به هر حال زمان‌بندی شود؟",
     "picker_button": "افزودن از مخاطبین",
     "picker_title": "افزودن گیرندگان",
     "tab_contacts": "مخاطبین",

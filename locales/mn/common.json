@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "Хуваарь илгээх",
-    "schedule_send_description": "Сервер энэ мессежийг хэзээ гаргахыг сонгоно уу.",
+    "schedule_send_description": "Хэзээ илгээхээ сонгоно уу.",
     "schedule_preset": {
       "this_morning": "Өнөө өглөө",
       "this_afternoon": "Өнөөдөр үдээс хойш",
@@ -1162,6 +1162,7 @@
       "edit_link": "Холбоос засах",
       "remove_link": "Холбоос хасах",
       "link_address": "Холбоосын хаяг",
+      "link_text": "Текст",
       "link_invalid": "Хаяг хоосон зай агуулж болохгүй",
       "table": "Хүснэгт",
       "clear_formatting": "Форматыг арилгах",
@@ -4056,6 +4057,9 @@
     "sending": "Илгээж байна…",
     "sent": "Илгээгдлээ",
     "view": "Харах",
+    "template_saved": "Загвар хадгалагдлаа",
+    "schedule_anyway": "Ямар ч байсан хуваарьт оруулах",
+    "schedule_warnings_title": "Энэ захиаг ямар ч байсан хуваарьт оруулах уу?",
     "picker_button": "Харилцагчдаас нэмэх",
     "picker_title": "Хүлээн авагч нэмэх",
     "tab_contacts": "Харилцагчид",

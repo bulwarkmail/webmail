@@ -85,3 +85,18 @@ describe('quick reply wording', () => {
     expect(onReply).toHaveBeenCalledWith('Thanks, will do');
   });
 });
+
+// compose-p2-17: the toasts lift over the box by its height (toast.tsx).
+describe('quick reply box and the toasts', () => {
+  it('marks the box and gives the page its height, and takes both back when it goes', async () => {
+    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(96);
+    const { unmount } = render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} onReply={vi.fn()} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+
+    expect(document.querySelector('[data-quick-reply-box]')).not.toBeNull();
+    expect(document.documentElement.style.getPropertyValue('--quick-reply-height')).toBe('96px');
+    unmount();
+    expect(document.documentElement.style.getPropertyValue('--quick-reply-height')).toBe('');
+    height.mockRestore();
+  });
+});

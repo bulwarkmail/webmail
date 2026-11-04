@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "Planlegg sending",
-    "schedule_send_description": "Velg når serveren skal sende denne meldingen.",
+    "schedule_send_description": "Velg når den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag tidlig",
       "this_afternoon": "I ettermiddag",
@@ -1162,6 +1162,7 @@
       "edit_link": "Rediger lenke",
       "remove_link": "Fjern lenke",
       "link_address": "Lenkeadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen kan ikke inneholde mellomrom",
       "table": "Tabell",
       "clear_formatting": "Fjern formatering",
@@ -4056,6 +4057,9 @@
     "sending": "Sender…",
     "sent": "Sendt",
     "view": "Vis",
+    "template_saved": "Mal lagret",
+    "schedule_anyway": "Planlegg likevel",
+    "schedule_warnings_title": "Planlegge denne meldingen likevel?",
     "picker_button": "Legg til fra kontakter",
     "picker_title": "Legg til mottakere",
     "tab_contacts": "Kontakter",

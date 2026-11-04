@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "Ajasta saatmine",
-    "schedule_send_description": "Vali, millal server peaks selle sõnumi välja saatma.",
+    "schedule_send_description": "Vali, millal see saata.",
     "schedule_preset": {
       "this_morning": "Täna hommikul",
       "this_afternoon": "Täna pärastlõunal",
@@ -1162,6 +1162,7 @@
       "edit_link": "Muuda linki",
       "remove_link": "Eemalda link",
       "link_address": "Lingi aadress",
+      "link_text": "Tekst",
       "link_invalid": "Aadressis ei tohi olla tühikuid",
       "table": "Tabel",
       "clear_formatting": "Eemalda vormindus",
@@ -4056,6 +4057,9 @@
     "sending": "Saatmine…",
     "sent": "Saadetud",
     "view": "Vaata",
+    "template_saved": "Mall salvestatud",
+    "schedule_anyway": "Ajasta ikkagi",
+    "schedule_warnings_title": "Kas ajastada see kiri ikkagi?",
     "picker_button": "Lisa kontaktidest",
     "picker_title": "Lisa saajaid",
     "tab_contacts": "Kontaktid",

@@ -1,4 +1,4 @@
-import { act, createEvent, fireEvent, render, screen } from '@testing-library/react';
+import { act, createEvent, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -332,7 +332,7 @@ describe('composer-send-menu', () => {
   });
 
   // compose-23: a menu with "Schedule send" as its only item.
-  it('opens the schedule dialog straight from the arrow when it is the only entry', () => {
+  it('opens the schedule dialog straight from the arrow when it is the only entry', async () => {
     useAuthStore.setState({
       client: { hasDelayedSend: () => true, getMaxDelayedSend: () => 30 * 86400, createDraft: vi.fn() } as never,
     });
@@ -343,7 +343,24 @@ describe('composer-send-menu', () => {
     fireEvent.click(arrow);
 
     expect(screen.queryByRole('menuitem', { name: /schedule_send/ })).toBeNull();
-    expect(screen.getByRole('dialog')).toHaveTextContent('schedule_send_description');
+    // After the send checks, which found nothing here (compose-p2-14).
+    expect(await screen.findByRole('dialog')).toHaveTextContent('schedule_send_description');
+  });
+
+  // compose-p2-14: the checks opened on top of the picked time and said
+  // "Send anyway" though nothing was sent then.
+  it('runs the send checks before the schedule dialog, and says "Schedule anyway"', async () => {
+    useAuthStore.setState({
+      client: { hasDelayedSend: () => true, getMaxDelayedSend: () => 30 * 86400, createDraft: vi.fn() } as never,
+    });
+    render(<EmailComposer initialData={{ ...DRAFT, subject: '' }} onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'schedule_send' })[0]);
+    const warnings = await screen.findByRole('alertdialog');
+    expect(screen.queryByText('schedule_send_description')).toBeNull();
+    fireEvent.click(within(warnings).getByRole('button', { name: 'schedule_anyway' }));
+
+    expect(await screen.findByText('schedule_send_description')).toBeInTheDocument();
   });
 
   it('keeps a plain Send button without plugin entries or scheduled send', () => {

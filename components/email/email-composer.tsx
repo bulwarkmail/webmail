@@ -70,10 +70,10 @@ import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
-import { markReplyQuoteHeader } from "@/components/email/reply-quote-collapse";
+import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
-import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-block";
 import {
@@ -413,6 +413,11 @@ interface EmailComposerProps {
   onDiscardDraft?: (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   onSaveState?: (data: ComposerDraftData) => void;
   /**
+   * Undo after the bin: opens a composer again with what this one held. The
+   * draft on the server is still there then.
+   */
+  onRestoreDiscarded?: (data: ComposerDraftData) => void;
+  /**
    * Offers "Open in new window". Called in the click, since a browser only
    * opens a window for a user action: the host opens it and answers with what
    * takes the draft, or null when no window opened. The composer then saves,
@@ -445,6 +450,8 @@ interface EmailComposerProps {
      * this one is gone before a toast here could be read.
      */
     onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /** The bin closed the window: another window says "Draft discarded" with Undo, and deletes it after. */
+    onDraftDiscarded?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
   };
   /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
   onSubjectChange?: (subject: string) => void;
@@ -607,6 +614,7 @@ export function EmailComposer({
   requestCloseRef,
   onDiscardDraft,
   onSaveState,
+  onRestoreDiscarded,
   popOut,
   popOutToMainLabel,
   ownWindow,
@@ -1260,7 +1268,9 @@ export function EmailComposer({
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
   // What the checks before sending found (no subject, no text, placeholders,
   // a missing attachment, open proofreading issues), asked about in one dialog.
-  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string } | null>(null);
+  // `schedule`: asked before the schedule dialog, which opens on "Schedule anyway".
+  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string; schedule?: boolean } | null>(null);
+  const checkThenScheduleRef = useRef<() => void>(() => {});
   // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
@@ -1456,6 +1466,19 @@ export function EmailComposer({
   // when the user switches identity in "above quote" mode without rebuilding
   // the whole body (which would lose user edits to the surrounding draft).
   const editorRef = useRef<Editor | null>(null);
+  // The white space under the text is the message too (compose-p2-9): a
+  // click there puts the caret at the end of the user's text, above a folded
+  // quote and the signature, instead of dropping the focus.
+  const focusBodyFromEmptySpace = (event: React.MouseEvent<HTMLElement>) => {
+    const editor = editorRef.current;
+    const target = event.target as HTMLElement;
+    if (event.button !== 0 || !editor || editor.isDestroyed || !editor.isEditable) return;
+    if (target.closest('.ProseMirror, button, input, textarea, select, a, label, [role="toolbar"], [role="dialog"], [data-plugin-slot]')) return;
+    event.preventDefault();
+    const end = userTextEnd(editor.state);
+    if (end === null) editor.commands.focus('end');
+    else editor.chain().setTextSelection(end).focus().run();
+  };
   // Set while the composer itself swaps the signature in the editor.
   const signatureSwapRef = useRef(false);
   // Set once a reply's body got its initial focus, so switching formats later
@@ -1546,9 +1569,11 @@ export function EmailComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision, autoSignatureEnabled]);
 
+  // The send checks run first, so they don't open on top of the picked time
+  // saying "Send anyway" when nothing is sent now (compose-p2-14).
   const openScheduleDialog = useCallback(() => {
-    setShowScheduleDialog(true);
     closeSendMenu();
+    checkThenScheduleRef.current();
   }, [closeSendMenu]);
 
   // `autoSelectReplyIdentity` fused two behaviours: matching one of the user's
@@ -1843,9 +1868,13 @@ export function EmailComposer({
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
   // "Save as template" keeps it with the account the message is written from.
+  // It says so: the dialog closing was the only sign before (compose-p2-15).
   const addTemplate = useCallback(
-    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => personalTemplatesFor(composingAccountId).add(data),
-    [composingAccountId],
+    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => {
+      personalTemplatesFor(composingAccountId).add(data);
+      toast.success(tSend('template_saved'));
+    },
+    [composingAccountId, tSend],
   );
   // The admin may leave users only organisation and team templates.
   const composingTemplates = useTemplateSources(composingAccountId);
@@ -3837,10 +3866,12 @@ export function EmailComposer({
     else editor.commands.focus();
   };
 
-  const handleSend = async ({ warningsConfirmed = false, delayedUntil }: {
+  const handleSend = async ({ warningsConfirmed = false, delayedUntil, checkOnly = false }: {
     /** "Send anyway" in the warnings dialog: don't check those again. */
     warningsConfirmed?: boolean;
     delayedUntil?: string;
+    /** Only the checks, then the schedule dialog instead of a send. */
+    checkOnly?: boolean;
   } = {}) => {
     if (isSendingRef.current) return;
 
@@ -3987,9 +4018,13 @@ export function EmailComposer({
       }
 
       if (warnings.length > 0) {
-        setSendWarnings({ items: warnings, delayedUntil });
+        setSendWarnings({ items: warnings, delayedUntil, ...(checkOnly ? { schedule: true } : {}) });
         return;
       }
+    }
+    if (checkOnly) {
+      setShowScheduleDialog(true);
+      return;
     }
 
     // Checks other features register (lib/outgoing/send-pipeline.ts), such
@@ -4475,6 +4510,8 @@ export function EmailComposer({
   };
 
 
+  checkThenScheduleRef.current = () => void handleSend({ checkOnly: true });
+
   // A host can hand a follow-up to requestCloseRef - "close this session, then
   // do that". It runs only once the composer really closes, never when the
   // guard dialog is cancelled, and never before onClose has had its say.
@@ -4688,7 +4725,9 @@ export function EmailComposer({
     </button>
   );
 
-  const handleDiscardAndClose = () => {
+  // `keepDraft`: the bin's discard, which deletes the draft once its Undo is
+  // over, not here.
+  const handleDiscardAndClose = ({ keepDraft = false }: { keepDraft?: boolean } = {}) => {
     cancelSaveAndClose();
     sendCancelledRef.current = true;
     explicitCloseRef.current = true;
@@ -4706,7 +4745,7 @@ export function EmailComposer({
     // From belongs to: switching From doesn't move the draft until it is
     // saved again, and the same id names another message on another server.
     const discardedDraftId = draftIdRef.current;
-    if (discardedDraftId && onDiscardDraft) {
+    if (discardedDraftId && onDiscardDraft && !keepDraft) {
       onDiscardDraft(discardedDraftId, {
         accountId: draftAccountIdRef.current,
         localAccountId: draftLocalAccountIdRef.current,
@@ -4742,6 +4781,11 @@ export function EmailComposer({
   // Discard deletes the draft, also one that has no unsaved changes, such as
   // a scheduled message reopened with "Cancel and edit". It used to share the
   // X button's path, which closed such a composer and kept the draft.
+  // It asks nothing (compose-p2-10): the composer goes at once with "Draft
+  // discarded · Undo", as Discard on the "Draft saved" toast does, and the
+  // draft is deleted once Undo is no longer offered. Undo brings the composer
+  // back with its text where the host can; elsewhere the last saved draft
+  // stays in Drafts. A window of its own has the main window say it.
   const handleDiscardClick = () => {
     if (saveCloseAttemptRef.current?.saving) return;
     cancelSaveAndClose();
@@ -4750,7 +4794,22 @@ export function EmailComposer({
       return;
     }
     afterCloseRef.current = null;
-    openCloseDialog('discard');
+    const draftId = draftIdRef.current;
+    const where = { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current };
+    const snapshot = snapshotStateRef.current();
+    const discard = onDiscardDraft;
+    const restore = onRestoreDiscarded;
+    const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
+    handleDiscardAndClose({ keepDraft: true });
+    if (windowDiscarded) {
+      if (draftId) windowDiscarded(draftId, where);
+      return;
+    }
+    discardWithUndo(
+      () => { if (draftId) discard?.(draftId, where); },
+      { discarded: tUx('draft_discarded'), undo: tUx('undo') },
+      restore ? () => restore(snapshot) : undefined,
+    );
   };
 
   // X, Escape, another message, a host's tab: one rule, as drafts save
@@ -4952,7 +5011,8 @@ export function EmailComposer({
         "flex h-full bg-background relative",
         className,
         // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
-        maximized && "fixed inset-0 z-40 h-auto pt-[var(--titlebar-row-height)]",
+        // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
+        maximized && "fixed inset-0 z-50 h-auto pt-[var(--titlebar-row-height)]",
       )}
       data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
@@ -5505,7 +5565,7 @@ export function EmailComposer({
           </div>
       </div>
 
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")}>
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace}>
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
@@ -5637,12 +5697,13 @@ export function EmailComposer({
               </p>
             )}
             <div
-              // Every file shows, wrapping. Past about two rows the list
-              // scrolls by itself: it sits outside the body's scroller and
-              // can't shrink, and a few dozen files pushed Send off the
-              // bottom. Files still uploading or failed come first, so their
-              // progress and errors are never out of sight.
-              className="flex flex-wrap gap-2 max-h-[5.25rem] overflow-y-auto overscroll-contain"
+              // Every file shows, wrapping. Past four rows (two in a short
+              // window) the list scrolls by itself: it sits outside the
+              // body's scroller and can't shrink, and a few dozen files pushed
+              // Send off the bottom. The height is whole rows of 2rem chips
+              // with 0.5rem gaps, so no chip is cut in half (compose-p2-11);
+              // the line above says how many there are. Failed files first.
+              className="flex flex-wrap gap-2 max-h-[4.5rem] [@media(min-height:700px)]:max-h-[9.5rem] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
               data-testid="composer-attachments"
             >
               {attachmentsForDisplay(attachments).map(({ att, index }) => {
@@ -6145,7 +6206,8 @@ export function EmailComposer({
       <ScheduleSendDialog
         isOpen={showScheduleDialog}
         onClose={() => setShowScheduleDialog(false)}
-        onSchedule={(delayedUntil) => handleSend({ delayedUntil })}
+        // Checked before the dialog opened (openScheduleDialog).
+        onSchedule={(delayedUntil) => handleSend({ delayedUntil, warningsConfirmed: true })}
         supported={!!composerClient?.hasDelayedSend()}
         maxDelayedSend={composerClient?.getMaxDelayedSend() ?? 0}
         disabled={!canSend || isSending || isSavingAndClosing}
@@ -6156,6 +6218,7 @@ export function EmailComposer({
 
       <SendWarningsDialog
         warnings={sendWarnings?.items ?? null}
+        scheduling={sendWarnings?.schedule === true}
         onBack={() => {
           const first = sendWarnings?.items[0];
           setSendWarnings(null);
@@ -6173,7 +6236,7 @@ export function EmailComposer({
         }}
         onSendAnyway={(dontAskAgain) => {
           if (!sendWarnings) return;
-          const { items, delayedUntil } = sendWarnings;
+          const { items, delayedUntil, schedule } = sendWarnings;
           for (const warning of items) {
             if (warning.kind === 'subject') {
               emptySubjectConfirmedRef.current = true;
@@ -6188,7 +6251,8 @@ export function EmailComposer({
             }
           }
           setSendWarnings(null);
-          handleSend({ warningsConfirmed: true, delayedUntil });
+          if (schedule) setShowScheduleDialog(true);
+          else handleSend({ warningsConfirmed: true, delayedUntil });
         }}
       />
 
@@ -6204,7 +6268,7 @@ export function EmailComposer({
             <Button variant="outline" onClick={() => dismissCloseDialog()}>
               {t('cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleDiscardAndClose}>
+            <Button variant="destructive" onClick={() => handleDiscardAndClose()}>
               {t('discard')}
             </Button>
             {closeDialogKind === 'close' && (
@@ -6817,6 +6881,14 @@ export function RecipientChipInput({
                 !isEditing && "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
+              // A click opens the chip's menu too (address, Edit, Move to,
+              // Remove), as Gmail and Outlook do; it did nothing visible.
+              onClick={isEditing ? undefined : (e) => {
+                if (e.target instanceof Element && e.target.closest('button')) return;
+                // Not on to the field, whose click puts the caret in the input.
+                e.stopPropagation();
+                openChipMenu(i);
+              }}
               data-invalid={isInvalid || undefined}
               title={isInvalid ? t('invalid_recipient') : undefined}
               role="listitem"
@@ -6933,7 +7005,10 @@ export function RecipientChipInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onBlur={handleBlur}
-            className="flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+            // focus-inset: the keyboard focus ring goes inside the box. Drawn
+            // outside, the field's own scroller cut it to a line along the top
+            // and the end (compose-p2-18, a pop-out focuses To from a key).
+            className="focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"

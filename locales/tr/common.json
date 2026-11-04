@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "Göndermeyi zamanla",
-    "schedule_send_description": "Sunucunun bu iletiyi ne zaman göndereceğini seçin.",
+    "schedule_send_description": "Ne zaman gönderileceğini seçin.",
     "schedule_preset": {
       "this_morning": "Bu sabah",
       "this_afternoon": "Bu öğleden sonra",
@@ -1162,6 +1162,7 @@
       "edit_link": "Bağlantıyı düzenle",
       "remove_link": "Bağlantıyı kaldır",
       "link_address": "Bağlantı adresi",
+      "link_text": "Metin",
       "link_invalid": "Adres boşluk içeremez",
       "table": "Tablo",
       "clear_formatting": "Biçimlendirmeyi temizle",
@@ -4056,6 +4057,9 @@
     "sending": "Gönderiliyor…",
     "sent": "Gönderildi",
     "view": "Görüntüle",
+    "template_saved": "Şablon kaydedildi",
+    "schedule_anyway": "Yine de zamanla",
+    "schedule_warnings_title": "Bu ileti yine de zamanlansın mı?",
     "picker_button": "Kişilerden ekle",
     "picker_title": "Alıcı ekle",
     "tab_contacts": "Kişiler",

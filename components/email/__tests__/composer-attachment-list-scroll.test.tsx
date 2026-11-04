@@ -259,6 +259,16 @@ describe('attachment list', () => {
     expect(row.className).toContain('max-h-[');
   });
 
+  // compose-p2-11: 5.25rem showed two rows of 2rem chips and half a third.
+  it('is as high as whole rows of chips, so none is cut in half', () => {
+    render(<EmailComposer initialData={DRAFT} />);
+
+    const heights = [...chipRow().className.matchAll(/max-h-\[([\d.]+)rem\]/g)].map((m) => Number(m[1]));
+    expect(heights.length).toBeGreaterThan(0);
+    // n rows of 2rem chips with 0.5rem gaps: 2.5n - 0.5.
+    for (const height of heights) expect(Number.isInteger((height + 0.5) / 2.5)).toBe(true);
+  });
+
   it('says how many files and how much they weigh', () => {
     render(<EmailComposer initialData={DRAFT} />);
 

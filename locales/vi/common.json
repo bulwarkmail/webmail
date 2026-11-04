@@ -1125,7 +1125,7 @@
       ]
     },
     "schedule_send": "Lên lịch gửi",
-    "schedule_send_description": "Chọn thời điểm máy chủ sẽ gửi thư này.",
+    "schedule_send_description": "Chọn thời điểm gửi.",
     "schedule_preset": {
       "this_morning": "Sáng nay",
       "this_afternoon": "Chiều nay",
@@ -1176,6 +1176,7 @@
       "edit_link": "Chỉnh sửa liên kết",
       "remove_link": "Xóa liên kết",
       "link_address": "Địa chỉ liên kết",
+      "link_text": "Văn bản",
       "link_invalid": "Địa chỉ không được chứa dấu cách",
       "table": "Bảng",
       "clear_formatting": "Xóa định dạng",
@@ -4068,6 +4069,9 @@
     "sending": "Đang gửi…",
     "sent": "Đã gửi",
     "view": "Xem",
+    "template_saved": "Đã lưu mẫu",
+    "schedule_anyway": "Vẫn lên lịch",
+    "schedule_warnings_title": "Vẫn lên lịch gửi thư này?",
     "picker_button": "Thêm từ danh bạ",
     "picker_title": "Thêm người nhận",
     "tab_contacts": "Danh bạ",

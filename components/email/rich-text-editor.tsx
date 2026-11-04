@@ -32,7 +32,8 @@ import { RecipientMention, RecipientMentionList, type RecipientMentionListHandle
 import { MentionChipCard, setMentionRecipients } from "@/components/email/mention-chip";
 import { mentionSuggestions, type MentionCandidate, type MentionContact } from "@/lib/recipient-mentions";
 import { cn } from "@/lib/utils";
-import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { getMarkRange } from "@tiptap/core";
+import { LinkDialog } from "@/components/email/link-dialog";
 import { ImageAltDialog } from "@/components/email/image-alt-dialog";
 
 /** A typed address without a scheme ("example.com") becomes a web link. */
@@ -741,26 +742,43 @@ export function RichTextEditor({
     if (editor) setMentionRecipients(editor, mentionCandidates ? mentionCandidates.map((c) => c.email) : null);
   }, [editor, mentionCandidates]);
 
-  // Insert link asks for the address in the app's own dialog; on a link it
-  // starts from the current address and offers "Remove link".
-  // The selection is kept from when the dialog opened: the dialog takes the
-  // focus, and with it the editor's selection.
-  const [linkDialog, setLinkDialog] = useState<{ href: string; from: number; to: number } | null>(null);
+  // Insert link asks for the text and the address in the app's own dialog
+  // (compose-p2-7); on a link it starts from the link's text and address and
+  // offers "Remove link". The range is kept from when the dialog opened: the
+  // dialog takes the focus, and with it the editor's selection.
+  const [linkDialog, setLinkDialog] = useState<{ href: string; text: string; from: number; to: number } | null>(null);
   const addLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href as string | undefined;
-    const { from, to } = editor.state.selection;
-    setLinkDialog({ href: previousUrl ?? "", from, to });
+    let { from, to } = editor.state.selection;
+    // The caret in a link edits the whole link.
+    const linkType = editor.schema.marks.link;
+    if (previousUrl && from === to && linkType) {
+      const range = getMarkRange(editor.state.doc.resolve(from), linkType);
+      if (range) ({ from, to } = range);
+    }
+    const text = editor.state.doc.textBetween(from, to, " ");
+    setLinkDialog({ href: previousUrl ?? "", text, from, to });
   }, [editor]);
   addLinkRef.current = addLink;
-  const applyLink = useCallback((url: string) => {
+  const applyLink = useCallback(({ text, href }: { text: string; href: string }) => {
     if (!editor || !linkDialog) return;
-    editor
-      .chain()
-      .focus()
-      .setTextSelection({ from: linkDialog.from, to: linkDialog.to })
+    const label = text.trim() ? text : href;
+    const { from, to } = linkDialog;
+    const chain = editor.chain().focus();
+    if (from === to || label !== linkDialog.text) {
+      // Nothing selected, or the text changed: the text goes in as the link.
+      chain
+        .insertContentAt({ from, to }, { type: "text", text: label, marks: [{ type: "link", attrs: { href } }] })
+        .setTextSelection(from + label.length)
+        .unsetMark("link")
+        .run();
+      return;
+    }
+    chain
+      .setTextSelection({ from, to })
       .extendMarkRange("link")
-      .setLink({ href: url })
+      .setLink({ href })
       .run();
   }, [editor, linkDialog]);
   const removeLink = useCallback(() => {
@@ -776,7 +794,6 @@ export function RichTextEditor({
 
   const tToolbar = useTranslations("email_composer.toolbar");
   const tWindows = useTranslations("compose_windows");
-  const tCommon = useTranslations("common");
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -1465,16 +1482,13 @@ export function RichTextEditor({
         document.body
       )}
 
-      <PromptDialog
+      <LinkDialog
         isOpen={!!linkDialog}
         onClose={() => setLinkDialog(null)}
-        title={linkDialog?.href ? tToolbar("edit_link") : tToolbar("insert_link")}
-        placeholder={tToolbar("link_address")}
-        defaultValue={linkDialog?.href ?? ""}
-        confirmText={tCommon("save")}
-        validate={(value) => (/\s/.test(value) ? tToolbar("link_invalid") : null)}
-        onSubmit={(value) => applyLink(withLinkScheme(value))}
-        extraAction={linkDialog?.href ? { label: tToolbar("remove_link"), onClick: removeLink } : undefined}
+        defaultText={linkDialog?.text ?? ""}
+        defaultHref={linkDialog?.href ?? ""}
+        onSubmit={({ text, href }) => applyLink({ text, href: withLinkScheme(href) })}
+        onRemove={linkDialog?.href ? removeLink : undefined}
       />
 
       <ImageAltDialog

@@ -1111,7 +1111,7 @@
       "unfinished": []
     },
     "schedule_send": "排程寄送",
-    "schedule_send_description": "選擇伺服器要在何時送出這封郵件。",
+    "schedule_send_description": "選擇寄送時間。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -1162,6 +1162,7 @@
       "edit_link": "編輯連結",
       "remove_link": "移除連結",
       "link_address": "連結網址",
+      "link_text": "文字",
       "link_invalid": "網址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",
@@ -4056,6 +4057,9 @@
     "sending": "正在傳送…",
     "sent": "已傳送",
     "view": "檢視",
+    "template_saved": "範本已儲存",
+    "schedule_anyway": "仍然排程",
+    "schedule_warnings_title": "仍然排程這封郵件？",
     "picker_button": "從聯絡人新增",
     "picker_title": "新增收件者",
     "tab_contacts": "聯絡人",
