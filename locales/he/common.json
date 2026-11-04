@@ -5301,6 +5301,21 @@
     "next_file": "הקובץ הבא",
     "loading": "טוען…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} כבר קיים.",
+    "conflict_file_hint": "החלפה שמה את התוכן החדש בקובץ הקיים, כך שהשיתופים שלו נשמרים. שמירת שניהם מוסיפה עותק עם מספר.",
+    "conflict_folder_hint": "החלפה מוסיפה את הקבצים לתיקייה הקיימת ומחליפה קבצים עם אותו שם. שמירת שניהם יוצרת תיקייה שנייה עם מספר.",
+    "replace": "החלפה",
+    "keep_both": "שמירת שניהם",
+    "skip": "דילוג",
+    "apply_to_all": "{count, plural, other {לעשות כך לכל # ההתנגשויות}}",
+    "no_preview": "אין תצוגה מקדימה לסוג קובץ זה.",
+    "open_in_app": "פתיחה ביישום ברירת המחדל",
+    "shared_with": "{name} משותף עכשיו עם {person}.",
+    "send_message": "שליחת הודעה",
+    "share_mail_subject": "שיתפתי איתך את {name}",
+    "share_mail_body": "שלום,\n\nשיתפתי איתך את \"{name}\". אפשר לפתוח אותו כאן:\n{link}"
+  },
   "smime": {
     "your_certificates": "התעודות שלך",
     "your_certificates_desc": "ייבא ונהל את אישורי ה-S/MIME שלך עבור חתימה והצפנה של הודעות דוא\"ל",

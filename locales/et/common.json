@@ -5583,6 +5583,21 @@
     "next_file": "Järgmine fail",
     "loading": "Laadimine…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} on juba olemas.",
+    "conflict_file_hint": "Asenda paneb uue sisu olemasolevasse faili, nii jäävad selle jagamised alles. Jäta mõlemad lisab nummerdatud koopia.",
+    "conflict_folder_hint": "Asenda lisab failid olemasolevasse kausta ja asendab sama nimega failid. Jäta mõlemad loob teise, nummerdatud kausta.",
+    "replace": "Asenda",
+    "keep_both": "Jäta mõlemad",
+    "skip": "Jäta vahele",
+    "apply_to_all": "{count, plural, one {Tee sama konfliktiga} other {Tee sama kõigi # konfliktiga}}",
+    "no_preview": "Seda tüüpi failil pole eelvaadet.",
+    "open_in_app": "Ava vaikerakenduses",
+    "shared_with": "{name} on nüüd jagatud kasutajaga {person}.",
+    "send_message": "Saada sõnum",
+    "share_mail_subject": "Jagasin sinuga faili {name}",
+    "share_mail_body": "Tere\n\nJagasin sinuga „{name}“. Saad selle avada siin:\n{link}"
+  },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
     "your_certificates_desc": "Impordi ja halda oma S/MIME sertifikaate e-kirjade allkirjastamiseks ja krüpteerimiseks",

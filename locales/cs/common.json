@@ -5408,6 +5408,21 @@
     "next_file": "Další soubor",
     "loading": "Načítání…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} už existuje.",
+    "conflict_file_hint": "Nahradit vloží nový obsah do existujícího souboru, takže jeho sdílení zůstane. Ponechat obojí přidá kopii s číslem.",
+    "conflict_folder_hint": "Nahradit přidá soubory do existující složky a nahradí soubory se stejným názvem. Ponechat obojí vytvoří druhou složku s číslem.",
+    "replace": "Nahradit",
+    "keep_both": "Ponechat obojí",
+    "skip": "Přeskočit",
+    "apply_to_all": "{count, plural, other {Udělat totéž u všech konfliktů ({count})}}",
+    "no_preview": "Pro tento typ souboru není náhled.",
+    "open_in_app": "Otevřít ve výchozí aplikaci",
+    "shared_with": "{name} je teď sdílen s {person}.",
+    "send_message": "Poslat zprávu",
+    "share_mail_subject": "Sdílel jsem s vámi {name}",
+    "share_mail_body": "Dobrý den,\n\nsdílel jsem s vámi „{name}“. Otevřete to zde:\n{link}"
+  },
   "smime": {
     "your_certificates": "Vaše certifikáty",
     "your_certificates_desc": "Importujte a spravujte své certifikáty S/MIME pro podepisování a šifrování e-mailů",

@@ -15,6 +15,8 @@ interface EmptyFolderProps {
 /** What an empty folder shows: what to do next, and that dropping files works. */
 export function EmptyFolder({ isRoot, canCreate, onUpload, onCreateFolder }: EmptyFolderProps) {
   const t = useTranslations("files");
+  // Both open a picker or a dialog, so they end in "…" as the menus' entries do.
+  const tMenu = useTranslations("menuAudit");
   return (
     <EmptyState
       className="h-full"
@@ -25,11 +27,11 @@ export function EmptyFolder({ isRoot, canCreate, onUpload, onCreateFolder }: Emp
         <>
           <Button size="sm" onClick={onUpload} className="gap-1.5">
             <Upload className="w-4 h-4" />
-            {t("upload_files")}
+            {tMenu("files_upload_files")}
           </Button>
           <Button variant="outline" size="sm" onClick={onCreateFolder} className="gap-1.5">
             <FolderPlus className="w-4 h-4" />
-            {t("new_folder")}
+            {tMenu("files_new_folder")}
           </Button>
         </>
       ) : undefined}

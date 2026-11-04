@@ -5408,6 +5408,21 @@
     "next_file": "下一个文件",
     "loading": "正在加载…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} 已存在。",
+    "conflict_file_hint": "替换会把新内容放进现有文件，共享设置保持不变。保留两者会添加一个带编号的副本。",
+    "conflict_folder_hint": "替换会把文件添加到现有文件夹，并替换同名文件。保留两者会新建一个带编号的文件夹。",
+    "replace": "替换",
+    "keep_both": "保留两者",
+    "skip": "跳过",
+    "apply_to_all": "{count, plural, other {对全部 # 个冲突执行此操作}}",
+    "no_preview": "此类文件无法预览。",
+    "open_in_app": "用默认应用打开",
+    "shared_with": "{name} 已与 {person} 共享。",
+    "send_message": "发送消息",
+    "share_mail_subject": "我与你共享了 {name}",
+    "share_mail_body": "你好，\n\n我与你共享了“{name}”。可以在这里打开：\n{link}"
+  },
   "smime": {
     "your_certificates": "您的证书",
     "your_certificates_desc": "导入和管理您的 S/MIME 证书以对邮件进行签名和加密",

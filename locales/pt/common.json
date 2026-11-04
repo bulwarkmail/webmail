@@ -5408,6 +5408,21 @@
     "next_file": "Próximo arquivo",
     "loading": "Carregando…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} já existe.",
+    "conflict_file_hint": "Substituir coloca o novo conteúdo no arquivo existente, e os compartilhamentos continuam. Manter ambos adiciona uma cópia com um número.",
+    "conflict_folder_hint": "Substituir adiciona os arquivos à pasta existente e substitui os que têm o mesmo nome. Manter ambos cria uma segunda pasta com um número.",
+    "replace": "Substituir",
+    "keep_both": "Manter ambos",
+    "skip": "Ignorar",
+    "apply_to_all": "{count, plural, one {Fazer o mesmo para o conflito} other {Fazer o mesmo para os # conflitos}}",
+    "no_preview": "Não há pré-visualização para este tipo de arquivo.",
+    "open_in_app": "Abrir no aplicativo padrão",
+    "shared_with": "{name} agora está compartilhado com {person}.",
+    "send_message": "Enviar uma mensagem",
+    "share_mail_subject": "Compartilhei {name} com você",
+    "share_mail_body": "Olá,\n\nCompartilhei \"{name}\" com você. Você pode abrir aqui:\n{link}"
+  },
   "smime": {
     "your_certificates": "Seus certificados",
     "your_certificates_desc": "Importe e gerencie seus certificados S/MIME para assinar e criptografar e-mails",

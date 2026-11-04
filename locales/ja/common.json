@@ -5408,6 +5408,21 @@
     "next_file": "次のファイル",
     "loading": "読み込み中…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} は既に存在します。",
+    "conflict_file_hint": "置き換えると、既存のファイルに新しい内容が入り、共有設定はそのまま残ります。両方残すと、番号付きのコピーが追加されます。",
+    "conflict_folder_hint": "置き換えると、既存のフォルダーにファイルが追加され、同じ名前のファイルは置き換えられます。両方残すと、番号付きの別フォルダーが作られます。",
+    "replace": "置き換える",
+    "keep_both": "両方残す",
+    "skip": "スキップ",
+    "apply_to_all": "{count, plural, other {# 件すべての競合に適用}}",
+    "no_preview": "この種類のファイルはプレビューできません。",
+    "open_in_app": "既定のアプリで開く",
+    "shared_with": "{name} を {person} と共有しました。",
+    "send_message": "メッセージを送信",
+    "share_mail_subject": "{name} を共有しました",
+    "share_mail_body": "こんにちは。\n\n「{name}」を共有しました。こちらから開けます:\n{link}"
+  },
   "smime": {
     "your_certificates": "あなたの証明書",
     "your_certificates_desc": "メールの署名と暗号化のために S/MIME 証明書をインポートして管理します",

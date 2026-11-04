@@ -5583,6 +5583,21 @@
     "next_file": "Neste fil",
     "loading": "Laster inn…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} finnes allerede.",
+    "conflict_file_hint": "Erstatt legger det nye innholdet i den eksisterende filen, så delingene blir. Behold begge legger til en kopi med et nummer.",
+    "conflict_folder_hint": "Erstatt legger filene i den eksisterende mappen og erstatter filer med samme navn. Behold begge lager en ny mappe med et nummer.",
+    "replace": "Erstatt",
+    "keep_both": "Behold begge",
+    "skip": "Hopp over",
+    "apply_to_all": "{count, plural, one {Gjør det samme for konflikten} other {Gjør det samme for alle # konfliktene}}",
+    "no_preview": "Det finnes ingen forhåndsvisning for denne filtypen.",
+    "open_in_app": "Åpne i standardprogram",
+    "shared_with": "{name} er nå delt med {person}.",
+    "send_message": "Send en melding",
+    "share_mail_subject": "Jeg har delt {name} med deg",
+    "share_mail_body": "Hei,\n\nJeg har delt «{name}» med deg. Du kan åpne den her:\n{link}"
+  },
   "smime": {
     "your_certificates": "Dine sertifikater",
     "your_certificates_desc": "Importer og administrer S/MIME-sertifikatene dine for signering og kryptering av e-post",

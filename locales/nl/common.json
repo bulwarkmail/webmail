@@ -5408,6 +5408,21 @@
     "next_file": "Volgend bestand",
     "loading": "Laden…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} bestaat al.",
+    "conflict_file_hint": "Vervangen zet de nieuwe inhoud in het bestaande bestand, zodat het gedeeld blijft. Beide behouden voegt een kopie met een nummer toe.",
+    "conflict_folder_hint": "Vervangen voegt de bestanden toe aan de bestaande map en vervangt bestanden met dezelfde naam. Beide behouden maakt een tweede map met een nummer.",
+    "replace": "Vervangen",
+    "keep_both": "Beide behouden",
+    "skip": "Overslaan",
+    "apply_to_all": "{count, plural, one {Dit doen voor het conflict} other {Dit doen voor alle # conflicten}}",
+    "no_preview": "Er is geen voorbeeld voor dit type bestand.",
+    "open_in_app": "Openen in standaard-app",
+    "shared_with": "{name} is nu gedeeld met {person}.",
+    "send_message": "Bericht sturen",
+    "share_mail_subject": "Ik heb {name} met je gedeeld",
+    "share_mail_body": "Hoi,\n\nIk heb \"{name}\" met je gedeeld. Je kunt het hier openen:\n{link}"
+  },
   "smime": {
     "your_certificates": "Uw certificaten",
     "your_certificates_desc": "Importeer en beheer uw S/MIME-certificaten voor het ondertekenen en versleutelen van e-mails",

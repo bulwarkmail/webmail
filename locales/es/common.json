@@ -5408,6 +5408,21 @@
     "next_file": "Archivo siguiente",
     "loading": "Cargando…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} ya existe.",
+    "conflict_file_hint": "Reemplazar pone el contenido nuevo en el archivo existente, así se mantienen sus permisos. Conservar ambos añade una copia con un número.",
+    "conflict_folder_hint": "Reemplazar añade los archivos a la carpeta existente y reemplaza los que tienen el mismo nombre. Conservar ambos crea una segunda carpeta con un número.",
+    "replace": "Reemplazar",
+    "keep_both": "Conservar ambos",
+    "skip": "Omitir",
+    "apply_to_all": "{count, plural, one {Hacer lo mismo con el conflicto} other {Hacer lo mismo con los # conflictos}}",
+    "no_preview": "No hay vista previa para este tipo de archivo.",
+    "open_in_app": "Abrir en la aplicación predeterminada",
+    "shared_with": "{name} ahora está compartido con {person}.",
+    "send_message": "Enviar un mensaje",
+    "share_mail_subject": "He compartido {name} contigo",
+    "share_mail_body": "Hola:\n\nHe compartido «{name}» contigo. Puedes abrirlo aquí:\n{link}"
+  },
   "smime": {
     "your_certificates": "Tus certificados",
     "your_certificates_desc": "Importa y administra tus certificados S/MIME para firmar y cifrar correos",

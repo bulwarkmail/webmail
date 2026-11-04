@@ -5595,6 +5595,21 @@
     "next_file": "Tệp tiếp theo",
     "loading": "Đang tải…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} đã tồn tại.",
+    "conflict_file_hint": "Thay thế đưa nội dung mới vào tệp hiện có, nên các chia sẻ của tệp vẫn giữ nguyên. Giữ cả hai thêm một bản sao có đánh số.",
+    "conflict_folder_hint": "Thay thế thêm các tệp vào thư mục hiện có và thay các tệp trùng tên. Giữ cả hai tạo thêm một thư mục có đánh số.",
+    "replace": "Thay thế",
+    "keep_both": "Giữ cả hai",
+    "skip": "Bỏ qua",
+    "apply_to_all": "{count, plural, other {Làm vậy cho cả # xung đột}}",
+    "no_preview": "Không có bản xem trước cho loại tệp này.",
+    "open_in_app": "Mở bằng ứng dụng mặc định",
+    "shared_with": "{name} giờ đã được chia sẻ với {person}.",
+    "send_message": "Gửi tin nhắn",
+    "share_mail_subject": "Tôi đã chia sẻ {name} với bạn",
+    "share_mail_body": "Chào bạn,\n\nTôi đã chia sẻ \"{name}\" với bạn. Bạn có thể mở tại đây:\n{link}"
+  },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
     "your_certificates_desc": "Nhập và quản lý chứng chỉ S/MIME của bạn để ký và mã hóa email",
