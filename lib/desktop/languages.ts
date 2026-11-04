@@ -52,6 +52,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuWindow: t('desktopUi.menu.window'),
     menuHelp: t('desktopUi.menu.help'),
     menuNewMessage: t('email_composer.new_message'),
+    menuQuickCompose: t('desktopQuickCompose.menu'),
     menuNewWindow: t('desktopUi.menu.new_window'),
     menuPrint: t('desktopUi.menu.print'),
     menuSavePdf: t('desktopUi.menu.save_pdf'),

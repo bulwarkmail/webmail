@@ -48,6 +48,8 @@ export interface DesktopWindowsBridge {
   setRestoreEnabled?: (enabled: boolean) => void;
   /** Signed in, with a session to lend: windows from last time can open. */
   sessionReady?: () => void;
+  /** Nobody is signed in any more: a pop-out would find no session. */
+  sessionEnded?: () => void;
   /** The warm spare's page, see components/popout/popout-spare-app.tsx. */
   spare?: {
     ready: () => void;
@@ -471,6 +473,19 @@ export interface DesktopOsSettings {
   quietHoursEnd: string;
   /** "Show Bulwark", an Electron accelerator. Null: off. */
   showShortcut: string | null;
+  /** Quick compose, an Electron accelerator. Null: off. Unset: nobody chose, so the policy's or the built-in one. */
+  quickComposeShortcut?: string | null;
+}
+
+export interface DesktopQuickComposeStatus {
+  /** What's in force after policy and the user's choice. Null: off. */
+  shortcut: string | null;
+  /** Really held. False with a shortcut: another app has it. */
+  active: boolean;
+  /** Set by the `QuickComposeShortcut` policy. */
+  locked: boolean;
+  /** What turning it on again gives. */
+  builtIn: string | null;
 }
 
 export interface DesktopOsStatus {
@@ -478,6 +493,7 @@ export interface DesktopOsStatus {
   pausedUntil: number | null;
   /** The shortcut in settings is really held. Another app can have it. */
   shortcutActive: boolean;
+  quickCompose?: DesktopQuickComposeStatus;
 }
 
 export interface DesktopOsFile {

@@ -6966,6 +6966,21 @@
     "copy_failed": "Faili ei saanud kopeerida.",
     "reply_lost": "Kirjutatud vastust ei saanud säilitada. Ava kiri ja vasta seal."
   },
+  "desktopQuickCompose": {
+    "label": "Kiirkiri",
+    "menu": "Kiirkiri",
+    "description": "{keys} avab väikese akna uue kirja jaoks, ükskõik millisest teisest rakendusest.",
+    "description_off": "Avab väikese akna uue kirja jaoks, ükskõik millisest teisest rakendusest.",
+    "taken": "{keys} on teise rakenduse kasutuses, seega siin ei juhtu midagi. Valige teised klahvid või sulgege see rakendus.",
+    "change": "Muuda klahve: {keys}",
+    "recording": "Vajutage klahve…",
+    "recording_hint": "Hoidke all Ctrl (Macis Cmd) koos Alt või Shiftiga ja vajutage tähte, numbrit, Enterit või funktsiooniklahvi. Esc tühistab.",
+    "back_to_main": "Teisalda põhiaknasse",
+    "back_busy": "Põhiaknas on juba kiri avatud. Sulgege see ja proovige uuesti.",
+    "back_no_answer": "Põhiaken ei vastanud. Teie kiri jääb siia.",
+    "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
+    "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
+  },
   "desktopReminders": {
     "generic_title": "Meeldetuletus",
     "snooze": "Lükka {count} min edasi",

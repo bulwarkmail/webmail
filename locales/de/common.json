@@ -6966,6 +6966,21 @@
     "copy_failed": "Die Datei konnte nicht kopiert werden.",
     "reply_lost": "Ihre eingegebene Antwort konnte nicht übernommen werden. Öffnen Sie die Nachricht und antworten Sie dort."
   },
+  "desktopQuickCompose": {
+    "label": "Schnell schreiben",
+    "menu": "Schnell schreiben",
+    "description": "{keys} öffnet ein kleines Fenster für eine neue Nachricht, aus jeder anderen App.",
+    "description_off": "Öffnet ein kleines Fenster für eine neue Nachricht, aus jeder anderen App.",
+    "taken": "Eine andere App verwendet {keys}, daher passiert hier nichts. Wählen Sie andere Tasten, oder schließen Sie diese App.",
+    "change": "Tasten ändern: {keys}",
+    "recording": "Tasten drücken…",
+    "recording_hint": "Halten Sie Strg (auf dem Mac Cmd) mit Alt oder Umschalt, und drücken Sie einen Buchstaben, eine Zahl, die Eingabetaste oder eine Funktionstaste. Esc bricht ab.",
+    "back_to_main": "In das Hauptfenster verschieben",
+    "back_busy": "Im Hauptfenster ist bereits eine Nachricht geöffnet. Schließen Sie diese, und versuchen Sie es dann erneut.",
+    "back_no_answer": "Das Hauptfenster hat nicht geantwortet. Ihre Nachricht bleibt hier.",
+    "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
+    "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
+  },
   "desktopReminders": {
     "generic_title": "Erinnerung",
     "snooze": "{count} Min. schlummern",

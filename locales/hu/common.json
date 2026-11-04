@@ -6966,6 +6966,21 @@
     "copy_failed": "A fájlt nem sikerült másolni.",
     "reply_lost": "A beírt válasz nem maradt meg. Nyissa meg az üzenetet, és válaszoljon ott."
   },
+  "desktopQuickCompose": {
+    "label": "Gyors levélírás",
+    "menu": "Gyors levélírás",
+    "description": "A(z) {keys} kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "description_off": "Kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "taken": "A(z) {keys} billentyűket egy másik alkalmazás használja, így itt nem történik semmi. Válasszon más billentyűket, vagy zárja be azt az alkalmazást.",
+    "change": "Billentyűk módosítása: {keys}",
+    "recording": "Nyomja meg a billentyűket…",
+    "recording_hint": "Tartsa lenyomva a Ctrl (Macen a Cmd) billentyűt az Alt vagy a Shift billentyűvel, és nyomjon meg egy betűt, számot, az Entert vagy egy funkcióbillentyűt. Az Esc megszakítja.",
+    "back_to_main": "Áthelyezés a főablakba",
+    "back_busy": "A főablakban már nyitva van egy üzenet. Zárja be, majd próbálja újra.",
+    "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
+    "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
+    "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
+  },
   "desktopReminders": {
     "generic_title": "Emlékeztető",
     "snooze": "Halasztás {count} perccel",
