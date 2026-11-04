@@ -12,3 +12,19 @@ export function loginHintFrom(value: string | null | undefined): string {
   if (/[\s\u0000-\u001f\u007f<>"]/.test(hint)) return '';
   return /^[^@]+@[^@]+\.[^@.]+$/.test(hint) ? hint : '';
 }
+
+/**
+ * The server an account signed in here uses for this domain, so a second address there
+ * goes to the same one without a lookup (the lookup can't find many own servers).
+ */
+export function serverOfSignedInDomain(accounts: ReadonlyArray<{ username: string; email?: string; serverUrl: string }>, domain: string): string | null {
+  const wanted = domain.trim().toLowerCase();
+  if (!wanted) return null;
+  for (const account of accounts) {
+    for (const address of [account.email, account.username]) {
+      const at = address?.lastIndexOf('@') ?? -1;
+      if (address && at > 0 && address.slice(at + 1).trim().toLowerCase() === wanted && account.serverUrl) return account.serverUrl;
+    }
+  }
+  return null;
+}

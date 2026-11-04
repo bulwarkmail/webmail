@@ -49,7 +49,7 @@ import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } fr
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
 import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
-import { loginHintFrom } from "@/lib/auth/login-hint";
+import { loginHintFrom, serverOfSignedInDomain } from "@/lib/auth/login-hint";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -493,11 +493,16 @@ function LoginPageContent() {
     }
   }, [serverUrl, jmapEndpoint, customServerMode]);
 
-  /** One lookup per domain while the page is open. */
+  /**
+   * One lookup per domain while the page is open. A domain an account here already
+   * signs in at needs none: the second address there goes to the same server, and
+   * Change still picks another.
+   */
   const lookUpServer = useCallback((domain: string, address: string): Promise<string | null> => {
     let pending = serverLookups.current.get(domain);
     if (!pending) {
-      pending = requestServerDiscovery(address);
+      const known = serverOfSignedInDomain(useAccountStore.getState().accounts, domain);
+      pending = known ? Promise.resolve(known) : requestServerDiscovery(address);
       serverLookups.current.set(domain, pending);
     }
     return pending;
