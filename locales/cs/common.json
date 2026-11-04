@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."
   },
+  "ux_pim_event": {
+    "time_zone": "Časové pásmo",
+    "time_zone_line": "Časové pásmo: {zone}",
+    "your_time": "{times} váš čas",
+    "zone_times": "{times} {zone} ({local} váš čas)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Přijato",
+    "status_declined": "Odmítnuto",
+    "status_tentative": "Možná",
+    "status_needs_action": "Zatím bez odpovědi",
+    "status_delegated": "Předáno",
+    "answered_accepted": "Přijali jste {date}.",
+    "answered_declined": "Odmítli jste {date}.",
+    "answered_tentative": "Odpověděli jste možná {date}.",
+    "answered_accepted_nodate": "Přijali jste.",
+    "answered_declined_nodate": "Odmítli jste.",
+    "answered_tentative_nodate": "Odpověděli jste možná."
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",

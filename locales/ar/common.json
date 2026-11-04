@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
   },
+  "ux_pim_event": {
+    "time_zone": "المنطقة الزمنية",
+    "time_zone_line": "المنطقة الزمنية: {zone}",
+    "your_time": "{times} بتوقيتك",
+    "zone_times": "{times} {zone} ({local} بتوقيتك)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "مقبول",
+    "status_declined": "مرفوض",
+    "status_tentative": "ربما",
+    "status_needs_action": "لم يتم الرد بعد",
+    "status_delegated": "تم التحويل",
+    "answered_accepted": "قبلت الدعوة في {date}.",
+    "answered_declined": "رفضت الدعوة في {date}.",
+    "answered_tentative": "أجبت بـ\"ربما\" في {date}.",
+    "answered_accepted_nodate": "قبلت الدعوة.",
+    "answered_declined_nodate": "رفضت الدعوة.",
+    "answered_tentative_nodate": "أجبت بـ\"ربما\"."
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",

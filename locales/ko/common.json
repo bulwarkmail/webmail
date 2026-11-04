@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
   },
+  "ux_pim_event": {
+    "time_zone": "시간대",
+    "time_zone_line": "시간대: {zone}",
+    "your_time": "내 시간 {times}",
+    "zone_times": "{times} {zone} (내 시간 {local})",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "수락함",
+    "status_declined": "거절함",
+    "status_tentative": "미정",
+    "status_needs_action": "아직 응답 안 함",
+    "status_delegated": "위임됨",
+    "answered_accepted": "{date}에 수락했습니다.",
+    "answered_declined": "{date}에 거절했습니다.",
+    "answered_tentative": "{date}에 미정으로 응답했습니다.",
+    "answered_accepted_nodate": "수락했습니다.",
+    "answered_declined_nodate": "거절했습니다.",
+    "answered_tentative_nodate": "미정으로 응답했습니다."
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",

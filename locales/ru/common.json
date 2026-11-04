@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Для этого изменения нужно подключение к серверу. Пока измените только это событие или повторите попытку, когда снова будете в сети."
   },
+  "ux_pim_event": {
+    "time_zone": "Часовой пояс",
+    "time_zone_line": "Часовой пояс: {zone}",
+    "your_time": "{times} по вашему времени",
+    "zone_times": "{times} {zone} ({local} по вашему времени)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Принято",
+    "status_declined": "Отклонено",
+    "status_tentative": "Может быть",
+    "status_needs_action": "Ещё не ответил",
+    "status_delegated": "Передано",
+    "answered_accepted": "Вы приняли {date}.",
+    "answered_declined": "Вы отклонили {date}.",
+    "answered_tentative": "Вы ответили «может быть» {date}.",
+    "answered_accepted_nodate": "Вы приняли.",
+    "answered_declined_nodate": "Вы отклонили.",
+    "answered_tentative_nodate": "Вы ответили «может быть»."
+  },
   "advanced_search": {
     "title": "Расширенный поиск",
     "from": "От",

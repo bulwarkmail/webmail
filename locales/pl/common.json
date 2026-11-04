@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Ta zmiana wymaga połączenia z serwerem. Na razie zmień tylko to wydarzenie albo spróbuj ponownie, gdy wrócisz do trybu online."
   },
+  "ux_pim_event": {
+    "time_zone": "Strefa czasowa",
+    "time_zone_line": "Strefa czasowa: {zone}",
+    "your_time": "{times} twojego czasu",
+    "zone_times": "{times} {zone} ({local} twojego czasu)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Zaakceptowano",
+    "status_declined": "Odrzucono",
+    "status_tentative": "Może",
+    "status_needs_action": "Jeszcze bez odpowiedzi",
+    "status_delegated": "Przekazano",
+    "answered_accepted": "Zaakceptowano {date}.",
+    "answered_declined": "Odrzucono {date}.",
+    "answered_tentative": "Odpowiedziano „może” {date}.",
+    "answered_accepted_nodate": "Zaakceptowano.",
+    "answered_declined_nodate": "Odrzucono.",
+    "answered_tentative_nodate": "Odpowiedziano „może”."
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",

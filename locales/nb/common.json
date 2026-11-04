@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Denne endringen krever tilkobling til serveren. Endre bare denne hendelsen for nå, eller prøv igjen når du er tilkoblet."
   },
+  "ux_pim_event": {
+    "time_zone": "Tidssone",
+    "time_zone_line": "Tidssone: {zone}",
+    "your_time": "{times} din tid",
+    "zone_times": "{times} {zone} ({local} din tid)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Godtatt",
+    "status_declined": "Avslått",
+    "status_tentative": "Kanskje",
+    "status_needs_action": "Har ikke svart ennå",
+    "status_delegated": "Overført",
+    "answered_accepted": "Du godtok {date}.",
+    "answered_declined": "Du avslo {date}.",
+    "answered_tentative": "Du svarte kanskje {date}.",
+    "answered_accepted_nodate": "Du godtok.",
+    "answered_declined_nodate": "Du avslo.",
+    "answered_tentative_nodate": "Du svarte kanskje."
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",

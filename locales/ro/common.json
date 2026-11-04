@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
   },
+  "ux_pim_event": {
+    "time_zone": "Fus orar",
+    "time_zone_line": "Fus orar: {zone}",
+    "your_time": "{times} ora ta",
+    "zone_times": "{times} {zone} ({local} ora ta)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Acceptat",
+    "status_declined": "Respins",
+    "status_tentative": "Poate",
+    "status_needs_action": "Încă fără răspuns",
+    "status_delegated": "Delegat",
+    "answered_accepted": "Ai acceptat pe {date}.",
+    "answered_declined": "Ai refuzat pe {date}.",
+    "answered_tentative": "Ai răspuns poate pe {date}.",
+    "answered_accepted_nodate": "Ai acceptat.",
+    "answered_declined_nodate": "Ai refuzat.",
+    "answered_tentative_nodate": "Ai răspuns poate."
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",

@@ -30,6 +30,7 @@ describe('participation status colours', () => {
 
   it('colours a participant\'s answer the same way', () => {
     render(<ParticipantStatusBadge status="accepted" />);
-    expect(screen.getByText('participants.accepted').className).toContain('text-green-700');
+    // In plain words (pim-19): ux_pim_event.status_accepted.
+    expect(screen.getByText('status_accepted').className).toContain('text-green-700');
   });
 });

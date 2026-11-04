@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "This change needs a connection to the server. Change only this event for now, or try again when you're back online."
   },
+  "ux_pim_event": {
+    "time_zone": "Time zone",
+    "time_zone_line": "Time zone: {zone}",
+    "your_time": "{times} your time",
+    "zone_times": "{times} {zone} ({local} your time)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Accepted",
+    "status_declined": "Declined",
+    "status_tentative": "Maybe",
+    "status_needs_action": "Not answered yet",
+    "status_delegated": "Passed on",
+    "answered_accepted": "You accepted on {date}.",
+    "answered_declined": "You declined on {date}.",
+    "answered_tentative": "You answered maybe on {date}.",
+    "answered_accepted_nodate": "You accepted.",
+    "answered_declined_nodate": "You declined.",
+    "answered_tentative_nodate": "You answered maybe."
+  },
   "calendar_event_notifications": {
     "someone": "Someone",
     "invited": "{name} invited you to \"{title}\"",

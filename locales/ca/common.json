@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
   },
+  "ux_pim_event": {
+    "time_zone": "Fus horari",
+    "time_zone_line": "Fus horari: {zone}",
+    "your_time": "{times} la vostra hora",
+    "zone_times": "{times} {zone} ({local} la vostra hora)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Acceptat",
+    "status_declined": "Rebutjat",
+    "status_tentative": "Potser",
+    "status_needs_action": "Encara sense resposta",
+    "status_delegated": "Delegat",
+    "answered_accepted": "Vau acceptar el {date}.",
+    "answered_declined": "Vau rebutjar el {date}.",
+    "answered_tentative": "Vau respondre potser el {date}.",
+    "answered_accepted_nodate": "Heu acceptat.",
+    "answered_declined_nodate": "Heu rebutjat.",
+    "answered_tentative_nodate": "Heu respost potser."
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",

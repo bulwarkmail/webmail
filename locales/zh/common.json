@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"
   },
+  "ux_pim_event": {
+    "time_zone": "时区",
+    "time_zone_line": "时区：{zone}",
+    "your_time": "你的时间 {times}",
+    "zone_times": "{times} {zone}（你的时间 {local}）",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "已接受",
+    "status_declined": "已拒绝",
+    "status_tentative": "暂定",
+    "status_needs_action": "尚未答复",
+    "status_delegated": "已委托",
+    "answered_accepted": "你已于 {date} 接受。",
+    "answered_declined": "你已于 {date} 拒绝。",
+    "answered_tentative": "你已于 {date} 答复暂定。",
+    "answered_accepted_nodate": "你已接受。",
+    "answered_declined_nodate": "你已拒绝。",
+    "answered_tentative_nodate": "你已答复暂定。"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",

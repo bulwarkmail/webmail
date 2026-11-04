@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Táto zmena vyžaduje pripojenie k serveru. Zatiaľ zmeňte iba túto udalosť alebo to skúste znova, keď budete online."
   },
+  "ux_pim_event": {
+    "time_zone": "Časové pásmo",
+    "time_zone_line": "Časové pásmo: {zone}",
+    "your_time": "{times} váš čas",
+    "zone_times": "{times} {zone} ({local} váš čas)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Prijaté",
+    "status_declined": "Odmietnuté",
+    "status_tentative": "Možno",
+    "status_needs_action": "Zatiaľ bez odpovede",
+    "status_delegated": "Odovzdané",
+    "answered_accepted": "Prijali ste {date}.",
+    "answered_declined": "Odmietli ste {date}.",
+    "answered_tentative": "Odpovedali ste možno {date}.",
+    "answered_accepted_nodate": "Prijali ste.",
+    "answered_declined_nodate": "Odmietli ste.",
+    "answered_tentative_nodate": "Odpovedali ste možno."
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",

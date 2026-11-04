@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Энэ өөрчлөлтөд сервертэй холболт шаардлагатай. Одоохондоо зөвхөн энэ үйл явдлыг өөрчлөх эсвэл онлайн болсны дараа дахин оролдоно уу."
   },
+  "ux_pim_event": {
+    "time_zone": "Цагийн бүс",
+    "time_zone_line": "Цагийн бүс: {zone}",
+    "your_time": "Таны цагаар {times}",
+    "zone_times": "{times} {zone} (таны цагаар {local})",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Хүлээн зөвшөөрсөн",
+    "status_declined": "Татгалзсан",
+    "status_tentative": "Магадгүй",
+    "status_needs_action": "Хараахан хариулаагүй",
+    "status_delegated": "Шилжүүлсэн",
+    "answered_accepted": "Та {date}-нд зөвшөөрсөн.",
+    "answered_declined": "Та {date}-нд татгалзсан.",
+    "answered_tentative": "Та {date}-нд магадгүй гэж хариулсан.",
+    "answered_accepted_nodate": "Та зөвшөөрсөн.",
+    "answered_declined_nodate": "Та татгалзсан.",
+    "answered_tentative_nodate": "Та магадгүй гэж хариулсан."
+  },
   "calendar_event_notifications": {
     "someone": "Хэн нэгэн",
     "invited": "{name} таныг \"{title}\"-д урилаа",

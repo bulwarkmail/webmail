@@ -4972,6 +4972,24 @@
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
   },
+  "ux_pim_event": {
+    "time_zone": "Múi giờ",
+    "time_zone_line": "Múi giờ: {zone}",
+    "your_time": "{times} theo giờ của bạn",
+    "zone_times": "{times} {zone} ({local} theo giờ của bạn)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Đã chấp nhận",
+    "status_declined": "Đã từ chối",
+    "status_tentative": "Có thể",
+    "status_needs_action": "Chưa trả lời",
+    "status_delegated": "Đã chuyển giao",
+    "answered_accepted": "Bạn đã chấp nhận vào {date}.",
+    "answered_declined": "Bạn đã từ chối vào {date}.",
+    "answered_tentative": "Bạn đã trả lời có thể vào {date}.",
+    "answered_accepted_nodate": "Bạn đã chấp nhận.",
+    "answered_declined_nodate": "Bạn đã từ chối.",
+    "answered_tentative_nodate": "Bạn đã trả lời có thể."
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",

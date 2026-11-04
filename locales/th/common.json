@@ -4353,6 +4353,24 @@
   "calendar_offline": {
     "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
   },
+  "ux_pim_event": {
+    "time_zone": "เขตเวลา",
+    "time_zone_line": "เขตเวลา: {zone}",
+    "your_time": "{times} ตามเวลาของคุณ",
+    "zone_times": "{times} {zone} ({local} ตามเวลาของคุณ)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "ยอมรับแล้ว",
+    "status_declined": "ปฏิเสธแล้ว",
+    "status_tentative": "อาจจะ",
+    "status_needs_action": "ยังไม่ได้ตอบ",
+    "status_delegated": "มอบหมายต่อแล้ว",
+    "answered_accepted": "คุณตอบรับเมื่อ {date}",
+    "answered_declined": "คุณปฏิเสธเมื่อ {date}",
+    "answered_tentative": "คุณตอบว่าอาจจะเมื่อ {date}",
+    "answered_accepted_nodate": "คุณตอบรับแล้ว",
+    "answered_declined_nodate": "คุณปฏิเสธแล้ว",
+    "answered_tentative_nodate": "คุณตอบว่าอาจจะ"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "org_locked": "กำหนดโดยองค์กรของคุณ",

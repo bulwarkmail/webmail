@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Для цієї зміни потрібне з'єднання із сервером. Поки що змініть лише цю подію або спробуйте ще раз, коли знову будете в мережі."
   },
+  "ux_pim_event": {
+    "time_zone": "Часовий пояс",
+    "time_zone_line": "Часовий пояс: {zone}",
+    "your_time": "{times} за вашим часом",
+    "zone_times": "{times} {zone} ({local} за вашим часом)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Прийнято",
+    "status_declined": "Відхилено",
+    "status_tentative": "Можливо",
+    "status_needs_action": "Ще не відповів",
+    "status_delegated": "Передано",
+    "answered_accepted": "Ви прийняли {date}.",
+    "answered_declined": "Ви відхилили {date}.",
+    "answered_tentative": "Ви відповіли «можливо» {date}.",
+    "answered_accepted_nodate": "Ви прийняли.",
+    "answered_declined_nodate": "Ви відхилили.",
+    "answered_tentative_nodate": "Ви відповіли «можливо»."
+  },
   "advanced_search": {
     "title": "Розширений пошук",
     "from": "Від",

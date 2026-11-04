@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
   },
+  "ux_pim_event": {
+    "time_zone": "Saat dilimi",
+    "time_zone_line": "Saat dilimi: {zone}",
+    "your_time": "{times} sizin saatinizle",
+    "zone_times": "{times} {zone} ({local} sizin saatinizle)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Kabul edildi",
+    "status_declined": "Reddedildi",
+    "status_tentative": "Belki",
+    "status_needs_action": "Henüz yanıtlanmadı",
+    "status_delegated": "Devredildi",
+    "answered_accepted": "{date} tarihinde kabul ettiniz.",
+    "answered_declined": "{date} tarihinde reddettiniz.",
+    "answered_tentative": "{date} tarihinde belki dediniz.",
+    "answered_accepted_nodate": "Kabul ettiniz.",
+    "answered_declined_nodate": "Reddettiniz.",
+    "answered_tentative_nodate": "Belki dediniz."
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",

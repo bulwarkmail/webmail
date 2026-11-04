@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
   },
+  "ux_pim_event": {
+    "time_zone": "Ajavöönd",
+    "time_zone_line": "Ajavöönd: {zone}",
+    "your_time": "{times} teie aja järgi",
+    "zone_times": "{times} {zone} ({local} teie aja järgi)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Nõustunud",
+    "status_declined": "Keeldunud",
+    "status_tentative": "Võib-olla",
+    "status_needs_action": "Pole veel vastanud",
+    "status_delegated": "Edasi antud",
+    "answered_accepted": "Nõustusite {date}.",
+    "answered_declined": "Keeldusite {date}.",
+    "answered_tentative": "Vastasite võib-olla {date}.",
+    "answered_accepted_nodate": "Nõustusite.",
+    "answered_declined_nodate": "Keeldusite.",
+    "answered_tentative_nodate": "Vastasite võib-olla."
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",

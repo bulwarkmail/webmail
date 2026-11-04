@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
   },
+  "ux_pim_event": {
+    "time_zone": "Tijdzone",
+    "time_zone_line": "Tijdzone: {zone}",
+    "your_time": "{times} jouw tijd",
+    "zone_times": "{times} {zone} ({local} jouw tijd)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Geaccepteerd",
+    "status_declined": "Geweigerd",
+    "status_tentative": "Misschien",
+    "status_needs_action": "Nog niet geantwoord",
+    "status_delegated": "Doorgegeven",
+    "answered_accepted": "Je hebt op {date} geaccepteerd.",
+    "answered_declined": "Je hebt op {date} geweigerd.",
+    "answered_tentative": "Je hebt op {date} misschien geantwoord.",
+    "answered_accepted_nodate": "Je hebt geaccepteerd.",
+    "answered_declined_nodate": "Je hebt geweigerd.",
+    "answered_tentative_nodate": "Je hebt misschien geantwoord."
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",

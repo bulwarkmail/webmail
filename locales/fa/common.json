@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
   },
+  "ux_pim_event": {
+    "time_zone": "منطقه زمانی",
+    "time_zone_line": "منطقه زمانی: {zone}",
+    "your_time": "{times} به وقت شما",
+    "zone_times": "{times} {zone} ({local} به وقت شما)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "پذیرفته شد",
+    "status_declined": "رد شد",
+    "status_tentative": "شاید",
+    "status_needs_action": "هنوز پاسخ نداده",
+    "status_delegated": "واگذار شد",
+    "answered_accepted": "در {date} پذیرفتید.",
+    "answered_declined": "در {date} رد کردید.",
+    "answered_tentative": "در {date} پاسخ «شاید» دادید.",
+    "answered_accepted_nodate": "پذیرفتید.",
+    "answered_declined_nodate": "رد کردید.",
+    "answered_tentative_nodate": "پاسخ «شاید» دادید."
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",

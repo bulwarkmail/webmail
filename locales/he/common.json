@@ -4857,6 +4857,24 @@
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
   },
+  "ux_pim_event": {
+    "time_zone": "אזור זמן",
+    "time_zone_line": "אזור זמן: {zone}",
+    "your_time": "{times} לפי השעה שלך",
+    "zone_times": "{times} {zone} ({local} לפי השעה שלך)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "התקבל",
+    "status_declined": "נדחה",
+    "status_tentative": "אולי",
+    "status_needs_action": "עדיין לא ענו",
+    "status_delegated": "הועבר",
+    "answered_accepted": "אישרת ב-{date}.",
+    "answered_declined": "דחית ב-{date}.",
+    "answered_tentative": "ענית 'אולי' ב-{date}.",
+    "answered_accepted_nodate": "אישרת.",
+    "answered_declined_nodate": "דחית.",
+    "answered_tentative_nodate": "ענית 'אולי'."
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",

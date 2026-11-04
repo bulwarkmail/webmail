@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
   },
+  "ux_pim_event": {
+    "time_zone": "Laika josla",
+    "time_zone_line": "Laika josla: {zone}",
+    "your_time": "{times} jūsu laikā",
+    "zone_times": "{times} {zone} ({local} jūsu laikā)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Pieņemts",
+    "status_declined": "Noraidīts",
+    "status_tentative": "Varbūt",
+    "status_needs_action": "Vēl nav atbildējis",
+    "status_delegated": "Nodots tālāk",
+    "answered_accepted": "Jūs pieņēmāt {date}.",
+    "answered_declined": "Jūs noraidījāt {date}.",
+    "answered_tentative": "Jūs atbildējāt varbūt {date}.",
+    "answered_accepted_nodate": "Jūs pieņēmāt.",
+    "answered_declined_nodate": "Jūs noraidījāt.",
+    "answered_tentative_nodate": "Jūs atbildējāt varbūt."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",

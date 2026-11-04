@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
   },
+  "ux_pim_event": {
+    "time_zone": "Időzóna",
+    "time_zone_line": "Időzóna: {zone}",
+    "your_time": "{times} az Ön ideje szerint",
+    "zone_times": "{times} {zone} ({local} az Ön ideje szerint)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Elfogadva",
+    "status_declined": "Elutasítva",
+    "status_tentative": "Talán",
+    "status_needs_action": "Még nem válaszolt",
+    "status_delegated": "Továbbadva",
+    "answered_accepted": "Ön elfogadta: {date}.",
+    "answered_declined": "Ön elutasította: {date}.",
+    "answered_tentative": "Ön talánnal válaszolt: {date}.",
+    "answered_accepted_nodate": "Ön elfogadta.",
+    "answered_declined_nodate": "Ön elutasította.",
+    "answered_tentative_nodate": "Ön talánnal válaszolt."
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",

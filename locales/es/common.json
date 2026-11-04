@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Este cambio necesita conexión con el servidor. Cambia solo este evento por ahora o inténtalo de nuevo cuando vuelvas a tener conexión."
   },
+  "ux_pim_event": {
+    "time_zone": "Zona horaria",
+    "time_zone_line": "Zona horaria: {zone}",
+    "your_time": "{times} tu hora",
+    "zone_times": "{times} {zone} ({local} tu hora)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Aceptado",
+    "status_declined": "Rechazado",
+    "status_tentative": "Quizás",
+    "status_needs_action": "Sin responder todavía",
+    "status_delegated": "Delegado",
+    "answered_accepted": "Aceptaste el {date}.",
+    "answered_declined": "Rechazaste el {date}.",
+    "answered_tentative": "Respondiste quizás el {date}.",
+    "answered_accepted_nodate": "Aceptaste.",
+    "answered_declined_nodate": "Rechazaste.",
+    "answered_tentative_nodate": "Respondiste quizás."
+  },
   "advanced_search": {
     "title": "Búsqueda avanzada",
     "from": "De",

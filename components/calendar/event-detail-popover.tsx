@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar, CalendarParticipant } from "@/lib/jmap/types";
 import { parseDuration, getEventColor } from "./event-card";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
+import { eventZonedTimes, zonedTimesText } from "@/lib/event-time-zone";
 import { buildRecurrenceSummary } from "./recurrence-editor";
 import { formatEventAlertsLabel } from "./alert-list-editor";
 import {
@@ -147,6 +148,7 @@ export function EventDetailPopover({
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
+  const tEvent = useTranslations("ux_pim_event");
   const locale = useLocale();
   const popoverRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
@@ -166,6 +168,11 @@ export function EventDetailPopover({
   const endDate = getEventEndDate(event);
   const displayEndDate = getEventDisplayEndDate(event);
   const isMultiDay = !isSameDay(startDate, displayEndDate);
+  // An event on another zone's clock shows its own times too (pim-2).
+  const zoned = eventZonedTimes(event, startDate, endDate);
+  const zonedText = zoned
+    ? zonedTimesText(zoned, startDate, endDate, timeFormat === "12h" ? "h:mm a" : "HH:mm", locale)
+    : null;
 
   const locationName = useMemo(() => primaryLocationName(event) ?? null, [event]);
   // Re-computes the location link once the config is known (#903).
@@ -499,6 +506,11 @@ export function EventDetailPopover({
                   <div className="text-muted-foreground text-xs">
                     ({formatDurationDisplay(durationMinutes)})
                   </div>
+                  {zoned && zonedText && (
+                    <div className="text-muted-foreground text-xs" data-testid="event-zone-times">
+                      {tEvent("zone_only", { times: zonedText.times, zone: zoned.zone })}
+                    </div>
+                  )}
                 </>
               )
             ) : (
@@ -508,6 +520,10 @@ export function EventDetailPopover({
                 </span>
                 {event.showWithoutTime ? (
                   <span className="text-muted-foreground ms-1.5">{t("events.all_day")}</span>
+                ) : zoned && zonedText ? (
+                  <div className="text-muted-foreground" data-testid="event-zone-times">
+                    {tEvent("zone_times", { times: zonedText.times, zone: zoned.zone, local: zonedText.local })}
+                  </div>
                 ) : (
                   <div className="text-muted-foreground">
                     <bdi dir="ltr">{formatTime(startDate)} – {formatTime(endDate)}</bdi>

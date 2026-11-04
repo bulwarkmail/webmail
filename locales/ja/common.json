@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
   },
+  "ux_pim_event": {
+    "time_zone": "タイムゾーン",
+    "time_zone_line": "タイムゾーン: {zone}",
+    "your_time": "あなたの時刻 {times}",
+    "zone_times": "{times} {zone}（あなたの時刻 {local}）",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "承諾",
+    "status_declined": "辞退",
+    "status_tentative": "未定",
+    "status_needs_action": "まだ回答なし",
+    "status_delegated": "委任済み",
+    "answered_accepted": "{date} に承諾しました。",
+    "answered_declined": "{date} に辞退しました。",
+    "answered_tentative": "{date} に未定と回答しました。",
+    "answered_accepted_nodate": "承諾しました。",
+    "answered_declined_nodate": "辞退しました。",
+    "answered_tentative_nodate": "未定と回答しました。"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",

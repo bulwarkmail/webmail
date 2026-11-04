@@ -4960,6 +4960,24 @@
   "calendar_offline": {
     "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."
   },
+  "ux_pim_event": {
+    "time_zone": "Zeitzone",
+    "time_zone_line": "Zeitzone: {zone}",
+    "your_time": "{times} Ihre Zeit",
+    "zone_times": "{times} {zone} ({local} Ihre Zeit)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Zugesagt",
+    "status_declined": "Abgelehnt",
+    "status_tentative": "Vielleicht",
+    "status_needs_action": "Noch nicht beantwortet",
+    "status_delegated": "Weitergegeben",
+    "answered_accepted": "Sie haben am {date} zugesagt.",
+    "answered_declined": "Sie haben am {date} abgesagt.",
+    "answered_tentative": "Sie haben am {date} mit Vielleicht geantwortet.",
+    "answered_accepted_nodate": "Sie haben zugesagt.",
+    "answered_declined_nodate": "Sie haben abgesagt.",
+    "answered_tentative_nodate": "Sie haben mit Vielleicht geantwortet."
+  },
   "advanced_search": {
     "title": "Erweiterte Suche",
     "from": "Von",
