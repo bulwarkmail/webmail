@@ -7382,6 +7382,14 @@
     "copy_failed": "Không thể sao chép tệp.",
     "reply_lost": "Không thể giữ câu trả lời bạn đã nhập. Hãy mở thư và trả lời ở đó."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Tìm liên hệ",
+    "search_files": "Tìm tệp",
+    "import": "Nhập",
+    "import_mail": "Thư…",
+    "import_calendar": "Lịch…",
+    "import_contacts": "Danh bạ…"
+  },
   "desktopEdit": {
     "edit": "Chỉnh sửa",
     "edit_named": "Chỉnh sửa {name}",

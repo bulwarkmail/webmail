@@ -7378,6 +7378,14 @@
     "copy_failed": "คัดลอกไฟล์ไม่ได้",
     "reply_lost": "ไม่สามารถเก็บคำตอบที่พิมพ์ไว้ได้ เปิดข้อความแล้วตอบจากที่นั่น"
   },
+  "ux_pim_menu": {
+    "search_contacts": "ค้นหาผู้ติดต่อ",
+    "search_files": "ค้นหาไฟล์",
+    "import": "นำเข้า",
+    "import_mail": "อีเมล…",
+    "import_calendar": "ปฏิทิน…",
+    "import_contacts": "ผู้ติดต่อ…"
+  },
   "desktopEdit": {
     "edit": "แก้ไข",
     "edit_named": "แก้ไข {name}",

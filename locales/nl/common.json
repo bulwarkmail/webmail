@@ -7370,6 +7370,14 @@
     "copy_failed": "Het bestand kon niet worden gekopieerd.",
     "reply_lost": "Je getypte antwoord kon niet worden bewaard. Open het bericht en antwoord daar."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Contacten zoeken",
+    "search_files": "Bestanden zoeken",
+    "import": "Importeren",
+    "import_mail": "E-mail…",
+    "import_calendar": "Agenda…",
+    "import_contacts": "Contacten…"
+  },
   "desktopEdit": {
     "edit": "Bewerken",
     "edit_named": "{name} bewerken",

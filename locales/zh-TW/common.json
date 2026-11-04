@@ -7370,6 +7370,14 @@
     "copy_failed": "無法複製檔案。",
     "reply_lost": "無法保留您輸入的回覆。請開啟郵件並在其中回覆。"
   },
+  "ux_pim_menu": {
+    "search_contacts": "搜尋聯絡人",
+    "search_files": "搜尋檔案",
+    "import": "匯入",
+    "import_mail": "郵件…",
+    "import_calendar": "行事曆…",
+    "import_contacts": "聯絡人…"
+  },
   "desktopEdit": {
     "edit": "編輯",
     "edit_named": "編輯 {name}",

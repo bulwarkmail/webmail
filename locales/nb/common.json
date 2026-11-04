@@ -7370,6 +7370,14 @@
     "copy_failed": "Filen kunne ikke kopieres.",
     "reply_lost": "Svaret du skrev, kunne ikke beholdes. Åpne meldingen og svar der."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Søk i kontakter",
+    "search_files": "Søk i filer",
+    "import": "Importer",
+    "import_mail": "E-post…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontakter…"
+  },
   "desktopEdit": {
     "edit": "Rediger",
     "edit_named": "Rediger {name}",

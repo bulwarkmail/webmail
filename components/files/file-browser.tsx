@@ -45,6 +45,7 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { isAppShortcutBlocked, isArrowKeyWidgetTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { FilesListingSkeleton } from "@/components/boot-skeleton/files-skeleton";
 
 const NO_FORMATS: string[] = [];
@@ -767,6 +768,9 @@ export function FileBrowser({
     const tops = Array.from(row.children).map((c) => (c as HTMLElement).offsetTop);
     return Math.max(1, tops.filter((top) => top === tops[0]).length);
   }, [focusedName]);
+
+  // Edit > Search files in the desktop app's menus.
+  useDesktopCommands({ "edit.search": () => searchInputRef.current?.focus() }, { "edit.search": !accountPickerMode });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

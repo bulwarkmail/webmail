@@ -7370,6 +7370,14 @@
     "copy_failed": "Die Datei konnte nicht kopiert werden.",
     "reply_lost": "Ihre eingegebene Antwort konnte nicht übernommen werden. Öffnen Sie die Nachricht und antworten Sie dort."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Kontakte durchsuchen",
+    "search_files": "Dateien durchsuchen",
+    "import": "Importieren",
+    "import_mail": "E-Mails…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontakte…"
+  },
   "desktopEdit": {
     "edit": "Bearbeiten",
     "edit_named": "{name} bearbeiten",

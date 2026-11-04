@@ -7371,6 +7371,14 @@
     "copy_failed": "לא ניתן להעתיק את הקובץ.",
     "reply_lost": "לא ניתן היה לשמור את התשובה שהקלדת. פתחו את ההודעה והשיבו משם."
   },
+  "ux_pim_menu": {
+    "search_contacts": "חיפוש אנשי קשר",
+    "search_files": "חיפוש קבצים",
+    "import": "ייבוא",
+    "import_mail": "דואר…",
+    "import_calendar": "לוח שנה…",
+    "import_contacts": "אנשי קשר…"
+  },
   "desktopEdit": {
     "edit": "עריכה",
     "edit_named": "עריכת {name}",

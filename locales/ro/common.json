@@ -7370,6 +7370,14 @@
     "copy_failed": "Fișierul nu a putut fi copiat.",
     "reply_lost": "Răspunsul scris nu a putut fi păstrat. Deschide mesajul și răspunde de acolo."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Caută contacte",
+    "search_files": "Caută fișiere",
+    "import": "Importă",
+    "import_mail": "E-mail…",
+    "import_calendar": "Calendar…",
+    "import_contacts": "Contacte…"
+  },
   "desktopEdit": {
     "edit": "Editează",
     "edit_named": "Editează {name}",

@@ -7370,6 +7370,14 @@
     "copy_failed": "Impossibile copiare il file.",
     "reply_lost": "Non è stato possibile conservare la risposta digitata. Apri il messaggio e rispondi da lì."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Cerca contatti",
+    "search_files": "Cerca file",
+    "import": "Importa",
+    "import_mail": "Posta…",
+    "import_calendar": "Calendario…",
+    "import_contacts": "Contatti…"
+  },
   "desktopEdit": {
     "edit": "Modifica",
     "edit_named": "Modifica {name}",

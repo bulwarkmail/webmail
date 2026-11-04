@@ -7370,6 +7370,14 @@
     "copy_failed": "Файлыг хуулж чадсангүй.",
     "reply_lost": "Бичсэн хариуг хадгалж чадсангүй. Захиаг нээгээд тэндээс хариулна уу."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Харилцагч хайх",
+    "search_files": "Файл хайх",
+    "import": "Импортлох",
+    "import_mail": "Шуудан…",
+    "import_calendar": "Хуанли…",
+    "import_contacts": "Харилцагчид…"
+  },
   "desktopEdit": {
     "edit": "Засах",
     "edit_named": "{name} засах",

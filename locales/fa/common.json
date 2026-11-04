@@ -7370,6 +7370,14 @@
     "copy_failed": "رونوشت پرونده ممکن نشد.",
     "reply_lost": "پاسخی که نوشتید نگه داشته نشد. پیام را باز کنید و از آنجا پاسخ دهید."
   },
+  "ux_pim_menu": {
+    "search_contacts": "جستجوی مخاطبین",
+    "search_files": "جستجوی پرونده‌ها",
+    "import": "وارد کردن",
+    "import_mail": "نامه…",
+    "import_calendar": "تقویم…",
+    "import_contacts": "مخاطبین…"
+  },
   "desktopEdit": {
     "edit": "ویرایش",
     "edit_named": "ویرایش {name}",

@@ -7370,6 +7370,14 @@
     "copy_failed": "Dosya kopyalanamadı.",
     "reply_lost": "Yazdığınız yanıt korunamadı. İletiyi açıp oradan yanıtlayın."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Kişilerde ara",
+    "search_files": "Dosyalarda ara",
+    "import": "İçe aktar",
+    "import_mail": "E-posta…",
+    "import_calendar": "Takvim…",
+    "import_contacts": "Kişiler…"
+  },
   "desktopEdit": {
     "edit": "Düzenle",
     "edit_named": "{name} dosyasını düzenle",
