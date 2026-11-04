@@ -7618,6 +7618,11 @@
     "merge_kept": "เก็บไว้",
     "import_show": "แสดง"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
+    "selection_more": "และอีก {count} รายการ",
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล"
+  },
   "desktopEdit": {
     "edit": "แก้ไข",
     "edit_named": "แก้ไข {name}",

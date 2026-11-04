@@ -7610,6 +7610,11 @@
     "merge_kept": "Zostane",
     "import_show": "Zobraziť"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybraný # kontakt} few {Vybrané # kontakty} other {Vybraných # kontaktov}}",
+    "selection_more": "a ďalšie {count}",
+    "no_addresses": "Žiadny z vybraných kontaktov nemá e-mailovú adresu."
+  },
   "desktopEdit": {
     "edit": "Upraviť",
     "edit_named": "Upraviť {name}",

@@ -7610,6 +7610,11 @@
     "merge_kept": "Залишиться",
     "import_show": "Показати"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Вибрано # контакт} few {Вибрано # контакти} many {Вибрано # контактів} other {Вибрано # контакту}}",
+    "selection_more": "і ще {count}",
+    "no_addresses": "Жоден із вибраних контактів не має адреси ел. пошти."
+  },
   "desktopEdit": {
     "edit": "Редагувати",
     "edit_named": "Редагувати {name}",

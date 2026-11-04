@@ -7610,6 +7610,11 @@
     "merge_kept": "Conservé",
     "import_show": "Afficher"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact sélectionné} other {# contacts sélectionnés}}",
+    "selection_more": "et {count} de plus",
+    "no_addresses": "Aucun des contacts sélectionnés n’a d’adresse e-mail."
+  },
   "desktopEdit": {
     "edit": "Modifier",
     "edit_named": "Modifier {name}",

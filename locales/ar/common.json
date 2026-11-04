@@ -7610,6 +7610,11 @@
     "merge_kept": "محفوظ",
     "import_show": "عرض"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {تم تحديد جهة اتصال واحدة} other {تم تحديد # جهة اتصال}}",
+    "selection_more": "و{count} غيرهم",
+    "no_addresses": "لا تملك أي من جهات الاتصال المحددة عنوان بريد إلكتروني."
+  },
   "desktopEdit": {
     "edit": "تعديل",
     "edit_named": "تعديل {name}",

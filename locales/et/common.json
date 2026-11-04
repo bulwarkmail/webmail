@@ -7610,6 +7610,11 @@
     "merge_kept": "Jääb alles",
     "import_show": "Näita"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valitud} other {# kontakti valitud}}",
+    "selection_more": "ja veel {count}",
+    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi."
+  },
   "desktopEdit": {
     "edit": "Muuda",
     "edit_named": "Muuda faili {name}",

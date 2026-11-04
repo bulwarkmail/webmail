@@ -7610,6 +7610,11 @@
     "merge_kept": "حفظ می‌شود",
     "import_show": "نمایش"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# مخاطب انتخاب شد} other {# مخاطب انتخاب شد}}",
+    "selection_more": "و {count} مورد دیگر",
+    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند."
+  },
   "desktopEdit": {
     "edit": "ویرایش",
     "edit_named": "ویرایش {name}",

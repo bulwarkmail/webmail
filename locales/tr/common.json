@@ -7610,6 +7610,11 @@
     "merge_kept": "Korunur",
     "import_show": "Göster"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kişi seçildi} other {# kişi seçildi}}",
+    "selection_more": "ve {count} kişi daha",
+    "no_addresses": "Seçilen kişilerin hiçbirinin e-posta adresi yok."
+  },
   "desktopEdit": {
     "edit": "Düzenle",
     "edit_named": "{name} dosyasını düzenle",

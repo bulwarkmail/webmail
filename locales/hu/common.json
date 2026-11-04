@@ -7610,6 +7610,11 @@
     "merge_kept": "Megmarad",
     "import_show": "Megjelenítés"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# névjegy kijelölve} other {# névjegy kijelölve}}",
+    "selection_more": "és még {count}",
+    "no_addresses": "A kijelölt névjegyek egyikének sincs e-mail-címe."
+  },
   "desktopEdit": {
     "edit": "Szerkesztés",
     "edit_named": "{name} szerkesztése",

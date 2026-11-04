@@ -7610,6 +7610,11 @@
     "merge_kept": "Blijft bewaard",
     "import_show": "Tonen"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact geselecteerd} other {# contacten geselecteerd}}",
+    "selection_more": "en nog {count}",
+    "no_addresses": "Geen van de geselecteerde contacten heeft een e-mailadres."
+  },
   "desktopEdit": {
     "edit": "Bewerken",
     "edit_named": "{name} bewerken",

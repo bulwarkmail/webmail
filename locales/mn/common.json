@@ -7610,6 +7610,11 @@
     "merge_kept": "Хадгалагдана",
     "import_show": "Харуулах"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# харилцагч сонгосон} other {# харилцагч сонгосон}}",
+    "selection_more": "болон өөр {count}",
+    "no_addresses": "Сонгосон харилцагчдын хэнд нь ч имэйл хаяг алга."
+  },
   "desktopEdit": {
     "edit": "Засах",
     "edit_named": "{name} засах",

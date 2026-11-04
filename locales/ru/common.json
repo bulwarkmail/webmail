@@ -7610,6 +7610,11 @@
     "merge_kept": "Сохранится",
     "import_show": "Показать"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Выбран # контакт} few {Выбрано # контакта} other {Выбрано # контактов}}",
+    "selection_more": "и ещё {count}",
+    "no_addresses": "Ни у одного из выбранных контактов нет адреса эл. почты."
+  },
   "desktopEdit": {
     "edit": "Изменить",
     "edit_named": "Изменить {name}",

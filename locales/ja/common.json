@@ -7610,6 +7610,11 @@
     "merge_kept": "残ります",
     "import_show": "表示"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {#件の連絡先を選択中}}",
+    "selection_more": "ほか{count}件",
+    "no_addresses": "選択した連絡先にはメールアドレスがありません。"
+  },
   "desktopEdit": {
     "edit": "編集",
     "edit_named": "{name} を編集",

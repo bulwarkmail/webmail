@@ -7610,6 +7610,11 @@
     "merge_kept": "保留",
     "import_show": "显示"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {已选择 # 位联系人}}",
+    "selection_more": "以及另外 {count} 位",
+    "no_addresses": "所选联系人都没有电子邮件地址。"
+  },
   "desktopEdit": {
     "edit": "编辑",
     "edit_named": "编辑 {name}",

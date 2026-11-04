@@ -68,6 +68,8 @@ interface ContactContextMenuProps {
   onBatchDelete?: () => void;
   /** Two or more ticked: merge them into one. */
   onBatchMerge?: () => void;
+  /** One new message to everyone ticked (pim-p3-7). */
+  onBatchCompose?: () => void;
   /** The contact is in an address book shared read-only: no Edit, Move or Delete. */
   readOnly?: boolean;
 }
@@ -94,6 +96,7 @@ export function ContactContextMenu({
   onBatchAddToGroup,
   onBatchDelete,
   onBatchMerge,
+  onBatchCompose,
   readOnly = false,
 }: ContactContextMenuProps) {
   const t = useTranslations("contacts");
@@ -141,6 +144,12 @@ export function ContactContextMenu({
         <ContextMenuHeader>
           {t("bulk.selected", { count: selectedCount })}
         </ContextMenuHeader>
+        {onBatchCompose && (
+          <>
+            <ContextMenuItem icon={Mail} label={t("context_menu.send_email")} onClick={handle(onBatchCompose)} />
+            <ContextMenuSeparator />
+          </>
+        )}
         <ContextMenuItem
           icon={Users}
           label={tMenu("contacts_bulk_add_to_group")}
@@ -155,14 +164,15 @@ export function ContactContextMenu({
         )}
         <ContextMenuItem
           icon={Download}
-          label={t("bulk.export")}
+          label={t("context_menu.export_vcard")}
           onClick={handle(() => onBatchExport?.())}
           disabled={!onBatchExport || exporting}
         />
         <ContextMenuSeparator />
         <ContextMenuItem
           icon={Trash2}
-          label={t("bulk.delete")}
+          label={t("context_menu.delete")}
+          shortcut="Del"
           onClick={handle(() => onBatchDelete?.())}
           disabled={!onBatchDelete}
           destructive

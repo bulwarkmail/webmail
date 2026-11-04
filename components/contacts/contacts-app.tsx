@@ -25,7 +25,8 @@ import { AddressBookPickerDialog } from "@/components/contacts/address-book-pick
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
-import { exportContacts } from "@/components/contacts/contact-export";
+import { exportContacts, useContactExportBusy } from "@/components/contacts/contact-export";
+import { ContactSelectionView, selectionRecipients } from "@/components/contacts/contact-selection-view";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { AppSidePanelPhoneButton, useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { contactToView } from "@/lib/plugin-projection";
@@ -114,6 +115,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const tCommon = useTranslations("common");
   const tShell = useTranslations("shell");
   const tMerge = useTranslations("ux_pim_cimport");
+  const tPc = useTranslations("ux_p3_pim_pc");
+  const exportBusy = useContactExportBusy();
   useDocumentTitle(tSidebar("contacts"));
   useDesktopWindowName(tSidebar("contacts"), { withAccount: true });
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
@@ -1028,6 +1031,16 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     setView("bulk-add-to-group");
   };
 
+  /** One new message to everyone ticked, in To (pim-p3-7). */
+  const handleBulkCompose = () => {
+    const recipients = selectionRecipients(contacts.filter((c) => selectedContactIds.has(c.id)));
+    if (recipients.length === 0) {
+      toast.error(tPc("no_addresses"));
+      return;
+    }
+    openComposeInApp(recipients, "to");
+  };
+
   const handleBulkExport = async () => {
     const toExport = contacts.filter(c => selectedContactIds.has(c.id));
     if (toExport.length > 0 && await exportContacts(toExport)) {
@@ -1081,6 +1094,25 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onAddToContacts={guard(handleAddDirectoryEntryToContacts)}
         />
       );
+    }
+    // Ticked contacts: what can be done with them, not the one that was open (pim-p3-7).
+    if (selectedContactIds.size > 0 && !isMobile && (view === "detail" || view === "list")) {
+      const chosen = contacts.filter((c) => selectedContactIds.has(c.id));
+      if (chosen.length > 0) {
+        return (
+          <ContactSelectionView
+            contacts={chosen}
+            onSendEmail={handleBulkCompose}
+            onAddToGroup={guard(handleBulkAddToGroup)}
+            onMoveTo={canMoveContacts ? () => handleMoveContacts(chosen.map((c) => c.id)) : undefined}
+            onMerge={handleBulkMerge}
+            onExport={() => { void handleBulkExport(); }}
+            onDelete={() => { void handleBulkDelete(); }}
+            onClear={clearSelection}
+            exporting={exportBusy}
+          />
+        );
+      }
     }
     switch (view) {
       case "create":
@@ -1504,6 +1536,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                   onComposeContact={handleComposeContact}
                   onMergeContact={(contact) => setMergePickFor(contact)}
                   onBulkMerge={handleBulkMerge}
+                  onBulkCompose={handleBulkCompose}
                   banner={duplicateGroups.length > 0 && view !== "duplicates" ? (
                     <button
                       type="button"

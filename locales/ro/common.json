@@ -7610,6 +7610,11 @@
     "merge_kept": "Se păstrează",
     "import_show": "Afișează"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selectat} few {# contacte selectate} other {# de contacte selectate}}",
+    "selection_more": "și încă {count}",
+    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail."
+  },
   "desktopEdit": {
     "edit": "Editează",
     "edit_named": "Editează {name}",

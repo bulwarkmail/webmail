@@ -7610,6 +7610,11 @@
     "merge_kept": "Saglabājas",
     "import_show": "Rādīt"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Atlasīts # kontakts} other {Atlasīti # kontakti}}",
+    "selection_more": "un vēl {count}",
+    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses."
+  },
   "desktopEdit": {
     "edit": "Rediģēt",
     "edit_named": "Rediģēt {name}",

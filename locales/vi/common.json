@@ -7622,6 +7622,11 @@
     "merge_kept": "Được giữ lại",
     "import_show": "Hiển thị"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {Đã chọn # liên hệ}}",
+    "selection_more": "và {count} người khác",
+    "no_addresses": "Không liên hệ nào được chọn có địa chỉ email."
+  },
   "desktopEdit": {
     "edit": "Chỉnh sửa",
     "edit_named": "Chỉnh sửa {name}",
