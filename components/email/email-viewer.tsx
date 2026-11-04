@@ -155,6 +155,7 @@ import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
+import { BreakableAddress } from "@/components/ui/breakable-address";
 import { mentionFromLink } from "@/lib/recipient-mentions";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
@@ -5403,6 +5404,11 @@ ${printWatermark ? printWatermark.html : ''}
           const fullDate = (iso?: string) => iso
             ? formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })
             : '-';
+          // A long date wraps over three lines in the narrow column: the short one
+          // shows, the full one is on hover.
+          const shownDate = (iso?: string) => iso
+            ? <time dateTime={iso} title={fullDate(iso)}>{formatDateTime(iso, timeFormat, { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+            : '-';
           const auth = email.authenticationResults;
           const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
           const topMimeType = email.bodyStructure?.type;
@@ -5413,7 +5419,7 @@ ${printWatermark ? printWatermark.html : ''}
           );
           const Row = ({ label, children, mono }: { label: string; children: React.ReactNode; mono?: boolean }) => (
             <>
-              <dt className="text-muted-foreground text-xs pt-1">{label}</dt>
+              <dt className="text-muted-foreground text-xs @sm:pt-1">{label}</dt>
               <dd className={cn(
                 "text-sm text-foreground min-w-0 break-words",
                 mono && "font-mono text-xs",
@@ -5430,7 +5436,7 @@ ${printWatermark ? printWatermark.html : ''}
             return (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
                   tooltip && "cursor-help",
                   status.icon === 'check' && "bg-green-500/[0.07] border-green-500/30",
                   status.icon === 'x' && "bg-red-500/[0.07] border-red-500/30",
@@ -5440,14 +5446,14 @@ ${printWatermark ? printWatermark.html : ''}
                 title={tooltip}
               >
                 <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
-                <span className="font-medium text-foreground">{name}</span>
-                <span className={cn("text-[0.6875rem]", status.color)}>
+                <span className="font-medium text-foreground whitespace-nowrap">{name}</span>
+                <span className={cn("text-[0.6875rem] whitespace-nowrap", status.color)}>
                   {translateAuthResult(result)}
                 </span>
                 {extra && (
                   <>
                     <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground">{extra}</span>
+                    <span className="text-muted-foreground truncate min-w-0" title={typeof extra === 'string' ? extra : undefined}>{extra}</span>
                   </>
                 )}
               </span>
@@ -5468,17 +5474,24 @@ ${printWatermark ? printWatermark.html : ''}
           );
 
           return (
-            <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
+            <div className="@container bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
+              <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-10 gap-y-5">
                 <section className="min-w-0">
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
                       <div className="flex flex-wrap items-center gap-1">
                         <RecipientPopover
                           name={sender?.name}
                           email={sender?.email || ''}
-                          displayLabel={sender?.name && sender?.email ? `${sender.name} <${sender.email}>` : undefined}
+                          label={sender?.name && sender?.email ? (
+                            <>
+                              <bdi className="block">{sender.name}</bdi>
+                              <bdi className="block text-muted-foreground" title={sender.email}>
+                                <BreakableAddress text={sender.email} />
+                              </bdi>
+                            </>
+                          ) : undefined}
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
@@ -5532,10 +5545,10 @@ ${printWatermark ? printWatermark.html : ''}
                       </Row>
                     )}
                     {email.sentAt && (
-                      <Row label={t('details.sent')}>{fullDate(email.sentAt)}</Row>
+                      <Row label={t('details.sent')}>{shownDate(email.sentAt)}</Row>
                     )}
                     <Row label={t('details.received')}>
-                      {fullDate(email.receivedAt)}
+                      {shownDate(email.receivedAt)}
                       {deliveryDeltaMs > 60000 && (
                         <span className="text-muted-foreground"> · {formatDelta(deliveryDeltaMs)} {t('details.delivery_time').toLowerCase()}</span>
                       )}
@@ -5580,7 +5593,7 @@ ${printWatermark ? printWatermark.html : ''}
                       )}
                       {email.spamScore !== undefined && (
                         <span className={cn(
-                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
                           email.spamScore > 5 ? "bg-red-500/[0.07] border-red-500/30" :
                           email.spamScore > 2 ? "bg-amber-500/[0.07] border-amber-500/30" :
                           "bg-green-500/[0.07] border-green-500/30",
@@ -5603,7 +5616,7 @@ ${printWatermark ? printWatermark.html : ''}
                           {email.spamStatus && (
                             <>
                               <span className="text-muted-foreground">·</span>
-                              <span className="text-muted-foreground">{email.spamStatus}</span>
+                              <span className="text-muted-foreground truncate min-w-0" title={email.spamStatus}>{email.spamStatus}</span>
                             </>
                           )}
                         </span>
@@ -5634,9 +5647,9 @@ ${printWatermark ? printWatermark.html : ''}
                 {hasIdentifiers && (
                   <section className="min-w-0">
                     <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                       {email.messageId && (
-                        <Row label={t('headers.message_id')} mono>{email.messageId}</Row>
+                        <Row label={t('headers.message_id')} mono><BreakableAddress text={email.messageId} /></Row>
                       )}
                       {email.inReplyTo && email.inReplyTo.length > 0 && (
                         <Row label={t('details.in_reply_to')} mono>
@@ -5668,7 +5681,7 @@ ${printWatermark ? printWatermark.html : ''}
 
                 <section className="min-w-0">
                   <SectionHeader>{t('details.message_properties')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     {email.subject !== undefined && (
                       <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
                     )}
@@ -5691,9 +5704,9 @@ ${printWatermark ? printWatermark.html : ''}
                 </section>
 
                 {hasListInfo && (
-                  <section className="lg:col-span-2 min-w-0">
+                  <section className="@3xl:col-span-2 min-w-0">
                     <SectionHeader>{t('details.mailing_list')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                       {listHeaders?.listId && (
                         <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
                       )}
@@ -5720,7 +5733,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {/* Plugin-supplied category. Plugins whose shouldShow accepts
                     `category === null` render their own titled section here. */}
                 {hasDetailsSlotOffers && (
-                  <section className="lg:col-span-2 min-w-0">
+                  <section className="@3xl:col-span-2 min-w-0">
                     <DetailsCategorySlot email={pluginEmailView} category={null} />
                   </section>
                 )}
