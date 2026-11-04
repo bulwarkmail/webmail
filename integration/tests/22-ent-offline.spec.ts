@@ -98,11 +98,11 @@ async function setPolicy(browser: Browser, patch: { organisation?: Record<string
 
 /** Settings > Backup & reset > Offline, switched on, and the first sync done. */
 async function enableOffline(page: Page, phone = false): Promise<void> {
-  await page.goto('/settings/backup/offline');
+  await page.goto('/settings/offline');
   const toggle = page.getByTestId('offline-switch');
   if (phone && !(await toggle.waitFor({ state: 'visible', timeout: 8_000 }).then(() => true, () => false))) {
     // On a phone the settings list may come first.
-    await page.getByText('Backup & reset', { exact: true }).first().click();
+    await page.getByTestId('settings-tab-offline').click();
   }
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click();
