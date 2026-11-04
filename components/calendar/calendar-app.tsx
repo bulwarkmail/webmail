@@ -144,6 +144,8 @@ type PendingScopeAction =
 
 /** How long a sideways scroll rests on a day before that day becomes the selection. */
 const VISIBLE_DATE_SETTLE_MS = 300;
+/** How long a just-created event stays marked. */
+const JUST_SAVED_MARK_MS = 3000;
 
 function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
@@ -274,6 +276,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const [miniMonth, setMiniMonth] = useState(() => displayNow());
   const [pendingScopeAction, setPendingScopeAction] = useState<PendingScopeAction | null>(null);
   const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
+  // The event created last keeps the top row of its week in Month, so a full
+  // day doesn't hide it, and is marked for a moment so it can be found
+  // (pim-p3-3).
+  const [justSaved, setJustSaved] = useState<{ id: string; marked: boolean } | null>(null);
+  useEffect(() => {
+    if (!justSaved?.marked) return;
+    const timer = setTimeout(() => setJustSaved((prev) => (prev ? { ...prev, marked: false } : prev)), JUST_SAVED_MARK_MS);
+    return () => clearTimeout(timer);
+  }, [justSaved]);
   const [detailAnchorRect, setDetailAnchorRect] = useState<DOMRect | null>(null);
   // A clicked event's card stays until closed; a hover preview goes when
   // the pointer leaves. Held in a ref too for the hover timers.
@@ -1245,6 +1256,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           const picked = pickedId ? useCalendarStore.getState().calendars.find((c) => c.id === pickedId) : undefined;
           if (picked) rememberEventCalendar(picked);
           focusCalendarOnEvent(created);
+          setJustSaved({ id: created.id, marked: true });
           if (sendSchedulingMessages) {
             toast.success(t("notifications.invitation_sent"));
           } else {
@@ -2061,6 +2073,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               currentUserEmails={currentUserEmails}
               canEditEvent={canEditEvent}
               selectedEventId={selectedEventId}
+              recentEventId={justSaved?.id ?? null}
+              highlightEventId={justSaved?.marked ? justSaved.id : null}
               onMoveEvent={handleMoveEvent}
             />
           );
