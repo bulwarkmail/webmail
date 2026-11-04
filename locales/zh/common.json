@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# 小时}}",
     "desktop_attention_title": "在这台电脑上"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "你的名字",
+      "description": "你给别人发邮件时,对方会在你的地址旁看到这个名字。",
+      "saved": "你的名字已保存。",
+      "error": "无法保存你的名字。请重试。"
+    },
+    "addresses": {
+      "description": "你可以用来发信的地址,每个地址都有自己的名字和签名。",
+      "label": "你的地址",
+      "count": "{count, plural, =0 {还没有地址} other {# 个地址}}",
+      "manage": "编辑地址…",
+      "modal_title": "你的电子邮件地址",
+      "add": "添加地址",
+      "edit": "编辑地址",
+      "added": "地址已添加。",
+      "saved": "地址已保存。",
+      "deleted": "地址已删除。",
+      "delete_title": "删除这个地址?"
+    },
+    "signatures": {
+      "title": "签名",
+      "description": "添加在你所写邮件的末尾。每个地址都有自己的签名。",
+      "saved": "签名已保存。",
+      "error": "无法保存签名。请重试。",
+      "no_addresses": "还没有可以发信的地址。"
+    },
+    "search": {
+      "addresses": "身份 别名 发件人 发件人地址 发件地址 identity alias sender",
+      "signatures": "签名 邮件签名 页脚 身份 发件人 发件地址 signature",
+      "your_name": "显示名称 全名 发件人姓名 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "请先输入服务器地址。",
     "server_declined": "你没有允许此服务器,因此没有向它发送任何内容。",

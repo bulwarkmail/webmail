@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
     "desktop_attention_title": "På denne datamaskinen"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Navnet ditt",
+      "description": "Folk ser dette navnet ved siden av adressen din når du sender dem e-post.",
+      "saved": "Navnet ditt er lagret.",
+      "error": "Navnet ditt kunne ikke lagres. Prøv igjen."
+    },
+    "addresses": {
+      "description": "Adressene du kan sende fra, hver med sitt eget navn og sin egen signatur.",
+      "label": "Adressene dine",
+      "count": "{count, plural, =0 {Ingen adresser ennå} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "E-postadressene dine",
+      "add": "Legg til adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er lagt til.",
+      "saved": "Adressen er lagret.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Vil du slette denne adressen?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Legges til på slutten av meldingene du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er lagret.",
+      "error": "Signaturen kunne ikke lagres. Prøv igjen.",
+      "no_addresses": "Det finnes ingen adresse å sende fra ennå."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias avsender avsenderadresse fra-adresse identity sender",
+      "signatures": "signatur e-postsignatur bunntekst identitet avsender fra-adresse signature",
+      "your_name": "visningsnavn fullt navn avsendernavn display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",

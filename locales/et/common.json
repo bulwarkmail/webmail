@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# tund} other {# tundi}}",
     "desktop_attention_title": "Selles arvutis"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Teie nimi",
+      "description": "Seda nime näevad inimesed teie aadressi kõrval, kui saadate neile kirja.",
+      "saved": "Teie nimi on salvestatud.",
+      "error": "Teie nime ei õnnestunud salvestada. Proovige uuesti."
+    },
+    "addresses": {
+      "description": "Aadressid, millelt saate saata, igaühel oma nimi ja allkiri.",
+      "label": "Teie aadressid",
+      "count": "{count, plural, =0 {Aadresse veel pole} one {# aadress} other {# aadressi}}",
+      "manage": "Muuda aadresse…",
+      "modal_title": "Teie e-posti aadressid",
+      "add": "Lisa aadress",
+      "edit": "Muuda aadressi",
+      "added": "Aadress lisatud.",
+      "saved": "Aadress salvestatud.",
+      "deleted": "Aadress kustutatud.",
+      "delete_title": "Kas kustutada see aadress?"
+    },
+    "signatures": {
+      "title": "Allkirjad",
+      "description": "Lisatakse teie kirjutatud kirjade lõppu. Igal aadressil on oma.",
+      "saved": "Allkiri salvestatud.",
+      "error": "Allkirja ei õnnestunud salvestada. Proovige uuesti.",
+      "no_addresses": "Teil pole veel aadressi, millelt saata."
+    },
+    "search": {
+      "addresses": "identiteet identiteedid alias saatja saatja aadress saatja nimi identity alias sender",
+      "signatures": "allkiri e-kirja allkiri jalus identiteet saatja saatja aadress signature",
+      "your_name": "kuvatav nimi täisnimi saatja nimi display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Sisesta kõigepealt serveri aadress.",
     "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",

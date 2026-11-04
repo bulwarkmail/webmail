@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, GripVertical, Plus, Star, AlertCircle, ChevronRight, ChevronUp, ChevronDown } from '@/components/icons';
+import { Check, GripVertical, Plus, Star, AlertCircle, ChevronRight, ChevronUp, ChevronDown, X } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAccountStore, type AccountEntry } from '@/stores/account-store';
@@ -12,18 +12,18 @@ import { SettingsSection, SettingItem } from './settings-section';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
-import { getMaxAccounts, accountRowText } from '@/lib/account-utils';
+import { getMaxAccounts, accountRowText, accountSharesAddress } from '@/lib/account-utils';
 import { formatFileSize, cn } from '@/lib/utils';
 import { toUnicodeDomain, toUnicodeEmail } from '@/lib/idn';
 import { IS_LITE } from '@/lib/lite';
-import { isPasswordSession } from '@/lib/auth/password-session';
 import { usePolicyStore } from '@/stores/policy-store';
 import { AccountArchiveSettings } from './account-archive-settings';
 import { SignOutRow } from './sign-out-row';
-import { DisplayNameSection } from './account-security-settings';
+import { YourNameRow } from './your-name-row';
 import { EmailAddressesSection } from './identity-settings';
 import { MultipleAccountsSection } from './layout-settings';
-import { useAccountSecurityStore } from '@/stores/account-security-store';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 
 function hostnameOf(serverUrl: string): string {
   try { return toUnicodeDomain(new URL(serverUrl).hostname); } catch { return serverUrl; }
@@ -42,30 +42,15 @@ function firstScopedTab(caps: SharedAccount['capabilities']): string | null {
 export function AccountSettings() {
   const t = useTranslations('settings.account');
   const tCommon = useTranslations('common');
+  const tSidebar = useTranslations('sidebar');
   const router = useRouter();
+  const removeAccount = useAuthStore((s) => s.removeAccount);
+  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
   const { username, serverUrl, isDemoMode, primaryIdentity, authMode, client } = useAuthStore();
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const switchAccount = useAuthStore((s) => s.switchAccount);
   const setManagedAccount = useManagedAccountStore((s) => s.setManagedAccount);
   const archiveEnabled = usePolicyStore((s) => s.isFeatureEnabled('accountArchiveEnabled')) && !IS_LITE && !isDemoMode;
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  // The display name is editable on Stalwart (the principal's name) for
-  // password sign-ins; identity-provider and token sessions cannot manage
-  // the principal.
-  const { isStalwart, probe, fetchPrincipal } = useAccountSecurityStore();
-  const activeAccount = useAccountStore((s) => (activeAccountId ? s.getAccountById(activeAccountId) : undefined));
-  const canEditDisplayName = isStalwart === true && isPasswordSession(authMode, activeAccount);
-  // Wait for `client` before probing, as the Security page does: on reload
-  // the persisted session flips authenticated before the client reconnects.
-  useEffect(() => {
-    if (!isAuthenticated || !client) return;
-    if (isStalwart === null) {
-      void probe().then((detected) => { if (detected) void fetchPrincipal(); });
-    } else if (isStalwart) {
-      void fetchPrincipal();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, client, isStalwart]);
 
   // Shared/group accounts delegated to this session (excludes the user's own
   // primary account). These can be drilled into for scoped settings editing.
@@ -83,10 +68,8 @@ export function AccountSettings() {
   const draggedIndexRef = useRef<number | null>(null);
 
   const quotaPercentage = quota && quota.total > 0 ? Math.min(Math.round((quota.used / quota.total) * 100), 100) : 0;
-  // `account.displayName` is refreshed from the server on every login/restore
-  // (Stalwart principal "Full name" when available - #900); the identity name
-  // is only a fallback until that entry exists.
-  const displayName = account?.displayName || primaryIdentity?.name || (isDemoMode ? 'Nora Lindqvist' : undefined);
+  // Shown when there is no identity to edit: the name the app knows.
+  const displayName = primaryIdentity?.name || account?.displayName || (isDemoMode ? 'Nora Lindqvist' : undefined);
   const email = primaryIdentity?.email || account?.email || username;
   const max = getMaxAccounts();
 
@@ -131,6 +114,18 @@ export function AccountSettings() {
     void switchAccount(id);
   }, [activeAccountId, switchAccount]);
 
+  // The switcher has no remove button on its rows; an account you're not in
+  // is removed here ("Manage accounts…" leads to this list).
+  const handleRemove = useCallback(async (target: AccountEntry) => {
+    const ok = await confirm({
+      title: tSidebar('remove_account_title'),
+      message: tSidebar('remove_account_confirm', { account: toUnicodeEmail(target.email || target.username) }),
+      confirmText: tSidebar('remove_account'),
+      variant: 'destructive',
+    });
+    if (ok) removeAccount(target.id);
+  }, [confirm, removeAccount, tSidebar]);
+
   const handleAddAccount = useCallback(() => {
     router.push(`/login?mode=add-account` as never);
   }, [router]);
@@ -148,14 +143,9 @@ export function AccountSettings() {
   return (
     <div className="space-y-8">
       <SettingsSection id="profile" title={t('title')} description={t('description')}>
-        {/* Display Name: editable where the server lets us, read-only otherwise. */}
-        {canEditDisplayName ? (
-          <DisplayNameSection />
-        ) : (
-          <SettingItem label={t('name_label')}>
-            <span className="text-sm text-foreground">{displayName || tCommon('unknown')}</span>
-          </SettingItem>
-        )}
+        {/* One name: the primary address's, what recipients see (settings-p2-2).
+            Stalwart's principal description is an admin's field and isn't shown. */}
+        <YourNameRow fallbackName={displayName} />
 
         {/* Email Address */}
         <SettingItem label={t('email.label')}>
@@ -225,13 +215,20 @@ export function AccountSettings() {
 
       {/* Logged-in accounts list */}
       {accounts.length > 0 && (
-        <SettingsSection id="browser" title={t('accounts.title')} description={t('accounts.description')}>
+        <SettingsSection
+          id="browser"
+          title={t('accounts.title')}
+          // "Drag to change the order" says nothing with one account.
+          description={accounts.length > 1 ? t('accounts.description') : undefined}
+        >
           <div className="space-y-2">
             {accounts.map((a, index) => (
               <AccountRow
                 key={a.id}
                 account={a}
                 text={accountRowText(a, accounts)}
+                showServer={a.hasError || accountSharesAddress(a, accounts)}
+                canReorder={accounts.length > 1}
                 index={index}
                 isActive={a.id === activeAccountId}
                 isFirst={index === 0}
@@ -245,6 +242,7 @@ export function AccountSettings() {
                 onMoveDown={() => moveAccount(index, index + 1)}
                 onSwitch={() => handleSwitch(a.id)}
                 onSetDefault={() => setDefaultAccount(a.id)}
+                onRemove={() => void handleRemove(a)}
                 labels={{
                   active: t('accounts.active'),
                   default: t('accounts.default_badge'),
@@ -253,6 +251,7 @@ export function AccountSettings() {
                   moveUp: t('accounts.move_up'),
                   moveDown: t('accounts.move_down'),
                   dragHandle: t('accounts.drag_handle'),
+                  remove: tSidebar('remove_account'),
                 }}
               />
             ))}
@@ -271,6 +270,8 @@ export function AccountSettings() {
           </div>
         </SettingsSection>
       )}
+
+      <ConfirmDialog {...confirmDialogProps} />
 
       {archiveEnabled && <AccountArchiveSettings />}
 
@@ -320,6 +321,10 @@ export function AccountSettings() {
 interface AccountRowProps {
   account: AccountEntry;
   text: { title: string; subtitle: string | null };
+  /** The server line: only for an account in trouble or a shared address. */
+  showServer: boolean;
+  /** Dragging and the arrows: only with two accounts or more. */
+  canReorder: boolean;
   index: number;
   isActive: boolean;
   isFirst: boolean;
@@ -333,6 +338,7 @@ interface AccountRowProps {
   onMoveDown: () => void;
   onSwitch: () => void;
   onSetDefault: () => void;
+  onRemove: () => void;
   labels: {
     active: string;
     default: string;
@@ -341,12 +347,15 @@ interface AccountRowProps {
     moveUp: string;
     moveDown: string;
     dragHandle: string;
+    remove: string;
   };
 }
 
 function AccountRow({
   account,
   text,
+  showServer,
+  canReorder,
   index,
   isActive,
   isFirst,
@@ -360,11 +369,12 @@ function AccountRow({
   onMoveDown,
   onSwitch,
   onSetDefault,
+  onRemove,
   labels,
 }: AccountRowProps) {
   return (
     <div
-      draggable
+      draggable={canReorder}
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={(e) => onDrop(e, index)}
@@ -378,12 +388,14 @@ function AccountRow({
             : 'border-border hover:bg-muted/50'
       )}
     >
-      <div
-        className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0"
-        title={labels.dragHandle}
-      >
-        <GripVertical className="w-4 h-4" />
-      </div>
+      {canReorder && (
+        <div
+          className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0"
+          title={labels.dragHandle}
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
 
       <div className="relative flex-shrink-0">
         <Avatar
@@ -412,7 +424,7 @@ function AccountRow({
         title={isActive ? labels.active : labels.switchTo}
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium truncate">
+          <span className="text-sm font-medium wrap-anywhere" title={toUnicodeEmail(text.title)}>
             {toUnicodeEmail(text.title)}
           </span>
           {account.isDefault && (
@@ -420,23 +432,18 @@ function AccountRow({
           )}
         </div>
         {text.subtitle && (
-          <p dir="ltr" className="text-xs text-muted-foreground truncate rtl:text-right">
+          <p dir="ltr" className="text-xs text-muted-foreground wrap-anywhere rtl:text-right">
             {toUnicodeEmail(text.subtitle)}
           </p>
         )}
-        <div className="flex items-center gap-1 mt-0.5">
-          {account.hasError ? (
-            <AlertCircle className="w-3 h-3 text-destructive" />
-          ) : (
-            <span className={cn(
-              'w-1.5 h-1.5 rounded-full',
-              account.isConnected ? 'bg-green-500' : 'bg-muted-foreground/40'
-            )} />
-          )}
-          <span className="text-[0.625rem] text-muted-foreground truncate">
-            {hostnameOf(account.serverUrl)}
-          </span>
-        </div>
+        {showServer && (
+          <div className="flex items-center gap-1 mt-0.5" data-testid="account-server">
+            {account.hasError && <AlertCircle className="w-3 h-3 text-destructive" />}
+            <span className="text-xs text-muted-foreground truncate">
+              {hostnameOf(account.serverUrl)}
+            </span>
+          </div>
+        )}
       </button>
 
       <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -451,6 +458,7 @@ function AccountRow({
             <Star className="w-3.5 h-3.5" />
           </button>
         )}
+        {canReorder && (<>
         <button
           type="button"
           onClick={onMoveUp}
@@ -471,6 +479,18 @@ function AccountRow({
         >
           <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
+        </>)}
+        {!isActive && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+            title={labels.remove}
+            aria-label={labels.remove}
+          >
+            <X className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        )}
       </div>
     </div>
   );

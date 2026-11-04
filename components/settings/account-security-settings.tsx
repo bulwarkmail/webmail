@@ -174,60 +174,6 @@ function PasswordChangeSection() {
   );
 }
 
-/**
- * Editable display name (the Stalwart principal's name). Rendered by the
- * Account page's Profile section; the Security page no longer repeats it.
- */
-export function DisplayNameSection() {
-  const t = useTranslations('settings.security');
-  const { displayName, updateDisplayName, isSaving, isLoadingPrincipal } = useAccountSecurityStore();
-  const [name, setName] = useState(displayName);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setName(displayName);
-  }, [displayName]);
-
-  const handleSave = async () => {
-    try {
-      await updateDisplayName(name);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      toast.success(t('display_name.success'));
-    } catch (err) {
-      toast.error(t('display_name.error'), err instanceof Error ? err.message : undefined);
-    }
-  };
-
-  if (isLoadingPrincipal) {
-    return (
-      <SettingItem label={t('display_name.label')} description={t('display_name.description')}>
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-      </SettingItem>
-    );
-  }
-
-  return (
-    <SettingItem label={t('display_name.label')} description={t('display_name.description')}>
-      <div className="flex items-center gap-2">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={displayName || t('display_name.placeholder')}
-          className="w-48"
-        />
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={isSaving || name === displayName}
-        >
-          {saved ? <Check className="w-4 h-4" /> : isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('display_name.save')}
-        </Button>
-      </div>
-    </SettingItem>
-  );
-}
-
 function generateTotp(accountLabel: string, issuer: string): { totp: OTPAuth.TOTP; url: string } {
   const totp = new OTPAuth.TOTP({
     issuer,

@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# 小時}}",
     "desktop_attention_title": "在這台電腦上"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "你的名稱",
+      "description": "你寄信給別人時,對方會在你的地址旁看到這個名稱。",
+      "saved": "你的名稱已儲存。",
+      "error": "無法儲存你的名稱。請再試一次。"
+    },
+    "addresses": {
+      "description": "你可以用來寄信的地址,每個地址都有自己的名稱和簽名。",
+      "label": "你的地址",
+      "count": "{count, plural, =0 {還沒有地址} other {# 個地址}}",
+      "manage": "編輯地址…",
+      "modal_title": "你的電子郵件地址",
+      "add": "新增地址",
+      "edit": "編輯地址",
+      "added": "已新增地址。",
+      "saved": "已儲存地址。",
+      "deleted": "已刪除地址。",
+      "delete_title": "要刪除這個地址嗎?"
+    },
+    "signatures": {
+      "title": "簽名",
+      "description": "加在你所寫郵件的結尾。每個地址都有自己的簽名。",
+      "saved": "已儲存簽名。",
+      "error": "無法儲存簽名。請再試一次。",
+      "no_addresses": "還沒有可以寄信的地址。"
+    },
+    "search": {
+      "addresses": "身分 別名 寄件者 寄件者地址 寄件地址 identity alias sender",
+      "signatures": "簽名 郵件簽名 頁尾 身分 寄件者 寄件地址 signature",
+      "your_name": "顯示名稱 全名 寄件者名稱 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",

@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# ora} other {# ore}}",
     "desktop_attention_title": "Su questo computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Il tuo nome",
+      "description": "Le persone vedono questo nome accanto al tuo indirizzo quando scrivi loro.",
+      "saved": "Il tuo nome è stato salvato.",
+      "error": "Non è stato possibile salvare il tuo nome. Riprova."
+    },
+    "addresses": {
+      "description": "Gli indirizzi da cui puoi inviare, ognuno con il proprio nome e la propria firma.",
+      "label": "I tuoi indirizzi",
+      "count": "{count, plural, =0 {Ancora nessun indirizzo} one {# indirizzo} other {# indirizzi}}",
+      "manage": "Modifica indirizzi…",
+      "modal_title": "I tuoi indirizzi email",
+      "add": "Aggiungi indirizzo",
+      "edit": "Modifica indirizzo",
+      "added": "Indirizzo aggiunto.",
+      "saved": "Indirizzo salvato.",
+      "deleted": "Indirizzo eliminato.",
+      "delete_title": "Eliminare questo indirizzo?"
+    },
+    "signatures": {
+      "title": "Firme",
+      "description": "Aggiunta alla fine dei messaggi che scrivi. Ogni indirizzo ha la sua.",
+      "saved": "Firma salvata.",
+      "error": "Non è stato possibile salvare la firma. Riprova.",
+      "no_addresses": "Non c'è ancora un indirizzo da cui inviare."
+    },
+    "search": {
+      "addresses": "identità alias mittente indirizzo del mittente indirizzo da identity sender",
+      "signatures": "firma firma email piè di pagina identità mittente indirizzo da signature",
+      "your_name": "nome visualizzato nome completo nome del mittente display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Inserisci prima l'indirizzo del server.",
     "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",

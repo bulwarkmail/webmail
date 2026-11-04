@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# Stunde} other {# Stunden}}",
     "desktop_attention_title": "Auf diesem Computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Ihr Name",
+      "description": "Diesen Namen sehen andere neben Ihrer Adresse, wenn Sie ihnen schreiben.",
+      "saved": "Ihr Name ist gespeichert.",
+      "error": "Ihr Name konnte nicht gespeichert werden. Versuchen Sie es noch einmal."
+    },
+    "addresses": {
+      "description": "Die Adressen, von denen Sie senden können, jede mit eigenem Namen und eigener Signatur.",
+      "label": "Ihre Adressen",
+      "count": "{count, plural, =0 {Noch keine Adressen} one {# Adresse} other {# Adressen}}",
+      "manage": "Adressen bearbeiten…",
+      "modal_title": "Ihre E-Mail-Adressen",
+      "add": "Adresse hinzufügen",
+      "edit": "Adresse bearbeiten",
+      "added": "Adresse hinzugefügt.",
+      "saved": "Adresse gespeichert.",
+      "deleted": "Adresse gelöscht.",
+      "delete_title": "Diese Adresse löschen?"
+    },
+    "signatures": {
+      "title": "Signaturen",
+      "description": "Steht am Ende der Nachrichten, die Sie schreiben. Jede Adresse hat ihre eigene.",
+      "saved": "Signatur gespeichert.",
+      "error": "Die Signatur konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
+      "no_addresses": "Es gibt noch keine Adresse zum Senden."
+    },
+    "search": {
+      "addresses": "Identität Identitäten Alias Aliasse Absender Absenderadresse Von-Adresse Absendername identity alias sender",
+      "signatures": "Signatur E-Mail-Signatur Grußformel Fußzeile Identität Absender Von-Adresse signature",
+      "your_name": "Anzeigename vollständiger Name Absendername display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
     "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",

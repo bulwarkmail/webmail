@@ -1,4 +1,5 @@
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { toUnicodeEmail } from '@/lib/idn';
 
 /**
  * Utilities for multi-account support:
@@ -172,6 +173,19 @@ export function accountRowText(
   const shared = accounts.some((a) => a.id !== account.id && key(nameOf(a)) === key(name));
   if (!name || shared || key(name) === key(address)) return { title: address, subtitle: null };
   return { title: name, subtitle: address };
+}
+
+/**
+ * Whether another signed-in account has the same address (one mailbox on two
+ * servers). Only then is the server worth a line under an account: in every
+ * other case it says nothing the person needs (settings-14, settings-p2-11).
+ */
+export function accountSharesAddress(
+  account: NamedAccount,
+  accounts: NamedAccount[],
+): boolean {
+  const key = (a: NamedAccount) => toUnicodeEmail(a.email || a.username).trim().toLowerCase();
+  return accounts.some((other) => other.id !== account.id && key(other) === key(account));
 }
 
 /**

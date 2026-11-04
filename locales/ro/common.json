@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
     "desktop_attention_title": "Pe acest computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Numele dvs.",
+      "description": "Oamenii văd acest nume lângă adresa dvs. când le trimiteți e-mail.",
+      "saved": "Numele dvs. a fost salvat.",
+      "error": "Numele dvs. nu a putut fi salvat. Încercați din nou."
+    },
+    "addresses": {
+      "description": "Adresele de pe care puteți trimite, fiecare cu numele și semnătura ei.",
+      "label": "Adresele dvs.",
+      "count": "{count, plural, =0 {Încă nicio adresă} one {# adresă} few {# adrese} other {# de adrese}}",
+      "manage": "Editați adresele…",
+      "modal_title": "Adresele dvs. de e-mail",
+      "add": "Adăugați o adresă",
+      "edit": "Editați adresa",
+      "added": "Adresa a fost adăugată.",
+      "saved": "Adresa a fost salvată.",
+      "deleted": "Adresa a fost ștearsă.",
+      "delete_title": "Ștergeți această adresă?"
+    },
+    "signatures": {
+      "title": "Semnături",
+      "description": "Se adaugă la sfârșitul mesajelor pe care le scrieți. Fiecare adresă are semnătura ei.",
+      "saved": "Semnătura a fost salvată.",
+      "error": "Semnătura nu a putut fi salvată. Încercați din nou.",
+      "no_addresses": "Nu există încă nicio adresă de pe care să trimiteți."
+    },
+    "search": {
+      "addresses": "identitate identități alias expeditor adresa expeditorului adresa de la identity sender",
+      "signatures": "semnătură semnătură e-mail subsol identitate expeditor adresa de la signature",
+      "your_name": "nume afișat nume complet numele expeditorului display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Introdu mai întâi adresa serverului.",
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",

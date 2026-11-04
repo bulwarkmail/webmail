@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
     "desktop_attention_title": "Bu bilgisayarda"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Adınız",
+      "description": "Birine e-posta gönderdiğinizde bu adı adresinizin yanında görür.",
+      "saved": "Adınız kaydedildi.",
+      "error": "Adınız kaydedilemedi. Yeniden deneyin."
+    },
+    "addresses": {
+      "description": "Gönderebileceğiniz adresler; her birinin kendi adı ve imzası var.",
+      "label": "Adresleriniz",
+      "count": "{count, plural, =0 {Henüz adres yok} one {# adres} other {# adres}}",
+      "manage": "Adresleri düzenle…",
+      "modal_title": "E-posta adresleriniz",
+      "add": "Adres ekle",
+      "edit": "Adresi düzenle",
+      "added": "Adres eklendi.",
+      "saved": "Adres kaydedildi.",
+      "deleted": "Adres silindi.",
+      "delete_title": "Bu adres silinsin mi?"
+    },
+    "signatures": {
+      "title": "İmzalar",
+      "description": "Yazdığınız iletilerin sonuna eklenir. Her adresin kendi imzası vardır.",
+      "saved": "İmza kaydedildi.",
+      "error": "İmza kaydedilemedi. Yeniden deneyin.",
+      "no_addresses": "Henüz gönderebileceğiniz bir adres yok."
+    },
+    "search": {
+      "addresses": "kimlik kimlikler takma ad gönderen gönderen adresi kimden adresi identity alias sender",
+      "signatures": "imza e-posta imzası alt bilgi kimlik gönderen kimden adresi signature",
+      "your_name": "görünen ad tam ad gönderen adı display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",

@@ -1,9 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-// Removing an account from the popover: the app's confirm dialog instead of
-// the browser's, a control a touch screen can reach, and sign-out rows in
-// the menu's plain text colour.
+// The popover's rows: no remove button (settings-p2-11), whole addresses,
+// and sign-out rows in the menu's plain text colour.
 
 const { AccountSwitcher } = await import('../account-switcher');
 const { useAccountStore } = await import('@/stores/account-store');
@@ -18,35 +17,34 @@ function account(id: string) {
   };
 }
 
-const removeAccount = vi.fn();
-
 beforeEach(() => {
-  removeAccount.mockClear();
   useAccountStore.setState({ accounts: [account('a'), account('b')] } as never);
-  useAuthStore.setState({ activeAccountId: 'a', removeAccount } as never);
+  useAuthStore.setState({ activeAccountId: 'a' } as never);
   useSettingsStore.setState({ interfaceLayout: 'default' } as never);
 });
 
 describe('removing an account from the popover', () => {
-  it('asks with the app dialog, not the browser, and removes on confirm', async () => {
-    const browserConfirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  // settings-p2-11: each row had a hidden X next to "Sign out of …" below.
+  // An account you're not in is removed under Settings > Account, where
+  // "Manage accounts…" leads.
+  it('has no remove button on the rows', () => {
     render(<AccountSwitcher variant="rail" />);
     fireEvent.click(screen.getByTestId('account-switcher'));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'remove_account' }));
-
-    expect(browserConfirm).not.toHaveBeenCalled();
-    const dialog = screen.getByRole('alertdialog', { name: 'remove_account_title' });
-    expect(removeAccount).not.toHaveBeenCalled();
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'remove_account' })); });
-    expect(removeAccount).toHaveBeenCalledWith('b');
-    expect(dialog).not.toBeInTheDocument();
-    browserConfirm.mockRestore();
+    expect(screen.queryByRole('menuitem', { name: 'remove_account' })).toBeNull();
+    expect(screen.getAllByTestId('account-option')).toHaveLength(2);
   });
 
-  it('keeps the remove control visible on a touch screen', () => {
+  // The address is what tells two same-named accounts apart, and it was cut
+  // ("dso-ux-settings@example…").
+  it('shows the whole address, wrapped, with the full text as a tooltip', () => {
+    const long = (id: string, email: string) => ({ ...account(id), email, username: email, label: 'Sam', displayName: 'Sam' });
+    useAccountStore.setState({ accounts: [long('a', 'dso-ux-settings@example.org'), long('b', 'dso-ux-settings-b@example.org')] } as never);
     render(<AccountSwitcher variant="rail" />);
     fireEvent.click(screen.getByTestId('account-switcher'));
-    expect(screen.getByRole('menuitem', { name: 'remove_account' }).className).toContain('pointer-coarse:opacity-100');
+    const title = screen.getByText('dso-ux-settings-b@example.org');
+    expect(title.className).not.toContain('truncate');
+    expect(title.className).toContain('wrap-anywhere');
+    expect(title.getAttribute('title')).toBe('dso-ux-settings-b@example.org');
   });
 
   it('draws "sign out of all accounts" like the other rows, start-aligned', () => {

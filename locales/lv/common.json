@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, zero {# stundu} one {# stunda} other {# stundas}}",
     "desktop_attention_title": "Šajā datorā"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Jūsu vārds",
+      "description": "Šo vārdu cilvēki redz blakus jūsu adresei, kad sūtāt viņiem vēstuli.",
+      "saved": "Jūsu vārds ir saglabāts.",
+      "error": "Jūsu vārdu neizdevās saglabāt. Mēģiniet vēlreiz."
+    },
+    "addresses": {
+      "description": "Adreses, no kurām varat sūtīt, katrai savs vārds un paraksts.",
+      "label": "Jūsu adreses",
+      "count": "{count, plural, =0 {Vēl nav adrešu} zero {# adrešu} one {# adrese} other {# adreses}}",
+      "manage": "Rediģēt adreses…",
+      "modal_title": "Jūsu e-pasta adreses",
+      "add": "Pievienot adresi",
+      "edit": "Rediģēt adresi",
+      "added": "Adrese pievienota.",
+      "saved": "Adrese saglabāta.",
+      "deleted": "Adrese izdzēsta.",
+      "delete_title": "Vai dzēst šo adresi?"
+    },
+    "signatures": {
+      "title": "Paraksti",
+      "description": "Tiek pievienots jūsu rakstīto ziņojumu beigās. Katrai adresei ir savs.",
+      "saved": "Paraksts saglabāts.",
+      "error": "Parakstu neizdevās saglabāt. Mēģiniet vēlreiz.",
+      "no_addresses": "Vēl nav adreses, no kuras sūtīt."
+    },
+    "search": {
+      "addresses": "identitāte identitātes aizstājvārds sūtītājs sūtītāja adrese no adrese identity alias sender",
+      "signatures": "paraksts e-pasta paraksts kājene identitāte sūtītājs no adrese signature",
+      "your_name": "parādāmais vārds pilns vārds sūtītāja vārds display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",

@@ -7153,6 +7153,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# heure} other {# heures}}",
     "desktop_attention_title": "Sur cet ordinateur"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Votre nom",
+      "description": "Les gens voient ce nom à côté de votre adresse quand vous leur écrivez.",
+      "saved": "Votre nom est enregistré.",
+      "error": "Votre nom n'a pas pu être enregistré. Réessayez."
+    },
+    "addresses": {
+      "description": "Les adresses depuis lesquelles vous pouvez envoyer, chacune avec son nom et sa signature.",
+      "label": "Vos adresses",
+      "count": "{count, plural, =0 {Pas encore d'adresse} one {# adresse} other {# adresses}}",
+      "manage": "Modifier les adresses…",
+      "modal_title": "Vos adresses e-mail",
+      "add": "Ajouter une adresse",
+      "edit": "Modifier l'adresse",
+      "added": "Adresse ajoutée.",
+      "saved": "Adresse enregistrée.",
+      "deleted": "Adresse supprimée.",
+      "delete_title": "Supprimer cette adresse ?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "Ajoutée à la fin des messages que vous écrivez. Chaque adresse a la sienne.",
+      "saved": "Signature enregistrée.",
+      "error": "La signature n'a pas pu être enregistrée. Réessayez.",
+      "no_addresses": "Vous n'avez encore aucune adresse d'envoi."
+    },
+    "search": {
+      "addresses": "identité identités alias expéditeur adresse d'expédition adresse de l'expéditeur identity alias sender",
+      "signatures": "signature signature e-mail pied de page identité expéditeur adresse d'expédition",
+      "your_name": "nom affiché nom complet nom de l'expéditeur display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
