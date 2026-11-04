@@ -1261,6 +1261,44 @@ describe('what else goes with a wipe', () => {
   });
 });
 
+describe('the HTTP cache in the desktop app', () => {
+  it('goes with a wipe, also of one account with another still signed in', async () => {
+    const clear = vi.fn(async () => {});
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', mode: 'standalone', httpCache: { clear } };
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)] } as never);
+    try {
+      await wipe.wipeAccountFromDevice(ALICE, 'user');
+      expect(clear).toHaveBeenCalled();
+    } finally {
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    }
+  });
+});
+
+describe('the 30 days', () => {
+  it('run out in an app that stays open too', async () => {
+    const offline = await import('../offline-mode');
+    const stop = offline.startOfflineMode();
+    try {
+      state.markEvicted(ALICE, Date.now() - 31 * 24 * 60 * 60 * 1000);
+      useAccountStore.setState({ accounts: [] } as never);
+      const before = purge.files;
+      expect(offline.EVICTED_SWEEP_MS).toBeLessThanOrEqual(60 * 60 * 1000);
+      const spy = vi.spyOn(globalThis, 'setInterval');
+      stop();
+      const again = offline.startOfflineMode();
+      const tick = spy.mock.calls.find((call) => call[1] === offline.EVICTED_SWEEP_MS)?.[0] as (() => void) | undefined;
+      expect(tick).toBeTypeOf('function');
+      spy.mockRestore();
+      tick!();
+      await vi.waitFor(() => expect(purge.files).toBeGreaterThan(before));
+      again();
+    } finally {
+      stop();
+    }
+  });
+});
+
 describe('a shell that never answers about shown notifications', () => {
   // Electron has no answer to getNotifications(): the promise stays pending for good.
   beforeEach(() => {

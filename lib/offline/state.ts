@@ -69,6 +69,10 @@ interface OfflineState {
   startedOffline: boolean;
   /** The browser won't hand out the private file system here: a private window, say. */
   storageBlocked: boolean;
+  /** This computer's key store is there and wouldn't take a store key. Settings say so. */
+  keyUnprotected: boolean;
+  /** Re-encryptions: how far each got, or that it didn't finish. */
+  rekey: Record<string, number | 'failed'>;
   /**
    * Accounts whose store came back empty since this page loaded: the browser
    * cleared their key or file. Whatever warns about eviction can go by this.
@@ -137,6 +141,8 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   startedOffline: false,
   storeLost: [],
   storageBlocked: false,
+  keyUnprotected: false,
+  rekey: {},
   outbox: [],
   pendingChanges: 0,
   conflicts: [],
@@ -252,6 +258,63 @@ export function clearEvicted(account: string): void {
   if (!(account in evicted)) return;
   delete evicted[account];
   writeEvicted(evicted);
+}
+
+/**
+ * localStorage: the JMAP account and the server each store belongs to. The app's account id is only
+ * `username@host`, and an address can move to another person, so that alone doesn't vouch for a
+ * store that waits for a sign-in.
+ */
+export const OFFLINE_OWNERS_KEY = 'bulwark-offline-owners';
+
+export interface StoreOwner {
+  jmap: string;
+  server: string;
+}
+
+export function readStoreOwners(): Record<string, StoreOwner> {
+  return readRecord<StoreOwner>(OFFLINE_OWNERS_KEY);
+}
+
+let storeOwnerChanged: ((account: string) => Promise<void>) | null = null;
+
+/** Lib/offline/offline-mode.ts takes the data away. No Lite, no store: nothing does. */
+export function onStoreOwnerChanged(listener: (account: string) => Promise<void>): () => void {
+  storeOwnerChanged = listener;
+  return () => {
+    if (storeOwnerChanged === listener) storeOwnerChanged = null;
+  };
+}
+
+/**
+ * A sign-in, once the server has said who this is and before the account is added. A store waiting
+ * for this address that belongs to another JMAP account or another server isn't theirs: an address
+ * can be given to someone new, and a host can run a second server on another port. Its data goes
+ * first, and they start with nothing. The id itself doesn't include the port, because every store,
+ * setting and server-side record of an existing account is keyed by it.
+ */
+export async function checkStoreOwner(account: string, jmap: string, serverUrl: string): Promise<void> {
+  const known = readStoreOwners()[account];
+  const server = originOf(serverUrl);
+  if (known && isEvicted(account) && (known.jmap !== jmap || known.server !== server)) await storeOwnerChanged?.(account);
+  if (known?.jmap !== jmap || known?.server !== server) {
+    writeRecord(OFFLINE_OWNERS_KEY, { ...readStoreOwners(), [account]: { jmap, server } });
+  }
+}
+
+export function forgetStoreOwner(account: string): void {
+  const owners = readStoreOwners();
+  if (!(account in owners)) return;
+  delete owners[account];
+  writeRecord(OFFLINE_OWNERS_KEY, owners);
+}
+
+function originOf(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url.replace(/\/+$/, '').toLowerCase();
+  }
 }
 
 /** localStorage: who a dropped account was, only in the desktop app: its plugin secrets are on this device's server, under this. */

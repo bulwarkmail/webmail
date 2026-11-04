@@ -5895,6 +5895,14 @@
     "usage_label": "Lo que guarda este dispositivo",
     "pin_not_ready": "Este archivo aún no está en la lista de este dispositivo. Inténtalo de nuevo en un momento."
   },
+  "keyProtection": {
+    "browser_note": "En un navegador, la clave de este correo está en el mismo perfil del navegador que el correo. Quien copie los archivos del perfil puede leerlo, así que usa el cifrado de disco.",
+    "no_secure_storage": "Este equipo no tiene un almacén seguro de claves que la aplicación pueda usar, así que la clave de este correo solo está ofuscada en el disco. Usa el cifrado de disco.",
+    "wrap_failed": "El almacén seguro de claves de este equipo no aceptó la clave de este correo, así que no está protegida como debería. Reinicia la aplicación y usa el cifrado de disco.",
+    "rekey_progress": "Volviendo a cifrar el correo de este dispositivo: {percent} %. Puedes seguir trabajando.",
+    "rekey_failed": "El nuevo cifrado del correo de este dispositivo no terminó, así que la clave antigua aún puede abrirlo. La aplicación lo intentará de nuevo en el próximo inicio.",
+    "reenroll_note": "La clave de acceso y el desbloqueo del sistema usaban la clave del PIN anterior, así que se han quitado. Configúralos de nuevo si los usas."
+  },
   "offlineDrafts": {
     "title": "Borradores en este dispositivo",
     "description": "Estos borradores están guardados en este dispositivo. Irán al servidor por sí solos en cuanto se pueda conectar con él.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "Bloqueo de la app",
-    "section_desc": "Pide un PIN tras un tiempo sin uso, en cada ventana y pestaña. Mientras está bloqueada, el correo de este dispositivo sigue cifrado y la app no tiene la clave.",
+    "section_desc": "Pide un PIN tras un tiempo sin uso, en cada ventana y pestaña. Mientras está bloqueada, la aplicación no puede leer el correo guardado en este dispositivo hasta que alguien introduzca el PIN.",
     "enable_label": "Bloquear con un PIN",
     "enable_desc": "Desactivado de forma predeterminada. El PIN se queda en este dispositivo.",
-    "protects_desc": "De qué protege: en un navegador, el PIN impide que alguien frente a este dispositivo entre en la aplicación y mantiene cifrado el correo guardado aquí. No puede detener un programa que se ejecute en este ordenador, una extensión del navegador que hayas instalado ni a alguien que copie los archivos del navegador y tenga tiempo de probar muchos PIN, así que merece la pena un PIN más largo. En la aplicación de escritorio, el PIN también queda ligado a tu inicio de sesión en este ordenador. Tu cuenta en el servidor no se ve afectada.",
+    "protects_desc": "De qué protege: el PIN impide que alguien que esté en este dispositivo entre en la aplicación. El correo guardado aquí recibe una clave nueva al activar el bloqueo o cambiar el PIN, lo que puede tardar un momento. No puede detener un programa que se ejecute en este equipo, una extensión de navegador que hayas instalado ni a alguien que copie los archivos de la aplicación y tenga tiempo de probar muchos PIN, así que conviene un PIN más largo. En la aplicación de escritorio, probar PIN también requiere tu sesión en este equipo. Tu cuenta en el servidor no se ve afectada.",
     "enable_body": "Elija un PIN. Lo necesitará cada vez que la app se bloquee, y tras recargar o volver a iniciar.",
     "set_pin_title": "Elegir un PIN",
     "change_pin": "Cambiar PIN…",

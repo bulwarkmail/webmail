@@ -5895,6 +5895,14 @@
     "usage_label": "Wat dit apparaat bewaart",
     "pin_not_ready": "Dit bestand staat nog niet op de lijst van dit apparaat. Probeer het zo meteen opnieuw."
   },
+  "keyProtection": {
+    "browser_note": "In een browser staat de sleutel van deze mail in hetzelfde browserprofiel als de mail. Wie de bestanden van het profiel kopieert, kan de mail lezen, dus gebruik schijfversleuteling.",
+    "no_secure_storage": "Deze computer heeft geen veilige sleutelopslag die de app kan gebruiken, dus de sleutel van deze mail is op schijf alleen verhuld. Gebruik schijfversleuteling.",
+    "wrap_failed": "De veilige sleutelopslag van deze computer heeft de sleutel van deze mail niet aangenomen, dus die is niet beveiligd zoals het hoort. Start de app opnieuw en gebruik schijfversleuteling.",
+    "rekey_progress": "De mail op dit apparaat wordt opnieuw versleuteld: {percent}%. Je kunt gewoon doorwerken.",
+    "rekey_failed": "Het opnieuw versleutelen van de mail op dit apparaat is niet afgerond, dus de oude sleutel kan de mail nog openen. De app probeert het bij de volgende start opnieuw.",
+    "reenroll_note": "De passkey en systeemontgrendeling gebruikten de sleutel van de oude pincode en zijn daarom verwijderd. Stel ze opnieuw in als je ze gebruikt."
+  },
   "offlineDrafts": {
     "title": "Concepten op dit apparaat",
     "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "App-vergrendeling",
-    "section_desc": "Vraagt na een tijd zonder gebruik om een pincode, in elk venster en tabblad. Zolang de app vergrendeld is, blijft de mail op dit apparaat versleuteld en heeft de app er geen sleutel voor.",
+    "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
     "enable_label": "Vergrendelen met een pincode",
     "enable_desc": "Standaard uit. De pincode blijft op dit apparaat.",
-    "protects_desc": "Waartegen dit beschermt: in een browser houdt de pincode iemand bij dit apparaat buiten de app en blijft de e-mail die hier is opgeslagen versleuteld. Hij kan geen programma op deze computer tegenhouden, geen browserextensie die je hebt geïnstalleerd en niemand die de bestanden van de browser kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is de pincode ook gekoppeld aan je aanmelding op deze computer. Je account op de server verandert niet.",
+    "protects_desc": "Waartegen dit beschermt: de pincode houdt iemand bij dit apparaat uit de app. De mail die hier staat krijgt een nieuwe sleutel als je de vergrendeling aanzet of de pincode wijzigt, wat even kan duren. Het kan niet tegenhouden: een programma op deze computer, een browserextensie die je hebt geïnstalleerd, of iemand die de bestanden van de app kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is voor het proberen van pincodes ook je aanmelding op deze computer nodig. Je account op de server verandert hierdoor niet.",
     "enable_body": "Kies een pincode. Die heeft u nodig telkens als de app vergrendelt, en na herladen of opnieuw starten.",
     "set_pin_title": "Kies een pincode",
     "change_pin": "Pincode wijzigen…",

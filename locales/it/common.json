@@ -5895,6 +5895,14 @@
     "usage_label": "Cosa conserva questo dispositivo",
     "pin_not_ready": "Questo file non è ancora nell'elenco di questo dispositivo. Riprova tra un momento."
   },
+  "keyProtection": {
+    "browser_note": "In un browser, la chiave di questa posta si trova nello stesso profilo del browser della posta. Chi copia i file del profilo può leggerla, quindi usa la crittografia del disco.",
+    "no_secure_storage": "Questo computer non ha un archivio sicuro di chiavi utilizzabile dall'app, quindi la chiave di questa posta è solo offuscata sul disco. Usa la crittografia del disco.",
+    "wrap_failed": "L'archivio sicuro di chiavi di questo computer non ha accettato la chiave di questa posta, quindi non è protetta come dovrebbe. Riavvia l'app e usa la crittografia del disco.",
+    "rekey_progress": "Nuova cifratura della posta su questo dispositivo: {percent}%. Puoi continuare a lavorare.",
+    "rekey_failed": "La nuova cifratura della posta su questo dispositivo non è terminata, quindi la vecchia chiave può ancora aprirla. L'app riproverà al prossimo avvio.",
+    "reenroll_note": "La passkey e lo sblocco di sistema usavano la chiave del vecchio PIN, quindi sono stati rimossi. Configurali di nuovo se li usi."
+  },
   "offlineDrafts": {
     "title": "Bozze su questo dispositivo",
     "description": "Queste bozze sono salvate su questo dispositivo. Passano da sole al server appena è raggiungibile.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "Blocco dell'app",
-    "section_desc": "Chiede un PIN dopo un periodo senza utilizzo, in ogni finestra e scheda. Finché è bloccata, la posta su questo dispositivo resta cifrata e l'app non ha la chiave.",
+    "section_desc": "Chiede un PIN dopo un periodo di inattività, in ogni finestra e scheda. Mentre è bloccata, l'app non può leggere la posta salvata su questo dispositivo finché qualcuno non inserisce il PIN.",
     "enable_label": "Blocca con un PIN",
     "enable_desc": "Disattivato per impostazione predefinita. Il PIN resta su questo dispositivo.",
-    "protects_desc": "Da cosa protegge: in un browser, il PIN tiene fuori dall'app chi si trova davanti a questo dispositivo e mantiene cifrata la posta salvata qui. Non può fermare un programma in esecuzione su questo computer, un'estensione del browser che hai installato o chi copia i file del browser e ha il tempo di provare molti PIN, quindi conviene un PIN più lungo. Nell'app desktop, il PIN è legato anche al tuo accesso a questo computer. Il tuo account sul server non cambia.",
+    "protects_desc": "Da cosa protegge: il PIN tiene fuori dall'app chi si trova davanti a questo dispositivo. La posta salvata qui riceve una nuova chiave quando attivi il blocco o cambi il PIN, e può volerci un momento. Non può fermare un programma in esecuzione su questo computer, un'estensione del browser che hai installato o chi copia i file dell'app e ha tempo di provare molti PIN, quindi conviene un PIN più lungo. Nell'app desktop, per provare i PIN serve anche il tuo accesso a questo computer. Il tuo account sul server non è interessato.",
     "enable_body": "Scegli un PIN. Ti servirà ogni volta che l'app si blocca, e dopo un ricaricamento o un nuovo avvio.",
     "set_pin_title": "Scegli un PIN",
     "change_pin": "Cambia PIN…",

@@ -5907,6 +5907,14 @@
     "usage_label": "Những gì thiết bị này giữ",
     "pin_not_ready": "Tệp này chưa có trong danh sách của thiết bị này. Hãy thử lại sau giây lát."
   },
+  "keyProtection": {
+    "browser_note": "Trong trình duyệt, khóa của thư này nằm trong cùng hồ sơ trình duyệt với thư. Ai sao chép các tệp của hồ sơ đều có thể đọc được, vì vậy hãy dùng mã hóa ổ đĩa.",
+    "no_secure_storage": "Máy tính này không có kho khóa an toàn mà ứng dụng có thể dùng, nên khóa của thư này chỉ được làm rối trên ổ đĩa. Hãy dùng mã hóa ổ đĩa.",
+    "wrap_failed": "Kho khóa an toàn của máy tính này không nhận khóa của thư này, nên khóa không được bảo vệ như đáng lẽ phải có. Hãy khởi động lại ứng dụng và dùng mã hóa ổ đĩa.",
+    "rekey_progress": "Đang mã hóa lại thư trên thiết bị này: {percent}%. Bạn có thể tiếp tục làm việc.",
+    "rekey_failed": "Việc mã hóa lại thư trên thiết bị này chưa xong, nên khóa cũ vẫn có thể mở được. Ứng dụng sẽ thử lại ở lần khởi động sau.",
+    "reenroll_note": "Mã khóa truy cập và mở khóa hệ thống đã dùng khóa của mã PIN cũ nên đã bị gỡ bỏ. Hãy thiết lập lại nếu bạn dùng chúng."
+  },
   "offlineDrafts": {
     "title": "Bản nháp trên thiết bị này",
     "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
@@ -6818,10 +6826,10 @@
   },
   "appLock": {
     "section_title": "Khóa ứng dụng",
-    "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và thẻ. Khi đang khóa, thư trên thiết bị này vẫn được mã hóa và ứng dụng không có khóa của chúng.",
+    "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
     "enable_label": "Khóa bằng mã PIN",
     "enable_desc": "Mặc định tắt. Mã PIN chỉ ở trên thiết bị này.",
-    "protects_desc": "Điều này bảo vệ trước gì: trong trình duyệt, mã PIN ngăn người ở cạnh thiết bị này vào ứng dụng và giữ thư lưu ở đây được mã hóa. Nó không thể chặn một chương trình chạy trên máy tính này, tiện ích trình duyệt bạn đã cài, hoặc người sao chép tệp của trình duyệt và có thời gian thử nhiều mã, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, mã PIN còn gắn với thông tin đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
+    "protects_desc": "Điều này bảo vệ khỏi: mã PIN giữ người đang ở thiết bị này bên ngoài ứng dụng. Thư lưu ở đây nhận khóa mới khi bạn bật khóa hoặc đổi mã PIN, việc này có thể mất một lúc. Nó không thể ngăn một chương trình chạy trên máy tính này, một tiện ích trình duyệt bạn đã cài, hoặc người sao chép các tệp của ứng dụng và có thời gian thử nhiều mã PIN, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, việc thử mã PIN còn cần phiên đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
     "enable_body": "Hãy chọn một mã PIN. Bạn cần nó mỗi khi ứng dụng khóa, và sau khi tải lại hoặc khởi động lại.",
     "set_pin_title": "Chọn mã PIN",
     "change_pin": "Đổi mã PIN…",

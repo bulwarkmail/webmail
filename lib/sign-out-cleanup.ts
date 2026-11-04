@@ -42,6 +42,7 @@ const SIGNED_OUT_STORAGE_KEYS = [
   // Which accounts' data waits for a new sign-in, and until when.
   'bulwark-offline-evicted',
   'bulwark-offline-evicted-owners',
+  'bulwark-offline-owners',
   'bulwark-store-opened',
   // What each account chose to keep, and what's known about its store.
   'bulwark-offline-scope',

@@ -209,11 +209,12 @@ async function clearShellFiles(): Promise<void> {
   const bridge = getDesktopBridge() as unknown as {
     os?: { clearSurfaces?: () => void };
     clipboard?: { clearFiles?: () => void | Promise<void> };
+    httpCache?: { clear?: () => Promise<void> };
   } | null;
   bridge?.os?.clearSurfaces?.();
   let timer: ReturnType<typeof setTimeout> | undefined;
   await Promise.race([
-    Promise.resolve(bridge?.clipboard?.clearFiles?.()),
+    Promise.all([bridge?.clipboard?.clearFiles?.(), bridge?.httpCache?.clear?.()]),
     new Promise((resolve) => { timer = setTimeout(resolve, SHELL_FILES_BUDGET_MS); }),
   ]).finally(() => clearTimeout(timer));
 }

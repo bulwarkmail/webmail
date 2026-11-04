@@ -5895,6 +5895,14 @@
     "usage_label": "Was dieses Gerät behält",
     "pin_not_ready": "Diese Datei steht noch nicht auf der Liste dieses Geräts. Versuchen Sie es gleich noch einmal."
   },
+  "keyProtection": {
+    "browser_note": "Im Browser liegt der Schlüssel zu dieser Mail im selben Browserprofil wie die Mail. Wer die Dateien des Profils kopiert, kann sie lesen. Nutzen Sie deshalb eine Festplattenverschlüsselung.",
+    "no_secure_storage": "Dieser Computer hat keinen sicheren Schlüsselspeicher, den die App nutzen kann. Der Schlüssel zu dieser Mail ist auf der Festplatte nur verschleiert. Nutzen Sie eine Festplattenverschlüsselung.",
+    "wrap_failed": "Der sichere Schlüsselspeicher dieses Computers hat den Schlüssel zu dieser Mail nicht angenommen, er ist also nicht so geschützt, wie er sein sollte. Starten Sie die App neu und nutzen Sie eine Festplattenverschlüsselung.",
+    "rekey_progress": "Die Mail auf diesem Gerät wird neu verschlüsselt: {percent} %. Sie können weiterarbeiten.",
+    "rekey_failed": "Die neue Verschlüsselung der Mail auf diesem Gerät wurde nicht fertig, der alte Schlüssel öffnet sie also noch. Die App versucht es beim nächsten Start erneut.",
+    "reenroll_note": "Passkey und Systementsperrung nutzten den Schlüssel der alten PIN und wurden deshalb entfernt. Richten Sie sie neu ein, wenn Sie sie nutzen."
+  },
   "offlineDrafts": {
     "title": "Entwürfe auf diesem Gerät",
     "description": "Diese Entwürfe sind auf diesem Gerät gespeichert. Sie gehen von selbst an den Server, sobald er erreichbar ist.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "App-Sperre",
-    "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, bleiben E-Mails auf diesem Gerät verschlüsselt und die App hat keinen Schlüssel dafür.",
+    "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",
     "enable_label": "Mit PIN sperren",
     "enable_desc": "Standardmäßig aus. Die PIN bleibt auf diesem Gerät.",
-    "protects_desc": "Wovor das schützt: Im Browser hält die PIN andere an diesem Gerät aus der App heraus, und die hier gespeicherten E-Mails bleiben verschlüsselt. Sie kann kein Programm auf diesem Computer aufhalten, keine von Ihnen installierte Browser-Erweiterung und niemanden, der die Dateien des Browsers kopiert und Zeit hat, viele PINs auszuprobieren. Eine längere PIN lohnt sich also. In der Desktop-App ist die PIN zusätzlich an Ihre Anmeldung an diesem Computer gebunden. Ihr Konto auf dem Server ist davon nicht betroffen.",
+    "protects_desc": "Wovor das schützt: Die PIN hält Personen an diesem Gerät aus der App heraus. Die hier gespeicherte Mail bekommt einen neuen Schlüssel, wenn Sie die Sperre einschalten oder die PIN ändern. Das kann einen Moment dauern. Nicht verhindern kann sie ein Programm auf diesem Computer, eine von Ihnen installierte Browsererweiterung oder jemanden, der die Dateien der App kopiert und Zeit hat, viele PINs zu probieren. Eine längere PIN lohnt sich also. In der Desktop-App braucht das Probieren von PINs zusätzlich Ihre Anmeldung an diesem Computer. Ihr Konto auf dem Server ist davon nicht betroffen.",
     "enable_body": "Wählen Sie eine PIN. Sie brauchen sie jedes Mal, wenn die App sperrt, und nach einem Neuladen oder Neustart.",
     "set_pin_title": "PIN wählen",
     "change_pin": "PIN ändern…",

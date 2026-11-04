@@ -44,7 +44,7 @@ import { requestWindowSession, type SharedAccountSession } from '@/lib/popout/ch
 import { closePopoutWindow, isPopoutWindow, mainWindowStorage } from '@/lib/popout/window-role';
 import { noteCredentialsRejected, type ForcedSignOutKind } from '@/lib/offline/credentials-rejected';
 import { CREDENTIALS_REFUSED_CONFIRM_MS, markLoginRefused, wipeWorkWaiting } from '@/lib/devices/wipe-state';
-import { markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
+import { checkStoreOwner, markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
 import { toAsciiEmail } from '@/lib/idn';
 import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
@@ -1805,6 +1805,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
           initializeFeatureStores(client);
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           // Store client in multi-account map
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
@@ -1947,6 +1948,7 @@ export const useAuthStore = create<AuthState>()(
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
           initializeFeatureStores(client);
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2163,6 +2165,7 @@ export const useAuthStore = create<AuthState>()(
             clearAllStores();
           }
 
+          await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
@@ -2312,6 +2315,7 @@ export const useAuthStore = create<AuthState>()(
             clearAllStores();
           }
 
+          await checkStoreOwner(accountId, client.getAccountId(), ssoServerUrl);
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 

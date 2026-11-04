@@ -5895,6 +5895,14 @@
     "usage_label": "Co toto zařízení uchovává",
     "pin_not_ready": "Tento soubor ještě není v seznamu tohoto zařízení. Zkuste to za chvíli znovu."
   },
+  "keyProtection": {
+    "browser_note": "V prohlížeči je klíč k této poště ve stejném profilu prohlížeče jako pošta. Kdo zkopíruje soubory profilu, může ji číst, proto používejte šifrování disku.",
+    "no_secure_storage": "Tento počítač nemá zabezpečené úložiště klíčů, které by aplikace mohla použít, takže klíč k této poště je na disku jen zastřený. Používejte šifrování disku.",
+    "wrap_failed": "Zabezpečené úložiště klíčů tohoto počítače nepřijalo klíč k této poště, takže není chráněný, jak by měl být. Restartujte aplikaci a používejte šifrování disku.",
+    "rekey_progress": "Pošta v tomto zařízení se znovu šifruje: {percent} %. Můžete dál pracovat.",
+    "rekey_failed": "Nové šifrování pošty v tomto zařízení nebylo dokončeno, takže ji starý klíč stále otevře. Aplikace to zkusí znovu při dalším spuštění.",
+    "reenroll_note": "Přístupový klíč a odemknutí systémem používaly klíč starého PINu, proto byly odebrány. Pokud je používáte, nastavte je znovu."
+  },
   "offlineDrafts": {
     "title": "Koncepty v tomto zařízení",
     "description": "Tyto koncepty jsou uložené v tomto zařízení. Na server se odešlou samy, jakmile bude dostupný.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "Zámek aplikace",
-    "section_desc": "Po čase bez použití žádá o PIN, v každém okně a na každé kartě. Dokud je zamčeno, zůstává pošta na tomto zařízení zašifrovaná a aplikace k ní nemá klíč.",
+    "section_desc": "Po době nečinnosti žádá o PIN v každém okně a na každé kartě. Dokud je zamčeno, aplikace nemůže číst poštu uloženou v tomto zařízení, dokud někdo nezadá PIN.",
     "enable_label": "Zamykat kódem PIN",
     "enable_desc": "Ve výchozím stavu vypnuto. PIN zůstává na tomto zařízení.",
-    "protects_desc": "Před čím to chrání: v prohlížeči PIN nepustí do aplikace nikoho u tohoto zařízení a pošta uložená zde zůstává šifrovaná. Nezastaví program běžící na tomto počítači, rozšíření prohlížeče, které jste nainstalovali, ani někoho, kdo zkopíruje soubory prohlížeče a má čas zkoušet mnoho PINů, proto se delší PIN vyplatí. V desktopové aplikaci je PIN navíc svázán s vaším přihlášením na tomto počítači. Váš účet na serveru to neovlivní.",
+    "protects_desc": "Před čím to chrání: PIN nepustí do aplikace nikoho, kdo je u tohoto zařízení. Pošta uložená zde dostane nový klíč, když zámek zapnete nebo změníte PIN, což může chvíli trvat. Nezastaví program spuštěný na tomto počítači, rozšíření prohlížeče, které jste nainstalovali, ani někoho, kdo zkopíruje soubory aplikace a má čas zkoušet mnoho PINů, takže delší PIN se vyplatí. V desktopové aplikaci je ke zkoušení PINů potřeba i vaše přihlášení k tomuto počítači. Váš účet na serveru to neovlivní.",
     "enable_body": "Zvolte PIN. Budete ho potřebovat při každém zamčení aplikace a po načtení znovu nebo novém spuštění.",
     "set_pin_title": "Zvolte PIN",
     "change_pin": "Změnit PIN…",

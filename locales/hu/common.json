@@ -5895,6 +5895,14 @@
     "usage_label": "Mit tart meg ez az eszköz",
     "pin_not_ready": "Ez a fájl még nincs rajta az eszköz listáján. Próbálja újra egy pillanat múlva."
   },
+  "keyProtection": {
+    "browser_note": "Böngészőben ennek a levélnek a kulcsa ugyanabban a böngészőprofilban van, mint a levél. Aki lemásolja a profil fájljait, el tudja olvasni, ezért használjon lemeztitkosítást.",
+    "no_secure_storage": "Ezen a számítógépen nincs biztonságos kulcstár, amelyet az alkalmazás használhatna, ezért a levél kulcsa a lemezen csak el van rejtve. Használjon lemeztitkosítást.",
+    "wrap_failed": "A számítógép biztonságos kulcstára nem fogadta el a levél kulcsát, ezért az nincs úgy védve, ahogy kellene. Indítsa újra az alkalmazást, és használjon lemeztitkosítást.",
+    "rekey_progress": "Az eszközön lévő levelek újratitkosítása: {percent}%. Nyugodtan dolgozhat tovább.",
+    "rekey_failed": "Az eszközön lévő levelek újratitkosítása nem fejeződött be, így a régi kulcs még megnyitja őket. Az alkalmazás a következő indításkor újra megpróbálja.",
+    "reenroll_note": "A jelkulcs és a rendszeres feloldás a régi PIN kulcsát használta, ezért eltávolítottuk őket. Ha használja őket, állítsa be újra."
+  },
   "offlineDrafts": {
     "title": "Piszkozatok ezen az eszközön",
     "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",
@@ -6806,10 +6814,10 @@
   },
   "appLock": {
     "section_title": "Alkalmazászár",
-    "section_desc": "Használat nélküli idő után PIN-kódot kér, minden ablakban és lapon. Amíg zárolva van, az eszközön lévő levelek titkosítva maradnak, és az alkalmazásnak nincs hozzájuk kulcsa.",
+    "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
     "enable_label": "Zárolás PIN-kóddal",
     "enable_desc": "Alapból ki van kapcsolva. A PIN-kód ezen az eszközön marad.",
-    "protects_desc": "Mi ellen véd: böngészőben a PIN-kód távol tartja az alkalmazástól az eszköznél lévőket, az itt tárolt levelek pedig titkosítva maradnak. Nem állít meg egy ezen a számítógépen futó programot, egy ön által telepített böngészőbővítményt, vagy valakit, aki lemásolja a böngésző fájljait, és van ideje sok kódot kipróbálni, ezért megéri a hosszabb PIN-kód. Az asztali alkalmazásban a PIN-kód ehhez a számítógépes bejelentkezéshez is kötődik. A szerveren lévő fiókját ez nem érinti.",
+    "protects_desc": "Mi ellen véd: a PIN-kód kint tartja az alkalmazásból azt, aki ennél az eszköznél van. Az itt tárolt levelek új kulcsot kapnak, amikor bekapcsolja a zárolást vagy módosítja a PIN-kódot, ami eltarthat egy ideig. Nem tudja megállítani a számítógépen futó programot, az Ön által telepített böngészőbővítményt, sem azt, aki lemásolja az alkalmazás fájljait, és van ideje sok PIN-kódot kipróbálni, ezért érdemes hosszabb PIN-kódot választani. Az asztali alkalmazásban a PIN-kódok kipróbálásához az Ön bejelentkezése is kell ezen a számítógépen. A kiszolgálón lévő fiókját ez nem érinti.",
     "enable_body": "Válasszon PIN-kódot. Minden zároláskor, valamint újratöltés vagy új indítás után szükség lesz rá.",
     "set_pin_title": "PIN-kód választása",
     "change_pin": "PIN-kód módosítása…",

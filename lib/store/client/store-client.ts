@@ -250,8 +250,8 @@ export class StoreClient {
     return result;
   }
 
-  private direct<T>(message: PageToWorker & { id: string }): Promise<T> {
-    const result = this.track<T>(message.id, CALL_TIMEOUT_MS);
+  private direct<T>(message: PageToWorker & { id: string }, timeoutMs = CALL_TIMEOUT_MS): Promise<T> {
+    const result = this.track<T>(message.id, timeoutMs);
     this.post(message);
     return result;
   }
@@ -270,6 +270,11 @@ export class StoreClient {
   /** Deletes every store file but these. */
   pruneFiles(keep: string[]): Promise<void> {
     return this.direct({ kind: 'prune-files', id: crypto.randomUUID(), keep });
+  }
+
+  /** Copies an open account into a new file under a new key. It ends with the account closed. */
+  rekeyAccount(account: string, file: string, keyHex: string): Promise<void> {
+    return this.direct({ kind: 'rekey', id: crypto.randomUUID(), account, file, keyHex }, SYNC_TIMEOUT_MS);
   }
 
   closeAccount(account: string): Promise<void> {
