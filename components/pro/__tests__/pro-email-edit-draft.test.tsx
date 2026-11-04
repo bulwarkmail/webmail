@@ -33,9 +33,9 @@ vi.mock('@/lib/popout/window-role', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/lib/popout/window-role')>(),
   isPopoutWindow: () => popout.value,
 }));
-const moveDialog = vi.hoisted(() => ({ current: null as { email: unknown } | null }));
+const moveDialog = vi.hoisted(() => ({ current: null as { emails: unknown[] } | null }));
 vi.mock('@/components/email/move-to-dialog', () => ({
-  MoveToDialog: (props: { email: unknown }) => {
+  MoveToDialog: (props: { emails: unknown[] }) => {
     moveDialog.current = props;
     return null;
   },
@@ -331,11 +331,11 @@ describe('Message > Move to… in a message window', () => {
       const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
       render(<ProEmailView emailId="eaaaaab" client={client as never} onClose={vi.fn()} />);
       await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
-      expect(moveDialog.current?.email ?? null).toBeNull();
+      expect(moveDialog.current?.emails ?? []).toEqual([]);
       act(() => {
         expect(runDesktopCommand('message.move')).toBe(true);
       });
-      await waitFor(() => expect(moveDialog.current?.email).toMatchObject({ id: 'eaaaaab' }));
+      await waitFor(() => expect(moveDialog.current?.emails?.[0]).toMatchObject({ id: 'eaaaaab' }));
     } finally {
       popout.value = false;
       window.bulwarkDesktop = undefined;
