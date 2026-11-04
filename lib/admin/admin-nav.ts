@@ -251,11 +251,11 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     label: 'Plugins',
     description: 'Plugins installed for every user, and what users may install themselves',
     group: 'extensions',
-    keywords: 'extensions addons upload zip approve permissions configure force enable',
+    keywords: 'extensions addons upload zip approve permissions configure force enable always on default off',
     sections: [
+      { id: 'policy', title: 'Plugins for users', keywords: 'plugins enabled master switch user uploads require approval policy' },
       { id: 'approvals', title: 'Approval requests', keywords: 'approve deny user uploaded code review' },
       { id: 'installed', title: 'Installed plugins', keywords: 'enable disable remove roll back configure' },
-      { id: 'policy', title: 'Plugin policy', keywords: 'plugins enabled user uploads require approval' },
     ],
     hasDetail: true,
   },

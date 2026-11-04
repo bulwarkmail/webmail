@@ -390,6 +390,10 @@ describe('installPlugin', () => {
   });
 
   it('keeps the translations a plugin ships', async () => {
+    // Uploads are off unless the admin allows them.
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const { DEFAULT_POLICY } = await import('@/lib/admin/types');
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, features: { ...DEFAULT_POLICY.features, pluginsUploadEnabled: true } } });
     const { extractPlugin } = await import('@/lib/plugin-validator');
     vi.mocked(extractPlugin).mockResolvedValueOnce({
       valid: true, errors: [], warnings: [], preview: null, code: 'module.exports = {}',
@@ -439,6 +443,15 @@ describe('plugins the user installs', () => {
 
     expect(result).toMatchObject({ success: false, reason: 'uploads-disabled' });
     expect(usePluginStore.getState().plugins).toHaveLength(0);
+  });
+
+  it('refuses a user\'s ZIP unless the admin allowed uploads', async () => {
+    await setFeatures({ pluginsEnabled: true });
+    await mockExtract();
+
+    const result = await usePluginStore.getState().installPlugin(new File(['x'], 'p.zip'));
+
+    expect(result).toMatchObject({ success: false, reason: 'uploads-disabled' });
   });
 
   it('refuses a package that reuses the id of an admin plugin', async () => {
