@@ -204,6 +204,8 @@ export const BUILT_URL_FILES: readonly { file: string; why: string }[] = [
   { file: 'components/email/rich-text-editor.tsx', why: "adds the scheme to a link address the user types in the editor" },
   { file: 'lib/admin/branding-asset.ts', why: "scheme checks of admin-configured branding URLs" },
   { file: 'lib/auth/pair-bundle.ts', why: "scheme checks of the paired server URL" },
+  { file: 'lib/auth/mail-server-address.ts', why: 'adds https:// to a server address the user types on the sign-in form' },
+  { file: 'lib/auth/discover-mail-server.ts', why: "the well-known and SRV addresses of the domain in the address the user typed, fetched through fetchPublicUrl" },
   { file: 'lib/calendar-subscription-sync.ts', why: "webcal:// rewritten to https:// for a feed the user subscribed to" },
   { file: 'lib/email-sanitization.ts', why: "comment about links in mail" },
   { file: 'lib/idn.ts', why: "parses a host name the user typed" },

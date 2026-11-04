@@ -1,6 +1,5 @@
 {
   "login": {
-    "jmap_endpoint_cors_hint": "Máy chủ thư phải cho phép đăng nhập từ trang web này. Quản trị viên có thể thiết lập việc này.",
     "reconnecting": "Đã mất kết nối. Đang thử kết nối lại…",
     "error": {
       "invalid_credentials": "Địa chỉ email hoặc mật khẩu không đúng. Hãy kiểm tra cả hai rồi thử lại.",
@@ -14,7 +13,6 @@
       "oauth_discovery_failed": "Hiện không thể đăng nhập thông qua tổ chức của bạn. Hãy thử lại sau hoặc liên hệ quản trị viên.",
       "token_exchange_failed": "Mật khẩu và mã của bạn đúng nhưng máy chủ thư không cho phép ứng dụng này truy cập. Hãy nhờ quản trị viên kiểm tra cài đặt đăng nhập cho ứng dụng này."
     },
-    "totp_toggle": "Tôi có mã từ ứng dụng xác thực",
     "token_hint": "Một số nhà cung cấp thư cho phép dùng mã truy cập thay cho mật khẩu. Hãy tạo mã trong cài đặt của nhà cung cấp thư, sao chép rồi dán vào đây.",
     "config_error": {
       "title": "Ứng dụng thư điện tử trên web chưa được thiết lập đúng",

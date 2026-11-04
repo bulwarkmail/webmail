@@ -1,6 +1,5 @@
 {
   "login": {
-    "jmap_endpoint_cors_hint": "Der Mailserver muss Anmeldungen von dieser Website erlauben. Ihre Administration kann das einrichten.",
     "reconnecting": "Die Verbindung ist weg. Wir versuchen, wieder zu verbinden…",
     "error": {
       "invalid_credentials": "Die E-Mail-Adresse oder das Passwort ist falsch. Prüfen Sie beides und versuchen Sie es noch einmal.",
@@ -14,7 +13,6 @@
       "oauth_discovery_failed": "Die Anmeldung über Ihre Organisation funktioniert gerade nicht. Versuchen Sie es später noch einmal oder fragen Sie Ihre Administration.",
       "token_exchange_failed": "Passwort und Code sind richtig, aber der Mailserver hat diese App nicht hereingelassen. Bitten Sie Ihre Administration, die Anmelde-Einstellungen für diese App zu prüfen."
     },
-    "totp_toggle": "Ich habe einen Code aus meiner Authenticator-App",
     "token_hint": "Manche Mailanbieter geben Ihnen ein Token statt eines Passworts. Erstellen Sie es in den Einstellungen Ihres Mailanbieters, kopieren Sie es und fügen Sie es hier ein.",
     "config_error": {
       "title": "Das Webmail ist nicht richtig eingerichtet",

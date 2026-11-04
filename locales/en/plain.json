@@ -1,6 +1,5 @@
 {
   "login": {
-    "jmap_endpoint_cors_hint": "The mail server must allow sign-ins from this website. Your administrator can set this up.",
     "reconnecting": "The connection is lost. We are trying to connect again…",
     "error": {
       "invalid_credentials": "The email address or password is wrong. Check both and try again.",
@@ -14,7 +13,6 @@
       "oauth_discovery_failed": "Sign-in through your organisation does not work right now. Try again later or ask your administrator.",
       "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app."
     },
-    "totp_toggle": "I have a code from my authenticator app",
     "token_hint": "Some mail providers give you a token instead of a password. Create one in your mail provider's settings, copy it, and paste it here.",
     "config_error": {
       "title": "The webmail is not set up correctly",
