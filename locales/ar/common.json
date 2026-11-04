@@ -1394,6 +1394,8 @@
     "from_description": "اتركه فارغًا للبدء فورًا.",
     "until_label": "حتى (اختياري)",
     "until_description": "اتركه فارغًا لمواصلة الرد حتى توقفه.",
+    "from_placeholder": "فورًا",
+    "until_placeholder": "حتى توقفه",
     "audience_all": "الجميع",
     "audience_internal": "مؤسستي فقط ({domains})",
     "audience_external": "من هم خارج مؤسستي فقط",

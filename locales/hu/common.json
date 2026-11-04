@@ -1394,6 +1394,8 @@
     "from_description": "Hagyja üresen az azonnali kezdéshez.",
     "until_label": "Eddig (nem kötelező)",
     "until_description": "Hagyja üresen, hogy a válaszolás addig tartson, amíg ki nem kapcsolja.",
+    "from_placeholder": "Azonnal",
+    "until_placeholder": "Amíg ki nem kapcsolja",
     "audience_all": "Mindenkinek",
     "audience_internal": "Csak a szervezetemnek ({domains})",
     "audience_external": "Csak a szervezetemen kívülieknek",

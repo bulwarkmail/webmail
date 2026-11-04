@@ -1394,6 +1394,8 @@
     "from_description": "Deixa-ho buit per començar ara mateix.",
     "until_label": "Fins a (opcional)",
     "until_description": "Deixa-ho buit per continuar responent fins que ho desactivis.",
+    "from_placeholder": "Des d’ara",
+    "until_placeholder": "Fins que el desactiveu",
     "audience_all": "Tothom",
     "audience_internal": "Només la meva organització ({domains})",
     "audience_external": "Només persones de fora de la meva organització",

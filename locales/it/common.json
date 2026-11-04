@@ -1394,6 +1394,8 @@
     "from_description": "Lascia vuoto per iniziare subito.",
     "until_label": "Al (facoltativo)",
     "until_description": "Lascia vuoto per continuare a rispondere finché non lo disattivi.",
+    "from_placeholder": "Da subito",
+    "until_placeholder": "Finché non lo disattivi",
     "audience_all": "Tutti",
     "audience_internal": "Solo la mia organizzazione ({domains})",
     "audience_external": "Solo persone esterne alla mia organizzazione",

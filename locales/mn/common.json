@@ -1394,6 +1394,8 @@
     "from_description": "Шууд эхлүүлэхийн тулд хоосон үлдээнэ үү.",
     "until_label": "Дуусах (заавал биш)",
     "until_description": "Унтраах хүртэл хариулсаар байхын тулд хоосон үлдээнэ үү.",
+    "from_placeholder": "Одоо даруй",
+    "until_placeholder": "Таныг унтраах хүртэл",
     "audience_all": "Бүгдэд",
     "audience_internal": "Зөвхөн миний байгууллагад ({domains})",
     "audience_external": "Зөвхөн байгууллагаас гадуурх хүмүүст",

@@ -1394,6 +1394,8 @@
     "from_description": "空欄にするとすぐに始まります。",
     "until_label": "終了（任意）",
     "until_description": "空欄にすると、オフにするまで返信を続けます。",
+    "from_placeholder": "今すぐ",
+    "until_placeholder": "オフにするまで",
     "audience_all": "全員",
     "audience_internal": "自分の組織のみ（{domains}）",
     "audience_external": "組織外の人のみ",

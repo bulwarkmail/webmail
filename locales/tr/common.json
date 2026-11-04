@@ -1394,6 +1394,8 @@
     "from_description": "Hemen başlamak için boş bırakın.",
     "until_label": "Bitiş (isteğe bağlı)",
     "until_description": "Siz kapatana kadar yanıt vermeye devam etmek için boş bırakın.",
+    "from_placeholder": "Hemen",
+    "until_placeholder": "Siz kapatana kadar",
     "audience_all": "Herkese",
     "audience_internal": "Yalnızca kuruluşuma ({domains})",
     "audience_external": "Yalnızca kuruluşum dışındakilere",

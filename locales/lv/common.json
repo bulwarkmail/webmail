@@ -1394,6 +1394,8 @@
     "from_description": "Atstājiet tukšu, lai sāktu uzreiz.",
     "until_label": "Līdz (neobligāti)",
     "until_description": "Atstājiet tukšu, lai atbildētu, līdz to izslēgsiet.",
+    "from_placeholder": "Uzreiz",
+    "until_placeholder": "Līdz to izslēgsiet",
     "audience_all": "Visiem",
     "audience_internal": "Tikai manai organizācijai ({domains})",
     "audience_external": "Tikai cilvēkiem ārpus manas organizācijas",

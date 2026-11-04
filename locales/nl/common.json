@@ -1394,6 +1394,8 @@
     "from_description": "Laat leeg om meteen te beginnen.",
     "until_label": "Tot (optioneel)",
     "until_description": "Laat leeg om te blijven antwoorden tot je het uitzet.",
+    "from_placeholder": "Meteen",
+    "until_placeholder": "Tot u het uitzet",
     "audience_all": "Iedereen",
     "audience_internal": "Alleen mijn organisatie ({domains})",
     "audience_external": "Alleen mensen buiten mijn organisatie",

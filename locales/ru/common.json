@@ -1394,6 +1394,8 @@
     "from_description": "Оставьте пустым, чтобы начать сразу.",
     "until_label": "По (необязательно)",
     "until_description": "Оставьте пустым, чтобы отвечать, пока вы это не выключите.",
+    "from_placeholder": "Сразу",
+    "until_placeholder": "Пока вы не выключите",
     "audience_all": "Всем",
     "audience_internal": "Только моей организации ({domains})",
     "audience_external": "Только тем, кто вне моей организации",

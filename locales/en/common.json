@@ -1394,6 +1394,8 @@
     "from_description": "Leave it empty to start right away.",
     "until_label": "Until (optional)",
     "until_description": "Leave it empty to keep replying until you turn it off.",
+    "from_placeholder": "Right away",
+    "until_placeholder": "Until you turn it off",
     "audience_all": "Everyone",
     "audience_internal": "Only my organisation ({domains})",
     "audience_external": "Only people outside my organisation",

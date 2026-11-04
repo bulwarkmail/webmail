@@ -1394,6 +1394,8 @@
     "from_description": "برای شروع فوری خالی بگذارید.",
     "until_label": "تا (اختیاری)",
     "until_description": "خالی بگذارید تا پاسخ دادن تا زمانی که خاموشش کنید ادامه یابد.",
+    "from_placeholder": "از همین حالا",
+    "until_placeholder": "تا وقتی خاموشش کنید",
     "audience_all": "همه",
     "audience_internal": "فقط سازمان من ({domains})",
     "audience_external": "فقط افراد بیرون از سازمان من",

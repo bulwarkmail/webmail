@@ -1394,6 +1394,8 @@
     "from_description": "Lăsați gol pentru a începe imediat.",
     "until_label": "Până la (opțional)",
     "until_description": "Lăsați gol pentru a răspunde până îl dezactivați.",
+    "from_placeholder": "Imediat",
+    "until_placeholder": "Până îl dezactivați",
     "audience_all": "Tuturor",
     "audience_internal": "Doar organizației mele ({domains})",
     "audience_external": "Doar persoanelor din afara organizației mele",

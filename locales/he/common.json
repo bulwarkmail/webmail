@@ -1337,6 +1337,8 @@
     "from_description": "השאירו ריק כדי להתחיל מיד.",
     "until_label": "עד (לא חובה)",
     "until_description": "השאירו ריק כדי להמשיך להשיב עד שתכבו.",
+    "from_placeholder": "מיד",
+    "until_placeholder": "עד שתכבו",
     "audience_all": "כולם",
     "audience_internal": "רק הארגון שלי ({domains})",
     "audience_external": "רק אנשים מחוץ לארגון שלי",

@@ -750,6 +750,8 @@
     "from_description": "เว้นว่างไว้เพื่อเริ่มทันที",
     "until_label": "จนถึง (ไม่บังคับ)",
     "until_description": "เว้นว่างไว้เพื่อตอบกลับต่อไปจนกว่าคุณจะปิด",
+    "from_placeholder": "ทันที",
+    "until_placeholder": "จนกว่าคุณจะปิด",
     "audience_all": "ทุกคน",
     "audience_internal": "เฉพาะองค์กรของฉัน ({domains})",
     "audience_external": "เฉพาะคนนอกองค์กรของฉัน",

@@ -1394,6 +1394,8 @@
     "from_description": "留空即立即開始。",
     "until_label": "結束（選填）",
     "until_description": "留空即持續回覆，直到您關閉。",
+    "from_placeholder": "立即",
+    "until_placeholder": "直到您關閉",
     "audience_all": "所有人",
     "audience_internal": "僅限我的組織（{domains}）",
     "audience_external": "僅限組織外的人",

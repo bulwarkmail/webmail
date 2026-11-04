@@ -1394,6 +1394,8 @@
     "from_description": "Leer lassen, um sofort zu beginnen.",
     "until_label": "Bis (optional)",
     "until_description": "Leer lassen, um weiter zu antworten, bis Sie es ausschalten.",
+    "from_placeholder": "Ab sofort",
+    "until_placeholder": "Bis Sie sie ausschalten",
     "audience_all": "Allen",
     "audience_internal": "Nur meiner Organisation ({domains})",
     "audience_external": "Nur Leuten außerhalb meiner Organisation",

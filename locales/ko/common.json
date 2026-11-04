@@ -1394,6 +1394,8 @@
     "from_description": "비워 두면 바로 시작합니다.",
     "until_label": "종료 (선택)",
     "until_description": "비워 두면 끌 때까지 계속 답장합니다.",
+    "from_placeholder": "지금부터",
+    "until_placeholder": "끌 때까지",
     "audience_all": "모든 사람",
     "audience_internal": "내 조직만 ({domains})",
     "audience_external": "내 조직 밖의 사람만",

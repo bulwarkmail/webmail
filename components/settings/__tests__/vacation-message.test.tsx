@@ -18,8 +18,8 @@ vi.mock('next-intl', () => {
 });
 // The editor hands the card its HTML as typed.
 vi.mock('@/components/email/rich-text-editor', () => ({
-  RichTextEditor: ({ content, onChange, placeholder }: { content: string; onChange: (html: string) => void; placeholder?: string }) => (
-    <textarea data-testid="message-editor" value={content} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+  RichTextEditor: ({ content, onChange, placeholder, toolbar }: { content: string; onChange: (html: string) => void; placeholder?: string; toolbar?: string }) => (
+    <textarea data-testid="message-editor" data-toolbar={toolbar ?? 'full'} value={content} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 
@@ -137,4 +137,34 @@ describe('the out-of-office message', () => {
     await saved(server, 1);
     expect(lastSent(server)).toMatchObject({ isEnabled: true, htmlBody: '<p>Back on 5 May.</p>', textBody: 'Back soon.' });
   }, 15_000);
+});
+
+// settings-p2-19: a short toolbar for a few lines, and date fields that say
+// what an empty one means instead of the browser's "dd.mm.yyyy --:--".
+describe('the out-of-office form', () => {
+  it('gives the message the short formatting toolbar', async () => {
+    await openCard(blank());
+    expect(editor().dataset.toolbar).toBe('short');
+  });
+
+  it('shows empty dates as words, and the date picker once a field is used', async () => {
+    await openCard(blank());
+    const from = screen.getByLabelText('from_label') as HTMLInputElement;
+    const until = screen.getByLabelText('until_label') as HTMLInputElement;
+    expect(from.type).toBe('text');
+    expect(from.placeholder).toBe('from_placeholder');
+    expect(until.type).toBe('text');
+    expect(until.placeholder).toBe('until_placeholder');
+
+    fireEvent.focus(from);
+    expect(from.type).toBe('datetime-local');
+    fireEvent.change(from, { target: { value: '2030-01-02T09:00' } });
+    fireEvent.blur(from);
+    // A field with a date keeps the picker; the empty one goes back to words.
+    expect(from.type).toBe('datetime-local');
+    expect(from.value).toBe('2030-01-02T09:00');
+    fireEvent.focus(until);
+    fireEvent.blur(until);
+    expect(until.type).toBe('text');
+  });
 });

@@ -1394,6 +1394,8 @@
     "from_description": "La feltet stå tomt for å starte med en gang.",
     "until_label": "Til (valgfritt)",
     "until_description": "La feltet stå tomt for å fortsette å svare til du slår det av.",
+    "from_placeholder": "Med en gang",
+    "until_placeholder": "Til du slår det av",
     "audience_all": "Alle",
     "audience_internal": "Bare organisasjonen min ({domains})",
     "audience_external": "Bare folk utenfor organisasjonen min",

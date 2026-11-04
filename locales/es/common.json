@@ -1394,6 +1394,8 @@
     "from_description": "Déjalo vacío para empezar ya.",
     "until_label": "Hasta (opcional)",
     "until_description": "Déjalo vacío para seguir respondiendo hasta que lo desactives.",
+    "from_placeholder": "Desde ahora",
+    "until_placeholder": "Hasta que lo desactive",
     "audience_all": "Todos",
     "audience_internal": "Solo mi organización ({domains})",
     "audience_external": "Solo personas de fuera de mi organización",

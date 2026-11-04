@@ -1394,6 +1394,8 @@
     "from_description": "Nechte prázdné, aby to začalo hned.",
     "until_label": "Do (nepovinné)",
     "until_description": "Nechte prázdné, aby se odpovídalo, dokud to nevypnete.",
+    "from_placeholder": "Hned",
+    "until_placeholder": "Dokud ji nevypnete",
     "audience_all": "Všem",
     "audience_internal": "Jen mé organizaci ({domains})",
     "audience_external": "Jen lidem mimo mou organizaci",

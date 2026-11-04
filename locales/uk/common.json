@@ -1394,6 +1394,8 @@
     "from_description": "Залиште порожнім, щоб почати одразу.",
     "until_label": "До (необов'язково)",
     "until_description": "Залиште порожнім, щоб відповідати, доки ви це не вимкнете.",
+    "from_placeholder": "Одразу",
+    "until_placeholder": "Доки ви не вимкнете",
     "audience_all": "Усім",
     "audience_internal": "Лише моїй організації ({domains})",
     "audience_external": "Лише тим, хто поза моєю організацією",

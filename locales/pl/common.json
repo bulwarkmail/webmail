@@ -1394,6 +1394,8 @@
     "from_description": "Zostaw puste, aby zacząć od razu.",
     "until_label": "Do (opcjonalnie)",
     "until_description": "Zostaw puste, aby odpowiadać, dopóki tego nie wyłączysz.",
+    "from_placeholder": "Od teraz",
+    "until_placeholder": "Dopóki jej nie wyłączysz",
     "audience_all": "Wszystkim",
     "audience_internal": "Tylko mojej organizacji ({domains})",
     "audience_external": "Tylko osobom spoza mojej organizacji",

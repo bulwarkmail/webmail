@@ -1394,6 +1394,8 @@
     "from_description": "Lad feltet være tomt for at starte med det samme.",
     "until_label": "Til (valgfrit)",
     "until_description": "Lad feltet være tomt for at blive ved med at svare, til du slår det fra.",
+    "from_placeholder": "Med det samme",
+    "until_placeholder": "Indtil du slår det fra",
     "audience_all": "Alle",
     "audience_internal": "Kun min organisation ({domains})",
     "audience_external": "Kun folk uden for min organisation",

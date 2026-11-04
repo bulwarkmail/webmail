@@ -1394,6 +1394,8 @@
     "from_description": "Jäta tühjaks, et alustada kohe.",
     "until_label": "Kuni (valikuline)",
     "until_description": "Jäta tühjaks, et vastata, kuni selle välja lülitad.",
+    "from_placeholder": "Kohe",
+    "until_placeholder": "Kuni selle välja lülitate",
     "audience_all": "Kõigile",
     "audience_internal": "Ainult minu organisatsioonile ({domains})",
     "audience_external": "Ainult inimestele väljastpoolt minu organisatsiooni",

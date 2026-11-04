@@ -1394,6 +1394,8 @@
     "from_description": "Nechajte prázdne, aby sa začalo hneď.",
     "until_label": "Do (nepovinné)",
     "until_description": "Nechajte prázdne, aby sa odpovedalo, kým to nevypnete.",
+    "from_placeholder": "Hneď",
+    "until_placeholder": "Kým ju nevypnete",
     "audience_all": "Všetkým",
     "audience_internal": "Len mojej organizácii ({domains})",
     "audience_external": "Len ľuďom mimo mojej organizácie",

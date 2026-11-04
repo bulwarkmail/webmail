@@ -1406,6 +1406,8 @@
     "from_description": "Để trống để bắt đầu ngay.",
     "until_label": "Đến (không bắt buộc)",
     "until_description": "Để trống để tiếp tục trả lời cho đến khi bạn tắt.",
+    "from_placeholder": "Ngay bây giờ",
+    "until_placeholder": "Cho đến khi bạn tắt",
     "audience_all": "Mọi người",
     "audience_internal": "Chỉ tổ chức của tôi ({domains})",
     "audience_external": "Chỉ người ngoài tổ chức của tôi",

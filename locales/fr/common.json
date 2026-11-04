@@ -1394,6 +1394,8 @@
     "from_description": "Laissez vide pour commencer tout de suite.",
     "until_label": "Au (facultatif)",
     "until_description": "Laissez vide pour continuer à répondre jusqu'à ce que vous le désactiviez.",
+    "from_placeholder": "Dès maintenant",
+    "until_placeholder": "Jusqu’à ce que vous le désactiviez",
     "audience_all": "Tout le monde",
     "audience_internal": "Seulement mon organisation ({domains})",
     "audience_external": "Seulement les personnes hors de mon organisation",
