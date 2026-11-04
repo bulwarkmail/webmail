@@ -1985,7 +1985,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Automatycznie wybieraj adres odpowiedzi",
-        "description": "Podczas odpowiadania automatycznie przełączaj adres nadawcy na tożsamość, która pierwotnie otrzymała wiadomość"
+        "description": "Przy odpowiadaniu wysyłaj z adresu, na który wysłano wiadomość."
       },
       "reply_identity_match": {
         "label": "Dopasowanie adresu odbioru",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Ponownie wczytaj kontakty, kalendarze i foldery z serwera. Pozostajesz zalogowany.",
         "button": "Refresh",
         "confirm_title": "Odświeżyć dane w pamięci podręcznej?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "Eksportuj ustawienia",
-        "description": "Pobierz swoje ustawienia jako JSON",
+        "description": "Pobierz kopię ustawień",
         "button": "Eksportuj"
       },
       "import_settings": {
         "label": "Importuj ustawienia",
-        "description": "Prześlij ustawienia z pliku JSON",
+        "description": "Przywróć ustawienia z pliku",
         "button": "Importuj"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "Głos, który czyta wiadomości. Lista pokazuje głosy, które przeglądarka ma dla języka interfejsu.",
         "default": "Domyślny przeglądarki"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Prywatność",
+      "about": "Informacje"
+    },
+    "search": {
+      "signature": "podpis podpis e-mail stopka",
+      "sign_out": "wyloguj wylogowanie logout",
+      "app_lock": "PIN blokada kod zablokuj ekran",
+      "text_size": "rozmiar czcionki większy tekst powiększenie zoom",
+      "vacation": "autoodpowiedź automatyczna odpowiedź poza biurem nieobecność urlop autoreply",
+      "two_factor": "2FA dwuetapowe dwuskładnikowe MFA OTP uwierzytelniacz kod jednorazowy",
+      "encryption": "S/MIME smime PGP OpenPGP szyfrowanie certyfikat",
+      "password": "hasło zmień hasło nowe hasło",
+      "offline": "offline bez połączenia bez internetu pobierz pamięć synchronizacja",
+      "wipe": "usuń wyczyść wymaż urządzenie dane",
+      "outbox": "skrzynka nadawcza niewysłane oczekujące kolejka",
+      "remote_content": "zdalne obrazy treści zewnętrzne śledzenie piksele zaufani nadawcy",
+      "push": "push przekaźnik w tle powiadomienia",
+      "version": "wersja aktualizacja informacje kod źródłowy GitHub licencja"
+    },
+    "privacy": {
+      "push_title": "Powiadomienia",
+      "push_link": {
+        "label": "Przekaźnik powiadomień",
+        "description": "Powiadomienia przy zamkniętej aplikacji idą przez przekaźnik push, który nigdy nie widzi Twojej poczty. Wybierasz go na stronie Powiadomienia.",
+        "button": "Powiadomienia"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Zdalne obrazy i zaufani nadawcy",
+      "receipts_label": "Potwierdzenia przeczytania",
+      "senders_label": "Obrazy nadawców",
+      "description": "Te ustawienia są na stronie Prywatność.",
+      "button": "Prywatność"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Gęstość i etykiety paska",
+        "description": "Odstępy między wierszami listy i to, czy przyciski pokazują nazwy, ustawisz na stronie Wygląd."
+      },
+      "light_mode": {
+        "label": "Jasne tło wiadomości",
+        "description": "Wyświetlanie wiadomości na jasnym tle w trybie ciemnym ustawisz na stronie Czytanie."
+      },
+      "calendar": {
+        "label": "Podgląd wydarzeń w kalendarzu",
+        "description": "To, czy wskazanie wydarzenia pokazuje szczegóły, ustawisz na stronie Kalendarz."
+      },
+      "list": {
+        "label": "Wątki i wiersze podglądu",
+        "description": "Grupowanie w wątki i wiersz podglądu pod każdą wiadomością ustawisz na stronie Lista wiadomości."
+      },
+      "reading": {
+        "label": "Oznaczanie jako przeczytane",
+        "description": "Kiedy wiadomość liczy się jako przeczytana i dokąd trafiasz po usunięciu lub przeniesieniu, ustawisz na stronie Czytanie."
+      },
+      "send_warnings_description": "Cofnięcie wysłania i ostrzeżenia o braku tematu, zapomnianym załączniku lub tekście zastępczym.",
+      "bulk_delete": {
+        "label": "Pytanie przed usunięciem wielu wiadomości",
+        "description": "To ustawisz na stronie Lista wiadomości."
+      },
+      "sounds": {
+        "label": "Dźwięki i licznik nieprzeczytanych",
+        "description": "Dźwięki powiadomień i liczbę nieprzeczytanych na karcie ustawisz na stronie Powiadomienia."
+      }
+    },
+    "about": {
+      "title": "Informacje o {appName}"
+    },
+    "sign_out": {
+      "description": "Wyloguj to konto na tym urządzeniu."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# niewysłana wiadomość zostanie utracona.} few {# niewysłane wiadomości zostaną utracone.} many {# niewysłanych wiadomości zostanie utraconych.} other {# niewysłanej wiadomości zostanie utraconej.}}",
     "clear_confirm": "Wyczyść",
     "persist_refused": "Ta przeglądarka może usunąć przechowywaną pocztę, gdy zabraknie miejsca. Zainstalowanie aplikacji zwykle temu zapobiega.",
-    "persist_retry": "Zapytaj ponownie",
+    "persist_retry": "Poproś przeglądarkę o zachowanie",
     "safari_hint": "Safari usuwa dane witryny po 7 dniach bez odwiedzin. Dodaj Bulwark do ekranu początkowego lub do Docka, aby zachować pocztę na tym urządzeniu.",
     "evicted": "Przeglądarka usunęła pocztę przechowywaną na tym urządzeniu. Jest pobierana ponownie.",
     "evicted_lost": "{count, plural, one {Utracono # niewysłaną wiadomość lub zmianę.} few {Utracono # niewysłane wiadomości lub zmiany.} many {Utracono # niewysłanych wiadomości lub zmian.} other {Utracono # niewysłanej wiadomości lub zmiany.}}",

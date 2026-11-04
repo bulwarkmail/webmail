@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Reply from the address it was sent to",
-        "description": "When replying, send from the address the message was originally sent to. Your configured identities always match; whether other addresses on your domains count too (catch-all) is set by “Received Address Matching” below."
+        "description": "When replying, send from the address the message was originally sent to."
       },
       "reply_identity_match": {
         "label": "Received address matching",
@@ -2636,7 +2636,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Reload contacts, calendars and folders from the server. You stay signed in.",
         "button": "Refresh",
         "confirm_title": "Refresh cached data?"
       },
@@ -2649,12 +2649,12 @@
       },
       "export_settings": {
         "label": "Export settings",
-        "description": "Download your settings as JSON",
+        "description": "Download a copy of your settings",
         "button": "Export"
       },
       "import_settings": {
         "label": "Import settings",
-        "description": "Upload settings from JSON file",
+        "description": "Restore settings from a file",
         "button": "Import"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "The voice that reads messages aloud. The list shows the voices your browser has for the interface language.",
         "default": "Browser default"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "About"
+    },
+    "search": {
+      "signature": "signature email signature sign-off footer",
+      "sign_out": "sign out log out logout log off sign off",
+      "app_lock": "PIN lock code passcode lock screen",
+      "text_size": "font size bigger text larger text zoom",
+      "vacation": "autoreply auto-reply automatic reply out of office away vacation holiday",
+      "two_factor": "2FA two-factor two-step MFA OTP authenticator one-time code",
+      "encryption": "S/MIME smime PGP OpenPGP encryption certificate",
+      "password": "password change password new password",
+      "offline": "offline without connection no internet download mail storage sync",
+      "wipe": "remove erase wipe device data",
+      "outbox": "outbox unsent waiting queued",
+      "remote_content": "remote images external content tracking pixels trusted senders",
+      "push": "push relay background notifications",
+      "version": "version update about source code GitHub license"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relay for notifications",
+        "description": "Notifications while the app is closed go through a push relay, which never sees your mail. You choose it on the Notifications page.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Remote images and trusted senders",
+      "receipts_label": "Read receipts",
+      "senders_label": "Sender pictures",
+      "description": "These settings are on the Privacy page.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Density and toolbar labels",
+        "description": "How close together list rows are, and whether toolbar buttons show their names, is set on the Appearance page."
+      },
+      "light_mode": {
+        "label": "Light background for messages",
+        "description": "Showing messages on a light background in dark mode is set on the Reading page."
+      },
+      "calendar": {
+        "label": "Event previews in the calendar",
+        "description": "Whether pointing at an event shows its details is set on the Calendar page."
+      },
+      "list": {
+        "label": "Conversations and preview lines",
+        "description": "Grouping by conversation and the preview line under each message are set on the Message list page."
+      },
+      "reading": {
+        "label": "Marking mail as read",
+        "description": "When a message counts as read, and where you go after deleting or moving it, is set on the Reading page."
+      },
+      "send_warnings_description": "Undo send, and the warnings about a missing subject, a forgotten attachment or placeholder text.",
+      "bulk_delete": {
+        "label": "Asking before deleting several messages",
+        "description": "This is set on the Message list page."
+      },
+      "sounds": {
+        "label": "Sounds and the unread badge",
+        "description": "Notification sounds and the unread count on the tab are set on the Notifications page."
+      }
+    },
+    "about": {
+      "title": "About {appName}"
+    },
+    "sign_out": {
+      "description": "Sign out of this account on this device."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# message that was not sent is lost.} other {# messages that were not sent are lost.}}",
     "clear_confirm": "Clear",
     "persist_refused": "This browser may delete the kept mail when space runs low. Installing the app usually stops that.",
-    "persist_retry": "Ask again",
+    "persist_retry": "Ask the browser to keep it",
     "safari_hint": "Safari deletes a site's data after 7 days without a visit. Add Bulwark to your Home Screen or Dock to keep your mail on this device.",
     "evicted": "The browser deleted the mail kept on this device. It's downloading again.",
     "evicted_lost": "{count, plural, one {# unsent message or change was lost.} other {# unsent messages or changes were lost.}}",

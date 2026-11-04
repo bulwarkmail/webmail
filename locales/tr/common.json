@@ -1985,7 +1985,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Yanıt Adresini Otomatik Seç",
-        "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
+        "description": "Yanıtlarken, iletinin gönderildiği adresten gönder."
       },
       "reply_identity_match": {
         "label": "Alıcı adresi eşleştirme",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Kişileri, takvimleri ve klasörleri sunucudan yeniden yükleyin. Oturumunuz açık kalır.",
         "button": "Refresh",
         "confirm_title": "Önbellekteki veriler yenilensin mi?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "Ayarları Dışa Aktar",
-        "description": "Ayarlarınızı JSON olarak indirin",
+        "description": "Ayarlarınızın bir kopyasını indirin",
         "button": "Dışa Aktar"
       },
       "import_settings": {
         "label": "Ayarları İçe Aktar",
-        "description": "JSON dosyasından ayarları yükle",
+        "description": "Ayarları bir dosyadan geri yükleyin",
         "button": "İçe Aktar"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "İletileri sesli okuyan ses. Liste, tarayıcınızda arayüz dili için bulunan sesleri gösterir.",
         "default": "Tarayıcı varsayılanı"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Çevrimdışı",
+      "privacy": "Gizlilik",
+      "about": "Hakkında"
+    },
+    "search": {
+      "signature": "imza e-posta imzası alt bilgi",
+      "sign_out": "oturumu kapat çıkış yap logout",
+      "app_lock": "PIN kilit kod kilit ekranı",
+      "text_size": "yazı tipi boyutu büyük metin yakınlaştır zoom",
+      "vacation": "otomatik yanıt ofis dışında uzakta tatil izin autoreply",
+      "two_factor": "2FA iki faktörlü iki adımlı MFA OTP doğrulayıcı tek kullanımlık kod",
+      "encryption": "S/MIME smime PGP OpenPGP şifreleme sertifika",
+      "password": "parola şifre parolayı değiştir yeni parola",
+      "offline": "çevrimdışı bağlantısız internetsiz indir depolama eşitleme",
+      "wipe": "kaldır sil temizle cihaz veriler",
+      "outbox": "giden kutusu gönderilmemiş bekleyen kuyruk",
+      "remote_content": "uzak resimler harici içerik izleme pikseller güvenilir gönderenler",
+      "push": "push aktarıcı arka plan bildirimler",
+      "version": "sürüm güncelleme hakkında kaynak kodu GitHub lisans"
+    },
+    "privacy": {
+      "push_title": "Bildirimler",
+      "push_link": {
+        "label": "Bildirim aktarıcısı",
+        "description": "Uygulama kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunu Bildirimler sayfasında seçersiniz.",
+        "button": "Bildirimler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Uzak resimler ve güvenilir gönderenler",
+      "receipts_label": "Okundu bilgileri",
+      "senders_label": "Gönderen resimleri",
+      "description": "Bu ayarlar Gizlilik sayfasındadır.",
+      "button": "Gizlilik"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Yoğunluk ve düğme etiketleri",
+        "description": "Liste satırlarının ne kadar sık olduğu ve düğmelerin adını gösterip göstermediği Görünüm sayfasında ayarlanır."
+      },
+      "light_mode": {
+        "label": "İletiler için açık arka plan",
+        "description": "Koyu modda iletilerin açık arka planda gösterilmesi Okuma sayfasında ayarlanır."
+      },
+      "calendar": {
+        "label": "Takvimde etkinlik önizlemesi",
+        "description": "Bir etkinliğin üzerine gelince ayrıntılarının görünüp görünmeyeceği Takvim sayfasında ayarlanır."
+      },
+      "list": {
+        "label": "Konuşmalar ve önizleme satırları",
+        "description": "Konuşmaya göre gruplama ve her iletinin altındaki önizleme satırı İleti listesi sayfasında ayarlanır."
+      },
+      "reading": {
+        "label": "Okundu olarak işaretleme",
+        "description": "Bir iletinin ne zaman okunmuş sayılacağı ve silip taşıdıktan sonra nereye gideceğiniz Okuma sayfasında ayarlanır."
+      },
+      "send_warnings_description": "Göndermeyi geri alma ve eksik konu, unutulan ek veya yer tutucu metin uyarıları.",
+      "bulk_delete": {
+        "label": "Birden çok iletiyi silmeden önce sor",
+        "description": "Bu, İleti listesi sayfasında ayarlanır."
+      },
+      "sounds": {
+        "label": "Sesler ve okunmamış sayacı",
+        "description": "Bildirim sesleri ve sekmedeki okunmamış sayısı Bildirimler sayfasında ayarlanır."
+      }
+    },
+    "about": {
+      "title": "{appName} hakkında"
+    },
+    "sign_out": {
+      "description": "Bu cihazda bu hesabın oturumunu kapatın."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# gönderilmemiş ileti kaybolacak.} other {# gönderilmemiş ileti kaybolacak.}}",
     "clear_confirm": "Temizle",
     "persist_refused": "Alan azaldığında bu tarayıcı tutulan e-postaları silebilir. Uygulamayı yüklemek genellikle bunu önler.",
-    "persist_retry": "Yeniden sor",
+    "persist_retry": "Tarayıcıdan saklamasını iste",
     "safari_hint": "Safari, 7 gün ziyaret edilmeyen bir sitenin verilerini siler. E-postalarınızı bu cihazda tutmak için Bulwark'ı Ana Ekran'a veya Dock'a ekleyin.",
     "evicted": "Tarayıcı, bu cihazda tutulan e-postaları sildi. Yeniden indiriliyor.",
     "evicted_lost": "{count, plural, one {# gönderilmemiş ileti veya değişiklik kayboldu.} other {# gönderilmemiş ileti veya değişiklik kayboldu.}}",

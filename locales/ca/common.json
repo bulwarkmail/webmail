@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Respon des de l'adreça de recepció",
-        "description": "En respondre, envia des de l'adreça a la qual es va enviar originalment el missatge. Primer intenta coincidir amb les identitats; per als lliuraments de captura general de domini, reescriu la capçalera «De» amb l'àlies mentre envia a través de la identitat principal."
+        "description": "En respondre, envia des de l’adreça a la qual es va enviar el missatge."
       },
       "reply_identity_match": {
         "label": "Coincidència de l'adreça de recepció",
@@ -2636,7 +2636,7 @@
       },
       "refresh_cache": {
         "label": "Actualitza les dades emmagatzemades",
-        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Manté els comptes i les sessions — soluciona una vista obsoleta o incorrecta sense tancar la sessió.",
+        "description": "Torna a carregar els contactes, els calendaris i les carpetes des del servidor. Mantens la sessió iniciada.",
         "button": "Actualitza",
         "confirm_title": "Voleu actualitzar les dades de la memòria cau?"
       },
@@ -2649,12 +2649,12 @@
       },
       "export_settings": {
         "label": "Exporta la configuració",
-        "description": "Baixeu la configuració en format JSON",
+        "description": "Baixa una còpia dels paràmetres",
         "button": "Exporta"
       },
       "import_settings": {
         "label": "Importa la configuració",
-        "description": "Carregueu la configuració des d'un fitxer JSON",
+        "description": "Restaura els paràmetres des d’un fitxer",
         "button": "Importa"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "La veu que llegeix els missatges. La llista mostra les veus que té el navegador per a la llengua de la interfície.",
         "default": "Predeterminada del navegador"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Fora de línia",
+      "privacy": "Privadesa",
+      "about": "Quant a"
+    },
+    "search": {
+      "signature": "signatura signatura de correu peu de missatge",
+      "sign_out": "tancar la sessió sortir desconnectar logout",
+      "app_lock": "PIN bloqueig codi bloquejar pantalla",
+      "text_size": "mida de la lletra text més gran zoom ampliar",
+      "vacation": "resposta automàtica fora de l’oficina absent vacances autoreply",
+      "two_factor": "2FA dos factors dos passos MFA OTP autenticador codi d’un sol ús",
+      "encryption": "S/MIME smime PGP OpenPGP xifratge certificat",
+      "password": "contrasenya canviar contrasenya nova contrasenya",
+      "offline": "fora de línia sense connexió sense internet baixar emmagatzematge sincronitzar",
+      "wipe": "treure esborrar eliminar dispositiu dades",
+      "outbox": "safata de sortida no enviat en espera cua",
+      "remote_content": "imatges remotes contingut extern seguiment píxels remitents de confiança",
+      "push": "push repetidor segon pla notificacions",
+      "version": "versió actualització quant a codi font GitHub llicència"
+    },
+    "privacy": {
+      "push_title": "Notificacions",
+      "push_link": {
+        "label": "Repetidor de notificacions",
+        "description": "Les notificacions amb l’aplicació tancada passen per un repetidor push, que mai no veu el vostre correu. El trieu a la pàgina Notificacions.",
+        "button": "Notificacions"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Imatges remotes i remitents de confiança",
+      "receipts_label": "Confirmacions de lectura",
+      "senders_label": "Imatges dels remitents",
+      "description": "Aquests paràmetres són a la pàgina Privadesa.",
+      "button": "Privadesa"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densitat i etiquetes de la barra",
+        "description": "La separació de les files de la llista i si els botons mostren el nom es configuren a la pàgina Aparença."
+      },
+      "light_mode": {
+        "label": "Fons clar per als missatges",
+        "description": "Mostrar els missatges amb fons clar en mode fosc es configura a la pàgina Lectura."
+      },
+      "calendar": {
+        "label": "Previsualització d’esdeveniments al calendari",
+        "description": "Si en assenyalar un esdeveniment se’n mostren els detalls es configura a la pàgina Calendari."
+      },
+      "list": {
+        "label": "Converses i línies de previsualització",
+        "description": "L’agrupació per conversa i la línia de previsualització de cada missatge es configuren a la pàgina Llista de missatges."
+      },
+      "reading": {
+        "label": "Marcar com a llegit",
+        "description": "Quan un missatge compta com a llegit, i on aneu després d’esborrar-lo o moure’l, es configura a la pàgina Lectura."
+      },
+      "send_warnings_description": "Desfer l’enviament i els avisos d’assumpte buit, adjunt oblidat o text provisional.",
+      "bulk_delete": {
+        "label": "Preguntar abans d’esborrar diversos missatges",
+        "description": "Això es configura a la pàgina Llista de missatges."
+      },
+      "sounds": {
+        "label": "Sons i comptador de no llegits",
+        "description": "Els sons de notificació i el nombre de no llegits a la pestanya es configuren a la pàgina Notificacions."
+      }
+    },
+    "about": {
+      "title": "Quant a {appName}"
+    },
+    "sign_out": {
+      "description": "Tanca la sessió d’aquest compte en aquest dispositiu."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {Es perdrà # missatge sense enviar.} other {Es perdran # missatges sense enviar.}}",
     "clear_confirm": "Buida",
     "persist_refused": "Aquest navegador pot esborrar el correu desat quan falti espai. Instal·lar l'aplicació sol evitar-ho.",
-    "persist_retry": "Torna-ho a demanar",
+    "persist_retry": "Demana al navegador que el conservi",
     "safari_hint": "El Safari esborra les dades d'un lloc després de 7 dies sense visitar-lo. Afegiu Bulwark a la pantalla d'inici o al Dock per mantenir el vostre correu en aquest dispositiu.",
     "evicted": "El navegador ha esborrat el correu desat en aquest dispositiu. Es torna a baixar.",
     "evicted_lost": "{count, plural, one {S'ha perdut # missatge o canvi sense enviar.} other {S'han perdut # missatges o canvis sense enviar.}}",

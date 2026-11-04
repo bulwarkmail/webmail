@@ -1976,7 +1976,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Seleziona automaticamente l'indirizzo di risposta",
-        "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
+        "description": "Quando rispondi, invia dall’indirizzo a cui è stato inviato il messaggio."
       },
       "reply_identity_match": {
         "label": "Corrispondenza dell'indirizzo di ricezione",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Ricarica contatti, calendari e cartelle dal server. Resti connesso.",
         "button": "Refresh",
         "confirm_title": "Aggiornare i dati nella cache?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "Esporta impostazioni",
-        "description": "Scarica le tue impostazioni come JSON",
+        "description": "Scarica una copia delle impostazioni",
         "button": "Esporta"
       },
       "import_settings": {
         "label": "Importa impostazioni",
-        "description": "Carica impostazioni da file JSON",
+        "description": "Ripristina le impostazioni da un file",
         "button": "Importa"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "La voce che legge i messaggi. L'elenco mostra le voci che il browser ha per la lingua dell'interfaccia.",
         "default": "Predefinita del browser"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "Informazioni"
+    },
+    "search": {
+      "signature": "firma firma email piè di pagina",
+      "sign_out": "esci disconnetti logout uscita",
+      "app_lock": "PIN blocco codice blocca schermo",
+      "text_size": "dimensione carattere testo più grande zoom ingrandire",
+      "vacation": "risposta automatica fuori sede assente ferie vacanza autoreply",
+      "two_factor": "2FA due fattori due passaggi MFA OTP autenticatore codice monouso",
+      "encryption": "S/MIME smime PGP OpenPGP crittografia certificato",
+      "password": "password cambia password nuova password",
+      "offline": "offline senza connessione senza internet scaricare archiviazione sincronizzare",
+      "wipe": "rimuovi cancella elimina dispositivo dati",
+      "outbox": "posta in uscita non inviati in attesa coda",
+      "remote_content": "immagini remote contenuti esterni tracciamento pixel mittenti attendibili",
+      "push": "push relay in background notifiche",
+      "version": "versione aggiornamento informazioni codice sorgente GitHub licenza"
+    },
+    "privacy": {
+      "push_title": "Notifiche",
+      "push_link": {
+        "label": "Relay per le notifiche",
+        "description": "Le notifiche ad app chiusa passano da un relay push, che non vede mai la tua posta. Lo scegli nella pagina Notifiche.",
+        "button": "Notifiche"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Immagini remote e mittenti attendibili",
+      "receipts_label": "Conferme di lettura",
+      "senders_label": "Immagini dei mittenti",
+      "description": "Queste impostazioni sono nella pagina Privacy.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densità ed etichette della barra",
+        "description": "La distanza tra le righe dell’elenco e la presenza del nome sui pulsanti si impostano nella pagina Aspetto."
+      },
+      "light_mode": {
+        "label": "Sfondo chiaro per i messaggi",
+        "description": "Mostrare i messaggi su sfondo chiaro in modalità scura si imposta nella pagina Lettura."
+      },
+      "calendar": {
+        "label": "Anteprima degli eventi nel calendario",
+        "description": "Se puntando un evento compaiono i dettagli si imposta nella pagina Calendario."
+      },
+      "list": {
+        "label": "Conversazioni e righe di anteprima",
+        "description": "Il raggruppamento per conversazione e la riga di anteprima sotto ogni messaggio si impostano nella pagina Elenco messaggi."
+      },
+      "reading": {
+        "label": "Segnare come letto",
+        "description": "Quando un messaggio conta come letto, e dove vai dopo averlo eliminato o spostato, si imposta nella pagina Lettura."
+      },
+      "send_warnings_description": "Annulla invio e gli avvisi per oggetto mancante, allegato dimenticato o testo segnaposto.",
+      "bulk_delete": {
+        "label": "Chiedere prima di eliminare più messaggi",
+        "description": "Si imposta nella pagina Elenco messaggi."
+      },
+      "sounds": {
+        "label": "Suoni e contatore dei non letti",
+        "description": "I suoni delle notifiche e il numero di non letti nella scheda si impostano nella pagina Notifiche."
+      }
+    },
+    "about": {
+      "title": "Informazioni su {appName}"
+    },
+    "sign_out": {
+      "description": "Esci da questo account su questo dispositivo."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# messaggio non inviato andrà perso.} other {# messaggi non inviati andranno persi.}}",
     "clear_confirm": "Svuota",
     "persist_refused": "Questo browser può eliminare la posta conservata quando lo spazio scarseggia. Installare l'app di solito lo evita.",
-    "persist_retry": "Chiedi di nuovo",
+    "persist_retry": "Chiedi al browser di conservarla",
     "safari_hint": "Safari elimina i dati di un sito dopo 7 giorni senza visite. Aggiungi Bulwark alla schermata Home o al Dock per conservare la tua posta su questo dispositivo.",
     "evicted": "Il browser ha eliminato la posta conservata su questo dispositivo. Viene scaricata di nuovo.",
     "evicted_lost": "{count, plural, one {# messaggio o modifica non inviati sono andati persi.} other {# messaggi o modifiche non inviati sono andati persi.}}",

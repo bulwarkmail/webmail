@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto';
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { NextIntlClientProvider } from 'next-intl';
@@ -8,6 +9,8 @@ import en from '@/locales/en/common.json';
 // off and in the situations some rows need (touch screen, Mountain View,
 // several accounts), and checks that each entry of the search index has a
 // row marked with its label, and is advanced exactly when the page says so.
+// settings-8 (2026-11-04): and that every section a page draws can be found,
+// so a new section (offline, app lock) can't be left out of the index.
 
 vi.unmock('next-intl');
 vi.mock('@/components/plugins/plugin-iframe-slot', () => ({ PluginIframeSlot: () => null }));
@@ -33,7 +36,8 @@ const { useEmailStore } = await import('@/stores/email-store');
 const { useAccountStore } = await import('@/stores/account-store');
 const { TourProvider } = await import('@/components/tour/tour-provider');
 const { AdvancedSettingsProvider } = await import('../settings-section');
-const { tabSearchEntries, getByPath } = await import('@/lib/settings-search');
+const { tabSearchEntries, getByPath, withAppName, settingsTabLabelKey } = await import('@/lib/settings-search');
+const { setStoreBackend } = await import('@/lib/store/client/api');
 const pages = {
   account: (await import('../account-settings')).AccountSettings,
   general: (await import('../general-settings')).GeneralSettings,
@@ -56,6 +60,9 @@ const pages = {
   files: (await import('../files-settings')).FilesSettingsComponent,
   addons: (await import('../addons-settings')).AddonsSettings,
   backup: (await import('../about-data-settings')).AboutDataSettings,
+  offline: (await import('@/components/offline/offline-settings')).OfflineSettings,
+  privacy: (await import('../privacy-settings')).PrivacySettings,
+  about: (await import('../about-data-settings')).AboutSettings,
 };
 
 const OVERRIDES: Record<string, () => unknown> = {
@@ -77,19 +84,22 @@ const TAB_PAGES: Record<string, string[]> = {
   message_list: ['message_list'], reading: ['reading'], composing: ['composing'], vacation: ['vacation'],
   filters: ['filters'], organize: ['organize'], security: ['security'], sharing: ['sharing'], recovery: ['recovery'], calendar: ['calendar', 'calendar2'],
   contacts: ['contacts', 'contacts2'], files: ['files'], addons: ['addons'], backup: ['backup'],
+  offline: ['offline'], privacy: ['privacy'], about: ['about'],
 };
 
 describe('settings search index', () => {
   it('has a row for every entry on its page', { timeout: 120_000 }, () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no network')));
-    useAuthStore.setState({ isAuthenticated: true, authMode: 'basic', client: CLIENT } as never);
+    useAuthStore.setState({ isAuthenticated: true, authMode: 'basic', client: CLIENT, activeAccountId: 'acc' } as never);
     useVacationStore.setState({ isSupported: true, isLoading: false, forwardAvailable: true, fetchVacationResponse: vi.fn(async () => {}) } as never);
     useFilterStore.setState({ isSupported: true, isLoading: false, rules: [], selectAccount: vi.fn(async () => {}) } as never);
     useAccountSecurityStore.setState({ isStalwart: true, isProbing: false, probe: vi.fn(async () => true), fetchAll: vi.fn(), fetchAuthInfo: vi.fn(), fetchPublicKeys: vi.fn(), fetchCryptoInfo: vi.fn() } as never);
     useCalendarStore.setState({ calendars: [{ id: 'c', name: 'Work', color: '#3b82f6', isDefault: false, isShared: false, shareWith: null, myRights: { mayShare: true, mayDelete: true, mayWriteAll: true } }], icalSubscriptions: [] } as never);
     useContactStore.setState({ addressBooks: [{ id: 'b', name: 'Club', isDefault: true, isShared: false, shareWith: null, myRights: { mayRead: true, mayWrite: true, mayDelete: true } }], contacts: [], fetchAddressBooks: vi.fn(async () => {}) } as never);
     useEmailStore.setState({ fetchMailboxes: vi.fn(async () => {}) } as never);
-    const out: Record<string, Record<string, { on: string[]; off: string[]; error?: string }>> = {};
+    // jsdom has no OPFS: the store says it's there, as a browser would, so Offline draws its rows.
+    setStoreBackend({ supported: () => true } as never);
+    const out: Record<string, Record<string, { on: string[]; off: string[]; sections: string[]; error?: string }>> = {};
     const realMatchMedia = window.matchMedia;
     const variants: Record<string, () => void> = {
       base: () => {},
@@ -125,13 +135,16 @@ describe('settings search index', () => {
           </NextIntlClientProvider>,
         );
         const found = Array.from(container.querySelectorAll('[data-search-label]')).map((el) => el.getAttribute('data-search-label') ?? '');
+        const sections = Array.from(container.querySelectorAll('[data-settings-section]')).map((el) => el.getAttribute('data-search-label') ?? '');
         unmount();
-        return found;
+        return { found, sections };
       };
       try {
-        out[variant][tab] = { on: labels(true), off: labels(false) };
+        const on = labels(true);
+        const off = labels(false);
+        out[variant][tab] = { on: on.found, off: off.found, sections: on.sections };
       } catch (e) {
-        out[variant][tab] = { on: [], off: [], error: String(e) };
+        out[variant][tab] = { on: [], off: [], sections: [], error: String(e) };
       }
     }
     }
@@ -140,7 +153,7 @@ describe('settings search index', () => {
     const problems: string[] = [];
     for (const [tab, entries] of Object.entries(tabSearchEntries)) {
       for (const entry of entries) {
-        const text = getByPath(en, entry.label) as string;
+        const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
         const variant = out[entry.when ?? 'base'];
         const parts = TAB_PAGES[tab].map((page) => variant[page]);
         const errors = parts.filter((part) => part.error).map((part) => part.error);
@@ -150,6 +163,17 @@ describe('settings search index', () => {
         if (!withAdvanced) problems.push(`${tab}: no row for ${entry.label} ("${text}")`);
         else if (!!entry.advanced === withoutAdvanced) {
           problems.push(`${tab}: ${entry.label} is ${withoutAdvanced ? 'not ' : ''}an advanced row`);
+        }
+      }
+    }
+    // Every section a page draws has an entry, so searching its name finds it.
+    for (const [tab, entries] of Object.entries(tabSearchEntries)) {
+      const indexed = new Set(entries.map((entry) => withAppName(getByPath(en, entry.label), 'Bulwark') as string));
+      // A section named like its page is the page itself, which the search lists anyway.
+      indexed.add(getByPath(en, settingsTabLabelKey(tab as never)) as string);
+      for (const page of TAB_PAGES[tab]) {
+        for (const section of out.base[page].sections) {
+          if (!indexed.has(section)) problems.push(`${tab}: section "${section}" has no search entry`);
         }
       }
     }

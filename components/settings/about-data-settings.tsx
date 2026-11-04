@@ -17,7 +17,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from '@/stores/toast-store';
 import { DebugSettings } from './debug-settings';
 import { MailBackupSettings } from '@/components/mail-transfer/mail-backup-settings';
-import { OfflineSettings } from '@/components/offline/offline-settings';
+import { productName } from '@/lib/product-name';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -55,7 +55,7 @@ function VersionUpdateTag() {
 }
 
 /**
- * The About card, in the settings sidebar's footer: logo, version with the
+ * The About card, on Settings > About and at the foot of the admin's list: logo, version with the
  * update tag, and the source link. A modified build must offer its own
  * source (AGPL-3.0 §13), so a configured URL replaces the upstream link.
  * Three clicks on the logo open Spam Siege, as before.
@@ -126,9 +126,28 @@ export function AboutFooter() {
 }
 
 /**
- * The Backup & reset page: keep settings (sync, export, import), fix a stale
- * view, start over, and (Advanced, where the admin allows it) debug logging.
- * The About card moved to the settings sidebar's footer.
+ * Settings > About, the last entry of the page list: the About card with the
+ * version and the source link. It was in the sidebar's footer, where it took
+ * room from the page list on short screens.
+ */
+export function AboutSettings() {
+  const t = useTranslations('uxs_structure.about');
+  const appName = productName(useConfig().appName);
+  return (
+    <div className="space-y-8">
+      <SettingsSection id="about" title={t('title', { appName })}>
+        <div className="-mx-3">
+          <AboutFooter />
+        </div>
+      </SettingsSection>
+    </div>
+  );
+}
+
+/**
+ * The Backup & reset page: keep settings (sync, export, import), bring mail
+ * in and save it as files, fix a stale view, start over, and (Advanced, where
+ * the admin allows it) debug logging. Offline has a page of its own.
  */
 export function AboutDataSettings() {
   const t = useTranslations('settings.advanced');
@@ -217,8 +236,6 @@ export function AboutDataSettings() {
       </SettingsSection>
 
       <MailBackupSettings />
-
-      <OfflineSettings />
 
       <SettingsSection id="fix" title={t('sections.fix')} description={t('sections.fix_description')}>
         <SettingItem label={t('refresh_cache.label')} description={t('refresh_cache.description')} term="cache">

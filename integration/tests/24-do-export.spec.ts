@@ -101,7 +101,7 @@ async function startOffline(): Promise<void> {
   await expect(page.getByTestId('offline-banner')).toContainText("You're offline", { timeout: 60_000 });
   // The shell can open Settings on its first page: from there through the menu, as a person would.
   if (!(await page.getByTestId('offline-switch').waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false))) {
-    await page.getByText('Backup & reset', { exact: true }).first().click();
+    await page.getByTestId('settings-tab-offline').click();
   }
   await expect(page.getByTestId('offline-switch')).toBeVisible({ timeout: 30_000 });
 }

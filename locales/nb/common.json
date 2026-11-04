@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Svar fra mottatt adresse",
-        "description": "Når du svarer, bruker Bulwark adressen meldingen opprinnelig ble sendt til. Programmet ser først etter en samsvarende identitet. For meldinger til et oppsamlingsdomene brukes aliaset i Fra-feltet, mens sendingen går gjennom hovedidentiteten din."
+        "description": "Når du svarer, send fra adressen meldingen ble sendt til."
       },
       "reply_identity_match": {
         "label": "Samsvar for mottaksadresse",
@@ -2636,7 +2636,7 @@
       },
       "refresh_cache": {
         "label": "Oppdater bufrede data",
-        "description": "Last inn kontakter, kalendere og mapper på nytt fra serveren. Kontoene og øktene beholdes, slik at du kan rette en utdatert eller feil visning uten å logge av.",
+        "description": "Last inn kontakter, kalendere og mapper fra serveren på nytt. Du forblir logget inn.",
         "button": "Oppdater",
         "confirm_title": "Oppdatere bufrede data?"
       },
@@ -2649,12 +2649,12 @@
       },
       "export_settings": {
         "label": "Eksporter innstillinger",
-        "description": "Last ned innstillingene dine som JSON",
+        "description": "Last ned en kopi av innstillingene",
         "button": "Eksporter"
       },
       "import_settings": {
         "label": "Importer innstillinger",
-        "description": "Last opp innstillinger fra en JSON-fil",
+        "description": "Gjenopprett innstillinger fra en fil",
         "button": "Importer"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "Stemmen som leser opp meldinger. Listen viser stemmene nettleseren har for språket i grensesnittet.",
         "default": "Nettleserens standard"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Frakoblet",
+      "privacy": "Personvern",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-postsignatur bunntekst",
+      "sign_out": "logg ut logout avlogging",
+      "app_lock": "PIN lås kode låseskjerm",
+      "text_size": "skriftstørrelse større tekst zoom forstørr",
+      "vacation": "autosvar automatisk svar fraværende ferie ikke på kontoret autoreply",
+      "two_factor": "2FA totrinns tofaktor MFA OTP autentiseringsapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering sertifikat",
+      "password": "passord endre passord nytt passord",
+      "offline": "frakoblet offline uten tilkobling uten internett last ned lagring synkroniser",
+      "wipe": "fjern slett tøm enhet data",
+      "outbox": "utboks ikke sendt venter kø",
+      "remote_content": "eksterne bilder eksternt innhold sporing piksler klarerte avsendere",
+      "push": "push relé bakgrunn varsler",
+      "version": "versjon oppdatering om kildekode GitHub lisens"
+    },
+    "privacy": {
+      "push_title": "Varsler",
+      "push_link": {
+        "label": "Relé for varsler",
+        "description": "Varsler mens appen er lukket går gjennom et push-relé, som aldri ser e-posten din. Du velger det på siden Varsler.",
+        "button": "Varsler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne bilder og klarerte avsendere",
+      "receipts_label": "Lesebekreftelser",
+      "senders_label": "Avsenderbilder",
+      "description": "Disse innstillingene finner du på siden Personvern.",
+      "button": "Personvern"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tetthet og knappenavn",
+        "description": "Hvor tett radene i listen står, og om knappene viser navnet sitt, stiller du inn på siden Utseende."
+      },
+      "light_mode": {
+        "label": "Lys bakgrunn for meldinger",
+        "description": "Å vise meldinger på lys bakgrunn i mørk modus stiller du inn på siden Lesing."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning av hendelser i kalenderen",
+        "description": "Om det å peke på en hendelse viser detaljene, stiller du inn på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og forhåndsvisningslinjer",
+        "description": "Gruppering etter samtale og forhåndsvisningslinjen under hver melding stiller du inn på siden Meldingsliste."
+      },
+      "reading": {
+        "label": "Merke som lest",
+        "description": "Når en melding regnes som lest, og hvor du havner etter å ha slettet eller flyttet den, stiller du inn på siden Lesing."
+      },
+      "send_warnings_description": "Angre sending og varslene om manglende emne, glemt vedlegg eller plassholdertekst.",
+      "bulk_delete": {
+        "label": "Spør før sletting av flere meldinger",
+        "description": "Dette stiller du inn på siden Meldingsliste."
+      },
+      "sounds": {
+        "label": "Lyder og telleren for uleste",
+        "description": "Varsellyder og antall uleste i fanen stiller du inn på siden Varsler."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Logg ut av denne kontoen på denne enheten."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# usendt melding går tapt.} other {# usendte meldinger går tapt.}}",
     "clear_confirm": "Tøm",
     "persist_refused": "Denne nettleseren kan slette den beholdte e-posten når plassen blir knapp. Å installere appen hjelper vanligvis.",
-    "persist_retry": "Spør igjen",
+    "persist_retry": "Be nettleseren om å beholde den",
     "safari_hint": "Safari sletter data fra et nettsted etter 7 dager uten besøk. Legg Bulwark til på Hjem-skjermen eller i Dock for å beholde e-posten på denne enheten.",
     "evicted": "Nettleseren slettet e-posten som var beholdt på denne enheten. Den lastes ned på nytt.",
     "evicted_lost": "{count, plural, one {# usendt melding eller endring gikk tapt.} other {# usendte meldinger eller endringer gikk tapt.}}",

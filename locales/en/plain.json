@@ -312,7 +312,7 @@
         "description": "Write all messages as plain text, without bold, colours or pictures. This also applies to replies and forwards."
       },
       "auto_select_reply_identity": {
-        "description": "When you reply, the reply is sent from the address the message was sent to. This works for all your own addresses. Below, you can choose if other addresses on your domain count too."
+        "description": "When you reply, the reply is sent from the address the message was sent to. This works for all your own addresses."
       },
       "reply_identity_match": {
         "label": "Which addresses count as yours",
@@ -577,10 +577,10 @@
         "description": "Put all settings back to how they were at the start"
       },
       "export_settings": {
-        "description": "Save your settings as a file on your device"
+        "description": "Download a copy of your settings"
       },
       "import_settings": {
-        "description": "Load your settings from a file you saved before"
+        "description": "Restore settings from a file"
       },
       "sections": {
         "backup_description": "Use the same settings in other browsers and on other devices.",

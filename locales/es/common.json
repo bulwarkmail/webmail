@@ -1976,7 +1976,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Seleccionar dirección de respuesta automáticamente",
-        "description": "Al responder, cambia automáticamente la dirección del remitente a la identidad que recibió el mensaje original"
+        "description": "Al responder, enviar desde la dirección a la que se envió el mensaje."
       },
       "reply_identity_match": {
         "label": "Coincidencia de la dirección de recepción",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Volver a cargar contactos, calendarios y carpetas desde el servidor. Sigues con la sesión iniciada.",
         "button": "Refresh",
         "confirm_title": "¿Actualizar los datos en caché?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "Exportar Configuración",
-        "description": "Descargar su configuración como JSON",
+        "description": "Descargar una copia de tus ajustes",
         "button": "Exportar"
       },
       "import_settings": {
         "label": "Importar Configuración",
-        "description": "Cargar configuración desde archivo JSON",
+        "description": "Restaurar los ajustes desde un archivo",
         "button": "Importar"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "La voz que lee los mensajes en voz alta. La lista muestra las voces que tiene tu navegador para el idioma de la interfaz.",
         "default": "Predeterminada del navegador"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Sin conexión",
+      "privacy": "Privacidad",
+      "about": "Acerca de"
+    },
+    "search": {
+      "signature": "firma firma de correo pie de mensaje",
+      "sign_out": "cerrar sesión salir desconectar logout",
+      "app_lock": "PIN bloqueo código bloquear pantalla",
+      "text_size": "tamaño de letra texto más grande zoom ampliar",
+      "vacation": "respuesta automática fuera de la oficina ausente vacaciones autoreply",
+      "two_factor": "2FA dos factores dos pasos MFA OTP autenticador código de un solo uso",
+      "encryption": "S/MIME smime PGP OpenPGP cifrado certificado",
+      "password": "contraseña cambiar contraseña nueva contraseña",
+      "offline": "sin conexión offline sin internet descargar almacenamiento sincronizar",
+      "wipe": "quitar borrar eliminar dispositivo datos",
+      "outbox": "bandeja de salida sin enviar en espera cola",
+      "remote_content": "imágenes remotas contenido externo rastreo píxeles remitentes de confianza",
+      "push": "push relé segundo plano notificaciones",
+      "version": "versión actualización acerca de código fuente GitHub licencia"
+    },
+    "privacy": {
+      "push_title": "Notificaciones",
+      "push_link": {
+        "label": "Relé de notificaciones",
+        "description": "Las notificaciones con la aplicación cerrada pasan por un relé push, que nunca ve tu correo. Lo eliges en la página Notificaciones.",
+        "button": "Notificaciones"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Imágenes remotas y remitentes de confianza",
+      "receipts_label": "Confirmaciones de lectura",
+      "senders_label": "Imágenes de remitentes",
+      "description": "Estos ajustes están en la página Privacidad.",
+      "button": "Privacidad"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densidad y etiquetas de la barra",
+        "description": "La separación de las filas de la lista y si los botones muestran su nombre se ajustan en la página Apariencia."
+      },
+      "light_mode": {
+        "label": "Fondo claro para los mensajes",
+        "description": "Mostrar los mensajes con fondo claro en modo oscuro se ajusta en la página Lectura."
+      },
+      "calendar": {
+        "label": "Vista previa de eventos en el calendario",
+        "description": "Si al señalar un evento se muestran sus detalles se ajusta en la página Calendario."
+      },
+      "list": {
+        "label": "Conversaciones y líneas de vista previa",
+        "description": "La agrupación por conversación y la línea de vista previa de cada mensaje se ajustan en la página Lista de mensajes."
+      },
+      "reading": {
+        "label": "Marcar como leído",
+        "description": "Cuándo un mensaje cuenta como leído, y adónde vas tras borrarlo o moverlo, se ajusta en la página Lectura."
+      },
+      "send_warnings_description": "Deshacer envío y los avisos de asunto vacío, adjunto olvidado o texto de relleno.",
+      "bulk_delete": {
+        "label": "Preguntar antes de borrar varios mensajes",
+        "description": "Esto se ajusta en la página Lista de mensajes."
+      },
+      "sounds": {
+        "label": "Sonidos y contador de no leídos",
+        "description": "Los sonidos de notificación y el número de no leídos en la pestaña se ajustan en la página Notificaciones."
+      }
+    },
+    "about": {
+      "title": "Acerca de {appName}"
+    },
+    "sign_out": {
+      "description": "Cerrar sesión de esta cuenta en este dispositivo."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {Se perderá # mensaje sin enviar.} other {Se perderán # mensajes sin enviar.}}",
     "clear_confirm": "Vaciar",
     "persist_refused": "Este navegador puede borrar el correo guardado cuando falte espacio. Instalar la aplicación suele evitarlo.",
-    "persist_retry": "Preguntar de nuevo",
+    "persist_retry": "Pedir al navegador que lo conserve",
     "safari_hint": "Safari borra los datos de un sitio tras 7 días sin visitarlo. Añade Bulwark a tu pantalla de inicio o al Dock para conservar tu correo en este dispositivo.",
     "evicted": "El navegador borró el correo guardado en este dispositivo. Se está descargando de nuevo.",
     "evicted_lost": "{count, plural, one {Se perdió # mensaje o cambio sin enviar.} other {Se perdieron # mensajes o cambios sin enviar.}}",

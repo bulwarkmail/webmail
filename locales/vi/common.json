@@ -2000,7 +2000,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Trả lời bằng địa chỉ nhận thư",
-        "description": "Khi trả lời, gửi thư từ địa chỉ mà thư ban đầu được gửi đến. Các danh tính bạn đã cấu hình luôn được khớp; tùy chọn “Khớp địa chỉ nhận” bên dưới quyết định có tính các địa chỉ khác trong miền của bạn (catch-all) hay không."
+        "description": "Khi trả lời, gửi từ địa chỉ mà thư đã được gửi đến."
       },
       "reply_identity_match": {
         "label": "Khớp địa chỉ nhận",
@@ -2648,7 +2648,7 @@
       },
       "refresh_cache": {
         "label": "Làm mới dữ liệu được lưu trong bộ nhớ đệm",
-        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Giữ lại các tài khoản và phiên của bạn — sửa chế độ xem cũ hoặc sai mà không cần đăng xuất.",
+        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Bạn vẫn đăng nhập.",
         "button": "Làm mới",
         "confirm_title": "Làm mới dữ liệu đã lưu vào bộ nhớ đệm?"
       },
@@ -2661,12 +2661,12 @@
       },
       "export_settings": {
         "label": "Xuất cài đặt",
-        "description": "Tải xuống cài đặt của bạn dưới dạng JSON",
+        "description": "Tải xuống bản sao cài đặt",
         "button": "Xuất"
       },
       "import_settings": {
         "label": "Nhập cài đặt",
-        "description": "Tải lên cài đặt từ tệp JSON",
+        "description": "Khôi phục cài đặt từ tệp",
         "button": "Nhập"
       },
       "about": {
@@ -3398,6 +3398,81 @@
         "description": "Giọng nói đọc to thư. Danh sách hiển thị các giọng nói mà trình duyệt của bạn dành cho ngôn ngữ giao diện.",
         "default": "Trình duyệt mặc định"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Ngoại tuyến",
+      "privacy": "Quyền riêng tư",
+      "about": "Giới thiệu"
+    },
+    "search": {
+      "signature": "chữ ký chữ ký email chân thư",
+      "sign_out": "đăng xuất thoát logout",
+      "app_lock": "PIN khóa mã màn hình khóa",
+      "text_size": "cỡ chữ chữ to hơn phóng to thu phóng",
+      "vacation": "trả lời tự động vắng mặt nghỉ phép kỳ nghỉ ngoài văn phòng autoreply",
+      "two_factor": "2FA hai lớp hai bước MFA OTP ứng dụng xác thực mã dùng một lần",
+      "encryption": "S/MIME smime PGP OpenPGP mã hóa chứng chỉ",
+      "password": "mật khẩu đổi mật khẩu mật khẩu mới",
+      "offline": "ngoại tuyến offline không có kết nối không có mạng tải xuống bộ nhớ đồng bộ",
+      "wipe": "xóa gỡ dọn thiết bị dữ liệu",
+      "outbox": "hộp thư đi chưa gửi đang chờ hàng đợi",
+      "remote_content": "hình ảnh từ xa nội dung bên ngoài theo dõi pixel người gửi tin cậy",
+      "push": "đẩy push chuyển tiếp nền thông báo",
+      "version": "phiên bản cập nhật giới thiệu mã nguồn GitHub giấy phép"
+    },
+    "privacy": {
+      "push_title": "Thông báo",
+      "push_link": {
+        "label": "Máy chuyển tiếp thông báo",
+        "description": "Thông báo khi ứng dụng đóng đi qua một máy chuyển tiếp đẩy, máy này không bao giờ thấy thư của bạn. Bạn chọn nó trên trang Thông báo.",
+        "button": "Thông báo"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Hình ảnh từ xa và người gửi tin cậy",
+      "receipts_label": "Xác nhận đã đọc",
+      "senders_label": "Ảnh người gửi",
+      "description": "Các cài đặt này nằm trên trang Quyền riêng tư.",
+      "button": "Quyền riêng tư"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Mật độ và nhãn nút",
+        "description": "Khoảng cách các dòng trong danh sách và việc nút có hiện tên hay không được đặt trên trang Giao diện."
+      },
+      "light_mode": {
+        "label": "Nền sáng cho thư",
+        "description": "Hiển thị thư trên nền sáng ở chế độ tối được đặt trên trang Đọc thư."
+      },
+      "calendar": {
+        "label": "Xem trước sự kiện trong lịch",
+        "description": "Việc trỏ vào sự kiện có hiện chi tiết hay không được đặt trên trang Lịch."
+      },
+      "list": {
+        "label": "Cuộc trò chuyện và dòng xem trước",
+        "description": "Nhóm theo cuộc trò chuyện và dòng xem trước dưới mỗi thư được đặt trên trang Danh sách thư."
+      },
+      "reading": {
+        "label": "Đánh dấu đã đọc",
+        "description": "Khi nào thư được tính là đã đọc, và bạn đi đâu sau khi xóa hoặc di chuyển thư, được đặt trên trang Đọc thư."
+      },
+      "send_warnings_description": "Hoàn tác gửi và các cảnh báo khi thiếu tiêu đề, quên tệp đính kèm hoặc còn văn bản giữ chỗ.",
+      "bulk_delete": {
+        "label": "Hỏi trước khi xóa nhiều thư",
+        "description": "Mục này được đặt trên trang Danh sách thư."
+      },
+      "sounds": {
+        "label": "Âm thanh và số thư chưa đọc",
+        "description": "Âm thanh thông báo và số thư chưa đọc trên thẻ được đặt trên trang Thông báo."
+      }
+    },
+    "about": {
+      "title": "Giới thiệu {appName}"
+    },
+    "sign_out": {
+      "description": "Đăng xuất tài khoản này trên thiết bị này."
     }
   },
   "setup": {
@@ -5906,7 +5981,7 @@
     "clear_confirm_unsent": "{count, plural, other {# thư chưa gửi sẽ bị mất.}}",
     "clear_confirm": "Xóa",
     "persist_refused": "Trình duyệt này có thể xóa thư đã giữ khi sắp hết dung lượng. Cài đặt ứng dụng thường giúp tránh điều này.",
-    "persist_retry": "Hỏi lại",
+    "persist_retry": "Đề nghị trình duyệt giữ lại",
     "safari_hint": "Safari xóa dữ liệu của một trang web sau 7 ngày không truy cập. Hãy thêm Bulwark vào Màn hình chính hoặc Dock để giữ thư trên thiết bị này.",
     "evicted": "Trình duyệt đã xóa thư được giữ trên thiết bị này. Đang tải lại.",
     "evicted_lost": "{count, plural, other {# thư hoặc thay đổi chưa gửi đã bị mất.}}",

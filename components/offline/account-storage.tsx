@@ -63,7 +63,7 @@ function useUnsent(account: string) {
   return { unsent, read };
 }
 
-/** One account in Settings > Backup & reset > Offline. */
+/** One account in Settings > Offline. */
 export function AccountStorage({ account, primary, heading }: { account: string; primary: boolean; heading: string | null }) {
   const t = useTranslations('offline.settings');
   const tStorage = useTranslations('offlineStorage');
@@ -164,14 +164,18 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             </div>
           )}
           <div className="space-y-2 py-3">
-            <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid={testId('offline-status')}>
-              {syncing
-                ? t('syncing')
-                : lastSynced
-                  ? t('usage_updated', { size: formatFileSize(usage?.bytes ?? 0), time: format.relativeTime(lastSynced, now) })
-                  : t('usage', { size: formatFileSize(usage?.bytes ?? 0) })}
-            </p>
-            {syncing && progressWorthShowing(progress) && <ProgressLine progress={progress} />}
+            {/* A sync with a progress line says so once, in that line. */}
+            {syncing && progressWorthShowing(progress) ? (
+              <ProgressLine progress={progress} />
+            ) : (
+              <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid={testId('offline-status')}>
+                {syncing
+                  ? t('syncing')
+                  : lastSynced
+                    ? t('usage_updated', { size: formatFileSize(usage?.bytes ?? 0), time: format.relativeTime(lastSynced, now) })
+                    : t('usage', { size: formatFileSize(usage?.bytes ?? 0) })}
+              </p>
+            )}
             {usage && usage.parts.length > 0 && (
               <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs" aria-label={tStorage('usage_label')} data-testid={testId('offline-usage')}>
                 {usage.parts.filter((part) => part.items > 0).map((part) => (

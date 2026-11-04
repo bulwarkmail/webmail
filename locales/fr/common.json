@@ -1976,7 +1976,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Sélection automatique de l'adresse de réponse",
-        "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
+        "description": "Lors d’une réponse, envoyer depuis l’adresse à laquelle le message a été envoyé."
       },
       "reply_identity_match": {
         "label": "Correspondance de l'adresse de réception",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Actualiser les données en cache",
-        "description": "Actualiser les contacts, calendriers et dossiers depuis le serveur. Vos comptes et sessions sont conservés. Corrige un affichage obsolète ou incorrect sans vous déconnecter.",
+        "description": "Recharger les contacts, calendriers et dossiers depuis le serveur. Vous restez connecté.",
         "button": "Actualiser",
         "confirm_title": "Actualiser les données en cache ?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "Exporter les paramètres",
-        "description": "Télécharger vos paramètres au format JSON",
+        "description": "Télécharger une copie de vos réglages",
         "button": "Exporter"
       },
       "import_settings": {
         "label": "Importer les paramètres",
-        "description": "Charger les paramètres depuis un fichier JSON",
+        "description": "Restaurer les réglages depuis un fichier",
         "button": "Importer"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "La voix qui lit les messages. La liste montre les voix de votre navigateur pour la langue de l'interface.",
         "default": "Voix par défaut du navigateur"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Hors ligne",
+      "privacy": "Confidentialité",
+      "about": "À propos"
+    },
+    "search": {
+      "signature": "signature signature e-mail pied de message",
+      "sign_out": "déconnexion se déconnecter quitter logout",
+      "app_lock": "PIN verrou code verrouillage écran",
+      "text_size": "taille de police texte plus grand zoom agrandir",
+      "vacation": "réponse automatique absence congés vacances absent autoreply",
+      "two_factor": "2FA double authentification deux facteurs MFA OTP authentificateur code unique",
+      "encryption": "S/MIME smime PGP OpenPGP chiffrement certificat",
+      "password": "mot de passe changer nouveau mot de passe",
+      "offline": "hors ligne sans connexion sans internet télécharger stockage synchronisation",
+      "wipe": "supprimer effacer appareil données",
+      "outbox": "boîte d’envoi non envoyé en attente file",
+      "remote_content": "images distantes contenu externe pistage pixels expéditeurs de confiance",
+      "push": "push relais arrière-plan notifications",
+      "version": "version mise à jour à propos code source GitHub licence"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relais des notifications",
+        "description": "Les notifications reçues quand l’application est fermée passent par un relais push, qui ne voit jamais vos e-mails. Vous le choisissez sur la page Notifications.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Images distantes et expéditeurs de confiance",
+      "receipts_label": "Accusés de lecture",
+      "senders_label": "Images des expéditeurs",
+      "description": "Ces réglages se trouvent sur la page Confidentialité.",
+      "button": "Confidentialité"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densité et libellés de la barre d’outils",
+        "description": "L’espacement des lignes de la liste et l’affichage du nom des boutons se règlent sur la page Apparence."
+      },
+      "light_mode": {
+        "label": "Fond clair pour les messages",
+        "description": "L’affichage des messages sur fond clair en mode sombre se règle sur la page Lecture."
+      },
+      "calendar": {
+        "label": "Aperçu des événements dans le calendrier",
+        "description": "L’affichage des détails en pointant un événement se règle sur la page Calendrier."
+      },
+      "list": {
+        "label": "Conversations et lignes d’aperçu",
+        "description": "Le regroupement par conversation et la ligne d’aperçu sous chaque message se règlent sur la page Liste des messages."
+      },
+      "reading": {
+        "label": "Marquer comme lu",
+        "description": "Le moment où un message compte comme lu, et la page affichée après une suppression ou un déplacement, se règlent sur la page Lecture."
+      },
+      "send_warnings_description": "Annulation de l’envoi, et les avertissements pour un objet manquant, une pièce jointe oubliée ou un texte provisoire.",
+      "bulk_delete": {
+        "label": "Confirmer avant de supprimer plusieurs messages",
+        "description": "Ce réglage se trouve sur la page Liste des messages."
+      },
+      "sounds": {
+        "label": "Sons et badge des non lus",
+        "description": "Les sons de notification et le nombre de non lus dans l’onglet se règlent sur la page Notifications."
+      }
+    },
+    "about": {
+      "title": "À propos de {appName}"
+    },
+    "sign_out": {
+      "description": "Se déconnecter de ce compte sur cet appareil."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# message non envoyé sera perdu.} other {# messages non envoyés seront perdus.}}",
     "clear_confirm": "Vider",
     "persist_refused": "Ce navigateur peut supprimer les e-mails gardés quand la place manque. Installer l'application l'évite en général.",
-    "persist_retry": "Redemander",
+    "persist_retry": "Demander au navigateur de les garder",
     "safari_hint": "Safari supprime les données d'un site après 7 jours sans visite. Ajoutez Bulwark à votre écran d'accueil ou au Dock pour garder vos e-mails sur cet appareil.",
     "evicted": "Le navigateur a supprimé les e-mails gardés sur cet appareil. Ils sont de nouveau en cours de téléchargement.",
     "evicted_lost": "{count, plural, one {# message ou modification non envoyé a été perdu.} other {# messages ou modifications non envoyés ont été perdus.}}",

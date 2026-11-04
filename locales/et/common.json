@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Vasta kirja saanud aadressilt",
-        "description": "Vastamisel saada kiri aadressilt, millele algne kiri saadeti. Sinu seadistatud identiteedid vastavad alati; kas ka teised sinu domeenide aadressid loetakse sobivaks (catch-all), määrab allpool olev „Vastuvõetud aadressi sobitamine“."
+        "description": "Vastamisel saada aadressilt, kuhu kiri saadeti."
       },
       "reply_identity_match": {
         "label": "Vastuvõetud aadressi sobitamine",
@@ -2636,7 +2636,7 @@
       },
       "refresh_cache": {
         "label": "Värskenda vahemällu salvestatud andmeid",
-        "description": "Laadi kontaktid, kalendrid ja kaustad serverist uuesti. Kontod ja seansid jäävad alles — parandab aegunud või vale kuva ilma välja logimata.",
+        "description": "Laadi kontaktid, kalendrid ja kaustad serverist uuesti. Jääd sisselogituks.",
         "button": "Värskenda",
         "confirm_title": "Värskendada vahemälu andmed?"
       },
@@ -2649,12 +2649,12 @@
       },
       "export_settings": {
         "label": "Ekspordi seaded",
-        "description": "Laadi oma seaded alla JSON-ina",
+        "description": "Laadi alla oma seadete koopia",
         "button": "Ekspordi"
       },
       "import_settings": {
         "label": "Impordi seaded",
-        "description": "Lae seaded üles JSON-failist",
+        "description": "Taasta seaded failist",
         "button": "Impordi"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "Hääl, mis kirju ette loeb. Loendis on hääled, mis brauseril liidese keele jaoks on.",
         "default": "Brauseri vaikeväärtus"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Võrguühenduseta",
+      "privacy": "Privaatsus",
+      "about": "Teave"
+    },
+    "search": {
+      "signature": "allkiri e-posti allkiri jalus",
+      "sign_out": "logi välja väljalogimine logout",
+      "app_lock": "PIN lukk kood lukustuskuva",
+      "text_size": "fondi suurus suurem tekst suum suurendus",
+      "vacation": "automaatvastus kontorist väljas eemal puhkus autoreply",
+      "two_factor": "2FA kaheastmeline kahefaktoriline MFA OTP autentija ühekordne kood",
+      "encryption": "S/MIME smime PGP OpenPGP krüpteerimine sertifikaat",
+      "password": "parool muuda parooli uus parool",
+      "offline": "võrguühenduseta offline ilma ühenduseta ilma internetita laadi alla salvestus sünkroonimine",
+      "wipe": "eemalda kustuta tühjenda seade andmed",
+      "outbox": "väljuvad saatmata ootel järjekord",
+      "remote_content": "kaugpildid väline sisu jälgimine pikslid usaldusväärsed saatjad",
+      "push": "push relee taustal teavitused",
+      "version": "versioon uuendus teave lähtekood GitHub litsents"
+    },
+    "privacy": {
+      "push_title": "Teavitused",
+      "push_link": {
+        "label": "Teavituste relee",
+        "description": "Teavitused suletud rakenduse ajal käivad läbi push-relee, mis ei näe kunagi sinu kirju. Valid selle lehel Teavitused.",
+        "button": "Teavitused"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Kaugpildid ja usaldusväärsed saatjad",
+      "receipts_label": "Lugemiskinnitused",
+      "senders_label": "Saatjate pildid",
+      "description": "Need seaded on lehel Privaatsus.",
+      "button": "Privaatsus"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tihedus ja nuppude nimed",
+        "description": "Kui tihedalt loendi read on ja kas nupud näitavad oma nime, seadistad lehel Välimus."
+      },
+      "light_mode": {
+        "label": "Hele taust kirjadele",
+        "description": "Kirjade näitamise heledal taustal tumedas režiimis seadistad lehel Lugemine."
+      },
+      "calendar": {
+        "label": "Sündmuste eelvaade kalendris",
+        "description": "Kas sündmusele osutamine näitab üksikasju, seadistad lehel Kalender."
+      },
+      "list": {
+        "label": "Vestlused ja eelvaate read",
+        "description": "Vestluste kaupa rühmitamise ja iga kirja all oleva eelvaate rea seadistad lehel Kirjade loend."
+      },
+      "reading": {
+        "label": "Loetuks märkimine",
+        "description": "Millal kiri loetakse loetuks ja kuhu jõuad pärast kustutamist või teisaldamist, seadistad lehel Lugemine."
+      },
+      "send_warnings_description": "Saatmise tagasivõtmine ja hoiatused puuduva teema, unustatud manuse või kohatäiteteksti kohta.",
+      "bulk_delete": {
+        "label": "Küsi enne mitme kirja kustutamist",
+        "description": "Selle seadistad lehel Kirjade loend."
+      },
+      "sounds": {
+        "label": "Helid ja lugemata kirjade arv",
+        "description": "Teavitushelid ja lugemata kirjade arvu vahekaardil seadistad lehel Teavitused."
+      }
+    },
+    "about": {
+      "title": "Teave: {appName}"
+    },
+    "sign_out": {
+      "description": "Logi sellest kontost selles seadmes välja."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# saatmata kiri läheb kaotsi.} other {# saatmata kirja lähevad kaotsi.}}",
     "clear_confirm": "Tühjenda",
     "persist_refused": "See brauser võib hoitud kirjad kustutada, kui ruumi napib. Rakenduse paigaldamine hoiab selle tavaliselt ära.",
-    "persist_retry": "Küsi uuesti",
+    "persist_retry": "Palu brauseril need alles hoida",
     "safari_hint": "Safari kustutab saidi andmed, kui seda pole 7 päeva külastatud. Lisa Bulwark avaekraanile või Dockile, et su kirjad sellesse seadmesse alles jääksid.",
     "evicted": "Brauser kustutas selles seadmes hoitud kirjad. Need laaditakse uuesti alla.",
     "evicted_lost": "{count, plural, one {# saatmata kiri või muudatus läks kaotsi.} other {# saatmata kirja või muudatust läks kaotsi.}}",

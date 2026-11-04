@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Odpovedať z prijatej adresy",
-        "description": "Pri odpovedaní automaticky prepnúť adresu odosielateľa na identitu, ktorá pôvodne prijala správu"
+        "description": "Pri odpovedaní odoslať z adresy, na ktorú bola správa poslaná."
       },
       "reply_identity_match": {
         "label": "Porovnávanie prijímacej adresy",
@@ -2636,7 +2636,7 @@
       },
       "refresh_cache": {
         "label": "Obnoviť uložené údaje",
-        "description": "Znova načíta kontakty, kalendáre a priečinky zo servera. Zachová vaše účty a prihlásenia — opraví zastarané alebo nesprávne zobrazenie bez odhlásenia.",
+        "description": "Znova načítať kontakty, kalendáre a priečinky zo servera. Zostanete prihlásení.",
         "button": "Obnoviť",
         "confirm_title": "Obnoviť údaje vo vyrovnávacej pamäti?"
       },
@@ -2649,12 +2649,12 @@
       },
       "export_settings": {
         "label": "Exportovať nastavenia",
-        "description": "Stiahnuť svoje nastavenia ako súbor JSON",
+        "description": "Stiahnuť kópiu nastavení",
         "button": "Exportovať"
       },
       "import_settings": {
         "label": "Importovať nastavenia",
-        "description": "Nahrať nastavenia zo súboru JSON",
+        "description": "Obnoviť nastavenia zo súboru",
         "button": "Importovať"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "Hlas, ktorý číta správy nahlas. Zoznam ukazuje hlasy, ktoré má prehliadač pre jazyk rozhrania.",
         "default": "Predvolený v prehliadači"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Súkromie",
+      "about": "O aplikácii"
+    },
+    "search": {
+      "signature": "podpis e-mailový podpis päta",
+      "sign_out": "odhlásiť odhlásenie logout",
+      "app_lock": "PIN zámok kód uzamknúť obrazovka",
+      "text_size": "veľkosť písma väčší text zoom zväčšiť",
+      "vacation": "automatická odpoveď mimo kancelárie neprítomnosť dovolenka autoreply",
+      "two_factor": "2FA dvojfázové dvojfaktorové MFA OTP autentifikátor jednorazový kód",
+      "encryption": "S/MIME smime PGP OpenPGP šifrovanie certifikát",
+      "password": "heslo zmeniť heslo nové heslo",
+      "offline": "offline bez pripojenia bez internetu stiahnuť úložisko synchronizácia",
+      "wipe": "odstrániť zmazať vymazať zariadenie údaje",
+      "outbox": "na odoslanie neodoslané čakajúce front",
+      "remote_content": "vzdialené obrázky externý obsah sledovanie pixely dôveryhodní odosielatelia",
+      "push": "push relay na pozadí upozornenia",
+      "version": "verzia aktualizácia o aplikácii zdrojový kód GitHub licencia"
+    },
+    "privacy": {
+      "push_title": "Upozornenia",
+      "push_link": {
+        "label": "Relay pre upozornenia",
+        "description": "Upozornenia pri zatvorenej aplikácii idú cez push relay, ktorý nikdy nevidí vašu poštu. Vyberiete ho na stránke Upozornenia.",
+        "button": "Upozornenia"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Vzdialené obrázky a dôveryhodní odosielatelia",
+      "receipts_label": "Potvrdenia o prečítaní",
+      "senders_label": "Obrázky odosielateľov",
+      "description": "Tieto nastavenia nájdete na stránke Súkromie.",
+      "button": "Súkromie"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Hustota a popisy panela",
+        "description": "Ako tesne sú riadky zoznamu a či tlačidlá ukazujú svoj názov, nastavíte na stránke Vzhľad."
+      },
+      "light_mode": {
+        "label": "Svetlé pozadie správ",
+        "description": "Zobrazenie správ na svetlom pozadí v tmavom režime nastavíte na stránke Čítanie."
+      },
+      "calendar": {
+        "label": "Náhľad udalostí v kalendári",
+        "description": "Či ukázanie na udalosť zobrazí jej podrobnosti, nastavíte na stránke Kalendár."
+      },
+      "list": {
+        "label": "Konverzácie a riadky náhľadu",
+        "description": "Zoskupenie podľa konverzácie a riadok náhľadu pod každou správou nastavíte na stránke Zoznam správ."
+      },
+      "reading": {
+        "label": "Označenie ako prečítané",
+        "description": "Kedy sa správa počíta ako prečítaná a kam sa dostanete po zmazaní alebo presune, nastavíte na stránke Čítanie."
+      },
+      "send_warnings_description": "Zrušenie odoslania a upozornenia na chýbajúci predmet, zabudnutú prílohu alebo zástupný text.",
+      "bulk_delete": {
+        "label": "Opýtať sa pred zmazaním viacerých správ",
+        "description": "To nastavíte na stránke Zoznam správ."
+      },
+      "sounds": {
+        "label": "Zvuky a počet neprečítaných",
+        "description": "Zvuky upozornení a počet neprečítaných na karte nastavíte na stránke Upozornenia."
+      }
+    },
+    "about": {
+      "title": "O aplikácii {appName}"
+    },
+    "sign_out": {
+      "description": "Odhlásiť tento účet na tomto zariadení."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# neodoslaná správa sa stratí.} few {# neodoslané správy sa stratia.} many {# neodoslanej správy sa stratí.} other {# neodoslaných správ sa stratí.}}",
     "clear_confirm": "Vymazať",
     "persist_refused": "Tento prehliadač môže uchovanú poštu zmazať, keď dôjde miesto. Inštalácia aplikácie tomu zvyčajne zabráni.",
-    "persist_retry": "Opýtať sa znova",
+    "persist_retry": "Požiadať prehliadač o zachovanie",
     "safari_hint": "Safari zmaže dáta webu po 7 dňoch bez návštevy. Pridajte Bulwark na plochu alebo do Docku, aby vaša pošta na tomto zariadení zostala.",
     "evicted": "Prehliadač zmazal poštu uchovanú na tomto zariadení. Sťahuje sa znova.",
     "evicted_lost": "{count, plural, one {# neodoslaná správa alebo zmena sa stratila.} few {# neodoslané správy alebo zmeny sa stratili.} many {# neodoslanej správy alebo zmeny sa stratilo.} other {# neodoslaných správ alebo zmien sa stratilo.}}",

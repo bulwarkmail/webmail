@@ -1985,7 +1985,7 @@
       },
       "auto_select_reply_identity": {
         "label": "自动选择回复地址",
-        "description": "回复时自动将发件人地址切换为最初收到该邮件的身份"
+        "description": "回复时，从邮件发送到的地址发出。"
       },
       "reply_identity_match": {
         "label": "接收地址匹配",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "从服务器重新加载联系人、日历和文件夹。你将保持登录。",
         "button": "Refresh",
         "confirm_title": "刷新缓存数据?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "导出设置",
-        "description": "将设置导出为 JSON 文件",
+        "description": "下载设置的副本",
         "button": "导出"
       },
       "import_settings": {
         "label": "导入设置",
-        "description": "从 JSON 文件导入设置",
+        "description": "从文件恢复设置",
         "button": "导入"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "朗读邮件所用的语音。列表显示浏览器为界面语言提供的语音。",
         "default": "浏览器默认"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "离线",
+      "privacy": "隐私",
+      "about": "关于"
+    },
+    "search": {
+      "signature": "签名 邮件签名 页脚",
+      "sign_out": "退出登录 注销 登出 logout",
+      "app_lock": "PIN 锁定 密码锁 锁屏",
+      "text_size": "字体大小 字号 大字 放大 缩放",
+      "vacation": "自动回复 不在办公室 外出 休假 假期 autoreply",
+      "two_factor": "2FA 双重验证 两步验证 MFA OTP 身份验证器 一次性验证码",
+      "encryption": "S/MIME smime PGP OpenPGP 加密 证书",
+      "password": "密码 修改密码 新密码",
+      "offline": "离线 offline 无网络 无连接 下载 存储 同步",
+      "wipe": "移除 删除 清除 设备 数据",
+      "outbox": "发件箱 未发送 等待 队列",
+      "remote_content": "远程图片 外部内容 跟踪 像素 受信任的发件人",
+      "push": "推送 push 中继 后台 通知",
+      "version": "版本 更新 关于 源代码 GitHub 许可证"
+    },
+    "privacy": {
+      "push_title": "通知",
+      "push_link": {
+        "label": "通知中继",
+        "description": "应用关闭时的通知通过推送中继发送，中继永远看不到你的邮件。可在“通知”页面选择。",
+        "button": "通知"
+      }
+    },
+    "privacy_links": {
+      "images_label": "远程图片和受信任的发件人",
+      "receipts_label": "已读回执",
+      "senders_label": "发件人头像",
+      "description": "这些设置在“隐私”页面。",
+      "button": "隐私"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "密度和按钮标签",
+        "description": "列表行的疏密以及按钮是否显示名称，在“外观”页面设置。"
+      },
+      "light_mode": {
+        "label": "邮件使用浅色背景",
+        "description": "深色模式下邮件是否使用浅色背景，在“阅读”页面设置。"
+      },
+      "calendar": {
+        "label": "日历中的事件预览",
+        "description": "指向事件时是否显示详情，在“日历”页面设置。"
+      },
+      "list": {
+        "label": "会话和预览行",
+        "description": "按会话分组以及每封邮件下方的预览行，在“邮件列表”页面设置。"
+      },
+      "reading": {
+        "label": "标记为已读",
+        "description": "邮件何时算作已读，以及删除或移动后跳到哪里，在“阅读”页面设置。"
+      },
+      "send_warnings_description": "撤销发送，以及缺少主题、忘记附件或占位文字的提醒。",
+      "bulk_delete": {
+        "label": "删除多封邮件前询问",
+        "description": "在“邮件列表”页面设置。"
+      },
+      "sounds": {
+        "label": "声音和未读标记",
+        "description": "通知声音和标签页上的未读数，在“通知”页面设置。"
+      }
+    },
+    "about": {
+      "title": "关于 {appName}"
+    },
+    "sign_out": {
+      "description": "在此设备上退出此账户。"
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, other {# 封未发送的邮件将丢失。}}",
     "clear_confirm": "清除",
     "persist_refused": "存储空间不足时，此浏览器可能会删除保留的邮件。安装应用通常可以避免这种情况。",
-    "persist_retry": "再次请求",
+    "persist_retry": "请浏览器保留",
     "safari_hint": "Safari 会在网站 7 天未访问后删除其数据。把 Bulwark 添加到主屏幕或程序坞，邮件就能保留在此设备上。",
     "evicted": "浏览器删除了此设备上保留的邮件。正在重新下载。",
     "evicted_lost": "{count, plural, other {# 封未发送的邮件或更改已丢失。}}",

@@ -312,7 +312,7 @@
         "description": "Soạn tất cả thư dưới dạng văn bản thuần, không có chữ đậm, màu sắc hoặc hình ảnh. Áp dụng cả cho thư trả lời và thư chuyển tiếp."
       },
       "auto_select_reply_identity": {
-        "description": "Khi trả lời, thư sẽ được gửi từ địa chỉ đã nhận thư gốc. Áp dụng cho tất cả địa chỉ riêng của bạn. Bên dưới, bạn có thể chọn xem có tính cả các địa chỉ khác trên miền của mình hay không."
+        "description": "Khi trả lời, thư sẽ được gửi từ địa chỉ đã nhận thư gốc. Áp dụng cho tất cả địa chỉ riêng của bạn."
       },
       "reply_identity_match": {
         "label": "Những địa chỉ được tính là của bạn",
@@ -577,10 +577,10 @@
         "description": "Đưa tất cả cài đặt về trạng thái ban đầu"
       },
       "export_settings": {
-        "description": "Lưu cài đặt thành tệp trên thiết bị"
+        "description": "Tải xuống bản sao cài đặt"
       },
       "import_settings": {
-        "description": "Tải cài đặt từ tệp bạn đã lưu trước đó"
+        "description": "Khôi phục cài đặt từ tệp"
       },
       "sections": {
         "backup_description": "Dùng cùng cài đặt trên các trình duyệt và thiết bị khác.",

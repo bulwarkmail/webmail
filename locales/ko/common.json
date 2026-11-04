@@ -1985,7 +1985,7 @@
       },
       "auto_select_reply_identity": {
         "label": "답장 시 보내는 사람 자동 선택",
-        "description": "답장할 때 메일을 받았던 주소로 보내는 사람을 자동으로 변경해요"
+        "description": "답장할 때 메시지를 받은 주소로 보내요."
       },
       "reply_identity_match": {
         "label": "수신 주소 일치 방식",
@@ -2629,7 +2629,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "서버에서 연락처, 캘린더, 폴더를 다시 불러와요. 로그인 상태는 유지돼요.",
         "button": "Refresh",
         "confirm_title": "캐시된 데이터를 새로 고칠까요?"
       },
@@ -2642,12 +2642,12 @@
       },
       "export_settings": {
         "label": "설정 내보내기",
-        "description": "내 설정을 JSON 파일로 다운로드해요",
+        "description": "설정 사본 다운로드",
         "button": "내보내기"
       },
       "import_settings": {
         "label": "설정 가져오기",
-        "description": "JSON 파일에서 설정을 불러와요",
+        "description": "파일에서 설정 복원",
         "button": "가져오기"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "메시지를 읽어 주는 음성이에요. 목록에는 브라우저에 있는 인터페이스 언어용 음성이 표시돼요.",
         "default": "브라우저 기본값"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "오프라인",
+      "privacy": "개인정보",
+      "about": "정보"
+    },
+    "search": {
+      "signature": "서명 이메일 서명 바닥글",
+      "sign_out": "로그아웃 로그 아웃 logout 나가기",
+      "app_lock": "PIN 잠금 코드 잠금 화면",
+      "text_size": "글꼴 크기 큰 글자 확대 줌",
+      "vacation": "자동 응답 부재중 휴가 외근 autoreply",
+      "two_factor": "2FA 2단계 2요소 MFA OTP 인증 앱 일회용 코드",
+      "encryption": "S/MIME smime PGP OpenPGP 암호화 인증서",
+      "password": "비밀번호 암호 비밀번호 변경 새 비밀번호",
+      "offline": "오프라인 offline 연결 없음 인터넷 없음 다운로드 저장 공간 동기화",
+      "wipe": "제거 삭제 지우기 기기 데이터",
+      "outbox": "보낼 편지함 보내지 않음 대기 중 대기열",
+      "remote_content": "원격 이미지 외부 콘텐츠 추적 픽셀 신뢰하는 보낸 사람",
+      "push": "푸시 push 릴레이 백그라운드 알림",
+      "version": "버전 업데이트 정보 소스 코드 GitHub 라이선스"
+    },
+    "privacy": {
+      "push_title": "알림",
+      "push_link": {
+        "label": "알림 릴레이",
+        "description": "앱이 닫혀 있을 때의 알림은 푸시 릴레이를 거치며, 릴레이는 메일을 절대 보지 않아요. 알림 페이지에서 선택해요.",
+        "button": "알림"
+      }
+    },
+    "privacy_links": {
+      "images_label": "원격 이미지와 신뢰하는 보낸 사람",
+      "receipts_label": "읽음 확인",
+      "senders_label": "보낸 사람 사진",
+      "description": "이 설정은 개인정보 페이지에 있어요.",
+      "button": "개인정보"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "밀도와 버튼 이름",
+        "description": "목록 줄 간격과 버튼에 이름을 표시할지는 모양 페이지에서 설정해요."
+      },
+      "light_mode": {
+        "label": "메시지의 밝은 배경",
+        "description": "다크 모드에서 메시지를 밝은 배경으로 보여줄지는 읽기 페이지에서 설정해요."
+      },
+      "calendar": {
+        "label": "캘린더의 일정 미리 보기",
+        "description": "일정을 가리킬 때 자세한 내용을 보여줄지는 캘린더 페이지에서 설정해요."
+      },
+      "list": {
+        "label": "대화와 미리 보기 줄",
+        "description": "대화별 묶기와 각 메시지 아래의 미리 보기 줄은 메시지 목록 페이지에서 설정해요."
+      },
+      "reading": {
+        "label": "읽음으로 표시",
+        "description": "메시지를 언제 읽음으로 볼지, 삭제하거나 옮긴 뒤 어디로 갈지는 읽기 페이지에서 설정해요."
+      },
+      "send_warnings_description": "보내기 취소, 그리고 제목 없음, 첨부 파일 누락, 자리 표시 텍스트 경고.",
+      "bulk_delete": {
+        "label": "여러 메시지를 삭제하기 전에 묻기",
+        "description": "메시지 목록 페이지에서 설정해요."
+      },
+      "sounds": {
+        "label": "소리와 읽지 않음 배지",
+        "description": "알림 소리와 탭의 읽지 않은 개수는 알림 페이지에서 설정해요."
+      }
+    },
+    "about": {
+      "title": "{appName} 정보"
+    },
+    "sign_out": {
+      "description": "이 기기에서 이 계정을 로그아웃해요."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, other {보내지 않은 메시지 #개가 사라집니다.}}",
     "clear_confirm": "비우기",
     "persist_refused": "저장 공간이 부족해지면 이 브라우저가 보관한 메일을 삭제할 수 있습니다. 앱을 설치하면 대개 막을 수 있습니다.",
-    "persist_retry": "다시 요청",
+    "persist_retry": "브라우저에 보관을 요청",
     "safari_hint": "Safari는 7일 동안 방문하지 않은 사이트의 데이터를 삭제합니다. 이 기기에 메일을 계속 보관하려면 Bulwark를 홈 화면이나 Dock에 추가하세요.",
     "evicted": "브라우저가 이 기기에 보관한 메일을 삭제했습니다. 다시 다운로드하는 중입니다.",
     "evicted_lost": "{count, plural, other {보내지 않은 메시지 또는 변경 사항 #개가 사라졌습니다.}}",

@@ -1988,7 +1988,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Svar fra modtaget adresse",
-        "description": "Når du svarer, send fra den adresse som beskeden oprindeligt blev sendt til. Matcher først identiteter; for domæne catch-all-leveringer omskriver Fra-headeren til aliaset, mens der sendes gennem din primære identitet."
+        "description": "Når du svarer, send fra den adresse, beskeden blev sendt til."
       },
       "reply_identity_match": {
         "label": "Matchning af modtageradresse",
@@ -2632,7 +2632,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Indlæs kontakter, kalendere og mapper fra serveren igen. Du forbliver logget ind.",
         "button": "Refresh",
         "confirm_title": "Opdater cachelagrede data?"
       },
@@ -2645,12 +2645,12 @@
       },
       "export_settings": {
         "label": "Eksportér indstillinger",
-        "description": "Download dine indstillinger som JSON",
+        "description": "Hent en kopi af dine indstillinger",
         "button": "Eksportér"
       },
       "import_settings": {
         "label": "Importér indstillinger",
-        "description": "Upload indstillinger fra JSON-fil",
+        "description": "Gendan indstillinger fra en fil",
         "button": "Importér"
       },
       "about": {
@@ -3386,6 +3386,81 @@
         "description": "Stemmen, der læser beskeder op. Listen viser de stemmer, din browser har til grænsefladens sprog.",
         "default": "Browserens standard"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privatliv",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-mailsignatur sidefod",
+      "sign_out": "log ud logout afmeld",
+      "app_lock": "PIN lås kode låseskærm",
+      "text_size": "skriftstørrelse større tekst zoom forstør",
+      "vacation": "autosvar automatisk svar ikke på kontoret fraværende ferie autoreply",
+      "two_factor": "2FA totrins to-faktor MFA OTP godkendelsesapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering certifikat",
+      "password": "adgangskode skift adgangskode ny adgangskode",
+      "offline": "offline uden forbindelse uden internet hent lager synkroniser",
+      "wipe": "fjern slet ryd enhed data",
+      "outbox": "udbakke ikke sendt venter kø",
+      "remote_content": "eksterne billeder eksternt indhold sporing pixels betroede afsendere",
+      "push": "push relæ baggrund notifikationer",
+      "version": "version opdatering om kildekode GitHub licens"
+    },
+    "privacy": {
+      "push_title": "Notifikationer",
+      "push_link": {
+        "label": "Relæ til notifikationer",
+        "description": "Notifikationer mens appen er lukket går gennem et push-relæ, som aldrig ser din mail. Du vælger det på siden Notifikationer.",
+        "button": "Notifikationer"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne billeder og betroede afsendere",
+      "receipts_label": "Læsebekræftelser",
+      "senders_label": "Afsenderbilleder",
+      "description": "Disse indstillinger findes på siden Privatliv.",
+      "button": "Privatliv"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tæthed og knapnavne",
+        "description": "Hvor tæt listens rækker står, og om knapperne viser deres navn, indstilles på siden Udseende."
+      },
+      "light_mode": {
+        "label": "Lys baggrund til beskeder",
+        "description": "At vise beskeder på lys baggrund i mørk tilstand indstilles på siden Læsning."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning af begivenheder i kalenderen",
+        "description": "Om det viser detaljer at pege på en begivenhed, indstilles på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og eksempellinjer",
+        "description": "Gruppering efter samtale og eksempellinjen under hver besked indstilles på siden Beskedliste."
+      },
+      "reading": {
+        "label": "Markér som læst",
+        "description": "Hvornår en besked tæller som læst, og hvor du kommer hen efter at have slettet eller flyttet den, indstilles på siden Læsning."
+      },
+      "send_warnings_description": "Fortryd afsendelse og advarslerne om manglende emne, glemt vedhæftning eller pladsholdertekst.",
+      "bulk_delete": {
+        "label": "Spørg før sletning af flere beskeder",
+        "description": "Det indstilles på siden Beskedliste."
+      },
+      "sounds": {
+        "label": "Lyde og tæller for ulæste",
+        "description": "Notifikationslyde og antallet af ulæste i fanen indstilles på siden Notifikationer."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Log ud af denne konto på denne enhed."
     }
   },
   "setup": {
@@ -5894,7 +5969,7 @@
     "clear_confirm_unsent": "{count, plural, one {# usendt besked går tabt.} other {# usendte beskeder går tabt.}}",
     "clear_confirm": "Ryd",
     "persist_refused": "Denne browser kan slette den beholdte mail, når pladsen bliver knap. Det hjælper normalt at installere appen.",
-    "persist_retry": "Spørg igen",
+    "persist_retry": "Bed browseren om at beholde den",
     "safari_hint": "Safari sletter et websteds data efter 7 dage uden besøg. Føj Bulwark til din hjemmeskærm eller til Dock for at beholde din mail på denne enhed.",
     "evicted": "Browseren slettede den mail, der var beholdt på denne enhed. Den hentes igen.",
     "evicted_lost": "{count, plural, one {# usendt besked eller ændring gik tabt.} other {# usendte beskeder eller ændringer gik tabt.}}",
