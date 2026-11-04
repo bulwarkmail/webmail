@@ -985,7 +985,7 @@
     "cc": "Kopie",
     "bcc": "Skrytá kopie",
     "subject": "Předmět",
-    "body_placeholder": "Napište zprávu...",
+    "body_placeholder": "Napište zprávu…",
     "send": "Odeslat",
     "cancel": "Zrušit",
     "attach": "Připojit",
@@ -1039,10 +1039,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Pokud váš server tuto adresu jako odesílatele obálky nepřijme, použije se místo ní {identity} a příjemci ji uvidí v záhlaví Return-Path."
     },
-    "save_as_template": "Uložit jako šablonu",
+    "save_as_template": "Uložit jako šablonu…",
     "attach_from_device": "Nahrát z tohoto zařízení",
     "templates_menu": "Šablony",
-    "insert_template": "Vložit šablonu",
+    "insert_template": "Vložit šablonu…",
     "options": "Možnosti",
     "option_plain_text": "Prostý text",
     "option_plain_text_hint": "Odeslat bez formátování",
@@ -7825,6 +7825,10 @@
     "missing": "„{name}“ už neexistuje.",
     "too_large": "„{name}“ je větší než {max} a nelze ho připojit.",
     "failed": "„{name}“ se nepodařilo připojit. Zkuste to znovu."
+  },
+  "composeRecentLimit": {
+    "too_large": "Příliš velký",
+    "too_large_hint": "Větší, než server přijme ({max})"
   },
   "compose_windows": {
     "more_formatting": "Další formátování",

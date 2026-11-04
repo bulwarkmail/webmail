@@ -982,10 +982,10 @@
     "forward_message": "İlet",
     "from": "Kimden",
     "to": "Kime",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Konu",
-    "body_placeholder": "İletinizi yazın...",
+    "body_placeholder": "İletinizi yazın…",
     "send": "Gönder",
     "cancel": "İptal",
     "attach": "Ekle",
@@ -1042,10 +1042,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Sunucunuz bu adresi zarf göndereni olarak kabul etmezse yerine {identity} kullanılır ve alıcılar bunu Return-Path başlığında görebilir."
     },
-    "save_as_template": "Şablon olarak kaydet",
+    "save_as_template": "Şablon olarak kaydet…",
     "attach_from_device": "Bu cihazdan yükle",
     "templates_menu": "Şablonlar",
-    "insert_template": "Şablon ekle",
+    "insert_template": "Şablon ekle…",
     "options": "Seçenekler",
     "option_plain_text": "Düz metin",
     "option_plain_text_hint": "Biçimlendirmeden gönder",
@@ -7825,6 +7825,10 @@
     "missing": "\"{name}\" artık yok.",
     "too_large": "\"{name}\" {max} boyutundan büyük ve eklenemez.",
     "failed": "\"{name}\" eklenemedi. Yeniden deneyin."
+  },
+  "composeRecentLimit": {
+    "too_large": "Çok büyük",
+    "too_large_hint": "Sunucunun kabul ettiğinden büyük ({max})"
   },
   "compose_windows": {
     "more_formatting": "Daha fazla biçimlendirme",

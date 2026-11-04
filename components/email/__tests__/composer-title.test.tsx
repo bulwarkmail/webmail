@@ -222,6 +222,17 @@ describe('composer title', () => {
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(title);
   });
 
+  // compose-p3-6: a re-opened reply draft is in "compose" mode and was called "New message".
+  it('names a re-opened reply draft a reply', () => {
+    render(<EmailComposer initialData={{ ...DATA, mode: 'compose', inReplyTo: ['m1@example.org'] }} mode="compose" />);
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('reply');
+  });
+
+  it('names a reply draft resumed with Reply all a reply to all', () => {
+    render(<EmailComposer initialData={{ ...DATA, mode: 'compose', inReplyTo: ['m1@example.org'], kind: 'replyAll' }} mode="compose" />);
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('reply_all');
+  });
+
   it('names the close button for screen readers', () => {
     render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} />);
     expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();

@@ -114,9 +114,10 @@ describe('undo send toast', () => {
     await waitFor(() => expect(undoToast()).toBeDefined());
     const toast = undoToast()!;
     expect(toast.title).toBe('email_viewer.sending_in');
-    // 30 s is the setting, but only 10 s are left of the window. The toast
-    // itself stays a moment longer, to say "Sent" once Undo is over.
-    expect(toast.duration).toBeLessThanOrEqual(10_000);
+    // 30 s is the setting, but only 10 s are left of the window: Undo ends
+    // half a second before the server lets it go (undoEndsAt), and the toast
+    // stays a second longer to say "Sent".
+    expect(toast.duration).toBeLessThanOrEqual(10_000 - 500 + 1000);
     expect(toast.pauseOnHover).toBe(false);
   });
 

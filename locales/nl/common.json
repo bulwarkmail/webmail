@@ -982,10 +982,10 @@
     "forward_message": "Doorsturen",
     "from": "Van",
     "to": "Aan",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Onderwerp",
-    "body_placeholder": "Schrijf je bericht...",
+    "body_placeholder": "Schrijf je bericht…",
     "send": "Verzenden",
     "cancel": "Annuleren",
     "attach": "Bijlage toevoegen",
@@ -1039,10 +1039,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Als je server dit adres niet accepteert als envelopafzender, wordt daar {identity} gebruikt, en ontvangers kunnen dat zien in de Return-Path-header."
     },
-    "save_as_template": "Opslaan als sjabloon",
+    "save_as_template": "Opslaan als sjabloon…",
     "attach_from_device": "Uploaden vanaf dit apparaat",
     "templates_menu": "Sjablonen",
-    "insert_template": "Sjabloon invoegen",
+    "insert_template": "Sjabloon invoegen…",
     "options": "Opties",
     "option_plain_text": "Platte tekst",
     "option_plain_text_hint": "Verzenden zonder opmaak",
@@ -7825,6 +7825,10 @@
     "missing": "\"{name}\" bestaat niet meer.",
     "too_large": "\"{name}\" is groter dan {max} en kan niet worden bijgevoegd.",
     "failed": "\"{name}\" kon niet worden bijgevoegd. Probeer het opnieuw."
+  },
+  "composeRecentLimit": {
+    "too_large": "Te groot",
+    "too_large_hint": "Groter dan de server aanneemt ({max})"
   },
   "compose_windows": {
     "more_formatting": "Meer opmaak",

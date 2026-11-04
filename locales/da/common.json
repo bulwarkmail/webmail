@@ -982,10 +982,10 @@
     "forward_message": "Videresend",
     "from": "Fra",
     "to": "Til",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Emne",
-    "body_placeholder": "Skriv din besked...",
+    "body_placeholder": "Skriv din besked…",
     "send": "Send",
     "cancel": "Annuller",
     "attach": "Vedhæft",
@@ -1041,10 +1041,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis din server ikke accepterer denne adresse som konvolutafsender, bruges {identity} i stedet, og modtagerne kan se den i Return-Path-headeren."
     },
-    "save_as_template": "Gem som skabelon",
+    "save_as_template": "Gem som skabelon…",
     "attach_from_device": "Upload fra denne enhed",
     "templates_menu": "Skabeloner",
-    "insert_template": "Indsæt skabelon",
+    "insert_template": "Indsæt skabelon…",
     "options": "Indstillinger",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uden formatering",
@@ -7825,6 +7825,10 @@
     "missing": "\"{name}\" findes ikke længere.",
     "too_large": "\"{name}\" er større end {max} og kan ikke vedhæftes.",
     "failed": "\"{name}\" kunne ikke vedhæftes. Prøv igen."
+  },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større end serveren tager imod ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mere formatering",

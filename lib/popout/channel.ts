@@ -55,6 +55,8 @@ export interface PopoutSentNotice {
   } | null;
   /** A send held for undo in the pop-out itself: when the server lets it go. */
   releasesAt?: string;
+  /** That send's submission, which the main window's Scheduled leaves out until then. */
+  heldSubmissionId?: string;
 }
 
 /**

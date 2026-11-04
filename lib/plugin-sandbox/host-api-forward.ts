@@ -38,6 +38,7 @@ import { readNamedEmail } from './host-api-mail';
 import { messagesFor } from './host-api-app';
 import { approvalAccount, forwardApprovals, saveForwardApprovals } from './forward-approvals';
 import { addressOf, readAddressList, readId, readObject, readString, sessionClient, withinRate } from './host-api-input';
+import { undoDelayUntil } from '@/lib/outgoing/undo-delay';
 
 /** Most recipients of one forward. */
 export const MAX_FORWARD_RECIPIENTS = 10;
@@ -234,7 +235,7 @@ export async function doEmailForward(
 
   const delaySeconds = useSettingsStore.getState().sendDelaySeconds;
   const delayedUntil = delaySeconds > 0 && client.hasDelayedSend()
-    ? new Date(Date.now() + delaySeconds * 1000).toISOString()
+    ? undoDelayUntil(delaySeconds)
     : undefined;
   const result = await useEmailStore.getState().sendEmail(
     client, to, labelled.subject, body, undefined, undefined, identity.id, identity.email, undefined,

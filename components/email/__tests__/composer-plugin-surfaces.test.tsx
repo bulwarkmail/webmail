@@ -8,6 +8,7 @@ import { clearOffers, lastSlotProps, offerSlots, slotProps } from '@/components/
 import { useSettingsStore } from '@/stores/settings-store';
 import { SLOT_CATALOG } from '@/lib/plugin-slot-catalog';
 import { requestPanel, resetPanelRequests } from '@/lib/plugin-sandbox/panel-requests';
+import { registerShortcuts } from '@/lib/plugin-sandbox/shortcuts';
 
 // Plugin surfaces of the composer: frames above and below the message text
 // (fed the draft, at most every 2 seconds), and entries in the Send and
@@ -577,15 +578,21 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     expect(panel('right').style.width).toBe('360px');
   });
 
-  it('keep a panel laid over the composer between its header and its bottom bar', () => {
+  // compose-p3-4: a panel with no room lay over To, Cc and Bcc and the
+  // right half of the text. With no room beside the composer either, it
+  // goes over the text only, below the fields and above the bottom bar.
+  it('lays a panel with no room anywhere over the text, below the fields', () => {
     stubWidth(700);
     offerSlots('p1', ['composer-sidebar-right']);
     const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 700, width: 700, height: bottom - top, x: 0, y: top, toJSON: () => ({}) });
     const original = Element.prototype.getBoundingClientRect;
+    const innerWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { value: 700, configurable: true, writable: true });
     Element.prototype.getBoundingClientRect = function (this: Element) {
       if (this.matches('[data-testid="email-composer"]')) return rect(100, 800);
       if (this.matches('[data-composer-header]')) return rect(100, 156);
       if (this.matches('[data-composer-panels]')) return rect(156, 800);
+      if (this.matches('[data-composer-subject]')) return rect(260, 300);
       if (this.matches('[data-composer-footer]')) return rect(740, 800);
       return original.call(this);
     };
@@ -594,25 +601,27 @@ describe('composer-sidebar and composer-sidebar-right', () => {
       render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
       fireEvent.click(document.querySelector('[data-composer-panel-toggle="right"]')!);
       expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
-      // The header is above the row the panel is laid over: the panel starts at that row's top.
-      expect(document.querySelector('[data-composer-panels]')!.contains(document.querySelector('[data-composer-header]'))).toBe(false);
-      expect(panel('right').style.top).toBe('0px');
+      expect(panel('right').dataset.composerSidebarPlace).toBe('over-text');
+      // From the end of Subject (300) in the row that starts at 156; the bottom bar stays free.
+      expect(panel('right').style.top).toBe('144px');
       expect(panel('right').style.bottom).toBe('60px');
     } finally {
       Element.prototype.getBoundingClientRect = original;
+      Object.defineProperty(window, 'innerWidth', { value: innerWidth, configurable: true, writable: true });
     }
   });
 
-  it('folds a widened panel sooner, since it needs the room', () => {
+  it('gives a widened panel only the room the composer can spare', () => {
     localStorage.setItem('composerPluginSidebarWidth:right', '480');
     stubWidth(1000);
     offerSlots('p1', ['composer-sidebar-right']);
     render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
-    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
-    expect(screen.queryByTestId('composer-sidebar-resize-right')).toBeNull();
+    expect(panel('right').dataset.composerSidebarMode).toBe('docked');
+    // 1000 - 560 for the composer.
+    expect(panel('right').style.width).toBe('440px');
   });
 
-  it('fold the right panel, then both, when the composer would get too narrow', () => {
+  it('narrow the panels to keep the composer its room, then fold the right one, then both', () => {
     stubWidth(900);
     offerSlots('p1', ['composer-sidebar', 'composer-sidebar-right']);
     const { unmount } = render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
@@ -621,9 +630,16 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     expect(screen.queryByTestId('slot-composer-sidebar-right')).toBeNull();
     unmount();
 
-    // The reading pane of a 1280 px window: an open panel would leave the
-    // composer too narrow for its bottom bar.
+    // The reading pane of a 1280 px window: the left panel narrows to 232 px.
     stubWidth(792);
+    const second = render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+    expect(panel('left').dataset.composerSidebarMode).toBe('docked');
+    expect(panel('left').style.width).toBe('232px');
+    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+    second.unmount();
+
+    // Below its narrowest (220 px) a panel folds.
+    stubWidth(760);
     render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
     expect(panel('left').dataset.composerSidebarMode).toBe('folded');
     expect(panel('right').dataset.composerSidebarMode).toBe('folded');
@@ -740,17 +756,40 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     }
   });
 
-  it('open a folded panel over the composer when there is no room beside it', () => {
+  // compose-p3-4: the reading pane at 1366 px. The panel went over the
+  // composer's fields; it opens beside the composer, over the message list.
+  it('open a folded panel beside the composer when there is no room in it', () => {
     stubWidth(600);
     offerSlots('p1', ['composer-sidebar-right']);
-    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+    const original = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this.matches('[data-testid="email-composer"]')) return { top: 60, bottom: 760, left: 400, right: 1000, width: 600, height: 700, x: 400, y: 60, toJSON: () => ({}) };
+      if (this.matches('[data-composer-sidebar]')) {
+        const style = (this as HTMLElement).style;
+        const left = parseFloat(style.left) || 0;
+        const top = parseFloat(style.top) || 0;
+        return { top, bottom: top + 700, left, right: left + 260, width: 260, height: 700, x: left, y: top, toJSON: () => ({}) };
+      }
+      return original.call(this);
+    };
+    try {
+      render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'show_panel' }));
+      expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
+      expect(panel('right').dataset.composerSidebarPlace).toBe('beside');
+      expect(panel('right').className).toContain('fixed');
+      // No room on its own side (the window ends at 1024): before the composer.
+      expect(panel('right').style.left).toBe('140px');
+      expect(panel('right').style.top).toBe('60px');
+      expect(panel('right').style.height).toBe('700px');
+      // Its head in the header is only Hide: it doesn't take the panel's width there.
+      expect((document.querySelector('[data-composer-panel-head="right"]') as HTMLElement).style.minWidth).toBe('');
 
-    fireEvent.click(screen.getByRole('button', { name: 'show_panel' }));
-    expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
-    expect(panel('right').className).toContain('absolute');
-
-    fireEvent.click(screen.getByRole('button', { name: 'hide_panel' }));
-    expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+      fireEvent.click(screen.getByRole('button', { name: 'hide_panel' }));
+      expect(panel('right').dataset.composerSidebarMode).toBe('folded');
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+    }
   });
 });
 
@@ -801,6 +840,23 @@ describe('the composer header with a plugin panel open', () => {
     expect(all[all.length - 1]).toBe(screen.getByTestId('composer-close'));
     expect(right).toContainElement(screen.getByTestId('composer-close'));
     expect(right).toContainElement(screen.getByTestId('composer-maximize'));
+  });
+
+  // compose-p3-12: the assistant's Alt+A was only on its own footer button.
+  it('shows the panel shortcut on the panel’s Show and Hide button', () => {
+    const unregister = registerShortcuts({ pluginId: 'p1' } as never, [{ id: 'toggle-panel', keys: 'Alt+A', label: 'Assistant' }]);
+    try {
+      stubWidth(1400);
+      offerSlots('p1', ['composer-sidebar-right']);
+      render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+      const hide = head('right')!.querySelector<HTMLElement>('[data-composer-panel-hide="right"]')!;
+      expect(hide.getAttribute('title')).toBe('hide_panel (Alt+A)');
+      expect(hide.getAttribute('aria-keyshortcuts')).toBe('Alt+A');
+      fireEvent.click(hide);
+      expect(screen.getByRole('button', { name: 'show_panel' }).getAttribute('title')).toBe('show_panel (Alt+A)');
+    } finally {
+      unregister();
+    }
   });
 
   it('gives the open panel a Hide button in its head, and the header a Show button while it is folded', () => {

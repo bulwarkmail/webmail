@@ -8,14 +8,26 @@ import { listRecentFiles, readRecentFile, recentFilesOffered, recentWhen, shortF
 describe('shortFolder', () => {
   it('keeps the drive or share and the folders nearest the file, and drops the middle', () => {
     expect(shortFolder('C:\\Users\\me\\Documents')).toBe('C:\\Users\\me\\Documents');
+    // At most 34 characters: what fits the Attach menu's line beside the date (compose-p3-5).
     expect(shortFolder('C:\\Users\\me\\AppData\\Local\\Temp\\bw-shots-gnIFSO\\Documents\\Reports'))
-      .toBe('C:\\…\\Temp\\bw-shots-gnIFSO\\Documents\\Reports');
+      .toBe('C:\\…\\Documents\\Reports');
     expect(shortFolder('\\\\fileserver\\departments\\Finance\\Controlling\\2026\\Quarterly\\Board'))
-      .toBe('\\\\fileserver\\departments\\…\\Quarterly\\Board');
-    expect(shortFolder('/home/me/projects/customer-a/2026/contracts/signed/final')).toBe('/…/customer-a/2026/contracts/signed/final');
-    // One long name: nothing to drop, the line's ellipsis does the rest.
-    const long = `C:\\${'x'.repeat(60)}`;
-    expect(shortFolder(long)).toBe(long);
+      .toBe('\\\\fileserver\\departments\\…\\Board');
+    expect(shortFolder('/home/me/projects/customer-a/2026/contracts/signed/final')).toBe('/…/2026/contracts/signed/final');
+    expect(shortFolder('C:\\Users\\me\\Documents\\Reports', 44)).toBe('C:\\Users\\me\\Documents\\Reports');
+  });
+
+  // compose-p3-5: a name too long for the line lost its end to the line's ellipsis.
+  it('shortens a name too long for the line in its middle, keeping its end', () => {
+    const long = shortFolder(`C:\\${'x'.repeat(30)}${'y'.repeat(30)}`);
+    expect(long).toHaveLength(34);
+    expect(long.startsWith('C:\\xxxx')).toBe(true);
+    expect(long.endsWith('yyyy')).toBe(true);
+    expect(long).toContain('…');
+    const deep = shortFolder('C:\\Users\\me\\Kunden\\Beispiel GmbH mit einem sehr langen Namen');
+    expect(deep.length).toBeLessThanOrEqual(34);
+    expect(deep.startsWith('C:\\…\\Beispiel')).toBe(true);
+    expect(deep.endsWith('Namen')).toBe(true);
   });
 });
 
