@@ -1690,8 +1690,10 @@ export function EmailViewer({
   const mvOpenFolded = mvOpenIndex >= 0 && mvOpenCollapsed;
   // The default layout's conversation (not Mountain View): the open message
   // gets the same header as the others, with its date and its reply actions
-  // on the sender's line, and the subject line no date (mail-p2-4).
-  const inConversation = mvOpenIndex >= 0 && !mvViewer;
+  // on the sender's line, and the subject line no date (mail-p2-4). A
+  // conversation of one message (no thread came back) looks the same
+  // (pass 3: p2-4 had left it the old header).
+  const inConversation = !mvViewer && (mvOpenIndex >= 0 || (!!conversationPane && !isMobile));
   // Folding or unfolding the open message of a conversation, told to plugins
   // like any other conversation message (onThreadExpand).
   const setMvOpenFolded = (folded: boolean) => {

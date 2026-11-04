@@ -74,6 +74,33 @@ describe('conversation headers in the default layout', () => {
     expect(container.querySelector('.sm\\:block .whitespace-nowrap')).toBeNull();
   });
 
+  it('gives a conversation of one message the same header (pass 3)', () => {
+    const open = withBody(mail(3), 'Only message');
+    const onForward = vi.fn();
+    // No thread of two or more came back: no mvConversation at all.
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        conversationPane onReply={vi.fn()} onReplyAll={vi.fn()} onForward={onForward} />,
+    );
+    const actions = container.querySelector('[data-mv-sender-actions]') as HTMLElement;
+    expect(actions).not.toBeNull();
+    fireEvent.click(within(actions).getByRole('button', { name: 'forward' }));
+    expect(onForward).toHaveBeenCalled();
+    const date = actions.querySelector('time[data-conversation-date]') as HTMLElement;
+    expect(date.getAttribute('title')!.length).toBeGreaterThan(date.textContent!.length);
+    // Not the long date beside the subject.
+    expect(container.querySelector('.sm\\:block .whitespace-nowrap')).toBeNull();
+  });
+
+  it('keeps the plain reader header with "Show emails as individual messages"', () => {
+    const open = withBody(mail(3), 'Only message');
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        onReply={vi.fn()} onReplyAll={vi.fn()} onForward={vi.fn()} />,
+    );
+    expect(container.querySelector('[data-mv-sender-actions]')).toBeNull();
+  });
+
   it('gives an unfolded older message Forward too, in the same short date style', () => {
     const open = withBody(mail(3), 'Newest body');
     const onForward = vi.fn();
