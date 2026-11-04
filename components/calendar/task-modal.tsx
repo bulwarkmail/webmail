@@ -226,7 +226,7 @@ export function TaskModal({
         <h2 id={`${id}-heading`} className="text-sm font-semibold">
           {isEdit ? t("tasks.edit") : t("tasks.create")}
         </h2>
-        <IconButton label={tCommon("close")} onClick={requestClose}>
+        <IconButton label={tCommon("close")} onClick={requestClose} data-pane-close="">
           <X />
         </IconButton>
       </div>

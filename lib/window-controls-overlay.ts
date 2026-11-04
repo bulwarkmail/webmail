@@ -114,21 +114,35 @@ export function markWindowRows(area: TitlebarArea, doc: Document = document): HT
   for (const el of Array.from(doc.querySelectorAll<HTMLElement>(ROW_CANDIDATES))) {
     const rect = el.getBoundingClientRect();
     const explicit = el.hasAttribute('data-window-top-row');
-    const fits = rect.top <= 1 && rect.height > 0 && rect.width > 0 && (explicit || rect.height <= MAX_ROW_HEIGHT);
+    const shaped = rect.height > 0 && rect.width > 0 && (explicit || rect.height <= MAX_ROW_HEIGHT);
+    const atTop = shaped && rect.top <= 1;
+    // A row a line above pushed down (a note that the message moved, that the app is
+    // offline, an update) still starts beside the controls and needs the same room.
+    // It isn't what the window is dragged by, though: that's the top. A list's row
+    // scrolled up under its header isn't one of these.
+    const underControls = shaped && !atTop && rect.top < area.height && !inScrolledList(el);
     // The outermost box of a row: an inner one sits inside its padding already.
-    const nested = fits && [...seen].some((outer) => outer.contains(el));
-    if (!fits || nested) {
+    const nested = (atTop || underControls) && [...seen].some((outer) => outer.contains(el));
+    if ((!atTop && !underControls) || nested) {
       el.removeAttribute(ROW_ATTRIBUTE);
       el.removeAttribute(ROW_RIGHT_ATTRIBUTE);
       el.removeAttribute(ROW_LEFT_ATTRIBUTE);
       continue;
     }
     seen.add(el);
-    el.setAttribute(ROW_ATTRIBUTE, '');
+    el.toggleAttribute(ROW_ATTRIBUTE, atTop);
     el.toggleAttribute(ROW_RIGHT_ATTRIBUTE, right > 0 && rect.right > viewportWidth - right);
     el.toggleAttribute(ROW_LEFT_ATTRIBUTE, left > 0 && rect.left < left);
   }
   return [...seen];
+}
+
+/** Inside something scrolled away from its top: a row passing under, not a toolbar. */
+function inScrolledList(el: HTMLElement): boolean {
+  for (let at = el.parentElement; at && at !== el.ownerDocument.body; at = at.parentElement) {
+    if (at.scrollTop > 0) return true;
+  }
+  return false;
 }
 
 /**

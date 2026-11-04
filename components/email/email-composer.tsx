@@ -4894,6 +4894,7 @@ export function EmailComposer({
           label={tCommon('close')}
           data-testid="composer-close"
           data-own-window-close={ownWindow ? "" : undefined}
+          data-pane-close=""
         >
           <X className="w-5 h-5 md:w-4 md:h-4" />
         </IconButton>

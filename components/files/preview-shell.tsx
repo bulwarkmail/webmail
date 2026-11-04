@@ -87,7 +87,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 ms-auto">
           {neighbours && (
             <>
               <IconButton label={t("previous_file")} disabled={!neighbours.previous} onClick={() => neighbours.previous && neighbours.onGo(neighbours.previous)}>
@@ -104,10 +104,11 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
               <Download />
             </IconButton>
           )}
-          <IconButton label={t("close_preview")} onClick={onClose}>
-            <X />
-          </IconButton>
         </div>
+        {/* Its own child of the bar, so it can move to the bar's other end beside the window's controls. */}
+        <IconButton label={t("close_preview")} onClick={onClose} className="shrink-0 -ms-1" data-pane-close="">
+          <X />
+        </IconButton>
       </div>
       {children}
     </div>
