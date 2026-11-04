@@ -18,17 +18,27 @@ export function useWelcomeBannerDue(): boolean {
   const showOnboardingOnNewDevices = useSettingsStore((s) => s.showOnboardingOnNewDevices);
   const [due, setDue] = useState(false);
   useEffect(() => {
-    if (!onboardingCompleted) {
-      setDue(true);
-      return;
-    }
-    let seenHere = true;
-    try {
-      seenHere = localStorage.getItem(ONBOARDING_KEY) === "true";
-    } catch { /* localStorage unavailable */ }
-    setDue(showOnboardingOnNewDevices && !seenHere);
+    setDue(welcomeTipsDue(onboardingCompleted, showOnboardingOnNewDevices, seenOnThisDevice()));
   }, [onboardingCompleted, showOnboardingOnNewDevices]);
   return due;
+}
+
+function seenOnThisDevice(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The tips show once per device. Settings are kept per account, so an
+ * account added later starts with `onboardingCompleted` false; the device's
+ * own flag keeps the tips from coming back for it.
+ */
+export function welcomeTipsDue(onboardingCompleted: boolean, showOnNewDevices: boolean, seenHere: boolean): boolean {
+  if (seenHere) return false;
+  return !onboardingCompleted || showOnNewDevices;
 }
 
 /**
@@ -61,19 +71,7 @@ export function WelcomeBanner({ variant = "list" }: { variant?: "list" | "pane" 
   }, [onboardingCompleted, updateSetting]);
 
   useEffect(() => {
-    if (!onboardingCompleted) {
-      setVisible(true);
-      return;
-    }
-    if (showOnboardingOnNewDevices) {
-      try {
-        if (localStorage.getItem(ONBOARDING_KEY) !== "true") {
-          setVisible(true);
-          return;
-        }
-      } catch { /* localStorage unavailable */ }
-    }
-    setVisible(false);
+    setVisible(welcomeTipsDue(onboardingCompleted, showOnboardingOnNewDevices, seenOnThisDevice()));
   }, [onboardingCompleted, showOnboardingOnNewDevices]);
 
   const dismiss = useCallback(() => {
