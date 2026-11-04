@@ -1083,7 +1083,12 @@ export function FileBrowser({
   const handlers: FileItemHandlers = useMemo(() => ({
     onSelectClick: handleSelectClick,
     onToggleSelect: handleToggleSelect,
-    onOpen: openResource,
+    // A double-click's first click selected the file; opening it isn't choosing it, so the
+    // toolbar stays the folder's own when the preview closes (pim-p3-11).
+    onOpen: (r) => {
+      if (!r.isDirectory) onSetSelection(new Set());
+      openResource(r);
+    },
     onContextMenu: openItemMenu,
     onDownload: downloadsOff ? undefined : (r) => void onDownload(r.name),
     onShare: (r) => setShareTargetId(r.id),
@@ -1091,7 +1096,7 @@ export function FileBrowser({
     dragProps: itemDragProps,
     // Tab onto an item: the arrows go on from there.
     onFocusItem: (r) => setFocusedName(r.name),
-  }), [handleSelectClick, handleToggleSelect, openResource, openItemMenu, onDownload, downloadsOff, canShare, itemDragProps]);
+  }), [handleSelectClick, handleToggleSelect, openResource, onSetSelection, openItemMenu, onDownload, downloadsOff, canShare, itemDragProps]);
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
