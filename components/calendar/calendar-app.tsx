@@ -60,6 +60,7 @@ import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { ResizeHandle } from "@/components/layout/resize-handle";
+import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
@@ -183,6 +184,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // collapses into a burger-toggled overlay instead of taking inline space.
   const isNarrow = !isFullDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
+  const closeNarrowSidebar = useCallback(() => setNarrowSidebarOpen(false), []);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const { client, isAuthenticated, logout, checkAuth, switchAccount, activeAccountId, isLoading: authLoading } = useAuthStore();
@@ -2218,6 +2220,97 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     />
   );
 
+  // The sidebar's content: beside the views on the full desktop, a drawer below it.
+  const calendarSidebar = (
+    <>
+      <CalendarSidebarHeader
+        onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateForView(); }}
+        createLabel={createLabel}
+        tourTarget={!isNarrow}
+      />
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+      <div className="px-3">
+      <MiniCalendar
+        selectedDate={selectedDate}
+        displayMonth={miniMonth}
+        onSelectDate={handleMiniCalendarSelect}
+        onChangeMonth={handleMiniMonthChange}
+        events={events}
+        firstDayOfWeek={firstDayOfWeek}
+        showWeekNumbers={showWeekNumbers}
+      />
+      </div>
+      <CalendarSidebarPanel
+        calendars={allCalendars}
+        selectedCalendarIds={shownCalendarIds}
+        onToggleVisibility={toggleShownCalendar}
+        onColorChange={client ? (calendarId, color) => {
+          if (calendarId === BIRTHDAY_CALENDAR_ID) {
+            updateSetting('birthdayCalendarColor', color);
+            return;
+          }
+          // Shared calendars: recolor locally only (the viewer usually
+          // can't write the owner's calendar, and it'd recolor it for
+          // everyone). Personal calendars write through to the server.
+          const cal = allCalendars.find((c) => c.id === calendarId);
+          if (cal?.isShared) {
+            setSharedCalendarColor(sharedCalendarColorKey(cal), color);
+            return;
+          }
+          updateCalendar(client, calendarId, { color });
+        } : undefined}
+        onResetColor={(cal) => {
+          // Drop the local override. A calendar with a server color goes
+          // back to it; one without gets a fresh unused color from the
+          // auto-assign effect (so it never reverts to a collision).
+          removeSharedCalendarColor(sharedCalendarColorKey(cal));
+        }}
+        onShareCalendar={client ? (cal) => setSharingCalendarId(cal.id) : undefined}
+        onCreateEvent={(cal: Calendar) => {
+          setDefaultCalendarIdForCreate(cal.id);
+          openCreateModal();
+        }}
+        onClearCalendar={client ? async (cal: Calendar) => {
+          const ok = await confirmAction({
+            title: tMgmt("clear_events"),
+            message: tMgmt("confirm_clear", { name: shownName.calendar(cal) }),
+            variant: "destructive",
+            confirmText: tMgmt("clear_events"),
+          });
+          if (!ok) return;
+          try {
+            const count = await clearCalendarEvents(client, cal.id);
+            toast.success(tMgmt("events_cleared", { count }));
+          } catch (err) {
+            // The store rethrows the server's reason (#434).
+            toast.error(err instanceof Error && err.message ? err.message : tMgmt("error_clear"));
+          }
+        } : undefined}
+        onDeleteCalendar={client ? async (cal: Calendar) => {
+          const ok = await confirmAction({
+            title: tMgmt("delete"),
+            message: tMgmt("confirm_delete", { name: shownName.calendar(cal) }),
+            variant: "destructive",
+            confirmText: tMgmt("delete"),
+          });
+          if (!ok) return;
+          try {
+            await removeCalendar(client, cal.id);
+            toast.success(tMgmt("calendar_deleted"));
+          } catch {
+            toast.error(tMgmt("error_delete"));
+          }
+        } : undefined}
+        onCreateCalendar={client ? () => setShowCreateCalendar(true) : undefined}
+        onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
+        onEditSubscription={(subId) => setEditingSubscription(subId)}
+        client={client}
+        multiAccountMode={multiAccountEnabled && accountClients.length > 1}
+      />
+      </div>
+    </>
+  );
+
   return (
     <div className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
@@ -2253,138 +2346,49 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} className="flex-1" />
       )}
 
-      {/* Narrow-pane backdrop: dim and close overlay sidebar */}
-      {isNarrow && narrowSidebarOpen && !inlineApp && (
-        <div
-          className={cn(
-            "inset-0 bg-black/50 z-40",
-            isEmbedded ? "absolute" : "fixed"
-          )}
-          onClick={() => setNarrowSidebarOpen(false)}
-        />
-      )}
-
       {!inlineApp && (
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
       <div className="flex flex-1 min-w-0 min-h-0">
-      {/* Sidebar - in-flow when desktop pane, overlay when narrow */}
-      {(isNarrow || !sidebarCollapsed) && (
+      {/* The sidebar: in flow on the full desktop; below it a drawer from
+          the window's edge, over the app rail, as Mail's folders. */}
+      {isNarrow && (
+        <EdgeDrawer
+          open={narrowSidebarOpen}
+          onClose={closeNarrowSidebar}
+          contained={isEmbedded || mvShell}
+          // A closed drawer is off-screen: not a pane for F6.
+          data-pane={narrowSidebarOpen ? "sidebar" : undefined}
+          data-testid="calendar-sidebar-drawer"
+          className="border-e border-border bg-secondary overflow-hidden"
+        >
+          {calendarSidebar}
+        </EdgeDrawer>
+      )}
+      {!isNarrow && !sidebarCollapsed && (
         <>
           <div
-            // A closed drawer is off-screen: not a pane for F6.
-            data-pane={!isNarrow || narrowSidebarOpen ? "sidebar" : undefined}
+            data-pane="sidebar"
             className={cn(
               "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
               !isResizing && "transition-[width] duration-300",
-              isNarrow && cn(
-                "absolute inset-y-0 start-0 z-50 w-72 pt-[var(--app-top-inset)]",
-                "transform transition-transform duration-300 ease-in-out",
-                !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full"
-              )
             )}
-            style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
+            style={{ width: `${calSidebarWidth}px` }}
           >
-            <CalendarSidebarHeader
-              onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateForView(); }}
-              createLabel={createLabel}
-              tourTarget={!isNarrow}
-            />
-            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
-            <div className="px-3">
-            <MiniCalendar
-              selectedDate={selectedDate}
-              displayMonth={miniMonth}
-              onSelectDate={handleMiniCalendarSelect}
-              onChangeMonth={handleMiniMonthChange}
-              events={events}
-              firstDayOfWeek={firstDayOfWeek}
-              showWeekNumbers={showWeekNumbers}
-            />
-            </div>
-            <CalendarSidebarPanel
-              calendars={allCalendars}
-              selectedCalendarIds={shownCalendarIds}
-              onToggleVisibility={toggleShownCalendar}
-              onColorChange={client ? (calendarId, color) => {
-                if (calendarId === BIRTHDAY_CALENDAR_ID) {
-                  updateSetting('birthdayCalendarColor', color);
-                  return;
-                }
-                // Shared calendars: recolor locally only (the viewer usually
-                // can't write the owner's calendar, and it'd recolor it for
-                // everyone). Personal calendars write through to the server.
-                const cal = allCalendars.find((c) => c.id === calendarId);
-                if (cal?.isShared) {
-                  setSharedCalendarColor(sharedCalendarColorKey(cal), color);
-                  return;
-                }
-                updateCalendar(client, calendarId, { color });
-              } : undefined}
-              onResetColor={(cal) => {
-                // Drop the local override. A calendar with a server color goes
-                // back to it; one without gets a fresh unused color from the
-                // auto-assign effect (so it never reverts to a collision).
-                removeSharedCalendarColor(sharedCalendarColorKey(cal));
-              }}
-              onShareCalendar={client ? (cal) => setSharingCalendarId(cal.id) : undefined}
-              onCreateEvent={(cal: Calendar) => {
-                setDefaultCalendarIdForCreate(cal.id);
-                openCreateModal();
-              }}
-              onClearCalendar={client ? async (cal: Calendar) => {
-                const ok = await confirmAction({
-                  title: tMgmt("clear_events"),
-                  message: tMgmt("confirm_clear", { name: shownName.calendar(cal) }),
-                  variant: "destructive",
-                  confirmText: tMgmt("clear_events"),
-                });
-                if (!ok) return;
-                try {
-                  const count = await clearCalendarEvents(client, cal.id);
-                  toast.success(tMgmt("events_cleared", { count }));
-                } catch (err) {
-                  // The store rethrows the server's reason (#434).
-                  toast.error(err instanceof Error && err.message ? err.message : tMgmt("error_clear"));
-                }
-              } : undefined}
-              onDeleteCalendar={client ? async (cal: Calendar) => {
-                const ok = await confirmAction({
-                  title: tMgmt("delete"),
-                  message: tMgmt("confirm_delete", { name: shownName.calendar(cal) }),
-                  variant: "destructive",
-                  confirmText: tMgmt("delete"),
-                });
-                if (!ok) return;
-                try {
-                  await removeCalendar(client, cal.id);
-                  toast.success(tMgmt("calendar_deleted"));
-                } catch {
-                  toast.error(tMgmt("error_delete"));
-                }
-              } : undefined}
-              onCreateCalendar={client ? () => setShowCreateCalendar(true) : undefined}
-              onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
-              onEditSubscription={(subId) => setEditingSubscription(subId)}
-              client={client}
-              multiAccountMode={multiAccountEnabled && accountClients.length > 1}
-            />
-            </div>
+            {calendarSidebar}
           </div>
-          {!isNarrow && (
-            <ResizeHandle
-              pane="sidebar"
-              value={calSidebarWidth}
-              min={180}
-              max={400}
-              onResizeStart={() => { dragStartWidth.current = calSidebarWidth; setIsResizing(true); }}
-              onResize={(delta) => setCalSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
-              onResizeEnd={() => {
-                setIsResizing(false);
-                localStorage.setItem("calendar-sidebar-width", String(calSidebarWidth));
-              }}
-              onDoubleClick={() => { setCalSidebarWidth(256); localStorage.setItem("calendar-sidebar-width", "256"); }}
-            />
-          )}
+          <ResizeHandle
+            pane="sidebar"
+            value={calSidebarWidth}
+            min={180}
+            max={400}
+            onResizeStart={() => { dragStartWidth.current = calSidebarWidth; setIsResizing(true); }}
+            onResize={(delta) => setCalSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
+            onResizeEnd={() => {
+              setIsResizing(false);
+              localStorage.setItem("calendar-sidebar-width", String(calSidebarWidth));
+            }}
+            onDoubleClick={() => { setCalSidebarWidth(256); localStorage.setItem("calendar-sidebar-width", "256"); }}
+          />
         </>
       )}
 
