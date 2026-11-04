@@ -62,6 +62,8 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { useCollectionNames } from "@/hooks/use-collection-names";
+import { formatDurationDisplay } from "./event-detail-popover";
 
 export interface PendingEventPreview {
   start: Date;
@@ -250,14 +252,6 @@ export function buildAlertsPatch(
   return patch;
 }
 
-function formatDurationDisplay(minutes: number): string {
-  if (minutes < 60) return `${minutes}min`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (m === 0) return `${h}h`;
-  return `${h}h${m}min`;
-}
-
 function getRecurrenceLabel(event: CalendarEvent, t: ReturnType<typeof useTranslations>, locale: string): string | null {
   if (!event.recurrenceRules?.length) return null;
   return buildRecurrenceSummary(event.recurrenceRules[0], t, locale);
@@ -293,6 +287,7 @@ export function EventModal({
   const labelFor = (key: string) => `${labelIdBase}-${key}`;
   const tCommon = useTranslations("common");
   const tEvent = useTranslations("ux_pim_event");
+  const shownName = useCollectionNames();
   // The header's close goes to its start when the window's own close is at its end.
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(header);
@@ -1141,7 +1136,7 @@ export function EventModal({
               <h2 className="text-lg font-semibold truncate" title={event.title || t("events.no_title")}>{event.title || t("events.no_title")}</h2>
             </div>
             {eventCalendar && (
-              <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">{eventCalendar.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 ps-[18px]">{shownName.calendar(eventCalendar)}</p>
             )}
           </div>
           {onMore && (
@@ -1203,7 +1198,7 @@ export function EventModal({
                           </span>
                         </div>
                         <div className="text-muted-foreground text-xs">
-                          ({formatDurationDisplay(durMin)})
+                          ({formatDurationDisplay(durMin, locale)})
                         </div>
                         {zoned && zonedText && (
                           <div className="text-muted-foreground text-xs" data-testid="event-zone-times">
@@ -1227,7 +1222,7 @@ export function EventModal({
                       ) : (
                         <div className="text-muted-foreground">
                           {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
-                          <span className="ms-1.5 text-xs">({formatDurationDisplay(durMin)})</span>
+                          <span className="ms-1.5 text-xs">({formatDurationDisplay(durMin, locale)})</span>
                         </div>
                       )}
                     </>

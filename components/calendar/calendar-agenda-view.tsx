@@ -19,6 +19,7 @@ import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { gridReplyState } from "@/lib/calendar-reply-state";
 import { readableTextOn } from "@/lib/color-transform";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   events: CalendarEvent[];
@@ -64,6 +65,7 @@ export function CalendarAgendaView({
   const t = useTranslations("calendar");
   const tEvent = useTranslations("ux_pim_event");
   const tGrid = useTranslations("ux_pim_grid");
+  const shownName = useCollectionNames();
   const paint = useCvdColor();
   // An event of another signed-in login is read with that login's addresses.
   const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
@@ -265,7 +267,7 @@ export function CalendarAgendaView({
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
-              const meta = [locationName, calendar?.name].filter(Boolean).join(" · ");
+              const meta = [locationName, calendar ? shownName.calendar(calendar) : null].filter(Boolean).join(" · ");
 
               const row = (
                 <button

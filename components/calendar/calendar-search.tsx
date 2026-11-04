@@ -19,6 +19,7 @@ import type { CalendarSearchResults as Results } from "@/hooks/use-calendar-even
 import { getEventColor } from "./event-card";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useShortenedText } from "@/hooks/use-shortened-text";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 const RESULT_SELECTOR = "[data-search-result]";
 
@@ -94,6 +95,7 @@ export function CalendarSearchResults({
   query, results, calendars, timeFormat = "24h", currentUserEmails, onSelectEvent, onContextMenuEvent, onClearSearch,
 }: CalendarSearchResultsProps) {
   const t = useTranslations("calendar");
+  const shownName = useCollectionNames();
   const paint = useCvdColor();
   const intlFormatter = useDisplayDateFormatter();
   const listRef = useRef<HTMLDivElement>(null);
@@ -125,7 +127,7 @@ export function CalendarSearchResults({
     const end = getEventEndDate(ev);
     const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
     const locationName = ev.locations ? Object.values(ev.locations)[0]?.name : null;
-    const meta = [locationName, calendar?.name].filter(Boolean).join(" · ");
+    const meta = [locationName, calendar ? shownName.calendar(calendar) : null].filter(Boolean).join(" · ");
     // A series the server found by its first occurrence.
     const repeats = !ev.recurrenceId && isRecurringEvent(ev);
     const sameYear = start.getFullYear() === thisYear;

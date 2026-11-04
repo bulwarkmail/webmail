@@ -1263,7 +1263,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const listTitle = activeCategory === "all" ? t("tabs.all")
     : activeCategory === "uncategorized" ? t("no_category")
       : activeCategory === "directory" ? t("directory.title")
-        : "addressBookId" in activeCategory ? addressBooks.find((b) => b.id === activeCategory.addressBookId)?.name ?? t("title")
+        : "addressBookId" in activeCategory ? (() => { const book = addressBooks.find((b) => b.id === activeCategory.addressBookId); return book ? shownName.addressBook(book) : t("title"); })()
           : "keyword" in activeCategory ? activeCategory.keyword
             : getContactDisplayName(groups.find((g) => g.id === activeCategory.groupId) ?? ({} as ContactCard)) || t("title");
   // The list prints itself, with its filters and letter groups; a phone
