@@ -163,6 +163,7 @@ import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
+import { SenderNameLine } from "./sender-name-line";
 import { AddressText } from "./address-context-menu";
 import { BreakableAddress } from "@/components/ui/breakable-address";
 import { mentionFromLink } from "@/lib/recipient-mentions";
@@ -1013,15 +1014,16 @@ export function MvExpandedConversationCard({
         <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
-            <span dir="auto" className="text-sm font-semibold truncate">{sender?.name || sender?.email || ''}</span>
+            <SenderNameLine
+              className="text-sm font-semibold"
+              name={sender?.name || sender?.email || ''}
+              address={compact ? null : sender?.email}
+            />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6875rem] font-medium bg-primary/10 text-primary shrink-0">
                 <CalendarClock className="w-3 h-3" />
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
-            )}
-            {!compact && sender?.name && sender.email && (
-              <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
             )}
             <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
@@ -5372,8 +5374,27 @@ ${printWatermark ? printWatermark.html : ''}
               {/* Row 1: Sender name + badges */}
               <div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {sender?.email ? (
+                  {/* In a conversation one line, as the other messages'
+                      headers: the address shows only when it fits whole
+                      (mail-p3-13), and the date and actions stay at its end. */}
+                  <div className={cn("flex items-center gap-2", mvViewer || inConversation ? "min-w-0 [&>*:not([data-sender-line])]:shrink-0" : "flex-wrap")}>
+                    {sender?.email && (mvViewer || inConversation) ? (
+                      <SenderNameLine
+                        name={sender.name || sender.email}
+                        address={sender.name ? sender.email : null}
+                        nameNode={(
+                          <RecipientPopover
+                            name={sender.name}
+                            email={sender.email}
+                            onViewContact={handleViewContactSidebar}
+                            className="font-semibold text-start block max-w-full truncate"
+                          />
+                        )}
+                        addressNode={inConversation && sender.name
+                          ? <AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />
+                          : undefined}
+                      />
+                    ) : sender?.email ? (
                       <RecipientPopover
                         name={sender?.name}
                         email={sender.email}
@@ -5382,12 +5403,6 @@ ${printWatermark ? printWatermark.html : ''}
                       />
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
-                    )}
-                    {mvViewer && sender?.email && sender?.name && (
-                      <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
-                    )}
-                    {inConversation && sender?.email && sender?.name && (
-                      <span className="text-xs text-muted-foreground truncate min-w-0">&lt;<AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />&gt;</span>
                     )}
                     <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
