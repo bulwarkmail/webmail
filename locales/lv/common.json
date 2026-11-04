@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}",
     "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
   },
+  "mail_p2_conv": {
+    "show_message": "Rādīt ziņojumu",
+    "back_to_reply": "Atpakaļ pie atbildes"
+  },
   "identities": {
     "modal_title": "Pārvaldīt sūtītāja identitātes",
     "create_new": "Izveidot jaunu identitāti",

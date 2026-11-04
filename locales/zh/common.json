@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
+  "mail_p2_conv": {
+    "show_message": "显示邮件",
+    "back_to_reply": "返回回复"
+  },
   "identities": {
     "modal_title": "管理发送身份",
     "create_new": "创建新身份",

@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
     "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
   },
+  "mail_p2_conv": {
+    "show_message": "Näita kirja",
+    "back_to_reply": "Tagasi vastuse juurde"
+  },
   "identities": {
     "modal_title": "Halda saatja identiteete",
     "create_new": "Loo uus identiteet",

@@ -3945,6 +3945,10 @@
     "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
     "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
+  "mail_p2_conv": {
+    "show_message": "Hiện thư",
+    "back_to_reply": "Quay lại thư trả lời"
+  },
   "identities": {
     "modal_title": "Quản lý danh tính gửi thư",
     "create_new": "Danh tính mới",

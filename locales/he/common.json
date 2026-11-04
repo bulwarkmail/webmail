@@ -3817,6 +3817,10 @@
     "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
     "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
+  "mail_p2_conv": {
+    "show_message": "הצגת ההודעה",
+    "back_to_reply": "חזרה לתשובה שלך"
+  },
   "identities": {
     "modal_title": "ניהול זהויות שליחה",
     "create_new": "צור זהות חדשה",

@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
   },
+  "mail_p2_conv": {
+    "show_message": "Zobraziť správu",
+    "back_to_reply": "Späť na odpoveď"
+  },
   "identities": {
     "modal_title": "Správa identít odosielateľa",
     "create_new": "Vytvoriť novú identitu",

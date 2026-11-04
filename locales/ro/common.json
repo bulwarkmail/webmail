@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
   },
+  "mail_p2_conv": {
+    "show_message": "Afișează mesajul",
+    "back_to_reply": "Înapoi la răspuns"
+  },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",
     "create_new": "Creați o identitate nouă",

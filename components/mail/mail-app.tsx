@@ -11,6 +11,7 @@ import { productName } from "@/lib/product-name";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
+import { ReplyDock } from "@/components/mail/reply-dock";
 import { addEcho, isUndoWindow, mergeEchoes, sentEcho, withoutHeldSend } from "@/lib/held-send";
 import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 
@@ -5483,6 +5484,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         prefill={composerPrefill}
         initialFiles={composerInitialFiles}
         sessionKey={`inline-${composerSessionId}`}
+        docked={composerHost === 'dock'}
         sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
           setComposerPrefill(null);
@@ -6445,11 +6447,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 </ErrorBoundary>
               </>
             )}
-            {dockedReply && (
-              <div className="flex basis-[62%] min-h-[18rem] shrink-0 flex-col border-t border-border" data-reply-dock="">
-                {composerNode}
-              </div>
-            )}
+            {dockedReply && <ReplyDock>{composerNode}</ReplyDock>}
             </>
             )}
           </section>

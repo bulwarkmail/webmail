@@ -827,6 +827,19 @@ export function conversationOpenPlan(conversation: Email[], openId: string): { e
   return { expanded, foldOpen: !!open.keywords?.$seen, newestId: newest.id };
 }
 
+/**
+ * The reading pane's scroll position that shows the message being answered
+ * above a docked reply: its end at the pane's bottom edge, or its start at
+ * the top when the whole message doesn't fit.
+ */
+export function replyScrollTop(pane: HTMLElement, end: HTMLElement, start: HTMLElement | null): number {
+  const paneTop = pane.getBoundingClientRect().top;
+  const endY = end.getBoundingClientRect().top - paneTop + pane.scrollTop;
+  const startY = start ? start.getBoundingClientRect().top - paneTop + pane.scrollTop : 0;
+  const toEnd = endY - pane.clientHeight;
+  return Math.max(0, startY > toEnd ? toEnd : startY);
+}
+
 /** A button's tooltip with the key the menus and the shortcut help show (mail-p2-13). */
 function useKeyTip() {
   const shortcut = useMessageActionShortcut();
@@ -3662,6 +3675,27 @@ export function EmailViewer({
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
   // Not on spam: a reply confirms the address to the sender.
+  // A reply docks under the message it answers: keep that message in view
+  // above it, its end just over the dock, or its start when it is taller
+  // than what is left of the pane (mail-p2-2).
+  useEffect(() => {
+    if (!replyComposerOpen || !email) return;
+    // The message answered is read while answering: unfold it.
+    setMvOpenCollapsed(false);
+    let frame = 0;
+    const place = () => {
+      const pane = document.querySelector<HTMLElement>('[data-reader-scroll]');
+      const end = pane?.querySelector<HTMLElement>('[data-open-message-end]');
+      if (!pane || !end) return;
+      const start = pane.querySelector<HTMLElement>('[data-mv-open-header]') ?? pane.querySelector<HTMLElement>('[data-mv-open-folded]');
+      pane.scrollTop = replyScrollTop(pane, end, start);
+    };
+    // Once the dock has taken its room, and again when its height settles.
+    frame = requestAnimationFrame(() => { frame = requestAnimationFrame(place); });
+    const timer = setTimeout(place, 250);
+    return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
+  }, [replyComposerOpen, email?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per reply opened
+
   const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
   // The plain-text body, where reader-above-quote mounts between text and quote.
@@ -6319,6 +6353,9 @@ ${printWatermark ? printWatermark.html : ''}
           )}
 
           <PluginSlot name="email-footer" extraProps={pluginFooterProps} />
+
+          {/* Where the open message ends: a reply docked under it scrolls to here. */}
+          <div data-open-message-end="" aria-hidden="true" />
 
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (

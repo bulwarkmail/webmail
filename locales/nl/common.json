@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
+  "mail_p2_conv": {
+    "show_message": "Bericht tonen",
+    "back_to_reply": "Terug naar je antwoord"
+  },
   "identities": {
     "modal_title": "Verzendidentiteiten beheren",
     "create_new": "Nieuwe identiteit aanmaken",

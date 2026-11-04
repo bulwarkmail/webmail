@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {Mostrar # mensaje anterior} other {Mostrar # mensajes anteriores}}",
     "return_to_list_follows_layout": "Mientras no lo cambies, sigue el diseño: desactivado cuando la lista y el mensaje están uno al lado del otro, activado en los demás casos."
   },
+  "mail_p2_conv": {
+    "show_message": "Mostrar el mensaje",
+    "back_to_reply": "Volver a tu respuesta"
+  },
   "identities": {
     "modal_title": "Administrar Identidades de Envío",
     "create_new": "Crear Nueva Identidad",

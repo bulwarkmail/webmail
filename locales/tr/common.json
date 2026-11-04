@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
     "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
   },
+  "mail_p2_conv": {
+    "show_message": "İletiyi göster",
+    "back_to_reply": "Yanıtınıza dönün"
+  },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",
     "create_new": "Yeni Kimlik Oluştur",

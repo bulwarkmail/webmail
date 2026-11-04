@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
     "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
   },
+  "mail_p2_conv": {
+    "show_message": "Mostra il messaggio",
+    "back_to_reply": "Torna alla risposta"
+  },
   "identities": {
     "modal_title": "Gestisci identità di invio",
     "create_new": "Crea nuova identità",

@@ -3933,6 +3933,10 @@
     "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
     "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
   },
+  "mail_p2_conv": {
+    "show_message": "メッセージを表示",
+    "back_to_reply": "返信に戻る"
+  },
   "identities": {
     "modal_title": "送信者情報を管理",
     "create_new": "新しい送信者情報を作成",
