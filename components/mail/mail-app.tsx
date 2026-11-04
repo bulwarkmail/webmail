@@ -396,6 +396,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     threadId: string; emailId: string; startedAt: number; promise: Promise<Email[] | null>;
   } | null>(null);
   const mvConversationOpenSeqRef = useRef(0);
+  // The open that put a message on screen together with its conversation (or
+  // with none, a message alone in its thread). The effect below then has
+  // nothing to fetch, and resetting and setting it again would draw the whole
+  // mail view twice more for each message opened.
+  const mvConversationSettledRef = useRef<{
+    emailId: string; threadId: string; client: EmailBlobContext['client']; accountId?: string;
+  } | null>(null);
   // compose-p2-6: a reply to the open message saved as a draft. The reader
   // shows it under the message, and Reply opens it again. The conversation
   // fetch notes the thread's drafts; a scan reads them fresh after a composer
@@ -2299,10 +2306,29 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       setLoadingEmail(true);
       try {
-        const email = await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
+        // With the conversation in the reader, the message waits for it, as on
+        // a click: shown alone first, it would move down once it came.
+        const withConversation = readerConversationView && !cursorOnly;
+        const email = withConversation
+          ? await fetchEmailContent(activeClient, link.id, link.ownerAccountId, { select: false })
+          : await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
+        }
+        if (withConversation) {
+          const source = resolveEmailBlobContext(email, activeClient);
+          const conversation = await Promise.race([
+            loadMvConversation(email, activeClient),
+            new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
+          ]);
+          if (conversation !== undefined) {
+            setMvConversationResult(conversation ? { emails: conversation, source, threadId: email.threadId } : null);
+            mvConversationSettledRef.current = {
+              emailId: email.id, threadId: email.threadId, client: source.client, accountId: source.accountId,
+            };
+          }
+          useEmailStore.setState({ selectedEmail: email });
         }
         await showInOwningFolder(activeClient, email);
         if (link.fullscreen && !isMobile) {
@@ -4990,10 +5016,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   useEffect(() => {
     ++mvConversationOpenSeqRef.current;
+    const settled = mvConversationSettledRef.current;
+    mvConversationSettledRef.current = null;
     if (!mvConversationThreadId || !client || !mvConversationRef) {
       setMvConversationResult(null);
       setMvConversationLoading(null);
       return;
+    }
+    if (settled && settled.emailId === mvConversationRef.id && settled.threadId === mvConversationThreadId
+      && settled.client === mvBlobSource.client && settled.accountId === mvBlobSource.accountId) {
+      // The open already has the conversation on screen with the message.
+      setMvConversationLoading(null);
+      return () => { ++mvConversationOpenSeqRef.current; };
     }
     let cancelled = false;
     setMvConversationResult(null);
@@ -5442,9 +5476,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (openSeq !== emailOpenSeqRef.current) return 'opened';
-          if (conversation !== undefined) setMvConversationResult(conversation ? {
-            emails: conversation, source, threadId: fullEmail.threadId,
-          } : null);
+          if (conversation !== undefined) {
+            setMvConversationResult(conversation ? {
+              emails: conversation, source, threadId: fullEmail.threadId,
+            } : null);
+            mvConversationSettledRef.current = {
+              emailId: fullEmail.id, threadId: fullEmail.threadId, client: source.client, accountId: source.accountId,
+            };
+          }
         }
         // One write: the message, and the end of its loading state.
         finishOpenEmail(fullEmail);

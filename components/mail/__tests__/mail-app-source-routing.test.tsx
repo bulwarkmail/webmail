@@ -272,7 +272,8 @@ describe('shared message deep link from the personal Inbox (#1491)', () => {
     });
     const mounted = render(<MailApp linkSegments={['message', 'eaaaaab']} />);
     try {
-      await waitFor(() => expect(fetchContent).toHaveBeenCalledWith(client, 'eaaaaab', 'ce'));
+      // Fetched without opening: it opens with its conversation, in the reading pane.
+      await waitFor(() => expect(fetchContent).toHaveBeenCalledWith(client, 'eaaaaab', 'ce', { select: false }));
       await waitFor(() => expect(useEmailStore.getState().selectedMailbox).toBe('ce:a'));
       expect(fetchEmails).toHaveBeenCalledWith(client, 'ce:a', { background: true });
       expect(useEmailStore.getState().selectedEmail?.subject).toBe('GRP one');
