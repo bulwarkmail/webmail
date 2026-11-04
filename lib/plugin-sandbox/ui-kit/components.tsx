@@ -669,7 +669,7 @@ export interface KitCheckboxProps {
   id?: string;
 }
 
-/** The composer's check items and the Files app's select box: a drawn box, not the browser's. */
+/** The Files app's select box: a drawn box, not the browser's. */
 export function Checkbox({ checked, onChange, label, hint, disabled = false, id, ariaLabel }: KitCheckboxProps) {
   const autoId = React.useId();
   const boxId = id ?? autoId;
