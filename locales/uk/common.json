@@ -4483,6 +4483,13 @@
     "open_categories": "Відкрити категорії",
     "row_actions": "Дії для {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Домашній",
+    "phone_voice": "Телефон",
+    "more_fields": "Інші поля",
+    "import_menu": "Імпортувати контакти…",
+    "new_address_book_menu": "Нова адресна книга…"
+  },
   "uxs_wording": {
     "more_options": "Інші параметри",
     "use_in_other_apps": "Використовувати в інших застосунках",

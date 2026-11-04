@@ -4483,6 +4483,13 @@
       "menu": "開啟聯絡人選單"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "住家",
+    "phone_voice": "電話",
+    "more_fields": "更多欄位",
+    "import_menu": "匯入聯絡人…",
+    "new_address_book_menu": "新增通訊錄…"
+  },
   "uxs_wording": {
     "more_options": "更多選項",
     "use_in_other_apps": "在其他應用程式中使用",

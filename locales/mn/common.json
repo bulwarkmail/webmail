@@ -4483,6 +4483,13 @@
       "menu": "Харилцагчийн цэсийг нээх"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Гэр",
+    "phone_voice": "Утас",
+    "more_fields": "Нэмэлт талбарууд",
+    "import_menu": "Харилцагчдыг импортлох…",
+    "new_address_book_menu": "Шинэ хаягийн дэвтэр…"
+  },
   "uxs_wording": {
     "more_options": "Бусад сонголт",
     "use_in_other_apps": "Бусад апп-д ашиглах",

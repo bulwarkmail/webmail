@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatAddressLines } from "@/lib/address-format";
 import type { ContactCard, AnniversaryDate } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef } from "@/stores/contact-store";
 import { ContactActivity } from "./contact-activity";
@@ -40,14 +41,15 @@ interface ContactDetailProps {
 }
 
 // Contexts and phone features the contact form offers, shown with the same
-// labels here. Anything else (custom vCard types) is shown as stored.
+// labels here. Anything else (custom vCard types) is shown as stored. The
+// standard's "private" reads "Home" and "voice" reads "Phone" (#pim-19).
 const CONTEXT_LABEL_KEYS: Record<string, string> = {
   work: "form.context_work",
-  private: "form.context_private",
+  private: "ux_pim_contact.context_private",
 };
 
 const PHONE_FEATURE_LABEL_KEYS: Record<string, string> = {
-  voice: "form.phone_voice",
+  voice: "ux_pim_contact.phone_voice",
   cell: "form.phone_cell",
   mobile: "form.phone_cell",
   fax: "form.phone_fax",
@@ -78,12 +80,14 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 
 export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
   const t = useTranslations("contacts");
+  const tRoot = useTranslations();
   const tCommon = useTranslations("common");
   const locale = useLocale();
   // The ⋮ shows the contact's menu, the one right-click shows in the list (R6).
   const moreMenu = useContextMenu<ContactCard>();
-  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? t(CONTEXT_LABEL_KEYS[key]) : key);
-  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? t(PHONE_FEATURE_LABEL_KEYS[key]) : key);
+  const label = (labelKey: string) => (labelKey.startsWith("ux_pim_contact.") ? tRoot(labelKey) : t(labelKey));
+  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? label(CONTEXT_LABEL_KEYS[key]) : key);
+  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? label(PHONE_FEATURE_LABEL_KEYS[key]) : key);
 
   const cryptoKeys = contact?.cryptoKeys ? Object.values(contact.cryptoKeys) : [];
   const hasCryptoKeysSlotOffers = usePluginSlotOffers('contact-cryptokeys').length > 0;
@@ -148,7 +152,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
           <div className={cn("flex items-center gap-4 min-w-0 flex-1", !isMobile && "basis-60")}>
             <Avatar name={name} email={email} contactPhoto={photo} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0 flex-1">
-              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
+              {/* A long name takes two lines, then ends in "…" with the whole name on hover. */}
+              <h2 title={name || undefined} className={cn("font-semibold line-clamp-2 break-words", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
               {hasNickname && (
                 <p className="text-sm text-muted-foreground truncate">&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
               )}
@@ -264,23 +269,14 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               })}
 
               {addresses.map((a, i) => {
-                const lines: string[] = [];
-                if (a.full || a.fullAddress) {
-                  lines.push((a.full || a.fullAddress) as string);
-                } else if (a.components && a.components.length > 0) {
-                  const joined = a.components.filter(c => c.kind !== 'separator').map(c => c.value).filter(Boolean).join(", ");
-                  if (joined) lines.push(joined);
-                } else {
-                  const parts = [a.street, [a.postcode, a.locality].filter(Boolean).join(" "), a.region, a.country]
-                    .map(s => (typeof s === "string" ? s.trim() : ""))
-                    .filter(Boolean) as string[];
-                  lines.push(...parts);
-                }
+                // One line per part, in the order of the address's country:
+                // "Hauptstraße 1" / "10000 Berlin" / "Germany".
+                const lines = formatAddressLines(a, locale);
                 return (
                   <FieldRow key={`ad${i}`} icon={MapPin} label={formatContexts(a.contexts, contextLabel) || t("detail.address_default_label")}>
-                    <div className="text-sm space-y-0.5">
+                    <div className="text-sm space-y-0.5" data-testid="contact-address">
                       {lines.map((line, idx) => (
-                        <div key={idx}>{line}</div>
+                        <div key={idx} data-address-line="">{line}</div>
                       ))}
                       {a.timeZone && (
                         <div className="text-xs text-muted-foreground">{t("detail.timezone")}: {a.timeZone}</div>

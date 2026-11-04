@@ -4483,6 +4483,13 @@
     "open_categories": "カテゴリを開く",
     "row_actions": "{name} の操作"
   },
+  "ux_pim_contact": {
+    "context_private": "自宅",
+    "phone_voice": "電話",
+    "more_fields": "その他の項目",
+    "import_menu": "連絡先をインポート…",
+    "new_address_book_menu": "新しいアドレス帳…"
+  },
   "uxs_wording": {
     "more_options": "その他のオプション",
     "use_in_other_apps": "ほかのアプリで使う",

@@ -4483,6 +4483,13 @@
       "menu": "Åpne kontaktens meny"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Hjem",
+    "phone_voice": "Telefon",
+    "more_fields": "Flere felt",
+    "import_menu": "Importer kontakter…",
+    "new_address_book_menu": "Ny adressebok…"
+  },
   "uxs_wording": {
     "more_options": "Flere valg",
     "use_in_other_apps": "Bruk i andre apper",

@@ -3826,6 +3826,13 @@
       "menu": "เปิดเมนูของผู้ติดต่อ"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "บ้าน",
+    "phone_voice": "โทรศัพท์",
+    "more_fields": "ช่องเพิ่มเติม",
+    "import_menu": "นำเข้าผู้ติดต่อ…",
+    "new_address_book_menu": "สมุดที่อยู่ใหม่…"
+  },
   "uxs_wording": {
     "more_options": "ตัวเลือกเพิ่มเติม",
     "use_in_other_apps": "ใช้ในแอปอื่น",

@@ -101,6 +101,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
   const printOff = useStrictestDevices().noPrint;
   const tSidebar = useTranslations("sidebar");
+  const tUxContact = useTranslations("ux_pim_contact");
   const tCommon = useTranslations("common");
   const tShell = useTranslations("shell");
   useDocumentTitle(tSidebar("contacts"));
@@ -1408,7 +1409,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 <ContactList
                   contacts={displayedContacts}
                   isContactReadOnly={isContactReadOnly}
-                  selectedContactId={selectedContactId}
+                  // A group's page opens no member: none is marked in the list (#pim-18).
+                  selectedContactId={view === "group-detail" || view === "group-edit" ? null : selectedContactId}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onSelectContact={guard(handleSelectContact)}
@@ -1435,7 +1437,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                     // On the phone these are otherwise only in the drawer's "+".
                     <>
                       <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { close(); guard(handleCreateGroup)(); }} />
-                      <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { close(); setShowImportDialog(true); }} />
+                      <ContextMenuItem icon={Upload} label={tUxContact("import_menu")} onClick={() => { close(); setShowImportDialog(true); }} />
                       {!printOff && <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={() => { close(); void requestPrint({ kind: "contact-list" }); }} />}
                     </>
                   )}

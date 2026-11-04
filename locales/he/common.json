@@ -4376,6 +4376,13 @@
       "menu": "פתח את התפריט של איש הקשר"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "בית",
+    "phone_voice": "טלפון",
+    "more_fields": "שדות נוספים",
+    "import_menu": "ייבוא אנשי קשר…",
+    "new_address_book_menu": "ספר כתובות חדש…"
+  },
   "uxs_wording": {
     "more_options": "אפשרויות נוספות",
     "use_in_other_apps": "שימוש באפליקציות אחרות",

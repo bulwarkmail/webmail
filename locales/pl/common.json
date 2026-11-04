@@ -4483,6 +4483,13 @@
     "open_categories": "Otwórz kategorie",
     "row_actions": "Działania dla {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Dom",
+    "phone_voice": "Telefon",
+    "more_fields": "Więcej pól",
+    "import_menu": "Importuj kontakty…",
+    "new_address_book_menu": "Nowa książka adresowa…"
+  },
   "uxs_wording": {
     "more_options": "Więcej opcji",
     "use_in_other_apps": "Użyj w innych aplikacjach",

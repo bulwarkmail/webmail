@@ -4483,6 +4483,13 @@
       "menu": "باز کردن منوی مخاطب"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "منزل",
+    "phone_voice": "تلفن",
+    "more_fields": "فیلدهای بیشتر",
+    "import_menu": "وارد کردن مخاطبین…",
+    "new_address_book_menu": "دفترچه آدرس جدید…"
+  },
   "uxs_wording": {
     "more_options": "گزینه‌های بیشتر",
     "use_in_other_apps": "استفاده در برنامه‌های دیگر",

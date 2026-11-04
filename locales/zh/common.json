@@ -4483,6 +4483,13 @@
     "open_categories": "打开分类",
     "row_actions": "{name} 的操作"
   },
+  "ux_pim_contact": {
+    "context_private": "住宅",
+    "phone_voice": "电话",
+    "more_fields": "更多字段",
+    "import_menu": "导入联系人…",
+    "new_address_book_menu": "新建通讯录…"
+  },
   "uxs_wording": {
     "more_options": "更多选项",
     "use_in_other_apps": "在其他应用中使用",

@@ -215,7 +215,7 @@ describe('ContactsApp', () => {
     renderContacts();
     fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
     fireEvent.click(within(drawer()).getByRole('button', { name: 'new' }));
-    fireEvent.click(screen.getByText('import.title'));
+    fireEvent.click(screen.getByText('import_menu'));
     const dialog = screen.getByRole('dialog', { name: 'import.title' });
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'import.title' })).toBeNull();
@@ -273,7 +273,7 @@ describe('ContactsApp', () => {
     try {
       renderContacts();
       fireEvent.click(screen.getByRole('button', { name: 'more' }));
-      fireEvent.click(screen.getByText('import.title'));
+      fireEvent.click(screen.getByText('import_menu'));
       expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
     } finally {
       window.matchMedia = matchMedia;
@@ -287,7 +287,7 @@ describe('ContactsApp', () => {
     fireEvent.click(within(drawer()).getByText('Work'));
     expect(screen.getByText('empty_view_title')).toBeInTheDocument();
     expect(screen.queryByText('empty_state_title')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /import.title/ }));
+    fireEvent.click(screen.getByRole('button', { name: /import_menu/ }));
     expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
   });
 
@@ -306,5 +306,17 @@ describe('ContactsApp', () => {
     fireEvent.contextMenu(screen.getByText('Alice Smith'));
     fireEvent.click(screen.getByText('context_menu.duplicate'));
     await waitFor(() => expect(useToastStore.getState().toasts.at(-1)?.title).toBe('toast.error_create'));
+  });
+
+  it("marks no member in the list on a group's page, even with a contact open before", () => {
+    const team: ContactCard = { id: 'g-team', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { 'c-alice': true, 'c-bob': true } };
+    renderContacts([alice, bob, team]);
+    fireEvent.click(screen.getByText('Alice Smith'));
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
+    fireEvent.click(within(drawer()).getByText('Team'));
+    expect(screen.getByText('groups.members_label')).toBeInTheDocument();
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'false');
+    expect(document.querySelectorAll('[data-contact-id][aria-selected="true"]')).toHaveLength(0);
   });
 });
