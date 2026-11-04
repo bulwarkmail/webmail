@@ -90,7 +90,7 @@ import {
 } from "@/components/error";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScheduleSendDialog } from "@/components/email/schedule-send-dialog";
-import { MailFolderMenu, MailFolderMenuItems } from "@/components/email/mail-list-menus";
+import { MailFolderMenu, MailFolderMenuItems, MailSortSubMenu } from "@/components/email/mail-list-menus";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
@@ -532,7 +532,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen,
     setSearchFilters,
     setSearchMailboxId,
-    scopeSearchToOpenFolder,
     clearSearchFilters,
     toggleAdvancedSearch,
     advancedSearch,
@@ -621,7 +620,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen: state.isAdvancedSearchOpen,
     setSearchFilters: state.setSearchFilters,
     setSearchMailboxId: state.setSearchMailboxId,
-    scopeSearchToOpenFolder: state.scopeSearchToOpenFolder,
     clearSearchFilters: state.clearSearchFilters,
     toggleAdvancedSearch: state.toggleAdvancedSearch,
     advancedSearch: state.advancedSearch,
@@ -3895,47 +3893,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
-  const handleUnreadFilterClick = async (mailboxId: string) => {
-    const isTogglingOff = selectedMailbox === mailboxId && !selectedKeyword && searchFilters.isUnread === true;
-
-    // Open the mailbox unless it is already the one listed. A tag view keeps
-    // selectedMailbox, so it counts as another view.
-    if (selectedMailbox !== mailboxId || selectedKeyword) {
-      if (isUnifiedView) exitUnifiedView();
-      setScheduledView(false);
-      selectMailbox(mailboxId);
-      selectEmail(null);
-    }
-
-    // On mobile, close sidebar and go to list view
-    if (isMobile) {
-      setSidebarOpen(false);
-      setActiveView("list");
-    }
-
-    // On tablet, show the list again
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
-
-    if (isTogglingOff) {
-      // Disable the unread filter and show all emails
-      clearSearchFilters();
-      if (client) {
-        await fetchEmails(client, mailboxId);
-      }
-    } else {
-      // Enable unread filter, in this folder only
-      clearSearchFilters();
-      scopeSearchToOpenFolder();
-      setSearchFilters({ isUnread: true });
-      if (client) {
-        await advancedSearch(client);
-      }
-    }
-  };
-
   const tCtxMenu = t;
 
   const handleMarkFolderRead = async (mailboxId: string) => {
@@ -4758,7 +4715,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onOpenStarred: mvShell ? goToStarred : undefined,
     onMailboxSelect: handleMailboxSelect,
     onTagSelect: handleTagSelect,
-    onUnreadFilterClick: handleUnreadFilterClick,
     onMarkFolderRead: handleMarkFolderRead,
     onMarkFolderTreeRead: handleMarkFolderTreeRead,
     onMarkAllFoldersRead: handleMarkAllFoldersRead,
@@ -5542,6 +5498,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     disabled={!client || isManualRefreshing}
                     onClick={() => { close(); void handleManualRefresh(); }}
                   />
+                  {/* A tablet shows the list's own ⋮ nowhere else (see below). */}
+                  {isTablet && <MailSortSubMenu folderRole={conversationRole} onPicked={close} />}
                   <MailFolderMenuItems
                     onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
@@ -5647,8 +5605,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       </ToolbarSearchAction>
                     }
                   />
-                  {/* The folder's actions, as the Mountain View list ⋮ has them. */}
-                  <MailFolderMenu
+                  {/* The folder's actions, as the Mountain View list ⋮ has them. A
+                      tablet has them in the header's ⋮ right above, and two ⋮
+                      stacked read as one menu twice (mail-27). */}
+                  {!isTablet && <MailFolderMenu
                     disabled={isScheduledView}
                     folderRole={conversationRole}
                     onRefresh={handleManualRefresh}
@@ -5656,7 +5616,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onMarkFolderRead={selectedMailbox ? folderMenuMarkRead : undefined}
                     onMarkAllFoldersRead={folderMenuMarkAllRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? folderMenuEmpty : undefined}
-                  />
+                  />}
                   {/* Plugin buttons (top-bar-actions). On phones they sit in
                       the header's overflow menu instead (MobileHeader). */}
                   {!isMobile && (
@@ -5863,9 +5823,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button - on desktop Mountain View puts Compose
-                at the top of the navigation rail instead. */}
-            {!mvShell && <Button
+            {/* Floating Compose Button - on desktop the folder sidebar has
+                Compose at its top instead (and Mountain View its rail), so the
+                button no longer sits on the list's rows. */}
+            {!mvShell && (isMobile || isTablet || isEmbedded) && <Button
               onClick={() => {
                 void withComposeGate('compose', {}, () => {
                   startFreshComposerSession();

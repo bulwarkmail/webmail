@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % von {total} belegt",
     "accessibility": "Barrierefreiheit"
   },
+  "account_unread": {
+    "others": "Ungelesen in anderen Konten: {count}",
+    "badge_all_accounts": {
+      "label": "Ungelesene Mails aller Konten zählen",
+      "description": "Die Zahl am Tab, am App-Symbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen."
+    },
+    "empty_hint": "Sie können den Ordner {folder} leeren, um alle Nachrichten dauerhaft zu entfernen."
+  },
   "protocol_handlers": {
     "title": "Standard-Apps",
     "description": "Legen Sie fest, ob E-Mail- und Kalender-Links in {appName} geöffnet werden. Technisch registriert sich {appName} dafür als Protokoll-Handler für mailto: und webcal:.",

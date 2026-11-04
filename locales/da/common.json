@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% af {total} brugt",
     "accessibility": "Tilgængelighed"
   },
+  "account_unread": {
+    "others": "Ulæste i andre konti: {count}",
+    "badge_all_accounts": {
+      "label": "Tæl ulæst post i alle konti",
+      "description": "Tallet på fanen, appikonet og i proceslinjen lægger indbakkerne for alle loggede-ind konti sammen."
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for permanent at fjerne alle beskeder."
+  },
   "protocol_handlers": {
     "title": "Standardapps",
     "description": "Vælg om e-mail- og kalenderlinks åbnes i {appName}. Teknisk set registrerer {appName} sig som protokolhåndtering for mailto:- og webcal:-links.",

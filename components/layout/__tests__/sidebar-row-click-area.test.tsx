@@ -72,14 +72,17 @@ describe.each([
   });
 });
 
-describe('folder row click area with the unread filter', () => {
-  it('filters to unread from the unread count without also opening the folder', () => {
+// Usability test 2026-11-04, mail-8: the count was a button of its own that
+// turned on an Unread filter and an "Inbox" search scope, both of which stayed
+// and broke later searches. It is part of the row now and opens the folder.
+describe('folder row click area on the unread count', () => {
+  it('opens the folder from the unread count', () => {
     useSettingsStore.setState({ interfaceLayout: 'default', hideAccountSwitcher: true, enableUnifiedMailbox: false } as never);
     const onMailboxSelect = vi.fn();
-    const onUnreadFilterClick = vi.fn();
-    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onMailboxSelect={onMailboxSelect} onUnreadFilterClick={onUnreadFilterClick} />);
-    fireEvent.click(row('receipts').querySelector('[data-testid="folder-counts"] button')!);
-    expect(onUnreadFilterClick).toHaveBeenCalledWith('receipts');
-    expect(onMailboxSelect).not.toHaveBeenCalled();
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onMailboxSelect={onMailboxSelect} />);
+    const counts = row('receipts').querySelector('[data-testid="folder-counts"]')!;
+    expect(counts.querySelector('button')).toBeNull();
+    fireEvent.click(counts.firstElementChild!);
+    expect(onMailboxSelect).toHaveBeenCalledWith('receipts');
   });
 });

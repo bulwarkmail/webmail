@@ -215,6 +215,14 @@
     "mv_storage_used": "Đã dùng {percent}% dung lượng {total}",
     "accessibility": "Hỗ trợ tiếp cận"
   },
+  "account_unread": {
+    "others": "Chưa đọc trong các tài khoản khác: {count}",
+    "badge_all_accounts": {
+      "label": "Đếm thư chưa đọc của mọi tài khoản",
+      "description": "Con số trên tab, biểu tượng ứng dụng và khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập."
+    },
+    "empty_hint": "Bạn có thể làm trống thư mục {folder} để xóa vĩnh viễn tất cả thư."
+  },
   "protocol_handlers": {
     "title": "Ứng dụng mặc định",
     "description": "Chọn xem các liên kết email và lịch có mở trong {appName} hay không. Về mặt kỹ thuật, {appName} đăng ký làm trình xử lý giao thức cho các liên kết mailto: và webcal:.",

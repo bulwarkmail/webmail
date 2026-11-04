@@ -348,7 +348,9 @@ describe('unread badge scope', () => {
     });
   });
 
-  // What mail-app's handleUnreadFilterClick does with the store.
+  // What a click on a folder's unread count used to do with the store. The
+  // count is plain text now (usability test 2026-11-04, mail-8); the store
+  // keeps the folder-following scope.
   async function clickUnreadBadge(mailboxId: string) {
     const store = useEmailStore.getState();
     store.selectMailbox(mailboxId);
@@ -399,6 +401,24 @@ describe('unread badge scope', () => {
     useEmailStore.getState().selectMailbox('sent');
 
     expect(useEmailStore.getState().searchMailboxId).toBe('owner-x:x-inbox');
+  });
+
+  // mail-8: the scope stayed on Inbox and a later search for mail in
+  // Archive found nothing.
+  it('drops the following scope when a new search is typed', async () => {
+    await clickUnreadBadge('inbox');
+    useEmailStore.getState().setSearchQuery('O');
+    useEmailStore.getState().setSearchQuery('Old conversation');
+
+    expect(useEmailStore.getState().searchMailboxId).toBe('');
+    expect(useEmailStore.getState().searchScopeFollowsFolder).toBe(false);
+  });
+
+  it('keeps a scope picked in the filter panel when a new search is typed', () => {
+    useEmailStore.getState().setSearchMailboxId('inbox');
+    useEmailStore.getState().setSearchQuery('Old conversation');
+
+    expect(useEmailStore.getState().searchMailboxId).toBe('inbox');
   });
 
   it('stops following once the filters are cleared', async () => {

@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % de {total} utilisés",
     "accessibility": "Accessibilité"
   },
+  "account_unread": {
+    "others": "Non lus dans les autres comptes : {count}",
+    "badge_all_accounts": {
+      "label": "Compter les messages non lus de tous les comptes",
+      "description": "Le nombre sur l'onglet, l'icône de l'application et la zone de notification additionne les boîtes de réception de tous les comptes connectés."
+    },
+    "empty_hint": "Vous pouvez vider le dossier {folder} pour supprimer définitivement tous les messages."
+  },
   "protocol_handlers": {
     "title": "Applications par défaut",
     "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}. Techniquement, {appName} s'enregistre comme gestionnaire de protocole pour les liens mailto: et webcal:.",

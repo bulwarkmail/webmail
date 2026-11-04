@@ -70,6 +70,8 @@ describe('searchAcrossAccounts', () => {
 
     expect(byId['own-1']).toMatchObject({
       accountId: 'login', sourceClientAccountId: 'login', sourceAccountId: 'me', sourceFolder: 'Inbox',
+      // The role lets the chip say the sidebar's name (usability test 2026-11-04, mail-14).
+      sourceFolderRole: 'inbox',
     });
     expect(byId['grp-1']).toMatchObject({
       accountId: 'group', accountLabel: 'Team', sourceClientAccountId: 'login', sourceAccountId: 'group',

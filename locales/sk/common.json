@@ -215,6 +215,14 @@
     "mv_storage_used": "Využité {percent} % z {total}",
     "accessibility": "Prístupnosť"
   },
+  "account_unread": {
+    "others": "Neprečítané v ostatných účtoch: {count}",
+    "badge_all_accounts": {
+      "label": "Počítať neprečítanú poštu vo všetkých účtoch",
+      "description": "Číslo na karte, na ikone aplikácie a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov."
+    },
+    "empty_hint": "Môžete vyprázdniť priečinok {folder} a natrvalo odstrániť všetky správy."
+  },
   "protocol_handlers": {
     "title": "Predvolené aplikácie",
     "description": "Vyberte, či sa e-mailové a kalendárové odkazy otvárajú v aplikácii {appName}. {appName} sa registruje ako obslužná aplikácia protokolu pre odkazy mailto: a webcal:.",

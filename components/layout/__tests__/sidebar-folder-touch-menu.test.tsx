@@ -68,19 +68,18 @@ describe('folder list from the keyboard', () => {
   it('has no button inside another button', () => {
     useSettingsStore.setState({ hideAccountSwitcher: true } as never);
     const withUnread = mailboxes.map((m) => ({ ...m, unreadEmails: 3, totalEmails: 5 }) as Mailbox);
-    const { container } = render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onUnreadFilterClick={() => {}} onCreateFolder={() => {}} />);
+    const { container } = render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onCreateFolder={() => {}} />);
     expect(container.querySelectorAll('button button, button [role="button"]')).toHaveLength(0);
   });
 
-  it('keeps a one-digit unread count next to the total in its 24px target', () => {
+  // The count is text now (mail-8): the row's button is the keyboard target.
+  it('keeps the unread count out of the tab order', () => {
     useSettingsStore.setState({ hideAccountSwitcher: true } as never);
     const withUnread = mailboxes.map((m) => ({ ...m, unreadEmails: 4, totalEmails: 7 }) as Mailbox);
-    render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onUnreadFilterClick={() => {}} />);
-    const unread = row('travel').querySelector<HTMLElement>('[data-testid="folder-counts"] button')!;
-    expect(unread.textContent).toBe('4');
-    expect(unread.className).toContain('min-w-6');
-    expect(unread.className).toContain('justify-end');
-    expect(unread.className).not.toContain('justify-center');
+    render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" />);
+    const counts = row('travel').querySelector<HTMLElement>('[data-testid="folder-counts"]')!;
+    expect(counts.textContent).toContain('4');
+    expect(counts.querySelector('button, [tabindex]')).toBeNull();
   });
 });
 

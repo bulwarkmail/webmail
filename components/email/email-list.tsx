@@ -33,6 +33,8 @@ import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
+import { useIsDesktop } from "@/hooks/use-media-query";
+import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
@@ -43,6 +45,7 @@ import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEm
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
@@ -196,7 +199,10 @@ export function EmailList({
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
   const tListExtra = useTranslations('mail_list_extra');
+  const tUnread = useTranslations('account_unread');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
+  const isDesktopPane = useIsDesktop();
+  const isEmbeddedList = useIsEmbedded();
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
@@ -1074,10 +1080,11 @@ export function EmailList({
   );
 
   // Room under the last row for the round Compose button, which would otherwise
-  // sit on that row's actions (Mountain View has no such button). A spacer and
+  // sit on that row's actions (Mountain View has no such button, and a desktop
+  // has Compose in the folder sidebar instead). A spacer and
   // not padding on the list: padding is a minimum height the list can't go
   // under, and on a short screen it pushed the rows over the tab bar.
-  const composeButtonRoom = !mountainViewList ? <div aria-hidden="true" className="h-20" /> : null;
+  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
 
   return (
     <TagDisplayContext.Provider value={tagDisplay}>
@@ -1212,7 +1219,8 @@ export function EmailList({
         <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{currentMailbox?.role === 'junk' ? t('empty_folder.junk_hint') : t('empty_folder.trash_hint')}</span>
+            {/* Named as in the sidebar ("Spam"), not by the server ("Junk"). */}
+            <span>{tUnread('empty_hint', { folder: localizeMailboxName(currentMailbox?.role, currentMailbox?.name ?? '', (k) => tSidebar(`mailboxes.${k}`)) })}</span>
           </div>
           <Button
             variant="outline"

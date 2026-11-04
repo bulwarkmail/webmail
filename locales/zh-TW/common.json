@@ -215,6 +215,14 @@
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
     "accessibility": "無障礙"
   },
+  "account_unread": {
+    "others": "其他帳號中的未讀郵件：{count}",
+    "badge_all_accounts": {
+      "label": "計算所有帳號的未讀郵件",
+      "description": "分頁、應用程式圖示和系統匣上的數字會合計所有已登入帳號的收件匣。"
+    },
+    "empty_hint": "您可以清空「{folder}」信件匣，永久刪除其中的所有郵件。"
+  },
   "protocol_handlers": {
     "title": "預設應用程式",
     "description": "選擇電子郵件與行事曆連結是否要在 {appName} 開啟。{appName} 會註冊為 mailto: 與 webcal: 連結的通訊協定處理常式。",

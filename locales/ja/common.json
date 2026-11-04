@@ -215,6 +215,14 @@
     "mv_storage_used": "{total} のうち {percent}% を使用中",
     "accessibility": "アクセシビリティ"
   },
+  "account_unread": {
+    "others": "他のアカウントの未読: {count}",
+    "badge_all_accounts": {
+      "label": "すべてのアカウントの未読を数える",
+      "description": "タブ、アプリのアイコン、通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。"
+    },
+    "empty_hint": "{folder}フォルダを空にして、すべてのメールを完全に削除できます。"
+  },
   "protocol_handlers": {
     "title": "既定のアプリ",
     "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選択します。技術的には、{appName} は mailto: と webcal: リンクのプロトコル ハンドラーとして登録されます。",

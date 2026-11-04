@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% de {total} utilizado",
     "accessibility": "Acessibilidade"
   },
+  "account_unread": {
+    "others": "Não lidas em outras contas: {count}",
+    "badge_all_accounts": {
+      "label": "Contar os e-mails não lidos de todas as contas",
+      "description": "O número na aba, no ícone do app e na bandeja do sistema soma as caixas de entrada de todas as contas conectadas."
+    },
+    "empty_hint": "Você pode esvaziar a pasta {folder} para remover permanentemente todas as mensagens."
+  },
   "protocol_handlers": {
     "title": "Aplicativos padrão",
     "description": "Escolha se links de e-mail e calendário devem abrir no {appName}. Tecnicamente, o {appName} se registra como manipulador de protocolo para links mailto: e webcal:.",

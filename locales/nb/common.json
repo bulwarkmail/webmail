@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % av {total} brukt",
     "accessibility": "Tilgjengelighet"
   },
+  "account_unread": {
+    "others": "Uleste i andre kontoer: {count}",
+    "badge_all_accounts": {
+      "label": "Tell ulest e-post i alle kontoer",
+      "description": "Tallet på fanen, appikonet og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer."
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for å fjerne alle meldinger permanent."
+  },
   "protocol_handlers": {
     "title": "Standardapper",
     "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}. Teknisk sett registrerer {appName} seg som protokollbehandler for mailto:- og webcal:-lenker.",
