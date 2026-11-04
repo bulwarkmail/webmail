@@ -72,6 +72,13 @@ interface CalendarWeekViewProps extends ScrollWindowViewProps {
 const MIN_HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MOBILE_COL_WIDTH = 120;
+/**
+ * A pane narrower than this shows three days a page, unless the user asked
+ * for the whole week: seven columns there turned overlapping events into
+ * 30px slivers (pim-p3-13).
+ */
+const COMPACT_WEEK_BELOW = 1000;
+const COMPACT_WEEK_DAYS = 3;
 const MIN_COL_WIDTH = 80;
 
 export function CalendarWeekView({
@@ -110,6 +117,7 @@ export function CalendarWeekView({
   revealAt,
 }: CalendarWeekViewProps) {
   const t = useTranslations("calendar");
+  const tCal = useTranslations("ux_p3_pim_cal");
   const paint = useCvdColor();
   const tintedEvents = useSettingsStore((s) => s.calendarTintedEvents);
   const describeError = useCalendarErrorMessage();
@@ -152,14 +160,21 @@ export function CalendarWeekView({
   }, [allDays, workingDays]);
   const colCount = days.length;
   const columnsPerWeek = shownIndexByDay && workingDays ? workingDays.size : 7;
+  const allDaysWhenNarrow = useSettingsStore((s) => s.calendarNarrowWeekAllDays);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  // A narrow pane (not a phone, which has its own strip): three days a page.
+  const narrowPane = !isMobile && viewportWidth > 0 && viewportWidth + gutterWidth < COMPACT_WEEK_BELOW;
+  const canCompact = narrowPane && columnsPerWeek > COMPACT_WEEK_DAYS;
+  const compact = canCompact && !allDaysWhenNarrow;
+  const columnsPerPage = compact ? COMPACT_WEEK_DAYS : columnsPerWeek;
 
   const measureColWidth = useCallback((root: HTMLElement | null) => {
     if (isMobile || !root) return MOBILE_COL_WIDTH;
+    const perPage = !allDaysWhenNarrow && root.clientWidth < COMPACT_WEEK_BELOW && columnsPerWeek > COMPACT_WEEK_DAYS ? COMPACT_WEEK_DAYS : columnsPerWeek;
     // Not rounded down: the pixels left over showed a sliver of next Monday at the edge.
-    return Math.max(MIN_COL_WIDTH, (root.clientWidth - gutterWidth) / columnsPerWeek);
-  }, [isMobile, gutterWidth, columnsPerWeek]);
+    return Math.max(MIN_COL_WIDTH, (root.clientWidth - gutterWidth) / perPage);
+  }, [isMobile, gutterWidth, columnsPerWeek, allDaysWhenNarrow]);
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
-  const [viewportWidth, setViewportWidth] = useState(0);
   // First day in view, reported by the scroll handler below (#1293)
   const [visibleDayKey, setVisibleDayKey] = useState<string | null>(null);
   useLayoutEffect(() => {
@@ -295,10 +310,10 @@ export function CalendarWeekView({
   const visibleStartIndex = useMemo(() => {
     const tracked = visibleDayKey ? days.findIndex((d) => dayKey(d) === visibleDayKey) : -1;
     if (tracked >= 0) return tracked;
-    const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
+    const target = isMobile || compact ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
     return indexOfDayOnOrAfter(days, target);
-  }, [visibleDayKey, days, isMobile, focus.date, weekStart]);
-  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : columnsPerWeek;
+  }, [visibleDayKey, days, isMobile, compact, focus.date, weekStart]);
+  const visibleColumns = isMobile ? Math.max(1, Math.ceil(viewportWidth / colWidth)) : columnsPerPage;
 
   // Max combined rows (events + tasks) across the visible days
   const maxContentRows = useMemo(() => {
@@ -328,9 +343,10 @@ export function CalendarWeekView({
   const scrollToFocus = useCallback(() => {
     const root = rootRef.current;
     if (!root) return;
-    const target = isMobile ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
+    // Three days a page start at the focused day, as on a phone.
+    const target = isMobile || compact ? focus.date : startOfWeek(focus.date, { weekStartsOn: weekStart });
     setScrollStart(root, "horizontal", indexOfDayOnOrAfter(days, target) * colWidth);
-  }, [focus.date, isMobile, weekStart, days, colWidth]);
+  }, [focus.date, isMobile, compact, weekStart, days, colWidth]);
 
   useScrollWindow({
     scrollRef: rootRef,
@@ -471,7 +487,20 @@ export function CalendarWeekView({
           row and an hours row, each with one cell per day. The events sit in
           their day's cell, so a screen reader reads them under the date. */}
       <div className="flex border-b border-border" role="row">
-        <div role="gridcell" className={cn(gutterClass, "flex items-end justify-center pb-1")}>
+        <div role="gridcell" className={cn(gutterClass, "flex flex-col items-center justify-end gap-1 pb-1")}>
+          {canCompact ? (
+            <button
+              type="button"
+              data-week-days-toggle
+              onClick={() => useSettingsStore.getState().updateSetting("calendarNarrowWeekAllDays", !allDaysWhenNarrow)}
+              aria-pressed={!compact}
+              aria-label={tCal("week_all_days")}
+              title={tCal("week_all_days")}
+              className={cn("rounded-xs px-1 text-[0.625rem] font-medium hover:bg-muted hover:text-foreground", compact ? "text-muted-foreground" : "bg-muted text-foreground")}
+            >
+              {tCal("week_days_short", { count: columnsPerWeek })}
+            </button>
+          ) : null}
           {canToggleHours && (
             <AllHoursToggle
               showAllHours={showAllHours}
