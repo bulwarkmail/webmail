@@ -8,6 +8,7 @@ import {
   getTimeZoneOffsetMs,
   toDisplayDate,
   toZonedDisplayDate,
+  type WallClock,
 } from "@/lib/timezone";
 
 /**
@@ -57,6 +58,45 @@ export function zoneWallToDisplay(wall: Date, zone: string | null): Date {
     minute: wall.getMinutes(),
     second: wall.getSeconds(),
   }, zone));
+}
+
+/**
+ * The form's "yyyy-MM-dd" and "HH:mm" as clock fields. Not through a Date: in
+ * the browser's own zone a time in its daylight-saving gap (02:30 on the
+ * last Sunday of March in Berlin) would move an hour, though it exists in
+ * the event's zone.
+ */
+export function wallFields(date: string, time: string): WallClock {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return { year, month, day, hour: hour || 0, minute: minute || 0, second: 0 };
+}
+
+/** The clock fields `ms` later, by the clock. */
+export function addToWall(w: WallClock, ms: number): WallClock {
+  const d = new Date(Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute, w.second) + ms);
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds() };
+}
+
+/** Clock fields compared as a clock reads them: negative, 0 or positive. */
+export function compareWall(a: WallClock, b: WallClock): number {
+  return Date.UTC(a.year, a.month - 1, a.day, a.hour, a.minute, a.second) - Date.UTC(b.year, b.month - 1, b.day, b.hour, b.minute, b.second);
+}
+
+/** The display date at which the clock in `zone` reads `w` (zoneWallToDisplay, from fields). */
+export function zoneFieldsToDisplay(w: WallClock, zone: string | null): Date {
+  if (!zone || zone === getEffectiveTimeZone()) return new Date(w.year, w.month - 1, w.day, w.hour, w.minute, w.second);
+  return toDisplayDate(fromWallClock(w, zone));
+}
+
+/**
+ * The time from `a` to `b` on the clock in `zone`, as an event's duration
+ * counts it: exact time, so 01:00-04:00 in New York on the night the clocks
+ * go forward lasts two hours. A floating event (no zone) counts by the clock.
+ */
+export function zoneWallDurationMs(a: WallClock, b: WallClock, zone: string | null): number {
+  if (!zone) return compareWall(b, a);
+  return fromWallClock(b, zone).getTime() - fromWallClock(a, zone).getTime();
 }
 
 /** "America/New_York" as people say it: "New York". */

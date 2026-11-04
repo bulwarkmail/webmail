@@ -20,7 +20,7 @@ import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from
 import { parseDuration, getEventColor } from "./event-card";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, listTimeZones, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
-import { displayToZoneWall, eventFormTimeZone, eventZonedTimes, timeZoneCity, zonedTimesText, zoneWallToDisplay } from "@/lib/event-time-zone";
+import { addToWall, compareWall, displayToZoneWall, eventFormTimeZone, eventZonedTimes, timeZoneCity, wallFields, zonedTimesText, zoneFieldsToDisplay, zoneWallDurationMs, zoneWallToDisplay } from "@/lib/event-time-zone";
 import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule";
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
@@ -796,6 +796,7 @@ export function EventModal({
     let duration: string;
     // The last day of an all-day event, the end of a timed one.
     let end: Date;
+    let timedWhen: { start: Date; end: Date } | undefined;
 
     if (allDay) {
       let inclusiveEnd = new Date(`${endDate}T00:00:00`);
@@ -805,25 +806,30 @@ export function EventModal({
       duration = buildAllDayDuration(start, inclusiveEnd);
       end = inclusiveEnd;
     } else {
-      const endStr = `${endDate}T${endTime}:00`;
-      end = new Date(endStr);
+      // Clock fields, not Dates: see wallFields.
+      const startWall = wallFields(startDate, startTime);
+      let endWall = wallFields(endDate, endTime);
       // An end at or before the start becomes an hour - but an event that
       // lasts no time (a deadline, a reminder) keeps doing so.
       const lastedNoTime = !!event && !event.showWithoutTime
         && getEventEndDate(event).getTime() === getEventStartDate(event).getTime();
-      if (end < start || (end.getTime() === start.getTime() && !lastedNoTime)) {
-        end = new Date(start.getTime() + 3600000);
+      const order = compareWall(endWall, startWall);
+      if (order < 0 || (order === 0 && !lastedNoTime)) {
+        endWall = addToWall(startWall, 3600000);
       }
-      duration = buildDuration(start, end);
+      // Exact time in the event's zone, not the browser's.
+      duration = buildDuration(new Date(0), new Date(Math.max(0, zoneWallDurationMs(startWall, endWall, timeZone))));
+      // The fields are the wall clock in the form's zone: the event's own, so
+      // an edit keeps it, or the one the user picked.
+      end = zoneFieldsToDisplay(endWall, timeZone);
+      timedWhen = { start: zoneFieldsToDisplay(startWall, timeZone), end };
     }
 
-    // The fields are the wall clock in the form's zone: the event's own, so
-    // an edit keeps it, or the one the user picked. The editor state below
-    // is in display dates, as the rest of the calendar.
+    // The editor state below is in display dates, as the rest of the calendar.
     const when = {
       allDay,
-      start: allDay ? start : zoneWallToDisplay(start, timeZone),
-      end: allDay ? end : zoneWallToDisplay(end, timeZone),
+      start: allDay ? start : timedWhen!.start,
+      end: allDay ? end : timedWhen!.end,
     };
     const timeZoneChanged = !!event && !allDay && timeZone !== initialForm.timeZone;
 

@@ -72,6 +72,30 @@ describe('the event editor keeps the event in its own time zone (pim-2)', () => 
     expect(state.timeZoneChanged).toBeUndefined();
   });
 
+  // Review of pim-2: the duration and the editor state came from Dates in the
+  // browser's zone. 01:00-04:00 in New York on the night its clocks go
+  // forward lasts two hours, not three; and 02:30 exists in New York on the
+  // night Berlin's clocks go forward, where a browser Date moved it to 03:30.
+  it("counts the duration on the event's clock across its daylight-saving switch", async () => {
+    const onSave = editor({ ...newYork, start: '2026-03-08T01:00:00', duration: 'PT2H', utcStart: '2026-03-08T06:00:00Z', utcEnd: '2026-03-08T08:00:00Z' } as CalendarEvent);
+    expect(field('form.end_time').value).toBe('04:00');
+    fireEvent.change(field('form.title'), { target: { value: 'Night shift handover' } });
+    const { data } = await save(onSave);
+    expect(data).toMatchObject({ start: '2026-03-08T01:00:00', timeZone: 'America/New_York', duration: 'PT2H' });
+  });
+
+  it("keeps a time that falls in the browser's daylight-saving gap", async () => {
+    const onSave = editor(newYork);
+    fireEvent.change(field('form.start_date'), { target: { value: '2026-03-29' } });
+    fireEvent.change(field('form.end_date'), { target: { value: '2026-03-29' } });
+    fireEvent.change(field('form.start_time'), { target: { value: '02:30' } });
+    fireEvent.change(field('form.end_time'), { target: { value: '03:30' } });
+    const { data, state } = await save(onSave);
+    expect(data).toMatchObject({ start: '2026-03-29T02:30:00', duration: 'PT1H' });
+    // 02:30 in New York (UTC-4 since 8 March) is 06:30 UTC.
+    expect(fromDisplayDate(state.when.start).toISOString()).toBe('2026-03-29T06:30:00.000Z');
+  });
+
   it('moves the event on its own clock', async () => {
     const onSave = editor(newYork);
     fireEvent.change(field('form.start_time'), { target: { value: '12:00' } });
