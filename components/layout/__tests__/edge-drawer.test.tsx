@@ -33,6 +33,18 @@ describe('EdgeDrawer', () => {
     expect(document.activeElement).toBe(menu);
   });
 
+  // Seen in the desktop app: with visibility in the opening transition the
+  // panel is still hidden in its first frame and refuses the focus.
+  it('is visible from its first frame when it opens, and hidden only after sliding out', () => {
+    render(<Harness />);
+    const classes = () => screen.getByTestId('drawer').className.split(/\s+/);
+    expect(classes()).toContain('transition-[transform,visibility]');
+    fireEvent.click(screen.getByText('menu'));
+    expect(classes()).toContain('transition-transform');
+    expect(classes()).not.toContain('transition-[transform,visibility]');
+    expect(classes()).not.toContain('invisible');
+  });
+
   it('leaves the focus where a pick moved it, outside the drawer', () => {
     render(<Harness onPickFocus={() => screen.getByLabelText('elsewhere').focus()} />);
     const menu = screen.getByText('menu');

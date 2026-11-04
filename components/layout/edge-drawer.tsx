@@ -61,8 +61,11 @@ export function EdgeDrawer({ open, onClose, contained, returnFocus, className, c
         className={cn(
           "z-50 w-72 max-w-[85%] flex flex-col",
           contained ? "absolute inset-y-0 start-0" : "fixed start-0 top-[var(--drawer-top)] bottom-0",
-          "transform transition-[transform,visibility] duration-300 ease-in-out",
-          open ? "shadow-xl" : "invisible -translate-x-full rtl:translate-x-full",
+          "transform duration-300 ease-in-out",
+          // Visible at once on opening, so the focus can go in straight away
+          // (a visibility transition keeps it hidden for that first frame);
+          // hidden only once it has slid out on closing.
+          open ? "shadow-xl transition-transform" : "invisible -translate-x-full rtl:translate-x-full transition-[transform,visibility]",
           className
         )}
       >
