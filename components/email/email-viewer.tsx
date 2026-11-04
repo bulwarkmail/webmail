@@ -1670,7 +1670,13 @@ export function EmailViewer({
   }, [onRescheduleScheduled, t, tComposer, scheduledSendAt, timeFormat]);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { startTour } = useTour();
-  const [showFullHeaders, setShowFullHeaders] = useState(false);
+  // The details panel belongs to the message it was opened on: the next
+  // message opens without it (mail-7).
+  const shownEmailId = email?.id ?? null;
+  const [details, setDetails] = useState<{ emailId: string | null; open: boolean }>({ emailId: shownEmailId, open: false });
+  if (details.emailId !== shownEmailId) setDetails({ emailId: shownEmailId, open: false });
+  const showFullHeaders = details.open && details.emailId === shownEmailId;
+  const setShowFullHeaders = (open: boolean) => setDetails({ emailId: shownEmailId, open });
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
   const [allowExternalContent, setAllowExternalContent] = useState(false);
@@ -5516,8 +5522,10 @@ ${printWatermark ? printWatermark.html : ''}
           };
           const replyToDifferent = !!email.replyTo?.length &&
             (!email.from || email.replyTo[0].email !== email.from[0]?.email);
+          // Received before it was sent means a wrong clock somewhere, not a
+          // delivery time (mail-29).
           const deliveryDeltaMs = email.sentAt && email.receivedAt
-            ? Math.abs(new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime())
+            ? new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime()
             : 0;
           const formatDelta = (diff: number) => {
             const minutes = Math.floor(diff / 60000);
