@@ -198,8 +198,8 @@ describe('the selection view', () => {
   it('leaves no button alone on a line in a narrow pane', () => {
     // Nine buttons, room for three a line: three even lines, not 3 + 3 + 2 + 1.
     expect(lineLengths(560)).toEqual([3, 3, 3]);
-    // Room for two: a column, rather than one left over.
-    expect(lineLengths(360).every((n) => n === 1)).toBe(true);
+    // Room for two: pairs, and More actions across the width at the end.
+    expect(lineLengths(360)).toEqual([2, 2, 2, 2, 1]);
   });
 });
 

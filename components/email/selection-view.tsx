@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { cloneElement, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, MoreHorizontal, CheckSquare } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,17 @@ const GAP = 8;
 
 /**
  * How many buttons go on each line: as few lines as the width allows, and the lines as
- * even as they can be, so no button is left alone on the last one. With room for one
- * button a line, or no way to avoid a single one, it's one column.
+ * even as they can be, so no button is left alone at the end of a ragged wrap. With room
+ * for two a line and an odd count, the last one (More actions) gets a line of its own
+ * across the full width; with room for one, it's a column.
  */
 export function selectionRows(count: number, perLine: number): number[] {
   if (count <= 0) return [];
   const most = Math.max(1, Math.min(perLine, count));
+  if (most === 1) return Array.from({ length: count }, () => 1);
   const lines = Math.ceil(count / most);
   const base = Math.floor(count / lines);
-  if (lines > 1 && base < 2) return Array.from({ length: count }, () => 1);
+  if (lines > 1 && base < 2) return [...Array.from({ length: Math.floor(count / 2) }, () => 2), 1];
   const longer = count % lines;
   return Array.from({ length: lines }, (_, i) => base + (i < longer ? 1 : 0));
 }
@@ -191,7 +193,8 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
   const rows = lines.map((length) => {
     const row = all.slice(at, at + length);
     at += length;
-    return row;
+    // A line of one under lines of two spans the width.
+    return length === 1 && widest > 1 ? row.map((el) => cloneElement(el, { style: { width: "100%" } })) : row;
   });
 
   return (
