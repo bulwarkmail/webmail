@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Stránka {page} z {pages} nebo více} other {Stránka {page} z {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Vybrána # konverzace} few {Vybrány # konverzace} many {Vybráno # konverzace} other {Vybráno # konverzací}}",
+    "search_count": "{conversations, plural, one {# konverzace} few {# konverzace} many {# konverzace} other {# konverzací}} ({messages, plural, one {# zpráva} few {# zprávy} many {# zprávy} other {# zpráv}})",
+    "conversation_count": "{count, plural, one {# konverzace} few {# konverzace} many {# konverzace} other {# konverzací}}",
+    "archived": "Archivováno",
+    "moved_to_trash": "Přesunuto do koše",
+    "moved_to": "Přesunuto do složky {mailbox}",
+    "moved_count_to": "{count, plural, one {# zpráva přesunuta do složky {mailbox}} few {# zprávy přesunuty do složky {mailbox}} many {# zprávy přesunuto do složky {mailbox}} other {# zpráv přesunuto do složky {mailbox}}}",
+    "new_folder_title": "Nová složka",
+    "new_subfolder_title": "Nová podsložka"
+  },
   "shared_tags": {
     "title": "Sdílené štítky",
     "description": "Štítky vašich skupinových schránek. Všichni ve skupině vidí u její pošty stejné názvy a barvy.",

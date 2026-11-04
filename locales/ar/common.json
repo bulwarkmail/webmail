@@ -411,6 +411,17 @@
       "position": "{more, select, yes {الصفحة {page} من {pages} أو أكثر} other {الصفحة {page} من {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {تم تحديد محادثة واحدة} two {تم تحديد محادثتين} few {تم تحديد # محادثات} many {تم تحديد # محادثة} other {تم تحديد # محادثة}}",
+    "search_count": "{conversations, plural, one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}} ({messages, plural, one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}})",
+    "conversation_count": "{count, plural, one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}}",
+    "archived": "تمت الأرشفة",
+    "moved_to_trash": "تم النقل إلى المهملات",
+    "moved_to": "تم النقل إلى {mailbox}",
+    "moved_count_to": "{count, plural, one {تم نقل رسالة واحدة إلى {mailbox}} other {تم نقل # رسالة إلى {mailbox}}}",
+    "new_folder_title": "مجلد جديد",
+    "new_subfolder_title": "مجلد فرعي جديد"
+  },
   "shared_tags": {
     "title": "الوسوم المشتركة",
     "description": "وسوم صناديق البريد الجماعية الخاصة بك. يرى كل من في المجموعة الأسماء والألوان نفسها على رسائلها.",

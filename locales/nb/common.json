@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Side {page} av {pages} eller flere} other {Side {page} av {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# samtale valgt} other {# samtaler valgt}}",
+    "search_count": "{conversations, plural, one {# samtale} other {# samtaler}} ({messages, plural, one {# melding} other {# meldinger}})",
+    "conversation_count": "{count, plural, one {# samtale} other {# samtaler}}",
+    "archived": "Arkivert",
+    "moved_to_trash": "Flyttet til papirkurven",
+    "moved_to": "Flyttet til {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-post flyttet til {mailbox}} other {# e-poster flyttet til {mailbox}}}",
+    "new_folder_title": "Ny mappe",
+    "new_subfolder_title": "Ny undermappe"
+  },
   "shared_tags": {
     "title": "Delte etiketter",
     "description": "Etiketter i gruppepostkassene dine. Alle i gruppen ser de samme navnene og fargene på e-posten der.",

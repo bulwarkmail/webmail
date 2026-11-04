@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Page {page} of {pages} or more} other {Page {page} of {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversation selected} other {# conversations selected}}",
+    "search_count": "{conversations, plural, one {# conversation} other {# conversations}} ({messages, plural, one {# message} other {# messages}})",
+    "conversation_count": "{count, plural, one {# conversation} other {# conversations}}",
+    "archived": "Archived",
+    "moved_to_trash": "Moved to Trash",
+    "moved_to": "Moved to {mailbox}",
+    "moved_count_to": "{count, plural, one {# email moved to {mailbox}} other {# emails moved to {mailbox}}}",
+    "new_folder_title": "New folder",
+    "new_subfolder_title": "New subfolder"
+  },
   "shared_tags": {
     "title": "Shared tags",
     "description": "Tags of your group mailboxes. Everyone in the group sees the same names and colors on its mail.",

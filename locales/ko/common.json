@@ -411,6 +411,17 @@
       "position": "{more, select, yes {{pages}페이지 이상 중 {page}페이지} other {{pages}페이지 중 {page}페이지}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {대화 #개 선택됨}}",
+    "search_count": "{conversations, plural, other {대화 #개}} ({messages, plural, other {메시지 #개}})",
+    "conversation_count": "{count, plural, other {대화 #개}}",
+    "archived": "보관했어요",
+    "moved_to_trash": "휴지통으로 이동했어요",
+    "moved_to": "{mailbox}함으로 이동되었어요",
+    "moved_count_to": "{count, plural, other {메일 #개를 {mailbox}(으)로 이동했어요}}",
+    "new_folder_title": "새 폴더",
+    "new_subfolder_title": "새 하위 폴더"
+  },
   "shared_tags": {
     "title": "공유 태그",
     "description": "그룹 사서함의 태그예요. 그룹의 모든 사람이 해당 메일에서 같은 이름과 색상을 봐요.",

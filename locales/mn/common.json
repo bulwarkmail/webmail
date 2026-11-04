@@ -411,6 +411,17 @@
       "position": "{more, select, yes {{pages} буюу түүнээс олон хуудасны {page}-р хуудас} other {{pages} хуудасны {page}-р хуудас}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# харилцан яриа сонгосон} other {# харилцан яриа сонгосон}}",
+    "search_count": "{conversations, plural, one {# харилцан яриа} other {# харилцан яриа}} ({messages, plural, one {# зурвас} other {# зурвас}})",
+    "conversation_count": "{count, plural, one {# харилцан яриа} other {# харилцан яриа}}",
+    "archived": "Архивласан",
+    "moved_to_trash": "Хогийн сав руу зөөсөн",
+    "moved_to": "{mailbox} руу зөөсөн",
+    "moved_count_to": "{count, plural, one {# имэйлийг {mailbox} руу зөөсөн} other {# имэйлийг {mailbox} руу зөөсөн}}",
+    "new_folder_title": "Шинэ хавтас",
+    "new_subfolder_title": "Шинэ дэд хавтас"
+  },
   "shared_tags": {
     "title": "Хуваалцсан тагууд",
     "description": "Таны бүлгийн шуудангийн хайрцгуудын тагууд. Бүлгийн бүх гишүүн түүний захидлууд дээр ижил нэр, өнгийг хардаг.",

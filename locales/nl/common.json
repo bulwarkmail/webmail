@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Pagina {page} van {pages} of meer} other {Pagina {page} van {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# gesprek geselecteerd} other {# gesprekken geselecteerd}}",
+    "search_count": "{conversations, plural, one {# gesprek} other {# gesprekken}} ({messages, plural, one {# bericht} other {# berichten}})",
+    "conversation_count": "{count, plural, one {# gesprek} other {# gesprekken}}",
+    "archived": "Gearchiveerd",
+    "moved_to_trash": "Naar de prullenbak verplaatst",
+    "moved_to": "Verplaatst naar {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail verplaatst naar {mailbox}} other {# e-mails verplaatst naar {mailbox}}}",
+    "new_folder_title": "Nieuwe map",
+    "new_subfolder_title": "Nieuwe submap"
+  },
   "shared_tags": {
     "title": "Gedeelde labels",
     "description": "Labels van je groepspostvakken. Iedereen in de groep ziet dezelfde namen en kleuren bij de e-mail ervan.",

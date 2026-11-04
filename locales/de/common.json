@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Seite {page} von {pages} oder mehr} other {Seite {page} von {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# Unterhaltung ausgewählt} other {# Unterhaltungen ausgewählt}}",
+    "search_count": "{conversations, plural, one {# Unterhaltung} other {# Unterhaltungen}} ({messages, plural, one {# Nachricht} other {# Nachrichten}})",
+    "conversation_count": "{count, plural, one {# Unterhaltung} other {# Unterhaltungen}}",
+    "archived": "Archiviert",
+    "moved_to_trash": "In den Papierkorb verschoben",
+    "moved_to": "Nach {mailbox} verschoben",
+    "moved_count_to": "{count, plural, one {# E-Mail nach {mailbox} verschoben} other {# E-Mails nach {mailbox} verschoben}}",
+    "new_folder_title": "Neuer Ordner",
+    "new_subfolder_title": "Neuer Unterordner"
+  },
   "shared_tags": {
     "title": "Geteilte Labels",
     "description": "Labels Ihrer Gruppenpostfächer. Alle in der Gruppe sehen dieselben Namen und Farben an ihren Nachrichten.",

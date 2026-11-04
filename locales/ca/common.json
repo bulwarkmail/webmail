@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Pàgina {page} de {pages} o més} other {Pàgina {page} de {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversa seleccionada} other {# converses seleccionades}}",
+    "search_count": "{conversations, plural, one {# conversa} other {# converses}} ({messages, plural, one {# missatge} other {# missatges}})",
+    "conversation_count": "{count, plural, one {# conversa} other {# converses}}",
+    "archived": "Arxivat",
+    "moved_to_trash": "S'ha mogut a la Paperera",
+    "moved_to": "Mogut a {mailbox}",
+    "moved_count_to": "{count, plural, one {# correu mogut a {mailbox}} other {# correus moguts a {mailbox}}}",
+    "new_folder_title": "Carpeta nova",
+    "new_subfolder_title": "Subcarpeta nova"
+  },
   "shared_tags": {
     "title": "Etiquetes compartides",
     "description": "Etiquetes de les vostres bústies de grup. Tothom del grup veu els mateixos noms i colors al seu correu.",

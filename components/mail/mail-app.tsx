@@ -139,6 +139,7 @@ import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-iden
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog } from "@/components/email/move-to-dialog";
+import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
@@ -5701,9 +5702,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
             {(searchQuery || !isFilterEmpty(searchFilters)) && !activeIsLoading && !isScheduledView && (
               <div className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-muted/20">
-                {activeHasMore
-                  ? t("advanced_search.results_found_more", { count: activeEmails.length })
-                  : t("advanced_search.results_found", { count: activeEmails.length })}
+                <SearchResultCount emails={activeEmails} hasMore={activeHasMore} />
               </div>
             )}
 

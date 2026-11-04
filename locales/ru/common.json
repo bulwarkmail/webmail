@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Страница {page} из {pages} или больше} other {Страница {page} из {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Выбрана # беседа} few {Выбрано # беседы} many {Выбрано # бесед} other {Выбрано # беседы}}",
+    "search_count": "{conversations, plural, one {# беседа} few {# беседы} many {# бесед} other {# беседы}} ({messages, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}})",
+    "conversation_count": "{count, plural, one {# беседа} few {# беседы} many {# бесед} other {# беседы}}",
+    "archived": "Перемещено в архив",
+    "moved_to_trash": "Перемещено в корзину",
+    "moved_to": "Перемещено в {mailbox}",
+    "moved_count_to": "{count, plural, one {# письмо перемещено в {mailbox}} few {# письма перемещены в {mailbox}} many {# писем перемещено в {mailbox}} other {# письма перемещено в {mailbox}}}",
+    "new_folder_title": "Новая папка",
+    "new_subfolder_title": "Новая вложенная папка"
+  },
   "shared_tags": {
     "title": "Общие теги",
     "description": "Теги ваших групповых ящиков. Все в группе видят одинаковые названия и цвета у её писем.",

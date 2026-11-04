@@ -411,6 +411,17 @@
       "position": "{more, select, yes {{page}. lapa no {pages} vai vairāk} other {{page}. lapa no {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, zero {Atlasītas # sarunas} one {Atlasīta # saruna} other {Atlasītas # sarunas}}",
+    "search_count": "{conversations, plural, zero {# sarunas} one {# saruna} other {# sarunas}} ({messages, plural, zero {# ziņojumu} one {# ziņojums} other {# ziņojumi}})",
+    "conversation_count": "{count, plural, zero {# sarunas} one {# saruna} other {# sarunas}}",
+    "archived": "Arhivēts",
+    "moved_to_trash": "Pārvietots uz atkritni",
+    "moved_to": "Pārvietots uz {mailbox}",
+    "moved_count_to": "{count, plural, zero {# vēstules pārvietotas uz {mailbox}} one {# vēstule pārvietota uz {mailbox}} other {# vēstules pārvietotas uz {mailbox}}}",
+    "new_folder_title": "Jauna mape",
+    "new_subfolder_title": "Jauna apakšmape"
+  },
   "shared_tags": {
     "title": "Kopīgotie tagi",
     "description": "Jūsu grupu pastkastu tagi. Visi grupā redz vienādus nosaukumus un krāsas pie tās vēstulēm.",

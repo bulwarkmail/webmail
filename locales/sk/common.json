@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Strana {page} z {pages} alebo viac} other {Strana {page} z {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Vybraná # konverzácia} few {Vybrané # konverzácie} many {Vybraných # konverzácií} other {Vybraných # konverzácií}}",
+    "search_count": "{conversations, plural, one {# konverzácia} few {# konverzácie} many {# konverzácií} other {# konverzácií}} ({messages, plural, one {# správa} few {# správy} many {# správ} other {# správ}})",
+    "conversation_count": "{count, plural, one {# konverzácia} few {# konverzácie} many {# konverzácií} other {# konverzácií}}",
+    "archived": "Archivované",
+    "moved_to_trash": "Presunuté do koša",
+    "moved_to": "Presunuté do {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail presunutý do {mailbox}} few {# e-maily presunuté do {mailbox}} many {# e-mailov presunutých do {mailbox}} other {# e-mailov presunutých do {mailbox}}}",
+    "new_folder_title": "Nový priečinok",
+    "new_subfolder_title": "Nový podpriečinok"
+  },
   "shared_tags": {
     "title": "Zdieľané štítky",
     "description": "Štítky vašich skupinových schránok. Všetci v skupine vidia pri jej pošte rovnaké názvy a farby.",
