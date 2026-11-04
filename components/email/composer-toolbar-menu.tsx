@@ -1,5 +1,6 @@
 "use client";
 
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, CONTEXT_MENU_ITEM_CLASS } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -112,17 +113,11 @@ export function ComposerToolbarMenuCheckItem({ checked, onToggle, description, t
       data-testid={testId}
       className={cn(CONTEXT_MENU_ITEM_CLASS, "items-start")}
     >
-      <span
-        className={cn(
-          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
-          checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50"
-        )}
-        aria-hidden="true"
-      >
-        {checked && <Check className="w-3 h-3" />}
+      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden="true">
+        {checked && <Check className="w-4 h-4" />}
       </span>
       <span className="flex-1">
-        <span className="block">{children}</span>
+        <span className="block" data-menu-label="">{children}</span>
         {description && <span className="block text-xs text-muted-foreground">{description}</span>}
       </span>
     </button>
@@ -147,16 +142,10 @@ export function ComposerToolbarMenuRadioItem({ checked, onSelect, testId, childr
       data-testid={testId}
       className={CONTEXT_MENU_ITEM_CLASS}
     >
-      <span
-        className={cn(
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-          checked ? "border-primary" : "border-muted-foreground/50"
-        )}
-        aria-hidden="true"
-      >
-        {checked && <span className="h-2 w-2 rounded-full bg-primary" />}
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden="true">
+        {checked && <Check className="w-4 h-4" />}
       </span>
-      <span className="flex-1">{children}</span>
+      <span className="flex-1" data-menu-label="">{children}</span>
     </button>
   );
 }
@@ -192,7 +181,7 @@ export function ComposerPluginToolbarButtons({ surface, context, alwaysVisible =
     <>
       {actions.map((action) => {
         const Icon = iconForName(action.icon) ?? Puzzle;
-        const tip = action.shortcut ? `${action.label} (${action.shortcut})` : action.label;
+        const tip = action.shortcut ? `${action.label} (${formatShortcutCombo(action.shortcut)})` : action.label;
         return (
           <Button
             key={`${action.pluginId}:${action.id}`}

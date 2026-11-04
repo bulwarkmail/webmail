@@ -6682,7 +6682,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       void handleCompose();
                     }}
                     emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
-                      ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
+                      ? <div ref={setSelectionPaneHost} className="m-auto w-full p-8" />
                       : openFailure && !isLoadingEmail
                         ? <ReaderOpenFailure offline={openFailure.offline} onRetry={() => void handleEmailSelect(openFailure.target)} />
                         : undefined}

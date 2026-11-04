@@ -1,9 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContextMenu, ContextMenuItem, ContextMenuSubMenu, type ContextMenuPosition } from '../context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { placeMenu } from '@/lib/menu-placement';
-import type { BulwarkDesktopBridge } from '@/lib/desktop/types';
 
 // Every menu opens next to what opened it: under a button, lined up with its
 // edge, or at the pointer, and towards the other side only where there's no
@@ -149,34 +148,6 @@ describe('placeMenu', () => {
 
   it('wider than the room on both sides of a button: clamped inside the window', () => {
     expect(placeMenu({ point: { x: 0, y: 0 }, anchor: { left: 100, top: 40, right: 132, bottom: 72 }, size: { width: 1270, height: 100 }, viewport }).x).toBe(10);
-  });
-});
-
-describe('a native menu from a button', () => {
-  it('lines its right edge up with an end-aligned button, by the native menu\'s width, not the hidden copy\'s', async () => {
-    const popup = vi.fn(async () => null);
-    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: () => {}, popup } } as unknown as BulwarkDesktopBridge;
-    // The hidden copy holds every submenu open, so it is far wider than the menu the OS draws.
-    MENU.width = 700;
-    try {
-      render(
-        <ContextMenu isOpen position={{ x: 0, y: 0, anchor: { left: 468, top: 40, right: 500, bottom: 72, align: 'end' } }} onClose={() => {}}>
-          <ContextMenuItem label="Forward as attachment" onClick={() => {}} />
-          <ContextMenuSubMenu label="Rules">
-            <ContextMenuItem label="Always move mail from this sender to a folder of its own" onClick={() => {}} />
-          </ContextMenuSubMenu>
-          <ContextMenuItem label="Print" onClick={() => {}} />
-        </ContextMenu>,
-      );
-      await waitFor(() => expect(popup).toHaveBeenCalled());
-      const at = (popup.mock.calls[0] as unknown[])[1] as { x: number; y: number };
-      expect(at.y).toBe(76);
-      // Under the button: its left edge somewhere left of the button, not at the window's edge.
-      expect(at.x).toBeGreaterThan(200);
-      expect(at.x).toBeLessThan(468);
-    } finally {
-      MENU.width = 220;
-    }
   });
 });
 

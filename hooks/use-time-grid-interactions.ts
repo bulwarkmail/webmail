@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type PointerEvent, type DragEvent } from "react";
+import { useState, useCallback, useEffect, useRef, type PointerEvent, type DragEvent } from "react";
 import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
@@ -72,6 +72,17 @@ interface UseTimeGridInteractionsOptions {
   onMoveEvent?: MoveEventHandler;
 }
 
+/**
+ * The range a drag from `anchorMinutes` to `currentMinutes` (both snapped)
+ * selects, or null when it is shorter than a quarter of an hour. The
+ * drawn selection, its label and the event it creates all come from this.
+ */
+export function dragCreateRange(anchorMinutes: number, currentMinutes: number): { startMinutes: number; endMinutes: number } | null {
+  const startMinutes = Math.min(anchorMinutes, currentMinutes);
+  const endMinutes = Math.max(anchorMinutes, currentMinutes);
+  return endMinutes - startMinutes >= 15 ? { startMinutes, endMinutes } : null;
+}
+
 /** `date` moved by `minutes` on the local clock, not by elapsed time. */
 function addWallClockMinutes(date: Date, minutes: number): Date {
   const shifted = new Date(date);
@@ -101,6 +112,9 @@ export function useTimeGridInteractions({
   const wasDragging = useRef(false);
 
   // --- Drag-to-create ---
+  // The range on screen is the range created: the release commits the
+  // selection last drawn rather than measuring the pointer again, and a
+  // scroll during the drag redraws it under the pointer.
   const dragRef = useRef<{
     dayKey: string;
     dayDate: Date;
@@ -108,9 +122,30 @@ export function useTimeGridInteractions({
     pointerId: number;
     startY: number;
     captured: boolean;
+    column: HTMLElement;
+    lastY: number;
+    range: { startMinutes: number; endMinutes: number } | null;
+    stopScrollWatch?: () => void;
   } | null>(null);
 
   const [dragCreate, setDragCreate] = useState<DragCreateState | null>(null);
+
+  const updateDragRange = useCallback((clientY: number) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    drag.lastY = clientY;
+    const range = dragCreateRange(drag.startMinutes, snapToMinutes(clientY, drag.column.getBoundingClientRect().top));
+    drag.range = range;
+    setDragCreate(range ? { dayKey: drag.dayKey, ...range } : null);
+  }, [snapToMinutes]);
+
+  const endDrag = useCallback(() => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    drag?.stopScrollWatch?.();
+    setDragCreate(null);
+    return drag;
+  }, []);
 
   const handleGridPointerDown = useCallback((
     e: PointerEvent<HTMLDivElement>,
@@ -125,34 +160,34 @@ export function useTimeGridInteractions({
     const rect = e.currentTarget.getBoundingClientRect();
     const minutes = snapToMinutes(e.clientY, rect.top);
 
+    dragRef.current?.stopScrollWatch?.();
     dragRef.current = {
       dayKey, dayDate, startMinutes: minutes,
       pointerId: e.pointerId, startY: e.clientY, captured: false,
+      column: e.currentTarget, lastY: e.clientY, range: null,
     };
   }, [snapToMinutes, isMobile]);
 
   const handleGridPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current) return;
+    const drag = dragRef.current;
+    if (!drag) return;
 
-    if (!dragRef.current.captured) {
-      if (Math.abs(e.clientY - dragRef.current.startY) < 5) return;
-      dragRef.current.captured = true;
-      e.currentTarget.setPointerCapture(dragRef.current.pointerId);
+    if (!drag.captured) {
+      if (Math.abs(e.clientY - drag.startY) < 5) return;
+      drag.captured = true;
+      e.currentTarget.setPointerCapture(drag.pointerId);
+      // The wheel or the browser's autoscroll moves the grid under a
+      // pointer that stands still: follow it.
+      const onScroll = () => updateDragRange(drag.lastY);
+      window.addEventListener("scroll", onScroll, true);
+      drag.stopScrollWatch = () => window.removeEventListener("scroll", onScroll, true);
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const currentMinutes = snapToMinutes(e.clientY, rect.top);
-    const start = Math.min(dragRef.current.startMinutes, currentMinutes);
-    const end = Math.max(dragRef.current.startMinutes, currentMinutes);
-
-    setDragCreate(end > start ? { dayKey: dragRef.current.dayKey, startMinutes: start, endMinutes: end } : null);
-  }, [snapToMinutes]);
+    updateDragRange(e.clientY);
+  }, [updateDragRange]);
 
   const handleGridPointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    dragRef.current = null;
-    setDragCreate(null);
-
+    const drag = endDrag();
     if (!drag || !drag.captured) return;
 
     wasDragging.current = true;
@@ -160,19 +195,22 @@ export function useTimeGridInteractions({
 
     try { e.currentTarget.releasePointerCapture(drag.pointerId); } catch { /* may already be released */ }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const endMinutes = snapToMinutes(e.clientY, rect.top);
-    const start = Math.min(drag.startMinutes, endMinutes);
-    const end = Math.max(drag.startMinutes, endMinutes);
-
-    if (end - start < 15) return;
+    const range = drag.range;
+    if (!range) return;
 
     const startDate = new Date(drag.dayDate);
-    startDate.setHours(Math.floor(start / 60), start % 60, 0, 0);
+    startDate.setHours(Math.floor(range.startMinutes / 60), range.startMinutes % 60, 0, 0);
     const endDate = new Date(drag.dayDate);
-    endDate.setHours(Math.floor(end / 60), end % 60, 0, 0);
+    endDate.setHours(Math.floor(range.endMinutes / 60), range.endMinutes % 60, 0, 0);
     onCreateRange(startDate, endDate);
-  }, [snapToMinutes, onCreateRange]);
+  }, [endDrag, onCreateRange]);
+
+  useEffect(() => () => dragRef.current?.stopScrollWatch?.(), []);
+
+  /** The browser took the pointer over (a touch scroll, a system gesture): nothing is created. */
+  const handleGridPointerCancel = useCallback(() => {
+    endDrag();
+  }, [endDrag]);
 
   // --- Resize ---
   const resizeRef = useRef<{
@@ -438,6 +476,7 @@ export function useTimeGridInteractions({
     handleGridPointerDown,
     handleGridPointerMove,
     handleGridPointerUp,
+    handleGridPointerCancel,
     resizeVisual,
     handleResizePointerDown,
     handleResizePointerMove,

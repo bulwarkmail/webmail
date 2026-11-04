@@ -5,6 +5,7 @@ import { addPlainLanguage } from "@/i18n/plain-language";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
 import { PushBindingsHost } from "@/components/providers/push-bindings-host";
+import { FilesSyncPrompts } from "@/components/files-sync/files-sync-prompts";
 import { EmbeddedBridgeProvider } from "@/components/providers/embedded-bridge-provider";
 import { RateLimitToastProvider } from "@/components/providers/rate-limit-toast-provider";
 import { TourProvider } from "@/components/tour/tour-provider";
@@ -34,6 +35,7 @@ import { NotificationActionsHost } from "@/components/providers/notification-act
 import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
 import { FileDropHost } from "@/components/file-drop/file-drop-host";
 import { EditedFilesHost } from "@/components/desktop/edited-files-host";
+import { FilesSyncHost } from "@/components/providers/files-sync-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
@@ -97,8 +99,10 @@ export default async function LocaleLayout({
                     <PushBindingsHost />
                     <DesktopOsHost />
                     {!IS_LITE && <EditedFilesHost />}
+                    {!IS_LITE && <FilesSyncHost />}
                     <FreeBusyAutoShare />
                     {!IS_LITE && <PopoutHost />}
+                    {!IS_LITE && <FilesSyncPrompts />}
                   </MainWindowOnly>
                   {!IS_LITE && <WindowSyncHost />}
                   {!IS_LITE && <WindowMenuBar />}

@@ -22,7 +22,8 @@ import { accountAvatarName, getMaxAccounts } from "@/lib/account-utils";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { quotaLevel, type StorageQuota } from "@/lib/quota";
-import { useMenuNavigation } from "@/hooks/use-menu-navigation";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useStalwartAdmin } from "@/hooks/use-stalwart-admin";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
@@ -304,61 +305,11 @@ export function NavigationRail({
   const switchAccount = useAuthStore((s) => s.switchAccount);
   const logout = useAuthStore((s) => s.logout);
   const logoutAll = useAuthStore((s) => s.logoutAll);
-  const [logoutMenuOpen, setLogoutMenuOpen] = useState(false);
-  const logoutBtnRef = useRef<HTMLButtonElement>(null);
-  // Portalled to <body>, so without explicit focus handling the menu is
-  // unreachable for keyboard and screen reader users (#719).
-  const closeLogoutMenu = useCallback(() => setLogoutMenuOpen(false), []);
-  const { menuRef: logoutPopoverRef, onKeyDown: onLogoutMenuKeyDown } = useMenuNavigation<HTMLDivElement>({
-    open: logoutMenuOpen,
-    onClose: closeLogoutMenu,
-    triggerRef: logoutBtnRef,
-  });
-  const [logoutPopoverStyle, setLogoutPopoverStyle] = useState<React.CSSProperties>({});
+  // Sign out: the app's own menu, as every ⋮ and right-click has it.
+  const logoutMenu = useContextMenu<null>();
+  const logoutMenuOpen = logoutMenu.contextMenu.isOpen;
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
-  const updateLogoutPosition = useCallback(() => {
-    if (!logoutBtnRef.current) return;
-    const rect = logoutBtnRef.current.getBoundingClientRect();
-    setLogoutPopoverStyle(
-      isDocumentRTL()
-        ? {
-            position: "fixed",
-            right: window.innerWidth - rect.left + 8,
-            bottom: Math.max(8, window.innerHeight - rect.bottom),
-          }
-        : {
-            position: "fixed",
-            left: rect.right + 8,
-            bottom: Math.max(8, window.innerHeight - rect.bottom),
-          }
-    );
-  }, []);
-
-  // Position before the first paint (same reasoning as the quota popover above).
-  useLayoutEffect(() => {
-    if (logoutMenuOpen) updateLogoutPosition();
-  }, [logoutMenuOpen, updateLogoutPosition]);
-
-  useEffect(() => {
-    if (!logoutMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        logoutBtnRef.current?.contains(e.target as Node) ||
-        logoutPopoverRef.current?.contains(e.target as Node)
-      ) return;
-      setLogoutMenuOpen(false);
-    };
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLogoutMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [logoutMenuOpen, logoutPopoverRef]);
 
 
   const navItems: NavItem[] = [
@@ -952,10 +903,9 @@ export function NavigationRail({
             )}
             </div>
 
-            {/* Logout button with popover */}
+            {/* Sign out, with a menu */}
             <button
-              ref={logoutBtnRef}
-              onClick={() => setLogoutMenuOpen(!logoutMenuOpen)}
+              onClick={(ev) => (logoutMenuOpen ? logoutMenu.closeContextMenu() : logoutMenu.openContextMenuFrom(ev.currentTarget, null, "start"))}
               className="flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               title={t("sign_out")}
               aria-label={t("sign_out")}
@@ -964,37 +914,18 @@ export function NavigationRail({
             >
               <LogOut className="w-4 h-4" />
             </button>
-
-            {logoutMenuOpen && createPortal(
-              <div
-                ref={logoutPopoverRef}
-                onKeyDown={onLogoutMenuKeyDown}
-                style={logoutPopoverStyle}
-                className="w-56 rounded-lg border border-border bg-background text-foreground shadow-lg z-50 overflow-hidden"
-                role="menu"
-                aria-label={t("sign_out")}
-              >
-                <button
-                  onClick={() => { setLogoutMenuOpen(false); logout(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  role="menuitem"
-                >
-                  <LogOut className="w-4 h-4" />
-                  {t("sign_out")}
-                </button>
-                {accounts.length > 1 && (
-                  <button
-                    onClick={() => { setLogoutMenuOpen(false); logoutAll(); }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-start text-foreground hover:bg-muted transition-colors"
-                    role="menuitem"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    {t("sign_out_all")}
-                  </button>
-                )}
-              </div>,
-              document.body
-            )}
+            <ContextMenu
+              ref={logoutMenu.menuRef}
+              isOpen={logoutMenuOpen}
+              position={logoutMenu.contextMenu.position}
+              onClose={logoutMenu.closeContextMenu}
+              label={t("sign_out")}
+            >
+              <ContextMenuItem icon={LogOut} label={t("sign_out")} onClick={() => { logoutMenu.closeContextMenu(); logout(); }} />
+              {accounts.length > 1 && (
+                <ContextMenuItem icon={LogOut} label={t("sign_out_all")} onClick={() => { logoutMenu.closeContextMenu(); logoutAll(); }} />
+              )}
+            </ContextMenu>
           </>
         )}
 

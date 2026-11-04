@@ -226,6 +226,19 @@ describe('sending', () => {
     await expect(result.current.edits.confirmSend()).resolves.toBe(true);
   });
 
+  it('asks in the app\'s own window where the shell has them; Escape is going back', async () => {
+    const show = vi.fn(async (_request: unknown) => null as unknown);
+    const desktop = (window as unknown as { bulwarkDesktop: { dialogs: Record<string, unknown> } }).bulwarkDesktop;
+    desktop.dialogs = { confirm, show, cancel: vi.fn() };
+    useEditSessions.setState({ sessions: [session({ changed: true })] });
+    const { result } = setup({ start: [chip] });
+    await expect(result.current.edits.confirmSend()).resolves.toBe(false);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(show.mock.calls[0][0]).toMatchObject({ message: [{ text: 'send_stale_detail' }], buttons: [{ label: 'send_stale_back', variant: 'secondary' }, { label: 'send_stale_send' }], defaultIndex: 0 });
+    show.mockResolvedValueOnce({ button: 1 });
+    await expect(result.current.edits.confirmSend()).resolves.toBe(true);
+  });
+
   it('sees a save from a moment ago, which the list has not heard of', async () => {
     useEditSessions.setState({ sessions: [session()] });
     const { result } = setup({ start: [chip] });

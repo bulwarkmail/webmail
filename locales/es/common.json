@@ -5905,6 +5905,11 @@
     "cancelled": "{name} ha cancelado \"{title}\"",
     "untitled": "Evento sin título"
   },
+  "calendar_month_select": {
+    "selected_range": "Seleccionado del {start} al {end}.",
+    "selected_day": "Seleccionado {day}.",
+    "enter_hint": "Pulsa Intro para crear un evento."
+  },
   "company_calendars": {
     "section": "Organización"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "Aún sin adjuntar ni guardar, y eliminados ahora: {names}.",
     "signout_held": "Siguen abiertos en otro programa, así que no se eliminan hasta que los cierre allí: {names}."
   },
+  "files_sync": {
+    "title": "Archivos en este ordenador",
+    "drive": {
+      "title": "Unidad de Archivos",
+      "label": "Mostrar Archivos como una unidad",
+      "description": "Tus Archivos aparecen en el Explorador de archivos como una unidad. Un archivo se descarga cuando lo abres.",
+      "unsupported": "Requiere Windows 10 versión 1809 o posterior.",
+      "root_name": "Unidad de Archivos",
+      "letter_label": "Letra de unidad",
+      "letter_description": "Asigna a la unidad su propia letra en el Explorador de archivos.",
+      "letter_none": "Sin letra"
+    },
+    "folders": {
+      "title": "Carpetas sincronizadas",
+      "description": "Una carpeta de este ordenador y una carpeta de Archivos se mantienen iguales, en los dos sentidos.",
+      "empty": "Todavía no se sincroniza ninguna carpeta.",
+      "forced_off": "Tu organización desactivó la sincronización de carpetas. Los archivos que contienen se quedan en este ordenador.",
+      "add": "Añadir carpeta…",
+      "loading": "Cargando tus carpetas…",
+      "load_failed": "No se pudieron cargar tus carpetas de Archivos. Inténtalo de nuevo.",
+      "pick_title": "¿Qué carpeta de Archivos?",
+      "pick_confirm": "Elegir carpeta en este ordenador…",
+      "paired_with": "Con {folder} en Archivos",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "remove": "Quitar…",
+      "remove_title": "¿Dejar de sincronizar esta carpeta?",
+      "remove_message": "Los archivos de este ordenador se quedan donde están, y también los de Archivos. Los cambios ya no pasan de uno a otro.",
+      "remove_confirm": "Dejar de sincronizar",
+      "add_failed": {
+        "overlap": "Esta carpeta está dentro de una carpeta sincronizada, contiene una o es una carpeta del sistema. Elige otra.",
+        "denied": "La aplicación no puede usar esta carpeta. Elige otra.",
+        "policy": "Tu organización no lo permite.",
+        "failed": "No se pudo añadir la carpeta. Inténtalo de nuevo."
+      }
+    },
+    "status": {
+      "starting": "Iniciando…",
+      "idle": "Al día. Última sincronización {time}",
+      "idle_never": "Al día",
+      "syncing": "Sincronizando: {done} hechos, {pending} pendientes",
+      "paused": "En pausa",
+      "offline": "Sin conexión. {count, plural, =0 {Los cambios esperan al servidor} one {# cambio espera al servidor} other {# cambios esperan al servidor}}",
+      "error": "Detenido: {reason}",
+      "confirm_delete": "En pausa hasta que respondas la pregunta de abajo",
+      "blocked": "Desactivado por tu organización"
+    },
+    "mass_delete": {
+      "title": "¿Eliminar {count, plural, one {# elemento} other {# elementos}}?",
+      "local": "{count, plural, one {Se eliminó # elemento} other {Se eliminaron # elementos}} de {folder} en este ordenador. ¿{count, plural, one {Eliminarlo} other {Eliminarlos}} también en Archivos?",
+      "remote": "{count, plural, one {Se eliminó # elemento} other {Se eliminaron # elementos}} de {folder} en Archivos. ¿{count, plural, one {Eliminarlo} other {Eliminarlos}} también en este ordenador?",
+      "allow": "{count, plural, one {Eliminarlo} other {Eliminarlos}}",
+      "restore": "{count, plural, one {Recuperarlo} other {Recuperarlos}}",
+      "later": "Decidir más tarde"
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "empty": "Todavía no ha pasado nada.",
+      "clear": "Borrar",
+      "to_files": "A Archivos",
+      "to_computer": "A este ordenador",
+      "mark_conflict": "Conflicto",
+      "mark_error": "Fallo",
+      "mark_question": "Necesita tu respuesta",
+      "uploaded": "Se subió {path}",
+      "downloaded": "Se descargó {path}",
+      "folder-created": "Se creó la carpeta {path}",
+      "renamed": "Se cambió el nombre de {detail} a {path}",
+      "moved": "Se movió {detail} a {path}",
+      "deleted": "Se eliminó {path}",
+      "trashed": "Se movió {path} a la papelera",
+      "conflict": "{path} se cambió en los dos sitios. La otra versión se guarda como {detail}",
+      "renamed-for-disk": "{path} se llama {detail} en este ordenador, porque su nombre no está permitido aquí",
+      "too-large": "{path} supera el tamaño que permite Archivos ({detail}). Se queda solo en este ordenador",
+      "waiting": "{path} está esperando al servidor",
+      "mass-delete": "En pausa antes de eliminar muchos elementos",
+      "error": "No se pudo sincronizar {path}"
+    },
+    "errors": {
+      "offline": "No se puede conectar con el servidor",
+      "server_refused": "El servidor rechazó el cambio",
+      "too_large": "El archivo es demasiado grande para Archivos",
+      "name_invalid": "El nombre no está permitido",
+      "disk_full": "El disco está lleno",
+      "denied": "Sin permiso",
+      "busy": "Otro programa lo está usando",
+      "quota": "Tu almacenamiento en Archivos está lleno",
+      "not_found": "Ya no existe",
+      "policy": "Tu organización no lo permite",
+      "failed": "Algo salió mal"
+    },
+    "item": {
+      "label": "En este ordenador",
+      "synced": "Sincronizado",
+      "syncing": "Sincronizando",
+      "pending": "Esperando para sincronizar",
+      "error": "No se pudo sincronizar",
+      "online-only": "Solo en Archivos, se descarga al abrirlo"
+    },
+    "show_in": {
+      "explorer": "Mostrar en el Explorador de archivos",
+      "finder": "Mostrar en Finder",
+      "file_manager": "Mostrar en el gestor de archivos",
+      "failed": "No se pudo abrir la carpeta."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacción rápida",
     "menu": "Redacción rápida",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "La ventana principal no respondió. Tu mensaje se queda aquí.",
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
+  },
+  "desktopAttachRecent": {
+    "heading": "Archivos recientes",
+    "browse": "Examinar este equipo…",
+    "from_files": "Desde Archivos…",
+    "missing": "\"{name}\" ya no existe.",
+    "too_large": "\"{name}\" supera {max} y no se puede adjuntar.",
+    "failed": "No se pudo adjuntar \"{name}\". Inténtalo de nuevo."
   },
   "compose_windows": {
     "more_formatting": "Más formato",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "Para ver el correo nuevo mientras trabaja en otra aplicación.",
     "tip_compose_keys": "Pulse {keys} para escribir un mensaje nuevo",
     "tip_palette_keys": "Pulse {keys} para buscar cualquier comando"
+  },
+  "selectionView": {
+    "starred": "Destacado",
+    "unstarred": "Estrella quitada"
   }
 }

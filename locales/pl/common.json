@@ -5905,6 +5905,11 @@
     "cancelled": "{name} odwołał(a) „{title}”",
     "untitled": "Wydarzenie bez tytułu"
   },
+  "calendar_month_select": {
+    "selected_range": "Wybrano od {start} do {end}.",
+    "selected_day": "Wybrano {day}.",
+    "enter_hint": "Naciśnij Enter, aby utworzyć wydarzenie."
+  },
   "company_calendars": {
     "section": "Organizacja"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "Jeszcze niedołączone ani niezapisane, a teraz usunięte: {names}.",
     "signout_held": "Nadal otwarte w innym programie, więc zostaną usunięte dopiero po zamknięciu: {names}."
   },
+  "files_sync": {
+    "title": "Pliki na tym komputerze",
+    "drive": {
+      "title": "Dysk Pliki",
+      "label": "Pokazuj Pliki jako dysk",
+      "description": "Twoje Pliki widać w Eksploratorze plików jako dysk. Plik jest pobierany, gdy go otworzysz.",
+      "unsupported": "Wymaga systemu Windows 10 w wersji 1809 lub nowszej.",
+      "root_name": "Dysk Pliki",
+      "letter_label": "Litera dysku",
+      "letter_description": "Nadaje dyskowi własną literę w Eksploratorze plików.",
+      "letter_none": "Bez litery"
+    },
+    "folders": {
+      "title": "Synchronizowane foldery",
+      "description": "Folder na tym komputerze i folder w Plikach pozostają takie same, zmiany idą w obie strony.",
+      "empty": "Nie synchronizujesz jeszcze żadnych folderów.",
+      "forced_off": "Twoja organizacja wyłączyła synchronizację folderów. Pliki w nich zostają na tym komputerze.",
+      "add": "Dodaj folder…",
+      "loading": "Wczytywanie Twoich folderów…",
+      "load_failed": "Nie udało się wczytać Twoich folderów w Plikach. Spróbuj ponownie.",
+      "pick_title": "Który folder w Plikach?",
+      "pick_confirm": "Wybierz folder na tym komputerze…",
+      "paired_with": "Z folderem {folder} w Plikach",
+      "pause": "Wstrzymaj",
+      "resume": "Wznów",
+      "remove": "Usuń…",
+      "remove_title": "Przestać synchronizować ten folder?",
+      "remove_message": "Pliki na tym komputerze zostają na miejscu, tak samo jak pliki w Plikach. Zmiany nie będą już przenoszone między nimi.",
+      "remove_confirm": "Przestań synchronizować",
+      "add_failed": {
+        "overlap": "Ten folder leży w synchronizowanym folderze, zawiera taki folder albo jest folderem systemowym. Wybierz inny.",
+        "denied": "Aplikacja nie może używać tego folderu. Wybierz inny.",
+        "policy": "Twoja organizacja na to nie pozwala.",
+        "failed": "Nie udało się dodać folderu. Spróbuj ponownie."
+      }
+    },
+    "status": {
+      "starting": "Uruchamianie…",
+      "idle": "Aktualne. Ostatnia synchronizacja: {time}",
+      "idle_never": "Aktualne",
+      "syncing": "Synchronizacja: gotowe {done}, pozostało {pending}",
+      "paused": "Wstrzymano",
+      "offline": "Brak połączenia. {count, plural, =0 {Zmiany czekają na serwer} one {# zmiana czeka na serwer} few {# zmiany czekają na serwer} many {# zmian czeka na serwer} other {# zmiany czeka na serwer}}",
+      "error": "Zatrzymano: {reason}",
+      "confirm_delete": "Wstrzymano, dopóki nie odpowiesz na pytanie poniżej",
+      "blocked": "Wyłączone przez Twoją organizację"
+    },
+    "mass_delete": {
+      "title": "Usunąć {count, plural, one {# element} few {# elementy} many {# elementów} other {# elementu}}?",
+      "local": "{count, plural, one {# element został usunięty} few {# elementy zostały usunięte} many {# elementów zostało usuniętych} other {# elementu zostało usunięte}} z folderu {folder} na tym komputerze. Usunąć {count, plural, one {go} few {je} many {je} other {je}} także w Plikach?",
+      "remote": "{count, plural, one {# element został usunięty} few {# elementy zostały usunięte} many {# elementów zostało usuniętych} other {# elementu zostało usunięte}} z folderu {folder} w Plikach. Usunąć {count, plural, one {go} few {je} many {je} other {je}} także na tym komputerze?",
+      "allow": "{count, plural, one {Usuń go} few {Usuń je} many {Usuń je} other {Usuń je}}",
+      "restore": "{count, plural, one {Przywróć go} few {Przywróć je} many {Przywróć je} other {Przywróć je}}",
+      "later": "Zdecyduj później"
+    },
+    "activity": {
+      "title": "Ostatnia aktywność",
+      "empty": "Jeszcze nic się nie wydarzyło.",
+      "clear": "Wyczyść",
+      "to_files": "Do Plików",
+      "to_computer": "Na ten komputer",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Błąd",
+      "mark_question": "Czeka na Twoją odpowiedź",
+      "uploaded": "Przesłano {path}",
+      "downloaded": "Pobrano {path}",
+      "folder-created": "Utworzono folder {path}",
+      "renamed": "Zmieniono nazwę {detail} na {path}",
+      "moved": "Przeniesiono {detail} do {path}",
+      "deleted": "Usunięto {path}",
+      "trashed": "Przeniesiono {path} do kosza",
+      "conflict": "{path} zmieniono w obu miejscach. Druga wersja została zachowana jako {detail}",
+      "renamed-for-disk": "{path} nazywa się na tym komputerze {detail}, bo jego nazwa jest tu niedozwolona",
+      "too-large": "{path} jest większy, niż pozwalają Pliki ({detail}). Zostaje tylko na tym komputerze",
+      "waiting": "{path} czeka na serwer",
+      "mass-delete": "Wstrzymano przed usunięciem wielu elementów",
+      "error": "Nie udało się zsynchronizować {path}"
+    },
+    "errors": {
+      "offline": "Nie można połączyć się z serwerem",
+      "server_refused": "Serwer odrzucił zmianę",
+      "too_large": "Plik jest za duży dla Plików",
+      "name_invalid": "Ta nazwa jest niedozwolona",
+      "disk_full": "Dysk jest pełny",
+      "denied": "Brak uprawnień",
+      "busy": "Używany przez inny program",
+      "quota": "Twoje miejsce w Plikach jest pełne",
+      "not_found": "Już nie istnieje",
+      "policy": "Twoja organizacja na to nie pozwala",
+      "failed": "Coś poszło nie tak"
+    },
+    "item": {
+      "label": "Na tym komputerze",
+      "synced": "Zsynchronizowano",
+      "syncing": "Synchronizacja",
+      "pending": "Czeka na synchronizację",
+      "error": "Nie udało się zsynchronizować",
+      "online-only": "Tylko w Plikach, pobierany po otwarciu"
+    },
+    "show_in": {
+      "explorer": "Pokaż w Eksploratorze plików",
+      "finder": "Pokaż w Finderze",
+      "file_manager": "Pokaż w menedżerze plików",
+      "failed": "Nie udało się otworzyć folderu."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Szybka wiadomość",
     "menu": "Szybka wiadomość",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "Główne okno nie odpowiedziało. Wiadomość zostaje tutaj.",
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
+  },
+  "desktopAttachRecent": {
+    "heading": "Ostatnie pliki",
+    "browse": "Przeglądaj ten komputer…",
+    "from_files": "Z Plików…",
+    "missing": "„{name}” już nie istnieje.",
+    "too_large": "„{name}” jest większy niż {max} i nie można go dołączyć.",
+    "failed": "Nie udało się dołączyć „{name}”. Spróbuj ponownie."
   },
   "compose_windows": {
     "more_formatting": "Więcej formatowania",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "Aby widzieć nową pocztę, gdy pracujesz w innej aplikacji.",
     "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
     "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
+  },
+  "selectionView": {
+    "starred": "Oznaczono gwiazdką",
+    "unstarred": "Usunięto gwiazdkę"
   }
 }

@@ -5279,6 +5279,11 @@
     "cancelled": "{name} 取消了「{title}」",
     "untitled": "未命名活動"
   },
+  "calendar_month_select": {
+    "selected_range": "已選取 {start} 至 {end}。",
+    "selected_day": "已選取 {day}。",
+    "enter_hint": "按 Enter 鍵建立活動。"
+  },
   "company_calendars": {
     "section": "組織"
   },
@@ -7650,6 +7655,112 @@
     "signout_changed": "尚未附加或儲存,現在將刪除:{names}。",
     "signout_held": "仍在其他程式中開啟,因此要在那裡關閉後才會刪除:{names}。"
   },
+  "files_sync": {
+    "title": "這部電腦上的檔案",
+    "drive": {
+      "title": "檔案磁碟機",
+      "label": "將檔案顯示為磁碟機",
+      "description": "您的檔案會像磁碟機一樣顯示在檔案總管中。檔案在開啟時才會下載。",
+      "unsupported": "需要 Windows 10 版本 1809 或更新版本。",
+      "root_name": "檔案磁碟機",
+      "letter_label": "磁碟機代號",
+      "letter_description": "在檔案總管中為磁碟機指定專屬的代號。",
+      "letter_none": "無代號"
+    },
+    "folders": {
+      "title": "已同步的資料夾",
+      "description": "這部電腦上的一個資料夾和檔案中的一個資料夾會雙向保持一致。",
+      "empty": "尚未同步任何資料夾。",
+      "forced_off": "您的組織已關閉資料夾同步。其中的檔案會保留在這部電腦上。",
+      "add": "新增資料夾…",
+      "loading": "正在載入您的資料夾…",
+      "load_failed": "無法載入您在檔案中的資料夾。請再試一次。",
+      "pick_title": "要與檔案中的哪個資料夾同步？",
+      "pick_confirm": "選擇這部電腦上的資料夾…",
+      "paired_with": "與檔案中的 {folder} 同步",
+      "pause": "暫停",
+      "resume": "繼續",
+      "remove": "移除…",
+      "remove_title": "要停止同步此資料夾嗎？",
+      "remove_message": "這部電腦上的檔案和檔案中的檔案都會保持原樣。變更將不再於兩者之間同步。",
+      "remove_confirm": "停止同步",
+      "add_failed": {
+        "overlap": "此資料夾位於已同步的資料夾中、包含已同步的資料夾，或者是系統資料夾。請選擇其他資料夾。",
+        "denied": "應用程式無法使用此資料夾。請選擇其他資料夾。",
+        "policy": "您的組織不允許此操作。",
+        "failed": "無法新增資料夾。請再試一次。"
+      }
+    },
+    "status": {
+      "starting": "正在啟動…",
+      "idle": "已是最新狀態。上次同步於 {time}",
+      "idle_never": "已是最新狀態",
+      "syncing": "正在同步：已完成 {done} 個，還剩 {pending} 個",
+      "paused": "已暫停",
+      "offline": "離線。{count, plural, =0 {變更正在等待伺服器} other {# 項變更正在等待伺服器}}",
+      "error": "已停止：{reason}",
+      "confirm_delete": "已暫停，請先回答下方的問題",
+      "blocked": "已被您的組織關閉"
+    },
+    "mass_delete": {
+      "title": "要刪除 {count, plural, other {# 個項目}}嗎？",
+      "local": "已從這部電腦上的 {folder} 中刪除 {count, plural, other {# 個項目}}。也要在檔案中刪除嗎？",
+      "remote": "已從檔案中的 {folder} 刪除 {count, plural, other {# 個項目}}。也要在這部電腦上刪除嗎？",
+      "allow": "{count, plural, other {刪除}}",
+      "restore": "{count, plural, other {復原}}",
+      "later": "稍後決定"
+    },
+    "activity": {
+      "title": "最近活動",
+      "empty": "目前還沒有任何活動。",
+      "clear": "清除",
+      "to_files": "到檔案",
+      "to_computer": "到這部電腦",
+      "mark_conflict": "衝突",
+      "mark_error": "錯誤",
+      "mark_question": "需要您回答",
+      "uploaded": "已上傳 {path}",
+      "downloaded": "已下載 {path}",
+      "folder-created": "已建立資料夾 {path}",
+      "renamed": "已將 {detail} 重新命名為 {path}",
+      "moved": "已將 {detail} 移至 {path}",
+      "deleted": "已刪除 {path}",
+      "trashed": "已將 {path} 移至垃圾桶",
+      "conflict": "{path} 在兩處都被變更。另一個版本已保留為 {detail}",
+      "renamed-for-disk": "{path} 的名稱在此處不允許使用，因此在這部電腦上名為 {detail}",
+      "too-large": "{path} 超出了檔案允許的大小（{detail}）。它只會保留在這部電腦上",
+      "waiting": "{path} 正在等待伺服器",
+      "mass-delete": "在刪除大量項目前已暫停",
+      "error": "無法同步 {path}"
+    },
+    "errors": {
+      "offline": "無法連線到伺服器",
+      "server_refused": "伺服器拒絕了此變更",
+      "too_large": "此檔案超出了檔案允許的大小",
+      "name_invalid": "不允許使用此名稱",
+      "disk_full": "磁碟已滿",
+      "denied": "不允許",
+      "busy": "另一個程式正在使用它",
+      "quota": "您在檔案中的儲存空間已滿",
+      "not_found": "它已不存在",
+      "policy": "您的組織不允許此操作",
+      "failed": "發生錯誤"
+    },
+    "item": {
+      "label": "在這部電腦上",
+      "synced": "已同步",
+      "syncing": "正在同步",
+      "pending": "等待同步",
+      "error": "無法同步",
+      "online-only": "僅在檔案中，開啟時下載"
+    },
+    "show_in": {
+      "explorer": "在檔案總管中顯示",
+      "finder": "在 Finder 中顯示",
+      "file_manager": "在檔案管理員中顯示",
+      "failed": "無法開啟資料夾。"
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰寫",
     "menu": "快速撰寫",
@@ -7664,6 +7775,14 @@
     "back_no_answer": "主視窗沒有回應。您的郵件仍在這裡。",
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
+  },
+  "desktopAttachRecent": {
+    "heading": "最近的檔案",
+    "browse": "瀏覽這部電腦…",
+    "from_files": "從檔案…",
+    "missing": "「{name}」已不存在。",
+    "too_large": "「{name}」超過 {max}，無法附加。",
+    "failed": "無法附加「{name}」。請再試一次。"
   },
   "compose_windows": {
     "more_formatting": "更多格式",
@@ -7770,5 +7889,9 @@
     "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
     "tip_compose_keys": "按 {keys} 撰寫新郵件",
     "tip_palette_keys": "按 {keys} 尋找任何指令"
+  },
+  "selectionView": {
+    "starred": "已加星號",
+    "unstarred": "已移除星號"
   }
 }

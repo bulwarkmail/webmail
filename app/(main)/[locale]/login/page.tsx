@@ -1,6 +1,8 @@
 "use client";
 
 import { freshLoginRequired } from "@/lib/app-lock/sign-out";
+import { ContextMenu, ContextMenuCheckItem } from "@/components/ui/context-menu";
+import { useContextMenu } from "@/hooks/use-context-menu";
 import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo, useSyncExternalStore } from "react";
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
@@ -22,7 +24,6 @@ import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useShallow } from "zustand/react/shallow";
 import { useConfig } from "@/hooks/use-config";
-import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy, KeyRound } from "@/components/icons";
@@ -369,7 +370,9 @@ function LoginPageContent() {
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shakeError, setShakeError] = useState(false);
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  // The theme menu: the app's menu, as everywhere else.
+  const themeMenu = useContextMenu<null>();
+  const showThemeMenu = themeMenu.contextMenu.isOpen;
 
   const [savedUsernames, setSavedUsernames] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -408,12 +411,6 @@ function LoginPageContent() {
   const prevError = useRef<string | null>(null);
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
-  const closeThemeMenu = useCallback(() => setShowThemeMenu(false), []);
-  const { menuRef: themeListRef, onKeyDown: onThemeMenuKeyDown } = useMenuNavigation<HTMLDivElement>({
-    open: showThemeMenu,
-    onClose: closeThemeMenu,
-    triggerRef: themeButtonRef,
-  });
   // Captured by handleSubmit when in mobile handoff mode; consumed by the
   // isAuthenticated effect to build the deep-link fragment.
   const mobileHandoffPayloadRef = useRef<{ server_url: string; username: string; password: string } | null>(null);
@@ -737,9 +734,6 @@ function LoginPageContent() {
           inputRef.current && !inputRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
-      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
-        setShowThemeMenu(false);
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -873,8 +867,8 @@ function LoginPageContent() {
 
   const handleThemeSelect = useCallback((newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
-    setShowThemeMenu(false);
-  }, [setTheme]);
+    themeMenu.closeContextMenu();
+  }, [setTheme, themeMenu]);
 
   // The server HTML, and every visit until /api/config answers: the card's
   // shape, the same one signed-out visitors of the app pages get first. Also
@@ -1578,7 +1572,7 @@ function LoginPageContent() {
           <button
             type="button"
             ref={themeButtonRef}
-            onClick={() => setShowThemeMenu(!showThemeMenu)}
+            onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
             className={cn(
               "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
               showThemeMenu
@@ -1594,39 +1588,24 @@ function LoginPageContent() {
             <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
           </button>
 
-          {showThemeMenu && (
-            <div
-              ref={themeListRef}
-              onKeyDown={onThemeMenuKeyDown}
-              className="absolute end-0 top-full mt-2 w-40 rounded-xl border border-border bg-background shadow-lg overflow-hidden animate-fade-in z-50"
-              role="menu"
-              aria-label={tTheme("label")}
-            >
-              {THEME_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                const isActive = theme === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={isActive}
-                    onClick={() => handleThemeSelect(option.value)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-foreground font-medium"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="flex-1 text-start">{tTheme(option.label)}</span>
-                    {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <ContextMenu
+            ref={themeMenu.menuRef}
+            isOpen={showThemeMenu}
+            position={themeMenu.contextMenu.position}
+            onClose={themeMenu.closeContextMenu}
+            label={tTheme("label")}
+          >
+            {THEME_OPTIONS.map((option) => (
+              <ContextMenuCheckItem
+                key={option.value}
+                kind="radio"
+                icon={option.icon}
+                checked={theme === option.value}
+                label={tTheme(option.label)}
+                onClick={() => handleThemeSelect(option.value)}
+              />
+            ))}
+          </ContextMenu>
         </div>
 
         <div className="w-full max-w-[440px] mx-auto">
@@ -1749,7 +1728,7 @@ function LoginPageContent() {
         <button
           type="button"
           ref={themeButtonRef}
-          onClick={() => setShowThemeMenu(!showThemeMenu)}
+          onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
           className={cn(
             "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
             showThemeMenu
@@ -1765,39 +1744,24 @@ function LoginPageContent() {
           <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
         </button>
 
-        {showThemeMenu && (
-          <div
-            ref={themeListRef}
-            onKeyDown={onThemeMenuKeyDown}
-            className="absolute end-0 top-full mt-2 w-40 rounded-xl border border-border bg-background shadow-lg overflow-hidden animate-fade-in z-50"
-            role="menu"
-            aria-label={tTheme("label")}
-          >
-            {THEME_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isActive = theme === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={isActive}
-                  onClick={() => handleThemeSelect(option.value)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3.5 py-2.5 text-sm transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-foreground font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="flex-1 text-start">{tTheme(option.label)}</span>
-                  {isActive && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <ContextMenu
+          ref={themeMenu.menuRef}
+          isOpen={showThemeMenu}
+          position={themeMenu.contextMenu.position}
+          onClose={themeMenu.closeContextMenu}
+          label={tTheme("label")}
+        >
+          {THEME_OPTIONS.map((option) => (
+            <ContextMenuCheckItem
+              key={option.value}
+              kind="radio"
+              icon={option.icon}
+              checked={theme === option.value}
+              label={tTheme(option.label)}
+              onClick={() => handleThemeSelect(option.value)}
+            />
+          ))}
+        </ContextMenu>
       </div>
 
       <div className="w-full max-w-[400px] mx-auto">

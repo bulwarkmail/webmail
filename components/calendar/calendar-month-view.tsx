@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useCallback, useRef, useLayoutEffect, type DragEvent } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef, useLayoutEffect, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { format, parseISO, eachDayOfInterval, addDays, isSameDay } from "date-fns";
+import { format, parseISO, eachDayOfInterval, addDays, isSameDay, differenceInCalendarDays, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { CalendarTaskChip } from "./task-chip";
@@ -26,6 +26,8 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { isInMonthRange, useMonthRangeSelect, type MonthRange } from "@/hooks/use-month-range-select";
+import { announce } from "@/lib/announce";
 
 interface CalendarMonthViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -41,6 +43,12 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
   onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   /** A click on a day's empty space: a new all-day event there (wide screens). */
   onCreateAllDay?: (date: Date) => void;
+  /**
+   * Days picked by a drag over empty day space, a long press and drag on
+   * touch, or Shift+arrows and Enter: a new all-day event over them. Left
+   * out where no calendar can take a new event.
+   */
+  onCreateRange?: (start: Date, end: Date) => void;
   /** Open a day in the day view (its date number, or its "N more" link). */
   onOpenDay?: (date: Date) => void;
   firstDayOfWeek?: number;
@@ -162,6 +170,7 @@ export function CalendarMonthView({
   onContextMenuEmpty,
   onReplyEvent,
   onCreateAllDay,
+  onCreateRange,
   onOpenDay,
   isMobile,
   pendingPreview,
@@ -174,6 +183,7 @@ export function CalendarMonthView({
   onMoveEvent,
 }: CalendarMonthViewProps) {
   const t = useTranslations("calendar");
+  const tSelect = useTranslations("calendar_month_select");
   const paint = useCvdColor();
   const describeError = useCalendarErrorMessage();
   // An event of another signed-in login is read with that login's addresses.
@@ -270,6 +280,36 @@ export function CalendarMonthView({
   const headerRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Picking days to create an event over them (drag, long press, Shift+arrows).
+  const rangeSelect = useMonthRangeSelect({
+    scrollRef,
+    enabled: !!onCreateRange,
+    onCreateRange: (start, end) => onCreateRange?.(start, end),
+    onContextMenuDay: onContextMenuEmpty ? (e, day) => onContextMenuEmpty(e, day, undefined, true) : undefined,
+  });
+  // The days stay marked while the quick editor for them is open; Escape
+  // or a click elsewhere closes it and the mark goes with it.
+  const draftRange = useMemo<MonthRange | null>(() => {
+    if (!pendingPreview?.allDay) return null;
+    const start = startOfDay(pendingPreview.start);
+    const end = startOfDay(pendingPreview.end);
+    return end < start ? { start, end: start } : { start, end };
+  }, [pendingPreview?.allDay, pendingPreview?.start, pendingPreview?.end]);
+  const highlight = rangeSelect.selection ?? draftRange;
+  const picking = rangeSelect.selection;
+  const announcement = picking
+    ? [
+      isSameDay(picking.start, picking.end)
+        ? tSelect("selected_day", { day: formatFullDate(picking.start) })
+        : tSelect("selected_range", { start: formatFullDate(picking.start), end: formatFullDate(picking.end) }),
+      picking.keyboard ? tSelect("enter_hint") : "",
+    ].join(" ").trim()
+    : "";
+  // The days picked, read out as they change (the last of a quick run).
+  useEffect(() => {
+    if (announcement) announce(announcement, { key: "calendar-month-selection", debounceMs: 250 });
+  }, [announcement]);
 
   // Six rows fill the viewport, as a single month used to; taller rows grow
   // with their chips.
@@ -420,8 +460,21 @@ export function CalendarMonthView({
     const focusKey = dayKey(focus.date);
     return keys.has(focusKey) ? focusKey : (weeks[0]?.[0] ? dayKey(weeks[0][0]) : selectedKey);
   }, [weeks, selectedKey, focus.date]);
+  const { extendTo, commitKeyboard, clearKeyboard } = rangeSelect;
   const handleDayKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>, day: Date, dayIndex: number) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    // Enter over days picked with Shift+arrows creates there; without
+    // them it opens the day, as before.
+    if (e.key === "Enter" && !e.shiftKey && commitKeyboard()) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === "Escape" && clearKeyboard()) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (e.shiftKey && !onCreateRange) return;
     const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
     let delta: number;
     switch (e.key) {
@@ -438,9 +491,11 @@ export function CalendarMonthView({
     const next = addDays(day, delta);
     const target = scrollRef.current?.querySelector<HTMLButtonElement>(`[data-day-button="${dayKey(next)}"]`);
     if (!target) return;
+    if (e.shiftKey) extendTo(day, next);
+    else clearKeyboard();
     onSelectDate(next);
     target.focus();
-  }, [onSelectDate]);
+  }, [onSelectDate, onCreateRange, extendTo, commitKeyboard, clearKeyboard]);
 
   const [dropDayKey, setDropDayKey] = useState<string | null>(null);
 
@@ -484,13 +539,20 @@ export function CalendarMonthView({
   }, [t, describeError, userEmailsFor, onMoveEvent]);
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}>
+    <div
+      className="flex flex-col flex-1 overflow-hidden"
+      role="grid"
+      aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}
+      aria-multiselectable={onCreateRange ? true : undefined}
+    >
       <div
         ref={scrollRef}
         // At 150 % the pane's edge falls inside a device pixel, and the week
         // scrolled under the header showed a line of its events there.
-        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none] [clip-path:inset(0.5px_0_0_0)]"
+        // No text selection or touch callout: a drag over the days picks days.
+        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none] [clip-path:inset(0.5px_0_0_0)] select-none [-webkit-touch-callout:none]"
         onScroll={handleScroll}
+        {...rangeSelect.pointerHandlers}
       >
         <div
           ref={headerRef}
@@ -512,7 +574,7 @@ export function CalendarMonthView({
           const fit = capRows ? fitMonthWeek(segments, dayEventRows, dayTasks.map((list) => list.length), rowCapacity, moreInHeader) : null;
           const hiddenPerDay = fit?.hidden ?? null;
           // Rows that grow with their content make room for the new event's preview.
-          const previewRows = !capRows && pendingPreview && week.some((day) => checkIsSameDay(pendingPreview.start, day)) ? 1 : 0;
+          const previewRows = !capRows && pendingPreview && week.some((day) => checkIsSameDay(pendingPreview.start, day) || isInMonthRange(day, draftRange)) ? 1 : 0;
           return (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
             minHeight: showChips && !capRows
@@ -530,13 +592,17 @@ export function CalendarMonthView({
               const fullDateLabel = formatFullDate(day);
               const previous = dayIndex > 0 ? week[dayIndex - 1] : addDays(day, -1);
               const firstOfMonth = !checkIsSameMonth(day, previous);
+              const picked = isInMonthRange(day, highlight);
 
               return (
                 <div
                   key={key}
                   role="gridcell"
-                  aria-selected={selected}
+                  data-month-day={key}
+                  aria-selected={selected || picked}
                   onClick={() => {
+                    // The end of a drag over days, not a click on this one.
+                    if (rangeSelect.wasDragging.current) return;
                     onSelectDate(day);
                     // On phones a tap opens the day instead.
                     if (!isMobile) onCreateAllDay?.(day);
@@ -550,7 +616,8 @@ export function CalendarMonthView({
                     !inMonth && "bg-muted/30",
                     "hover:bg-muted/50",
                     selected && isMobile && "bg-primary/10",
-                    dropDayKey === key && "ring-2 ring-inset ring-primary bg-primary/10"
+                    dropDayKey === key && "ring-2 ring-inset ring-primary bg-primary/10",
+                    picked && "bg-primary/15 hover:bg-primary/15"
                   )}
                 >
                   <div className="flex items-center justify-center gap-1 mb-0.5">
@@ -649,6 +716,7 @@ export function CalendarMonthView({
                       isMobile={isMobile}
                       calendarMap={calendarMap}
                       pendingPreview={pendingPreview}
+                      draftRange={draftRange}
                       lastRow={capRows ? rowCapacity - 1 : Infinity}
                       selectedEventId={selectedEventId}
                       currentUserEmails={currentUserEmails}
@@ -693,7 +761,7 @@ type WeekSegment = ReturnType<typeof buildWeekSegments>[number];
  */
 function MonthCellEntries({
   dayIndex, week, segments, rowLimit, isShown, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
-  isMobile, calendarMap, pendingPreview, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
+  isMobile, calendarMap, pendingPreview, draftRange, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
   onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onReplyEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, moreInHeader = false, paint,
 }: {
   dayIndex: number;
@@ -713,6 +781,8 @@ function MonthCellEntries({
   isMobile?: boolean;
   calendarMap: Map<string, Calendar>;
   pendingPreview?: PendingEventPreview | null;
+  /** The days of a new all-day event being created: its bar spans them. */
+  draftRange?: MonthRange | null;
   /** The last row a fixed-height week has room for; the preview must not go past it. */
   lastRow: number;
   selectedEventId?: string | null;
@@ -746,13 +816,25 @@ function MonthCellEntries({
   // A click, double click or right-click on an entry is the entry's, not a
   // click on the empty day (which creates an all-day event there).
   const own = {
+    // Not empty day space: a drag from here doesn't pick days.
+    "data-month-entry": true,
     onClick: (e: React.MouseEvent) => e.stopPropagation(),
     onDoubleClick: (e: React.MouseEvent) => e.stopPropagation(),
     onContextMenu: (e: React.MouseEvent) => e.stopPropagation(),
   };
   const daySegments = segments.filter((segment) => segment.startIndex === dayIndex && (isShown ? isShown(segment) : segment.row < rowLimit));
   const tasks = dayTasks[dayIndex].filter((_, taskIndex) => dayEventRows[dayIndex] + taskIndex < rowLimit);
-  const preview = pendingPreview && isSameDay(pendingPreview.start, day) ? pendingPreview : null;
+  // A new all-day event spans its days, from its first day or the start
+  // of each week row it continues into; a timed one sits on its day.
+  const previewSpan = (() => {
+    if (!pendingPreview) return 0;
+    if (draftRange) {
+      if (!isInMonthRange(day, draftRange) || (dayIndex > 0 && !isSameDay(day, draftRange.start))) return 0;
+      return Math.min(differenceInCalendarDays(draftRange.end, day) + 1, week.length - dayIndex);
+    }
+    return isSameDay(pendingPreview.start, day) ? 1 : 0;
+  })();
+  const preview = previewSpan > 0 ? pendingPreview : null;
 
   return (
     <>
@@ -835,10 +917,12 @@ function MonthCellEntries({
       )}
       {preview && (() => {
         // On a full day it lies over the last row: below it, it landed on the next week's date.
-        const previewRow = Math.min(lastRow, Math.max(rowCount, dayEventRows[dayIndex] + dayTasks[dayIndex].length));
+        let busiest = 0;
+        for (let d = dayIndex; d < dayIndex + previewSpan; d++) busiest = Math.max(busiest, dayEventRows[d] + dayTasks[d].length);
+        const previewRow = Math.min(lastRow, Math.max(rowCount, busiest));
         const color = paint(calendarMap.get(preview.calendarId)?.color || "#3b82f6");
         return (
-          <div className="absolute z-20 px-0.5 pointer-events-none" style={place(previewRow)}>
+          <div className="absolute z-20 px-0.5 pointer-events-none" style={place(previewRow, previewSpan)}>
             <div
               data-pending-preview
               className={cn(

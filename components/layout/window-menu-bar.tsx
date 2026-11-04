@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, ChevronRight } from "@/components/icons";
+import {
+  Archive, ArrowLeft, ArrowRight, BookOpen, Calendar, CalendarDays, CalendarPlus, Check, CheckSquare, ChevronDown,
+  ChevronRight, ChevronUp, Clipboard, Copy, Download, ExternalLink, FileText, FolderInput, Forward, Inbox, Info, Keyboard,
+  Lock, LogOut, Mail, MailOpen, Maximize2, Minus, Paperclip, PanelRight, Printer, RefreshCw, Reply, ReplyAll, Save, Scissors,
+  Search, Send, Settings, ShieldAlert, SquarePen, Star, Trash2, Undo, Redo, Upload, UserPlus, Users, Folder, ZoomIn, ZoomOut,
+  Server, RotateCcw, LayoutGrid, LayoutList, LayoutTemplate, Zap, Power,
+} from "@/components/icons";
+import { CONTEXT_MENU_PANEL_CLASS, MenuShortcut } from "@/components/ui/context-menu";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { MENU_BAR_ATTRIBUTE, cachedMenuBarPinned, menuKeyText, rememberMenuBarPinned } from "@/lib/desktop/menu-bar";
 import type { DesktopMenuBarEntry, DesktopMenuBarItem, DesktopMenuBarMenu } from "@/lib/desktop/types";
@@ -23,6 +30,39 @@ import { cn } from "@/lib/utils";
  */
 
 const LINE = "[data-menu-line]";
+
+type Glyph = React.ComponentType<{ className?: string }>;
+
+/**
+ * The icon of each line of the shell's menus, by its id (src/main/menu.ts in the desktop
+ * repo; a role's line comes as `role.<role>`), so the bar's menus look like every other
+ * menu in the app. A shell that sends no ids gets the lines without icons.
+ */
+const MENU_BAR_ICONS: Record<string, Glyph> = {
+  "file.newMessage": SquarePen, "file.newEvent": CalendarPlus, "file.newTask": CheckSquare, "file.newContact": UserPlus,
+  "file.quickCompose": Zap, "file.newWindow": ExternalLink, "file.print": Printer, "file.savePdf": Download,
+  "file.import": Upload, "file.importMenu": Upload, "file.importCalendar": Calendar, "file.importContacts": Users,
+  "file.settings": Settings, "app.settings": Settings, "file.switchMode": Server, "file.lock": Lock, "file.close": Minus,
+  "file.quit": Power, "role.quit": Power, "role.close": Minus,
+  "role.undo": Undo, "role.redo": Redo, "role.cut": Scissors, "role.copy": Copy, "role.paste": Clipboard,
+  "role.selectAll": CheckSquare, "role.selectall": CheckSquare, "edit.search": Search,
+  "view.refresh": RefreshCw, "view.calendar.day": CalendarDays, "view.calendar.week": CalendarDays,
+  "view.calendar.month": CalendarDays, "view.calendar.agenda": CalendarDays, "view.readingPane": PanelRight,
+  "view.layout.split": PanelRight, "view.layout.horizontal": LayoutList, "view.layout.focus": LayoutTemplate,
+  "view.zoomIn": ZoomIn, "view.zoomOut": ZoomOut, "view.zoomReset": RotateCcw,
+  "role.togglefullscreen": Maximize2, "role.toggleFullScreen": Maximize2,
+  "compose.send": Send, "compose.saveDraft": Save, "compose.attach": Paperclip,
+  "message.reply": Reply, "message.replyAll": ReplyAll, "message.forward": Forward, "message.markRead": MailOpen,
+  "message.markUnread": Mail, "message.star": Star, "message.move": FolderInput, "message.archive": Archive,
+  "message.spam": ShieldAlert, "message.delete": Trash2, "message.openWindow": ExternalLink,
+  "go.inbox": Inbox, "go.sent": Send, "go.drafts": FileText, "go.nextMessage": ChevronDown, "go.previousMessage": ChevronUp,
+  "go.nextUnread": MailOpen, "go.mail": Mail, "go.calendar": Calendar, "go.contacts": Users, "go.files": Folder,
+  "go.back": ArrowLeft, "go.forward": ArrowRight, "go.today": CalendarDays, "go.nextPeriod": ChevronRight,
+  "go.previousPeriod": ArrowLeft,
+  "window.minimize": Minus, "role.minimize": Minus, "window.cycle": LayoutGrid,
+  "help.shortcuts": Keyboard, "help.docs": BookOpen, "help.updates": Download, "help.restart": RefreshCw, "help.about": Info,
+  "role.about": Info, "app.lock": Lock, "file.unlock": Lock, "app.logout": LogOut,
+};
 const ENABLED_LINE = `${LINE}:not([aria-disabled="true"])`;
 
 type Focus = { kind: "name"; index: number } | { kind: "line" | "panel"; sub?: boolean };
@@ -363,6 +403,7 @@ export function WindowMenuBar() {
       const isSub = item.type === "submenu";
       const checkable = item.type === "checkbox" || item.type === "radio";
       const opened = level === "panel" && isSub && sub === index;
+      const LineIcon = item.id ? MENU_BAR_ICONS[item.id] : undefined;
       return (
         <div key={item.key} className="relative">
           <button
@@ -384,24 +425,28 @@ export function WindowMenuBar() {
               if (isSub) openSub(index);
               else run(item);
             }}
+            // The shared menu's row (components/ui/context-menu.tsx): icon column, label,
+            // the key as a keycap, the submenu's chevron.
             className={cn(
-              "flex w-full items-center gap-2 rounded px-2 py-1.5 text-start text-sm outline-none",
-              item.enabled ? "focus:bg-muted" : "cursor-default text-muted-foreground/60",
+              "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm outline-none",
+              item.enabled ? "focus:bg-muted" : "cursor-default opacity-50",
               opened && "bg-muted",
             )}
           >
             <span className="flex w-4 shrink-0 justify-center" aria-hidden="true">
-              {checkable && item.checked && (item.type === "radio" ? <span className="h-1.5 w-1.5 rounded-full bg-current" /> : <Check className="h-3.5 w-3.5" />)}
+              {checkable && item.checked ? <Check className="h-4 w-4" /> : LineIcon ? <LineIcon className="h-4 w-4" /> : null}
             </span>
             <span className="min-w-0 flex-1 truncate" data-menu-label="">
               <Label text={item.label} at={item.mnemonic} cue={cue} />
             </span>
             {item.accelerator && (
-              <span className="shrink-0 ps-6 text-xs text-muted-foreground" data-menu-keys="" aria-hidden="true">
-                {menuKeyText(item.accelerator, getDesktopBridge()?.platform)}
-              </span>
+              <MenuShortcut
+                keys={menuKeyText(item.accelerator, getDesktopBridge()?.platform)}
+                className="ms-6"
+                data-menu-keys=""
+              />
             )}
-            {isSub && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+            {isSub && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
           </button>
         </div>
       );
@@ -456,7 +501,7 @@ export function WindowMenuBar() {
               aria-label={menu.label}
               data-menu-panel=""
               tabIndex={-1}
-              className="absolute start-0 top-full mt-0.5 min-w-56 max-w-[min(24rem,90vw)] max-h-[calc(100dvh-2.75rem)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none"
+              className={cn("absolute start-0 top-full mt-0.5 min-w-56 max-w-[min(22rem,90vw)] max-h-[calc(100dvh-2.75rem)] overflow-y-auto py-1 text-foreground outline-none", CONTEXT_MENU_PANEL_CLASS)}
             >
               {renderLines(openItems, "panel")}
             </div>
@@ -466,7 +511,7 @@ export function WindowMenuBar() {
               role="menu"
               aria-label={openItems[sub]?.label}
               data-menu-subpanel=""
-              className="fixed z-10 min-w-44 max-w-[min(24rem,90vw)] max-h-[calc(100dvh-0.5rem)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+              className={cn("fixed z-10 min-w-44 max-w-[min(22rem,90vw)] max-h-[calc(100dvh-0.5rem)] overflow-y-auto py-1 text-foreground", CONTEXT_MENU_PANEL_CLASS)}
               style={{ top: -9999, left: -9999 }}
             >
               {renderLines(subItems, "subpanel")}

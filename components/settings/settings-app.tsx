@@ -42,6 +42,8 @@ import { HelpLinks } from '@/components/layout/help-links';
 import { OrganizeSettings } from '@/components/settings/organize-settings';
 import { AccountSecuritySettings } from '@/components/settings/account-security-settings';
 import { FilesSettingsComponent } from '@/components/settings/files-settings';
+import { DesktopFilesSettings } from '@/components/settings/desktop-files-settings';
+import { useFilesSyncStore } from '@/stores/files-sync-store';
 import { ContactsSettings } from '@/components/settings/contacts-settings';
 import { AddonsSettings } from '@/components/settings/addons-settings';
 import { NotificationSettings } from '@/components/settings/notification-settings';
@@ -686,6 +688,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const supportsCalendar = client?.supportsCalendars() ?? false;
   const supportsSieve = client?.supportsSieve() ?? false;
   const supportsFiles = client?.supportsFiles() ?? false;
+  // Files on this computer: the desktop app's sync engine runs in this window.
+  const filesSyncAvailable = useFilesSyncStore((s) => s.available);
   // Delegates (Settings > Sharing) needs someone to share with and something to share.
   const supportsSharing = !delegationHidden && !!client?.getShareTargets && (client?.supportsPrincipals() ?? false)
     && ((client?.supportsMailboxSharing?.() ?? false)
@@ -718,6 +722,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     ...(supportsCalendar && isFeatureEnabled('calendarEnabled') ? [{ id: 'calendar' as Tab, label: t('tabs.calendar'), icon: tabIcons.calendar, group: 'apps' as TabGroup }] : []),
     ...(isFeatureEnabled('contactsEnabled') ? [{ id: 'contacts' as Tab, label: t('tabs.contacts'), icon: tabIcons.contacts, group: 'apps' as TabGroup }] : []),
     ...(supportsFiles && isFeatureEnabled('filesEnabled') ? [{ id: 'files' as Tab, label: t('tabs.files'), icon: tabIcons.files, group: 'apps' as TabGroup }] : []),
+    ...(filesSyncAvailable && supportsFiles && isFeatureEnabled('filesEnabled') ? [{ id: 'files_sync' as Tab, label: tRoot(settingsTabLabelKey('files_sync')), icon: tabIcons.files_sync, group: 'apps' as TabGroup }] : []),
     ...(isFeatureEnabled('sidebarAppsEnabled') || isFeatureEnabled('pluginsEnabled') ? [{ id: 'addons' as Tab, label: t('tabs.addons'), icon: tabIcons.addons, group: 'apps' as TabGroup }] : []),
     // Plugin-contributed pages nest under Add-ons: a page of its own for each
     // plugin that offers one, and an entry for each plugin that offers only a
@@ -926,6 +931,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           : <><ContactsSettings /><div className="mt-8"><AddressBookManagementSettings /></div></>
       )}
       {effectiveActiveTab === 'files' && <FilesSettingsComponent />}
+      {effectiveActiveTab === 'files_sync' && <DesktopFilesSettings />}
       {effectiveActiveTab === 'addons' && <AddonsSettings />}
       {effectiveActiveTab === 'privacy' && <PrivacySettings />}
       {effectiveActiveTab === 'offline' && <OfflineSettings />}

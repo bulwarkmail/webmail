@@ -45,6 +45,9 @@ import {
   BookUser,
   Lock,
   CloudOff,
+  Pencil,
+  UserPen,
+  ArrowLeftRight,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
@@ -188,7 +191,11 @@ import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
-import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
+import { askInWindow } from "@/lib/desktop/dialog-window";
+import { readRecentFile, RECENT_FILE_MAX_BYTES, useRecentFilesOffered } from "@/lib/desktop/recent-files";
+import type { DesktopRecentFile } from "@/lib/desktop/types";
+import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
@@ -650,6 +657,7 @@ export function EmailComposer({
   const tEdit = useTranslations('desktopEdit');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
+  const tRecent = useTranslations('desktopAttachRecent');
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
@@ -2778,6 +2786,20 @@ export function EmailComposer({
     void addFiles(initialFiles, { handedIn: true });
   }, [client, initialFiles, addFiles]);
 
+  // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
+  // shell reads the file; from there it's a file like one from the file dialog.
+  const recentOffered = useRecentFilesOffered();
+  const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
+    const result = await readRecentFile(file.id);
+    if (result.ok) {
+      await addFiles([result.file]);
+      return;
+    }
+    if (result.reason === 'missing') toast.error(tRecent('missing', { name: file.name }));
+    else if (result.reason === 'too-large') toast.error(tRecent('too_large', { name: file.name, max: formatFileSize(RECENT_FILE_MAX_BYTES) }));
+    else if (result.reason === 'failed') toast.error(tRecent('failed', { name: file.name }));
+  }, [addFiles, tRecent]);
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
     await addFiles(Array.from(event.target.files));
@@ -4862,15 +4884,39 @@ export function EmailComposer({
     emitClose();
   };
 
-  /** The question before closing or discarding: the OS's own in the desktop app. */
+  /**
+   * The question before closing or discarding. In the desktop app it is a window of its
+   * own; an older shell asks with the OS's message box.
+   */
   const openCloseDialog = (kind: 'discard' | 'close') => {
-    const dialogs = getDesktopBridge()?.dialogs;
-    if (!dialogs) {
+    const inPage = () => {
       setCloseDialogKind(kind);
       setShowCloseDialog(true);
+    };
+    const discarding = kind === 'discard';
+    const asked = askInWindow({
+      title: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      message: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
+      buttons: discarding
+        ? [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }]
+        : [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }, { label: tUx('try_again') }],
+      defaultIndex: discarding ? 0 : 2,
+    });
+    if (asked) {
+      void asked.answer.then((answer) => {
+        const button = answer && answer !== 'failed' && 'button' in answer ? answer.button : -1;
+        if (answer === 'failed') inPage();
+        else if (button === 1) handleDiscardAndClose();
+        else if (button === 2) void handleSaveDraftAndClose({ fromClose: true });
+        else afterCloseRef.current = null;
+      });
       return;
     }
-    const discarding = kind === 'discard';
+    const dialogs = getDesktopBridge()?.dialogs;
+    if (!dialogs) {
+      inPage();
+      return;
+    }
     const buttons = discarding ? [t('discard'), t('cancel')] : [tUx('try_again'), t('discard'), t('cancel')];
     void dialogs.confirm({
       type: 'warning',
@@ -5941,14 +5987,19 @@ export function EmailComposer({
               className="hidden"
               accept="*/*"
             />
-            {(filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
+            {recentOffered || (filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
               <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
                 {(close) => <>
+                  {/* As Outlook's: the recent files first, one click attaches one and closes. */}
+                  {recentOffered && (
+                    <RecentFilesMenuSection onPick={(file) => { close(); void attachRecentFile(file); }} />
+                  )}
                   <ComposerToolbarMenuItem
                     icon={Upload}
                     onSelect={() => { close(); fileInputRef.current?.click(); }}
+                    testId="composer-attach-from-device"
                   >
-                    {t('attach_from_device')}
+                    {isDesktopApp() ? tRecent('browse') : t('attach_from_device')}
                   </ComposerToolbarMenuItem>
                   {filesEnabled && composerClient?.supportsFiles?.() && (
                     <ComposerToolbarMenuItem
@@ -5956,7 +6007,7 @@ export function EmailComposer({
                       onSelect={() => { close(); setFilesPicker({ client: composerClient, accountId: composerAccountId }); }}
                       testId="composer-attach-from-files"
                     >
-                      {t('attach_from_files')}
+                      {isDesktopApp() ? tRecent('from_files') : t('attach_from_files')}
                     </ComposerToolbarMenuItem>
                   )}
                   <ComposerPluginMenuItems surface="composer-attach-menu" context={composerActionContext} onSelect={close} separator />
@@ -7123,14 +7174,15 @@ export function RecipientChipInput({
             </div>
             <ContextMenuSeparator />
             {!contextMenu.data.recipient.group && (
-              <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />
+              <ContextMenuItem icon={Pencil} label={t('recipient_edit_email')} onClick={handleEditEmail} />
             )}
-            <ContextMenuItem label={t('recipient_edit_name')} onClick={handleEditName} />
+            <ContextMenuItem icon={UserPen} label={t('recipient_edit_name')} onClick={handleEditName} />
             <ContextMenuSeparator />
             {/* Moving between fields without dragging (WCAG 2.5.7). */}
             {(['to', 'cc', 'bcc'] as const).filter((target) => target !== field).map((target) => (
               <ContextMenuItem
                 key={target}
+                icon={ArrowLeftRight}
                 testId={`recipient-move-${target}`}
                 label={t('recipient_move_to', { field: fieldNames[target] })}
                 onClick={() => {
@@ -7142,7 +7194,7 @@ export function RecipientChipInput({
               />
             ))}
             <ContextMenuSeparator />
-            <ContextMenuItem label={t('recipient_remove')} onClick={() => {
+            <ContextMenuItem icon={X} label={t('recipient_remove')} onClick={() => {
               if (contextMenu.data) {
                 handleChipRemove(contextMenu.data.index, { stopPropagation: () => {} } as React.MouseEvent);
               }

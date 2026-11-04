@@ -507,6 +507,8 @@ export function CalendarSidebarPanel({
           <ContextMenuItem
             icon={Eraser}
             label={tUx('clear_all_events')}
+            destructive
+            testId="calendar-clear-all"
             onClick={() => { closeContextMenu(); onClearCalendar(cal); }}
           />
         )}

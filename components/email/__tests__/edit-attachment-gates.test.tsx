@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { PHISHING_KEYWORD } from '@/lib/phishing-report';
@@ -50,14 +50,11 @@ function makeEmail(attachment: Record<string, unknown>, keywords: Record<string,
 /** Answers anything the views ask of a client with nothing. */
 const fakeClient = new Proxy({}, { get: (_target, name) => (name === 'then' ? undefined : () => undefined) });
 
-let popup: ReturnType<typeof vi.fn>;
-
 beforeEach(() => {
-  popup = vi.fn(async () => null);
   window.bulwarkDesktop = {
     version: 1,
     platform: 'win32',
-    menu: { setState: () => {}, popup },
+    menu: { setState: () => {} },
     // The shell's list, for the ones used here.
     edit: { canEdit: (name: string) => /\.(docx|txt)$/.test(name), list: async () => [], onChange: () => () => {} },
   } as never;
@@ -74,8 +71,8 @@ async function viewerMenu(email: Email): Promise<(string | undefined)[]> {
   render(<EmailViewer email={email} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onArchive={vi.fn()} onDelete={vi.fn()} />);
   const tile = await screen.findByTestId('attachment');
   fireEvent.contextMenu(tile.parentElement ?? tile, { clientX: 5, clientY: 5 });
-  await waitFor(() => expect(popup).toHaveBeenCalled());
-  return (popup.mock.calls[0][0] as { label?: string }[]).map((item) => item.label);
+  const menu = await screen.findByRole('menu');
+  return within(menu).getAllByRole('menuitem').map((item) => item.querySelector('[data-menu-label]')?.textContent ?? undefined);
 }
 
 describe('the reader', () => {

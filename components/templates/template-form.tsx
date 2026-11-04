@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useId, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Plus, Square, CheckSquare } from '@/components/icons';
+import { Star, Plus, Square, CheckSquare, Braces } from '@/components/icons';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { cn } from '@/lib/utils';
@@ -338,6 +338,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel, shared =
         {BUILT_IN_PLACEHOLDERS.map((p) => (
           <ContextMenuItem
             key={p}
+            icon={Braces}
             label={`{{${p}}}`}
             hint={t(`placeholders.${p}`)}
             onClick={() => {
