@@ -253,6 +253,12 @@ describe('recipient fields (SR-06, CV-02)', () => {
     expect(screen.getByRole('list', { name: 'to:' })).toBeInTheDocument();
   });
 
+  // compose-p2-18: the ring outside the input was cut by the field's scroller.
+  it("draws the To field's keyboard focus ring inside it", () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    expect(screen.getByRole('combobox', { name: 'to:' })).toHaveClass('focus-inset');
+  });
+
   it('labels the subject field', () => {
     render(<EmailComposer initialData={DRAFT} />);
     expect(screen.getByLabelText('subject_label')).toBe(screen.getByTestId('composer-subject'));
