@@ -231,6 +231,8 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
 const REQUIRED_TOOLBAR_PRIORITIES = [5, 3, 2, 4, 1] as const;
 /** Set on the toolbar while it shows icons without their labels. */
 const TOOLBAR_COMPACT_ATTRIBUTE = 'data-toolbar-compact';
+/** Which labels the reader toolbar has dropped: none, all but the main four, or all. */
+type ToolbarCompact = false | 'secondary' | 'all';
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
 const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 
@@ -1854,7 +1856,7 @@ export function EmailViewer({
   // looked like (see layoutKey), and the width it last had: an open that
   // brings back a toolbar already measured at this width needs no measuring.
   // A loading message and a loaded one can differ, so a few are kept.
-  const measuredToolbarRef = useRef(new Map<string, { hidden: Set<number>; compact: boolean }>());
+  const measuredToolbarRef = useRef(new Map<string, { hidden: Set<number>; compact: ToolbarCompact }>());
   const toolbarWidthRef = useRef<number | undefined>(undefined);
   const currentTagIds = getEmailTagIds(email?.keywords);
   const sortedTagIds = sortTagIds(currentTagIds);
@@ -2117,7 +2119,8 @@ export function EmailViewer({
       const key = layoutKey(items);
       const known = toolbarWidthRef.current !== undefined ? measuredToolbarRef.current.get(key) : undefined;
       if (known) {
-        el.toggleAttribute(TOOLBAR_COMPACT_ATTRIBUTE, known.compact);
+        if (known.compact) el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, known.compact);
+        else el.removeAttribute(TOOLBAR_COMPACT_ATTRIBUTE);
         for (const item of items) item.style.display = known.hidden.has(Number(item.dataset.overflowPriority)) ? 'none' : '';
         applyHidden(known.hidden);
         return;
@@ -2135,10 +2138,13 @@ export function EmailViewer({
       const containerWidth = el.clientWidth;
       const overflowNow = () => leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
       let overflow = overflowNow();
-      // The labels go before any button does (icons keep their tooltips).
-      const compact = overflow > 0;
-      if (compact) {
-        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, '');
+      // The labels go before any button does (icons keep their tooltips):
+      // first all but Reply, Archive, Delete and Move, then those too.
+      let compact: ToolbarCompact = false;
+      for (const step of ['secondary', 'all'] as const) {
+        if (overflow <= 0) break;
+        compact = step;
+        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, step);
         overflow = overflowNow();
       }
       const hidden = new Set<number>();
@@ -4477,7 +4483,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply')}
         >
           <Reply className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4535,7 +4541,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('spam.not_spam_title')}
           >
             <ShieldCheck className={cn("h-4 w-4", !mvViewer && "text-emerald-600 dark:text-emerald-400")} />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('spam.not_spam_title')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('spam.not_spam_title')}</span>}
           </Button>
         )}
         {isInTrashFolder && restoreTarget && onMoveToMailbox && (
@@ -4551,7 +4557,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={tActions('restore_to', { folder: localizeMailboxName(restoreTarget.role, restoreTarget.name, (key) => tSidebarNames(`mailboxes.${key}`)) })}
           >
             <RotateCcw className="w-4 h-4" />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
         {archiveActionEnabled && !isInJunkFolder && !isInTrashFolder && (
@@ -4565,7 +4571,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('tooltips.archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4578,7 +4584,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-testid="reader-delete"
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {canMoveAnywhere && onMoveToMailbox && (
@@ -4598,7 +4604,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+              {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-64 max-w-full" data-reader-move-menu="">
