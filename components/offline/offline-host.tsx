@@ -11,6 +11,9 @@ import { buildSettingsPath } from '@/lib/deep-links';
 import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
 import { toast } from '@/stores/toast-store';
 
+/** How long the notice that the desktop app keeps mail stays: a long sentence, so twice a plain toast. */
+const DEFAULT_ON_NOTICE_MS = 10_000;
+
 /**
  * Runs offline mode (#523) in this tab: the JMAP client's offline hooks,
  * the outbox, the wipes. Its notices become toasts, and a sign-out the
@@ -74,7 +77,8 @@ export function OfflineHost() {
           toast.warning(tStorageRef.current('storage_full_title'), { message: tStorageRef.current('storage_full_text'), duration: 0, action: openStorage });
           break;
         case 'default-on':
-          toast.info(tStorageRef.current('default_on'), { duration: 0, action: openStorage });
+          // Said once; it goes like other notices, and Settings has the switch.
+          toast.info(tStorageRef.current('default_on'), { duration: DEFAULT_ON_NOTICE_MS, action: openStorage });
           break;
         case 'legacy-stranded':
           toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });
