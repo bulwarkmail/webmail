@@ -1261,6 +1261,41 @@ describe('what else goes with a wipe', () => {
   });
 });
 
+describe('a shell that never answers about shown notifications', () => {
+  // Electron has no answer to getNotifications(): the promise stays pending for good.
+  beforeEach(() => {
+    respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : noWipe());
+    const registration = {
+      getNotifications: () => new Promise<Notification[]>(() => {}),
+      pushManager: { getSubscription: async () => null },
+    };
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { getRegistration: async () => registration, controller: null } });
+  });
+
+  afterEach(() => {
+    delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+  });
+
+  const ended = (work: Promise<void>) => Promise.race([
+    work.then(() => 'finished'),
+    new Promise((resolve) => setTimeout(() => resolve('hung'), 20_000)),
+  ]);
+
+  it('a wipe of the whole device still gets to the keys and the files', async () => {
+    const before = purge.files;
+    expect(await ended(wipe.wipeWholeDevice('user'))).toBe('finished');
+    expect(purge.files).toBeGreaterThan(before);
+    expect(wipeState.readPendingWipes()).toEqual({});
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('a wipe of one account gets past them too, to its sign-out', async () => {
+    expect(await ended(wipe.wipeAccountFromDevice(ALICE, 'admin'))).toBe('finished');
+    expect(wipeState.readPendingWipes()).toEqual({});
+    expect(useAccountStore.getState().accounts.some((account) => account.id === ALICE)).toBe(false);
+  });
+});
+
 describe('the session timers', () => {
   const timerSignOut = () => useAuthStore.getState().logoutAll({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
 

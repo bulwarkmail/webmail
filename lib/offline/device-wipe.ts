@@ -52,6 +52,7 @@ import { isAppLockedNow } from '@/lib/app-lock/state';
 import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
 import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
+import { shownNotifications } from '@/lib/notifications/shown';
 import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
 import { ACCOUNT_STORAGE_KEYS, onBeforeSignOut } from '@/lib/sign-out-cleanup';
 import {
@@ -101,6 +102,8 @@ export const CHECK_IN_EVERY_MS = 60 * 60 * 1000;
 const TICK_MS = 60 * 1000;
 /** How long a wipe waits to tell the instance before it goes on: it tries again at the next contact. */
 const REPORT_BUDGET_MS = 3_000;
+/** How long a wipe waits for the desktop app's main process: the keys come after this. */
+const SHELL_FILES_BUDGET_MS = 10_000;
 /** How long a wipe waits for one database a running plugin frame holds open. */
 const DATABASE_BUDGET_MS = 2_000;
 
@@ -208,7 +211,11 @@ async function clearShellFiles(): Promise<void> {
     clipboard?: { clearFiles?: () => void | Promise<void> };
   } | null;
   bridge?.os?.clearSurfaces?.();
-  await bridge?.clipboard?.clearFiles?.();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    Promise.resolve(bridge?.clipboard?.clearFiles?.()),
+    new Promise((resolve) => { timer = setTimeout(resolve, SHELL_FILES_BUDGET_MS); }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 /** A running frame is gone at the next load. Before any plugin starts again. */
@@ -256,7 +263,8 @@ async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
 /** A sender and a subject can sit on screen long after the mail is gone. */
 async function closeShownNotifications(): Promise<void> {
   const registration = await pushRegistration();
-  for (const notification of await registration?.getNotifications?.() ?? []) notification.close();
+  if (!registration?.getNotifications) return;
+  for (const notification of await shownNotifications(registration) ?? []) notification.close();
 }
 
 /** The subscription is the browser's, shared by every account on this origin. */
