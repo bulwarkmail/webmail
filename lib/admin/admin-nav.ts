@@ -119,10 +119,10 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
   },
   {
     id: 'policy',
-    label: 'User policy',
-    description: 'Which features users get and which settings they may change',
-    group: 'top',
-    keywords: 'features gates restrictions lock hide users',
+    label: 'Features and settings',
+    description: 'Which features users get, which settings they may change, and what they start with, for everyone or one domain or group',
+    group: 'organisation',
+    keywords: 'user policy features gates restrictions lock hide users defaults presets scope domain group',
     sections: [
       { id: 'features', title: 'Features', keywords: 'calendar contacts files smime templates keywords sidebar apps unified mailbox archive custom from debug export' },
       { id: 'push-relays', title: 'Push relays', keywords: 'notifications relay url default lock' },

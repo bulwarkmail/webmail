@@ -19,7 +19,7 @@ export interface ReachableHost {
   host: string;
   /** scheme://host[:port], for the CSP; absent for addresses users enter. */
   origin?: string;
-  /** Where it was configured, e.g. "JMAP_SERVER_URL" or "User policy > Push relays". */
+  /** Where it was configured, e.g. "JMAP_SERVER_URL" or "Features and settings > Push relays". */
   setIn: string;
   /** Who connects: this server, the browser, or both. */
   side: 'server' | 'browser' | 'both';
@@ -83,8 +83,8 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
     add('OAuth issuer', get('oauthAuthorizeUrl'), 'OAUTH_AUTHORIZE_URL', 'browser');
     add('OAuth issuer', get('oauthEndSessionUrl'), 'OAUTH_END_SESSION_URL', 'browser');
   }
-  for (const relay of policy.pushRelays ?? []) add('Push relay', relay?.url, 'User policy > Push relays', 'browser');
-  add('Push relay', policy.pushRelayUrl, 'User policy > Push relays', 'browser');
+  for (const relay of policy.pushRelays ?? []) add('Push relay', relay?.url, 'Features and settings > Push relays', 'browser');
+  add('Push relay', policy.pushRelayUrl, 'Features and settings > Push relays', 'browser');
   // The relay browsers offer as the default is the one inlined when the
   // bundle was built. A different value in the running environment does
   // nothing for them, so it is listed with a warning.
@@ -92,7 +92,7 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   const runtimeRelay = parse(env.NEXT_PUBLIC_PUSH_RELAY_URL);
   if (runtimeRelay && runtimeRelay.origin !== parse(buildRelayUrl)?.origin) {
     add('Push relay', runtimeRelay.href, 'NEXT_PUBLIC_PUSH_RELAY_URL (environment)', 'browser',
-      'Set in the environment only: browsers use the relay this build was made with. Rebuild, or add it under User policy > Push relays.');
+      'Set in the environment only: browsers use the relay this build was made with. Rebuild, or add it under Features and settings > Push relays.');
   }
   add('Extension directory', get('extensionDirectoryUrl'), 'EXTENSION_DIRECTORY_URL', 'server');
   // Company calendars of Everyone and of every scope: this server fetches
@@ -103,7 +103,7 @@ export function listReachableHosts({ get, policy, env, buildRelayUrl = DEFAULT_R
   for (const plugin of plugins) {
     for (const origin of plugin.origins) add(`Plugin ${plugin.name}`, origin, "The plugin's admin page", 'server');
   }
-  for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `User policy > Sidebar apps (${app?.name ?? ''})`, 'browser');
+  for (const app of policy.defaultSidebarApps ?? []) add('Sidebar app', app?.url, `Features and settings > Default sidebar apps (${app?.name ?? ''})`, 'browser');
   add('Document editor (WOPI)', get('wopiClientUrl'), 'WOPI_CLIENT_URL', 'both');
   add('Translation (LibreTranslate)', env.LIBRETRANSLATE_URL, 'LIBRETRANSLATE_URL', 'server');
   // Only when an admin set it; browsers and this server send error reports there.
