@@ -38,6 +38,7 @@ import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-m
 import { EmailContextMenu } from "./email-context-menu";
 import { rememberedTrashOrigin } from "@/lib/trash-origin";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
+import { useMessageActionShortcut } from "./message-action-shortcuts";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
 import { turnOffLinks } from "@/lib/phishing-links";
 import { usePhishingMarked } from "@/hooks/use-phishing-report";
@@ -1592,6 +1593,13 @@ export function EmailViewer({
   const simpleMode = useSettingsStore((state) => state.simpleMode);
   // Simple mode always names the toolbar's buttons in words.
   const showToolbarLabels = (showToolbarLabelsSetting || simpleMode) && interfaceLayout !== 'mountain-view';
+  // Tooltips name the same key the message menus and the shortcut help do
+  // (mail-p2-13), and none when single keys are off.
+  const messageActionShortcut = useMessageActionShortcut();
+  const withShortcut = (label: string, action: MessageActionKey) => {
+    const key = messageActionShortcut(action);
+    return key ? `${label} (${key})` : label;
+  };
   // Inside a Pro pane, `isMobile` above is pane-width based: overlays that
   // would go viewport-fixed must instead cover just the pane (via
   // PaneOverlay + absolute positioning), and viewport CSS breakpoints like
@@ -4480,7 +4488,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="1"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-          title={t('tooltips.reply')}
+          title={withShortcut(t('reply'), 'reply')}
         >
           <Reply className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
@@ -4492,7 +4500,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="2"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
-          title={t('tooltips.reply_all')}
+          title={withShortcut(t('reply_all'), 'reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
@@ -4504,7 +4512,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="3"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-          title={t('tooltips.forward')}
+          title={withShortcut(t('forward'), 'forward')}
         >
           <Forward className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
@@ -4568,7 +4576,7 @@ ${printWatermark ? printWatermark.html : ''}
             data-overflow-item
             data-overflow-priority="4"
             className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
-            title={t('tooltips.archive')}
+            title={withShortcut(t('archive'), 'archive')}
           >
             <Archive className="w-4 h-4" />
             {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
@@ -4580,7 +4588,7 @@ ${printWatermark ? printWatermark.html : ''}
           size="sm"
           onClick={onDelete}
           className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-3")}
-          title={deleteIsPermanent ? tActions('delete_forever') : t('tooltips.delete')}
+          title={deleteIsPermanent ? tActions('delete_forever') : withShortcut(t('delete'), 'delete')}
           data-testid="reader-delete"
         >
           <Trash2 className="w-4 h-4" />
