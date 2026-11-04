@@ -398,4 +398,15 @@ describe('recent files in the Attach menu', () => {
     await waitFor(() => expect(rows()).toHaveLength(2), { timeout: 10_000 });
     expect(popup).not.toHaveBeenCalled();
   }, 15_000);
+
+  // The To field takes the focus a moment after a new message opens; a click the user made
+  // in the composer before that (Subject, Attach) keeps it.
+  it('leaves the focus where the user put it before the first focus runs', async () => {
+    useAuthStore.setState({ client: client() as never });
+    render(<EmailComposer onClose={vi.fn()} />);
+    const subject = screen.getByTestId('composer-subject');
+    subject.focus();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 250)); });
+    expect(document.activeElement).toBe(subject);
+  });
 });

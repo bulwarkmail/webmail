@@ -2173,13 +2173,22 @@ export function EmailComposer({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // The first focus waits a moment for the fields to render. If the user has already
+  // clicked somewhere in this composer by then (Attach, Subject, a menu), it stays there.
+  const focusUnlessMoved = (target: HTMLElement | null): boolean => {
+    if (!target) return false;
+    const root = target.closest('[data-testid="email-composer"]');
+    const active = document.activeElement;
+    if (root && active && active !== document.body && active !== target && root.contains(active)) return false;
+    target.focus();
+    return true;
+  };
+
   // Auto-focus the To field when composing a new email or forwarding
   useEffect(() => {
     if (mode === 'forward' || mode === 'compose') {
       // Small delay to ensure the input is rendered
-      const timer = setTimeout(() => {
-        toInputRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => focusUnlessMoved(toInputRef.current), 100);
       return () => clearTimeout(timer);
     }
     // A reply has its recipients already: put the caret at the start of the
@@ -2187,8 +2196,7 @@ export function EmailComposer({
     // rich text editor focuses itself once it is ready (onEditorReady below).
     if ((mode === 'reply' || mode === 'replyAll') && plainTextMode) {
       const timer = setTimeout(() => {
-        bodyRef.current?.focus();
-        bodyRef.current?.setSelectionRange(0, 0);
+        if (focusUnlessMoved(bodyRef.current)) bodyRef.current?.setSelectionRange(0, 0);
       }, 100);
       return () => clearTimeout(timer);
     }
