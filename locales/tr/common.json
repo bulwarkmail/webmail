@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Yanıt Adresini Otomatik Seç",
       "description": "Postanın gönderildiği adresten yanıtlayın. Birden çok adresiniz varsa kullanışlıdır."
-    }
+    },
+    "require_tls": "Yalnızca güvenli bağlantı üzerinden teslim et",
+    "require_tls_hint": "İletinin kendisi şifrelenmez. Bir sunucu TLS kullanamazsa geri döner.",
+    "encrypt": "Şifrele…",
+    "encrypt_hint": "S/MIME veya PGP eklentisi gerekir. Ayarlar'ı açar."
   },
   "plugin_list": {
     "filters": "Filtreler",

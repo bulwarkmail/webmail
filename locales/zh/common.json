@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "自动选择回复地址",
       "description": "从邮件发往的地址回复。适合拥有多个地址的情况。"
-    }
+    },
+    "require_tls": "仅通过安全连接投递",
+    "require_tls_hint": "邮件本身不会加密。如果服务器无法使用 TLS，邮件会被退回。",
+    "encrypt": "加密…",
+    "encrypt_hint": "需要 S/MIME 或 PGP 附加组件。将打开设置。"
   },
   "plugin_list": {
     "filters": "筛选",

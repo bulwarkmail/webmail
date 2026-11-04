@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "使用收件地址回覆",
       "description": "從郵件寄達的地址回覆。適合擁有多個地址時使用。"
-    }
+    },
+    "require_tls": "僅透過安全連線投遞",
+    "require_tls_hint": "郵件本身不會加密。如果伺服器無法使用 TLS，郵件會被退回。",
+    "encrypt": "加密…",
+    "encrypt_hint": "需要 S/MIME 或 PGP 附加元件。將開啟設定。"
   },
   "plugin_list": {
     "filters": "篩選",

@@ -41,7 +41,9 @@ import {
   Reply,
   Forward,
   BookUser,
+  Lock,
 } from "@/components/icons";
+import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
 import type { MessagePriority } from "@/lib/message-priority";
@@ -603,6 +605,9 @@ export function EmailComposer({
   const tOffline = useTranslations('offline');
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
+  const tWords = useTranslations('compose_words');
+  const router = useRouter();
+  const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
   // Per-message format (#1022). Seeded from the "plain text only" setting -
@@ -5632,15 +5637,30 @@ export function EmailComposer({
                     {t('option_dsn')}
                   </ComposerToolbarMenuCheckItem>
                 )}
-                {composerClient?.supportsSubmissionExtension?.('REQUIRETLS') && (
+                {/* REQUIRETLS only secures the way there, so it is an advanced
+                    option; one already ticked stays visible to untick. */}
+                {composerClient?.supportsSubmissionExtension?.('REQUIRETLS') && (showAdvancedSettings || requireTls) && (
                   <ComposerToolbarMenuCheckItem
                     checked={requireTls}
                     onToggle={() => setRequireTls(v => !v)}
-                    description={t('option_require_tls_hint')}
+                    description={tWords('require_tls_hint')}
                     testId="composer-require-tls-toggle"
                   >
-                    {t('option_require_tls')}
+                    {tWords('require_tls')}
                   </ComposerToolbarMenuCheckItem>
+                )}
+                {/* Encrypting is a crypto plugin's job (S/MIME, PGP). Without
+                    one, say where to get it rather than offer nothing. */}
+                {emailHooks.onComposeSend.size === 0 && isFeatureEnabled('pluginsEnabled') && !ownWindow && (
+                  <ComposerToolbarMenuItem
+                    icon={Lock}
+                    muted
+                    description={tWords('encrypt_hint')}
+                    onSelect={() => { close(); router.push('/settings/addons'); }}
+                    testId="composer-encrypt-setup"
+                  >
+                    {tWords('encrypt')}
+                  </ComposerToolbarMenuItem>
                 )}
                 <div role="separator" className="my-1 h-px bg-border" />
                 <div role="group" aria-label={t('option_priority')} data-testid="composer-priority">

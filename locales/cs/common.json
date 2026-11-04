@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Automaticky vybírat adresu pro odpověď",
       "description": "Odpovídat z adresy, na kterou zpráva přišla. Hodí se, pokud máte více adres."
-    }
+    },
+    "require_tls": "Doručit jen přes zabezpečené spojení",
+    "require_tls_hint": "Samotná zpráva šifrovaná není. Vrátí se, pokud server nemůže použít TLS.",
+    "encrypt": "Šifrovat…",
+    "encrypt_hint": "Vyžaduje doplněk S/MIME nebo PGP. Otevře Nastavení."
   },
   "plugin_list": {
     "filters": "Filtry",

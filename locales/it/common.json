@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Seleziona automaticamente l'indirizzo di risposta",
       "description": "Rispondi dall'indirizzo a cui è stata inviata l'email. Utile se hai più indirizzi."
-    }
+    },
+    "require_tls": "Consegna solo tramite una connessione sicura",
+    "require_tls_hint": "Il messaggio in sé non è cifrato. Viene respinto se un server non può usare TLS.",
+    "encrypt": "Cifra…",
+    "encrypt_hint": "Serve un componente aggiuntivo S/MIME o PGP. Apre le Impostazioni."
   },
   "plugin_list": {
     "filters": "Filtri",

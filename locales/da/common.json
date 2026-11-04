@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Svar fra modtaget adresse",
       "description": "Svar fra den adresse, mailen blev sendt til. Nyttigt, hvis du har flere adresser."
-    }
+    },
+    "require_tls": "Lever kun via en sikker forbindelse",
+    "require_tls_hint": "Selve beskeden er ikke krypteret. Den sendes retur, hvis en server ikke kan bruge TLS.",
+    "encrypt": "Krypter…",
+    "encrypt_hint": "Kræver en S/MIME- eller PGP-tilføjelse. Åbner Indstillinger."
   },
   "plugin_list": {
     "filters": "Filtre",

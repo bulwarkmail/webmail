@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Răspunde de la adresa de la care a fost primit mesajul",
       "description": "Răspunde de la adresa la care a fost trimis e-mailul. Util dacă ai mai multe adrese."
-    }
+    },
+    "require_tls": "Livrează doar printr-o conexiune sigură",
+    "require_tls_hint": "Mesajul în sine nu este criptat. Este returnat dacă un server nu poate folosi TLS.",
+    "encrypt": "Criptează…",
+    "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările."
   },
   "plugin_list": {
     "filters": "Filtre",

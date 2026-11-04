@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Vasta kirja saanud aadressilt",
       "description": "Vasta aadressilt, kuhu kiri saadeti. Kasulik, kui sul on mitu aadressi."
-    }
+    },
+    "require_tls": "Toimeta kohale ainult turvalise ühenduse kaudu",
+    "require_tls_hint": "Kiri ise ei ole krüpteeritud. See tuleb tagasi, kui server ei saa TLS-i kasutada.",
+    "encrypt": "Krüpteeri…",
+    "encrypt_hint": "Vajab S/MIME või PGP lisa. Avab seaded."
   },
   "plugin_list": {
     "filters": "Filtrid",

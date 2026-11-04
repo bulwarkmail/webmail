@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Automatycznie wybieraj adres odpowiedzi",
       "description": "Odpowiadaj z adresu, na który wysłano wiadomość. Przydatne, jeśli masz kilka adresów."
-    }
+    },
+    "require_tls": "Doręczaj tylko przez bezpieczne połączenie",
+    "require_tls_hint": "Sama wiadomość nie jest szyfrowana. Zostanie zwrócona, jeśli serwer nie może użyć TLS.",
+    "encrypt": "Zaszyfruj…",
+    "encrypt_hint": "Wymaga dodatku S/MIME lub PGP. Otwiera Ustawienia."
   },
   "plugin_list": {
     "filters": "Filtry",

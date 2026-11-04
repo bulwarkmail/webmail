@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Automātiski izvēlēties atbildes adresi",
       "description": "Atbildēt no adreses, uz kuru vēstule tika nosūtīta. Noder, ja jums ir vairākas adreses."
-    }
+    },
+    "require_tls": "Piegādāt tikai pa drošu savienojumu",
+    "require_tls_hint": "Pats ziņojums nav šifrēts. Tas tiek atgriezts, ja serveris nevar izmantot TLS.",
+    "encrypt": "Šifrēt…",
+    "encrypt_hint": "Nepieciešams S/MIME vai PGP papildinājums. Atver iestatījumus."
   },
   "plugin_list": {
     "filters": "Filtri",

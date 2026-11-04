@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Respon des de l'adreça de recepció",
       "description": "Respon des de l'adreça a la qual es va enviar el correu. Útil si teniu diverses adreces."
-    }
+    },
+    "require_tls": "Lliura només per una connexió segura",
+    "require_tls_hint": "El missatge en si no està xifrat. Es retorna si un servidor no pot fer servir TLS.",
+    "encrypt": "Xifra…",
+    "encrypt_hint": "Cal un complement S/MIME o PGP. Obre la configuració."
   },
   "plugin_list": {
     "filters": "Filtres",

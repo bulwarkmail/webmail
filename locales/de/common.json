@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "Antwortadresse automatisch wählen",
       "description": "Die Antwort geht von der Adresse aus, an die die E-Mail ging. Nützlich, wenn Sie mehrere Adressen haben."
-    }
+    },
+    "require_tls": "Nur über eine sichere Verbindung zustellen",
+    "require_tls_hint": "Die Nachricht selbst wird nicht verschlüsselt. Sie kommt zurück, wenn ein Server kein TLS nutzen kann.",
+    "encrypt": "Verschlüsseln…",
+    "encrypt_hint": "Dafür brauchen Sie eine S/MIME- oder PGP-Erweiterung. Öffnet die Einstellungen."
   },
   "plugin_list": {
     "filters": "Filter",

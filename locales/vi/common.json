@@ -6404,7 +6404,11 @@
     "reply_from_received": {
       "label": "Trả lời bằng địa chỉ nhận thư",
       "description": "Trả lời từ địa chỉ mà thư đã được gửi đến. Hữu ích nếu bạn có nhiều địa chỉ."
-    }
+    },
+    "require_tls": "Chỉ gửi qua kết nối an toàn",
+    "require_tls_hint": "Bản thân thư không được mã hóa. Thư sẽ bị trả lại nếu máy chủ không dùng được TLS.",
+    "encrypt": "Mã hóa…",
+    "encrypt_hint": "Cần tiện ích S/MIME hoặc PGP. Mở Cài đặt."
   },
   "plugin_list": {
     "filters": "Bộ lọc",

@@ -6392,7 +6392,11 @@
     "reply_from_received": {
       "label": "返信元アドレスを自動選択",
       "description": "メールの宛先になったアドレスから返信します。複数のアドレスがある場合に便利です。"
-    }
+    },
+    "require_tls": "安全な接続でのみ配信",
+    "require_tls_hint": "メッセージ自体は暗号化されません。サーバーが TLS を使えない場合は返送されます。",
+    "encrypt": "暗号化…",
+    "encrypt_hint": "S/MIME または PGP のアドオンが必要です。設定を開きます。"
   },
   "plugin_list": {
     "filters": "フィルター",
