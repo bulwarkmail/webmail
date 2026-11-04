@@ -44,6 +44,7 @@ export {
   IconBookmark as Bookmark,
   IconBookmarkPlus as BookmarkPlus,
   IconBox as Box,
+  IconBraces as Braces,
   IconBrain as Brain,
   IconBriefcase as Briefcase,
   IconBug as Bug,

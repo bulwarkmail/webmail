@@ -45,6 +45,9 @@ import {
   BookUser,
   Lock,
   CloudOff,
+  Pencil,
+  UserPen,
+  ArrowLeftRight,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
@@ -7071,14 +7074,15 @@ export function RecipientChipInput({
             </div>
             <ContextMenuSeparator />
             {!contextMenu.data.recipient.group && (
-              <ContextMenuItem label={t('recipient_edit_email')} onClick={handleEditEmail} />
+              <ContextMenuItem icon={Pencil} label={t('recipient_edit_email')} onClick={handleEditEmail} />
             )}
-            <ContextMenuItem label={t('recipient_edit_name')} onClick={handleEditName} />
+            <ContextMenuItem icon={UserPen} label={t('recipient_edit_name')} onClick={handleEditName} />
             <ContextMenuSeparator />
             {/* Moving between fields without dragging (WCAG 2.5.7). */}
             {(['to', 'cc', 'bcc'] as const).filter((target) => target !== field).map((target) => (
               <ContextMenuItem
                 key={target}
+                icon={ArrowLeftRight}
                 testId={`recipient-move-${target}`}
                 label={t('recipient_move_to', { field: fieldNames[target] })}
                 onClick={() => {
@@ -7090,7 +7094,7 @@ export function RecipientChipInput({
               />
             ))}
             <ContextMenuSeparator />
-            <ContextMenuItem label={t('recipient_remove')} onClick={() => {
+            <ContextMenuItem icon={X} label={t('recipient_remove')} onClick={() => {
               if (contextMenu.data) {
                 handleChipRemove(contextMenu.data.index, { stopPropagation: () => {} } as React.MouseEvent);
               }

@@ -2,9 +2,9 @@
 
 import { memo } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUpDown, Check, CheckCheck, FolderX, MailOpen, MoreVertical, RefreshCw } from "@/components/icons";
+import { ArrowUpDown, CheckCheck, FolderX, MailOpen, MoreVertical, RefreshCw } from "@/components/icons";
 import { ToolbarButton } from "@/components/ui/toolbar";
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu, ContextMenuCheckItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useSettingsStore, getMessageListOrderFor } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -106,21 +106,7 @@ export function MailSortSubMenu({ folderRole, onPicked }: { folderRole: string |
 
 /** A checkable entry of the Sort menu, as in Files'. */
 function SortItem({ label, checked, onClick, testId }: { label: string; checked: boolean; onClick: () => void; testId?: string }) {
-  return (
-    <button
-      type="button"
-      role="menuitemradio"
-      aria-checked={checked}
-      data-testid={testId}
-      onClick={onClick}
-      className="w-full px-3 py-1.5 max-md:min-h-11 text-sm text-start flex items-center gap-2 hover:bg-muted focus:outline-none focus-visible:bg-muted"
-    >
-      <span className="w-4 h-4 shrink-0 flex items-center justify-center">
-        {checked && <Check className="w-4 h-4" />}
-      </span>
-      <span className="flex-1">{label}</span>
-    </button>
-  );
+  return <ContextMenuCheckItem kind="radio" label={label} checked={checked} onClick={onClick} testId={testId} />;
 }
 
 /**

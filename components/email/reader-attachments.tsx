@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip } from "@/components/icons";
+import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip, Eye, Pencil } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -355,16 +355,16 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
       {desktopMenu && menuTarget && (
         <ContextMenu ref={menu.menuRef} isOpen={menu.contextMenu.isOpen} position={menu.contextMenu.position} onClose={menu.closeContextMenu}>
           {!locked(menuTarget) && (
-            <ContextMenuItem label={tDesktop("open")} onClick={() => { menu.closeContextMenu(); onOpen(menuTarget); }} />
+            <ContextMenuItem icon={Eye} label={tDesktop("open")} onClick={() => { menu.closeContextMenu(); onOpen(menuTarget); }} />
           )}
           {!downloadsOff && (
-            <ContextMenuItem label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
+            <ContextMenuItem icon={Download} label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
           )}
           {!downloadsOff && onEdit && canEdit?.(menuTarget) && (
-            <ContextMenuItem label={tEdit("edit")} onClick={() => { menu.closeContextMenu(); onEdit(menuTarget); }} />
+            <ContextMenuItem icon={Pencil} label={tEdit("edit")} onClick={() => { menu.closeContextMenu(); onEdit(menuTarget); }} />
           )}
           {!downloadsOff && onCopyFile && (
-            <ContextMenuItem label={tDesktop("copy")} onClick={() => { menu.closeContextMenu(); onCopyFile(menuTarget); }} />
+            <ContextMenuItem icon={Copy} label={tDesktop("copy")} onClick={() => { menu.closeContextMenu(); onCopyFile(menuTarget); }} />
           )}
         </ContextMenu>
       )}
