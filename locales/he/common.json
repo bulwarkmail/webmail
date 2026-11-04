@@ -1498,8 +1498,8 @@
       "title": "מראה",
       "description": "התאם אישית את המראה והתחושה של דואר האינטרנט שלך",
       "theme": {
-        "label": "נושא",
-        "description": "בחר את ערכת הצבעים המועדפת עליך",
+        "label": "בהיר או כהה",
+        "description": "האפשרות \"מערכת\" פועלת לפי הגדרת המכשיר",
         "light": "בהיר",
         "dark": "כהה",
         "system": "מערכת"
@@ -1527,7 +1527,7 @@
         "label": "פריסת הממשק",
         "description": "היכן ממוקמים החיפוש, הניווט וסרגלי הכלים",
         "default": "ברירת מחדל",
-        "mountain_view": "Mountain View"
+        "mountain_view": "שורת חיפוש למעלה, אפליקציות משמאל"
       },
       "animations": {
         "label": "הפעל אנימציות",
@@ -1571,7 +1571,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "סמלי סרגל צד צבעוניים",
-        "description": "צבע אייקונים של תיקיות וקוביות לפי סוג (כחול Inbox, אדום Junk, ירוק Sent וכו׳). השבת עבור סרגל צד חד צבע."
+        "description": "צביעת סמלי תיקיות ותגיות לפי סוג (דואר נכנס בכחול, ספאם באדום, נשלח בירוק וכן הלאה). כבו לסמלים אפורים."
       },
       "tint_list_rows": {
         "label": "צביעת שורות הרשימה לפי צבע התגית",
@@ -1886,13 +1886,13 @@
       },
       "mail_layout": {
         "label": "פריסת דואר",
-        "description": "בחר בין חלונית הקריאה המפוצלת הקלאסית לבין זרימת קריאה ממוקדת בסגנון Gmail.",
+        "description": "איפה רשימת ההודעות וההודעה הפתוחה מופיעות במסך.",
         "split": "חלונית מפוצלת",
-        "split_description": "השאר את רשימת ההודעות וחלונית הקריאה גלויים זה לצד זה.",
+        "split_description": "רשימה והודעה זו לצד זו",
         "focus": "רשימה ממוקדת",
-        "focus_description": "הצג שורה אחת לכל הודעה ופתח דואר ברוחב מלא תוך שמירה על סרגל הצד של התיקייה גלוי.",
+        "focus_description": "הרשימה, ואז ההודעה ברוחב מלא",
         "horizontal": "חלונית קריאה בתחתית",
-        "horizontal_description": "הצג את רשימת ההודעות בחלק העליון וכנס את ההודעה שנבחרה בחלונית קריאה למטה."
+        "horizontal_description": "ההודעה מתחת לרשימה"
       },
       "list_columns": {
         "label": "הצגת הרשימה בעמודות",
@@ -2236,7 +2236,7 @@
       },
       "totp": {
         "section_title": "אימות דו-גורמי",
-        "label": "אימות TOTP",
+        "label": "כניסה בשני שלבים",
         "description": "הוסף שכבת אבטחה נוספת עם סיסמה חד פעמית מבוססת זמן",
         "active": "מופעל",
         "inactive": "מושבת",
@@ -2301,12 +2301,12 @@
         "enabled_success": "הצפנה במנוחה מופעלת"
       },
       "email_client": {
-        "title": "הגדרת לקוח אימייל",
-        "description": "השתמש באישורים אלה כדי להגדיר את לקוח הדוא\"ל של שולחן העבודה או הנייד שלך (Thunderbird, Apple Mail, Outlook וכו')",
-        "jmap_username_label": "שם משתמש JMAP",
+        "title": "שימוש בדואר באפליקציות אחרות",
+        "description": "Thunderbird, Apple Mail, Outlook ואפליקציות דואר בטלפון יכולות להשתמש בהגדרות האלה.",
+        "jmap_username_label": "שם משתמש",
         "copy": "העתק",
         "copied": "הועתק",
-        "password_instructions": "השתמש בשם המשתמש שלך ב-JMAP למעלה יחד עם סיסמת אפליקציה כדי להיכנס ללקוח הדוא\"ל שלך. צור סיסמת אפליקציה בסעיף למטה אם עדיין לא עשית זאת."
+        "password_instructions": "בתור סיסמה יש להשתמש בסיסמת אפליקציה, לא בסיסמה הרגילה. אפשר ליצור אחת בהמשך הדף."
       },
       "api_keys": {
         "title": "מפתחות API",
@@ -2642,8 +2642,8 @@
       "manage_description": "הוסף, ערוך או הסר אפליקציות מותאמות אישית מהסרגל הצדדי שלך"
     },
     "contacts": {
-      "title": "אנשי קשר",
-      "description": "ייבא וייצא את אנשי הקשר שלך",
+      "title": "רשימת אנשי הקשר",
+      "description": "איך אנשי הקשר מוצגים, וקובצי אנשי קשר לייבוא או לייצוא",
       "import_label": "ייבוא אנשי קשר",
       "import_description": "ייבא אנשי קשר מקובץ vCard (.vcf).",
       "export_label": "ייצוא אנשי קשר",
@@ -4341,6 +4341,28 @@
       "menu": "פתח את התפריט של איש הקשר"
     }
   },
+  "uxs_wording": {
+    "more_options": "אפשרויות נוספות",
+    "use_in_other_apps": "שימוש באפליקציות אחרות",
+    "default_address_book": "אנשי קשר",
+    "default_calendar": "לוח שנה",
+    "preview_documents": "מסמכים",
+    "preview_photos": "תמונות",
+    "sample_subject": "הערות מהפגישה בבית הקפה",
+    "mail_apps": {
+      "imap": "דואר נכנס (IMAP)",
+      "smtp": "דואר יוצא (SMTP)",
+      "caldav": "לוחות שנה (CalDAV)",
+      "carddav": "אנשי קשר (CardDAV)",
+      "port_security": "פורט {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "ללא הצפנה",
+      "copy_label": "העתקת {name}",
+      "loading": "קוראים את ההגדרות משרת הדואר…",
+      "not_found": "שרת הדואר לא מסר את שמות השרתים לאפליקציות אחרות. אפשר לבקש אותם ממנהל המערכת."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "יומנים: {names}",
@@ -4595,7 +4617,7 @@
       "notifications_enabled_desc": "הצג התראות עבור אירועי לוח שנה קרובים",
       "notification_sound": "צליל התראה",
       "notification_sound_desc": "השמע צליל להתראות לוח שנה",
-      "invitation_parsing": "נתח הזמנות באימייל",
+      "invitation_parsing": "הצגת הזמנות מהדואר",
       "invitation_parsing_desc": "זיהוי הזמנות ליומן בקבצים מצורפים לאימייל והצג פעולות ביומן",
       "show_time_in_month_view": "הצג זמן בתצוגת חודש",
       "show_time_in_month_view_desc": "הצג זמני אירועים בתצוגת לוח השנה של החודש",
@@ -4610,7 +4632,7 @@
       "show_week_numbers_desc": "הצג מספרי שבוע במיני-לוח שנה",
       "calendar_free_scroll": "גלילה חופשית",
       "calendar_free_scroll_desc": "גלילה רציפה בין חודשים, שבועות וימים במקום תקופה אחת בכל פעם",
-      "enable_tasks": "אפשר משימות",
+      "enable_tasks": "משימות",
       "enable_tasks_desc": "הצג תצוגת משימות בלוח השנה לניהול מטלות",
       "show_tasks_on_calendar": "הצג משימות בלוח השנה",
       "show_tasks_on_calendar_desc": "הצג משימות בתצוגות החודש, השבוע והיום של היומן",
@@ -4748,8 +4770,8 @@
       "error_update": "עדכון היומן נכשל",
       "error_delete": "מחיקת היומן נכשלה",
       "caldav_url": "כתובת CalDAV",
-      "copy_url": "העתק כתובת URL של CalDAV",
-      "url_copied": "כתובת האתר של CalDAV הועתקה ללוח",
+      "copy_url": "העתקת הכתובת לאפליקציות אחרות",
+      "url_copied": "הכתובת הועתקה",
       "random_color": "צבע אקראי חדש",
       "reset_color": "איפוס צבע",
       "set_default": "הגדר כברירת מחדל",
@@ -4774,8 +4796,8 @@
       "default_alerts_updated": "תזכורות ברירת המחדל עודכנו"
     },
     "subscription": {
-      "title": "מנוי iCal",
-      "section_title": "מנויי iCal",
+      "title": "הרשמה ללוח שנה",
+      "section_title": "לוחות שנה במינוי",
       "description": "הירשם לעדכון iCalendar חיצוני. אירועים יסונכרנו אוטומטית עם היומן שלהם. תומך בכתובות URL של https:// ו-webcal://.",
       "url_label": "כתובת אתר של לוח שנה",
       "url_placeholder": "https://example.com/calendar.icsאו webcal://...",

@@ -1558,8 +1558,8 @@
       "title": "Megjelenés",
       "description": "Webmail megjelenésének testreszabása",
       "theme": {
-        "label": "Téma",
-        "description": "Válaszd ki a preferált színösszeállítást",
+        "label": "Világos vagy sötét",
+        "description": "A Rendszer az eszköz beállítását követi",
         "light": "Világos",
         "dark": "Sötét",
         "system": "Rendszer"
@@ -1587,7 +1587,7 @@
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
         "default": "Alapértelmezett",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Keresősáv felül, alkalmazások balra"
       },
       "animations": {
         "label": "Animációk engedélyezése",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Színes oldalsáv ikonok",
-        "description": "Mappa és címke ikonok színezése típus szerint (kék Beérkező, piros Spam, zöld Elküldött, stb.). Kapcsold ki az egyszínű oldalsávhoz."
+        "description": "A mappa- és címkeikonok színezése típus szerint (kék Beérkező levelek, piros Spam, zöld Elküldött stb.). Kapcsolja ki a szürke ikonokhoz."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "Levelezés elrendezés",
-        "description": "Válassz a klasszikus osztott olvasóablak, a Gmail-stílusú fókuszált olvasás vagy a Zimbra-stílusú alsó olvasóablak között.",
+        "description": "Hol jelenik meg a képernyőn az üzenetlista és a megnyitott üzenet.",
         "split": "Osztott ablak",
-        "split_description": "Üzenetlista és olvasóablak egymás mellett.",
+        "split_description": "Lista és üzenet egymás mellett",
         "focus": "Fókuszált lista",
-        "focus_description": "Egy sor üzenetenként, és a levél teljes szélességben nyílik meg, miközben a mappa oldalsáv látható marad.",
+        "focus_description": "A lista, aztán az üzenet teljes szélességben",
         "horizontal": "Olvasóablak alul",
-        "horizontal_description": "Üzenetlista felül, a kiválasztott üzenet pedig egy olvasóablakban alatta."
+        "horizontal_description": "Üzenet a lista alatt"
       },
       "list_columns": {
         "label": "Lista megjelenítése oszlopokban",
@@ -2296,7 +2296,7 @@
       },
       "totp": {
         "section_title": "Kétfaktoros hitelesítés",
-        "label": "TOTP hitelesítés",
+        "label": "Kétlépéses bejelentkezés",
         "description": "Extra biztonsági réteg egy időalapú egyszeri jelszóval",
         "active": "Engedélyezve",
         "inactive": "Letiltva",
@@ -2376,12 +2376,12 @@
         "enabled_success": "Titkosítás nyugalmi állapotban engedélyezve"
       },
       "email_client": {
-        "title": "E-mail kliens beállítás",
-        "description": "Használd ezeket a hitelesítő adatokat az asztali vagy mobil e-mail kliensed beállításához (Thunderbird, Apple Mail, Outlook, stb.)",
-        "jmap_username_label": "JMAP felhasználónév",
+        "title": "A levelek használata más alkalmazásokban",
+        "description": "A Thunderbird, az Apple Mail, az Outlook és a telefonos levelezőalkalmazások ezekkel a beállításokkal működnek.",
+        "jmap_username_label": "Felhasználónév",
         "copy": "Másolás",
         "copied": "Másolva",
-        "password_instructions": "Használd a fenti JMAP felhasználóneved egy alkalmazás jelszóval együtt az e-mail kliensbe való bejelentkezéshez. Hozz létre egy alkalmazás jelszót a lenti részben, ha még nem tetted."
+        "password_instructions": "Jelszóként alkalmazásjelszót használjon, ne a szokásos jelszavát. Ezen az oldalon lejjebb hozhat létre egyet."
       },
       "link_device": {
         "title": "Mobilalkalmazás összekapcsolása",
@@ -2701,8 +2701,8 @@
       "manage_description": "Egyedi alkalmazások hozzáadása, szerkesztése vagy eltávolítása az oldalsávról"
     },
     "contacts": {
-      "title": "Névjegyek",
-      "description": "Névjegyek importálása és exportálása",
+      "title": "Névjegylista",
+      "description": "A névjegyek megjelenítése, és névjegyfájlok importálása vagy exportálása",
       "group_by_letter_label": "Csoportosítás kezdőbetű szerint",
       "sort_by_last_name_label": "Rendezés vezetéknév szerint",
       "sort_by_last_name_description": "A névjegylista vezetéknév szerinti rendezése, hogy a családtagok egymás mellett legyenek",
@@ -4448,6 +4448,28 @@
       "menu": "Névjegy menüjének megnyitása"
     }
   },
+  "uxs_wording": {
+    "more_options": "További beállítások",
+    "use_in_other_apps": "Használat más alkalmazásokban",
+    "default_address_book": "Névjegyek",
+    "default_calendar": "Naptár",
+    "preview_documents": "Dokumentumok",
+    "preview_photos": "Fényképek",
+    "sample_subject": "Jegyzetek a kávézói megbeszélésről",
+    "mail_apps": {
+      "imap": "Bejövő levelek (IMAP)",
+      "smtp": "Kimenő levelek (SMTP)",
+      "caldav": "Naptárak (CalDAV)",
+      "carddav": "Névjegyek (CardDAV)",
+      "port_security": "Port: {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Titkosítás nélkül",
+      "copy_label": "{name} másolása",
+      "loading": "A beállítások beolvasása a levelezőszerverről…",
+      "not_found": "A levelezőszerver nem adta meg a szerverneveket más alkalmazásokhoz. Kérje el őket a rendszergazdától."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Naptárak: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Figyelmeztetések megjelenítése a közelgő naptári eseményekhez",
       "notification_sound": "Értesítési hang",
       "notification_sound_desc": "Hang lejátszása naptári figyelmeztetésekhez",
-      "invitation_parsing": "E-mail meghívók feldolgozása",
+      "invitation_parsing": "Meghívók megjelenítése a levelekből",
       "invitation_parsing_desc": "Naptármeghívók észlelése az e-mail csatolmányokban és naptár műveletek megjelenítése",
       "show_time_in_month_view": "Idő mutatása a hónap nézetben",
       "show_time_in_month_view_desc": "Események időpontjának mutatása a havi naptár nézetben",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Hétszámok mutatása a mini naptárban",
       "calendar_free_scroll": "Szabad görgetés",
       "calendar_free_scroll_desc": "Folyamatos görgetés hónapok, hetek és napok között egyetlen időszak helyett",
-      "enable_tasks": "Feladatok engedélyezése",
+      "enable_tasks": "Feladatok",
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",
       "show_tasks_on_calendar_desc": "Feladatok mutatása a havi, heti és napi naptárnézetben",
@@ -4898,8 +4920,8 @@
       "error_update": "Nem sikerült frissíteni a naptárat",
       "error_delete": "Nem sikerült törölni a naptárat",
       "caldav_url": "CalDAV URL",
-      "copy_url": "CalDAV URL másolása",
-      "url_copied": "CalDAV URL a vágólapra másolva",
+      "copy_url": "Cím másolása más alkalmazásokhoz",
+      "url_copied": "A cím másolva",
       "share": "Naptár megosztása…",
       "new_event_in_calendar": "Új esemény ebben a naptárban",
       "shared_with": "Megosztva: {names}",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "Alapértelmezett emlékeztetők frissítve"
     },
     "subscription": {
-      "title": "iCal feliratkozás",
-      "section_title": "iCal feliratkozások",
+      "title": "Feliratkozás naptárra",
+      "section_title": "Feliratkozott naptárak",
       "description": "Feliratkozás külső iCalendar feed-re. Az események automatikusan szinkronizálódnak a saját naptárukba. https:// és webcal:// URL-ek támogatottak.",
       "url_label": "Naptár URL",
       "url_placeholder": "https://example.com/calendar.ics vagy webcal://...",

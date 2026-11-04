@@ -1558,8 +1558,8 @@
       "title": "Välimus",
       "description": "Kohanda oma veebiposti välimust ja tunnetust",
       "theme": {
-        "label": "Teema",
-        "description": "Vali eelistatud värviskeem",
+        "label": "Hele või tume",
+        "description": "Süsteem järgib seadme seadet",
         "light": "Hele",
         "dark": "Tume",
         "system": "Süsteem"
@@ -1587,7 +1587,7 @@
         "label": "Liidese paigutus",
         "description": "Kus asuvad otsing, navigeerimine ja tööriistaribad",
         "default": "Vaikimisi",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Otsinguriba üleval, rakendused vasakul"
       },
       "animations": {
         "label": "Luba animatsioonid",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Värvilised külgriba ikoonid",
-        "description": "Värvi kausta- ja sildiikoonid tüübi järgi (sinine Saabunud, punane Rämpspost, roheline Saadetud jne). Lülita välja ühevärvilise külgriba jaoks."
+        "description": "Kausta- ja sildiikoonid tüübi järgi värviliseks (Saabunud sinine, Rämpspost punane, Saadetud roheline jne). Lülita välja hallide ikoonide jaoks."
       },
       "tint_list_rows": {
         "label": "Värvi loendirida sildi värviga",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "Kirjade paigutus",
-        "description": "Vali klassikalise jagatud lugemispaani, Gmaili-laadse fokuseeritud lugemisvoo või Zimbra-laadse alumise lugemispaani vahel.",
+        "description": "Kus ekraanil on kirjade loend ja avatud kiri.",
         "split": "Jagatud paan",
-        "split_description": "Kuva kirjade loend ja lugemispaan kõrvuti.",
+        "split_description": "Loend ja kiri kõrvuti",
         "focus": "Fokuseeritud loend",
-        "focus_description": "Kuva iga kirja kohta üks rida ja ava kiri täislaiuses, hoides kaustade külgriba nähtaval.",
+        "focus_description": "Loend, siis kiri kogu laiuses",
         "horizontal": "Lugemispaan all",
-        "horizontal_description": "Kuva kirjade loend üleval ja ava valitud kiri selle all olevas lugemispaanis."
+        "horizontal_description": "Kiri loendi all"
       },
       "list_columns": {
         "label": "Näita loendit veergudena",
@@ -2300,7 +2300,7 @@
       },
       "totp": {
         "section_title": "Kaheastmeline autentimine",
-        "label": "TOTP autentimine",
+        "label": "Kaheastmeline sisselogimine",
         "description": "Lisa täiendav turvakiht ajapõhise ühekordse parooliga",
         "active": "Lubatud",
         "inactive": "Keelatud",
@@ -2396,12 +2396,12 @@
         "delete_message": "{name} eemaldatakse serverist."
       },
       "email_client": {
-        "title": "E-posti kliendi seadistus",
-        "description": "Kasuta neid andmeid oma lauaarvuti või mobiili e-posti kliendi seadistamiseks (Thunderbird, Apple Mail, Outlook jne)",
-        "jmap_username_label": "JMAP kasutajanimi",
+        "title": "Kasuta oma e-posti teistes rakendustes",
+        "description": "Thunderbird, Apple Mail, Outlook ja telefoni e-posti rakendused saavad neid seadeid kasutada.",
+        "jmap_username_label": "Kasutajanimi",
         "copy": "Kopeeri",
         "copied": "Kopeeritud",
-        "password_instructions": "Kasuta oma e-posti kliendisse sisselogimiseks ülaltoodud JMAP kasutajanime koos rakenduse parooliga. Kui sul veel pole rakenduse parooli, loo see allolevas jaotises."
+        "password_instructions": "Kasuta paroolina rakenduse parooli, mitte oma tavalist parooli. Selle saad luua sellel lehel allpool."
       },
       "link_device": {
         "title": "Ühenda mobiilirakendus",
@@ -2705,8 +2705,8 @@
       "manage_description": "Lisa, muuda või eemalda oma külgriba kohandatud rakendusi"
     },
     "contacts": {
-      "title": "Kontaktid",
-      "description": "Impordi ja ekspordi oma kontaktid",
+      "title": "Kontaktide loend",
+      "description": "Kuidas kontakte näidatakse, ning kontaktifailide import ja eksport",
       "group_by_letter_label": "Rühmita esitähe järgi",
       "group_by_letter_description": "Näita kontaktide loendis tähestikulisi jaotisepealkirju",
       "sort_by_last_name_label": "Sordi perekonnanime järgi",
@@ -4448,6 +4448,28 @@
       "menu": "Ava kontakti menüü"
     }
   },
+  "uxs_wording": {
+    "more_options": "Rohkem valikuid",
+    "use_in_other_apps": "Kasuta teistes rakendustes",
+    "default_address_book": "Kontaktid",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumendid",
+    "preview_photos": "Fotod",
+    "sample_subject": "Märkmed kohvikukoosolekult",
+    "mail_apps": {
+      "imap": "Sissetulev e-post (IMAP)",
+      "smtp": "Väljaminev e-post (SMTP)",
+      "caldav": "Kalendrid (CalDAV)",
+      "carddav": "Kontaktid (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Krüpteerimata",
+      "copy_label": "Kopeeri {name}",
+      "loading": "Seadeid loetakse e-posti serverist…",
+      "not_found": "E-posti server ei andnud teiste rakenduste jaoks serverite nimesid. Küsi neid oma administraatorilt."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendrid: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Kuva teavitusi eelseisvate kalendrisündmuste kohta",
       "notification_sound": "Teavituse heli",
       "notification_sound_desc": "Esita kalendriteavituste puhul heli",
-      "invitation_parsing": "Tuvasta e-kirjade kutsed",
+      "invitation_parsing": "Näita kutseid e-kirjadest",
       "invitation_parsing_desc": "Tuvasta kalendrikutsed e-kirjade manustes ja kuva kalenditoimingud",
       "show_time_in_month_view": "Kuva kellaaeg kuuvaates",
       "show_time_in_month_view_desc": "Kuva sündmuste kellaajad kuu kalendrivaates. Väikestel ekraanidel kuvatakse punktide asemel täielikud sündmuste kirjed.",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Kuva nädalanumbrid minikalendris",
       "calendar_free_scroll": "Vaba kerimine",
       "calendar_free_scroll_desc": "Keri kuude, nädalate ja päevade vahel pidevalt, mitte ühe perioodi kaupa",
-      "enable_tasks": "Luba ülesanded",
+      "enable_tasks": "Ülesanded",
       "enable_tasks_desc": "Kuva kalendris ülesannete vaade tegemiste haldamiseks",
       "show_tasks_on_calendar": "Kuva ülesanded kalendris",
       "show_tasks_on_calendar_desc": "Kuva ülesannete sildid päeva- ja nädalavaates",
@@ -4898,8 +4920,8 @@
       "error_update": "Kalendri uuendamine ebaõnnestus",
       "error_delete": "Kalendri kustutamine ebaõnnestus",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Kopeeri CalDAV URL",
-      "url_copied": "CalDAV URL kopeeriti lõikelauale",
+      "copy_url": "Kopeeri aadress teiste rakenduste jaoks",
+      "url_copied": "Aadress kopeeritud",
       "share": "Jaga kalendrit…",
       "new_event_in_calendar": "Uus sündmus selles kalendris",
       "shared_with": "Jagatud: {names}",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "Vaikemeeldetuletused uuendatud"
     },
     "subscription": {
-      "title": "iCal tellimus",
-      "section_title": "iCal tellimused",
+      "title": "Telli kalender",
+      "section_title": "Tellitud kalendrid",
       "description": "Telli väline iCalendari voog. Sündmused sünkroonitakse automaatselt omaette kalendrisse. Toetab https:// ja webcal:// URL-e.",
       "url_label": "Kalendri URL",
       "url_placeholder": "https://example.com/calendar.ics või webcal://...",

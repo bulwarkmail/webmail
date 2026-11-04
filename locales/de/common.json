@@ -1555,8 +1555,8 @@
       "title": "Darstellung",
       "description": "Passen Sie das Aussehen Ihres Webmails an",
       "theme": {
-        "label": "Design",
-        "description": "Wählen Sie Ihr bevorzugtes Farbschema",
+        "label": "Hell oder dunkel",
+        "description": "System folgt der Einstellung Ihres Geräts",
         "light": "Hell",
         "dark": "Dunkel",
         "system": "System"
@@ -1584,7 +1584,7 @@
         "label": "Oberflächen-Layout",
         "description": "Wo Suche, Navigation und Symbolleisten liegen",
         "default": "Standard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Suchleiste oben, Apps links"
       },
       "animations": {
         "label": "Animationen aktivieren",
@@ -1628,7 +1628,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Farbige Seitenleistensymbole",
-        "description": "Ordner- und Tag-Symbole nach Typ einfärben (blauer Posteingang, roter Spam, grüner Gesendet usw.). Für eine monochrome Seitenleiste deaktivieren."
+        "description": "Ordner- und Label-Symbole farbig zeigen (blauer Posteingang, roter Spam, grünes Gesendet und so weiter). Schalten Sie das aus für graue Symbole."
       },
       "tint_list_rows": {
         "label": "Nachrichtenzeilen mit Tag-Farbe einfärben",
@@ -1954,13 +1954,13 @@
       },
       "mail_layout": {
         "label": "Mail-Layout",
-        "description": "Wählen Sie zwischen dem klassischen geteilten Lesebereich und einem fokussierten Lesefluss im Gmail-Stil.",
+        "description": "Wo die E-Mail-Liste und die geöffnete E-Mail auf dem Bildschirm stehen.",
         "split": "Geteilter Bereich",
-        "split_description": "Nachrichtenliste und Lesebereich nebeneinander sichtbar halten.",
+        "split_description": "Liste und E-Mail nebeneinander",
         "focus": "Fokussierte Liste",
-        "focus_description": "Eine Zeile pro Nachricht anzeigen und E-Mails in voller Breite öffnen, während die Ordner-Seitenleiste sichtbar bleibt.",
+        "focus_description": "Erst die Liste, dann die E-Mail in voller Breite",
         "horizontal": "Lesebereich unten",
-        "horizontal_description": "Nachrichtenliste oben anzeigen und ausgewählte Nachricht in einem darunter liegenden Lesebereich öffnen."
+        "horizontal_description": "E-Mail unter der Liste"
       },
       "list_columns": {
         "label": "Liste als Spalten anzeigen",
@@ -2293,7 +2293,7 @@
       },
       "totp": {
         "section_title": "Zwei-Faktor-Authentifizierung",
-        "label": "TOTP-Authentifizierung",
+        "label": "Anmeldung in zwei Schritten",
         "description": "Fügen Sie eine zusätzliche Sicherheitsebene mit einem zeitbasierten Einmalpasswort hinzu",
         "active": "Aktiviert",
         "inactive": "Deaktiviert",
@@ -2373,12 +2373,12 @@
         "enabled_success": "Verschlüsselung im Ruhezustand aktiviert"
       },
       "email_client": {
-        "title": "E-Mail-Client-Einrichtung",
-        "description": "Verwenden Sie diese Anmeldedaten, um Ihren Desktop- oder Mobil-E-Mail-Client zu konfigurieren (Thunderbird, Apple Mail, Outlook usw.)",
-        "jmap_username_label": "JMAP-Benutzername",
+        "title": "E-Mail in anderen Apps nutzen",
+        "description": "Thunderbird, Apple Mail, Outlook und Mail-Apps auf dem Handy können diese Angaben nutzen.",
+        "jmap_username_label": "Benutzername",
         "copy": "Kopieren",
         "copied": "Kopiert",
-        "password_instructions": "Verwenden Sie Ihren oben angezeigten JMAP-Benutzernamen zusammen mit einem App-Passwort, um sich bei Ihrem E-Mail-Client anzumelden. Erstellen Sie im Abschnitt unten ein App-Passwort, falls Sie noch keines haben."
+        "password_instructions": "Nutzen Sie als Passwort ein App-Passwort, nicht Ihr normales. Ein App-Passwort erstellen Sie weiter unten auf dieser Seite."
       },
       "link_device": {
         "title": "Mobile App verknüpfen",
@@ -2698,8 +2698,8 @@
       "manage_description": "Apps in der Seitenleiste hinzufügen, bearbeiten oder entfernen"
     },
     "contacts": {
-      "title": "Kontakte",
-      "description": "Importieren und exportieren Sie Ihre Kontakte",
+      "title": "Kontaktliste",
+      "description": "Wie Kontakte aufgelistet werden, und Kontaktdateien zum Importieren oder Exportieren",
       "import_label": "Kontakte importieren",
       "import_description": "Kontakte aus einer vCard-Datei (.vcf) importieren",
       "export_label": "Kontakte exportieren",
@@ -4448,6 +4448,28 @@
     "open_categories": "Kategorien öffnen",
     "row_actions": "Aktionen für {name}"
   },
+  "uxs_wording": {
+    "more_options": "Weitere Optionen",
+    "use_in_other_apps": "In anderen Apps nutzen",
+    "default_address_book": "Kontakte",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumente",
+    "preview_photos": "Fotos",
+    "sample_subject": "Notizen vom Treffen im Café Müller",
+    "mail_apps": {
+      "imap": "Eingehende E-Mails (IMAP)",
+      "smtp": "Ausgehende E-Mails (SMTP)",
+      "caldav": "Kalender (CalDAV)",
+      "carddav": "Kontakte (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Keine Verschlüsselung",
+      "copy_label": "{name} kopieren",
+      "loading": "Die Einstellungen werden vom Mailserver gelesen…",
+      "not_found": "Ihr Mailserver hat keine Servernamen für andere Apps genannt. Fragen Sie Ihre Administration danach."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalender: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Benachrichtigungen für bevorstehende Termine anzeigen",
       "notification_sound": "Benachrichtigungston",
       "notification_sound_desc": "Ton für Kalenderbenachrichtigungen abspielen",
-      "invitation_parsing": "E-Mail-Einladungen verarbeiten",
+      "invitation_parsing": "Einladungen aus E-Mails zeigen",
       "invitation_parsing_desc": "Kalendereinladungen in E-Mail-Anhängen erkennen und Kalenderaktionen anzeigen",
       "show_time_in_month_view": "Zeit in Monatsansicht anzeigen",
       "show_time_in_month_view_desc": "Ereigniszeiten in der Monatskalenderansicht anzeigen",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Kalenderwochen im Minikalender anzeigen",
       "calendar_free_scroll": "Freies Scrollen",
       "calendar_free_scroll_desc": "Fortlaufend durch Monate, Wochen und Tage scrollen statt nur einen Zeitraum auf einmal anzuzeigen",
-      "enable_tasks": "Aufgaben aktivieren",
+      "enable_tasks": "Aufgaben",
       "enable_tasks_desc": "Eine Aufgabenansicht im Kalender zum Verwalten von To-dos anzeigen",
       "show_tasks_on_calendar": "Aufgaben im Kalender anzeigen",
       "show_tasks_on_calendar_desc": "Aufgaben in der Monats-, Wochen- und Tagesansicht anzeigen",
@@ -4862,8 +4884,8 @@
       "error_update": "Kalender konnte nicht aktualisiert werden",
       "error_delete": "Kalender konnte nicht gelöscht werden",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "CalDAV-URL kopieren",
-      "url_copied": "CalDAV-URL in die Zwischenablage kopiert",
+      "copy_url": "Adresse für andere Apps kopieren",
+      "url_copied": "Adresse kopiert",
       "confirm_clear": "Alle Ereignisse aus \"{name}\" löschen? Dies kann nicht rückgängig gemacht werden.",
       "set_default": "Als Standard festlegen",
       "default_updated": "Standardkalender aktualisiert",
@@ -4890,8 +4912,8 @@
       "default_alerts_updated": "Standarderinnerungen aktualisiert"
     },
     "subscription": {
-      "title": "iCal-Abonnement",
-      "section_title": "iCal-Abonnements",
+      "title": "Kalender abonnieren",
+      "section_title": "Abonnierte Kalender",
       "description": "Abonnieren Sie einen externen iCalendar-Feed. Ereignisse werden automatisch in einen eigenen Kalender synchronisiert. Unterstützt https://- und webcal://-URLs.",
       "url_label": "Kalender-URL",
       "url_placeholder": "https://example.com/calendar.ics oder webcal://...",

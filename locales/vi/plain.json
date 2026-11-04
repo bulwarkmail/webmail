@@ -137,9 +137,6 @@
         "unsupported_note": "Máy chủ thư không thể sắp xếp theo trạng thái đã đọc hoặc chưa đọc, dấu sao hoặc thẻ. Các tiêu chí đó sẽ bị bỏ qua và thư mới nhất được xếp trước."
       },
       "description": "Thay đổi giao diện của ứng dụng thư điện tử trên web",
-      "theme": {
-        "description": "Chọn màu sáng hoặc tối"
-      },
       "font_size": {
         "description": "Tăng hoặc giảm cỡ chữ"
       },
@@ -173,9 +170,6 @@
       },
       "all_mail": {
         "folders_description": "Chọn các thư mục của tài khoản này sẽ xuất hiện trong danh sách Tất cả thư, Chưa đọc và Đã gắn dấu sao."
-      },
-      "colorful_sidebar_icons": {
-        "description": "Tô màu biểu tượng thư mục và thẻ (Hộp thư đến màu xanh dương, Thư rác màu đỏ, Đã gửi màu xanh lá cây, v.v.). Tắt để dùng biểu tượng màu xám."
       },
       "tint_list_rows": {
         "description": "Tô màu mỗi thư trong danh sách theo màu thẻ đầu tiên của thư đó. Khi tắt, màu thẻ vẫn xuất hiện ở các chấm nhỏ."
@@ -294,12 +288,6 @@
       },
       "confirm_bulk_delete": {
         "description": "Hỏi trước khi chuyển nhiều thư đã chọn vào Thùng rác. Luôn hỏi trước khi xóa vĩnh viễn."
-      },
-      "mail_layout": {
-        "description": "Chọn cách bố trí danh sách thư và thư đang mở trên màn hình.",
-        "split_description": "Danh sách thư và thư đang mở được đặt cạnh nhau.",
-        "focus_description": "Mỗi thư chiếm một dòng. Thư đang mở chiếm toàn bộ chiều rộng. Danh sách thư mục vẫn hiển thị.",
-        "horizontal_description": "Danh sách thư nằm phía trên. Thư đang mở hiển thị bên dưới."
       },
       "list_columns": {
         "description": "Hiển thị danh sách dưới dạng bảng với các cột Từ, Tiêu đề, Ngày và Kích thước."
@@ -435,7 +423,6 @@
         "error": "Không thể thay đổi tên của bạn. Hãy thử lại."
       },
       "totp": {
-        "label": "Mã từ ứng dụng xác thực",
         "description": "Tăng cường bảo vệ tài khoản: khi đăng nhập, bạn cần nhập thêm mã từ ứng dụng trên điện thoại",
         "enable_error": "Không thể bật xác thực hai yếu tố. Hãy thử lại.",
         "disable_error": "Không thể tắt xác thực hai yếu tố. Hãy thử lại.",
@@ -475,11 +462,6 @@
         "key_label": "Khóa công khai (S/MIME hoặc PGP, dạng văn bản)",
         "add_error": "Không thể thêm khóa công khai. Hãy kiểm tra xem bạn đã dán đầy đủ khóa hay chưa.",
         "remove_error": "Không thể xóa khóa công khai. Hãy thử lại."
-      },
-      "email_client": {
-        "description": "Dùng các thông tin này để thiết lập thư trên máy tính hoặc điện thoại, chẳng hạn trong Thunderbird, Apple Mail hoặc Outlook",
-        "jmap_username_label": "Tên người dùng cho ứng dụng thư",
-        "password_instructions": "Trong ứng dụng thư, dùng tên người dùng bên trên cùng mật khẩu ứng dụng. Bạn có thể tạo mật khẩu ứng dụng ở phần dưới của trang này."
       },
       "link_device": {
         "description": "Đăng nhập vào ứng dụng Bulwark Mail trên điện thoại mà không cần nhập mật khẩu. Điện thoại có phiên đăng nhập riêng. Nếu đăng xuất tại đây, điện thoại vẫn giữ trạng thái đăng nhập.",

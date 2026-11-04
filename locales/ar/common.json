@@ -1558,8 +1558,8 @@
       "title": "المظهر",
       "description": "تخصيص شكل ومظهر البريد الإلكتروني على الويب",
       "theme": {
-        "label": "السمة",
-        "description": "اختر نظام الألوان المفضل لديك",
+        "label": "فاتح أو داكن",
+        "description": "خيار «النظام» يتبع إعداد جهازك",
         "light": "فاتح",
         "dark": "داكن",
         "system": "النظام"
@@ -1587,7 +1587,7 @@
         "label": "تخطيط الواجهة",
         "description": "موضع البحث والتنقل وأشرطة الأدوات",
         "default": "افتراضي",
-        "mountain_view": "Mountain View"
+        "mountain_view": "شريط البحث في الأعلى والتطبيقات على اليسار"
       },
       "animations": {
         "label": "تفعيل الحركات",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "أيقونات ملونة في الشريط الجانبي",
-        "description": "تلوين أيقونات المجلدات والوسوم حسب النوع (أزرق للبريد الوارد، أحمر للمزعج، أخضر للمرسل، إلخ). عطّل هذا لشريط جانبي أحادي اللون."
+        "description": "تلوين أيقونات المجلدات والوسوم حسب النوع (أزرق للبريد الوارد، أحمر للبريد المزعج، أخضر للمرسل، إلخ). أوقفه لأيقونات رمادية."
       },
       "tint_list_rows": {
         "label": "تلوين صفوف القائمة بلون الوسم",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "تخطيط البريد",
-        "description": "اختر بين جزء القراءة المقسّم الكلاسيكي، أو تدفق قراءة مركّز على طراز Gmail، أو جزء قراءة سفلي على طراز Zimbra.",
+        "description": "مكان قائمة الرسائل والرسالة المفتوحة على الشاشة.",
         "split": "جزء مقسّم",
-        "split_description": "إبقاء قائمة الرسائل وجزء القراءة ظاهرين جنبًا إلى جنب.",
+        "split_description": "القائمة والرسالة جنبًا إلى جنب",
         "focus": "قائمة مركّزة",
-        "focus_description": "إظهار سطر واحد لكل رسالة وفتح البريد بعرض كامل مع إبقاء الشريط الجانبي للمجلدات ظاهرًا.",
+        "focus_description": "القائمة، ثم الرسالة بالعرض الكامل",
         "horizontal": "جزء القراءة أسفل",
-        "horizontal_description": "إظهار قائمة الرسائل أعلى وفتح الرسالة المحددة في جزء قراءة أسفلها."
+        "horizontal_description": "الرسالة أسفل القائمة"
       },
       "list_columns": {
         "label": "عرض القائمة كأعمدة",
@@ -2300,7 +2300,7 @@
       },
       "totp": {
         "section_title": "المصادقة الثنائية",
-        "label": "مصادقة TOTP",
+        "label": "تسجيل الدخول بخطوتين",
         "description": "أضف طبقة حماية إضافية بكلمة مرور لمرة واحدة قائمة على الوقت",
         "active": "مفعّلة",
         "inactive": "معطّلة",
@@ -2380,12 +2380,12 @@
         "enabled_success": "تم تفعيل التشفير أثناء التخزين"
       },
       "email_client": {
-        "title": "إعداد عميل البريد الإلكتروني",
-        "description": "استخدم بيانات الاعتماد هذه لإعداد عميل البريد على سطح المكتب أو الجوال (Thunderbird، Apple Mail، Outlook، إلخ)",
-        "jmap_username_label": "اسم مستخدم JMAP",
+        "title": "استخدام بريدك في تطبيقات أخرى",
+        "description": "يمكن لـ Thunderbird وApple Mail وOutlook وتطبيقات البريد على الهاتف استخدام هذه الإعدادات.",
+        "jmap_username_label": "اسم المستخدم",
         "copy": "نسخ",
         "copied": "تم النسخ",
-        "password_instructions": "استخدم اسم مستخدم JMAP أعلاه مع كلمة مرور تطبيق لتسجيل الدخول إلى عميل البريد الخاص بك. أنشئ كلمة مرور تطبيق في القسم أدناه إذا لم تفعل بعد."
+        "password_instructions": "استخدم كلمة مرور تطبيق بدلًا من كلمة مرورك العادية. يمكنك إنشاء واحدة في أسفل هذه الصفحة."
       },
       "link_device": {
         "title": "ربط تطبيق الجوال",
@@ -2705,8 +2705,8 @@
       "manage_description": "إضافة أو تعديل أو إزالة التطبيقات المخصصة من الشريط الجانبي"
     },
     "contacts": {
-      "title": "جهات الاتصال",
-      "description": "استيراد وتصدير جهات اتصالك",
+      "title": "قائمة جهات الاتصال",
+      "description": "طريقة عرض جهات الاتصال، وملفات جهات الاتصال للاستيراد أو التصدير",
       "group_by_letter_label": "التجميع حسب الحرف الأول",
       "sort_by_last_name_label": "الترتيب حسب اسم العائلة",
       "sort_by_last_name_description": "ترتيب قائمة جهات الاتصال حسب اسم العائلة بحيث يظهر أفراد العائلة معًا",
@@ -4448,6 +4448,28 @@
       "menu": "فتح قائمة جهة الاتصال"
     }
   },
+  "uxs_wording": {
+    "more_options": "خيارات إضافية",
+    "use_in_other_apps": "الاستخدام في تطبيقات أخرى",
+    "default_address_book": "جهات الاتصال",
+    "default_calendar": "التقويم",
+    "preview_documents": "المستندات",
+    "preview_photos": "الصور",
+    "sample_subject": "ملاحظات من اجتماع المقهى",
+    "mail_apps": {
+      "imap": "البريد الوارد (IMAP)",
+      "smtp": "البريد الصادر (SMTP)",
+      "caldav": "التقويمات (CalDAV)",
+      "carddav": "جهات الاتصال (CardDAV)",
+      "port_security": "المنفذ {port}، {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "بدون تشفير",
+      "copy_label": "نسخ {name}",
+      "loading": "جارٍ قراءة الإعدادات من خادم البريد…",
+      "not_found": "لم يشارك خادم البريد أسماء الخوادم للتطبيقات الأخرى. اطلبها من المسؤول."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "التقويمات: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "إظهار تنبيهات لأحداث التقويم القادمة",
       "notification_sound": "صوت الإشعار",
       "notification_sound_desc": "تشغيل صوت لتنبيهات التقويم",
-      "invitation_parsing": "تحليل دعوات البريد الإلكتروني",
+      "invitation_parsing": "عرض الدعوات من البريد",
       "invitation_parsing_desc": "اكتشاف دعوات التقويم في مرفقات البريد وإظهار إجراءات التقويم",
       "show_time_in_month_view": "إظهار الوقت في عرض الشهر",
       "show_time_in_month_view_desc": "عرض أوقات الأحداث في عرض التقويم الشهري",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "عرض أرقام الأسابيع في التقويم المصغّر",
       "calendar_free_scroll": "تمرير حر",
       "calendar_free_scroll_desc": "التمرير باستمرار عبر الأشهر والأسابيع والأيام بدلاً من فترة واحدة في كل مرة",
-      "enable_tasks": "تفعيل المهام",
+      "enable_tasks": "المهام",
       "enable_tasks_desc": "إظهار عرض للمهام في التقويم لإدارة قوائم المهام",
       "show_tasks_on_calendar": "إظهار المهام في التقويم",
       "show_tasks_on_calendar_desc": "عرض المهام في عروض التقويم الشهري والأسبوعي واليومي",
@@ -4898,8 +4920,8 @@
       "error_update": "فشل تحديث التقويم",
       "error_delete": "فشل حذف التقويم",
       "caldav_url": "رابط CalDAV",
-      "copy_url": "نسخ رابط CalDAV",
-      "url_copied": "تم نسخ رابط CalDAV إلى الحافظة",
+      "copy_url": "نسخ العنوان للتطبيقات الأخرى",
+      "url_copied": "تم نسخ العنوان",
       "share": "مشاركة التقويم…",
       "new_event_in_calendar": "حدث جديد في هذا التقويم",
       "shared_with": "مشترك مع {names}",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "تم تحديث التذكيرات الافتراضية"
     },
     "subscription": {
-      "title": "اشتراك iCal",
-      "section_title": "اشتراكات iCal",
+      "title": "الاشتراك في تقويم",
+      "section_title": "التقويمات المشترك بها",
       "description": "اشترك في تغذية iCalendar خارجية. ستتم مزامنة الأحداث تلقائيًا في تقويمها الخاص. يدعم روابط https:// وwebcal://.",
       "url_label": "رابط التقويم",
       "url_placeholder": "https://example.com/calendar.ics أو webcal://...",

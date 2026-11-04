@@ -1555,8 +1555,8 @@
       "title": "Izskats",
       "description": "Pielāgojiet tīmekļa pasta izskatu",
       "theme": {
-        "label": "Tēma",
-        "description": "Izvēlieties vēlamo krāsu shēmu",
+        "label": "Gaišs vai tumšs",
+        "description": "Sistēma seko ierīces iestatījumam",
         "light": "Gaišā",
         "dark": "Tumšā",
         "system": "Sistēmas"
@@ -1584,7 +1584,7 @@
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
         "default": "Noklusējuma",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Meklēšana augšā, lietotnes pa kreisi"
       },
       "animations": {
         "label": "Iespējot animācijas",
@@ -1628,7 +1628,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Krāsainas sānjoslas ikonas",
-        "description": "Iekrāsojiet mapju un birku ikonas pēc to veida (zila Iesūtne, sarkana Mēstules, zaļa Nosūtītie utt.). Atspējojiet, lai iegūtu vienkrāsainu sānjoslu."
+        "description": "Iekrāsot mapju un birku ikonas pēc veida (Iesūtne zila, Mēstules sarkanas, Nosūtītie zaļi utt.). Izslēdziet, lai ikonas būtu pelēkas."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1954,13 +1954,13 @@
       },
       "mail_layout": {
         "label": "Pasta izkārtojums",
-        "description": "Izvēlieties starp klasisko dalīto skatu vai fokusa sarakstu.",
+        "description": "Kur ekrānā atrodas ziņojumu saraksts un atvērtais ziņojums.",
         "split": "Dalīts skats",
-        "split_description": "Ziņojumu saraksts un lasīšanas rūts ir redzamas blakus.",
+        "split_description": "Saraksts un ziņojums blakus",
         "focus": "Fokusa saraksts",
-        "focus_description": "Rādīt vienu rindu katram ziņojumam un atvērt vēstuli pilnā platumā.",
+        "focus_description": "Saraksts, tad ziņojums visā platumā",
         "horizontal": "Lasīšanas rūts apakšā",
-        "horizontal_description": "Rādīt ziņojumu sarakstu augšā un atvērt atlasīto ziņojumu lasīšanas rūtī zem tā."
+        "horizontal_description": "Ziņojums zem saraksta"
       },
       "list_columns": {
         "label": "Rādīt sarakstu kolonnās",
@@ -2293,7 +2293,7 @@
       },
       "totp": {
         "section_title": "Divfaktoru autentifikācija",
-        "label": "TOTP autentifikācija",
+        "label": "Pieteikšanās divos soļos",
         "description": "Pievienojiet papildu drošības slāni ar vienreizēju paroli",
         "active": "Iespējota",
         "inactive": "Izslēgta",
@@ -2373,12 +2373,12 @@
         "enabled_success": "Krātuves šifrēšana ir iespējota"
       },
       "email_client": {
-        "title": "Pasta klienta iestatīšana",
-        "description": "Izmantojiet šos datus, lai iestatītu Thunderbird, Apple Mail vai Outlook",
-        "jmap_username_label": "JMAP lietotājvārds",
+        "title": "Lietot pastu citās lietotnēs",
+        "description": "Thunderbird, Apple Mail, Outlook un tālruņa pasta lietotnes var izmantot šos iestatījumus.",
+        "jmap_username_label": "Lietotājvārds",
         "copy": "Kopēt",
         "copied": "Nokopēts",
-        "password_instructions": "Izmantojiet augstāk norādīto JMAP lietotājvārdu kopā ar lietotnes paroli, lai pierakstītos e-pasta klientā. Ja vēl neesat to izdarījis, izveidojiet lietotnes paroli sadaļā zemāk."
+        "password_instructions": "Kā paroli izmantojiet lietotnes paroli, nevis savu parasto paroli. To var izveidot zemāk šajā lapā."
       },
       "link_device": {
         "title": "Saistīt mobilo lietotni",
@@ -2698,8 +2698,8 @@
       "manage_description": "Pievienojiet, rediģējiet vai dzēsiet sānu joslas lietotnes"
     },
     "contacts": {
-      "title": "Kontakti",
-      "description": "Importējiet un eksportējiet savus kontaktus",
+      "title": "Kontaktu saraksts",
+      "description": "Kā tiek rādīti kontakti, un kontaktu faili importēšanai vai eksportēšanai",
       "import_label": "Kontaktu imports",
       "import_description": "Importēt kontaktus no vCard faila (.vcf)",
       "export_label": "Kontaktu eksports",
@@ -4448,6 +4448,28 @@
     "open_categories": "Atvērt kategorijas",
     "row_actions": "Darbības: {name}"
   },
+  "uxs_wording": {
+    "more_options": "Vairāk iespēju",
+    "use_in_other_apps": "Lietot citās lietotnēs",
+    "default_address_book": "Kontakti",
+    "default_calendar": "Kalendārs",
+    "preview_documents": "Dokumenti",
+    "preview_photos": "Fotoattēli",
+    "sample_subject": "Piezīmes no sanāksmes kafejnīcā",
+    "mail_apps": {
+      "imap": "Ienākošais pasts (IMAP)",
+      "smtp": "Izejošais pasts (SMTP)",
+      "caldav": "Kalendāri (CalDAV)",
+      "carddav": "Kontakti (CardDAV)",
+      "port_security": "Ports {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Bez šifrēšanas",
+      "copy_label": "Kopēt: {name}",
+      "loading": "Nolasa iestatījumus no pasta servera…",
+      "not_found": "Pasta serveris nenorādīja serveru nosaukumus citām lietotnēm. Jautājiet tos savam administratoram."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendāri: {names}",
@@ -4701,7 +4723,7 @@
       "notifications_enabled_desc": "Rādīt brīdinājumus par gaidāmajiem pasākumiem",
       "notification_sound": "Paziņojuma skaņa",
       "notification_sound_desc": "Atskaņot skaņu kalendāra brīdinājumiem",
-      "invitation_parsing": "Uzaicinājumu atpazīšana e-pastā",
+      "invitation_parsing": "Rādīt ielūgumus no pasta",
       "invitation_parsing_desc": "Meklēt kalendāra uzaicinājumus e-pasta pielikumos",
       "show_time_in_month_view": "Rādīt laiku mēneša skatā",
       "show_time_in_month_view_desc": "Rādīt pasākuma laiku mēneša kalendārā",
@@ -4716,7 +4738,7 @@
       "show_week_numbers_desc": "Rādīt nedēļu numurus mini kalendārā",
       "calendar_free_scroll": "Brīva ritināšana",
       "calendar_free_scroll_desc": "Nepārtraukti ritināt cauri mēnešiem, nedēļām un dienām, nevis pa vienam periodam",
-      "enable_tasks": "Iespējot uzdevumus",
+      "enable_tasks": "Uzdevumi",
       "enable_tasks_desc": "Rādīt uzdevumu sadaļu kalendārā",
       "show_tasks_on_calendar": "Rādīt uzdevumus kalendārā",
       "show_tasks_on_calendar_desc": "Rādīt uzdevumus mēneša, nedēļas un dienas skatā",
@@ -4868,8 +4890,8 @@
       "error_update": "Neizdevās atjaunināt kalendāru",
       "error_delete": "Neizdevās izdzēst kalendāru",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Kopēt CalDAV URL",
-      "url_copied": "CalDAV URL nokopēts starpliktuvē",
+      "copy_url": "Kopēt adresi citām lietotnēm",
+      "url_copied": "Adrese nokopēta",
       "share": "Kopīgot kalendāru…",
       "new_event_in_calendar": "Jauns notikums šajā kalendārā",
       "shared_with": "Kopīgots ar: {names}",
@@ -4889,8 +4911,8 @@
       "default_alerts_updated": "Noklusējuma atgādinājumi atjaunināti"
     },
     "subscription": {
-      "title": "iCal abonements",
-      "section_title": "iCal abonementi",
+      "title": "Abonēt kalendāru",
+      "section_title": "Abonētie kalendāri",
       "description": "Abonējiet ārēju iCalendar plūsmu. Pasākumi tiks sinhronizēti automātiski.",
       "url_label": "Kalendāra URL",
       "url_placeholder": "https://example.com/calendar.ics vai webcal://...",

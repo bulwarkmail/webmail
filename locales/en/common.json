@@ -1558,8 +1558,8 @@
       "title": "Appearance",
       "description": "Customize the look and feel of your webmail",
       "theme": {
-        "label": "Theme",
-        "description": "Choose your preferred color scheme",
+        "label": "Light or dark",
+        "description": "System follows your device's setting",
         "light": "Light",
         "dark": "Dark",
         "system": "System"
@@ -1587,7 +1587,7 @@
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
         "default": "Default",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Search bar on top, apps on the left"
       },
       "animations": {
         "label": "Enable animations",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Colorful sidebar icons",
-        "description": "Tint folder and tag icons by type (blue Inbox, red Junk, green Sent, etc.). Disable for a monochrome sidebar."
+        "description": "Give folder and tag icons colors (blue Inbox, red Spam, green Sent and so on). Turn this off for gray icons."
       },
       "tint_list_rows": {
         "label": "Tint list rows by tag color",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "Mail layout",
-        "description": "Choose between the classic split reading pane, a Gmail-style focused reading flow, or a Zimbra-style bottom reading pane.",
+        "description": "Where the message list and the open message go on the screen.",
         "split": "Split pane",
-        "split_description": "Keep the message list and reading pane visible side by side.",
+        "split_description": "List and message side by side",
         "focus": "Focused list",
-        "focus_description": "Show one line per message and open mail full-width while keeping the folder sidebar visible.",
+        "focus_description": "List, then the message full width",
         "horizontal": "Reading pane at bottom",
-        "horizontal_description": "Show the message list on top and open the selected message in a reading pane below it."
+        "horizontal_description": "Message below the list"
       },
       "list_columns": {
         "label": "Show the list as columns",
@@ -2300,7 +2300,7 @@
       },
       "totp": {
         "section_title": "Two-factor authentication",
-        "label": "TOTP authentication",
+        "label": "Two-step sign-in",
         "description": "Add an extra layer of security with a time-based one-time password",
         "active": "Enabled",
         "inactive": "Disabled",
@@ -2396,12 +2396,12 @@
         "delete_message": "{name} is removed from the server."
       },
       "email_client": {
-        "title": "Email client setup",
-        "description": "Use these credentials to configure your desktop or mobile email client (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "JMAP username",
+        "title": "Use your mail in other apps",
+        "description": "Thunderbird, Apple Mail, Outlook and phone mail apps can use these settings.",
+        "jmap_username_label": "User name",
         "copy": "Copy",
         "copied": "Copied",
-        "password_instructions": "Use your JMAP username above along with an app password to sign in to your email client. Create an app password in the section below if you haven't already."
+        "password_instructions": "For the password, use an app password, not your normal one. You can create one in the section below."
       },
       "link_device": {
         "title": "Link the mobile app",
@@ -2705,8 +2705,8 @@
       "manage_description": "Add, edit, or remove custom apps from your sidebar"
     },
     "contacts": {
-      "title": "Contacts",
-      "description": "Import and export your contacts",
+      "title": "Contact list",
+      "description": "How contacts are listed, and contact files to import or export",
       "group_by_letter_label": "Group by first letter",
       "group_by_letter_description": "Show alphabetical section headers in the contact list",
       "sort_by_last_name_label": "Sort by last name",
@@ -4448,6 +4448,28 @@
       "menu": "Open the contact's menu"
     }
   },
+  "uxs_wording": {
+    "more_options": "More options",
+    "use_in_other_apps": "Use in other apps",
+    "default_address_book": "Contacts",
+    "default_calendar": "Calendar",
+    "preview_documents": "Documents",
+    "preview_photos": "Photos",
+    "sample_subject": "Notes from Zoë's café meeting",
+    "mail_apps": {
+      "imap": "Incoming mail (IMAP)",
+      "smtp": "Outgoing mail (SMTP)",
+      "caldav": "Calendars (CalDAV)",
+      "carddav": "Contacts (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "No encryption",
+      "copy_label": "Copy {name}",
+      "loading": "Reading the settings from your mail server…",
+      "not_found": "Your mail server didn't share its server names for other apps. Ask your administrator for them."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendars: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Show alerts for upcoming calendar events",
       "notification_sound": "Notification sound",
       "notification_sound_desc": "Play a sound for calendar alerts",
-      "invitation_parsing": "Parse email invitations",
+      "invitation_parsing": "Show invitations from mail",
       "invitation_parsing_desc": "Detect calendar invitations in email attachments and show calendar actions",
       "show_time_in_month_view": "Show time in month view",
       "show_time_in_month_view_desc": "Display event times in the month calendar view. On small screens this shows full event entries instead of dots.",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Display week numbers in the mini-calendar",
       "calendar_free_scroll": "Free scrolling",
       "calendar_free_scroll_desc": "Scroll continuously through months, weeks and days instead of one period at a time",
-      "enable_tasks": "Enable tasks",
+      "enable_tasks": "Tasks",
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",
       "show_tasks_on_calendar_desc": "Display tasks on the month, week and day calendar views",
@@ -4898,8 +4920,8 @@
       "error_update": "Couldn't update calendar",
       "error_delete": "Couldn't delete calendar",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Copy CalDAV URL",
-      "url_copied": "CalDAV URL copied to clipboard",
+      "copy_url": "Copy address for other apps",
+      "url_copied": "Address copied",
       "share": "Share calendar…",
       "new_event_in_calendar": "New event in this calendar",
       "shared_with": "Shared with {names}",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "Default reminders updated"
     },
     "subscription": {
-      "title": "iCal subscription",
-      "section_title": "iCal subscriptions",
+      "title": "Subscribe to a calendar",
+      "section_title": "Subscribed calendars",
       "description": "Subscribe to an external iCalendar feed. Events will be synced automatically into their own calendar. Supports https:// and webcal:// URLs.",
       "url_label": "Calendar URL",
       "url_placeholder": "https://example.com/calendar.ics or webcal://...",

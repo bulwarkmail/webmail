@@ -1558,8 +1558,8 @@
       "title": "Udseende",
       "description": "Tilpas udseendet af din webmail",
       "theme": {
-        "label": "Tema",
-        "description": "Vælg dit foretrukne farveskema",
+        "label": "Lys eller mørk",
+        "description": "System følger din enheds indstilling",
         "light": "Lys",
         "dark": "Mørk",
         "system": "System"
@@ -1587,7 +1587,7 @@
         "label": "Grænsefladelayout",
         "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
         "default": "Standard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Søgefelt øverst, apps til venstre"
       },
       "animations": {
         "label": "Aktivér animationer",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Farverige sidepane-ikoner",
-        "description": "Farvelæg mappe- og tag-ikoner efter type (blå indbakke, rød spam, grøn sendt osv.). Deaktivér for et monokromt sidepanel."
+        "description": "Giv mappe- og etiketikoner farver (blå Indbakke, rød Spam, grøn Sendt og så videre). Slå fra for grå ikoner."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "Mail-layout",
-        "description": "Vælg mellem den klassiske opdelte læserude, en Gmail-lignende fokuseret læsestrøm eller en Zimbra-lignende læserude i bunden.",
+        "description": "Hvor meddelelseslisten og den åbne meddelelse står på skærmen.",
         "split": "Opdelt rude",
-        "split_description": "Hold beskedlisten og læseruden synlige side om side.",
+        "split_description": "Liste og meddelelse side om side",
         "focus": "Fokuseret liste",
-        "focus_description": "Vis én linje pr. besked og åbn mail i fuld bredde, mens mappesidepanelet forbliver synligt.",
+        "focus_description": "Listen, derefter meddelelsen i fuld bredde",
         "horizontal": "Læserude i bunden",
-        "horizontal_description": "Vis beskedlisten øverst og åbn den valgte besked i en læserude nedenunder."
+        "horizontal_description": "Meddelelsen under listen"
       },
       "list_columns": {
         "label": "Vis listen som kolonner",
@@ -2296,7 +2296,7 @@
       },
       "totp": {
         "section_title": "To-faktor-godkendelse",
-        "label": "TOTP-godkendelse",
+        "label": "Login i to trin",
         "description": "Tilføj et ekstra lag af sikkerhed med en tidsbaseret engangskode",
         "active": "Aktiveret",
         "inactive": "Deaktiveret",
@@ -2376,12 +2376,12 @@
         "enabled_success": "Kryptering af lagrede data aktiveret"
       },
       "email_client": {
-        "title": "E-mail-klientopsætning",
-        "description": "Brug disse legitimationsoplysninger til at konfigurere din desktop- eller mobil-e-mailklient (Thunderbird, Apple Mail, Outlook osv.)",
-        "jmap_username_label": "JMAP-brugernavn",
+        "title": "Brug din mail i andre apps",
+        "description": "Thunderbird, Apple Mail, Outlook og mailapps på telefonen kan bruge disse indstillinger.",
+        "jmap_username_label": "Brugernavn",
         "copy": "Kopier",
         "copied": "Kopieret",
-        "password_instructions": "Brug dit JMAP-brugernavn ovenfor sammen med en app-adgangskode for at logge ind i din e-mailklient. Opret en app-adgangskode i sektionen nedenfor, hvis du ikke allerede har gjort det."
+        "password_instructions": "Brug en app-adgangskode som adgangskode, ikke din normale. Du kan oprette en længere nede på siden."
       },
       "link_device": {
         "title": "Tilknyt mobilapp",
@@ -2701,8 +2701,8 @@
       "manage_description": "Tilføj, redigér eller fjern brugerdefinerede apps fra dit sidepanel"
     },
     "contacts": {
-      "title": "Kontakter",
-      "description": "Importér og eksportér dine kontakter",
+      "title": "Kontaktliste",
+      "description": "Hvordan kontakter vises, og kontaktfiler til import eller eksport",
       "group_by_letter_label": "Gruppér efter første bogstav",
       "sort_by_last_name_label": "Sortér efter efternavn",
       "sort_by_last_name_description": "Sortér kontaktlisten efter efternavn, så familiemedlemmer står samlet",
@@ -4448,6 +4448,28 @@
     "open_categories": "Åbn kategorier",
     "row_actions": "Handlinger for {name}"
   },
+  "uxs_wording": {
+    "more_options": "Flere indstillinger",
+    "use_in_other_apps": "Brug i andre apps",
+    "default_address_book": "Kontakter",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumenter",
+    "preview_photos": "Billeder",
+    "sample_subject": "Noter fra mødet på caféen i Århus",
+    "mail_apps": {
+      "imap": "Indgående mail (IMAP)",
+      "smtp": "Udgående mail (SMTP)",
+      "caldav": "Kalendere (CalDAV)",
+      "carddav": "Kontakter (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Ingen kryptering",
+      "copy_label": "Kopiér {name}",
+      "loading": "Læser indstillingerne fra din mailserver…",
+      "not_found": "Din mailserver oplyste ikke servernavne til andre apps. Spørg din administrator om dem."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendere: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Vis alarmer for kommende kalenderbegivenheder",
       "notification_sound": "Notifikationslyd",
       "notification_sound_desc": "Afspil en lyd for kalenderalarmer",
-      "invitation_parsing": "Pars e-mail-invitationer",
+      "invitation_parsing": "Vis invitationer fra mail",
       "invitation_parsing_desc": "Registrér kalenderinvitationer i e-mail-vedhæftninger og vis kalenderhandlinger",
       "show_time_in_month_view": "Vis tid i månedsvisning",
       "show_time_in_month_view_desc": "Vis begivenhedstider i månedskalendervisningen",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Vis ugenumre i minikalenderen",
       "calendar_free_scroll": "Fri rulning",
       "calendar_free_scroll_desc": "Rul fortløbende gennem måneder, uger og dage i stedet for én periode ad gangen",
-      "enable_tasks": "Aktivér opgaver",
+      "enable_tasks": "Opgaver",
       "enable_tasks_desc": "Vis en opgavevisning i kalenderen til styring af gøremål",
       "show_tasks_on_calendar": "Vis opgaver på kalender",
       "show_tasks_on_calendar_desc": "Vis opgaver i måneds-, uge- og dagsvisningen",
@@ -4895,8 +4917,8 @@
       "error_update": "Kunne ikke opdatere kalender",
       "error_delete": "Kunne ikke slette kalender",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "Kopier CalDAV-URL",
-      "url_copied": "CalDAV-URL kopieret til udklipsholder",
+      "copy_url": "Kopiér adresse til andre apps",
+      "url_copied": "Adressen er kopieret",
       "share": "Del kalender…",
       "new_event_in_calendar": "Ny begivenhed i denne kalender",
       "shared_with": "Delt med {names}",
@@ -4916,8 +4938,8 @@
       "default_alerts_updated": "Standardpåmindelser opdateret"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementer",
+      "title": "Abonnér på en kalender",
+      "section_title": "Abonnerede kalendere",
       "description": "Abonnér på et eksternt iCalendar-feed. Begivenheder synkroniseres automatisk til deres egen kalender. Understøtter https:// og webcal:// URL'er.",
       "url_label": "Kalender-URL",
       "url_placeholder": "https://example.com/kalender.ics eller webcal://...",

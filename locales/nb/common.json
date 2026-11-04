@@ -1558,8 +1558,8 @@
       "title": "Utseende",
       "description": "Tilpass utseendet til nettposten",
       "theme": {
-        "label": "Tema",
-        "description": "Velg fargevalget du foretrekker",
+        "label": "Lyst eller mørkt",
+        "description": "System følger innstillingen på enheten din",
         "light": "Lyst",
         "dark": "Mørkt",
         "system": "System"
@@ -1587,7 +1587,7 @@
         "label": "Grensesnittoppsett",
         "description": "Hvor søk, navigasjon og verktøylinjer ligger",
         "default": "Standard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Søkefelt øverst, apper til venstre"
       },
       "animations": {
         "label": "Aktiver animasjoner",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Fargede ikoner i sidefeltet",
-        "description": "Fargelegg mappe- og etikettikoner etter type (blått ikon for Innboks, rødt for Søppelpost, grønt for Sendt osv.). Deaktiver dette for et ensfarget sidefelt."
+        "description": "Gi mappe- og etikettikoner farger (blå Innboks, rød Søppelpost, grønn Sendt og så videre). Slå av for grå ikoner."
       },
       "tint_list_rows": {
         "label": "Fargelegg meldingsrader etter etikett",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "E-postoppsett",
-        "description": "Velg mellom den klassiske delte leseruten, en fokusert leseflyt i Gmail-stil eller en bunnleserute i Zimbra-stil.",
+        "description": "Hvor meldingslisten og den åpne meldingen står på skjermen.",
         "split": "Delt rute",
-        "split_description": "Hold meldingslisten og leseruten synlige side ved side.",
+        "split_description": "Liste og melding side om side",
         "focus": "Fokusert liste",
-        "focus_description": "Vis én linje per melding, og åpne meldingen i full bredde samtidig som mappesidefeltet forblir synlig.",
+        "focus_description": "Listen, så meldingen i full bredde",
         "horizontal": "Leseruten nederst",
-        "horizontal_description": "Vis meldingslisten øverst og åpne den valgte meldingen i en leserute under den."
+        "horizontal_description": "Meldingen under listen"
       },
       "list_columns": {
         "label": "Vis listen som kolonner",
@@ -2300,7 +2300,7 @@
       },
       "totp": {
         "section_title": "Tofaktorautentisering",
-        "label": "TOTP-autentisering",
+        "label": "Pålogging i to trinn",
         "description": "Legg til et ekstra lag med sikkerhet med et tidsbasert engangspassord",
         "active": "Aktivert",
         "inactive": "Deaktivert",
@@ -2396,12 +2396,12 @@
         "delete_message": "{name} fjernes fra serveren."
       },
       "email_client": {
-        "title": "Oppsett av e-postklient",
-        "description": "Bruk denne påloggingsinformasjonen til å sette opp en e-postklient på datamaskinen eller mobilen (Thunderbird, Apple Mail, Outlook osv.)",
-        "jmap_username_label": "JMAP-brukernavn",
+        "title": "Bruk e-posten i andre apper",
+        "description": "Thunderbird, Apple Mail, Outlook og e-postapper på telefonen kan bruke disse innstillingene.",
+        "jmap_username_label": "Brukernavn",
         "copy": "Kopier",
         "copied": "Kopiert",
-        "password_instructions": "Bruk JMAP-brukernavnet ovenfor sammen med et app-passord for å logge på e-postklienten. Opprett et app-passord i delen nedenfor hvis du ikke allerede har gjort det."
+        "password_instructions": "Bruk et app-passord som passord, ikke det vanlige passordet ditt. Du kan lage et lenger ned på denne siden."
       },
       "link_device": {
         "title": "Koble til mobilappen",
@@ -2705,8 +2705,8 @@
       "manage_description": "Legg til, rediger eller fjern egendefinerte apper fra sidefeltet"
     },
     "contacts": {
-      "title": "Kontakter",
-      "description": "Importer og eksporter kontaktene dine",
+      "title": "Kontaktliste",
+      "description": "Hvordan kontakter vises, og kontaktfiler som skal importeres eller eksporteres",
       "group_by_letter_label": "Grupper etter første bokstav",
       "sort_by_last_name_label": "Sorter etter etternavn",
       "sort_by_last_name_description": "Sorter kontaktlisten etter etternavn slik at familiemedlemmer står samlet",
@@ -4448,6 +4448,28 @@
       "menu": "Åpne kontaktens meny"
     }
   },
+  "uxs_wording": {
+    "more_options": "Flere valg",
+    "use_in_other_apps": "Bruk i andre apper",
+    "default_address_book": "Kontakter",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumenter",
+    "preview_photos": "Bilder",
+    "sample_subject": "Notater fra møtet på kaféen i Tromsø",
+    "mail_apps": {
+      "imap": "Innkommende e-post (IMAP)",
+      "smtp": "Utgående e-post (SMTP)",
+      "caldav": "Kalendere (CalDAV)",
+      "carddav": "Kontakter (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Ingen kryptering",
+      "copy_label": "Kopier {name}",
+      "loading": "Leser innstillingene fra e-postserveren…",
+      "not_found": "E-postserveren oppga ikke servernavn for andre apper. Spør administratoren din om dem."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendere: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Vis varsler for kommende kalenderhendelser",
       "notification_sound": "Varslingslyd",
       "notification_sound_desc": "Spill av en lyd for kalendervarsler",
-      "invitation_parsing": "Les kalenderinvitasjoner i e-post",
+      "invitation_parsing": "Vis invitasjoner fra e-post",
       "invitation_parsing_desc": "Finn kalenderinvitasjoner i e-postvedlegg og vis tilgjengelige kalenderhandlinger",
       "show_time_in_month_view": "Vis klokkeslett i månedsvisning",
       "show_time_in_month_view_desc": "Vis klokkeslettet for hendelser i månedsvisningen. På små skjermer vises hele hendelsesoppføringen i stedet for en prikk.",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Vis ukenummer i minikalenderen",
       "calendar_free_scroll": "Fri rulling",
       "calendar_free_scroll_desc": "Rull fortløpende gjennom måneder, uker og dager i stedet for én periode om gangen",
-      "enable_tasks": "Aktiver oppgaver",
+      "enable_tasks": "Oppgaver",
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",
       "show_tasks_on_calendar_desc": "Vis oppgaver i måneds-, uke- og dagsvisningen",
@@ -4898,8 +4920,8 @@
       "error_update": "Kunne ikke oppdatere kalenderen",
       "error_delete": "Kunne ikke slette kalenderen",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "Kopier CalDAV-URL",
-      "url_copied": "CalDAV-URL kopiert til utklippstavlen",
+      "copy_url": "Kopier adressen for andre apper",
+      "url_copied": "Adressen er kopiert",
       "share": "Del kalender…",
       "new_event_in_calendar": "Ny hendelse i denne kalenderen",
       "shared_with": "Delt med {names}",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "Standardpåminnelser oppdatert"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementer",
+      "title": "Abonner på en kalender",
+      "section_title": "Kalendere du abonnerer på",
       "description": "Abonner på en ekstern iCalendar-strøm. Hendelser synkroniseres automatisk til en egen kalender. Du kan bruke URL-er med https:// og webcal://.",
       "url_label": "Kalender-URL",
       "url_placeholder": "https://example.com/calendar.ics eller webcal://...",

@@ -1558,8 +1558,8 @@
       "title": "外觀",
       "description": "自訂網頁郵件的外觀與使用感受",
       "theme": {
-        "label": "主題",
-        "description": "選擇您喜歡的配色方案",
+        "label": "淺色或深色",
+        "description": "「系統」會依照裝置的設定",
         "light": "淺色",
         "dark": "深色",
         "system": "系統"
@@ -1587,7 +1587,7 @@
         "label": "介面版面配置",
         "description": "搜尋、導覽與工具列的位置",
         "default": "預設",
-        "mountain_view": "Mountain View"
+        "mountain_view": "搜尋列在上方，應用程式在左側"
       },
       "animations": {
         "label": "啟用動畫",
@@ -1631,7 +1631,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "彩色側邊欄圖示",
-        "description": "依類型為信件匣與標籤圖示上色（藍色收件匣、紅色垃圾郵件、綠色寄件備份等）。停用後側邊欄會以單色顯示。"
+        "description": "依類型為資料夾和標籤圖示上色（收件匣藍色、垃圾郵件紅色、寄件備份綠色等）。關閉後圖示為灰色。"
       },
       "tint_list_rows": {
         "label": "依標籤顏色為清單列上色",
@@ -1957,13 +1957,13 @@
       },
       "mail_layout": {
         "label": "郵件版面配置",
-        "description": "選擇經典分割閱讀窗格、Gmail 風格的專注閱讀流程，或 Zimbra 風格的底部閱讀窗格。",
+        "description": "郵件清單和開啟的郵件在畫面上的位置。",
         "split": "分割窗格",
-        "split_description": "郵件清單與閱讀窗格並排顯示。",
+        "split_description": "清單和郵件並排",
         "focus": "專注清單",
-        "focus_description": "每封郵件顯示一列，開啟郵件時以全寬顯示，同時保留信件匣側邊欄。",
+        "focus_description": "先清單，再以全寬顯示郵件",
         "horizontal": "底部閱讀窗格",
-        "horizontal_description": "在頂端顯示郵件清單，並在下方閱讀窗格開啟選取的郵件。"
+        "horizontal_description": "郵件在清單下方"
       },
       "list_columns": {
         "label": "以欄位顯示清單",
@@ -2300,7 +2300,7 @@
       },
       "totp": {
         "section_title": "雙因素驗證",
-        "label": "TOTP 驗證",
+        "label": "兩步驟登入",
         "description": "透過基於時間的一次性密碼，增加一層安全保護",
         "active": "已啟用",
         "inactive": "未啟用",
@@ -2396,12 +2396,12 @@
         "delete_message": "{name} 將從伺服器中移除。"
       },
       "email_client": {
-        "title": "郵件用戶端設定",
-        "description": "使用以下登入資訊設定桌面版或行動裝置電子郵件用戶端（Thunderbird、Apple Mail、Outlook 等）",
-        "jmap_username_label": "JMAP 使用者名稱",
+        "title": "在其他應用程式中使用郵件",
+        "description": "Thunderbird、Apple Mail、Outlook 和手機郵件應用程式可以使用這些設定。",
+        "jmap_username_label": "使用者名稱",
         "copy": "複製",
         "copied": "已複製",
-        "password_instructions": "使用上方的 JMAP 使用者名稱與應用程式密碼登入電子郵件用戶端。如果尚未建立應用程式密碼，請在下方區段建立一組。"
+        "password_instructions": "密碼請使用應用程式密碼，而不是你平常的密碼。可以在本頁下方建立。"
       },
       "link_device": {
         "title": "連結行動應用程式",
@@ -2705,8 +2705,8 @@
       "manage_description": "在側邊欄新增、編輯或移除自訂應用程式"
     },
     "contacts": {
-      "title": "聯絡人",
-      "description": "匯入與匯出聯絡人",
+      "title": "聯絡人清單",
+      "description": "聯絡人的顯示方式，以及要匯入或匯出的聯絡人檔案",
       "group_by_letter_label": "依首字分組",
       "sort_by_last_name_label": "依姓氏排序",
       "sort_by_last_name_description": "依姓氏排列聯絡人清單，讓家庭成員顯示在一起",
@@ -4448,6 +4448,28 @@
       "menu": "開啟聯絡人選單"
     }
   },
+  "uxs_wording": {
+    "more_options": "更多選項",
+    "use_in_other_apps": "在其他應用程式中使用",
+    "default_address_book": "聯絡人",
+    "default_calendar": "行事曆",
+    "preview_documents": "文件",
+    "preview_photos": "相片",
+    "sample_subject": "咖啡廳會議筆記",
+    "mail_apps": {
+      "imap": "內送郵件 (IMAP)",
+      "smtp": "外寄郵件 (SMTP)",
+      "caldav": "行事曆 (CalDAV)",
+      "carddav": "聯絡人 (CardDAV)",
+      "port_security": "連接埠 {port}，{security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "不加密",
+      "copy_label": "複製{name}",
+      "loading": "正在從郵件伺服器讀取設定…",
+      "not_found": "你的郵件伺服器沒有提供其他應用程式所需的伺服器名稱。請洽詢管理員。"
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "行事曆：{names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "顯示即將開始的行事曆活動提醒",
       "notification_sound": "通知聲音",
       "notification_sound_desc": "播放行事曆提醒聲音",
-      "invitation_parsing": "解析郵件邀請",
+      "invitation_parsing": "顯示郵件中的邀請",
       "invitation_parsing_desc": "偵測郵件附件中的行事曆邀請，並顯示行事曆動作",
       "show_time_in_month_view": "在月檢視中顯示時間",
       "show_time_in_month_view_desc": "在月檢視中顯示活動時間。小螢幕會顯示完整活動項目，而不只是圓點。",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "在迷你行事曆中顯示週數",
       "calendar_free_scroll": "自由捲動",
       "calendar_free_scroll_desc": "連續捲動瀏覽月、週和日，而不是一次只顯示一個時段",
-      "enable_tasks": "啟用任務",
+      "enable_tasks": "工作",
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",
       "show_tasks_on_calendar_desc": "在行事曆的月／週／日檢視中顯示任務",
@@ -4898,8 +4920,8 @@
       "error_update": "更新行事曆失敗",
       "error_delete": "刪除行事曆失敗",
       "caldav_url": "CalDAV URL",
-      "copy_url": "複製 CalDAV URL",
-      "url_copied": "CalDAV URL 已複製到剪貼簿",
+      "copy_url": "複製供其他應用程式使用的位址",
+      "url_copied": "位址已複製",
       "share": "分享行事曆…",
       "new_event_in_calendar": "在此行事曆中新增活動",
       "shared_with": "已與 {names} 共用",
@@ -4919,8 +4941,8 @@
       "default_alerts_updated": "預設提醒已更新"
     },
     "subscription": {
-      "title": "iCal 訂閱",
-      "section_title": "iCal 訂閱",
+      "title": "訂閱行事曆",
+      "section_title": "已訂閱的行事曆",
       "description": "訂閱外部 iCalendar 資料來源。活動會自動同步到獨立的行事曆。支援 https:// 與 webcal:// URL。",
       "url_label": "行事曆 URL",
       "url_placeholder": "https://example.com/calendar.ics 或 webcal://...",

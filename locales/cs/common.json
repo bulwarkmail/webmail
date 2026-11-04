@@ -1555,8 +1555,8 @@
       "title": "Vzhled",
       "description": "Přizpůsobte si vzhled a chování vašeho webového e-mailu",
       "theme": {
-        "label": "Motiv",
-        "description": "Vyberte preferované barevné schéma",
+        "label": "Světlý nebo tmavý",
+        "description": "Systém se řídí nastavením zařízení",
         "light": "Světlý",
         "dark": "Tmavý",
         "system": "Systémový"
@@ -1584,7 +1584,7 @@
         "label": "Rozvržení rozhraní",
         "description": "Kde se nachází hledání, navigace a panely nástrojů",
         "default": "Výchozí",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Vyhledávání nahoře, aplikace vlevo"
       },
       "animations": {
         "label": "Povolit animace",
@@ -1628,7 +1628,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Barevné ikony postranního panelu",
-        "description": "Obarví ikony složek a štítků podle typu (modré Doručené, červený Spam, zelené Odeslané atd.). Vypněte pro jednobarevný postranní panel."
+        "description": "Obarvit ikony složek a štítků podle typu (Doručené modře, Spam červeně, Odeslané zeleně atd.). Vypněte pro šedé ikony."
       },
       "tint_list_rows": {
         "label": "Podbarvit řádky barvou štítku",
@@ -1954,13 +1954,13 @@
       },
       "mail_layout": {
         "label": "Rozložení pošty",
-        "description": "Vyberte si mezi klasickým rozděleným zobrazením a soustředěným seznamem podobným Gmailu.",
+        "description": "Kde se na obrazovce zobrazí seznam zpráv a otevřená zpráva.",
         "split": "Rozdělené zobrazení",
-        "split_description": "Seznam zpráv a panel pro čtení zůstávají viditelné vedle sebe.",
+        "split_description": "Seznam a zpráva vedle sebe",
         "focus": "Soustředěný seznam",
-        "focus_description": "Zobrazit jeden řádek na zprávu a otevřít poštu na plnou šířku s viditelným panelem složek.",
+        "focus_description": "Seznam, pak zpráva na celou šířku",
         "horizontal": "Čtecí panel dole",
-        "horizontal_description": "Zobrazit seznam zpráv nahoře a otevřít vybranou zprávu ve čtecím panelu pod ním."
+        "horizontal_description": "Zpráva pod seznamem"
       },
       "list_columns": {
         "label": "Zobrazit seznam ve sloupcích",
@@ -2293,7 +2293,7 @@
       },
       "totp": {
         "section_title": "Dvoufázové ověření",
-        "label": "Ověřování TOTP",
+        "label": "Dvoufázové přihlášení",
         "description": "Přidejte další vrstvu zabezpečení pomocí jednorázového hesla na bázi času",
         "active": "Zapnuto",
         "inactive": "Vypnuto",
@@ -2373,12 +2373,12 @@
         "enabled_success": "Šifrování dat v klidu zapnuto"
       },
       "email_client": {
-        "title": "Konfigurace poštovního klienta",
-        "description": "Použijte tyto přihlašovací údaje pro konfiguraci e-mailového klienta na počítači nebo mobilním zařízení (Thunderbird, Apple Mail, Outlook atd.)",
-        "jmap_username_label": "Uživatelské jméno JMAP",
+        "title": "Používat poštu v jiných aplikacích",
+        "description": "Thunderbird, Apple Mail, Outlook a poštovní aplikace v telefonu mohou použít tato nastavení.",
+        "jmap_username_label": "Uživatelské jméno",
         "copy": "Kopírovat",
         "copied": "Zkopírováno",
-        "password_instructions": "Použijte výše uvedené uživatelské jméno JMAP společně s heslem aplikace pro přihlášení v poštovním klientovi. Pokud jste tak ještě neučinili, vytvořte si heslo aplikace v sekci níže."
+        "password_instructions": "Jako heslo použijte heslo aplikace, ne své běžné heslo. Vytvoříte ho níže na této stránce."
       },
       "link_device": {
         "title": "Propojit mobilní aplikaci",
@@ -2698,8 +2698,8 @@
       "manage_description": "Přidávat, upravovat nebo odebírat vlastní aplikace z postranního panelu"
     },
     "contacts": {
-      "title": "Kontakty",
-      "description": "Import a export kontaktů",
+      "title": "Seznam kontaktů",
+      "description": "Jak se kontakty zobrazují a soubory kontaktů k importu nebo exportu",
       "group_by_letter_label": "Seskupit podle prvního písmena",
       "sort_by_last_name_label": "Řadit podle příjmení",
       "sort_by_last_name_description": "Seřadit seznam kontaktů podle příjmení, aby členové rodiny byli pohromadě",
@@ -4448,6 +4448,28 @@
     "open_categories": "Otevřít kategorie",
     "row_actions": "Akce pro {name}"
   },
+  "uxs_wording": {
+    "more_options": "Další možnosti",
+    "use_in_other_apps": "Použít v jiných aplikacích",
+    "default_address_book": "Kontakty",
+    "default_calendar": "Kalendář",
+    "preview_documents": "Dokumenty",
+    "preview_photos": "Fotky",
+    "sample_subject": "Poznámky ze schůzky v kavárně",
+    "mail_apps": {
+      "imap": "Příchozí pošta (IMAP)",
+      "smtp": "Odchozí pošta (SMTP)",
+      "caldav": "Kalendáře (CalDAV)",
+      "carddav": "Kontakty (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Bez šifrování",
+      "copy_label": "Kopírovat {name}",
+      "loading": "Načítají se nastavení z poštovního serveru…",
+      "not_found": "Poštovní server nesdělil názvy serverů pro jiné aplikace. Požádejte o ně správce."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendáře: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Zobrazovat upozornění na nadcházející události v kalendáři",
       "notification_sound": "Zvuk oznámení",
       "notification_sound_desc": "Přehrát zvukové upozornění pro kalendář",
-      "invitation_parsing": "Analyzovat e-mailové pozvánky",
+      "invitation_parsing": "Zobrazovat pozvánky z pošty",
       "invitation_parsing_desc": "Rozpoznávat pozvánky kalendáře v přílohách e-mailů a zobrazovat akce kalendáře",
       "show_time_in_month_view": "Zobrazit čas v měsíčním zobrazení",
       "show_time_in_month_view_desc": "Zobrazovat časy událostí v měsíčním zobrazení kalendáře",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Zobrazovat čísla týdnů v minikalendáři",
       "calendar_free_scroll": "Volné posouvání",
       "calendar_free_scroll_desc": "Plynule procházet měsíce, týdny a dny místo jednoho období najednou",
-      "enable_tasks": "Povolit úkoly",
+      "enable_tasks": "Úkoly",
       "enable_tasks_desc": "Zobrazovat zobrazení úkolů v kalendáři pro správu úkolů",
       "show_tasks_on_calendar": "Zobrazit úkoly v kalendáři",
       "show_tasks_on_calendar_desc": "Zobrazovat úkoly v měsíčním, týdenním a denním zobrazení kalendáře",
@@ -4869,8 +4891,8 @@
       "error_update": "Aktualizace kalendáře selhala",
       "error_delete": "Odstranění kalendáře selhalo",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Kopírovat URL CalDAV",
-      "url_copied": "URL CalDAV zkopírováno do schránky",
+      "copy_url": "Kopírovat adresu pro jiné aplikace",
+      "url_copied": "Adresa zkopírována",
       "share": "Sdílet kalendář…",
       "new_event_in_calendar": "Nová událost v tomto kalendáři",
       "shared_with": "Sdíleno s: {names}",
@@ -4890,8 +4912,8 @@
       "default_alerts_updated": "Výchozí připomenutí aktualizována"
     },
     "subscription": {
-      "title": "Odběr iCal",
-      "section_title": "Odběry iCal",
+      "title": "Odebírat kalendář",
+      "section_title": "Odebírané kalendáře",
       "description": "Odebírejte externí zdroj iCalendar. Události budou automaticky synchronizovány do samostatného kalendáře. Podporuje adresy URL https:// a webcal://.",
       "url_label": "URL kalendáře",
       "url_placeholder": "https://example.com/calendar.ics nebo webcal://...",

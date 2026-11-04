@@ -1555,8 +1555,8 @@
       "title": "外观",
       "description": "自定义邮箱的外观与风格",
       "theme": {
-        "label": "主题",
-        "description": "选择您喜欢的配色方案",
+        "label": "浅色或深色",
+        "description": "“系统”跟随设备的设置",
         "light": "浅色",
         "dark": "深色",
         "system": "系统"
@@ -1584,7 +1584,7 @@
         "label": "界面布局",
         "description": "搜索、导航和工具栏的位置",
         "default": "默认",
-        "mountain_view": "Mountain View"
+        "mountain_view": "搜索栏在上，应用在左"
       },
       "animations": {
         "label": "启用动画",
@@ -1628,7 +1628,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "彩色侧边栏图标",
-        "description": "按类型为文件夹和标签图标着色（蓝色收件箱、红色垃圾邮件、绿色已发送等）。禁用以获得单色侧边栏。"
+        "description": "按类型为文件夹和标签图标着色（收件箱蓝色、垃圾邮件红色、已发送绿色等）。关闭后图标为灰色。"
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1954,13 +1954,13 @@
       },
       "mail_layout": {
         "label": "邮件布局",
-        "description": "在经典分栏阅读和 Gmail 风格的沉浸阅读之间选择",
+        "description": "邮件列表和打开的邮件在屏幕上的位置。",
         "split": "分栏视图",
-        "split_description": "左侧显示邮件列表，右侧显示阅读窗格。",
+        "split_description": "列表和邮件并排",
         "focus": "沉浸模式",
-        "focus_description": "每封邮件显示一行，打开邮件时使用全宽阅读视图，同时保留文件夹侧边栏。",
+        "focus_description": "先列表，再全宽显示邮件",
         "horizontal": "底部阅读窗格",
-        "horizontal_description": "在顶部显示邮件列表，并在下方的阅读窗格中打开所选邮件。"
+        "horizontal_description": "邮件在列表下方"
       },
       "list_columns": {
         "label": "以列显示列表",
@@ -2293,7 +2293,7 @@
       },
       "totp": {
         "section_title": "双因素身份验证",
-        "label": "TOTP 身份验证",
+        "label": "两步登录",
         "description": "使用基于时间的一次性密码添加额外的安全层",
         "active": "启用",
         "inactive": "未启用",
@@ -2373,12 +2373,12 @@
         "enabled_success": "静态加密已启用"
       },
       "email_client": {
-        "title": "邮件客户端设置",
-        "description": "使用这些凭据配置桌面端或移动端邮件客户端（Thunderbird、Apple Mail、Outlook 等）",
-        "jmap_username_label": "JMAP 用户名",
+        "title": "在其他应用中使用邮件",
+        "description": "Thunderbird、Apple Mail、Outlook 和手机邮件应用可以使用这些设置。",
+        "jmap_username_label": "用户名",
         "copy": "复制",
         "copied": "已复制",
-        "password_instructions": "使用上面的 JMAP 用户名和应用密码登录您的邮件客户端。如果您还没有创建应用密码，请在下面的部分中创建。"
+        "password_instructions": "密码请使用应用专用密码，而不是你的常用密码。可以在本页下方创建。"
       },
       "link_device": {
         "title": "关联移动应用",
@@ -2698,8 +2698,8 @@
       "manage_description": "从侧边栏添加、编辑或删除自定义应用"
     },
     "contacts": {
-      "title": "联系人",
-      "description": "导入和导出联系人",
+      "title": "联系人列表",
+      "description": "联系人的显示方式，以及要导入或导出的联系人文件",
       "import_label": "导入联系人",
       "import_description": "从 vCard (.vcf) 文件导入联系人",
       "export_label": "导出联系人",
@@ -4448,6 +4448,28 @@
     "open_categories": "打开分类",
     "row_actions": "{name} 的操作"
   },
+  "uxs_wording": {
+    "more_options": "更多选项",
+    "use_in_other_apps": "在其他应用中使用",
+    "default_address_book": "联系人",
+    "default_calendar": "日历",
+    "preview_documents": "文档",
+    "preview_photos": "照片",
+    "sample_subject": "咖啡馆会议笔记",
+    "mail_apps": {
+      "imap": "收件服务器 (IMAP)",
+      "smtp": "发件服务器 (SMTP)",
+      "caldav": "日历 (CalDAV)",
+      "carddav": "联系人 (CardDAV)",
+      "port_security": "端口 {port}，{security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "不加密",
+      "copy_label": "复制{name}",
+      "loading": "正在从邮件服务器读取设置…",
+      "not_found": "你的邮件服务器没有提供其他应用所需的服务器名称。请向管理员询问。"
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "日历：{names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "显示即将发生的日历事件的提醒",
       "notification_sound": "通知声音",
       "notification_sound_desc": "播放日历提醒声音",
-      "invitation_parsing": "解析邮件邀请",
+      "invitation_parsing": "显示邮件中的邀请",
       "invitation_parsing_desc": "检测邮件附件中的日历邀请并显示日历操作",
       "show_time_in_month_view": "在月视图中显示时间",
       "show_time_in_month_view_desc": "在月历视图中显示事件时间",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "在迷你日历中显示周数",
       "calendar_free_scroll": "自由滚动",
       "calendar_free_scroll_desc": "连续滚动浏览月、周和日，而不是一次只显示一个时段",
-      "enable_tasks": "启用任务",
+      "enable_tasks": "任务",
       "enable_tasks_desc": "在日历中显示任务视图以管理待办事项",
       "show_tasks_on_calendar": "在日历上显示任务",
       "show_tasks_on_calendar_desc": "在日历的月/周/日视图中显示任务",
@@ -4869,8 +4891,8 @@
       "error_update": "更新日历失败",
       "error_delete": "删除日历失败",
       "caldav_url": "CalDAV URL",
-      "copy_url": "复制 CalDAV URL",
-      "url_copied": "CalDAV URL 已复制到剪贴板",
+      "copy_url": "复制供其他应用使用的地址",
+      "url_copied": "地址已复制",
       "share": "共享日历…",
       "new_event_in_calendar": "在此日历中新建事件",
       "shared_with": "已与 {names} 共享",
@@ -4890,8 +4912,8 @@
       "default_alerts_updated": "默认提醒已更新"
     },
     "subscription": {
-      "title": "iCal 订阅",
-      "section_title": "iCal 订阅",
+      "title": "订阅日历",
+      "section_title": "已订阅的日历",
       "description": "订阅外部 iCalendar 源。活动将自动同步到单独的日历中。支持 https:// 和 webcal:// URL。",
       "url_label": "日历 URL",
       "url_placeholder": "https://example.com/calendar.ics 或 webcal://...",

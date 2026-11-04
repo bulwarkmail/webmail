@@ -1555,8 +1555,8 @@
       "title": "Görünüm",
       "description": "Web postanızın görünümünü özelleştirin",
       "theme": {
-        "label": "Tema",
-        "description": "Tercih ettiğiniz renk şemasını seçin",
+        "label": "Açık veya koyu",
+        "description": "Sistem, cihazınızın ayarını izler",
         "light": "Açık",
         "dark": "Koyu",
         "system": "Sistem"
@@ -1584,7 +1584,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Arama üstte, uygulamalar solda"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -1628,7 +1628,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Renkli Kenar Çubuğu Simgeleri",
-        "description": "Klasör ve etiket simgelerini türe göre renklendir (mavi Gelen Kutusu, kırmızı İstem Dışı vb.). Tek renkli kenar çubuğu için kapatın."
+        "description": "Klasör ve etiket simgelerini türe göre renklendir (Gelen Kutusu mavi, Spam kırmızı, Gönderilenler yeşil vb.). Gri simgeler için kapatın."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1954,13 +1954,13 @@
       },
       "mail_layout": {
         "label": "Posta Düzeni",
-        "description": "Klasik bölünmüş okuma bölmesi ile Gmail tarzı odaklı okuma akışı arasında seçin.",
+        "description": "İleti listesi ile açık iletinin ekranda nerede durduğu.",
         "split": "Bölünmüş bölme",
-        "split_description": "İleti listesi ve okuma bölmesini yan yana görünür tutun.",
+        "split_description": "Liste ve ileti yan yana",
         "focus": "Odaklı liste",
-        "focus_description": "İleti başına bir satır gösterin ve klasör kenar çubuğu görünürken postayı tam genişlikte açın.",
+        "focus_description": "Önce liste, sonra tam genişlikte ileti",
         "horizontal": "Okuma bölmesi altta",
-        "horizontal_description": "Mesaj listesini üstte gösterin ve seçilen mesajı altındaki okuma bölmesinde açın."
+        "horizontal_description": "İleti listenin altında"
       },
       "list_columns": {
         "label": "Listeyi sütunlar halinde göster",
@@ -2293,7 +2293,7 @@
       },
       "totp": {
         "section_title": "İki Faktörlü Kimlik Doğrulama",
-        "label": "TOTP Kimlik Doğrulama",
+        "label": "İki adımlı oturum açma",
         "description": "Zamana dayalı tek kullanımlık parola ile ekstra bir güvenlik katmanı ekleyin",
         "active": "Etkin",
         "inactive": "Devre dışı",
@@ -2373,12 +2373,12 @@
         "enabled_success": "Bekleme süresi şifrelemesi etkinleştirildi"
       },
       "email_client": {
-        "title": "E-posta İstemcisi Kurulumu",
-        "description": "Masaüstü veya mobil e-posta istemcinizi (Thunderbird, Apple Mail, Outlook vb.) yapılandırmak için bu kimlik bilgilerini kullanın",
-        "jmap_username_label": "JMAP Kullanıcı Adı",
+        "title": "Postanızı başka uygulamalarda kullanın",
+        "description": "Thunderbird, Apple Mail, Outlook ve telefondaki posta uygulamaları bu ayarları kullanabilir.",
+        "jmap_username_label": "Kullanıcı adı",
         "copy": "Kopyala",
         "copied": "Kopyalandı",
-        "password_instructions": "E-posta istemcinizde oturum açmak için yukarıdaki JMAP kullanıcı adı ile bir uygulama parolasını birlikte kullanın. Henüz oluşturmadıysanız aşağıdaki bölümden bir uygulama parolası oluşturun."
+        "password_instructions": "Parola olarak normal parolanızı değil, bir uygulama parolası kullanın. Bu sayfanın aşağısında oluşturabilirsiniz."
       },
       "link_device": {
         "title": "Mobil uygulamayı bağla",
@@ -2698,8 +2698,8 @@
       "manage_description": "Kenar çubuğunuzdan özel uygulamalar ekleyin, düzenleyin veya kaldırın"
     },
     "contacts": {
-      "title": "Kişiler",
-      "description": "Kişilerinizi içe ve dışa aktarın",
+      "title": "Kişi listesi",
+      "description": "Kişilerin nasıl listelendiği ve içe ya da dışa aktarılacak kişi dosyaları",
       "group_by_letter_label": "İlk harfe göre grupla",
       "sort_by_last_name_label": "Soyada göre sırala",
       "sort_by_last_name_description": "Aile üyeleri bir arada görünsün diye kişi listesini soyada göre sıralar",
@@ -4448,6 +4448,28 @@
     "open_categories": "Kategorileri aç",
     "row_actions": "{name} için işlemler"
   },
+  "uxs_wording": {
+    "more_options": "Diğer seçenekler",
+    "use_in_other_apps": "Başka uygulamalarda kullan",
+    "default_address_book": "Kişiler",
+    "default_calendar": "Takvim",
+    "preview_documents": "Belgeler",
+    "preview_photos": "Fotoğraflar",
+    "sample_subject": "Kafedeki toplantıdan notlar",
+    "mail_apps": {
+      "imap": "Gelen posta (IMAP)",
+      "smtp": "Giden posta (SMTP)",
+      "caldav": "Takvimler (CalDAV)",
+      "carddav": "Kişiler (CardDAV)",
+      "port_security": "Bağlantı noktası {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Şifreleme yok",
+      "copy_label": "{name} kopyala",
+      "loading": "Ayarlar posta sunucusundan okunuyor…",
+      "not_found": "Posta sunucunuz diğer uygulamalar için sunucu adlarını bildirmedi. Bunları yöneticinize sorun."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Takvimler: {names}",
@@ -4702,7 +4724,7 @@
       "notifications_enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
       "notification_sound": "Bildirim sesi",
       "notification_sound_desc": "Takvim uyarıları için ses çal",
-      "invitation_parsing": "E-posta davetlerini ayrıştır",
+      "invitation_parsing": "Postadaki davetleri göster",
       "invitation_parsing_desc": "E-posta eklerindeki takvim davetlerini algıla ve takvim işlemlerini göster",
       "show_time_in_month_view": "Ay görünümünde saati göster",
       "show_time_in_month_view_desc": "Aylık takvim görünümünde etkinlik saatlerini görüntüle",
@@ -4717,7 +4739,7 @@
       "show_week_numbers_desc": "Mini takvimde hafta numaralarını görüntüle",
       "calendar_free_scroll": "Serbest kaydırma",
       "calendar_free_scroll_desc": "Tek seferde bir dönem yerine aylar, haftalar ve günler arasında kesintisiz kaydırın",
-      "enable_tasks": "Görevleri etkinleştir",
+      "enable_tasks": "Görevler",
       "enable_tasks_desc": "Yapılacaklar listesini yönetmek için takvimde görev görünümü göster",
       "show_tasks_on_calendar": "Görevleri takvimde göster",
       "show_tasks_on_calendar_desc": "Görevleri ay, hafta ve gün takvim görünümlerinde görüntüle",
@@ -4895,8 +4917,8 @@
       "error_update": "Takvim güncellenemedi",
       "error_delete": "Takvim silinemedi",
       "caldav_url": "CalDAV URL'si",
-      "copy_url": "CalDAV URL'sini kopyala",
-      "url_copied": "CalDAV URL'si panoya kopyalandı",
+      "copy_url": "Başka uygulamalar için adresi kopyala",
+      "url_copied": "Adres kopyalandı",
       "share": "Takvimi paylaş…",
       "new_event_in_calendar": "Bu takvimde yeni etkinlik",
       "shared_with": "Paylaşılan kişiler: {names}",
@@ -4916,8 +4938,8 @@
       "default_alerts_updated": "Varsayılan hatırlatıcılar güncellendi"
     },
     "subscription": {
-      "title": "iCal Aboneliği",
-      "section_title": "iCal Abonelikleri",
+      "title": "Bir takvime abone ol",
+      "section_title": "Abone olunan takvimler",
       "description": "Harici iCalendar akışına abone olun. Etkinlikler kendi takvimlerine otomatik olarak senkronize edilecek. https:// ve webcal:// URL'lerini destekler.",
       "url_label": "Takvim URL'si",
       "url_placeholder": "https://example.com/calendar.ics veya webcal://...",
