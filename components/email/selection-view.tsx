@@ -11,8 +11,8 @@ import { TagPicker } from "./tag-picker";
 import type { MessageActionEntry, MessageActionKey } from "./message-actions";
 import type { TagScope } from "@/hooks/use-account-tags";
 
-/** The narrowest a button gets before the row takes one fewer (CSS px). */
-const MIN_BUTTON_WIDTH = 168;
+/** The narrowest a button gets, whatever its words (CSS px). */
+const MIN_BUTTON_WIDTH = 120;
 const GAP = 8;
 
 /**
@@ -71,20 +71,30 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
   const gridRef = useRef<HTMLDivElement>(null);
   const [perLine, setPerLine] = useState(4);
 
-  // As many buttons a line as fit the pane (a container's width, not the window's).
+  // As many buttons a line as fit the pane (a container's width, not the window's), each
+  // as wide as the longest words of any of them, so none has to cut its label.
+  const labelsKey = entries.map((entry) => (entry.kind === "separator" ? "" : entry.label)).join("|");
   useLayoutEffect(() => {
     const grid = gridRef.current;
     if (!grid) return;
     const measure = () => {
       const width = grid.clientWidth;
-      if (width > 0) setPerLine(Math.max(1, Math.floor((width + GAP) / (MIN_BUTTON_WIDTH + GAP))));
+      if (width <= 0) return;
+      let need = MIN_BUTTON_WIDTH;
+      for (const button of Array.from(grid.querySelectorAll<HTMLElement>("button"))) {
+        const label = button.querySelector<HTMLElement>("[data-selection-label]");
+        if (!label) continue;
+        // The label's whole text, plus what the button has around it (padding, icons).
+        need = Math.max(need, label.scrollWidth + button.clientWidth - label.clientWidth + 2);
+      }
+      setPerLine(Math.max(1, Math.floor((width + GAP) / (need + GAP))));
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(measure);
     observer.observe(grid);
     return () => observer.disconnect();
-  }, []);
+  }, [labelsKey]);
 
   // After an action the button that had the focus can go (Mark as read once all are
   // read): the focus stays in the view, on the button now in its place.
