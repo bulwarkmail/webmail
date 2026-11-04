@@ -4937,6 +4937,26 @@
     "mini_has_events": "有活動",
     "mini_week_number": "第 {week} 週"
   },
+  "ux_pim_calendar": {
+    "task_lists": "任務清單",
+    "task_status_not_started": "未開始",
+    "task_status_in_progress": "進行中",
+    "quick_task_due": "截止 {date}",
+    "quick_task_due_remove": "在標題中保留「{words}」",
+    "rename_calendar": "重新命名…",
+    "rename_title": "重新命名行事曆",
+    "rename_confirm": "重新命名",
+    "rename_empty": "請輸入名稱。",
+    "edit_calendar": "編輯…",
+    "default_alerts_open": "預設提醒…",
+    "share_open": "分享…",
+    "clear_all_events": "清除所有活動…",
+    "delete_calendar": "刪除…",
+    "caldav_title": "其他應用程式使用的地址 (CalDAV)",
+    "caldav_hint": "在 Thunderbird、Apple 行事曆或 DAVx⁵ 中加入此地址即可同步行事曆。",
+    "caldav_shared_by": "{name} 分享：",
+    "freebusy_description": "分享對象能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
+  },
   "calendar_offline": {
     "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
   },

@@ -4937,6 +4937,26 @@
     "mini_has_events": "heeft afspraken",
     "mini_week_number": "Week {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Takenlijsten",
+    "task_status_not_started": "Niet begonnen",
+    "task_status_in_progress": "Bezig",
+    "quick_task_due": "Vervalt {date}",
+    "quick_task_due_remove": "‘{words}’ in de titel houden",
+    "rename_calendar": "Naam wijzigen…",
+    "rename_title": "Naam van agenda wijzigen",
+    "rename_confirm": "Naam wijzigen",
+    "rename_empty": "Vul een naam in.",
+    "edit_calendar": "Bewerken…",
+    "default_alerts_open": "Standaardherinneringen…",
+    "share_open": "Delen…",
+    "clear_all_events": "Alle afspraken wissen…",
+    "delete_calendar": "Verwijderen…",
+    "caldav_title": "Adres voor andere apps (CalDAV)",
+    "caldav_hint": "Voeg dit adres toe in Thunderbird, Apple Agenda of DAVx⁵ om je agenda’s te synchroniseren.",
+    "caldav_shared_by": "Gedeeld door {name}:",
+    "freebusy_description": "Wie je deelt, ziet wanneer je bezet bent, niet wat je afspraken zijn. ‘Tijden voorstellen’ gebruikt dit."
+  },
   "calendar_offline": {
     "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
   },

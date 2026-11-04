@@ -4937,6 +4937,26 @@
     "mini_has_events": "有事件",
     "mini_week_number": "第 {week} 周"
   },
+  "ux_pim_calendar": {
+    "task_lists": "任务列表",
+    "task_status_not_started": "未开始",
+    "task_status_in_progress": "进行中",
+    "quick_task_due": "截止 {date}",
+    "quick_task_due_remove": "在标题中保留“{words}”",
+    "rename_calendar": "重命名…",
+    "rename_title": "重命名日历",
+    "rename_confirm": "重命名",
+    "rename_empty": "请输入名称。",
+    "edit_calendar": "编辑…",
+    "default_alerts_open": "默认提醒…",
+    "share_open": "共享…",
+    "clear_all_events": "清除所有活动…",
+    "delete_calendar": "删除…",
+    "caldav_title": "其他应用使用的地址 (CalDAV)",
+    "caldav_hint": "在 Thunderbird、Apple 日历或 DAVx⁵ 中添加此地址即可同步日历。",
+    "caldav_shared_by": "{name} 共享：",
+    "freebusy_description": "共享对象能看到你何时忙碌，看不到活动内容。“建议时间”会用到它。"
+  },
   "calendar_offline": {
     "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"
   },

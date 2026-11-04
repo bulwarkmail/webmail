@@ -4937,6 +4937,26 @@
     "mini_has_events": "has events",
     "mini_week_number": "Week {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Task lists",
+    "task_status_not_started": "Not started",
+    "task_status_in_progress": "In progress",
+    "quick_task_due": "Due {date}",
+    "quick_task_due_remove": "Keep “{words}” in the title",
+    "rename_calendar": "Rename…",
+    "rename_title": "Rename calendar",
+    "rename_confirm": "Rename",
+    "rename_empty": "Enter a name.",
+    "edit_calendar": "Edit…",
+    "default_alerts_open": "Default reminders…",
+    "share_open": "Share…",
+    "clear_all_events": "Clear all events…",
+    "delete_calendar": "Delete…",
+    "caldav_title": "Address for other apps (CalDAV)",
+    "caldav_hint": "Add this address in Thunderbird, Apple Calendar or DAVx⁵ to sync your calendars.",
+    "caldav_shared_by": "Shared by {name}:",
+    "freebusy_description": "Whoever you share with sees when you’re busy, not what your events are. Suggest times uses it."
+  },
   "calendar_offline": {
     "split_needs_server": "This change needs a connection to the server. Change only this event for now, or try again when you're back online."
   },

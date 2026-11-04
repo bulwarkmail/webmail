@@ -29,7 +29,7 @@ import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
 import { CalendarDayView } from "@/components/calendar/calendar-day-view";
 import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
-import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
+import { TaskListView, filterTasksForList, defaultTaskList } from "@/components/calendar/task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
 import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
@@ -1794,10 +1794,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   // The plugin drawing the task view's list, if one offers it.
   const pluginTaskView = usePluginTaskView();
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   // The tasks the task list shows; plugin buttons in its toolbar act on them.
   const listedTaskIds = useMemo(
-    () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter).map((task) => task.id),
-    [taskStore.tasks, selectedCalendarIds, taskStore.filter],
+    () => filterTasksForList(taskStore.tasks, hiddenTaskListIds, taskStore.filter).map((task) => task.id),
+    [taskStore.tasks, hiddenTaskListIds, taskStore.filter],
   );
 
   // Tasks on the month, week and day grids follow the calendar filter like
@@ -2017,20 +2018,19 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             <TaskListView
               tasks={taskStore.tasks}
               calendars={displayCalendars}
-              selectedCalendarIds={selectedCalendarIds}
               filter={taskStore.filter}
               onSelectTask={openEditTaskModal}
               onToggleComplete={handleToggleTaskComplete}
               selectedTaskId={taskStore.selectedTaskId}
-              onQuickCreate={(title) => {
-                // Into a calendar that takes it: the default one, else the
-                // first the user may write to.
-                const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
+              onQuickCreate={(title, due) => {
+                // Into the first task-only list, else the default calendar,
+                // else the first the user may write to (pim-8).
+                const target = defaultTaskList(writableTaskCalendars);
                 if (!client || !target) {
                   toast.error(t("notifications.task_save_error"));
                   return;
                 }
-                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
+                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true }, ...(due ? { due, showWithoutTime: true } : {}) })
                   .then((created) => { if (created) toast.success(t("notifications.task_created")); })
                   .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
               }}

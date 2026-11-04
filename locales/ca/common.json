@@ -4937,6 +4937,26 @@
     "mini_has_events": "té esdeveniments",
     "mini_week_number": "Setmana {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Llistes de tasques",
+    "task_status_not_started": "No començada",
+    "task_status_in_progress": "En curs",
+    "quick_task_due": "Venciment: {date}",
+    "quick_task_due_remove": "Deixa «{words}» al títol",
+    "rename_calendar": "Canvia el nom…",
+    "rename_title": "Canvia el nom del calendari",
+    "rename_confirm": "Canvia el nom",
+    "rename_empty": "Escriviu un nom.",
+    "edit_calendar": "Edita…",
+    "default_alerts_open": "Recordatoris predeterminats…",
+    "share_open": "Comparteix…",
+    "clear_all_events": "Esborra tots els esdeveniments…",
+    "delete_calendar": "Suprimeix…",
+    "caldav_title": "Adreça per a altres aplicacions (CalDAV)",
+    "caldav_hint": "Afegiu aquesta adreça a Thunderbird, al Calendari d’Apple o a DAVx⁵ per sincronitzar els calendaris.",
+    "caldav_shared_by": "Compartit per {name}:",
+    "freebusy_description": "Qui rebi la compartició veu quan esteu ocupat, no quins esdeveniments teniu. «Suggereix horaris» ho fa servir."
+  },
   "calendar_offline": {
     "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
   },

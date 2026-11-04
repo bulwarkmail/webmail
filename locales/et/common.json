@@ -4937,6 +4937,26 @@
     "mini_has_events": "on sündmusi",
     "mini_week_number": "Nädal {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Ülesannete loendid",
+    "task_status_not_started": "Alustamata",
+    "task_status_in_progress": "Pooleli",
+    "quick_task_due": "Tähtaeg {date}",
+    "quick_task_due_remove": "Jäta „{words}“ pealkirja",
+    "rename_calendar": "Nimeta ümber…",
+    "rename_title": "Nimeta kalender ümber",
+    "rename_confirm": "Nimeta ümber",
+    "rename_empty": "Sisesta nimi.",
+    "edit_calendar": "Muuda…",
+    "default_alerts_open": "Vaikemeeldetuletused…",
+    "share_open": "Jaga…",
+    "clear_all_events": "Tühjenda kõik sündmused…",
+    "delete_calendar": "Kustuta…",
+    "caldav_title": "Aadress teistele rakendustele (CalDAV)",
+    "caldav_hint": "Lisa see aadress Thunderbirdi, Apple’i kalendrisse või DAVx⁵-sse, et kalendreid sünkroonida.",
+    "caldav_shared_by": "Jagas {name}:",
+    "freebusy_description": "Kellega jagad, näeb, millal oled hõivatud, aga mitte sinu sündmusi. Seda kasutab „Soovita aegu“."
+  },
   "calendar_offline": {
     "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
   },

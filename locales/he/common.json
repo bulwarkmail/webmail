@@ -4834,6 +4834,26 @@
     "mini_has_events": "יש אירועים",
     "mini_week_number": "שבוע {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "רשימות משימות",
+    "task_status_not_started": "לא התחילה",
+    "task_status_in_progress": "בביצוע",
+    "quick_task_due": "יעד {date}",
+    "quick_task_due_remove": "להשאיר את „{words}” בכותרת",
+    "rename_calendar": "שינוי שם…",
+    "rename_title": "שינוי שם של לוח השנה",
+    "rename_confirm": "שינוי שם",
+    "rename_empty": "יש להזין שם.",
+    "edit_calendar": "עריכה…",
+    "default_alerts_open": "תזכורות ברירת מחדל…",
+    "share_open": "שיתוף…",
+    "clear_all_events": "ניקוי כל האירועים…",
+    "delete_calendar": "מחיקה…",
+    "caldav_title": "כתובת לאפליקציות אחרות (CalDAV)",
+    "caldav_hint": "הוסף את הכתובת הזו ב-Thunderbird, ביומן של Apple או ב-DAVx⁵ כדי לסנכרן את לוחות השנה.",
+    "caldav_shared_by": "משותף על ידי {name}:",
+    "freebusy_description": "מי שאתה משתף איתו רואה מתי אתה תפוס, לא מה האירועים שלך. \"הצע זמנים\" משתמש בזה."
+  },
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
   },

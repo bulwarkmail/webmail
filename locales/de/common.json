@@ -4937,6 +4937,26 @@
     "mini_has_events": "hat Termine",
     "mini_week_number": "Woche {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Aufgabenlisten",
+    "task_status_not_started": "Nicht begonnen",
+    "task_status_in_progress": "In Arbeit",
+    "quick_task_due": "Fällig {date}",
+    "quick_task_due_remove": "„{words}“ im Titel lassen",
+    "rename_calendar": "Umbenennen…",
+    "rename_title": "Kalender umbenennen",
+    "rename_confirm": "Umbenennen",
+    "rename_empty": "Geben Sie einen Namen ein.",
+    "edit_calendar": "Bearbeiten…",
+    "default_alerts_open": "Standarderinnerungen…",
+    "share_open": "Freigeben…",
+    "clear_all_events": "Alle Termine löschen…",
+    "delete_calendar": "Löschen…",
+    "caldav_title": "Adresse für andere Apps (CalDAV)",
+    "caldav_hint": "Tragen Sie diese Adresse in Thunderbird, Apple Kalender oder DAVx⁵ ein, um Ihre Kalender abzugleichen.",
+    "caldav_shared_by": "Freigegeben von {name}:",
+    "freebusy_description": "Wer die Freigabe erhält, sieht, wann Sie belegt sind, aber nicht, welche Termine Sie haben. „Zeiten vorschlagen“ nutzt das."
+  },
   "calendar_offline": {
     "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."
   },

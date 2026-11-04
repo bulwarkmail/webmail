@@ -881,6 +881,13 @@ interface CalendarStore {
   setSelectedDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
+  /**
+   * Task lists the tasks view leaves out. The tasks view filters by these,
+   * not by the grid's calendar selection, so a task-only list (which the
+   * grid never shows) has its tasks listed (pim-1).
+   */
+  hiddenTaskListIds: string[];
+  toggleTaskListVisibility: (calendarId: string) => void;
   setSelectedEventId: (id: string | null) => void;
   clearState: () => void;
 
@@ -912,6 +919,7 @@ const initialState = {
   selectedCalendarIds: [] as string[],
   calendarSelectionChosen: false,
   knownCalendarIds: null as string[] | null,
+  hiddenTaskListIds: [] as string[],
   selectedEventId: null as string | null,
   isLoading: false,
   isLoadingEvents: false,
@@ -1069,7 +1077,8 @@ export const useCalendarStore = create<CalendarStore>()(
           );
           if (currentStoreEpoch() !== epoch) return;
           const calendars = sortCalendars(results.flat());
-          const defaultSelected = calendars.map(c => c.id);
+          // As for one account: tasks-only calendars stay out of the grid.
+          const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
           set({
             calendars,
             isLoading: false,
@@ -1738,6 +1747,14 @@ export const useCalendarStore = create<CalendarStore>()(
         void calendarHooks.onCalendarVisibilityToggle.emit({ calendarId, visible });
       },
 
+      toggleTaskListVisibility: (calendarId) => {
+        set((state) => ({
+          hiddenTaskListIds: state.hiddenTaskListIds.includes(calendarId)
+            ? state.hiddenTaskListIds.filter((id) => id !== calendarId)
+            : [...state.hiddenTaskListIds, calendarId],
+        }));
+      },
+
       setSelectedEventId: (id) => set({ selectedEventId: id }),
 
       // iCal subscriptions
@@ -2143,6 +2160,7 @@ export const useCalendarStore = create<CalendarStore>()(
         selectedCalendarIds: state.selectedCalendarIds,
         calendarSelectionChosen: state.calendarSelectionChosen,
         knownCalendarIds: state.knownCalendarIds,
+        hiddenTaskListIds: state.hiddenTaskListIds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
         deletedSubscriptionIds: state.deletedSubscriptionIds,

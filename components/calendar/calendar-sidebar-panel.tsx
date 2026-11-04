@@ -19,6 +19,7 @@ import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu 
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { taskListsOf } from "@/components/calendar/task-list-view";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { displayNow } from "@/lib/timezone";
 import { readableTextOn } from "@/lib/color-transform";
@@ -93,6 +94,7 @@ export function CalendarSidebarPanel({
   multiAccountMode,
 }: CalendarSidebarPanelProps) {
   const t = useTranslations("calendar");
+  const tUx = useTranslations("ux_pim_calendar");
   const paint = useCvdColor();
   const tSub = useTranslations("calendar.subscription");
   const tMgmt = useTranslations("calendar.management");
@@ -107,6 +109,9 @@ export function CalendarSidebarPanel({
   const refreshICalSubscription = useCalendarStore((s) => s.refreshICalSubscription);
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
+  const viewMode = useCalendarStore((s) => s.viewMode);
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
+  const toggleTaskListVisibility = useCalendarStore((s) => s.toggleTaskListVisibility);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
@@ -268,6 +273,25 @@ export function CalendarSidebarPanel({
     }
   };
 
+  // The tasks view lists task lists, each with its own tick (pim-1): a
+  // task-only list never shows in the grid, so the grid's selection can't
+  // say which tasks to list.
+  const inTasksView = enableCalendarTasks && viewMode === 'tasks';
+  const taskLists = useMemo(() => (inTasksView ? taskListsOf(calendars, tasks) : []), [inTasksView, calendars, tasks]);
+  const accountLabel = (localAccountId: string) => {
+    const acct = localAccounts.find(a => a.id === localAccountId);
+    return acct?.label || acct?.email || acct?.username || localAccountId;
+  };
+  const taskListGroups = useMemo(() => {
+    if (!multiAccountMode) return [{ key: '__all__', label: '', lists: taskLists }];
+    const groups = new Map<string, Calendar[]>();
+    for (const cal of taskLists) {
+      const key = cal.localAccountId || '__other__';
+      groups.set(key, [...(groups.get(key) ?? []), cal]);
+    }
+    return Array.from(groups.entries()).map(([key, lists]) => ({ key, label: key === '__other__' ? '' : key, lists }));
+  }, [multiAccountMode, taskLists]);
+
   const handleSetDefault = async (calendarId: string) => {
     if (!client) return;
     try {
@@ -280,8 +304,9 @@ export function CalendarSidebarPanel({
 
   if (calendars.length === 0 && !onSubscribe) return null;
 
-  const renderCalendarItem = (cal: Calendar) => {
-    const isVisible = selectedCalendarIds.includes(cal.id);
+  const renderCalendarItem = (cal: Calendar, asTaskList = false) => {
+    const isVisible = asTaskList ? !hiddenTaskListIds.includes(cal.id) : selectedCalendarIds.includes(cal.id);
+    const onToggle = asTaskList ? () => toggleTaskListVisibility(cal.id) : () => onToggleVisibility(cal.id);
     const color = paint(cal.color || "#3b82f6");
     // A company calendar can only be shown or hidden: no menu.
     const hasMenu = cal.isCompany ? false : isSubscriptionCalendar(cal.id) ? !!client : true;
@@ -289,7 +314,7 @@ export function CalendarSidebarPanel({
     return (
       <div key={cal.id} className="relative group/cal">
         <button
-          onClick={() => onToggleVisibility(cal.id)}
+          onClick={onToggle}
           onContextMenu={hasMenu ? (e) => openContextMenu(e, cal) : undefined}
           {...(hasMenu ? {
             onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => { pressedRef.current = { calendar: cal, element: e.currentTarget }; longPress.onTouchStart(e); },
@@ -299,7 +324,7 @@ export function CalendarSidebarPanel({
           } : {})}
           role="checkbox"
           aria-checked={isVisible}
-          data-testid="calendar-item"
+          data-testid={asTaskList ? "task-list-item" : "calendar-item"}
           data-calendar-name={cal.name}
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
@@ -400,7 +425,7 @@ export function CalendarSidebarPanel({
     }
 
     const isBirthday = cal.id === BIRTHDAY_CALENDAR_ID;
-    const canCreate = onCreateEvent && !isBirthday && cal.myRights?.mayWriteOwn !== false;
+    const canCreate = onCreateEvent && !isBirthday && !cal.isTasksOnly && cal.myRights?.mayWriteOwn !== false;
     const canShare = onShareCalendar && cal.myRights?.mayShare && !cal.isShared;
     const canSetDefault = !!client && !isBirthday && !cal.isShared && !cal.isDefault;
     const canChangeColor = !!onColorChange;
@@ -509,7 +534,7 @@ export function CalendarSidebarPanel({
       {renderSectionHeader(key, label, onAdd)}
       {!collapsedAccountGroups.has(key) && (
         <div>
-          {list.map(renderCalendarItem)}
+          {list.map((cal) => renderCalendarItem(cal))}
         </div>
       )}
     </div>
@@ -533,7 +558,22 @@ export function CalendarSidebarPanel({
           )}
         </button>
       )}
-      {multiAccountMode && localAccountGroups.length > 0 ? (
+      {inTasksView ? (
+        <div data-testid="task-lists-section">
+          {renderSectionHeader('__task_lists__', tUx('task_lists'))}
+          {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
+            <div key={group.key} className={cn(group.label && "mt-1")}>
+              {group.label && (
+                <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
+                  <User className="w-3 h-3" aria-hidden="true" />
+                  <span className="truncate">{accountLabel(group.label)}</span>
+                </div>
+              )}
+              {group.lists.map((cal) => renderCalendarItem(cal, true))}
+            </div>
+          ))}
+        </div>
+      ) : multiAccountMode && localAccountGroups.length > 0 ? (
         <>
           {localAccountGroups.map((group, idx) => {
             const expanded = !collapsedAccountGroups.has(group.key);
@@ -581,7 +621,7 @@ export function CalendarSidebarPanel({
                           {t('my_calendars')}
                         </div>
                         <div>
-                          {owned.map(renderCalendarItem)}
+                          {owned.map((cal) => renderCalendarItem(cal))}
                         </div>
                       </div>
                     )}
@@ -592,7 +632,7 @@ export function CalendarSidebarPanel({
                           {sg.label}
                         </div>
                         <div>
-                          {sg.calendars.map(renderCalendarItem)}
+                          {sg.calendars.map((cal) => renderCalendarItem(cal))}
                         </div>
                       </div>
                     ))}
@@ -627,7 +667,7 @@ export function CalendarSidebarPanel({
                     {group.accountName}
                   </div>
                   <div>
-                    {group.calendars.map(renderCalendarItem)}
+                    {group.calendars.map((cal) => renderCalendarItem(cal))}
                   </div>
                 </div>
               ))}

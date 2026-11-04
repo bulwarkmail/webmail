@@ -4937,6 +4937,26 @@
     "mini_has_events": "일정 있음",
     "mini_week_number": "{week}주차"
   },
+  "ux_pim_calendar": {
+    "task_lists": "할 일 목록",
+    "task_status_not_started": "시작 전",
+    "task_status_in_progress": "진행 중",
+    "quick_task_due": "마감 {date}",
+    "quick_task_due_remove": "제목에 “{words}” 남기기",
+    "rename_calendar": "이름 바꾸기…",
+    "rename_title": "캘린더 이름 바꾸기",
+    "rename_confirm": "이름 바꾸기",
+    "rename_empty": "이름을 입력하세요.",
+    "edit_calendar": "편집…",
+    "default_alerts_open": "기본 알림…",
+    "share_open": "공유…",
+    "clear_all_events": "모든 일정 지우기…",
+    "delete_calendar": "삭제…",
+    "caldav_title": "다른 앱용 주소 (CalDAV)",
+    "caldav_hint": "Thunderbird, Apple 캘린더 또는 DAVx⁵에 이 주소를 추가하면 캘린더가 동기화됩니다.",
+    "caldav_shared_by": "{name} 님이 공유:",
+    "freebusy_description": "공유받은 사람은 내가 바쁜 시간만 보고 일정 내용은 보지 못합니다. 시간 제안에 사용됩니다."
+  },
   "calendar_offline": {
     "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
   },

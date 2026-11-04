@@ -4937,6 +4937,26 @@
     "mini_has_events": "har begivenheder",
     "mini_week_number": "Uge {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Opgavelister",
+    "task_status_not_started": "Ikke startet",
+    "task_status_in_progress": "I gang",
+    "quick_task_due": "Forfalder {date}",
+    "quick_task_due_remove": "Behold “{words}” i titlen",
+    "rename_calendar": "Omdøb…",
+    "rename_title": "Omdøb kalender",
+    "rename_confirm": "Omdøb",
+    "rename_empty": "Skriv et navn.",
+    "edit_calendar": "Redigér…",
+    "default_alerts_open": "Standardpåmindelser…",
+    "share_open": "Del…",
+    "clear_all_events": "Ryd alle begivenheder…",
+    "delete_calendar": "Slet…",
+    "caldav_title": "Adresse til andre apps (CalDAV)",
+    "caldav_hint": "Tilføj denne adresse i Thunderbird, Apple Kalender eller DAVx⁵ for at synkronisere dine kalendere.",
+    "caldav_shared_by": "Delt af {name}:",
+    "freebusy_description": "Dem, du deler med, ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
+  },
   "calendar_offline": {
     "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
   },

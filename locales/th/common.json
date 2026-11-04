@@ -4330,6 +4330,26 @@
     "mini_has_events": "มีกิจกรรม",
     "mini_week_number": "สัปดาห์ที่ {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "รายการงาน",
+    "task_status_not_started": "ยังไม่เริ่ม",
+    "task_status_in_progress": "กำลังทำ",
+    "quick_task_due": "ครบกำหนด {date}",
+    "quick_task_due_remove": "เก็บ “{words}” ไว้ในชื่อ",
+    "rename_calendar": "เปลี่ยนชื่อ…",
+    "rename_title": "เปลี่ยนชื่อปฏิทิน",
+    "rename_confirm": "เปลี่ยนชื่อ",
+    "rename_empty": "ป้อนชื่อ",
+    "edit_calendar": "แก้ไข…",
+    "default_alerts_open": "การแจ้งเตือนเริ่มต้น…",
+    "share_open": "แชร์…",
+    "clear_all_events": "ล้างกิจกรรมทั้งหมด…",
+    "delete_calendar": "ลบ…",
+    "caldav_title": "ที่อยู่สำหรับแอปอื่น (CalDAV)",
+    "caldav_hint": "เพิ่มที่อยู่นี้ใน Thunderbird, ปฏิทินของ Apple หรือ DAVx⁵ เพื่อซิงค์ปฏิทินของคุณ",
+    "caldav_shared_by": "แชร์โดย {name}:",
+    "freebusy_description": "ผู้ที่คุณแชร์ด้วยจะเห็นว่าคุณไม่ว่างเมื่อใด แต่ไม่เห็นรายละเอียดกิจกรรม ฟีเจอร์แนะนำเวลาใช้ข้อมูลนี้"
+  },
   "calendar_offline": {
     "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
   },

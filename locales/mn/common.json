@@ -4937,6 +4937,26 @@
     "mini_has_events": "үйл явдалтай",
     "mini_week_number": "{week}-р долоо хоног"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Даалгаврын жагсаалт",
+    "task_status_not_started": "Эхлээгүй",
+    "task_status_in_progress": "Хийгдэж байна",
+    "quick_task_due": "Хугацаа {date}",
+    "quick_task_due_remove": "“{words}”-г гарчигт үлдээх",
+    "rename_calendar": "Нэр солих…",
+    "rename_title": "Хуанлийн нэр солих",
+    "rename_confirm": "Нэр солих",
+    "rename_empty": "Нэр оруулна уу.",
+    "edit_calendar": "Засах…",
+    "default_alerts_open": "Өгөгдмөл сануулгууд…",
+    "share_open": "Хуваалцах…",
+    "clear_all_events": "Бүх үйл явдлыг арилгах…",
+    "delete_calendar": "Устгах…",
+    "caldav_title": "Бусад аппын хаяг (CalDAV)",
+    "caldav_hint": "Хуанлиа синк хийхийн тулд энэ хаягийг Thunderbird, Apple Calendar эсвэл DAVx⁵-д нэмнэ үү.",
+    "caldav_shared_by": "{name} хуваалцсан:",
+    "freebusy_description": "Таны хуваалцсан хүн таныг хэзээ завгүйг хардаг ч үйл явдлыг тань хардаггүй. “Цаг санал болгох” үүнийг ашигладаг."
+  },
   "calendar_offline": {
     "split_needs_server": "Энэ өөрчлөлтөд сервертэй холболт шаардлагатай. Одоохондоо зөвхөн энэ үйл явдлыг өөрчлөх эсвэл онлайн болсны дараа дахин оролдоно уу."
   },

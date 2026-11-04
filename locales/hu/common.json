@@ -4937,6 +4937,26 @@
     "mini_has_events": "vannak események",
     "mini_week_number": "{week}. hét"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Feladatlisták",
+    "task_status_not_started": "Nincs elkezdve",
+    "task_status_in_progress": "Folyamatban",
+    "quick_task_due": "Határidő: {date}",
+    "quick_task_due_remove": "„{words}” maradjon a címben",
+    "rename_calendar": "Átnevezés…",
+    "rename_title": "Naptár átnevezése",
+    "rename_confirm": "Átnevezés",
+    "rename_empty": "Adjon meg egy nevet.",
+    "edit_calendar": "Szerkesztés…",
+    "default_alerts_open": "Alapértelmezett emlékeztetők…",
+    "share_open": "Megosztás…",
+    "clear_all_events": "Az összes esemény törlése…",
+    "delete_calendar": "Törlés…",
+    "caldav_title": "Cím más alkalmazásokhoz (CalDAV)",
+    "caldav_hint": "Adja meg ezt a címet a Thunderbirdben, az Apple Naptárban vagy a DAVx⁵-ben a naptárak szinkronizálásához.",
+    "caldav_shared_by": "Megosztotta: {name}",
+    "freebusy_description": "Akivel megoszt, látja, mikor foglalt, de az eseményeit nem. Az Időpontok javaslata ezt használja."
+  },
   "calendar_offline": {
     "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
   },

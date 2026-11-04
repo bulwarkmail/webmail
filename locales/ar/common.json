@@ -4937,6 +4937,26 @@
     "mini_has_events": "فيه أحداث",
     "mini_week_number": "الأسبوع {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "قوائم المهام",
+    "task_status_not_started": "لم تبدأ",
+    "task_status_in_progress": "قيد التنفيذ",
+    "quick_task_due": "الاستحقاق {date}",
+    "quick_task_due_remove": "إبقاء «{words}» في العنوان",
+    "rename_calendar": "إعادة تسمية…",
+    "rename_title": "إعادة تسمية التقويم",
+    "rename_confirm": "إعادة تسمية",
+    "rename_empty": "أدخل اسمًا.",
+    "edit_calendar": "تعديل…",
+    "default_alerts_open": "التذكيرات الافتراضية…",
+    "share_open": "مشاركة…",
+    "clear_all_events": "مسح كل الأحداث…",
+    "delete_calendar": "حذف…",
+    "caldav_title": "عنوان للتطبيقات الأخرى (CalDAV)",
+    "caldav_hint": "أضف هذا العنوان في Thunderbird أو تقويم Apple أو DAVx⁵ لمزامنة تقويماتك.",
+    "caldav_shared_by": "مشارَك من {name}:",
+    "freebusy_description": "من تشارك معه يرى متى تكون مشغولًا، لا تفاصيل أحداثك. تستخدمه ميزة اقتراح الأوقات."
+  },
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
   },

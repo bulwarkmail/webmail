@@ -4937,6 +4937,26 @@
     "mini_has_events": "есть события",
     "mini_week_number": "Неделя {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Списки задач",
+    "task_status_not_started": "Не начата",
+    "task_status_in_progress": "В работе",
+    "quick_task_due": "Срок: {date}",
+    "quick_task_due_remove": "Оставить «{words}» в названии",
+    "rename_calendar": "Переименовать…",
+    "rename_title": "Переименовать календарь",
+    "rename_confirm": "Переименовать",
+    "rename_empty": "Введите название.",
+    "edit_calendar": "Изменить…",
+    "default_alerts_open": "Напоминания по умолчанию…",
+    "share_open": "Поделиться…",
+    "clear_all_events": "Удалить все события…",
+    "delete_calendar": "Удалить…",
+    "caldav_title": "Адрес для других приложений (CalDAV)",
+    "caldav_hint": "Добавьте этот адрес в Thunderbird, Календарь Apple или DAVx⁵, чтобы синхронизировать календари.",
+    "caldav_shared_by": "Поделился {name}:",
+    "freebusy_description": "Те, с кем вы поделились, видят, когда вы заняты, но не видят ваши события. Это использует функция «Предложить время»."
+  },
   "calendar_offline": {
     "split_needs_server": "Для этого изменения нужно подключение к серверу. Пока измените только это событие или повторите попытку, когда снова будете в сети."
   },

@@ -4937,6 +4937,26 @@
     "mini_has_events": "má události",
     "mini_week_number": "Týden {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Seznamy úkolů",
+    "task_status_not_started": "Nezahájeno",
+    "task_status_in_progress": "Probíhá",
+    "quick_task_due": "Termín {date}",
+    "quick_task_due_remove": "Ponechat „{words}“ v názvu",
+    "rename_calendar": "Přejmenovat…",
+    "rename_title": "Přejmenovat kalendář",
+    "rename_confirm": "Přejmenovat",
+    "rename_empty": "Zadejte název.",
+    "edit_calendar": "Upravit…",
+    "default_alerts_open": "Výchozí připomenutí…",
+    "share_open": "Sdílet…",
+    "clear_all_events": "Vymazat všechny události…",
+    "delete_calendar": "Odstranit…",
+    "caldav_title": "Adresa pro jiné aplikace (CalDAV)",
+    "caldav_hint": "Přidejte tuto adresu do Thunderbirdu, Kalendáře Apple nebo DAVx⁵ a kalendáře se budou synchronizovat.",
+    "caldav_shared_by": "Sdílí {name}:",
+    "freebusy_description": "Ten, s kým sdílíte, vidí, kdy jste obsazeni, ne jaké máte události. Používá to funkce Navrhnout časy."
+  },
   "calendar_offline": {
     "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."
   },

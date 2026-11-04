@@ -4937,6 +4937,26 @@
     "mini_has_events": "har hendelser",
     "mini_week_number": "Uke {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Oppgavelister",
+    "task_status_not_started": "Ikke startet",
+    "task_status_in_progress": "Pågår",
+    "quick_task_due": "Forfaller {date}",
+    "quick_task_due_remove": "Behold «{words}» i tittelen",
+    "rename_calendar": "Gi nytt navn…",
+    "rename_title": "Gi kalenderen nytt navn",
+    "rename_confirm": "Gi nytt navn",
+    "rename_empty": "Skriv inn et navn.",
+    "edit_calendar": "Rediger…",
+    "default_alerts_open": "Standardpåminnelser…",
+    "share_open": "Del…",
+    "clear_all_events": "Fjern alle hendelser…",
+    "delete_calendar": "Slett…",
+    "caldav_title": "Adresse for andre apper (CalDAV)",
+    "caldav_hint": "Legg til denne adressen i Thunderbird, Apple Kalender eller DAVx⁵ for å synkronisere kalenderne dine.",
+    "caldav_shared_by": "Delt av {name}:",
+    "freebusy_description": "De du deler med, ser når du er opptatt, ikke hva hendelsene dine er. Foreslå tidspunkter bruker det."
+  },
   "calendar_offline": {
     "split_needs_server": "Denne endringen krever tilkobling til serveren. Endre bare denne hendelsen for nå, eller prøv igjen når du er tilkoblet."
   },

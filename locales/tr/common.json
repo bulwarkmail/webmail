@@ -4937,6 +4937,26 @@
     "mini_has_events": "etkinlik var",
     "mini_week_number": "{week}. hafta"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Görev listeleri",
+    "task_status_not_started": "Başlanmadı",
+    "task_status_in_progress": "Devam ediyor",
+    "quick_task_due": "Son tarih {date}",
+    "quick_task_due_remove": "“{words}” başlıkta kalsın",
+    "rename_calendar": "Yeniden adlandır…",
+    "rename_title": "Takvimi yeniden adlandır",
+    "rename_confirm": "Yeniden adlandır",
+    "rename_empty": "Bir ad girin.",
+    "edit_calendar": "Düzenle…",
+    "default_alerts_open": "Varsayılan hatırlatıcılar…",
+    "share_open": "Paylaş…",
+    "clear_all_events": "Tüm etkinlikleri temizle…",
+    "delete_calendar": "Sil…",
+    "caldav_title": "Diğer uygulamalar için adres (CalDAV)",
+    "caldav_hint": "Takvimlerinizi eşitlemek için bu adresi Thunderbird, Apple Takvim veya DAVx⁵ içine ekleyin.",
+    "caldav_shared_by": "Paylaşan: {name}",
+    "freebusy_description": "Paylaştığınız kişiler ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
+  },
   "calendar_offline": {
     "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
   },

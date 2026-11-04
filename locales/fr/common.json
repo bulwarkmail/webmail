@@ -4937,6 +4937,26 @@
     "mini_has_events": "a des événements",
     "mini_week_number": "Semaine {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Listes de tâches",
+    "task_status_not_started": "Pas commencée",
+    "task_status_in_progress": "En cours",
+    "quick_task_due": "Échéance {date}",
+    "quick_task_due_remove": "Garder « {words} » dans le titre",
+    "rename_calendar": "Renommer…",
+    "rename_title": "Renommer le calendrier",
+    "rename_confirm": "Renommer",
+    "rename_empty": "Saisissez un nom.",
+    "edit_calendar": "Modifier…",
+    "default_alerts_open": "Rappels par défaut…",
+    "share_open": "Partager…",
+    "clear_all_events": "Effacer tous les événements…",
+    "delete_calendar": "Supprimer…",
+    "caldav_title": "Adresse pour d’autres applis (CalDAV)",
+    "caldav_hint": "Ajoutez cette adresse dans Thunderbird, Calendrier d’Apple ou DAVx⁵ pour synchroniser vos calendriers.",
+    "caldav_shared_by": "Partagé par {name} :",
+    "freebusy_description": "Les personnes avec qui vous partagez voient quand vous êtes occupé, pas le contenu de vos événements. « Suggérer des créneaux » s’en sert."
+  },
   "calendar_offline": {
     "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."
   },

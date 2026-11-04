@@ -4937,6 +4937,26 @@
     "mini_has_events": "イベントあり",
     "mini_week_number": "第{week}週"
   },
+  "ux_pim_calendar": {
+    "task_lists": "タスクリスト",
+    "task_status_not_started": "未着手",
+    "task_status_in_progress": "進行中",
+    "quick_task_due": "期限 {date}",
+    "quick_task_due_remove": "「{words}」をタイトルに残す",
+    "rename_calendar": "名前を変更…",
+    "rename_title": "カレンダーの名前を変更",
+    "rename_confirm": "名前を変更",
+    "rename_empty": "名前を入力してください。",
+    "edit_calendar": "編集…",
+    "default_alerts_open": "デフォルトのリマインダー…",
+    "share_open": "共有…",
+    "clear_all_events": "すべての予定を消去…",
+    "delete_calendar": "削除…",
+    "caldav_title": "他のアプリ用のアドレス (CalDAV)",
+    "caldav_hint": "このアドレスを Thunderbird、Apple カレンダー、DAVx⁵ に追加すると、カレンダーが同期されます。",
+    "caldav_shared_by": "{name} が共有:",
+    "freebusy_description": "共有した相手には予定がある時間だけが見え、予定の内容は見えません。「時間を提案」で使われます。"
+  },
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
   },

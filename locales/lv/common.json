@@ -4937,6 +4937,26 @@
     "mini_has_events": "ir notikumi",
     "mini_week_number": "{week}. nedēļa"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Uzdevumu saraksti",
+    "task_status_not_started": "Nav sākts",
+    "task_status_in_progress": "Procesā",
+    "quick_task_due": "Termiņš {date}",
+    "quick_task_due_remove": "Atstāt “{words}” virsrakstā",
+    "rename_calendar": "Pārdēvēt…",
+    "rename_title": "Pārdēvēt kalendāru",
+    "rename_confirm": "Pārdēvēt",
+    "rename_empty": "Ievadiet nosaukumu.",
+    "edit_calendar": "Rediģēt…",
+    "default_alerts_open": "Noklusējuma atgādinājumi…",
+    "share_open": "Kopīgot…",
+    "clear_all_events": "Notīrīt visus notikumus…",
+    "delete_calendar": "Dzēst…",
+    "caldav_title": "Adrese citām lietotnēm (CalDAV)",
+    "caldav_hint": "Pievienojiet šo adresi Thunderbird, Apple kalendārā vai DAVx⁵, lai sinhronizētu kalendārus.",
+    "caldav_shared_by": "Kopīgoja {name}:",
+    "freebusy_description": "Tas, ar kuru kopīgojat, redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
+  },
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
   },

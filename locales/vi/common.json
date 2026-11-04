@@ -4949,6 +4949,26 @@
     "mini_has_events": "Có sự kiện",
     "mini_week_number": "Tuần {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Danh sách công việc",
+    "task_status_not_started": "Chưa bắt đầu",
+    "task_status_in_progress": "Đang làm",
+    "quick_task_due": "Hạn {date}",
+    "quick_task_due_remove": "Giữ “{words}” trong tiêu đề",
+    "rename_calendar": "Đổi tên…",
+    "rename_title": "Đổi tên lịch",
+    "rename_confirm": "Đổi tên",
+    "rename_empty": "Nhập tên.",
+    "edit_calendar": "Chỉnh sửa…",
+    "default_alerts_open": "Lời nhắc mặc định…",
+    "share_open": "Chia sẻ…",
+    "clear_all_events": "Xóa mọi sự kiện…",
+    "delete_calendar": "Xóa…",
+    "caldav_title": "Địa chỉ cho ứng dụng khác (CalDAV)",
+    "caldav_hint": "Thêm địa chỉ này vào Thunderbird, Lịch Apple hoặc DAVx⁵ để đồng bộ lịch của bạn.",
+    "caldav_shared_by": "Được chia sẻ bởi {name}:",
+    "freebusy_description": "Người được chia sẻ thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
+  },
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
   },

@@ -4937,6 +4937,26 @@
     "mini_has_events": "رویداد دارد",
     "mini_week_number": "هفته {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "فهرست‌های وظایف",
+    "task_status_not_started": "شروع نشده",
+    "task_status_in_progress": "در حال انجام",
+    "quick_task_due": "سررسید {date}",
+    "quick_task_due_remove": "«{words}» در عنوان بماند",
+    "rename_calendar": "تغییر نام…",
+    "rename_title": "تغییر نام تقویم",
+    "rename_confirm": "تغییر نام",
+    "rename_empty": "یک نام وارد کنید.",
+    "edit_calendar": "ویرایش…",
+    "default_alerts_open": "یادآورهای پیش‌فرض…",
+    "share_open": "اشتراک‌گذاری…",
+    "clear_all_events": "پاک کردن همه رویدادها…",
+    "delete_calendar": "حذف…",
+    "caldav_title": "نشانی برای برنامه‌های دیگر (CalDAV)",
+    "caldav_hint": "این نشانی را در Thunderbird، تقویم Apple یا DAVx⁵ وارد کنید تا تقویم‌هایتان همگام شوند.",
+    "caldav_shared_by": "به اشتراک گذاشته‌شده توسط {name}:",
+    "freebusy_description": "کسی که با او به اشتراک می‌گذارید می‌بیند چه زمانی مشغول هستید، نه اینکه رویدادهایتان چیست. «پیشنهاد زمان» از آن استفاده می‌کند."
+  },
   "calendar_offline": {
     "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
   },

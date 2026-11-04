@@ -4,7 +4,7 @@ import { useMemo, type CSSProperties } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import type { Calendar, CalendarEvent, CalendarTask } from "@/lib/jmap/types";
-import type { CalendarViewMode } from "@/stores/calendar-store";
+import { useCalendarStore, type CalendarViewMode } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
@@ -98,6 +98,8 @@ export function CalendarPrint(props: CalendarPrintProps) {
   const locale = useLocale();
   const { formatMonthYear, formatWeekRange, formatFullDate } = useCalendarLocale();
   const { content, viewMode } = props;
+  // The tasks view's own lists, as the list on screen (pim-1).
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
 
   const calendarMap = useMemo(() => new Map(props.calendars.map((c) => [c.id, c])), [props.calendars]);
 
@@ -211,7 +213,7 @@ export function CalendarPrint(props: CalendarPrintProps) {
         <PrintRoot orientation="portrait" title={title}>
           {header(title)}
           <TaskListPrint
-            tasks={filterTasksForList(props.tasks, props.selectedCalendarIds, props.taskFilter)}
+            tasks={filterTasksForList(props.tasks, hiddenTaskListIds, props.taskFilter)}
             calendars={props.calendars}
             timeFormat={props.timeFormat}
           />

@@ -4937,6 +4937,26 @@
     "mini_has_events": "є події",
     "mini_week_number": "Тиждень {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Списки завдань",
+    "task_status_not_started": "Не розпочато",
+    "task_status_in_progress": "У роботі",
+    "quick_task_due": "Термін: {date}",
+    "quick_task_due_remove": "Залишити «{words}» у назві",
+    "rename_calendar": "Перейменувати…",
+    "rename_title": "Перейменувати календар",
+    "rename_confirm": "Перейменувати",
+    "rename_empty": "Введіть назву.",
+    "edit_calendar": "Редагувати…",
+    "default_alerts_open": "Типові нагадування…",
+    "share_open": "Поділитися…",
+    "clear_all_events": "Очистити всі події…",
+    "delete_calendar": "Видалити…",
+    "caldav_title": "Адреса для інших застосунків (CalDAV)",
+    "caldav_hint": "Додайте цю адресу в Thunderbird, Календар Apple або DAVx⁵, щоб синхронізувати календарі.",
+    "caldav_shared_by": "Поділився {name}:",
+    "freebusy_description": "Ті, з ким ви поділилися, бачать, коли ви зайняті, але не бачать ваших подій. Цим користується «Запропонувати час»."
+  },
   "calendar_offline": {
     "split_needs_server": "Для цієї зміни потрібне з'єднання із сервером. Поки що змініть лише цю подію або спробуйте ще раз, коли знову будете в мережі."
   },

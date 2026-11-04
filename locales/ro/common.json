@@ -4937,6 +4937,26 @@
     "mini_has_events": "are evenimente",
     "mini_week_number": "Săptămâna {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Liste de sarcini",
+    "task_status_not_started": "Neîncepută",
+    "task_status_in_progress": "În lucru",
+    "quick_task_due": "Termen {date}",
+    "quick_task_due_remove": "Păstrați „{words}” în titlu",
+    "rename_calendar": "Redenumire…",
+    "rename_title": "Redenumiți calendarul",
+    "rename_confirm": "Redenumiți",
+    "rename_empty": "Introduceți un nume.",
+    "edit_calendar": "Editare…",
+    "default_alerts_open": "Mementouri implicite…",
+    "share_open": "Partajare…",
+    "clear_all_events": "Ștergeți toate evenimentele…",
+    "delete_calendar": "Ștergere…",
+    "caldav_title": "Adresă pentru alte aplicații (CalDAV)",
+    "caldav_hint": "Adăugați această adresă în Thunderbird, Calendarul Apple sau DAVx⁵ pentru a sincroniza calendarele.",
+    "caldav_shared_by": "Partajat de {name}:",
+    "freebusy_description": "Cei cu care partajați văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
+  },
   "calendar_offline": {
     "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
   },
