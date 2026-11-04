@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "{name} 分享：",
     "freebusy_description": "分享對象能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "清單",
+    "task_list_not_in_calendar": "{name}（工作清單，不會顯示在行事曆中）",
+    "copy_to_account": "複製到 {address}",
+    "copied_to_account": "已複製到 {address}",
+    "delete_original": "刪除原始活動"
+  },
   "calendar_offline": {
     "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "你已接受。",
     "answered_declined_nodate": "你已拒絕。",
     "answered_tentative_nodate": "你已回覆暫定。"
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "重複：{rule}",
+    "declined_dates": "您已拒絕 {dates} 的會議。",
+    "declined_many": "您已拒絕此系列中的 {count} 場會議。",
+    "answers_series": "您的回覆適用於此系列的所有會議。"
   },
   "calendar_event_notifications": {
     "someone": "有人",
@@ -5808,6 +5821,26 @@
     "send_message": "傳送訊息",
     "share_mail_subject": "我與你共用了 {name}",
     "share_mail_body": "你好，\n\n我與你共用了「{name}」。可以在這裡開啟：\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "全部加入行事曆",
+    "zone_contacts_all": "全部加入聯絡人",
+    "save_to_files": "儲存到檔案",
+    "saved": "已將 {name} 儲存到檔案。",
+    "saved_copy": "已以 {name} 儲存到檔案。",
+    "save_failed": "無法將 {name} 儲存到檔案。",
+    "changed_on_server": "你開啟 {name} 後，它在檔案中被變更了。",
+    "gone_on_server": "{name} 已不在檔案中。",
+    "keep_both": "保留兩者",
+    "replace": "取代",
+    "cancel": "取消",
+    "save_as_new": "另存為新檔案",
+    "import_to_mail": "匯入到郵件資料夾…",
+    "import_to_mail_title": "匯入到郵件資料夾",
+    "imported_to_mail": "已匯入到 {folder}。",
+    "import_to_mail_failed": "無法匯入 {name}。",
+    "import_contacts": "匯入到聯絡人…",
+    "add_to_calendar": "加入行事曆…"
   },
   "smime": {
     "your_certificates": "您的憑證",
@@ -7555,6 +7588,18 @@
     "import_mail": "郵件…",
     "import_calendar": "行事曆…",
     "import_contacts": "聯絡人…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "重新整理",
+    "menu_today": "今天",
+    "menu_next_period": "下一個期間",
+    "menu_previous_period": "上一個期間",
+    "account_scope_label": "正在顯示 {address}。切換帳號",
+    "account_scope_menu": "切換帳號",
+    "merge_links": "連結",
+    "merge_photo": "相片",
+    "merge_kept": "保留",
+    "import_show": "顯示"
   },
   "desktopEdit": {
     "edit": "編輯",

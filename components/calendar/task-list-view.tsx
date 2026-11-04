@@ -32,9 +32,11 @@ interface TaskListViewProps {
  * The user's own calendars of the active login come first: a colleague's
  * shared list or another login's is never picked over them.
  */
-export function defaultTaskList(calendars: Calendar[]): Calendar | undefined {
+export function defaultTaskList(calendars: Calendar[], activeAccountId?: string | null): Calendar | undefined {
   const pick = (list: Calendar[]) => list.find((c) => c.isTasksOnly) ?? list.find((c) => c.isDefault) ?? list[0];
-  return pick(calendars.filter((c) => !c.isShared && !c.localAccountId)) ?? pick(calendars);
+  // With several accounts every calendar names its login: the one on screen counts as the user's own (pim-p2-4).
+  const own = (c: Calendar) => !c.isShared && (!c.localAccountId || (!!activeAccountId && c.localAccountId === activeAccountId));
+  return pick(calendars.filter(own)) ?? pick(calendars);
 }
 
 /**
@@ -123,9 +125,24 @@ function getTaskPriorityIcon(priority: number) {
 
 type FormatDate = ReturnType<typeof useDisplayDateFormatter>["dateTime"];
 
-function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<typeof useTranslations>, timeFormat: string, formatDate: FormatDate): { label: string; className: string } {
+/** Done and cancelled tasks are never overdue (pim-p2-12); a task due today isn't yet. */
+export function isTaskOverdue(task: Pick<CalendarTask, "due" | "progress">): boolean {
+  if (!task.due || task.progress === "completed" || task.progress === "cancelled") return false;
+  const dueDate = parseISO(task.due);
+  return isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+}
+
+export function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<typeof useTranslations>, timeFormat: string, formatDate: FormatDate, done = false): { label: string; className: string } {
   const dueDate = parseISO(due);
-  const overdue = isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+  const overdue = !done && isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+
+  // A finished task's date is a fact, not a warning: plain date, grey.
+  if (done) {
+    const formatted = showWithoutTime
+      ? formatDate(dueDate, { month: "short", day: "numeric" })
+      : formatDate(dueDate, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: timeFormat === "12h" });
+    return { label: formatted, className: "text-muted-foreground" };
+  }
 
   if (isDisplayToday(dueDate)) {
     return {
@@ -182,10 +199,7 @@ export function filterTasksForList(
       result = result.filter(task => task.progress === "completed");
       break;
     case "overdue":
-      result = result.filter(task => {
-        if (!task.due || task.progress === "completed" || task.progress === "cancelled") return false;
-        return isBefore(parseISO(task.due), displayNow()) && !isDisplayToday(parseISO(task.due));
-      });
+      result = result.filter(isTaskOverdue);
       break;
   }
 
@@ -258,7 +272,7 @@ export function TaskListView({
           const cal = calendars.find(c => task.calendarIds[c.id]);
           const isCompleted = task.progress === "completed";
           const priorityIcon = getTaskPriorityIcon(task.priority);
-          const dueDateInfo = task.due ? getDueDateLabel(task.due, task.showWithoutTime, t, timeFormat, formatDate) : null;
+          const dueDateInfo = task.due ? getDueDateLabel(task.due, task.showWithoutTime, t, timeFormat, formatDate, task.progress === "completed" || task.progress === "cancelled") : null;
 
           return (
             <div

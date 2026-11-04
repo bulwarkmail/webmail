@@ -50,7 +50,16 @@ async function save(onSave: ReturnType<typeof vi.fn>): Promise<{ data: Partial<C
 
 const field = (label: string) => screen.getByLabelText(label) as HTMLInputElement;
 
+// The picker is Settings' searchable one (pim-p2-5): type a city, pick it.
+async function pickZone(city: string) {
+  const search = await screen.findByRole('combobox', { name: 'time_zone_search' });
+  fireEvent.change(search, { target: { value: city } });
+  fireEvent.click(await screen.findByRole('option', { name: new RegExp(`^${city}`) }));
+}
+
 beforeEach(() => useSettingsStore.setState({ timeZone: 'Europe/Berlin' }));
+// jsdom has no layout; the picker scrolls its active option into view.
+beforeEach(() => { Element.prototype.scrollIntoView = vi.fn(); });
 afterEach(() => useSettingsStore.setState({ timeZone: AUTO_TIME_ZONE }));
 
 describe('the event editor keeps the event in its own time zone (pim-2)', () => {
@@ -109,7 +118,7 @@ describe('the event editor keeps the event in its own time zone (pim-2)', () => 
     // A new event is in the user's zone, behind a small link.
     expect(screen.queryByText(/^time_zone_line/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'time_zone' }));
-    fireEvent.change(field('time_zone'), { target: { value: 'Asia/Tokyo' } });
+    await pickZone('Tokyo');
     const { data, state } = await save(onSave);
     expect(data).toMatchObject({ start: '2026-11-12T10:00:00', timeZone: 'Asia/Tokyo', duration: 'PT1H' });
     // 10:00 in Tokyo is 01:00 UTC.
@@ -119,7 +128,7 @@ describe('the event editor keeps the event in its own time zone (pim-2)', () => 
   it('tells the series save when the user picked another zone', async () => {
     const onSave = editor(newYork);
     fireEvent.click(screen.getByText(/^time_zone_line:/));
-    fireEvent.change(field('time_zone'), { target: { value: 'Asia/Tokyo' } });
+    await pickZone('Tokyo');
     const { data, state } = await save(onSave);
     expect(data).toMatchObject({ start: '2026-11-05T10:00:00', timeZone: 'Asia/Tokyo' });
     expect(state.timeZoneChanged).toBe(true);
@@ -142,6 +151,40 @@ describe('the event editor keeps the event in its own time zone (pim-2)', () => 
   it('shows no zone line for an event on the user clock', () => {
     render(<EventModal event={{ ...newYork, timeZone: 'Europe/Paris' } as CalendarEvent} calendars={calendars} onSave={vi.fn()} onClose={vi.fn()} />);
     expect(screen.queryByTestId('event-zone-times')).toBeNull();
+  });
+});
+
+describe('the time zone picker is the one Settings has (pim-p2-5)', () => {
+  it('lists cities with their offset, common ones first, and no "Automatic"', async () => {
+    editor(newYork);
+    fireEvent.click(screen.getByText(/^time_zone_line:/));
+    const options = await screen.findAllByRole('option');
+    const names = options.map((o) => o.textContent ?? '');
+    // Common zones lead: UTC, then Los Angeles; no raw ids like "Africa/Abidjan" first.
+    expect(names[0]).toMatch(/^UTC/);
+    expect(names.some((n) => n.startsWith('New York') && /GMT-0[45]:00/.test(n))).toBe(true);
+    expect(names.some((n) => n.includes('/'))).toBe(false);
+    expect(screen.queryByText(/time_zone\.auto/)).toBeNull();
+  });
+
+  it('finds a zone by typing its city and saves the IANA id', async () => {
+    const onSave = editor(newYork);
+    fireEvent.click(screen.getByText(/^time_zone_line:/));
+    await pickZone('Kolkata');
+    const { data } = await save(onSave);
+    expect(['Asia/Kolkata', 'Asia/Calcutta']).toContain(data.timeZone);
+  });
+
+  it("shows an event's old zone id by its current city name", () => {
+    editor({ ...newYork, timeZone: 'Europe/Kiev' } as CalendarEvent);
+    expect(screen.getByText(/^time_zone_line:/).textContent).toBe('time_zone_line:{"zone":"Kyiv"}');
+  });
+
+  it('gives the "Time zone" link the link colour, not the near-white primary of the dark theme (pim-p2-19)', () => {
+    editor(null, { defaultDate: new Date(2026, 10, 12, 10, 0), defaultEndDate: new Date(2026, 10, 12, 11, 0) });
+    const link = screen.getByRole('button', { name: 'time_zone' });
+    expect(link.className).toContain('dark:text-blue-400');
+    expect(link.className).not.toContain('text-primary');
   });
 });
 

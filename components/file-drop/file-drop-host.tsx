@@ -19,6 +19,7 @@ import { readDroppedFiles, type DroppedFiles } from "@/lib/file-drop/read";
 import {
   defaultZone,
   fileDropZones,
+  filesTakeDropsAsIs,
   filesWithinLimits,
   kindForName,
   type DropFiles,
@@ -72,6 +73,7 @@ function currentPlace(pathname: string, translate: (key: string) => string): { p
     popout: isPopoutPath(window.location.pathname),
     files: !!client?.supportsFiles?.() && features.isFeatureEnabled("filesEnabled"),
     filesFolder: filesDropTarget()?.folder ?? null,
+    onFiles: filesDropTarget() !== null,
     calendar: useCalendarStore.getState().supportsCalendar && features.isFeatureEnabled("calendarEnabled"),
     contacts: !!client?.supportsContacts?.() && features.isFeatureEnabled("contactsEnabled"),
     contactsScreen: matchSurface(pathname)?.surface === "contacts",
@@ -179,6 +181,8 @@ export function FileDropHost() {
       enter: (files) => {
         if (overlayBlocked()) return false;
         const { place, folder } = currentPlace(ctx.current.pathname, translateMailbox);
+        // The Files screen takes the drop itself: the folder in view, or the folder row it lands on.
+        if (filesTakeDropsAsIs(place)) return false;
         const zones = fileDropZones(files, place);
         if (zones.length === 0) return false;
         setActive(null);

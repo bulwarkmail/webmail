@@ -18,6 +18,7 @@ import {
   Check,
   HelpCircle,
   X,
+  CalendarPlus,
 } from "@/components/icons";
 import type { CalendarEvent, CalendarParticipant } from "@/lib/jmap/types";
 import { buildCalendarPath } from "@/lib/deep-links";
@@ -54,6 +55,8 @@ interface EventContextMenuProps {
   responseStatus?: CalendarParticipant["participationStatus"] | null;
   /** Only the answers: the menu of the "?" / "Reply" marker. */
   answersOnly?: boolean;
+  /** "Copy to <address>", one per other signed-in account (pim-p2-16). */
+  copyTo?: Array<{ address: string; onCopy: () => void }>;
 }
 
 export function EventContextMenu({
@@ -73,7 +76,9 @@ export function EventContextMenu({
   onRespond,
   responseStatus,
   answersOnly = false,
+  copyTo = [],
 }: EventContextMenuProps) {
+  const tP2 = useTranslations("ux_p2_pim_cal");
   const t = useTranslations("calendar");
   const tDeepLink = useTranslations("deep_link");
   const tCommon = useTranslations("common");
@@ -118,6 +123,15 @@ export function EventContextMenu({
       )}
       {editable && <ContextMenuItem icon={Pencil} label={t("events.edit")} onClick={handle(onEdit)} />}
       <ContextMenuItem icon={CopyPlus} label={t("events.duplicate")} onClick={handle(onDuplicate)} />
+      {copyTo.map((target) => (
+        <ContextMenuItem
+          key={target.address}
+          icon={CalendarPlus}
+          label={tP2("copy_to_account", { address: target.address })}
+          onClick={handle(target.onCopy)}
+          testId="event-copy-to-account"
+        />
+      ))}
       <ContextMenuSeparator />
       <ContextMenuItem
         icon={Download}

@@ -60,7 +60,6 @@ import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
@@ -68,8 +67,9 @@ import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/l
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
-import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
+import { getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
+import { accountAddress, buildCopyToCalendarData, copyTargetsFor, distinctAccountDefaultColors, eventTargets, preferredTarget, taskTargets } from "@/lib/calendar-targets";
 import { canCreateEventsIn, canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { TASKS_LOAD_ERROR, useTaskStore } from "@/stores/task-store";
@@ -170,6 +170,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // mail server for and the Lite static build does not have at all.
   const canSubscribe = !demoMode && !IS_LITE;
   const tDeepLink = useTranslations("deep_link");
+  const tP2Cal = useTranslations("ux_p2_pim_cal");
   const isMobile = useIsMobile();
   // Below the full desktop the sidebar opens over the page.
   const isFullDesktop = useIsFullDesktop();
@@ -210,6 +211,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const { identities } = useIdentityStore();
   const contacts = useContactStore((s) => s.contacts);
   const normalizedViewMode = isCalendarViewMode(viewMode) ? viewMode : "month";
+  const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
+  const rememberEventCalendar = useCalendarStore((s) => s.rememberEventCalendar);
   usePrintListener();
   const printing = usePrinting();
   const printTarget = usePrintStore((s) => s.target);
@@ -277,6 +281,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const [quickDraft, setQuickDraft] = useState<QuickCreateDraft | null>(null);
   const [defaultModalTitle, setDefaultModalTitle] = useState<string | undefined>();
   const [modalStartsInEdit, setModalStartsInEdit] = useState(false);
+  // Duplicate opens the editor on an unsaved copy of this event (pim-p2-17).
+  const [copySource, setCopySource] = useState<CalendarEvent | null>(null);
+  useEffect(() => {
+    if (!showEventModal) setCopySource(null);
+  }, [showEventModal]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editTask, setEditTask] = useState<import("@/lib/jmap/types").CalendarTask | null>(null);
   const [mobileReturnToMonth, setMobileReturnToMonth] = useState(false);
@@ -725,6 +734,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setQuickDraft(null);
     setDefaultModalTitle(undefined);
     setEditEvent(null);
+    setCopySource(null);
     const d = date || selectedDate;
     setDefaultModalDate(d);
     setDefaultModalEndDate(endDate);
@@ -737,6 +747,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const openEditModal = useCallback((event: CalendarEvent, startInForm = false) => whenEditorsDiscarded(() => {
     setModalStartsInEdit(startInForm);
+    setCopySource(null);
     setEditEvent(event);
     setDefaultModalDate(undefined);
     setShowTaskModal(false);
@@ -1178,6 +1189,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             toast.error(t("notifications.event_error"));
             return;
           }
+          // The next new event in this account starts in the same calendar (pim-p2-4).
+          const pickedId = Object.keys(data.calendarIds ?? {})[0];
+          const picked = pickedId ? useCalendarStore.getState().calendars.find((c) => c.id === pickedId) : undefined;
+          if (picked) rememberEventCalendar(picked);
           focusCalendarOnEvent(created);
           if (sendSchedulingMessages) {
             toast.success(t("notifications.invitation_sent"));
@@ -1203,17 +1218,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       }
     };
     await save(requestedScheduling);
-  }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, describeError, t]);
+  }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, describeError, t, rememberEventCalendar]);
 
-  // Calendars a new task can go into: writable, not a subscription.
+  // Lists a new task can go into: task lists, writable, not a subscription (pim-p2-13).
   const writableTaskCalendars = useMemo(
-    () => calendars.filter((c) => canCreateEventsIn(c, isSubscriptionCalendar)),
-    [calendars, isSubscriptionCalendar],
+    () => taskTargets(calendars, isSubscriptionCalendar, { holdingTasks: taskStore.tasks.flatMap((x) => Object.keys(x.calendarIds ?? {})) }),
+    [calendars, isSubscriptionCalendar, taskStore.tasks],
   );
 
-  // Calendars a new event can go into: never a subscription or read-only one (#762).
+  // Calendars a new event can go into: never a subscription or read-only one
+  // (#762), nor a task list (pim-p2-2). Coloured as the grid shows them.
   const writableCalendars = useMemo(
-    () => calendars.filter((c) => !c.isTasksOnly && canCreateEventsIn(c, isSubscriptionCalendar)),
+    () => eventTargets(distinctAccountDefaultColors(calendars), isSubscriptionCalendar),
     [calendars, isSubscriptionCalendar],
   );
 
@@ -1225,7 +1241,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       return;
     }
     const finalEnd = end ?? (allDay ? start : new Date(start.getTime() + 60 * 60 * 1000));
-    const preferred = writableCalendars.find((c) => c.isDefault) ?? writableCalendars[0];
+    // The account on screen's calendar, not the first account's (pim-p2-4).
+    const preferred = preferredTarget(writableCalendars, activeLocalAccountId, lastEventCalendarIds);
     setShowEventModal(false);
     setEditEvent(null);
     setShowTaskModal(false);
@@ -1240,7 +1257,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         ? prev.calendarId
         : preferred?.id ?? "",
     }));
-  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded]);
+  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded, activeLocalAccountId, lastEventCalendarIds]);
 
   // A day in the month view or the all-day row: an all-day event, the same
   // quick editor as a slot in week and day view.
@@ -1320,24 +1337,24 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     };
   }, [quickDraft, pendingPreview, t]);
 
-  const handleDuplicateEvent = useCallback(async (data: Partial<CalendarEvent>) => {
-    if (!client) { toast.error(t("notifications.event_error")); return; }
-    try {
-      const created = await createEvent(client, data);
-      if (!created) {
-        toast.error(t("notifications.event_error"));
-        return;
-      }
-      focusCalendarOnEvent(created);
-      toast.success(t("notifications.event_duplicated"));
-      setEditEvent(created);
-      setDefaultModalDate(undefined);
-    } catch (error) {
-      toast.error(describeError(error, t("notifications.event_error")));
-      setShowEventModal(false);
-      setEditEvent(null);
-    }
-  }, [client, createEvent, focusCalendarOnEvent, describeError, t]);
+  // Duplicate, from every place that offers it: the editor opens on a copy at
+  // the same date and time, as in Google and Outlook. Nothing is saved until
+  // Save, so a mistaken click leaves nothing behind (pim-p2-17). The copy goes
+  // to the original's calendar when the user can write there.
+  const handleDuplicateEvent = useCallback((event: CalendarEvent) => whenEditorsDiscarded(() => {
+    const primary = getPrimaryCalendarId(event);
+    const calendar = calendars.find((c) => c.id === primary);
+    setDefaultCalendarIdForCreate(calendar && !calendar.isTasksOnly && canCreateEventsIn(calendar, isSubscriptionCalendar) ? calendar.id : undefined);
+    setEditEvent(null);
+    setCopySource(event);
+    setModalStartsInEdit(true);
+    setDefaultModalDate(undefined);
+    setDefaultModalEndDate(undefined);
+    setDefaultModalTitle(undefined);
+    setShowTaskModal(false);
+    setEditTask(null);
+    setShowEventModal(true);
+  }), [calendars, isSubscriptionCalendar, whenEditorsDiscarded]);
 
   const handleDeleteEvent = useCallback(async (id: string, sendSchedulingMessages?: boolean) => {
     if (!client) { toast.error(t("notifications.event_error")); return; }
@@ -1525,20 +1542,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     handleDeleteEvent(detailEvent.id, hasParticipants || undefined);
   }, [detailEvent, closeDetail, handleDeleteEvent]);
 
-  const handleDuplicateFromDetail = useCallback(async () => {
-    if (!detailEvent || !client) return;
-    const data = buildDuplicateEventData(detailEvent);
+  const handleDuplicateFromDetail = useCallback(() => {
+    if (!detailEvent) return;
+    const source = detailEvent;
     closeDetail();
-    try {
-      const created = await createEvent(client, data);
-      if (created) {
-        toast.success(t("notifications.event_duplicated"));
-        openEditModal(created);
-      }
-    } catch (error) {
-      toast.error(describeError(error, t("notifications.event_error")));
-    }
-  }, [detailEvent, client, createEvent, closeDetail, openEditModal, describeError, t]);
+    handleDuplicateEvent(source);
+  }, [detailEvent, closeDetail, handleDuplicateEvent]);
 
   const handleSaveNoteFromDetail = useCallback(async (note: string) => {
     if (!detailEvent || !client) return;
@@ -1553,19 +1562,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
   }, [detailEvent, client, updateEvent, describeError, t]);
 
-  const handleDuplicateContextMenu = useCallback(async (event: CalendarEvent) => {
-    if (!client) { toast.error(t("notifications.event_error")); return; }
-    const data = buildDuplicateEventData(event);
-    try {
-      const created = await createEvent(client, data);
-      if (created) {
-        toast.success(t("notifications.event_duplicated"));
-        openEditModal(created);
-      }
-    } catch (error) {
-      toast.error(describeError(error, t("notifications.event_error")));
-    }
-  }, [client, createEvent, openEditModal, describeError, t]);
+  const handleDuplicateContextMenu = useCallback((event: CalendarEvent) => {
+    handleDuplicateEvent(event);
+  }, [handleDuplicateEvent]);
 
   const handleExportICS = useCallback((event: CalendarEvent) => {
     try {
@@ -1600,6 +1599,35 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     const hasParticipants = event.participants && Object.keys(event.participants).length > 0;
     handleDeleteEvent(event.id, hasParticipants || undefined);
   }, [handleDeleteEvent]);
+
+  // "Copy to <other account>" (pim-p2-16): an event can't move between
+  // accounts, so the other one gets a copy, and the toast offers to delete
+  // the original. A series is copied whole, read from its own server.
+  const localAccounts = useAccountStore((s) => s.accounts);
+  const copyTargetsOf = useCallback(
+    (event: CalendarEvent) => copyTargetsFor(event, writableCalendars, localAccounts),
+    [writableCalendars, localAccounts],
+  );
+  const handleCopyToAccount = useCallback(async (event: CalendarEvent, target: { account: { email?: string; username?: string; id: string }; calendar: Calendar }) => {
+    if (!client) { toast.error(t("notifications.event_error")); return; }
+    let source = event;
+    if (event.recurrenceId && event.recurrenceRules?.length && event.originalId) {
+      const sourceClient = (event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : null) ?? client;
+      const isSharedSource = calendars.some((c) => event.calendarIds?.[c.id] && c.isShared);
+      const master = await sourceClient.getCalendarEvent(event.originalId, isSharedSource ? event.accountId : undefined).catch(() => null);
+      if (master) source = master;
+    }
+    const address = accountAddress(target.account);
+    try {
+      const created = await createEvent(client, buildCopyToCalendarData(source, target.calendar.id));
+      if (!created) return;
+      toast.success(tP2Cal("copied_to_account", { address }), {
+        action: { label: tP2Cal("delete_original"), onClick: () => handleDeleteContextMenu(event) },
+      });
+    } catch (error) {
+      toast.error(describeError(error, t("notifications.event_error")));
+    }
+  }, [client, calendars, createEvent, describeError, t, tP2Cal, handleDeleteContextMenu]);
 
   const handleRsvpFromDetail = useCallback(async (status: CalendarParticipant['participationStatus'], target?: AnswerTarget) => {
     if (!detailEvent || !client) return;
@@ -1671,7 +1699,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
     "import-calendar": () => { if (!demoMode) setShowImportModal(true); },
   }, true);
-  // Its View menu's Day, Week, Month and Agenda, and Edit > Search events.
+  // Its View menu's Day, Week, Month and Agenda, Go's Today and periods, and Edit > Search events.
   const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
   useDesktopCommands({
     "view.calendar.day": viewFromMenu("day"),
@@ -1679,7 +1707,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "view.calendar.month": viewFromMenu("month"),
     "view.calendar.agenda": viewFromMenu("agenda"),
     "edit.search": openSearch,
+    // Go > Today, Next period and Previous period: the toolbar's arrows and T.
+    "go.today": () => { leaveSearch(); goToToday(); },
+    "go.nextPeriod": () => { leaveSearch(); navigateNext(); },
+    "go.previousPeriod": () => { leaveSearch(); navigatePrev(); },
   }, {
+    "go.today": normalizedViewMode !== "tasks",
+    "go.nextPeriod": normalizedViewMode !== "tasks",
+    "go.previousPeriod": normalizedViewMode !== "tasks",
     "view.calendar.day": { enabled: true, checked: normalizedViewMode === "day" },
     "view.calendar.week": { enabled: true, checked: normalizedViewMode === "week" },
     "view.calendar.month": { enabled: true, checked: normalizedViewMode === "month" },
@@ -1725,7 +1760,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // colors via the `colorIsLocalOverride` flag (see getEventColor). Personal
   // calendars are passed through untouched.
   const displayCalendars = useMemo(() => {
-    return calendars.map((cal) => {
+    // Two accounts' default calendars come in one blue: the second gets a colour of its own (pim-p2-3).
+    return distinctAccountDefaultColors(calendars).map((cal) => {
       if (!cal.isShared) return cal;
       const override = sharedCalendarColors[sharedCalendarColorKey(cal)];
       if (!override) return cal;
@@ -2045,7 +2081,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onQuickCreate={(title, due) => {
                 // Into the first task-only list, else the default calendar,
                 // else the first the user may write to (pim-8).
-                const target = defaultTaskList(writableTaskCalendars);
+                const target = defaultTaskList(writableTaskCalendars, activeLocalAccountId);
                 if (!client || !target) {
                   toast.error(t("notifications.task_save_error"));
                   return;
@@ -2382,10 +2418,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               on small screens, so the week keeps its width (pim-25). Above
               the views' sticky headers (z-50) inside this isolated row. */}
           {!isMobile && showEventModal && (
-            <div data-testid="event-panel" className="absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden">
+            <div data-testid="event-panel" data-end-sheet="" className="absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden">
               <EventModal
-                key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
+                key={`${editEvent?.id ?? (copySource ? `copy:${copySource.id}` : 'new')}${modalStartsInEdit ? ':edit' : ''}`}
                 event={editEvent}
+                copyOf={copySource}
                 calendars={displayCalendars}
                 defaultDate={defaultModalDate}
                 defaultEndDate={defaultModalEndDate}
@@ -2399,9 +2436,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onRsvp={handleRsvp}
                 onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
                 onDirtyChange={setEventEditorDirty}
-                onClose={() => { setShowEventModal(false); setEditEvent(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+                onClose={() => { setShowEventModal(false); setEditEvent(null); setCopySource(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
                 onPreviewChange={setPendingPreview}
-                currentUserEmails={userEmailsFor(editEvent)}
+                currentUserEmails={userEmailsFor(editEvent ?? copySource)}
                 isSubscriptionCalendar={isSubscriptionCalendar}
                 maxParticipants={maxParticipants}
                 isMobile={false}
@@ -2411,7 +2448,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
           {/* Desktop task panel */}
           {!isMobile && showTaskModal && (
-            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
+            <div data-end-sheet="" className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
               <TaskModal
                 key={editTask?.id ?? 'new-task'}
                 task={editTask}
@@ -2477,6 +2514,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
           responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
           answersOnly={answersOnlyMenu}
+          copyTo={answersOnlyMenu ? [] : copyTargetsOf(eventContextMenu.data).map((target) => ({
+            address: accountAddress(target.account),
+            onCopy: () => { void handleCopyToAccount(eventContextMenu.data!, target); },
+          }))}
         />
       )}
 
@@ -2551,8 +2592,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
       {showEventModal && isMobile && (
         <EventModal
-          key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
+          key={`${editEvent?.id ?? (copySource ? `copy:${copySource.id}` : 'new')}${modalStartsInEdit ? ':edit' : ''}`}
           event={editEvent}
+          copyOf={copySource}
           calendars={displayCalendars}
           defaultDate={defaultModalDate}
           defaultEndDate={defaultModalEndDate}
@@ -2566,8 +2608,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRsvp={handleRsvp}
           onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
           onDirtyChange={setEventEditorDirty}
-          onClose={() => { setShowEventModal(false); setEditEvent(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
-          currentUserEmails={userEmailsFor(editEvent)}
+          onClose={() => { setShowEventModal(false); setEditEvent(null); setCopySource(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+          currentUserEmails={userEmailsFor(editEvent ?? copySource)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           maxParticipants={maxParticipants}
           isMobile={true}

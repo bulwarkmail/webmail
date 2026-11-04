@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Freigegeben von {name}:",
     "freebusy_description": "Wer die Freigabe erhält, sieht, wann Sie belegt sind, aber nicht, welche Termine Sie haben. „Zeiten vorschlagen“ nutzt das."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (Aufgabenliste, nicht im Kalender sichtbar)",
+    "copy_to_account": "In {address} kopieren",
+    "copied_to_account": "In {address} kopiert",
+    "delete_original": "Original löschen"
+  },
   "calendar_offline": {
     "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Sie haben zugesagt.",
     "answered_declined_nodate": "Sie haben abgesagt.",
     "answered_tentative_nodate": "Sie haben mit Vielleicht geantwortet."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Wiederholung: {rule}",
+    "declined_dates": "Sie haben am {dates} abgesagt.",
+    "declined_many": "Sie haben {count} Termine dieser Serie abgesagt.",
+    "answers_series": "Ihre Antwort gilt für alle Termine der Serie."
   },
   "advanced_search": {
     "title": "Erweiterte Suche",
@@ -5546,6 +5559,26 @@
     "send_message": "Nachricht senden",
     "share_mail_subject": "Ich habe {name} für Sie freigegeben",
     "share_mail_body": "Hallo,\n\nich habe „{name}“ für Sie freigegeben. Sie können es hier öffnen:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Alle zum Kalender hinzufügen",
+    "zone_contacts_all": "Alle zu Kontakten hinzufügen",
+    "save_to_files": "In Dateien speichern",
+    "saved": "{name} in Dateien gespeichert.",
+    "saved_copy": "In Dateien gespeichert als {name}.",
+    "save_failed": "{name} konnte nicht in Dateien gespeichert werden.",
+    "changed_on_server": "{name} wurde in Dateien geändert, nachdem Sie die Datei geöffnet haben.",
+    "gone_on_server": "{name} ist nicht mehr in Dateien.",
+    "keep_both": "Beide behalten",
+    "replace": "Ersetzen",
+    "cancel": "Abbrechen",
+    "save_as_new": "Als neue Datei speichern",
+    "import_to_mail": "In einen Mailordner importieren…",
+    "import_to_mail_title": "In einen Mailordner importieren",
+    "imported_to_mail": "In {folder} importiert.",
+    "import_to_mail_failed": "{name} konnte nicht importiert werden.",
+    "import_contacts": "In Kontakte importieren…",
+    "add_to_calendar": "Zum Kalender hinzufügen…"
   },
   "smime": {
     "your_certificates": "Ihre Zertifikate",
@@ -7555,6 +7588,18 @@
     "import_mail": "E-Mails…",
     "import_calendar": "Kalender…",
     "import_contacts": "Kontakte…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Aktualisieren",
+    "menu_today": "Heute",
+    "menu_next_period": "Nächster Zeitraum",
+    "menu_previous_period": "Vorheriger Zeitraum",
+    "account_scope_label": "Zeigt {address}. Konto wechseln",
+    "account_scope_menu": "Konto wechseln",
+    "merge_links": "Links",
+    "merge_photo": "Foto",
+    "merge_kept": "Bleibt erhalten",
+    "import_show": "Anzeigen"
   },
   "desktopEdit": {
     "edit": "Bearbeiten",
