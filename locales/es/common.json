@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% de {total} usado",
     "accessibility": "Accesibilidad"
   },
+  "account_unread": {
+    "others": "Sin leer en otras cuentas: {count}",
+    "badge_all_accounts": {
+      "label": "Contar el correo sin leer de todas las cuentas",
+      "description": "El número de la pestaña, el icono de la aplicación y la bandeja del sistema suma las bandejas de entrada de todas las cuentas con sesión iniciada."
+    }
+  },
   "protocol_handlers": {
     "title": "Aplicaciones predeterminadas",
     "description": "Elige si los enlaces de correo y calendario se abren en {appName}. Técnicamente, {appName} se registra como controlador de protocolo para enlaces mailto: y webcal:.",

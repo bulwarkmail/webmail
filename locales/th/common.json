@@ -345,6 +345,13 @@
     "mv_storage_used": "ใช้ไป {percent}% จาก {total}",
     "accessibility": "การเข้าถึง"
   },
+  "account_unread": {
+    "others": "ยังไม่ได้อ่านในบัญชีอื่น: {count}",
+    "badge_all_accounts": {
+      "label": "นับอีเมลที่ยังไม่ได้อ่านของทุกบัญชี",
+      "description": "ตัวเลขบนแท็บ ไอคอนแอป และถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้"
+    }
+  },
   "language": {
     "title": "ภาษา",
     "english": "English",

@@ -215,6 +215,13 @@
     "mv_storage_used": "Izmantoti {percent}% no {total}",
     "accessibility": "Pieejamība"
   },
+  "account_unread": {
+    "others": "Nelasītas citos kontos: {count}",
+    "badge_all_accounts": {
+      "label": "Skaitīt nelasītās vēstules visos kontos",
+      "description": "Skaitlis cilnē, lietotnes ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes."
+    }
+  },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
     "description": "Izvēlieties, vai e-pasta un kalendāra saites atvērt {appName}. Tehniski {appName} reģistrējas kā protokola apstrādātājs mailto: un webcal: saitēm.",

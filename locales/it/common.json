@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% di {total} utilizzato",
     "accessibility": "Accessibilità"
   },
+  "account_unread": {
+    "others": "Non letti negli altri account: {count}",
+    "badge_all_accounts": {
+      "label": "Conta la posta non letta di tutti gli account",
+      "description": "Il numero sulla scheda, sull'icona dell'app e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati."
+    }
+  },
   "protocol_handlers": {
     "title": "App predefinite",
     "description": "Scegli se i link e-mail e calendario devono aprirsi in {appName}. Tecnicamente, {appName} si registra come gestore di protocollo per i link mailto: e webcal:.",

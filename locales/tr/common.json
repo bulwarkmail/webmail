@@ -215,6 +215,13 @@
     "mv_storage_used": "{total} alanın %{percent} kadarı kullanıldı",
     "accessibility": "Erişilebilirlik"
   },
+  "account_unread": {
+    "others": "Diğer hesaplarda okunmamış: {count}",
+    "badge_all_accounts": {
+      "label": "Tüm hesaplardaki okunmamış postaları say",
+      "description": "Sekmedeki, uygulama simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
+    }
+  },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
     "description": "E-posta ve takvim bağlantılarının {appName} uygulamasında açılıp açılmayacağını seçin. Teknik olarak {appName}, mailto: ve webcal: bağlantıları için protokol işleyicisi olarak kaydolur.",

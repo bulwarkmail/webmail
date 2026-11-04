@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { HelpMenuItems } from "@/components/layout/help-links";
-import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText } from "@/lib/account-utils";
+import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText, accountAvatarName } from "@/lib/account-utils";
 import { inboxUnread, totalInboxUnread } from "@/lib/account-inbox-unread";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -40,10 +40,10 @@ interface AccountSwitcherProps {
   allInboxesSelected?: boolean;
 }
 
-function AccountAvatar({ account, size = "sm" }: { account: AccountEntry; size?: "sm" | "md" | "xl" }) {
+function AccountAvatar({ account, accounts, size = "sm" }: { account: AccountEntry; accounts: AccountEntry[]; size?: "sm" | "md" | "xl" }) {
   return (
     <Avatar
-      name={account.displayName || account.label}
+      name={accountAvatarName(account, accounts)}
       email={account.email || account.username}
       size="sm"
       className={cn(
@@ -74,6 +74,7 @@ export function AccountSwitcher({
   allInboxesSelected = false,
 }: AccountSwitcherProps) {
   const t = useTranslations("sidebar");
+  const tUnread = useTranslations("account_unread");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -297,12 +298,16 @@ export function AccountSwitcher({
   const unreadByAccount: Record<string, Mailbox[] | undefined> = activeAccountId
     ? { ...accountMailboxes, [activeAccountId]: ownMailboxes }
     : accountMailboxes;
+  // With several accounts every list carries the unread of each, so the new
+  // mail in another account shows without switching to it.
+  const severalAccounts = accounts.length > 1;
   const unreadFor = (account: AccountEntry) =>
-    mvPopover ? inboxUnread(unreadByAccount[account.id]) : undefined;
-  const allInboxesUnread = totalInboxUnread(
-    accounts.filter((account) => account.isConnected).map((account) => account.id),
-    unreadByAccount
-  );
+    mvPopover || severalAccounts ? inboxUnread(unreadByAccount[account.id]) : undefined;
+  const connectedIds = accounts.filter((account) => account.isConnected).map((account) => account.id);
+  const allInboxesUnread = totalInboxUnread(connectedIds, unreadByAccount);
+  // What waits in the accounts not on screen: a dot on the avatar says so.
+  const othersUnread = totalInboxUnread(connectedIds.filter((id) => id !== activeAccountId), unreadByAccount);
+  const othersUnreadText = othersUnread > 0 ? tUnread("others", { count: othersUnread }) : null;
 
   return (
     <>
@@ -320,15 +325,24 @@ export function AccountSwitcher({
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
-        title={variant !== "expanded" ? displayName : undefined}
-        aria-label={t("switch_account")}
+        title={variant !== "expanded" ? [displayName, othersUnreadText].filter(Boolean).join("\n") : undefined}
+        aria-label={othersUnreadText ? `${t("switch_account")}, ${othersUnreadText}` : t("switch_account")}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={open ? menuId : undefined}
       >
         {activeAccount ? (
           <>
-            <AccountAvatar account={activeAccount} size={variant === "expanded" ? "md" : "sm"} />
+            <span className="relative flex-shrink-0">
+              <AccountAvatar account={activeAccount} accounts={accounts} size={variant === "expanded" ? "md" : "sm"} />
+              {othersUnreadText && (
+                <span
+                  aria-hidden="true"
+                  data-testid="other-accounts-unread"
+                  className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-background"
+                />
+              )}
+            </span>
             {variant === "expanded" && (
               <>
                 <div className="min-w-0 flex-1">
@@ -382,7 +396,7 @@ export function AccountSwitcher({
 
           {mvPopover && activeAccount && (
             <div className="flex items-center gap-4 rounded-t-3xl bg-background px-4 pt-4 pb-3" data-mv-account-current="">
-              <AccountAvatar account={activeAccount} size="xl" />
+              <AccountAvatar account={activeAccount} accounts={accounts} size="xl" />
               <div className="min-w-0 flex-1">
                 <p className="text-lg leading-6 truncate">{displayName}</p>
                 {displaySubtitle && <p className="text-sm text-muted-foreground truncate">{displaySubtitle}</p>}
@@ -455,7 +469,7 @@ export function AccountSwitcher({
                   disabled={isActive}
                 >
                   <div className="relative flex-shrink-0">
-                    <AccountAvatar account={account} size="md" />
+                    <AccountAvatar account={account} accounts={accounts} size="md" />
                     {isActive && (
                       <div className="absolute -bottom-0.5 -end-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                         <Check className="w-2.5 h-2.5 text-primary-foreground" />

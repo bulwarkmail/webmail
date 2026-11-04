@@ -306,6 +306,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('notificationSoundChoice', 'notifications', `${NO}sound_selection.choose`, opts(`${NO}sounds.`, NOTIFICATION_SOUND_IDS)),
   bool('pushNotifyInboxOnly', 'notifications', `${NO}email.inbox_only`),
   bool('faviconUnreadBadge', 'notifications', `${AP}favicon_unread_badge.label`),
+  bool('unreadBadgeAllAccounts', 'notifications', 'account_unread.badge_all_accounts.label'),
   bool('calendarNotificationsEnabled', 'notifications', `${NO}calendar.enabled`),
   bool('calendarNotificationSound', 'notifications', `${NO}calendar.sound`),
   bool('doNotDisturb', 'accessibility', `${A}do_not_disturb.label`),

@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% din {total} folosit",
     "accessibility": "Accesibilitate"
   },
+  "account_unread": {
+    "others": "Necitite în alte conturi: {count}",
+    "badge_all_accounts": {
+      "label": "Numără mesajele necitite din toate conturile",
+      "description": "Numărul de pe filă, de pe pictograma aplicației și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate."
+    }
+  },
   "protocol_handlers": {
     "title": "Aplicații implicite",
     "description": "Alegeți dacă linkurile către e-mail și calendar se deschid în {appName}. Din punct de vedere tehnic, {appName} se înregistrează ca gestionar de protocol pentru linkurile de tip mailto: și webcal:.",

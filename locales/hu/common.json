@@ -215,6 +215,13 @@
     "mv_storage_used": "{total} {percent}%-a foglalt",
     "accessibility": "Kisegítő lehetőségek"
   },
+  "account_unread": {
+    "others": "Olvasatlan a többi fiókban: {count}",
+    "badge_all_accounts": {
+      "label": "Az összes fiók olvasatlan leveleinek számlálása",
+      "description": "A lapon, az alkalmazásikonon és a tálcán látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze."
+    }
+  },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",
     "description": "Válaszd ki, hogy az e-mail és naptár hivatkozások a(z) {appName} alkalmazásban nyíljanak meg. Technikailag a(z) {appName} protokollkezelőként regisztrálja magát a mailto: és webcal: hivatkozásokhoz.",

@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% mahust {total} kasutatud",
     "accessibility": "Juurdepääsetavus"
   },
+  "account_unread": {
+    "others": "Lugemata teistes kontodes: {count}",
+    "badge_all_accounts": {
+      "label": "Loe kõigi kontode lugemata kirjad kokku",
+      "description": "Vahekaardi, rakenduse ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid."
+    }
+  },
   "protocol_handlers": {
     "title": "Vaikerakendused",
     "description": "Vali, kas e-posti ja kalendri lingid avanevad rakenduses {appName}. Tehniliselt registreerib {appName} end mailto: ja webcal: linkide protokollikäsitlejana.",

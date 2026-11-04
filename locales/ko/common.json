@@ -215,6 +215,13 @@
     "mv_storage_used": "{total} 중 {percent}% 사용",
     "accessibility": "접근성"
   },
+  "account_unread": {
+    "others": "다른 계정의 읽지 않은 메일: {count}",
+    "badge_all_accounts": {
+      "label": "모든 계정의 읽지 않은 메일 세기",
+      "description": "탭, 앱 아이콘, 알림 영역의 숫자에 로그인한 모든 계정의 받은편지함을 합산해 표시해요."
+    }
+  },
   "protocol_handlers": {
     "title": "기본 앱",
     "description": "이메일 및 캘린더 링크를 {appName}에서 열지 선택하세요. 기술적으로 {appName}은(는) mailto: 및 webcal: 링크의 프로토콜 핸들러로 등록됩니다.",

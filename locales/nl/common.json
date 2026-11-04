@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% van {total} gebruikt",
     "accessibility": "Toegankelijkheid"
   },
+  "account_unread": {
+    "others": "Ongelezen in andere accounts: {count}",
+    "badge_all_accounts": {
+      "label": "Ongelezen mail van alle accounts tellen",
+      "description": "Het getal op het tabblad, het app-pictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op."
+    }
+  },
   "protocol_handlers": {
     "title": "Standaardapps",
     "description": "Kies of e-mail- en kalenderlinks in {appName} worden geopend. Technisch registreert {appName} zich als protocolhandler voor mailto:- en webcal:-links.",

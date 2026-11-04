@@ -119,13 +119,17 @@ describe('AccountSwitcher under Mountain View', () => {
     expect(screen.queryByTestId('all-inboxes')).toBeNull();
   });
 
-  it('leaves the default layout listing every account, unread-free', () => {
+  // With several accounts the default layout shows the unread of each too
+  // (usability test 2026-11-04, mail-6): before, it listed them without.
+  it('leaves the default layout listing every account, each with its unread', () => {
     useSettingsStore.setState({ interfaceLayout: 'default' } as never);
     render(<AccountSwitcher variant="header" onSelectAllInboxes={vi.fn()} />);
     openPopover();
 
-    expect(screen.getAllByTestId('account-option')).toHaveLength(2);
+    const options = screen.getAllByTestId('account-option');
+    expect(options).toHaveLength(2);
     expect(screen.queryByTestId('all-inboxes')).toBeNull();
-    expect(screen.queryByText('5')).toBeNull();
+    expect(within(options[0]).getByText('3')).toBeInTheDocument();
+    expect(within(options[1]).getByText('5')).toBeInTheDocument();
   });
 });

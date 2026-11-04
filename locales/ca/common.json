@@ -215,6 +215,13 @@
     "mv_storage_used": "{percent}% de {total} utilitzat",
     "accessibility": "Accessibilitat"
   },
+  "account_unread": {
+    "others": "Sense llegir en altres comptes: {count}",
+    "badge_all_accounts": {
+      "label": "Compta el correu no llegit de tots els comptes",
+      "description": "El número de la pestanya, la icona de l'aplicació i la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada."
+    }
+  },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",
     "description": "Trieu si els enllaços de correu i calendari s'obren al {appName}. Tècnicament, el {appName} es registra com a gestor de protocol per als enllaços mailto: i webcal:.",

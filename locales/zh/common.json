@@ -215,6 +215,13 @@
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
     "accessibility": "无障碍"
   },
+  "account_unread": {
+    "others": "其他账户中的未读邮件：{count}",
+    "badge_all_accounts": {
+      "label": "统计所有账户的未读邮件",
+      "description": "标签页、应用图标和托盘上的数字会合计所有已登录账户的收件箱。"
+    }
+  },
   "protocol_handlers": {
     "title": "默认应用",
     "description": "选择是否在 {appName} 中打开电子邮件和日历链接。从技术上讲，{appName} 会注册为 mailto: 和 webcal: 链接的协议处理程序。",

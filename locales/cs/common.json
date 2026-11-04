@@ -215,6 +215,13 @@
     "mv_storage_used": "Využito {percent} % z {total}",
     "accessibility": "Přístupnost"
   },
+  "account_unread": {
+    "others": "Nepřečtené v ostatních účtech: {count}",
+    "badge_all_accounts": {
+      "label": "Počítat nepřečtenou poštu ve všech účtech",
+      "description": "Číslo na kartě, na ikoně aplikace a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů."
+    }
+  },
   "protocol_handlers": {
     "title": "Výchozí aplikace",
     "description": "Zvolte, zda se mají e-mailové a kalendářové odkazy otevírat v aplikaci {appName}. Technicky se {appName} registruje jako obslužná aplikace protokolu pro odkazy mailto: a webcal:.",
