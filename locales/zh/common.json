@@ -7801,6 +7801,18 @@
       "start_at_login": "登录 Windows 时启动 Bulwark",
       "start_at_login_why": "和 OneDrive 一样，驱动器需要 Bulwark 在运行。",
       "closed_warning": "Bulwark 关闭时，无法打开驱动器中的文件。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 已是最新",
+      "syncing": "Bulwark Files: 正在同步。剩余：{count}",
+      "paused": "Bulwark Files: 已暂停",
+      "offline": "Bulwark Files: 离线。等待中：{count}",
+      "question": "Bulwark Files: 需要你的回答",
+      "error": "Bulwark Files: 错误"
+    },
+    "notify": {
+      "conflict_title": "一个文件在两处被更改",
+      "problem_title": "有文件无法同步"
     }
   },
   "desktopQuickCompose": {

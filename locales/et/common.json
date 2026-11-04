@@ -7801,6 +7801,18 @@
       "start_at_login": "Käivita Bulwark Windowsi sisselogimisel",
       "start_at_login_why": "Draiv vajab töötavat Bulwarki, nagu OneDrive.",
       "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Ajakohane",
+      "syncing": "Bulwark Files: Sünkroonimine. Jäänud: {count}",
+      "paused": "Bulwark Files: Peatatud",
+      "offline": "Bulwark Files: Võrguühenduseta. Ootel: {count}",
+      "question": "Bulwark Files: Ootab teie vastust",
+      "error": "Bulwark Files: Viga"
+    },
+    "notify": {
+      "conflict_title": "Faili muudeti kahes kohas",
+      "problem_title": "Faili ei saa sünkroonida"
     }
   },
   "desktopQuickCompose": {

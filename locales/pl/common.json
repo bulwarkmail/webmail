@@ -7801,6 +7801,18 @@
       "start_at_login": "Uruchamiaj Bulwark po zalogowaniu do Windows",
       "start_at_login_why": "Dysk potrzebuje działającego Bulwark, tak jak OneDrive.",
       "closed_warning": "Pliki na dysku nie otworzą się, gdy Bulwark jest zamknięty."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktualne",
+      "syncing": "Bulwark Files: Synchronizacja. Pozostało: {count}",
+      "paused": "Bulwark Files: Wstrzymano",
+      "offline": "Bulwark Files: Offline. Czeka: {count}",
+      "question": "Bulwark Files: Czeka na Twoją odpowiedź",
+      "error": "Bulwark Files: Błąd"
+    },
+    "notify": {
+      "conflict_title": "Plik zmieniono w dwóch miejscach",
+      "problem_title": "Nie można zsynchronizować pliku"
     }
   },
   "desktopQuickCompose": {

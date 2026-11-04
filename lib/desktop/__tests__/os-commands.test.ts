@@ -300,6 +300,25 @@ describe('a toast\'s buttons', () => {
   });
 });
 
+describe('a Files on this computer notification (files-p3-5)', () => {
+  it("answers the mass-delete question from its buttons, and a click opens the settings page", async () => {
+    const { useFilesSyncStore } = await import('@/stores/files-sync-store');
+    const confirmMassDelete = vi.fn(async () => {});
+    useFilesSyncStore.setState({ controller: { confirmMassDelete } as never });
+    const context = JSON.stringify({ filesSync: 'r1' });
+    await run({ type: 'notification', action: 'files-delete', context });
+    expect(confirmMassDelete).toHaveBeenLastCalledWith('r1', true);
+    await run({ type: 'notification', action: 'files-restore', context });
+    expect(confirmMassDelete).toHaveBeenLastCalledWith('r1', false);
+    expect(leaveFor).not.toHaveBeenCalled();
+    await run({ type: 'notification', action: 'open', context });
+    expect(focus).toHaveBeenCalled();
+    expect(leaveFor).toHaveBeenCalledWith('/settings/files_sync');
+    expect(confirmMassDelete).toHaveBeenCalledTimes(2);
+    useFilesSyncStore.getState().reset();
+  });
+});
+
 describe('listening', () => {
   it('does nothing in a browser', async () => {
     window.bulwarkDesktop = undefined;

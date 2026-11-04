@@ -20,6 +20,8 @@ import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { runNotificationAction, type NotificationActionRequest, type NotificationActionStatus } from '@/lib/pwa-notify/page-actions';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useFilesSyncStore } from '@/stores/files-sync-store';
+import { FILES_NOTIFY_ACTIONS, type FilesNotificationContext } from '@/lib/files-sync/notify';
 
 export interface OsCommandEnv {
   /** Goes to a page, saving an open composer first. */
@@ -101,6 +103,7 @@ async function handleNotification(action: string, rawContext: string, reply: str
     return;
   }
   if (await handleReminderCommand(action, rawContext, env)) return;
+  if (await handleFilesNotification(action, rawContext, env)) return;
   const context = parseContext(rawContext);
   // A saved file's toast: the offer is on the main window, wherever it was.
   if (context.editedFile) {
@@ -127,6 +130,29 @@ async function handleNotification(action: string, rawContext: string, reply: str
   }
   // Clicked, or the button couldn't be carried out here: the message opens.
   await openFromNotification(context, env);
+}
+
+/**
+ * A Files on this computer notification (lib/files-sync/host.ts announce): the mass-delete
+ * question's buttons answer it; a click opens Settings > Files on this computer.
+ */
+async function handleFilesNotification(action: string, rawContext: string, env: OsCommandEnv): Promise<boolean> {
+  let rootId: string | null = null;
+  try {
+    const parsed = JSON.parse(rawContext) as Partial<FilesNotificationContext>;
+    rootId = typeof parsed?.filesSync === 'string' ? parsed.filesSync : null;
+  } catch {
+    return false;
+  }
+  if (!rootId) return false;
+  const controller = useFilesSyncStore.getState().controller;
+  if (controller && (action === FILES_NOTIFY_ACTIONS.allow || action === FILES_NOTIFY_ACTIONS.restore)) {
+    await controller.confirmMassDelete(rootId, action === FILES_NOTIFY_ACTIONS.allow).catch(() => {});
+    return true;
+  }
+  showWindow();
+  await env.leaveFor('/settings/files_sync');
+  return true;
 }
 
 function handleFiles(command: Extract<DesktopOsCommand, { type: 'files' }>, env: OsCommandEnv): void {

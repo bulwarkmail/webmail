@@ -7801,6 +7801,18 @@
       "start_at_login": "Start Bulwark, når du logger på Windows",
       "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
       "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Opdateret",
+      "syncing": "Bulwark Files: Synkroniserer. Mangler: {count}",
+      "paused": "Bulwark Files: Sat på pause",
+      "offline": "Bulwark Files: Offline. Venter: {count}",
+      "question": "Bulwark Files: Venter på dit svar",
+      "error": "Bulwark Files: Fejl"
+    },
+    "notify": {
+      "conflict_title": "En fil blev ændret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
     }
   },
   "desktopQuickCompose": {

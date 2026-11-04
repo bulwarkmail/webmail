@@ -7801,6 +7801,18 @@
       "start_at_login": "Pornește Bulwark la conectarea în Windows",
       "start_at_login_why": "Unitatea are nevoie ca Bulwark să ruleze, ca OneDrive.",
       "closed_warning": "Fișierele din unitate nu se deschid cât timp Bulwark este închis."
+    },
+    "tray": {
+      "idle": "Bulwark Files: La zi",
+      "syncing": "Bulwark Files: Se sincronizează. Rămase: {count}",
+      "paused": "Bulwark Files: Întrerupt",
+      "offline": "Bulwark Files: Offline. În așteptare: {count}",
+      "question": "Bulwark Files: Așteaptă răspunsul dvs.",
+      "error": "Bulwark Files: Eroare"
+    },
+    "notify": {
+      "conflict_title": "Un fișier a fost modificat în două locuri",
+      "problem_title": "Un fișier nu poate fi sincronizat"
     }
   },
   "desktopQuickCompose": {

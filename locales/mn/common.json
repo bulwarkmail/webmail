@@ -7801,6 +7801,18 @@
       "start_at_login": "Windows-д нэвтрэхэд Bulwark-ыг эхлүүлэх",
       "start_at_login_why": "OneDrive шиг диск ажиллахад Bulwark асаалттай байх хэрэгтэй.",
       "closed_warning": "Bulwark хаалттай үед дискний файлуудыг нээх боломжгүй."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Шинэчлэгдсэн",
+      "syncing": "Bulwark Files: Синк хийж байна. Үлдсэн: {count}",
+      "paused": "Bulwark Files: Түр зогссон",
+      "offline": "Bulwark Files: Офлайн. Хүлээгдэж буй: {count}",
+      "question": "Bulwark Files: Таны хариуг хүлээж байна",
+      "error": "Bulwark Files: Алдаа"
+    },
+    "notify": {
+      "conflict_title": "Файлыг хоёр газар өөрчилсөн",
+      "problem_title": "Файлыг синк хийх боломжгүй"
     }
   },
   "desktopQuickCompose": {

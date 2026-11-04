@@ -7801,6 +7801,18 @@
       "start_at_login": "اجرای Bulwark هنگام ورود به Windows",
       "start_at_login_why": "درایو مانند OneDrive به اجرای Bulwark نیاز دارد.",
       "closed_warning": "تا وقتی Bulwark بسته است، فایل‌های درایو باز نمی‌شوند."
+    },
+    "tray": {
+      "idle": "Bulwark Files: به‌روز",
+      "syncing": "Bulwark Files: در حال همگام‌سازی. مانده: {count}",
+      "paused": "Bulwark Files: متوقف شده",
+      "offline": "Bulwark Files: آفلاین. در انتظار: {count}",
+      "question": "Bulwark Files: منتظر پاسخ شما",
+      "error": "Bulwark Files: خطا"
+    },
+    "notify": {
+      "conflict_title": "فایلی در دو جا تغییر کرد",
+      "problem_title": "یک فایل همگام نمی‌شود"
     }
   },
   "desktopQuickCompose": {

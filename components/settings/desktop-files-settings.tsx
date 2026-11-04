@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FolderPickerDialog, type PickerFolder } from "@/components/files/folder-picker-dialog";
 import { FilesSyncStatusLine } from "@/components/files-sync/files-sync-status-line";
 import { MassDeleteQuestion, useInlineMassDeleteQuestions } from "@/components/files-sync/files-sync-prompts";
-import { filesSyncErrorKey, rootName, syncTimeOptions } from "@/components/files-sync/files-sync-text";
+import { activityMessage, rootName, syncTimeOptions } from "@/components/files-sync/files-sync-text";
 import { fileNodeKind } from "@/lib/jmap/filenode-kind";
 import { findTrashFolder, trashSubtreeIds } from "@/lib/files-trash";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -418,15 +418,7 @@ function ActivitySection() {
   const items = useMemo(() => [...activity].sort((a, b) => b.at - a.at), [activity]);
   const rootById = useMemo(() => new Map(roots.map((r) => [r.id, r])), [roots]);
 
-  const message = (item: FilesSyncActivity) => {
-    const detail = item.kind === "too-large" && item.detail && /^\d+$/.test(item.detail)
-      ? formatFileSize(Number(item.detail))
-      : item.detail ?? "";
-    const text = t(`activity.${item.kind}`, { path: item.path, detail });
-    return (item.kind === "error" || item.kind === "waiting") && item.messageKey
-      ? `${text}: ${t(filesSyncErrorKey(item.messageKey))}`
-      : text;
-  };
+  const message = (item: FilesSyncActivity) => activityMessage(t, item, formatFileSize);
 
   return (
     <SettingsSection id="activity" title={t("activity.title")}>

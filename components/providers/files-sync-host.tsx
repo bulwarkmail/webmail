@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { statusLineText } from "@/components/files-sync/files-sync-text";
+import { activityMessage, massDeleteText, statusLineText, trayLineText } from "@/components/files-sync/files-sync-text";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { getDesktopPolicy, onDesktopPolicyChange } from "@/lib/desktop/policy";
 import { canDownload } from "@/lib/device-policy";
 import { claimFilesControls } from "@/lib/files-sync/controls";
 import type { DriveStatusText } from "@/lib/files-sync/drive-status";
 import { FilesSyncHost as Host, type HostAccount } from "@/lib/files-sync/host";
+import type { FilesNotifyText } from "@/lib/files-sync/notify";
 import { registerFilesSyncLifecycle, setRunningFilesSyncHost } from "@/lib/files-sync/lifecycle";
 import { scopeDecided } from "@/lib/offline/offline-mode";
 import { subscribePushStateChanges } from "@/lib/push-events";
@@ -45,6 +46,7 @@ export function FilesSyncHost() {
   const client = useAuthStore((s) => s.client);
   const tSync = useTranslations("files_sync");
   const tStorage = useTranslations("files_storage");
+  const tExtra = useTranslations("files_sync_extra");
   const format = useFormatter();
   // Explorer's status for the drive, in the page's language (lib/files-sync/drive-status.ts).
   const driveText = useMemo<DriveStatusText>(() => ({
@@ -54,9 +56,23 @@ export function FilesSyncHost() {
       ? tStorage("used", { used: formatFileSize(used) })
       : tStorage("used_of", { used: formatFileSize(used), total: formatFileSize(total) }),
     notice: (level) => tStorage(level === "full" ? "full" : "almost_full"),
-  }), [tSync, tStorage, format]);
+    tray: (status, state) => trayLineText(tExtra, status, state),
+  }), [tSync, tStorage, tExtra, format]);
   const driveTextRef = useRef(driveText);
   driveTextRef.current = driveText;
+  // The OS notifications' words (files-p3-5).
+  const notifyText = useMemo<FilesNotifyText>(() => ({
+    massDelete: (root, massDelete) => ({
+      title: tSync("mass_delete.title", { count: massDelete.count }),
+      body: massDeleteText(tSync, root, massDelete),
+      allow: tSync("mass_delete.allow", { count: massDelete.count }),
+      restore: tSync("mass_delete.restore", { count: massDelete.count }),
+    }),
+    conflict: (_root, entry) => ({ title: tExtra("notify.conflict_title"), body: activityMessage(tSync, entry, formatFileSize) }),
+    problem: (_root, entry) => ({ title: tExtra("notify.problem_title"), body: activityMessage(tSync, entry, formatFileSize) }),
+  }), [tSync, tExtra]);
+  const notifyTextRef = useRef(notifyText);
+  notifyTextRef.current = notifyText;
 
   useEffect(() => {
     const bridge = getDesktopBridge();
@@ -71,6 +87,10 @@ export function FilesSyncHost() {
       folderSyncForcedOff,
       downloadsForbidden,
       driveStatusText: () => driveTextRef.current,
+      notify: (notification) => {
+        void bridge.os?.notify(notification).catch(() => null);
+      },
+      notifyText: () => notifyTextRef.current,
     });
     hostRef.current = host;
     setRunningFilesSyncHost(host);

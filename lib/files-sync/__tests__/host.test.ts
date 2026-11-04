@@ -5,7 +5,7 @@
 import { render } from '@testing-library/react';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FilesControls } from '@/lib/desktop/types';
+import type { DesktopOsNotification, FilesControls } from '@/lib/desktop/types';
 import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { noteCredentialsRejected } from '@/lib/offline/credentials-rejected';
 import { runWipeCleaners } from '@/lib/offline/wipe-registry';
@@ -315,6 +315,93 @@ describe('sign-out, wipe and refused logins', () => {
     r.disk.driveCalls.length = 0;
     await runBeforeSignOut('a1');
     expect(r.disk.driveCalls.filter((call) => call.call === 'disable')).toEqual([{ call: 'disable', args: ['a1', 'suspended'] }]);
+  });
+});
+
+describe('OS notifications and the tray line (files-p3-5)', () => {
+  const NOTIFY_TEXT = {
+    massDelete: (_root: unknown, massDelete: { count: number; deletedOn: string }) => ({ title: `delete ${massDelete.count}?`, body: `deleted on ${massDelete.deletedOn}`, allow: 'Delete them', restore: 'Bring them back' }),
+    conflict: (_root: unknown, entry: { path: string; detail?: string }) => ({ title: 'conflict', body: `${entry.path} kept as ${entry.detail}` }),
+    problem: (_root: unknown, entry: { path: string; kind: string }) => ({ title: 'problem', body: `${entry.kind} ${entry.path}` }),
+  };
+
+  function notifyingRig(server?: Record<string, unknown>) {
+    const disk = new FakeDisk({ caseInsensitive: true });
+    const remote = new FakeServer(server ?? {});
+    const shown: DesktopOsNotification[] = [];
+    const host = new FilesSyncHost({
+      controls: disk,
+      platform: 'win32',
+      publish: () => {},
+      setController: () => {},
+      folderSyncForcedOff: () => false,
+      downloadsForbidden: () => false,
+      remoteFor: () => remote.remote(),
+      readUrl: disk.readUrl,
+      timing: FAST,
+      notify: (notification) => shown.push(notification),
+      notifyText: () => NOTIFY_TEXT as never,
+    });
+    const account: HostAccount = { id: 'a1', label: 'a@example.org', client: { getSessionSnapshot: () => remote.session, getAuthHeader: () => 'Basic x' } };
+    return { disk, server: remote, host, shown, account };
+  }
+
+  it('asks about a mass delete with both answers as buttons, and names conflicts and files that stay here', async () => {
+    const r = notifyingRig({ maxSizeUpload: 10 });
+    const folder = r.server.folder('Sync');
+    r.disk.addRoot({ id: 'r1', account: 'a1', remoteId: folder.id });
+    for (let i = 0; i < 60; i += 1) r.disk.write('r1', `bulk/f${i}.txt`, `file ${i}`);
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    // Ordinary work says nothing.
+    expect(r.shown).toEqual([]);
+
+    r.disk.deleteUser('r1', 'bulk');
+    r.host.engine.syncNow();
+    await settle(r.host);
+    expect(r.shown).toEqual([expect.objectContaining({
+      title: 'delete 61?',
+      body: 'deleted on this-computer',
+      context: JSON.stringify({ filesSync: 'r1' }),
+      actions: [{ id: 'files-restore', label: 'Bring them back' }, { id: 'files-delete', label: 'Delete them' }],
+    })]);
+    r.host.engine.confirmMassDelete('r1', false);
+    await settle(r.host);
+
+    r.disk.write('r1', 'huge.bin', 'x'.repeat(20));
+    r.host.engine.syncNow();
+    await settle(r.host);
+    expect(r.shown.at(-1)).toMatchObject({ title: 'problem', body: 'too-large huge.bin', context: JSON.stringify({ filesSync: 'r1' }) });
+    r.host.stop();
+  });
+
+  it('says a conflict', async () => {
+    const r = notifyingRig();
+    const folder = r.server.folder('Sync');
+    r.disk.addRoot({ id: 'r1', account: 'a1', remoteId: folder.id });
+    r.disk.write('r1', 'doc.txt', 'v1');
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    r.disk.write('r1', 'doc.txt', 'here, longer');
+    r.server.edit(r.server.find('Sync/doc.txt')!.id, 'there');
+    r.host.engine.syncNow();
+    await settle(r.host);
+    expect(r.shown).toEqual([expect.objectContaining({ title: 'conflict', body: expect.stringMatching(/^doc\.txt kept as doc \(conflict, Windows, /) })]);
+    r.host.stop();
+  });
+
+  it("gives main the tray's line for the drive", async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    const text = { ...TEXT, tray: (status: { state?: string } | undefined, state: string) => `Bulwark Files: ${state}` };
+    (r.host as unknown as { deps: { driveStatusText: () => unknown } }).deps.driveStatusText = () => text;
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    expect(r.disk.driveStatuses.at(-1)?.status.tray).toBe('Bulwark Files: idle');
+    r.host.stop();
   });
 });
 

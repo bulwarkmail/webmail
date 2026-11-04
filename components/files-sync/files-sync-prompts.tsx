@@ -8,7 +8,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
 import type { FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncRootStatus } from "@/lib/files-sync/types";
-import { rootName } from "./files-sync-text";
+import { massDeleteText } from "./files-sync-text";
 import { FilesFlushDialog } from "./files-sync-flush";
 
 /*
@@ -45,10 +45,7 @@ export function useInlineMassDeleteQuestions(): void {
  */
 export function useMassDeleteText(root: FilesRoot, massDelete: NonNullable<FilesSyncRootStatus["massDelete"]>): string {
   const t = useTranslations("files_sync");
-  const driveName = t("drive.root_name");
-  return massDelete.deletedOn === "this-computer"
-    ? t("mass_delete.local", { count: massDelete.count, folder: rootName(root, driveName) })
-    : t("mass_delete.remote", { count: massDelete.count, folder: root.kind === "drive" ? driveName : root.remoteLabel || driveName });
+  return massDeleteText(t, root, massDelete);
 }
 
 interface AnswerButtonsProps {

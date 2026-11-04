@@ -7801,6 +7801,18 @@
       "start_at_login": "Bulwark bei der Anmeldung an Windows starten",
       "start_at_login_why": "Das Laufwerk braucht Bulwark im Hintergrund, wie OneDrive.",
       "closed_warning": "Dateien im Laufwerk lassen sich nicht öffnen, solange Bulwark geschlossen ist."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Auf dem neuesten Stand",
+      "syncing": "Bulwark Files: Wird synchronisiert. Ausstehend: {count}",
+      "paused": "Bulwark Files: Angehalten",
+      "offline": "Bulwark Files: Offline. Wartend: {count}",
+      "question": "Bulwark Files: Wartet auf Ihre Antwort",
+      "error": "Bulwark Files: Fehler"
+    },
+    "notify": {
+      "conflict_title": "Eine Datei wurde an zwei Stellen geändert",
+      "problem_title": "Eine Datei kann nicht synchronisiert werden"
     }
   },
   "desktopQuickCompose": {

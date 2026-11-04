@@ -7801,6 +7801,18 @@
       "start_at_login": "Iniciar Bulwark al iniciar sesión en Windows",
       "start_at_login_why": "La unidad necesita que Bulwark esté abierto, como OneDrive.",
       "closed_warning": "Los archivos de la unidad no se abren mientras Bulwark esté cerrado."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualizado",
+      "syncing": "Bulwark Files: Sincronizando. Pendientes: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sin conexión. En espera: {count}",
+      "question": "Bulwark Files: Necesita tu respuesta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un archivo se cambió en dos sitios",
+      "problem_title": "Un archivo no se puede sincronizar"
     }
   },
   "desktopQuickCompose": {

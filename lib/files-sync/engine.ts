@@ -69,6 +69,8 @@ export interface EngineOptions {
   downloadsAllowed?: (account: string) => boolean;
   /** Something the UI shows changed. */
   onUpdate?: () => void;
+  /** A new line in the activity list. */
+  onActivity?: (entry: FilesSyncActivity) => void;
 }
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
@@ -611,8 +613,14 @@ export class FilesSyncEngine {
 
   private addActivity(entry: ActivityInput): void {
     this.activitySeq += 1;
-    this.activity = [{ id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry }, ...this.activity].slice(0, ACTIVITY_LIMIT);
+    const line: FilesSyncActivity = { id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry };
+    this.activity = [line, ...this.activity].slice(0, ACTIVITY_LIMIT);
     this.update();
+    try {
+      this.options.onActivity?.(line);
+    } catch {
+      // Telling about it is extra.
+    }
   }
 
   private update(): void {

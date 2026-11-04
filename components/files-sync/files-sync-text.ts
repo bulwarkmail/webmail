@@ -1,5 +1,5 @@
 import type { FilesRoot } from "@/lib/desktop/types";
-import type { FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus } from "@/lib/files-sync/types";
+import type { FilesSyncActivity, FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus } from "@/lib/files-sync/types";
 
 /** The engine's message keys, under `files_sync.errors.`. */
 export const FILES_SYNC_ERROR_KEYS = [
@@ -60,6 +60,48 @@ export function statusLineText(t: Translate, formatTime: FormatTime, status: Fil
       return t("status.confirm_delete");
     default:
       return t(`status.${state}`);
+  }
+}
+
+/**
+ * The mass-delete question. `deletedOn` is where the items were deleted (MassDeleteOrigin); the
+ * question is about the other side. The drive is "Files drive" on both sides, never its address.
+ * `t` is the `files_sync` namespace.
+ */
+export function massDeleteText(t: Translate, root: FilesRoot, massDelete: NonNullable<FilesSyncRootStatus["massDelete"]>): string {
+  const driveName = t("drive.root_name");
+  return massDelete.deletedOn === "this-computer"
+    ? t("mass_delete.local", { count: massDelete.count, folder: rootName(root, driveName) })
+    : t("mass_delete.remote", { count: massDelete.count, folder: root.kind === "drive" ? driveName : root.remoteLabel || driveName });
+}
+
+/** An activity line in words. `t` is the `files_sync` namespace. */
+export function activityMessage(t: Translate, item: FilesSyncActivity, formatSize: (bytes: number) => string): string {
+  const detail = item.kind === "too-large" && item.detail && /^\d+$/.test(item.detail)
+    ? formatSize(Number(item.detail))
+    : item.detail ?? "";
+  const text = t(`activity.${item.kind}`, { path: item.path, detail });
+  return (item.kind === "error" || item.kind === "waiting") && item.messageKey
+    ? `${text}: ${t(filesSyncErrorKey(item.messageKey))}`
+    : text;
+}
+
+/** The tray menu's line for the drive (files-p3-5). `t` is the `files_sync_extra` namespace. */
+export function trayLineText(t: Translate, status: FilesSyncRootStatus | undefined, state: FilesSyncRootState): string {
+  switch (state) {
+    case "idle":
+      return t("tray.idle");
+    case "starting":
+    case "syncing":
+      return t("tray.syncing", { count: status?.pending ?? 0 });
+    case "paused":
+      return t("tray.paused");
+    case "offline":
+      return t("tray.offline", { count: status?.pending ?? 0 });
+    case "confirm-delete":
+      return t("tray.question");
+    default:
+      return t("tray.error");
   }
 }
 

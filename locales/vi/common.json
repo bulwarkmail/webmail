@@ -7813,6 +7813,18 @@
       "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
       "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
       "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Đã cập nhật",
+      "syncing": "Bulwark Files: Đang đồng bộ. Còn lại: {count}",
+      "paused": "Bulwark Files: Đã tạm dừng",
+      "offline": "Bulwark Files: Ngoại tuyến. Đang chờ: {count}",
+      "question": "Bulwark Files: Cần bạn trả lời",
+      "error": "Bulwark Files: Lỗi"
+    },
+    "notify": {
+      "conflict_title": "Một tệp đã bị thay đổi ở hai nơi",
+      "problem_title": "Không thể đồng bộ một tệp"
     }
   },
   "desktopQuickCompose": {

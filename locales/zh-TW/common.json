@@ -7801,6 +7801,18 @@
       "start_at_login": "登入 Windows 時啟動 Bulwark",
       "start_at_login_why": "和 OneDrive 一樣，磁碟機需要 Bulwark 在執行。",
       "closed_warning": "Bulwark 關閉時，無法開啟磁碟機中的檔案。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 已是最新",
+      "syncing": "Bulwark Files: 正在同步。剩餘：{count}",
+      "paused": "Bulwark Files: 已暫停",
+      "offline": "Bulwark Files: 離線。等待中：{count}",
+      "question": "Bulwark Files: 需要你的回答",
+      "error": "Bulwark Files: 錯誤"
+    },
+    "notify": {
+      "conflict_title": "一個檔案在兩處被變更",
+      "problem_title": "有檔案無法同步"
     }
   },
   "desktopQuickCompose": {

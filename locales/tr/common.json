@@ -7801,6 +7801,18 @@
       "start_at_login": "Windows'ta oturum açınca Bulwark'ı başlat",
       "start_at_login_why": "Sürücü, OneDrive gibi Bulwark'ın çalışmasına ihtiyaç duyar.",
       "closed_warning": "Bulwark kapalıyken sürücüdeki dosyalar açılmaz."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Güncel",
+      "syncing": "Bulwark Files: Eşitleniyor. Kalan: {count}",
+      "paused": "Bulwark Files: Duraklatıldı",
+      "offline": "Bulwark Files: Çevrimdışı. Bekleyen: {count}",
+      "question": "Bulwark Files: Yanıtınızı bekliyor",
+      "error": "Bulwark Files: Hata"
+    },
+    "notify": {
+      "conflict_title": "Bir dosya iki yerde değiştirildi",
+      "problem_title": "Bir dosya eşitlenemiyor"
     }
   },
   "desktopQuickCompose": {

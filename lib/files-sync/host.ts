@@ -22,7 +22,7 @@
  * and tells main what Explorer should show for each drive (drive-status.ts).
  */
 
-import type { FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { DesktopOsNotification, FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
 import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
 import { driveStatusFor, filesQuotaOf, type DriveStatusText } from './drive-status';
@@ -31,7 +31,8 @@ import { requestFlush } from './flush-requests';
 import type { FilesSyncErrorName } from './errors';
 import { namingFor } from './names';
 import { FilesRemote } from './remote';
-import type { FilesQuota, FilesSyncController, FilesSyncSnapshot } from './types';
+import { FILES_NOTIFY_ACTIONS, type FilesNotificationContext, type FilesNotifyText } from './notify';
+import type { FilesQuota, FilesSyncActivity, FilesSyncController, FilesSyncSnapshot } from './types';
 
 /** What the host needs of the app's JMAP client. */
 export interface SessionClient {
@@ -63,6 +64,9 @@ export interface HostDeps {
   readUrl?: (url: string) => Promise<Uint8Array>;
   /** The words for Explorer's status, in the page's language. Null: none sent. */
   driveStatusText?: () => DriveStatusText | null;
+  /** Shows an OS notification; main shows none while the main window has the focus. */
+  notify?: (notification: DesktopOsNotification) => void;
+  notifyText?: () => FilesNotifyText | null;
   quotaTiming?: Partial<QuotaTiming>;
   now?: () => number;
 }
@@ -146,6 +150,7 @@ export class FilesSyncHost {
       blocked: (root) => this.blocked(root),
       downloadsAllowed: (account) => !deps.downloadsForbidden(account),
       onUpdate: () => this.schedulePublish(),
+      onActivity: (entry) => this.announce(entry),
     });
   }
 
@@ -351,6 +356,43 @@ export class FilesSyncHost {
         this.statusTimer = null;
         this.sendDriveStatus();
       }, later);
+    }
+  }
+
+  /**
+   * The mass-delete question, a conflict, a file that can't sync: an OS notification too, so
+   * someone working in Explorer or Word sees it (files-p3-5). Main shows none while the app's
+   * window has the focus; the settings page says it there. A click opens that page; the
+   * question's buttons answer it.
+   */
+  private announce(entry: FilesSyncActivity): void {
+    const notify = this.deps.notify;
+    const text = this.deps.notifyText?.();
+    if (!notify || !text || !['mass-delete', 'conflict', 'error', 'too-large'].includes(entry.kind)) return;
+    const root = this.engine.roots.find((candidate) => candidate.id === entry.rootId);
+    if (!root || !this.accounts.has(root.account)) return;
+    const context = JSON.stringify({ filesSync: root.id } satisfies FilesNotificationContext);
+    try {
+      if (entry.kind === 'mass-delete') {
+        // Logged as the pass stops to ask, before its status says so: the line has it all.
+        const count = Number(entry.detail);
+        if (!Number.isFinite(count) || count <= 0) return;
+        const massDelete = { count, deletedOn: entry.direction === 'up' ? 'this-computer' as const : 'files' as const };
+        const words = text.massDelete(root, massDelete);
+        notify({
+          id: `files-sync:mass:${root.id}:${massDelete.deletedOn}:${massDelete.count}`,
+          group: 'files-sync',
+          title: words.title,
+          body: words.body,
+          context,
+          actions: [{ id: FILES_NOTIFY_ACTIONS.restore, label: words.restore }, { id: FILES_NOTIFY_ACTIONS.allow, label: words.allow }],
+        });
+        return;
+      }
+      const words = entry.kind === 'conflict' ? text.conflict(root, entry) : text.problem(root, entry);
+      notify({ id: `files-sync:${entry.kind}:${root.id}:${entry.path}`, group: 'files-sync', title: words.title, body: words.body, context });
+    } catch {
+      // A notification is extra.
     }
   }
 

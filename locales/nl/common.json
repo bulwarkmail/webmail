@@ -7801,6 +7801,18 @@
       "start_at_login": "Bulwark starten bij aanmelden bij Windows",
       "start_at_login_why": "Het station heeft Bulwark nodig, net als OneDrive.",
       "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Bijgewerkt",
+      "syncing": "Bulwark Files: Synchroniseren. Nog: {count}",
+      "paused": "Bulwark Files: Gepauzeerd",
+      "offline": "Bulwark Files: Offline. Wachtend: {count}",
+      "question": "Bulwark Files: Wacht op uw antwoord",
+      "error": "Bulwark Files: Fout"
+    },
+    "notify": {
+      "conflict_title": "Een bestand is op twee plekken gewijzigd",
+      "problem_title": "Een bestand kan niet worden gesynchroniseerd"
     }
   },
   "desktopQuickCompose": {

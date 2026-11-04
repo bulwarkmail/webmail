@@ -7801,6 +7801,18 @@
       "start_at_login": "Start Bulwark when you sign in to Windows",
       "start_at_login_why": "The drive needs Bulwark running, as OneDrive does.",
       "closed_warning": "Files in the drive can't open while Bulwark is closed."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Up to date",
+      "syncing": "Bulwark Files: Syncing. To go: {count}",
+      "paused": "Bulwark Files: Paused",
+      "offline": "Bulwark Files: Offline. Waiting: {count}",
+      "question": "Bulwark Files: Needs your answer",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "A file was changed in two places",
+      "problem_title": "A file can't be synced"
     }
   },
   "desktopQuickCompose": {

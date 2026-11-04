@@ -7809,6 +7809,18 @@
       "start_at_login": "เริ่ม Bulwark เมื่อลงชื่อเข้าใช้ Windows",
       "start_at_login_why": "ไดรฟ์ต้องให้ Bulwark ทำงานอยู่ เช่นเดียวกับ OneDrive",
       "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่"
+    },
+    "tray": {
+      "idle": "Bulwark Files: เป็นปัจจุบัน",
+      "syncing": "Bulwark Files: กำลังซิงค์ เหลือ: {count}",
+      "paused": "Bulwark Files: หยุดชั่วคราว",
+      "offline": "Bulwark Files: ออฟไลน์ รออยู่: {count}",
+      "question": "Bulwark Files: รอคำตอบของคุณ",
+      "error": "Bulwark Files: ข้อผิดพลาด"
+    },
+    "notify": {
+      "conflict_title": "มีไฟล์ถูกแก้ไขในสองที่",
+      "problem_title": "ซิงค์ไฟล์ไม่ได้"
     }
   },
   "desktopQuickCompose": {

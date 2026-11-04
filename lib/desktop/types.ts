@@ -1096,6 +1096,8 @@ export interface FilesDriveStatus {
   quota: { used: number; total: number | null; label: string } | null;
   /** Storage nearly full or full, in words. */
   notice: string | null;
+  /** The tray menu's line: "Bulwark Files: Up to date". Older shells ignore it. */
+  tray?: string;
 }
 
 /**

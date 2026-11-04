@@ -7801,6 +7801,18 @@
       "start_at_login": "Startēt Bulwark, piesakoties sistēmā Windows",
       "start_at_login_why": "Diskam vajadzīgs, lai Bulwark darbotos, tāpat kā OneDrive.",
       "closed_warning": "Diska failus nevar atvērt, kamēr Bulwark ir aizvērts."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Atjaunināts",
+      "syncing": "Bulwark Files: Sinhronizē. Atlikuši: {count}",
+      "paused": "Bulwark Files: Pauzēts",
+      "offline": "Bulwark Files: Bezsaistē. Gaida: {count}",
+      "question": "Bulwark Files: Gaida jūsu atbildi",
+      "error": "Bulwark Files: Kļūda"
+    },
+    "notify": {
+      "conflict_title": "Fails mainīts divās vietās",
+      "problem_title": "Failu nevar sinhronizēt"
     }
   },
   "desktopQuickCompose": {

@@ -7801,6 +7801,18 @@
       "start_at_login": "Spúšťať Bulwark po prihlásení do Windows",
       "start_at_login_why": "Jednotka potrebuje spustený Bulwark, rovnako ako OneDrive.",
       "closed_warning": "Súbory na jednotke sa neotvoria, keď je Bulwark zatvorený."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktuálne",
+      "syncing": "Bulwark Files: Synchronizácia. Zostáva: {count}",
+      "paused": "Bulwark Files: Pozastavené",
+      "offline": "Bulwark Files: Offline. Čaká: {count}",
+      "question": "Bulwark Files: Čaká na vašu odpoveď",
+      "error": "Bulwark Files: Chyba"
+    },
+    "notify": {
+      "conflict_title": "Súbor sa zmenil na dvoch miestach",
+      "problem_title": "Súbor nemožno synchronizovať"
     }
   },
   "desktopQuickCompose": {

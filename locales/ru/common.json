@@ -7801,6 +7801,18 @@
       "start_at_login": "Запускать Bulwark при входе в Windows",
       "start_at_login_why": "Диску нужен запущенный Bulwark, как OneDrive.",
       "closed_warning": "Файлы на диске не откроются, пока Bulwark закрыт."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Синхронизировано",
+      "syncing": "Bulwark Files: Синхронизация. Осталось: {count}",
+      "paused": "Bulwark Files: Приостановлено",
+      "offline": "Bulwark Files: Нет связи. Ожидают: {count}",
+      "question": "Bulwark Files: Нужен ваш ответ",
+      "error": "Bulwark Files: Ошибка"
+    },
+    "notify": {
+      "conflict_title": "Файл изменён в двух местах",
+      "problem_title": "Файл не удаётся синхронизировать"
     }
   },
   "desktopQuickCompose": {

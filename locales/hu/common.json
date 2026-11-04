@@ -7801,6 +7801,18 @@
       "start_at_login": "A Bulwark indítása a Windowsba való bejelentkezéskor",
       "start_at_login_why": "A meghajtóhoz futnia kell a Bulwarknak, ahogy a OneDrive-nál is.",
       "closed_warning": "A meghajtón lévő fájlok nem nyílnak meg, amíg a Bulwark be van zárva."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Naprakész",
+      "syncing": "Bulwark Files: Szinkronizálás. Hátravan: {count}",
+      "paused": "Bulwark Files: Szüneteltetve",
+      "offline": "Bulwark Files: Offline. Várakozik: {count}",
+      "question": "Bulwark Files: Válaszra vár",
+      "error": "Bulwark Files: Hiba"
+    },
+    "notify": {
+      "conflict_title": "Egy fájl két helyen módosult",
+      "problem_title": "Egy fájl nem szinkronizálható"
     }
   },
   "desktopQuickCompose": {

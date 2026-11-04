@@ -7801,6 +7801,18 @@
       "start_at_login": "Windows にサインインしたら Bulwark を起動する",
       "start_at_login_why": "OneDrive と同じく、ドライブには Bulwark の実行が必要です。",
       "closed_warning": "Bulwark を閉じている間は、ドライブのファイルを開けません。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 最新の状態",
+      "syncing": "Bulwark Files: 同期中。残り: {count}",
+      "paused": "Bulwark Files: 一時停止中",
+      "offline": "Bulwark Files: オフライン。待機中: {count}",
+      "question": "Bulwark Files: 回答が必要です",
+      "error": "Bulwark Files: エラー"
+    },
+    "notify": {
+      "conflict_title": "ファイルが 2 か所で変更されました",
+      "problem_title": "ファイルを同期できません"
     }
   },
   "desktopQuickCompose": {

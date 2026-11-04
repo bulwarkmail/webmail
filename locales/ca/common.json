@@ -7801,6 +7801,18 @@
       "start_at_login": "Inicia Bulwark en iniciar la sessió al Windows",
       "start_at_login_why": "La unitat necessita que Bulwark s'executi, com OneDrive.",
       "closed_warning": "Els fitxers de la unitat no s'obren mentre Bulwark està tancat."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualitzat",
+      "syncing": "Bulwark Files: S'està sincronitzant. Queden: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sense connexió. En espera: {count}",
+      "question": "Bulwark Files: Necessita la vostra resposta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un fitxer s'ha canviat en dos llocs",
+      "problem_title": "Un fitxer no es pot sincronitzar"
     }
   },
   "desktopQuickCompose": {

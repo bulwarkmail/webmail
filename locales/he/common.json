@@ -7802,6 +7802,18 @@
       "start_at_login": "להפעיל את Bulwark בכניסה ל-Windows",
       "start_at_login_why": "הכונן צריך ש-Bulwark יפעל, כמו OneDrive.",
       "closed_warning": "קבצים בכונן לא נפתחים כש-Bulwark סגור."
+    },
+    "tray": {
+      "idle": "Bulwark Files: מעודכן",
+      "syncing": "Bulwark Files: מסנכרן. נותרו: {count}",
+      "paused": "Bulwark Files: מושהה",
+      "offline": "Bulwark Files: לא מחובר. ממתינים: {count}",
+      "question": "Bulwark Files: ממתין לתשובה שלך",
+      "error": "Bulwark Files: שגיאה"
+    },
+    "notify": {
+      "conflict_title": "קובץ השתנה בשני מקומות",
+      "problem_title": "לא ניתן לסנכרן קובץ"
     }
   },
   "desktopQuickCompose": {

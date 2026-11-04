@@ -7801,6 +7801,18 @@
       "start_at_login": "Windows에 로그인하면 Bulwark 시작",
       "start_at_login_why": "OneDrive처럼 드라이브는 Bulwark가 실행 중이어야 합니다.",
       "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다."
+    },
+    "tray": {
+      "idle": "Bulwark Files: 최신 상태",
+      "syncing": "Bulwark Files: 동기화 중. 남은 항목: {count}",
+      "paused": "Bulwark Files: 일시 중지됨",
+      "offline": "Bulwark Files: 오프라인. 대기 중: {count}",
+      "question": "Bulwark Files: 답변이 필요합니다",
+      "error": "Bulwark Files: 오류"
+    },
+    "notify": {
+      "conflict_title": "파일이 두 곳에서 변경되었습니다",
+      "problem_title": "파일을 동기화할 수 없습니다"
     }
   },
   "desktopQuickCompose": {
