@@ -6384,6 +6384,12 @@
     "not_running": "Nie wysłano. Kontrola wymagana przez Twoją organizację nie działa. Spróbuj ponownie za chwilę.",
     "stopped_working": "Nie wysłano. Kontrola wymagana przez Twoją organizację przestała działać. Odśwież stronę. Jeśli to nie pomoże, zgłoś to administratorowi."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Cofnij wysyłkę",
+      "description": "Daje kilka sekund na wycofanie wiadomości po naciśnięciu Wyślij."
+    }
+  },
   "plugin_list": {
     "filters": "Filtry",
     "remove_filter": "Usuń filtr {label}"

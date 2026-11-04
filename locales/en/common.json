@@ -6384,6 +6384,12 @@
     "not_running": "Not sent. A check your organisation requires isn't running. Try again in a moment.",
     "stopped_working": "Not sent. A check your organisation requires has stopped working. Reload the page. If that doesn't help, tell your administrator."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Undo send",
+      "description": "Gives you a few seconds to take a message back after you press Send."
+    }
+  },
   "plugin_list": {
     "filters": "Filters",
     "remove_filter": "Remove filter {label}"

@@ -6396,6 +6396,12 @@
     "not_running": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu hiện không chạy. Hãy thử lại sau giây lát.",
     "stopped_working": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu đã ngừng hoạt động. Hãy tải lại trang. Nếu vẫn không được, hãy báo cho quản trị viên."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Hoàn tác gửi",
+      "description": "Cho bạn vài giây để lấy lại thư sau khi nhấn Gửi."
+    }
+  },
   "plugin_list": {
     "filters": "Bộ lọc",
     "remove_filter": "Xóa bộ lọc {label}"

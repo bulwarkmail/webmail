@@ -6384,6 +6384,12 @@
     "not_running": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim şu anda çalışmıyor. Biraz sonra yeniden deneyin.",
     "stopped_working": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim çalışmayı durdurdu. Sayfayı yeniden yükleyin. İşe yaramazsa yöneticinize bildirin."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Göndermeyi geri al",
+      "description": "Gönder'e bastıktan sonra iletiyi geri almanız için birkaç saniye verir."
+    }
+  },
   "plugin_list": {
     "filters": "Filtreler",
     "remove_filter": "{label} filtresini kaldır"

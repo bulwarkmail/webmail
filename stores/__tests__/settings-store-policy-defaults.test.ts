@@ -87,7 +87,7 @@ describe('admin policy defaults (#1248)', () => {
     expect('notASetting' in settings()).toBe(false);
     expect(settings().showSharedMailAccounts).toBe(true);
     expect(settings().emailsPerPage).toBe(50);
-    expect(settings().sendDelaySeconds).toBe(0);
+    expect(settings().sendDelaySeconds).toBe(5);
   });
 
   it('respects the allowed values of a restriction', () => {

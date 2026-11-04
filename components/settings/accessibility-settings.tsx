@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useSettingsStore } from '@/stores/settings-store';
+import { useSettingsStore, undoSendOptions } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, RadioGroup, Select, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,7 @@ export function AccessibilitySettings() {
   const t = useTranslations('settings.accessibility');
   const tRoot = useTranslations();
   const tEmail = useTranslations('settings.email_behavior');
+  const tWords = useTranslations('compose_words');
   const tAppearance = useTranslations('settings.appearance');
   const tNotifications = useTranslations('settings.notifications');
   const tCalendar = useTranslations('calendar.settings');
@@ -514,16 +515,14 @@ export function AccessibilitySettings() {
             options={toastOptions}
           />
         </SettingItem>
-        <SettingItem label={tEmail('send_delay.label')} description={tEmail('send_delay.description')}>
+        <SettingItem label={tWords('undo_send.label')} description={tWords('undo_send.description')}>
           <Select
             value={String(settings.sendDelaySeconds)}
             onChange={(value) => set('sendDelaySeconds', Number(value) as SendDelaySeconds)}
-            options={[
-              { value: '0', label: tEmail('send_delay.off') },
-              { value: '10', label: tEmail('send_delay.seconds', { seconds: 10 }) },
-              { value: '30', label: tEmail('send_delay.seconds', { seconds: 30 }) },
-              { value: '60', label: tEmail('send_delay.seconds', { seconds: 60 }) },
-            ]}
+            options={undoSendOptions(settings.sendDelaySeconds).map((seconds) => ({
+              value: String(seconds),
+              label: seconds === 0 ? tEmail('send_delay.off') : tEmail('send_delay.seconds', { seconds }),
+            }))}
           />
         </SettingItem>
         {!isSettingHidden('sendConfirmation') && (

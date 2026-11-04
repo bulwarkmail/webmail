@@ -6384,6 +6384,12 @@
     "not_running": "未发送。你的组织要求的一项检查当前未运行。请稍后再试。",
     "stopped_working": "未发送。你的组织要求的一项检查已停止工作。请重新加载页面。如果仍不行，请告诉管理员。"
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "撤销发送",
+      "description": "点击发送后，给您几秒钟时间撤回邮件。"
+    }
+  },
   "plugin_list": {
     "filters": "筛选",
     "remove_filter": "移除筛选条件 {label}"

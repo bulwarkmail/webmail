@@ -6384,6 +6384,12 @@
     "not_running": "未傳送。貴組織要求的一項檢查目前未執行。請稍後再試。",
     "stopped_working": "未傳送。貴組織要求的一項檢查已停止運作。請重新載入頁面。如果仍無法解決，請告知管理員。"
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "取消傳送",
+      "description": "按下傳送後，給您幾秒鐘撤回郵件。"
+    }
+  },
   "plugin_list": {
     "filters": "篩選",
     "remove_filter": "移除篩選條件 {label}"

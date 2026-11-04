@@ -281,12 +281,12 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('signatureNewMailEnabled', 'composing', `${EB}signature_new_mail.label`),
   bool('signatureReplyForwardEnabled', 'composing', `${EB}signature_reply_forward.label`),
   bool('signatureSeparatorEnabled', 'composing', `${EB}signature_separator.label`),
-  // 10/30/60 read "{seconds} seconds" (send_delay.seconds): formatted.
-  choice('sendDelaySeconds', 'composing', `${EB}send_delay.label`, [
+  // 5/10/30 read "{seconds} seconds" (send_delay.seconds): formatted.
+  choice('sendDelaySeconds', 'composing', 'compose_words.undo_send.label', [
     { value: 0, label: `${EB}send_delay.off` },
+    { value: 5, label: null },
     { value: 10, label: null },
     { value: 30, label: null },
-    { value: 60, label: null },
   ]),
   bool('sendConfirmation', 'accessibility', `${A}confirm_send.label`),
   bool('attachmentReminderEnabled', 'composing', `${EB}attachment_reminder.label`),

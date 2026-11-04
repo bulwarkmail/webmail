@@ -6384,6 +6384,12 @@
     "not_running": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude pašlaik nedarbojas. Mēģiniet vēlreiz pēc brīža.",
     "stopped_working": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude vairs nedarbojas. Pārlādējiet lapu. Ja tas nepalīdz, sazinieties ar administratoru."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Atsaukt sūtīšanu",
+      "description": "Dod jums dažas sekundes, lai pēc Sūtīt nospiešanas paņemtu ziņojumu atpakaļ."
+    }
+  },
   "plugin_list": {
     "filters": "Filtri",
     "remove_filter": "Noņemt filtru {label}"

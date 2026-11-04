@@ -6384,6 +6384,12 @@
     "not_running": "Não enviado. Uma verificação exigida pela sua organização não está em execução. Tente novamente daqui a pouco.",
     "stopped_working": "Não enviado. Uma verificação exigida pela sua organização deixou de funcionar. Recarregue a página. Se não resolver, avise o administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Desfazer envio",
+      "description": "Dá alguns segundos para você recuperar uma mensagem depois de clicar em Enviar."
+    }
+  },
   "plugin_list": {
     "filters": "Filtros",
     "remove_filter": "Remover o filtro {label}"

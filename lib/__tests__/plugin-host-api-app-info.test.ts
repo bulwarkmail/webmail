@@ -57,8 +57,8 @@ describe('api.app.searchSettings', () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].pageId).toBe('composing');
     expect(results[0].page).toBe('Verfassen');
-    const de = (await import('@/locales/de/common.json')).default as unknown as { settings: { email_behavior: { send_delay: { label: string } } } };
-    expect(results.map((r) => r.label)).toContain(de.settings.email_behavior.send_delay.label);
+    const de = (await import('@/locales/de/common.json')).default as unknown as { compose_words: { undo_send: { label: string } } };
+    expect(results.map((r) => r.label)).toContain(de.compose_words.undo_send.label);
   });
 
   it('leaves out pages the server does not offer', async () => {

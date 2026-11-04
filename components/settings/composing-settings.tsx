@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSettingsStore } from '@/stores/settings-store';
+import { useSettingsStore, undoSendOptions } from '@/stores/settings-store';
 import type { MentionAddsRecipientTo, ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
@@ -20,6 +20,7 @@ import { X, ChevronRight } from '@/components/icons';
 export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.composing_page');
+  const tWords = useTranslations('compose_words');
   const templatesEnabled = usePolicyStore((s) => s.isFeatureEnabled('templatesEnabled'));
   // The admin panel can lock or hide these three (restriction-keys.ts).
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
@@ -158,17 +159,15 @@ export function ComposingSettings() {
       </SettingsSection>
 
       <SettingsSection id="sending" title={tPage('sections.sending')}>
-        <SettingItem label={t('send_delay.label')} description={t('send_delay.description')}>
+        <SettingItem label={tWords('undo_send.label')} description={tWords('undo_send.description')}>
           <div className="flex flex-col items-end gap-1">
             <Select
               value={String(sendDelaySeconds)}
               onChange={(value) => updateSetting('sendDelaySeconds', Number(value) as SendDelaySeconds)}
-              options={[
-                { value: '0', label: t('send_delay.off') },
-                { value: '10', label: t('send_delay.seconds', { seconds: 10 }) },
-                { value: '30', label: t('send_delay.seconds', { seconds: 30 }) },
-                { value: '60', label: t('send_delay.seconds', { seconds: 60 }) },
-              ]}
+              options={undoSendOptions(sendDelaySeconds).map((seconds) => ({
+                value: String(seconds),
+                label: seconds === 0 ? t('send_delay.off') : t('send_delay.seconds', { seconds }),
+              }))}
             />
             {sendDelaySeconds > 0 && !delayedSendSupported && (
               <p className="max-w-64 text-end text-xs text-amber-600 dark:text-amber-400">{t('send_delay.unsupported')}</p>

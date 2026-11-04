@@ -6384,6 +6384,12 @@
     "not_running": "Ei saadetud. Teie organisatsiooni nõutud kontroll praegu ei tööta. Proovige hetke pärast uuesti.",
     "stopped_working": "Ei saadetud. Teie organisatsiooni nõutud kontroll ei tööta enam. Laadige leht uuesti. Kui see ei aita, teatage administraatorile."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Saatmise tühistamine",
+      "description": "Annab sulle pärast Saada vajutamist mõne sekundi, et kiri tagasi võtta."
+    }
+  },
   "plugin_list": {
     "filters": "Filtrid",
     "remove_filter": "Eemalda filter {label}"

@@ -40,7 +40,7 @@ describe('settings search index (English messages)', () => {
     expect(labelsFor('message_list')).toContain('Sender favicons');
     expect(labelsFor('message_list')).toContain('Clear search when switching folders');
     expect(labelsFor('reading')).toContain('Trusted senders');
-    expect(labelsFor('composing')).toContain('Undo send / send delay');
+    expect(labelsFor('composing')).toContain('Undo send');
     expect(labelsFor('general')).toContain('Time zone');
     expect(labelsFor('organize')).toContain('Nested tags');
   });
@@ -80,7 +80,7 @@ describe('settings search index (English messages)', () => {
   it('finds the newer signature settings on their tabs', () => {
     expect(labelsFor('composing')).toContain('Signature on new mail');
     expect(labelsFor('composing')).toContain('Signature on replies & forwards');
-    expect(labelsFor('composing')).toContain('Undo send / send delay');
+    expect(labelsFor('composing')).toContain('Undo send');
   });
 
   it('marks the rows the Advanced switch hides', () => {

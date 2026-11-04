@@ -6384,6 +6384,12 @@
     "not_running": "Niet verzonden. Een controle die je organisatie verplicht stelt, draait niet. Probeer het zo meteen opnieuw.",
     "stopped_working": "Niet verzonden. Een controle die je organisatie verplicht stelt, werkt niet meer. Laad de pagina opnieuw. Helpt dat niet, meld het dan bij je beheerder."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Verzenden ongedaan maken",
+      "description": "Geeft je een paar seconden om een bericht terug te halen nadat je op Verzenden hebt gedrukt."
+    }
+  },
   "plugin_list": {
     "filters": "Filters",
     "remove_filter": "Filter {label} verwijderen"

@@ -6384,6 +6384,12 @@
     "not_running": "Nicht gesendet. Eine Prüfung, die Ihre Organisation vorschreibt, läuft gerade nicht. Versuchen Sie es gleich noch einmal.",
     "stopped_working": "Nicht gesendet. Eine Prüfung, die Ihre Organisation vorschreibt, funktioniert nicht mehr. Laden Sie die Seite neu. Wenn das nicht hilft, wenden Sie sich an Ihre Administration."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Senden rückgängig machen",
+      "description": "Gibt Ihnen ein paar Sekunden, um eine Nachricht nach dem Klick auf Senden zurückzuholen."
+    }
+  },
   "plugin_list": {
     "filters": "Filter",
     "remove_filter": "Filter {label} entfernen"

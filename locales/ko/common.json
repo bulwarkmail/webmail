@@ -6384,6 +6384,12 @@
     "not_running": "보내지 않았습니다. 조직에서 요구하는 검사가 실행되고 있지 않습니다. 잠시 후 다시 시도하세요.",
     "stopped_working": "보내지 않았습니다. 조직에서 요구하는 검사가 작동을 멈췄습니다. 페이지를 새로 고치세요. 그래도 안 되면 관리자에게 알리세요."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "보내기 취소",
+      "description": "보내기를 누른 후 몇 초 동안 메시지를 되돌릴 수 있습니다."
+    }
+  },
   "plugin_list": {
     "filters": "필터",
     "remove_filter": "{label} 필터 제거"

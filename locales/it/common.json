@@ -6384,6 +6384,12 @@
     "not_running": "Non inviato. Un controllo richiesto dalla tua organizzazione non è attivo. Riprova tra un momento.",
     "stopped_working": "Non inviato. Un controllo richiesto dalla tua organizzazione ha smesso di funzionare. Ricarica la pagina. Se non basta, avvisa l'amministratore."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Annulla invio",
+      "description": "Ti dà qualche secondo per riprendere un messaggio dopo aver premuto Invia."
+    }
+  },
   "plugin_list": {
     "filters": "Filtri",
     "remove_filter": "Rimuovi il filtro {label}"

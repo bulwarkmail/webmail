@@ -6384,6 +6384,12 @@
     "not_running": "Neodoslané. Kontrola, ktorú vyžaduje vaša organizácia, práve nebeží. Skúste to o chvíľu znova.",
     "stopped_working": "Neodoslané. Kontrola, ktorú vyžaduje vaša organizácia, prestala fungovať. Načítajte stránku znova. Ak to nepomôže, obráťte sa na správcu."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Vrátiť odoslanie",
+      "description": "Dáva vám niekoľko sekúnd na to, aby ste správu po stlačení Odoslať vzali späť."
+    }
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Odstrániť filter {label}"

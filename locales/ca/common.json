@@ -6384,6 +6384,12 @@
     "not_running": "No s'ha enviat. Una comprovació que exigeix la vostra organització no s'està executant. Torneu-ho a provar d'aquí a un moment.",
     "stopped_working": "No s'ha enviat. Una comprovació que exigeix la vostra organització ha deixat de funcionar. Torneu a carregar la pàgina. Si no ho soluciona, aviseu l'administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Desfés l'enviament",
+      "description": "Us dona uns segons per recuperar un missatge després de prémer Envia."
+    }
+  },
   "plugin_list": {
     "filters": "Filtres",
     "remove_filter": "Treu el filtre {label}"

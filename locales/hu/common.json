@@ -6384,6 +6384,12 @@
     "not_running": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés most nem fut. Próbálja újra egy pillanat múlva.",
     "stopped_working": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés leállt. Töltse be újra az oldalt. Ha ez nem segít, szóljon a rendszergazdának."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Küldés visszavonása",
+      "description": "A Küldés megnyomása után néhány másodpercet ad az üzenet visszavonására."
+    }
+  },
   "plugin_list": {
     "filters": "Szűrők",
     "remove_filter": "{label} szűrő eltávolítása"

@@ -6384,6 +6384,12 @@
     "not_running": "Ikke sendt. En kontroll organisasjonen din krever, kjører ikke. Prøv igjen om et øyeblikk.",
     "stopped_working": "Ikke sendt. En kontroll organisasjonen din krever, har sluttet å virke. Last inn siden på nytt. Hvis det ikke hjelper, si fra til administratoren."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Angre sending",
+      "description": "Gir deg noen sekunder til å ta tilbake en melding etter at du har trykket Send."
+    }
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Fjern filteret {label}"

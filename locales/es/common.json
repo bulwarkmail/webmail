@@ -6384,6 +6384,12 @@
     "not_running": "No enviado. Una comprobación que exige tu organización no está en marcha. Vuelve a intentarlo en un momento.",
     "stopped_working": "No enviado. Una comprobación que exige tu organización ha dejado de funcionar. Vuelve a cargar la página. Si no se soluciona, avisa al administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Deshacer envío",
+      "description": "Le da unos segundos para recuperar un mensaje después de pulsar Enviar."
+    }
+  },
   "plugin_list": {
     "filters": "Filtros",
     "remove_filter": "Quitar el filtro {label}"
