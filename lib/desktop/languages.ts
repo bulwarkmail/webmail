@@ -146,6 +146,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     trayNewMessage: t('email_composer.new_message'),
     trayLockNow: t('appLock.lock_now'),
     menuLockNow: t('appLock.lock_now'),
+    menuUnlock: t('appLock.unlock'),
     trayUnread: t('email_list.sections.unread'),
     trayPause: t('desktopMenuBar.tray_pause'),
     trayPauseHour: t('desktopMenuBar.tray_pause_hour'),
