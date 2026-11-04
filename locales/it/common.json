@@ -6810,6 +6810,9 @@
       "close": "Chiudi"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Cerca «{text}» nella posta"
+  },
   "appLock": {
     "section_title": "Blocco dell'app",
     "section_desc": "Chiede un PIN dopo un periodo senza utilizzo, in ogni finestra e scheda. Finché è bloccata, la posta su questo dispositivo resta cifrata e l'app non ha la chiave.",

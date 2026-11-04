@@ -6810,6 +6810,9 @@
       "close": "关闭"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "在邮件中搜索“{text}”"
+  },
   "appLock": {
     "section_title": "应用锁",
     "section_desc": "一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,此设备上的邮件保持加密,应用没有密钥。",

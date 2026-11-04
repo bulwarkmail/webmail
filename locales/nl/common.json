@@ -6810,6 +6810,9 @@
       "close": "Sluit"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Zoek ‘{text}’ in e-mail"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt na een tijd zonder gebruik om een pincode, in elk venster en tabblad. Zolang de app vergrendeld is, blijft de mail op dit apparaat versleuteld en heeft de app er geen sleutel voor.",

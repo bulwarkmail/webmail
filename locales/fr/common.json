@@ -6810,6 +6810,9 @@
       "close": "Fermer"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Rechercher « {text} » dans les messages"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que l'app est verrouillée, les e-mails sur cet appareil restent chiffrés et l'app n'a pas de clé pour les lire.",

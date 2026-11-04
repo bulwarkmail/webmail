@@ -6810,6 +6810,9 @@
       "close": "Zavřít"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Hledat v poště „{text}“"
+  },
   "appLock": {
     "section_title": "Zámek aplikace",
     "section_desc": "Po čase bez použití žádá o PIN, v každém okně a na každé kartě. Dokud je zamčeno, zůstává pošta na tomto zařízení zašifrovaná a aplikace k ní nemá klíč.",

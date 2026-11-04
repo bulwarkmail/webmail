@@ -6810,6 +6810,9 @@
       "close": "Lukk"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Søk etter «{text}» i e-post"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, forblir e-post på denne enheten kryptert, og appen har ingen nøkkel til den.",

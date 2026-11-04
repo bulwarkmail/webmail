@@ -6810,6 +6810,9 @@
       "close": "Zamknij"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Szukaj „{text}” w poczcie"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po czasie bezczynności, w każdym oknie i na każdej karcie. Gdy aplikacja jest zablokowana, poczta na tym urządzeniu pozostaje zaszyfrowana, a aplikacja nie ma do niej klucza.",

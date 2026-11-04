@@ -220,6 +220,42 @@ describe('DesktopHost', () => {
     });
   });
 
+  // mail-25: "Search mail for '…'" on selected text in the native menu.
+  describe('Search mail for selected text', () => {
+    const searchFor = (text: string) => `mail.searchText:${JSON.stringify(text)}`;
+
+    it('runs on the mail page', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      const heard: unknown[] = [];
+      const listen = (e: Event) => { e.preventDefault(); heard.push((e as CustomEvent).detail); };
+      window.addEventListener('bulwark:mail-search', listen);
+      try {
+        shell.run(searchFor('  quarterly report \n'));
+      } finally {
+        window.removeEventListener('bulwark:mail-search', listen);
+      }
+      expect(heard).toEqual([{ text: 'quarterly report' }]);
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it('goes to Mail first from another app', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      shell.run(searchFor('report'));
+      expect(push).toHaveBeenCalledWith('/');
+    });
+
+    it('is on offer to the shell when signed in, with its label in the interface language', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+      expect(shell.setState.mock.lastCall![0]).toMatchObject({ 'mail.searchText': true });
+      await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
+      expect(shell.setLanguages.mock.lastCall![0].labels.contextSearchMail).toBe('desktop_mail.context_search_mail');
+    });
+  });
+
   it('hands the shell its menus in the interface language', async () => {
     const shell = fakeBridge();
     act(() => useLocaleStore.setState({ locale: 'fr' }));

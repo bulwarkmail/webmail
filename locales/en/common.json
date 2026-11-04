@@ -6810,6 +6810,9 @@
       "close": "Close"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Search mail for \"{text}\""
+  },
   "appLock": {
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, mail on this device stays encrypted and the app has no key for it.",

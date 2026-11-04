@@ -6810,6 +6810,9 @@
       "close": "Bezárás"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "„{text}” keresése a levelek között"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
     "section_desc": "Használat nélküli idő után PIN-kódot kér, minden ablakban és lapon. Amíg zárolva van, az eszközön lévő levelek titkosítva maradnak, és az alkalmazásnak nincs hozzájuk kulcsa.",

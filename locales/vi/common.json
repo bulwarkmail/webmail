@@ -6822,6 +6822,9 @@
       "close": "Đóng"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Tìm “{text}” trong thư"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và thẻ. Khi đang khóa, thư trên thiết bị này vẫn được mã hóa và ứng dụng không có khóa của chúng.",
