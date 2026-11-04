@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Atvērt Sieve redaktoru",
       "fetch_error": "Neizdevās ielādēt filtrus",
       "expanded_view": "Izvērstais skats",
+      "show_rule_details": "Rādīt katra noteikuma nosacījumus un darbības",
       "expanded_view_description": "Rādīt filtra noteikumus ar detalizētiem nosacījumiem un darbībām",
       "if": "Ja",
       "then": "Tad",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "Norādiet laika posma sākuma vai beigu datumu",
       "validation_period_invalid": "Norādiet laika posmam derīgu datumu ar laiku vai atstājiet lauku tukšu",
       "apply_existing_period": "Noteikums ar laika posmu darbojas tikai ar ziņojumiem, kas pienāk šajā posmā, tāpēc to nevar lietot esošajiem ziņojumiem.",
+      "apply_existing_in": "Piemērot arī vēstulēm, kas jau ir mapē {folder}",
+      "apply_existing_count": "{count, plural, zero {Piemērot arī # vēstulēm, kas jau ir mapē {folder}} one {Piemērot arī # vēstulei, kas jau ir mapē {folder}} other {Piemērot arī # vēstulēm, kas jau ir mapē {folder}}}",
+      "apply_existing_none": "Mapē {folder} vēl nav nevienas vēstules, kas atbilst šim noteikumam.",
       "period_status_scheduled": "ieplānots",
       "period_status_active": "aktīvs",
       "period_status_expired": "beidzies"

@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "باز کردن ویرایشگر خام Sieve",
       "fetch_error": "بارگذاری فیلترها ناموفق بود",
       "expanded_view": "نمای گسترده",
+      "show_rule_details": "نمایش شرط‌ها و کارهای هر قانون",
       "expanded_view_description": "نمایش قوانین فیلتر با بلوک‌های شرط و عملیات جزئی",
       "if": "اگر",
       "then": "آنگاه",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "تاریخ شروع یا پایان بازه را وارد کنید",
       "validation_period_invalid": "برای بازه یک تاریخ معتبر همراه با ساعت وارد کنید یا فیلد را خالی بگذارید",
       "apply_existing_period": "قانونی که بازه زمانی دارد فقط روی پیام‌هایی عمل می‌کند که در آن بازه می‌رسند، بنابراین روی پیام‌های موجود اجرا نمی‌شود.",
+      "apply_existing_in": "روی پیام‌هایی هم که الان در {folder} هستند اعمال شود",
+      "apply_existing_count": "{count, plural, one {روی # پیامی هم که الان در {folder} است اعمال شود} other {روی # پیامی هم که الان در {folder} هستند اعمال شود}}",
+      "apply_existing_none": "هنوز هیچ پیامی در {folder} با این قانون جور نیست.",
       "period_status_scheduled": "زمان‌بندی‌شده",
       "period_status_active": "فعال",
       "period_status_expired": "منقضی‌شده"

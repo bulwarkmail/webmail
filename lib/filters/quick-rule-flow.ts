@@ -214,30 +214,6 @@ async function applyAndReport(
 }
 
 /**
- * After a rule was saved in Settings › Filters: when it would change mail
- * already in `mailboxId` (the Inbox), say how much and offer to apply it
- * there. Nothing is said when it would change nothing or can't be checked.
- */
-export async function offerRuleOnFolder(
-  target: QuickRuleTarget,
-  rule: FilterRule,
-  mailboxId: string,
-  text: QuickRuleText,
-  applyLabel: (count: number) => string,
-): Promise<void> {
-  const plan = await planSafely(target, rule, mailboxId);
-  if (plan.ids.length === 0) return;
-  toast.success(text.notifications('rule_created'), {
-    message: rule.name,
-    duration: SAVED_TOAST_MS,
-    action: {
-      label: applyLabel(plan.ids.length),
-      onClick: () => { void applyAndReport(target, rule, mailboxId, text); },
-    },
-  });
-}
-
-/**
  * Run a saved rule over the mail already in a folder, from the folder's
  * context menu. A progress toast stays up while the server is asked which
  * messages match and the changes are made.

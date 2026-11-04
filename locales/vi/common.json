@@ -2925,6 +2925,7 @@
       "open_sieve_editor": "Mở trình chỉnh sửa mã Sieve",
       "fetch_error": "Không thể tải bộ lọc",
       "expanded_view": "Chế độ xem mở rộng",
+      "show_rule_details": "Hiện điều kiện và hành động của từng quy tắc",
       "expanded_view_description": "Hiển thị quy tắc lọc với các khối hành động và điều kiện chi tiết",
       "if": "Nếu",
       "then": "Sau đó",
@@ -3003,6 +3004,9 @@
       "validation_period_empty": "Nhập ngày bắt đầu hoặc ngày kết thúc cho khoảng thời gian",
       "validation_period_invalid": "Nhập ngày hợp lệ cùng với thời gian trong khoảng thời gian hoặc để trống trường",
       "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó, nên không thể chạy trên các thư hiện có.",
+      "apply_existing_in": "Áp dụng cả cho các thư đã có trong {folder}",
+      "apply_existing_count": "{count, plural, other {Áp dụng cả cho # thư đã có trong {folder}}}",
+      "apply_existing_none": "Chưa có thư nào trong {folder} khớp với quy tắc này.",
       "period_status_scheduled": "Theo lịch trình",
       "period_status_active": "Hoạt động",
       "period_status_expired": "Hết hạn"

@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "開啟原始 Sieve 編輯器",
       "fetch_error": "無法載入篩選規則",
       "expanded_view": "展開檢視",
+      "show_rule_details": "顯示每條規則的條件和動作",
       "expanded_view_description": "顯示包含詳細條件與動作區塊的篩選規則",
       "if": "如果",
       "then": "然後",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "請輸入期間的開始日期或結束日期",
       "validation_period_invalid": "請為期間輸入含時間的有效日期，或將該欄位留空",
       "apply_existing_period": "設定了期間的規則只作用於在該期間內收到的郵件，因此無法套用到既有郵件。",
+      "apply_existing_in": "同時套用到{folder}中既有的郵件",
+      "apply_existing_count": "{count, plural, other {同時套用到{folder}中既有的 # 封郵件}}",
+      "apply_existing_none": "{folder}中還沒有符合此規則的郵件。",
       "period_status_scheduled": "尚未開始",
       "period_status_active": "生效中",
       "period_status_expired": "已過期"

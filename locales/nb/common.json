@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Åpne redigereren for Sieve-kode",
       "fetch_error": "Kunne ikke laste inn filtre",
       "expanded_view": "Utvidet visning",
+      "show_rule_details": "Vis betingelsene og handlingene for hver regel",
       "expanded_view_description": "Vis filterregler med detaljerte blokker for vilkår og handlinger",
       "if": "Hvis",
       "then": "Gjør følgende",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Angi en start- eller sluttdato for perioden",
       "validation_period_invalid": "Angi en gyldig dato med klokkeslett for perioden, eller la feltet stå tomt",
       "apply_existing_period": "En regel med periode virker bare på meldinger som kommer i perioden, og kan derfor ikke brukes på eksisterende meldinger.",
+      "apply_existing_in": "Bruk også på meldingene som allerede er i {folder}",
+      "apply_existing_count": "{count, plural, one {Bruk også på den # meldingen som allerede er i {folder}} other {Bruk også på de # meldingene som allerede er i {folder}}}",
+      "apply_existing_none": "Ingen meldinger i {folder} passer med regelen ennå.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
       "period_status_expired": "utløpt"

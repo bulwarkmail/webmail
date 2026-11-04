@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "فتح محرر Sieve الخام",
       "fetch_error": "فشل تحميل المرشحات",
       "expanded_view": "عرض موسّع",
+      "show_rule_details": "عرض شروط كل قاعدة وإجراءاتها",
       "expanded_view_description": "إظهار قواعد المرشح مع كتل الشروط والإجراءات المفصّلة",
       "if": "إذا",
       "then": "عندئذٍ",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "أدخل تاريخ بدء أو انتهاء للفترة",
       "validation_period_invalid": "أدخل تاريخًا صالحًا مع الوقت للفترة، أو اترك الحقل فارغًا",
       "apply_existing_period": "القاعدة ذات الفترة الزمنية تعمل فقط على الرسائل التي تصل خلالها، لذا لا يمكن تطبيقها على الرسائل الموجودة.",
+      "apply_existing_in": "طبّقها أيضًا على الرسائل الموجودة في {folder}",
+      "apply_existing_count": "{count, plural, zero {طبّقها أيضًا على الرسائل الموجودة في {folder}} one {طبّقها أيضًا على الرسالة الموجودة في {folder}} two {طبّقها أيضًا على الرسالتين الموجودتين في {folder}} few {طبّقها أيضًا على # رسائل موجودة في {folder}} many {طبّقها أيضًا على # رسالة موجودة في {folder}} other {طبّقها أيضًا على # رسالة موجودة في {folder}}}",
+      "apply_existing_none": "لا توجد رسالة في {folder} تطابق هذه القاعدة بعد.",
       "period_status_scheduled": "مجدولة",
       "period_status_active": "نشطة",
       "period_status_expired": "منتهية"

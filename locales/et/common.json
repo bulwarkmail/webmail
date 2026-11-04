@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Ava Sieve lähtekoodi redaktor",
       "fetch_error": "Filtrite laadimine ebaõnnestus",
       "expanded_view": "Laiendatud vaade",
+      "show_rule_details": "Näita iga reegli tingimusi ja toiminguid",
       "expanded_view_description": "Näita filtrireegleid koos üksikasjalike tingimuste ja tegevuste plokkidega",
       "if": "Kui",
       "then": "Siis",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Sisesta ajavahemiku algus- või lõppkuupäev",
       "validation_period_invalid": "Sisesta ajavahemiku jaoks kehtiv kuupäev koos kellaajaga või jäta väli tühjaks",
       "apply_existing_period": "Ajavahemikuga reegel toimib ainult kirjadele, mis saabuvad selle jooksul, seega ei saa seda olemasolevatele kirjadele rakendada.",
+      "apply_existing_in": "Rakenda ka kirjadele, mis on juba kaustas {folder}",
+      "apply_existing_count": "{count, plural, one {Rakenda ka # kirjale, mis on juba kaustas {folder}} other {Rakenda ka # kirjale, mis on juba kaustas {folder}}}",
+      "apply_existing_none": "Kaustas {folder} pole veel ühtegi kirja, mis selle reegliga sobiks.",
       "period_status_scheduled": "ajastatud",
       "period_status_active": "aktiivne",
       "period_status_expired": "aegunud"

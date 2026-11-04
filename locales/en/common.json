@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Open raw Sieve editor",
       "fetch_error": "Couldn't load the filters",
       "expanded_view": "Expanded view",
+      "show_rule_details": "Show each rule’s conditions and actions",
       "expanded_view_description": "Show filter rules with detailed condition and action blocks",
       "if": "If",
       "then": "Then",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Enter a start or end date for the period",
       "validation_period_invalid": "Enter a valid date with a time for the period, or leave the field empty",
       "apply_existing_period": "A rule with a period acts only on messages that arrive within it, so it cannot run on existing messages.",
+      "apply_existing_in": "Also apply to the messages already in {folder}",
+      "apply_existing_count": "{count, plural, one {Also apply to the # message already in {folder}} other {Also apply to the # messages already in {folder}}}",
+      "apply_existing_none": "No message in {folder} matches this rule yet.",
       "period_status_scheduled": "scheduled",
       "period_status_active": "active",
       "period_status_expired": "expired"

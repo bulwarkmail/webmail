@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Sieve-Skript-Editor öffnen",
       "fetch_error": "Filter konnten nicht geladen werden",
       "expanded_view": "Erweiterte Ansicht",
+      "show_rule_details": "Bedingungen und Aktionen jeder Regel anzeigen",
       "expanded_view_description": "Filterregeln mit detaillierten Bedingungs- und Aktionsblöcken anzeigen",
       "if": "Wenn",
       "then": "Dann",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "Bitte ein Start- oder Enddatum für den Zeitraum angeben",
       "validation_period_invalid": "Bitte für den Zeitraum ein gültiges Datum mit Uhrzeit angeben oder das Feld leer lassen",
       "apply_existing_period": "Eine Regel mit Zeitraum wirkt nur auf Nachrichten, die in diesem Zeitraum eintreffen, und lässt sich daher nicht auf vorhandene Nachrichten anwenden.",
+      "apply_existing_in": "Auch auf die Nachrichten anwenden, die schon in {folder} sind",
+      "apply_existing_count": "{count, plural, one {Auch auf die # Nachricht anwenden, die schon in {folder} ist} other {Auch auf die # Nachrichten anwenden, die schon in {folder} sind}}",
+      "apply_existing_none": "Noch keine Nachricht in {folder} passt zu dieser Regel.",
       "period_status_scheduled": "geplant",
       "period_status_active": "aktiv",
       "period_status_expired": "abgelaufen"

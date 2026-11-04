@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Sieveスクリプトエディタを開く",
       "fetch_error": "フィルターの読み込みに失敗しました",
       "expanded_view": "詳細表示",
+      "show_rule_details": "各ルールの条件と動作を表示",
       "expanded_view_description": "フィルタールールを条件とアクションのブロックで表示",
       "if": "条件",
       "then": "実行",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "期間の開始日または終了日を入力してください",
       "validation_period_invalid": "期間には時刻付きの有効な日付を入力するか、欄を空のままにしてください",
       "apply_existing_period": "期間付きのルールは期間内に届いたメッセージにのみ適用されるため、既存のメッセージには適用できません。",
+      "apply_existing_in": "{folder} にあるメッセージにも適用する",
+      "apply_existing_count": "{count, plural, other {{folder} にある # 件にも適用する}}",
+      "apply_existing_none": "{folder} にこのルールに合うメッセージはまだありません。",
       "period_status_scheduled": "予定",
       "period_status_active": "有効",
       "period_status_expired": "期限切れ"

@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Abrir editor Sieve",
       "fetch_error": "Error al cargar los filtros",
       "expanded_view": "Vista expandida",
+      "show_rule_details": "Mostrar las condiciones y acciones de cada regla",
       "expanded_view_description": "Mostrar reglas de filtro con bloques detallados de condiciones y acciones",
       "if": "Si",
       "then": "Entonces",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "Introduce una fecha de inicio o de fin para el período",
       "validation_period_invalid": "Introduce una fecha válida con hora para el período o deja el campo vacío",
       "apply_existing_period": "Una regla con período solo actúa sobre los mensajes que llegan dentro de él, por lo que no se puede aplicar a los mensajes existentes.",
+      "apply_existing_in": "Aplicar también a los mensajes que ya están en {folder}",
+      "apply_existing_count": "{count, plural, one {Aplicar también al # mensaje que ya está en {folder}} other {Aplicar también a los # mensajes que ya están en {folder}}}",
+      "apply_existing_none": "Ningún mensaje de {folder} coincide todavía con esta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
       "period_status_expired": "caducada"

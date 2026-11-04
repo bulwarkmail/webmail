@@ -2909,6 +2909,7 @@
       "open_sieve_editor": "Nyers Sieve szerkesztő megnyitása",
       "fetch_error": "Nem sikerült betölteni a szűrőket",
       "expanded_view": "Részletes nézet",
+      "show_rule_details": "Minden szabály feltételeinek és műveleteinek megjelenítése",
       "expanded_view_description": "Szűrőszabályok megjelenítése részletes feltétel- és műveletblokkokkal",
       "if": "Ha",
       "then": "Akkor",
@@ -2987,6 +2988,9 @@
       "validation_period_empty": "Adjon meg kezdő vagy befejező dátumot az időszakhoz",
       "validation_period_invalid": "Adjon meg érvényes dátumot időponttal az időszakhoz, vagy hagyja üresen a mezőt",
       "apply_existing_period": "Az időszakhoz kötött szabály csak az abban érkező üzenetekre hat, ezért meglévő üzenetekre nem alkalmazható.",
+      "apply_existing_in": "Alkalmazás a már itt lévő üzenetekre is: {folder}",
+      "apply_existing_count": "{count, plural, one {Alkalmazás a már itt lévő # üzenetre is: {folder}} other {Alkalmazás a már itt lévő # üzenetre is: {folder}}}",
+      "apply_existing_none": "Itt még egy üzenet sem felel meg ennek a szabálynak: {folder}.",
       "period_status_scheduled": "ütemezett",
       "period_status_active": "aktív",
       "period_status_expired": "lejárt"

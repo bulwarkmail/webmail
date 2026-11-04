@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Deschideți editorul de fișiere Sieve în format brut",
       "fetch_error": "Nu s-au putut încărca filtrele",
       "expanded_view": "Vizualizare extinsă",
+      "show_rule_details": "Afișați condițiile și acțiunile fiecărei reguli",
       "expanded_view_description": "Afișați regulile de filtrare cu blocuri detaliate de condiții și acțiuni",
       "if": "Dacă",
       "then": "Apoi",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Introduceți o dată de începere sau de încheiere pentru perioadă",
       "validation_period_invalid": "Introduceți o dată validă cu oră pentru perioadă sau lăsați câmpul gol",
       "apply_existing_period": "O regulă cu perioadă acționează doar asupra mesajelor care sosesc în acea perioadă, deci nu poate fi aplicată mesajelor existente.",
+      "apply_existing_in": "Aplicați și mesajelor care sunt deja în {folder}",
+      "apply_existing_count": "{count, plural, one {Aplicați și # mesajului care este deja în {folder}} few {Aplicați și celor # mesaje care sunt deja în {folder}} other {Aplicați și celor # de mesaje care sunt deja în {folder}}}",
+      "apply_existing_none": "Niciun mesaj din {folder} nu se potrivește încă acestei reguli.",
       "period_status_scheduled": "programată",
       "period_status_active": "activă",
       "period_status_expired": "expirată"

@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Otevřít textový editor Sieve",
       "fetch_error": "Nepodařilo se načíst filtry",
       "expanded_view": "Rozšířené zobrazení",
+      "show_rule_details": "Zobrazit podmínky a akce každého pravidla",
       "expanded_view_description": "Zobrazovat pravidla filtrů s podrobnými bloky podmínek a akcí",
       "if": "Pokud",
       "then": "Pak",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "Zadejte datum zahájení nebo ukončení období",
       "validation_period_invalid": "Zadejte pro období platné datum včetně času, nebo pole nechte prázdné",
       "apply_existing_period": "Pravidlo s obdobím působí jen na zprávy, které v něm přijdou, a proto ho nelze použít na existující zprávy.",
+      "apply_existing_in": "Použít i na zprávy, které už jsou ve složce {folder}",
+      "apply_existing_count": "{count, plural, one {Použít i na # zprávu, která už je ve složce {folder}} few {Použít i na # zprávy, které už jsou ve složce {folder}} many {Použít i na # zprávy, které už jsou ve složce {folder}} other {Použít i na # zpráv, které už jsou ve složce {folder}}}",
+      "apply_existing_none": "Tomuto pravidlu zatím neodpovídá žádná zpráva ve složce {folder}.",
       "period_status_scheduled": "naplánováno",
       "period_status_active": "aktivní",
       "period_status_expired": "vypršelo"

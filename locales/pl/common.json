@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "Otwórz surowy edytor Sieve",
       "fetch_error": "Nie udało się załadować filtrów",
       "expanded_view": "Widok rozszerzony",
+      "show_rule_details": "Pokaż warunki i działania każdej reguły",
       "expanded_view_description": "Pokazuj reguły filtrów ze szczegółowymi blokami warunków i akcji",
       "if": "Jeśli",
       "then": "Wtedy",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "Podaj datę rozpoczęcia lub zakończenia okresu",
       "validation_period_invalid": "Podaj prawidłową datę z godziną dla okresu albo pozostaw pole puste",
       "apply_existing_period": "Reguła z okresem działa tylko na wiadomości, które przychodzą w tym okresie, dlatego nie można jej zastosować do istniejących wiadomości.",
+      "apply_existing_in": "Zastosuj też do wiadomości, które już są w folderze {folder}",
+      "apply_existing_count": "{count, plural, one {Zastosuj też do # wiadomości, która już jest w folderze {folder}} few {Zastosuj też do # wiadomości, które już są w folderze {folder}} many {Zastosuj też do # wiadomości, które już są w folderze {folder}} other {Zastosuj też do # wiadomości, które już są w folderze {folder}}}",
+      "apply_existing_none": "Żadna wiadomość w folderze {folder} nie pasuje jeszcze do tej reguły.",
       "period_status_scheduled": "zaplanowana",
       "period_status_active": "aktywna",
       "period_status_expired": "wygasła"

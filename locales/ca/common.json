@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Obre l'editor Sieve en brut",
       "fetch_error": "No s'han pogut carregar els filtres",
       "expanded_view": "Vista ampliada",
+      "show_rule_details": "Mostra les condicions i les accions de cada regla",
       "expanded_view_description": "Mostra les regles de filtre amb blocs detallats de condicions i accions",
       "if": "Si",
       "then": "Aleshores",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Introdueix una data d'inici o de finalització per al període",
       "validation_period_invalid": "Introdueix una data vàlida amb l'hora per al període, o deixa el camp buit",
       "apply_existing_period": "Una regla amb període només actua sobre els missatges que arriben dins d'aquest període, de manera que no es pot aplicar als missatges existents.",
+      "apply_existing_in": "Aplica-la també als missatges que ja són a {folder}",
+      "apply_existing_count": "{count, plural, one {Aplica-la també al # missatge que ja és a {folder}} other {Aplica-la també als # missatges que ja són a {folder}}}",
+      "apply_existing_none": "Encara cap missatge de {folder} no compleix aquesta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
       "period_status_expired": "caducada"

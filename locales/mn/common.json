@@ -2913,6 +2913,7 @@
       "open_sieve_editor": "Raw Sieve редакторыг нээнэ үү",
       "fetch_error": "Шүүлтүүрийг ачаалж чадсангүй",
       "expanded_view": "Өргөтгөсөн харах",
+      "show_rule_details": "Дүрэм бүрийн нөхцөл, үйлдлийг харуулах",
       "expanded_view_description": "Шүүлтүүрийн дүрмийг нарийвчилсан нөхцөл, үйлдлийн блокоор харуулах",
       "if": "Хэрэв",
       "then": "Дараа нь",
@@ -2991,6 +2992,9 @@
       "validation_period_empty": "Хугацааны эхлэх эсвэл төгсгөлийн огноог оруулна уу",
       "validation_period_invalid": "Хугацаанд цагтай хүчинтэй огноо оруулах эсвэл талбарыг хоосон үлдээнэ үү",
       "apply_existing_period": "Хугацаатай дүрэм зөвхөн тэр хугацаанд ирсэн мессежид үйлчилдэг тул одоо байгаа мессежид хэрэглэх боломжгүй.",
+      "apply_existing_in": "{folder} доторх байгаа захианд бас хэрэглэх",
+      "apply_existing_count": "{count, plural, one {{folder} доторх байгаа # захианд бас хэрэглэх} other {{folder} доторх байгаа # захианд бас хэрэглэх}}",
+      "apply_existing_none": "{folder} дотор энэ дүрэмд тохирох захиа одоогоор алга.",
       "period_status_scheduled": "төлөвлөсөн",
       "period_status_active": "идэвхтэй",
       "period_status_expired": "хугацаа дууссан"

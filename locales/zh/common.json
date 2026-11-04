@@ -2906,6 +2906,7 @@
       "open_sieve_editor": "打开原始 Sieve 编辑器",
       "fetch_error": "加载过滤器失败",
       "expanded_view": "展开视图",
+      "show_rule_details": "显示每条规则的条件和操作",
       "expanded_view_description": "显示包含详细条件和操作的过滤规则",
       "if": "如果",
       "then": "然后",
@@ -2984,6 +2985,9 @@
       "validation_period_empty": "请输入时间段的开始日期或结束日期",
       "validation_period_invalid": "请为时间段输入带时间的有效日期，或将该字段留空",
       "apply_existing_period": "设置了时间段的规则只作用于在该时间段内收到的邮件，因此无法应用于已有邮件。",
+      "apply_existing_in": "同时应用于{folder}中已有的邮件",
+      "apply_existing_count": "{count, plural, other {同时应用于{folder}中已有的 # 封邮件}}",
+      "apply_existing_none": "{folder}中还没有符合此规则的邮件。",
       "period_status_scheduled": "未开始",
       "period_status_active": "生效中",
       "period_status_expired": "已过期"
