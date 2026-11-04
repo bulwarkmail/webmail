@@ -37,6 +37,11 @@ describe('the labels the desktop shell gets', () => {
     }
   });
 
+  it('names File > Unlock, which the menus offer while the app is locked', () => {
+    expect(labelsFor('de').labels.menuUnlock).toBe('Entsperren');
+    expect(labelsFor('en').labels.menuUnlock).toBe('Unlock');
+  });
+
   it.each(LOCALES)('%s: leaves the shell its placeholders to fill in', (locale) => {
     const { labels } = labelsFor(locale);
     expect(labels.contextAddToDictionary).toContain('{word}');
