@@ -12,7 +12,23 @@ import { getEffectiveLocale } from '@/i18n/detect-locale';
  * GMT+01:00"), the common zones first. Searching finds a zone by city, id,
  * offset ("+05:30", "UTC-5") or its name in the UI language.
  */
-export function TimeZonePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function TimeZonePicker({
+  value,
+  onChange,
+  withAuto = true,
+  label,
+  className = 'w-64 max-w-full',
+  defaultOpen,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  /** "Automatic (<browser zone>)" first. Off where a zone has to be named, as for an event. */
+  withAuto?: boolean;
+  /** The field's name, when it isn't Settings' "Time zone". */
+  label?: string;
+  className?: string;
+  defaultOpen?: boolean;
+}) {
   const t = useTranslations('settings.language_region');
   const tz = useTranslations('uxs_general');
 
@@ -40,11 +56,11 @@ export function TimeZonePicker({ value, onChange }: { value: string; onChange: (
       group,
     });
     return [
-      { value: AUTO_TIME_ZONE, label: t('time_zone.auto', { zone: timeZoneCity(browserTimeZone) }) },
+      ...(withAuto ? [{ value: AUTO_TIME_ZONE, label: t('time_zone.auto', { zone: timeZoneCity(browserTimeZone) }) }] : []),
       ...common.map(toOption(tz('time_zone_common'))),
       ...all.map(toOption(tz('time_zone_all'))),
     ];
-  }, [zones, value, browserTimeZone, t, tz, offsets]);
+  }, [zones, value, browserTimeZone, t, tz, offsets, withAuto]);
   // "CET" and "GMT+1" find their zones first (settings-p2-20).
   const rank = useCallback(
     (query: string, option: SearchableOption, wordsMatch: boolean) =>
@@ -55,13 +71,14 @@ export function TimeZonePicker({ value, onChange }: { value: string; onChange: (
   const current = options.find((option) => option.value === value);
   return (
     <SearchableSelect
-      className="w-64 max-w-full"
+      className={className}
+      defaultOpen={defaultOpen}
       menuClassName="w-72"
       value={value}
       options={options}
       onSelect={onChange}
       rank={rank}
-      ariaLabel={`${t('time_zone.label')}: ${current?.label ?? timeZoneCity(value)}`}
+      ariaLabel={`${label ?? t('time_zone.label')}: ${current?.label ?? timeZoneCity(value)}`}
       searchLabel={tz('time_zone_search')}
       noMatchLabel={tz('time_zone_no_match')}
       renderValue={(option) => (
