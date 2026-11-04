@@ -87,6 +87,7 @@ import {
   type OutboxRow,
   type UserChoice,
 } from './state';
+import { desktopOfflinePolicy } from '@/lib/desktop/policy';
 import { effectiveScope, offlineDefaultOn, olderThanCap, platformDefault, userChoiceFor, type EffectiveScope } from './scope';
 import { isStandaloneDisplayMode } from '@/lib/standalone-display';
 import { readPersistence, requestPersistence, safariMayDelete } from './storage-health';
@@ -166,7 +167,7 @@ export function offlineSupported(): boolean {
 
 /** The organisation allows this account to keep mail on the device. */
 export function offlineAllowed(account: string | null | undefined): boolean {
-  return offlineSupported() && !devicesForAccount(account ?? null).noOffline;
+  return offlineSupported() && !devicesForAccount(account ?? null).noOffline && !desktopOfflinePolicy().invalid;
 }
 
 /** A dropped account's data isn't judged by the groups of whoever is signed in now. */
