@@ -493,6 +493,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Desktop lifts search into a global header. Mobile keeps its native
   // one-pane flow, with Mountain View's own app chrome.
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isEmbedded;
+  const sidebarAccountSwitcher = useSettingsStore((state) => state.sidebarAccountSwitcher);
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
   // Mountain View reads a thread as one conversation in the viewer, on the
   // phone as on the desktop, so both show the same order and details. (#1224)
@@ -6329,10 +6330,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button - on desktop the folder sidebar has
-                Compose at its top instead (and Mountain View its rail), so the
-                button no longer sits on the list's rows. */}
-            {!mvShell && (isMobile || isEmbedded) && <Button
+            {/* Floating Compose Button - Mountain View has Compose in its rail,
+                and a desktop with sidebarAccountSwitcher off at the top of the
+                folder sidebar, so there the button doesn't sit on the rows. */}
+            {!mvShell && (isMobile || isEmbedded || sidebarAccountSwitcher) && <Button
               onClick={() => {
                 void handleCompose();
               }}

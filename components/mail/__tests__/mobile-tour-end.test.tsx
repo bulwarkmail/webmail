@@ -29,10 +29,17 @@ vi.mock('@/components/email/email-composer', () => ({
     return <p>stub composer</p>;
   },
 }));
-// On a desktop Compose sits at the head of the folder sidebar (mail-13).
-vi.mock('@/components/layout/sidebar', () => ({
-  Sidebar: ({ onCompose }: { onCompose?: () => void }) => (device.isMobile ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>),
-}));
+// With sidebarAccountSwitcher off, Compose sits at the head of the folder
+// sidebar on a desktop (mail-13); by default it is the round button.
+vi.mock('@/components/layout/sidebar', async () => {
+  const { useSettingsStore: settings } = await import('@/stores/settings-store');
+  return {
+    Sidebar: ({ onCompose }: { onCompose?: () => void }) => {
+      const switcherOnTop = settings((s) => s.sidebarAccountSwitcher);
+      return device.isMobile || switcherOnTop ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>;
+    },
+  };
+});
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
@@ -95,7 +102,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 0 } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', sendDelaySeconds: 0, sidebarAccountSwitcher: true } as never);
   sendEmail.mockReset().mockResolvedValue({});
   useUIStore.setState({ activeView: 'list', sidebarOpen: false });
   useEmailStore.setState({
@@ -128,14 +135,19 @@ describe('Mail after the tour on a phone', () => {
   });
 
   // Usability test 2026-11-04, mail-13: on a desktop the round button sat on
-  // the list's rows; Compose is at the head of the folder sidebar there.
-  it('draws the round Compose button on a phone, not on a desktop', () => {
+  // the list's rows. It stays by default, with the account switcher at the
+  // head of the folder sidebar; turned off, Compose is there instead.
+  it('draws the round Compose button on a phone, and on a desktop unless Compose is in the sidebar', () => {
     const view = render(<MailApp />);
     expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
 
     device.isMobile = false;
     view.rerender(<MailApp />);
+    expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
+
+    act(() => { useSettingsStore.setState({ sidebarAccountSwitcher: false } as never); });
     expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'sidebar.compose' })).toBeTruthy();
   });
 
   // mail-27 kept the tablet from drawing the header's ⋮ and the list's ⋮ one

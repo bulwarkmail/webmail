@@ -1658,6 +1658,10 @@
         "label": "Ukryj przełącznik kont na pasku bocznym",
         "description": "Ukryj wybór konta u góry paska folderów. Nadal możesz przełączać konta z dolnego paska nawigacyjnego."
       },
+      "sidebar_account_switcher": {
+        "label": "Przełącznik kont u góry paska bocznego",
+        "description": "Pokazuje przełącznik kont nad folderami i okrągły przycisk Napisz nad listą wiadomości. Po wyłączeniu przycisk Napisz będzie nad folderami."
+      },
       "show_rail_account_list": {
         "label": "Pokazuj awatary kont na pasku nawigacyjnym",
         "description": "Wyświetlaj osobne ikony kont na dole paska nawigacyjnego, aby szybko się przełączać, z przyciskiem wylogowania poniżej."

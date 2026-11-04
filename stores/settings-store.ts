@@ -732,6 +732,9 @@ interface SettingsState extends AccessibilitySettings {
   toolbarPosition: ToolbarPosition;
   showToolbarLabels: boolean;
   hideAccountSwitcher: boolean;
+  // The account switcher at the head of the folder sidebar, with the round
+  // Compose button over the list. Off puts Compose at the sidebar's head.
+  sidebarAccountSwitcher: boolean;
   showRailAccountList: boolean;
   proInterface: boolean;
   // Settings marked `advanced` (power-user and integrator rows) stay hidden
@@ -1062,6 +1065,7 @@ const DEFAULT_SETTINGS = {
   toolbarPosition: 'top' as ToolbarPosition,
   showToolbarLabels: true,
   hideAccountSwitcher: false,
+  sidebarAccountSwitcher: true,
   showRailAccountList: false,
   proInterface: false,
   showAdvancedSettings: false,
@@ -1485,6 +1489,7 @@ export const useSettingsStore = create<SettingsState>()(
           hiddenCompanyCalendars: state.hiddenCompanyCalendars,
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,
+          sidebarAccountSwitcher: state.sidebarAccountSwitcher,
           showRailAccountList: state.showRailAccountList,
           showAdvancedSettings: state.showAdvancedSettings,
           // proInterface is intentionally omitted - it's a per-device choice

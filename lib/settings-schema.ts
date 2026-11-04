@@ -171,6 +171,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showToolbarLabels', 'appearance', `${AP}toolbar_labels.label`),
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
+  bool('sidebarAccountSwitcher', 'appearance', `${AP}sidebar_account_switcher.label`),
   bool('showRailAccountList', 'appearance', `${AP}show_rail_account_list.label`),
   bool('proInterface', 'appearance', `${AP}pro_interface.label`),
   bool('enableUnifiedMailbox', 'appearance', `${AP}unified_mailbox.label`),

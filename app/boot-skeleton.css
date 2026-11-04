@@ -30,6 +30,9 @@
   }
 }
 
+/* Compose heads the folder sidebar, in place of the account switcher. */
+@custom-variant boot-sidebar-compose (&:where([data-boot-sidebar-compose="on"] *));
+
 /* A message, thread, contact, settings page or admin page is open. */
 @custom-variant boot-open (&:where([data-boot-pane] *));
 @custom-variant boot-thread (&:where([data-boot-pane="thread"] *));

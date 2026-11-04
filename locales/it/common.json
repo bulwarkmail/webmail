@@ -1658,6 +1658,10 @@
         "label": "Nascondi selettore account dalla barra laterale",
         "description": "Nascondi il selettore account nella parte superiore della barra laterale delle cartelle. Puoi comunque cambiare account dalla barra di navigazione inferiore."
       },
+      "sidebar_account_switcher": {
+        "label": "Selettore account in cima alla barra laterale",
+        "description": "Mostra il selettore account sopra le cartelle e il pulsante rotondo Scrivi sull'elenco dei messaggi. Disattivalo per mettere invece Scrivi sopra le cartelle."
+      },
       "show_rail_account_list": {
         "label": "Mostra avatar account nella barra di navigazione",
         "description": "Visualizza i cerchi degli account individuali nella parte inferiore della barra di navigazione per un cambio rapido, con un pulsante di disconnessione sotto."
