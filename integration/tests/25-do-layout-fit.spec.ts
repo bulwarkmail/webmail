@@ -99,14 +99,15 @@ for (const scenario of SCENARIOS) {
     await check(page, scenario, 'mail-list', found);
     await item.click();
     await page.getByRole('button', { name: text.showDetails }).first().click();
-    const routing = page.locator('section', { has: page.getByText(text.routing, { exact: true }) }).first();
+    // Sections nest: the last match is the innermost, the routing section itself.
+    const routing = page.locator('section', { has: page.getByText(text.routing, { exact: true }) }).last();
     await expect(routing).toBeVisible();
     await check(page, scenario, 'mail-details', found);
 
     // The sender's address gets a column of its own width, not a sliver, and a date
     // takes one line. Rows: From, To, Sent, Received.
-    const fit = await routing.evaluate((section) => {
-      const values = Array.from(section.querySelectorAll('dl > dd'));
+    const fit = await routing.locator('dl').first().evaluate((list) => {
+      const values = Array.from(list.querySelectorAll(':scope > dd'));
       const from = values[0].getBoundingClientRect();
       const sent = values[values.length - 2];
       const lineHeight = parseFloat(getComputedStyle(sent).lineHeight) || 20;
