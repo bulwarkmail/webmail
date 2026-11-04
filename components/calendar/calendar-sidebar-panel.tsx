@@ -20,9 +20,8 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { taskListsOf } from "@/components/calendar/task-list-view";
+import { isTaskOverdue, taskListsOf } from "@/components/calendar/task-list-view";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { displayNow } from "@/lib/timezone";
 import { readableTextOn } from "@/lib/color-transform";
 import { shareRecipientNames, useShareRecipientLabels } from "@/hooks/use-share-recipient-labels";
 import { useCvdColor } from "@/hooks/use-cvd-color";
@@ -124,10 +123,8 @@ export function CalendarSidebarPanel({
   const setViewMode = useCalendarStore((s) => s.setViewMode);
 
   const pendingTaskCount = useMemo(() => tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled').length, [tasks]);
-  const overdueTaskCount = useMemo(() => {
-    const now = displayNow();
-    return tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled' && t.due && new Date(t.due) < now).length;
-  }, [tasks]);
+  // The same rule as the task list's Overdue filter (pim-p2-12).
+  const overdueTaskCount = useMemo(() => tasks.filter(isTaskOverdue).length, [tasks]);
 
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<Calendar>();
 
