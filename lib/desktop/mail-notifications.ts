@@ -19,7 +19,7 @@ import { devicesForAccount } from '@/lib/device-policy';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { isPopoutWindow } from '@/lib/popout/window-role';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
-import { useAccountStore } from '@/stores/account-store';
+import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -61,6 +61,22 @@ interface Sender {
   label: string | null;
 }
 
+type NamedAccount = Pick<AccountEntry, 'id' | 'label' | 'email' | 'username'>;
+
+/**
+ * What a notification calls an account: its name, or its address where another signed-in
+ * account has the same name, as work and private accounts often do. The tray names its
+ * list's account by address.
+ */
+export function accountName(entry: NamedAccount, accounts: readonly NamedAccount[]): string | null {
+  const address = entry.email || entry.username || null;
+  const name = entry.label?.trim();
+  if (!name) return address;
+  const key = name.toLocaleLowerCase();
+  const shared = accounts.some((other) => other.id !== entry.id && other.label?.trim().toLocaleLowerCase() === key);
+  return shared && address ? address : name;
+}
+
 async function senderInfo(client: IJMAPClient): Promise<Sender> {
   const auth = useAuthStore.getState();
   const accounts = useAccountStore.getState().accounts;
@@ -71,7 +87,7 @@ async function senderInfo(client: IJMAPClient): Promise<Sender> {
     entryId: entry.id,
     slot: entry.cookieSlot,
     login: await loginFingerprint(entry.serverUrl, entry.username),
-    label: accounts.length > 1 ? (entry.label || entry.email || entry.username || null) : null,
+    label: accounts.length > 1 ? accountName(entry, accounts) : null,
   };
 }
 
@@ -151,10 +167,23 @@ export function startMailNotifications(initial: MailNotificationLabels): MailNot
     if (current.length === 0) return;
     const settings = useSettingsStore.getState();
     if (!settings.emailNotificationsEnabled || settings.doNotDisturb) return;
+    // One notification per account: each says whose mail it is.
+    // Account ids are the server's: two logins on two servers can share one.
+    const groups: NewMail[][] = [];
+    for (const mail of current) {
+      const group = groups.find(([first]) => first.client === mail.client && first.accountId === mail.accountId);
+      if (group) group.push(mail);
+      else groups.push([mail]);
+    }
     void (async () => {
-      const notification = await buildMailNotification(current, labels);
-      const result = await getDesktopBridge()?.os?.notify({ ...notification, sound: settings.emailNotificationSound });
-      if (result?.playSound) playNotificationSound(settings.notificationSoundChoice);
+      let playSound = false;
+      for (const mail of groups) {
+        const notification = await buildMailNotification(mail, labels);
+        const result = await getDesktopBridge()?.os?.notify({ ...notification, sound: settings.emailNotificationSound });
+        playSound ||= !!result?.playSound;
+      }
+      // The sound once, however many accounts got mail.
+      if (playSound) playNotificationSound(settings.notificationSoundChoice);
     })().catch((error) => {
       console.error('Failed to show a notification:', error);
     });
