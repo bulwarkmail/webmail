@@ -46,7 +46,7 @@ function makeClient(emptyMailboxImpl: IJMAPClient['emptyMailbox']) {
   return { emptyMailbox: emptyMailboxImpl } as unknown as IJMAPClient;
 }
 
-describe('emptyUnifiedMailbox (#1131: "All Trash" empty-across-accounts)', () => {
+describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
   beforeEach(() => {
     useEmailStore.setState({
       isUnifiedView: false,

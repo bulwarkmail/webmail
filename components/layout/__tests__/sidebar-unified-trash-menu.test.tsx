@@ -3,7 +3,7 @@ import { fireEvent } from '@testing-library/dom';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
-// #1131: right-clicking the unified "All Trash" sidebar row did nothing at
+// Right-clicking the unified "All Trash" sidebar row did nothing at
 // all - no context menu, so no way to empty trash across every connected
 // account short of doing it one account at a time. This pins that the row
 // now gets a context menu with an "empty across all accounts" action wired
@@ -44,7 +44,7 @@ function account(id: string) {
   };
 }
 
-describe('Sidebar unified "All Trash" context menu (#1131)', () => {
+describe('Sidebar unified "All Trash" context menu', () => {
   beforeEach(() => {
     useAccountStore.setState({ accounts: [account('a'), account('b')] } as never);
     useSettingsStore.setState({
