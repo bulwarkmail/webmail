@@ -69,7 +69,7 @@ import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
-import { markReplyQuoteHeader } from "@/components/email/reply-quote-collapse";
+import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
 import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
@@ -1455,6 +1455,19 @@ export function EmailComposer({
   // when the user switches identity in "above quote" mode without rebuilding
   // the whole body (which would lose user edits to the surrounding draft).
   const editorRef = useRef<Editor | null>(null);
+  // The white space under the text is the message too (compose-p2-9): a
+  // click there puts the caret at the end of the user's text, above a folded
+  // quote and the signature, instead of dropping the focus.
+  const focusBodyFromEmptySpace = (event: React.MouseEvent<HTMLElement>) => {
+    const editor = editorRef.current;
+    const target = event.target as HTMLElement;
+    if (event.button !== 0 || !editor || editor.isDestroyed || !editor.isEditable) return;
+    if (target.closest('.ProseMirror, button, input, textarea, select, a, label, [role="toolbar"], [role="dialog"], [data-plugin-slot]')) return;
+    event.preventDefault();
+    const end = userTextEnd(editor.state);
+    if (end === null) editor.commands.focus('end');
+    else editor.chain().setTextSelection(end).focus().run();
+  };
   // Set while the composer itself swaps the signature in the editor.
   const signatureSwapRef = useRef(false);
   // Set once a reply's body got its initial focus, so switching formats later
@@ -5503,7 +5516,7 @@ export function EmailComposer({
           </div>
       </div>
 
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")}>
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace}>
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
