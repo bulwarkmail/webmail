@@ -484,13 +484,12 @@ export function CalendarMonthView({
   }, [t, describeError, userEmailsFor, onMoveEvent]);
 
   return (
-    <div className="relative flex flex-col flex-1 overflow-hidden" role="grid" aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}>
-      {/* At 150 % the browser rounds the sticky header a device pixel below
-          the pane's edge, and a sliver of the week scrolled under it showed. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-[60] h-px bg-background" />
+    <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}>
       <div
         ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none]"
+        // At 150 % the pane's edge falls inside a device pixel, and the week
+        // scrolled under the header showed a line of its events there.
+        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none] [clip-path:inset(0.5px_0_0_0)]"
         onScroll={handleScroll}
       >
         <div
