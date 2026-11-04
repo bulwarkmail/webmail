@@ -56,7 +56,7 @@ async function viewer(folder: string, h = handlers()) {
   return h;
 }
 
-const archiveButton = () => document.querySelector('button[title="tooltips.archive"]');
+const archiveButton = () => document.querySelector('button[title="archive (E)"]');
 
 beforeEach(() => {
   useSettingsStore.setState({ deleteAction: 'trash', permanentlyDeleteJunk: false, quickReplyEnabled: true });
