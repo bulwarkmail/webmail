@@ -30,6 +30,7 @@ import {
   Fish,
 } from "@/components/icons";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
+import { useMessageActionShortcut } from "./message-action-shortcuts";
 import { buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { localizeMailboxName } from "@/lib/mailbox-label";
@@ -198,6 +199,7 @@ export function EmailContextMenu({
   label,
 }: EmailContextMenuProps) {
   const t = useTranslations("context_menu");
+  const shortcutOf = useMessageActionShortcut();
   const archiveActionEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
   const tSidebar = useTranslations("sidebar");
@@ -356,6 +358,7 @@ export function EmailContextMenu({
         <ContextMenuItem
           icon={Archive}
           label={t("archive")}
+          shortcut={shortcutOf("archive")}
           onClick={() => handleAction(onBatchArchive!)}
           disabled={!onBatchArchive}
         />
@@ -368,6 +371,7 @@ export function EmailContextMenu({
           icon={Trash2}
           label={t("delete")}
           testId="ctx-delete"
+          shortcut={shortcutOf("delete")}
           onClick={() => handleAction(onBatchDelete!)}
           disabled={!onBatchDelete}
           destructive={!mountainView}
@@ -381,6 +385,7 @@ export function EmailContextMenu({
           icon={isUnread ? MailOpen : Mail}
           label={isUnread ? t("mark_read") : t("mark_unread")}
           testId={isUnread ? "ctx-mark-read" : "ctx-mark-unread"}
+          shortcut={shortcutOf("read", isUnread)}
           onClick={() => handleAction(() => onBatchMarkAsRead?.(isUnread))}
         />
     </>
@@ -457,6 +462,7 @@ export function EmailContextMenu({
               icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
               label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
               testId={isInJunkFolder ? "ctx-not-spam" : "ctx-spam"}
+              shortcut={shortcutOf("spam")}
               onClick={() => handleAction(isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)}
               disabled={isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam}
               destructive={!isInJunkFolder && !mountainView}
@@ -511,6 +517,7 @@ export function EmailContextMenu({
         testId={entry.testId}
         disabled={entry.disabled}
         destructive={entry.destructive}
+        shortcut={shortcutOf(entry.key, isUnread)}
         onClick={() => handleAction(entry.run)}
       />
     );
