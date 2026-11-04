@@ -394,6 +394,21 @@ describe('moving a recipient by keyboard (MO-07)', () => {
     expect(liveRegion()).toHaveTextContent('recipient_moved:Anna Berg|cc');
   });
 
+  // compose-p2-16: a click did nothing visible, and Escape then closed the composer.
+  it('opens the chip menu on a click, and Escape closes only the menu', async () => {
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'anna@example.com' }} onClose={onClose} />);
+    const chip = within(screen.getByRole('list', { name: 'to:' })).getByRole('listitem');
+    fireEvent.click(chip.querySelector('.truncate')!);
+
+    const move = await screen.findByTestId('recipient-move-bcc');
+    fireEvent.keyDown(move, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByTestId('recipient-move-bcc')).toBeNull());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+  });
+
   it('opens the chip menu with Shift+F10 too', async () => {
     render(<EmailComposer initialData={{ ...DRAFT, to: 'anna@example.com' }} />);
     const chip = within(screen.getByRole('list', { name: 'to:' })).getByRole('listitem');

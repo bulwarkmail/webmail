@@ -6860,6 +6860,14 @@ export function RecipientChipInput({
                 !isEditing && "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               )}
               onContextMenu={isEditing ? undefined : (e) => handleContextMenu(e, i, chip)}
+              // A click opens the chip's menu too (address, Edit, Move to,
+              // Remove), as Gmail and Outlook do; it did nothing visible.
+              onClick={isEditing ? undefined : (e) => {
+                if (e.target instanceof Element && e.target.closest('button')) return;
+                // Not on to the field, whose click puts the caret in the input.
+                e.stopPropagation();
+                openChipMenu(i);
+              }}
               data-invalid={isInvalid || undefined}
               title={isInvalid ? t('invalid_recipient') : undefined}
               role="listitem"
