@@ -7601,6 +7601,112 @@
     "signout_changed": "まだ添付も保存もされておらず、今削除されます: {names}。",
     "signout_held": "まだ別のプログラムで開かれているため、そちらで閉じるまで削除されません: {names}。"
   },
+  "files_sync": {
+    "title": "このパソコンのファイル",
+    "drive": {
+      "title": "ファイル ドライブ",
+      "label": "ファイルをドライブとして表示",
+      "description": "ファイルがエクスプローラーにドライブのように表示されます。ファイルは開いたときにダウンロードされます。",
+      "unsupported": "Windows 10 バージョン 1809 以降が必要です。",
+      "root_name": "ファイル ドライブ",
+      "letter_label": "ドライブ文字",
+      "letter_description": "エクスプローラーでドライブに専用の文字を割り当てます。",
+      "letter_none": "文字なし"
+    },
+    "folders": {
+      "title": "同期しているフォルダー",
+      "description": "このパソコンのフォルダーとファイルのフォルダーを、双方向で同じ内容に保ちます。",
+      "empty": "同期しているフォルダーはまだありません。",
+      "forced_off": "組織によってフォルダーの同期が無効にされました。フォルダー内のファイルはこのパソコンに残ります。",
+      "add": "フォルダーを追加…",
+      "loading": "フォルダーを読み込んでいます…",
+      "load_failed": "ファイルのフォルダーを読み込めませんでした。もう一度お試しください。",
+      "pick_title": "ファイルのどのフォルダーと同期しますか？",
+      "pick_confirm": "このパソコンのフォルダーを選択…",
+      "paired_with": "ファイルの {folder} と同期",
+      "pause": "一時停止",
+      "resume": "再開",
+      "remove": "削除…",
+      "remove_title": "このフォルダーの同期を停止しますか？",
+      "remove_message": "このパソコン上のファイルも、ファイル側のファイルもそのまま残ります。今後、変更は一方からもう一方に反映されなくなります。",
+      "remove_confirm": "同期を停止",
+      "add_failed": {
+        "overlap": "このフォルダーは同期フォルダーの中にあるか、同期フォルダーを含んでいるか、システム フォルダーです。別のフォルダーを選んでください。",
+        "denied": "アプリはこのフォルダーを使用できません。別のフォルダーを選んでください。",
+        "policy": "組織によって許可されていません。",
+        "failed": "フォルダーを追加できませんでした。もう一度お試しください。"
+      }
+    },
+    "status": {
+      "starting": "起動しています…",
+      "idle": "最新の状態です。最終同期: {time}",
+      "idle_never": "最新の状態です",
+      "syncing": "同期中: {done} 件完了、残り {pending} 件",
+      "paused": "一時停止中",
+      "offline": "オフライン。{count, plural, =0 {変更はサーバーへの接続を待っています} other {# 件の変更がサーバーへの接続を待っています}}",
+      "error": "停止しました: {reason}",
+      "confirm_delete": "下の質問に答えるまで一時停止しています",
+      "blocked": "組織によって無効にされています"
+    },
+    "mass_delete": {
+      "title": "{count, plural, other {# 個の項目}}を削除しますか？",
+      "local": "このパソコンの {folder} から {count, plural, other {# 個の項目}}が削除されました。ファイルでも削除しますか？",
+      "remote": "ファイルの {folder} から {count, plural, other {# 個の項目}}が削除されました。このパソコンでも削除しますか？",
+      "allow": "{count, plural, other {削除する}}",
+      "restore": "{count, plural, other {元に戻す}}",
+      "later": "後で決める"
+    },
+    "activity": {
+      "title": "最近のアクティビティ",
+      "empty": "まだ何も起きていません。",
+      "clear": "クリア",
+      "to_files": "ファイルへ",
+      "to_computer": "このパソコンへ",
+      "mark_conflict": "競合",
+      "mark_error": "エラー",
+      "mark_question": "回答が必要",
+      "uploaded": "{path} をアップロードしました",
+      "downloaded": "{path} をダウンロードしました",
+      "folder-created": "フォルダー {path} を作成しました",
+      "renamed": "{detail} の名前を {path} に変更しました",
+      "moved": "{detail} を {path} に移動しました",
+      "deleted": "{path} を削除しました",
+      "trashed": "{path} をゴミ箱に移動しました",
+      "conflict": "{path} は両方の場所で変更されました。もう一方のバージョンは {detail} として保存されています",
+      "renamed-for-disk": "{path} の名前はここでは使えないため、このパソコンでは {detail} という名前になっています",
+      "too-large": "{path} はファイルの上限 ({detail}) を超えています。このパソコンにのみ保存されます",
+      "waiting": "{path} はサーバーを待っています",
+      "mass-delete": "多数の項目を削除する前に一時停止しました",
+      "error": "{path} を同期できませんでした"
+    },
+    "errors": {
+      "offline": "サーバーに接続できません",
+      "server_refused": "サーバーが変更を拒否しました",
+      "too_large": "ファイルのサイズがファイルの上限を超えています",
+      "name_invalid": "この名前は使用できません",
+      "disk_full": "ディスクがいっぱいです",
+      "denied": "許可されていません",
+      "busy": "別のプログラムが使用中です",
+      "quota": "ファイルの保存容量がいっぱいです",
+      "not_found": "もう存在しません",
+      "policy": "組織によって許可されていません",
+      "failed": "問題が発生しました"
+    },
+    "item": {
+      "label": "このパソコン上",
+      "synced": "同期済み",
+      "syncing": "同期中",
+      "pending": "同期待ち",
+      "error": "同期できませんでした",
+      "online-only": "ファイルにのみ保存。開くとダウンロードされます"
+    },
+    "show_in": {
+      "explorer": "エクスプローラーで表示",
+      "finder": "Finder で表示",
+      "file_manager": "ファイル マネージャーで表示",
+      "failed": "フォルダーを開けませんでした。"
+    }
+  },
   "desktopQuickCompose": {
     "label": "クイック作成",
     "menu": "クイック作成",
