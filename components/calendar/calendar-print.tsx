@@ -685,6 +685,7 @@ export function EventPrintSheet({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
   const formatTime = useTimeFormatter(timeFormat);
   const resolveContactName = useContactNameResolver();
 
@@ -692,12 +693,19 @@ export function EventPrintSheet({
   const end = getEventEndDate(event);
   const displayEnd = getEventDisplayEndDate(event);
   const multiDay = !isSameDay(start, displayEnd);
+  // Several days as the language writes a range (pim-13).
+  const dayParts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
   const when = event.showWithoutTime
     ? multiDay
-      ? `${formatEventDate(start)} – ${formatEventDate(displayEnd)} · ${t("events.all_day")}`
+      ? `${formatDateRangeLabel(start, displayEnd, dayParts)} · ${t("events.all_day")}`
       : `${formatEventDate(start)} · ${t("events.all_day")}`
     : multiDay
-      ? `${formatEventDate(start)} ${formatTime(start)} – ${formatEventDate(end)} ${formatTime(end)}`
+      ? formatDateRangeLabel(start, end, {
+        ...dayParts,
+        hour: "numeric",
+        minute: "2-digit",
+        ...(timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" as const }),
+      })
       : `${formatEventDate(start)} · ${formatTime(start)} – ${formatTime(end)}`;
 
   const location = primaryLocationName(event);

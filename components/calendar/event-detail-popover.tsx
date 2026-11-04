@@ -24,6 +24,7 @@ import {
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
 import { descriptionAsText } from "@/lib/calendar-description";
@@ -370,6 +371,7 @@ export function EventDetailPopover({
   const hasParticipants = participants.length > 0;
 
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
 
   const popover = (
     <div
@@ -481,11 +483,9 @@ export function EventDetailPopover({
             {isMultiDay ? (
               event.showWithoutTime ? (
                 <>
+                  {/* One range as the language writes it (pim-13). */}
                   <div className="font-medium text-foreground">
-                    {formatEventDate(startDate)} –
-                  </div>
-                  <div className="font-medium text-foreground">
-                    {formatEventDate(displayEndDate)}
+                    {formatDateRangeLabel(startDate, displayEndDate, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                   </div>
                   <div className="text-muted-foreground">{t("events.all_day")}</div>
                 </>

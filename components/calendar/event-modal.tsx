@@ -42,6 +42,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { confirmInvitationRecipients } from "@/lib/outgoing/external-recipients";
@@ -297,6 +298,7 @@ export function EventModal({
     : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]";
   const isEdit = !!event;
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
   const [mode, setMode] = useState<"view" | "edit">(isEdit && !startInEditMode ? "view" : "edit");
 
   // Only the organizer invites: someone else's invitation keeps its
@@ -1135,8 +1137,10 @@ export function EventModal({
                   if (multiDay && event.showWithoutTime) {
                     return (
                       <>
-                        <div className="font-medium text-foreground">{formatEventDate(startD)} –</div>
-                        <div className="font-medium text-foreground">{formatEventDate(displayEnd)}</div>
+                        {/* One range as the language writes it (pim-13). */}
+                        <div className="font-medium text-foreground">
+                          {formatDateRangeLabel(startD, displayEnd, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                        </div>
                         <div className="text-muted-foreground">{t("events.all_day")}</div>
                       </>
                     );
