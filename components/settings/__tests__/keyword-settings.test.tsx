@@ -23,10 +23,21 @@ describe('KeywordSettings', () => {
     });
   });
 
-  it('shows keyword JMAP id', () => {
+  // settings-28: the stored keyword is no line of its own; with the advanced
+  // settings on it is the tag's tooltip.
+  it('does not show the stored keyword under each tag', () => {
     render(<KeywordSettings />);
-    expect(screen.getByText('$label:red')).toBeInTheDocument();
-    expect(screen.getByText('$label:blue')).toBeInTheDocument();
+    expect(screen.queryByText('$label:red')).toBeNull();
+    expect(screen.queryByTitle('$label:red')).toBeNull();
+  });
+
+  it('shows the stored keyword as a tooltip with the advanced settings on', () => {
+    useSettingsStore.setState({ showAdvancedSettings: true });
+    render(<KeywordSettings />);
+    expect(screen.queryByText('$label:red')).toBeNull();
+    expect(screen.getByTitle('$label:red')).toBeInTheDocument();
+    expect(screen.getByTitle('$label:blue')).toBeInTheDocument();
+    useSettingsStore.setState({ showAdvancedSettings: false });
   });
 
   // MO-06: the tag order was drag-only.
@@ -180,7 +191,7 @@ describe('KeywordSettings', () => {
     render(<KeywordSettings />);
 
     expect(screen.getByText('Work/Clients')).toBeInTheDocument();
-    expect(screen.getByText('$label:work/clients')).toBeInTheDocument();
+    expect(screen.queryByText('$label:work/clients')).toBeNull();
   });
 
   it('rejects a path that would exceed the 128-byte keyword limit of Stalwart', () => {
