@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# contact geselecteerd} other {# contacten geselecteerd}}",
     "selection_more": "en nog {count}",
-    "no_addresses": "Geen van de geselecteerde contacten heeft een e-mailadres."
+    "no_addresses": "Geen van de geselecteerde contacten heeft een e-mailadres.",
+    "task_open": "Openen",
+    "due_next_week": "Volgende week",
+    "due_none": "Geen vervaldatum",
+    "due_pick": "Datum kiezen…",
+    "move_to_list": "Naar lijst verplaatsen"
   },
   "desktopEdit": {
     "edit": "Bewerken",

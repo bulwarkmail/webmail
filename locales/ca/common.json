@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# contacte seleccionat} other {# contactes seleccionats}}",
     "selection_more": "i {count} més",
-    "no_addresses": "Cap dels contactes seleccionats té adreça electrònica."
+    "no_addresses": "Cap dels contactes seleccionats té adreça electrònica.",
+    "task_open": "Obre",
+    "due_next_week": "La setmana vinent",
+    "due_none": "Sense data de venciment",
+    "due_pick": "Tria una data…",
+    "move_to_list": "Mou a la llista"
   },
   "desktopEdit": {
     "edit": "Edita",

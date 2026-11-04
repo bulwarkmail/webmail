@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# contact selectat} few {# contacte selectate} other {# de contacte selectate}}",
     "selection_more": "și încă {count}",
-    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail."
+    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail.",
+    "task_open": "Deschide",
+    "due_next_week": "Săptămâna viitoare",
+    "due_none": "Fără termen",
+    "due_pick": "Alege o dată…",
+    "move_to_list": "Mută în listă"
   },
   "desktopEdit": {
     "edit": "Editează",

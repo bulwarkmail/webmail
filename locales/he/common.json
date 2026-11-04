@@ -7614,7 +7614,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {איש קשר אחד נבחר} other {# אנשי קשר נבחרו}}",
     "selection_more": "ועוד {count}",
-    "no_addresses": "לאף אחד מאנשי הקשר שנבחרו אין כתובת דוא״ל."
+    "no_addresses": "לאף אחד מאנשי הקשר שנבחרו אין כתובת דוא״ל.",
+    "task_open": "פתיחה",
+    "due_next_week": "בשבוע הבא",
+    "due_none": "ללא תאריך יעד",
+    "due_pick": "בחירת תאריך…",
+    "move_to_list": "העברה לרשימה"
   },
   "desktopEdit": {
     "edit": "עריכה",

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# contact sélectionné} other {# contacts sélectionnés}}",
     "selection_more": "et {count} de plus",
-    "no_addresses": "Aucun des contacts sélectionnés n’a d’adresse e-mail."
+    "no_addresses": "Aucun des contacts sélectionnés n’a d’adresse e-mail.",
+    "task_open": "Ouvrir",
+    "due_next_week": "La semaine prochaine",
+    "due_none": "Pas d’échéance",
+    "due_pick": "Choisir une date…",
+    "move_to_list": "Déplacer vers la liste"
   },
   "desktopEdit": {
     "edit": "Modifier",

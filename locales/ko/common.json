@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, other {연락처 #개 선택됨}}",
     "selection_more": "외 {count}개",
-    "no_addresses": "선택한 연락처 중 이메일 주소가 있는 연락처가 없습니다."
+    "no_addresses": "선택한 연락처 중 이메일 주소가 있는 연락처가 없습니다.",
+    "task_open": "열기",
+    "due_next_week": "다음 주",
+    "due_none": "마감일 없음",
+    "due_pick": "날짜 선택…",
+    "move_to_list": "목록으로 이동"
   },
   "desktopEdit": {
     "edit": "편집",

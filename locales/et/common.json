@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# kontakt valitud} other {# kontakti valitud}}",
     "selection_more": "ja veel {count}",
-    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi."
+    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi.",
+    "task_open": "Ava",
+    "due_next_week": "Järgmisel nädalal",
+    "due_none": "Tähtajata",
+    "due_pick": "Vali kuupäev…",
+    "move_to_list": "Teisalda loendisse"
   },
   "desktopEdit": {
     "edit": "Muuda",

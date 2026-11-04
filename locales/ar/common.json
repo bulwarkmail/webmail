@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {تم تحديد جهة اتصال واحدة} other {تم تحديد # جهة اتصال}}",
     "selection_more": "و{count} غيرهم",
-    "no_addresses": "لا تملك أي من جهات الاتصال المحددة عنوان بريد إلكتروني."
+    "no_addresses": "لا تملك أي من جهات الاتصال المحددة عنوان بريد إلكتروني.",
+    "task_open": "فتح",
+    "due_next_week": "الأسبوع القادم",
+    "due_none": "بلا تاريخ استحقاق",
+    "due_pick": "اختيار تاريخ…",
+    "move_to_list": "نقل إلى قائمة"
   },
   "desktopEdit": {
     "edit": "تعديل",

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, other {#件の連絡先を選択中}}",
     "selection_more": "ほか{count}件",
-    "no_addresses": "選択した連絡先にはメールアドレスがありません。"
+    "no_addresses": "選択した連絡先にはメールアドレスがありません。",
+    "task_open": "開く",
+    "due_next_week": "来週",
+    "due_none": "期限なし",
+    "due_pick": "日付を選択…",
+    "move_to_list": "リストへ移動"
   },
   "desktopEdit": {
     "edit": "編集",

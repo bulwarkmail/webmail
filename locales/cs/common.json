@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {Vybrán # kontakt} few {Vybrány # kontakty} other {Vybráno # kontaktů}}",
     "selection_more": "a {count} další",
-    "no_addresses": "Žádný z vybraných kontaktů nemá e-mailovou adresu."
+    "no_addresses": "Žádný z vybraných kontaktů nemá e-mailovou adresu.",
+    "task_open": "Otevřít",
+    "due_next_week": "Příští týden",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrat datum…",
+    "move_to_list": "Přesunout do seznamu"
   },
   "desktopEdit": {
     "edit": "Upravit",

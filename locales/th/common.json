@@ -7621,7 +7621,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
     "selection_more": "และอีก {count} รายการ",
-    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล"
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล",
+    "task_open": "เปิด",
+    "due_next_week": "สัปดาห์หน้า",
+    "due_none": "ไม่มีวันครบกำหนด",
+    "due_pick": "เลือกวันที่…",
+    "move_to_list": "ย้ายไปยังรายการ"
   },
   "desktopEdit": {
     "edit": "แก้ไข",

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {Atlasīts # kontakts} other {Atlasīti # kontakti}}",
     "selection_more": "un vēl {count}",
-    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses."
+    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses.",
+    "task_open": "Atvērt",
+    "due_next_week": "Nākamnedēļ",
+    "due_none": "Bez termiņa",
+    "due_pick": "Izvēlēties datumu…",
+    "move_to_list": "Pārvietot uz sarakstu"
   },
   "desktopEdit": {
     "edit": "Rediģēt",

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
     "selection_more": "og {count} til",
-    "no_addresses": "Ingen av de valgte kontaktene har en e-postadresse."
+    "no_addresses": "Ingen av de valgte kontaktene har en e-postadresse.",
+    "task_open": "Åpne",
+    "due_next_week": "Neste uke",
+    "due_none": "Ingen forfallsdato",
+    "due_pick": "Velg en dato…",
+    "move_to_list": "Flytt til liste"
   },
   "desktopEdit": {
     "edit": "Rediger",

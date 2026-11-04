@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, other {已選取 # 位聯絡人}}",
     "selection_more": "以及另外 {count} 位",
-    "no_addresses": "所選聯絡人都沒有電子郵件地址。"
+    "no_addresses": "所選聯絡人都沒有電子郵件地址。",
+    "task_open": "開啟",
+    "due_next_week": "下週",
+    "due_none": "無截止日期",
+    "due_pick": "選擇日期…",
+    "move_to_list": "移到清單"
   },
   "desktopEdit": {
     "edit": "編輯",

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# kişi seçildi} other {# kişi seçildi}}",
     "selection_more": "ve {count} kişi daha",
-    "no_addresses": "Seçilen kişilerin hiçbirinin e-posta adresi yok."
+    "no_addresses": "Seçilen kişilerin hiçbirinin e-posta adresi yok.",
+    "task_open": "Aç",
+    "due_next_week": "Gelecek hafta",
+    "due_none": "Bitiş tarihi yok",
+    "due_pick": "Tarih seç…",
+    "move_to_list": "Listeye taşı"
   },
   "desktopEdit": {
     "edit": "Düzenle",

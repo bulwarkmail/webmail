@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# Kontakt ausgewählt} other {# Kontakte ausgewählt}}",
     "selection_more": "und {count} weitere",
-    "no_addresses": "Keiner der ausgewählten Kontakte hat eine E-Mail-Adresse."
+    "no_addresses": "Keiner der ausgewählten Kontakte hat eine E-Mail-Adresse.",
+    "task_open": "Öffnen",
+    "due_next_week": "Nächste Woche",
+    "due_none": "Kein Fälligkeitsdatum",
+    "due_pick": "Datum wählen…",
+    "move_to_list": "In Liste verschieben"
   },
   "desktopEdit": {
     "edit": "Bearbeiten",

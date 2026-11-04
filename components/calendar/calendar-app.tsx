@@ -35,6 +35,7 @@ import { TaskToolbar } from "@/components/calendar/task-toolbar";
 import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
 import { onOpenTask } from "@/lib/plugin-sandbox/open-task";
 import { TaskModal } from "@/components/calendar/task-modal";
+import { dueFor, type TaskDueChoice } from "@/components/calendar/task-context-menu";
 import { MiniCalendar } from "@/components/calendar/mini-calendar";
 import { CalendarSidebarPanel } from "@/components/calendar/calendar-sidebar-panel";
 import { EventModal, type PendingEventPreview } from "@/components/calendar/event-modal";
@@ -839,6 +840,43 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(false);
     setEditTask(null);
   }, [client, taskStore, confirmAction, describeError, t]);
+
+  // Del and the list's right-click Delete (pim-p3-10): at once, with Undo instead of a
+  // question, as Mail does. Undo makes the task again from what it held.
+  const handleDeleteTaskWithUndo = useCallback(async (task: CalendarTask) => {
+    if (!client) return;
+    try {
+      if (!(await taskStore.deleteTask(client, task.id))) return;
+    } catch (error) {
+      toast.error(describeError(error, t("notifications.task_delete_error")));
+      return;
+    }
+    const { id: _id, created: _c, updated: _u, localAccountId: _l, originalId: _o, accountId: _a, isShared: _s, progressUpdated: _p, ...kept } = task;
+    toast.success(t("notifications.task_deleted"), {
+      action: {
+        label: t("notifications.undo"),
+        onClick: () => {
+          void taskStore.createTask(client, kept).catch((error: unknown) => {
+            toast.error(describeError(error, t("notifications.task_save_error")));
+          });
+        },
+      },
+    });
+  }, [client, taskStore, describeError, t]);
+
+  const handleSetTaskDue = useCallback((task: CalendarTask, choice: TaskDueChoice) => {
+    if (!client) return;
+    taskStore.updateTask(client, task.id, dueFor(task, choice)).catch((error: unknown) => {
+      toast.error(describeError(error, t("notifications.task_update_error")));
+    });
+  }, [client, taskStore, describeError, t]);
+
+  const handleMoveTask = useCallback((task: CalendarTask, calendarId: string) => {
+    if (!client) return;
+    taskStore.updateTask(client, task.id, { calendarIds: { [calendarId]: true } }).catch((error: unknown) => {
+      toast.error(describeError(error, t("notifications.task_update_error")));
+    });
+  }, [client, taskStore, describeError, t]);
 
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -2098,6 +2136,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onSelectTask={openEditTaskModal}
               onToggleComplete={handleToggleTaskComplete}
               selectedTaskId={taskStore.selectedTaskId}
+              onDeleteTask={(task) => { void handleDeleteTaskWithUndo(task); }}
+              onSetDue={handleSetTaskDue}
+              moveLists={writableTaskCalendars}
+              onMoveTask={handleMoveTask}
               onQuickCreate={(title, due) => {
                 // Into the first task-only list, else the default calendar,
                 // else the first the user may write to (pim-8).

@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# névjegy kijelölve} other {# névjegy kijelölve}}",
     "selection_more": "és még {count}",
-    "no_addresses": "A kijelölt névjegyek egyikének sincs e-mail-címe."
+    "no_addresses": "A kijelölt névjegyek egyikének sincs e-mail-címe.",
+    "task_open": "Megnyitás",
+    "due_next_week": "Jövő héten",
+    "due_none": "Nincs határidő",
+    "due_pick": "Dátum választása…",
+    "move_to_list": "Áthelyezés listába"
   },
   "desktopEdit": {
     "edit": "Szerkesztés",

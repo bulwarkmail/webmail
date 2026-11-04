@@ -7613,7 +7613,12 @@
   "ux_p3_pim_pc": {
     "selection_title": "{count, plural, one {# مخاطب انتخاب شد} other {# مخاطب انتخاب شد}}",
     "selection_more": "و {count} مورد دیگر",
-    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند."
+    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند.",
+    "task_open": "باز کردن",
+    "due_next_week": "هفتهٔ بعد",
+    "due_none": "بدون موعد",
+    "due_pick": "انتخاب تاریخ…",
+    "move_to_list": "انتقال به فهرست"
   },
   "desktopEdit": {
     "edit": "ویرایش",
