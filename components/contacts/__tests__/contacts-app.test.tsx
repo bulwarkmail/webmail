@@ -299,12 +299,83 @@ describe('ContactsApp', () => {
     expect(consumePendingMailto()).toMatchObject({ to: [expect.stringContaining('alice@example.com')], inApp: true });
   });
 
-  it('says so when a duplicate fails', async () => {
-    renderContacts();
-    const addLocalContact = vi.fn(async () => { throw new Error('quota'); });
-    act(() => { useContactStore.setState({ addLocalContact }); });
-    fireEvent.contextMenu(screen.getByText('Alice Smith'));
-    fireEvent.click(screen.getByText('context_menu.duplicate'));
-    await waitFor(() => expect(useToastStore.getState().toasts.at(-1)?.title).toBe('toast.error_create'));
+  describe('merging duplicates (pim-14)', () => {
+    const anna1: ContactCard = {
+      id: 'c-anna1', uid: 'urn:uuid:anna1', addressBookIds: {}, updated: '2026-01-01T00:00:00Z',
+      name: { components: [{ kind: 'given', value: 'Anna' }, { kind: 'surname', value: 'Example' }], isOrdered: true },
+      emails: { e0: { address: 'anna@home.example.net' } },
+      addresses: { a0: { components: [{ kind: 'name', value: 'Hauptstraße 1' }, { kind: 'locality', value: 'Berlin' }], isOrdered: true } },
+    };
+    const anna2: ContactCard = {
+      id: 'c-anna2', uid: 'urn:uuid:anna2', addressBookIds: {}, updated: '2026-06-01T00:00:00Z',
+      name: { components: [{ kind: 'given', value: 'Anna' }, { kind: 'surname', value: 'Example' }], isOrdered: true },
+      emails: { e0: { address: 'anna@example.net' } },
+    };
+    const club: ContactCard = { id: 'g-club', kind: 'group', addressBookIds: {}, name: { full: 'Club' }, members: { 'urn:uuid:anna1': true } };
+    const lastToast = () => useToastStore.getState().toasts.at(-1);
+
+    it('merges two ticked contacts from the selection bar, keeps all their data and group, and Undo brings the other back', async () => {
+      renderContacts([anna1, anna2, bob, club]);
+      fireEvent.click(screen.getAllByText('Anna Example')[0]);
+      fireEvent.click(screen.getAllByText('Anna Example')[1], { ctrlKey: true });
+      fireEvent.click(screen.getByRole('button', { name: 'merge_selected' }));
+      const preview = await screen.findByTestId('merge-preview');
+      expect(within(preview).getByText('anna@example.net')).toBeInTheDocument();
+      expect(within(preview).getByText('anna@home.example.net')).toBeInTheDocument();
+      expect(within(preview).getByText('Hauptstraße 1, Berlin')).toBeInTheDocument();
+      expect(within(preview).getByText('Club')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id)).toEqual(['c-anna2', 'c-bob', 'g-club']));
+      const kept = useContactStore.getState().contacts[0];
+      expect(Object.values(kept.emails ?? {}).map((e) => e.address)).toEqual(['anna@example.net', 'anna@home.example.net']);
+      expect(Object.values(kept.addresses ?? {})).toEqual([anna1.addresses!.a0]);
+      expect(useContactStore.getState().contacts[2].members).toEqual({ 'urn:uuid:anna2': true });
+      expect(lastToast()?.title).toBe('merged');
+
+      await act(async () => { lastToast()?.action?.onClick(); });
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id).sort()).toEqual(['c-anna1', 'c-anna2', 'c-bob', 'g-club']));
+      const restored = useContactStore.getState().contacts;
+      expect(Object.keys(restored.find((c) => c.id === 'c-anna2')!.emails ?? {})).toEqual(['e0']);
+      expect(restored.find((c) => c.id === 'g-club')?.members).toEqual({ 'urn:uuid:anna1': true });
+    });
+
+    it('lists possible duplicates over the list and merges a set from there', async () => {
+      renderContacts([anna1, anna2, bob]);
+      fireEvent.click(screen.getByText('possible_duplicates'));
+      const view = screen.getByTestId('contact-duplicates');
+      expect(within(view).getAllByText('Anna Example')).toHaveLength(2);
+      expect(within(view).queryByText('Bob Jones')).toBeNull();
+      fireEvent.click(within(view).getByRole('button', { name: /merge_selected/ }));
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(useContactStore.getState().contacts.map((c) => c.id)).toEqual(['c-anna2', 'c-bob']));
+      // Nothing left to merge: the line goes away.
+      await waitFor(() => expect(screen.queryByText('possible_duplicates')).toBeNull());
+    });
+
+    it('offers Merge with… instead of Duplicate, picks the other card, then merges', async () => {
+      renderContacts([anna1, anna2, bob]);
+      fireEvent.contextMenu(screen.getByText('Bob Jones'));
+      expect(screen.queryByText('context_menu.duplicate')).toBeNull();
+      fireEvent.click(screen.getByText('merge_with'));
+      const list = await screen.findByTestId('merge-pick-list');
+      fireEvent.click(within(list).getAllByText('Anna Example')[0]);
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(useContactStore.getState().contacts).toHaveLength(2));
+    });
+
+    it('says so when the merge fails, and deletes nothing', async () => {
+      renderContacts([anna1, anna2]);
+      const updateLocalContact = vi.fn(async () => { throw new Error('quota'); });
+      act(() => { useContactStore.setState({ updateLocalContact }); });
+      fireEvent.click(screen.getByText('possible_duplicates'));
+      fireEvent.click(within(screen.getByTestId('contact-duplicates')).getByRole('button', { name: /merge_selected/ }));
+      await screen.findByTestId('merge-preview');
+      fireEvent.click(screen.getByRole('button', { name: 'merge' }));
+      await waitFor(() => expect(lastToast()?.title).toBe('merge_failed'));
+      expect(useContactStore.getState().contacts).toHaveLength(2);
+    });
   });
 });

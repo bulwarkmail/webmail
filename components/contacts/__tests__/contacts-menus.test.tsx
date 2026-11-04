@@ -17,22 +17,23 @@ const alice: ContactCard = {
 const menuLabels = () => within(screen.getByRole('menu')).getAllByRole('menuitem').map((i) => i.textContent);
 
 describe('one action list per contact (R6)', () => {
-  it('offers Duplicate in the right-click menu as in the detail ⋮', () => {
+  it('offers Merge with… in the right-click menu as in the detail ⋮, and no Duplicate', () => {
     const noop = vi.fn();
     render(
       <ContactList
         contacts={[alice]} selectedContactId={null} searchQuery="" onSearchChange={noop} onSelectContact={noop}
         onCreateNew={noop} selectedContactIds={new Set()} onToggleSelection={noop} onSelectRangeContacts={noop}
         onSelectAll={noop} onClearSelection={noop} onBulkDelete={noop} onBulkAddToGroup={noop} onBulkExport={noop}
-        onEditContact={noop} onDeleteContact={noop} onAddContactToGroup={noop} onDuplicateContact={noop} onComposeContact={noop}
+        onEditContact={noop} onDeleteContact={noop} onAddContactToGroup={noop} onMergeContact={noop} onComposeContact={noop}
       />,
     );
     fireEvent.contextMenu(screen.getByText('Alice'));
     const rightClick = menuLabels();
-    expect(rightClick).toContain('context_menu.duplicate');
+    expect(rightClick).toContain('merge_with');
+    expect(rightClick).not.toContain('context_menu.duplicate');
     fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
 
-    render(<ContactDetail contact={alice} onEdit={noop} onDelete={noop} onDuplicate={noop} onAddToGroup={noop} onCompose={noop} />);
+    render(<ContactDetail contact={alice} onEdit={noop} onDelete={noop} onMergeWith={noop} onAddToGroup={noop} onCompose={noop} />);
     fireEvent.click(screen.getByRole('button', { name: 'detail.more_actions' }));
     const detail = menuLabels();
     // The detail's ⋮ is the same list, without what the page has as buttons.
