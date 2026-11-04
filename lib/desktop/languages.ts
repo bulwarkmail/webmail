@@ -42,6 +42,18 @@ export function noteComposerLanguage(key: string, language: string | null): void
 export function shellLabels(t: (key: string, values?: Record<string, string>) => string): Record<string, string> {
   return {
     ...updateLabels(t),
+    signInDone: t('desktop_browser_sign_in.page_done'),
+    signInFailed: t('desktop_browser_sign_in.page_failed'),
+    signInLinkUsed: t('desktop_browser_sign_in.page_link_used'),
+    signInPageTitle: t('desktop_browser_sign_in.page_title', { server: '{server}' }),
+    signInPageIntro: t('desktop_browser_sign_in.page_intro', { server: '{server}' }),
+    signInUsername: t('desktop_browser_sign_in.page_username'),
+    signInPassword: t('desktop_browser_sign_in.page_password'),
+    signInCode: t('desktop_browser_sign_in.page_code'),
+    signInSubmit: t('desktop_browser_sign_in.page_submit'),
+    signInWrongPassword: t('desktop_browser_sign_in.page_wrong_password'),
+    signInCodeNeeded: t('desktop_browser_sign_in.page_code_needed'),
+    signInNoAnswer: t('desktop_browser_sign_in.page_no_answer'),
     menuFile: t('desktopUi.menu.file'),
     menuEdit: t('desktopUi.menu.edit'),
     menuView: t('desktopUi.menu.view'),

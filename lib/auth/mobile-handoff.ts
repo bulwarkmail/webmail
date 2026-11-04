@@ -27,6 +27,26 @@ export function mobileHandoffTarget(raw: string | null | undefined): string {
     : '';
 }
 
+/**
+ * The desktop app's loopback listener (RFC 8252), the other kind of target. Only ever
+ * with a code: unlike the phone's link, it has no older builds that take the sign-in in a
+ * fragment, so without a valid challenge this isn't a hand-off at all. The code goes
+ * nowhere but this computer, whichever port a link names, and it's worthless without the
+ * verifier behind the challenge.
+ */
+const DESKTOP_TARGET = /^http:\/\/127\.0\.0\.1:([1-9][0-9]{3,4})\/bulwark-desktop\/callback$/;
+
+export function desktopHandoffTarget(raw: string | null | undefined): string {
+  if (typeof raw !== 'string') return '';
+  const match = DESKTOP_TARGET.exec(raw.trim());
+  return match && Number(match[1]) <= 65535 ? match[0] : '';
+}
+
+/** Either kind of target, as the callback page reads it back. */
+export function handoffTarget(raw: string | null | undefined): string {
+  return mobileHandoffTarget(raw) || desktopHandoffTarget(raw);
+}
+
 /** The URL the browser hands to the app: the target plus the fragment. */
 export function buildMobileHandoffUrl(target: string, fragment: Record<string, string>): string {
   return `${target}#${new URLSearchParams(fragment).toString()}`;

@@ -10,6 +10,7 @@ import {
 } from '@/lib/oauth/token-exchange';
 import { buildRedeemBundle } from '@/lib/auth/pair-bundle';
 import { isHandoffCodeChallenge, stashHandoff } from '@/lib/auth/handoff-store';
+import { desktopHandoffTarget } from '@/lib/auth/mobile-handoff';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
@@ -149,6 +150,28 @@ export async function POST(request: NextRequest) {
       // builds refuse a provider on another host, so those renew through
       // this webmail - the same bundle a paired phone gets.
       const { clientId, serverUrl } = getRequiredConfig(pendingServerId);
+      if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri)) {
+        // The desktop app on this instance: its redeem writes its own cookies, the way
+        // the code below would have for this browser. sso/start made sure of a challenge.
+        if (!mobileCodeChallenge) throw new Error('desktop hand-off without a challenge');
+        const handoffCode = await stashHandoff({
+          flow: 'desktop-tokens',
+          server_url: serverUrl,
+          server_id: pendingServerId,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          id_token: tokens.id_token,
+          expires_in: tokens.expires_in ?? 3600,
+          signed_in_at: signedInAt,
+        }, { challenge: mobileCodeChallenge, state: mobileState ?? '', awaitConfirm: true });
+        logger.info('Desktop hand-off parked', { flow: 'desktop-tokens' });
+        return NextResponse.json({
+          mobile_handoff_code: handoffCode,
+          server_url: serverUrl,
+          mobile_redirect_uri: mobileRedirectUri,
+          mobile_state: mobileState,
+        });
+      }
       const bundle = buildRedeemBundle({
         flow: 'oauth',
         serverUrl,

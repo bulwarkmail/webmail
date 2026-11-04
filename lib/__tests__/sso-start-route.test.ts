@@ -196,3 +196,36 @@ describe('sso start for the mobile app', () => {
     expect(encrypted.last).not.toHaveProperty('mobile_code_challenge');
   });
 });
+
+describe('sso start for the desktop app', () => {
+  const CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
+  const LISTENER = 'http://127.0.0.1:51234/bulwark-desktop/callback';
+  const desktop = (extra: Record<string, unknown> = {}) => callRoute({
+    redirect_uri: 'https://mail.example.com/auth/callback',
+    mobile_redirect_uri: LISTENER,
+    mobile_state: 'd-1',
+    ...extra,
+  });
+
+  beforeEach(() => {
+    encrypted.last = null;
+  });
+
+  it('keeps the loopback target and its challenge for the complete route', async () => {
+    const { status } = await desktop({ mobile_code_challenge: CHALLENGE });
+    expect(status).toBe(200);
+    expect(encrypted.last).toMatchObject({ mobile_redirect_uri: LISTENER, mobile_state: 'd-1', mobile_code_challenge: CHALLENGE });
+  });
+
+  it('refuses it without a challenge: tokens would come back for a link', async () => {
+    const { status } = await desktop();
+    expect(status).toBe(400);
+    expect(encrypted.last).toBeNull();
+  });
+
+  it.each(['http://127.0.0.1:51234/other', 'http://localhost:51234/bulwark-desktop/callback', 'http://evil.example/bulwark-desktop/callback'])('refuses %s as a target', async (target) => {
+    const { status } = await desktop({ mobile_code_challenge: CHALLENGE, mobile_redirect_uri: target });
+    expect(status).toBe(400);
+    expect(encrypted.last).toBeNull();
+  });
+});

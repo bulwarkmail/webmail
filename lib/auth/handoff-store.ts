@@ -59,9 +59,29 @@ export function isHandoffCode(value: unknown): value is string {
   return typeof value === 'string' && CODE_RE.test(value);
 }
 
+/**
+ * What the desktop app's sign-in parks (app/api/auth/desktop-handoff). The app's redeem
+ * writes its own cookies from this, so these fields never go to anyone else: the mobile
+ * redeem route refuses them.
+ */
+export type DesktopHandoffBundle =
+  | { flow: 'desktop-password'; server_url: string; server_id: string | null; username: string; password: string }
+  | {
+      flow: 'desktop-tokens';
+      server_url: string;
+      server_id: string | null;
+      access_token: string;
+      refresh_token?: string;
+      id_token?: string;
+      expires_in: number;
+      signed_in_at: number;
+    };
+
+export type ParkedHandoff = RedeemBundle | DesktopHandoffBundle;
+
 interface HandoffRecord {
   /** Null once redeemed (or tried) or expired. */
-  bundle: RedeemBundle | null;
+  bundle: ParkedHandoff | null;
   state: string;
   challenge: string;
   /** Whether the user confirmed the hand-off; only confirmed codes redeem. */
@@ -72,7 +92,7 @@ interface HandoffRecord {
 }
 
 export type HandoffRedeemResult =
-  | { ok: true; bundle: RedeemBundle; state: string }
+  | { ok: true; bundle: ParkedHandoff; state: string }
   | { ok: false; reason: 'invalid' | 'expired' | 'verifier_mismatch' };
 
 const STORE_KEY = '__bulwarkMobileHandoffStore';
@@ -98,7 +118,7 @@ function s256(verifier: string): string {
 }
 
 function newRecord(
-  bundle: RedeemBundle,
+  bundle: ParkedHandoff,
   options: { challenge: string; state: string; awaitConfirm?: boolean },
   now: number,
 ): HandoffRecord {
@@ -121,7 +141,7 @@ function confirmed(record: HandoffRecord, now: number): HandoffRecord {
 }
 
 /** What a redeem attempt of `record` (spent by the attempt) gets. */
-function redeemOutcome(record: HandoffRecord, bundle: RedeemBundle | null, verifier: string, now: number): HandoffRedeemResult {
+function redeemOutcome(record: HandoffRecord, bundle: ParkedHandoff | null, verifier: string, now: number): HandoffRedeemResult {
   if (!bundle) return { ok: false, reason: record.expiresAt <= now ? 'expired' : 'invalid' };
   if (!record.confirmed) return { ok: false, reason: 'invalid' };
   const expected = Buffer.from(record.challenge, 'ascii');
@@ -129,7 +149,7 @@ function redeemOutcome(record: HandoffRecord, bundle: RedeemBundle | null, verif
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
     return { ok: false, reason: 'verifier_mismatch' };
   }
-  if (bundle.flow === 'oauth' && typeof bundle.expires_in === 'number') {
+  if ((bundle.flow === 'oauth' || bundle.flow === 'desktop-tokens') && typeof bundle.expires_in === 'number') {
     const elapsed = Math.floor((now - record.issuedAt) / 1000);
     return { ok: true, bundle: { ...bundle, expires_in: Math.max(0, bundle.expires_in - elapsed) }, state: record.state };
   }
@@ -161,7 +181,7 @@ const ttl = (record: HandoffRecord, now: number) => Math.max(record.forgetAt - n
  * `awaitConfirm` the code only becomes redeemable through confirmHandoff.
  */
 export async function stashHandoff(
-  bundle: RedeemBundle,
+  bundle: ParkedHandoff,
   options: { challenge: string; state: string; awaitConfirm?: boolean },
   now = Date.now(),
 ): Promise<string> {

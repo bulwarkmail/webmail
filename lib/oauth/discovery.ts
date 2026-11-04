@@ -5,6 +5,7 @@ export interface OAuthMetadata {
   revocation_endpoint?: string;
   end_session_endpoint?: string;
   scopes_supported?: string[];
+  registration_endpoint?: string;
 }
 
 // Validates that a discovered endpoint URL is safe to follow. Server-side

@@ -1,8 +1,6 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
-import { DESKTOP_CLIENT_ID_KEY, DESKTOP_REDIRECT_URI_KEY } from "@/lib/desktop/browser-sign-in";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
@@ -12,7 +10,7 @@ import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-o
 import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { buildMobileHandoffUrl, mobileHandoffTarget } from "@/lib/auth/mobile-handoff";
+import { buildMobileHandoffUrl, desktopHandoffTarget, handoffTarget } from "@/lib/auth/mobile-handoff";
 import { confirmMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
@@ -32,6 +30,7 @@ function OAuthCallbackInner() {
     url: string | null;
     resolveUrl?: () => Promise<string | null>;
     username: string;
+    desktop?: boolean;
   } | null>(null);
   // The authorization code is single-use. React's development double effect
   // ran this twice: the second pass no longer saw the pairing re-auth flag
@@ -118,12 +117,9 @@ function OAuthCallbackInner() {
       const prefix = getPathPrefix(params.locale as string);
       // Lite on Stalwart registers one locale-free URI (lib/auth/lite-oauth.ts);
       // the entry document brought us here from it.
-      // The desktop app's browser sign-in redirected to its loopback listener
-      // (lib/desktop/browser-sign-in.ts), which this page's origin can't tell.
-      const desktopRedirectUri = IS_DESKTOP_BUILD ? sessionStorage.getItem(DESKTOP_REDIRECT_URI_KEY) : null;
-      const redirectUri = desktopRedirectUri ?? (LITE_OAUTH_AVAILABLE
+      const redirectUri = LITE_OAUTH_AVAILABLE
         ? getLiteOAuthRedirectUri()
-        : `${window.location.origin}${prefix}/${params.locale}/auth/callback`);
+        : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
 
       loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
         .then((success) => {
@@ -133,10 +129,6 @@ function OAuthCallbackInner() {
             sessionStorage.removeItem("oauth_server_url");
             sessionStorage.removeItem("oauth_server_id");
             sessionStorage.removeItem("oauth_add_account_mode");
-            if (IS_DESKTOP_BUILD) {
-              sessionStorage.removeItem(DESKTOP_REDIRECT_URI_KEY);
-              sessionStorage.removeItem(DESKTOP_CLIENT_ID_KEY);
-            }
             let redirectTo = `${prefix}/${params.locale}`;
             try {
               const saved = sessionStorage.getItem('redirect_after_login');
@@ -160,7 +152,7 @@ function OAuthCallbackInner() {
       let mobileRedirectUri = "";
       let mobileState: string | null = null;
       try {
-        mobileRedirectUri = mobileHandoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
+        mobileRedirectUri = handoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
         mobileState = sessionStorage.getItem("mobile_state");
       } catch { /* sessionStorage may be unavailable */ }
 
@@ -200,6 +192,7 @@ function OAuthCallbackInner() {
                   code: handoffCode,
                   state: handoffState,
                 }),
+                desktop: Boolean(desktopHandoffTarget(mobileRedirectUri)),
                 username: typeof data.server_url === "string" ? data.server_url : "",
               });
               return;
@@ -275,6 +268,7 @@ function OAuthCallbackInner() {
           url={pendingHandoff.url}
           resolveUrl={pendingHandoff.resolveUrl ?? null}
           username={pendingHandoff.username}
+          desktop={pendingHandoff.desktop}
           onError={() => {
             setPendingHandoff(null);
             setError("token_exchange_failed");
