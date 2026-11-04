@@ -64,6 +64,8 @@ describe('the folded column\'s drawer (default layout)', () => {
     expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'bottom-0', 'top-[var(--drawer-top)]', 'z-50']));
     expect(classes).not.toContain('desk:absolute');
     expect(classes).not.toContain('h-full');
+    // Where the window's controls are over the page, app/globals.css places it by this.
+    expect(drawer()).toHaveAttribute('data-window-drawer');
   });
 
   it('asks the caller to dim the page while it is open, and closes from there', () => {

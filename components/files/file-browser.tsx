@@ -1332,7 +1332,7 @@ export function FileBrowser({
           contained={isEmbedded || mvShell}
           data-testid="files-sidebar-drawer"
           data-pane="sidebar"
-          className="border-e border-border"
+          className="border-e border-border bg-secondary"
         >
           {sidebar}
         </EdgeDrawer>

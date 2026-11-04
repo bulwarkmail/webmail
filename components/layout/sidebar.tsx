@@ -2256,6 +2256,7 @@ function SidebarImpl({
       data-mv-rail-peek={hoverExpanded && mvShell ? "" : undefined}
       data-folder-peek={isFolderDrawer ? "" : undefined}
       data-folder-drawer={isFolderDrawer ? "" : undefined}
+      data-window-drawer={isFolderDrawer && !isEmbedded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         // Mountain View's navigation sits on the canvas, with no rule between
@@ -2269,8 +2270,9 @@ function SidebarImpl({
         // message list underneath never moves while the pointer passes over.
         // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
         hoverExpanded && mvShell && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl",
-        // The drawer: at the window's start edge, from under the top bar and
-        // the window's controls (--drawer-top) to the bottom; in a Pro pane, at
+        // The drawer: at the window's start edge, from under the top bar
+        // (--drawer-top, and [data-window-drawer] for the window's controls)
+        // to the bottom; in a Pro pane, at
         // the pane's. At its full width at once: grown from the folded
         // column's 48px at the edge, it would leave the pointer that opened it
         // outside, which closes it again.

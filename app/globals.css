@@ -630,9 +630,51 @@ optgroup {
   --titlebar-left-inset: env(titlebar-area-x, 0px);
   --titlebar-row-height: env(titlebar-area-height, 0px);
   /* Where a drawer from the window's edge starts (Mail's folders, the
-     Calendar, Contacts and Files sidebars): under the top bar, and under the
-     window's controls when they are over the page. */
+     Calendar, Contacts and Files sidebars): under the top bar. With the
+     window's controls over the page, see the [data-window-drawer] rules. */
   --drawer-top: max(var(--app-top-inset), var(--titlebar-row-height));
+}
+
+/*
+ * A drawer from the window's edge with the window's controls over the page runs
+ * from the very top, over the rail's top, as in the browser, and its top band is
+ * one more place to drag the window by (its buttons stay buttons). Only where it
+ * would cover the controls does that change; lib/window-controls-overlay.ts reads
+ * that from the overlay's rect, for each edge. Under the buttons at the right
+ * (Windows, Linux, so a right-to-left page's drawer) it starts below their row.
+ * Under the traffic lights at the left (macOS) it still runs from the top, as a
+ * Finder or Mail sidebar does, and its content starts below them. The menu bar's
+ * row holds the controls when it shows: the drawer starts below that.
+ */
+html[data-window-controls]:not([data-menu-bar]) {
+  --drawer-top: var(--app-top-inset);
+  --drawer-band: var(--titlebar-row-height);
+}
+
+html[data-window-controls]:not([data-menu-bar]):not([dir="rtl"])[data-left-drawer="below"],
+html[data-window-controls]:not([data-menu-bar])[dir="rtl"][data-right-drawer="below"] {
+  --drawer-top: max(var(--app-top-inset), var(--titlebar-row-height));
+  --drawer-band: 0px;
+}
+
+html[data-window-controls]:not([data-menu-bar]):not([dir="rtl"])[data-left-drawer="inset"],
+html[data-window-controls]:not([data-menu-bar])[dir="rtl"][data-right-drawer="inset"] {
+  --drawer-inset: var(--titlebar-row-height);
+}
+
+html[data-window-controls] [data-window-drawer] {
+  padding-top: var(--drawer-inset, 0px);
+}
+
+html[data-window-controls] [data-window-drawer]::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--drawer-band, 0px);
+  pointer-events: none;
+  app-region: drag;
+  -webkit-app-region: drag;
 }
 
 /* A skeleton's row that will hold the controls has them from the first frame. */

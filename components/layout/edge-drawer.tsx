@@ -44,8 +44,9 @@ interface EdgeDrawerProps extends Omit<HTMLAttributes<HTMLDivElement>, "children
 /**
  * A sidebar opened over the page below the full desktop, as Mail's folders
  * do: from the window's start edge (the right in RTL), over the app rail,
- * from under the top bar and the window's controls (--drawer-top) to the
- * bottom, with the page dimmed behind it. Keyboard and focus: useEdgeDrawer.
+ * from under the top bar (--drawer-top) to the bottom, with the page dimmed
+ * behind it. With the window's controls over the page it meets them as
+ * app/globals.css says for [data-window-drawer]. Keyboard and focus: useEdgeDrawer.
  * Closed, it is off-screen and out of reach: no clicks, no Tab stops.
  */
 export function EdgeDrawer({ open, onClose, contained, returnFocus, className, children, ...rest }: EdgeDrawerProps) {
@@ -57,6 +58,7 @@ export function EdgeDrawer({ open, onClose, contained, returnFocus, className, c
         {...rest}
         ref={ref}
         data-edge-drawer=""
+        data-window-drawer={contained ? undefined : ""}
         inert={!open}
         className={cn(
           "z-50 w-72 max-w-[85%] flex flex-col",

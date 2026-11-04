@@ -6,7 +6,7 @@ import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { WindowMenuBar } from '@/components/layout/window-menu-bar';
 import { menuKeyText } from '@/lib/desktop/menu-bar';
 import { desktopBootScript } from '@/lib/desktop/boot';
-import { CONTROLS_ATTRIBUTE, CONTROLS_LEFT_ATTRIBUTE, ROW_ATTRIBUTE, ROW_LEFT_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, TITLEBAR_RIGHT_VAR, TITLEBAR_ROW_VAR, markWindowRows, readTitlebarArea, watchWindowRows } from '@/lib/window-controls-overlay';
+import { CONTROLS_ATTRIBUTE, CONTROLS_LEFT_ATTRIBUTE, DRAWER_LEFT_ATTRIBUTE, DRAWER_RIGHT_ATTRIBUTE, ROW_ATTRIBUTE, ROW_LEFT_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, TITLEBAR_RIGHT_VAR, TITLEBAR_ROW_VAR, markWindowRows, readTitlebarArea, watchWindowRows } from '@/lib/window-controls-overlay';
 
 class FakeOverlay extends EventTarget {
   visible = true;
@@ -34,6 +34,8 @@ afterEach(() => {
   root.style.removeProperty(TITLEBAR_ROW_VAR);
   root.removeAttribute(CONTROLS_ATTRIBUTE);
   root.removeAttribute(CONTROLS_LEFT_ATTRIBUTE);
+  root.removeAttribute(DRAWER_LEFT_ATTRIBUTE);
+  root.removeAttribute(DRAWER_RIGHT_ATTRIBUTE);
 });
 
 describe('the menu bar in the desktop app', () => {
@@ -405,6 +407,76 @@ describe('the window controls over the app', () => {
         resizeTo(fake, width);
         expect(rightInset(), `at ${width} px`).toBe('137px');
       }
+    });
+  });
+
+  // A drawer from the window's edge started under the controls' row on both sides,
+  // so the rail's top icon showed above it, dimmed (usability test 2026-11-04).
+  describe("a drawer from the window's edge", () => {
+    const startWidth = window.innerWidth;
+    const setWidth = (width: number) => Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true });
+    afterEach(() => setWidth(startWidth));
+
+    it('Windows and Linux: from the left it runs from the top, from the right it starts below the controls', () => {
+      overlayAt(0, window.innerWidth - 138);
+      render(<WindowControlsHost />);
+      expect(root.hasAttribute(DRAWER_LEFT_ATTRIBUTE)).toBe(false);
+      expect(root.getAttribute(DRAWER_RIGHT_ATTRIBUTE)).toBe('below');
+    });
+
+    it('macOS: from the left it runs from the top with its content below the traffic lights, from the right it runs from the top', () => {
+      overlayAt(78, window.innerWidth - 78);
+      render(<WindowControlsHost />);
+      expect(root.getAttribute(DRAWER_LEFT_ATTRIBUTE)).toBe('inset');
+      expect(root.hasAttribute(DRAWER_RIGHT_ATTRIBUTE)).toBe(false);
+    });
+
+    it('follows the window: too narrow for the drawer and the controls side by side, the left one goes below too, and back', () => {
+      setWidth(1000);
+      const fake = overlayAt(0, 1000 - 138);
+      render(<WindowControlsHost />);
+      expect(root.hasAttribute(DRAWER_LEFT_ATTRIBUTE)).toBe(false);
+      const resizeTo = (width: number) => act(() => {
+        (fake as unknown as { getTitlebarAreaRect: () => object }).getTitlebarAreaRect = () => ({ x: 0, y: 0, width: width - 138, height: 56 });
+        fake.dispatchEvent(new Event('geometrychange'));
+        setWidth(width);
+        window.dispatchEvent(new Event('resize'));
+      });
+      // 85 % of 400 is 340, wider than 288; 400 - 138 = 262 leaves less than that.
+      resizeTo(400);
+      expect(root.getAttribute(DRAWER_LEFT_ATTRIBUTE)).toBe('below');
+      resizeTo(1000);
+      expect(root.hasAttribute(DRAWER_LEFT_ATTRIBUTE)).toBe(false);
+    });
+
+    it('the overlay going takes the marks with it', () => {
+      const fake = overlayAt(0, window.innerWidth - 138);
+      render(<WindowControlsHost />);
+      act(() => {
+        (fake as unknown as { visible: boolean }).visible = false;
+        fake.dispatchEvent(new Event('geometrychange'));
+      });
+      expect(root.hasAttribute(DRAWER_RIGHT_ATTRIBUTE)).toBe(false);
+    });
+
+    it('the stylesheet: from the top with a band to drag by, below where marked, and the content inset under the traffic lights', () => {
+      const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+      const rule = (selector: string) => {
+        const at = css.indexOf(`${selector} {`);
+        expect(at, selector).toBeGreaterThan(-1);
+        return css.slice(at, css.indexOf('}', at));
+      };
+      expect(rule('html[data-window-controls]:not([data-menu-bar])')).toMatch(/--drawer-top:\s*var\(--app-top-inset\);\s*--drawer-band:\s*var\(--titlebar-row-height\)/);
+      const below = rule('html[data-window-controls]:not([data-menu-bar])[dir="rtl"][data-right-drawer="below"]');
+      expect(css).toContain('html[data-window-controls]:not([data-menu-bar]):not([dir="rtl"])[data-left-drawer="below"],');
+      expect(below).toMatch(/--drawer-top:\s*max\(var\(--app-top-inset\), var\(--titlebar-row-height\)\);\s*--drawer-band:\s*0px/);
+      expect(css).toContain('html[data-window-controls]:not([data-menu-bar]):not([dir="rtl"])[data-left-drawer="inset"],');
+      expect(rule('html[data-window-controls]:not([data-menu-bar])[dir="rtl"][data-right-drawer="inset"]')).toMatch(/--drawer-inset:\s*var\(--titlebar-row-height\)/);
+      expect(rule('html[data-window-controls] [data-window-drawer]')).toMatch(/padding-top:\s*var\(--drawer-inset, 0px\)/);
+      const band = rule('html[data-window-controls] [data-window-drawer]::before');
+      expect(band).toMatch(/height:\s*var\(--drawer-band, 0px\)/);
+      expect(band).toMatch(/pointer-events:\s*none/);
+      expect(band).toMatch(/-webkit-app-region:\s*drag/);
     });
   });
 });
