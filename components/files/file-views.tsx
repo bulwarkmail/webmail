@@ -223,6 +223,7 @@ function FileListRow({ resource, isSelected, isFocused, isTabStop, isDropTarget,
   note?: string;
 }) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const touchProps = useTouchPress(touch, selecting, resource, handlers);
   const icon = <ResourceIcon resource={resource} size="sm" options={iconOptions} />;
   return (
@@ -299,7 +300,7 @@ function FileListRow({ resource, isSelected, isFocused, isTabStop, isDropTarget,
           <RowAction icon={Download} label={t("download")} onClick={() => handlers.onDownload?.(resource)} />
         )}
         {!touch && handlers.canShare(resource) && (
-          <RowAction icon={Share2} label={t("share")} onClick={() => handlers.onShare(resource)} />
+          <RowAction icon={Share2} label={tMenu("files_share_button")} onClick={() => handlers.onShare(resource)} />
         )}
         <IconButton
           data-item-action
