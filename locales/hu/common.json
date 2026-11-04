@@ -6455,6 +6455,19 @@
     "group_account": "Fiók",
     "switch_to": "Váltás erre: {account}"
   },
+  "menuAudit": {
+    "offline_header": "Nincs kapcsolat. Néhány művelethez kapcsolat kell.",
+    "files_new_folder": "Új mappa…",
+    "files_new_file": "Új fájl…",
+    "files_new_text_file": "Új szöveges fájl…",
+    "files_upload_files": "Fájlok feltöltése…",
+    "files_upload_folder": "Mappa feltöltése…",
+    "files_share": "Megosztás…",
+    "files_share_button": "Megosztás",
+    "contacts_add_to_group": "Hozzáadás a csoporthoz…",
+    "contacts_bulk_add_to_group": "Hozzáadás a csoporthoz…",
+    "schedule_send": "Késleltetett küldés…"
+  },
   "notification_center": {
     "title": "Értesítések",
     "mark_all_read": "Összes megjelölése olvasottként",

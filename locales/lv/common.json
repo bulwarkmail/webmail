@@ -6455,6 +6455,19 @@
     "group_account": "Konts",
     "switch_to": "Pārslēgties uz {account}"
   },
+  "menuAudit": {
+    "offline_header": "Jūs esat bezsaistē. Dažām darbībām vajag savienojumu.",
+    "files_new_folder": "Jauna mape…",
+    "files_new_file": "Jauns fails…",
+    "files_new_text_file": "Jauns teksta fails…",
+    "files_upload_files": "Augšupielādēt failus…",
+    "files_upload_folder": "Augšupielādēt mapi…",
+    "files_share": "Kopīgot…",
+    "files_share_button": "Kopīgot",
+    "contacts_add_to_group": "Pievienot grupai…",
+    "contacts_bulk_add_to_group": "Pievienot grupai…",
+    "schedule_send": "Ieplānot sūtīšanu…"
+  },
   "notification_center": {
     "title": "Paziņojumi",
     "mark_all_read": "Atzīmēt visus kā lasītus",

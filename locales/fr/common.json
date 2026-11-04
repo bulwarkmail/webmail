@@ -6455,6 +6455,19 @@
     "group_account": "Compte",
     "switch_to": "Passer à {account}"
   },
+  "menuAudit": {
+    "offline_header": "Vous êtes hors ligne. Certaines actions ont besoin d’une connexion.",
+    "files_new_folder": "Nouveau dossier…",
+    "files_new_file": "Nouveau fichier…",
+    "files_new_text_file": "Nouveau fichier texte…",
+    "files_upload_files": "Téléverser des fichiers…",
+    "files_upload_folder": "Téléverser un dossier…",
+    "files_share": "Partager…",
+    "files_share_button": "Partager",
+    "contacts_add_to_group": "Ajouter au groupe…",
+    "contacts_bulk_add_to_group": "Ajouter au groupe…",
+    "schedule_send": "Planifier l’envoi…"
+  },
   "notification_center": {
     "title": "Notifications",
     "mark_all_read": "Tout marquer comme lu",

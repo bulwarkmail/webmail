@@ -12,7 +12,7 @@ import type { MessageActionKey } from "./message-actions";
  */
 const KEYS: Partial<Record<MessageActionKey, { key: string; single: boolean }>> = {
   reply: { key: "R", single: true },
-  reply_all: { key: "Shift+R", single: true },
+  reply_all: { key: "Shift + R", single: true },
   forward: { key: "F", single: true },
   archive: { key: "E", single: true },
   delete: { key: "Del", single: false },
@@ -25,7 +25,7 @@ export function messageActionShortcut(
   options: { unread?: boolean; singleKeys: boolean },
 ): string | undefined {
   const entry = key === "read"
-    ? { key: options.unread ? "Shift+I" : "U", single: true }
+    ? { key: options.unread ? "Shift + I" : "U", single: true }
     : KEYS[key];
   if (!entry) return undefined;
   if (entry.single && !options.singleKeys) return undefined;

@@ -2335,6 +2335,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     empty: () => { if (selectedMailbox) void handleEmptyFolderFromContextMenu(selectedMailbox); },
   };
   const folderMenuMarkRead = useCallback(() => folderMenuLatest.current.markRead(), []);
+  // "Mark folder as read" is greyed out with nothing unread in the open folder.
+  const selectedFolderHasUnread = mailboxes.find((m) => m.id === selectedMailbox)?.unreadEmails !== 0;
   const folderMenuMarkAllRead = useCallback(() => folderMenuLatest.current.markAllRead(), []);
   const folderMenuEmpty = useCallback(() => folderMenuLatest.current.empty(), []);
   useEffect(() => {
@@ -5541,7 +5543,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onClick={() => { close(); void handleManualRefresh(); }}
                   />
                   <MailFolderMenuItems
-                    onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
+                    onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
                     onPicked={close}
@@ -5581,7 +5583,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   totalCount={searchQuery || !isFilterEmpty(searchFilters) ? undefined : mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
                   onRefresh={handleManualRefresh}
                   isRefreshing={isManualRefreshing}
-                  onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
+                  onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                   onMarkAllFoldersRead={handleMarkAllFoldersRead}
                   onEmptyFolder={selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
                   onCreateFolder={() => handleCreateFolderFromContextMenu()}
@@ -5651,7 +5653,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     folderRole={conversationRole}
                     onRefresh={handleManualRefresh}
                     refreshDisabled={!client || isManualRefreshing}
-                    onMarkFolderRead={selectedMailbox ? folderMenuMarkRead : undefined}
+                    onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? folderMenuMarkRead : undefined}
                     onMarkAllFoldersRead={folderMenuMarkAllRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? folderMenuEmpty : undefined}
                   />

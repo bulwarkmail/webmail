@@ -6455,6 +6455,19 @@
     "group_account": "アカウント",
     "switch_to": "{account} に切り替え"
   },
+  "menuAudit": {
+    "offline_header": "オフラインです。一部の操作には接続が必要です。",
+    "files_new_folder": "新しいフォルダー…",
+    "files_new_file": "新規ファイル…",
+    "files_new_text_file": "新規テキストファイル…",
+    "files_upload_files": "ファイルをアップロード…",
+    "files_upload_folder": "フォルダをアップロード…",
+    "files_share": "共有…",
+    "files_share_button": "共有",
+    "contacts_add_to_group": "グループに追加…",
+    "contacts_bulk_add_to_group": "グループに追加…",
+    "schedule_send": "送信を予約…"
+  },
   "notification_center": {
     "title": "通知",
     "mark_all_read": "すべて既読にする",

@@ -6455,6 +6455,19 @@
     "group_account": "Compte",
     "switch_to": "Canvia a {account}"
   },
+  "menuAudit": {
+    "offline_header": "No teniu connexió. Algunes accions la necessiten.",
+    "files_new_folder": "Carpeta nova…",
+    "files_new_file": "Fitxer nou…",
+    "files_new_text_file": "Fitxer de text nou…",
+    "files_upload_files": "Puja fitxers…",
+    "files_upload_folder": "Puja una carpeta…",
+    "files_share": "Comparteix…",
+    "files_share_button": "Comparteix",
+    "contacts_add_to_group": "Afegeix al grup…",
+    "contacts_bulk_add_to_group": "Afegeix al grup…",
+    "schedule_send": "Programa l'enviament…"
+  },
   "notification_center": {
     "title": "Notificacions",
     "mark_all_read": "Marca-ho tot com a llegit",

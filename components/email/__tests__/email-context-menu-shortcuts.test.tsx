@@ -58,10 +58,10 @@ describe('message menu key hints', () => {
   it('shows the keys the list runs each action with', () => {
     renderMenu();
     expect(within(row('reply')).getByText('R')).toBeInTheDocument();
-    expect(within(row('reply_all')).getByText('Shift+R')).toBeInTheDocument();
+    expect(within(row('reply_all')).getByText('Shift + R')).toBeInTheDocument();
     expect(within(row('forward')).getByText('F')).toBeInTheDocument();
     expect(within(row('star')).getByText('S')).toBeInTheDocument();
-    expect(within(row('mark_read')).getByText('Shift+I')).toBeInTheDocument();
+    expect(within(row('mark_read')).getByText('Shift + I')).toBeInTheDocument();
     expect(within(row('mark_as_spam')).getByText('!')).toBeInTheDocument();
     expect(within(screen.getByTestId('ctx-delete')).getByText('Del')).toBeInTheDocument();
   });
@@ -77,13 +77,38 @@ describe('message menu key hints', () => {
   it('shows them on a selection too', () => {
     renderMenu({ isMultiSelect: true, selectedCount: 2, onBatchDelete: vi.fn(), onBatchMarkAsRead: vi.fn(), onBatchMarkAsSpam: vi.fn() });
     expect(within(screen.getByTestId('ctx-delete')).getByText('Del')).toBeInTheDocument();
-    expect(within(screen.getByTestId('ctx-mark-read')).getByText('Shift+I')).toBeInTheDocument();
+    expect(within(screen.getByTestId('ctx-mark-read')).getByText('Shift + I')).toBeInTheDocument();
     expect(within(screen.getByTestId('ctx-spam')).getByText('!')).toBeInTheDocument();
   });
 
   it('matches the read state: U marks a read message unread', () => {
     expect(messageActionShortcut('read', { unread: false, singleKeys: true })).toBe('U');
-    expect(messageActionShortcut('read', { unread: true, singleKeys: true })).toBe('Shift+I');
+    expect(messageActionShortcut('read', { unread: true, singleKeys: true })).toBe('Shift + I');
     expect(messageActionShortcut('print', { singleKeys: true })).toBeUndefined();
+  });
+});
+
+describe('message menu offline', () => {
+  afterEach(async () => {
+    const { useOfflineStore } = await import('@/lib/offline/state');
+    useOfflineStore.setState({ browserOffline: false, enabled: [] });
+  });
+
+  it('greys out changes that would fail without a connection, and says why', async () => {
+    const { useOfflineStore } = await import('@/lib/offline/state');
+    useOfflineStore.setState({ browserOffline: true, enabled: [] });
+    renderMenu();
+    expect(screen.getByText('offline_header')).toBeInTheDocument();
+    expect((screen.getByTestId('ctx-delete') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId('ctx-star') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId('ctx-mark-read') as HTMLButtonElement).disabled).toBe(true);
+    // Writing a reply still works: the composer keeps the draft.
+    expect(row('reply')).not.toBeDisabled();
+  });
+
+  it('leaves them on while online', () => {
+    renderMenu();
+    expect(screen.queryByText('offline_header')).toBeNull();
+    expect((screen.getByTestId('ctx-delete') as HTMLButtonElement).disabled).toBe(false);
   });
 });

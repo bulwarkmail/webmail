@@ -6455,6 +6455,19 @@
     "group_account": "Konto",
     "switch_to": "Lülitu kontole {account}"
   },
+  "menuAudit": {
+    "offline_header": "Olete võrguühenduseta. Mõni toiming vajab ühendust.",
+    "files_new_folder": "Uus kaust…",
+    "files_new_file": "Uus fail…",
+    "files_new_text_file": "Uus tekstifail…",
+    "files_upload_files": "Laadi failid üles…",
+    "files_upload_folder": "Laadi kaust üles…",
+    "files_share": "Jaga…",
+    "files_share_button": "Jaga",
+    "contacts_add_to_group": "Lisa gruppi…",
+    "contacts_bulk_add_to_group": "Lisa gruppi…",
+    "schedule_send": "Ajasta saatmine…"
+  },
   "notification_center": {
     "title": "Märguanded",
     "mark_all_read": "Märgi kõik loetuks",

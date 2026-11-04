@@ -6455,6 +6455,19 @@
     "group_account": "Account",
     "switch_to": "Overschakelen naar {account}"
   },
+  "menuAudit": {
+    "offline_header": "U bent offline. Sommige acties hebben een verbinding nodig.",
+    "files_new_folder": "Nieuwe map…",
+    "files_new_file": "Nieuw bestand…",
+    "files_new_text_file": "Nieuw tekstbestand…",
+    "files_upload_files": "Bestanden uploaden…",
+    "files_upload_folder": "Map uploaden…",
+    "files_share": "Delen…",
+    "files_share_button": "Delen",
+    "contacts_add_to_group": "Aan groep toevoegen…",
+    "contacts_bulk_add_to_group": "Aan groep toevoegen…",
+    "schedule_send": "Verzenden plannen…"
+  },
   "notification_center": {
     "title": "Meldingen",
     "mark_all_read": "Alles als gelezen markeren",

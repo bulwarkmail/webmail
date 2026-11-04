@@ -6455,6 +6455,19 @@
     "group_account": "계정",
     "switch_to": "{account}(으)로 전환"
   },
+  "menuAudit": {
+    "offline_header": "오프라인 상태입니다. 일부 작업에는 연결이 필요합니다.",
+    "files_new_folder": "새 폴더…",
+    "files_new_file": "새 파일…",
+    "files_new_text_file": "새 텍스트 파일…",
+    "files_upload_files": "파일 업로드…",
+    "files_upload_folder": "폴더 업로드…",
+    "files_share": "공유…",
+    "files_share_button": "공유",
+    "contacts_add_to_group": "그룹에 추가…",
+    "contacts_bulk_add_to_group": "그룹에 추가…",
+    "schedule_send": "보내기 예약…"
+  },
   "notification_center": {
     "title": "알림",
     "mark_all_read": "모두 읽음으로 표시",

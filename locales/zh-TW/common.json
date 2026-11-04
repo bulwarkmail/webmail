@@ -6455,6 +6455,19 @@
     "group_account": "帳戶",
     "switch_to": "切換到 {account}"
   },
+  "menuAudit": {
+    "offline_header": "您已離線。部分操作需要連線。",
+    "files_new_folder": "新增資料夾…",
+    "files_new_file": "新增檔案…",
+    "files_new_text_file": "新增文字檔案…",
+    "files_upload_files": "上傳檔案…",
+    "files_upload_folder": "上傳資料夾…",
+    "files_share": "分享…",
+    "files_share_button": "分享",
+    "contacts_add_to_group": "新增至群組…",
+    "contacts_bulk_add_to_group": "新增至群組…",
+    "schedule_send": "排程寄送…"
+  },
   "notification_center": {
     "title": "通知",
     "mark_all_read": "全部標示為已讀",

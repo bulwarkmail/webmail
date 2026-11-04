@@ -6455,6 +6455,19 @@
     "group_account": "Hesap",
     "switch_to": "{account} hesabına geç"
   },
+  "menuAudit": {
+    "offline_header": "Çevrimdışısınız. Bazı işlemler bağlantı gerektirir.",
+    "files_new_folder": "Yeni Klasör…",
+    "files_new_file": "Yeni Dosya…",
+    "files_new_text_file": "Yeni Metin Dosyası…",
+    "files_upload_files": "Dosya Yükle…",
+    "files_upload_folder": "Klasör Yükle…",
+    "files_share": "Paylaş…",
+    "files_share_button": "Paylaş",
+    "contacts_add_to_group": "Gruba ekle…",
+    "contacts_bulk_add_to_group": "Gruba ekle…",
+    "schedule_send": "Göndermeyi zamanla…"
+  },
   "notification_center": {
     "title": "Bildirimler",
     "mark_all_read": "Tümünü okundu işaretle",

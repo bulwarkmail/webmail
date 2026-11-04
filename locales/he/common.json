@@ -6456,6 +6456,19 @@
     "group_account": "חשבון",
     "switch_to": "מעבר אל {account}"
   },
+  "menuAudit": {
+    "offline_header": "אין חיבור. חלק מהפעולות צריכות חיבור.",
+    "files_new_folder": "תיקיה חדשה…",
+    "files_new_file": "קובץ חדש…",
+    "files_new_text_file": "קובץ טקסט חדש…",
+    "files_upload_files": "העלה קבצים…",
+    "files_upload_folder": "העלה תיקייה…",
+    "files_share": "שתף…",
+    "files_share_button": "שתף",
+    "contacts_add_to_group": "הוסף לקבוצה…",
+    "contacts_bulk_add_to_group": "הוסף לקבוצה…",
+    "schedule_send": "תזמן שליחה…"
+  },
   "notification_center": {
     "title": "התראות",
     "mark_all_read": "סימון הכול כנקרא",
