@@ -68,7 +68,7 @@ const accountDot = (c: HTMLElement) =>
 describe('ThreadListItem account dot (#912)', () => {
   beforeEach(() => {
     accountState.accounts = [ACCOUNT_TEAL, ACCOUNT_OTHER];
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,

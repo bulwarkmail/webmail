@@ -18,7 +18,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useAccountStore } from "@/stores/account-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
-import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails";
 import { Button } from "@/components/ui/button";
 import { CalendarSkeleton, CalendarSkeletonBody, CalendarViewSkeleton, calendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
@@ -166,7 +166,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const canSubscribe = !demoMode && !IS_LITE;
   const tDeepLink = useTranslations("deep_link");
   const isMobile = useIsMobile();
-  const isDesktop = useIsDesktop();
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
   const isEmbedded = useIsEmbedded();
   // The Pro interface takes over this route; the Pro tab loads the data then.
   const proInterfaceActive = useProInterfaceActive();
@@ -174,7 +175,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const mvShell = useMountainViewShell(isEmbedded);
   // When the pane (Pro shell) or window is narrower than `lg`, the sidebar
   // collapses into a burger-toggled overlay instead of taking inline space.
-  const isNarrow = !isDesktop;
+  const isNarrow = !isFullDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();

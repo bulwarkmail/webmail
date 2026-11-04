@@ -16,7 +16,7 @@ export interface ContactsSkeletonProps {
  * Mountain View's content card on a desktop: the data-mv-card row of the
  * contacts, files and plugin pages, inset 16px from the canvas.
  */
-export const MV_CARD_ROW = "lg:mv:mb-4 lg:mv:mx-4 lg:mv:rounded-[var(--mv-card-radius)] lg:mv:bg-background";
+export const MV_CARD_ROW = "desk:mv:mb-4 desk:mv:mx-4 desk:mv:rounded-[var(--mv-card-radius)] desk:mv:bg-background";
 
 const SIDEBAR_ROW_PY = { paddingBlock: "var(--density-sidebar-py, 4px)" } as const;
 const CONTACT_ROW_STYLE = {
@@ -121,7 +121,7 @@ function ContactListToolbarSkeleton({ embedded }: { embedded: boolean }) {
           <ToolIcon icon={Square} />
           <SearchFieldSkeleton trailing={Filter} className="flex-1 min-w-0" />
           <ToolIcon icon={Printer} className={embedded ? undefined : "hidden md:grid"} />
-          {embedded ? null : <PhoneActionsSkeleton className="flex md:hidden" />}
+          {embedded ? null : <PhoneActionsSkeleton className="flex desk:hidden" />}
         </div>
       </div>
     </div>
@@ -213,7 +213,7 @@ export function ContactsSkeletonBody({ embedded = false }: { embedded?: boolean 
               "relative border-e border-border bg-background flex flex-col flex-shrink-0",
               embedded
                 ? "w-[var(--boot-contacts-list-w,384px)]"
-                : "max-md:w-full max-md:boot-open:hidden md:w-[var(--boot-contacts-list-w,384px)]",
+                : "max-desk:w-full max-desk:boot-open:hidden desk:w-[var(--boot-contacts-list-w,384px)]",
             )}
           >
             <ContactListToolbarSkeleton embedded={embedded} />
@@ -221,14 +221,14 @@ export function ContactsSkeletonBody({ embedded = false }: { embedded?: boolean 
               <ContactRowsSkeleton />
             </div>
             {embedded ? null : (
-              <span className="md:hidden absolute bottom-4 end-4 z-20 grid place-items-center w-11 h-11 rounded-full shadow-lg bg-primary text-primary-foreground">
+              <span className="desk:hidden absolute bottom-4 end-4 z-20 grid place-items-center w-11 h-11 rounded-full shadow-lg bg-primary text-primary-foreground">
                 <Plus className="w-5 h-5" />
               </span>
             )}
           </div>
-          <div className={cn("flex-1 min-w-0 flex flex-col", !embedded && "max-md:[:root:not([data-boot-pane])_&]:hidden")}>
+          <div className={cn("flex-1 min-w-0 flex flex-col", !embedded && "max-desk:[:root:not([data-boot-pane])_&]:hidden")}>
             {embedded ? null : (
-              <div className="hidden max-md:block px-3 py-2 border-b border-border">
+              <div className="hidden max-desk:block px-3 py-2 border-b border-border">
                 <span className="flex items-center h-9 px-3">
                   <ArrowLeft className="w-4 h-4 me-2" />
                   <Bar className="h-3.5" w="7rem" />
@@ -257,7 +257,6 @@ export function ContactsSkeleton({ label, labels }: ContactsSkeletonProps) {
       surface="contacts"
       label={label}
       labels={labels}
-      railBelow="md"
       active="contacts"
       mvMenu={false}
       rowClassName={MV_CARD_ROW}

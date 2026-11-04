@@ -20,6 +20,7 @@ import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell } from "./list-columns";
 import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useEmailStore, isUnscopedSearchActive } from "@/stores/email-store";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
 import { emailKeyFor, getThreadTagIds, getEmailTagIds } from "@/lib/thread-utils";
@@ -93,6 +94,16 @@ function useShowAccountDot(tintListRowsByAccount: boolean): boolean {
   const enabled = useSettingsStore((state) => state.showAccountDot);
   const severalAccounts = useAccountStore((state) => state.accounts.length > 1);
   return enabled && severalAccounts && !tintListRowsByAccount;
+}
+
+/**
+ * Rows swipe on a phone, and on a touch screen below the full desktop: a
+ * tablet draws the compact desktop layout and keeps the phone's gesture.
+ */
+function useSwipeRows(): boolean {
+  const isMobile = useUIStore((state) => state.isMobile);
+  const touchCompact = useMediaQuery("(pointer: coarse) and (width < 64rem)");
+  return isMobile || touchCompact;
 }
 
 /** Hover actions mount on the first pointerover or keyboard focus in the row. */
@@ -478,6 +489,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const announceRowPreview = useSettingsStore((state) => state.announceRowPreview);
     const showRowActionButton = useSettingsStore((state) => state.showRowActionButton);
     const isMobile = useUIStore((state) => state.isMobile);
+    const swipeRows = useSwipeRows();
     // One line per row where the list has the full width; stacked on phones.
     const { oneLine: oneLineRow, columns } = useListRowShape();
     // Mountain View leads its rows with a checkbox and a clickable star
@@ -557,7 +569,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     };
     const hasRight = isActionable(swipeRightAction);
     const hasLeft = isActionable(swipeLeftAction);
-    const swipeEnabled = isMobile && (hasLeft || hasRight);
+    const swipeEnabled = swipeRows && (hasLeft || hasRight);
     const { swipeHandlers, offsetX, side: swipeSide, willCommit, consumeTap } = useSwipeActions({
       enabled: swipeEnabled,
       hasLeft,
@@ -1066,6 +1078,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
     const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
     const isMobile = useUIStore((state) => state.isMobile);
+    const swipeRows = useSwipeRows();
     const { latestEmail, participantNames, hasUnread, hasStarred, hasPinned, hasAnswered, hasForwarded, emailCount } = thread;
     // Only the latest email's parts are loaded; an older one with the flag keeps the paperclip.
     const latestHasAttachment = useListHasAttachment(latestEmail, loadAttachments);
@@ -1165,7 +1178,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     };
     const threadHasRight = threadActionable(threadSwipeRightAction);
     const threadHasLeft = threadActionable(threadSwipeLeftAction);
-    const threadSwipeEnabled = isMobile && (threadHasLeft || threadHasRight);
+    const threadSwipeEnabled = swipeRows && (threadHasLeft || threadHasRight);
     const {
       swipeHandlers: threadSwipeHandlers, offsetX: threadOffsetX, side: threadSwipeSide,
       willCommit: threadWillCommit, consumeTap: threadConsumeTap,

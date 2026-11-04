@@ -9,7 +9,7 @@ const untouched = { returnToListAfterAction: true, explicitSettings: [] as strin
 const chosen = (value: boolean) => ({ returnToListAfterAction: value, explicitSettings: ['returnToListAfterAction'] });
 
 describe('listBesideReader', () => {
-  const desktop = { isMobile: false, isTablet: false, interfaceLayout: 'default' as const };
+  const desktop = { isMobile: false, interfaceLayout: 'default' as const };
   it('is true for the split and horizontal layouts on a desktop', () => {
     expect(listBesideReader({ ...desktop, mailLayout: 'split' })).toBe(true);
     expect(listBesideReader({ ...desktop, mailLayout: 'horizontal' })).toBe(true);
@@ -19,7 +19,6 @@ describe('listBesideReader', () => {
     expect(listBesideReader({ ...desktop, mailLayout: 'split', interfaceLayout: 'mountain-view' })).toBe(false);
     expect(listBesideReader({ ...desktop, mailLayout: 'split', simpleMode: true })).toBe(false);
     expect(listBesideReader({ ...desktop, mailLayout: 'split', isMobile: true })).toBe(false);
-    expect(listBesideReader({ ...desktop, mailLayout: 'split', isTablet: true })).toBe(false);
   });
 });
 

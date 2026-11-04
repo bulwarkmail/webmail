@@ -152,11 +152,11 @@ describe('mail page hand-off from the boot skeleton', () => {
     const { getByTestId, container } = render(<MailApp linkSegments={['message', 'm9']} />);
     await act(async () => {});
     const reader = container.querySelector('[data-pane="reader"]')!;
-    expect(reader.className).not.toMatch(/(^|\s)md:hidden(\s|$)/);
+    expect(reader.className).not.toMatch(/(^|\s)desk:hidden(\s|$)/);
     expect(getByTestId('viewer').hasAttribute('data-loading')).toBe(true);
     // Not found: the reader goes away again and the list takes the page.
     await act(async () => { content.resolve(null); });
-    await waitFor(() => expect(container.querySelector('[data-pane="reader"]')!.className).toMatch(/(^|\s)md:hidden(\s|$)/));
+    await waitFor(() => expect(container.querySelector('[data-pane="reader"]')!.className).toMatch(/(^|\s)desk:hidden(\s|$)/));
   });
 
   it('opens a linked message over the list on a phone and hides the bottom bar meanwhile', async () => {
@@ -165,7 +165,7 @@ describe('mail page hand-off from the boot skeleton', () => {
     const { container, queryByTestId } = render(<MailApp linkSegments={['message', 'm9']} />);
     await act(async () => {});
     const reader = container.querySelector('[data-pane="reader"]')!;
-    expect(reader.className).not.toMatch(/(^|\s)max-md:hidden(\s|$)/);
+    expect(reader.className).not.toMatch(/(^|\s)max-desk:hidden(\s|$)/);
     expect(queryByTestId('bottom-nav')).toBeNull();
   });
 

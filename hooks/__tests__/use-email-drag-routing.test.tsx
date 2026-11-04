@@ -648,7 +648,7 @@ describe('ZIP failure handling and retry', () => {
 describe('message row drag hover wiring', () => {
   beforeEach(() => {
     useSettingsStore.setState({ interfaceLayout: 'default', mailLayout: 'split', density: 'regular', hoverActions: ['delete'] });
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   });
 
   function renderRows(emails: Email[]) {

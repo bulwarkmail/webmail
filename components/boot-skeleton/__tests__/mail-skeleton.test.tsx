@@ -18,7 +18,7 @@ describe('mail skeleton', () => {
     const bar = tabs[tabs.length - 1]?.parentElement as HTMLElement;
     expect(bar.querySelector('svg')).not.toBeNull();
     expect(bar).toBeTruthy();
-    expect(bar.className.split(' ')).toContain('max-md:boot-open:hidden');
+    expect(bar.className.split(' ')).toContain('max-desk:boot-open:hidden');
   });
 
   it('draws only the body inside a Pro pane: no frame, no sidebar header', () => {
@@ -52,6 +52,6 @@ describe('mail skeleton', () => {
     expect(rows.querySelector('.boot-density-xc\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-dense\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-one-preview-line\\:hidden')).not.toBeNull();
-    expect(rows.querySelector('.md\\:mv\\:block')).not.toBeNull();
+    expect(rows.querySelector('.desk\\:mv\\:block')).not.toBeNull();
   });
 });

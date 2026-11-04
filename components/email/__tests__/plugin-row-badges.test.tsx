@@ -58,7 +58,7 @@ beforeEach(() => {
   clearAllHooks();
   clearRowBadgeCache();
   resetRowBadgeRefresh();
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   useSettingsStore.setState({
     emailKeywords: [...DEFAULT_KEYWORDS],
     showPreview: false,
@@ -120,7 +120,7 @@ describe('plugin badges in message-list rows', () => {
   });
 
   it('shows badges on a conversation row and on the phone layout', async () => {
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     renderHooks.onEmailListItemRender.register('test', async () => [{ key: 'k', label: 'Phone badge' }]);
 
     render(row([

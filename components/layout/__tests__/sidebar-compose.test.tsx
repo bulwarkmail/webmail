@@ -31,7 +31,7 @@ const mailboxes = [
 const realMatchMedia = window.matchMedia;
 function narrowWindow(narrow: boolean) {
   window.matchMedia = ((query: string) => ({
-    matches: narrow && query.includes('64rem') && query.includes('<'),
+    matches: narrow && query === '(width < 37.5rem)',
     media: query,
     onchange: null,
     addListener: () => {},

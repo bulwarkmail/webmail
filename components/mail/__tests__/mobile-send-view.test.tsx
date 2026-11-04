@@ -43,7 +43,7 @@ vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMa
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: true, isTablet: false, isDesktop: false }),
+  useDeviceDetection: () => ({ isMobile: true, isCompact: false, isDesktop: false }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -89,7 +89,7 @@ afterEach(() => {
 });
 
 /** On a phone only one of list and reading pane shows; the other gets max-md:hidden. */
-const listHidden = () => screen.getByText('message list').closest('.max-md\\:hidden') !== null;
+const listHidden = () => screen.getByText('message list').closest('.max-desk\\:hidden') !== null;
 
 describe('sending from a phone', () => {
   it('goes back to the message list after sending a new message', async () => {
