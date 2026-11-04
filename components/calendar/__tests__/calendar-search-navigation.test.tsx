@@ -3,7 +3,20 @@ import {render, screen, fireEvent, within} from '@testing-library/react';
 import {describe, expect, it, vi} from 'vitest';
 import {CalendarSearchField, CalendarSearchResults} from '../calendar-search';
 import type {CalendarEvent} from '@/lib/jmap/types';
-const event = (id:string,title:string) => ({id,uid:id,title,start:'2030-11-03T10:00:00',duration:'PT1H',timeZone:null,calendarIds:{work:true}} as CalendarEvent);
+const event = (id:string,title:string): CalendarEvent => ({
+  id, uid:id, title, '@type':'Event', calendarIds:{work:true},
+  start:'2030-11-03T10:00:00', duration:'PT1H', timeZone:null,
+  isDraft:false, isOrigin:true, utcStart:null, utcEnd:null,
+  description:'', descriptionContentType:'text/plain', created:null,
+  updated:'2030-11-03T09:00:00Z', sequence:0, showWithoutTime:false,
+  status:'confirmed', freeBusyStatus:'busy', privacy:'public', color:null,
+  keywords:null, categories:null, locale:null, replyTo:null,
+  organizerCalendarAddress:null, participants:null, mayInviteSelf:false,
+  mayInviteOthers:false, hideAttendees:false, recurrenceId:null,
+  recurrenceIdTimeZone:null, recurrenceRules:null, recurrenceOverrides:null,
+  excludedRecurrenceRules:null, useDefaultAlerts:false, alerts:null,
+  locations:null, virtualLocations:null, links:null, relatedTo:null,
+});
 const first = event('one','Planning with the product team');
 const second = event('two','Design review');
 const past = event('past','Previous workshop');
