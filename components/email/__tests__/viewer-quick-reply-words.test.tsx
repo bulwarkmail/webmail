@@ -86,17 +86,17 @@ describe('quick reply wording', () => {
   });
 });
 
-// compose-p2-17: the toasts lift over the box by its height (toast.tsx).
+// compose-p2-17: toasts stand above the box. It marks itself for
+// lib/toast-placement, which measures it where it is on screen; nothing about
+// it is kept on the page once it goes.
 describe('quick reply box and the toasts', () => {
-  it('marks the box and gives the page its height, and takes both back when it goes', async () => {
-    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(96);
+  it('marks the box as docked at the bottom and leaves nothing behind when it goes', async () => {
     const { unmount } = render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} onReply={vi.fn()} />);
     await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
 
-    expect(document.querySelector('[data-quick-reply-box]')).not.toBeNull();
-    expect(document.documentElement.style.getPropertyValue('--quick-reply-height')).toBe('96px');
+    expect(document.querySelector('[data-quick-reply-box]')).toHaveAttribute('data-toast-avoid', 'bottom');
     unmount();
-    expect(document.documentElement.style.getPropertyValue('--quick-reply-height')).toBe('');
-    height.mockRestore();
+    expect(document.querySelector('[data-toast-avoid]')).toBeNull();
+    expect(document.documentElement.getAttribute('style') ?? '').not.toContain('--quick-reply-height');
   });
 });

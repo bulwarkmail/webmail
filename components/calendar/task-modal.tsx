@@ -393,7 +393,7 @@ export function TaskModal({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+      <div data-toast-avoid="bottom" className="flex items-center justify-between px-4 py-3 border-t border-border">
         <div>
           {isEdit && onDelete && task && (
             <Button

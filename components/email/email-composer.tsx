@@ -5971,6 +5971,7 @@ export function EmailComposer({
             the tools after it, and Discard as a bin at the far end. */}
         <div
           data-composer-footer=""
+          data-toast-avoid="bottom"
           data-mv-compose-footer={mvWindow ? "" : undefined}
           className={cn(
             "@container/composer-bar flex items-center justify-between px-4 py-2.5 max-md:py-1.5 bg-background shrink-0 pb-[calc(0.625rem+env(safe-area-inset-bottom)/2)]",

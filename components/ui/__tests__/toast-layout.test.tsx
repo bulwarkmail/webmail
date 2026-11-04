@@ -36,26 +36,10 @@ describe('toast layout', () => {
     expect(titles).toEqual(['First', 'Second']);
   });
 
-  it('sits above the bottom controls on a phone, and over an open composer', () => {
+  // Where it stands above docked boxes and beside panels: toast-placement.test.tsx.
+  it('starts in the bottom end corner, across the bottom on a phone', () => {
     render(<Toasts />);
-    const container = toastContainer();
-    expect(container.className).toContain('max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]');
-    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-20');
-  });
-
-  // compose-p2-17: "Draft saved" covered the quick reply box.
-  it('sits over the quick reply box, by its height', () => {
-    render(<Toasts />);
-    const container = toastContainer();
-    expect(container).toHaveClass('[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]');
-    expect(container).toHaveClass('max-sm:[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]');
-  });
-
-  it('sits above a registered bottom bar on the desktop too, such as a form footer', () => {
-    render(<Toasts />);
-    const container = toastContainer();
-    expect(container).toHaveClass('bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))]');
-    expect(container).not.toHaveClass('bottom-5');
+    expect(toastContainer()).toHaveClass('bottom-5', 'end-5', 'max-sm:inset-x-3', 'max-sm:bottom-3');
   });
 
   it('names the close button and hides it on a phone', () => {
@@ -115,6 +99,8 @@ describe('useBottomControls', () => {
     );
     const { unmount } = render(<Bar />);
     expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).toBe('64px');
+    // Toasts keep clear of it (lib/toast-placement).
+    expect(screen.getByText('tabs')).toHaveAttribute('data-toast-avoid', 'bottom');
     unmount();
     expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).toBe('');
   });
@@ -209,7 +195,8 @@ describe('toasts and the focused element', () => {
     act(() => { (document.getElementById('save') as HTMLElement).focus(); });
     act(() => { vi.advanceTimersByTime(20); });
     expect(toastContainer()).toHaveAttribute('data-dodging');
-    expect(toastContainer()).toHaveClass('top-5');
+    expect(toastContainer().style.top).toBe('20px');
+    expect(toastContainer().style.bottom).toBe('auto');
 
     act(() => { (document.getElementById('title') as HTMLElement).focus(); });
     act(() => { vi.advanceTimersByTime(20); });
@@ -232,7 +219,7 @@ describe('toasts and the focused element', () => {
     act(() => { toast.success('Email sent'); });
     act(() => { vi.advanceTimersByTime(20); });
     expect(toastContainer()).not.toHaveAttribute('data-dodging');
-    expect(toastContainer()).not.toHaveClass('top-5');
+    expect(toastContainer().style.top).toBe('');
   });
 
   // On a phone the top of the screen is the header with Back and the message
@@ -255,6 +242,6 @@ describe('toasts and the focused element', () => {
     act(() => { toast.success('Moved to Trash'); });
     act(() => { vi.advanceTimersByTime(20); });
     expect(toastContainer()).not.toHaveAttribute('data-dodging');
-    expect(toastContainer().className).not.toMatch(/(^|\s)(max-sm:)?top-/);
+    expect(toastContainer().style.top).toBe('');
   });
 });

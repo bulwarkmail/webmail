@@ -4,39 +4,25 @@ import { describe, expect, it } from 'vitest';
 
 // pim-p2-19: toasts at the top right covered the event sheet's title and
 // close button; at the bottom right they covered its Save. They stand beside
-// a sheet docked at the window's end now. jsdom has no layout, so the rule is
-// checked through the cascade: the stylesheet's own rule, applied in jsdom.
+// a sheet docked at the window's end, or above its buttons when the window
+// has no room beside it. lib/toast-placement does that for whatever is marked
+// (components/ui/__tests__/toast-placement.test.tsx); here: the marks.
 
-const css = readFileSync(path.join(process.cwd(), 'app', 'globals.css'), 'utf8');
-
-function endSheetRule(): string {
-  const match = /body:has\(\[data-end-sheet\]\) \[data-toast-container\] \{[^}]*\}/.exec(css);
-  expect(match, 'no end-sheet rule for toasts in globals.css').not.toBeNull();
-  return match![0];
-}
+const read = (...parts: string[]) => readFileSync(path.join(process.cwd(), ...parts), 'utf8');
 
 describe('toasts beside an end sheet', () => {
-  it('move the stack past the sheet while one is open', () => {
-    const style = document.createElement('style');
-    style.textContent = endSheetRule();
-    document.head.appendChild(style);
-    const container = document.createElement('div');
-    container.setAttribute('data-toast-container', '');
-    document.body.appendChild(container);
-    expect(getComputedStyle(container).getPropertyValue('inset-inline-end')).not.toContain('400px');
-
-    const sheet = document.createElement('div');
-    sheet.setAttribute('data-end-sheet', '');
-    document.body.appendChild(sheet);
-    expect(getComputedStyle(container).getPropertyValue('inset-inline-end')).toBe('calc(var(--end-sheet-width, 400px) + 1.25rem)');
-    style.remove();
-    container.remove();
-    sheet.remove();
+  it('leaves the place to lib/toast-placement, with no fixed width in the stylesheet', () => {
+    expect(read('app', 'globals.css')).not.toMatch(/\[data-end-sheet\][^{]*\[data-toast-container\]/);
   });
 
   it('marks the calendar event and task panels as end sheets', () => {
-    const app = readFileSync(path.join(process.cwd(), 'components', 'calendar', 'calendar-app.tsx'), 'utf8');
+    const app = read('components', 'calendar', 'calendar-app.tsx');
     expect(app).toMatch(/data-testid="event-panel" data-end-sheet=""/);
     expect(app).toMatch(/data-end-sheet="" className="w-\[400px\][^"]*"[\s\S]{0,40}<TaskModal/);
+  });
+
+  it('marks the button rows of the panels, which toasts keep clear of when there is no room beside', () => {
+    expect(read('components', 'calendar', 'event-modal.tsx').match(/data-toast-avoid="bottom"/g)).toHaveLength(2);
+    expect(read('components', 'calendar', 'task-modal.tsx')).toContain('data-toast-avoid="bottom"');
   });
 });
