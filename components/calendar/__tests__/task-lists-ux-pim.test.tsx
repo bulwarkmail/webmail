@@ -113,6 +113,15 @@ describe('where a new task goes (pim-8)', () => {
     expect(defaultTaskList([work])?.id).toBe('work');
   });
 
+  // A colleague's shared to-do list, or another login's, came before the
+  // user's own default calendar.
+  it("never picks someone else's or another login's list over the user's own", () => {
+    const shared = { ...todo, id: 'shared-todo', isShared: true } as Calendar;
+    const otherLogin = { ...todo, id: 'b:todo', localAccountId: 'login-b' } as Calendar;
+    expect(defaultTaskList([shared, otherLogin, work, home])?.id).toBe('home');
+    expect(defaultTaskList([shared, otherLogin])?.id).toBe('shared-todo');
+  });
+
   it('opens the task form on the task-only list', () => {
     render(<TaskModal calendars={[home, work, todo]} onSave={vi.fn()} onClose={() => {}} />);
     expect((screen.getByLabelText('tasks.calendar') as HTMLSelectElement).value).toBe('todo');

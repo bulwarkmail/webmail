@@ -28,9 +28,12 @@ interface TaskListViewProps {
 /**
  * Where a new task goes (pim-8): the first task-only list, else the default
  * calendar, else the first one. `calendars` are the ones the user may write.
+ * The user's own calendars of the active login come first: a colleague's
+ * shared list or another login's is never picked over them.
  */
 export function defaultTaskList(calendars: Calendar[]): Calendar | undefined {
-  return calendars.find((c) => c.isTasksOnly) ?? calendars.find((c) => c.isDefault) ?? calendars[0];
+  const pick = (list: Calendar[]) => list.find((c) => c.isTasksOnly) ?? list.find((c) => c.isDefault) ?? list[0];
+  return pick(calendars.filter((c) => !c.isShared && !c.localAccountId)) ?? pick(calendars);
 }
 
 /**
