@@ -111,7 +111,17 @@ export function stampProSource(email: Email, source: EmailBlobContext, loginId: 
   return { ...email, sourceClientAccountId: login, sourceAccountId: account };
 }
 
-function buildReplyContext(email: Email): ProReplyContext {
+/**
+ * The login holding the message, for ProReplyContext.accountId: the composer
+ * defaults its From to that account and copies the original's parts from it
+ * (#1104, #1511). email.accountId can't say: it is for display, and a message
+ * read through client.getEmail() has none.
+ */
+function replyLogin(email: Email, source: EmailWriteSource): string | undefined {
+  return email.sourceClientAccountId ?? source.clientAccountId;
+}
+
+function buildReplyContext(email: Email, source: EmailWriteSource): ProReplyContext {
   return {
     from: email.from,
     replyToAddresses: email.replyTo,
@@ -122,7 +132,7 @@ function buildReplyContext(email: Email): ProReplyContext {
     subject: email.subject,
     ...getQuoteBodies(email),
     receivedAt: email.receivedAt,
-    accountId: email.accountId,
+    accountId: replyLogin(email, source),
     attachments: email.attachments,
     messageId: email.messageId,
     inReplyTo: email.inReplyTo,
@@ -285,7 +295,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     if (!email) return;
     openComposeTab({
       mode: 'reply',
-      replyTo: buildReplyContext(email),
+      replyTo: buildReplyContext(email, writeSource),
       sourceEmailId: email.id,
       sourceEmailSource: writeSource,
       initialDraftText: draftText,
@@ -305,7 +315,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     if (!email) return;
     openComposeTab({
       mode: 'replyAll',
-      replyTo: buildReplyContext(email),
+      replyTo: buildReplyContext(email, writeSource),
       sourceEmailId: email.id,
       sourceEmailSource: writeSource,
       title: buildReplySubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.reply')),
@@ -316,7 +326,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     if (!email) return;
     openComposeTab({
       mode: 'forward',
-      replyTo: buildReplyContext(email),
+      replyTo: buildReplyContext(email, writeSource),
       sourceEmailId: email.id,
       sourceEmailSource: writeSource,
       title: buildForwardSubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
@@ -355,6 +365,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         attachments: [payload.attachment],
         headers: labelSourceHeaders(email.headers),
         originalFrom: email.from,
+        accountId: replyLogin(email, writeSource),
       },
       sourceEmailId: email.id,
       sourceEmailSource: writeSource,
