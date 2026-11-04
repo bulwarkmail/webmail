@@ -211,6 +211,17 @@ describe('a mail link from another program in the desktop app', () => {
     expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
   });
 
+  it('files from Send to or Open with go to a compose window too, attached, and the main window shows no composer', async () => {
+    const { handOffDraft } = await import('@/lib/launch-handoff');
+    render(<MailApp />);
+    const file = new File(['pdf'], 'report.pdf', { type: 'application/pdf' });
+    act(() => { handOffDraft({ files: [file], fromOs: true }); });
+    await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.handOver).toHaveBeenCalledWith(expect.objectContaining({ mode: 'compose', initialFiles: [file] }));
+    await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+
   it('a link inside the app still opens here', async () => {
     render(<MailApp />);
     act(() => { requestInternalMailto('mailto:bob@example.com?subject=Hi'); });

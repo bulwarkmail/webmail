@@ -1717,7 +1717,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // as Outlook and Thunderbird do, and the main window stays where it was. Plugins get
   // their say first. False when it has to open here instead.
   const openMailtoInWindow = useCallback(async (pending: DraftRequest): Promise<boolean> => {
-    if (!pending.fromOs || pending.initialFiles?.length || !hasDesktopWindows() || !popoutsAvailable()) return false;
+    if (!pending.fromOs || !hasDesktopWindows() || !popoutsAvailable()) return false;
     let prefill: ComposePrefill | null = null;
     if (emailHooks.onBeforeCompose.size > 0) {
       prefill = await runBeforeCompose(composeOptionsFor('compose', {
@@ -1735,6 +1735,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       mode: 'compose',
       initialData: mailtoComposerDraft(pending, useSettingsStore.getState().plainTextMode),
       prefill: prefill && Object.keys(prefill).length > 0 ? prefill : null,
+      // Send to and Open with: the files go along (desktop-p2-6).
+      ...(pending.initialFiles?.length ? { initialFiles: pending.initialFiles } : {}),
     });
     return true;
   }, [identities, t]);
@@ -1857,6 +1859,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         body: handoff.body ?? '',
         initialFiles: handoff.files,
         unedited: true,
+        ...(handoff.fromOs ? { fromOs: true } : {}),
       });
     };
 

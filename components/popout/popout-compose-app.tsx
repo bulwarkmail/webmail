@@ -516,6 +516,7 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
         replyTo={payload.replyTo}
         initialDraftText={payload.initialDraftText}
         initialData={payload.initialData}
+        initialFiles={payload.initialFiles ?? null}
         prefill={payload.prefill}
         sessionKey={sessionKey}
         sourceEmailId={payload.sourceEmailId ?? undefined}
