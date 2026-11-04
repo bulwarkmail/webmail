@@ -1218,7 +1218,14 @@
     "discard_draft": "임시 보관 메일 삭제",
     "save_failed_close": "임시 보관 메일을 저장하지 못했습니다. 다시 시도하거나 삭제하세요.",
     "try_again": "다시 시도",
-    "add_description": "설명 추가"
+    "add_description": "설명 추가",
+    "attachments_summary": "첨부 파일: {count}개, {size}",
+    "from_sub_address": "하위 주소 사용…",
+    "from_edit_sender": "보낸 사람 편집…",
+    "shortcut_insert_link": "링크 삽입",
+    "shortcut_save_draft": "임시 저장",
+    "shortcut_show_cc": "참조 표시",
+    "shortcut_show_bcc": "숨은 참조 표시"
   },
   "confirm_dialog": {
     "confirm": "확인",

@@ -1218,7 +1218,14 @@
     "discard_draft": "Ноорог устгах",
     "save_failed_close": "Ноорогийг хадгалж чадсангүй. Дахин оролдох эсвэл устгана уу.",
     "try_again": "Дахин оролдох",
-    "add_description": "Тайлбар нэмэх"
+    "add_description": "Тайлбар нэмэх",
+    "attachments_summary": "Хавсралт: {count}, {size}",
+    "from_sub_address": "Дэд хаяг ашиглах…",
+    "from_edit_sender": "Илгээгчийг засах…",
+    "shortcut_insert_link": "Холбоос оруулах",
+    "shortcut_save_draft": "Ноорог хадгалах",
+    "shortcut_show_cc": "Хуулбар харуулах",
+    "shortcut_show_bcc": "Нууц хуулбар харуулах"
   },
   "confirm_dialog": {
     "confirm": "Баталгаажуулах",

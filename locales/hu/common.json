@@ -1218,7 +1218,14 @@
     "discard_draft": "Piszkozat elvetése",
     "save_failed_close": "A piszkozatot nem sikerült menteni. Próbálja újra, vagy vesse el.",
     "try_again": "Újra",
-    "add_description": "Leírás hozzáadása"
+    "add_description": "Leírás hozzáadása",
+    "attachments_summary": "Mellékletek: {count}, {size}",
+    "from_sub_address": "Alcím használata…",
+    "from_edit_sender": "Feladó szerkesztése…",
+    "shortcut_insert_link": "Hivatkozás beszúrása",
+    "shortcut_save_draft": "Piszkozat mentése",
+    "shortcut_show_cc": "Másolat megjelenítése",
+    "shortcut_show_bcc": "Titkos másolat megjelenítése"
   },
   "confirm_dialog": {
     "confirm": "Megerősítés",

@@ -1218,7 +1218,14 @@
     "discard_draft": "Discard draft",
     "save_failed_close": "The draft could not be saved. Try again, or discard it.",
     "try_again": "Try again",
-    "add_description": "Add description"
+    "add_description": "Add description",
+    "attachments_summary": "Attachments: {count}, {size}",
+    "from_sub_address": "Use a sub-address…",
+    "from_edit_sender": "Edit sender…",
+    "shortcut_insert_link": "Insert link",
+    "shortcut_save_draft": "Save draft",
+    "shortcut_show_cc": "Show Cc",
+    "shortcut_show_bcc": "Show Bcc"
   },
   "confirm_dialog": {
     "confirm": "Confirm",

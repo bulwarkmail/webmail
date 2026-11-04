@@ -1218,7 +1218,14 @@
     "discard_draft": "Forkast utkast",
     "save_failed_close": "Utkastet kunne ikke lagres. Prøv igjen, eller forkast det.",
     "try_again": "Prøv igjen",
-    "add_description": "Legg til beskrivelse"
+    "add_description": "Legg til beskrivelse",
+    "attachments_summary": "Vedlegg: {count}, {size}",
+    "from_sub_address": "Bruk en underadresse…",
+    "from_edit_sender": "Rediger avsender…",
+    "shortcut_insert_link": "Sett inn lenke",
+    "shortcut_save_draft": "Lagre utkast",
+    "shortcut_show_cc": "Vis kopi",
+    "shortcut_show_bcc": "Vis blindkopi"
   },
   "confirm_dialog": {
     "confirm": "Bekreft",

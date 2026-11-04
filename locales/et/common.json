@@ -1218,7 +1218,14 @@
     "discard_draft": "Loobu mustandist",
     "save_failed_close": "Mustandit ei saanud salvestada. Proovige uuesti või loobuge sellest.",
     "try_again": "Proovi uuesti",
-    "add_description": "Lisa kirjeldus"
+    "add_description": "Lisa kirjeldus",
+    "attachments_summary": "Manused: {count}, {size}",
+    "from_sub_address": "Kasuta alamaadressi…",
+    "from_edit_sender": "Muuda saatjat…",
+    "shortcut_insert_link": "Lisa link",
+    "shortcut_save_draft": "Salvesta mustand",
+    "shortcut_show_cc": "Näita koopiat",
+    "shortcut_show_bcc": "Näita pimekoopiat"
   },
   "confirm_dialog": {
     "confirm": "Kinnita",

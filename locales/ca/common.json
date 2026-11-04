@@ -1218,7 +1218,14 @@
     "discard_draft": "Descarta l'esborrany",
     "save_failed_close": "No s'ha pogut desar l'esborrany. Torneu-ho a provar o descarteu-lo.",
     "try_again": "Torna-ho a provar",
-    "add_description": "Afegeix una descripció"
+    "add_description": "Afegeix una descripció",
+    "attachments_summary": "Adjunts: {count}, {size}",
+    "from_sub_address": "Fes servir una subadreça…",
+    "from_edit_sender": "Edita el remitent…",
+    "shortcut_insert_link": "Insereix un enllaç",
+    "shortcut_save_draft": "Desa l'esborrany",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Cco"
   },
   "confirm_dialog": {
     "confirm": "Confirma",

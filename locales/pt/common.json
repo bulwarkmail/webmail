@@ -1218,7 +1218,14 @@
     "discard_draft": "Descartar rascunho",
     "save_failed_close": "Não foi possível guardar o rascunho. Tente novamente ou descarte-o.",
     "try_again": "Tentar novamente",
-    "add_description": "Adicionar descrição"
+    "add_description": "Adicionar descrição",
+    "attachments_summary": "Anexos: {count}, {size}",
+    "from_sub_address": "Usar um subendereço…",
+    "from_edit_sender": "Editar remetente…",
+    "shortcut_insert_link": "Inserir ligação",
+    "shortcut_save_draft": "Guardar rascunho",
+    "shortcut_show_cc": "Mostrar Cc",
+    "shortcut_show_bcc": "Mostrar Bcc"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

@@ -1218,7 +1218,14 @@
     "discard_draft": "تجاهل المسودة",
     "save_failed_close": "تعذّر حفظ المسودة. حاول مرة أخرى أو تجاهلها.",
     "try_again": "حاول مرة أخرى",
-    "add_description": "إضافة وصف"
+    "add_description": "إضافة وصف",
+    "attachments_summary": "المرفقات: {count}، {size}",
+    "from_sub_address": "استخدام عنوان فرعي…",
+    "from_edit_sender": "تعديل المرسل…",
+    "shortcut_insert_link": "إدراج رابط",
+    "shortcut_save_draft": "حفظ المسودة",
+    "shortcut_show_cc": "إظهار نسخة",
+    "shortcut_show_bcc": "إظهار نسخة مخفية"
   },
   "confirm_dialog": {
     "confirm": "تأكيد",

@@ -1218,7 +1218,14 @@
     "discard_draft": "Удалить черновик",
     "save_failed_close": "Не удалось сохранить черновик. Попробуйте ещё раз или удалите его.",
     "try_again": "Повторить",
-    "add_description": "Добавить описание"
+    "add_description": "Добавить описание",
+    "attachments_summary": "Вложения: {count}, {size}",
+    "from_sub_address": "Использовать подадрес…",
+    "from_edit_sender": "Изменить отправителя…",
+    "shortcut_insert_link": "Вставить ссылку",
+    "shortcut_save_draft": "Сохранить черновик",
+    "shortcut_show_cc": "Показать копию",
+    "shortcut_show_bcc": "Показать скрытую копию"
   },
   "confirm_dialog": {
     "confirm": "Подтвердить",

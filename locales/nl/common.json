@@ -1218,7 +1218,14 @@
     "discard_draft": "Concept verwijderen",
     "save_failed_close": "Het concept kon niet worden opgeslagen. Probeer het opnieuw of verwijder het.",
     "try_again": "Opnieuw proberen",
-    "add_description": "Beschrijving toevoegen"
+    "add_description": "Beschrijving toevoegen",
+    "attachments_summary": "Bijlagen: {count}, {size}",
+    "from_sub_address": "Subadres gebruiken…",
+    "from_edit_sender": "Afzender bewerken…",
+    "shortcut_insert_link": "Link invoegen",
+    "shortcut_save_draft": "Concept opslaan",
+    "shortcut_show_cc": "Cc tonen",
+    "shortcut_show_bcc": "Bcc tonen"
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",

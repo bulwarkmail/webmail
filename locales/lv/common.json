@@ -1218,7 +1218,14 @@
     "discard_draft": "Atmest melnrakstu",
     "save_failed_close": "Melnrakstu neizdevās saglabāt. Mēģiniet vēlreiz vai atmetiet to.",
     "try_again": "Mēģināt vēlreiz",
-    "add_description": "Pievienot aprakstu"
+    "add_description": "Pievienot aprakstu",
+    "attachments_summary": "Pielikumi: {count}, {size}",
+    "from_sub_address": "Izmantot apakšadresi…",
+    "from_edit_sender": "Rediģēt sūtītāju…",
+    "shortcut_insert_link": "Ievietot saiti",
+    "shortcut_save_draft": "Saglabāt melnrakstu",
+    "shortcut_show_cc": "Rādīt kopiju",
+    "shortcut_show_bcc": "Rādīt diskrēto kopiju"
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",

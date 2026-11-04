@@ -68,6 +68,8 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader } from "@/components/email/reply-quote-collapse";
+import { attachmentIcon } from "@/components/email/attachment-chips";
+import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
 import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-block";
@@ -1244,7 +1246,6 @@ export function EmailComposer({
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
   // Closing saves without asking; the question comes only when that save failed.
   const [closeSaveFailed, setCloseSaveFailed] = useState(false);
-  const [showAllAttachments, setShowAllAttachments] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
   // What the checks before sending found (no subject, no text, placeholders,
   // a missing attachment, open proofreading issues), asked about in one dialog.
@@ -5538,21 +5539,24 @@ export function EmailComposer({
         {/* Attachments */}
         {attachments.length > 0 && (
           <div className="px-4 py-2 border-t shrink-0">
+            {attachments.length > 1 && (
+              <p className="mb-1.5 text-xs text-muted-foreground tabular-nums" data-testid="composer-attachments-summary">
+                {tUx('attachments_summary', {
+                  count: attachments.length,
+                  size: formatFileSize(attachments.reduce((sum, att) => sum + (att.size || 0), 0)),
+                })}
+              </p>
+            )}
             <div
-              className={cn(
-                "flex flex-wrap gap-2",
-                // Collapsed this is three chips and a counter, so it stays
-                // small. Expanded it is as tall as the attachment count
-                // makes it, and it sits outside the body's scroll container
-                // and cannot shrink - so a few dozen files grew it past the
-                // composer, pushed the send toolbar off the bottom and left
-                // nothing that scrolled: the list was stuck with its last
-                // rows and the Send button both unreachable. Cap the
-                // expanded list and give it a scroller of its own.
-                showAllAttachments && "max-h-[30vh] overflow-y-auto overscroll-contain",
-              )}
+              // Every file shows, wrapping. Past about two rows the list
+              // scrolls by itself: it sits outside the body's scroller and
+              // can't shrink, and a few dozen files pushed Send off the
+              // bottom. Files still uploading or failed come first, so their
+              // progress and errors are never out of sight.
+              className="flex flex-wrap gap-2 max-h-[5.25rem] overflow-y-auto overscroll-contain"
+              data-testid="composer-attachments"
             >
-              {(showAllAttachments ? attachments : attachments.slice(0, 3)).map((att, index) => {
+              {attachmentsForDisplay(attachments).map(({ att, index }) => {
                 // Clickable to preview only once it has content (local File or an
                 // uploaded blob) and the type is previewable; never mid-upload.
                 const canPreview = !att.uploading && !att.error
@@ -5612,9 +5616,11 @@ export function EmailComposer({
                       <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
                     ) : att.error ? (
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                    ) : (
-                      <Paperclip className="w-3 h-3 flex-shrink-0" />
-                    )}
+                    ) : (() => {
+                      // The file's type, as the reader shows it.
+                      const { icon: TypeIcon, className: typeIconClass } = attachmentIcon(att.type, att.name);
+                      return <TypeIcon className={cn("w-3.5 h-3.5 flex-shrink-0", typeIconClass)} aria-hidden />;
+                    })()}
                     {canPreview ? (
                       <button
                         type="button"
@@ -5661,14 +5667,6 @@ export function EmailComposer({
                 </div>
                 );
               })}
-              {attachments.length > 3 && (
-                <button
-                  onClick={() => setShowAllAttachments(prev => !prev)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showAllAttachments ? t('show_less') : `+${attachments.length - 3}`}
-                </button>
-              )}
             </div>
           </div>
         )}

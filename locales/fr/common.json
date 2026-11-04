@@ -1218,7 +1218,14 @@
     "discard_draft": "Supprimer le brouillon",
     "save_failed_close": "Le brouillon n'a pas pu être enregistré. Réessayez ou supprimez-le.",
     "try_again": "Réessayer",
-    "add_description": "Ajouter une description"
+    "add_description": "Ajouter une description",
+    "attachments_summary": "Pièces jointes : {count}, {size}",
+    "from_sub_address": "Utiliser une sous-adresse…",
+    "from_edit_sender": "Modifier l'expéditeur…",
+    "shortcut_insert_link": "Insérer un lien",
+    "shortcut_save_draft": "Enregistrer le brouillon",
+    "shortcut_show_cc": "Afficher Cc",
+    "shortcut_show_bcc": "Afficher Cci"
   },
   "confirm_dialog": {
     "confirm": "Confirmer",

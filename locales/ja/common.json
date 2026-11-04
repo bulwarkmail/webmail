@@ -1218,7 +1218,14 @@
     "discard_draft": "下書きを破棄",
     "save_failed_close": "下書きを保存できませんでした。もう一度試すか、破棄してください。",
     "try_again": "再試行",
-    "add_description": "説明を追加"
+    "add_description": "説明を追加",
+    "attachments_summary": "添付ファイル: {count} 件、{size}",
+    "from_sub_address": "サブアドレスを使用…",
+    "from_edit_sender": "差出人を編集…",
+    "shortcut_insert_link": "リンクを挿入",
+    "shortcut_save_draft": "下書きを保存",
+    "shortcut_show_cc": "Cc を表示",
+    "shortcut_show_bcc": "Bcc を表示"
   },
   "confirm_dialog": {
     "confirm": "確認",

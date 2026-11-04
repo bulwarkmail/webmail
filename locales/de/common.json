@@ -1218,7 +1218,14 @@
     "discard_draft": "Entwurf verwerfen",
     "save_failed_close": "Der Entwurf konnte nicht gespeichert werden. Versuchen Sie es erneut oder verwerfen Sie ihn.",
     "try_again": "Erneut versuchen",
-    "add_description": "Beschreibung hinzufügen"
+    "add_description": "Beschreibung hinzufügen",
+    "attachments_summary": "Anhänge: {count}, {size}",
+    "from_sub_address": "Unteradresse verwenden…",
+    "from_edit_sender": "Absender bearbeiten…",
+    "shortcut_insert_link": "Link einfügen",
+    "shortcut_save_draft": "Entwurf speichern",
+    "shortcut_show_cc": "Cc anzeigen",
+    "shortcut_show_bcc": "Bcc anzeigen"
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",

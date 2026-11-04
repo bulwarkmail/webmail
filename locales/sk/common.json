@@ -1218,7 +1218,14 @@
     "discard_draft": "Zahodiť koncept",
     "save_failed_close": "Koncept sa nepodarilo uložiť. Skúste to znova alebo ho zahoďte.",
     "try_again": "Skúsiť znova",
-    "add_description": "Pridať popis"
+    "add_description": "Pridať popis",
+    "attachments_summary": "Prílohy: {count}, {size}",
+    "from_sub_address": "Použiť podadresu…",
+    "from_edit_sender": "Upraviť odosielateľa…",
+    "shortcut_insert_link": "Vložiť odkaz",
+    "shortcut_save_draft": "Uložiť koncept",
+    "shortcut_show_cc": "Zobraziť kópiu",
+    "shortcut_show_bcc": "Zobraziť skrytú kópiu"
   },
   "confirm_dialog": {
     "confirm": "Potvrdiť",

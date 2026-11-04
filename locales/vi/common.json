@@ -1230,7 +1230,14 @@
     "discard_draft": "Hủy bản nháp",
     "save_failed_close": "Không lưu được bản nháp. Hãy thử lại hoặc hủy bản nháp.",
     "try_again": "Thử lại",
-    "add_description": "Thêm mô tả"
+    "add_description": "Thêm mô tả",
+    "attachments_summary": "Tệp đính kèm: {count}, {size}",
+    "from_sub_address": "Dùng địa chỉ phụ…",
+    "from_edit_sender": "Sửa người gửi…",
+    "shortcut_insert_link": "Chèn liên kết",
+    "shortcut_save_draft": "Lưu bản nháp",
+    "shortcut_show_cc": "Hiện Cc",
+    "shortcut_show_bcc": "Hiện Bcc"
   },
   "confirm_dialog": {
     "confirm": "Xác nhận",

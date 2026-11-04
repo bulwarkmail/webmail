@@ -1218,7 +1218,14 @@
     "discard_draft": "Descartar borrador",
     "save_failed_close": "No se pudo guardar el borrador. Inténtelo de nuevo o descártelo.",
     "try_again": "Reintentar",
-    "add_description": "Añadir descripción"
+    "add_description": "Añadir descripción",
+    "attachments_summary": "Adjuntos: {count}, {size}",
+    "from_sub_address": "Usar una subdirección…",
+    "from_edit_sender": "Editar remitente…",
+    "shortcut_insert_link": "Insertar enlace",
+    "shortcut_save_draft": "Guardar borrador",
+    "shortcut_show_cc": "Mostrar CC",
+    "shortcut_show_bcc": "Mostrar CCO"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

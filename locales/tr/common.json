@@ -1218,7 +1218,14 @@
     "discard_draft": "Taslağı sil",
     "save_failed_close": "Taslak kaydedilemedi. Yeniden deneyin ya da silin.",
     "try_again": "Yeniden dene",
-    "add_description": "Açıklama ekle"
+    "add_description": "Açıklama ekle",
+    "attachments_summary": "Ekler: {count}, {size}",
+    "from_sub_address": "Alt adres kullan…",
+    "from_edit_sender": "Göndereni düzenle…",
+    "shortcut_insert_link": "Bağlantı ekle",
+    "shortcut_save_draft": "Taslağı kaydet",
+    "shortcut_show_cc": "Bilgiyi göster",
+    "shortcut_show_bcc": "Gizli bilgiyi göster"
   },
   "confirm_dialog": {
     "confirm": "Onayla",

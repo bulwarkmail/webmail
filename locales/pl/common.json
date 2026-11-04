@@ -1218,7 +1218,14 @@
     "discard_draft": "Odrzuć wersję roboczą",
     "save_failed_close": "Nie udało się zapisać wersji roboczej. Spróbuj ponownie lub ją odrzuć.",
     "try_again": "Spróbuj ponownie",
-    "add_description": "Dodaj opis"
+    "add_description": "Dodaj opis",
+    "attachments_summary": "Załączniki: {count}, {size}",
+    "from_sub_address": "Użyj podadresu…",
+    "from_edit_sender": "Edytuj nadawcę…",
+    "shortcut_insert_link": "Wstaw link",
+    "shortcut_save_draft": "Zapisz wersję roboczą",
+    "shortcut_show_cc": "Pokaż DW",
+    "shortcut_show_bcc": "Pokaż UDW"
   },
   "confirm_dialog": {
     "confirm": "Potwierdź",

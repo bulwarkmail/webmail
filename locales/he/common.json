@@ -1161,7 +1161,14 @@
     "discard_draft": "מחיקת הטיוטה",
     "save_failed_close": "לא ניתן היה לשמור את הטיוטה. נסו שוב או מחקו אותה.",
     "try_again": "ניסיון נוסף",
-    "add_description": "הוספת תיאור"
+    "add_description": "הוספת תיאור",
+    "attachments_summary": "קבצים מצורפים: {count}, {size}",
+    "from_sub_address": "שימוש בכתובת משנה…",
+    "from_edit_sender": "עריכת השולח…",
+    "shortcut_insert_link": "הוספת קישור",
+    "shortcut_save_draft": "שמירת טיוטה",
+    "shortcut_show_cc": "הצגת עותק",
+    "shortcut_show_bcc": "הצגת עותק מוסתר"
   },
   "confirm_dialog": {
     "confirm": "אשר",

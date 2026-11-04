@@ -1218,7 +1218,14 @@
     "discard_draft": "Elimina bozza",
     "save_failed_close": "Impossibile salvare la bozza. Riprova o eliminala.",
     "try_again": "Riprova",
-    "add_description": "Aggiungi descrizione"
+    "add_description": "Aggiungi descrizione",
+    "attachments_summary": "Allegati: {count}, {size}",
+    "from_sub_address": "Usa un sottoindirizzo…",
+    "from_edit_sender": "Modifica mittente…",
+    "shortcut_insert_link": "Inserisci link",
+    "shortcut_save_draft": "Salva bozza",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Ccn"
   },
   "confirm_dialog": {
     "confirm": "Conferma",

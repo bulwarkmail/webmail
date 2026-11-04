@@ -1218,7 +1218,14 @@
     "discard_draft": "舍弃草稿",
     "save_failed_close": "无法保存草稿。请重试或舍弃草稿。",
     "try_again": "重试",
-    "add_description": "添加描述"
+    "add_description": "添加描述",
+    "attachments_summary": "附件：{count} 个，{size}",
+    "from_sub_address": "使用子地址…",
+    "from_edit_sender": "编辑发件人…",
+    "shortcut_insert_link": "插入链接",
+    "shortcut_save_draft": "保存草稿",
+    "shortcut_show_cc": "显示抄送",
+    "shortcut_show_bcc": "显示密送"
   },
   "confirm_dialog": {
     "confirm": "确认",

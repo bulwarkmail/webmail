@@ -1218,7 +1218,14 @@
     "discard_draft": "Видалити чернетку",
     "save_failed_close": "Не вдалося зберегти чернетку. Спробуйте ще раз або видаліть її.",
     "try_again": "Спробувати ще раз",
-    "add_description": "Додати опис"
+    "add_description": "Додати опис",
+    "attachments_summary": "Вкладення: {count}, {size}",
+    "from_sub_address": "Використати підадресу…",
+    "from_edit_sender": "Змінити відправника…",
+    "shortcut_insert_link": "Вставити посилання",
+    "shortcut_save_draft": "Зберегти чернетку",
+    "shortcut_show_cc": "Показати копію",
+    "shortcut_show_bcc": "Показати приховану копію"
   },
   "confirm_dialog": {
     "confirm": "Підтвердити",

@@ -1218,7 +1218,14 @@
     "discard_draft": "دور انداختن پیش‌نویس",
     "save_failed_close": "پیش‌نویس ذخیره نشد. دوباره تلاش کنید یا آن را دور بیندازید.",
     "try_again": "تلاش دوباره",
-    "add_description": "افزودن توضیح"
+    "add_description": "افزودن توضیح",
+    "attachments_summary": "پیوست‌ها: {count}، {size}",
+    "from_sub_address": "استفاده از زیرنشانی…",
+    "from_edit_sender": "ویرایش فرستنده…",
+    "shortcut_insert_link": "درج پیوند",
+    "shortcut_save_draft": "ذخیرهٔ پیش‌نویس",
+    "shortcut_show_cc": "نمایش رونوشت",
+    "shortcut_show_bcc": "نمایش رونوشت پنهان"
   },
   "confirm_dialog": {
     "confirm": "تأیید",

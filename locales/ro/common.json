@@ -1218,7 +1218,14 @@
     "discard_draft": "Renunță la ciornă",
     "save_failed_close": "Ciorna nu a putut fi salvată. Încercați din nou sau renunțați la ea.",
     "try_again": "Încearcă din nou",
-    "add_description": "Adaugă o descriere"
+    "add_description": "Adaugă o descriere",
+    "attachments_summary": "Atașamente: {count}, {size}",
+    "from_sub_address": "Folosește o subadresă…",
+    "from_edit_sender": "Editează expeditorul…",
+    "shortcut_insert_link": "Inserează un link",
+    "shortcut_save_draft": "Salvează ciorna",
+    "shortcut_show_cc": "Afișează Cc",
+    "shortcut_show_bcc": "Afișează Bcc"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
