@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
 import { getContactDisplayName } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export type ContactCategory = "all" | "directory" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
 
@@ -116,6 +117,7 @@ export function ContactsSidebar({
   className,
   multiAccountMode,
 }: ContactsSidebarProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts");
   const router = useRouter();
   const { contextMenu: groupContextMenu, openContextMenu: openGroupContextMenu, openContextMenuFrom: openGroupMenuFrom, closeContextMenu: closeGroupContextMenu, menuRef: groupMenuRef } = useContextMenu<ContactCard>();
@@ -127,7 +129,7 @@ export function ContactsSidebar({
   const bookMenu = (book: AddressBook) => hasBookMenu ? {
     onContextMenu: (e: React.MouseEvent) => openBookContextMenu(e, book),
     onOpenMenu: (anchor: HTMLElement) => openBookMenuFrom(anchor, book, "end"),
-    menuLabel: t("row_actions", { name: book.name }),
+    menuLabel: t("row_actions", { name: shownName.addressBook(book) }),
   } : {};
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsed);
@@ -905,6 +907,7 @@ function AddressBookItem({
   onSelect: () => void;
   onDropContacts?: (contactIds: string[], addressBook: AddressBook) => void;
 }) {
+  const shownName = useCollectionNames();
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -939,7 +942,7 @@ function AddressBookItem({
       isActive={isActive}
       isDragOver={isDragOver}
       icon={<Book className="w-4 h-4 flex-shrink-0" />}
-      label={book.name}
+      label={shownName.addressBook(book)}
       count={contactCount}
       extra={sharedOut ? <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ms-auto" /> : undefined}
       onSelect={onSelect}

@@ -16,6 +16,7 @@ import { taskToView } from "@/lib/plugin-projection";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { canCreateEventsIn } from "@/lib/calendar-editability";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface TaskModalProps {
   task?: CalendarTask | null;
@@ -60,6 +61,7 @@ export function TaskModal({
   isMobile = false,
   isSubscriptionCalendar,
 }: TaskModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const tCommon = useTranslations("common");
   // The header's close goes to its start when the window's own close is at its end.
@@ -349,7 +351,7 @@ export function TaskModal({
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
             >
               {calendarOptions.map((cal) => (
-                <option key={cal.id} value={cal.id}>{cal.name}</option>
+                <option key={cal.id} value={cal.id}>{shownName.calendar(cal)}</option>
               ))}
             </select>
           </div>

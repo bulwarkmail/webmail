@@ -779,7 +779,7 @@ describe('CalendarApp view menu', () => {
 
 describe('CalendarApp long names', () => {
   it('shows the full name of a cut-off calendar on hover', () => {
-    const long = { ...calendars[0], name: 'Stalwart Calendar (usera@internal.bulwarkmail.org)' };
+    const long = { ...calendars[0], name: 'Quarterly planning with the regional sales team (usera@internal.bulwarkmail.org)' };
     useCalendarStore.setState({ calendars: [long] } as never);
     renderApp();
     expect(screen.getByTestId('calendar-item').querySelector('[title]')).toHaveAttribute('title', long.name);

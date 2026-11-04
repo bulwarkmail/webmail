@@ -56,6 +56,7 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export interface PendingEventPreview {
   start: Date;
@@ -273,6 +274,7 @@ export function EventModal({
   maxParticipants = null,
   isMobile = false,
 }: EventModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   // Ids that tie each visible label to its field.
@@ -1483,7 +1485,7 @@ export function EventModal({
               >
                 {selectableCalendars.map((cal) => (
                   <option key={cal.id} value={cal.id}>
-                    {cal.name}
+                    {shownName.calendar(cal)}
                   </option>
                 ))}
               </select>

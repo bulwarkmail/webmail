@@ -24,6 +24,7 @@ import { displayNow } from "@/lib/timezone";
 import { readableTextOn } from "@/lib/color-transform";
 import { shareRecipientNames, useShareRecipientLabels } from "@/hooks/use-share-recipient-labels";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 /**
  * Split a per-account calendar list into "owned" (the user's own) and
@@ -92,6 +93,7 @@ export function CalendarSidebarPanel({
   client,
   multiAccountMode,
 }: CalendarSidebarPanelProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tSub = useTranslations("calendar.subscription");
@@ -321,8 +323,8 @@ export function CalendarSidebarPanel({
           >
             {isVisible && <Check className="w-2.5 h-2.5" stroke={3.5} />}
           </span>
-          <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={cal.name}>
-            {cal.name}
+          <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={shownName.calendar(cal)}>
+            {shownName.calendar(cal)}
           </span>
           {isSubscriptionCalendar(cal.id) && (
             <>
@@ -355,7 +357,7 @@ export function CalendarSidebarPanel({
               "opacity-0 group-hover/cal:opacity-100 group-focus-within/cal:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100",
               contextMenu.isOpen && contextMenu.data?.id === cal.id && "opacity-100"
             )}
-            label={t('calendar_options', { name: cal.name })}
+            label={t('calendar_options', { name: shownName.calendar(cal) })}
           >
             <MoreVertical />
           </IconButton>

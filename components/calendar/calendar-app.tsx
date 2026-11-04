@@ -131,6 +131,7 @@ import { useConfig } from "@/hooks/use-config";
 import { CalendarPrint, type CalendarPrintContent } from "@/components/calendar/calendar-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { requestPrint, usePrintStore } from "@/stores/print-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 // `fromEditor`: asked on the way out of the event editor, which stays open
 // until a scope is picked, so Cancel goes back to it with the changes.
@@ -151,6 +152,7 @@ export interface CalendarAppProps {
 export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('calendar', routeSegments);
+  const shownName = useCollectionNames();
   const router = useRouter();
   const t = useTranslations("calendar");
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
@@ -2303,7 +2305,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onClearCalendar={client ? async (cal: Calendar) => {
                 const ok = await confirmAction({
                   title: tMgmt("clear_events"),
-                  message: tMgmt("confirm_clear", { name: cal.name }),
+                  message: tMgmt("confirm_clear", { name: shownName.calendar(cal) }),
                   variant: "destructive",
                   confirmText: tMgmt("clear_events"),
                 });
@@ -2319,7 +2321,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onDeleteCalendar={client ? async (cal: Calendar) => {
                 const ok = await confirmAction({
                   title: tMgmt("delete"),
-                  message: tMgmt("confirm_delete", { name: cal.name }),
+                  message: tMgmt("confirm_delete", { name: shownName.calendar(cal) }),
                   variant: "destructive",
                   confirmText: tMgmt("delete"),
                 });
@@ -2674,7 +2676,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           <ShareCollectionDialog
             client={client}
             kind="calendar"
-            collectionName={cal.name}
+            collectionName={shownName.calendar(cal)}
             shareWith={cal.shareWith}
             ownAccountId={client.getAccountId()}
             onShare={async (principalId, rights) => {

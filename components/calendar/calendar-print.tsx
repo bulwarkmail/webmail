@@ -46,6 +46,7 @@ import {
   type AgendaDay,
 } from "@/lib/calendar-print";
 import type { TaskViewFilter } from "@/stores/task-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 type TimeFormat = "12h" | "24h";
 
@@ -94,6 +95,7 @@ function useTimeFormatter(timeFormat: TimeFormat) {
 
 /** The calendar page's print copy. */
 export function CalendarPrint(props: CalendarPrintProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const locale = useLocale();
   const { formatMonthYear, formatWeekRange, formatFullDate } = useCalendarLocale();
@@ -118,7 +120,7 @@ export function CalendarPrint(props: CalendarPrintProps) {
   const meta = (
     <p className="pr-meta">
       {props.shownCalendars.length > 0 && (
-        <span>{t("print.calendars", { names: props.shownCalendars.map((c) => c.name).join(", ") })}</span>
+        <span>{t("print.calendars", { names: props.shownCalendars.map((c) => shownName.calendar(c)).join(", ") })}</span>
       )}
       {props.shownCalendars.length > 0 && <span className="pr-meta-sep" aria-hidden>·</span>}
       <span>{t("print.time_zone", { zone: formatPrintTimeZone(props.timeZone, locale, props.periodDate) })}</span>
@@ -632,6 +634,7 @@ function priorityKey(priority: number): string | null {
 }
 
 function TaskListPrint({ tasks, calendars, timeFormat }: { tasks: CalendarTask[]; calendars: Calendar[]; timeFormat: TimeFormat }) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const intlFormatter = useDisplayDateFormatter();
   if (tasks.length === 0) return <p className="pr-empty">{t("tasks.no_tasks")}</p>;
@@ -659,7 +662,7 @@ function TaskListPrint({ tasks, calendars, timeFormat }: { tasks: CalendarTask[]
             <span className="pr-checkbox" aria-hidden>{done ? "✓" : ""}</span>
             <div>
               <div className="pr-task-title"><bdi>{task.title || t("tasks.no_title")}</bdi></div>
-              {calendar && <div className="pr-task-meta"><bdi>{calendar.name}</bdi></div>}
+              {calendar && <div className="pr-task-meta"><bdi>{shownName.calendar(calendar)}</bdi></div>}
             </div>
             <div className="pr-task-meta">{dueLabel}</div>
             <div className="pr-task-meta">{priority ? t(priority) : ""}</div>
@@ -680,6 +683,7 @@ export function EventPrintSheet({
   timeFormat: TimeFormat;
   timeZone: string;
 }) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const locale = useLocale();
   const formatEventDate = useFormatEventDate();
@@ -730,7 +734,7 @@ export function EventPrintSheet({
           {meeting && (<><dt>{t("print.meeting")}</dt><dd><bdi>{meeting.uri}</bdi></dd></>)}
           {recurrence && (<><dt>{t("print.repeats")}</dt><dd>{recurrence}</dd></>)}
           {alerts && (<><dt>{t("tasks.alert")}</dt><dd>{alerts}</dd></>)}
-          {calendar && (<><dt>{t("tasks.calendar")}</dt><dd><bdi>{calendar.name}</bdi></dd></>)}
+          {calendar && (<><dt>{t("tasks.calendar")}</dt><dd><bdi>{shownName.calendar(calendar)}</bdi></dd></>)}
           {organizer && (
             <>
               <dt>{t("participants.organizer")}</dt>
