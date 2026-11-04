@@ -138,6 +138,7 @@ import { wantsSignatureSeparator } from "@/lib/signature-delimiter";
 import { finalizeOutgoing, runPreSendChecks, type OutgoingContext } from "@/lib/outgoing/send-pipeline";
 import { classifyOutgoing, isLabelRequiredError, labelMissing, labelsPolicyFor, resolveLabel, type OriginalMessage } from "@/lib/outgoing/classification";
 import { beginLabelTakeover, endLabelTakeover } from "@/lib/outgoing/classification-raw";
+import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { beginComposeTakeover, endComposeTakeover } from "@/lib/outgoing/compose-takeover";
 import { recipientsChanged, runPluginSendCheck, sendGuardMessageKey } from "@/lib/outgoing/plugin-send-check";
 import { externalRecipientsFor, inspectAttachments, sniffFile } from "@/lib/outgoing/send-check-payload";
@@ -3783,15 +3784,23 @@ export function EmailComposer({
     return undefined;
   };
 
-  const resolveDelayedUntil = async (requestedDelayedUntil?: string): Promise<string | undefined> => {
-    if (requestedDelayedUntil) return requestedDelayedUntil;
-    if (sendDelaySeconds === 0) return undefined;
+  /**
+   * Whether the send waits, asking "send without a delay?" when the server
+   * can't. Returns what gives the time to send at: called only once every
+   * question is answered, right before the message is handed on, so the
+   * Undo time is never spent on reading a question (compose-p3-1). A time
+   * picked in the schedule dialog stays as it is.
+   */
+  const decideSendDelay = async (requestedDelayedUntil?: string): Promise<() => string | undefined> => {
+    if (requestedDelayedUntil) return () => requestedDelayedUntil;
+    if (sendDelaySeconds === 0) return () => undefined;
     if (composerClient?.hasDelayedSend()) {
-      return new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
+      const seconds = sendDelaySeconds;
+      return () => undoDelayUntil(seconds);
     }
     // Undo send is on by default; a server without delayed sending just
     // sends. Only a delay the user picked is worth a question.
-    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return undefined;
+    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return () => undefined;
     const confirmed = await confirmNoDelay({
       title: t('send_delay_unsupported_title'),
       message: t('send_delay_unsupported_confirm'),
@@ -3800,7 +3809,7 @@ export function EmailComposer({
     if (!confirmed) {
       throw new Error(t('send_delay_unsupported'));
     }
-    return undefined;
+    return () => undefined;
   };
 
   // The cids of the inline images (tagged with data-cid) the body still shows.
@@ -4244,7 +4253,9 @@ export function EmailComposer({
     let handedToHost: ComposerDraftData | null = null;
 
     try {
-      const effectiveDelayedUntil = await resolveDelayedUntil(delayedUntil);
+      // Whether it waits is asked now; when it goes is worked out once
+      // every question below is answered.
+      const sendDelayTime = await decideSendDelay(delayedUntil);
       // Let plugins veto the send (external-mail warning, mistyped-domain
       // guards, send checks). Returning false from any handler aborts before
       // either the S/MIME or standard JMAP path runs. What a send check needs
@@ -4311,6 +4322,9 @@ export function EmailComposer({
       // draft, and never fall back to sending it unsigned (#1207). It signs
       // or encrypts the message with the `last` finalisers' additions.
       const sealed = lastStage(finalHtmlBody, finalBody);
+      // The plugins' checks are answered: the Undo time starts here. Taken
+      // again below for the standard send, after the plugins' changes.
+      let effectiveDelayedUntil = sendDelayTime();
       // The label as it stands now, from the policy of the sending account.
       const labelPolicy = labelsPolicyFor({ email: currentIdentity?.email, accountId: composingAccountId });
       const sendLabel = resolveLabel(labelPolicy, classificationRef.current.choice, labelOriginal);
@@ -4448,6 +4462,8 @@ export function EmailComposer({
           draftAccountId: draftAccountIdRef.current,
           draftLocalAccountId: draftLocalAccountIdRef.current,
         };
+        // A second check may have asked again: the Undo time starts now.
+        effectiveDelayedUntil = sendDelayTime();
         const outcome = await onSend?.({
           to: outgoing.to,
           cc: outgoing.cc,

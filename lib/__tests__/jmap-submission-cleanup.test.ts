@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JMAPClient, NoLongerScheduledError, RecipientsRejectedError, SubmissionQuotaError, prunableSubmissionIds } from '../jmap/client';
 import { jmapErrorType } from '../jmap/jmap-error';
+import { undoDelayUntil } from '../outgoing/undo-delay';
 
 /**
  * Stalwart 1.0 counts every EmailSubmission record of an account against
@@ -483,6 +484,31 @@ describe('destroying the record of an immediate send', () => {
 
     expect(server.destroys()).toEqual([]);
     expect(server.submissions.size).toBe(2);
+  });
+
+  // compose-p3-1: a send check that waits for the user used to eat the
+  // Undo time, and a slow answer put it in the past, so the send failed.
+  it('holds an Undo send for the whole delay however long the questions before it took', async () => {
+    const server = fakeStalwart({ version: '1.0' });
+    const clickedAt = Date.parse('2026-11-04T10:00:00Z');
+    const now = vi.spyOn(Date, 'now').mockReturnValue(clickedAt);
+    const delayedUntil = undoDelayUntil(5);
+    // The user reads a plugin's question for 10 seconds.
+    now.mockReturnValue(clickedAt + 10_000);
+
+    const result = await send(createClient(), { delayedUntil });
+
+    expect(result.scheduled).toBe(true);
+    const create = server.requests.flat().find(([method, args]) => method === 'EmailSubmission/set' && args.create);
+    const submission = Object.values(create![1].create as Record<string, { envelope: { mailFrom: { parameters: { HOLDFOR: string } } } }>)[0];
+    expect(submission.envelope.mailFrom.parameters.HOLDFOR).toBe('5');
+    expect(Date.parse(result.sendAt!)).toBe(clickedAt + 10_000 + 5_000);
+  });
+
+  it('still refuses a picked time that has passed', async () => {
+    fakeStalwart({ version: '1.0' });
+    await expect(send(createClient(), { delayedUntil: new Date(Date.now() - 1_000).toISOString() }))
+      .rejects.toThrow('Scheduled send time must be in the future');
   });
 
   it('leaves the record alone without urn:stalwart:jmap', async () => {

@@ -155,6 +155,7 @@ import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick-reply";
+import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { isPhishingMarked } from "@/lib/phishing-links";
 import { phishingMarkedNow } from "@/hooks/use-phishing-report";
@@ -4847,7 +4848,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         });
         if (!confirmed) return false;
       } else {
-        delayedUntil = new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
+        delayedUntil = undoDelayUntil(sendDelaySeconds);
       }
     }
 
