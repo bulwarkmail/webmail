@@ -7761,6 +7761,19 @@
       "failed": "Mappen kunne ikke åbnes."
     }
   },
+  "files_storage": {
+    "title": "Lagerplads i Filer",
+    "used_of": "{used} af {total} brugt",
+    "used": "{used} brugt",
+    "no_limit": "Din server sætter ingen grænse. Så meget fylder dine filer.",
+    "almost_full": "Din lagerplads i Filer er næsten fuld",
+    "full": "Din lagerplads i Filer er fuld",
+    "state_synced": "Opdateret",
+    "state_syncing": "Synkroniserer",
+    "state_paused": "På pause",
+    "state_offline": "Offline",
+    "state_error": "Stoppet"
+  },
   "desktopQuickCompose": {
     "label": "Hurtig skrivning",
     "menu": "Hurtig skrivning",

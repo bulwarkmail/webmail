@@ -312,3 +312,30 @@ describe('Files on this computer settings page', () => {
     expect(controller.confirmMassDelete).toHaveBeenLastCalledWith('r2', false);
   });
 });
+
+describe('storage on the Files on this computer page', () => {
+  it("shows the server's limit with a bar, and says when it is full", () => {
+    setup({ quota: { used: 95 * 1048576, total: 100 * 1048576, source: 'server' } });
+    renderPage();
+    const section = screen.getByTestId('files-sync-storage');
+    expect(section).toHaveTextContent('95 MB of 100 MB used');
+    expect(within(section).getByRole('progressbar', { name: 'Storage in Files' })).toHaveAttribute('aria-valuenow', '95');
+    expect(section).toHaveTextContent('Your storage in Files is full');
+    expect(section).toHaveAttribute('data-quota-level', 'full');
+  });
+
+  it('without a limit on the server: what the files take, and no bar', () => {
+    setup({ quota: { used: 7 * 1048576, total: null, source: 'files' } });
+    renderPage();
+    const section = screen.getByTestId('files-sync-storage');
+    expect(section).toHaveTextContent('7 MB used');
+    expect(section).toHaveTextContent('Your server sets no limit. This is what your files take.');
+    expect(within(section).queryByRole('progressbar')).toBeNull();
+  });
+
+  it('says nothing about storage before it is known', () => {
+    setup({ quota: null });
+    renderPage();
+    expect(screen.queryByTestId('files-sync-storage')).toBeNull();
+  });
+});

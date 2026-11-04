@@ -5,7 +5,8 @@
  * - two siblings with the same name are refused (`alreadyExists`);
  * - a destroy with onDestroyRemoveChildren takes the subtree;
  * - an upload over maxSizeUpload is an HTTP 413;
- * - the session's filenode capability names forbidden characters (0.16.6+ style).
+ * - the session's filenode capability names forbidden characters (0.16.6+ style);
+ * - with `quota`, the quota capability and Quota/get answering that list.
  */
 
 import { TransportError, type StoreSession } from '@/lib/store/engine/transport';
@@ -18,7 +19,11 @@ export { JMAP_ACCOUNT };
 export interface FakeServerOptions extends FakeFilesOptions {
   maxSizeUpload?: number;
   forbiddenNameChars?: string;
+  /** Quota/get's list. Absent: no quota capability. */
+  quota?: Record<string, unknown>[];
 }
+
+const QUOTA = 'urn:ietf:params:jmap:quota';
 
 export class FakeServer extends FakeFiles {
   readonly session: StoreSession;
@@ -29,20 +34,27 @@ export class FakeServer extends FakeFiles {
   private serverClock = Date.UTC(2026, 9, 1);
   private nextNodeId = 1000;
   private nextBlob = 1;
+  quotaList: Record<string, unknown>[];
+  quotaCalls = 0;
 
   constructor(options: FakeServerOptions = {}) {
     super(options);
+    this.quotaList = options.quota ?? [];
     this.session = {
       ...FILES_SESSION,
       capabilities: {
         ...FILES_SESSION.capabilities,
         'urn:ietf:params:jmap:core': { maxSizeUpload: options.maxSizeUpload ?? 50_000_000, maxObjectsInGet: 500, maxObjectsInSet: 500, maxCallsInRequest: 16 },
+        ...(options.quota ? { [QUOTA]: {} } : {}),
       },
       accounts: {
         ...FILES_SESSION.accounts,
         [JMAP_ACCOUNT]: {
           ...FILES_SESSION.accounts[JMAP_ACCOUNT],
-          accountCapabilities: { [FILES]: { forbiddenNameChars: options.forbiddenNameChars ?? '/', forbiddenNodeNames: ['.', '..'], maxSizeFileNodeName: 255 } },
+          accountCapabilities: {
+            [FILES]: { forbiddenNameChars: options.forbiddenNameChars ?? '/', forbiddenNodeNames: ['.', '..'], maxSizeFileNodeName: 255 },
+            ...(options.quota ? { [QUOTA]: {} } : {}),
+          },
         },
       },
     };
@@ -154,6 +166,10 @@ export class FakeServer extends FakeFiles {
   }
 
   protected override handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
+    if (name === 'Quota/get') {
+      this.quotaCalls += 1;
+      return { accountId: args.accountId, state: 'n', list: this.quotaList, notFound: [] };
+    }
     if (name !== 'FileNode/set') return super.handle(name, args);
     this.sets.push(args);
     const account = this.account(String(args.accountId));

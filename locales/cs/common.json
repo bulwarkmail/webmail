@@ -7761,6 +7761,19 @@
       "failed": "Složku se nepodařilo otevřít."
     }
   },
+  "files_storage": {
+    "title": "Úložiště v Souborech",
+    "used_of": "Využito {used} z {total}",
+    "used": "Využito {used}",
+    "no_limit": "Server nenastavuje žádný limit. Tolik místa zabírají vaše soubory.",
+    "almost_full": "Vaše úložiště v Souborech je téměř plné",
+    "full": "Vaše úložiště v Souborech je plné",
+    "state_synced": "Aktuální",
+    "state_syncing": "Synchronizace",
+    "state_paused": "Pozastaveno",
+    "state_offline": "Offline",
+    "state_error": "Zastaveno"
+  },
   "desktopQuickCompose": {
     "label": "Rychlá zpráva",
     "menu": "Rychlá zpráva",

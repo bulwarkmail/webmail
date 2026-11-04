@@ -7761,6 +7761,19 @@
       "failed": "フォルダーを開けませんでした。"
     }
   },
+  "files_storage": {
+    "title": "ファイルの保存容量",
+    "used_of": "{total} 中 {used} 使用",
+    "used": "{used} 使用",
+    "no_limit": "サーバーに上限は設定されていません。これはファイルが使っている容量です。",
+    "almost_full": "ファイルの保存容量がもうすぐいっぱいです",
+    "full": "ファイルの保存容量がいっぱいです",
+    "state_synced": "最新の状態",
+    "state_syncing": "同期中",
+    "state_paused": "一時停止中",
+    "state_offline": "オフライン",
+    "state_error": "停止"
+  },
   "desktopQuickCompose": {
     "label": "クイック作成",
     "menu": "クイック作成",

@@ -7761,6 +7761,19 @@
       "failed": "Neizdevās atvērt mapi."
     }
   },
+  "files_storage": {
+    "title": "Krātuve Failos",
+    "used_of": "Izmantoti {used} no {total}",
+    "used": "Izmantoti {used}",
+    "no_limit": "Serveris nenosaka ierobežojumu. Tik daudz vietas aizņem jūsu faili.",
+    "almost_full": "Jūsu krātuve Failos ir gandrīz pilna",
+    "full": "Jūsu krātuve Failos ir pilna",
+    "state_synced": "Atjaunināts",
+    "state_syncing": "Sinhronizē",
+    "state_paused": "Pauzēts",
+    "state_offline": "Bezsaistē",
+    "state_error": "Apturēts"
+  },
   "desktopQuickCompose": {
     "label": "Ātrā rakstīšana",
     "menu": "Ātrā rakstīšana",

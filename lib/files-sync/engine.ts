@@ -377,6 +377,15 @@ export class FilesSyncEngine {
     this.update();
   }
 
+  /** What the account's files take, from its FileNode tree. Null before the first listing. */
+  filesBytes(account: string): number | null {
+    const entry = this.accounts.get(account);
+    if (!entry?.isLoaded) return null;
+    let total = 0;
+    for (const node of entry.tree.nodes.values()) if (node.kind === 'file') total += node.size;
+    return total;
+  }
+
   hasAccount(account: string): boolean {
     return this.accounts.has(account);
   }

@@ -7761,6 +7761,19 @@
       "failed": "Nem sikerült megnyitni a mappát."
     }
   },
+  "files_storage": {
+    "title": "Tárhely a Fájlokban",
+    "used_of": "{used} / {total} foglalt",
+    "used": "{used} foglalt",
+    "no_limit": "A szerver nem szab korlátot. Ennyi helyet foglalnak a fájljaid.",
+    "almost_full": "Majdnem megtelt a tárhelyed a Fájlokban",
+    "full": "Megtelt a tárhelyed a Fájlokban",
+    "state_synced": "Naprakész",
+    "state_syncing": "Szinkronizálás",
+    "state_paused": "Szüneteltetve",
+    "state_offline": "Offline",
+    "state_error": "Leállítva"
+  },
   "desktopQuickCompose": {
     "label": "Gyors levélírás",
     "menu": "Gyors levélírás",

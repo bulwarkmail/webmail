@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useFormatter, useTranslations } from "next-intl";
+import { statusLineText } from "@/components/files-sync/files-sync-text";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { getDesktopPolicy, onDesktopPolicyChange } from "@/lib/desktop/policy";
 import { canDownload } from "@/lib/device-policy";
 import { claimFilesControls } from "@/lib/files-sync/controls";
+import type { DriveStatusText } from "@/lib/files-sync/drive-status";
 import { FilesSyncHost as Host, type HostAccount } from "@/lib/files-sync/host";
 import { registerFilesSyncLifecycle, setRunningFilesSyncHost } from "@/lib/files-sync/lifecycle";
 import { scopeDecided } from "@/lib/offline/offline-mode";
 import { subscribePushStateChanges } from "@/lib/push-events";
+import { formatFileSize } from "@/lib/utils";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
@@ -38,6 +42,20 @@ export function FilesSyncHost() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const revision = useAuthStore((s) => s.connectedAccountsRevision);
   const client = useAuthStore((s) => s.client);
+  const tSync = useTranslations("files_sync");
+  const tStorage = useTranslations("files_storage");
+  const format = useFormatter();
+  // Explorer's status for the drive, in the page's language (lib/files-sync/drive-status.ts).
+  const driveText = useMemo<DriveStatusText>(() => ({
+    state: (state) => tStorage(`state_${state}`),
+    detail: (status, state) => statusLineText(tSync, (date, options) => format.dateTime(date, options), status, state),
+    quota: (used, total) => total === null
+      ? tStorage("used", { used: formatFileSize(used) })
+      : tStorage("used_of", { used: formatFileSize(used), total: formatFileSize(total) }),
+    notice: (level) => tStorage(level === "full" ? "full" : "almost_full"),
+  }), [tSync, tStorage, format]);
+  const driveTextRef = useRef(driveText);
+  driveTextRef.current = driveText;
 
   useEffect(() => {
     const bridge = getDesktopBridge();
@@ -51,6 +69,7 @@ export function FilesSyncHost() {
       setController: (controller) => useFilesSyncStore.getState().setController(controller),
       folderSyncForcedOff,
       downloadsForbidden,
+      driveStatusText: () => driveTextRef.current,
     });
     hostRef.current = host;
     setRunningFilesSyncHost(host);
@@ -87,6 +106,11 @@ export function FilesSyncHost() {
     }
     host.setAccounts(list, isAuthenticated ? activeAccountId : null);
   }, [accounts, activeAccountId, isAuthenticated, revision, client]);
+
+  // Another language: Explorer's words change with it.
+  useEffect(() => {
+    hostRef.current?.publishNow();
+  }, [driveText]);
 
   return null;
 }

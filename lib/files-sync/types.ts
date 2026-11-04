@@ -113,6 +113,19 @@ export interface FilesSyncController {
   clearActivity: () => void;
 }
 
+/**
+ * The storage Files counts against. From the server's Quota/get when it sets a limit; without
+ * one, what the account's files take, from its FileNode tree, and no total.
+ */
+export interface FilesQuota {
+  used: number;
+  /** Null: the server sets no limit. */
+  total: number | null;
+  /** warnLimit, when the server sets one below the total. */
+  warnAt?: number;
+  source: 'server' | 'files';
+}
+
 export interface FilesSyncSnapshot {
   /** In the desktop app, with a shell that has the files bridge, in the main window. */
   available: boolean;
@@ -128,4 +141,6 @@ export interface FilesSyncSnapshot {
   folderSyncForcedOff: boolean;
   /** Per FileNode id of the current account, for rows in the Files screen. */
   items: Record<string, FilesSyncItemStatus>;
+  /** The current account's storage. Null until known. */
+  quota: FilesQuota | null;
 }

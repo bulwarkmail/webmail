@@ -7761,6 +7761,19 @@
       "failed": "Mappen kunne ikke åpnes."
     }
   },
+  "files_storage": {
+    "title": "Lagringsplass i Filer",
+    "used_of": "{used} av {total} brukt",
+    "used": "{used} brukt",
+    "no_limit": "Serveren setter ingen grense. Så mye tar filene dine.",
+    "almost_full": "Lagringsplassen din i Filer er nesten full",
+    "full": "Lagringsplassen din i Filer er full",
+    "state_synced": "Oppdatert",
+    "state_syncing": "Synkroniserer",
+    "state_paused": "På pause",
+    "state_offline": "Frakoblet",
+    "state_error": "Stoppet"
+  },
   "desktopQuickCompose": {
     "label": "Rask skriving",
     "menu": "Rask skriving",

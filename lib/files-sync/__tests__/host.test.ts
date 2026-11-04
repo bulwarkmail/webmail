@@ -12,10 +12,21 @@ import { runWipeCleaners } from '@/lib/offline/wipe-registry';
 import { runBeforeSignOut } from '@/lib/sign-out-cleanup';
 import type { FilesSyncController, FilesSyncSnapshot } from '../types';
 import { claimFilesControls, resetFilesControlsForTests } from '../controls';
-import { FilesSyncHost, type HostAccount } from '../host';
+import type { DriveStatusText } from '../drive-status';
+import { FilesSyncHost, type HostAccount, type QuotaTiming } from '../host';
 import { registerFilesSyncLifecycle, resetFilesSyncLifecycleForTests, setRunningFilesSyncHost } from '../lifecycle';
 import { FakeDisk } from './helpers/fake-disk';
 import { FakeServer } from './helpers/fake-server';
+
+const TEXT: DriveStatusText = {
+  state: (state) => `state:${state}`,
+  detail: (_status, state) => `detail:${state}`,
+  quota: (used, total) => (total === null ? `${used} used` : `${used} of ${total}`),
+  notice: (level) => `notice:${level}`,
+};
+
+/** What Quota/get answered for dso-quota@example.org on Stalwart 1.0 (0.16 the same, but `used`), 2026-11-04. */
+const STALWART_QUOTA = { id: 'a', resourceType: 'octets', used: 1048816, warnLimit: null, softLimit: null, hardLimit: 104857600, scope: 'account', name: 'dso-quota@example.org', types: ['Email', 'SieveScript', 'FileNode', 'CalendarEvent', 'ContactCard'] };
 
 const FAST = { localDelayMs: 0, remoteDelayMs: 0, pollMs: 1e9, rescanMs: 1e9, retryMs: [1e9], soonMs: 5, fetchWaitMs: 1000 };
 
@@ -64,10 +75,10 @@ interface Rig {
   account: HostAccount;
 }
 
-function rig(options: { drive?: boolean; wanted?: string[] } = {}): Rig {
+function rig(options: { drive?: boolean; wanted?: string[]; quota?: Record<string, unknown>[]; quotaTiming?: Partial<QuotaTiming> } = {}): Rig {
   const disk = new FakeDisk({ caseInsensitive: true, drive: options.drive });
   disk.driveWanted = options.wanted ?? [];
-  const server = new FakeServer();
+  const server = new FakeServer(options.quota ? { quota: options.quota } : {});
   let published: Partial<FilesSyncSnapshot> = {};
   let controller: FilesSyncController | null = null;
   const folderOff = { value: false };
@@ -85,6 +96,8 @@ function rig(options: { drive?: boolean; wanted?: string[] } = {}): Rig {
     remoteFor: () => server.remote(),
     readUrl: disk.readUrl,
     timing: FAST,
+    driveStatusText: () => TEXT,
+    quotaTiming: options.quotaTiming,
   });
   const account: HostAccount = { id: 'a1', label: 'a@example.org', client: { getSessionSnapshot: () => server.session, getAuthHeader: () => 'Basic x' } };
   return { host, disk, server, snapshot: () => published, controller: () => controller, folderOff, account };
@@ -221,5 +234,77 @@ describe('sign-out, wipe and refused logins', () => {
     await runBeforeSignOut('a1');
     expect(r.disk.driveCalls).toContainEqual({ call: 'disable', args: ['a1', 'signed-out'] });
     expect(r.disk.calls).toEqual([]);
+  });
+});
+
+describe('storage and the drive in Explorer', () => {
+  it("reads the server's quota, publishes it for the UI, and tells main what Explorer shows for the drive", async () => {
+    const r = rig({ drive: true, wanted: ['a1'], quota: [STALWART_QUOTA] });
+    r.server.file('a.txt', null, 'abc');
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    expect(r.server.quotaCalls).toBe(1);
+    expect(r.snapshot().quota).toEqual({ used: 1048816, total: 104857600, source: 'server' });
+    expect(r.disk.driveStatuses.at(-1)).toEqual({
+      account: 'a1',
+      status: { state: 'synced', label: 'state:synced', detail: 'detail:idle', quota: { used: 1048816, total: 104857600, label: '1048816 of 104857600' }, notice: null },
+    });
+    // Unchanged: main doesn't hear it again.
+    const sent = r.disk.driveStatuses.length;
+    r.host.publishNow();
+    expect(r.disk.driveStatuses).toHaveLength(sent);
+    r.host.stop();
+  });
+
+  it('no limit on the server: what the files take, and no total', async () => {
+    const r = rig({ drive: true, wanted: ['a1'], quota: [] });
+    r.server.file('a.txt', null, 'abc');
+    r.server.file('b.txt', null, 'defgh');
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    expect(r.snapshot().quota).toEqual({ used: 8, total: null, source: 'files' });
+    expect(r.disk.driveStatuses.at(-1)?.status.quota).toEqual({ used: 8, total: null, label: '8 used' });
+    r.host.stop();
+  });
+
+  it('asks again after Files changes, at most once per gap, the last of a burst at its end', async () => {
+    const r = rig({ quota: [STALWART_QUOTA], quotaTiming: { minGapMs: 300, everyMs: 1e9 } });
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    expect(r.server.quotaCalls).toBe(1);
+    r.server.quotaList = [{ ...STALWART_QUOTA, used: 2_000_000 }];
+    r.host.remoteChanged('a1');
+    r.host.remoteChanged('a1');
+    r.host.remoteChanged('a1');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(r.server.quotaCalls).toBe(1);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(r.server.quotaCalls).toBe(2);
+    expect(r.snapshot().quota).toMatchObject({ used: 2_000_000 });
+    r.host.stop();
+  });
+
+  it('a drive turned on again hears its status again; signed out, the storage goes', async () => {
+    const r = rig({ drive: true, wanted: ['a1'], quota: [STALWART_QUOTA] });
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    const before = r.disk.driveStatuses.length;
+    expect(before).toBeGreaterThan(0);
+    await r.host.signedOut('a1');
+    await settle(r.host);
+    expect(r.snapshot().quota).toBeNull();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    expect(r.disk.driveStatuses.length).toBeGreaterThan(before);
+    expect(r.disk.driveStatuses.at(-1)).toMatchObject({ account: 'a1', status: { state: 'synced', quota: { used: 1048816 } } });
+    r.host.stop();
   });
 });

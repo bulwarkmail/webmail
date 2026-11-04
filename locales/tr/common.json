@@ -7761,6 +7761,19 @@
       "failed": "Klasör açılamadı."
     }
   },
+  "files_storage": {
+    "title": "Dosyalar'daki depolama",
+    "used_of": "{total} alanın {used} kadarı kullanılıyor",
+    "used": "{used} kullanılıyor",
+    "no_limit": "Sunucunuz bir sınır koymuyor. Dosyalarınızın kapladığı alan bu.",
+    "almost_full": "Dosyalar'daki depolama alanınız neredeyse dolu",
+    "full": "Dosyalar'daki depolama alanınız dolu",
+    "state_synced": "Güncel",
+    "state_syncing": "Eşitleniyor",
+    "state_paused": "Duraklatıldı",
+    "state_offline": "Çevrimdışı",
+    "state_error": "Durduruldu"
+  },
   "desktopQuickCompose": {
     "label": "Hızlı ileti",
     "menu": "Hızlı ileti",

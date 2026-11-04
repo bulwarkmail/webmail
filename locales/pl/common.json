@@ -7761,6 +7761,19 @@
       "failed": "Nie udało się otworzyć folderu."
     }
   },
+  "files_storage": {
+    "title": "Miejsce w Plikach",
+    "used_of": "Użyto {used} z {total}",
+    "used": "Użyto {used}",
+    "no_limit": "Serwer nie ustala limitu. Tyle miejsca zajmują Twoje pliki.",
+    "almost_full": "Twoje miejsce w Plikach jest prawie pełne",
+    "full": "Twoje miejsce w Plikach jest pełne",
+    "state_synced": "Aktualne",
+    "state_syncing": "Synchronizowanie",
+    "state_paused": "Wstrzymano",
+    "state_offline": "Offline",
+    "state_error": "Zatrzymano"
+  },
   "desktopQuickCompose": {
     "label": "Szybka wiadomość",
     "menu": "Szybka wiadomość",

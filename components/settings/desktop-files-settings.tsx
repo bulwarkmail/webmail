@@ -16,6 +16,7 @@ import { findTrashFolder, trashSubtreeIds } from "@/lib/files-trash";
 import { cn, formatFileSize } from "@/lib/utils";
 import type { FilesDriveState, FilesError, FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncActivity, FilesSyncActivityKind } from "@/lib/files-sync/types";
+import { filesQuotaLevel } from "@/lib/files-sync/drive-status";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
 import { OrgLockedNote } from "./org-locked-note";
@@ -35,10 +36,55 @@ export function DesktopFilesSettings() {
   if (!available) return null;
   return (
     <div className="space-y-8" data-testid="files-sync-settings">
+      <StorageSection />
       {drive && <DriveSection drive={drive} />}
       <FoldersSection />
       <ActivitySection />
     </div>
+  );
+}
+
+/**
+ * What the account's Files take: the server's limit when it sets one (the same numbers the
+ * Files screen's storage ring and Explorer show), else what the files take, with no total.
+ */
+function StorageSection() {
+  const t = useTranslations("files_storage");
+  const quota = useFilesSyncStore((s) => s.quota);
+  if (!quota) return null;
+  const level = filesQuotaLevel(quota);
+  const used = formatFileSize(quota.used);
+  const percent = quota.total ? Math.min(100, (quota.used / quota.total) * 100) : 0;
+  return (
+    <SettingsSection id="storage" title={t("title")}>
+      <div className="space-y-2" data-testid="files-sync-storage" data-quota-level={level}>
+        <p className="text-sm text-foreground tabular-nums">
+          {quota.total === null ? t("used", { used }) : t("used_of", { used, total: formatFileSize(quota.total) })}
+        </p>
+        {quota.total !== null ? (
+          <div
+            className="w-full bg-muted rounded-full h-1.5"
+            role="progressbar"
+            aria-label={t("title")}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(percent)}
+          >
+            <div
+              className={cn("h-1.5 rounded-full", level === "full" ? "bg-destructive" : level === "warn" ? "bg-warning" : "bg-success")}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t("no_limit")}</p>
+        )}
+        {level !== "ok" && (
+          <p className={cn("text-xs", level === "full" ? "text-destructive" : "text-muted-foreground")}>
+            {t(level === "full" ? "full" : "almost_full")}
+          </p>
+        )}
+      </div>
+    </SettingsSection>
   );
 }
 

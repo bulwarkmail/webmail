@@ -7761,6 +7761,19 @@
       "failed": "De map kon niet worden geopend."
     }
   },
+  "files_storage": {
+    "title": "Opslag in Bestanden",
+    "used_of": "{used} van {total} gebruikt",
+    "used": "{used} gebruikt",
+    "no_limit": "Je server stelt geen limiet. Zoveel ruimte nemen je bestanden in.",
+    "almost_full": "Je opslag in Bestanden is bijna vol",
+    "full": "Je opslag in Bestanden is vol",
+    "state_synced": "Bijgewerkt",
+    "state_syncing": "Synchroniseren",
+    "state_paused": "Gepauzeerd",
+    "state_offline": "Offline",
+    "state_error": "Gestopt"
+  },
   "desktopQuickCompose": {
     "label": "Snel opstellen",
     "menu": "Snel opstellen",
