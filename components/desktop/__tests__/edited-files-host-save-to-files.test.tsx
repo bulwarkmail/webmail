@@ -59,12 +59,16 @@ function show() {
   return render(<EditedFilesHost />);
 }
 
+let serverBlob = 'b-old';
+
 beforeEach(() => {
   vi.clearAllMocks();
+  serverBlob = 'b-old';
   client = {
-    getFileNodes: vi.fn(async () => [{ id: 'n1', blobId: 'b-old', name: 'budget-2026.xlsx', parentId: 'p1' }]),
+    // The server keeps a new content under a blob id of its own, as Stalwart 1.0 does (pim-p3-1).
+    getFileNodes: vi.fn(async (ids: string[]) => ids.includes('n1') ? [{ id: 'n1', blobId: serverBlob, name: 'budget-2026.xlsx', parentId: 'p1' }] : []),
     uploadBlob: vi.fn(async () => ({ blobId: 'b-new', size: 1, type: 'x/y' })),
-    replaceFileNodeBlob: vi.fn(async () => {}),
+    replaceFileNodeBlob: vi.fn(async () => { serverBlob = 'b-server'; }),
     createFileNode: vi.fn(async () => ({ id: 'n2', name: 'budget-2026 (2).xlsx', parentId: 'p1' })),
   };
   files.client = client;
@@ -113,14 +117,14 @@ describe('Save to Files (pim-p2-1)', () => {
     fireEvent.click(screen.getByText('save_to_files'));
     await waitFor(() => expect(client.replaceFileNodeBlob).toHaveBeenCalledWith('n1', 'b-new'));
     expect(client.createFileNode).not.toHaveBeenCalled();
-    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n1', blobId: 'b-new', parentId: 'p1' }));
+    expect(edit.setSource).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'node', nodeId: 'n1', blobId: 'b-server', parentId: 'p1' }));
     expect(edit.taken).toHaveBeenCalledWith('s1', 'h2');
     expect(toast.success).toHaveBeenCalledWith('saved');
     expect(files.refresh).toHaveBeenCalled();
   });
 
   it('asks Keep both or Replace when the file changed on the server, and Keep both adds a copy beside it', async () => {
-    client.getFileNodes.mockResolvedValue([{ id: 'n1', blobId: 'b-someone-else', name: 'budget-2026.xlsx', parentId: 'p1' }]);
+    serverBlob = 'b-someone-else';
     show();
     fireEvent.click(screen.getByText('save_to_files'));
     await waitFor(() => expect(screen.getByTestId('edited-file-conflict').textContent).toBe('changed_on_server'));
@@ -136,7 +140,7 @@ describe('Save to Files (pim-p2-1)', () => {
   });
 
   it('Replace writes over the change', async () => {
-    client.getFileNodes.mockResolvedValue([{ id: 'n1', blobId: 'b-someone-else', name: 'budget-2026.xlsx', parentId: 'p1' }]);
+    serverBlob = 'b-someone-else';
     show();
     fireEvent.click(screen.getByText('save_to_files'));
     fireEvent.click(await screen.findByText('replace'));

@@ -16,7 +16,8 @@ import type { EditSource } from './edit-attachments';
 export type NodeEditSource = Extract<EditSource, { kind: 'node' }>;
 
 export type SaveBackResult =
-  | { status: 'saved'; blobId: string }
+  /** `source`: the node as the server holds it now, the base for the next save. */
+  | { status: 'saved'; source: NodeEditSource }
   /** Someone changed the file on the server since it was opened. */
   | { status: 'changed' }
   /** It isn't there any more. */
@@ -30,14 +31,43 @@ export function filesClientFor(account: string): IJMAPClient | null {
   return auth.getClientForAccount?.(account) ?? (auth.activeAccountId === account ? auth.client : null) ?? null;
 }
 
+const STATE_PROPERTIES = ['id', 'blobId', 'name', 'parentId', 'size', 'modified'];
+
+type NodeState = { blobId: string | null; size?: number; modified?: string; parentId?: string | null };
+
+/**
+ * Whether the node still holds what the session last knew. The blob id is what the server
+ * reported (Stalwart 1.0 keeps an uploaded file under a blob id of its own, pim-p3-1), and
+ * where a server reports another id for the same content, the same size and change time
+ * still say nobody touched it.
+ */
+export function nodeUnchanged(source: NodeEditSource, node: NodeState): boolean {
+  if (!source.blobId) return true;
+  if (node.blobId === source.blobId) return true;
+  return source.size !== undefined && source.modified !== undefined && node.size === source.size && node.modified === source.modified;
+}
+
+function sourceOf(source: NodeEditSource, node: NodeState, fallbackBlobId: string): NodeEditSource {
+  return {
+    kind: 'node',
+    nodeId: source.nodeId,
+    blobId: node.blobId ?? fallbackBlobId,
+    parentId: node.parentId === undefined ? source.parentId : node.parentId,
+    ...(typeof node.size === 'number' ? { size: node.size } : {}),
+    ...(typeof node.modified === 'string' && node.modified ? { modified: node.modified } : {}),
+  };
+}
+
 /** Puts the file into its node. `force`: also when it changed on the server (Replace). */
 export async function saveBackToNode(client: IJMAPClient, source: NodeEditSource, file: File, force = false): Promise<SaveBackResult> {
-  const [node] = await client.getFileNodes([source.nodeId], ['id', 'blobId', 'name', 'parentId']);
+  const [node] = await client.getFileNodes([source.nodeId], STATE_PROPERTIES);
   if (!node) return { status: 'gone' };
-  if (!force && source.blobId && node.blobId !== source.blobId) return { status: 'changed' };
+  if (!force && !nodeUnchanged(source, node)) return { status: 'changed' };
   const { blobId } = await client.uploadBlob(file);
   await client.replaceFileNodeBlob(source.nodeId, blobId);
-  return { status: 'saved', blobId };
+  // What the server holds now, not what was uploaded: the next save compares with this.
+  const [after] = await client.getFileNodes([source.nodeId], STATE_PROPERTIES).catch(() => []);
+  return { status: 'saved', source: sourceOf(source, after ?? { blobId }, blobId) };
 }
 
 /** Keep both: a new file beside the original, numbered by the server when the name is taken. */
@@ -51,7 +81,9 @@ export async function saveBesideNode(client: IJMAPClient, source: NodeEditSource
     if (source.parentId === null) throw error;
     created = await client.createFileNode(file.name, blobId, type || file.type || 'application/octet-stream', file.size, null);
   }
-  return { source: { kind: 'node', nodeId: created.id, blobId, parentId: created.parentId ?? null }, name: created.name };
+  const base: NodeEditSource = { kind: 'node', nodeId: created.id, blobId, parentId: created.parentId ?? null };
+  const [after] = await client.getFileNodes([created.id], STATE_PROPERTIES).catch(() => []);
+  return { source: sourceOf(base, after ?? { blobId }, blobId), name: created.name };
 }
 
 /** Files on screen shows the new size and date. */

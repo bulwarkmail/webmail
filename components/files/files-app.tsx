@@ -706,7 +706,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       type: r.contentType || "application/octet-stream",
       account: filesLocalAccount,
       // Saved in its program, it goes back into this node (pim-p2-1).
-      source: { kind: "node", nodeId: r.id, blobId: r.blobId ?? null, parentId: r.parentId ?? null },
+      source: { kind: "node", nodeId: r.id, blobId: r.blobId ?? null, parentId: r.parentId ?? null, size: r.contentLength, modified: r.lastModified },
       load: async () => (await getFileContent(r.name)).blob,
     });
     // The program has it now: the pane has nothing more to offer (pim-p2-18).

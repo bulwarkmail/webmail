@@ -29,16 +29,16 @@ export type EditSource =
   | { kind: 'draft'; draftId: string | null; ownerAccountId?: string }
   /**
    * A file in Files, opened with "Open in default app": a save goes back into this node.
-   * `blobId` is the content last known to be there, to tell whether someone changed it
-   * on the server meanwhile.
+   * `blobId`, `size` and `modified` are the content last known to be there, as the server
+   * reported it, to tell whether someone changed it on the server meanwhile.
    */
-  | { kind: 'node'; nodeId: string; blobId: string | null; parentId: string | null }
+  | { kind: 'node'; nodeId: string; blobId: string | null; parentId: string | null; size?: number; modified?: string }
   /** Its message went or it was taken off a draft: only the file is left. */
   | { kind: 'file' };
 
 export function parseEditSource(raw: string): EditSource {
   try {
-    const parsed = JSON.parse(raw) as Partial<EditSource> & { emailId?: unknown; draftId?: unknown; ownerAccountId?: unknown; nodeId?: unknown; blobId?: unknown; parentId?: unknown };
+    const parsed = JSON.parse(raw) as Partial<EditSource> & { emailId?: unknown; draftId?: unknown; ownerAccountId?: unknown; nodeId?: unknown; blobId?: unknown; parentId?: unknown; size?: unknown; modified?: unknown };
     const ownerAccountId = typeof parsed.ownerAccountId === 'string' ? parsed.ownerAccountId : undefined;
     if (parsed.kind === 'node' && typeof parsed.nodeId === 'string' && parsed.nodeId) {
       return {
@@ -46,6 +46,8 @@ export function parseEditSource(raw: string): EditSource {
         nodeId: parsed.nodeId,
         blobId: typeof parsed.blobId === 'string' ? parsed.blobId : null,
         parentId: typeof parsed.parentId === 'string' ? parsed.parentId : null,
+        ...(typeof parsed.size === 'number' ? { size: parsed.size } : {}),
+        ...(typeof parsed.modified === 'string' ? { modified: parsed.modified } : {}),
       };
     }
     if (parsed.kind === 'mail' && typeof parsed.emailId === 'string') return { kind: 'mail', emailId: parsed.emailId, ownerAccountId };

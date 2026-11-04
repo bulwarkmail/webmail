@@ -176,7 +176,7 @@ export function EditedFilesHost() {
           setConflicts((all) => ({ ...all, [session.id]: result.status }));
           return;
         }
-        bridge.setSource(session.id, JSON.stringify({ ...source, blobId: result.blobId }));
+        bridge.setSource(session.id, JSON.stringify(result.source));
         await bridge.taken(session.id, hash);
         toast.success(tFiles("saved", { name: session.name }));
       }
