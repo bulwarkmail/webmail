@@ -10,6 +10,11 @@ const TEMPLATE_PLACEHOLDER = /\{\{\s*[\w.-]+\s*\}\}/g;
 // Markdown link.
 const CAPS_BRACKET = /\[[\p{Lu}\d][\p{Lu}\d _./-]{0,28}[\p{Lu}\d]\](?!\()/gu;
 
+// [Name], [Company], [First Name]: one to three capitalised words, the way
+// templates name a fill-in. A lowercase word ([Yours truly]) or a number
+// ([Anlage 2]) makes it ordinary text.
+const TITLE_BRACKET = /\[\p{Lu}[\p{Ll}'’-]+(?: \p{Lu}[\p{Ll}'’-]+){0,2}\](?!\()/gu;
+
 /**
  * The words that mark a fill-in in one language. They live in each locale
  * file under email_composer.placeholder_words, so a new translation brings
@@ -113,7 +118,7 @@ function collect(text: string, patterns: RegExp[]): Match[] {
  * to check (see PlaceholderWords).
  */
 export function findUnfilledPlaceholders(subject: string, bodyText: string, words: PlaceholderWords[] = []): string[] {
-  const bodyPatterns = [TEMPLATE_PLACEHOLDER, CAPS_BRACKET, CIRCLE_MARKER];
+  const bodyPatterns = [TEMPLATE_PLACEHOLDER, CAPS_BRACKET, TITLE_BRACKET, CIRCLE_MARKER];
   const prompt = promptBracketPattern(words);
   const unfinished = unfinishedWordPattern(words);
   if (prompt) bodyPatterns.push(prompt);

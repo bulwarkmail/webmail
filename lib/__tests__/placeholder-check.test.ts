@@ -31,6 +31,22 @@ describe('findUnfilledPlaceholders', () => {
     expect(findUnfilledPlaceholders('', 'Treffpunkt: [ÜBERGABEORT]')).toEqual(['[ÜBERGABEORT]']);
   });
 
+  // A template's "Hi [Name]" went out unchanged: only capitals and
+  // "your/insert" prompts counted.
+  it('finds capitalised words in brackets that a template left to fill in', () => {
+    expect(findUnfilledPlaceholders('', ['Hi [Name],', '[Step] is done. Regards, [First Name] at [Company]. [Date]'].join('\n'), EN)).toEqual([
+      '[Name]',
+      '[Step]',
+      '[First Name]',
+      '[Company]',
+      '[Date]',
+    ]);
+  });
+
+  it('leaves longer bracketed phrases and links alone', () => {
+    expect(findUnfilledPlaceholders('', 'See [Chapter Four Part Two] and [Name](https://example.com).', EN)).toEqual([]);
+  });
+
   it('finds fill-ins that ask the sender to write something', () => {
     expect(findUnfilledPlaceholders('', 'Best regards,\n[Your Name]\n[Insert date]', EN)).toEqual([
       '[Your Name]',
@@ -94,7 +110,7 @@ describe('findUnfilledPlaceholders', () => {
 
   it('skips word lists that are not lists of strings', () => {
     const broken = [{ before: 'your' }, { before: [1, '', '-', null] }, null, { after: {} }] as unknown as PlaceholderWords[];
-    expect(findUnfilledPlaceholders('', '[Your Name] [TIME]', broken)).toEqual(['[TIME]']);
+    expect(findUnfilledPlaceholders('', '[Your name] [TIME]', broken)).toEqual(['[TIME]']);
   });
 
   it('finds the circles that stand in for a name in Japanese and Korean', () => {
@@ -104,7 +120,7 @@ describe('findUnfilledPlaceholders', () => {
   it('leaves bracketed words and headings in other languages alone', () => {
     const text = [
       '【重要】お知らせ 【通知】',
-      '[Votre] [Ваше] [您的]',
+      '[votre] [ваше] [您的]',
       'Le [ton] juste. Vote [tu].',
       'Siehe [Anlage 2] und [Kapitel 3].',
       'Termin: ○ und ◯.',
