@@ -24,6 +24,7 @@ import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
 import { forwardFrameKeys } from "@/lib/email-frame-keys";
+import { addAddressToContacts } from "@/lib/contacts/add-from-address";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
@@ -48,7 +49,7 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
+import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview, type MailboxNode } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { itemsToHide } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
@@ -156,6 +157,7 @@ import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
+import { AddressText } from "./address-context-menu";
 import { mentionFromLink } from "@/lib/recipient-mentions";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
@@ -5143,7 +5145,7 @@ ${printWatermark ? printWatermark.html : ''}
                   </div>
                   {/* Email address under name (on the name's line under Mountain View) */}
                   {!mvViewer && sender?.email && sender?.name && (
-                    <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
+                    <div className="text-sm text-muted-foreground mt-0.5 truncate"><AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} /></div>
                   )}
                 </div>
               </div>
@@ -6305,24 +6307,7 @@ ${printWatermark ? printWatermark.html : ''}
           setContactSidebarEmail(null);
         } : undefined}
         onAddToContacts={(addr, name) => {
-          const { createContact, addLocalContact, supportsSync } = useContactStore.getState();
-          const client = useAuthStore.getState().client;
-          const contactData: Partial<ContactCard> = {
-            emails: { email: { address: addr } },
-            // `full` feeds the mandatory vCard FN — strict CardDAV clients
-            // (Apple Contacts) drop cards without it (#430).
-            ...(name ? { name: { components: name.includes(' ')
-              ? [{ kind: 'given' as const, value: name.split(' ')[0] }, { kind: 'surname' as const, value: name.split(' ').slice(1).join(' ') }]
-              : [{ kind: 'given' as const, value: name }],
-              isOrdered: true, full: name,
-            }} : {}),
-          };
-          if (client && supportsSync) {
-            createContact(client, contactData).then((created) => { if (created) toast.success(t('contact_added')); });
-          } else {
-            void addLocalContact({ id: `local-${generateUUID()}`, addressBookIds: {}, ...contactData } as ContactCard)
-              .then((created) => { if (created) toast.success(t('contact_added')); });
-          }
+          void addAddressToContacts(addr, name).then((created) => { if (created) toast.success(t('contact_added')); });
         }}
       />
     )}
