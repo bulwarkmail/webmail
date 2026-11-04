@@ -242,7 +242,7 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
   ({ isOpen, position, onClose, children, label }, ref) => {
     const [mounted, setMounted] = useState(false);
-    const [adjustedPosition, setAdjustedPosition] = useState<Position | null>(null);
+    const [adjustedPosition, setAdjustedPosition] = useState<(Position & { maxHeight?: number }) | null>(null);
     const localRef = useRef<HTMLDivElement | null>(null);
     const onCloseRef = useRef(onClose);
     useEffect(() => {
@@ -326,18 +326,25 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
       const clamp = () => {
         const rect = node.getBoundingClientRect();
+        // The height it would have uncapped: a cap set last time mustn't decide the next.
+        const list = node.firstElementChild as HTMLElement | null;
+        const height = list && list.scrollHeight > list.clientHeight
+          ? rect.height + list.scrollHeight - list.clientHeight
+          : rect.height;
         // Next to the button it opened from, or at the pointer (lib/menu-placement.ts).
-        const { x, y } = placeMenu({
+        const { x, y, maxHeight } = placeMenu({
           point: { x: position.x, y: position.y },
           anchor,
-          size: { width: rect.width, height: rect.height },
+          size: { width: rect.width, height },
           viewport: { width: window.innerWidth, height: window.innerHeight },
           rtl: getComputedStyle(node).direction === "rtl",
           margin: VIEWPORT_MARGIN,
           gap: ANCHOR_GAP,
         });
 
-        setAdjustedPosition((prev) => (prev && prev.x === x && prev.y === y ? prev : { x, y }));
+        setAdjustedPosition((prev) =>
+          prev && prev.x === x && prev.y === y && prev.maxHeight === maxHeight ? prev : { x, y, maxHeight }
+        );
       };
       clamp();
       if (typeof ResizeObserver === "undefined") return;
@@ -528,7 +535,14 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           }}
         >
           {/* Taller than the window: scroll inside the menu. */}
-          <div className="py-1 overflow-y-auto" style={{ maxHeight: `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)` }}>
+          <div
+            className="py-1 overflow-y-auto"
+            style={{
+              maxHeight: adjustedPosition?.maxHeight !== undefined
+                ? `${Math.max(0, adjustedPosition.maxHeight - 2)}px`
+                : `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)`,
+            }}
+          >
             {children}
           </div>
         </div>

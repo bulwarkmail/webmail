@@ -98,6 +98,25 @@ describe('a menu from a button', () => {
     expect(openAt({ x: 0, y: 0, anchor: { left: 100, top: 600, right: 132, bottom: 632 } }).top).toBe(600 - 4 - MENU.height);
   });
 
+  it('too tall for either side: stays under the button, as tall as the room, and scrolls', () => {
+    // The ⋮ menu at 150 % zoom: 480 CSS pixels of window.
+    Object.defineProperty(window, 'innerHeight', { value: 480, configurable: true });
+    MENU.height = 460;
+    try {
+      render(
+        <ContextMenu isOpen position={{ x: 0, y: 0, anchor: { left: 805, top: 12, right: 837, bottom: 44, align: 'end' } }} onClose={() => {}}>
+          <ContextMenuItem label="Reply" onClick={() => {}} />
+        </ContextMenu>,
+      );
+      const menu = screen.getByRole('menu');
+      // Clamped instead, it sat at 10 and covered its own button.
+      expect(menu.style.top).toBe('48px');
+      expect((menu.firstElementChild as HTMLElement).style.maxHeight).toBe(`${480 - 10 - 48 - 2}px`);
+    } finally {
+      MENU.height = 300;
+    }
+  });
+
   it('mirrors in RTL: start is the right edge', () => {
     document.documentElement.dir = 'rtl';
     const at = openAt({ x: 0, y: 0, anchor: { left: 500, top: 40, right: 532, bottom: 72 } });

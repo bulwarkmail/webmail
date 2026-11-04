@@ -50,8 +50,9 @@ export function placeMenu({
   rtl = false,
   margin = MENU_VIEWPORT_MARGIN,
   gap = MENU_ANCHOR_GAP,
-}: MenuPlacementInput): { x: number; y: number } {
-  const { width: w, height: h } = size;
+}: MenuPlacementInput): { x: number; y: number; maxHeight?: number } {
+  const { width: w } = size;
+  let h = size.height;
   const { width: vw, height: vh } = viewport;
   const fitsX = (x: number) => x >= margin && x + w <= vw - margin;
   const fitsY = (y: number) => y >= margin && y + h <= vh - margin;
@@ -69,8 +70,16 @@ export function placeMenu({
     const above = anchor.top - gap - h;
     if (fitsY(below)) y = below;
     else if (fitsY(above)) y = above;
-    // Neither fits whole: the side with more room, and the menu scrolls.
-    else y = vh - anchor.bottom >= anchor.top ? below : above;
+    else {
+      // Neither fits whole: the side with more room, as tall as that room, and
+      // the menu scrolls. Clamped instead, it would cover its own button.
+      const roomBelow = vh - margin - below;
+      const roomAbove = anchor.top - gap - margin;
+      const maxHeight = Math.max(roomBelow, roomAbove);
+      h = Math.min(h, maxHeight);
+      y = roomBelow >= roomAbove ? below : anchor.top - gap - h;
+      return { x: clamp(x, w, vw, margin), y: Math.max(margin, y), maxHeight };
+    }
   } else {
     const towardEnd = rtl ? point.x - w : point.x;
     const towardStart = rtl ? point.x : point.x - w;
