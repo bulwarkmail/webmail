@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useId, useRef } from 'react';
+import { useState, useEffect, useCallback, useId, useRef } from 'react';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import * as OTPAuth from 'otpauth';
-import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, CheckCircle, Loader2, Monitor, Terminal, QrCode, Unlock, RefreshCw } from '@/components/icons';
+import { Shield, Key, Smartphone, Lock, Trash2, Plus, Eye, EyeOff, Copy, Check, CheckCircle, Loader2, Terminal, ChevronDown, QrCode, Unlock, RefreshCw } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingsSection, SettingItem, ToggleSwitch, AdvancedOnly } from './settings-section';
@@ -25,6 +25,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TermInfo } from '@/components/ui/term';
 import { IconButton } from '@/components/ui/icon-button';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { MailAppsSetup } from './mail-apps-setup';
 
 /** Ids that tie a visible label to its field: labelFor("key"). */
 function useLabelIds() {
@@ -335,16 +336,11 @@ function TotpSection() {
   return (
     <div className="space-y-3">
       <SettingItem label={t('totp.label')} description={t('totp.description')} term="totp">
-        <div className="flex items-center gap-2">
-          <ToggleSwitch
-            checked={otpEnabled || !!setupUrl}
-            onChange={handleToggle}
-            disabled={isSaving}
-          />
-          <span className={cn('text-xs font-medium', otpEnabled ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground')}>
-            {otpEnabled ? t('totp.active') : t('totp.inactive')}
-          </span>
-        </div>
+        <ToggleSwitch
+          checked={otpEnabled || !!setupUrl}
+          onChange={handleToggle}
+          disabled={isSaving}
+        />
       </SettingItem>
 
       {setupUrl && (
@@ -468,12 +464,15 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
   const t = useTranslations('settings.security');
   const labelFor = useLabelIds();
   const tCommon = useTranslations('common');
+  const tWording = useTranslations('uxs_wording');
   const tk = (key: string) => t(`${i18nNamespace}.${key}`);
   const { isSaving, isLoadingAuth } = useAccountSecurityStore();
   const [showAdd, setShowAdd] = useState(false);
   const [newDescription, setNewDescription] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [allowedIpsRaw, setAllowedIpsRaw] = useState('');
+  // Expiry and allowed addresses are rarely needed, so they wait behind "More options".
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -491,6 +490,7 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
       setNewDescription('');
       setExpiresAt('');
       setAllowedIpsRaw('');
+      setShowMoreOptions(false);
       setShowAdd(false);
       toast.success(tk('added'));
     } catch (err) {
@@ -582,6 +582,16 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
               required
             />
           </div>
+          <button
+            type="button"
+            aria-expanded={showMoreOptions}
+            onClick={() => setShowMoreOptions((open) => !open)}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown className={cn('size-3.5 transition-transform', showMoreOptions && 'rotate-180')} aria-hidden="true" />
+            {tWording('more_options')}
+          </button>
+          {showMoreOptions && (<>
           <div>
             <label htmlFor={labelFor("expires_label")} className="text-xs text-muted-foreground mb-1 block">{t('app_passwords.expires_label')}</label>
             <Input id={labelFor("expires_label")} type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
@@ -598,6 +608,7 @@ function CredentialSection({ icon: Icon, i18nNamespace, entries, onCreate, onRem
             />
             <p className="text-[0.625rem] text-muted-foreground mt-1">{t('app_passwords.allowed_ips_hint')}</p>
           </div>
+          </>)}
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isSaving || !newDescription.trim()}>
               {isSaving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : null}
@@ -938,60 +949,6 @@ function PublicKeysSection() {
         <p className="text-xs text-muted-foreground italic">{tk('none')}</p>
       )}
       <ConfirmDialog {...confirmProps} />
-    </div>
-  );
-}
-
-function EmailClientSection() {
-  const t = useTranslations('settings.security');
-  const labelFor = useLabelIds();
-  const { client } = useAuthStore();
-  const [copied, setCopied] = useState(false);
-
-  const jmapUsername = useMemo(() => client?.getUsername() || '', [client]);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(jmapUsername).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Monitor className="w-4 h-4 text-muted-foreground" />
-        <h4 data-search-label={t('email_client.title')} className="text-sm font-medium text-foreground">{t('email_client.title')}</h4>
-      </div>
-      <p className="text-xs text-muted-foreground">{t('email_client.description')}</p>
-      <div className="p-3 bg-muted/70 dark:bg-muted/40 rounded-md space-y-2">
-        <div>
-          <div className="mb-1 flex items-center gap-1">
-            <label htmlFor={labelFor('jmap-username')} className="text-xs text-muted-foreground block">
-              {t('email_client.jmap_username_label')}
-            </label>
-            <TermInfo id="jmap" />
-          </div>
-          <div className="flex rounded-lg">
-            <input
-              id={labelFor('jmap-username')}
-              type="text"
-              readOnly
-              value={jmapUsername}
-              className="py-2 px-3 block w-full bg-background border border-border border-e-transparent rounded-s-lg text-sm text-foreground focus:z-10 focus:border-ring"
-            />
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="h-[38px] px-3 shrink-0 inline-flex items-center gap-1.5 rounded-e-lg border border-border bg-muted text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-hidden"
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? t('email_client.copied') : t('email_client.copy')}
-            </button>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground pt-1">{t('email_client.password_instructions')}</p>
-      </div>
     </div>
   );
 }
@@ -1621,7 +1578,7 @@ export function AccountSecuritySettings() {
               <div className="border-t border-border" />
             </>
           )}
-          <EmailClientSection />
+          <MailAppsSetup />
           <div className="border-t border-border" />
           <AppPasswordsSection />
           <AdvancedOnly>

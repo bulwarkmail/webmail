@@ -51,7 +51,7 @@ describe('admin skeleton', () => {
   it('draws the page list with its real names and the open page current', () => {
     const container = dom(renderToString(<AdminSkeleton page="branding" label="Loading" />));
     const text = container.textContent ?? '';
-    for (const name of ['Overview', 'Server', 'Branding', 'Organisation', 'Extensions', 'System', 'Audit log']) {
+    for (const name of ['Overview', 'Server', 'Branding', 'Users', 'Features and settings', 'Extensions', 'System', 'Audit log']) {
       expect(text).toContain(name);
     }
     const current = [...container.querySelectorAll('.bg-accent')].map((el) => el.textContent);

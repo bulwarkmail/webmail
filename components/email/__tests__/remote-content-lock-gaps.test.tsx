@@ -31,7 +31,8 @@ vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect()
 
 const { EmailViewer } = await import('../email-viewer');
 const { ThreadConversationView } = await import('../thread-conversation-view');
-const { ReadingSettings } = await import('@/components/settings/reading-settings');
+// Remote content and trusted senders moved from Reading to Privacy (settings-24, 2026-11-04).
+const { PrivacySettings } = await import('@/components/settings/privacy-settings');
 
 const mailboxes = [{ id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, myRights: { mayAddItems: true } }] as unknown as Mailbox[];
 const email = {
@@ -123,7 +124,7 @@ describe('before the policy has loaded', () => {
 
 describe('trusted senders settings', () => {
   it('lets users add senders and switch the address book when nothing blocks', async () => {
-    render(<ReadingSettings />);
+    render(<PrivacySettings />);
     const toggle = screen.getByText('trusted_senders.use_address_book_label').closest('[class]')!.parentElement!;
     expect(toggle.querySelector('[inert]')).toBeNull();
     fireEvent.click(screen.getByText('trusted_senders.count_zero'));
@@ -132,7 +133,7 @@ describe('trusted senders settings', () => {
 
   it('shows the list read-only and the address book switch as the organisation\'s while it blocks', async () => {
     restrict({ locked: true, value: 'block' });
-    render(<ReadingSettings />);
+    render(<PrivacySettings />);
     expect(screen.getAllByText('trusted_senders_note').length).toBeGreaterThan(0);
     const switchRow = screen.getByText('trusted_senders.use_address_book_label').closest('div')!.parentElement!.parentElement!;
     expect(switchRow.querySelector('[inert]')).not.toBeNull();
@@ -145,7 +146,7 @@ describe('trusted senders settings', () => {
   it('still lets users take a sender off the list while it blocks', async () => {
     restrict({ locked: true, value: 'block' });
     useSettingsStore.setState({ trustedSenders: ['news@shop.example'], trustedSendersAddressBook: false });
-    render(<ReadingSettings />);
+    render(<PrivacySettings />);
     fireEvent.click(screen.getByText('trusted_senders.count_one'));
     await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
     fireEvent.click(screen.getByTitle('remove'));

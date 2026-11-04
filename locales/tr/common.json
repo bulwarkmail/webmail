@@ -6,9 +6,6 @@
     "username_placeholder": "kullanici@example.com",
     "password_label": "Şifre",
     "password_placeholder": "Şifrenizi girin",
-    "jmap_endpoint_label": "JMAP Sunucusu",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Sunucu, bu etki alanından gelen CORS isteklerine izin vermelidir.",
     "jmap_server_label": "Sunucu",
     "jmap_server_auto_picked": "Sunucu, e-posta etki alanınıza göre seçildi.",
     "sign_in": "Giriş yap",
@@ -29,7 +26,7 @@
     },
     "show_password": "Şifreyi göster",
     "hide_password": "Şifreyi gizle",
-    "totp_toggle": "2FA kodum var",
+    "totp_toggle": "Kimlik doğrulama uygulamamdan bir kodum var",
     "token_toggle": "Erişim belirteciyle giriş yap",
     "password_toggle": "Şifreyle giriş yap",
     "token_label": "Erişim belirteci",
@@ -48,7 +45,7 @@
     "dismiss": "Kapat",
     "or": "veya",
     "sign_in_sso": "SSO ile giriş yap",
-    "add_account_title": "Hesap Ekle",
+    "add_account_title": "Hesap ekle",
     "add_account_subtitle": "Başka bir hesapla giriş yap",
     "subtitle": "Hesabınızda oturum açın",
     "version": {
@@ -126,7 +123,7 @@
     "sign_out_of": "{account} hesabından çıkış yap",
     "sign_out_all": "Tüm hesaplardan çıkış yap",
     "add_account": "Hesap ekle",
-    "set_as_default": "Varsayılan olarak ayarla",
+    "set_as_default": "Bu hesabı başlangıçta aç",
     "switch_account": "Hesap değiştir",
     "contacts": "Kişiler",
     "calendar": "Takvim",
@@ -225,20 +222,20 @@
   },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
-    "description": "E-posta ve takvim bağlantılarının {appName} uygulamasında açılıp açılmayacağını seçin. Teknik olarak {appName}, mailto: ve webcal: bağlantıları için protokol işleyicisi olarak kaydolur.",
+    "description": "E-posta ve takvim bağlantılarının {appName} içinde açılıp açılmayacağını seçin.",
     "unsupported": "Bu tarayıcı veya bağlantı manuel protokol işleyicisi kaydını desteklemiyor. Yüklü PWA'yı yine de tarayıcı veya işletim sistemi ayarlarından kullanabilirsiniz.",
-    "mailto_label": "E-posta bağlantıları",
-    "mailto_description": "mailto: bağlantılarını {appName} uygulamasında önceden doldurulmuş düzenleyiciyle açın.",
-    "protocol_open_mode_label": "Protokol bağlantıları açılırken",
+    "mailto_label": "E-posta bağlantılarını {appName} içinde aç",
+    "mailto_description": "Bir web sitesindeki e-posta adresine tıklamak {appName} içinde yeni bir ileti başlatır.",
+    "protocol_open_mode_label": "Bağlantılar nasıl açılır",
     "protocol_open_mode_description": "{appName} uygulamasının mailto: ve webcal: bağlantılarını yeni bir sekmede açmasını mı yoksa açık bir oturumu yeniden kullanmasını mı istediğinizi seçin. Etkin oturum seçeneği, tarayıcı odağı engellerse {appName} uygulamasını öne getirmek için yedek bildirime tıklayabilmeniz amacıyla bildirim izni gerektirir.",
     "protocol_open_mode_active_session": "Mümkünse etkin oturumda aç",
     "protocol_open_mode_new_tab": "Her zaman yeni sekme aç",
     "focus_notification_title": "{appName} uygulamasını aç",
     "focus_notification_body": "Bağlantı {appName} uygulamasında açıldı. Pencereyi öne getirmek için tıklayın.",
-    "webcal_label": "Takvim bağlantıları",
-    "webcal_description": "webcal: bağlantılarını {appName} uygulamasında önceden doldurulmuş takvim aboneliği penceresiyle açın.",
-    "register_mailto": "E-posta uygulaması olarak kaydet",
-    "register_webcal": "Takvim uygulaması olarak kaydet",
+    "webcal_label": "Takvim bağlantılarını {appName} içinde aç",
+    "webcal_description": "Bir web sitesindeki takvim bağlantısına tıklamak takvimi {appName} içine ekler.",
+    "register_mailto": "E-posta bağlantıları için {appName} kullan",
+    "register_webcal": "Takvim bağlantıları için {appName} kullan",
     "mailto_registered": "E-posta işleyicisi kaydı istendi",
     "webcal_registered": "Takvim işleyicisi kaydı istendi",
     "registration_failed": "Protokol işleyicisi kaydı başarısız oldu",
@@ -1369,6 +1366,30 @@
     "apply": "Bu metni kullan",
     "apply_hint": "Aşağıdaki konu ve metnin yerine geçer."
   },
+  "uxs_vacation": {
+    "default_subject": "Ofis dışında",
+    "default_message": "E-postanız için teşekkürler. Şu an ofis dışındayım, döndüğümde yanıt vereceğim.",
+    "write_message_first": "Önce bir ileti yazın. İleti olmadan insanlar boş bir yanıt alır.",
+    "enter_address_first": "Önce iletilecek adresi girin.",
+    "message_title": "Yanıtınız",
+    "message_label": "İleti",
+    "message_description": "Size yazan kişilerin alacağı metin. Biçimlendirme ve bağlantı kullanabilirsiniz.",
+    "from_label": "Başlangıç (isteğe bağlı)",
+    "from_description": "Hemen başlamak için boş bırakın.",
+    "until_label": "Bitiş (isteğe bağlı)",
+    "until_description": "Siz kapatana kadar yanıt vermeye devam etmek için boş bırakın.",
+    "audience_all": "Herkese",
+    "audience_internal": "Yalnızca kuruluşuma ({domains})",
+    "audience_external": "Yalnızca kuruluşum dışındakilere",
+    "signature_label": "İmza",
+    "signature_plain_label": "İmza (düz metin)",
+    "signature_plain_description": "Yalnızca düz metin yazıyorsunuz (Yazma), bu yüzden imzanız da düz metin.",
+    "edit_as_html": "HTML olarak düzenle",
+    "edit_formatted": "Biçimlendirme düzenleyicisine dön",
+    "html_source_label": "HTML imza",
+    "signature_size": "{max} bayttan {bytes} bayt kullanıldı",
+    "signature_too_long": "Sunucu için çok uzun ({max} bayttan {bytes} bayt). Kısaltın."
+  },
   "retention_notice": {
     "line": "Buradaki iletiler buraya taşındıktan {count, plural, one {# gün} other {# gün}} sonra silinir."
   },
@@ -1558,8 +1579,8 @@
       "title": "Görünüm",
       "description": "Web postanızın görünümünü özelleştirin",
       "theme": {
-        "label": "Tema",
-        "description": "Tercih ettiğiniz renk şemasını seçin",
+        "label": "Açık veya koyu",
+        "description": "Sistem, cihazınızın ayarını izler",
         "light": "Açık",
         "dark": "Koyu",
         "system": "Sistem"
@@ -1587,7 +1608,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Arama üstte, uygulamalar solda"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -1631,7 +1652,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Renkli Kenar Çubuğu Simgeleri",
-        "description": "Klasör ve etiket simgelerini türe göre renklendir (mavi Gelen Kutusu, kırmızı İstem Dışı vb.). Tek renkli kenar çubuğu için kapatın."
+        "description": "Klasör ve etiket simgelerini türe göre renklendir (Gelen Kutusu mavi, Spam kırmızı, Gönderilenler yeşil vb.). Gri simgeler için kapatın."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1643,7 +1664,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Başka bir sekmede veya uygulamada çalışırken de yeni postayı görmeniz için."
       },
       "show_shared_mail_accounts": {
         "label": "Paylaşılan posta hesaplarını göster",
@@ -1694,7 +1715,7 @@
     },
     "keywords": {
       "title": "E-posta Etiketleri",
-      "description": "E-postalarınızı renklerle düzenlemek için etiketler tanımlayın. Bunlar sunucuda JMAP anahtar sözcükleri olarak saklanır.",
+      "description": "İletilerinizi düzenlemek için etiketler oluşturun. Etiketler iletilerinizle birlikte sunucuda saklanır.",
       "add_keyword": "Etiket Ekle",
       "label_field": "Görünen Ad",
       "label_placeholder": "ör. İş, Kişisel, Acil",
@@ -1729,8 +1750,8 @@
         "hide": "Gizle"
       },
       "unrecognized": {
-        "title": "Etiketleri sunucudan kurtar",
-        "description": "Etiket adları ve renkleri bu tarayıcıda saklanır, ancak etiketlerin kendisi JMAP anahtar sözcükleri olarak e-postalarınızda bulunur. Burada karşılığı olmayan anahtar sözcükler için postanızı tarayın ve bunları geri ekleyin.",
+        "title": "İletilerinizde olup burada eksik olan etiketleri bul",
+        "description": "Bu tarayıcı etiketlerinizin adlarını ve renklerini saklar. Etiketlerin kendisi iletilerinizde saklanır. Postanızda burada eksik olan etiketleri arayın ve yeniden ekleyin.",
         "scan": "Etiketleri tara",
         "rescan": "Yeniden tara",
         "scanning": "Taranıyor… {total} e-postadan {scanned} tanesi",
@@ -1763,17 +1784,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Bildirim Sesi",
+        "title": "Ses",
         "description": "Bildirimler için hangi sesin çalınacağını seçin",
-        "choose": "Ses",
+        "choose": "Ton",
         "choose_desc": "Bir bildirim tonu seçin ve önizlemek için hoparlör simgesine tıklayın"
       },
       "email": {
-        "title": "E-posta Bildirimleri",
+        "title": "Yeni e-posta",
         "description": "Gelen e-postalar için bildirimleri yapılandırın",
         "enabled": "E-posta bildirimleri",
         "enabled_desc": "Yeni e-postalar geldiğinde bildirim göster",
-        "sound": "Bildirim sesi",
+        "sound": "Yeni posta sesi",
         "sound_desc": "Yeni e-postalar geldiğinde sesli uyarı çal",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1783,7 +1804,7 @@
         "description": "Takvim etkinlikleri için bildirimleri yapılandırın",
         "enabled": "Etkinlik bildirimleri",
         "enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
-        "sound": "Bildirim sesi",
+        "sound": "Anımsatıcı sesi",
         "sound_desc": "Takvim hatırlatıcıları için sesli uyarı çal"
       },
       "push": {
@@ -1791,7 +1812,7 @@
         "confirm_disable_title": "Arka plan bildirimleri devre dışı bırakılsın mı?",
         "description": "Bu site kapalıyken yeni postalar için sistem bildirimleri alın. Bulwark push röle aracılığıyla iletilir; röle posta içeriğini asla görmez.",
         "disable": "Devre dışı bırak",
-        "enable": "Etkinleştir",
+        "enable": "Bu cihazda aç",
         "dismiss_aria": "Bildirim istemini kapat",
         "ios_hint": "iOS'ta önce siteyi ana ekranınıza yükleyin – Safari Web Push'u yalnızca yüklü PWA'lara teslim eder.",
         "reenable": "Yeniden kaydet",
@@ -1805,7 +1826,7 @@
         "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Arka plan bildirimleri demoda kullanılamaz.",
-        "title": "Arka plan bildirimleri",
+        "title": "{appName} kapalıyken bildirimler",
         "devices_title": "Kayıtlı cihazlar",
         "devices_desc": "Bu hesap için arka plan bildirimleri almak üzere kayıtlı tüm cihazlar. Birini iptal ettiğinizde o cihaz bildirimleri hemen almayı bırakır.",
         "devices_loading": "Kayıtlı cihazlar yükleniyor…",
@@ -1867,7 +1888,7 @@
       },
       "first_day": {
         "label": "Haftanın İlk Günü",
-        "description": "Haftayı Pazar veya Pazartesi başlat",
+        "description": "Takvimlerde haftanın ilk günü",
         "sunday": "Pazar",
         "monday": "Pazartesi"
       },
@@ -1957,13 +1978,13 @@
       },
       "mail_layout": {
         "label": "Posta Düzeni",
-        "description": "Klasik bölünmüş okuma bölmesi ile Gmail tarzı odaklı okuma akışı arasında seçin.",
+        "description": "İleti listesi ile açık iletinin ekranda nerede durduğu.",
         "split": "Bölünmüş bölme",
-        "split_description": "İleti listesi ve okuma bölmesini yan yana görünür tutun.",
+        "split_description": "Liste ve ileti yan yana",
         "focus": "Odaklı liste",
-        "focus_description": "İleti başına bir satır gösterin ve klasör kenar çubuğu görünürken postayı tam genişlikte açın.",
+        "focus_description": "Önce liste, sonra tam genişlikte ileti",
         "horizontal": "Okuma bölmesi altta",
-        "horizontal_description": "Mesaj listesini üstte gösterin ve seçilen mesajı altındaki okuma bölmesinde açın."
+        "horizontal_description": "İleti listenin altında"
       },
       "list_columns": {
         "label": "Listeyi sütunlar halinde göster",
@@ -1988,7 +2009,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Yanıt Adresini Otomatik Seç",
-        "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
+        "description": "Yanıtlarken, iletinin gönderildiği adresten gönder."
       },
       "reply_identity_match": {
         "label": "Alıcı adresi eşleştirme",
@@ -2212,8 +2233,8 @@
         "title": "Oturum açılmış hesaplar",
         "description": "Hesapların hesap menüsünde görüntülenme sırasını değiştirmek için sürükleyin",
         "active": "Şu anda etkin hesap",
-        "default_badge": "Varsayılan hesap",
-        "set_default": "Varsayılan olarak ayarla",
+        "default_badge": "Başlangıçta açılır",
+        "set_default": "Bu hesabı başlangıçta aç",
         "switch_to": "Bu hesaba geç",
         "move_up": "Yukarı taşı",
         "move_down": "Aşağı taşı",
@@ -2296,7 +2317,7 @@
       },
       "totp": {
         "section_title": "İki Faktörlü Kimlik Doğrulama",
-        "label": "TOTP Kimlik Doğrulama",
+        "label": "İki adımlı oturum açma",
         "description": "Zamana dayalı tek kullanımlık parola ile ekstra bir güvenlik katmanı ekleyin",
         "active": "Etkin",
         "inactive": "Devre dışı",
@@ -2376,12 +2397,12 @@
         "enabled_success": "Bekleme süresi şifrelemesi etkinleştirildi"
       },
       "email_client": {
-        "title": "E-posta İstemcisi Kurulumu",
-        "description": "Masaüstü veya mobil e-posta istemcinizi (Thunderbird, Apple Mail, Outlook vb.) yapılandırmak için bu kimlik bilgilerini kullanın",
-        "jmap_username_label": "JMAP Kullanıcı Adı",
+        "title": "Postanızı başka uygulamalarda kullanın",
+        "description": "Thunderbird, Apple Mail, Outlook ve telefondaki posta uygulamaları bu ayarları kullanabilir.",
+        "jmap_username_label": "Kullanıcı adı",
         "copy": "Kopyala",
         "copied": "Kopyalandı",
-        "password_instructions": "E-posta istemcinizde oturum açmak için yukarıdaki JMAP kullanıcı adı ile bir uygulama parolasını birlikte kullanın. Henüz oluşturmadıysanız aşağıdaki bölümden bir uygulama parolası oluşturun."
+        "password_instructions": "Parola olarak normal parolanızı değil, bir uygulama parolası kullanın. Bu sayfanın aşağısında oluşturabilirsiniz."
       },
       "link_device": {
         "title": "Mobil uygulamayı bağla",
@@ -2632,7 +2653,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Kişileri, takvimleri ve klasörleri sunucudan yeniden yükleyin. Oturumunuz açık kalır.",
         "button": "Refresh",
         "confirm_title": "Önbellekteki veriler yenilensin mi?"
       },
@@ -2645,12 +2666,12 @@
       },
       "export_settings": {
         "label": "Ayarları Dışa Aktar",
-        "description": "Ayarlarınızı JSON olarak indirin",
+        "description": "Ayarlarınızın bir kopyasını indirin",
         "button": "Dışa Aktar"
       },
       "import_settings": {
         "label": "Ayarları İçe Aktar",
-        "description": "JSON dosyasından ayarları yükle",
+        "description": "Ayarları bir dosyadan geri yükleyin",
         "button": "İçe Aktar"
       },
       "about": {
@@ -2701,8 +2722,8 @@
       "manage_description": "Kenar çubuğunuzdan özel uygulamalar ekleyin, düzenleyin veya kaldırın"
     },
     "contacts": {
-      "title": "Kişiler",
-      "description": "Kişilerinizi içe ve dışa aktarın",
+      "title": "Kişi listesi",
+      "description": "Kişilerin nasıl listelendiği ve içe ya da dışa aktarılacak kişi dosyaları",
       "group_by_letter_label": "İlk harfe göre grupla",
       "sort_by_last_name_label": "Soyada göre sırala",
       "sort_by_last_name_description": "Aile üyeleri bir arada görünsün diye kişi listesini soyada göre sıralar",
@@ -2797,15 +2818,15 @@
       "not_supported": "Posta sunucunuz e-posta filtrelerini desteklemiyor.",
       "rule_name": "Kural Adı",
       "rule_name_placeholder": "ör. Bültenleri sırala",
-      "match_all": "TÜM koşullarla eşleş",
-      "match_any": "HERHANGİ bir koşulla eşleş",
+      "match_all": "Tüm koşullarla eşleş",
+      "match_any": "Herhangi bir koşulla eşleş",
       "conditions": "Koşullar",
       "add_condition": "Koşul Ekle",
       "actions": "İşlemler",
       "add_action": "İşlem Ekle",
       "remove_condition": "Koşulu kaldır",
       "remove_action": "Eylemi kaldır",
-      "stop_processing": "Sonraki kuralları işlemeyi durdur",
+      "stop_processing": "Sonraki kuralları uygulama",
       "include_spam": "İstenmeyen olarak işaretlenen iletileri de taşı",
       "attachment_type_placeholder": "örn. pdf, doc, jpg",
       "value_placeholder_multi": "Değer (birden fazla virgülle ayrılır)",
@@ -2847,7 +2868,7 @@
         "discard": "At (sessizce sil)",
         "reject": "İletiyle reddet",
         "keep": "Gelen kutusunda tut",
-        "stop": "İşlemeyi durdur"
+        "stop": "Sonraki kuralları uygulama"
       },
       "move_to_folder": "Klasör seçin",
       "copy_to_folder": "Klasör seçin",
@@ -2991,7 +3012,7 @@
         "description": "Dosya ve klasörlerin nasıl görüntüleneceğini yapılandırın"
       },
       "default_view": {
-        "label": "Varsayılan Görünüm",
+        "label": "Dosyaları şöyle göster",
         "description": "Izgara ve liste düzeni arasında seçin",
         "list": "Liste",
         "grid": "Izgara"
@@ -3194,10 +3215,6 @@
         "label": "Okuma maskesi",
         "description": "İletide işaretçinin çevresindeki birkaç satır dışındaki her şeyi karartır, böylece okuduğunuz yeri kaybetmezsiniz."
       },
-      "plain_language": {
-        "label": "Sade dil",
-        "description": "Ayarlarda ve hata iletilerinde daha basit ifadeler ve teknik terimler için kısa açıklamalar. İngilizce ve Almanca dillerinde kullanılabilir."
-      },
       "contrast": {
         "label": "Karşıtlık",
         "description": "Daha fazla karşıtlık, her temada metni, kenarlıkları ve odak çerçevesini daha koyu ya da daha açık yapar ve bağlantıların altını çizer. Sistem, cihazınızı izler.",
@@ -3389,6 +3406,81 @@
         "description": "İletileri sesli okuyan ses. Liste, tarayıcınızda arayüz dili için bulunan sesleri gösterir.",
         "default": "Tarayıcı varsayılanı"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Çevrimdışı",
+      "privacy": "Gizlilik",
+      "about": "Hakkında"
+    },
+    "search": {
+      "signature": "imza e-posta imzası alt bilgi",
+      "sign_out": "oturumu kapat çıkış yap logout",
+      "app_lock": "PIN kilit kod kilit ekranı",
+      "text_size": "yazı tipi boyutu büyük metin yakınlaştır zoom",
+      "vacation": "otomatik yanıt ofis dışında uzakta tatil izin autoreply",
+      "two_factor": "2FA iki faktörlü iki adımlı MFA OTP doğrulayıcı tek kullanımlık kod",
+      "encryption": "S/MIME smime PGP OpenPGP şifreleme sertifika",
+      "password": "parola şifre parolayı değiştir yeni parola",
+      "offline": "çevrimdışı bağlantısız internetsiz indir depolama eşitleme",
+      "wipe": "kaldır sil temizle cihaz veriler",
+      "outbox": "giden kutusu gönderilmemiş bekleyen kuyruk",
+      "remote_content": "uzak resimler harici içerik izleme pikseller güvenilir gönderenler",
+      "push": "push aktarıcı arka plan bildirimler",
+      "version": "sürüm güncelleme hakkında kaynak kodu GitHub lisans"
+    },
+    "privacy": {
+      "push_title": "Bildirimler",
+      "push_link": {
+        "label": "Bildirim aktarıcısı",
+        "description": "Uygulama kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunu Bildirimler sayfasında seçersiniz.",
+        "button": "Bildirimler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Uzak resimler ve güvenilir gönderenler",
+      "receipts_label": "Okundu bilgileri",
+      "senders_label": "Gönderen resimleri",
+      "description": "Bu ayarlar Gizlilik sayfasındadır.",
+      "button": "Gizlilik"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Yoğunluk ve düğme etiketleri",
+        "description": "Liste satırlarının ne kadar sık olduğu ve düğmelerin adını gösterip göstermediği Görünüm sayfasında ayarlanır."
+      },
+      "light_mode": {
+        "label": "İletiler için açık arka plan",
+        "description": "Koyu modda iletilerin açık arka planda gösterilmesi Okuma sayfasında ayarlanır."
+      },
+      "calendar": {
+        "label": "Takvimde etkinlik önizlemesi",
+        "description": "Bir etkinliğin üzerine gelince ayrıntılarının görünüp görünmeyeceği Takvim sayfasında ayarlanır."
+      },
+      "list": {
+        "label": "Konuşmalar ve önizleme satırları",
+        "description": "Konuşmaya göre gruplama ve her iletinin altındaki önizleme satırı İleti listesi sayfasında ayarlanır."
+      },
+      "reading": {
+        "label": "Okundu olarak işaretleme",
+        "description": "Bir iletinin ne zaman okunmuş sayılacağı ve silip taşıdıktan sonra nereye gideceğiniz Okuma sayfasında ayarlanır."
+      },
+      "send_warnings_description": "Göndermeyi geri alma ve eksik konu, unutulan ek veya yer tutucu metin uyarıları.",
+      "bulk_delete": {
+        "label": "Birden çok iletiyi silmeden önce sor",
+        "description": "Bu, İleti listesi sayfasında ayarlanır."
+      },
+      "sounds": {
+        "label": "Sesler ve okunmamış sayacı",
+        "description": "Bildirim sesleri ve sekmedeki okunmamış sayısı Bildirimler sayfasında ayarlanır."
+      }
+    },
+    "about": {
+      "title": "{appName} hakkında"
+    },
+    "sign_out": {
+      "description": "Bu cihazda bu hesabın oturumunu kapatın."
     }
   },
   "setup": {
@@ -3725,6 +3817,10 @@
     "delete_with_contents_title": "Klasör boş değil",
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
     "delete_with_contents_confirm": "Klasörü ve iletileri sil"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Hesapları yönet…",
+    "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"
   },
   "shortcuts": {
     "title": "Klavye kısayolları",
@@ -4387,6 +4483,28 @@
     "open_categories": "Kategorileri aç",
     "row_actions": "{name} için işlemler"
   },
+  "uxs_wording": {
+    "more_options": "Diğer seçenekler",
+    "use_in_other_apps": "Başka uygulamalarda kullan",
+    "default_address_book": "Kişiler",
+    "default_calendar": "Takvim",
+    "preview_documents": "Belgeler",
+    "preview_photos": "Fotoğraflar",
+    "sample_subject": "Kafedeki toplantıdan notlar",
+    "mail_apps": {
+      "imap": "Gelen posta (IMAP)",
+      "smtp": "Giden posta (SMTP)",
+      "caldav": "Takvimler (CalDAV)",
+      "carddav": "Kişiler (CardDAV)",
+      "port_security": "Bağlantı noktası {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Şifreleme yok",
+      "copy_label": "{name} kopyala",
+      "loading": "Ayarlar posta sunucusundan okunuyor…",
+      "not_found": "Posta sunucunuz diğer uygulamalar için sunucu adlarını bildirmedi. Bunları yöneticinize sorun."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Takvimler: {names}",
@@ -4630,7 +4748,7 @@
       "hide_non_working_days_desc": "Çalışmadığınız günleri hafta görünümünden çıkar. Bu günlerin etkinlikleri ay, gün ve ajanda görünümlerinde görünmeye devam eder.",
       "working_days": "Çalışma günleri",
       "title": "Takvim ayarları",
-      "default_view": "Varsayılan görünüm",
+      "default_view": "Takvim şu görünümde açılır",
       "week_starts_on": "Hafta başlangıcı",
       "time_format": "Saat biçimi",
       "default_calendar": "Varsayılan takvim",
@@ -4641,7 +4759,7 @@
       "notifications_enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
       "notification_sound": "Bildirim sesi",
       "notification_sound_desc": "Takvim uyarıları için ses çal",
-      "invitation_parsing": "E-posta davetlerini ayrıştır",
+      "invitation_parsing": "Postadaki davetleri göster",
       "invitation_parsing_desc": "E-posta eklerindeki takvim davetlerini algıla ve takvim işlemlerini göster",
       "show_time_in_month_view": "Ay görünümünde saati göster",
       "show_time_in_month_view_desc": "Aylık takvim görünümünde etkinlik saatlerini görüntüle",
@@ -4656,7 +4774,7 @@
       "show_week_numbers_desc": "Mini takvimde hafta numaralarını görüntüle",
       "calendar_free_scroll": "Serbest kaydırma",
       "calendar_free_scroll_desc": "Tek seferde bir dönem yerine aylar, haftalar ve günler arasında kesintisiz kaydırın",
-      "enable_tasks": "Görevleri etkinleştir",
+      "enable_tasks": "Görevler",
       "enable_tasks_desc": "Yapılacaklar listesini yönetmek için takvimde görev görünümü göster",
       "show_tasks_on_calendar": "Görevleri takvimde göster",
       "show_tasks_on_calendar_desc": "Görevleri ay, hafta ve gün takvim görünümlerinde görüntüle",
@@ -4834,8 +4952,8 @@
       "error_update": "Takvim güncellenemedi",
       "error_delete": "Takvim silinemedi",
       "caldav_url": "CalDAV URL'si",
-      "copy_url": "CalDAV URL'sini kopyala",
-      "url_copied": "CalDAV URL'si panoya kopyalandı",
+      "copy_url": "Başka uygulamalar için adresi kopyala",
+      "url_copied": "Adres kopyalandı",
       "share": "Takvimi paylaş…",
       "new_event_in_calendar": "Bu takvimde yeni etkinlik",
       "shared_with": "Paylaşılan kişiler: {names}",
@@ -4855,8 +4973,8 @@
       "default_alerts_updated": "Varsayılan hatırlatıcılar güncellendi"
     },
     "subscription": {
-      "title": "iCal Aboneliği",
-      "section_title": "iCal Abonelikleri",
+      "title": "Bir takvime abone ol",
+      "section_title": "Abone olunan takvimler",
       "description": "Harici iCalendar akışına abone olun. Etkinlikler kendi takvimlerine otomatik olarak senkronize edilecek. https:// ve webcal:// URL'lerini destekler.",
       "url_label": "Takvim URL'si",
       "url_placeholder": "https://example.com/calendar.ics veya webcal://...",
@@ -5908,7 +6026,7 @@
     "clear_confirm_unsent": "{count, plural, one {# gönderilmemiş ileti kaybolacak.} other {# gönderilmemiş ileti kaybolacak.}}",
     "clear_confirm": "Temizle",
     "persist_refused": "Alan azaldığında bu tarayıcı tutulan e-postaları silebilir. Uygulamayı yüklemek genellikle bunu önler.",
-    "persist_retry": "Yeniden sor",
+    "persist_retry": "Tarayıcıdan saklamasını iste",
     "safari_hint": "Safari, 7 gün ziyaret edilmeyen bir sitenin verilerini siler. E-postalarınızı bu cihazda tutmak için Bulwark'ı Ana Ekran'a veya Dock'a ekleyin.",
     "evicted": "Tarayıcı, bu cihazda tutulan e-postaları sildi. Yeniden indiriliyor.",
     "evicted_lost": "{count, plural, one {# gönderilmemiş ileti veya değişiklik kayboldu.} other {# gönderilmemiş ileti veya değişiklik kayboldu.}}",
@@ -6776,7 +6894,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Pencereler",
+      "title": "Uygulama pencereleri",
       "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
       "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
       "restore_label": "Başlangıçta pencereleri yeniden aç",
@@ -6893,9 +7011,9 @@
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
     "enable_label": "PIN ile kilitle",
-    "enable_desc": "Varsayılan olarak kapalı. PIN bu cihazda kalır.",
+    "enable_desc": "PIN bu cihazda kalır.",
     "protects_desc": "Neye karşı korur: PIN, bu cihazın başındaki birini uygulamanın dışında tutar. Burada saklanan posta, kilidi açtığınızda veya PIN'i değiştirdiğinizde yeni bir anahtar alır; bu biraz sürebilir. Bu bilgisayarda çalışan bir programı, yüklediğiniz bir tarayıcı uzantısını veya uygulamanın dosyalarını kopyalayıp çok sayıda PIN deneyecek zamanı olan birini durduramaz, bu yüzden daha uzun bir PIN'e değer. Masaüstü uygulamasında PIN denemek için bu bilgisayardaki oturumunuz da gerekir. Sunucudaki hesabınız bundan etkilenmez.",
-    "enable_body": "Bir PIN seçin. Uygulama her kilitlendiğinde ve yeniden yükleme ya da yeni başlatma sonrasında gerekir.",
+    "enable_body": "Uygulama her kilitlendiğinde ve yeniden başlattıktan sonra gerekir.",
     "set_pin_title": "PIN seçin",
     "change_pin": "PIN'i değiştir…",
     "change_pin_title": "PIN'i değiştir",
@@ -6957,6 +7075,19 @@
     "blocked_seconds": "Çok fazla deneme. {count, plural, one {# saniye} other {# saniye}} sonra yeniden deneyin.",
     "blocked_minutes": "Çok fazla deneme. {count, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin."
   },
+  "uxs_general": {
+    "time_zone_common": "Sık kullanılan saat dilimleri",
+    "time_zone_all": "Tüm saat dilimleri",
+    "time_zone_search": "Saat dilimi ara",
+    "time_zone_no_match": "Saat dilimi bulunamadı",
+    "time_zone_desktop_description": "Posta ve randevu saatlerini bu saat diliminde göster. Seçmezseniz bilgisayarınızın saat dilimi kullanılır.",
+    "app_lock_desc_desktop": "Bir süre kullanılmadığında her pencerede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
+    "app_lock_timeout_desc_desktop": "Herhangi bir pencerede kullanılmayan süre.",
+    "app_lock_now_desc_desktop": "Tüm pencereleri hemen kilitler.",
+    "app_lock_protects_toggle": "Bu neye karşı korur?",
+    "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
+    "desktop_attention_title": "Bu bilgisayarda"
+  },
   "desktop_sign_in": {
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
@@ -6991,6 +7122,21 @@
     "declined": "Tarayıcınızda hayır dediniz, bu yüzden oturum açılmadı.",
     "too_many": "Bu ağdan çok fazla oturum açma denemesi yapıldı. Birkaç dakika bekleyip yeniden deneyin.",
     "page_declined": "Hiçbir şey aktarılmadı. Bu sekmeyi kapatabilirsiniz."
+  },
+  "uxs_login": {
+    "theme_button": "Açık veya koyu",
+    "server_label": "Posta sunucusu",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Posta sunucunuz aranıyor…",
+    "server_found": "Posta sunucusu: {server}",
+    "server_change": "Değiştir",
+    "server_not_found": "Bu adresin posta sunucusunu bulamadık. Buraya girin, örneğin mail.example.com.",
+    "server_needed": "Posta sunucunuzun adresini girin.",
+    "server_invalid": "Bu bir sunucu adresi değil. mail.example.com gibi yazın.",
+    "email_needed": "Önce e-posta adresinizi girin.",
+    "trouble": "Sorun mu var?",
+    "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
+    "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
   },
   "desktop_updates": {
     "title": "Güncellemeler",
@@ -7204,7 +7350,7 @@
     "section_title": "Kullanım bilgileri ve kilitlenme raporları",
     "section_description": "İkisi de siz açana kadar kapalıdır ve her birinin kendi anahtarı vardır.",
     "telemetry_label": "Kullanım bilgilerini gönder",
-    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulama sürümü, Node sürümü, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
+    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulamanın sürüm numaraları, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
     "crash_label": "Kilitlenme raporlarını gönder",
     "crash_description": "Uygulamadaki hatalar rastgele bir kimlik, uygulamanın kendi kodundaki dosya adları ve kısa, temizlenmiş iletilerle gönderilir. Uygulamanın kendisi kilitlenirse bir kilitlenme dosyası bu bilgisayarda kalır ve yalnızca siz gönderirseniz çıkar.",
     "crash_memory": "Kilitlenme dosyası, kilitlenme anında uygulama belleğinin bir bölümünün kopyasıdır. Bulwark bulduğu kullanıcı adlarını, adresleri ve oturum açma belirteçlerini kaldırır ancak kilitlenme dosyası yine de e-postalarınızın metnini içerebilir.",

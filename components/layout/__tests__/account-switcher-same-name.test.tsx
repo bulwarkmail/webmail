@@ -54,10 +54,12 @@ describe('account switcher with two accounts of the same name', () => {
     expect(within(row).getByText('sarah@meridianlabs.example')).toBeInTheDocument();
   });
 
-  it('names the open account by its address in the sidebar button', () => {
+  // settings-14: the button names one account, with its address under it, so
+  // its name doesn't jump to the address when a second account is added.
+  it("keeps the open account's name in the sidebar button, with the address under it", () => {
     render(<AccountSwitcher variant="expanded" />);
     const button = screen.getByTestId('account-switcher');
-    expect(within(button).getByText('nora@meridianlabs.example').className).toContain('font-medium');
-    expect(within(button).queryByText('Nora Lindqvist')).toBeNull();
+    expect(within(button).getByText('Nora Lindqvist').className).toContain('font-medium');
+    expect(within(button).getByText('nora@meridianlabs.example')).toBeInTheDocument();
   });
 });

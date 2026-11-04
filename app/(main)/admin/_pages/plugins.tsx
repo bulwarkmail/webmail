@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Upload, Loader2, Puzzle, Lock, Store, Power, PowerOff, ShieldAlert } from '@/components/icons';
+import { Upload, Loader2, Puzzle, Lock, Store, Power, PowerOff, ShieldAlert, AlertTriangle } from '@/components/icons';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -18,7 +18,11 @@ import { Badge } from '@/components/admin/badge';
 import { EmptyState } from '@/components/admin/empty-state';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { ExtensionIcon } from '@/components/admin/extension-icon';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { PluginApprovalsPanel } from './plugin-approvals-panel';
+import { offerToTurnOnPlugins, turnOnNote } from './turn-on-plugins';
+import { pluginTypeLabel } from './plugin-type-label';
 import { useExtensionIcons } from './use-extension-icons';
 import type { ExtensionEntry } from './extension-detail';
 
@@ -37,6 +41,7 @@ export function PluginsPage() {
   // The version of the policy this page loaded (see the policy page).
   const policyETag = useRef<string | null>(null);
   const iconFor = useExtensionIcons();
+  const { dialogProps: confirmProps, confirm } = useConfirmDialog();
 
   const fetchPlugins = useCallback(async () => {
     try {
@@ -66,8 +71,8 @@ export function PluginsPage() {
   useEffect(() => { fetchPlugins(); fetchPolicy(); }, [fetchPlugins, fetchPolicy]);
 
   const features = policy.features;
-  const pluginsEnabled = features.pluginsEnabled ?? true;
-  const pluginsUploadEnabled = features.pluginsUploadEnabled ?? true;
+  const pluginsEnabled = features.pluginsEnabled ?? false;
+  const pluginsUploadEnabled = features.pluginsUploadEnabled ?? false;
   const requirePluginApproval = features.requirePluginApproval ?? true;
   const policyDirty = JSON.stringify(policy.features) !== JSON.stringify(savedPolicy.features);
   const isOn = (p: ExtensionEntry) => enabledDraft[p.id] ?? p.enabled;
@@ -123,7 +128,7 @@ export function PluginsPage() {
     setSavingPolicy(false);
     setMessage(errors.length > 0
       ? { type: 'error', text: `Couldn't save everything. ${errors.join('; ')}` }
-      : { type: 'success', text: 'Plugins saved. Users see the change on their next login.' });
+      : { type: 'success', text: 'Plugins saved. Users get the change when they next open or reload Bulwark.' });
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -138,7 +143,14 @@ export function PluginsPage() {
       const data = await res.json();
       if (res.ok) {
         const warnings = data.warnings?.length ? ` (${data.warnings.length} warning${data.warnings.length === 1 ? '' : 's'})` : '';
-        setMessage({ type: 'success', text: `"${data.plugin.name}" installed${warnings}` });
+        // Only asks when plugins are off as saved, not about an unsaved switch below.
+        const outcome = savedPolicy.features.pluginsEnabled ? 'already-on' : await offerToTurnOnPlugins(confirm);
+        if (outcome === 'turned-on') {
+          setPolicy((prev) => ({ ...prev, features: { ...prev.features, pluginsEnabled: true } }));
+          setSavedPolicy((prev) => ({ ...prev, features: { ...prev.features, pluginsEnabled: true } }));
+          void fetchPolicy();
+        }
+        setMessage({ type: 'success', text: `"${data.plugin.name}" installed${warnings}.${turnOnNote(outcome)}` });
         await fetchPlugins();
       } else {
         setMessage({ type: 'error', text: data.error || 'Upload failed' });
@@ -201,13 +213,40 @@ export function PluginsPage() {
       />
 
 
+      <ConfirmDialog {...confirmProps} />
+
       <div className="space-y-10">
+        <SettingsSection id="policy" title="Plugins for users" description="Whether plugins run for users at all, and what users may install themselves.">
+          {!pluginsEnabled && (
+            <div role="status" data-testid="plugins-off-banner" className="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/10 p-3">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+              <p className="min-w-0 flex-1 text-sm text-foreground">
+                Plugins are off for users. Nothing on this page runs for anyone until you turn them on.
+              </p>
+              <Button size="sm" onClick={() => setFeature('pluginsEnabled', true)}>Turn on</Button>
+            </div>
+          )}
+          <SettingItem label="Plugins" description="Load and run plugins for users at all. Off hides the plugin system everywhere.">
+            <ToggleSwitch checked={pluginsEnabled} onChange={(v) => setFeature('pluginsEnabled', v)} />
+          </SettingItem>
+          <SettingItem nested label="Users may upload plugins" description="Let users install plugin ZIPs for their own account from their settings.">
+            <ToggleSwitch checked={pluginsEnabled && pluginsUploadEnabled} disabled={!pluginsEnabled} onChange={(v) => setFeature('pluginsUploadEnabled', v)} />
+          </SettingItem>
+          <SettingItem
+            nested
+            label="Require approval"
+            description="A plugin a user uploads stays off until an admin has approved that exact package here."
+          >
+            <ToggleSwitch checked={pluginsEnabled && pluginsUploadEnabled && requirePluginApproval} disabled={!pluginsEnabled || !pluginsUploadEnabled} onChange={(v) => setFeature('requirePluginApproval', v)} />
+          </SettingItem>
+        </SettingsSection>
+
         <PluginApprovalsPanel />
 
         <SettingsSection
           id="installed"
           title="Installed plugins"
-          description={loading || plugins.length === 0 ? undefined : `${enabledCount} of ${plugins.length} enabled. The switch turns a plugin on or off for everyone.`}
+          description={loading || plugins.length === 0 ? undefined : `${enabledCount} of ${plugins.length} on. The switch turns a plugin on or off for everyone; open one to choose whether users can turn it off.`}
         >
           {loading ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
@@ -247,7 +286,8 @@ export function PluginsPage() {
                         <>
                           <span className="text-xs text-muted-foreground">v{plugin.version}</span>
                           {!plugin.enabled && <Badge>Off</Badge>}
-                          {plugin.forceEnabled && <Badge tone="warning" icon={<Lock className="h-3 w-3" />}>Forced on</Badge>}
+                          {plugin.forceEnabled && <Badge tone="warning" icon={<Lock className="h-3 w-3" />}>Always on</Badge>}
+                          {plugin.enabled && !plugin.forceEnabled && plugin.defaultOff && <Badge>Users turn it on</Badge>}
                           {plugin.dev && <Badge tone="info" title="Loaded from the dev plugins directory">Dev</Badge>}
                           {risky.length > 0 && (
                             <Badge tone="warning" icon={<ShieldAlert className="h-3 w-3" />} title={risky.join(', ')} className="whitespace-normal">
@@ -260,7 +300,7 @@ export function PluginsPage() {
                       meta={(
                         <>
                           by {plugin.author || 'unknown'}
-                          {plugin.type && <> &middot; {plugin.type}</>}
+                          {plugin.type && <> &middot; {pluginTypeLabel(plugin.type)}</>}
                           {perms.length > 0 && <> &middot; {perms.length} permission{perms.length === 1 ? '' : 's'}</>}
                           {plugin.source?.kind === 'marketplace' && <> &middot; Marketplace</>}
                         </>
@@ -280,21 +320,6 @@ export function PluginsPage() {
             </>
           )}
         </SettingsSection>
-
-        <SettingsSection id="policy" title="Plugin policy" description="What users may do with plugins on their own.">
-          <SettingItem label="Plugins" description="Load and run plugins for users at all. Off hides the plugin system everywhere.">
-            <ToggleSwitch checked={pluginsEnabled} onChange={(v) => setFeature('pluginsEnabled', v)} />
-          </SettingItem>
-          <SettingItem label="Users may upload plugins" description="Let users install plugin ZIPs for their own account from their settings.">
-            <ToggleSwitch checked={pluginsUploadEnabled} disabled={!pluginsEnabled} onChange={(v) => setFeature('pluginsUploadEnabled', v)} />
-          </SettingItem>
-          <SettingItem
-            label="Require approval"
-            description="A plugin a user uploads stays off until an admin has approved that exact package here."
-          >
-            <ToggleSwitch checked={requirePluginApproval} disabled={!pluginsEnabled || !pluginsUploadEnabled} onChange={(v) => setFeature('requirePluginApproval', v)} />
-          </SettingItem>
-        </SettingsSection>
       </div>
 
       <AdminSaveBar
@@ -303,7 +328,7 @@ export function PluginsPage() {
         onSave={() => void save()}
         onDiscard={() => { setPolicy(savedPolicy); setEnabledDraft({}); }}
         saveLabel="Save"
-        note="Users see the change on their next login"
+        note="Users get the change when they next open or reload Bulwark"
       />
     </div>
   );

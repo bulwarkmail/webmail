@@ -221,7 +221,10 @@
   [data-boot-settings-tab="contacts"] [data-sk-settings-tab="contacts"],
   [data-boot-settings-tab="files"] [data-sk-settings-tab="files"],
   [data-boot-settings-tab="addons"] [data-sk-settings-tab="addons"],
-  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"]
+  [data-boot-settings-tab="offline"] [data-sk-settings-tab="offline"],
+  [data-boot-settings-tab="privacy"] [data-sk-settings-tab="privacy"],
+  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"],
+  [data-boot-settings-tab="about"] [data-sk-settings-tab="about"]
 ));
 
 /* Settings pages the nav listed last time (bulwark-boot-hints). Without
@@ -234,6 +237,7 @@
 @custom-variant boot-no-settings-contacts (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="contacts"]) *));
 @custom-variant boot-no-settings-files (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="files"]) *));
 @custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
+@custom-variant boot-no-settings-offline (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="offline"]) *));
 @custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
 
 /* Settings pages with one section have no section jump row (SectionNav). */

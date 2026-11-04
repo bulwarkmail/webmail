@@ -7,6 +7,7 @@ import {
   matchesAllWords,
   tabKeywords,
   settingsSubResults,
+  subResultText,
   tabSearchEntries,
   withAppName,
 } from '../settings-search';
@@ -37,9 +38,11 @@ describe('settings search index (English messages)', () => {
     expect(labelsFor('calendar')).toContain('Free scrolling');
     expect(labelsFor('calendar')).toContain('Show week numbers');
     expect(labelsFor('notifications')).toContain('Unread count on the tab and app icon');
-    expect(labelsFor('message_list')).toContain('Sender favicons');
+    // settings-24 (2026-11-04): sender pictures, remote images and trusted
+    // senders moved from Message list and Reading to the new Privacy page.
+    expect(labelsFor('privacy')).toContain('Sender favicons');
     expect(labelsFor('message_list')).toContain('Clear search when switching folders');
-    expect(labelsFor('reading')).toContain('Trusted senders');
+    expect(labelsFor('privacy')).toContain('Trusted senders');
     expect(labelsFor('composing')).toContain('Undo send / send delay');
     expect(labelsFor('general')).toContain('Time zone');
     expect(labelsFor('organize')).toContain('Nested tags');
@@ -86,7 +89,92 @@ describe('settings search index (English messages)', () => {
   it('marks the rows the Advanced switch hides', () => {
     const advanced = settingsSubResults(en, 'message_list', 'Bulwark').filter((r) => r.advanced).map((r) => r.label);
     expect(advanced).toContain('Emails per page');
-    expect(advanced).not.toContain('Sender favicons');
+    expect(settingsSubResults(en, 'privacy', 'Bulwark').filter((r) => r.advanced).map((r) => r.label)).not.toContain('Sender favicons');
+  });
+});
+
+// settings-8 (2026-11-04): "offline", "autoreply" and "logout" found nothing,
+// and "lock" found "Time format" (clock) and "Send Checks" (block).
+describe('settings search: words, word starts and synonyms', () => {
+  /** Every row of every page that the query finds, as "page: label". */
+  const everywhere = (query: string) => (Object.keys(tabSearchEntries) as SettingsSearchTab[]).flatMap((tab) =>
+    settingsSubResults(en, tab, 'Bulwark')
+      .filter((r) => matchesAllWords(subResultText(r), query))
+      .map((r) => `${tab}: ${r.label}`));
+
+  it('matches whole words and the start of words, not the inside of a word', () => {
+    expect(matchesAllWords('App lock', 'lock')).toBe(true);
+    expect(matchesAllWords('Clock format', 'lock')).toBe(false);
+    expect(matchesAllWords('Block senders', 'lock')).toBe(false);
+    expect(matchesAllWords('Notifications', 'notif')).toBe(true);
+    expect(matchesAllWords('Two-factor authentication', 'two factor')).toBe(true);
+    expect(matchesAllWords('Mention recipients', 'pin')).toBe(false);
+  });
+
+  it('still finds words inside Chinese, Japanese and Thai text, which has no spaces', () => {
+    expect(matchesAllWords('自动回复设置', '回复')).toBe(true);
+    expect(matchesAllWords('ตอบกลับอัตโนมัติ', 'อัตโนมัติ')).toBe(true);
+  });
+
+  it.each([
+    ['offline', 'offline: Keep mail on this device'],
+    ['autoreply', 'vacation: Reply automatically'],
+    ['out of office', 'vacation: Reply automatically'],
+    ['vacation', 'vacation: Reply automatically'],
+    ['logout', 'account: Sign out'],
+    ['sign out', 'account: Sign out'],
+    ['2fa', 'security: Two-step sign-in'],
+    ['two-factor', 'security: Two-step sign-in'],
+    ['password', 'security: Change password'],
+    ['signature', 'composing: Signatures'],
+    ['font size', 'accessibility: Text size'],
+    ['outbox', 'offline: Outbox'],
+    ['s/mime', 'security: Encryption'],
+  ])('finds "%s"', (query, row) => {
+    expect(everywhere(query)).toContain(row);
+  });
+
+  it('finds the app lock for "pin", and nothing that only has "pin" inside a word', () => {
+    expect(everywhere('pin')).toEqual(['general: Lock with a PIN']);
+  });
+
+  it('finds the Privacy page by its name and keywords', () => {
+    expect(matchesAllWords(`Privacy ${tabKeywords.privacy}`, 'privacy')).toBe(true);
+    expect(matchesAllWords(`Privacy ${tabKeywords.privacy}`, 'tracking')).toBe(true);
+    expect(matchesAllWords(tabKeywords.reading, 'privacy')).toBe(false);
+  });
+
+  it('finds the app lock for "lock", not the clock or blocked senders', () => {
+    const found = everywhere('lock');
+    expect(found).toContain('general: App lock');
+    // "12-hour or 24-hour clock" and "block" in their descriptions.
+    expect(found).not.toContain('general: Time format');
+    expect(found).not.toContain('privacy: Images & external content');
+  });
+});
+
+// Decision 9 (2026-11-04): one setting, one place. Two rows called the same
+// ("Notification sound" twice on Accessibility) made people change one and
+// find the other "changed by itself".
+describe('settings search: no two rows with the same name', () => {
+  // Renamed on other branches of the same fix (settings-27 on the
+  // notification sound and mail rows, the Default view rows of Calendar and
+  // Files still to decide). Empty this list once they're merged.
+  const PENDING_RENAMES = new Set<string>([]);
+
+  it('names every indexed row and section differently, across all pages', () => {
+    const seen = new Map<string, string>();
+    const duplicates: string[] = [];
+    for (const [tab, entries] of Object.entries(tabSearchEntries)) {
+      for (const entry of entries) {
+        const text = (withAppName(getByPath(en, entry.label), 'Bulwark') as string).trim().toLowerCase();
+        if (PENDING_RENAMES.has(text)) continue;
+        const where = `${tab}: ${entry.label}`;
+        if (seen.has(text)) duplicates.push(`"${text}" at ${seen.get(text)} and ${where}`);
+        else seen.set(text, where);
+      }
+    }
+    expect(duplicates).toEqual([]);
   });
 });
 

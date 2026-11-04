@@ -6,9 +6,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "Passord",
     "password_placeholder": "Skriv inn passordet ditt",
-    "jmap_endpoint_label": "JMAP-server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Serveren må tillate CORS-forespørsler fra dette domenet.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Serveren ble valgt ut fra e-postdomenet ditt.",
     "sign_in": "Logg på",
@@ -29,7 +26,7 @@
     },
     "show_password": "Vis passord",
     "hide_password": "Skjul passord",
-    "totp_toggle": "Jeg har en kode for tofaktorautentisering",
+    "totp_toggle": "Jeg har en kode fra autentiseringsappen min",
     "token_toggle": "Logg på med et tilgangstoken",
     "password_toggle": "Logg på med passord",
     "token_label": "Tilgangstoken",
@@ -126,7 +123,7 @@
     "sign_out_of": "Logg ut av {account}",
     "sign_out_all": "Logg ut av alle kontoer",
     "add_account": "Legg til konto",
-    "set_as_default": "Sett som standard",
+    "set_as_default": "Åpne denne kontoen ved oppstart",
     "switch_account": "Bytt konto",
     "contacts": "Kontakter",
     "calendar": "Kalender",
@@ -225,20 +222,20 @@
   },
   "protocol_handlers": {
     "title": "Standardapper",
-    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}. Teknisk sett registrerer {appName} seg som protokollbehandler for mailto:- og webcal:-lenker.",
+    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}.",
     "unsupported": "Denne nettleseren eller tilkoblingen støtter ikke manuell registrering av protokollbehandlere. Det kan hende du likevel kan velge den installerte PWA-en i innstillingene for nettleseren eller operativsystemet.",
-    "mailto_label": "E-postlenker",
-    "mailto_description": "Åpne mailto:-lenker i {appName} med et forhåndsutfylt meldingsvindu.",
-    "protocol_open_mode_label": "Når mailto:- og webcal:-lenker åpnes",
+    "mailto_label": "Åpne e-postlenker i {appName}",
+    "mailto_description": "Et klikk på en e-postadresse på et nettsted starter en ny melding i {appName}.",
+    "protocol_open_mode_label": "Slik åpnes lenker",
     "protocol_open_mode_description": "Velg om {appName} skal åpne mailto:- og webcal:-lenker i en ny fane eller bruke en økt som allerede er åpen. Alternativet for aktiv økt krever tillatelse til varsler. Hvis nettleseren hindrer {appName} i å få fokus, kan du klikke på et varsel for å vise vinduet.",
     "protocol_open_mode_active_session": "Åpne i aktiv økt hvis mulig",
     "protocol_open_mode_new_tab": "Åpne alltid en ny fane",
     "focus_notification_title": "Åpne {appName}",
     "focus_notification_body": "Lenken ble åpnet i {appName}. Klikk for å vise vinduet.",
-    "webcal_label": "Kalenderlenker",
-    "webcal_description": "Åpne webcal:-lenker i {appName} med en forhåndsutfylt dialog for kalenderabonnement.",
-    "register_mailto": "Registrer e-postprogram",
-    "register_webcal": "Registrer kalenderprogram",
+    "webcal_label": "Åpne kalenderlenker i {appName}",
+    "webcal_description": "Et klikk på en kalenderlenke på et nettsted legger til kalenderen i {appName}.",
+    "register_mailto": "Bruk {appName} for e-postlenker",
+    "register_webcal": "Bruk {appName} for kalenderlenker",
     "mailto_registered": "Forespørsel om registrering av e-postprogram er sendt",
     "webcal_registered": "Forespørsel om registrering av kalenderprogram er sendt",
     "registration_failed": "Registrering av protokollbehandler mislyktes",
@@ -1369,6 +1366,30 @@
     "apply": "Bruk denne teksten",
     "apply_hint": "Erstatter emnet og teksten nedenfor."
   },
+  "uxs_vacation": {
+    "default_subject": "Ikke på kontoret",
+    "default_message": "Takk for e-posten. Jeg er ikke på kontoret og svarer når jeg er tilbake.",
+    "write_message_first": "Skriv en melding først. Uten den ville folk fått et tomt svar.",
+    "enter_address_first": "Skriv først inn adressen det skal videresendes til.",
+    "message_title": "Svaret ditt",
+    "message_label": "Melding",
+    "message_description": "Dette får de som skriver til deg. Du kan bruke formatering og lenker.",
+    "from_label": "Fra (valgfritt)",
+    "from_description": "La feltet stå tomt for å starte med en gang.",
+    "until_label": "Til (valgfritt)",
+    "until_description": "La feltet stå tomt for å fortsette å svare til du slår det av.",
+    "audience_all": "Alle",
+    "audience_internal": "Bare organisasjonen min ({domains})",
+    "audience_external": "Bare folk utenfor organisasjonen min",
+    "signature_label": "Signatur",
+    "signature_plain_label": "Signatur (ren tekst)",
+    "signature_plain_description": "Du skriver bare ren tekst (Skriving), så signaturen din er også ren tekst.",
+    "edit_as_html": "Rediger som HTML",
+    "edit_formatted": "Tilbake til redigeringsverktøyet med formatering",
+    "html_source_label": "Signatur som HTML",
+    "signature_size": "{bytes} av {max} byte brukt",
+    "signature_too_long": "For lang for serveren ({bytes} av {max} byte). Gjør den kortere."
+  },
   "retention_notice": {
     "line": "Meldinger her slettes {count, plural, one {# dag} other {# dager}} etter at de ble flyttet hit."
   },
@@ -1561,8 +1582,8 @@
       "title": "Utseende",
       "description": "Tilpass utseendet til nettposten",
       "theme": {
-        "label": "Tema",
-        "description": "Velg fargevalget du foretrekker",
+        "label": "Lyst eller mørkt",
+        "description": "System følger innstillingen på enheten din",
         "light": "Lyst",
         "dark": "Mørkt",
         "system": "System"
@@ -1590,7 +1611,7 @@
         "label": "Grensesnittoppsett",
         "description": "Hvor søk, navigasjon og verktøylinjer ligger",
         "default": "Standard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Søkefelt øverst, apper til venstre"
       },
       "animations": {
         "label": "Aktiver animasjoner",
@@ -1634,7 +1655,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Fargede ikoner i sidefeltet",
-        "description": "Fargelegg mappe- og etikettikoner etter type (blått ikon for Innboks, rødt for Søppelpost, grønt for Sendt osv.). Deaktiver dette for et ensfarget sidefelt."
+        "description": "Gi mappe- og etikettikoner farger (blå Innboks, rød Søppelpost, grønn Sendt og så videre). Slå av for grå ikoner."
       },
       "tint_list_rows": {
         "label": "Fargelegg meldingsrader etter etikett",
@@ -1646,7 +1667,7 @@
       },
       "favicon_unread_badge": {
         "label": "Antall uleste på faneikonet",
-        "description": "Vis antall uleste meldinger i innboksen som et merke på nettleserfaneikonet, slik at ny e-post er synlig når fanen ikke er fokusert. Deaktiver for å beholde ikonet uten merke."
+        "description": "Slik ser du ny e-post mens du jobber i en annen fane eller app."
       },
       "show_shared_mail_accounts": {
         "label": "Vis delte e-postkontoer",
@@ -1697,7 +1718,7 @@
     },
     "keywords": {
       "title": "E-postetiketter",
-      "description": "Definer etiketter for å organisere e-postene dine. De lagres som JMAP-nøkkelord på serveren.",
+      "description": "Lag etiketter for å sortere meldingene dine. Etikettene lagres sammen med meldingene på serveren.",
       "add_keyword": "Legg til etikett",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. arbeid, personlig, haster",
@@ -1732,8 +1753,8 @@
         "hide": "Skjul"
       },
       "unrecognized": {
-        "title": "Gjenopprett etiketter fra serveren",
-        "description": "Navn og farger på etiketter lagres i denne nettleseren, men selve etikettene finnes på meldingene som JMAP-nøkkelord. Søk gjennom meldingene etter nøkkelord som ikke er definert her, og legg dem til igjen.",
+        "title": "Finn etiketter på meldingene som mangler her",
+        "description": "Denne nettleseren lagrer navn og farger på etikettene dine. Selve etikettene er lagret på meldingene. Søk i e-posten etter etiketter som mangler her, og legg dem til igjen.",
         "scan": "Søk etter etiketter",
         "rescan": "Søk på nytt",
         "scanning": "Søker... {scanned} av {total} meldinger",
@@ -1754,7 +1775,7 @@
         "relax": "Rolig"
       },
       "push": {
-        "title": "Bakgrunnsvarsler",
+        "title": "Varsler når {appName} er lukket",
         "description": "Motta systemvarsler om ny e-post selv når denne siden ikke er åpen. Varslene leveres via Bulwarks push-relé, som aldri ser innholdet i e-posten.",
         "relay_label": "Push-relé",
         "relay_desc": "Reléet som driftes av Bulwark, brukes som standard. Endre dette bare hvis du drifter et eget relé.",
@@ -1766,7 +1787,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Bakgrunnsvarsler er ikke tilgjengelige i demoen.",
         "status_busy": "Behandler...",
-        "enable": "Aktiver",
+        "enable": "Slå på for denne enheten",
         "reenable": "Registrer på nytt",
         "disable": "Deaktiver",
         "confirm_disable_title": "Vil du deaktivere bakgrunnsvarsler?",
@@ -1811,17 +1832,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Varslingslyd",
+        "title": "Lyd",
         "description": "Velg hvilken lyd som skal spilles av for varsler",
-        "choose": "Lyd",
+        "choose": "Tone",
         "choose_desc": "Velg en varseltone og klikk på høyttalerikonet for å forhåndsvise den"
       },
       "email": {
-        "title": "E-postvarsler",
+        "title": "Ny e-post",
         "description": "Velg innstillinger for varsler om innkommende e-post",
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved ny e-post",
         "sound_desc": "Spill av et lydvarsel når nye e-poster kommer",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1831,7 +1852,7 @@
         "description": "Velg innstillinger for varsler om kalenderhendelser",
         "enabled": "Hendelsesvarsler",
         "enabled_desc": "Vis varsler for kommende kalenderhendelser",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved påminnelser",
         "sound_desc": "Spill av et lydvarsel for kalenderpåminnelser"
       }
     },
@@ -1870,7 +1891,7 @@
       },
       "first_day": {
         "label": "Første dag i uken",
-        "description": "Start uken på søndag eller mandag",
+        "description": "Første dag i uken i kalendere",
         "sunday": "søndag",
         "monday": "mandag"
       },
@@ -1960,13 +1981,13 @@
       },
       "mail_layout": {
         "label": "E-postoppsett",
-        "description": "Velg mellom den klassiske delte leseruten, en fokusert leseflyt i Gmail-stil eller en bunnleserute i Zimbra-stil.",
+        "description": "Hvor meldingslisten og den åpne meldingen står på skjermen.",
         "split": "Delt rute",
-        "split_description": "Hold meldingslisten og leseruten synlige side ved side.",
+        "split_description": "Liste og melding side om side",
         "focus": "Fokusert liste",
-        "focus_description": "Vis én linje per melding, og åpne meldingen i full bredde samtidig som mappesidefeltet forblir synlig.",
+        "focus_description": "Listen, så meldingen i full bredde",
         "horizontal": "Leseruten nederst",
-        "horizontal_description": "Vis meldingslisten øverst og åpne den valgte meldingen i en leserute under den."
+        "horizontal_description": "Meldingen under listen"
       },
       "list_columns": {
         "label": "Vis listen som kolonner",
@@ -1991,7 +2012,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Svar fra mottatt adresse",
-        "description": "Når du svarer, bruker Bulwark adressen meldingen opprinnelig ble sendt til. Programmet ser først etter en samsvarende identitet. For meldinger til et oppsamlingsdomene brukes aliaset i Fra-feltet, mens sendingen går gjennom hovedidentiteten din."
+        "description": "Når du svarer, send fra adressen meldingen ble sendt til."
       },
       "reply_identity_match": {
         "label": "Samsvar for mottaksadresse",
@@ -2215,8 +2236,8 @@
         "title": "Innloggede kontoer",
         "description": "Dra for å endre rekkefølgen på kontoene i kontomenyen",
         "active": "Aktiv konto",
-        "default_badge": "Standardkonto",
-        "set_default": "Sett som standard",
+        "default_badge": "Åpnes ved oppstart",
+        "set_default": "Åpne denne kontoen ved oppstart",
         "switch_to": "Bytt til denne kontoen",
         "move_up": "Flytt opp",
         "move_down": "Flytt ned",
@@ -2303,7 +2324,7 @@
       },
       "totp": {
         "section_title": "Tofaktorautentisering",
-        "label": "TOTP-autentisering",
+        "label": "Pålogging i to trinn",
         "description": "Legg til et ekstra lag med sikkerhet med et tidsbasert engangspassord",
         "active": "Aktivert",
         "inactive": "Deaktivert",
@@ -2399,12 +2420,12 @@
         "delete_message": "{name} fjernes fra serveren."
       },
       "email_client": {
-        "title": "Oppsett av e-postklient",
-        "description": "Bruk denne påloggingsinformasjonen til å sette opp en e-postklient på datamaskinen eller mobilen (Thunderbird, Apple Mail, Outlook osv.)",
-        "jmap_username_label": "JMAP-brukernavn",
+        "title": "Bruk e-posten i andre apper",
+        "description": "Thunderbird, Apple Mail, Outlook og e-postapper på telefonen kan bruke disse innstillingene.",
+        "jmap_username_label": "Brukernavn",
         "copy": "Kopier",
         "copied": "Kopiert",
-        "password_instructions": "Bruk JMAP-brukernavnet ovenfor sammen med et app-passord for å logge på e-postklienten. Opprett et app-passord i delen nedenfor hvis du ikke allerede har gjort det."
+        "password_instructions": "Bruk et app-passord som passord, ikke det vanlige passordet ditt. Du kan lage et lenger ned på denne siden."
       },
       "link_device": {
         "title": "Koble til mobilappen",
@@ -2639,7 +2660,7 @@
       },
       "refresh_cache": {
         "label": "Oppdater bufrede data",
-        "description": "Last inn kontakter, kalendere og mapper på nytt fra serveren. Kontoene og øktene beholdes, slik at du kan rette en utdatert eller feil visning uten å logge av.",
+        "description": "Last inn kontakter, kalendere og mapper fra serveren på nytt. Du forblir logget inn.",
         "button": "Oppdater",
         "confirm_title": "Oppdatere bufrede data?"
       },
@@ -2652,12 +2673,12 @@
       },
       "export_settings": {
         "label": "Eksporter innstillinger",
-        "description": "Last ned innstillingene dine som JSON",
+        "description": "Last ned en kopi av innstillingene",
         "button": "Eksporter"
       },
       "import_settings": {
         "label": "Importer innstillinger",
-        "description": "Last opp innstillinger fra en JSON-fil",
+        "description": "Gjenopprett innstillinger fra en fil",
         "button": "Importer"
       },
       "about": {
@@ -2708,8 +2729,8 @@
       "manage_description": "Legg til, rediger eller fjern egendefinerte apper fra sidefeltet"
     },
     "contacts": {
-      "title": "Kontakter",
-      "description": "Importer og eksporter kontaktene dine",
+      "title": "Kontaktliste",
+      "description": "Hvordan kontakter vises, og kontaktfiler som skal importeres eller eksporteres",
       "group_by_letter_label": "Grupper etter første bokstav",
       "sort_by_last_name_label": "Sorter etter etternavn",
       "sort_by_last_name_description": "Sorter kontaktlisten etter etternavn slik at familiemedlemmer står samlet",
@@ -2804,15 +2825,15 @@
       "not_supported": "E-postserveren din støtter ikke e-postfiltre.",
       "rule_name": "Regelnavn",
       "rule_name_placeholder": "f.eks. sorter nyhetsbrev",
-      "match_all": "ALLE vilkår må samsvare",
-      "match_any": "Minst ETT vilkår må samsvare",
+      "match_all": "Alle vilkår må samsvare",
+      "match_any": "Minst ett vilkår må samsvare",
       "conditions": "Vilkår",
       "add_condition": "Legg til vilkår",
       "actions": "Handlinger",
       "add_action": "Legg til handling",
       "remove_condition": "Fjern betingelse",
       "remove_action": "Fjern handling",
-      "stop_processing": "Ikke behandle flere regler",
+      "stop_processing": "Ikke bruk senere regler",
       "include_spam": "Flytt også meldinger som er merket som søppelpost",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Verdi (skill flere verdier med komma)",
@@ -2854,7 +2875,7 @@
         "discard": "Forkast (slett uten varsel)",
         "reject": "Avvis med melding",
         "keep": "Behold i innboksen",
-        "stop": "Stopp behandlingen"
+        "stop": "Ikke bruk senere regler"
       },
       "move_to_folder": "Velg mappe",
       "copy_to_folder": "Velg mappe",
@@ -2998,7 +3019,7 @@
         "description": "Velg hvordan filer og mapper skal vises"
       },
       "default_view": {
-        "label": "Standardvisning",
+        "label": "Vis filer som",
         "description": "Velg mellom rutenett og listeoppsett",
         "list": "Liste",
         "grid": "Rutenett"
@@ -3194,10 +3215,6 @@
         "label": "Lesemaske",
         "description": "Demper alt i en melding unntatt noen få linjer rundt pekeren, slik at du holder styr på hvor du er."
       },
-      "plain_language": {
-        "label": "Enkelt språk",
-        "description": "Enklere ord i innstillinger og feilmeldinger, og korte forklaringer av tekniske uttrykk. Tilgjengelig på engelsk og tysk."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Mer kontrast gjør tekst, kantlinjer og fokusrammen mørkere eller lysere i alle temaer, og understreker lenker. System følger enheten din.",
@@ -3389,6 +3406,81 @@
         "description": "Stemmen som leser opp meldinger. Listen viser stemmene nettleseren har for språket i grensesnittet.",
         "default": "Nettleserens standard"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Frakoblet",
+      "privacy": "Personvern",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-postsignatur bunntekst",
+      "sign_out": "logg ut logout avlogging",
+      "app_lock": "PIN lås kode låseskjerm",
+      "text_size": "skriftstørrelse større tekst zoom forstørr",
+      "vacation": "autosvar automatisk svar fraværende ferie ikke på kontoret autoreply",
+      "two_factor": "2FA totrinns tofaktor MFA OTP autentiseringsapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering sertifikat",
+      "password": "passord endre passord nytt passord",
+      "offline": "frakoblet offline uten tilkobling uten internett last ned lagring synkroniser",
+      "wipe": "fjern slett tøm enhet data",
+      "outbox": "utboks ikke sendt venter kø",
+      "remote_content": "eksterne bilder eksternt innhold sporing piksler klarerte avsendere",
+      "push": "push relé bakgrunn varsler",
+      "version": "versjon oppdatering om kildekode GitHub lisens"
+    },
+    "privacy": {
+      "push_title": "Varsler",
+      "push_link": {
+        "label": "Relé for varsler",
+        "description": "Varsler mens appen er lukket går gjennom et push-relé, som aldri ser e-posten din. Du velger det på siden Varsler.",
+        "button": "Varsler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne bilder og klarerte avsendere",
+      "receipts_label": "Lesebekreftelser",
+      "senders_label": "Avsenderbilder",
+      "description": "Disse innstillingene finner du på siden Personvern.",
+      "button": "Personvern"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tetthet og knappenavn",
+        "description": "Hvor tett radene i listen står, og om knappene viser navnet sitt, stiller du inn på siden Utseende."
+      },
+      "light_mode": {
+        "label": "Lys bakgrunn for meldinger",
+        "description": "Å vise meldinger på lys bakgrunn i mørk modus stiller du inn på siden Lesing."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning av hendelser i kalenderen",
+        "description": "Om det å peke på en hendelse viser detaljene, stiller du inn på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og forhåndsvisningslinjer",
+        "description": "Gruppering etter samtale og forhåndsvisningslinjen under hver melding stiller du inn på siden Meldingsliste."
+      },
+      "reading": {
+        "label": "Merke som lest",
+        "description": "Når en melding regnes som lest, og hvor du havner etter å ha slettet eller flyttet den, stiller du inn på siden Lesing."
+      },
+      "send_warnings_description": "Angre sending og varslene om manglende emne, glemt vedlegg eller plassholdertekst.",
+      "bulk_delete": {
+        "label": "Spør før sletting av flere meldinger",
+        "description": "Dette stiller du inn på siden Meldingsliste."
+      },
+      "sounds": {
+        "label": "Lyder og telleren for uleste",
+        "description": "Varsellyder og antall uleste i fanen stiller du inn på siden Varsler."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Logg ut av denne kontoen på denne enheten."
     }
   },
   "setup": {
@@ -3725,6 +3817,10 @@
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
     "delete_with_contents_confirm": "Slett mappe og meldinger"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Administrer kontoer…",
+    "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"
   },
   "shortcuts": {
     "title": "Tastatursnarveier",
@@ -4387,6 +4483,28 @@
       "menu": "Åpne kontaktens meny"
     }
   },
+  "uxs_wording": {
+    "more_options": "Flere valg",
+    "use_in_other_apps": "Bruk i andre apper",
+    "default_address_book": "Kontakter",
+    "default_calendar": "Kalender",
+    "preview_documents": "Dokumenter",
+    "preview_photos": "Bilder",
+    "sample_subject": "Notater fra møtet på kaféen i Tromsø",
+    "mail_apps": {
+      "imap": "Innkommende e-post (IMAP)",
+      "smtp": "Utgående e-post (SMTP)",
+      "caldav": "Kalendere (CalDAV)",
+      "carddav": "Kontakter (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Ingen kryptering",
+      "copy_label": "Kopier {name}",
+      "loading": "Leser innstillingene fra e-postserveren…",
+      "not_found": "E-postserveren oppga ikke servernavn for andre apper. Spør administratoren din om dem."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendere: {names}",
@@ -4630,7 +4748,7 @@
       "hide_non_working_days_desc": "Utelat dagene du ikke jobber, fra ukevisningen. Hendelsene deres vises fortsatt i måneds-, dag- og agendavisningen.",
       "working_days": "Arbeidsdager",
       "title": "Kalenderinnstillinger",
-      "default_view": "Standardvisning",
+      "default_view": "Kalenderen åpner i",
       "week_starts_on": "Uken starter på",
       "time_format": "Tidsformat",
       "default_calendar": "Standardkalender",
@@ -4641,7 +4759,7 @@
       "notifications_enabled_desc": "Vis varsler for kommende kalenderhendelser",
       "notification_sound": "Varslingslyd",
       "notification_sound_desc": "Spill av en lyd for kalendervarsler",
-      "invitation_parsing": "Les kalenderinvitasjoner i e-post",
+      "invitation_parsing": "Vis invitasjoner fra e-post",
       "invitation_parsing_desc": "Finn kalenderinvitasjoner i e-postvedlegg og vis tilgjengelige kalenderhandlinger",
       "show_time_in_month_view": "Vis klokkeslett i månedsvisning",
       "show_time_in_month_view_desc": "Vis klokkeslettet for hendelser i månedsvisningen. På små skjermer vises hele hendelsesoppføringen i stedet for en prikk.",
@@ -4656,7 +4774,7 @@
       "show_week_numbers_desc": "Vis ukenummer i minikalenderen",
       "calendar_free_scroll": "Fri rulling",
       "calendar_free_scroll_desc": "Rull fortløpende gjennom måneder, uker og dager i stedet for én periode om gangen",
-      "enable_tasks": "Aktiver oppgaver",
+      "enable_tasks": "Oppgaver",
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",
       "show_tasks_on_calendar_desc": "Vis oppgaver i måneds-, uke- og dagsvisningen",
@@ -4837,8 +4955,8 @@
       "error_update": "Kunne ikke oppdatere kalenderen",
       "error_delete": "Kunne ikke slette kalenderen",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "Kopier CalDAV-URL",
-      "url_copied": "CalDAV-URL kopiert til utklippstavlen",
+      "copy_url": "Kopier adressen for andre apper",
+      "url_copied": "Adressen er kopiert",
       "share": "Del kalender…",
       "new_event_in_calendar": "Ny hendelse i denne kalenderen",
       "shared_with": "Delt med {names}",
@@ -4858,8 +4976,8 @@
       "default_alerts_updated": "Standardpåminnelser oppdatert"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementer",
+      "title": "Abonner på en kalender",
+      "section_title": "Kalendere du abonnerer på",
       "description": "Abonner på en ekstern iCalendar-strøm. Hendelser synkroniseres automatisk til en egen kalender. Du kan bruke URL-er med https:// og webcal://.",
       "url_label": "Kalender-URL",
       "url_placeholder": "https://example.com/calendar.ics eller webcal://...",
@@ -5908,7 +6026,7 @@
     "clear_confirm_unsent": "{count, plural, one {# usendt melding går tapt.} other {# usendte meldinger går tapt.}}",
     "clear_confirm": "Tøm",
     "persist_refused": "Denne nettleseren kan slette den beholdte e-posten når plassen blir knapp. Å installere appen hjelper vanligvis.",
-    "persist_retry": "Spør igjen",
+    "persist_retry": "Be nettleseren om å beholde den",
     "safari_hint": "Safari sletter data fra et nettsted etter 7 dager uten besøk. Legg Bulwark til på Hjem-skjermen eller i Dock for å beholde e-posten på denne enheten.",
     "evicted": "Nettleseren slettet e-posten som var beholdt på denne enheten. Den lastes ned på nytt.",
     "evicted_lost": "{count, plural, one {# usendt melding eller endring gikk tapt.} other {# usendte meldinger eller endringer gikk tapt.}}",
@@ -6776,7 +6894,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Vinduer",
+      "title": "Appens vinduer",
       "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
       "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
       "restore_label": "Åpne vinduer på nytt ved start",
@@ -6893,9 +7011,9 @@
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
     "enable_label": "Lås med en PIN-kode",
-    "enable_desc": "Av som standard. PIN-koden blir på denne enheten.",
+    "enable_desc": "PIN-koden blir på denne enheten.",
     "protects_desc": "Dette beskytter mot: PIN-koden holder folk ved denne enheten ute av appen. E-posten som er lagret her, får en ny nøkkel når du slår på låsen eller endrer PIN-koden, og det kan ta et øyeblikk. Den kan ikke stoppe et program som kjører på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer appens filer og har tid til å prøve mange PIN-koder, så en lengre PIN-kode lønner seg. I skrivebordsappen krever det også påloggingen din på denne datamaskinen å prøve PIN-koder. Kontoen din på serveren berøres ikke.",
-    "enable_body": "Velg en PIN-kode. Du trenger den hver gang appen låses, og etter en ny lasting eller ny start.",
+    "enable_body": "Du trenger den hver gang appen låses, og etter en omstart.",
     "set_pin_title": "Velg en PIN-kode",
     "change_pin": "Endre PIN-kode…",
     "change_pin_title": "Endre PIN-koden",
@@ -6957,6 +7075,19 @@
     "blocked_seconds": "For mange forsøk. Prøv igjen om {count, plural, one {# sekund} other {# sekunder}}.",
     "blocked_minutes": "For mange forsøk. Prøv igjen om {count, plural, one {# minutt} other {# minutter}}."
   },
+  "uxs_general": {
+    "time_zone_common": "Vanlige tidssoner",
+    "time_zone_all": "Alle tidssoner",
+    "time_zone_search": "Søk etter tidssone",
+    "time_zone_no_match": "Fant ingen tidssone",
+    "time_zone_desktop_description": "Vis tidspunkter for e-post og avtaler i denne tidssonen. Hvis du ikke velger en, brukes tidssonen til datamaskinen.",
+    "app_lock_desc_desktop": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
+    "app_lock_timeout_desc_desktop": "Tid uten bruk i et vindu.",
+    "app_lock_now_desc_desktop": "Låser alle vinduer med en gang.",
+    "app_lock_protects_toggle": "Hva beskytter dette mot?",
+    "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
+    "desktop_attention_title": "På denne datamaskinen"
+  },
   "desktop_sign_in": {
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
@@ -6991,6 +7122,21 @@
     "declined": "Du sa nei i nettleseren, så ingenting ble logget inn.",
     "too_many": "For mange innloggingsforsøk fra dette nettverket. Vent noen minutter og prøv igjen.",
     "page_declined": "Ingenting ble overlevert. Du kan lukke denne fanen."
+  },
+  "uxs_login": {
+    "theme_button": "Lyst eller mørkt",
+    "server_label": "E-postserver",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Leter etter e-postserveren din…",
+    "server_found": "E-postserver: {server}",
+    "server_change": "Endre",
+    "server_not_found": "Vi fant ikke e-postserveren for denne adressen. Skriv den inn her, for eksempel mail.example.com.",
+    "server_needed": "Skriv inn adressen til e-postserveren din.",
+    "server_invalid": "Dette er ikke en serveradresse. Skriv den som mail.example.com.",
+    "email_needed": "Skriv inn e-postadressen din først.",
+    "trouble": "Problemer?",
+    "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
+    "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
   },
   "desktop_updates": {
     "title": "Oppdateringer",
@@ -7204,7 +7350,7 @@
     "section_title": "Bruksdata og krasjrapporter",
     "section_description": "Begge er av til du slår dem på, og hver har sin egen bryter.",
     "telemetry_label": "Send bruksdata",
-    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appversjonen, Node-versjonen, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
+    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appens versjonsnumre, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
     "crash_label": "Send krasjrapporter",
     "crash_description": "Feil i appen sendes med en tilfeldig ID, filnavn fra appens egen kode og korte, rensede meldinger. Hvis selve appen krasjer, blir en krasjfil liggende på denne datamaskinen og forlater den bare hvis du sender den.",
     "crash_memory": "En krasjfil er en kopi av en del av appens minne da den krasjet. Bulwark fjerner brukernavn, adresser og påloggingstokener det finner, men en krasjfil kan likevel inneholde teksten i e-posten din.",

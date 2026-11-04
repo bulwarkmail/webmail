@@ -16,6 +16,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MultiAccountPushSettings } from './multi-account-push';
+import { productName } from '@/lib/product-name';
+import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import {
   WebPushUnsupportedError,
@@ -56,6 +58,7 @@ export function NotificationSettings() {
   const tUnread = useTranslations('account_unread');
   const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
+  const appName = productName(useConfig().appName);
   // The relay list depends on it; re-render once the config is known (#903).
   const noThirdParty = useNoThirdPartyTraffic();
   const {
@@ -428,7 +431,7 @@ export function NotificationSettings() {
       {/* The desktop app's taskbar flash and quiet hours. Nothing in a browser. */}
       <DesktopOsSettings part="notifications" />
 
-      <SettingsSection id="push" title={t('push.title')} description={t('push.description')} term="push">
+      <SettingsSection id="push" title={t('push.title', { appName })} description={t('push.description')} term="push">
         <SettingItem label={t('push.enable')} description={statusDescription}>
           <div className="flex items-center gap-2">
             {pushEnabled && (

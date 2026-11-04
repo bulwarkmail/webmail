@@ -15,8 +15,9 @@ import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { fetchConfig, type ConfigData } from '@/hooks/use-config';
 import { productName } from '@/lib/product-name';
+import { IS_LITE } from '@/lib/lite';
 import {
-  getByPath, settingsSubResults, tabKeywords, tabSearchEntries, type SettingsSearchTab,
+  getByPath, settingsSubResults, settingsTabLabelKey, tabKeywords, tabSearchEntries, type SettingsSearchTab,
 } from '@/lib/settings-search';
 import { currentSessionLimits } from '@/lib/session-policy/limits';
 import type { AppSettingsView, SettingsSearchResult } from '../plugin-types';
@@ -44,7 +45,8 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
     try { return policy.isFeatureEnabled(feature); } catch { return true; }
   };
   const stalwart = config?.stalwartFeaturesEnabled ?? true;
-  const pages = new Set<SettingsSearchTab>(['account', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup']);
+  const pages = new Set<SettingsSearchTab>(['account', 'privacy', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup', 'about']);
+  if (!IS_LITE) pages.add('offline');
   if (stalwart) pages.add('security');
   if (client?.supportsSieve?.()) pages.add('filters');
   if (client?.supportsVacationResponse?.()) pages.add('vacation');
@@ -56,7 +58,7 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
 }
 
 function pageName(messages: Messages, tab: SettingsSearchTab): string {
-  const name = getByPath(messages, `settings.tabs.${tab}`);
+  const name = getByPath(messages, settingsTabLabelKey(tab));
   return typeof name === 'string' ? name : tab;
 }
 
@@ -91,7 +93,7 @@ export async function doAppSearchSettings(query: unknown, options?: unknown): Pr
     const theirs = settingsSubResults(english, tab, appName);
     mine.forEach((entry, i) => {
       const en = theirs[i];
-      const text = `${entry.label} ${entry.description ?? ''} ${en?.label ?? ''} ${en?.description ?? ''}`.toLowerCase();
+      const text = `${entry.label} ${entry.description ?? ''} ${entry.keywords ?? ''} ${en?.label ?? ''} ${en?.description ?? ''} ${en?.keywords ?? ''}`.toLowerCase();
       let score = 0;
       for (const word of words) {
         if (text.includes(word)) score += 2;
@@ -153,7 +155,7 @@ export const SHARED_SETTINGS = [
   'calendarFreeScroll', 'calendarHoverPreview', 'showTasksOnCalendar',
   'groupContactsByLetter', 'sortContactsByLastName', 'showContactsDirectory',
   'showAccessibilityButton', 'lineSpacing', 'letterSpacing', 'wordSpacing', 'paragraphSpacing', 'readingWidth',
-  'readingMask', 'plainLanguage', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
+  'readingMask', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
   'focusAlwaysVisible', 'largeCursor', 'openOnHover', 'showRowActionButton', 'nativeScrollbars',
   'mailViewMode', 'mailTextScale', 'mailMinFontSize', 'mailOverrideStyles', 'mailFitWidth', 'readAloudRate',
   'composeFontFamily', 'composeFontSize', 'confirmDelete', 'confirmArchive', 'unreadCountStyle',

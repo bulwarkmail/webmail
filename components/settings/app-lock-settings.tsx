@@ -21,6 +21,7 @@ import { passkeysPossible } from "@/lib/app-lock/passkey";
 import { appLockRequired, effectiveTimeout, onLockPolicyChange } from "@/lib/app-lock/policy";
 import { readAppLockFile, TIMEOUT_CHOICES } from "@/lib/app-lock/state";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { useIsDesktopApp } from "@/hooks/use-is-desktop-app";
 import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
 import { IS_LITE } from "@/lib/lite";
 import { toast } from "@/stores/toast-store";
@@ -42,6 +43,9 @@ export function AppLockSettings() {
   const t = useTranslations("appLock");
   const tKey = useTranslations("keyProtection");
   const tEdit = useTranslations("desktopEdit");
+  const tGeneral = useTranslations("uxs_general");
+  // The desktop app has windows, no tabs.
+  const desktop = useIsDesktopApp();
   const { appName } = useConfig();
   const { on, required, timeout, update } = useLockFacts();
   const [pending, setPending] = useState<Pending>(null);
@@ -132,16 +136,19 @@ export function AppLockSettings() {
   };
 
   return (
-    <SettingsSection id="app-lock" title={t("section_title")} description={t("section_desc")}>
+    <SettingsSection id="app-lock" title={t("section_title")} description={desktop ? tGeneral("app_lock_desc_desktop") : t("section_desc")}>
       <SettingItem label={t("enable_label")} description={t("enable_desc")} locked={required}>
         <ToggleSwitch checked={on || required} onChange={(next) => setPending(next ? "enable" : "disable")} testId="app-lock-switch" />
       </SettingItem>
-      <p className="text-xs text-muted-foreground" data-testid="app-lock-protects">{t("protects_desc")}</p>
+      <details className="text-xs text-muted-foreground">
+        <summary className="cursor-pointer select-none text-foreground">{tGeneral("app_lock_protects_toggle")}</summary>
+        <p className="mt-1" data-testid="app-lock-protects">{t("protects_desc")}</p>
+      </details>
       <KeyProtectionNotes />
 
       {on && (
         <>
-          <SettingItem label={t("timeout_label")} description={t("timeout_desc")} locked={timeout.locked}>
+          <SettingItem label={t("timeout_label")} description={desktop ? tGeneral("app_lock_timeout_desc_desktop") : t("timeout_desc")} locked={timeout.locked}>
             <select
               data-testid="app-lock-timeout"
               className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
@@ -152,12 +159,14 @@ export function AppLockSettings() {
               }}
             >
               {[...new Set([...TIMEOUT_CHOICES, timeout.minutes])].sort((a, b) => a - b).map((minutes) => (
-                <option key={minutes} value={minutes}>{t("timeout_option", { count: minutes })}</option>
+                <option key={minutes} value={minutes}>
+                  {minutes >= 60 && minutes % 60 === 0 ? tGeneral("app_lock_timeout_hours", { count: minutes / 60 }) : t("timeout_option", { count: minutes })}
+                </option>
               ))}
             </select>
           </SettingItem>
 
-          <SettingItem label={t("lock_now")} description={t("lock_now_desc")}>
+          <SettingItem label={t("lock_now")} description={desktop ? tGeneral("app_lock_now_desc_desktop") : t("lock_now_desc")}>
             <Button variant="outline" size="sm" className="text-xs h-7" onClick={lockEverywhere} data-testid="app-lock-now">{t("lock_now")}</Button>
           </SettingItem>
 

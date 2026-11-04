@@ -88,7 +88,9 @@ export interface FeatureGates {
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
   pluginsEnabled: false,
-  pluginsUploadEnabled: true,
+  // Users rarely have a plugin ZIP; the admin's plugins are what they get.
+  // A policy saved before this change keeps its stored value.
+  pluginsUploadEnabled: false,
   requirePluginApproval: true,
   themesEnabled: true,
   sidebarAppsEnabled: true,

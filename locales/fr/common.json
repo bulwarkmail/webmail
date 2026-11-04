@@ -6,9 +6,6 @@
     "username_placeholder": "utilisateur@exemple.com",
     "password_label": "Mot de passe",
     "password_placeholder": "Entrez votre mot de passe",
-    "jmap_endpoint_label": "Serveur JMAP",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Le serveur doit autoriser les requêtes CORS depuis ce domaine.",
     "jmap_server_label": "Serveur",
     "jmap_server_auto_picked": "Serveur sélectionné à partir de votre domaine de messagerie.",
     "sign_in": "Se connecter",
@@ -29,7 +26,7 @@
     },
     "show_password": "Afficher le mot de passe",
     "hide_password": "Masquer le mot de passe",
-    "totp_toggle": "J'ai un code 2FA",
+    "totp_toggle": "J'ai un code de mon application d'authentification",
     "token_toggle": "Se connecter avec un jeton d'accès",
     "password_toggle": "Se connecter avec un mot de passe",
     "token_label": "Jeton d'accès",
@@ -126,7 +123,7 @@
     "sign_out_of": "Se déconnecter de {account}",
     "sign_out_all": "Se déconnecter de tous les comptes",
     "add_account": "Ajouter un compte",
-    "set_as_default": "Définir par défaut",
+    "set_as_default": "Ouvrir ce compte au démarrage",
     "switch_account": "Changer de compte",
     "contacts": "Contacts",
     "calendar": "Calendrier",
@@ -225,20 +222,20 @@
   },
   "protocol_handlers": {
     "title": "Applications par défaut",
-    "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}. Techniquement, {appName} s'enregistre comme gestionnaire de protocole pour les liens mailto: et webcal:.",
+    "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}.",
     "unsupported": "Ce navigateur ou cette connexion ne prend pas en charge l'enregistrement manuel des gestionnaires de protocole. Vous pourrez peut-être quand même utiliser la PWA installée via les paramètres du navigateur ou du système.",
-    "mailto_label": "Liens e-mail",
-    "mailto_description": "Ouvre les liens mailto: dans {appName} avec un éditeur prérempli.",
-    "protocol_open_mode_label": "À l’ouverture des liens de protocole",
+    "mailto_label": "Ouvrir les liens d'e-mail dans {appName}",
+    "mailto_description": "Un clic sur une adresse e-mail sur un site web commence un nouveau message dans {appName}.",
+    "protocol_open_mode_label": "Ouverture des liens",
     "protocol_open_mode_description": "Choisissez si {appName} ouvre les liens mailto: et webcal: dans un nouvel onglet ou réutilise une session ouverte. L’option de session active nécessite l’autorisation des notifications afin que vous puissiez cliquer sur une notification de secours pour ramener {appName} au premier plan si le navigateur bloque le focus.",
     "protocol_open_mode_active_session": "Ouvrir dans la session active si possible",
     "protocol_open_mode_new_tab": "Toujours ouvrir un nouvel onglet",
     "focus_notification_title": "Ouvrir {appName}",
     "focus_notification_body": "Le lien a été ouvert dans {appName}. Cliquez pour ramener la fenêtre au premier plan.",
-    "webcal_label": "Liens de calendrier",
-    "webcal_description": "Ouvre les liens webcal: dans {appName} avec une boîte de dialogue d'abonnement au calendrier préremplie.",
-    "register_mailto": "Enregistrer l'application e-mail",
-    "register_webcal": "Enregistrer l'application de calendrier",
+    "webcal_label": "Ouvrir les liens de calendrier dans {appName}",
+    "webcal_description": "Un clic sur un lien de calendrier sur un site web ajoute le calendrier dans {appName}.",
+    "register_mailto": "Utiliser {appName} pour les liens d'e-mail",
+    "register_webcal": "Utiliser {appName} pour les liens de calendrier",
     "mailto_registered": "Enregistrement du gestionnaire d'e-mail demandé",
     "webcal_registered": "Enregistrement du gestionnaire de calendrier demandé",
     "registration_failed": "Échec de l'enregistrement du gestionnaire de protocole",
@@ -1369,6 +1366,30 @@
     "apply": "Utiliser ce texte",
     "apply_hint": "Remplace l'objet et le texte ci-dessous."
   },
+  "uxs_vacation": {
+    "default_subject": "Absent du bureau",
+    "default_message": "Merci pour votre message. Je suis absent du bureau et répondrai à mon retour.",
+    "write_message_first": "Écrivez d'abord un message. Sans lui, les gens recevraient une réponse vide.",
+    "enter_address_first": "Saisissez d'abord l'adresse vers laquelle transférer.",
+    "message_title": "Votre réponse",
+    "message_label": "Message",
+    "message_description": "Ce que reçoivent les personnes qui vous écrivent. Vous pouvez utiliser la mise en forme et des liens.",
+    "from_label": "Du (facultatif)",
+    "from_description": "Laissez vide pour commencer tout de suite.",
+    "until_label": "Au (facultatif)",
+    "until_description": "Laissez vide pour continuer à répondre jusqu'à ce que vous le désactiviez.",
+    "audience_all": "Tout le monde",
+    "audience_internal": "Seulement mon organisation ({domains})",
+    "audience_external": "Seulement les personnes hors de mon organisation",
+    "signature_label": "Signature",
+    "signature_plain_label": "Signature (texte brut)",
+    "signature_plain_description": "Vous écrivez uniquement en texte brut (Rédaction), votre signature l'est donc aussi.",
+    "edit_as_html": "Modifier en HTML",
+    "edit_formatted": "Revenir à l'éditeur avec mise en forme",
+    "html_source_label": "Signature en HTML",
+    "signature_size": "{bytes} octets utilisés sur {max}",
+    "signature_too_long": "Trop longue pour le serveur ({bytes} octets sur {max}). Raccourcissez-la."
+  },
   "retention_notice": {
     "line": "Les messages ici sont supprimés {count, plural, one {# jour} other {# jours}} après y avoir été déplacés."
   },
@@ -1558,8 +1579,8 @@
       "title": "Apparence",
       "description": "Personnalisez l'apparence de votre webmail",
       "theme": {
-        "label": "Thème",
-        "description": "Choisissez votre schéma de couleurs préféré",
+        "label": "Clair ou sombre",
+        "description": "Système suit le réglage de votre appareil",
         "light": "Clair",
         "dark": "Sombre",
         "system": "Système"
@@ -1587,7 +1608,7 @@
         "label": "Disposition de l'interface",
         "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
         "default": "Par défaut",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Recherche en haut, applications à gauche"
       },
       "animations": {
         "label": "Activer les animations",
@@ -1631,7 +1652,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Icônes colorées dans la barre latérale",
-        "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Indésirable en rouge, Envoyés en vert, etc.). Désactivez pour une barre latérale monochrome."
+        "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Spam en rouge, Envoyés en vert, etc.). Désactivez pour des icônes grises."
       },
       "tint_list_rows": {
         "label": "Lignes de liste colorées selon la couleur d'étiquette",
@@ -1643,7 +1664,7 @@
       },
       "favicon_unread_badge": {
         "label": "Nombre de non-lu sur l'icône de l'onglet",
-        "description": "Afficher le nombre de messages non lus de la boîte de réception sous forme de badge sur l’icône de l’onglet du navigateur, afin que les nouveaux messages restent visibles lorsque l’onglet n’est pas actif. Désactiver cette option pour ne pas afficher de badge sur l’icône."
+        "description": "Pour voir les nouveaux messages pendant que vous travaillez dans un autre onglet ou une autre application."
       },
       "show_shared_mail_accounts": {
         "label": "Afficher les comptes de messagerie partagés",
@@ -1694,7 +1715,7 @@
     },
     "keywords": {
       "title": "Étiquettes de messagerie",
-      "description": "Définissez des étiquettes pour organiser vos e-mails avec des couleurs. Elles sont stockées sous forme de mots-clés JMAP sur le serveur.",
+      "description": "Créez des étiquettes pour trier vos messages. Les étiquettes sont enregistrées avec vos messages sur le serveur.",
       "add_keyword": "Ajouter une étiquette",
       "label_field": "Nom d'affichage",
       "label_placeholder": "ex. Travail, Personnel, Urgent",
@@ -1729,8 +1750,8 @@
         "hide": "Masquer"
       },
       "unrecognized": {
-        "title": "Récupérer les étiquettes depuis le serveur",
-        "description": "Les noms et couleurs des étiquettes sont enregistrés dans ce navigateur, mais les étiquettes elles-mêmes se trouvent sur vos e-mails sous forme de mots-clés JMAP. Analysez votre messagerie à la recherche de mots-clés qu'aucune étiquette ici n'explique, puis rajoutez-les.",
+        "title": "Trouver les étiquettes de vos messages qui manquent ici",
+        "description": "Ce navigateur garde les noms et les couleurs de vos étiquettes. Les étiquettes elles-mêmes sont enregistrées sur vos messages. Cherchez dans votre messagerie les étiquettes qui manquent ici et ajoutez-les à nouveau.",
         "scan": "Rechercher des étiquettes",
         "rescan": "Analyser à nouveau",
         "scanning": "Analyse en cours… {scanned} e-mails sur {total}",
@@ -1763,17 +1784,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Son de notification",
+        "title": "Son",
         "description": "Choisissez le son à jouer pour les notifications",
-        "choose": "Son",
+        "choose": "Tonalité",
         "choose_desc": "Sélectionnez une sonnerie et cliquez sur l'icône du haut-parleur pour l'écouter"
       },
       "email": {
-        "title": "Notifications par e-mail",
+        "title": "Nouveaux e-mails",
         "description": "Configurer les notifications pour les e-mails entrants",
         "enabled": "Notifications par e-mail",
         "enabled_desc": "Afficher des notifications à l'arrivée de nouveaux e-mails",
-        "sound": "Son de notification",
+        "sound": "Son pour les nouveaux messages",
         "sound_desc": "Jouer un son à l'arrivée de nouveaux e-mails",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1783,7 +1804,7 @@
         "description": "Configurer les notifications pour les événements du calendrier",
         "enabled": "Notifications d'événements",
         "enabled_desc": "Afficher des alertes pour les événements à venir",
-        "sound": "Son de notification",
+        "sound": "Son pour les rappels",
         "sound_desc": "Jouer un son pour les rappels de calendrier"
       },
       "push": {
@@ -1791,7 +1812,7 @@
         "confirm_disable_title": "Désactiver les notifications en arrière-plan ?",
         "description": "Recevez des notifications système pour les nouveaux courriers quand ce site est fermé. Livré via le relais push Bulwark ; le relais ne voit jamais le contenu des courriers.",
         "disable": "Désactiver",
-        "enable": "Activer",
+        "enable": "Activer sur cet appareil",
         "dismiss_aria": "Fermer l'invite de notifications",
         "ios_hint": "Sur iOS, installez d'abord le site sur l'écran d'accueil – Safari ne livre Web Push qu'aux PWA installées.",
         "reenable": "Réenregistrer",
@@ -1805,7 +1826,7 @@
         "status_unsupported": "Ce navigateur ne prend pas en charge Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Les notifications en arrière-plan ne sont pas disponibles dans la démo.",
-        "title": "Notifications en arrière-plan",
+        "title": "Notifications quand {appName} est fermé",
         "devices_title": "Appareils enregistrés",
         "devices_desc": "Tous les appareils enregistrés pour recevoir les notifications en arrière-plan de ce compte. Révoquer un appareil l’empêche immédiatement d’en recevoir.",
         "devices_loading": "Chargement des appareils enregistrés…",
@@ -1867,7 +1888,7 @@
       },
       "first_day": {
         "label": "Premier jour de la semaine",
-        "description": "Commencer la semaine le dimanche ou le lundi",
+        "description": "Premier jour de la semaine dans les calendriers",
         "sunday": "Dimanche",
         "monday": "Lundi"
       },
@@ -1957,13 +1978,13 @@
       },
       "mail_layout": {
         "label": "Disposition du courrier",
-        "description": "Choisissez entre le volet de lecture divisé classique et un flux de lecture focalisé style Gmail.",
+        "description": "Où se placent la liste des messages et le message ouvert à l'écran.",
         "split": "Volet divisé",
-        "split_description": "Garder la liste des messages et le volet de lecture visibles côte à côte.",
+        "split_description": "Liste et message côte à côte",
         "focus": "Liste focalisée",
-        "focus_description": "Afficher une ligne par message et ouvrir le courrier en pleine largeur tout en gardant la barre latérale des dossiers visible.",
+        "focus_description": "La liste, puis le message sur toute la largeur",
         "horizontal": "Volet de lecture en bas",
-        "horizontal_description": "Afficher la liste des messages en haut et ouvrir le message sélectionné dans un volet de lecture en dessous."
+        "horizontal_description": "Message sous la liste"
       },
       "list_columns": {
         "label": "Afficher la liste en colonnes",
@@ -1979,7 +2000,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Sélection automatique de l'adresse de réponse",
-        "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
+        "description": "Lors d’une réponse, envoyer depuis l’adresse à laquelle le message a été envoyé."
       },
       "reply_identity_match": {
         "label": "Correspondance de l'adresse de réception",
@@ -2212,8 +2233,8 @@
         "title": "Comptes connectés",
         "description": "Faites glisser pour réorganiser l'affichage des comptes dans le menu déroulant",
         "active": "Compte actuellement actif",
-        "default_badge": "Compte par défaut",
-        "set_default": "Définir par défaut",
+        "default_badge": "S'ouvre au démarrage",
+        "set_default": "Ouvrir ce compte au démarrage",
         "switch_to": "Basculer vers ce compte",
         "move_up": "Déplacer vers le haut",
         "move_down": "Déplacer vers le bas",
@@ -2296,7 +2317,7 @@
       },
       "totp": {
         "section_title": "Authentification à deux facteurs",
-        "label": "Authentification TOTP",
+        "label": "Connexion en deux étapes",
         "description": "Ajoutez une couche de sécurité supplémentaire avec un mot de passe à usage unique basé sur le temps",
         "active": "Activé",
         "inactive": "Désactivé",
@@ -2376,12 +2397,12 @@
         "enabled_success": "Chiffrement au repos activé"
       },
       "email_client": {
-        "title": "Configuration du client de messagerie",
-        "description": "Utilisez ces identifiants pour configurer votre client de messagerie de bureau ou mobile (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "Nom d'utilisateur JMAP",
+        "title": "Utiliser vos e-mails dans d'autres applications",
+        "description": "Thunderbird, Apple Mail, Outlook et les applications de messagerie du téléphone peuvent utiliser ces réglages.",
+        "jmap_username_label": "Nom d'utilisateur",
         "copy": "Copier",
         "copied": "Copié",
-        "password_instructions": "Utilisez votre nom d'utilisateur JMAP ci-dessus avec un mot de passe d'application pour vous connecter à votre client de messagerie. Créez un mot de passe d'application dans la section ci-dessous si vous ne l'avez pas encore fait."
+        "password_instructions": "Comme mot de passe, utilisez un mot de passe d'application, pas votre mot de passe habituel. Vous pouvez en créer un plus bas sur cette page."
       },
       "link_device": {
         "title": "Associer l'application mobile",
@@ -2632,7 +2653,7 @@
       },
       "refresh_cache": {
         "label": "Actualiser les données en cache",
-        "description": "Actualiser les contacts, calendriers et dossiers depuis le serveur. Vos comptes et sessions sont conservés. Corrige un affichage obsolète ou incorrect sans vous déconnecter.",
+        "description": "Recharger les contacts, calendriers et dossiers depuis le serveur. Vous restez connecté.",
         "button": "Actualiser",
         "confirm_title": "Actualiser les données en cache ?"
       },
@@ -2645,12 +2666,12 @@
       },
       "export_settings": {
         "label": "Exporter les paramètres",
-        "description": "Télécharger vos paramètres au format JSON",
+        "description": "Télécharger une copie de vos réglages",
         "button": "Exporter"
       },
       "import_settings": {
         "label": "Importer les paramètres",
-        "description": "Charger les paramètres depuis un fichier JSON",
+        "description": "Restaurer les réglages depuis un fichier",
         "button": "Importer"
       },
       "about": {
@@ -2701,8 +2722,8 @@
       "manage_description": "Ajouter, modifier ou supprimer des apps personnalisées de la barre latérale"
     },
     "contacts": {
-      "title": "Contacts",
-      "description": "Importer et exporter vos contacts",
+      "title": "Liste des contacts",
+      "description": "Comment les contacts sont affichés, et fichiers de contacts à importer ou exporter",
       "import_label": "Importer des contacts",
       "import_description": "Importer des contacts depuis un fichier vCard (.vcf)",
       "export_label": "Exporter des contacts",
@@ -2797,15 +2818,15 @@
       "not_supported": "Votre serveur de messagerie ne prend pas en charge les filtres de courrier.",
       "rule_name": "Nom de la règle",
       "rule_name_placeholder": "ex. Trier les newsletters",
-      "match_all": "Correspondre à TOUTES les conditions",
-      "match_any": "Correspondre à N'IMPORTE QUELLE condition",
+      "match_all": "Correspondre à toutes les conditions",
+      "match_any": "Correspondre à l'une des conditions",
       "conditions": "Conditions",
       "add_condition": "Ajouter une condition",
       "actions": "Actions",
       "add_action": "Ajouter une action",
       "remove_condition": "Retirer la condition",
       "remove_action": "Retirer l'action",
-      "stop_processing": "Arrêter le traitement des règles suivantes",
+      "stop_processing": "Ne pas appliquer les règles suivantes",
       "include_spam": "Déplacer aussi les messages marqués comme spam",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valeur (plusieurs séparées par des virgules)",
@@ -2847,7 +2868,7 @@
         "discard": "Supprimer silencieusement",
         "reject": "Rejeter avec un message",
         "keep": "Conserver dans la boîte de réception",
-        "stop": "Arrêter le traitement"
+        "stop": "Ne pas appliquer les règles suivantes"
       },
       "move_to_folder": "Sélectionner le dossier",
       "copy_to_folder": "Sélectionner le dossier",
@@ -2991,7 +3012,7 @@
         "description": "Configurez l'affichage des fichiers et dossiers"
       },
       "default_view": {
-        "label": "Vue par défaut",
+        "label": "Afficher les fichiers en",
         "description": "Choisissez entre la disposition en grille et en liste",
         "list": "Liste",
         "grid": "Grille"
@@ -3194,10 +3215,6 @@
         "label": "Masque de lecture",
         "description": "Assombrit tout le message sauf quelques lignes autour du pointeur, pour vous aider à ne pas perdre votre place."
       },
-      "plain_language": {
-        "label": "Langage simple",
-        "description": "Formulations plus simples pour les paramètres et les messages d'erreur, avec de courtes explications des termes techniques. Disponible en anglais et en allemand."
-      },
       "contrast": {
         "label": "Contraste",
         "description": "Plus de contraste rend le texte, les bordures et le contour de focus plus sombres ou plus clairs avec n'importe quel thème, et souligne les liens. Système suit votre appareil.",
@@ -3389,6 +3406,81 @@
         "description": "La voix qui lit les messages. La liste montre les voix de votre navigateur pour la langue de l'interface.",
         "default": "Voix par défaut du navigateur"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Hors ligne",
+      "privacy": "Confidentialité",
+      "about": "À propos"
+    },
+    "search": {
+      "signature": "signature signature e-mail pied de message",
+      "sign_out": "déconnexion se déconnecter quitter logout",
+      "app_lock": "PIN verrou code verrouillage écran",
+      "text_size": "taille de police texte plus grand zoom agrandir",
+      "vacation": "réponse automatique absence congés vacances absent autoreply",
+      "two_factor": "2FA double authentification deux facteurs MFA OTP authentificateur code unique",
+      "encryption": "S/MIME smime PGP OpenPGP chiffrement certificat",
+      "password": "mot de passe changer nouveau mot de passe",
+      "offline": "hors ligne sans connexion sans internet télécharger stockage synchronisation",
+      "wipe": "supprimer effacer appareil données",
+      "outbox": "boîte d’envoi non envoyé en attente file",
+      "remote_content": "images distantes contenu externe pistage pixels expéditeurs de confiance",
+      "push": "push relais arrière-plan notifications",
+      "version": "version mise à jour à propos code source GitHub licence"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relais des notifications",
+        "description": "Les notifications reçues quand l’application est fermée passent par un relais push, qui ne voit jamais vos e-mails. Vous le choisissez sur la page Notifications.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Images distantes et expéditeurs de confiance",
+      "receipts_label": "Accusés de lecture",
+      "senders_label": "Images des expéditeurs",
+      "description": "Ces réglages se trouvent sur la page Confidentialité.",
+      "button": "Confidentialité"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densité et libellés de la barre d’outils",
+        "description": "L’espacement des lignes de la liste et l’affichage du nom des boutons se règlent sur la page Apparence."
+      },
+      "light_mode": {
+        "label": "Fond clair pour les messages",
+        "description": "L’affichage des messages sur fond clair en mode sombre se règle sur la page Lecture."
+      },
+      "calendar": {
+        "label": "Aperçu des événements dans le calendrier",
+        "description": "L’affichage des détails en pointant un événement se règle sur la page Calendrier."
+      },
+      "list": {
+        "label": "Conversations et lignes d’aperçu",
+        "description": "Le regroupement par conversation et la ligne d’aperçu sous chaque message se règlent sur la page Liste des messages."
+      },
+      "reading": {
+        "label": "Marquer comme lu",
+        "description": "Le moment où un message compte comme lu, et la page affichée après une suppression ou un déplacement, se règlent sur la page Lecture."
+      },
+      "send_warnings_description": "Annulation de l’envoi, et les avertissements pour un objet manquant, une pièce jointe oubliée ou un texte provisoire.",
+      "bulk_delete": {
+        "label": "Confirmer avant de supprimer plusieurs messages",
+        "description": "Ce réglage se trouve sur la page Liste des messages."
+      },
+      "sounds": {
+        "label": "Sons et badge des non lus",
+        "description": "Les sons de notification et le nombre de non lus dans l’onglet se règlent sur la page Notifications."
+      }
+    },
+    "about": {
+      "title": "À propos de {appName}"
+    },
+    "sign_out": {
+      "description": "Se déconnecter de ce compte sur cet appareil."
     }
   },
   "setup": {
@@ -3725,6 +3817,10 @@
     "placeholder_folder_name": "Nom du dossier",
     "create": "Créer",
     "rename_confirm": "Renommer"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gérer les comptes…",
+    "apply_to_existing": "{count, plural, one {Appliquer à # message existant dans {folder}} other {Appliquer à # messages existants dans {folder}}}"
   },
   "shortcuts": {
     "title": "Raccourcis clavier",
@@ -4387,6 +4483,28 @@
     "open_categories": "Ouvrir les catégories",
     "row_actions": "Actions pour {name}"
   },
+  "uxs_wording": {
+    "more_options": "Plus d'options",
+    "use_in_other_apps": "Utiliser dans d'autres applications",
+    "default_address_book": "Contacts",
+    "default_calendar": "Agenda",
+    "preview_documents": "Documents",
+    "preview_photos": "Photos",
+    "sample_subject": "Notes de la réunion au café de Noël",
+    "mail_apps": {
+      "imap": "Courrier entrant (IMAP)",
+      "smtp": "Courrier sortant (SMTP)",
+      "caldav": "Agendas (CalDAV)",
+      "carddav": "Contacts (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Sans chiffrement",
+      "copy_label": "Copier {name}",
+      "loading": "Lecture des réglages sur votre serveur de messagerie…",
+      "not_found": "Votre serveur de messagerie n'a pas indiqué les noms de serveur pour d'autres applications. Demandez-les à votre administrateur."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendriers : {names}",
@@ -4630,7 +4748,7 @@
       "hide_non_working_days_desc": "Retirer de la vue semaine les jours où vous ne travaillez pas. Leurs événements restent visibles dans les vues mois, jour et agenda.",
       "working_days": "Jours travaillés",
       "title": "Paramètres du calendrier",
-      "default_view": "Vue par défaut",
+      "default_view": "Le calendrier s'ouvre en",
       "week_starts_on": "La semaine commence le",
       "time_format": "Format de l'heure",
       "default_calendar": "Calendrier par défaut",
@@ -4641,7 +4759,7 @@
       "notifications_enabled_desc": "Afficher les alertes pour les événements à venir",
       "notification_sound": "Son de notification",
       "notification_sound_desc": "Jouer un son pour les alertes de calendrier",
-      "invitation_parsing": "Analyser les invitations par e-mail",
+      "invitation_parsing": "Afficher les invitations reçues par e-mail",
       "invitation_parsing_desc": "Détecter les invitations de calendrier dans les pièces jointes des e-mails et afficher les actions du calendrier",
       "show_time_in_month_view": "Afficher l'heure dans la vue mensuelle",
       "show_time_in_month_view_desc": "Afficher les heures des événements dans la vue mensuelle du calendrier",
@@ -4656,7 +4774,7 @@
       "show_week_numbers_desc": "Afficher les numéros de semaine dans le mini-calendrier",
       "calendar_free_scroll": "Défilement libre",
       "calendar_free_scroll_desc": "Faire défiler les mois, semaines et jours en continu au lieu d'une période à la fois",
-      "enable_tasks": "Activer les tâches",
+      "enable_tasks": "Tâches",
       "enable_tasks_desc": "Afficher une vue des tâches dans le calendrier pour gérer les choses à faire",
       "show_tasks_on_calendar": "Afficher les tâches dans le calendrier",
       "show_tasks_on_calendar_desc": "Afficher les tâches dans les vues mois, semaine et jour du calendrier",
@@ -4827,8 +4945,8 @@
       "error_update": "Échec de la mise à jour du calendrier",
       "error_delete": "Échec de la suppression du calendrier",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Copier l'URL CalDAV",
-      "url_copied": "URL CalDAV copiée dans le presse-papiers",
+      "copy_url": "Copier l'adresse pour d'autres applications",
+      "url_copied": "Adresse copiée",
       "confirm_clear": "Supprimer tous les événements de \"{name}\" ? Cette action est irréversible.",
       "set_default": "Définir par défaut",
       "default_updated": "Calendrier par défaut mis à jour",
@@ -4855,8 +4973,8 @@
       "default_alerts_updated": "Rappels par défaut mis à jour"
     },
     "subscription": {
-      "title": "Abonnement iCal",
-      "section_title": "Abonnements iCal",
+      "title": "S'abonner à un agenda",
+      "section_title": "Agendas abonnés",
       "description": "Abonnez-vous à un flux iCalendar externe. Les événements seront synchronisés automatiquement dans leur propre calendrier. Prend en charge les URL https:// et webcal://.",
       "url_label": "URL du calendrier",
       "url_placeholder": "https://example.com/calendar.ics ou webcal://...",
@@ -5908,7 +6026,7 @@
     "clear_confirm_unsent": "{count, plural, one {# message non envoyé sera perdu.} other {# messages non envoyés seront perdus.}}",
     "clear_confirm": "Vider",
     "persist_refused": "Ce navigateur peut supprimer les e-mails gardés quand la place manque. Installer l'application l'évite en général.",
-    "persist_retry": "Redemander",
+    "persist_retry": "Demander au navigateur de les garder",
     "safari_hint": "Safari supprime les données d'un site après 7 jours sans visite. Ajoutez Bulwark à votre écran d'accueil ou au Dock pour garder vos e-mails sur cet appareil.",
     "evicted": "Le navigateur a supprimé les e-mails gardés sur cet appareil. Ils sont de nouveau en cours de téléchargement.",
     "evicted_lost": "{count, plural, one {# message ou modification non envoyé a été perdu.} other {# messages ou modifications non envoyés ont été perdus.}}",
@@ -6776,7 +6894,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Fenêtres",
+      "title": "Fenêtres de l'application",
       "double_click_label": "Ouvrir les messages dans une nouvelle fenêtre par double-clic",
       "double_click_description": "Un simple clic ouvre toujours le message à côté de la liste.",
       "restore_label": "Rouvrir les fenêtres au démarrage",
@@ -6893,9 +7011,9 @@
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
     "enable_label": "Verrouiller avec un code PIN",
-    "enable_desc": "Désactivé par défaut. Le code PIN reste sur cet appareil.",
+    "enable_desc": "Le code PIN reste sur cet appareil.",
     "protects_desc": "Contre quoi cela protège : le code PIN empêche une personne devant cet appareil d'entrer dans l'application. Les messages stockés ici reçoivent une nouvelle clé quand vous activez le verrouillage ou changez le code PIN, ce qui peut prendre un moment. Cela ne peut pas arrêter un programme exécuté sur cet ordinateur, une extension de navigateur que vous avez installée, ni quelqu'un qui copie les fichiers de l'application et a le temps d'essayer de nombreux codes : un code plus long est donc utile. Dans l'application de bureau, essayer des codes demande aussi votre session sur cet ordinateur. Votre compte sur le serveur n'est pas concerné.",
-    "enable_body": "Choisissez un code PIN. Il vous sera demandé à chaque verrouillage, et après un rechargement ou un nouveau démarrage.",
+    "enable_body": "Il vous sera demandé à chaque verrouillage de l'application et après un redémarrage.",
     "set_pin_title": "Choisir un code PIN",
     "change_pin": "Changer le code PIN…",
     "change_pin_title": "Changer le code PIN",
@@ -6957,6 +7075,19 @@
     "blocked_seconds": "Trop d'essais. Réessayez dans {count, plural, one {# seconde} other {# secondes}}.",
     "blocked_minutes": "Trop d'essais. Réessayez dans {count, plural, one {# minute} other {# minutes}}."
   },
+  "uxs_general": {
+    "time_zone_common": "Fuseaux horaires courants",
+    "time_zone_all": "Tous les fuseaux horaires",
+    "time_zone_search": "Rechercher un fuseau horaire",
+    "time_zone_no_match": "Aucun fuseau horaire trouvé",
+    "time_zone_desktop_description": "Afficher les heures des messages et des rendez-vous dans ce fuseau horaire. Si vous n'en choisissez aucun, celui de votre ordinateur est utilisé.",
+    "app_lock_desc_desktop": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
+    "app_lock_timeout_desc_desktop": "Temps sans utilisation dans une fenêtre.",
+    "app_lock_now_desc_desktop": "Verrouille toutes les fenêtres immédiatement.",
+    "app_lock_protects_toggle": "Contre quoi cela protège-t-il ?",
+    "app_lock_timeout_hours": "{count, plural, one {# heure} other {# heures}}",
+    "desktop_attention_title": "Sur cet ordinateur"
+  },
   "desktop_sign_in": {
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
@@ -6991,6 +7122,21 @@
     "declined": "Vous avez refusé dans votre navigateur : aucune connexion n’a été faite.",
     "too_many": "Trop de tentatives de connexion depuis ce réseau. Attendez quelques minutes et réessayez.",
     "page_declined": "Rien n’a été transmis. Vous pouvez fermer cet onglet."
+  },
+  "uxs_login": {
+    "theme_button": "Clair ou sombre",
+    "server_label": "Serveur de messagerie",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Recherche de votre serveur de messagerie…",
+    "server_found": "Serveur de messagerie : {server}",
+    "server_change": "Modifier",
+    "server_not_found": "Nous n'avons pas trouvé le serveur de messagerie de cette adresse. Saisissez-le ici, par exemple mail.example.com.",
+    "server_needed": "Saisissez l'adresse de votre serveur de messagerie.",
+    "server_invalid": "Ce n'est pas une adresse de serveur. Écrivez-la comme mail.example.com.",
+    "email_needed": "Saisissez d'abord votre adresse e-mail.",
+    "trouble": "Un problème ?",
+    "trouble_cors": "Votre serveur de messagerie doit autoriser les connexions depuis ce site. Si la connexion échoue, demandez à la personne qui gère votre serveur de l'autoriser.",
+    "provider_unsupported": "{provider} ne propose pas JMAP, la façon dont Bulwark communique avec les serveurs de messagerie, donc Bulwark ne peut pas encore s'y connecter directement."
   },
   "desktop_updates": {
     "title": "Mises à jour",
@@ -7204,7 +7350,7 @@
     "section_title": "Données d'utilisation et rapports de plantage",
     "section_description": "Les deux restent désactivés tant que vous ne les activez pas, et chacun a son propre interrupteur.",
     "telemetry_label": "Envoyer les données d'utilisation",
-    "telemetry_description": "Une fois par jour : un identifiant aléatoire, la version de l'application, la version de Node, votre système d'exploitation, depuis combien de temps l'application tourne et son mode de connexion. Avec votre propre serveur de messagerie, aussi les fonctions activées, un nombre approximatif de comptes et le nombre de plugins et de thèmes. Jamais de messages, d'adresses ni de noms de serveur.",
+    "telemetry_description": "Une fois par jour : un identifiant aléatoire, les numéros de version de l'application, votre système d'exploitation, depuis combien de temps l'application tourne et son mode de connexion. Avec votre propre serveur de messagerie, aussi les fonctions activées, un nombre approximatif de comptes et le nombre de plugins et de thèmes. Jamais de messages, d'adresses ni de noms de serveur.",
     "crash_label": "Envoyer les rapports de plantage",
     "crash_description": "Les erreurs de l'application partent avec un identifiant aléatoire, les noms de fichiers du code de l'application et de courts messages nettoyés. Si l'application elle-même plante, un fichier de plantage reste sur cet ordinateur et n'en sort que si vous l'envoyez.",
     "crash_memory": "Un fichier de plantage est une copie d'une partie de la mémoire de l'application au moment du plantage. Bulwark retire les noms d'utilisateur, les adresses et les jetons de connexion qu'il trouve, mais un fichier de plantage peut quand même contenir le texte de vos messages.",

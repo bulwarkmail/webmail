@@ -33,7 +33,7 @@ export function WipeDeviceSection() {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3" data-testid="wipe-device-section">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3" data-testid="wipe-device-section" data-search-label={t('settings_title')}>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-foreground">{t('settings_title')}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t('settings_description')}</p>

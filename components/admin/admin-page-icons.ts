@@ -60,7 +60,9 @@ export const ADMIN_GROUPS = ['top', 'organisation', 'extensions', 'system'] as c
 
 export const ADMIN_GROUP_LABELS: Record<AdminPageDef['group'], string | null> = {
   top: null,
-  organisation: 'Organisation',
+  // Everything about what users get: features, settings, and the
+  // organisation pages, each with the same "Applies to" picker.
+  organisation: 'Users',
   extensions: 'Extensions',
   system: 'System',
 };

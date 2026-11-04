@@ -1,6 +1,5 @@
 {
   "login": {
-    "jmap_endpoint_cors_hint": "The mail server must allow sign-ins from this website. Your administrator can set this up.",
     "reconnecting": "The connection is lost. We are trying to connect again…",
     "error": {
       "invalid_credentials": "The email address or password is wrong. Check both and try again.",
@@ -14,7 +13,6 @@
       "oauth_discovery_failed": "Sign-in through your organisation does not work right now. Try again later or ask your administrator.",
       "token_exchange_failed": "Your password and code are correct, but the mail server did not let this app in. Ask your administrator to check the sign-in settings for this app."
     },
-    "totp_toggle": "I have a code from my authenticator app",
     "token_hint": "Some mail providers give you a token instead of a password. Create one in your mail provider's settings, copy it, and paste it here.",
     "config_error": {
       "title": "The webmail is not set up correctly",
@@ -139,9 +137,6 @@
         "unsupported_note": "Your mail server can't sort by read or unread, star or tag. Those steps are left out, and the newest messages come first."
       },
       "description": "Change how the webmail looks",
-      "theme": {
-        "description": "Choose light or dark colours"
-      },
       "font_size": {
         "description": "Make the text bigger or smaller"
       },
@@ -176,9 +171,6 @@
       "all_mail": {
         "folders_description": "Choose which folders of this account are part of the lists All mail, Unread and Starred."
       },
-      "colorful_sidebar_icons": {
-        "description": "Give folder and tag icons colours (blue Inbox, red Spam, green Sent and so on). Turn this off for grey icons."
-      },
       "tint_list_rows": {
         "description": "Colour each message in the list with the colour of its first tag. The tag colour still shows in the small dots when this is off."
       },
@@ -186,7 +178,6 @@
         "description": "Show how many messages a folder or tag has in total, next to the number of unread ones."
       },
       "favicon_unread_badge": {
-        "description": "Show the number of unread messages on the browser tab and on the app icon. Then you see new mail even when you use another tab."
       },
       "show_shared_mail_accounts": {
         "description": "Show the folders of mailboxes that others share with you, under Shared in the folder list. Turn this off to hide them all, or hide single accounts below. Their calendars and contacts stay."
@@ -298,12 +289,6 @@
       "confirm_bulk_delete": {
         "description": "Ask before several selected messages go to the Trash. Deleting for good always asks."
       },
-      "mail_layout": {
-        "description": "Choose how the message list and the open message are placed on the screen.",
-        "split_description": "The message list and the open message are side by side.",
-        "focus_description": "Each message takes one line. An open message fills the whole width. The folder list stays visible.",
-        "horizontal_description": "The message list is at the top. The open message is shown below it."
-      },
       "list_columns": {
         "description": "Show the list as a table with the columns From, Subject, Date and Size."
       },
@@ -314,7 +299,7 @@
         "description": "Write all messages as plain text, without bold, colours or pictures. This also applies to replies and forwards."
       },
       "auto_select_reply_identity": {
-        "description": "When you reply, the reply is sent from the address the message was sent to. This works for all your own addresses. Below, you can choose if other addresses on your domain count too."
+        "description": "When you reply, the reply is sent from the address the message was sent to. This works for all your own addresses."
       },
       "reply_identity_match": {
         "label": "Which addresses count as yours",
@@ -438,7 +423,6 @@
         "error": "Your name could not be changed. Try again."
       },
       "totp": {
-        "label": "Code from an authenticator app",
         "description": "Protect your account better: when you sign in, you also type a code from an app on your phone",
         "enable_error": "Two-factor authentication could not be turned on. Try again.",
         "disable_error": "Two-factor authentication could not be turned off. Try again.",
@@ -478,11 +462,6 @@
         "key_label": "Public key (S/MIME or PGP, as text)",
         "add_error": "The public key could not be added. Check that you pasted all of it.",
         "remove_error": "The public key could not be deleted. Try again."
-      },
-      "email_client": {
-        "description": "Use these details to set up mail on your computer or phone, for example in Thunderbird, Apple Mail or Outlook",
-        "jmap_username_label": "User name for mail apps",
-        "password_instructions": "In your mail app, use the user name above and an app password. You can create an app password further down on this page."
       },
       "link_device": {
         "description": "Sign in to the Bulwark Mail app on your phone without typing your password. Your phone gets its own sign-in. If you sign out here, your phone stays signed in.",
@@ -579,10 +558,10 @@
         "description": "Put all settings back to how they were at the start"
       },
       "export_settings": {
-        "description": "Save your settings as a file on your device"
+        "description": "Download a copy of your settings"
       },
       "import_settings": {
-        "description": "Load your settings from a file you saved before"
+        "description": "Restore settings from a file"
       },
       "sections": {
         "backup_description": "Use the same settings in other browsers and on other devices.",

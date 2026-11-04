@@ -24,6 +24,7 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { toUnicodeDomain, toUnicodeEmail } from "@/lib/idn";
+import { buildSettingsPath } from "@/lib/deep-links";
 
 interface AccountSwitcherProps {
   /** "rail" = small avatar only (NavigationRail), "expanded" = avatar + name + email (Sidebar) */
@@ -75,6 +76,8 @@ export function AccountSwitcher({
 }: AccountSwitcherProps) {
   const t = useTranslations("sidebar");
   const tUnread = useTranslations("account_unread");
+  const tAccounts = useTranslations("settings.account.accounts");
+  const tFolders = useTranslations("uxs_folders");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -210,6 +213,11 @@ export function AccountSwitcher({
     router.push(`/login?mode=add-account` as never);
   };
 
+  const handleManageAccounts = () => {
+    setOpen(false);
+    router.push(buildSettingsPath("account", "browser") as never);
+  };
+
   const handleRemove = async (e: React.MouseEvent, account: AccountEntry) => {
     e.stopPropagation();
     const label = toUnicodeEmail(account.email || account.username);
@@ -283,7 +291,11 @@ export function AccountSwitcher({
   // the actually logged-in account (info@linusrath.de).
   // IDN domains arrive in their ASCII (xn--) form; show them as written (#1100).
   // A name another account shares gives way to the address (accountRowText).
-  const activeText = activeAccount ? accountRowText(activeAccount, accounts) : null;
+  // The rows below lead with the address when two accounts share a name, so
+  // they differ in their bold line. The button names one account only, with
+  // its address under it, so its name stays put when another account is
+  // added (settings-14).
+  const activeText = activeAccount ? accountRowText(activeAccount, [activeAccount]) : null;
   const displayName = toUnicodeEmail(activeText?.title || "");
   const displaySubtitle = toUnicodeEmail(activeText?.subtitle || "");
   const displayEmail = toUnicodeEmail(activeAccount?.email || activeAccount?.username || "");
@@ -298,11 +310,15 @@ export function AccountSwitcher({
   const unreadByAccount: Record<string, Mailbox[] | undefined> = activeAccountId
     ? { ...accountMailboxes, [activeAccountId]: ownMailboxes }
     : accountMailboxes;
-  // With several accounts every list carries the unread of each, so the new
-  // mail in another account shows without switching to it.
+  // With several accounts every row carries the unread waiting in its Inbox, as Gmail and
+  // Outlook show. A single account's count is already on its Inbox in the folder list.
   const severalAccounts = accounts.length > 1;
   const unreadFor = (account: AccountEntry) =>
     mvPopover || severalAccounts ? inboxUnread(unreadByAccount[account.id]) : undefined;
+  // The server is only worth a line when it is what tells two rows apart.
+  const addressKey = (account: AccountEntry) => toUnicodeEmail(account.email || account.username).trim().toLowerCase();
+  const sharesAddress = (account: AccountEntry) =>
+    accounts.some((other) => other.id !== account.id && addressKey(other) === addressKey(account));
   const connectedIds = accounts.filter((account) => account.isConnected).map((account) => account.id);
   const allInboxesUnread = totalInboxUnread(connectedIds, unreadByAccount);
   // What waits in the accounts not on screen: a dot on the avatar says so.
@@ -481,8 +497,10 @@ export function AccountSwitcher({
                       <span className="text-sm font-medium truncate">
                         {toUnicodeEmail(text.title)}
                       </span>
-                      {account.isDefault && (
-                        <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
+                      {account.isDefault && accounts.length > 1 && (
+                        <span title={tAccounts("default_badge")} className="flex-shrink-0 inline-flex">
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" aria-label={tAccounts("default_badge")} />
+                        </span>
                       )}
                       <UnreadBadge count={unreadFor(account)} />
                     </div>
@@ -491,21 +509,16 @@ export function AccountSwitcher({
                         {toUnicodeEmail(text.subtitle)}
                       </p>
                     )}
-                    {/* Server and connection state: Mountain View keeps the line
-                        only for an account in trouble. */}
-                    <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && "hidden")}>
-                      {account.hasError ? (
-                        <AlertCircle className="w-3 h-3 text-destructive" />
-                      ) : (
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          account.isConnected ? "bg-green-500" : "bg-muted-foreground/40"
-                        )} />
-                      )}
-                      <span className="text-[0.625rem] text-muted-foreground truncate">
-                        {(() => { try { return toUnicodeDomain(new URL(account.serverUrl).hostname); } catch { return account.serverUrl; } })()}
-                      </span>
-                    </div>
+                    {/* The server line: only for an account in trouble, or
+                        when two accounts have the same address. */}
+                    {(account.hasError || sharesAddress(account)) && (
+                      <div className="flex items-center gap-1 mt-0.5" data-testid="account-server">
+                        {account.hasError && <AlertCircle className="w-3 h-3 text-destructive" />}
+                        <span className="text-xs text-muted-foreground truncate">
+                          {(() => { try { return toUnicodeDomain(new URL(account.serverUrl).hostname); } catch { return account.serverUrl; } })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </button>
                 {isDraggable && (
@@ -643,6 +656,20 @@ export function AccountSwitcher({
               >
                 <Plus className="w-4 h-4" />
                 {t("add_account")}
+              </button>
+            </div>
+          )}
+
+          {!mvPopover && (
+            <div className={cn(accounts.length >= getMaxAccounts() && "border-t border-border")}>
+              <button
+                onClick={handleManageAccounts}
+                data-testid="manage-accounts"
+                className="w-full flex items-center gap-2 px-3 py-2 pointer-coarse:min-h-11 text-sm text-start text-foreground hover:bg-muted transition-colors"
+                role="menuitem"
+              >
+                <Settings className="w-4 h-4" />
+                {tFolders("manage_accounts")}
               </button>
             </div>
           )}

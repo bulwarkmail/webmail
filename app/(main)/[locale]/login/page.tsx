@@ -46,6 +46,8 @@ import { usePrefetchMailView } from "@/hooks/use-prefetch-mail-view";
 import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
 import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
+import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
+import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -206,6 +208,7 @@ function LoginPageContent() {
   const tOffline = useTranslations("offline");
   const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
+  const tLogin = useTranslations("uxs_login");
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
@@ -299,6 +302,29 @@ function LoginPageContent() {
   // with OAuth even while OAuth is off globally: a Gmail bridge next to a
   // password server.
   const serverOauthEnabled = oauthEnabled || offersOwnOAuth(selectedServer);
+  // A server of one's own (custom endpoint, the desktop app's standalone mode): the
+  // email address comes first and the server is looked up from its domain (JMAP
+  // well-known, SRV, then the admin's default). The field for it only opens when
+  // nothing was found or the user wants another one. Lite has no server to ask
+  // and keeps the field open.
+  const customServerMode = !hasServerList && allowCustomJmapEndpoint;
+  const canLookUpServer = customServerMode && !IS_LITE;
+  const [serverEditing, setServerEditing] = useState(false);
+  const [serverLookup, setServerLookup] = useState<{ domain: string; status: "looking" | "found" | "failed"; url: string | null } | null>(null);
+  const [serverError, setServerError] = useState<ServerFieldError>(null);
+  const [emailNeeded, setEmailNeeded] = useState(false);
+  const serverInputRef = useRef<HTMLInputElement>(null);
+  const serverLookups = useRef(new Map<string, Promise<string | null>>());
+  const typedDomain = canLookUpServer ? emailDomain(formData.username) : "";
+  const unsupportedMailProvider = typedDomain ? unsupportedProvider(typedDomain) : null;
+  const lookupForAddress = serverLookup && serverLookup.domain === typedDomain ? serverLookup : null;
+  // What the lookup found, else the admin's default once it found nothing (or for
+  // a user name with no domain to look up).
+  const autoServer = lookupForAddress?.status === "found"
+    ? lookupForAddress.url
+    : configuredServerUrl && (lookupForAddress?.status === "failed" || (!typedDomain && formData.username.trim() !== ""))
+      ? configuredServerUrl
+      : null;
   const [totpCode, setTotpCode] = useState("");
   const [showTotpField, setShowTotpField] = useState(false);
   // Access-token sign-in (Bearer auth) in place of username and password.
@@ -306,6 +332,15 @@ function LoginPageContent() {
   const [tokenMode, setTokenMode] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const signInWithToken = tokenMode && loginShowTokenLogin && !isMobileHandoff;
+  const serverFieldOpen = customServerMode && (
+    !canLookUpServer
+    || serverEditing
+    || signInWithToken
+    || unsupportedMailProvider !== null
+    || (lookupForAddress?.status === "failed" && !configuredServerUrl)
+  );
+  /** The server a sign-in goes to right now, in custom-server mode; null when there is none yet. */
+  const customServer = serverFieldOpen ? normalizeServerInput(jmapEndpoint) : autoServer;
   const [rememberMe, setRememberMe] = useState(false);
   // Lite (no server session): "remember me" needs Stalwart's token login on the
   // target server. Probe it once per URL and hide the box when it is missing;
@@ -384,7 +419,7 @@ function LoginPageContent() {
 
   const probeTarget = hasServerList
     ? selectedServer?.url ?? ""
-    : (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl) || "";
+    : (allowCustomJmapEndpoint ? normalizeServerInput(jmapEndpoint) : serverUrl) || "";
   useEffect(() => {
     if (!IS_LITE || !probeTarget) return;
     let cancelled = false;
@@ -446,10 +481,57 @@ function LoginPageContent() {
   }, [pageTitle, serverUrl]);
 
   useEffect(() => {
+    if (customServerMode) return;
     if (serverUrl && !jmapEndpoint) {
       setJmapEndpoint(serverUrl);
     }
-  }, [serverUrl, jmapEndpoint]);
+  }, [serverUrl, jmapEndpoint, customServerMode]);
+
+  /** One lookup per domain while the page is open. */
+  const lookUpServer = useCallback((domain: string, address: string): Promise<string | null> => {
+    let pending = serverLookups.current.get(domain);
+    if (!pending) {
+      pending = requestServerDiscovery(address);
+      serverLookups.current.set(domain, pending);
+    }
+    return pending;
+  }, []);
+
+  // Look the server up once the address is complete, after a pause in typing.
+  const typedAddress = formData.username.trim();
+  useEffect(() => {
+    if (!typedDomain || unsupportedMailProvider || serverLookup?.domain === typedDomain) return;
+    const timer = setTimeout(() => {
+      setServerLookup({ domain: typedDomain, status: "looking", url: null });
+      lookUpServer(typedDomain, typedAddress).then((url) => {
+        setServerLookup((current) => (current?.domain === typedDomain ? { domain: typedDomain, status: url ? "found" : "failed", url } : current));
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer]);
+
+  /**
+   * The server to sign in to in custom-server mode, looked up now if need be.
+   * Null after it opened the field and said what is missing there.
+   */
+  const resolveCustomServer = async (): Promise<string | null> => {
+    setServerError(null);
+    if (!serverFieldOpen) {
+      if (typedDomain) {
+        const url = await lookUpServer(typedDomain, typedAddress);
+        setServerLookup({ domain: typedDomain, status: url ? "found" : "failed", url });
+        if (url) return url;
+      }
+      if (configuredServerUrl && (typedDomain || typedAddress)) return configuredServerUrl;
+    } else {
+      const typed = normalizeServerInput(jmapEndpoint);
+      if (typed) return typed;
+    }
+    setServerEditing(true);
+    setServerError(serverFieldOpen && jmapEndpoint.trim() ? "invalid" : "needed");
+    setTimeout(() => serverInputRef.current?.focus(), 0);
+    return null;
+  };
 
   // Initialize selected server when the server list arrives. Picks the first
   // entry; the auto-pick effect below may override based on the email domain.
@@ -840,6 +922,7 @@ function LoginPageContent() {
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, username: e.target.value });
+    setEmailNeeded(false);
   };
 
   const handleUsernameFocus = () => {
@@ -962,7 +1045,7 @@ function LoginPageContent() {
    * whichever server is selected so that "Sign in with Google" is one tap.
    */
   const handleOAuthLogin = async (target?: PublicJmapServerEntry) => {
-    const oauthTarget = (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? jmapEndpoint : configuredServerUrl);
+    const oauthTarget = (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
     if (oauthTarget && !jmapServerAllowedByDesktopPolicy(oauthTarget, desktopPolicy)) {
       setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
       return;
@@ -1011,7 +1094,7 @@ function LoginPageContent() {
     // Resolve the JMAP URL to send to the callback. Server-list entries win
     // over the custom-endpoint input, which wins over the global server URL.
     const oauthServerUrl = server?.url
-      || (allowCustomJmapEndpoint ? jmapEndpoint : configuredServerUrl);
+      || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
 
     sessionStorage.setItem("oauth_code_verifier", verifier);
     sessionStorage.setItem("oauth_state", state);
@@ -1074,8 +1157,18 @@ function LoginPageContent() {
     // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
     // builds' bundles, which Lite's check on API strings relies on.
     if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
-      const target = jmapEndpoint.trim();
-      if (!target) {
+      let target = jmapEndpoint.trim();
+      if (customServerMode) {
+        // The address first: the server is found from it. A server typed by hand needs none.
+        if (!typedAddress && !serverFieldOpen) {
+          setEmailNeeded(true);
+          inputRef.current?.focus();
+          return;
+        }
+        const resolved = await resolveCustomServer();
+        if (!resolved) return;
+        target = resolved;
+      } else if (!target) {
         setDesktopNotice(tDesktop("server_needed"));
         return;
       }
@@ -1145,8 +1238,13 @@ function LoginPageContent() {
 
     // Server-list entries always win - `allowCustomJmapEndpoint` is only honored
     // when the admin hasn't configured a server list.
-    const effectiveServerUrl = selectedServer?.url
+    let effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    if (customServerMode) {
+      const resolved = await resolveCustomServer();
+      if (!resolved) return;
+      effectiveServerUrl = resolved;
+    }
     // The desktop app opened this page in the user's browser. Nothing leaves this page until
     // the user says yes: the password is only checked, and a two-factor code can't be, as it
     // works once. This browser gets no session of its own out of any of it.
@@ -1301,6 +1399,8 @@ function LoginPageContent() {
   };
 
   const currentThemeOption = THEME_OPTIONS.find(o => o.value === theme) || THEME_OPTIONS[2];
+  // "Webmail" is the default name, not a brand: the heading then says what the page is for.
+  const brandedAppName = appName && appName !== "Webmail" ? appName : "";
   const CurrentThemeIcon = currentThemeOption.icon;
 
   // Server picker (when admin has configured a server list). Rendered by both
@@ -1378,7 +1478,7 @@ function LoginPageContent() {
         ))}
       </select>
       {domainAutoLocked && (
-        <p className="text-[0.6875rem] text-muted-foreground leading-snug">
+        <p className="text-xs text-muted-foreground leading-snug">
           {t("jmap_server_auto_picked")}
         </p>
       )}
@@ -1438,17 +1538,18 @@ function LoginPageContent() {
             ref={themeButtonRef}
             onClick={() => setShowThemeMenu(!showThemeMenu)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+              "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
               showThemeMenu
                 ? "bg-secondary border-border text-foreground shadow-md"
                 : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
             )}
-            aria-label={`${tTheme("label")}: ${tTheme(currentThemeOption.label)}`}
+            aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+            title={tLogin("theme_button")}
             aria-expanded={showThemeMenu}
             aria-haspopup="menu"
+            data-testid="login-theme-button"
           >
-            <CurrentThemeIcon className="w-4 h-4" />
-            <span className="hidden sm:inline" suppressHydrationWarning>{tTheme(currentThemeOption.label)}</span>
+            <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
           </button>
 
           {showThemeMenu && (
@@ -1608,17 +1709,18 @@ function LoginPageContent() {
           ref={themeButtonRef}
           onClick={() => setShowThemeMenu(!showThemeMenu)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+            "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
             showThemeMenu
               ? "bg-secondary border-border text-foreground shadow-md"
               : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
           )}
-          aria-label={`${tTheme("label")}: ${tTheme(currentThemeOption.label)}`}
+          aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+          title={tLogin("theme_button")}
           aria-expanded={showThemeMenu}
           aria-haspopup="menu"
+          data-testid="login-theme-button"
         >
-          <CurrentThemeIcon className="w-4 h-4" />
-          <span className="hidden sm:inline" suppressHydrationWarning>{tTheme(currentThemeOption.label)}</span>
+          <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {showThemeMenu && (
@@ -1671,10 +1773,11 @@ function LoginPageContent() {
             </div>
             {loginShowHeading && (
               <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                {isAddAccountMode ? t("add_account_title") : appName}
+                {isAddAccountMode ? t("add_account_title") : brandedAppName || t("sign_in")}
               </h1>
             )}
-            {loginShowSubtitle && (
+            {/* Under a heading that already says "Sign in" the subtitle would say it twice. */}
+            {loginShowSubtitle && (isAddAccountMode || brandedAppName || !loginShowHeading) && (
               <p className="text-sm text-muted-foreground mt-1.5">
                 {isAddAccountMode ? t("add_account_subtitle") : t("subtitle")}
               </p>
@@ -1846,28 +1949,8 @@ function LoginPageContent() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <fieldset disabled={isLoading} className="space-y-4">
                   {serverPicker}
-                  {/* JMAP Endpoint field (only when no server list and custom endpoints are allowed) */}
-                  {!hasServerList && allowCustomJmapEndpoint && (
-                    <div className="space-y-1.5">
-                      <label htmlFor="jmap-endpoint" className="block text-sm font-medium text-foreground">
-                        {t("jmap_endpoint_label")}
-                      </label>
-                      <Input
-                        id="jmap-endpoint"
-                        type="url"
-                        value={jmapEndpoint}
-                        onChange={(e) => setJmapEndpoint(e.target.value)}
-                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
-                        placeholder={t("jmap_endpoint_placeholder")}
-                        required
-                      />
-                      <p className="text-[0.6875rem] text-muted-foreground leading-snug">
-                        {t("jmap_endpoint_cors_hint")}
-                      </p>
-                    </div>
-                  )}
 
-                  {browserSignInOption}
+                  {!customServerMode && browserSignInOption}
 
                   {/* Username field. The access token names the account, so
                       token sign-in has none. */}
@@ -1947,7 +2030,37 @@ function LoginPageContent() {
                         </>
                       )}
                     </div>
+                    {emailNeeded && (
+                      <p role="alert" data-testid="login-email-needed" className="text-xs text-destructive leading-snug">
+                        {tLogin("email_needed")}
+                      </p>
+                    )}
                   </div>
+
+                  {customServerMode && (
+                    <LoginServerField
+                      ref={serverInputRef}
+                      lookup={canLookUpServer ? lookupForAddress?.status ?? "idle" : "idle"}
+                      server={autoServer}
+                      editing={serverFieldOpen}
+                      value={jmapEndpoint}
+                      onChange={(value) => {
+                        setJmapEndpoint(value);
+                        setServerEditing(true);
+                        setServerError(null);
+                      }}
+                      onEdit={() => {
+                        setJmapEndpoint(autoServer ? serverHostLabel(autoServer) : "");
+                        setServerEditing(true);
+                        setTimeout(() => serverInputRef.current?.focus(), 0);
+                      }}
+                      provider={unsupportedMailProvider}
+                      error={serverError}
+                      showTrouble={!IS_DESKTOP_BUILD}
+                    />
+                  )}
+
+                  {customServerMode && browserSignInOption}
 
                   {/* Password field. Hidden for an account that signs in at an
                       external provider (Lite on Stalwart): the submit button is
@@ -2007,7 +2120,7 @@ function LoginPageContent() {
                         data-lpignore="true"
                         {...errorProps(tokenBlamed)}
                       />
-                      <p className="text-[0.6875rem] text-muted-foreground leading-snug">
+                      <p className="text-xs text-muted-foreground leading-snug">
                         {t("token_hint")}
                       </p>
                     </div>

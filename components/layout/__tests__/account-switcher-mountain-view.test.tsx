@@ -59,8 +59,9 @@ describe('AccountSwitcher under Mountain View', () => {
 
     const row = screen.getByTestId('account-option');
     expect(row.getAttribute('style') ?? '').not.toMatch(/border/);
-    // Tailwind's `hidden`: jsdom has no style sheet to compute visibility from.
-    expect(within(row).getByText('mail.example.com').closest('.hidden')).not.toBeNull();
+    // Not drawn at all now (settings-14): the server line is only for an
+    // account in trouble or for two accounts with one address.
+    expect(within(row).queryByText('mail.example.com')).toBeNull();
   });
 
   it('keeps the server line for an account in trouble', () => {

@@ -28,6 +28,8 @@ const OPTIONAL: Partial<Record<SettingsSearchTab, string>> = {
   contacts: "boot-no-settings-contacts:hidden",
   files: "boot-no-files:hidden boot-no-settings-files:hidden",
   addons: "boot-no-settings-addons:hidden",
+  // Not in the static Lite build.
+  offline: "boot-no-settings-offline:hidden",
 };
 
 /** A line of text as tall as its line box, so rows keep the real height. */

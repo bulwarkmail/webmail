@@ -226,6 +226,7 @@ const MUTATING_HANDLERS: Array<[string, string]> = [
   ['@/app/api/auth/sso/complete/route', 'POST'],
   ['@/app/api/auth/reauth/sso/complete/route', 'POST'],
   ['@/app/api/auth/verify/route', 'POST'],
+  ['@/app/api/auth/discover-server/route', 'POST'],
 ];
 
 describe('every mutating /api/auth handler rejects cross-site requests', () => {

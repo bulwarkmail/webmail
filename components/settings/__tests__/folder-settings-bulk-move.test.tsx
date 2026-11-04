@@ -84,7 +84,8 @@ describe('FolderSettings bulk move (#1173)', () => {
     fireEvent.click(checkboxFor('A3'), { shiftKey: true });
 
     expect(['A1', 'A2', 'A3'].map(isTicked)).toEqual([true, true, true]);
-    expect(['Inbox', 'A4', 'Old mailbox'].map(isTicked)).toEqual([false, false, false]);
+    // The Inbox row carries the sidebar's name (mailboxes.inbox under the key-echo mock).
+    expect(['mailboxes.inbox', 'A4', 'Old mailbox'].map(isTicked)).toEqual([false, false, false]);
     expect(screen.getByText('selected_count')).toBeTruthy();
   });
 

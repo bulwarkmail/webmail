@@ -214,8 +214,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('tintListRowsByTag', 'message_list', `${AP}tint_list_rows.label`),
   bool('showVerificationCodes', 'message_list', `${EB}show_verification_codes.label`),
   // Both make the server fetch the sender's domain: the assistant may only switch them off.
-  bool('senderFavicons', 'message_list', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
-  bool('showAvatarsInJunk', 'message_list', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
+  bool('senderFavicons', 'privacy', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
+  bool('showAvatarsInJunk', 'privacy', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
   entry('hoverActions', 'message_list', `${EB}hover_actions.label`, {
     type: 'list',
     options: HOVER_ACTION_IDS.map(([value, labelKey]) => ({
@@ -294,9 +294,9 @@ const ENTRIES: SettingSchemaEntry[] = [
     { type: 'words', max: 50, maxLength: 40, lowercase: true }),
   bool('emptySubjectWarningEnabled', 'composing', `${EB}empty_subject_warning.label`),
   bool('placeholderWarningEnabled', 'composing', `${EB}placeholder_warning.label`),
-  bool('requestReadReceiptDefault', 'composing', `${EB}request_read_receipt.label`),
+  bool('requestReadReceiptDefault', 'privacy', `${EB}request_read_receipt.label`),
   // No "always": that sends a receipt mail by itself.
-  choice('readReceiptResponse', 'composing', `${EB}read_receipt_response.label`,
+  choice('readReceiptResponse', 'privacy', `${EB}read_receipt_response.label`,
     opts(`${EB}read_receipt_response.`, ['ask', 'never'])),
 
   // --- Notifications ---
@@ -356,7 +356,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('paragraphSpacing', 'accessibility', `${A}paragraph_spacing.label`, opts(`${A}spacing.`, allowed('paragraphSpacing'))),
   choice('readingWidth', 'accessibility', `${A}reading_width.label`, opts(`${A}reading_width.`, allowed('readingWidth'))),
   bool('readingMask', 'accessibility', `${A}reading_mask.label`),
-  bool('plainLanguage', 'accessibility', `${A}plain_language.label`),
   choice('contrast', 'accessibility', `${A}contrast.label`, [
     { value: 'system', label: `${A}system` },
     { value: 'more', label: `${A}contrast.more` },
