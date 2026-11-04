@@ -27,6 +27,8 @@ import { useChooseMoveFolder } from "./move-to-dialog";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { getMailboxPath } from "@/lib/utils";
 import { emptyFolderLabelKey, emptyFolderPrompt } from "@/lib/empty-folder-text";
+import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
+import { useAccountStore } from "@/stores/account-store";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -414,7 +416,7 @@ export function EmailList({
 
   const [isProcessing, setIsProcessing] = useState(false);
   // The selection view's More actions opens only that part of the selection's menu.
-  const [menuSection, setMenuSection] = useState<'all' | 'more'>('all');
+  const [menuSection, setMenuSection] = useState<'all' | 'more' | 'rules'>('all');
   useEffect(() => {
     if (!contextMenu.isOpen) setMenuSection('all');
   }, [contextMenu.isOpen]);
@@ -823,7 +825,14 @@ export function EmailList({
     onMarkAsSpam: () => void handleBatchMarkAsSpam(),
     onUndoSpam: () => void handleBatchUndoSpam(),
     onRemoveFromFolder: () => void handleBatchRemoveFromFolder(),
+    onForwardAsAttachment: onBatchForwardAsAttachment,
   });
+  // What "More actions" holds, as the pane's own buttons when that's two
+  // things or fewer (mail-p3-8). Another signed-in account adds Copy to
+  // account, and plugins can add entries: then More stays.
+  const otherAccounts = useAccountStore((state) => state.accounts.filter((account) => account.isConnected).length > 1);
+  const menuPlugins = usePluginSlotOffers('context-menu-email').length > 0;
+  const selectionMoreInline = !otherAccounts && !menuPlugins ? selectionActions.more : null;
 
   // Archive, Delete, Move, Mark read/unread and Tag, as icons on the bar beside the
   // list. The reading pane has the selection view.
@@ -1550,6 +1559,13 @@ export function EmailList({
           title={selectionTitle}
           unread={selectionUnread}
           entries={selectionActions.top}
+          more={selectionMoreInline}
+          onOpenRules={(button) => {
+            const anchor = selectedEmailsForRemoval[0];
+            if (!anchor) return;
+            setMenuSection('rules');
+            openContextMenuFrom(button, anchor, 'start');
+          }}
           shortcutOf={(entry) => (entry.key === 'star' ? undefined : shortcutOf(entry.key, entry.testId === 'ctx-mark-read'))}
           onMove={(button) => moveMenu.openContextMenuFrom(button, null, 'start')}
           onMore={(button) => {

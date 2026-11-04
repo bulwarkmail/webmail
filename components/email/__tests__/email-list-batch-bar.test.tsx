@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useAccountStore } from '@/stores/account-store';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { EmailList } from '../email-list';
 
@@ -17,6 +18,7 @@ vi.mock('@/hooks/use-email-drag', () => ({ useEmailDrag: () => ({ dragHandlers: 
 vi.mock('@/components/ui/avatar', () => ({ Avatar: () => null }));
 
 const initial = useEmailStore.getState();
+const initialAccounts = useAccountStore.getState();
 const folder = (id: string, role: string): Mailbox => ({ id, name: id, role, accountId: 'c',
   totalEmails: 2, unreadEmails: 0, totalThreads: 2, unreadThreads: 0,
   myRights: { mayReadItems: true, mayAddItems: true, mayRemoveItems: true } } as Mailbox);
@@ -25,6 +27,7 @@ beforeEach(() => {
   useAuthStore.setState({ activeAccountId: 'test', client: { getAccountId: () => 'c', getSieveAccountId: () => null, getCapabilities: () => ({}) }, getClientForAccount: () => undefined } as never);
   useSettingsStore.setState({ confirmBulkDelete: false, deleteAction: 'trash', interfaceLayout: 'default' } as never);
   useEmailStore.setState(initial, true);
+  useAccountStore.setState(initialAccounts, true);
   const emails = ['one', 'two'].map(id => ({ id, threadId: 't-' + id, blobId: 'b-' + id,
     mailboxIds: { inbox: true }, keywords: { $seen: true }, subject: id, receivedAt: '2026-10-01T00:00:00Z',
     from: [{ email: 'someone@example.invalid' }], size: 1, hasAttachment: false } as Email));
@@ -101,7 +104,8 @@ describe('selection bar: Move, read state and the reading pane', () => {
     expect(pane).not.toBeNull();
     expect(pane.textContent).toContain('selected_conversations');
     // All read: the pane offers Mark as unread, as the selection's menu does.
-    for (const id of ['archive', 'delete', 'move', 'mark-unread', 'star', 'tag', 'spam', 'more']) {
+    // One account, no plugins: More would hold two entries, so they're buttons (mail-p3-8).
+    for (const id of ['archive', 'delete', 'move', 'mark-unread', 'star', 'tag', 'spam', 'batch-forward-as-attachment', 'rules']) {
       expect(pane.querySelector(`[data-testid="pane-batch-${id}"]`)).not.toBeNull();
     }
     fireEvent.click(pane.querySelector('[data-testid="pane-batch-archive"]')!);
@@ -165,12 +169,16 @@ describe('the selection view', () => {
     const menuTop = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'))
       .filter((row) => row.parentElement?.closest('[role="menu"]') === menu)
       .map((row) => row.querySelector('[data-menu-label]')?.textContent ?? '');
-    expect(paneLabels(pane)).toEqual(menuTop);
-    expect(paneLabels(pane)).toEqual(['archive', 'delete', 'move_to', 'mark_read', 'mark_unread', 'star', 'tag', 'mark_as_spam', 'more_actions']);
+    // The menu's top level, then what its More actions holds (two entries,
+    // so buttons of their own, mail-p3-8).
+    expect(paneLabels(pane)).toEqual([...menuTop.filter((label) => label !== 'more_actions'), 'forward_as_attachments', 'rules.title']);
+    expect(paneLabels(pane)).toEqual(['archive', 'delete', 'move_to', 'mark_read', 'mark_unread', 'star', 'tag', 'mark_as_spam', 'forward_as_attachments', 'rules.title']);
     host.remove();
   });
 
   it('opens what the menu has under More actions from its More actions button', () => {
+    // A second signed-in account adds Copy to account: three entries, so More stays.
+    useAccountStore.setState({ accounts: [{ id: 'a', isConnected: true }, { id: 'b', isConnected: true }] } as never);
     const host = document.createElement('div');
     document.body.appendChild(host);
     render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
@@ -178,6 +186,16 @@ describe('the selection view', () => {
     const menu = screen.getByRole('menu', { name: 'more_actions' });
     expect(within(menu).getByTestId('ctx-batch-forward-as-attachment')).toBeTruthy();
     expect(within(menu).queryByTestId('ctx-archive')).toBeNull();
+    host.remove();
+  });
+
+  it('opens the Rules list from its own button when More would hold two entries (mail-p3-8)', () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
+    expect(host.querySelector('[data-testid="pane-batch-more"]')).toBeNull();
+    fireEvent.click(host.querySelector('[data-testid="pane-batch-rules"]')!);
+    expect(screen.getByRole('menu', { name: 'rules.title' })).toBeTruthy();
     host.remove();
   });
 
@@ -196,9 +214,12 @@ describe('the selection view', () => {
   };
 
   it('leaves no button alone on a line in a narrow pane', () => {
-    // Nine buttons, room for three a line: three even lines, not 3 + 3 + 2 + 1.
-    expect(lineLengths(560)).toEqual([3, 3, 3]);
-    // Room for two: pairs, and More actions across the width at the end.
+    // Ten buttons (More's two as buttons), even lines, nothing alone at the end.
+    expect(lineLengths(560)).toEqual([4, 3, 3]);
+    // Room for two: pairs.
+    expect(lineLengths(360)).toEqual([2, 2, 2, 2, 2]);
+    // Eleven, room for two: pairs, and the last across the width.
+    useAccountStore.setState({ accounts: [{ id: 'a', isConnected: true }, { id: 'b', isConnected: true }] } as never);
     expect(lineLengths(360)).toEqual([2, 2, 2, 2, 1]);
   });
 });

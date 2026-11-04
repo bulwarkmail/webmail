@@ -28,7 +28,7 @@ import { useMessageActionShortcut } from "./message-action-shortcuts";
 import { useConnectionState } from "@/hooks/use-connection-state";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
-import { RulesContextSubMenu } from "./rules-menu";
+import { RulesContextList, RulesContextSubMenu } from "./rules-menu";
 
 interface Position {
   x: number;
@@ -144,7 +144,7 @@ interface EmailContextMenuProps {
    * "more": only what a selection's menu has under "More actions", for the
    * selection view's More actions button.
    */
-  section?: "all" | "more";
+  section?: "all" | "more" | "rules";
 }
 
 /** Entries that change the message on the server, or queue the change offline. */
@@ -463,7 +463,9 @@ export function EmailContextMenu({
 
   let body: React.ReactNode;
   if (showBatchActions) {
-    body = isScheduled ? null : section === "more" ? (
+    body = isScheduled ? null : section === "rules" ? (
+      <RulesContextList anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} />
+    ) : section === "more" ? (
       <>
         {renderEntries(selectionLists.more, "more-", true)}
         {pluginEntries}
@@ -502,7 +504,7 @@ export function EmailContextMenu({
       isOpen={isOpen}
       position={position}
       onClose={onClose}
-      label={label ?? (section === "more" ? tViewer("more_actions") : undefined)}
+      label={label ?? (section === "more" ? tViewer("more_actions") : section === "rules" ? t("rules.title") : undefined)}
     >
       {offline && <ContextMenuHeader>{tMenu("offline_header")}</ContextMenuHeader>}
       {body}

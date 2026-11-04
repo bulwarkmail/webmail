@@ -51,6 +51,13 @@ export interface SelectionViewProps {
   onMove: (button: HTMLElement) => void;
   /** Opens what the selection menu has under "More actions", under the button. */
   onMore: (button: HTMLElement) => void;
+  /**
+   * What "More actions" holds, when the host knows all of it. Two entries or
+   * fewer become buttons of their own and More goes (mail-p3-8).
+   */
+  more?: MessageActionEntry[] | null;
+  /** Opens the Rules list under the button (a Rules entry shown as a button). */
+  onOpenRules?: (button: HTMLElement) => void;
   onClear: () => void;
   /** The tag picker for the whole selection. */
   tags: { selectedIds: string[]; partialIds: string[]; scope: TagScope | null; onToggle: (tagId: string) => void };
@@ -65,7 +72,7 @@ export interface SelectionViewProps {
  * rest, and a way out. The buttons and their order come from the same list as the
  * selection's right-click menu.
  */
-export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMore, onClear, tags, disabled, isDisabled }: SelectionViewProps) {
+export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMore, more, onOpenRules, onClear, tags, disabled, isDisabled }: SelectionViewProps) {
   const t = useTranslations("email_list");
   const tViewer = useTranslations("email_viewer");
   const tCount = useTranslations("notification_center");
@@ -115,9 +122,12 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
     buttons[Math.min(last.index, buttons.length - 1)]?.focus();
   });
 
-  const items = entries.filter((entry) => entry.kind !== "separator");
-  // More actions is the last button of the grid.
-  const lines = selectionRows(items.length + 1, perLine);
+  // A More menu of two entries or fewer is no menu: they're buttons too.
+  const moreItems = (more ?? []).filter((entry) => entry.kind !== "separator");
+  const moreInline = !!more && moreItems.length <= 2 && (moreItems.every((entry) => entry.kind === "item" || (entry.key === "rules" && !!onOpenRules)));
+  const items = [...entries, ...(moreInline ? moreItems : [])].filter((entry) => entry.kind !== "separator");
+  // More actions, when there is one, is the last button of the grid.
+  const lines = selectionRows(items.length + (moreInline ? 0 : 1), perLine);
   const widest = Math.max(1, ...lines);
   const cell = `calc((100% - ${(widest - 1) * GAP}px) / ${widest})`;
 
@@ -135,7 +145,9 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
     };
     const label = <span className="truncate" data-selection-label="">{entry.label}</span>;
     if (entry.kind === "submenu") {
-      const open = (el: HTMLElement) => (entry.key === "tag" ? tagMenu.openContextMenuFrom(el, null, "start") : onMove(el));
+      const open = (el: HTMLElement) => (entry.key === "tag"
+        ? tagMenu.openContextMenuFrom(el, null, "start")
+        : entry.key === "rules" ? onOpenRules?.(el) : onMove(el));
       return (
         <Button
           key={entry.key}
@@ -172,7 +184,7 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
 
   const all = [
     ...items.map((entry, index) => button(entry, index)),
-    <Button
+    ...(moreInline ? [] : [<Button
       key="more"
       variant="outline"
       size="sm"
@@ -187,7 +199,7 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
       <MoreHorizontal className="size-4 shrink-0" />
       <span className="truncate" data-selection-label="">{tViewer("more_actions")}</span>
       <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-    </Button>,
+    </Button>]),
   ];
   let at = 0;
   const rows = lines.map((length) => {

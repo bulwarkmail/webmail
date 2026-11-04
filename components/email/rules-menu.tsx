@@ -441,6 +441,20 @@ export function RulesContextSubMenu({
   );
 }
 
+/**
+ * RulesContextSubMenu's entries without the submenu around them: the menu a
+ * selection view's Rules button opens (mail-p3-8).
+ */
+export function RulesContextList({ anchor, senderEmails, onClose }: { anchor: Email; senderEmails: Email[]; onClose: () => void }) {
+  const accountEmails = useMemo(
+    () => (senderEmails.some((e) => e.id === anchor.id) ? senderEmails : [anchor, ...senderEmails]),
+    [anchor, senderEmails],
+  );
+  const { availability, target } = useRulesAvailability(accountEmails);
+  if (availability === "hidden" || availability === "cross_account" || !target) return null;
+  return <ContextRulesContent anchor={anchor} senderEmails={senderEmails} target={target} onDone={onClose} />;
+}
+
 // ── Reading pane ⋮ menu ──────────────────────────────────────────────────
 
 type PanelView = "root" | MovePresetKind | "tag";
