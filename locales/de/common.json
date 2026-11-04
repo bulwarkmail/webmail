@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Zurück zur Bearbeitung",
+    "send_anyway": "Trotzdem senden",
+    "warnings_title": "Diese Nachricht trotzdem senden?",
+    "warning_subject": "Kein Betreff",
+    "warning_text": "Kein Text",
+    "warning_attachment": "Erwähnt „{keyword}“, aber keine Datei ist angehängt",
+    "warning_placeholders": "Platzhaltertext, den die Empfänger sehen:",
+    "warning_proofreading": "Offene Rechtschreib- oder Grammatikfehler: {count}",
+    "empty_text_title": "Ohne Text senden?",
+    "empty_text_message": "Diese Nachricht hat keinen Text und keinen Anhang. Trotzdem senden?"
+  },
   "org_templates": {
     "section_personal": "Meine Vorlagen",
     "section_organisation": "Organisation",

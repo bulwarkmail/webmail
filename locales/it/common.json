@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna alla modifica",
+    "send_anyway": "Invia comunque",
+    "warnings_title": "Inviare comunque questo messaggio?",
+    "warning_subject": "Nessun oggetto",
+    "warning_text": "Nessun testo",
+    "warning_attachment": "Menziona \"{keyword}\", ma non c'è nessun file allegato",
+    "warning_placeholders": "Testo segnaposto che i destinatari vedranno:",
+    "warning_proofreading": "Errori di ortografia o grammatica aperti: {count}",
+    "empty_text_title": "Inviare senza testo?",
+    "empty_text_message": "Questo messaggio non ha testo né allegati. Inviarlo comunque?"
+  },
   "org_templates": {
     "section_personal": "I miei modelli",
     "section_organisation": "Organizzazione",

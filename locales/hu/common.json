@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Vissza a szerkesztéshez",
+    "send_anyway": "Küldés így is",
+    "warnings_title": "Elküldi így is ezt az üzenetet?",
+    "warning_subject": "Nincs tárgy",
+    "warning_text": "Nincs szöveg",
+    "warning_attachment": "Említi ezt: „{keyword}”, de nincs csatolt fájl",
+    "warning_placeholders": "Helykitöltő szöveg, amelyet a címzettek látni fognak:",
+    "warning_proofreading": "Nyitott helyesírási vagy nyelvtani hibák: {count}",
+    "empty_text_title": "Küldés szöveg nélkül?",
+    "empty_text_message": "Ennek az üzenetnek nincs szövege és melléklete. Elküldi így is?"
+  },
   "org_templates": {
     "section_personal": "Saját sablonok",
     "section_organisation": "Szervezet",

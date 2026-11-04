@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Back to editing",
+    "send_anyway": "Send anyway",
+    "warnings_title": "Send this message anyway?",
+    "warning_subject": "No subject",
+    "warning_text": "No text",
+    "warning_attachment": "Mentions \"{keyword}\", but no file is attached",
+    "warning_placeholders": "Placeholder text that recipients will see:",
+    "warning_proofreading": "Open spelling or grammar issues: {count}",
+    "empty_text_title": "Send without text?",
+    "empty_text_message": "This message has no text and no attachment. Send it anyway?"
+  },
   "org_templates": {
     "section_personal": "My templates",
     "section_organisation": "Organisation",

@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Düzenlemeye dön",
+    "send_anyway": "Yine de gönder",
+    "warnings_title": "Bu ileti yine de gönderilsin mi?",
+    "warning_subject": "Konu yok",
+    "warning_text": "Metin yok",
+    "warning_attachment": "\"{keyword}\" geçiyor ama hiç dosya eklenmemiş",
+    "warning_placeholders": "Alıcıların göreceği yer tutucu metin:",
+    "warning_proofreading": "Açık yazım veya dilbilgisi sorunları: {count}",
+    "empty_text_title": "Metin olmadan gönderilsin mi?",
+    "empty_text_message": "Bu iletide metin ve ek yok. Yine de gönderilsin mi?"
+  },
   "org_templates": {
     "section_personal": "Şablonlarım",
     "section_organisation": "Kuruluş",

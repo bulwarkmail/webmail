@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tilbake til redigering",
+    "send_anyway": "Send likevel",
+    "warnings_title": "Sende denne meldingen likevel?",
+    "warning_subject": "Ingen emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nevner «{keyword}», men ingen fil er lagt ved",
+    "warning_placeholders": "Plassholdertekst som mottakerne vil se:",
+    "warning_proofreading": "Åpne stave- eller grammatikkfeil: {count}",
+    "empty_text_title": "Sende uten tekst?",
+    "empty_text_message": "Denne meldingen har verken tekst eller vedlegg. Sende den likevel?"
+  },
   "org_templates": {
     "section_personal": "Mine maler",
     "section_organisation": "Organisasjon",

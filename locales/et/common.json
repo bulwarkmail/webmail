@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tagasi muutmise juurde",
+    "send_anyway": "Saada ikkagi",
+    "warnings_title": "Kas saata see kiri ikkagi?",
+    "warning_subject": "Teema puudub",
+    "warning_text": "Tekst puudub",
+    "warning_attachment": "Mainib sõna „{keyword}“, kuid ühtegi faili pole lisatud",
+    "warning_placeholders": "Kohatäitetekst, mida saajad näevad:",
+    "warning_proofreading": "Lahendamata õigekirja- või grammatikavead: {count}",
+    "empty_text_title": "Kas saata ilma tekstita?",
+    "empty_text_message": "Selles kirjas pole teksti ega manust. Kas saata see ikkagi?"
+  },
   "org_templates": {
     "section_personal": "Minu mallid",
     "section_organisation": "Organisatsioon",

@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Назад до редагування",
+    "send_anyway": "Усе одно надіслати",
+    "warnings_title": "Усе одно надіслати цей лист?",
+    "warning_subject": "Без теми",
+    "warning_text": "Без тексту",
+    "warning_attachment": "Згадується «{keyword}», але файл не прикріплено",
+    "warning_placeholders": "Текст-заповнювач, який побачать одержувачі:",
+    "warning_proofreading": "Невиправлені орфографічні чи граматичні помилки: {count}",
+    "empty_text_title": "Надіслати без тексту?",
+    "empty_text_message": "У цьому листі немає ні тексту, ні вкладень. Усе одно надіслати?"
+  },
   "org_templates": {
     "section_personal": "Мої шаблони",
     "section_organisation": "Організація",

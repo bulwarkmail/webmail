@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "العودة إلى التعديل",
+    "send_anyway": "الإرسال على أي حال",
+    "warnings_title": "هل تريد إرسال هذه الرسالة على أي حال؟",
+    "warning_subject": "بلا موضوع",
+    "warning_text": "بلا نص",
+    "warning_attachment": "تذكر \"{keyword}\" لكن لا يوجد ملف مرفق",
+    "warning_placeholders": "نص مؤقت سيراه المستلمون:",
+    "warning_proofreading": "مشكلات إملائية أو نحوية مفتوحة: {count}",
+    "empty_text_title": "هل تريد الإرسال بدون نص؟",
+    "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟"
+  },
   "org_templates": {
     "section_personal": "قوالبي",
     "section_organisation": "المؤسسة",

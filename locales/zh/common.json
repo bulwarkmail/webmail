@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "返回编辑",
+    "send_anyway": "仍然发送",
+    "warnings_title": "仍然发送这封邮件？",
+    "warning_subject": "没有主题",
+    "warning_text": "没有正文",
+    "warning_attachment": "提到了“{keyword}”，但没有附加文件",
+    "warning_placeholders": "收件人会看到的占位文本：",
+    "warning_proofreading": "未处理的拼写或语法问题：{count}",
+    "empty_text_title": "不写正文就发送？",
+    "empty_text_message": "这封邮件没有正文，也没有附件。仍然发送？"
+  },
   "org_templates": {
     "section_personal": "我的模板",
     "section_organisation": "组织",

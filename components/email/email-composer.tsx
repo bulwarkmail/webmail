@@ -52,6 +52,7 @@ import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
+import { SendWarningsDialog, type SendWarning } from "./send-warnings-dialog";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu, isContextMenuKey } from "@/hooks/use-context-menu";
@@ -598,7 +599,6 @@ export function EmailComposer({
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
   const tEdit = useTranslations('desktopEdit');
-  const tProofreading = useTranslations('proofreading');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
   const tOfflineNotes = useTranslations('offlineConflicts');
@@ -1201,19 +1201,11 @@ export function EmailComposer({
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
   const [showAllAttachments, setShowAllAttachments] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
-  const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
-  const [attachmentWarningKeyword, setAttachmentWarningKeyword] = useState('');
-  const [attachmentWarningDelayedUntil, setAttachmentWarningDelayedUntil] = useState<string | undefined>();
-  const [showEmptySubjectWarning, setShowEmptySubjectWarning] = useState(false);
-  const [emptySubjectDelayedUntil, setEmptySubjectDelayedUntil] = useState<string | undefined>();
-  const [emptySubjectDontAskAgain, setEmptySubjectDontAskAgain] = useState(false);
-  const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false);
-  // A proofreading checker asked to warn before sending with open issues.
-  const [proofreadingWarning, setProofreadingWarning] = useState<{ count: number; delayedUntil?: string } | null>(null);
+  // What the checks before sending found (no subject, no text, placeholders,
+  // a missing attachment, open proofreading issues), asked about in one dialog.
+  const [sendWarnings, setSendWarnings] = useState<{ items: SendWarning[]; delayedUntil?: string } | null>(null);
+  // Open proofreading issues, once a checker asked to warn about them.
   const proofreadingConfirmedRef = useRef(false);
-  const [placeholderWarningMatches, setPlaceholderWarningMatches] = useState<string[]>([]);
-  const [placeholderWarningDelayedUntil, setPlaceholderWarningDelayedUntil] = useState<string | undefined>();
-  const [placeholderDontAskAgain, setPlaceholderDontAskAgain] = useState(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   // Asks before sending at once when the account can't hold a message back.
   const { dialogProps: noDelayDialogProps, confirm: confirmNoDelay } = useConfirmDialog();
@@ -3595,14 +3587,14 @@ export function EmailComposer({
   const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
   const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
   // A missing subject no longer blocks Send (#684) - users hit the disabled
-  // button without understanding why. It is confirmed in a dialog instead.
-  const canSend = toAddresses.length > 0 && hasContent;
+  // button without understanding why. It is confirmed in a dialog instead,
+  // and so is a message with no text and no file.
+  const canSend = toAddresses.length > 0;
 
   const getSendTooltip = (): string | undefined => {
     if (isWaitingForUploads) return t('validation.attachments_uploading');
     if (canSend) return undefined;
     if (toAddresses.length === 0) return t('validation.recipient_required');
-    if (!hasContent) return t('validation.body_required');
     return undefined;
   };
 
@@ -3697,6 +3689,8 @@ export function EmailComposer({
   const confirmingSendRef = useRef(false);
   // The user confirmed sending without a subject for this message.
   const emptySubjectConfirmedRef = useRef(false);
+  // ... and without text.
+  const emptyTextConfirmedRef = useRef(false);
   // Placeholders the user chose to send as they are. The warning comes back
   // only for one that is not in here.
   const confirmedPlaceholdersRef = useRef<Set<string>>(new Set());
@@ -3741,9 +3735,9 @@ export function EmailComposer({
     else editor.commands.focus();
   };
 
-  const handleSend = async ({ skipAttachmentCheck = false, skipSubjectCheck = false, delayedUntil }: {
-    skipAttachmentCheck?: boolean;
-    skipSubjectCheck?: boolean;
+  const handleSend = async ({ warningsConfirmed = false, delayedUntil }: {
+    /** "Send anyway" in the warnings dialog: don't check those again. */
+    warningsConfirmed?: boolean;
     delayedUntil?: string;
   } = {}) => {
     if (isSendingRef.current) return;
@@ -3791,7 +3785,6 @@ export function EmailComposer({
     if (!canSend) {
       const errors: { to?: boolean; body?: boolean } = {};
       if (toAddresses.length === 0) errors.to = true;
-      if (!hasContent) errors.body = true;
       setValidationErrors(errors);
 
       if (errors.to) {
@@ -3830,69 +3823,69 @@ export function EmailComposer({
       return;
     }
 
-    // Empty subject confirmation (#684). Asked once per message: after "Send
-    // anyway" and a trip back to add an attachment, it asked again.
-    if (!skipSubjectCheck && !emptySubjectConfirmedRef.current && emptySubjectWarningEnabled && !subject.trim()) {
-      setEmptySubjectDontAskAgain(false);
-      setEmptySubjectDelayedUntil(delayedUntil);
-      setShowEmptySubjectWarning(true);
-      return;
-    }
-
-    // Unfilled placeholders: template fields left as {{name}}, fill-ins like
-    // [TIME] from AI drafts, and markers like TODO. The signature is left
-    // out, or a placeholder in it would stop every message.
-    if (placeholderWarningEnabled) {
-      const authored = plainTextMode
-        ? plainTextBodyWithoutSignature(body, signatureIdentity)
-        : stripEmbeddedSignatureHtml(body);
-      const bodyText = extractUserAuthoredText(authored, {
-        plainTextMode,
-        forwardedSeparator: tQuote('forwarded_separator'),
-      });
-      // The fill-in words of the UI language, and of English: AI drafts and
-      // templates are often English whatever the UI language is.
-      const found = findUnfilledPlaceholders(subject, bodyText, [
-        enMessages.email_composer.placeholder_words,
-        t.raw('placeholder_words'),
-      ]);
-      if (found.some(p => !confirmedPlaceholdersRef.current.has(p))) {
-        setPlaceholderWarningMatches(found);
-        setPlaceholderDontAskAgain(false);
-        setPlaceholderWarningDelayedUntil(delayedUntil);
-        setShowPlaceholderWarning(true);
-        return;
+    // What the user may have missed, asked about in one dialog (two in a
+    // row used to ask about each in turn). Answered with "Send anyway", the
+    // subject, the text, the placeholders listed and the proofreading issues
+    // aren't asked about again for this message.
+    if (!warningsConfirmed) {
+      const warnings: SendWarning[] = [];
+      // Empty subject confirmation (#684).
+      if (!emptySubjectConfirmedRef.current && emptySubjectWarningEnabled && !subject.trim()) {
+        warnings.push({ kind: 'subject' });
       }
-    }
+      // No text and no file: Send stays enabled and asks instead.
+      if (!emptyTextConfirmedRef.current && !hasContent) {
+        warnings.push({ kind: 'text' });
+      }
 
-    // Attachment reminder check
-    if (!skipAttachmentCheck && attachmentReminderEnabled) {
-      const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
-      if (!hasAttachments) {
-        // Scan only the user-authored text: the quoted original of a
-        // reply/forward often mentions an attachment itself, which used to fire
-        // the reminder even when the user typed no keyword and added nothing (#570).
-        const bodyText = extractUserAuthoredText(body, {
+      // Unfilled placeholders: template fields left as {{name}}, fill-ins like
+      // [TIME] from AI drafts, and markers like TODO. The signature is left
+      // out, or a placeholder in it would stop every message.
+      if (placeholderWarningEnabled) {
+        const authored = plainTextMode
+          ? plainTextBodyWithoutSignature(body, signatureIdentity)
+          : stripEmbeddedSignatureHtml(body);
+        const bodyText = extractUserAuthoredText(authored, {
           plainTextMode,
           forwardedSeparator: tQuote('forwarded_separator'),
         });
-        const searchText = `${subject} ${bodyText}`.toLowerCase();
-        const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
-        if (matched) {
-          setAttachmentWarningKeyword(matched);
-          setAttachmentWarningDelayedUntil(delayedUntil);
-          setShowAttachmentWarning(true);
-          return;
+        // The fill-in words of the UI language, and of English: AI drafts and
+        // templates are often English whatever the UI language is.
+        const found = findUnfilledPlaceholders(subject, bodyText, [
+          enMessages.email_composer.placeholder_words,
+          t.raw('placeholder_words'),
+        ]);
+        if (found.some(p => !confirmedPlaceholdersRef.current.has(p))) {
+          warnings.push({ kind: 'placeholders', matches: found });
         }
       }
-    }
 
-    // Open proofreading issues, when a checker asked for the warning (the
-    // LanguageTool plugin's "warn before sending" option). Once per message.
-    if (!proofreadingConfirmedRef.current) {
-      const open = proofreading.sendWarningIssues().length;
-      if (open > 0) {
-        setProofreadingWarning({ count: open, delayedUntil });
+      // Attachment reminder check
+      if (attachmentReminderEnabled) {
+        const hasAttachments = attachmentsRef.current.some(att => att.blobId && !att.uploading && !att.error);
+        if (!hasAttachments) {
+          // Scan only the user-authored text: the quoted original of a
+          // reply/forward often mentions an attachment itself, which used to fire
+          // the reminder even when the user typed no keyword and added nothing (#570).
+          const bodyText = extractUserAuthoredText(body, {
+            plainTextMode,
+            forwardedSeparator: tQuote('forwarded_separator'),
+          });
+          const searchText = `${subject} ${bodyText}`.toLowerCase();
+          const matched = attachmentReminderKeywords.find(kw => searchText.includes(kw.toLowerCase()));
+          if (matched) warnings.push({ kind: 'attachment', keyword: matched });
+        }
+      }
+
+      // Open proofreading issues, when a checker asked for the warning (the
+      // LanguageTool plugin's "warn before sending" option).
+      if (!proofreadingConfirmedRef.current) {
+        const open = proofreading.sendWarningIssues().length;
+        if (open > 0) warnings.push({ kind: 'proofreading', count: open });
+      }
+
+      if (warnings.length > 0) {
+        setSendWarnings({ items: warnings, delayedUntil });
         return;
       }
     }
@@ -4651,9 +4644,7 @@ export function EmailComposer({
       filesPicker ||
       showSaveAsTemplate ||
       showScheduleDialog ||
-      showAttachmentWarning ||
-      showEmptySubjectWarning ||
-      showPlaceholderWarning ||
+      sendWarnings ||
       showCloseDialog
     ) return;
 
@@ -5832,163 +5823,45 @@ export function EmailComposer({
         disabled={!canSend || isSending || isSavingAndClosing}
       />
 
-      <Dialog
-        isOpen={showAttachmentWarning}
-        onClose={() => setShowAttachmentWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('forgot_attachment.title')}
-        description={t('forgot_attachment.message', { keyword: attachmentWarningKeyword })}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setShowAttachmentWarning(false)}>
-              {t('forgot_attachment.back')}
-            </Button>
-            <Button onClick={() => { setShowAttachmentWarning(false); handleSend({ skipAttachmentCheck: true, skipSubjectCheck: true, delayedUntil: attachmentWarningDelayedUntil }); setAttachmentWarningDelayedUntil(undefined); }}>
-              {t('forgot_attachment.send_anyway')}
-            </Button>
-          </>
-        }
-      />
-
-      <Dialog
-        isOpen={showEmptySubjectWarning}
-        onClose={() => setShowEmptySubjectWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('empty_subject.title')}
-        description={t('empty_subject.message')}
-        footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEmptySubjectWarning(false);
-                  setEmptySubjectDelayedUntil(undefined);
-                  // After the focus trap tears down it restores focus to the
-                  // Send button, so claim the subject field on the next tick.
-                  setTimeout(() => subjectInputRef.current?.focus(), 0);
-                }}
-              >
-                {t('empty_subject.back')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (emptySubjectDontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
-                  emptySubjectConfirmedRef.current = true;
-                  setShowEmptySubjectWarning(false);
-                  handleSend({ skipSubjectCheck: true, delayedUntil: emptySubjectDelayedUntil });
-                  setEmptySubjectDelayedUntil(undefined);
-                }}
-              >
-                {t('empty_subject.send_anyway')}
-              </Button>
-            </>
-        }
-      >
-        <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={emptySubjectDontAskAgain}
-            onChange={(e) => setEmptySubjectDontAskAgain(e.target.checked)}
-            className="rounded border-input"
-          />
-          {t('empty_subject.dont_ask_again')}
-        </label>
-      </Dialog>
-
       <ConfirmDialog {...noDelayDialogProps} />
       <ConfirmDialog {...sendConfirmDialogProps} />
 
-      <Dialog
-        isOpen={showPlaceholderWarning}
-        onClose={() => setShowPlaceholderWarning(false)}
-        role="alertdialog"
-        showClose={false}
-        title={t('placeholder_warning.title')}
-        description={t('placeholder_warning.message')}
-        footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPlaceholderWarning(false);
-                  setPlaceholderWarningDelayedUntil(undefined);
-                  // The focus trap hands focus back to the Send button as it
-                  // tears down, so select on the next tick.
-                  const first = placeholderWarningMatches[0];
-                  setTimeout(() => { if (first) selectPlaceholder(first); }, 0);
-                }}
-              >
-                {t('placeholder_warning.back')}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (placeholderDontAskAgain) updateSetting('placeholderWarningEnabled', false);
-                  placeholderWarningMatches.forEach((p) => confirmedPlaceholdersRef.current.add(p));
-                  setShowPlaceholderWarning(false);
-                  handleSend({ skipSubjectCheck: true, delayedUntil: placeholderWarningDelayedUntil });
-                  setPlaceholderWarningDelayedUntil(undefined);
-                }}
-              >
-                {t('placeholder_warning.send_anyway')}
-              </Button>
-            </>
-        }
-      >
-        <ul className="mt-3 flex flex-wrap items-center gap-1.5" aria-label={t('placeholder_warning.found')}>
-          {placeholderWarningMatches.slice(0, 5).map((p) => (
-            <li key={p} className="max-w-full truncate rounded bg-muted px-2 py-0.5 font-mono text-xs text-foreground">{p}</li>
-          ))}
-          {placeholderWarningMatches.length > 5 && (
-            <li className="text-xs text-muted-foreground">
-              {t('placeholder_warning.more', { count: placeholderWarningMatches.length - 5 })}
-            </li>
-          )}
-        </ul>
-        <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={placeholderDontAskAgain}
-            onChange={(e) => setPlaceholderDontAskAgain(e.target.checked)}
-            className="rounded border-input"
-          />
-          {t('placeholder_warning.dont_ask_again')}
-        </label>
-      </Dialog>
-
-      <Dialog
-        isOpen={proofreadingWarning !== null}
-        onClose={() => setProofreadingWarning(null)}
-        role="alertdialog"
-        showClose={false}
-        title={tProofreading('send_warning.title')}
-        description={tProofreading('send_warning.body', { count: proofreadingWarning?.count ?? 0 })}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setProofreadingWarning(null);
-                // After the focus trap hands focus back, go to the first issue.
-                setTimeout(() => proofreading.navigate(1), 0);
-              }}
-            >
-              {tProofreading('send_warning.review')}
-            </Button>
-            <Button
-              data-testid="proofreading-send-anyway"
-              onClick={() => {
-                const delayed = proofreadingWarning?.delayedUntil;
-                proofreadingConfirmedRef.current = true;
-                setProofreadingWarning(null);
-                handleSend({ skipSubjectCheck: true, skipAttachmentCheck: true, delayedUntil: delayed });
-              }}
-            >
-              {tProofreading('send_warning.send')}
-            </Button>
-          </>
-        }
+      <SendWarningsDialog
+        warnings={sendWarnings?.items ?? null}
+        onBack={() => {
+          const first = sendWarnings?.items[0];
+          setSendWarnings(null);
+          // The focus trap hands focus back to the Send button as it tears
+          // down: go to what the first warning is about on the next tick.
+          setTimeout(() => {
+            if (first?.kind === 'subject') subjectInputRef.current?.focus();
+            else if (first?.kind === 'placeholders') selectPlaceholder(first.matches[0]);
+            else if (first?.kind === 'proofreading') proofreading.navigate(1);
+            else if (first?.kind === 'text') {
+              if (plainTextModeRef.current) bodyRef.current?.focus();
+              else editorRef.current?.commands.focus();
+            }
+          }, 0);
+        }}
+        onSendAnyway={(dontAskAgain) => {
+          if (!sendWarnings) return;
+          const { items, delayedUntil } = sendWarnings;
+          for (const warning of items) {
+            if (warning.kind === 'subject') {
+              emptySubjectConfirmedRef.current = true;
+              if (dontAskAgain) updateSetting('emptySubjectWarningEnabled', false);
+            } else if (warning.kind === 'text') {
+              emptyTextConfirmedRef.current = true;
+            } else if (warning.kind === 'placeholders') {
+              warning.matches.forEach((p) => confirmedPlaceholdersRef.current.add(p));
+              if (dontAskAgain) updateSetting('placeholderWarningEnabled', false);
+            } else if (warning.kind === 'proofreading') {
+              proofreadingConfirmedRef.current = true;
+            }
+          }
+          setSendWarnings(null);
+          handleSend({ warningsConfirmed: true, delayedUntil });
+        }}
       />
 
       <Dialog

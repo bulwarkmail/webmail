@@ -3793,6 +3793,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "חזור לעריכה",
+    "send_anyway": "שלח בכל זאת",
+    "warnings_title": "לשלוח את ההודעה בכל זאת?",
+    "warning_subject": "אין נושא",
+    "warning_text": "אין טקסט",
+    "warning_attachment": "מוזכר \"{keyword}\", אבל לא צורף קובץ",
+    "warning_placeholders": "טקסט ממלא מקום שהנמענים יראו:",
+    "warning_proofreading": "שגיאות כתיב או דקדוק פתוחות: {count}",
+    "empty_text_title": "לשלוח ללא טקסט?",
+    "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?"
+  },
   "org_templates": {
     "section_personal": "התבניות שלי",
     "section_organisation": "ארגון",

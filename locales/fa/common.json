@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "بازگشت به ویرایش",
+    "send_anyway": "ارسال به هر حال",
+    "warnings_title": "این پیام به هر حال ارسال شود؟",
+    "warning_subject": "بدون موضوع",
+    "warning_text": "بدون متن",
+    "warning_attachment": "به «{keyword}» اشاره می‌کند، اما هیچ فایلی پیوست نشده است",
+    "warning_placeholders": "متن جایگزینی که گیرندگان خواهند دید:",
+    "warning_proofreading": "خطاهای املایی یا دستوری باز: {count}",
+    "empty_text_title": "بدون متن ارسال شود؟",
+    "empty_text_message": "این پیام متن و پیوست ندارد. به هر حال ارسال شود؟"
+  },
   "org_templates": {
     "section_personal": "قالب‌های من",
     "section_organisation": "سازمان",

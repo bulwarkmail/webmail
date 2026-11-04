@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "繼續編輯",
+    "send_anyway": "仍然傳送",
+    "warnings_title": "仍然傳送這封郵件？",
+    "warning_subject": "沒有主旨",
+    "warning_text": "沒有內文",
+    "warning_attachment": "提到了「{keyword}」，但沒有附加檔案",
+    "warning_placeholders": "收件者會看到的預留位置文字：",
+    "warning_proofreading": "未處理的拼字或文法問題：{count}",
+    "empty_text_title": "不寫內文就傳送？",
+    "empty_text_message": "這封郵件沒有內文，也沒有附件。仍然傳送？"
+  },
   "org_templates": {
     "section_personal": "我的範本",
     "section_organisation": "組織",

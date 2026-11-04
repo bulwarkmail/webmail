@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Volver a editar",
+    "send_anyway": "Enviar de todos modos",
+    "warnings_title": "¿Enviar este mensaje de todos modos?",
+    "warning_subject": "Sin asunto",
+    "warning_text": "Sin texto",
+    "warning_attachment": "Menciona «{keyword}», pero no hay ningún archivo adjunto",
+    "warning_placeholders": "Texto de marcador que verán los destinatarios:",
+    "warning_proofreading": "Errores de ortografía o gramática pendientes: {count}",
+    "empty_text_title": "¿Enviar sin texto?",
+    "empty_text_message": "Este mensaje no tiene texto ni archivos adjuntos. ¿Enviarlo de todos modos?"
+  },
   "org_templates": {
     "section_personal": "Mis plantillas",
     "section_organisation": "Organización",

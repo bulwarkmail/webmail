@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tilbage til redigering",
+    "send_anyway": "Send alligevel",
+    "warnings_title": "Send denne besked alligevel?",
+    "warning_subject": "Intet emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nævner \"{keyword}\", men ingen fil er vedhæftet",
+    "warning_placeholders": "Pladsholdertekst, som modtagerne vil se:",
+    "warning_proofreading": "Åbne stave- eller grammatikfejl: {count}",
+    "empty_text_title": "Send uden tekst?",
+    "empty_text_message": "Denne besked har ingen tekst og ingen vedhæftet fil. Send den alligevel?"
+  },
   "org_templates": {
     "section_personal": "Mine skabeloner",
     "section_organisation": "Organisation",

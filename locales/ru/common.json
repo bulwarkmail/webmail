@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Вернуться к редактированию",
+    "send_anyway": "Отправить всё равно",
+    "warnings_title": "Всё равно отправить это письмо?",
+    "warning_subject": "Нет темы",
+    "warning_text": "Нет текста",
+    "warning_attachment": "Упоминается «{keyword}», но файл не прикреплён",
+    "warning_placeholders": "Текст-заполнитель, который увидят получатели:",
+    "warning_proofreading": "Неисправленные орфографические или грамматические ошибки: {count}",
+    "empty_text_title": "Отправить без текста?",
+    "empty_text_message": "В этом письме нет ни текста, ни вложений. Всё равно отправить?"
+  },
   "org_templates": {
     "section_personal": "Мои шаблоны",
     "section_organisation": "Организация",

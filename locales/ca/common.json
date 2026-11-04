@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna a l'edició",
+    "send_anyway": "Envia igualment",
+    "warnings_title": "Vols enviar aquest missatge igualment?",
+    "warning_subject": "Sense assumpte",
+    "warning_text": "Sense text",
+    "warning_attachment": "Esmenta «{keyword}», però no hi ha cap fitxer adjunt",
+    "warning_placeholders": "Text de mostra que veuran els destinataris:",
+    "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
+    "empty_text_title": "Vols enviar-lo sense text?",
+    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?"
+  },
   "org_templates": {
     "section_personal": "Les meves plantilles",
     "section_organisation": "Organització",

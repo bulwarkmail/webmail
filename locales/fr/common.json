@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Retour à l'édition",
+    "send_anyway": "Envoyer quand même",
+    "warnings_title": "Envoyer ce message quand même ?",
+    "warning_subject": "Pas d'objet",
+    "warning_text": "Pas de texte",
+    "warning_attachment": "Mentionne « {keyword} », mais aucun fichier n'est joint",
+    "warning_placeholders": "Texte de remplacement que les destinataires verront :",
+    "warning_proofreading": "Fautes d'orthographe ou de grammaire restantes : {count}",
+    "empty_text_title": "Envoyer sans texte ?",
+    "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?"
+  },
   "org_templates": {
     "section_personal": "Mes modèles",
     "section_organisation": "Organisation",

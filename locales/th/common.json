@@ -1147,6 +1147,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "กลับไปแก้ไข",
+    "send_anyway": "ส่งต่อไป",
+    "warnings_title": "ส่งข้อความนี้ต่อไปหรือไม่",
+    "warning_subject": "ไม่มีหัวเรื่อง",
+    "warning_text": "ไม่มีข้อความ",
+    "warning_attachment": "มีคำว่า \"{keyword}\" แต่ไม่ได้แนบไฟล์",
+    "warning_placeholders": "ข้อความตัวยึดตำแหน่งที่ผู้รับจะเห็น:",
+    "warning_proofreading": "ปัญหาการสะกดหรือไวยากรณ์ที่ยังค้างอยู่: {count}",
+    "empty_text_title": "ส่งโดยไม่มีข้อความหรือไม่",
+    "empty_text_message": "ข้อความนี้ไม่มีเนื้อหาและไม่มีไฟล์แนบ ส่งต่อไปหรือไม่"
+  },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",
     "section_organisation": "องค์กร",

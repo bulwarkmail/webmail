@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "편집으로 돌아가기",
+    "send_anyway": "그래도 보내기",
+    "warnings_title": "이 메일을 그래도 보낼까요?",
+    "warning_subject": "제목 없음",
+    "warning_text": "본문 없음",
+    "warning_attachment": "\"{keyword}\"라고 적혀 있지만 첨부된 파일이 없어요",
+    "warning_placeholders": "받는 사람에게 보이는 자리 표시 텍스트:",
+    "warning_proofreading": "남은 맞춤법 또는 문법 문제: {count}",
+    "empty_text_title": "본문 없이 보낼까요?",
+    "empty_text_message": "이 메일에는 본문도 첨부 파일도 없어요. 그래도 보낼까요?"
+  },
   "org_templates": {
     "section_personal": "내 템플릿",
     "section_organisation": "조직",

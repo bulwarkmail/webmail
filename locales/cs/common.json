@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Zpět k úpravám",
+    "send_anyway": "Přesto odeslat",
+    "warnings_title": "Přesto tuto zprávu odeslat?",
+    "warning_subject": "Bez předmětu",
+    "warning_text": "Bez textu",
+    "warning_attachment": "Zmiňuje „{keyword}“, ale není připojen žádný soubor",
+    "warning_placeholders": "Zástupný text, který příjemci uvidí:",
+    "warning_proofreading": "Nevyřešené pravopisné či gramatické chyby: {count}",
+    "empty_text_title": "Odeslat bez textu?",
+    "empty_text_message": "Tato zpráva nemá text ani přílohu. Přesto ji odeslat?"
+  },
   "org_templates": {
     "section_personal": "Moje šablony",
     "section_organisation": "Organizace",

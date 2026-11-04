@@ -370,17 +370,17 @@ describe('message body (SR-07)', () => {
     expect(screen.getByLabelText('body_label').tagName).toBe('TEXTAREA');
   });
 
-  it('marks an empty body invalid and links the error text', async () => {
-    render(<EmailComposer initialData={{ ...DRAFT, to: 'bob@example.com', body: '' }} />);
+  it('asks before sending an empty body instead of marking it invalid', async () => {
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'bob@example.com', subject: 'Hi', body: '' }} onSend={onSend} />);
     const editor = screen.getByTestId('rich-text-editor');
-    expect(editor).not.toHaveAttribute('data-invalid');
 
     fireEvent.keyDown(screen.getByTestId('composer-subject'), { key: 'Enter', ctrlKey: true });
-    await act(async () => {});
 
-    expect(editor).toHaveAttribute('data-invalid', 'true');
-    const error = document.getElementById(editor.getAttribute('data-describedby')!);
-    expect(error).toHaveTextContent('validation.body_required');
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('empty_text_title');
+    expect(editor).not.toHaveAttribute('data-invalid');
+    expect(onSend).not.toHaveBeenCalled();
   });
 });
 

@@ -3896,6 +3896,18 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Atpakaļ pie rediģēšanas",
+    "send_anyway": "Sūtīt tik un tā",
+    "warnings_title": "Vai tomēr sūtīt šo vēstuli?",
+    "warning_subject": "Nav temata",
+    "warning_text": "Nav teksta",
+    "warning_attachment": "Piemin “{keyword}”, bet neviens fails nav pievienots",
+    "warning_placeholders": "Vietturu teksts, ko redzēs saņēmēji:",
+    "warning_proofreading": "Neatrisinātas pareizrakstības vai gramatikas kļūdas: {count}",
+    "empty_text_title": "Sūtīt bez teksta?",
+    "empty_text_message": "Šai vēstulei nav ne teksta, ne pielikuma. Vai tomēr to sūtīt?"
+  },
   "org_templates": {
     "section_personal": "Manas veidnes",
     "section_organisation": "Organizācija",
