@@ -101,6 +101,10 @@ export function useContextMenuOpen(): boolean {
   return useSyncExternalStore(subscribeContextMenuOpen, isContextMenuOpen, () => false);
 }
 
+const subscribeNothing = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
 // ─── Items of a menu level ─────────────────────────────────────
 
 const ITEM_SELECTOR = [
@@ -270,7 +274,10 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
  */
 export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
   ({ isOpen, position, onClose, children, label }, ref) => {
-    const [mounted, setMounted] = useState(false);
+    // In the browser after hydration: a portal needs document.body. True from
+    // the first render for a menu mounted later, so a closed menu that comes
+    // with a row or a toolbar costs no second render pass.
+    const mounted = useSyncExternalStore(subscribeNothing, clientSnapshot, serverSnapshot);
     const [adjustedPosition, setAdjustedPosition] = useState<(Position & { maxHeight?: number }) | null>(null);
     const localRef = useRef<HTMLDivElement | null>(null);
     const onCloseRef = useRef(onClose);
@@ -287,9 +294,6 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
     // The desktop app shows this same menu, not a native copy: a native menu
     // has no icons, and writes keys with Chromium's names rather than Windows'.
-    useEffect(() => {
-      setMounted(true);
-    }, []);
 
     const anchor = position.anchor;
     const anchorKey = anchor ? `${anchor.left},${anchor.top},${anchor.right},${anchor.bottom},${anchor.align ?? ""}` : "";
