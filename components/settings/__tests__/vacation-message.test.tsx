@@ -18,8 +18,8 @@ vi.mock('next-intl', () => {
 });
 // The editor hands the card its HTML as typed.
 vi.mock('@/components/email/rich-text-editor', () => ({
-  RichTextEditor: ({ content, onChange }: { content: string; onChange: (html: string) => void }) => (
-    <textarea data-testid="message-editor" value={content} onChange={(e) => onChange(e.target.value)} />
+  RichTextEditor: ({ content, onChange, placeholder }: { content: string; onChange: (html: string) => void; placeholder?: string }) => (
+    <textarea data-testid="message-editor" value={content} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 
@@ -79,6 +79,8 @@ describe('the out-of-office message', () => {
     const server = blank();
     await openCard(server);
     fireEvent.change(editor(), { target: { value: '<p></p>' } });
+    // An emptied box looks empty: grey sample text there would read as a message that is set.
+    expect(editor().getAttribute('placeholder') ?? '').not.toContain('default_message');
     fireEvent.click(replySwitch());
     expect(replySwitch().getAttribute('aria-checked')).toBe('false');
     expect(screen.getByText('write_message_first')).toBeInTheDocument();

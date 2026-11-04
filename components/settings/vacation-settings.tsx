@@ -643,7 +643,6 @@ export function VacationSettings() {
             <RichTextEditor
               content={localBody}
               onChange={editBody}
-              placeholder={tx('default_message')}
               ariaLabel={tx('message_label')}
               ariaInvalid={!!bodyError}
               ariaDescribedBy={bodyError ? 'vacation-body-error' : undefined}
