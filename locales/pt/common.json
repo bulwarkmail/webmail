@@ -1217,7 +1217,8 @@
     "undo": "Desfazer",
     "discard_draft": "Descartar rascunho",
     "save_failed_close": "Não foi possível guardar o rascunho. Tente novamente ou descarte-o.",
-    "try_again": "Tentar novamente"
+    "try_again": "Tentar novamente",
+    "add_description": "Adicionar descrição"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

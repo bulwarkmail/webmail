@@ -1565,7 +1565,8 @@
     "undo": "เลิกทำ",
     "discard_draft": "ทิ้งฉบับร่าง",
     "save_failed_close": "บันทึกฉบับร่างไม่ได้ ลองอีกครั้งหรือทิ้งไป",
-    "try_again": "ลองอีกครั้ง"
+    "try_again": "ลองอีกครั้ง",
+    "add_description": "เพิ่มคำอธิบาย"
   },
   "email_viewer": {
     "read_receipt": {

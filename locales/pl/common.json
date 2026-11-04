@@ -1217,7 +1217,8 @@
     "undo": "Cofnij",
     "discard_draft": "Odrzuć wersję roboczą",
     "save_failed_close": "Nie udało się zapisać wersji roboczej. Spróbuj ponownie lub ją odrzuć.",
-    "try_again": "Spróbuj ponownie"
+    "try_again": "Spróbuj ponownie",
+    "add_description": "Dodaj opis"
   },
   "confirm_dialog": {
     "confirm": "Potwierdź",

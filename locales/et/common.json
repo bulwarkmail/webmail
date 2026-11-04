@@ -1217,7 +1217,8 @@
     "undo": "Võta tagasi",
     "discard_draft": "Loobu mustandist",
     "save_failed_close": "Mustandit ei saanud salvestada. Proovige uuesti või loobuge sellest.",
-    "try_again": "Proovi uuesti"
+    "try_again": "Proovi uuesti",
+    "add_description": "Lisa kirjeldus"
   },
   "confirm_dialog": {
     "confirm": "Kinnita",

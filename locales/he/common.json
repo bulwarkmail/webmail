@@ -1160,7 +1160,8 @@
     "undo": "ביטול",
     "discard_draft": "מחיקת הטיוטה",
     "save_failed_close": "לא ניתן היה לשמור את הטיוטה. נסו שוב או מחקו אותה.",
-    "try_again": "ניסיון נוסף"
+    "try_again": "ניסיון נוסף",
+    "add_description": "הוספת תיאור"
   },
   "confirm_dialog": {
     "confirm": "אשר",

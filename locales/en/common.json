@@ -1217,7 +1217,8 @@
     "undo": "Undo",
     "discard_draft": "Discard draft",
     "save_failed_close": "The draft could not be saved. Try again, or discard it.",
-    "try_again": "Try again"
+    "try_again": "Try again",
+    "add_description": "Add description"
   },
   "confirm_dialog": {
     "confirm": "Confirm",

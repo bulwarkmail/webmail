@@ -1217,7 +1217,8 @@
     "undo": "Zpět",
     "discard_draft": "Zahodit koncept",
     "save_failed_close": "Koncept se nepodařilo uložit. Zkuste to znovu, nebo ho zahoďte.",
-    "try_again": "Zkusit znovu"
+    "try_again": "Zkusit znovu",
+    "add_description": "Přidat popis"
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",

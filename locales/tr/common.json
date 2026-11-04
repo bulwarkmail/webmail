@@ -1217,7 +1217,8 @@
     "undo": "Geri al",
     "discard_draft": "Taslağı sil",
     "save_failed_close": "Taslak kaydedilemedi. Yeniden deneyin ya da silin.",
-    "try_again": "Yeniden dene"
+    "try_again": "Yeniden dene",
+    "add_description": "Açıklama ekle"
   },
   "confirm_dialog": {
     "confirm": "Onayla",

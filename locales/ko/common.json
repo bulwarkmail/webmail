@@ -1217,7 +1217,8 @@
     "undo": "실행 취소",
     "discard_draft": "임시 보관 메일 삭제",
     "save_failed_close": "임시 보관 메일을 저장하지 못했습니다. 다시 시도하거나 삭제하세요.",
-    "try_again": "다시 시도"
+    "try_again": "다시 시도",
+    "add_description": "설명 추가"
   },
   "confirm_dialog": {
     "confirm": "확인",

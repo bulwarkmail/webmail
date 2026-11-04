@@ -1217,7 +1217,8 @@
     "undo": "Desfés",
     "discard_draft": "Descarta l'esborrany",
     "save_failed_close": "No s'ha pogut desar l'esborrany. Torneu-ho a provar o descarteu-lo.",
-    "try_again": "Torna-ho a provar"
+    "try_again": "Torna-ho a provar",
+    "add_description": "Afegeix una descripció"
   },
   "confirm_dialog": {
     "confirm": "Confirma",

@@ -1217,7 +1217,8 @@
     "undo": "元に戻す",
     "discard_draft": "下書きを破棄",
     "save_failed_close": "下書きを保存できませんでした。もう一度試すか、破棄してください。",
-    "try_again": "再試行"
+    "try_again": "再試行",
+    "add_description": "説明を追加"
   },
   "confirm_dialog": {
     "confirm": "確認",

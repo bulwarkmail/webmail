@@ -1217,7 +1217,8 @@
     "undo": "تراجع",
     "discard_draft": "تجاهل المسودة",
     "save_failed_close": "تعذّر حفظ المسودة. حاول مرة أخرى أو تجاهلها.",
-    "try_again": "حاول مرة أخرى"
+    "try_again": "حاول مرة أخرى",
+    "add_description": "إضافة وصف"
   },
   "confirm_dialog": {
     "confirm": "تأكيد",

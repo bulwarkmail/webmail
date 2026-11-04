@@ -1217,7 +1217,8 @@
     "undo": "Ongedaan maken",
     "discard_draft": "Concept verwijderen",
     "save_failed_close": "Het concept kon niet worden opgeslagen. Probeer het opnieuw of verwijder het.",
-    "try_again": "Opnieuw proberen"
+    "try_again": "Opnieuw proberen",
+    "add_description": "Beschrijving toevoegen"
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",

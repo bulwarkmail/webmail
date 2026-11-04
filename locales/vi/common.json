@@ -1229,7 +1229,8 @@
     "undo": "Hoàn tác",
     "discard_draft": "Hủy bản nháp",
     "save_failed_close": "Không lưu được bản nháp. Hãy thử lại hoặc hủy bản nháp.",
-    "try_again": "Thử lại"
+    "try_again": "Thử lại",
+    "add_description": "Thêm mô tả"
   },
   "confirm_dialog": {
     "confirm": "Xác nhận",

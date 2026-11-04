@@ -1217,7 +1217,8 @@
     "undo": "Annulla",
     "discard_draft": "Elimina bozza",
     "save_failed_close": "Impossibile salvare la bozza. Riprova o eliminala.",
-    "try_again": "Riprova"
+    "try_again": "Riprova",
+    "add_description": "Aggiungi descrizione"
   },
   "confirm_dialog": {
     "confirm": "Conferma",

@@ -1217,7 +1217,8 @@
     "undo": "Rückgängig",
     "discard_draft": "Entwurf verwerfen",
     "save_failed_close": "Der Entwurf konnte nicht gespeichert werden. Versuchen Sie es erneut oder verwerfen Sie ihn.",
-    "try_again": "Erneut versuchen"
+    "try_again": "Erneut versuchen",
+    "add_description": "Beschreibung hinzufügen"
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",

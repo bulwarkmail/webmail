@@ -1217,7 +1217,8 @@
     "undo": "撤销",
     "discard_draft": "舍弃草稿",
     "save_failed_close": "无法保存草稿。请重试或舍弃草稿。",
-    "try_again": "重试"
+    "try_again": "重试",
+    "add_description": "添加描述"
   },
   "confirm_dialog": {
     "confirm": "确认",

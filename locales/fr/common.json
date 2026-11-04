@@ -1217,7 +1217,8 @@
     "undo": "Annuler",
     "discard_draft": "Supprimer le brouillon",
     "save_failed_close": "Le brouillon n'a pas pu être enregistré. Réessayez ou supprimez-le.",
-    "try_again": "Réessayer"
+    "try_again": "Réessayer",
+    "add_description": "Ajouter une description"
   },
   "confirm_dialog": {
     "confirm": "Confirmer",

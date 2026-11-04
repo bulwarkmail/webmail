@@ -1217,7 +1217,8 @@
     "undo": "Deshacer",
     "discard_draft": "Descartar borrador",
     "save_failed_close": "No se pudo guardar el borrador. Inténtelo de nuevo o descártelo.",
-    "try_again": "Reintentar"
+    "try_again": "Reintentar",
+    "add_description": "Añadir descripción"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

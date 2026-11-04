@@ -471,6 +471,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
+  const tUx = useTranslations("compose_ux");
   const tQuote = useTranslations("email_viewer");
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
@@ -521,6 +522,7 @@ export function RichTextEditor({
       ResizableImage.configure({
         onEditAlt: (pos: number) => setAltQueue((queue) => [...queue, { pos }]),
         editAltLabel: tComposer("image_alt.edit"),
+        addAltLabel: tUx("add_description"),
       }),
       Placeholder.configure({
         placeholder,
@@ -615,11 +617,11 @@ export function RichTextEditor({
             if (result) {
               const { state } = view;
               const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
-              // No alt yet (never the file name): the user is asked next.
+              // No alt yet (never the file name).
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.insert(pos?.pos ?? state.selection.anchor, node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }
@@ -638,7 +640,7 @@ export function RichTextEditor({
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.replaceSelectionWith(node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }

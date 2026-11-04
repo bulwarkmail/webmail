@@ -1217,7 +1217,8 @@
     "undo": "واگرد",
     "discard_draft": "دور انداختن پیش‌نویس",
     "save_failed_close": "پیش‌نویس ذخیره نشد. دوباره تلاش کنید یا آن را دور بیندازید.",
-    "try_again": "تلاش دوباره"
+    "try_again": "تلاش دوباره",
+    "add_description": "افزودن توضیح"
   },
   "confirm_dialog": {
     "confirm": "تأیید",

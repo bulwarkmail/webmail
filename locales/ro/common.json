@@ -1217,7 +1217,8 @@
     "undo": "Anulează",
     "discard_draft": "Renunță la ciornă",
     "save_failed_close": "Ciorna nu a putut fi salvată. Încercați din nou sau renunțați la ea.",
-    "try_again": "Încearcă din nou"
+    "try_again": "Încearcă din nou",
+    "add_description": "Adaugă o descriere"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
