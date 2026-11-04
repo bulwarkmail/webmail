@@ -63,6 +63,19 @@ describe('quick reply', () => {
   });
 });
 
+// mail-p2-12: toasts covered the right half of the quick reply box.
+describe('quick reply and toasts', () => {
+  it('counts as a bottom bar, so toasts sit above it', async () => {
+    document.documentElement.style.removeProperty('--bottom-controls-height');
+    const { unmount } = render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    expect(document.querySelector('[data-quick-reply-box]')).not.toBeNull();
+    expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).not.toBe('');
+    unmount();
+    expect(document.documentElement.style.getPropertyValue('--bottom-controls-height')).toBe('');
+  });
+});
+
 // mail-p2-8: Undo send on a quick reply brings its text back into this box.
 describe('quick reply after Undo send', () => {
   it('takes the undone text back into the box of the message it answered', async () => {

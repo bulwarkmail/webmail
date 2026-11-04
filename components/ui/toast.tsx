@@ -474,7 +474,7 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
         // Newest at the bottom, at the end corner (bottom left in RTL);
         // lifted over a registered bottom bar (a form's Save/Cancel footer)
         // and over an open composer's footer.
-        "fixed bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))] end-5 z-[99999] flex flex-col gap-2.5 [html[data-composer-open]_&]:bottom-20",
+        "fixed bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))] end-5 z-[99999] flex flex-col gap-2.5 [html[data-composer-open]_&]:bottom-[max(5rem,calc(var(--bottom-controls-height,0px)+0.75rem))]",
         // Phone: full width with 12px margins, above the bottom controls
         // (the tab bar, or whichever bar registered with useBottomControls).
         "max-sm:inset-x-3 max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]",

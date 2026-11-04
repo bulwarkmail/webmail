@@ -40,7 +40,7 @@ describe('toast layout', () => {
     render(<Toasts />);
     const container = toastContainer();
     expect(container.className).toContain('max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]');
-    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-20');
+    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-[max(5rem,calc(var(--bottom-controls-height,0px)+0.75rem))]');
   });
 
   it('sits above a registered bottom bar on the desktop too, such as a form footer', () => {

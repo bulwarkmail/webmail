@@ -1827,7 +1827,16 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const quickReplyRef = useRef<HTMLTextAreaElement>(null);
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
-  const quickReplyBoxRef = useRef<HTMLDivElement>(null);
+  const quickReplyBoxRef = useRef<HTMLDivElement | null>(null);
+  // Toasts ("Archived · Undo", "Sending in 5 seconds") sit above the quick
+  // reply box while it is on screen, not over it (mail-p2-12).
+  const [quickReplyBoxShown, setQuickReplyBoxShown] = useState(false);
+  const quickReplyBarRef = useBottomControls(quickReplyBoxShown);
+  const setQuickReplyBox = useCallback((el: HTMLDivElement | null) => {
+    quickReplyBoxRef.current = el;
+    setQuickReplyBoxShown(!!el);
+    quickReplyBarRef(el);
+  }, [quickReplyBarRef]);
   // Focused, the box grows by its buttons: bring them up, they'd sit below the fold.
   useEffect(() => {
     if (isQuickReplyFocused) quickReplyBoxRef.current?.scrollIntoView?.({ block: 'nearest' });
@@ -6393,7 +6402,7 @@ ${printWatermark ? printWatermark.html : ''}
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div ref={quickReplyBoxRef} className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={setQuickReplyBox} data-quick-reply-box="" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar

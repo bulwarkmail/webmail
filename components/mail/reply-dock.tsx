@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { useBottomControls } from "@/hooks/use-bottom-controls";
 
 /**
  * Below this reading-pane height a docked reply can't share the pane with
@@ -34,6 +35,8 @@ export function ReplyDock({ children }: { children: ReactNode }) {
   // The reader's toolbar and subject above its scrolling part: they stay.
   const [readerChrome, setReaderChrome] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
+  // Toasts sit above the reply and its Send button (mail-p2-12).
+  const barRef = useBottomControls();
 
   useLayoutEffect(() => {
     const pane = ref.current?.parentElement;
@@ -78,7 +81,7 @@ export function ReplyDock({ children }: { children: ReactNode }) {
         </button>
       )}
       {/* Folded, the composer stays mounted, with its text and its undo history. */}
-      <div className={cn("flex min-h-0 flex-1 flex-col", folded && "hidden")}>
+      <div ref={barRef} className={cn("flex min-h-0 flex-1 flex-col", folded && "hidden")}>
         {children}
       </div>
     </div>
