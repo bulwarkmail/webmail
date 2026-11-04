@@ -263,10 +263,14 @@ function googleColumn(normalized: string): { family: CsvFamily; slot: string; fi
 
 /** Each column with a sample value and the field it goes to: known headers matched, the rest "Don't import". */
 export function matchColumns(table: CsvTable): CsvColumn[] {
+  // Outlook's "E-mail 2 Type" and Google's older "E-mail 2 - Type" read the
+  // same once normalised; a "… - Value" column says the file is Google's.
+  const googleFile = table.headers.some((h) => /^(e mail|email|phone) \d+ value$/.test(normalizeHeader(h)));
   return table.headers.map((header, index) => {
     const sample = table.rows.map((r) => (r[index] ?? '').trim()).find((v) => v !== '') ?? '';
     const normalized = normalizeHeader(header);
-    if (normalized in HEADER_TARGETS) return { index, header, sample, slot: '', target: HEADER_TARGETS[normalized] };
+    const outlookSkip = HEADER_TARGETS[normalized] === 'skip' && googleFile && googleColumn(normalized);
+    if (normalized in HEADER_TARGETS && !outlookSkip) return { index, header, sample, slot: '', target: HEADER_TARGETS[normalized] };
     const google = googleColumn(normalized);
     if (google) {
       return { index, header, sample, slot: google.slot, family: google.family, target: GOOGLE_FIELDS[google.family][google.field] ?? 'skip' };

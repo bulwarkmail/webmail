@@ -330,6 +330,18 @@ describe('Google Contacts', () => {
     expect(tom.keywords).toEqual({ Club: true });
     expect(lea.name?.components).toEqual([{ kind: 'given', value: 'Lea' }, { kind: 'surname', value: 'van Probe' }]);
   });
+
+  // "E-mail 2 - Type" reads like Outlook's "E-mail 2 Type" (always SMTP) and
+  // was left out, so a second address lost its work or home mark.
+  it("keeps the type of the second and third address in Google's older format", () => {
+    const text = csv(GOOGLE_OLD_HEADERS, [{
+      Name: 'Tom Testperson', 'E-mail 1 - Type': '* Home', 'E-mail 1 - Value': 'tom@example.org',
+      'E-mail 2 - Type': 'Work', 'E-mail 2 - Value': 'tom@work.example.org',
+    }]);
+    const { columns, cards } = importText(text);
+    expect(target(columns, 'E-mail 2 - Type')).toBe('type');
+    expect(Object.values(cards[0].emails ?? {})).toContainEqual({ address: 'tom@work.example.org', contexts: { work: true } });
+  });
 });
 
 describe('column choices', () => {
