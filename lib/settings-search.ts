@@ -251,7 +251,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.placeholder_warning.label' },
     { label: 'settings.templates.title' },
     { label: 'settings.templates.export_import', advanced: true },
-    { label: 'settings.email_behavior.signatures_link.label', synonyms: syn('signature') },
+    { label: 'uxs2_ident.signatures.title', synonyms: 'uxs2_ident.search.signatures' },
   ],
   vacation: [
     { label: 'uxs_vacation.from_label' },

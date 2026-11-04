@@ -17,7 +17,13 @@ const everywhere = (messages: unknown, query: string) => (Object.keys(tabSearchE
     .filter((r) => matchesAllWords(subResultText(r), query))
     .map((r) => `${tab}: ${r.label}`));
 
-describe('settings search: addresses and your name', () => {
+describe('settings search: addresses, signatures and your name', () => {
+  it('finds the signatures on Composing', () => {
+    for (const query of ['signature', 'identity', 'sender', 'from address']) {
+      expect(everywhere(en, query), query).toContain('composing: Signatures');
+    }
+  });
+
   it('finds the sending addresses on Account for identity and alias', () => {
     for (const query of ['identity', 'alias', 'sender address']) {
       expect(everywhere(en, query), query).toContain('account: Email addresses');
@@ -29,6 +35,7 @@ describe('settings search: addresses and your name', () => {
   });
 
   it('finds them in German too', () => {
+    expect(everywhere(de, 'Absender')).toContain('composing: Signaturen');
     expect(everywhere(de, 'Identität')).toContain('account: E-Mail-Adressen');
   });
 });
