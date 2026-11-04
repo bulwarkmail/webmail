@@ -134,6 +134,14 @@ describe('the reader toolbar and the plugin side panel', () => {
     expect(mounts['email-detail-sidebar']).toBe(1);
   });
 
+  it('offers no second Compose in the empty reading pane: the sidebar has one (settings-p3-19)', () => {
+    // As the mail view used to hand it over.
+    const legacy = { onCompose: vi.fn() } as object;
+    render(<EmailViewer email={null} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} {...legacy} />);
+    expect(screen.getByText('no_conversation_selected')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /compose/ })).toBeNull();
+  });
+
   it('folds and unfolds the side panel from the toolbar', () => {
     show();
     const toggle = document.querySelector('[data-plugin-panel-toggle]') as HTMLElement;
