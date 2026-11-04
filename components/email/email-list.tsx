@@ -17,8 +17,9 @@ import { cn, cleanPreview } from "@/lib/utils";
 import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish, FolderInput, CheckSquare } from "@/components/icons";
 import { createPortal } from "react-dom";
 import { ContextMenu } from "@/components/ui/context-menu";
-import { MoveTargetList } from "./move-target-list";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { getMailboxPath } from "@/lib/utils";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
@@ -759,11 +760,12 @@ export function EmailList({
   // Move on the selection bar (mail-10): the folders the selection's own
   // context menu offers, with the selection's account first (#1149).
   const moveMenu = useContextMenu<null>();
-  const selectionMoveTargets = useMemo(() => buildMoveTargets(mailboxes, {
+  const selectionMoveModel = useMoveMenu(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], mailboxes, selectedMailbox),
     emails: selectedEmailsForRemoval,
-  }), [mailboxes, selectedMailbox, selectedEmailsForRemoval]);
+  });
+  const chooseMoveFolder = useChooseMoveFolder();
   // One read/unread button: "Mark as read" while any selected message is unread.
   const selectionHasUnread = selectedEmailsForRemoval.some((email) => !email.keywords?.$seen);
 
@@ -787,7 +789,7 @@ export function EmailList({
         >
           <Trash2 />
         </IconButton>
-        {selectionMoveTargets.tree.length > 0 && (
+        {!moveMenuIsEmpty(selectionMoveModel) && (
           <IconButton
             label={tContextMenu('move_to')}
             aria-haspopup="menu"
@@ -1409,11 +1411,13 @@ export function EmailList({
           onClose={moveMenu.closeContextMenu}
           label={tContextMenu('move_to')}
         >
-          <div className="w-56 max-h-72 overflow-y-auto">
-            <MoveTargetList
-              tree={selectionMoveTargets.tree}
-              targetIds={selectionMoveTargets.targetIds}
+          <div className="w-64 max-w-full">
+            <MoveFolderList
+              model={selectionMoveModel}
               onPick={(mailboxId) => { moveMenu.closeContextMenu(); void handleBatchMoveToMailbox(mailboxId); }}
+              onChooseFolder={chooseMoveFolder
+                ? () => { moveMenu.closeContextMenu(); chooseMoveFolder({ emails: selectedEmailsForRemoval, onMove: (mailboxId) => void handleBatchMoveToMailbox(mailboxId) }); }
+                : undefined}
             />
           </div>
         </ContextMenu>
