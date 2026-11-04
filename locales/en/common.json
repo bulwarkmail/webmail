@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 is already in Contacts:} other {# are already in Contacts:}}",
     "dupes_skip": "Skip them",
     "dupes_update": "Update the existing contacts",
-    "dupes_updates": "Updates the contact"
+    "dupes_updates": "Updates the contact",
+    "upload_cancelled": "Upload cancelled",
+    "upload_cancelled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you cancelled",
+    "download_cancelled": "Download cancelled"
   },
   "desktopEdit": {
     "edit": "Edit",

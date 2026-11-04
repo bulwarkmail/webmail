@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 est déjà dans Contacts :} other {# sont déjà dans Contacts :}}",
     "dupes_skip": "Les ignorer",
     "dupes_update": "Mettre à jour les contacts existants",
-    "dupes_updates": "Met à jour le contact"
+    "dupes_updates": "Met à jour le contact",
+    "upload_cancelled": "Téléversement annulé",
+    "upload_cancelled_partial": "{count, plural, one {1 fichier a été téléversé} other {# fichiers ont été téléversés}} avant l'annulation",
+    "download_cancelled": "Téléchargement annulé"
   },
   "desktopEdit": {
     "edit": "Modifier",

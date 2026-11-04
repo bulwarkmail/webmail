@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {واحدة موجودة في جهات الاتصال:} other {# موجودة في جهات الاتصال:}}",
     "dupes_skip": "تخطيها",
     "dupes_update": "تحديث جهات الاتصال الموجودة",
-    "dupes_updates": "يحدّث جهة الاتصال"
+    "dupes_updates": "يحدّث جهة الاتصال",
+    "upload_cancelled": "تم إلغاء الرفع",
+    "upload_cancelled_partial": "{count, plural, zero {لم يُرفع أي ملف} one {تم رفع ملف واحد} two {تم رفع ملفين} few {تم رفع # ملفات} many {تم رفع # ملفًا} other {تم رفع # ملف}} قبل الإلغاء",
+    "download_cancelled": "أُلغي التنزيل"
   },
   "desktopEdit": {
     "edit": "تعديل",

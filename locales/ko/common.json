@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, other {#개는 이미 연락처에 있음:}}",
     "dupes_skip": "건너뛰기",
     "dupes_update": "기존 연락처 업데이트",
-    "dupes_updates": "연락처 업데이트"
+    "dupes_updates": "연락처 업데이트",
+    "upload_cancelled": "업로드가 취소되었어요",
+    "upload_cancelled_partial": "취소하기 전에 {count, plural, other {#개의 파일}}이 업로드되었어요",
+    "download_cancelled": "다운로드를 취소했습니다"
   },
   "desktopEdit": {
     "edit": "편집",

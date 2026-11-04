@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, other {#件は連絡先に登録済み:}}",
     "dupes_skip": "スキップ",
     "dupes_update": "既存の連絡先を更新",
-    "dupes_updates": "連絡先を更新"
+    "dupes_updates": "連絡先を更新",
+    "upload_cancelled": "アップロードをキャンセルしました",
+    "upload_cancelled_partial": "キャンセル前に{count, plural, other {#件のファイル}}がアップロードされました",
+    "download_cancelled": "ダウンロードをキャンセルしました"
   },
   "desktopEdit": {
     "edit": "編集",

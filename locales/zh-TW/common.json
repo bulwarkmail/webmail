@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, other {# 位已在聯絡人中：}}",
     "dupes_skip": "略過",
     "dupes_update": "更新現有聯絡人",
-    "dupes_updates": "更新聯絡人"
+    "dupes_updates": "更新聯絡人",
+    "upload_cancelled": "已取消上傳",
+    "upload_cancelled_partial": "取消前已上傳 {count, plural, other {# 個檔案}}",
+    "download_cancelled": "已取消下載"
   },
   "desktopEdit": {
     "edit": "編輯",

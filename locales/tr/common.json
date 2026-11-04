@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 kişi zaten Kişiler içinde:} other {# kişi zaten Kişiler içinde:}}",
     "dupes_skip": "Atla",
     "dupes_update": "Mevcut kişileri güncelle",
-    "dupes_updates": "Kişiyi günceller"
+    "dupes_updates": "Kişiyi günceller",
+    "upload_cancelled": "Yükleme iptal edildi",
+    "upload_cancelled_partial": "İptal etmeden önce {count, plural, one {1 dosya} other {# dosya}} yüklendi",
+    "download_cancelled": "İndirme iptal edildi"
   },
   "desktopEdit": {
     "edit": "Düzenle",

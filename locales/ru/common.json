@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {# уже есть в контактах:} few {# уже есть в контактах:} other {# уже есть в контактах:}}",
     "dupes_skip": "Пропустить",
     "dupes_update": "Обновить существующие контакты",
-    "dupes_updates": "Обновит контакт"
+    "dupes_updates": "Обновит контакт",
+    "upload_cancelled": "Загрузка отменена",
+    "upload_cancelled_partial": "{count, plural, one {# файл был загружен} few {# файла было загружено} many {# файлов было загружено} other {# файла было загружено}} до отмены",
+    "download_cancelled": "Скачивание отменено"
   },
   "desktopEdit": {
     "edit": "Изменить",

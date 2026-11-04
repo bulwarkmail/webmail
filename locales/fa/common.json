@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {۱ مورد از قبل در مخاطبان است:} other {# مورد از قبل در مخاطبان است:}}",
     "dupes_skip": "رد کردن",
     "dupes_update": "به‌روزرسانی مخاطبان موجود",
-    "dupes_updates": "مخاطب را به‌روز می‌کند"
+    "dupes_updates": "مخاطب را به‌روز می‌کند",
+    "upload_cancelled": "بارگذاری لغو شد",
+    "upload_cancelled_partial": "{count, plural, one {۱ فایل} other {# فایل}} پیش از لغو بارگذاری شد",
+    "download_cancelled": "دانلود لغو شد"
   },
   "desktopEdit": {
     "edit": "ویرایش",

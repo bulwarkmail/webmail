@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 ist schon in Kontakte:} other {# sind schon in Kontakte:}}",
     "dupes_skip": "Überspringen",
     "dupes_update": "Vorhandene Kontakte aktualisieren",
-    "dupes_updates": "Aktualisiert den Kontakt"
+    "dupes_updates": "Aktualisiert den Kontakt",
+    "upload_cancelled": "Hochladen abgebrochen",
+    "upload_cancelled_partial": "{count, plural, one {1 Datei wurde} other {# Dateien wurden}} vor dem Abbrechen hochgeladen",
+    "download_cancelled": "Download abgebrochen"
   },
   "desktopEdit": {
     "edit": "Bearbeiten",

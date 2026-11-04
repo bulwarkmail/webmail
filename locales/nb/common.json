@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 finnes allerede i Kontakter:} other {# finnes allerede i Kontakter:}}",
     "dupes_skip": "Hopp over",
     "dupes_update": "Oppdater de eksisterende kontaktene",
-    "dupes_updates": "Oppdaterer kontakten"
+    "dupes_updates": "Oppdaterer kontakten",
+    "upload_cancelled": "Opplastingen ble avbrutt",
+    "upload_cancelled_partial": "{count, plural, one {1 fil ble} other {# filer ble}} lastet opp før du avbrøt",
+    "download_cancelled": "Nedlasting avbrutt"
   },
   "desktopEdit": {
     "edit": "Rediger",

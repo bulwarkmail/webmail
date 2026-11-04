@@ -7634,7 +7634,10 @@
     "dupes_legend": "{count, plural, other {# mục đã có trong Danh bạ:}}",
     "dupes_skip": "Bỏ qua",
     "dupes_update": "Cập nhật các liên hệ hiện có",
-    "dupes_updates": "Cập nhật liên hệ"
+    "dupes_updates": "Cập nhật liên hệ",
+    "upload_cancelled": "Đã hủy tải lên",
+    "upload_cancelled_partial": "{count, plural, one {Đã tải lên 1 tệp} other {Đã tải lên # tệp}} trước khi bạn hủy",
+    "download_cancelled": "Đã hủy tải xuống"
   },
   "desktopEdit": {
     "edit": "Chỉnh sửa",

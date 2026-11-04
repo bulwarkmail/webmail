@@ -7623,7 +7623,10 @@
     "dupes_legend": "{count, plural, one {אחד כבר נמצא באנשי הקשר:} other {# כבר נמצאים באנשי הקשר:}}",
     "dupes_skip": "לדלג עליהם",
     "dupes_update": "לעדכן את אנשי הקשר הקיימים",
-    "dupes_updates": "מעדכן את איש הקשר"
+    "dupes_updates": "מעדכן את איש הקשר",
+    "upload_cancelled": "ההעלאה בוטלה",
+    "upload_cancelled_partial": "{count, plural, one {קובץ אחד הועלה} two {שני קבצים הועלו} other {# קבצים הועלו}} לפני הביטול",
+    "download_cancelled": "ההורדה בוטלה"
   },
   "desktopEdit": {
     "edit": "עריכה",

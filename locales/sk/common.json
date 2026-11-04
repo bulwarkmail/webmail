@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 už je v Kontaktoch:} few {# už sú v Kontaktoch:} other {# už je v Kontaktoch:}}",
     "dupes_skip": "Preskočiť",
     "dupes_update": "Aktualizovať existujúce kontakty",
-    "dupes_updates": "Aktualizuje kontakt"
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávanie zrušené",
+    "upload_cancelled_partial": "Pred zrušením {count, plural, one {sa nahral 1 súbor} few {sa nahrali # súbory} many {sa nahralo # súboru} other {sa nahralo # súborov}}",
+    "download_cancelled": "Sťahovanie zrušené"
   },
   "desktopEdit": {
     "edit": "Upraviť",

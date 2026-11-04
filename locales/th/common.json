@@ -7630,7 +7630,10 @@
     "dupes_legend": "{count, plural, other {# รายการมีอยู่ในรายชื่อติดต่อแล้ว:}}",
     "dupes_skip": "ข้าม",
     "dupes_update": "อัปเดตผู้ติดต่อที่มีอยู่",
-    "dupes_updates": "อัปเดตผู้ติดต่อ"
+    "dupes_updates": "อัปเดตผู้ติดต่อ",
+    "upload_cancelled": "ยกเลิกการอัปโหลดแล้ว",
+    "upload_cancelled_partial": "อัปโหลดแล้ว {count, plural, other {# ไฟล์}} ก่อนที่คุณจะยกเลิก",
+    "download_cancelled": "ยกเลิกการดาวน์โหลดแล้ว"
   },
   "desktopEdit": {
     "edit": "แก้ไข",

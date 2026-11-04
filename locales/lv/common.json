@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {# jau ir kontaktos:} other {# jau ir kontaktos:}}",
     "dupes_skip": "Izlaist",
     "dupes_update": "Atjaunināt esošos kontaktus",
-    "dupes_updates": "Atjaunina kontaktu"
+    "dupes_updates": "Atjaunina kontaktu",
+    "upload_cancelled": "Augšupielāde atcelta",
+    "upload_cancelled_partial": "{count, plural, zero {# faili tika augšupielādēti} one {# fails tika augšupielādēts} other {# faili tika augšupielādēti}} pirms atcelšanas",
+    "download_cancelled": "Lejupielāde atcelta"
   },
   "desktopEdit": {
     "edit": "Rediģēt",

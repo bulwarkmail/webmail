@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 már szerepel a Névjegyekben:} other {# már szerepel a Névjegyekben:}}",
     "dupes_skip": "Kihagyás",
     "dupes_update": "A meglévő névjegyek frissítése",
-    "dupes_updates": "Frissíti a névjegyet"
+    "dupes_updates": "Frissíti a névjegyet",
+    "upload_cancelled": "Feltöltés megszakítva",
+    "upload_cancelled_partial": "{count, plural, one {1 fájl} other {# fájl}} feltöltődött a megszakítás előtt",
+    "download_cancelled": "Letöltés megszakítva"
   },
   "desktopEdit": {
     "edit": "Szerkesztés",

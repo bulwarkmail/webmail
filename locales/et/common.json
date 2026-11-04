@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 on juba kontaktides:} other {# on juba kontaktides:}}",
     "dupes_skip": "Jäta vahele",
     "dupes_update": "Uuenda olemasolevaid kontakte",
-    "dupes_updates": "Uuendab kontakti"
+    "dupes_updates": "Uuendab kontakti",
+    "upload_cancelled": "Üleslaadimine tühistatud",
+    "upload_cancelled_partial": "{count, plural, one {1 fail} other {# faili}} laaditi üles enne tühistamist",
+    "download_cancelled": "Allalaadimine tühistati"
   },
   "desktopEdit": {
     "edit": "Muuda",

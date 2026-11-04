@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 staat al in Contacten:} other {# staan al in Contacten:}}",
     "dupes_skip": "Overslaan",
     "dupes_update": "Bestaande contacten bijwerken",
-    "dupes_updates": "Werkt het contact bij"
+    "dupes_updates": "Werkt het contact bij",
+    "upload_cancelled": "Uploaden geannuleerd",
+    "upload_cancelled_partial": "{count, plural, one {1 bestand was} other {# bestanden waren}} al geüpload voordat u annuleerde",
+    "download_cancelled": "Download geannuleerd"
   },
   "desktopEdit": {
     "edit": "Bewerken",

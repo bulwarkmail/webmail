@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 нь харилцагчдад аль хэдийн байна:} other {# нь харилцагчдад аль хэдийн байна:}}",
     "dupes_skip": "Алгасах",
     "dupes_update": "Байгаа харилцагчдыг шинэчлэх",
-    "dupes_updates": "Харилцагчийг шинэчилнэ"
+    "dupes_updates": "Харилцагчийг шинэчилнэ",
+    "upload_cancelled": "Байршуулалт цуцлагдлаа",
+    "upload_cancelled_partial": "Цуцлахаас өмнө {count, plural, one {1 файл} other {# файл}} байршуулагдсан",
+    "download_cancelled": "Татаж авалтыг цуцаллаа"
   },
   "desktopEdit": {
     "edit": "Засах",

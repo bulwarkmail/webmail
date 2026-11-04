@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 já está em Contactos:} other {# já estão em Contactos:}}",
     "dupes_skip": "Ignorá-los",
     "dupes_update": "Atualizar os contactos existentes",
-    "dupes_updates": "Atualiza o contacto"
+    "dupes_updates": "Atualiza o contacto",
+    "upload_cancelled": "Carregamento cancelado",
+    "upload_cancelled_partial": "{count, plural, one {1 arquivo foi carregado} other {# arquivos foram carregados}} antes de cancelar",
+    "download_cancelled": "Download cancelado"
   },
   "desktopEdit": {
     "edit": "Editar",

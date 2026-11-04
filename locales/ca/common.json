@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 ja és a Contactes:} other {# ja són a Contactes:}}",
     "dupes_skip": "Omet-los",
     "dupes_update": "Actualitza els contactes existents",
-    "dupes_updates": "Actualitza el contacte"
+    "dupes_updates": "Actualitza el contacte",
+    "upload_cancelled": "Pujada cancel·lada",
+    "upload_cancelled_partial": "{count, plural, one {S'ha pujat 1 fitxer} other {S'han pujat # fitxers}} abans de cancel·lar",
+    "download_cancelled": "S'ha cancel·lat la baixada"
   },
   "desktopEdit": {
     "edit": "Edita",

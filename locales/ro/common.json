@@ -7622,7 +7622,10 @@
     "dupes_legend": "{count, plural, one {1 este deja în Contacte:} few {# sunt deja în Contacte:} other {# sunt deja în Contacte:}}",
     "dupes_skip": "Omite-le",
     "dupes_update": "Actualizează contactele existente",
-    "dupes_updates": "Actualizează contactul"
+    "dupes_updates": "Actualizează contactul",
+    "upload_cancelled": "Încărcare anulată",
+    "upload_cancelled_partial": "{count, plural, one {1 fișier a fost încărcat} few {# fișiere au fost încărcate} other {# de fișiere au fost încărcate}} înainte de anulare",
+    "download_cancelled": "Descărcare anulată"
   },
   "desktopEdit": {
     "edit": "Editează",
