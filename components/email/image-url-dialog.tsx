@@ -89,7 +89,6 @@ export function ImageUrlDialog({ isOpen, onClose, onSubmit }: {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             onBlur={() => setTouched(true)}
-            placeholder="https://"
             aria-invalid={error ? true : undefined}
             aria-describedby={[error ? errorId : null, hintId].filter(Boolean).join(" ")}
             className={error ? "border-destructive focus-visible:border-destructive" : undefined}
