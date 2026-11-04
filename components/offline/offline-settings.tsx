@@ -68,7 +68,8 @@ export function OfflineSettings() {
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <p data-testid="offline-warning">{isDesktopApp() ? tStorage('warning_desktop') : t('warning')}</p>
             </div>
-            <KeyProtectionNotes browser />
+            {/* The warning above already says "use disk encryption"; the browser note said it again (settings-p2-18). */}
+            <KeyProtectionNotes />
             {enabledCount > 0 && persist === 'refused' && (
               <div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between" role="status" data-testid="offline-persist-refused">
                 <p className="min-w-0">{tStorage('persist_refused')}</p>

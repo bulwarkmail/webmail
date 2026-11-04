@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { closeFirstStartNotice, useCurrentFirstStartNotice } from "@/lib/first-start-notices";
 import { useConnectionState } from "@/hooks/use-connection-state";
+import { useWelcomeBannerDue } from "@/components/ui/welcome-banner";
 
 /**
  * The first-start notice that's waiting, as a bar above the message list (see
- * lib/first-start-notices). In the page's flow, it covers nothing. `hidden` while
- * something else greets the user there, so only one shows at a time. Offline, the
- * offline bar above says what matters then, so the notice waits.
+ * lib/first-start-notices). In the page's flow, it covers nothing. It waits while the
+ * welcome tips are due, wherever they show (above the list or in the reading pane),
+ * so the first start has one greeting at a time. `hidden` while something else greets
+ * the user there. Offline, the offline bar above says what matters then, so the
+ * notice waits too.
  *
  * One line: a longer text is cut, and shows whole on hover.
  */
@@ -19,7 +22,8 @@ export function FirstStartNoticeBar({ hidden = false }: { hidden?: boolean }) {
   const tCommon = useTranslations("common");
   const notice = useCurrentFirstStartNotice();
   const { offline } = useConnectionState();
-  if (!notice || hidden || offline) return null;
+  const welcomeDue = useWelcomeBannerDue();
+  if (!notice || hidden || offline || welcomeDue) return null;
   return (
     <div
       role="status"

@@ -35,6 +35,8 @@ interface LoginServerFieldProps {
   value: string;
   onChange: (value: string) => void;
   onEdit: () => void;
+  /** The user pressed Change on a server that was found: they want another one, nothing went wrong. */
+  changing?: boolean;
   /** A provider Bulwark can't reach (Gmail, Outlook.com, iCloud Mail), by name. */
   provider: string | null;
   error: ServerFieldError;
@@ -49,13 +51,15 @@ interface LoginServerFieldProps {
  * field only opens when nothing was found or the user wants another one.
  */
 export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldProps>(function LoginServerField(
-  { lookup, server, editing, value, onChange, onEdit, provider, error, showTrouble, disabled },
+  { lookup, server, editing, value, onChange, onEdit, changing, provider, error, showTrouble, disabled },
   ref,
 ) {
   const t = useTranslations("uxs_login");
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
+  // After Change the lookup's result no longer matters: the user picks another server.
+  const notFound = lookup === "failed" && !provider && !changing;
 
   const providerNote = provider && (
     <div role="status" data-testid="login-provider-unsupported" className="p-3 rounded-xl border border-warning/30 bg-warning/5 flex items-start gap-2.5 text-sm text-foreground leading-relaxed">
@@ -112,14 +116,19 @@ export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldPro
           spellCheck={false}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+          className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
           placeholder={t("server_placeholder")}
           aria-invalid={error ? true : undefined}
-          aria-describedby={[error ? errorId : null, lookup === "failed" && !provider ? hintId : null].filter(Boolean).join(" ") || undefined}
+          aria-describedby={[error ? errorId : null, notFound || changing ? hintId : null].filter(Boolean).join(" ") || undefined}
         />
-        {lookup === "failed" && !provider && !error && (
+        {notFound && !error && (
           <p id={hintId} className="text-xs text-muted-foreground leading-snug" data-testid="login-server-not-found">
             {t("server_not_found")}
+          </p>
+        )}
+        {changing && !provider && !error && (
+          <p id={hintId} className="text-xs text-muted-foreground leading-snug" data-testid="login-server-change-hint">
+            {t("server_change_hint")}
           </p>
         )}
         {error && (

@@ -53,6 +53,7 @@ import { sanitizeColor } from '@/components/calendar/event-card';
 import { RecipientPopover } from './recipient-popover';
 import { useCalendarErrorMessage } from '@/hooks/use-calendar-error-message';
 import { useAccountOwner } from '@/components/calendar/answer-bars';
+import { useCollectionNames } from "@/hooks/use-collection-names";
 import { resolveTimeZone } from '@/lib/timezone';
 
 interface InvitationChangeItem {
@@ -380,6 +381,7 @@ interface CalendarInvitationBannerProps {
 type BannerState = 'loading' | 'parsed' | 'rsvp-sent' | 'imported' | 'error';
 
 export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations('email_viewer.calendar_invitation');
   const tEvent = useTranslations('ux_pim_event');
   const describeError = useCalendarErrorMessage();
@@ -1260,7 +1262,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: sanitizeColor(cal.color) }}
                       />
-                      <span className="truncate text-foreground">{cal.name}</span>
+                      <span className="truncate text-foreground">{shownName.calendar(cal)}</span>
                     </button>
                   ))}
                 </div>,

@@ -174,6 +174,7 @@
     },
     "clear_search": "清除搜尋",
     "vacation_active": "休假自動回覆已開啟",
+    "vacation_turn_off": "關閉",
     "demo_banner": "示範模式",
     "demo_reset": "重設",
     "demo_tour": "功能導覽",
@@ -1405,6 +1406,8 @@
     "from_description": "留空即立即開始。",
     "until_label": "結束（選填）",
     "until_description": "留空即持續回覆，直到您關閉。",
+    "from_placeholder": "立即",
+    "until_placeholder": "直到您關閉",
     "audience_all": "所有人",
     "audience_internal": "僅限我的組織（{domains}）",
     "audience_external": "僅限組織外的人",
@@ -2925,6 +2928,7 @@
       "open_sieve_editor": "開啟原始 Sieve 編輯器",
       "fetch_error": "無法載入篩選規則",
       "expanded_view": "展開檢視",
+      "show_rule_details": "顯示每條規則的條件和動作",
       "expanded_view_description": "顯示包含詳細條件與動作區塊的篩選規則",
       "if": "如果",
       "then": "然後",
@@ -3003,6 +3007,9 @@
       "validation_period_empty": "請輸入期間的開始日期或結束日期",
       "validation_period_invalid": "請為期間輸入含時間的有效日期，或將該欄位留空",
       "apply_existing_period": "設定了期間的規則只作用於在該期間內收到的郵件，因此無法套用到既有郵件。",
+      "apply_existing_in": "同時套用到{folder}中既有的郵件",
+      "apply_existing_count": "{count, plural, other {同時套用到{folder}中既有的 # 封郵件}}",
+      "apply_existing_none": "{folder}中還沒有符合此規則的郵件。",
       "period_status_scheduled": "尚未開始",
       "period_status_active": "生效中",
       "period_status_expired": "已過期"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "在此裝置上登出此帳號。"
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "系統匣 通知區域 背景 最小化到系統匣 tray",
+      "autostart": "自動啟動 開機啟動 隨 Windows 啟動 登入時啟動",
+      "default_app": "預設郵件應用程式 預設郵件程式 mailto 郵件連結",
+      "menu_bar": "功能表列 功能表 Alt 鍵 檔案 編輯 檢視",
+      "updates": "更新 新版本 測試版 頻道",
+      "devtools": "開發人員工具 devtools 主控台 檢查 F12 偵錯",
+      "taskbar": "工作列 閃爍 Dock 提醒",
+      "quiet_hours": "安靜時段 勿擾 靜音 夜間",
+      "telemetry": "使用資訊 遙測 統計 分析",
+      "crash": "當機報告 錯誤報告 當機",
+      "threads": "會話 對話 分組 討論串 threads",
+      "block_images": "封鎖圖片 外部圖片 載入圖片",
+      "dark_mode": "深色模式 淺色模式 夜間模式 暗色 dark mode",
+      "timezone": "時區 timezone",
+      "reading_pane": "閱讀窗格 預覽窗格 分割檢視",
+      "week_start": "每週開始 第一天 星期一 星期日",
+      "empty_trash": "清空垃圾桶 垃圾桶 已刪除",
+      "do_not_disturb": "安靜時段 靜音 安靜"
+    },
+    "desktop_notifications": {
+      "title": "在這台電腦上",
+      "closed_label": "關閉視窗後",
+      "closed_description": "{appName} 執行期間會提醒你有新郵件。若要在關閉視窗後繼續在系統匣中執行，請在「{page}」中開啟此項。"
+    },
+    "push_unsupported": "網站關閉時，此瀏覽器無法顯示通知。",
+    "backup_description_app": "在你的其他裝置上使用相同的設定。",
+    "sender_favicons": {
+      "label": "公司網站的圖片",
+      "description": "使用企業寄件者的網站圖示作為頭像"
+    },
+    "privacy_push": {
+      "label": "通知中繼",
+      "description": "{appName} 關閉時的通知會經過推播中繼，中繼永遠看不到你的郵件。可在「{page}」頁面開啟或關閉。"
+    },
+    "reset": {
+      "message": "將所有設定還原為最初的狀態。你的郵件、篩選規則、自動回覆和簽名保持不變。",
+      "sync_on": "你的其他裝置使用相同的設定，因此也會一起變更。",
+      "sync_off": "你的其他裝置會保留各自的設定。"
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# 小時}}",
     "desktop_attention_title": "在這台電腦上"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "你的名稱",
+      "description": "你寄信給別人時,對方會在你的地址旁看到這個名稱。",
+      "saved": "你的名稱已儲存。",
+      "error": "無法儲存你的名稱。請再試一次。"
+    },
+    "addresses": {
+      "description": "你可以用來寄信的地址,每個地址都有自己的名稱和簽名。",
+      "label": "你的地址",
+      "count": "{count, plural, =0 {還沒有地址} other {# 個地址}}",
+      "manage": "編輯地址…",
+      "modal_title": "你的電子郵件地址",
+      "add": "新增地址",
+      "edit": "編輯地址",
+      "added": "已新增地址。",
+      "saved": "已儲存地址。",
+      "deleted": "已刪除地址。",
+      "delete_title": "要刪除這個地址嗎?"
+    },
+    "signatures": {
+      "title": "簽名",
+      "description": "加在你所寫郵件的結尾。每個地址都有自己的簽名。",
+      "saved": "已儲存簽名。",
+      "error": "無法儲存簽名。請再試一次。",
+      "no_addresses": "還沒有可以寄信的地址。"
+    },
+    "search": {
+      "addresses": "身分 別名 寄件者 寄件者地址 寄件地址 identity alias sender",
+      "signatures": "簽名 郵件簽名 頁尾 身分 寄件者 寄件地址 signature",
+      "your_name": "顯示名稱 全名 寄件者名稱 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
@@ -7371,10 +7453,12 @@
     "server_looking": "正在尋找你的郵件伺服器…",
     "server_found": "郵件伺服器：{server}",
     "server_change": "變更",
+    "server_change_hint": "請輸入另一個伺服器位址。",
     "server_not_found": "找不到這個地址的郵件伺服器。請在這裡輸入，例如 mail.example.com。",
     "server_needed": "請輸入你的郵件伺服器位址。",
     "server_invalid": "這不是伺服器位址。請依 mail.example.com 的格式輸入。",
     "email_needed": "請先輸入你的電子郵件地址。",
+    "other_ways": "其他登入方式",
     "trouble": "遇到問題？",
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"

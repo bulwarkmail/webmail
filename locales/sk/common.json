@@ -174,6 +174,7 @@
     },
     "clear_search": "Vymazať hľadanie",
     "vacation_active": "Automatická odpoveď je aktívna",
+    "vacation_turn_off": "Vypnúť",
     "demo_banner": "Demo režim",
     "demo_reset": "Resetovať",
     "demo_tour": "Sprievodca",
@@ -1405,6 +1406,8 @@
     "from_description": "Nechajte prázdne, aby sa začalo hneď.",
     "until_label": "Do (nepovinné)",
     "until_description": "Nechajte prázdne, aby sa odpovedalo, kým to nevypnete.",
+    "from_placeholder": "Hneď",
+    "until_placeholder": "Kým ju nevypnete",
     "audience_all": "Všetkým",
     "audience_internal": "Len mojej organizácii ({domains})",
     "audience_external": "Len ľuďom mimo mojej organizácie",
@@ -2925,6 +2928,7 @@
       "open_sieve_editor": "Otvoriť textový editor Sieve",
       "fetch_error": "Nepodarilo sa načítať filtre",
       "expanded_view": "Rozšírené zobrazenie",
+      "show_rule_details": "Zobraziť podmienky a akcie každého pravidla",
       "expanded_view_description": "Zobrazovať pravidlá filtrov s podrobnými blokmi podmienok a akcií",
       "if": "Ak",
       "then": "Potom",
@@ -3003,6 +3007,9 @@
       "validation_period_empty": "Zadajte dátum začiatku alebo ukončenia obdobia",
       "validation_period_invalid": "Zadajte pre obdobie platný dátum aj s časom alebo pole nechajte prázdne",
       "apply_existing_period": "Pravidlo s obdobím pôsobí len na správy, ktoré v ňom prídu, preto ho nemožno použiť na existujúce správy.",
+      "apply_existing_in": "Použiť aj na správy, ktoré už sú v priečinku {folder}",
+      "apply_existing_count": "{count, plural, one {Použiť aj na # správu, ktorá už je v priečinku {folder}} few {Použiť aj na # správy, ktoré už sú v priečinku {folder}} many {Použiť aj na # správy, ktoré už sú v priečinku {folder}} other {Použiť aj na # správ, ktoré už sú v priečinku {folder}}}",
+      "apply_existing_none": "Tomuto pravidlu zatiaľ nezodpovedá žiadna správa v priečinku {folder}.",
       "period_status_scheduled": "naplánované",
       "period_status_active": "aktívne",
       "period_status_expired": "uplynulo"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Odhlásiť tento účet na tomto zariadení."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "oblasť oznámení systémová lišta pozadie minimalizovať tray",
+      "autostart": "automatické spustenie po štarte spustiť s Windows pri prihlásení",
+      "default_app": "predvolená poštová aplikácia predvolený e-mailový program mailto odkazy na e-mail",
+      "menu_bar": "panel ponúk ponuky kláves Alt Súbor Upraviť Zobraziť",
+      "updates": "aktualizácie aktualizácia nová verzia beta kanál",
+      "devtools": "nástroje pre vývojárov devtools konzola preskúmať F12 ladenie",
+      "taskbar": "panel úloh blikanie Dock pozornosť",
+      "quiet_hours": "tiché hodiny nerušiť stlmiť noc",
+      "telemetry": "údaje o používaní telemetria štatistiky analytika",
+      "crash": "hlásenia o páde chybové hlásenia pád",
+      "threads": "vlákna konverzácie zoskupiť threads",
+      "block_images": "blokovať obrázky externé obrázky načítať obrázky",
+      "dark_mode": "tmavý režim svetlý režim nočný režim dark mode",
+      "timezone": "časové pásmo timezone",
+      "reading_pane": "tabla čítania tabla ukážky rozdelené zobrazenie",
+      "week_start": "začiatok týždňa prvý deň pondelok nedeľa",
+      "empty_trash": "vyprázdniť kôš kôš odstránené položky",
+      "do_not_disturb": "tiché hodiny stlmiť ticho"
+    },
+    "desktop_notifications": {
+      "title": "Na tomto počítači",
+      "closed_label": "Pri zatvorenom okne",
+      "closed_description": "{appName} vás upozorní na novú poštu, kým beží. Aby po zatvorení okna bežal ďalej v oblasti oznámení, zapnite to v časti {page}."
+    },
+    "push_unsupported": "Tento prehliadač nemôže zobrazovať upozornenia, keď je web zatvorený.",
+    "backup_description_app": "Používajte rovnaké nastavenia na ďalších zariadeniach.",
+    "sender_favicons": {
+      "label": "Obrázky z webov firiem",
+      "description": "Zobrazovať ikony webových stránok ako profilové obrázky firemných odosielateľov"
+    },
+    "privacy_push": {
+      "label": "Relay pre upozornenia",
+      "description": "Upozornenia pri zatvorenom {appName} idú cez push relay, ktorý nikdy nevidí vašu poštu. Zapínate a vypínate ich na stránke {page}."
+    },
+    "reset": {
+      "message": "Vráti všetky nastavenia do pôvodného stavu. Vaša pošta, filtre, automatická odpoveď a podpisy zostanú, ako sú.",
+      "sync_on": "Vaše ďalšie zariadenia používajú rovnaké nastavenia, takže sa zmenia tiež.",
+      "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodín}}",
     "desktop_attention_title": "Na tomto počítači"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Vaše meno",
+      "description": "Toto meno ľudia vidia vedľa vašej adresy, keď im pošlete e-mail.",
+      "saved": "Vaše meno je uložené.",
+      "error": "Vaše meno sa nepodarilo uložiť. Skúste to znova."
+    },
+    "addresses": {
+      "description": "Adresy, z ktorých môžete odosielať, každá s vlastným menom a podpisom.",
+      "label": "Vaše adresy",
+      "count": "{count, plural, =0 {Zatiaľ žiadne adresy} one {# adresa} few {# adresy} many {# adresy} other {# adries}}",
+      "manage": "Upraviť adresy…",
+      "modal_title": "Vaše e-mailové adresy",
+      "add": "Pridať adresu",
+      "edit": "Upraviť adresu",
+      "added": "Adresa pridaná.",
+      "saved": "Adresa uložená.",
+      "deleted": "Adresa odstránená.",
+      "delete_title": "Odstrániť túto adresu?"
+    },
+    "signatures": {
+      "title": "Podpisy",
+      "description": "Pridá sa na koniec správ, ktoré píšete. Každá adresa má vlastný.",
+      "saved": "Podpis uložený.",
+      "error": "Podpis sa nepodarilo uložiť. Skúste to znova.",
+      "no_addresses": "Zatiaľ nemáte adresu, z ktorej sa dá odosielať."
+    },
+    "search": {
+      "addresses": "identita identity alias odosielateľ adresa odosielateľa adresa od identity sender",
+      "signatures": "podpis e-mailový podpis päta identita odosielateľ adresa od signature",
+      "your_name": "zobrazované meno celé meno meno odosielateľa display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Najprv zadajte adresu servera.",
     "server_declined": "Tento server ste nepovolili, preto sa naň nič neodoslalo.",
@@ -7371,10 +7453,12 @@
     "server_looking": "Hľadáme váš poštový server…",
     "server_found": "Poštový server: {server}",
     "server_change": "Zmeniť",
+    "server_change_hint": "Zadajte adresu iného servera.",
     "server_not_found": "Pre túto adresu sme poštový server nenašli. Zadajte ho sem, napríklad mail.example.com.",
     "server_needed": "Zadajte adresu svojho poštového servera.",
     "server_invalid": "Toto nie je adresa servera. Napíšte ju ako mail.example.com.",
     "email_needed": "Najprv zadajte svoju e-mailovú adresu.",
+    "other_ways": "Ďalšie spôsoby prihlásenia",
     "trouble": "Nedarí sa?",
     "trouble_cors": "Váš poštový server musí povoliť prihlasovanie z tejto webovej stránky. Ak prihlásenie zlyhá, požiadajte správcu poštového servera, aby to povolil.",
     "provider_unsupported": "{provider} neponúka JMAP, spôsob, akým Bulwark komunikuje s poštovými servermi, takže sa k nemu Bulwark zatiaľ nemôže pripojiť priamo."

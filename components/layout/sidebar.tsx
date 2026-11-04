@@ -77,6 +77,7 @@ import { sidebarFolded, useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { unifiedLoadProgress } from "@/lib/unified-mailbox";
 import { useVacationStore } from "@/stores/vacation-store";
+import { useManagedAccountStore } from "@/stores/managed-account-store";
 import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useEmailStore, buildTagViewAccountClients } from "@/stores/email-store";
@@ -1106,26 +1107,59 @@ function DemoBanner({ ruled }: { ruled: boolean }) {
   );
 }
 
-function VacationBanner() {
+export function VacationBanner() {
   const t = useTranslations('sidebar');
+  const tNotifications = useTranslations('notifications');
+  const tFilters = useTranslations('settings.filters');
   const router = useRouter();
-  const { isEnabled, isSupported } = useVacationStore(useShallow((state) => ({ isEnabled: state.isEnabled, isSupported: state.isSupported })));
+  const { isEnabled, isSupported, isSaving } = useVacationStore(useShallow((state) => ({
+    isEnabled: state.isEnabled, isSupported: state.isSupported, isSaving: state.isSaving,
+  })));
+  // The store holds the reply of the account Settings last loaded it for.
+  const managedAccountId = useManagedAccountStore((s) => s.managedAccountId);
+  const client = useAuthStore((s) => s.client);
+  const [turningOff, setTurningOff] = useState(false);
 
   if (!isSupported || !isEnabled) return null;
 
+  // Like Gmail's "End now": off on the server, without opening Settings.
+  const turnOff = async () => {
+    if (!client || turningOff) return;
+    setTurningOff(true);
+    try {
+      await useVacationStore.getState().updateVacationResponse(client, { isEnabled: false }, managedAccountId ?? undefined);
+    } catch {
+      toast.error(tNotifications('vacation_save_failed'));
+    } finally {
+      setTurningOff(false);
+    }
+  };
+
   return (
-    <button
-      onClick={() => router.push(buildSettingsPath('vacation'))}
+    <div
       className={cn(
-        "flex items-center gap-2 w-full px-3 py-2 text-xs",
+        "flex items-center gap-2 w-full px-3 py-1.5 text-xs",
         "bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-400",
-        "hover:bg-amber-500/15 dark:hover:bg-amber-400/15 transition-colors"
       )}
     >
-      <Palmtree className="w-3.5 h-3.5 flex-shrink-0" />
-      <span className="truncate font-medium">{t("vacation_active")}</span>
-      <Settings className="w-3 h-3 ms-auto flex-shrink-0 opacity-60" />
-    </button>
+      <button
+        type="button"
+        onClick={() => router.push(buildSettingsPath('vacation'))}
+        className="flex items-center gap-2 min-w-0 flex-1 py-0.5 text-start hover:underline"
+      >
+        <Palmtree className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate font-medium">{tFilters("vacation_active")}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => void turnOff()}
+        disabled={turningOff || isSaving}
+        className="inline-flex flex-shrink-0 items-center gap-1 px-2 py-0.5 rounded-sm font-medium hover:bg-amber-500/15 dark:hover:bg-amber-400/15 disabled:opacity-60 transition-colors"
+      >
+        {turningOff ? <Loader2 className="w-3 h-3 animate-spin" aria-hidden /> : null}
+        {t("vacation_turn_off")}
+      </button>
+    </div>
   );
 }
 

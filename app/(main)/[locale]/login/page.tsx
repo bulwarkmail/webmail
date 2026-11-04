@@ -310,6 +310,10 @@ function LoginPageContent() {
   const customServerMode = !hasServerList && allowCustomJmapEndpoint;
   const canLookUpServer = customServerMode && !IS_LITE;
   const [serverEditing, setServerEditing] = useState(false);
+  // Change on a found server: another one is wanted, nothing failed.
+  const [serverChanging, setServerChanging] = useState(false);
+  // Asks for focus in the server field once it is on screen (the field mounts in the next render).
+  const [serverFocusRequest, setServerFocusRequest] = useState(0);
   const [serverLookup, setServerLookup] = useState<{ domain: string; status: "looking" | "found" | "failed"; url: string | null } | null>(null);
   const [serverError, setServerError] = useState<ServerFieldError>(null);
   const [emailNeeded, setEmailNeeded] = useState(false);
@@ -400,6 +404,7 @@ function LoginPageContent() {
   const justRemovedSuggestion = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const prevError = useRef<string | null>(null);
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
@@ -510,6 +515,23 @@ function LoginPageContent() {
     return () => clearTimeout(timer);
   }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer]);
 
+  useEffect(() => {
+    if (serverFocusRequest) serverInputRef.current?.focus();
+  }, [serverFocusRequest]);
+
+  // The field opens by itself when the lookup found nothing, usually after the user
+  // already left the address field. Focus goes there, unless they are typing elsewhere.
+  const serverFieldOpenedByLookup = canLookUpServer && lookupForAddress?.status === "failed" && !configuredServerUrl && !unsupportedMailProvider;
+  useEffect(() => {
+    if (!serverFieldOpenedByLookup) return;
+    const active = document.activeElement;
+    if (active && active.id === "username") return;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+      if (!(active.id === "password" && !active.value)) return;
+    }
+    serverInputRef.current?.focus();
+  }, [serverFieldOpenedByLookup, typedDomain]);
+
   /**
    * The server to sign in to in custom-server mode, looked up now if need be.
    * Null after it opened the field and said what is missing there.
@@ -529,7 +551,7 @@ function LoginPageContent() {
     }
     setServerEditing(true);
     setServerError(serverFieldOpen && jmapEndpoint.trim() ? "invalid" : "needed");
-    setTimeout(() => serverInputRef.current?.focus(), 0);
+    setServerFocusRequest((n) => n + 1);
     return null;
   };
 
@@ -580,6 +602,19 @@ function LoginPageContent() {
       return () => clearTimeout(timer);
     }
     prevError.current = error;
+  }, [error]);
+
+  // A wrong password or token: focus that field with its text selected, ready to type again.
+  useEffect(() => {
+    if (error === "invalid_credentials" && !totpBlamed) {
+      passwordInputRef.current?.focus();
+      passwordInputRef.current?.select();
+    } else if (error === "invalid_token") {
+      tokenInputRef.current?.focus();
+      tokenInputRef.current?.select();
+    }
+    // Only on a new error, not when the code field changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   // Auto-show and focus TOTP field when server requires it
@@ -1232,6 +1267,10 @@ function LoginPageContent() {
   };
 
   const browserSignInShown = browserSignInAvailable() && desktopSignInEnabled;
+  // Once a password (or token) is typed, "Sign in" is what the user means: it becomes the
+  // main button and "Sign in with your browser" the other way.
+  const formSignInPreferred = signInWithToken ? accessToken.trim() !== "" : formData.password !== "";
+  const browserSignInPrimary = browserSignInShown && !formSignInPreferred;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1413,7 +1452,10 @@ function LoginPageContent() {
     <div className="space-y-3">
       <Button
         type="button"
-        className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+        variant={browserSignInPrimary ? undefined : "outline"}
+        className={browserSignInPrimary
+          ? "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+          : "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"}
         onClick={handleBrowserSignIn}
         disabled={desktopWaiting || isLoading}
         data-testid="desktop-browser-sign-in"
@@ -2052,8 +2094,10 @@ function LoginPageContent() {
                       onEdit={() => {
                         setJmapEndpoint(autoServer ? serverHostLabel(autoServer) : "");
                         setServerEditing(true);
-                        setTimeout(() => serverInputRef.current?.focus(), 0);
+                        setServerChanging(true);
+                        setServerFocusRequest((n) => n + 1);
                       }}
+                      changing={serverChanging}
                       provider={unsupportedMailProvider}
                       error={serverError}
                       showTrouble={!IS_DESKTOP_BUILD}
@@ -2071,11 +2115,12 @@ function LoginPageContent() {
                     </label>
                     <div className="relative">
                       <Input
+                        ref={passwordInputRef}
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
                         placeholder={t("password_placeholder")}
                         required={!liteSsoRequired && !signInWithToken}
                         autoComplete="current-password"
@@ -2168,20 +2213,31 @@ function LoginPageContent() {
                     </div>
                   )}
 
-                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        clearError();
-                        setTokenMode(!signInWithToken);
-                        setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <KeyRound className="w-3.5 h-3.5" />
-                      {signInWithToken ? t("password_toggle") : t("token_toggle")}
-                    </button>
-                  )}
+                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (() => {
+                    const tokenToggle = (
+                      <button
+                        type="button"
+                        data-testid="login-token-toggle"
+                        onClick={() => {
+                          clearError();
+                          setTokenMode(!signInWithToken);
+                          setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <KeyRound className="w-3.5 h-3.5" />
+                        {signInWithToken ? t("password_toggle") : t("token_toggle")}
+                      </button>
+                    );
+                    // Few people have a token: the way back to the password stays in sight,
+                    // the way to a token waits behind "Other ways to sign in".
+                    return signInWithToken ? tokenToggle : (
+                      <details className="text-xs text-muted-foreground" data-testid="login-other-ways">
+                        <summary className="cursor-pointer hover:text-foreground w-fit">{tLogin("other_ways")}</summary>
+                        <div className="mt-2 ps-1">{tokenToggle}</div>
+                      </details>
+                    );
+                  })()}
 
                   {/* Remember me, for the password and the SSO buttons below */}
                   {showRememberMe && rememberMeBox}
@@ -2189,8 +2245,9 @@ function LoginPageContent() {
 
                 <Button
                   type="submit"
-                  variant={browserSignInShown ? "outline" : undefined}
-                  className={browserSignInShown
+                  data-testid="login-submit"
+                  variant={browserSignInPrimary ? "outline" : undefined}
+                  className={browserSignInPrimary
                     ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
                     : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
                   disabled={isLoading || (liteSsoRequired && oauthLoading)}

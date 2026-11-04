@@ -21,3 +21,20 @@ export function isServerDefaultCollectionName(name: string | undefined, kind: De
 export function collectionDisplayName(name: string, kind: DefaultCollectionKind, plainName: string): string {
   return isServerDefaultCollectionName(name, kind) ? plainName : name;
 }
+
+/**
+ * The name to show for a collection anywhere in the app: the plain name for the
+ * user's own default one, and for a colleague's shared default the plain name with
+ * whose it is ("Calendar (bob@example.org)"), so two of them stay apart.
+ */
+export function collectionLabel(
+  collection: { name: string; isShared?: boolean },
+  kind: DefaultCollectionKind,
+  plainName: string,
+): string {
+  const { name } = collection;
+  if (!isServerDefaultCollectionName(name, kind)) return name;
+  if (!collection.isShared) return plainName;
+  const owner = /\(([^()]*)\)\s*$/.exec(name.trim())?.[1];
+  return owner ? `${plainName} (${owner})` : plainName;
+}

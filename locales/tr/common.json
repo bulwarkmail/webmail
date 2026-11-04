@@ -174,6 +174,7 @@
     },
     "clear_search": "Aramayı temizle",
     "vacation_active": "Tatil otomatik yanıtı aktif",
+    "vacation_turn_off": "Kapat",
     "demo_banner": "Demo Modu",
     "demo_reset": "Sıfırla",
     "demo_tour": "Tur",
@@ -1405,6 +1406,8 @@
     "from_description": "Hemen başlamak için boş bırakın.",
     "until_label": "Bitiş (isteğe bağlı)",
     "until_description": "Siz kapatana kadar yanıt vermeye devam etmek için boş bırakın.",
+    "from_placeholder": "Hemen",
+    "until_placeholder": "Siz kapatana kadar",
     "audience_all": "Herkese",
     "audience_internal": "Yalnızca kuruluşuma ({domains})",
     "audience_external": "Yalnızca kuruluşum dışındakilere",
@@ -2918,6 +2921,7 @@
       "open_sieve_editor": "Ham Sieve düzenleyicisini aç",
       "fetch_error": "Filtreler yüklenemedi",
       "expanded_view": "Genişletilmiş görünüm",
+      "show_rule_details": "Her kuralın koşullarını ve işlemlerini göster",
       "expanded_view_description": "Filtre kurallarını ayrıntılı koşul ve işlem bloklarıyla göster",
       "if": "Eğer",
       "then": "O zaman",
@@ -2996,6 +3000,9 @@
       "validation_period_empty": "Dönem için bir başlangıç veya bitiş tarihi girin",
       "validation_period_invalid": "Dönem için saatiyle birlikte geçerli bir tarih girin veya alanı boş bırakın",
       "apply_existing_period": "Dönemi olan bir kural yalnızca o dönemde gelen iletilere uygulanır, bu nedenle mevcut iletilere uygulanamaz.",
+      "apply_existing_in": "{folder} içindeki mevcut iletilere de uygula",
+      "apply_existing_count": "{count, plural, one {{folder} içindeki # mevcut iletiye de uygula} other {{folder} içindeki # mevcut iletiye de uygula}}",
+      "apply_existing_none": "{folder} içinde bu kurala uyan ileti henüz yok.",
       "period_status_scheduled": "planlandı",
       "period_status_active": "etkin",
       "period_status_expired": "süresi doldu"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Bu cihazda bu hesabın oturumunu kapatın."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "sistem tepsisi bildirim alanı arka plan tepsiye küçült tray",
+      "autostart": "otomatik başlatma başlangıç Windows ile başlat oturum açınca",
+      "default_app": "varsayılan posta uygulaması varsayılan e-posta programı mailto e-posta bağlantıları",
+      "menu_bar": "menü çubuğu menüler Alt tuşu Dosya Düzen Görünüm",
+      "updates": "güncellemeler güncelleme yeni sürüm beta kanal",
+      "devtools": "geliştirici araçları devtools konsol incele F12 hata ayıklama",
+      "taskbar": "görev çubuğu yanıp sönme Dock dikkat",
+      "quiet_hours": "sessiz saatler rahatsız etmeyin sessiz gece",
+      "telemetry": "kullanım bilgisi telemetri istatistik analiz",
+      "crash": "çökme raporları hata raporları çökme",
+      "threads": "ileti dizileri konuşmalar gruplama threads",
+      "block_images": "resimleri engelle dış resimler resimleri yükle",
+      "dark_mode": "karanlık mod açık mod gece modu dark mode",
+      "timezone": "saat dilimi timezone",
+      "reading_pane": "okuma bölmesi önizleme bölmesi bölünmüş görünüm",
+      "week_start": "hafta başlangıcı ilk gün pazartesi pazar",
+      "empty_trash": "çöp kutusunu boşalt çöp kutusu silinen öğeler",
+      "do_not_disturb": "sessiz saatler sessize al sessizlik"
+    },
+    "desktop_notifications": {
+      "title": "Bu bilgisayarda",
+      "closed_label": "Pencere kapalıyken",
+      "closed_description": "{appName} çalıştığı sürece yeni postaları bildirir. Pencereyi kapattıktan sonra sistem tepsisinde çalışmaya devam etmesi için bunu {page} bölümünde açın."
+    },
+    "push_unsupported": "Bu tarayıcı, web sitesi kapalıyken bildirim gösteremez.",
+    "backup_description_app": "Diğer cihazlarınızda da aynı ayarları kullanın.",
+    "sender_favicons": {
+      "label": "Şirket web sitelerinden resimler",
+      "description": "İş göndericileri için profil resmi olarak web sitesi simgelerini göster"
+    },
+    "privacy_push": {
+      "label": "Bildirim aktarıcısı",
+      "description": "{appName} kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunları {page} sayfasında açıp kapatırsınız."
+    },
+    "reset": {
+      "message": "Tüm ayarları başlangıçtaki hâline döndürür. Postalarınız, filtreleriniz, otomatik yanıtınız ve imzalarınız olduğu gibi kalır.",
+      "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
+      "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
     "desktop_attention_title": "Bu bilgisayarda"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Adınız",
+      "description": "Birine e-posta gönderdiğinizde bu adı adresinizin yanında görür.",
+      "saved": "Adınız kaydedildi.",
+      "error": "Adınız kaydedilemedi. Yeniden deneyin."
+    },
+    "addresses": {
+      "description": "Gönderebileceğiniz adresler; her birinin kendi adı ve imzası var.",
+      "label": "Adresleriniz",
+      "count": "{count, plural, =0 {Henüz adres yok} one {# adres} other {# adres}}",
+      "manage": "Adresleri düzenle…",
+      "modal_title": "E-posta adresleriniz",
+      "add": "Adres ekle",
+      "edit": "Adresi düzenle",
+      "added": "Adres eklendi.",
+      "saved": "Adres kaydedildi.",
+      "deleted": "Adres silindi.",
+      "delete_title": "Bu adres silinsin mi?"
+    },
+    "signatures": {
+      "title": "İmzalar",
+      "description": "Yazdığınız iletilerin sonuna eklenir. Her adresin kendi imzası vardır.",
+      "saved": "İmza kaydedildi.",
+      "error": "İmza kaydedilemedi. Yeniden deneyin.",
+      "no_addresses": "Henüz gönderebileceğiniz bir adres yok."
+    },
+    "search": {
+      "addresses": "kimlik kimlikler takma ad gönderen gönderen adresi kimden adresi identity alias sender",
+      "signatures": "imza e-posta imzası alt bilgi kimlik gönderen kimden adresi signature",
+      "your_name": "görünen ad tam ad gönderen adı display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
@@ -7371,10 +7453,12 @@
     "server_looking": "Posta sunucunuz aranıyor…",
     "server_found": "Posta sunucusu: {server}",
     "server_change": "Değiştir",
+    "server_change_hint": "Başka bir sunucu adresi yazın.",
     "server_not_found": "Bu adresin posta sunucusunu bulamadık. Buraya girin, örneğin mail.example.com.",
     "server_needed": "Posta sunucunuzun adresini girin.",
     "server_invalid": "Bu bir sunucu adresi değil. mail.example.com gibi yazın.",
     "email_needed": "Önce e-posta adresinizi girin.",
+    "other_ways": "Diğer oturum açma yolları",
     "trouble": "Sorun mu var?",
     "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."

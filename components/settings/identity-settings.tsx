@@ -27,29 +27,23 @@ export function EmailAddressesSection() {
   const t = useTranslations('settings.identities');
   const tAccount = useTranslations('settings.account');
   const tEmail = useTranslations('settings.email_behavior');
+  const tAddr = useTranslations('uxs2_ident.addresses');
   const { identities } = useIdentityStore();
   const { subAddressDelimiter, updateSetting } = useSettingsStore();
   const [showModal, setShowModal] = useState(false);
 
   return (
     <>
-      <SettingsSection id="addresses" title={tAccount('sections.addresses')} description={t('description')}>
-        {/* Identity Count */}
-        <SettingItem
-          label={t('identities_count.label')}
-          description={t('identities_count.description')}
-          term="identity"
-        >
+      {/* The section says what the addresses are; the row under it doesn't
+          say it again (settings-p2-18). No "identity": a developer word. */}
+      <SettingsSection id="addresses" title={tAccount('sections.addresses')} description={tAddr('description')}>
+        <SettingItem label={tAddr('label')}>
           <div className="flex items-center gap-2">
             <span className="text-sm text-foreground">
-              {identities.length === 0
-                ? t('identities_count.count_zero')
-                : identities.length === 1
-                ? t('identities_count.count_one')
-                : t('identities_count.count_other', { count: identities.length })}
+              {tAddr('count', { count: identities.length })}
             </span>
             <Button onClick={() => setShowModal(true)} size="sm">
-              {t('manage')}
+              {tAddr('manage')}
             </Button>
           </div>
         </SettingItem>

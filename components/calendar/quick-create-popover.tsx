@@ -11,6 +11,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { Calendar } from "@/lib/jmap/types";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export interface QuickCreateDraft {
   start: Date;
@@ -69,6 +70,7 @@ export function QuickCreatePopover({
   onMoreOptions,
   onClose,
 }: QuickCreatePopoverProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -207,7 +209,7 @@ export function QuickCreatePopover({
                 className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-hidden"
               >
                 {calendars.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{shownName.calendar(c)}</option>
                 ))}
               </select>
             </div>

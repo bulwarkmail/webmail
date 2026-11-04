@@ -174,6 +174,7 @@
     },
     "clear_search": "Clear search",
     "vacation_active": "Vacation responder is active",
+    "vacation_turn_off": "Turn off",
     "demo_banner": "Demo Mode",
     "demo_reset": "Reset",
     "demo_tour": "Tour",
@@ -1405,6 +1406,8 @@
     "from_description": "Leave it empty to start right away.",
     "until_label": "Until (optional)",
     "until_description": "Leave it empty to keep replying until you turn it off.",
+    "from_placeholder": "Right away",
+    "until_placeholder": "Until you turn it off",
     "audience_all": "Everyone",
     "audience_internal": "Only my organisation ({domains})",
     "audience_external": "Only people outside my organisation",
@@ -2925,6 +2928,7 @@
       "open_sieve_editor": "Open raw Sieve editor",
       "fetch_error": "Couldn't load the filters",
       "expanded_view": "Expanded view",
+      "show_rule_details": "Show each rule’s conditions and actions",
       "expanded_view_description": "Show filter rules with detailed condition and action blocks",
       "if": "If",
       "then": "Then",
@@ -3003,6 +3007,9 @@
       "validation_period_empty": "Enter a start or end date for the period",
       "validation_period_invalid": "Enter a valid date with a time for the period, or leave the field empty",
       "apply_existing_period": "A rule with a period acts only on messages that arrive within it, so it cannot run on existing messages.",
+      "apply_existing_in": "Also apply to the messages already in {folder}",
+      "apply_existing_count": "{count, plural, one {Also apply to the # message already in {folder}} other {Also apply to the # messages already in {folder}}}",
+      "apply_existing_none": "No message in {folder} matches this rule yet.",
       "period_status_scheduled": "scheduled",
       "period_status_active": "active",
       "period_status_expired": "expired"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Sign out of this account on this device."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tray system tray notification area background close to tray minimize to tray",
+      "autostart": "autostart startup start with Windows launch at login open at login run at startup",
+      "default_app": "default mail app default email program mailto email links",
+      "menu_bar": "menu bar menus Alt key File Edit View",
+      "updates": "updates update new version beta channel",
+      "devtools": "developer tools devtools console inspect F12 debugging",
+      "taskbar": "taskbar flash blink Dock bounce attention",
+      "quiet_hours": "quiet hours do not disturb silent mute night",
+      "telemetry": "usage info telemetry statistics analytics",
+      "crash": "crash reports error reports crash dump",
+      "threads": "threads thread conversation view conversations",
+      "block_images": "block images remote images load images external images",
+      "dark_mode": "dark mode light mode night mode dark theme",
+      "timezone": "timezone time zone",
+      "reading_pane": "reading pane preview pane split view",
+      "week_start": "week start start of week Monday Sunday",
+      "empty_trash": "empty trash trash bin deleted items",
+      "do_not_disturb": "quiet hours mute silence"
+    },
+    "desktop_notifications": {
+      "title": "On this computer",
+      "closed_label": "With the window closed",
+      "closed_description": "{appName} tells you about new mail as long as it runs. To keep it running in the tray after you close its window, turn that on in {page}."
+    },
+    "push_unsupported": "This browser can't show notifications when the website is closed.",
+    "backup_description_app": "Use the same settings on your other devices.",
+    "sender_favicons": {
+      "label": "Pictures from company websites",
+      "description": "For companies, show the icon of their website as the sender's picture"
+    },
+    "privacy_push": {
+      "label": "Relay for notifications",
+      "description": "Notifications while {appName} is closed go through a push relay, which never sees your mail. You turn them on or off on the {page} page."
+    },
+    "reset": {
+      "message": "Put all settings back to how they were at the start. Your mail, filters, out of office and signatures stay as they are.",
+      "sync_on": "Your other devices use the same settings, so they change too.",
+      "sync_off": "Your other devices keep their settings."
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hour} other {# hours}}",
     "desktop_attention_title": "On this computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Your name",
+      "description": "People see this name next to your address when you send them mail.",
+      "saved": "Your name is saved.",
+      "error": "Your name could not be saved. Try again."
+    },
+    "addresses": {
+      "description": "The addresses you can send from, each with its own name and signature.",
+      "label": "Your addresses",
+      "count": "{count, plural, =0 {No addresses yet} one {# address} other {# addresses}}",
+      "manage": "Edit addresses…",
+      "modal_title": "Your email addresses",
+      "add": "Add address",
+      "edit": "Edit address",
+      "added": "Address added.",
+      "saved": "Address saved.",
+      "deleted": "Address deleted.",
+      "delete_title": "Delete this address?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "Added at the end of the messages you write. Each address has its own.",
+      "saved": "Signature saved.",
+      "error": "The signature could not be saved. Try again.",
+      "no_addresses": "There is no address to send from yet."
+    },
+    "search": {
+      "addresses": "identity identities alias aliases sender sender address from address from name",
+      "signatures": "signature email signature sign-off footer identity sender from address",
+      "your_name": "display name full name sender name from name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
@@ -7371,10 +7453,12 @@
     "server_looking": "Looking for your mail server…",
     "server_found": "Mail server: {server}",
     "server_change": "Change",
+    "server_change_hint": "Type another server address.",
     "server_not_found": "We couldn't find the mail server for this address. Enter it here, for example mail.example.com.",
     "server_needed": "Enter the address of your mail server.",
     "server_invalid": "This isn't a server address. Type it like mail.example.com.",
     "email_needed": "Enter your email address first.",
+    "other_ways": "Other ways to sign in",
     "trouble": "Having trouble?",
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."

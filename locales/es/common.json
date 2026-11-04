@@ -174,6 +174,7 @@
     },
     "clear_search": "Limpiar búsqueda",
     "vacation_active": "Respuesta automática activa",
+    "vacation_turn_off": "Desactivar",
     "demo_banner": "Modo demo",
     "demo_reset": "Restablecer",
     "demo_tour": "Tour",
@@ -1405,6 +1406,8 @@
     "from_description": "Déjalo vacío para empezar ya.",
     "until_label": "Hasta (opcional)",
     "until_description": "Déjalo vacío para seguir respondiendo hasta que lo desactives.",
+    "from_placeholder": "Desde ahora",
+    "until_placeholder": "Hasta que lo desactive",
     "audience_all": "Todos",
     "audience_internal": "Solo mi organización ({domains})",
     "audience_external": "Solo personas de fuera de mi organización",
@@ -2918,6 +2921,7 @@
       "open_sieve_editor": "Abrir editor Sieve",
       "fetch_error": "Error al cargar los filtros",
       "expanded_view": "Vista expandida",
+      "show_rule_details": "Mostrar las condiciones y acciones de cada regla",
       "expanded_view_description": "Mostrar reglas de filtro con bloques detallados de condiciones y acciones",
       "if": "Si",
       "then": "Entonces",
@@ -2996,6 +3000,9 @@
       "validation_period_empty": "Introduce una fecha de inicio o de fin para el período",
       "validation_period_invalid": "Introduce una fecha válida con hora para el período o deja el campo vacío",
       "apply_existing_period": "Una regla con período solo actúa sobre los mensajes que llegan dentro de él, por lo que no se puede aplicar a los mensajes existentes.",
+      "apply_existing_in": "Aplicar también a los mensajes que ya están en {folder}",
+      "apply_existing_count": "{count, plural, one {Aplicar también al # mensaje que ya está en {folder}} other {Aplicar también a los # mensajes que ya están en {folder}}}",
+      "apply_existing_none": "Ningún mensaje de {folder} coincide todavía con esta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
       "period_status_expired": "caducada"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Cerrar sesión de esta cuenta en este dispositivo."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "bandeja bandeja del sistema área de notificación segundo plano minimizar",
+      "autostart": "inicio automático arranque iniciar con Windows al iniciar sesión",
+      "default_app": "aplicación de correo predeterminada programa de correo mailto enlaces de correo",
+      "menu_bar": "barra de menús menús tecla Alt Archivo Editar Ver",
+      "updates": "actualizaciones actualizar nueva versión beta canal",
+      "devtools": "herramientas de desarrollo devtools consola inspeccionar F12 depuración",
+      "taskbar": "barra de tareas parpadear Dock atención",
+      "quiet_hours": "horas de silencio no molestar silencio silenciar noche",
+      "telemetry": "información de uso telemetría estadísticas analítica",
+      "crash": "informes de errores informes de fallos fallo",
+      "threads": "hilos conversaciones agrupar threads",
+      "block_images": "bloquear imágenes imágenes externas cargar imágenes",
+      "dark_mode": "modo oscuro modo claro modo nocturno tema oscuro",
+      "timezone": "zona horaria huso horario timezone",
+      "reading_pane": "panel de lectura panel de vista previa vista dividida",
+      "week_start": "inicio de semana primer día lunes domingo",
+      "empty_trash": "vaciar la papelera papelera elementos eliminados",
+      "do_not_disturb": "horas de silencio silenciar silencio"
+    },
+    "desktop_notifications": {
+      "title": "En este ordenador",
+      "closed_label": "Con la ventana cerrada",
+      "closed_description": "{appName} le avisa del correo nuevo mientras está abierto. Para que siga en la bandeja al cerrar la ventana, actívelo en {page}."
+    },
+    "push_unsupported": "Este navegador no puede mostrar notificaciones cuando el sitio web está cerrado.",
+    "backup_description_app": "Use los mismos ajustes en sus otros dispositivos.",
+    "sender_favicons": {
+      "label": "Imágenes de los sitios web de empresas",
+      "description": "Mostrar iconos de sitios web como fotos de perfil para remitentes empresariales"
+    },
+    "privacy_push": {
+      "label": "Relé de notificaciones",
+      "description": "Las notificaciones con {appName} cerrado pasan por un relé push, que nunca ve su correo. Las activa o desactiva en la página {page}."
+    },
+    "reset": {
+      "message": "Devuelve todos los ajustes a como estaban al principio. Su correo, filtros, respuesta automática y firmas no cambian.",
+      "sync_on": "Sus otros dispositivos usan los mismos ajustes, así que también cambian.",
+      "sync_off": "Sus otros dispositivos conservan sus ajustes."
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# horas}}",
     "desktop_attention_title": "En este ordenador"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Tu nombre",
+      "description": "La gente ve este nombre junto a tu dirección cuando les envías un correo.",
+      "saved": "Tu nombre se ha guardado.",
+      "error": "No se ha podido guardar tu nombre. Inténtalo de nuevo."
+    },
+    "addresses": {
+      "description": "Las direcciones desde las que puedes enviar, cada una con su propio nombre y firma.",
+      "label": "Tus direcciones",
+      "count": "{count, plural, =0 {Todavía no hay direcciones} one {# dirección} other {# direcciones}}",
+      "manage": "Editar direcciones…",
+      "modal_title": "Tus direcciones de correo",
+      "add": "Añadir dirección",
+      "edit": "Editar dirección",
+      "added": "Dirección añadida.",
+      "saved": "Dirección guardada.",
+      "deleted": "Dirección eliminada.",
+      "delete_title": "¿Eliminar esta dirección?"
+    },
+    "signatures": {
+      "title": "Firmas",
+      "description": "Se añade al final de los mensajes que escribes. Cada dirección tiene la suya.",
+      "saved": "Firma guardada.",
+      "error": "No se ha podido guardar la firma. Inténtalo de nuevo.",
+      "no_addresses": "Todavía no hay ninguna dirección desde la que enviar."
+    },
+    "search": {
+      "addresses": "identidad identidades alias remitente dirección del remitente dirección de envío identity alias sender",
+      "signatures": "firma firma de correo pie identidad remitente dirección de envío signature",
+      "your_name": "nombre visible nombre completo nombre del remitente display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",
@@ -7371,10 +7453,12 @@
     "server_looking": "Buscando tu servidor de correo…",
     "server_found": "Servidor de correo: {server}",
     "server_change": "Cambiar",
+    "server_change_hint": "Escribe otra dirección de servidor.",
     "server_not_found": "No encontramos el servidor de correo de esta dirección. Escríbelo aquí, por ejemplo mail.example.com.",
     "server_needed": "Escribe la dirección de tu servidor de correo.",
     "server_invalid": "Esto no es la dirección de un servidor. Escríbela como mail.example.com.",
     "email_needed": "Primero escribe tu dirección de correo.",
+    "other_ways": "Otras formas de iniciar sesión",
     "trouble": "¿Tienes problemas?",
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."

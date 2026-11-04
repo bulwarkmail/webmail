@@ -2,15 +2,30 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FirstStartNoticeBar } from '../first-start-notice';
 import { resetFirstStartNotices, showFirstStartNotice } from '@/lib/first-start-notices';
+import { useSettingsStore } from '@/stores/settings-store';
 
 beforeEach(() => {
   localStorage.clear();
   resetFirstStartNotices();
+  // The welcome tips were closed: notices may show.
+  useSettingsStore.setState({ onboardingCompleted: true, showOnboardingOnNewDevices: false });
 });
 
 afterEach(() => cleanup());
 
 describe('first-start notices', () => {
+  it('wait for the welcome tips, wherever they show, and come after Got it', () => {
+    useSettingsStore.setState({ onboardingCompleted: false });
+    render(<FirstStartNoticeBar />);
+    act(() => showFirstStartNotice({ id: 'offline', text: 'Mail is kept on this device.' }));
+    expect(screen.queryByText('Mail is kept on this device.')).toBeNull();
+    act(() => {
+      localStorage.setItem('onboarding_completed', 'true');
+      useSettingsStore.setState({ onboardingCompleted: true });
+    });
+    expect(screen.getByText('Mail is kept on this device.')).toBeTruthy();
+  });
+
   it('show one at a time, each with a close button, the next once the first is closed', () => {
     render(<FirstStartNoticeBar />);
     act(() => {

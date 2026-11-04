@@ -174,6 +174,7 @@
     },
     "clear_search": "Keresés törlése",
     "vacation_active": "Automatikus válasz aktív",
+    "vacation_turn_off": "Kikapcsolás",
     "demo_banner": "Demó mód",
     "demo_reset": "Visszaállítás",
     "demo_tour": "Bemutató",
@@ -1405,6 +1406,8 @@
     "from_description": "Hagyja üresen az azonnali kezdéshez.",
     "until_label": "Eddig (nem kötelező)",
     "until_description": "Hagyja üresen, hogy a válaszolás addig tartson, amíg ki nem kapcsolja.",
+    "from_placeholder": "Azonnal",
+    "until_placeholder": "Amíg ki nem kapcsolja",
     "audience_all": "Mindenkinek",
     "audience_internal": "Csak a szervezetemnek ({domains})",
     "audience_external": "Csak a szervezetemen kívülieknek",
@@ -2921,6 +2924,7 @@
       "open_sieve_editor": "Nyers Sieve szerkesztő megnyitása",
       "fetch_error": "Nem sikerült betölteni a szűrőket",
       "expanded_view": "Részletes nézet",
+      "show_rule_details": "Minden szabály feltételeinek és műveleteinek megjelenítése",
       "expanded_view_description": "Szűrőszabályok megjelenítése részletes feltétel- és műveletblokkokkal",
       "if": "Ha",
       "then": "Akkor",
@@ -2999,6 +3003,9 @@
       "validation_period_empty": "Adjon meg kezdő vagy befejező dátumot az időszakhoz",
       "validation_period_invalid": "Adjon meg érvényes dátumot időponttal az időszakhoz, vagy hagyja üresen a mezőt",
       "apply_existing_period": "Az időszakhoz kötött szabály csak az abban érkező üzenetekre hat, ezért meglévő üzenetekre nem alkalmazható.",
+      "apply_existing_in": "Alkalmazás a már itt lévő üzenetekre is: {folder}",
+      "apply_existing_count": "{count, plural, one {Alkalmazás a már itt lévő # üzenetre is: {folder}} other {Alkalmazás a már itt lévő # üzenetre is: {folder}}}",
+      "apply_existing_none": "Itt még egy üzenet sem felel meg ennek a szabálynak: {folder}.",
       "period_status_scheduled": "ütemezett",
       "period_status_active": "aktív",
       "period_status_expired": "lejárt"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Kijelentkezés ebből a fiókból ezen az eszközön."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tálca értesítési terület háttér tálcára kicsinyítés tray",
+      "autostart": "automatikus indítás indításkor Windows-zal együtt bejelentkezéskor",
+      "default_app": "alapértelmezett levelezőalkalmazás alapértelmezett levelezőprogram mailto e-mail-hivatkozások",
+      "menu_bar": "menüsor menük Alt billentyű Fájl Szerkesztés Nézet",
+      "updates": "frissítések frissítés új verzió béta csatorna",
+      "devtools": "fejlesztői eszközök devtools konzol vizsgálat F12 hibakeresés",
+      "taskbar": "tálca villogás Dock figyelem",
+      "quiet_hours": "csendes órák ne zavarjanak némítás éjszaka",
+      "telemetry": "használati adatok telemetria statisztika elemzés",
+      "crash": "összeomlási jelentések hibajelentések összeomlás",
+      "threads": "szálak beszélgetések csoportosítás threads",
+      "block_images": "képek letiltása külső képek képek betöltése",
+      "dark_mode": "sötét mód világos mód éjszakai mód dark mode",
+      "timezone": "időzóna timezone",
+      "reading_pane": "olvasóablak előnézeti ablak osztott nézet",
+      "week_start": "hét kezdete első nap hétfő vasárnap",
+      "empty_trash": "kuka ürítése kuka törölt elemek",
+      "do_not_disturb": "csendes órák némítás csend"
+    },
+    "desktop_notifications": {
+      "title": "Ezen a számítógépen",
+      "closed_label": "Bezárt ablakkal",
+      "closed_description": "A(z) {appName} szól az új levelekről, amíg fut. Ha azt szeretné, hogy az ablak bezárása után a tálcán fusson tovább, kapcsolja be itt: {page}."
+    },
+    "push_unsupported": "Ez a böngésző nem tud értesítést mutatni, ha a webhely be van zárva.",
+    "backup_description_app": "Ugyanazok a beállítások a többi eszközén.",
+    "sender_favicons": {
+      "label": "Képek a cégek webhelyeiről",
+      "description": "Weboldal ikonok megjelenítése profilképekként az üzleti feladók számára"
+    },
+    "privacy_push": {
+      "label": "Értesítési továbbító",
+      "description": "A bezárt {appName} értesítései egy push továbbítón mennek át, amely soha nem látja a leveleit. Ki- és bekapcsolni a(z) {page} oldalon lehet."
+    },
+    "reset": {
+      "message": "Minden beállítást visszaállít a kezdeti állapotra. A levelei, szűrői, automatikus válasza és aláírásai maradnak.",
+      "sync_on": "A többi eszköze ugyanazokat a beállításokat használja, ezért azok is megváltoznak.",
+      "sync_off": "A többi eszköze megtartja a beállításait."
     }
   },
   "setup": {
@@ -7329,6 +7378,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# óra} other {# óra}}",
     "desktop_attention_title": "Ezen a számítógépen"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Az Ön neve",
+      "description": "Ezt a nevet látják mások a címe mellett, amikor levelet küld nekik.",
+      "saved": "A neve mentve.",
+      "error": "A nevét nem sikerült menteni. Próbálja újra."
+    },
+    "addresses": {
+      "description": "A címek, amelyekről küldhet, mindegyik saját névvel és aláírással.",
+      "label": "Az Ön címei",
+      "count": "{count, plural, =0 {Még nincs cím} one {# cím} other {# cím}}",
+      "manage": "Címek szerkesztése…",
+      "modal_title": "Az Ön e-mail-címei",
+      "add": "Cím hozzáadása",
+      "edit": "Cím szerkesztése",
+      "added": "Cím hozzáadva.",
+      "saved": "Cím mentve.",
+      "deleted": "Cím törölve.",
+      "delete_title": "Törli ezt a címet?"
+    },
+    "signatures": {
+      "title": "Aláírások",
+      "description": "Az Ön által írt üzenetek végére kerül. Minden címnek saját aláírása van.",
+      "saved": "Aláírás mentve.",
+      "error": "Az aláírást nem sikerült menteni. Próbálja újra.",
+      "no_addresses": "Még nincs cím, amelyről küldhetne."
+    },
+    "search": {
+      "addresses": "identitás identitások álnév alias feladó feladó címe feladócím identity alias sender",
+      "signatures": "aláírás e-mail aláírás lábléc identitás feladó feladócím signature",
+      "your_name": "megjelenített név teljes név feladó neve display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Először adja meg a szerver címét.",
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
@@ -7371,10 +7453,12 @@
     "server_looking": "A levelezőszerver keresése…",
     "server_found": "Levelezőszerver: {server}",
     "server_change": "Módosítás",
+    "server_change_hint": "Írjon be egy másik szervercímet.",
     "server_not_found": "Ehhez a címhez nem találtunk levelezőszervert. Írja be ide, például mail.example.com.",
     "server_needed": "Írja be a levelezőszervere címét.",
     "server_invalid": "Ez nem szervercím. Így írja: mail.example.com.",
     "email_needed": "Először írja be az e-mail-címét.",
+    "other_ways": "Más bejelentkezési módok",
     "trouble": "Probléma van?",
     "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."

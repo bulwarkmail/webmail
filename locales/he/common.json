@@ -165,6 +165,7 @@
     },
     "clear_search": "נקה חיפוש",
     "vacation_active": "משיב חופשה פעיל",
+    "vacation_turn_off": "כיבוי",
     "demo_banner": "מצב הדגמה",
     "demo_reset": "אִתחוּל",
     "demo_tour": "סִיוּר",
@@ -1349,6 +1350,8 @@
     "from_description": "השאירו ריק כדי להתחיל מיד.",
     "until_label": "עד (לא חובה)",
     "until_description": "השאירו ריק כדי להמשיך להשיב עד שתכבו.",
+    "from_placeholder": "מיד",
+    "until_placeholder": "עד שתכבו",
     "audience_all": "כולם",
     "audience_internal": "רק הארגון שלי ({domains})",
     "audience_external": "רק אנשים מחוץ לארגון שלי",
@@ -2816,6 +2819,7 @@
       "open_sieve_editor": "פתח את עורך Sieve הגולמי",
       "fetch_error": "טעינת המסננים נכשלה",
       "expanded_view": "תצוגה מורחבת",
+      "show_rule_details": "הצגת התנאים והפעולות של כל כלל",
       "expanded_view_description": "הצג כללי סינון עם תנאים מפורטים ואבני פעולה",
       "if": "אם",
       "then": "ואז",
@@ -2897,6 +2901,9 @@
       "validation_period_empty": "יש להזין תאריך התחלה או סיום לטווח",
       "validation_period_invalid": "יש להזין תאריך תקין עם שעה לטווח, או להשאיר את השדה ריק",
       "apply_existing_period": "כלל עם טווח זמן פועל רק על הודעות שמגיעות בתוכו, ולכן לא ניתן להחיל אותו על הודעות קיימות.",
+      "apply_existing_in": "להחיל גם על ההודעות שכבר נמצאות בתיקייה {folder}",
+      "apply_existing_count": "{count, plural, one {להחיל גם על ההודעה שכבר נמצאת בתיקייה {folder}} other {להחיל גם על # ההודעות שכבר נמצאות בתיקייה {folder}}}",
+      "apply_existing_none": "עדיין אין הודעה בתיקייה {folder} שמתאימה לכלל הזה.",
       "period_status_scheduled": "מתוזמן",
       "period_status_active": "פעיל",
       "period_status_expired": "פג תוקף"
@@ -3453,6 +3460,48 @@
     },
     "sign_out": {
       "description": "התנתקות מהחשבון הזה במכשיר הזה."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "מגש המערכת אזור ההודעות רקע מזעור למגש tray",
+      "autostart": "הפעלה אוטומטית הפעלה עם Windows בעת הכניסה",
+      "default_app": "אפליקציית דואר ברירת מחדל תוכנת דואר mailto קישורי דואר",
+      "menu_bar": "שורת תפריטים תפריטים מקש Alt קובץ עריכה תצוגה",
+      "updates": "עדכונים עדכון גרסה חדשה בטא ערוץ",
+      "devtools": "כלי מפתחים מסוף בדיקה F12 ניפוי באגים devtools",
+      "taskbar": "שורת המשימות הבהוב Dock תשומת לב",
+      "quiet_hours": "שעות שקט נא לא להפריע השתקה לילה",
+      "telemetry": "נתוני שימוש טלמטריה סטטיסטיקה ניתוח",
+      "crash": "דוחות קריסה דוחות שגיאה קריסה",
+      "threads": "שרשורים שיחות קיבוץ threads",
+      "block_images": "חסימת תמונות תמונות חיצוניות טעינת תמונות",
+      "dark_mode": "מצב כהה מצב בהיר מצב לילה dark mode",
+      "timezone": "אזור זמן timezone",
+      "reading_pane": "חלונית קריאה חלונית תצוגה מקדימה תצוגה מפוצלת",
+      "week_start": "תחילת השבוע היום הראשון ראשון שני",
+      "empty_trash": "ריקון האשפה אשפה פריטים שנמחקו",
+      "do_not_disturb": "שעות שקט השתקה שקט"
+    },
+    "desktop_notifications": {
+      "title": "במחשב הזה",
+      "closed_label": "כשהחלון סגור",
+      "closed_description": "{appName} מודיע על דואר חדש כל עוד הוא פועל. כדי שימשיך לפעול במגש המערכת אחרי סגירת החלון, יש להפעיל זאת ב{page}."
+    },
+    "push_unsupported": "הדפדפן הזה לא יכול להציג התראות כשהאתר סגור.",
+    "backup_description_app": "אותן הגדרות במכשירים האחרים שלך.",
+    "sender_favicons": {
+      "label": "תמונות מאתרי חברות",
+      "description": "הצג סמלי אתרים כתמונות פרופיל עבור שולחים עסקיים"
+    },
+    "privacy_push": {
+      "label": "ממסר להתראות",
+      "description": "התראות כש{appName} סגור עוברות דרך ממסר push שלעולם אינו רואה את הדואר שלך. מפעילים ומכבים אותן בדף {page}."
+    },
+    "reset": {
+      "message": "כל ההגדרות יחזרו למצבן ההתחלתי. הדואר, המסננים, המענה האוטומטי והחתימות שלך יישארו כפי שהם.",
+      "sync_on": "המכשירים האחרים שלך משתמשים באותן הגדרות, ולכן גם הם ישתנו.",
+      "sync_off": "המכשירים האחרים שלך ישמרו על ההגדרות שלהם."
     }
   },
   "setup": {
@@ -7330,6 +7379,39 @@
     "app_lock_timeout_hours": "{count, plural, one {שעה אחת} two {שעתיים} other {# שעות}}",
     "desktop_attention_title": "במחשב הזה"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "השם שלכם",
+      "description": "אנשים רואים את השם הזה ליד הכתובת שלכם כשאתם שולחים להם דואר.",
+      "saved": "השם שלכם נשמר.",
+      "error": "לא ניתן היה לשמור את השם שלכם. נסו שוב."
+    },
+    "addresses": {
+      "description": "הכתובות שמהן אפשר לשלוח, לכל אחת שם וחתימה משלה.",
+      "label": "הכתובות שלכם",
+      "count": "{count, plural, =0 {עדיין אין כתובות} one {כתובת אחת} two {# כתובות} other {# כתובות}}",
+      "manage": "עריכת כתובות…",
+      "modal_title": "כתובות הדואר שלכם",
+      "add": "הוספת כתובת",
+      "edit": "עריכת כתובת",
+      "added": "הכתובת נוספה.",
+      "saved": "הכתובת נשמרה.",
+      "deleted": "הכתובת נמחקה.",
+      "delete_title": "למחוק את הכתובת הזו?"
+    },
+    "signatures": {
+      "title": "חתימות",
+      "description": "נוספת בסוף ההודעות שאתם כותבים. לכל כתובת חתימה משלה.",
+      "saved": "החתימה נשמרה.",
+      "error": "לא ניתן היה לשמור את החתימה. נסו שוב.",
+      "no_addresses": "עדיין אין כתובת לשליחה."
+    },
+    "search": {
+      "addresses": "זהות זהויות כינוי שולח כתובת השולח כתובת מאת identity alias sender",
+      "signatures": "חתימה חתימת דואר כותרת תחתונה זהות שולח כתובת מאת signature",
+      "your_name": "שם תצוגה שם מלא שם השולח display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "קודם צריך להזין את כתובת השרת.",
     "server_declined": "לא אישרת את השרת הזה, לכן לא נשלח אליו דבר.",
@@ -7372,10 +7454,12 @@
     "server_looking": "מחפשים את שרת הדואר שלך…",
     "server_found": "שרת דואר: {server}",
     "server_change": "שינוי",
+    "server_change_hint": "הקלידו כתובת של שרת אחר.",
     "server_not_found": "לא מצאנו את שרת הדואר של הכתובת הזו. הזינו אותו כאן, למשל mail.example.com.",
     "server_needed": "הזינו את הכתובת של שרת הדואר שלכם.",
     "server_invalid": "זו לא כתובת של שרת. כתבו אותה כמו mail.example.com.",
     "email_needed": "הזינו קודם את כתובת הדוא״ל שלכם.",
+    "other_ways": "דרכים אחרות להתחבר",
     "trouble": "נתקלתם בבעיה?",
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."

@@ -1,7 +1,7 @@
 "use client";
 
 import { MoveButtons } from "@/components/ui/move-buttons";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection, ToggleSwitch } from "./settings-section";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,8 @@ import { supportsRegex } from "@/lib/sieve/regex";
 import { formatDateTime } from "@/lib/utils";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
-import { offerRuleOnFolder } from "@/lib/filters/quick-rule-flow";
+import { planOnServer, runRuleOnFolder } from "@/lib/filters/quick-rule-flow";
 import { resolveMailboxRuleTarget } from "@/lib/filters/quick-rule-target";
-import { retroactiveSupport } from "@/lib/filters/retroactive";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   Plus,
@@ -215,7 +214,6 @@ export function FilterSettings() {
   const tNotifications = useTranslations("notifications");
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
-  const tFolders = useTranslations("uxs_folders");
   // The raw script editor is for people who asked for the advanced settings,
   // unless the script is one only it can edit.
   const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
@@ -384,8 +382,24 @@ export function FilterSettings() {
     [client, deleteRule, saveFilters, tNotifications]
   );
 
+  // A rule only sees new mail. Its dialog offers to sort what is already in
+  // the Inbox too, as Gmail's "Also apply filter to matching conversations"
+  // does: for the user's own account, where the Inbox can be searched.
+  const inboxOffer = useMemo(() => {
+    if (!isPrimaryAccount || !client) return null;
+    const inbox = storeMailboxes.find((m) => m.role === "inbox" && !m.isShared);
+    const target = inbox ? resolveMailboxRuleTarget(inbox) : null;
+    if (!inbox || !target || target.client !== client) return null;
+    const folder = localizeMailboxName(inbox.role, inbox.name, (k) => tSidebar(`mailboxes.${k}`));
+    return { inbox, target, folder };
+  }, [isPrimaryAccount, client, storeMailboxes, tSidebar]);
+  const countInInbox = useCallback(async (rule: FilterRule) => {
+    if (!inboxOffer) return 0;
+    return (await planOnServer(inboxOffer.target, rule, inboxOffer.inbox.id)).ids.length;
+  }, [inboxOffer]);
+
   const handleSaveRule = useCallback(
-    async (rule: FilterRule) => {
+    async (rule: FilterRule, options?: { applyToExisting: boolean }) => {
       const previousRules = [...rules];
       if (editingRule) {
         updateRule(rule.id, rule);
@@ -403,25 +417,19 @@ export function FilterSettings() {
           toast.error(tNotifications("filters_save_failed"));
           return;
         }
-        // A new rule only sees new mail. Offer to sort what is already in the
-        // Inbox, as Gmail's "Also apply to matching conversations" does.
-        if (!editingRule && isPrimaryAccount && retroactiveSupport(rule).ok) {
-          const inbox = storeMailboxes.find((m) => m.role === "inbox" && !m.isShared);
-          const target = inbox ? resolveMailboxRuleTarget(inbox) : null;
-          if (inbox && target && target.client === client) {
-            const folder = localizeMailboxName(inbox.role, inbox.name, (k) => tSidebar(`mailboxes.${k}`));
-            void offerRuleOnFolder(
-              target,
-              rule,
-              inbox.id,
-              { notifications: tNotifications, filters: t, menu: tMenu },
-              (count) => tFolders("apply_to_existing", { count, folder }),
-            );
-          }
+        // The box in the dialog: run the saved rule over the Inbox now.
+        if (options?.applyToExisting && inboxOffer) {
+          void runRuleOnFolder(
+            inboxOffer.target,
+            rule,
+            inboxOffer.inbox.id,
+            inboxOffer.folder,
+            { notifications: tNotifications, filters: t, menu: tMenu },
+          );
         }
       }
     },
-    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, isPrimaryAccount, storeMailboxes, tSidebar, t, tMenu, tFolders]
+    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, inboxOffer, t, tMenu]
   );
 
   const handleSaveSieve = useCallback(
@@ -804,11 +812,11 @@ export function FilterSettings() {
           )}
           {!isOpaque && rules.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{t("expanded_view")}</span>
+              <span className="text-xs text-muted-foreground">{t("show_rule_details")}</span>
               <ToggleSwitch
                 checked={expandedFilterView}
                 onChange={(v) => updateSetting("expandedFilterView", v)}
-                ariaLabel={t("expanded_view")}
+                ariaLabel={t("show_rule_details")}
               />
             </div>
           )}
@@ -824,6 +832,9 @@ export function FilterSettings() {
           regexSupported={supportsRegex(sieveCapabilities?.sieveExtensions)}
           forwardsBefore={forwardsOfEdited.before}
           forwardsAfter={forwardsOfEdited.after}
+          offerApplyToExisting={!!inboxOffer}
+          applyExistingFolder={inboxOffer?.folder}
+          countExisting={inboxOffer ? countInInbox : undefined}
           onSave={handleSaveRule}
           onClose={() => {
             setShowRuleModal(false);

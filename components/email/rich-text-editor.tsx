@@ -179,6 +179,11 @@ interface RichTextEditorProps {
    * away entirely.
    */
   toolbarPlacement?: 'top' | 'bottom' | 'hidden';
+  /**
+   * "short" keeps bold, italic, underline, the lists and link: enough for a
+   * few lines such as an out-of-office reply. "full" is the composer's.
+   */
+  toolbar?: 'full' | 'short';
   /** The editing area's accessible name ("Message"). */
   ariaLabel?: string;
   /** The body failed validation: exposed as aria-invalid on the editing area. */
@@ -479,6 +484,7 @@ export function RichTextEditor({
   onMentionAdd,
   collapseToolbarOnMobile = false,
   toolbarPlacement = 'top',
+  toolbar = 'full',
   ariaLabel,
   ariaInvalid,
   ariaDescribedBy,
@@ -928,7 +934,9 @@ export function RichTextEditor({
   // A group that doesn't fit renders in the "More formatting" panel instead, in row order.
   const folded = new Set<FoldableGroup>(FOLDABLE_GROUPS.slice(0, foldCount).map((group) => group.id));
   const overflow: React.ReactNode[] = [];
+  const short = toolbar === 'short';
   const place = (group: FoldableGroup, node: React.ReactNode) => {
+    if (short) return null;
     if (!folded.has(group)) return node;
     overflow.push(<React.Fragment key={group}>{node}</React.Fragment>);
     return null;
@@ -1033,6 +1041,7 @@ export function RichTextEditor({
       >
         {/* Font size - two baseline-aligned A's read as "size" at a glance;
             once a size is chosen the button shows that number instead. */}
+        {!short && <>
         <div ref={fontSizeWrapperRef} className="relative">
           <ToolbarButton
             ref={fontSizeButtonRef}
@@ -1098,6 +1107,7 @@ export function RichTextEditor({
         </div>
 
         <ToolbarSeparator />
+        </>}
 
         <ToolbarButton
           item="bold"
@@ -1123,6 +1133,7 @@ export function RichTextEditor({
         >
           <UnderlineIcon className="w-4 h-4" />
         </ToolbarButton>
+        {!short && <>
         <ToolbarButton
           item="strike"
           pressed={editor.isActive("strike")}
@@ -1216,6 +1227,7 @@ export function RichTextEditor({
             </ToolbarPopover>
           )}
         </div>
+        </>}
 
         <ToolbarSeparator />
 
