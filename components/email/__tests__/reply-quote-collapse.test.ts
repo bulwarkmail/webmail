@@ -228,6 +228,19 @@ describe('a click in a reply with a folded quote', () => {
     expect(e.state.selection.from).toBe(1 + 'My response'.length);
   });
 
+  it('puts a click on the editor itself, under the text, at the end of the text', () => {
+    const e = mount(`<p>My response<br></p>${HEADER}${QUOTE}`);
+    e.view.coordsAtPos = () => ({ left: 0, right: 0, top: 10, bottom: 30 });
+    const below = new MouseEvent('mousedown', { button: 0, clientY: 200, bubbles: true, cancelable: true });
+    e.view.dom.dispatchEvent(below);
+    expect(below.defaultPrevented).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+    // On the text's own line the click is the browser's.
+    const onLine = new MouseEvent('mousedown', { button: 0, clientY: 20, bubbles: true, cancelable: true });
+    e.view.dom.dispatchEvent(onLine);
+    expect(onLine.defaultPrevented).toBe(false);
+  });
+
   it('starts an empty reply on its first line', () => {
     const e = mount(`<p></p><p></p>${HEADER}${QUOTE}`);
     expect(userTextEnd(e.state)).toBe(1);

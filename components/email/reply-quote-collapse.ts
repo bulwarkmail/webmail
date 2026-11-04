@@ -185,6 +185,28 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string 
         },
       },
       props: {
+        handleDOMEvents: {
+          // A click between the blocks or under the last one hits the editor
+          // itself, and the browser put the caret at the end of the message,
+          // below the folded quote: what came next was hidden under it
+          // (compose-p3-13). Under the user's text, it goes to the text's end.
+          mousedown(view, event) {
+            if (event.button !== 0 || event.target !== view.dom || collapsedRanges(view.state).length === 0) return false;
+            const end = userTextEnd(view.state);
+            if (end === null) return false;
+            let below: number;
+            try {
+              below = view.coordsAtPos(end).bottom;
+            } catch {
+              return false;
+            }
+            if (event.clientY <= below) return false;
+            event.preventDefault();
+            view.focus();
+            view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+            return true;
+          },
+        },
         handleClick(view, pos) {
           const end = userTextEnd(view.state);
           if (end === null) return false;
