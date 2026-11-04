@@ -86,7 +86,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.notifications.email.enabled' },
     { label: 'settings.notifications.email.sound' },
     { label: 'settings.appearance.favicon_unread_badge.label' },
-    { label: 'account_unread.badge_all_accounts.label' },
+    { label: 'account_unread.badge_all_accounts.label', when: 'multiAccount' },
     { label: 'settings.notifications.calendar.title' },
     { label: 'settings.notifications.calendar.enabled' },
     { label: 'settings.notifications.sound_selection.title' },
