@@ -69,6 +69,19 @@ export interface UploadReport {
 export interface UploadOptions {
   /** Asked when a name is taken in the target folder; without it, new ones are numbered. */
   resolveConflicts?: UploadConflictResolver;
+  /** A folder of the one in view, as when files are dropped on its row. Default: the folder in view. */
+  into?: { id: string; name: string };
+}
+
+/** Where an upload goes: the folder in view, or one of its folders (`into`), with what that folder holds. */
+async function uploadTarget(
+  state: Pick<FileState, 'currentParentId' | 'currentPath' | 'resources' | 'listByParentId'>,
+  into: UploadOptions['into'],
+): Promise<{ parentId: string | null; path: string; existing: FileResource[] }> {
+  if (!into || into.id === state.currentParentId) {
+    return { parentId: state.currentParentId, path: state.currentPath, existing: state.resources };
+  }
+  return { parentId: into.id, path: joinPath(state.currentPath, into.name), existing: await state.listByParentId(into.id) };
 }
 
 interface ClipboardState {
@@ -1120,10 +1133,11 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   uploadFiles: async (allFiles: File[], options?: UploadOptions) => {
-    const { client, currentParentId, currentPath, resources } = get();
+    const { client } = get();
     const report: UploadReport = { uploaded: 0, failed: [], canceled: false };
     if (!client) return report;
-    assertCanAddTo(currentParentId);
+    assertCanAddTo(options?.into?.id ?? get().currentParentId);
+    const { parentId: currentParentId, path: currentPath, existing: resources } = await uploadTarget(get(), options?.into);
 
     // Plugins may hold back single files; the rest go up.
     const files: File[] = [];
@@ -1204,10 +1218,11 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   uploadFolder: async (allFiles: File[], options?: UploadOptions) => {
-    const { client, currentParentId, currentPath, resources } = get();
+    const { client } = get();
     const report: UploadReport = { uploaded: 0, failed: [], canceled: false };
     if (!client || allFiles.length === 0) return report;
-    assertCanAddTo(currentParentId);
+    assertCanAddTo(options?.into?.id ?? get().currentParentId);
+    const { parentId: currentParentId, path: currentPath, existing: resources } = await uploadTarget(get(), options?.into);
 
     const relativePathOf = (file: File) => (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
     const dirOf = (relativePath: string) => {

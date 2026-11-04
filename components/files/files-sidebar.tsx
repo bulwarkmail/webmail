@@ -13,7 +13,7 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { cn } from "@/lib/utils";
 import { sharedFilePages, type FileResource } from "@/stores/file-store";
 import { getFileIconByName } from "@/components/files/file-icons";
-import { anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 
 const COLLAPSED_KEY = "files-sidebar-collapsed";
 const RECENT_LIMIT = 8;
@@ -297,7 +297,7 @@ export function FilesSidebar({
             onMouseDown={(e) => { if (newMenu.contextMenu.isOpen) e.stopPropagation(); }}
             onClick={(e) => {
               if (newMenu.contextMenu.isOpen) newMenu.closeContextMenu();
-              else newMenu.openContextMenu(anchorEvent(e.currentTarget, "end"), null);
+              else newMenu.openContextMenuFrom(e.currentTarget, null, "end");
             }}
           >
             <Plus />

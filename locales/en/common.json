@@ -5793,6 +5793,26 @@
     "share_mail_subject": "I shared {name} with you",
     "share_mail_body": "Hi,\n\nI shared \"{name}\" with you. You can open it here:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Add all to calendar",
+    "zone_contacts_all": "Add all to contacts",
+    "save_to_files": "Save to Files",
+    "saved": "{name} saved to Files.",
+    "saved_copy": "Saved to Files as {name}.",
+    "save_failed": "{name} could not be saved to Files.",
+    "changed_on_server": "{name} was changed in Files after you opened it.",
+    "gone_on_server": "{name} is no longer in Files.",
+    "keep_both": "Keep both",
+    "replace": "Replace",
+    "cancel": "Cancel",
+    "save_as_new": "Save as a new file",
+    "import_to_mail": "Import to a mail folder…",
+    "import_to_mail_title": "Import to a mail folder",
+    "imported_to_mail": "Imported into {folder}.",
+    "import_to_mail_failed": "{name} could not be imported.",
+    "import_contacts": "Import into contacts…",
+    "add_to_calendar": "Add to calendar…"
+  },
   "smime": {
     "your_certificates": "Your Certificates",
     "your_certificates_desc": "Import and manage your S/MIME certificates for signing and encrypting emails",

@@ -5425,6 +5425,26 @@
     "share_mail_subject": "שיתפתי איתך את {name}",
     "share_mail_body": "שלום,\n\nשיתפתי איתך את \"{name}\". אפשר לפתוח אותו כאן:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "הוספת הכול ללוח השנה",
+    "zone_contacts_all": "הוספת הכול לאנשי הקשר",
+    "save_to_files": "שמירה בקבצים",
+    "saved": "{name} נשמר בקבצים.",
+    "saved_copy": "נשמר בקבצים בשם {name}.",
+    "save_failed": "לא ניתן היה לשמור את {name} בקבצים.",
+    "changed_on_server": "{name} השתנה בקבצים אחרי שפתחת אותו.",
+    "gone_on_server": "{name} כבר לא נמצא בקבצים.",
+    "keep_both": "שמירת שניהם",
+    "replace": "החלפה",
+    "cancel": "ביטול",
+    "save_as_new": "שמירה כקובץ חדש",
+    "import_to_mail": "ייבוא לתיקיית דואר…",
+    "import_to_mail_title": "ייבוא לתיקיית דואר",
+    "imported_to_mail": "יובא אל {folder}.",
+    "import_to_mail_failed": "לא ניתן היה לייבא את {name}.",
+    "import_contacts": "ייבוא לאנשי הקשר…",
+    "add_to_calendar": "הוספה ללוח השנה…"
+  },
   "smime": {
     "your_certificates": "התעודות שלך",
     "your_certificates_desc": "ייבא ונהל את אישורי ה-S/MIME שלך עבור חתימה והצפנה של הודעות דוא\"ל",

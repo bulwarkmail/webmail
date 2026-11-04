@@ -5531,6 +5531,26 @@
     "share_mail_subject": "Ik heb {name} met je gedeeld",
     "share_mail_body": "Hoi,\n\nIk heb \"{name}\" met je gedeeld. Je kunt het hier openen:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Alles aan agenda toevoegen",
+    "zone_contacts_all": "Alles aan contacten toevoegen",
+    "save_to_files": "Opslaan in Bestanden",
+    "saved": "{name} opgeslagen in Bestanden.",
+    "saved_copy": "Opgeslagen in Bestanden als {name}.",
+    "save_failed": "{name} kon niet in Bestanden worden opgeslagen.",
+    "changed_on_server": "{name} is in Bestanden gewijzigd nadat je het opende.",
+    "gone_on_server": "{name} staat niet meer in Bestanden.",
+    "keep_both": "Beide behouden",
+    "replace": "Vervangen",
+    "cancel": "Annuleren",
+    "save_as_new": "Opslaan als nieuw bestand",
+    "import_to_mail": "Importeren in een mailmap…",
+    "import_to_mail_title": "Importeren in een mailmap",
+    "imported_to_mail": "Geïmporteerd in {folder}.",
+    "import_to_mail_failed": "{name} kon niet worden geïmporteerd.",
+    "import_contacts": "Importeren in contacten…",
+    "add_to_calendar": "Aan agenda toevoegen…"
+  },
   "smime": {
     "your_certificates": "Uw certificaten",
     "your_certificates_desc": "Importeer en beheer uw S/MIME-certificaten voor het ondertekenen en versleutelen van e-mails",

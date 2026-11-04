@@ -9,7 +9,9 @@ import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useFileStore, deletesToTrash, isSharedFilesPage, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type FileResource, type UploadReport } from "@/stores/file-store";
-import { hasQueuedFilesUpload, setFilesDropTarget, subscribeQueuedFilesUpload, takeQueuedFilesUpload } from "@/lib/file-drop/files-target";
+import { filesDropTarget, hasQueuedFilesUpload, setFilesDropTarget, subscribeQueuedFilesUpload, takeQueuedFilesUpload } from "@/lib/file-drop/files-target";
+import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
+import { isInternalDrag } from "@/components/files/file-item-parts";
 import { isTrashLocation } from "@/lib/files-trash";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
 import { toast } from "@/stores/toast-store";
@@ -37,6 +39,10 @@ import { savePendingMailto } from "@/lib/protocol-handlers/session";
 import { formatRecipient } from "@/lib/email-composer-utils";
 import { useRouter } from "@/i18n/navigation";
 import { useEditAttachment } from "@/hooks/use-edit-attachment";
+import { fileAppAction, type FileAppAction } from "@/lib/files-app-actions";
+import { handOffFiles } from "@/lib/launch-handoff";
+import { ImportEmlDialog } from "@/components/files/import-eml-dialog";
+import { useCalendarStore } from "@/stores/calendar-store";
 import { resolveConflictsInTurn, type ConflictAnswer, type UploadConflictResolver } from "@/lib/files-upload-conflicts";
 import { useWopiStatus, canWopiOpen, fileExtension } from "@/hooks/use-wopi-status";
 import { apiFetch } from "@/lib/browser-navigation";
@@ -409,7 +415,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }),
   ), []);
 
-  const handleUploadFiles = useCallback(async (files: File[]) => {
+  const handleUploadFiles = useCallback(async (files: File[], into?: FileResource) => {
     if (maxSizeUpload > 0) {
       const oversized = files.filter(f => f.size > maxSizeUpload);
       files = files.filter(f => f.size <= maxSizeUpload);
@@ -419,14 +425,14 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      showUploadReport(await uploadFiles(files, { resolveConflicts }));
+      showUploadReport(await uploadFiles(files, { resolveConflicts, ...(into ? { into: { id: into.id, name: into.name } } : {}) }));
     } catch (err) {
       console.error("Failed to upload files:", err);
       toast.error(t("upload_error"), failureReason(err));
     }
   }, [uploadFiles, t, maxSizeUpload, showUploadReport, failureReason, resolveConflicts]);
 
-  const handleUploadFolder = useCallback(async (files: File[]) => {
+  const handleUploadFolder = useCallback(async (files: File[], into?: FileResource) => {
     if (maxSizeUpload > 0) {
       const oversized = files.filter(f => f.size > maxSizeUpload);
       files = files.filter(f => f.size <= maxSizeUpload);
@@ -436,7 +442,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      showUploadReport(await uploadFolder(files, { resolveConflicts }));
+      showUploadReport(await uploadFolder(files, { resolveConflicts, ...(into ? { into: { id: into.id, name: into.name } } : {}) }));
     } catch (err) {
       console.error("Failed to upload folder:", err);
       toast.error(t("upload_error"), failureReason(err));
@@ -693,10 +699,55 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       name: r.name,
       type: r.contentType || "application/octet-stream",
       account: filesLocalAccount,
-      source: { kind: "file" },
+      // Saved in its program, it goes back into this node (pim-p2-1).
+      source: { kind: "node", nodeId: r.id, blobId: r.blobId ?? null, parentId: r.parentId ?? null },
       load: async () => (await getFileContent(r.name)).blob,
     });
+    // The program has it now: the pane has nothing more to offer (pim-p2-18).
+    setInfoFile((open) => (open === r.name ? null : open));
   }, [openInDesktopApp, filesLocalAccount, getFileContent]);
+
+  // What the app itself does with a file kept here (pim-p2-7).
+  const tFiles2 = useTranslations("ux_p2_pim_files");
+  const calendarSupported = useCalendarStore((s) => s.supportsCalendar);
+  const calendarAllowed = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
+  const contactsAllowed = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
+  const calendarOn = calendarSupported && calendarAllowed;
+  const contactsOn = !!storeClient?.supportsContacts?.() && contactsAllowed;
+  const [importEml, setImportEml] = useState<File | null>(null);
+  const appActionOf = useCallback((r: FileResource): FileAppAction | null => {
+    if (r.isDirectory || r.isSymlink || r.trash) return null;
+    const action = fileAppAction(r.name, r.contentType);
+    if (action === "add-calendar" && !calendarOn) return null;
+    if (action === "import-contacts" && !contactsOn) return null;
+    return action;
+  }, [calendarOn, contactsOn]);
+  const runAppAction = useCallback(async (r: FileResource) => {
+    const action = appActionOf(r);
+    if (!action) return;
+    let file: File;
+    try {
+      const { blob, contentType } = await getFileContent(r.name);
+      file = new File([blob], r.name, { type: contentType || r.contentType || blob.type });
+    } catch (err) {
+      console.error("Could not read a file for its import:", err);
+      toast.error(t("download_error"));
+      return;
+    }
+    if (action === "import-mail") {
+      setImportEml(file);
+      return;
+    }
+    setPreviewFile(null);
+    setInfoFile(null);
+    handOffFiles([file], action === "add-calendar" ? "calendar" : "contacts");
+  }, [appActionOf, getFileContent, t]);
+  const appActionFor = useCallback((r: FileResource) => {
+    const action = appActionOf(r);
+    if (!action) return null;
+    const label = action === "import-mail" ? tFiles2("import_to_mail") : action === "add-calendar" ? tFiles2("add_to_calendar") : tFiles2("import_contacts");
+    return { kind: action, label, onRun: () => void runAppAction(r) };
+  }, [appActionOf, runAppAction, tFiles2]);
 
   const handleRenameNode = useCallback(async (id: string, newName: string) => {
     try {
@@ -784,29 +835,31 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // The previewed file as plugins see it (file-preview-section).
   const previewedName = previewFile ?? previewImage;
-  // ←/→ in a preview go through the folder's other previewable files.
+  // ←/→ in a preview go through the folder's other files that open in one:
+  // previews and the pane of a file with no preview (pim-p2-18). Office
+  // documents open the editor, so the arrows pass them by.
+  const shownName = previewedName ?? infoFile;
   const previewNeighbours = useMemo(() => {
-    if (!previewedName) return undefined;
+    if (!shownName) return undefined;
     const names = resources
-      .filter((r) => !r.isDirectory && !r.isSymlink && (isImageFile(r.name) || isFilePreviewable(r.name)))
+      .filter((r) => !r.isDirectory && !r.isSymlink && (isImageFile(r.name) || isFilePreviewable(r.name) || !isOfficeEditable(r.name)))
       .map((r) => r.name);
-    const i = names.indexOf(previewedName);
+    const i = names.indexOf(shownName);
     if (i === -1) return undefined;
     return {
       previous: names[i - 1] ?? null,
       next: names[i + 1] ?? null,
       onGo: (name: string) => {
         addRecentFile(name, resources.find((r) => r.name === name)?.id ?? name);
-        if (isImageFile(name)) {
-          setPreviewFile(null);
-          setPreviewImage(name);
-        } else {
-          setPreviewImage(null);
-          setPreviewFile(name);
-        }
+        setPreviewFile(null);
+        setPreviewImage(null);
+        setInfoFile(null);
+        if (isImageFile(name)) setPreviewImage(name);
+        else if (isFilePreviewable(name)) setPreviewFile(name);
+        else setInfoFile(name);
       },
     };
-  }, [previewedName, resources, addRecentFile]);
+  }, [shownName, resources, addRecentFile, isOfficeEditable]);
   const previewedView = useMemo(() => {
     const resource = previewedName ? resources.find((r) => r.name === previewedName) : undefined;
     return resource ? resourceToView(resource, currentPath) : null;
@@ -926,7 +979,20 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   }
 
   return (
-    <div ref={dropRootRef} className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div
+      ref={dropRootRef}
+      className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}
+      // Files from outside dropped anywhere on the screen go into the folder in view,
+      // as the list itself does (pim-p2-6). The list and a folder's row take theirs first.
+      onDrop={(e) => {
+        if (e.defaultPrevented || !canTakeDrops || isInternalDrag(e) || !Array.from(e.dataTransfer.types ?? []).includes("Files")) return;
+        if (filesDropTarget() === null) return;
+        e.preventDefault();
+        void getDroppedFilesAndFolders(e.dataTransfer).then(({ files, hasDirectories }) => (
+          hasDirectories ? dropUploadRef.current.folder(files) : dropUploadRef.current.files(files)
+        ));
+      }}
+    >
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}
@@ -1033,6 +1099,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   onShowFileInfo={handleShowFileInfo}
                   canOpenInApp={canOpenInApp}
                   onOpenInApp={handleOpenInApp}
+                  appActionFor={appActionFor}
                   onShared={handleShared}
                 />
               )}
@@ -1072,6 +1139,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
           getFileContent={() => getFileContent(previewFile)}
           file={previewedView}
           neighbours={previewNeighbours}
+          extraAction={(() => {
+            const resource = resources.find((r) => r.name === previewFile);
+            const action = resource ? appActionFor(resource) : null;
+            return action ? { label: action.label, onClick: action.onRun } : undefined;
+          })()}
         />
       )}
 
@@ -1085,6 +1157,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
             onClose={() => setInfoFile(null)}
             onDownload={filesDownloadsOff ? undefined : () => void handleDownload(infoFile)}
             onOpenInApp={canOpenInApp(resource) ? () => handleOpenInApp(resource) : undefined}
+            appAction={appActionFor(resource) ?? undefined}
+            neighbours={previewNeighbours}
           />
         );
       })()}
@@ -1128,6 +1202,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
       <ConfirmDialog {...confirmDialogProps} />
       <UploadConflictDialog question={conflictQuestion} />
+      <ImportEmlDialog file={importEml} onClose={() => setImportEml(null)} />
       </div>
     </div>
   );

@@ -5793,6 +5793,26 @@
     "share_mail_subject": "شاركت {name} معك",
     "share_mail_body": "مرحبًا،\n\nشاركت «{name}» معك. يمكنك فتحه من هنا:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "إضافة الكل إلى التقويم",
+    "zone_contacts_all": "إضافة الكل إلى جهات الاتصال",
+    "save_to_files": "حفظ في الملفات",
+    "saved": "تم حفظ {name} في الملفات.",
+    "saved_copy": "تم الحفظ في الملفات باسم {name}.",
+    "save_failed": "تعذّر حفظ {name} في الملفات.",
+    "changed_on_server": "تم تغيير {name} في الملفات بعد أن فتحته.",
+    "gone_on_server": "لم يعد {name} موجودًا في الملفات.",
+    "keep_both": "الاحتفاظ بالاثنين",
+    "replace": "استبدال",
+    "cancel": "إلغاء",
+    "save_as_new": "حفظ كملف جديد",
+    "import_to_mail": "استيراد إلى مجلد بريد…",
+    "import_to_mail_title": "استيراد إلى مجلد بريد",
+    "imported_to_mail": "تم الاستيراد إلى {folder}.",
+    "import_to_mail_failed": "تعذّر استيراد {name}.",
+    "import_contacts": "استيراد إلى جهات الاتصال…",
+    "add_to_calendar": "إضافة إلى التقويم…"
+  },
   "smime": {
     "your_certificates": "شهاداتك",
     "your_certificates_desc": "استيراد وإدارة شهادات S/MIME الخاصة بك لتوقيع الرسائل وتشفيرها",

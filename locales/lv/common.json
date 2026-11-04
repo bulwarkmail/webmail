@@ -5531,6 +5531,26 @@
     "share_mail_subject": "Es koplietoju ar jums {name}",
     "share_mail_body": "Sveiki!\n\nEs koplietoju ar jums “{name}”. To var atvērt šeit:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Pievienot visus kalendāram",
+    "zone_contacts_all": "Pievienot visus kontaktiem",
+    "save_to_files": "Saglabāt failos",
+    "saved": "{name} saglabāts failos.",
+    "saved_copy": "Saglabāts failos kā {name}.",
+    "save_failed": "{name} neizdevās saglabāt failos.",
+    "changed_on_server": "{name} tika mainīts failos pēc tam, kad to atvērāt.",
+    "gone_on_server": "{name} vairs nav failos.",
+    "keep_both": "Paturēt abus",
+    "replace": "Aizstāt",
+    "cancel": "Atcelt",
+    "save_as_new": "Saglabāt kā jaunu failu",
+    "import_to_mail": "Importēt pasta mapē…",
+    "import_to_mail_title": "Importēt pasta mapē",
+    "imported_to_mail": "Importēts mapē {folder}.",
+    "import_to_mail_failed": "{name} neizdevās importēt.",
+    "import_contacts": "Importēt kontaktos…",
+    "add_to_calendar": "Pievienot kalendāram…"
+  },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
     "your_certificates_desc": "Importējiet un pārvaldiet savus S/MIME sertifikātus parakstīšanai un šifrēšanai",

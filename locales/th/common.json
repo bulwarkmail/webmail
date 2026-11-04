@@ -2694,6 +2694,26 @@
     "share_mail_subject": "ฉันแชร์ {name} กับคุณ",
     "share_mail_body": "สวัสดี\n\nฉันแชร์ \"{name}\" กับคุณแล้ว เปิดได้ที่นี่:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "เพิ่มทั้งหมดในปฏิทิน",
+    "zone_contacts_all": "เพิ่มทั้งหมดในรายชื่อติดต่อ",
+    "save_to_files": "บันทึกลงในไฟล์",
+    "saved": "บันทึก {name} ลงในไฟล์แล้ว",
+    "saved_copy": "บันทึกลงในไฟล์เป็น {name} แล้ว",
+    "save_failed": "บันทึก {name} ลงในไฟล์ไม่ได้",
+    "changed_on_server": "{name} ถูกเปลี่ยนในไฟล์หลังจากที่คุณเปิด",
+    "gone_on_server": "{name} ไม่อยู่ในไฟล์แล้ว",
+    "keep_both": "เก็บทั้งสอง",
+    "replace": "แทนที่",
+    "cancel": "ยกเลิก",
+    "save_as_new": "บันทึกเป็นไฟล์ใหม่",
+    "import_to_mail": "นำเข้าไปยังโฟลเดอร์อีเมล…",
+    "import_to_mail_title": "นำเข้าไปยังโฟลเดอร์อีเมล",
+    "imported_to_mail": "นำเข้าไปยัง {folder} แล้ว",
+    "import_to_mail_failed": "นำเข้า {name} ไม่ได้",
+    "import_contacts": "นำเข้าไปยังรายชื่อติดต่อ…",
+    "add_to_calendar": "เพิ่มในปฏิทิน…"
+  },
   "protocol_handlers": {
     "title": "แอปพลิเคชันเริ่มต้น",
     "description": "เลือกว่าจะเปิดลิงก์อีเมลและปฏิทินใน {appName} หรือไม่",

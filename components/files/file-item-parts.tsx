@@ -230,16 +230,3 @@ export function MiddleCutName({ name, title, className }: { name: string; title?
     </span>
   );
 }
-
-/** Open a shared context menu as a dropdown under a button. */
-export function anchorEvent(el: HTMLElement, align: "start" | "end" = "start"): React.MouseEvent {
-  const rect = el.getBoundingClientRect();
-  const rtl = typeof document !== "undefined" && document.dir === "rtl";
-  const alignEnd = (align === "end") !== rtl;
-  return {
-    clientX: alignEnd ? rect.right - 200 : rect.left,
-    clientY: rect.bottom + 4,
-    preventDefault: () => {},
-    stopPropagation: () => {},
-  } as unknown as React.MouseEvent;
-}

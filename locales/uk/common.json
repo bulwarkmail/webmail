@@ -5531,6 +5531,26 @@
     "share_mail_subject": "Я надав вам доступ до {name}",
     "share_mail_body": "Вітаю!\n\nЯ надав вам доступ до «{name}». Відкрити можна тут:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Додати все до календаря",
+    "zone_contacts_all": "Додати все до контактів",
+    "save_to_files": "Зберегти у Файли",
+    "saved": "{name} збережено у Файли.",
+    "saved_copy": "Збережено у Файли як {name}.",
+    "save_failed": "Не вдалося зберегти {name} у Файли.",
+    "changed_on_server": "{name} змінили у Файлах після того, як ви його відкрили.",
+    "gone_on_server": "{name} більше немає у Файлах.",
+    "keep_both": "Залишити обидва",
+    "replace": "Замінити",
+    "cancel": "Скасувати",
+    "save_as_new": "Зберегти як новий файл",
+    "import_to_mail": "Імпортувати в поштову теку…",
+    "import_to_mail_title": "Імпортувати в поштову теку",
+    "imported_to_mail": "Імпортовано в {folder}.",
+    "import_to_mail_failed": "Не вдалося імпортувати {name}.",
+    "import_contacts": "Імпортувати в контакти…",
+    "add_to_calendar": "Додати до календаря…"
+  },
   "smime": {
     "your_certificates": "Ваші сертифікати",
     "your_certificates_desc": "Імпортуйте та керуйте своїми сертифікатами S/MIME для підпису та шифрування електронних листів",

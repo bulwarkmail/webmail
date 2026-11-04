@@ -5531,6 +5531,26 @@
     "share_mail_subject": "J’ai partagé {name} avec vous",
     "share_mail_body": "Bonjour,\n\nJ’ai partagé « {name} » avec vous. Vous pouvez l’ouvrir ici :\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Tout ajouter au calendrier",
+    "zone_contacts_all": "Tout ajouter aux contacts",
+    "save_to_files": "Enregistrer dans Fichiers",
+    "saved": "{name} enregistré dans Fichiers.",
+    "saved_copy": "Enregistré dans Fichiers sous {name}.",
+    "save_failed": "Impossible d'enregistrer {name} dans Fichiers.",
+    "changed_on_server": "{name} a été modifié dans Fichiers après que vous l'avez ouvert.",
+    "gone_on_server": "{name} n'est plus dans Fichiers.",
+    "keep_both": "Conserver les deux",
+    "replace": "Remplacer",
+    "cancel": "Annuler",
+    "save_as_new": "Enregistrer comme nouveau fichier",
+    "import_to_mail": "Importer dans un dossier de messagerie…",
+    "import_to_mail_title": "Importer dans un dossier de messagerie",
+    "imported_to_mail": "Importé dans {folder}.",
+    "import_to_mail_failed": "Impossible d'importer {name}.",
+    "import_contacts": "Importer dans les contacts…",
+    "add_to_calendar": "Ajouter au calendrier…"
+  },
   "smime": {
     "your_certificates": "Vos certificats",
     "your_certificates_desc": "Importez et gérez vos certificats S/MIME pour signer et chiffrer les e-mails",
