@@ -209,6 +209,30 @@ describe('a click in a reply with a folded quote', () => {
     expect(userTextEnd(e.state)).toBe(1 + 'My response'.length);
   });
 
+  // compose-p3-13: the reply keeps a line break (or an empty line) between
+  // the text and the quote; a click under the text put the caret after it,
+  // so what came next landed on a new line.
+  it('ends the text before the line break and the empty line kept above the quote', () => {
+    const withBreak = mount(`<p>My response<br><br></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(withBreak.state)).toBe(1 + 'My response'.length);
+    withBreak.destroy();
+    const withEmptyLine = mount(`<p>My response</p><p></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(withEmptyLine.state)).toBe(1 + 'My response'.length);
+  });
+
+  it('puts a click on the empty line above the folded quote at the end of the text', () => {
+    const e = mount(`<p>My response</p><p></p>${HEADER}${QUOTE}`);
+    const emptyLine = 1 + 'My response'.length + 2 + 1;
+    const handled = e.view.someProp('handleClick', (f) => f(e.view, emptyLine, new MouseEvent('click')));
+    expect(handled).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+  });
+
+  it('starts an empty reply on its first line', () => {
+    const e = mount(`<p></p><p></p>${HEADER}${QUOTE}`);
+    expect(userTextEnd(e.state)).toBe(1);
+  });
+
   it('has no end of text in a body with neither quote nor signature', () => {
     const e = mount('<p>Just text</p>');
     expect(userTextEnd(e.state)).toBeNull();
