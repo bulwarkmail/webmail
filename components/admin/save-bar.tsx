@@ -14,7 +14,7 @@ interface AdminSaveBarProps {
   /** Drops the edits; without it the bar offers only Save. */
   onDiscard?: () => void;
   saveLabel?: string;
-  /** What the save does, e.g. "Users see the change on their next login". */
+  /** What the save does, e.g. "Users get the change within 15 minutes". */
   note?: ReactNode;
 }
 

@@ -58,6 +58,7 @@ export async function POST(
         id,
         enabled: current.enabled,
         ...(current.forceEnabled !== undefined ? { forceEnabled: current.forceEnabled } : {}),
+        defaultOff: current.defaultOff === true ? true : undefined,
         installedAt: current.installedAt,
         updatedAt: now,
       };

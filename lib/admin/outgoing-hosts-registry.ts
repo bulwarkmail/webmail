@@ -60,7 +60,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     files: ['lib/push-relays.ts', 'app/api/dev-jmap/[...path]/route.ts'],
     side: 'browser',
     usedBy: 'Built-in Web Push relay that wakes the browser for new mail.',
-    off: 'Add your own relays under Admin > User policy > Push relays and lock the choice.',
+    off: 'Add your own relays under Users > Features and settings > Push relays and lock the choice.',
     inMode: 'Not offered. Push works only with a relay the admin configured; existing registrations move to it or are removed.',
     lite: false,
   },

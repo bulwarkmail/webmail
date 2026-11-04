@@ -9,7 +9,7 @@ import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
 import { navigateAdmin } from '@/hooks/use-admin-navigation';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
 import { PluginIframeSlot } from '@/components/plugins/plugin-iframe-slot';
-import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
+import { SettingsSection, SettingItem, ToggleSwitch, Select } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { AdminLink } from '@/components/admin/admin-link';
@@ -20,6 +20,9 @@ import { inputClass } from '@/components/admin/config-items';
 import { ExtensionIcon } from '@/components/admin/extension-icon';
 import { cn } from '@/lib/utils';
 import { useExtensionIcons } from './use-extension-icons';
+import { pluginTypeLabel } from './plugin-type-label';
+import { useTranslations } from 'next-intl';
+import { permissionKey } from '@/lib/plugin-sandbox/permission-text';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogNotes } from '@/components/admin/changelog';
@@ -49,6 +52,8 @@ export interface ExtensionEntry {
   variants?: string[];
   enabled: boolean;
   forceEnabled?: boolean;
+  /** Plugins: users get it off until they turn it on. */
+  defaultOff?: boolean;
   permissions?: string[];
   installedAt: string;
   updatedAt: string;
@@ -65,6 +70,46 @@ export interface ExtensionEntry {
 }
 
 type Kind = 'plugin' | 'theme';
+
+/**
+ * A permission in the words users see when they're asked (the consent
+ * dialog's catalogue), with its id small beside it for those who know it.
+ */
+function PermissionText({ perm }: { perm: string }) {
+  const t = useTranslations('plugins.permissions');
+  return (
+    <span className="min-w-0 flex-1">
+      <span className="text-sm text-foreground">{t(`${permissionKey(perm)}.title`)}</span>{' '}
+      <code className="font-mono text-[0.6875rem] text-muted-foreground">{perm}</code>
+    </span>
+  );
+}
+
+/** What users get from an installed plugin, as one choice (PATCH: forceEnabled + defaultOff). */
+export type PluginUserMode = 'default-on' | 'always' | 'default-off';
+
+export const PLUGIN_USER_MODES: ReadonlyArray<{ value: PluginUserMode; label: string; description: string }> = [
+  {
+    value: 'default-on',
+    label: 'On for everyone, users can turn it off',
+    description: 'Every user gets it turned on. Anyone can turn it off for their own account in Settings > Add-ons.',
+  },
+  {
+    value: 'always',
+    label: 'On for everyone, always',
+    description: 'Every user gets it turned on and can\'t turn it off.',
+  },
+  {
+    value: 'default-off',
+    label: 'Off until users turn it on',
+    description: 'Users see it in Settings > Add-ons, turned off, and can turn it on for their own account.',
+  },
+];
+
+export function pluginUserMode(entry: { forceEnabled?: boolean; defaultOff?: boolean }): PluginUserMode {
+  if (entry.forceEnabled) return 'always';
+  return entry.defaultOff ? 'default-off' : 'default-on';
+}
 
 const KIND_LABEL: Record<Kind, { one: string; many: string; endpoint: string }> = {
   plugin: { one: 'plugin', many: 'Plugins', endpoint: '/api/admin/plugins' },
@@ -134,11 +179,17 @@ export function ExtensionDetailPage({ kind, id }: Props) {
   }, [schema, savedValues]);
 
   const dirty = Object.keys(savedValues).some((key) => (formValues[key] ?? '') !== savedValues[key]);
-  // On/off and "force on" wait for Save like the settings below.
-  const [availabilityDraft, setAvailabilityDraft] = useState<{ enabled?: boolean; forceEnabled?: boolean }>({});
+  // On/off and what users get wait for Save like the settings below.
+  const [availabilityDraft, setAvailabilityDraft] = useState<{ enabled?: boolean; forceEnabled?: boolean; defaultOff?: boolean }>({});
   const shownForced = availabilityDraft.forceEnabled ?? !!entry?.forceEnabled;
+  const shownDefaultOff = availabilityDraft.defaultOff ?? !!entry?.defaultOff;
+  const shownMode = pluginUserMode({ forceEnabled: shownForced, defaultOff: shownDefaultOff });
   const shownEnabled = shownForced || (availabilityDraft.enabled ?? !!entry?.enabled);
-  const availabilityDirty = !!entry && (shownEnabled !== entry.enabled || shownForced !== !!entry.forceEnabled);
+  const availabilityDirty = !!entry && (
+    shownEnabled !== entry.enabled
+    || shownForced !== !!entry.forceEnabled
+    || (kind === 'plugin' && shownDefaultOff !== !!entry.defaultOff)
+  );
   useAdminUnsavedChanges(`${kind}-config`, dirty || availabilityDirty);
 
   async function saveConfig() {
@@ -221,9 +272,10 @@ export function ExtensionDetailPage({ kind, id }: Props) {
     if (!entry) return true;
     const body: Record<string, unknown> = {};
     if (shownForced !== !!entry.forceEnabled) body.forceEnabled = shownForced;
+    if (kind === 'plugin' && shownDefaultOff !== !!entry.defaultOff) body.defaultOff = shownDefaultOff;
     if (shownEnabled !== entry.enabled) body.enabled = shownEnabled;
     const ok = await patch(body, 'availability');
-    if (ok) setEntry((prev) => (prev ? { ...prev, enabled: shownEnabled, forceEnabled: shownForced } : prev));
+    if (ok) setEntry((prev) => (prev ? { ...prev, enabled: shownEnabled, forceEnabled: shownForced, ...(kind === 'plugin' ? { defaultOff: shownDefaultOff } : {}) } : prev));
     setAvailabilityDraft({});
     return ok;
   }
@@ -329,14 +381,14 @@ export function ExtensionDetailPage({ kind, id }: Props) {
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             {entry.name}
             <span className="text-sm font-normal text-muted-foreground">v{entry.version}</span>
-            {entry.forceEnabled && <Badge tone="warning" icon={<Lock className="h-3 w-3" />}>Forced on</Badge>}
+            {entry.forceEnabled && <Badge tone="warning" icon={<Lock className="h-3 w-3" />}>Always on</Badge>}
             {entry.dev && <Badge tone="info" title="Loaded from the dev plugins directory">Dev</Badge>}
           </span>
         )}
         description={(
           <>
             by {entry.author || 'unknown'}
-            {entry.type && <> &middot; {entry.type}</>}
+            {entry.type && <> &middot; {kind === 'plugin' ? pluginTypeLabel(entry.type) : entry.type}</>}
             {entry.variants && entry.variants.length > 0 && <> &middot; {entry.variants.join(', ')}</>}
             {entry.installedAt && <> &middot; installed {new Date(entry.installedAt).toLocaleDateString()}</>}
           </>
@@ -366,18 +418,35 @@ export function ExtensionDetailPage({ kind, id }: Props) {
 
       <div className="space-y-10">
         <SettingsSection id="availability" title="Availability" description={`Whether users get this ${words.one} and whether they can turn it off.`}>
-          <SettingItem
-            label="Force on for everyone"
-            description={kind === 'plugin'
-              ? 'Users cannot turn it off in their settings. Turning this on also enables the plugin.'
-              : 'Users cannot deactivate it. Turning this on also enables the theme.'}
-          >
-            <ToggleSwitch
-              checked={shownForced}
-              disabled={busy === 'availability'}
-              onChange={(v) => { setMessage(null); setAvailabilityDraft((prev) => ({ ...prev, forceEnabled: v })); }}
-            />
-          </SettingItem>
+          {kind === 'plugin' ? (
+            <SettingItem
+              label="For users"
+              description={shownEnabled
+                ? PLUGIN_USER_MODES.find((m) => m.value === shownMode)!.description
+                : 'The plugin is off for everyone. Turn it on at the top of this page first.'}
+            >
+              <Select
+                value={shownMode}
+                disabled={busy === 'availability'}
+                options={PLUGIN_USER_MODES.map(({ value, label }) => ({ value, label }))}
+                onChange={(value) => {
+                  setMessage(null);
+                  setAvailabilityDraft((prev) => ({ ...prev, forceEnabled: value === 'always', defaultOff: value === 'default-off' }));
+                }}
+              />
+            </SettingItem>
+          ) : (
+            <SettingItem
+              label="Always on for everyone"
+              description="Users can't deactivate it. Turning this on also enables the theme."
+            >
+              <ToggleSwitch
+                checked={shownForced}
+                disabled={busy === 'availability'}
+                onChange={(v) => { setMessage(null); setAvailabilityDraft((prev) => ({ ...prev, forceEnabled: v })); }}
+              />
+            </SettingItem>
+          )}
           <SettingItem label="Source" description={entry.source?.kind === 'marketplace' ? 'Installed from the extension directory; updates show up in the marketplace.' : 'Installed from an uploaded ZIP.'}>
             {entry.source?.kind === 'marketplace' ? (
               <AdminLink href={adminPath('marketplace', entry.source.slug)} className="inline-flex items-center gap-1.5 text-sm text-foreground hover:underline">
@@ -400,7 +469,7 @@ export function ExtensionDetailPage({ kind, id }: Props) {
                       {risky
                         ? <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-label="High risk" />
                         : <Shield className="h-4 w-4 shrink-0 text-muted-foreground/60" />}
-                      <code className="font-mono text-xs text-foreground">{perm}</code>
+                      <PermissionText perm={perm} />
                       {risky && <Badge tone="warning">High risk</Badge>}
                     </li>
                   );

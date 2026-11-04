@@ -254,6 +254,18 @@ export interface InstalledPlugin {
   managed?: boolean;
   // True when plugin is admin-enforced and cannot be disabled locally.
   forceEnabled?: boolean;
+  /**
+   * For an admin's plugin: what users get while they haven't chosen.
+   * False when the admin picked "Off until users turn it on".
+   */
+  defaultOn?: boolean;
+  /**
+   * The user turned it on or off themselves (or it was turned off because it
+   * kept failing), so the admin's default no longer changes it.
+   */
+  chosen?: boolean;
+  /** Turned on by the admin's default, not by the user. */
+  autoEnabled?: boolean;
   // True when plugin has been approved by an admin. Unapproved plugins cannot be enabled.
   adminApproved?: boolean;
   settingsSchema?: Record<string, SettingFieldSchema>;

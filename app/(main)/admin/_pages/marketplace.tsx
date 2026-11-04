@@ -23,6 +23,9 @@ import { ConfigNote, inputClass } from '@/components/admin/config-items';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ChangelogBadges, ChangelogEntries, anyFlag, type ChangelogEntry, type ChangelogFlags } from '@/components/admin/changelog';
+import { PluginPermissionList } from '@/components/plugins/plugin-permission-list';
+import { offerToTurnOnPlugins, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
+import { pluginTypeLabel } from './plugin-type-label';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -171,6 +174,8 @@ export function MarketplacePage() {
   const [error, setError] = useState<string | null>(null);
   const [updates, setUpdates] = useState<UpdatesResult | null>(null);
   const [updatesLoading, setUpdatesLoading] = useState(true);
+  // A plugin's quick install asks first, with what it may do (themes don't).
+  const [quickInstall, setQuickInstall] = useState<MarketplaceListing | null>(null);
 
   const fetchExtensions = useCallback(async () => {
     setLoading(true);
@@ -244,11 +249,12 @@ export function MarketplacePage() {
     }
     const warnings = result.warnings.length ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'})` : '';
     const signed = result.signature === 'verified' ? ', signed by the directory' : '';
+    const outcome: TurnOnOutcome = !isUpdate && ext.type === 'plugin' ? await offerToTurnOnPlugins(confirm) : 'already-on';
     setMessage({
       type: 'success',
       text: isUpdate
         ? `"${ext.name}" updated to v${version}${signed}${warnings}`
-        : `"${ext.name}" installed (v${version})${signed}${warnings}`,
+        : `"${ext.name}" installed (v${version})${signed}${warnings}.${turnOnNote(outcome)}`,
     });
     setExtensions((prev) => prev.map((e) => (e.slug === ext.slug
       ? { ...e, installed: true, installedVersion: version, installedSource: { kind: 'marketplace', slug: ext.slug, directoryUrl: directoryUrl ?? '' } }
@@ -299,6 +305,24 @@ export function MarketplacePage() {
       />
 
       <ConfirmDialog {...confirmProps} />
+      <ConfirmDialog
+        isOpen={quickInstall !== null}
+        onClose={() => setQuickInstall(null)}
+        onConfirm={() => {
+          const ext = quickInstall;
+          setQuickInstall(null);
+          if (ext?.latestVersion) void install(ext, ext.latestVersion, false);
+        }}
+        title={`Install ${quickInstall?.name ?? ''}?`}
+        message={`${quickInstall?.author ? `By ${quickInstall.author.displayName}. ` : ''}It is installed for every user and turned on for them; they can turn it off in their settings. What it may do in each mailbox:`}
+        details={quickInstall ? (
+          <div className="mt-3 max-h-64 overflow-y-auto" data-testid="quick-install-permissions">
+            <PluginPermissionList permissions={quickInstall.permissions ?? []} compact />
+          </div>
+        ) : null}
+        confirmText="Install"
+        cancelText="Cancel"
+      />
 
       <div className="space-y-10">
         {updates && noticeCount > 0 && (
@@ -404,7 +428,11 @@ export function MarketplacePage() {
                         key={ext.slug}
                         extension={ext}
                         installing={installing.has(ext.slug)}
-                        onInstall={() => ext.latestVersion && install(ext, ext.latestVersion, ext.installed)}
+                        onInstall={() => {
+                          if (!ext.latestVersion) return;
+                          if (ext.type === 'plugin' && !ext.installed) setQuickInstall(ext);
+                          else void install(ext, ext.latestVersion, ext.installed);
+                        }}
                       />
                     ))}
                   </div>
@@ -716,7 +744,7 @@ function ExtensionCard({
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Badge tone={isPlugin ? 'info' : 'accent'}>
-                {isPlugin ? (extension.pluginType || 'plugin') : 'theme'}
+                {isPlugin ? pluginTypeLabel(extension.pluginType) : 'Theme'}
               </Badge>
               {offered?.channel === 'beta' && <Badge tone="info">beta</Badge>}
               {extension.deprecated && <Badge>deprecated</Badge>}

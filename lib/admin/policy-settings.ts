@@ -1,6 +1,6 @@
 /**
  * The settings an admin can preset (policy `defaults`) and lock with a value
- * (restriction `value` / `min`) on the User policy page, and the pure edits
+ * (restriction `value` / `min`) on the Features and settings page, and the pure edits
  * the page makes to a policy, for Everyone or for one domain or group scope.
  *
  * Labels are the ones users see in their own settings (English, like the
@@ -9,7 +9,7 @@
  * locales/en/common.json and the defaults against the settings store.
  */
 
-import type { SettingRestriction, SettingsPolicy } from './types';
+import { DEFAULT_FEATURE_GATES, type FeatureGates, type SettingRestriction, type SettingsPolicy } from './types';
 import { RESTRICTION_KEYS } from './restriction-keys';
 import {
   ACCESSIBILITY_DEFAULTS,
@@ -348,6 +348,31 @@ export function withRestrictionAt(
   const restrictions = (scope.policy.restrictions ??= {});
   if (value === undefined) delete restrictions[key];
   else restrictions[key] = value;
+  return next;
+}
+
+/** Whether a feature is on at the scope: its own value, or Everyone's. */
+export function featureAt(policy: SettingsPolicy, scopeId: string, key: keyof FeatureGates): ScopedValue<boolean> {
+  const everyone = policy.features?.[key] ?? DEFAULT_FEATURE_GATES[key];
+  const scope = scopeOf(policy, scopeId);
+  if (!scope) return { value: everyone, own: true, everyone };
+  const features = scope.policy.features;
+  return hasOwn(features, key)
+    ? { value: features![key] as boolean, own: true, everyone }
+    : { value: everyone, own: false, everyone };
+}
+
+/** The policy with `key` on or off at the scope; `undefined` in a scope means Everyone's again. */
+export function withFeatureAt(policy: SettingsPolicy, scopeId: string, key: keyof FeatureGates, value: boolean | undefined): SettingsPolicy {
+  const next = clonePolicy(policy);
+  const scope = scopeOf(next, scopeId);
+  if (!scope) {
+    next.features = { ...next.features, [key]: value ?? DEFAULT_FEATURE_GATES[key] };
+    return next;
+  }
+  const features = (scope.policy.features ??= {});
+  if (value === undefined) delete features[key];
+  else features[key] = value;
   return next;
 }
 

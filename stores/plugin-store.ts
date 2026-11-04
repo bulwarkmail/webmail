@@ -278,7 +278,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
         set(state => ({
           plugins: state.plugins.map(p =>
-            p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined } : p
+            p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         }));
 
@@ -300,7 +300,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
         set({
           plugins: plugins.map(p =>
-            p.id === id ? { ...p, enabled: false, status: 'disabled' as PluginStatus, error: undefined } : p
+            p.id === id ? { ...p, enabled: false, status: 'disabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         });
       },
@@ -504,7 +504,8 @@ function wireLoader(
       plugins: state.plugins.map(p => (p.id === id
         // enabled: false is persisted, so a reload doesn't start the
         // failing plugin again behind the user's back.
-        ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled' }
+        // chosen: the admin's default must not start it again either.
+        ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled', chosen: true, autoEnabled: false }
         : p)),
     })),
   });
@@ -524,6 +525,8 @@ interface ServerPluginInfo {
   permissions: string[];
   entrypoint: string;
   forceEnabled: boolean;
+  /** On for users who haven't chosen; absent from older servers, which counts as on. */
+  defaultOn?: boolean;
   /** Content hash of the bundle - changes whenever code changes, even if the version doesn't */
   bundleHash?: string;
   updatedAt?: string;
@@ -560,6 +563,7 @@ function serverMeta(sp: ServerPluginInfo) {
     ...(sp.tier ? { tier: sp.tier } : {}),
     managed: true as const,
     forceEnabled: sp.forceEnabled,
+    defaultOn: sp.defaultOn !== false,
     bundleHash: sp.bundleHash,
     httpOrigins: sp.httpOrigins,
     apiPostPaths: sp.apiPostPaths,
@@ -702,11 +706,15 @@ async function syncServerPlugins(
       const local = get().plugins.find(p => p.id === sp.id);
 
       if (isNew || !local) {
+        // An admin's plugin is on for everyone unless the admin chose
+        // "Off until users turn it on".
+        const on = sp.forceEnabled || sp.defaultOn !== false;
         const plugin: InstalledPlugin = {
           id: sp.id,
           type: sp.type as InstalledPlugin['type'],
-          enabled: sp.forceEnabled,
-          status: sp.forceEnabled ? 'enabled' : 'installed',
+          enabled: on,
+          status: on ? 'enabled' : 'installed',
+          ...(on && !sp.forceEnabled ? { autoEnabled: true } : {}),
           adminApproved: true, // Server-managed plugins are always approved
           settings: {},
           ...serverMeta(sp),
@@ -720,12 +728,19 @@ async function syncServerPlugins(
       }
 
       // Force-enable in the same pass when the server flips it on, so the user
-      // doesn't need a second refresh for it to run.
-      const shouldAutoEnable = sp.forceEnabled && !local.enabled;
+      // doesn't need a second refresh for it to run. Until the user chooses,
+      // the admin's default decides: on, or off ("Off until users turn it
+      // on"), which only takes back what the default turned on.
+      const followsDefault = !local.chosen && !sp.forceEnabled;
+      const defaultOn = sp.defaultOn !== false;
+      const shouldAutoEnable = !local.enabled && (sp.forceEnabled || (followsDefault && defaultOn));
+      const shouldAutoDisable = local.enabled && followsDefault && !defaultOn && !!local.autoEnabled;
+      if (shouldAutoDisable) deactivatePlugin(sp.id);
       const next: InstalledPlugin = {
         ...local,
         ...serverMeta(sp),
-        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const } : {}),
+        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const, ...(sp.forceEnabled ? {} : { autoEnabled: true }) } : {}),
+        ...(shouldAutoDisable ? { enabled: false, status: 'installed' as const, autoEnabled: false } : {}),
       };
       if (needsBundle || JSON.stringify(next) !== JSON.stringify(local)) {
         set(state => ({
@@ -913,7 +928,8 @@ onFullSignOut(() => {
   usePluginStore.setState({
     plugins: plugins.map((plugin) => {
       if (plugin.managed) {
-        const { grantedPermissions: _kept, declinedPermissions: _declined, ...kept } = plugin;
+        // The next person here starts from the admin's default again.
+        const { grantedPermissions: _kept, declinedPermissions: _declined, chosen: _chosen, ...kept } = plugin;
         return kept;
       }
       const { grantedPermissions: _granted, ...rest } = plugin;
