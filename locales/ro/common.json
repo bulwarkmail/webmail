@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Căutare „{text}” în e-mail"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "E-mailurile dvs. sunt păstrate pe acest dispozitiv, ca să le puteți citi offline."
+  },
   "desktopMenuBar": {
     "always_show_label": "Afișează mereu bara de meniu",
     "always_show_description": "Altfel apare la apăsarea tastei Alt.",

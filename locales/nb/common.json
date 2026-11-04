@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Søk etter «{text}» i e-post"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "E-posten din lagres på denne enheten, så du kan lese den uten nett."
+  },
   "desktopMenuBar": {
     "always_show_label": "Vis alltid menylinjen",
     "always_show_description": "Ellers vises den når du trykker på Alt.",

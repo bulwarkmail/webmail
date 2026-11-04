@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Ihre E-Mails werden auf diesem Gerät gespeichert, damit Sie sie auch offline lesen können."
+  },
   "desktopMenuBar": {
     "always_show_label": "Menüleiste immer anzeigen",
     "always_show_description": "Sonst erscheint sie, wenn Sie Alt drücken.",

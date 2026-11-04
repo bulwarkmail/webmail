@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "メールで「{text}」を検索"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "メールはこのデバイスに保存されるので、オフラインでも読めます。"
+  },
   "desktopMenuBar": {
     "always_show_label": "メニューバーを常に表示",
     "always_show_description": "オフにすると、Alt キーを押したときに表示されます。",

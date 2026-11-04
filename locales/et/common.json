@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Otsi kirjadest „{text}”"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Sinu kirjad hoitakse selles seadmes, nii et saad neid ka ühenduseta lugeda."
+  },
   "desktopMenuBar": {
     "always_show_label": "Näita menüüriba alati",
     "always_show_description": "Muidu ilmub see Alt-klahvi vajutamisel.",

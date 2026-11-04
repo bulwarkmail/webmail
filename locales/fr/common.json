@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Rechercher « {text} » dans les messages"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Vos e-mails sont gardés sur cet appareil : vous pouvez les lire hors ligne."
+  },
   "desktopMenuBar": {
     "always_show_label": "Toujours afficher la barre de menus",
     "always_show_description": "Sinon, elle s’affiche quand vous appuyez sur Alt.",

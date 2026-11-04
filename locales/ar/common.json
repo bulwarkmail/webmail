@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "البحث في البريد عن «{text}»"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "يُحفظ بريدك على هذا الجهاز، لذا يمكنك قراءته دون اتصال."
+  },
   "desktopMenuBar": {
     "always_show_label": "إظهار شريط القوائم دائمًا",
     "always_show_description": "وإلا فسيظهر عند الضغط على Alt.",

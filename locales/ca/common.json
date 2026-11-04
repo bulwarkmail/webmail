@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Cerca «{text}» al correu"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "El teu correu es guarda en aquest dispositiu, així el pots llegir sense connexió."
+  },
   "desktopMenuBar": {
     "always_show_label": "Mostra sempre la barra de menús",
     "always_show_description": "Si no, apareix en prémer Alt.",

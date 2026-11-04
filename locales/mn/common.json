@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Захидлаас “{text}”-г хайх"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Таны захиа энэ төхөөрөмж дээр хадгалагддаг тул офлайн үед ч уншиж болно."
+  },
   "desktopMenuBar": {
     "always_show_label": "Цэсний мөрийг үргэлж харуулах",
     "always_show_description": "Эс бөгөөс Alt товч дарахад гарч ирнэ.",

@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "جستجوی «{text}» در نامه‌ها"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "ایمیل‌های شما روی این دستگاه نگه داشته می‌شود تا آفلاین هم بخوانید."
+  },
   "desktopMenuBar": {
     "always_show_label": "همیشه نوار منو نمایش داده شود",
     "always_show_description": "در غیر این صورت با فشردن Alt نمایش داده می‌شود.",

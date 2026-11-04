@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Hľadať „{text}“ v pošte"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Vaša pošta je uložená v tomto zariadení, takže ju môžete čítať offline."
+  },
   "desktopMenuBar": {
     "always_show_label": "Vždy zobrazovať panel ponúk",
     "always_show_description": "Inak sa zobrazí po stlačení klávesu Alt.",

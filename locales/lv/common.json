@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Meklēt pastā “{text}”"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Jūsu pasts tiek glabāts šajā ierīcē, tāpēc to var lasīt bezsaistē."
+  },
   "desktopMenuBar": {
     "always_show_label": "Vienmēr rādīt izvēļņu joslu",
     "always_show_description": "Citādi tā parādās, nospiežot Alt.",

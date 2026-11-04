@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "在邮件中搜索“{text}”"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "您的邮件保存在此设备上，离线时也能阅读。"
+  },
   "desktopMenuBar": {
     "always_show_label": "始终显示菜单栏",
     "always_show_description": "否则按 Alt 键时显示。",

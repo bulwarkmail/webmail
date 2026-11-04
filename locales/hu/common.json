@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "„{text}” keresése a levelek között"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "A leveleid ezen az eszközön is megmaradnak, így kapcsolat nélkül is olvashatod őket."
+  },
   "desktopMenuBar": {
     "always_show_label": "Menüsor mindig látható",
     "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",

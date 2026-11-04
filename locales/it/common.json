@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Cerca «{text}» nella posta"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "La tua posta è conservata su questo dispositivo, così puoi leggerla offline."
+  },
   "desktopMenuBar": {
     "always_show_label": "Mostra sempre la barra dei menu",
     "always_show_description": "Altrimenti compare premendo Alt.",

@@ -7048,6 +7048,9 @@
   "desktop_mail": {
     "context_search_mail": "Шукати «{text}» у пошті"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Ваша пошта зберігається на цьому пристрої, тож її можна читати без мережі."
+  },
   "desktopMenuBar": {
     "always_show_label": "Завжди показувати рядок меню",
     "always_show_description": "Інакше він з’являється після натискання Alt.",

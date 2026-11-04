@@ -7049,6 +7049,9 @@
   "desktop_mail": {
     "context_search_mail": "חיפוש “{text}” בדואר"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "הדואר שלך נשמר במכשיר הזה, כך שאפשר לקרוא אותו גם בלי חיבור."
+  },
   "desktopMenuBar": {
     "always_show_label": "תמיד להציג את סרגל התפריטים",
     "always_show_description": "אחרת הוא מופיע בלחיצה על Alt.",

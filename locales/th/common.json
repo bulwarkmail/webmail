@@ -7056,6 +7056,9 @@
   "desktop_mail": {
     "context_search_mail": "ค้นหา “{text}” ในอีเมล"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "อีเมลของคุณถูกเก็บไว้ในอุปกรณ์นี้ คุณจึงอ่านได้แม้ออฟไลน์"
+  },
   "desktopMenuBar": {
     "always_show_label": "แสดงแถบเมนูเสมอ",
     "always_show_description": "มิฉะนั้นแถบเมนูจะแสดงเมื่อกด Alt",

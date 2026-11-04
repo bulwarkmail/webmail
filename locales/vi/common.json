@@ -7060,6 +7060,9 @@
   "desktop_mail": {
     "context_search_mail": "Tìm “{text}” trong thư"
   },
+  "mail_p2_desk": {
+    "offline_default_on": "Thư của bạn được lưu trên thiết bị này, nên bạn có thể đọc khi ngoại tuyến."
+  },
   "desktopMenuBar": {
     "always_show_label": "Luôn hiện thanh menu",
     "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
