@@ -10,6 +10,8 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 /** The client id on a server that won't register one: 0.16 accepts any id. */
 const FALLBACK_CLIENT_ID = 'bulwark-desktop';
 const REGISTERED_REDIRECT = 'http://127.0.0.1/bulwark-desktop/callback';
+/** Only tried when the server says no to loopback. Neither Stalwart line takes this one. */
+const SCHEME_REDIRECT = 'bulwark://sign-in/callback';
 const REGISTER_TIMEOUT_MS = 5000;
 
 function isLoopbackRedirect(value: unknown): boolean {
@@ -27,29 +29,42 @@ function isLoopbackRedirect(value: unknown): boolean {
  * ids are stateless, so the same metadata gives the same id and nothing is
  * stored. It accepts a loopback redirect and ignores the port when matching.
  */
-async function registerClient(base: string, scope: string): Promise<string> {
+async function postRegistration(endpoint: string, redirectUri: string, scope: string): Promise<Response> {
+  return fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_name: 'Bulwark',
+      redirect_uris: [redirectUri],
+      token_endpoint_auth_method: 'none',
+      grant_types: ['authorization_code', 'refresh_token'],
+      response_types: ['code'],
+      scope,
+    }),
+    redirect: 'error',
+    signal: AbortSignal.timeout(REGISTER_TIMEOUT_MS),
+  });
+}
+
+async function clientIdOf(response: Response): Promise<string | null> {
+  const body = (await response.json().catch(() => null)) as { client_id?: unknown } | null;
+  return typeof body?.client_id === 'string' && body.client_id ? body.client_id : null;
+}
+
+async function registerClient(endpoint: string, scope: string): Promise<{ clientId: string; useScheme: boolean }> {
   try {
-    const response = await fetch(`${base}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_name: 'Bulwark',
-        redirect_uris: [REGISTERED_REDIRECT],
-        token_endpoint_auth_method: 'none',
-        grant_types: ['authorization_code', 'refresh_token'],
-        response_types: ['code'],
-        scope,
-      }),
-      redirect: 'error',
-      signal: AbortSignal.timeout(REGISTER_TIMEOUT_MS),
-    });
-    if (!response.ok) return FALLBACK_CLIENT_ID;
-    const body = (await response.json()) as { client_id?: unknown };
-    return typeof body.client_id === 'string' && body.client_id ? body.client_id : FALLBACK_CLIENT_ID;
+    const response = await postRegistration(endpoint, REGISTERED_REDIRECT, scope);
+    if (response.ok) return { clientId: (await clientIdOf(response)) ?? FALLBACK_CLIENT_ID, useScheme: false };
+    const refusal = (await response.json().catch(() => null)) as { error?: unknown } | null;
+    if (refusal?.error === 'invalid_redirect_uri') {
+      const second = await postRegistration(endpoint, SCHEME_REDIRECT, scope);
+      const clientId = second.ok ? await clientIdOf(second) : null;
+      if (clientId) return { clientId, useScheme: true };
+    }
   } catch (error) {
     logger.warn('Desktop OAuth: client registration failed', { error: error instanceof Error ? error.message : String(error) });
-    return FALLBACK_CLIENT_ID;
   }
+  return { clientId: FALLBACK_CLIENT_ID, useScheme: false };
 }
 
 /**
@@ -74,10 +89,17 @@ export async function POST(request: NextRequest) {
     if (!metadata) return NextResponse.json({ error: 'no_oauth' }, { status: 404 });
 
     const scope = withProviderDataScopes(DEFAULT_OAUTH_SCOPES, metadata.scopes_supported);
+    // RFC 8414 says where. Without it, Stalwart's path: 0.16's documents don't always name it.
+    const validate = getDiscoveryValidator(upstream.serverUrl);
+    const named = metadata.registration_endpoint;
+    const endpoint = named && (!validate || (await validate(named))) ? named : `${upstream.serverUrl}/auth/register`;
+    const { clientId, useScheme } = await registerClient(endpoint, scope);
     return NextResponse.json({
       authorization_endpoint: metadata.authorization_endpoint,
-      client_id: await registerClient(upstream.serverUrl, scope),
+      client_id: clientId,
       scope,
+      issuer: metadata.issuer,
+      ...(useScheme ? { use_scheme: true } : {}),
     });
   } catch (error) {
     logger.error('Desktop OAuth discovery failed', { error: error instanceof Error ? error.message : 'Unknown error' });

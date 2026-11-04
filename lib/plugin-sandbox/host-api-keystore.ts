@@ -8,17 +8,19 @@
 // both cases is in the shell: a native dialog in main (keystore-consent.ts) and the OS.
 //
 // RPC errors reach the frame as message strings only, so the code is the message:
-// keystore:cancelled, keystore:not-found, keystore:unsupported, keystore:locked,
-// keystore:invalid, keystore:failed.
+// keystore:cancelled, keystore:ask-first, keystore:not-found, keystore:unsupported,
+// keystore:locked, keystore:invalid, keystore:failed.
 
 import type { InstalledPlugin } from '../plugin-types';
-import type { DesktopKeystoreBridge, DesktopKeystoreCertificate } from '../desktop/types';
+import type { DesktopKeystoreBridge, DesktopKeystoreCertificate, DesktopKeystoreUseOptions } from '../desktop/types';
+import { keystoreOffByDesktopPolicy } from '../desktop/policy';
 import { holdForUser } from './host-dialog';
 import { pluginHasPermission } from './permissions';
 import { resolvePluginTier } from './tier';
 
 const MAX_ID = 64;
-const MAX_DIGEST = 64;
+// The DER of a CMS message's signed attributes. The shell checks what they are.
+const MAX_SIGNED_ATTRIBUTES = 4096;
 // A 16384-bit modulus, the most anything issues.
 const MAX_CIPHERTEXT = 2048;
 const MAX_LABEL = 256;
@@ -38,13 +40,18 @@ export const KEYSTORE_PERMS = {
 export const KEYSTORE_METHODS: readonly string[] = Object.keys(KEYSTORE_PERMS);
 
 function desktopKeystore(): DesktopKeystoreBridge | undefined {
-  return typeof window === 'undefined' ? undefined : window.bulwarkDesktop?.keystore;
+  if (typeof window === 'undefined' || keystoreOffByDesktopPolicy()) return undefined;
+  return window.bulwarkDesktop?.keystore;
+}
+
+/** Whether this plugin could get at it at all, permission aside: the desktop app, policy, the tier. */
+export function keystoreCouldReach(plugin: InstalledPlugin): boolean {
+  return !!desktopKeystore() && resolvePluginTier(plugin).tier === 'privileged';
 }
 
 /** api.host.features.keystore for this plugin. Absent rather than false when it's not: older hosts don't name it. */
 export function keystoreFeature(plugin?: InstalledPlugin): { keystore?: true } {
-  if (!plugin || !desktopKeystore()) return {};
-  if (resolvePluginTier(plugin).tier !== 'privileged' || !pluginHasPermission(plugin, 'keystore')) return {};
+  if (!plugin || !keystoreCouldReach(plugin) || !pluginHasPermission(plugin, 'keystore')) return {};
   return { keystore: true };
 }
 
@@ -89,6 +96,11 @@ function checkedDecryptScheme(value: unknown): { scheme: string; hash?: string; 
   return { scheme: scheme.scheme, hash: readHash(scheme.hash), ...(label ? { label } : {}) };
 }
 
+/** Only `quiet`, and only when it's true: anything else may ask. */
+function readOptions(value: unknown): DesktopKeystoreUseOptions {
+  return (value as { quiet?: unknown } | null | undefined)?.quiet === true ? { quiet: true } : {};
+}
+
 /** Only the code, whatever the bridge put around it. */
 function codeOnly(error: unknown): Error {
   const code = /keystore:[a-z-]+/.exec(error instanceof Error ? error.message : String(error))?.[0];
@@ -103,13 +115,13 @@ export async function doKeystoreCall(plugin: InstalledPlugin, method: string, ar
   const run = (): Promise<DesktopKeystoreCertificate[] | Uint8Array> => {
     switch (method) {
       case 'keystore.list':
-        return keystore.list();
+        return keystore.list(readOptions(args[0]));
       case 'keystore.sign':
-        return keystore.sign(readId(args[0]), readBytes(args[1], MAX_DIGEST), checkedSignScheme(args[2]) as never);
+        return keystore.sign(readId(args[0]), readBytes(args[1], MAX_SIGNED_ATTRIBUTES), checkedSignScheme(args[2]) as never);
       case 'keystore.decrypt':
-        return keystore.decrypt(readId(args[0]), readBytes(args[1], MAX_CIPHERTEXT), checkedDecryptScheme(args[2]) as never);
+        return keystore.decrypt(readId(args[0]), readBytes(args[1], MAX_CIPHERTEXT), checkedDecryptScheme(args[2]) as never, readOptions(args[3]));
       case 'keystore.agree':
-        return keystore.agree(readId(args[0]), readBytes(args[1], MAX_PEER_KEY));
+        return keystore.agree(readId(args[0]), readBytes(args[1], MAX_PEER_KEY), readOptions(args[2]));
       default:
         throw new Error('keystore:unsupported');
     }

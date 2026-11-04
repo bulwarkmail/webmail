@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { build } from 'esbuild';
-import { desktopBuildFlag } from '../../../scripts/desktop-build-flag.mjs';
+import { DESKTOP_TRUST_MARKER, desktopBuildFlag } from '../../../scripts/desktop-build-flag.mjs';
 
 const ROOT = path.resolve(__dirname, '../../..');
 const TRUST_KEY = Symbol.for('bulwark.desktop.trustedJmapOrigins');
@@ -110,6 +110,42 @@ describe('the flag is fixed at build time', () => {
       expect(source, file).toMatch(/process\.env\.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && isDesktopTrustedServer/);
       expect(source, file).not.toMatch(/IS_DESKTOP_BUILD && isDesktopTrustedServer/);
     }
+  });
+
+  /** Compiles the trust check alone, kept as an export the way Turbopack keeps it. */
+  async function trustCheckOfBuild(flag: string): Promise<string> {
+    const result = await build({
+      entryPoints: [path.join(ROOT, 'lib/desktop/trusted-servers.ts')],
+      bundle: true,
+      write: false,
+      minify: true,
+      format: 'esm',
+      platform: 'node',
+      define: { 'process.env.NEXT_PUBLIC_BULWARK_DESKTOP': JSON.stringify(flag) },
+    });
+    return result.outputFiles[0].text;
+  }
+
+  it('a server build holds no trust path, even when a bundler keeps the unused export', async () => {
+    expect(await trustCheckOfBuild('')).not.toContain(DESKTOP_TRUST_MARKER);
+  });
+
+  it('a desktop build still holds it', async () => {
+    expect(await trustCheckOfBuild('1')).toContain(DESKTOP_TRUST_MARKER);
+  });
+
+  it('the secrets from the shell are read in the desktop build only', async () => {
+    const compile = async (flag: string) => (await build({
+      entryPoints: [path.join(ROOT, 'lib/desktop/server-secrets.ts')],
+      bundle: true,
+      write: false,
+      minify: true,
+      format: 'esm',
+      platform: 'node',
+      define: { 'process.env.NEXT_PUBLIC_BULWARK_DESKTOP': JSON.stringify(flag) },
+    })).outputFiles[0].text;
+    expect(await compile('')).not.toContain('bulwark.desktop.serverSecrets');
+    expect(await compile('1')).toContain('bulwark.desktop.serverSecrets');
   });
 
   it('no image build sets it', () => {

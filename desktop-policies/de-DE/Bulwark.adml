@@ -54,8 +54,12 @@
       <string id="AuthNegotiateDelegateAllowlist_Explain">Die Server, an die die App Kerberos-Anmeldedaten delegieren darf, durch Kommas getrennt. Wird beim Neustart der App wirksam.</string>
       <string id="AutoSelectCertificateForUrls">Clientzertifikate automatisch wählen</string>
       <string id="AutoSelectCertificateForUrls_Explain">Eine JSON-Regel pro Zeile, im Format von Chrome: {&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}. Die App wählt dann für diese Website das passende Zertifikat ohne Rückfrage.</string>
+      <string id="KeystoreEnabled">Zertifikatspeicher des Systems erlauben</string>
+      <string id="KeystoreEnabled_Explain">Wenn deaktiviert, kann nichts in der App mit den Zertifikaten und Smartcards im Speicher des Betriebssystems signieren oder entschlüsseln, und niemand wird gefragt. Das hat Vorrang vor der Liste der Websites unten. Es gilt auch, wenn Plugins ausgeschaltet sind. Importierte Schlüssel sind nicht betroffen.</string>
       <string id="KeystoreAllowedOrigins">Websites, die den Zertifikatspeicher des Systems verwenden dürfen</string>
       <string id="KeystoreAllowedOrigins_Explain">Die Bulwark-Server, nach https-Adresse, deren Plugins mit den Zertifikaten im Speicher des Betriebssystems signieren und entschlüsseln dürfen, ohne dass der Benutzer für jede Website gefragt wird. Eine pro Zeile.</string>
+      <string id="BrowserSignIn">Anmeldung über den Browser anbieten</string>
+      <string id="BrowserSignIn_Explain">Wenn aktiviert oder nicht konfiguriert, bietet die Anmeldeseite „Mit Ihrem Browser anmelden“ an, damit Benutzer dort ihren Passwort-Manager, Passkeys und Ihr Single Sign-on verwenden können. Wenn deaktiviert, fehlt die Schaltfläche und die App lehnt den Vorgang ab. Das Formular in der App bleibt, sofern der Server nicht nur OAuth erlaubt.</string>
       <string id="WipeOfflineData">Auf dem Gerät behaltene E-Mails löschen</string>
       <string id="WipeOfflineData_Explain">Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen.</string>
     </stringTable>

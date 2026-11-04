@@ -53,6 +53,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error }, { status: 400, headers: NO_STORE });
     }
 
+    // The desktop app's sign-in has its own redeem, which writes cookies from these fields.
+    if (result.bundle.flow === 'desktop-password' || result.bundle.flow === 'desktop-tokens') {
+      return NextResponse.json({ error: 'invalid_code' }, { status: 400, headers: NO_STORE });
+    }
+
     await refund();
     logger.info('Mobile hand-off redeemed', { flow: result.bundle.flow });
     return NextResponse.json({ ...result.bundle, state: result.state }, { headers: NO_STORE });

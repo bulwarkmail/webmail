@@ -45,10 +45,10 @@ describe('service worker with a redacted preview', () => {
     expect(calls[0].options.data).toMatchObject({ kind: 'email', emailId: 'e1' });
   });
 
-  it('counts several unread messages without naming any', async () => {
+  it('opens the one new message however much else is unread', async () => {
     const { push, calls } = loadWorker({ unreadTotal: 3, redacted: true, email: { id: 'e1', threadId: 't1' } });
     await push(delivery);
     expect(calls[0].title).toBe('New mail');
-    expect(calls[0].options.body).toBe('3 unread messages');
+    expect(calls[0].options.data).toMatchObject({ kind: 'email', emailId: 'e1' });
   });
 });

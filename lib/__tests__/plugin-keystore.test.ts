@@ -12,7 +12,9 @@ import { dispatchApiCall, PERM_PER_METHOD } from '../plugin-sandbox/host-api';
 import { hasDialogFor, holdForUser, whenNoDialogFor } from '../plugin-sandbox/host-dialog';
 import { snapshotHostFeatures } from '../plugin-sandbox/host-features';
 import { keystoreFeature } from '../plugin-sandbox/host-api-keystore';
-import { HIGH_RISK_PERMISSIONS } from '../plugin-sandbox/permission-text';
+import { DEFAULT_POLICY_SNAPSHOT } from '../desktop/policy-schema';
+import { declaredPermissions, HIGH_RISK_PERMISSIONS } from '../plugin-sandbox/permission-text';
+import { pluginHasPermission } from '../plugin-sandbox/permissions';
 
 vi.mock('@/stores/toast-store', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
@@ -28,6 +30,7 @@ function plugin(overrides: Partial<InstalledPlugin> = {}): InstalledPlugin {
     type: 'hook',
     tier: 'privileged',
     managed: true,
+    grantedPermissions: ['keystore'],
     permissions: ['crypto:full', 'keystore'],
     entrypoint: 'index.js',
     enabled: true,
@@ -37,7 +40,7 @@ function plugin(overrides: Partial<InstalledPlugin> = {}): InstalledPlugin {
   };
 }
 
-const DIGEST = new Uint8Array(32).fill(7);
+const ATTRIBUTES = new Uint8Array(200).fill(7);
 const SIGN = { scheme: 'rsa-pkcs1', hash: 'SHA-256' };
 
 function fakeBridge() {
@@ -66,7 +69,7 @@ describe('who may call it', () => {
 
   const METHODS: Array<[string, unknown[]]> = [
     ['keystore.list', []],
-    ['keystore.sign', ['id', DIGEST, SIGN]],
+    ['keystore.sign', ['id', ATTRIBUTES, SIGN]],
     ['keystore.decrypt', ['id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }]],
     ['keystore.agree', ['id', new Uint8Array(91)]],
   ];
@@ -91,9 +94,17 @@ describe('who may call it', () => {
     await expect(dispatchApiCall(notGiven, 'keystore.list', [], { privileged: true })).rejects.toThrow(/lacks permission "keystore"/);
   });
 
+  it('is refused for a plugin an admin installed until this user says yes too', async () => {
+    const adminsOnly = plugin({ managed: true, grantedPermissions: [] });
+    await expect(dispatchApiCall(adminsOnly, 'keystore.list', [], { privileged: true })).rejects.toThrow(/lacks permission "keystore"/);
+    expect(keystoreFeature(adminsOnly)).toEqual({});
+    expect(pluginHasPermission(adminsOnly, 'crypto:full'), 'its other permissions are the admin\'s call').toBe(true);
+    expect(pluginHasPermission(plugin({ managed: true }), 'keystore')).toBe(true);
+  });
+
   it('passes for a privileged plugin holding it', async () => {
-    await expect(dispatchApiCall(plugin(), 'keystore.sign', ['id', DIGEST, SIGN], { privileged: true })).resolves.toEqual(new Uint8Array([1, 2, 3]));
-    expect(bridge.sign).toHaveBeenCalledWith('id', DIGEST, SIGN);
+    await expect(dispatchApiCall(plugin(), 'keystore.sign', ['id', ATTRIBUTES, SIGN], { privileged: true })).resolves.toEqual(new Uint8Array([1, 2, 3]));
+    expect(bridge.sign).toHaveBeenCalledWith('id', ATTRIBUTES, SIGN);
     await expect(dispatchApiCall(plugin(), 'keystore.list', [], { privileged: true })).resolves.toEqual([]);
     await expect(dispatchApiCall(plugin(), 'keystore.decrypt', ['id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }], { privileged: true })).resolves.toEqual(new Uint8Array([4, 5, 6]));
     await expect(dispatchApiCall(plugin(), 'keystore.agree', ['id', new Uint8Array(91)], { privileged: true })).resolves.toEqual(new Uint8Array([7, 8, 9]));
@@ -122,17 +133,17 @@ describe('what gets through to the shell', () => {
   const call = (method: string, ...args: unknown[]) => dispatchApiCall(plugin(), method, args, { privileged: true });
 
   it.each<[string, unknown[]]>([
-    ['an id that is no string', [42, DIGEST, SIGN]],
-    ['an empty id', ['', DIGEST, SIGN]],
-    ['a long id', ['x'.repeat(65), DIGEST, SIGN]],
-    ['a digest that is no bytes', ['id', 'not bytes', SIGN]],
-    ['an empty digest', ['id', new Uint8Array(0), SIGN]],
-    ['a digest longer than any hash', ['id', new Uint8Array(65), SIGN]],
-    ['no scheme', ['id', DIGEST, null]],
-    ['a list as scheme', ['id', DIGEST, []]],
-    ['an unknown scheme', ['id', DIGEST, { scheme: 'raw', hash: 'SHA-256' }]],
-    ['an unknown hash', ['id', DIGEST, { scheme: 'rsa-pkcs1', hash: 'MD5' }]],
-    ['no hash', ['id', DIGEST, { scheme: 'rsa-pkcs1' }]],
+    ['an id that is no string', [42, ATTRIBUTES, SIGN]],
+    ['an empty id', ['', ATTRIBUTES, SIGN]],
+    ['a long id', ['x'.repeat(65), ATTRIBUTES, SIGN]],
+    ['attributes that are no bytes', ['id', 'not bytes', SIGN]],
+    ['empty attributes', ['id', new Uint8Array(0), SIGN]],
+    ['attributes past what S/MIME could need', ['id', new Uint8Array(4097), SIGN]],
+    ['no scheme', ['id', ATTRIBUTES, null]],
+    ['a list as scheme', ['id', ATTRIBUTES, []]],
+    ['an unknown scheme', ['id', ATTRIBUTES, { scheme: 'raw', hash: 'SHA-256' }]],
+    ['an unknown hash', ['id', ATTRIBUTES, { scheme: 'rsa-pkcs1', hash: 'MD5' }]],
+    ['no hash', ['id', ATTRIBUTES, { scheme: 'rsa-pkcs1' }]],
   ])('sign refuses %s', async (_name, args) => {
     await expect(call('keystore.sign', ...args)).rejects.toThrow('keystore:invalid');
     expect(bridge.sign).not.toHaveBeenCalled();
@@ -148,9 +159,9 @@ describe('what gets through to the shell', () => {
   it('passes only the fields it knows', async () => {
     const data = new Uint8Array(256);
     await call('keystore.decrypt', 'id', data, { scheme: 'rsa-oaep', hash: 'SHA-1', extra: 'x', label: new Uint8Array(0) });
-    expect(bridge.decrypt).toHaveBeenCalledWith('id', data, { scheme: 'rsa-oaep', hash: 'SHA-1' });
-    await call('keystore.sign', 'id', DIGEST, { ...SIGN, extra: 'x' });
-    expect(bridge.sign).toHaveBeenCalledWith('id', DIGEST, SIGN);
+    expect(bridge.decrypt).toHaveBeenCalledWith('id', data, { scheme: 'rsa-oaep', hash: 'SHA-1' }, {});
+    await call('keystore.sign', 'id', ATTRIBUTES, { ...SIGN, extra: 'x' });
+    expect(bridge.sign).toHaveBeenCalledWith('id', ATTRIBUTES, SIGN);
   });
 
   it('agree refuses an oversized peer key', async () => {
@@ -160,12 +171,81 @@ describe('what gets through to the shell', () => {
 
   it.each(['cancelled', 'not-found', 'unsupported', 'locked', 'failed'])('hands keystore:%s to the frame as the message', async (code) => {
     bridge.sign.mockRejectedValueOnce(new Error(`Error invoking remote method: Error: keystore:${code}`));
-    await expect(call('keystore.sign', 'id', DIGEST, SIGN)).rejects.toThrow(new RegExp(`^keystore:${code}$`));
+    await expect(call('keystore.sign', 'id', ATTRIBUTES, SIGN)).rejects.toThrow(new RegExp(`^keystore:${code}$`));
   });
 
   it('turns anything else into keystore:failed, not a stack or a path', async () => {
     bridge.sign.mockRejectedValueOnce(new Error('C:\\secret\\path blew up'));
-    await expect(call('keystore.sign', 'id', DIGEST, SIGN)).rejects.toThrow(/^keystore:failed$/);
+    await expect(call('keystore.sign', 'id', ATTRIBUTES, SIGN)).rejects.toThrow(/^keystore:failed$/);
+  });
+});
+
+describe('a call that must not ask', () => {
+  const call = (method: string, ...args: unknown[]) => dispatchApiCall(plugin(), method, args, { privileged: true });
+  let bridge: ReturnType<typeof fakeBridge>;
+  beforeEach(() => {
+    bridge = fakeBridge();
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, keystore: bridge };
+  });
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('passes quiet to the shell, and only quiet', async () => {
+    await call('keystore.list', { quiet: true, other: 1 });
+    expect(bridge.list).toHaveBeenCalledWith({ quiet: true });
+    await call('keystore.decrypt', 'id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }, { quiet: true });
+    expect(bridge.decrypt).toHaveBeenCalledWith('id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }, { quiet: true });
+    await call('keystore.agree', 'id', new Uint8Array(91), { quiet: true });
+    expect(bridge.agree).toHaveBeenCalledWith('id', new Uint8Array(91), { quiet: true });
+  });
+
+  it('a call without it, or with something else, can ask', async () => {
+    await call('keystore.list');
+    expect(bridge.list).toHaveBeenLastCalledWith({});
+    await call('keystore.list', { quiet: 'yes' });
+    expect(bridge.list).toHaveBeenLastCalledWith({});
+  });
+
+  it('the shell\'s answer comes through as its code', async () => {
+    bridge.list.mockRejectedValueOnce(new Error('keystore:ask-first'));
+    await expect(call('keystore.list', { quiet: true })).rejects.toThrow(/^keystore:ask-first$/);
+  });
+});
+
+describe('policy', () => {
+  const withPolicy = (values: Record<string, { value: unknown }>) => {
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = {
+      version: 1,
+      keystore: fakeBridge(),
+      policy: { get: () => ({ ...DEFAULT_POLICY_SNAPSHOT, ...values }) },
+    };
+  };
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it.each([
+    ['KeystoreEnabled off', { KeystoreEnabled: { value: false } }],
+    ['PluginsMode off', { PluginsMode: { value: 'off' } }],
+  ])('%s takes the flag away and refuses the call', async (_name, values) => {
+    withPolicy(values);
+    expect(keystoreFeature(plugin())).toEqual({});
+    await expect(dispatchApiCall(plugin(), 'keystore.list', [], { privileged: true })).rejects.toThrow('keystore:unsupported');
+  });
+
+  it('leaves it alone otherwise', () => {
+    withPolicy({});
+    expect(keystoreFeature(plugin())).toEqual({ keystore: true });
+  });
+});
+
+describe('what a manifest declares', () => {
+  it('counts optional permissions, as the install does', () => {
+    expect(declaredPermissions({ tier: 'privileged', permissions: ['crypto:full', 'email:read'], optionalPermissions: ['keystore', 'email:read'] }))
+      .toEqual(['crypto:full', 'email:read', 'keystore']);
+  });
+
+  it('leaves out what an untrusted plugin can not get, what this version does not know, and junk', () => {
+    expect(declaredPermissions({ permissions: ['email:read'], optionalPermissions: ['keystore', 'from:the-future', 7] })).toEqual(['email:read']);
+    expect(declaredPermissions(null)).toEqual([]);
+    expect(declaredPermissions({ permissions: 'email:read' })).toEqual([]);
   });
 });
 
@@ -285,7 +365,7 @@ describe('a keystore call and the hook timer', () => {
     const bridge = fakeBridge();
     bridge.sign.mockRejectedValueOnce(new Error('keystore:cancelled'));
     installBridge(bridge);
-    await expect(dispatchApiCall(plugin(), 'keystore.sign', ['id', DIGEST, SIGN], { privileged: true })).rejects.toThrow('keystore:cancelled');
+    await expect(dispatchApiCall(plugin(), 'keystore.sign', ['id', ATTRIBUTES, SIGN], { privileged: true })).rejects.toThrow('keystore:cancelled');
     expect(hasDialogFor(ID)).toBe(false);
 
     await expect(dispatchApiCall(plugin(), 'keystore.sign', [42], { privileged: true })).rejects.toThrow('keystore:invalid');

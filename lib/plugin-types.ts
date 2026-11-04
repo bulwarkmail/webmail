@@ -283,6 +283,8 @@ export interface InstalledPlugin {
    * skip the consent prompt (admin pre-approval).
    */
   grantedPermissions?: string[];
+  /** Asked for a plugin an admin installed (ALWAYS_ASK_USER), and the user said no: not asked again. */
+  declinedPermissions?: string[];
   /**
    * For plugins the user installed: the validated manifest, kept so the
    * package can be rebuilt for an approval request, and the hash an admin

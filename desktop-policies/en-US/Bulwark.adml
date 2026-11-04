@@ -54,8 +54,12 @@
       <string id="AuthNegotiateDelegateAllowlist_Explain">The servers the app may delegate Kerberos credentials to, separated by commas. Takes effect when the app restarts.</string>
       <string id="AutoSelectCertificateForUrls">Choose client certificates automatically</string>
       <string id="AutoSelectCertificateForUrls_Explain">One JSON rule per line, in the format Chrome uses: {&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}. The app then picks the matching certificate for that site without asking.</string>
+      <string id="KeystoreEnabled">Allow the system certificate store</string>
+      <string id="KeystoreEnabled_Explain">When disabled, nothing in the app can sign or decrypt with the certificates and smart cards in the operating system&apos;s store, and nobody is asked. This overrides the list of sites below. It also holds when plugins are turned off. Imported keys are not affected.</string>
       <string id="KeystoreAllowedOrigins">Sites that may use the system certificate store</string>
       <string id="KeystoreAllowedOrigins_Explain">The Bulwark servers, by https address, whose plugins may sign and decrypt with the certificates in the operating system&apos;s store, without the user being asked for each site. One per line.</string>
+      <string id="BrowserSignIn">Offer sign-in through the browser</string>
+      <string id="BrowserSignIn_Explain">When enabled or not configured, the login page offers &quot;Sign in with your browser&quot;, so people can use their password manager, passkeys and your single sign-on there. When disabled, the button is gone and the app refuses the flow. The form in the app stays, unless the server only allows OAuth.</string>
       <string id="WipeOfflineData">Delete mail kept on the device</string>
       <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.</string>
     </stringTable>

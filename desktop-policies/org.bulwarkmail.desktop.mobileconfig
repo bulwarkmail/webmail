@@ -57,10 +57,14 @@
       <array>
         <string>{&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}</string>
       </array>
+      <key>KeystoreEnabled</key>
+      <true/>
       <key>KeystoreAllowedOrigins</key>
       <array>
         <string>https://mail.example.com</string>
       </array>
+      <key>BrowserSignIn</key>
+      <true/>
       <key>Recommended</key>
       <dict>
         <key>UpdateChannel</key>

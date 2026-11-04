@@ -41,6 +41,7 @@ function useLockFacts() {
 export function AppLockSettings() {
   const t = useTranslations("appLock");
   const tKey = useTranslations("keyProtection");
+  const tEdit = useTranslations("desktopEdit");
   const { appName } = useConfig();
   const { on, required, timeout, update } = useLockFacts();
   const [pending, setPending] = useState<Pending>(null);
@@ -184,6 +185,10 @@ export function AppLockSettings() {
             </SettingItem>
           )}
         </>
+      )}
+
+      {on && getDesktopBridge()?.edit && (
+        <p className="text-xs text-muted-foreground" data-testid="app-lock-edit-note">{tEdit("lock_note")}</p>
       )}
 
       <Dialog
