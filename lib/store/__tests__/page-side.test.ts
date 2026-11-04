@@ -74,6 +74,94 @@ describe('whether the store can run here', () => {
   });
 });
 
+describe('re-encrypting a store', () => {
+  function ownerWithWorker() {
+    const failed: string[] = [];
+    configureStore({
+      inputs: () => ({ session: FAKE_SESSION, auth: 'x', invertedKeywordSort: null }),
+      refreshAuth: async () => null,
+      onEvent: () => {},
+      onRekeyFailed: (account) => failed.push(account),
+    });
+    Object.defineProperty(window.navigator, 'locks', { configurable: true, value: { request: async () => {} } });
+    Object.defineProperty(window.navigator, 'storage', { configurable: true, value: { getDirectory: async () => ({}) } });
+    vi.stubGlobal('FileSystemFileHandle', class {});
+    return { failed };
+  }
+
+  afterEach(() => {
+    delete (window.navigator as { storage?: unknown }).storage;
+    delete (window.navigator as { locks?: unknown }).locks;
+  });
+
+  const settle = (worker: FakeWorker, kind: string, error?: string) => {
+    const message = worker.posted.find((entry) => entry.kind === kind && !(entry as { answered?: boolean }).answered);
+    if (!message) return false;
+    (message as { answered?: boolean }).answered = true;
+    worker.onmessage?.({ data: { kind: 'result', id: message.id, error } } as MessageEvent);
+    return true;
+  };
+
+  it('a record that asks for it gets a new key and file once the copy is done, and the old file goes', async () => {
+    ownerWithWorker();
+    const { openAccountKey, rewrapAccountKey } = await import('../client/keys');
+    const before = await openAccountKey('rk1');
+    await rewrapAccountKey('rk1', [], [], { rekey: true });
+    const store = getStore();
+    const opening = store.ensureOpen('rk1', FAKE_SESSION);
+    FakeWorker.all[0].becomeOwner();
+    await opening;
+    const worker = FakeWorker.all[0];
+    await vi.waitFor(() => expect(worker.posted.some((entry) => entry.kind === 'rekey')).toBe(true));
+    const asked = worker.posted.find((entry) => entry.kind === 'rekey') as { file: string; keyHex: string; account: string };
+    expect(asked.account).toBe('rk1');
+    expect(asked.file).not.toBe(before.record.file);
+    expect(asked.keyHex).not.toBe(before.keyHex);
+    // Nothing changes on disk until the copy is whole.
+    expect((await getAccountRecord('rk1'))?.file).toBe(before.record.file);
+    settle(worker, 'rekey');
+    await vi.waitFor(async () => expect((await getAccountRecord('rk1'))?.file).toBe(asked.file));
+    const stored = await getAccountRecord('rk1');
+    expect(stored?.rekey).toBeUndefined();
+    await vi.waitFor(() => {
+      const prunes = worker.posted.filter((entry) => entry.kind === 'prune-files') as unknown as Array<{ keep: string[] }>;
+      expect(prunes.at(-1)?.keep).toContain(asked.file);
+      expect(prunes.at(-1)?.keep).not.toContain(before.record.file);
+    });
+    // It opens again, on the new file, with the new key.
+    await vi.waitFor(() => {
+      const opens = worker.posted.filter((entry) => entry.kind === 'open') as unknown as Array<{ params: { file: string; keyHex: string } }>;
+      expect(opens.at(-1)?.params).toMatchObject({ file: asked.file, keyHex: asked.keyHex });
+    });
+    store.stop();
+    await forgetAccountKey('rk1');
+  });
+
+  it('a failed copy keeps the old key and file, says so, and asks to be tried again', async () => {
+    const { failed } = ownerWithWorker();
+    const { openAccountKey, rewrapAccountKey } = await import('../client/keys');
+    const before = await openAccountKey('rk2');
+    await rewrapAccountKey('rk2', [], [], { rekey: true });
+    const store = getStore();
+    const opening = store.ensureOpen('rk2', FAKE_SESSION);
+    FakeWorker.all[0].becomeOwner();
+    await opening;
+    const worker = FakeWorker.all[0];
+    await vi.waitFor(() => expect(worker.posted.some((entry) => entry.kind === 'rekey')).toBe(true));
+    settle(worker, 'rekey', 'The disk is full');
+    await vi.waitFor(() => expect(failed).toEqual(['rk2']));
+    const stored = await getAccountRecord('rk2');
+    expect(stored?.file).toBe(before.record.file);
+    expect(stored?.rekey).toBe(true);
+    // It opens again on the old file, and doesn't try again until the next start.
+    await vi.waitFor(() => expect(worker.posted.filter((entry) => entry.kind === 'open').length).toBe(2));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(worker.posted.filter((entry) => entry.kind === 'rekey').length).toBe(1);
+    store.stop();
+    await forgetAccountKey('rk2');
+  });
+});
+
 describe('a tab that starts after the owner', () => {
   it('asks who owns the store, so its calls don\'t wait for an announcement that never comes', async () => {
     const owner = new FakeChannel('bulwark-store-rpc');

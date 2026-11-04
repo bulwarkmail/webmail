@@ -6,13 +6,15 @@
  * - PRAGMA key is the very first thing on a connection. Reading first deletes
  *   a hot journal (#292).
  * - The page size must be 8192. On 4096, rollback doesn't work (#293).
- * - No PRAGMA rekey (#291, #294). The key is random and only ever re-wrapped.
+ * - No PRAGMA rekey (#291, #294). A new key means a new file: sqlite3_backup into a database
+ *   opened under the new key (`startCopy`), which leaves the old file whole until it's done.
  * - Always the multipleciphers VFS. On plain opfs-sahpool, PRAGMA key throws
  *   and the connection still writes in the clear if that's ignored.
  */
 
 import { runTransaction, type SqlRow, type SqlValue, type StorageAdapter } from '../storage';
 import { POOL_DIRECTORY } from '../worker/protocol';
+import type { StoreCopy } from '../worker/host';
 
 const VFS = 'multipleciphers-opfs-sahpool';
 const INIT_TIMEOUT_MS = 30_000;
@@ -60,6 +62,10 @@ class WasmAdapter implements StorageAdapter {
   private readonly statements = new Map<string, any>();
 
   constructor(private readonly sqlite3: any, private readonly db: any) {}
+
+  get pointer(): number {
+    return this.db.pointer;
+  }
 
   exec(sql: string): void {
     this.db.exec(sql);
@@ -156,6 +162,47 @@ export class WasmStorage {
 
   /** Opens one account's database. `keyHex` is 32 random bytes in hex. */
   async open(file: string, keyHex: string): Promise<StorageAdapter> {
+    return new WasmAdapter(this.sqlite3, await this.openDb(file, keyHex));
+  }
+
+  /** Into a database opened under its own key. The source stays usable, and its writes reach the copy. */
+  async startCopy(source: StorageAdapter, file: string, keyHex: string): Promise<StoreCopy> {
+    const capi = this.sqlite3.capi;
+    const dst = await this.openDb(file, keyHex);
+    const backup = capi.sqlite3_backup_init(dst.pointer, 'main', (source as WasmAdapter).pointer, 'main');
+    if (!backup) {
+      const message = capi.sqlite3_errmsg(dst.pointer);
+      dst.close();
+      this.remove(file);
+      throw new Error(`The copy did not start: ${message}`);
+    }
+    let open = true;
+    const end = () => {
+      if (!open) return;
+      open = false;
+      capi.sqlite3_backup_finish(backup);
+      dst.close();
+    };
+    return {
+      step: (pages) => {
+        const rc = capi.sqlite3_backup_step(backup, pages);
+        if (rc === 0) return 'more';
+        if (rc === 101) return 'done';
+        // SQLITE_BUSY, SQLITE_LOCKED: the source is in a transaction.
+        if (rc === 5 || rc === 6) return 'busy';
+        throw new Error(`The copy failed: ${rc}`);
+      },
+      remaining: () => capi.sqlite3_backup_remaining(backup),
+      pageCount: () => capi.sqlite3_backup_pagecount(backup),
+      finish: end,
+      abort: () => {
+        end();
+        this.remove(file);
+      },
+    };
+  }
+
+  private async openDb(file: string, keyHex: string): Promise<any> {
     if (!/^\/a[0-9a-f]+\.db$/.test(file)) throw new Error('Store file names carry no account data');
     if (!/^[0-9a-f]{64}$/.test(keyHex)) throw new Error('A store key is 32 bytes of hex');
     const needed = this.pool.getFileCount() + SLOTS_PER_DATABASE;
@@ -181,7 +228,7 @@ export class WasmStorage {
       db.close();
       throw error;
     }
-    return new WasmAdapter(this.sqlite3, db);
+    return db;
   }
 
   remove(file: string): boolean {

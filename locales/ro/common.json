@@ -5901,6 +5901,14 @@
     "usage_label": "Ce păstrează acest dispozitiv",
     "pin_not_ready": "Acest fișier nu se află încă în lista acestui dispozitiv. Încercați din nou peste un moment."
   },
+  "keyProtection": {
+    "browser_note": "Într-un browser, cheia acestor mesaje se află în același profil de browser ca mesajele. Cine copiază fișierele profilului le poate citi, așa că folosește criptarea discului.",
+    "no_secure_storage": "Acest computer nu are un spațiu securizat pentru chei pe care aplicația să îl poată folosi, așa că cheia acestor mesaje este doar mascată pe disc. Folosește criptarea discului.",
+    "wrap_failed": "Spațiul securizat pentru chei al acestui computer nu a acceptat cheia acestor mesaje, așa că nu este protejată cum ar trebui. Repornește aplicația și folosește criptarea discului.",
+    "rekey_progress": "Se recriptează mesajele de pe acest dispozitiv: {percent}%. Poți lucra în continuare.",
+    "rekey_failed": "Recriptarea mesajelor de pe acest dispozitiv nu s-a încheiat, așa că vechea cheie le mai poate deschide. Aplicația încearcă din nou la următoarea pornire.",
+    "reenroll_note": "Cheia de acces și deblocarea de sistem foloseau cheia vechiului PIN, așa că au fost eliminate. Configurează-le din nou dacă le folosești."
+  },
   "offlineDrafts": {
     "title": "Ciorne pe acest dispozitiv",
     "description": "Aceste ciorne sunt salvate pe acest dispozitiv. Ajung singure pe server imediat ce poate fi contactat.",
@@ -6812,10 +6820,10 @@
   },
   "appLock": {
     "section_title": "Blocarea aplicației",
-    "section_desc": "Cere un PIN după un timp fără utilizare, în fiecare fereastră și filă. Cât timp e blocată, e-mailurile de pe acest dispozitiv rămân criptate și aplicația nu are cheia lor.",
+    "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
     "enable_label": "Blochează cu un PIN",
     "enable_desc": "Dezactivat implicit. PIN-ul rămâne pe acest dispozitiv.",
-    "protects_desc": "De ce protejează: într-un browser, PIN-ul ține în afara aplicației pe cineva aflat la acest dispozitiv și păstrează criptate e-mailurile stocate aici. Nu poate opri un program care rulează pe acest computer, o extensie de browser instalată de dvs. sau pe cineva care copiază fișierele browserului și are timp să încerce multe coduri, așa că merită un PIN mai lung. În aplicația desktop, PIN-ul este legat și de autentificarea dvs. pe acest computer. Contul de pe server nu este afectat.",
+    "protects_desc": "De ce protejează: PIN-ul ține în afara aplicației pe cineva aflat la acest dispozitiv. Mesajele stocate aici primesc o cheie nouă când activezi blocarea sau schimbi PIN-ul, ceea ce poate dura puțin. Nu poate opri un program care rulează pe acest computer, o extensie de browser instalată de tine sau pe cineva care copiază fișierele aplicației și are timp să încerce multe PIN-uri, așa că merită un PIN mai lung. În aplicația desktop, încercarea PIN-urilor cere și autentificarea ta pe acest computer. Contul tău de pe server nu este afectat.",
     "enable_body": "Alegeți un PIN. Veți avea nevoie de el de fiecare dată când aplicația se blochează, și după o reîncărcare sau o repornire.",
     "set_pin_title": "Alegeți un PIN",
     "change_pin": "Schimbați PIN-ul…",

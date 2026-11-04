@@ -7,7 +7,7 @@
 
 import type { StoreEvent, StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
-import { forgetAccountKey, getAccountRecord, knownStoreFiles, listAccountRecords, openAccountKey, STORE_OPENED_KEY, type StoreKeyLayerMissingError, type WrapLayer } from './keys';
+import { clearLeftover, forgetAccountKey, getAccountRecord, knownStoreFiles, listAccountRecords, newStoreKey, openAccountKey, replaceAccountKey, STORE_OPENED_KEY, type StoreKeyLayerMissingError, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
 
 export interface StoreAccountInputs {
@@ -25,7 +25,11 @@ export interface StorePageHooks {
   refreshAuth(account: string): Promise<string | null>;
   onEvent(event: StoreEvent): void;
   /** Wrap layers on top of the WebCrypto one (desktop keychain, app lock). */
-  keyLayers?(): readonly WrapLayer[];
+  keyLayers?(): readonly WrapLayer[] | Promise<readonly WrapLayer[]>;
+  /** The OS's key store is there and wouldn't take this key: it isn't protected as it should be. */
+  onKeyWrapFailed?(account: string): void;
+  /** A re-encryption didn't finish. The old key and file stay. It's tried again at the next start. */
+  onRekeyFailed?(account: string): void;
   /**
    * This tab just took over the store. Resolves when it has heard the
    * organisation's policy since: until then it sends no scope, which may be old.
@@ -63,6 +67,8 @@ export interface StoreBackend {
   /** This tab has the key again: its worker starts first, and takes the store. */
   unlock?(ownerWaitMs: number): Promise<void>;
   ownsStoreHere?(): boolean;
+  /** Starts the re-encryption of what's open here and asks for it. */
+  rekeyPending?(): Promise<void>;
 }
 
 /** The app is locked: the store is closed, and its key isn't in memory anywhere. */
@@ -112,6 +118,11 @@ class PageStore implements StoreBackend {
   private ownerReady: (() => void) | null = null;
   /** False from taking over the store until this tab has heard the policy again. */
   private scopeCurrent = true;
+  /** One at a time: each may double what's on disk for a while. */
+  private rekeyTurn: Promise<unknown> = Promise.resolve();
+  private readonly rekeyDone = new Set<string>();
+  /** Tried again at the next start, not in a loop. */
+  private readonly rekeyFailed = new Set<string>();
 
   constructor(private readonly hooks: () => StorePageHooks | null) {}
 
@@ -168,9 +179,12 @@ class PageStore implements StoreBackend {
 
   private async readKey(account: string): ReturnType<typeof openAccountKey> {
     try {
-      return await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+      const opened = await openAccountKey(account, await this.hooks()?.keyLayers?.() ?? []);
+      if (opened.wrapFailed) this.hooks()?.onKeyWrapFailed?.(account);
+      return opened;
     } catch (error) {
       if ((error as Error)?.name === 'StoreKeyLayerMissingError' && (error as StoreKeyLayerMissingError).layer === 'applock') this.hooks()?.onKeyLocked?.();
+      else if ((error as Error)?.name === 'StoreKeyLayerMissingError') this.hooks()?.onKeyWrapFailed?.(account);
       throw error;
     }
   }
@@ -185,6 +199,8 @@ class PageStore implements StoreBackend {
       if (fresh) this.keyJustMade.add(account);
       // The old file, if the key alone went, can never be read again.
       if (this.keyJustMade.has(account)) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
+      // A re-encryption stopped right before it deleted the old file.
+      if (record.leftover) await this.deleteLeftover(client, account);
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
       const opened = await client.openAccount({
         account,
@@ -200,10 +216,61 @@ class PageStore implements StoreBackend {
         if (readOpenedAccounts().includes(account)) this.hooks()?.onStoreLost?.(account);
       }
       rememberOpened(account, true);
+      if (record.rekey) void this.rekey(account);
     })();
     this.opening.set(account, run);
     run.catch(() => this.opening.delete(account));
     return run;
+  }
+
+  private async deleteLeftover(client: StoreClient, account: string): Promise<void> {
+    await client.pruneFiles(await knownStoreFiles());
+    await clearLeftover(account);
+  }
+
+  /**
+   * A new key and a new file for an account whose record asks for it: an older copy of that record,
+   * with fewer layers, may still be in the browser's files, and only a new key makes it worthless.
+   * The worker copies while the store goes on working, the record changes in one write, then the old
+   * file goes. Wherever this stops, one whole file has a record, and the other goes at the next open.
+   */
+  private rekey(account: string): Promise<void> {
+    if (this.rekeyDone.has(account) || this.rekeyFailed.has(account)) return Promise.resolve();
+    this.rekeyDone.add(account);
+    const turn = this.rekeyTurn.then(() => this.rekeyNow(account)).finally(() => this.rekeyDone.delete(account));
+    this.rekeyTurn = turn.catch(() => {});
+    return turn;
+  }
+
+  private async rekeyNow(account: string): Promise<void> {
+    const client = this.client;
+    const before = await getAccountRecord(account);
+    if (!client?.ownsStore || this.locked || !before?.rekey) return;
+    const { keyHex, file } = newStoreKey();
+    let copied = false;
+    try {
+      await client.pruneFiles(await knownStoreFiles());
+      await client.rekeyAccount(account, file, keyHex);
+      copied = true;
+      await replaceAccountKey(account, keyHex, file, await this.hooks()?.keyLayers?.() ?? []);
+      await this.deleteLeftover(client, account);
+    } catch (error) {
+      // A lock stopped it: the next unlock goes on from the start.
+      if (!this.locked && this.client === client && (error as Error)?.name !== 'StoreRekeyStoppedError') {
+        this.rekeyFailed.add(account);
+        this.hooks()?.onRekeyFailed?.(account);
+        if (copied) void client.pruneFiles(await knownStoreFiles()).catch(() => {});
+      }
+    }
+    if (this.locked || this.client !== client) return;
+    this.opening.delete(account);
+    if (this.wanted.has(account)) await this.openHere(account).catch(() => {});
+  }
+
+  async rekeyPending(): Promise<void> {
+    if (!this.client?.ownsStore || this.locked) return;
+    const records = await listAccountRecords().catch(() => []);
+    await Promise.all(records.filter((record) => record.rekey && this.wanted.has(record.account)).map((record) => this.rekey(record.account)));
   }
 
   async lock(closeMs: number): Promise<void> {

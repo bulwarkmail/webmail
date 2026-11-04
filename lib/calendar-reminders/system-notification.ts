@@ -5,6 +5,8 @@
  * tab asks.
  */
 
+import { shownNotifications } from '@/lib/notifications/shown';
+
 export interface SystemReminder {
   key: string;
   title: string;
@@ -65,7 +67,9 @@ export async function closeSystemReminders(keys: readonly string[]): Promise<voi
   if (!worker) return;
   try {
     for (const key of keys) {
-      for (const shown of await worker.getNotifications({ tag: tagOf(key) })) shown.close();
+      const shown = await shownNotifications(worker, { tag: tagOf(key) });
+      if (!shown) return;
+      for (const notification of shown) notification.close();
     }
   } catch {
     // Nothing that matters is left behind.
