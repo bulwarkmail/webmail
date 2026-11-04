@@ -72,4 +72,17 @@ describe('one menu component', () => {
     }
     expect(missing).toEqual([]);
   }, 60_000);
+
+  it('a row that deletes or clears is drawn as destructive', () => {
+    const plain: string[] = [];
+    for (const full of all()) {
+      const source = readFileSync(full, 'utf8');
+      for (const match of source.matchAll(MENU_ROW)) {
+        const attrs = match[2];
+        if (!/icon=\{(Trash2|Eraser)\}/.test(attrs) || attrs.includes('destructive')) continue;
+        plain.push(`${relative(full)}:${source.slice(0, match.index).split(/\r?\n/).length}`);
+      }
+    }
+    expect(plain).toEqual([]);
+  }, 60_000);
 });
