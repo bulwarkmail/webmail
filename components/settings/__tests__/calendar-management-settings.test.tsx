@@ -187,3 +187,35 @@ describe('CalendarManagementSettings with two accounts', () => {
     useAccountStore.setState({ accounts: [], activeAccountId: null });
   });
 });
+
+// pim-p2-3: opened straight away (no visit to Calendar first), Settings
+// loaded only the account on screen.
+describe('CalendarManagementSettings opened with two accounts signed in', () => {
+  it("loads and lists both accounts' calendars", async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const fake = (name: string) => ({
+      supportsCalendars: () => true,
+      getAccountId: () => 'acct',
+      getAllCalendarsWithFailures: vi.fn(async () => ({ calendars: [{ ...appleColored, id: 'cal', name }], failedAccountIds: [] })),
+    });
+    const clients: Record<string, unknown> = { 'login-a': fake('Home'), 'login-b': fake('Office') };
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'a@example.org', username: 'a@example.org', displayName: 'Sam', label: 'Sam', isConnected: true },
+        { id: 'login-b', email: 'b@example.org', username: 'b@example.org', displayName: 'Sam', label: 'Sam', isConnected: true },
+      ] as never,
+      activeAccountId: 'login-a',
+    });
+    useAuthStore.setState({
+      client: clients['login-a'], serverUrl: null, username: null, activeAccountId: 'login-a',
+      getClientForAccount: ((id: string) => clients[id]) as never,
+    } as never);
+    useCalendarStore.setState({ calendars: [], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    await waitFor(() => expect(screen.getAllByTestId('calendar-settings-account').map((el) => el.textContent)).toEqual(['a@example.org', 'b@example.org']));
+    useAccountStore.setState({ accounts: [], activeAccountId: null });
+    useCalendarStore.getState().setAccountClients(null, null);
+  });
+});

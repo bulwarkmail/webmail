@@ -25,6 +25,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useAccountStore } from '@/stores/account-store';
 import { groupCalendarsByAccount } from '@/lib/calendar-targets';
+import { useProMultiAccountCalendars } from '@/hooks/use-pro-multi-account-calendars';
 import { apiFetch } from '@/lib/browser-navigation';
 import { CALENDAR_COLORS, sharedCalendarColorKey } from '@/lib/shared-calendar-colors';
 import { IS_LITE } from '@/lib/lite';
@@ -342,12 +343,14 @@ export function CalendarManagementSettings() {
     calendars.some(cal => !cal.isShared && Object.keys(cal.shareWith ?? {}).length > 0 && resolvesShares(cal)),
   );
 
-  // Load calendars if not yet loaded
+  // With several accounts signed in, every account's calendars, as in
+  // Calendar (pim-p2-3); else load them if not yet loaded.
+  const { enabled: allAccounts } = useProMultiAccountCalendars(null, null);
   useEffect(() => {
-    if (client && calendars.length === 0) {
+    if (client && calendars.length === 0 && !allAccounts) {
       fetchCalendars(client);
     }
-  }, [client, calendars.length, fetchCalendars]);
+  }, [client, calendars.length, fetchCalendars, allAccounts]);
 
   useEffect(() => {
     // CalDAV discovery runs through /api/caldav/discover, absent in the static build.
