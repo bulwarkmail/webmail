@@ -3917,7 +3917,9 @@
     "tab_directory": "Katalogs",
     "contacts_empty_title": "Vēl nav kontaktu",
     "contacts_empty_hint": "Šeit redzami cilvēki, kurus saglabājat kontaktos.",
-    "contacts_no_match": "Meklēšanai neatbilst neviens kontakts"
+    "contacts_no_match": "Meklēšanai neatbilst neviens kontakts",
+    "template_name": "Veidnes nosaukums",
+    "template_edit_details": "Rediģēt detaļas…"
   },
   "org_templates": {
     "section_personal": "Manas veidnes",

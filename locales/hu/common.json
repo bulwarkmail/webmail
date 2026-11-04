@@ -3917,7 +3917,9 @@
     "tab_directory": "Címtár",
     "contacts_empty_title": "Még nincsenek névjegyek",
     "contacts_empty_hint": "A névjegyekbe mentett személyek itt jelennek meg.",
-    "contacts_no_match": "Egy névjegy sem felel meg a keresésnek"
+    "contacts_no_match": "Egy névjegy sem felel meg a keresésnek",
+    "template_name": "Sablon neve",
+    "template_edit_details": "Részletek szerkesztése…"
   },
   "org_templates": {
     "section_personal": "Saját sablonok",

@@ -3917,7 +3917,9 @@
     "tab_directory": "Katalog",
     "contacts_empty_title": "Ingen kontakter ennå",
     "contacts_empty_hint": "Personer du lagrer i Kontakter, vises her.",
-    "contacts_no_match": "Ingen kontakter samsvarer med søket"
+    "contacts_no_match": "Ingen kontakter samsvarer med søket",
+    "template_name": "Navn på mal",
+    "template_edit_details": "Rediger detaljer…"
   },
   "org_templates": {
     "section_personal": "Mine maler",

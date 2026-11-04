@@ -3917,7 +3917,9 @@
     "tab_directory": "Лавлах",
     "contacts_empty_title": "Одоогоор харилцагч алга",
     "contacts_empty_hint": "Харилцагчдад хадгалсан хүмүүс энд харагдана.",
-    "contacts_no_match": "Хайлтад тохирох харилцагч алга"
+    "contacts_no_match": "Хайлтад тохирох харилцагч алга",
+    "template_name": "Загварын нэр",
+    "template_edit_details": "Дэлгэрэнгүйг засах…"
   },
   "org_templates": {
     "section_personal": "Миний загварууд",

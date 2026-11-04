@@ -3917,7 +3917,9 @@
     "tab_directory": "Directorio",
     "contacts_empty_title": "Aún no hay contactos",
     "contacts_empty_hint": "Aquí aparecen las personas que guardas en Contactos.",
-    "contacts_no_match": "Ningún contacto coincide con la búsqueda"
+    "contacts_no_match": "Ningún contacto coincide con la búsqueda",
+    "template_name": "Nombre de la plantilla",
+    "template_edit_details": "Editar detalles…"
   },
   "org_templates": {
     "section_personal": "Mis plantillas",

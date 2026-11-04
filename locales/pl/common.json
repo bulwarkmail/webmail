@@ -3917,7 +3917,9 @@
     "tab_directory": "Katalog",
     "contacts_empty_title": "Brak kontaktów",
     "contacts_empty_hint": "Tutaj pojawią się osoby zapisane w Kontaktach.",
-    "contacts_no_match": "Żaden kontakt nie pasuje do wyszukiwania"
+    "contacts_no_match": "Żaden kontakt nie pasuje do wyszukiwania",
+    "template_name": "Nazwa szablonu",
+    "template_edit_details": "Edytuj szczegóły…"
   },
   "org_templates": {
     "section_personal": "Moje szablony",

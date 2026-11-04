@@ -3917,7 +3917,9 @@
     "tab_directory": "Dizin",
     "contacts_empty_title": "Henüz kişi yok",
     "contacts_empty_hint": "Kişiler'e kaydettiğiniz kişiler burada görünür.",
-    "contacts_no_match": "Aramanızla eşleşen kişi yok"
+    "contacts_no_match": "Aramanızla eşleşen kişi yok",
+    "template_name": "Şablon adı",
+    "template_edit_details": "Ayrıntıları düzenle…"
   },
   "org_templates": {
     "section_personal": "Şablonlarım",

@@ -1168,7 +1168,9 @@
     "tab_directory": "ไดเรกทอรีกลาง",
     "contacts_empty_title": "ยังไม่มีผู้ติดต่อ",
     "contacts_empty_hint": "คนที่คุณบันทึกไว้ในผู้ติดต่อจะแสดงที่นี่",
-    "contacts_no_match": "ไม่มีผู้ติดต่อที่ตรงกับการค้นหา"
+    "contacts_no_match": "ไม่มีผู้ติดต่อที่ตรงกับการค้นหา",
+    "template_name": "ชื่อแม่แบบ",
+    "template_edit_details": "แก้ไขรายละเอียด…"
   },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",

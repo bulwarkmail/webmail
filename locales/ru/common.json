@@ -3917,7 +3917,9 @@
     "tab_directory": "Справочник",
     "contacts_empty_title": "Контактов пока нет",
     "contacts_empty_hint": "Здесь появятся люди, которых вы сохраните в контактах.",
-    "contacts_no_match": "Нет контактов, подходящих под запрос"
+    "contacts_no_match": "Нет контактов, подходящих под запрос",
+    "template_name": "Название шаблона",
+    "template_edit_details": "Изменить подробности…"
   },
   "org_templates": {
     "section_personal": "Мои шаблоны",

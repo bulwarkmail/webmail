@@ -53,6 +53,7 @@ import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
 import { SendWarningsDialog, type SendWarning } from "./send-warnings-dialog";
+import { QuickSaveTemplateDialog } from "@/components/templates/quick-save-template-dialog";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu, isContextMenuKey } from "@/hooks/use-context-menu";
@@ -1194,6 +1195,9 @@ export function EmailComposer({
   const [filesPicker, setFilesPicker] = useState<{ client: IJMAPClient; accountId?: string } | null>(null);
   const [showDirectoryPicker, setShowDirectoryPicker] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
+  // Save as template asks for a name only; "Edit details…" opens the full
+  // editor with the name typed so far (null: the name dialog).
+  const [saveTemplateDetails, setSaveTemplateDetails] = useState<string | null>(null);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   // The formatting toolbar is folded away on a phone until asked for.
   const [showFormattingOnMobile, setShowFormattingOnMobile] = useState(false);
@@ -1232,6 +1236,7 @@ export function EmailComposer({
     if (!(await confirmDiscardTemplate(saveTemplateDirty))) return;
     setSaveTemplateDirty(false);
     setShowSaveAsTemplate(false);
+    setSaveTemplateDetails(null);
   };
 
   const { client: activeClient } = useAuthStore();
@@ -5797,7 +5802,18 @@ export function EmailComposer({
         />
       )}
 
-      {showSaveAsTemplate && (
+      {showSaveAsTemplate && saveTemplateDetails === null && (
+        <QuickSaveTemplateDialog
+          defaultName={subject.trim()}
+          onClose={() => setShowSaveAsTemplate(false)}
+          onEditDetails={(name) => setSaveTemplateDetails(name)}
+          onSave={(name) => {
+            addTemplate({ name, subject, body, isHTML: !plainTextMode, category: '', isFavorite: false });
+            setShowSaveAsTemplate(false);
+          }}
+        />
+      )}
+      {showSaveAsTemplate && saveTemplateDetails !== null && (
         <Dialog
           isOpen
           onClose={() => void closeSaveAsTemplate()}
@@ -5810,6 +5826,7 @@ export function EmailComposer({
             <TemplateForm
               categorySource={composingPersonalTemplates}
               initialData={{
+                name: saveTemplateDetails,
                 subject,
                 body,
                 isHTML: !plainTextMode,
@@ -5821,6 +5838,7 @@ export function EmailComposer({
                 addTemplate(data);
                 setSaveTemplateDirty(false);
                 setShowSaveAsTemplate(false);
+                setSaveTemplateDetails(null);
               }}
               onCancel={() => void closeSaveAsTemplate()}
               onDirtyChange={setSaveTemplateDirty}

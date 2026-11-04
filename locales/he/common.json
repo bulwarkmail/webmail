@@ -3814,7 +3814,9 @@
     "tab_directory": "ספרייה",
     "contacts_empty_title": "אין עדיין אנשי קשר",
     "contacts_empty_hint": "אנשים שתשמרו באנשי הקשר יופיעו כאן.",
-    "contacts_no_match": "אין איש קשר שתואם לחיפוש"
+    "contacts_no_match": "אין איש קשר שתואם לחיפוש",
+    "template_name": "שם התבנית",
+    "template_edit_details": "עריכת פרטים…"
   },
   "org_templates": {
     "section_personal": "התבניות שלי",

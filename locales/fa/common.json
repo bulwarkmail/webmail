@@ -3917,7 +3917,9 @@
     "tab_directory": "فهرست سازمانی",
     "contacts_empty_title": "هنوز مخاطبی وجود ندارد",
     "contacts_empty_hint": "افرادی که در مخاطبین ذخیره می‌کنید اینجا نمایش داده می‌شوند.",
-    "contacts_no_match": "هیچ مخاطبی با جستجوی شما مطابقت ندارد"
+    "contacts_no_match": "هیچ مخاطبی با جستجوی شما مطابقت ندارد",
+    "template_name": "نام قالب",
+    "template_edit_details": "ویرایش جزئیات…"
   },
   "org_templates": {
     "section_personal": "قالب‌های من",

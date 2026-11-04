@@ -3917,7 +3917,9 @@
     "tab_directory": "Rubrica aziendale",
     "contacts_empty_title": "Ancora nessun contatto",
     "contacts_empty_hint": "Le persone salvate in Contatti compaiono qui.",
-    "contacts_no_match": "Nessun contatto corrisponde alla ricerca"
+    "contacts_no_match": "Nessun contatto corrisponde alla ricerca",
+    "template_name": "Nome del modello",
+    "template_edit_details": "Modifica dettagli…"
   },
   "org_templates": {
     "section_personal": "I miei modelli",

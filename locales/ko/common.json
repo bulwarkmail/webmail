@@ -3917,7 +3917,9 @@
     "tab_directory": "디렉터리",
     "contacts_empty_title": "아직 연락처가 없어요",
     "contacts_empty_hint": "연락처에 저장한 사람이 여기에 표시돼요.",
-    "contacts_no_match": "검색과 일치하는 연락처가 없어요"
+    "contacts_no_match": "검색과 일치하는 연락처가 없어요",
+    "template_name": "템플릿 이름",
+    "template_edit_details": "세부 정보 편집…"
   },
   "org_templates": {
     "section_personal": "내 템플릿",

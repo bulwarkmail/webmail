@@ -3917,7 +3917,9 @@
     "tab_directory": "Adresboek van de organisatie",
     "contacts_empty_title": "Nog geen contacten",
     "contacts_empty_hint": "Mensen die u in Contacten opslaat, verschijnen hier.",
-    "contacts_no_match": "Geen contact komt overeen met uw zoekopdracht"
+    "contacts_no_match": "Geen contact komt overeen met uw zoekopdracht",
+    "template_name": "Naam van sjabloon",
+    "template_edit_details": "Details bewerken…"
   },
   "org_templates": {
     "section_personal": "Mijn sjablonen",

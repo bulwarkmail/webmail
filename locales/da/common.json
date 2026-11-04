@@ -3917,7 +3917,9 @@
     "tab_directory": "Adressefortegnelse",
     "contacts_empty_title": "Ingen kontakter endnu",
     "contacts_empty_hint": "Personer, du gemmer i Kontakter, vises her.",
-    "contacts_no_match": "Ingen kontakter matcher din søgning"
+    "contacts_no_match": "Ingen kontakter matcher din søgning",
+    "template_name": "Skabelonens navn",
+    "template_edit_details": "Rediger detaljer…"
   },
   "org_templates": {
     "section_personal": "Mine skabeloner",

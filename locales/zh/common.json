@@ -3917,7 +3917,9 @@
     "tab_directory": "通讯录目录",
     "contacts_empty_title": "还没有联系人",
     "contacts_empty_hint": "你在联系人中保存的人会显示在这里。",
-    "contacts_no_match": "没有符合搜索的联系人"
+    "contacts_no_match": "没有符合搜索的联系人",
+    "template_name": "模板名称",
+    "template_edit_details": "编辑详细信息…"
   },
   "org_templates": {
     "section_personal": "我的模板",

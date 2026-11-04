@@ -3917,7 +3917,9 @@
     "tab_directory": "Adresář organizace",
     "contacts_empty_title": "Zatím žádné kontakty",
     "contacts_empty_hint": "Zde se zobrazí lidé, které uložíte do Kontaktů.",
-    "contacts_no_match": "Hledání neodpovídá žádný kontakt"
+    "contacts_no_match": "Hledání neodpovídá žádný kontakt",
+    "template_name": "Název šablony",
+    "template_edit_details": "Upravit podrobnosti…"
   },
   "org_templates": {
     "section_personal": "Moje šablony",

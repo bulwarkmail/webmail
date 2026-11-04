@@ -3917,7 +3917,9 @@
     "tab_directory": "Directory",
     "contacts_empty_title": "No contacts yet",
     "contacts_empty_hint": "People you save in Contacts show up here.",
-    "contacts_no_match": "No contact matches your search"
+    "contacts_no_match": "No contact matches your search",
+    "template_name": "Template name",
+    "template_edit_details": "Edit details…"
   },
   "org_templates": {
     "section_personal": "My templates",

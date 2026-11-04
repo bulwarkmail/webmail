@@ -3917,7 +3917,9 @@
     "tab_directory": "通訊錄目錄",
     "contacts_empty_title": "還沒有聯絡人",
     "contacts_empty_hint": "你在聯絡人中儲存的人會顯示在這裡。",
-    "contacts_no_match": "沒有符合搜尋的聯絡人"
+    "contacts_no_match": "沒有符合搜尋的聯絡人",
+    "template_name": "範本名稱",
+    "template_edit_details": "編輯詳細資料…"
   },
   "org_templates": {
     "section_personal": "我的範本",

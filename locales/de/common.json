@@ -3917,7 +3917,9 @@
     "tab_directory": "Verzeichnis",
     "contacts_empty_title": "Noch keine Kontakte",
     "contacts_empty_hint": "Personen, die Sie in Kontakten speichern, erscheinen hier.",
-    "contacts_no_match": "Kein Kontakt passt zu Ihrer Suche"
+    "contacts_no_match": "Kein Kontakt passt zu Ihrer Suche",
+    "template_name": "Name der Vorlage",
+    "template_edit_details": "Details bearbeiten…"
   },
   "org_templates": {
     "section_personal": "Meine Vorlagen",

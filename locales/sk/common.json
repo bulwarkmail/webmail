@@ -3917,7 +3917,9 @@
     "tab_directory": "Adresár organizácie",
     "contacts_empty_title": "Zatiaľ žiadne kontakty",
     "contacts_empty_hint": "Tu sa zobrazia ľudia, ktorých uložíte do Kontaktov.",
-    "contacts_no_match": "Vyhľadávaniu nezodpovedá žiadny kontakt"
+    "contacts_no_match": "Vyhľadávaniu nezodpovedá žiadny kontakt",
+    "template_name": "Názov šablóny",
+    "template_edit_details": "Upraviť podrobnosti…"
   },
   "org_templates": {
     "section_personal": "Moje šablóny",

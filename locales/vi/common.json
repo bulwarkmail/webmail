@@ -3929,7 +3929,9 @@
     "tab_directory": "Danh bạ tổ chức",
     "contacts_empty_title": "Chưa có liên hệ nào",
     "contacts_empty_hint": "Những người bạn lưu trong Danh bạ sẽ hiện ở đây.",
-    "contacts_no_match": "Không có liên hệ nào khớp với tìm kiếm"
+    "contacts_no_match": "Không có liên hệ nào khớp với tìm kiếm",
+    "template_name": "Tên mẫu",
+    "template_edit_details": "Sửa chi tiết…"
   },
   "org_templates": {
     "section_personal": "Mẫu của tôi",

@@ -3917,7 +3917,9 @@
     "tab_directory": "Directori",
     "contacts_empty_title": "Encara no hi ha contactes",
     "contacts_empty_hint": "Aquí apareixen les persones que deses a Contactes.",
-    "contacts_no_match": "Cap contacte coincideix amb la cerca"
+    "contacts_no_match": "Cap contacte coincideix amb la cerca",
+    "template_name": "Nom de la plantilla",
+    "template_edit_details": "Edita els detalls…"
   },
   "org_templates": {
     "section_personal": "Les meves plantilles",

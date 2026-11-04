@@ -3917,7 +3917,9 @@
     "tab_directory": "الدليل",
     "contacts_empty_title": "لا توجد جهات اتصال بعد",
     "contacts_empty_hint": "يظهر هنا الأشخاص الذين تحفظهم في جهات الاتصال.",
-    "contacts_no_match": "لا توجد جهة اتصال تطابق بحثك"
+    "contacts_no_match": "لا توجد جهة اتصال تطابق بحثك",
+    "template_name": "اسم القالب",
+    "template_edit_details": "تعديل التفاصيل…"
   },
   "org_templates": {
     "section_personal": "قوالبي",

@@ -3917,7 +3917,9 @@
     "tab_directory": "ディレクトリ",
     "contacts_empty_title": "連絡先はまだありません",
     "contacts_empty_hint": "連絡先に保存した人がここに表示されます。",
-    "contacts_no_match": "検索に一致する連絡先はありません"
+    "contacts_no_match": "検索に一致する連絡先はありません",
+    "template_name": "テンプレート名",
+    "template_edit_details": "詳細を編集…"
   },
   "org_templates": {
     "section_personal": "マイテンプレート",
