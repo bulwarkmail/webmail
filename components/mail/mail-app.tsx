@@ -4927,8 +4927,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const dockedReply = dockCandidate && dockedSessionRef.current === composerSessionId;
   const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
   composerHostRef.current = composerHost;
+  // Rows ticked beyond the open message take the reading pane (mail-p2-3):
+  // the selection bar and the keys act on the ticked rows, so a reader
+  // toolbar acting on the one open message would be a second, different set.
+  // Unticking brings the message back. Mountain View keeps the message while
+  // rows are ticked (#1231); the focus layout can't tick rows while reading.
+  const openRowKeys = (() => {
+    if (!selectedEmail) return null;
+    const key = emailKeyFor(selectedEmail);
+    // A conversation row ticks all its messages: the open one's whole row.
+    const row = useEmailStore.getState().listRows?.find((r) => r.key === key || r.members.includes(key));
+    return new Set(row ? [key, ...row.members] : [key]);
+  })();
+  const selectionTakesReader = !isMobile && !isFocusedMailLayout && !mvShell && !isScheduledView
+    && selectedEmailKeys.size > 0
+    && !(openRowKeys && [...selectedEmailKeys].every((key) => openRowKeys.has(key)));
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
-    || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
+    || Boolean(selectedEmail && !(mvShell && cursorOnly) && !selectionTakesReader) || deepLinkPane !== null;
   // A linked message on a phone opens over the list, as one picked there does.
   const mobileView = deepLinkPane !== null && isMobile ? 'viewer' : activeView;
   const shouldCollapseListPane = !isMobile && isFocusedMailLayout && hasViewerContent;
@@ -6106,9 +6121,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               <>
                 <ErrorBoundary fallback={EmailViewerErrorFallback}>
                   <EmailViewer
-                    email={selectedEmail}
+                    email={selectionTakesReader ? null : selectedEmail}
                     blobSource={resolveEmailBlobContext(selectedEmail, client)}
-                    isLoading={isLoadingEmail || deepLinkPane !== null}
+                    isLoading={!selectionTakesReader && (isLoadingEmail || deepLinkPane !== null)}
                     onReply={handleReply}
                     onReplyAll={handleReplyAll}
                     onForward={handleForward}

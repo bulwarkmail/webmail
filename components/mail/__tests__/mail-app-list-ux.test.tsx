@@ -37,8 +37,8 @@ vi.mock('@/components/ui/welcome-banner', () => ({
   useWelcomeBannerDue: () => false,
 }));
 vi.mock('@/components/email/email-viewer', () => ({
-  EmailViewer: ({ emptyPaneContent, emptyPaneFooter }: { emptyPaneContent?: React.ReactNode; emptyPaneFooter?: React.ReactNode }) => (
-    <div data-testid="viewer">{emptyPaneContent ?? <p>no conversation selected</p>}{emptyPaneFooter}</div>
+  EmailViewer: ({ email, emptyPaneContent, emptyPaneFooter }: { email?: { id: string } | null; emptyPaneContent?: React.ReactNode; emptyPaneFooter?: React.ReactNode }) => (
+    <div data-testid="viewer">{email ? <p>reading {email.id}</p> : <>{emptyPaneContent ?? <p>no conversation selected</p>}{emptyPaneFooter}</>}</div>
   ),
 }));
 vi.mock('@/components/email/email-list', () => ({
@@ -94,7 +94,7 @@ beforeEach(() => {
     viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false, unifiedRole: null,
     isScheduledView: false, isLoadingEmail: false, isLoading: false, searchQuery: '',
     searchFilters: { ...DEFAULT_SEARCH_FILTERS }, searchMailboxId: '', isAdvancedSearchOpen: false,
-    selectedEmailKeys: new Set(), unreadSection: null,
+    selectedEmailKeys: new Set(), unreadSection: null, listRows: null,
     fetchMailboxes: vi.fn().mockResolvedValue(undefined), fetchEmails: vi.fn().mockResolvedValue(undefined),
     fetchQuota: vi.fn().mockResolvedValue(undefined), fetchTagCounts: vi.fn().mockResolvedValue(undefined),
     refreshScheduledMetadata: vi.fn().mockResolvedValue(undefined),
@@ -136,6 +136,35 @@ describe('the reading pane for a selection', () => {
     expect(screen.queryByText('no conversation selected')).toBeNull();
     expect(listProps.host).toBeInstanceOf(HTMLElement);
     expect(screen.getByTestId('viewer').contains(listProps.host!)).toBe(true);
+  });
+
+  it('replaces the open message once other rows are ticked too (mail-p2-3)', () => {
+    useEmailStore.setState({ selectedEmail: message, selectedEmailKeys: new Set(['m1', 'm2']) } as never);
+    render(<MailApp />);
+    expect(screen.queryByText('reading m1')).toBeNull();
+    expect(listProps.host).toBeInstanceOf(HTMLElement);
+    expect(screen.getByTestId('viewer').contains(listProps.host!)).toBe(true);
+  });
+
+  it('replaces the open message when another single row is ticked', () => {
+    useEmailStore.setState({ selectedEmail: message, selectedEmailKeys: new Set(['m2']) } as never);
+    render(<MailApp />);
+    expect(screen.queryByText('reading m1')).toBeNull();
+  });
+
+  it('keeps the open message when only its own row is ticked', () => {
+    useEmailStore.setState({ selectedEmail: message, selectedEmailKeys: new Set(['m1']) } as never);
+    render(<MailApp />);
+    expect(screen.getByText('reading m1')).toBeTruthy();
+  });
+
+  it('keeps the open message when its conversation row is ticked', () => {
+    useEmailStore.setState({
+      selectedEmail: message, selectedEmailKeys: new Set(['m1', 'm1-reply']),
+      listRows: [{ key: 'm1', members: ['m1', 'm1-reply'] }, { key: 'm2', members: ['m2'] }],
+    } as never);
+    render(<MailApp />);
+    expect(screen.getByText('reading m1')).toBeTruthy();
   });
 
   it('says nothing is selected without a selection', () => {
