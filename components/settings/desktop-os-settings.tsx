@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsDefaultAppStatus, DesktopOsSettings as Settings, DesktopOsStatus } from "@/lib/desktop/types";
+import { DesktopQuickComposeSetting } from "./desktop-quick-compose-setting";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
 
 /** On Windows and Linux this is what a press of the keys shows; macOS maps it to Cmd. */
@@ -17,7 +18,6 @@ function shortcutLabel(platform: string | undefined): string {
 /**
  * The desktop app's own settings, on the General page: only where there's an app to
  * set. A browser never sees it, and it renders nothing until the bridge has answered.
- * Quick compose adds its shortcut here later.
  */
 export function DesktopOsSettings() {
   const t = useTranslations("desktopOs");
@@ -102,6 +102,13 @@ export function DesktopOsSettings() {
           onChange={(on) => change({ showShortcut: on ? SHOW_SHORTCUT : null })}
         />
       </SettingItem>
+      {status.quickCompose && (
+        <DesktopQuickComposeSetting
+          status={status.quickCompose}
+          platform={bridge?.platform}
+          onChange={(quickComposeShortcut) => change({ quickComposeShortcut })}
+        />
+      )}
       <SettingItem
         label={t("default_app_label")}
         description={defaultApp?.mailto ? t("default_app_is_default") : t("default_app_description")}

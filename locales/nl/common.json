@@ -6989,6 +6989,21 @@
     "copy_failed": "Het bestand kon niet worden gekopieerd.",
     "reply_lost": "Je getypte antwoord kon niet worden bewaard. Open het bericht en antwoord daar."
   },
+  "desktopQuickCompose": {
+    "label": "Snel opstellen",
+    "menu": "Snel opstellen",
+    "description": "{keys} opent een klein venster voor een nieuw bericht, vanuit elke andere app.",
+    "description_off": "Opent een klein venster voor een nieuw bericht, vanuit elke andere app.",
+    "taken": "Een andere app gebruikt {keys}, dus hier gebeurt niets. Kies andere toetsen of sluit die app.",
+    "change": "Toetsen wijzigen: {keys}",
+    "recording": "Druk op de toetsen…",
+    "recording_hint": "Houd Ctrl (Cmd op een Mac) met Alt of Shift vast en druk op een letter, cijfer, Enter of functietoets. Esc annuleert.",
+    "back_to_main": "Naar het hoofdvenster verplaatsen",
+    "back_busy": "In het hoofdvenster staat al een bericht open. Sluit dat en probeer het opnieuw.",
+    "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier.",
+    "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
+    "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
+  },
   "desktopReminders": {
     "generic_title": "Herinnering",
     "snooze": "{count} min uitstellen",

@@ -6989,6 +6989,21 @@
     "copy_failed": "无法复制文件。",
     "reply_lost": "无法保留你输入的回复。请打开邮件并在其中回复。"
   },
+  "desktopQuickCompose": {
+    "label": "快速撰写",
+    "menu": "快速撰写",
+    "description": "{keys} 可从任何其他应用打开一个用于新邮件的小窗口。",
+    "description_off": "从任何其他应用打开一个用于新邮件的小窗口。",
+    "taken": "另一个应用正在使用 {keys}，所以在这里不起作用。请选择其他按键，或关闭那个应用。",
+    "change": "更改按键：{keys}",
+    "recording": "请按下按键…",
+    "recording_hint": "按住 Ctrl（Mac 上为 Cmd）和 Alt 或 Shift，再按一个字母、数字、Enter 或功能键。按 Esc 取消。",
+    "back_to_main": "移到主窗口",
+    "back_busy": "主窗口中已有打开的邮件。请先关闭它，然后重试。",
+    "back_no_answer": "主窗口没有响应。您的邮件仍在这里。",
+    "types_character": "这些键在您的键盘上会输入一个字符，占用后该字符在所有应用中都无法输入。请试试其他按键。",
+    "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
+  },
   "desktopReminders": {
     "generic_title": "提醒",
     "snooze": "{count} 分钟后再提醒",

@@ -10,6 +10,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
+import { commitReturnedComposer, dropReturnedComposer, offerReturnedComposer } from "@/lib/popout/return-to-main";
 import { credentialFingerprint, sealFor } from "@/lib/popout/sealed";
 import { changesAnyType, subscribePushStateChanges } from "@/lib/push-events";
 
@@ -171,6 +172,27 @@ export function PopoutHost() {
           if (rescue) void rescue.then((draftId) => channel?.post({ type: "rescue-answer", rescueKey: message.rescueKey, draftId }));
           break;
         }
+        case "composer-return": {
+          const { returnId, accountId, payload } = message;
+          if (closing || isAppLockedNow()) break;
+          if (accountId && !shareableSessions().some((session) => session.accountId === accountId)) break;
+          // Several main windows: one takes it, and only that one answers.
+          claimOnce(`bulwark-popout-return:${returnId}`, () => {
+            offerReturnedComposer({
+              returnId,
+              payload,
+              answer: (status) => channel?.post({ type: "composer-return-answer", returnId, status }),
+              sendReady: () => channel?.post({ type: "composer-return-ready", returnId }),
+            });
+          });
+          break;
+        }
+        case "composer-return-commit":
+          commitReturnedComposer(message.returnId);
+          break;
+        case "composer-return-cancel":
+          dropReturnedComposer(message.returnId);
+          break;
         case "main-ping":
           if (!closing) channel?.post({ type: "main-pong", windowId, accountIds: shareableSessions().map((session) => session.accountId) });
           break;

@@ -6989,6 +6989,21 @@
     "copy_failed": "Soubor se nepodařilo zkopírovat.",
     "reply_lost": "Napsanou odpověď se nepodařilo zachovat. Otevřete zprávu a odpovězte v ní."
   },
+  "desktopQuickCompose": {
+    "label": "Rychlá zpráva",
+    "menu": "Rychlá zpráva",
+    "description": "{keys} otevře malé okno pro novou zprávu z jakékoli jiné aplikace.",
+    "description_off": "Otevře malé okno pro novou zprávu z jakékoli jiné aplikace.",
+    "taken": "{keys} používá jiná aplikace, takže tady nic neudělá. Vyberte jiné klávesy nebo tu aplikaci zavřete.",
+    "change": "Změnit klávesy: {keys}",
+    "recording": "Stiskněte klávesy…",
+    "recording_hint": "Podržte Ctrl (na Macu Cmd) spolu s Alt nebo Shift a stiskněte písmeno, číslici, Enter nebo funkční klávesu. Esc zruší.",
+    "back_to_main": "Přesunout do hlavního okna",
+    "back_busy": "V hlavním okně je už otevřená zpráva. Zavřete ji a zkuste to znovu.",
+    "back_no_answer": "Hlavní okno neodpovědělo. Vaše zpráva zůstává tady.",
+    "types_character": "Tyto klávesy na vaší klávesnici píší znak, který by pak nefungoval v žádné aplikaci. Zkuste jiné klávesy.",
+    "reserved": "Tyto klávesy používá systém nebo většina aplikací. Zkuste jiné klávesy."
+  },
   "desktopReminders": {
     "generic_title": "Připomenutí",
     "snooze": "Odložit o {count} min",

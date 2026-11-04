@@ -4,6 +4,7 @@ import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-ch
 import { setLockedHere } from '@/lib/app-lock/state';
 import { openPopoutChannel, requestWindowSession, watchMainWindow, askRescuedDraftId, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
 import { takeRescuedDraft } from '@/lib/popout/rescued-drafts';
+import { takeReturnedComposer } from '@/lib/popout/return-to-main';
 import { createSessionOpener, credentialFingerprint } from '@/lib/popout/sealed';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -388,5 +389,72 @@ describe('sealed answers', () => {
     if (answer.type !== 'session-answer') throw new Error('unreachable');
     await expect(mine.open(answer.sealed)).resolves.toMatchObject({ activeAccountId: 'alice' });
     await expect(other.open(answer.sealed)).rejects.toThrow();
+  });
+});
+
+describe('a composer coming back', () => {
+  const PAYLOAD = { mode: 'compose' as const, initialData: { subject: 'Back' } as never };
+
+  afterEach(() => {
+    takeReturnedComposer();
+  });
+
+  it('is taken once, and the answer goes back to the window that sent it', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'alice', payload: PAYLOAD });
+    await settle();
+    const returned = takeReturnedComposer();
+    expect(returned?.payload).toEqual(PAYLOAD);
+    expect(lockRequests).toContain('bulwark-popout-return:r1');
+    const claim = returned!.claim();
+    await settle();
+    expect(heard).toContainEqual({ type: 'composer-return-ready', returnId: 'r1' });
+    popout.post({ type: 'composer-return-commit', returnId: 'r1' });
+    await expect(claim).resolves.toBe(true);
+    returned?.answer('shown');
+    await settle();
+    expect(heard).toContainEqual({ type: 'composer-return-answer', returnId: 'r1', status: 'shown' });
+  });
+
+  it('is left to a window holding its login', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'bob', payload: PAYLOAD });
+    await settle();
+    expect(takeReturnedComposer()).toBeNull();
+  });
+
+  it('is refused while locked: nothing of it goes on screen', async () => {
+    render(<PopoutHost />);
+    await settle();
+    setLockedHere(true);
+    try {
+      popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'alice', payload: PAYLOAD });
+      await settle();
+      expect(takeReturnedComposer()).toBeNull();
+    } finally {
+      setLockedHere(false);
+    }
+  });
+
+  it('a call-off after the mail page took it stops the page opening it', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'alice', payload: PAYLOAD });
+    await settle();
+    const claim = takeReturnedComposer()!.claim();
+    popout.post({ type: 'composer-return-cancel', returnId: 'r1' });
+    await expect(claim).resolves.toBe(false);
+  });
+
+  it('goes when the pop-out calls it off', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'alice', payload: PAYLOAD });
+    await settle();
+    popout.post({ type: 'composer-return-cancel', returnId: 'r1' });
+    await settle();
+    expect(takeReturnedComposer()).toBeNull();
   });
 });

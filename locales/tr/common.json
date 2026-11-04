@@ -6989,6 +6989,21 @@
     "copy_failed": "Dosya kopyalanamadı.",
     "reply_lost": "Yazdığınız yanıt korunamadı. İletiyi açıp oradan yanıtlayın."
   },
+  "desktopQuickCompose": {
+    "label": "Hızlı ileti",
+    "menu": "Hızlı ileti",
+    "description": "{keys}, başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "description_off": "Başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "taken": "{keys} başka bir uygulama tarafından kullanılıyor, bu yüzden burada bir şey yapmaz. Başka tuşlar seçin veya o uygulamayı kapatın.",
+    "change": "Tuşları değiştir: {keys}",
+    "recording": "Tuşlara basın…",
+    "recording_hint": "Ctrl (Mac'te Cmd) ile Alt veya Shift tuşunu basılı tutun ve bir harfe, rakama, Enter'a ya da işlev tuşuna basın. Esc iptal eder.",
+    "back_to_main": "Ana pencereye taşı",
+    "back_busy": "Ana pencerede zaten açık bir ileti var. Onu kapatın ve yeniden deneyin.",
+    "back_no_answer": "Ana pencere yanıt vermedi. İletiniz burada kalıyor.",
+    "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
+    "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
+  },
   "desktopReminders": {
     "generic_title": "Anımsatıcı",
     "snooze": "{count} dk ertele",

@@ -6989,6 +6989,21 @@
     "copy_failed": "Failu neizdevās nokopēt.",
     "reply_lost": "Ievadīto atbildi neizdevās saglabāt. Atveriet ziņojumu un atbildiet tur."
   },
+  "desktopQuickCompose": {
+    "label": "Ātrā rakstīšana",
+    "menu": "Ātrā rakstīšana",
+    "description": "{keys} atver nelielu logu jaunai ziņai no jebkuras citas lietotnes.",
+    "description_off": "Atver nelielu logu jaunai ziņai no jebkuras citas lietotnes.",
+    "taken": "{keys} izmanto cita lietotne, tāpēc šeit nekas nenotiek. Izvēlieties citus taustiņus vai aizveriet šo lietotni.",
+    "change": "Mainīt taustiņus: {keys}",
+    "recording": "Nospiediet taustiņus…",
+    "recording_hint": "Turiet nospiestu Ctrl (Mac datorā Cmd) kopā ar Alt vai Shift un nospiediet burtu, ciparu, Enter vai funkciju taustiņu. Esc atceļ.",
+    "back_to_main": "Pārvietot uz galveno logu",
+    "back_busy": "Galvenajā logā jau ir atvērta ziņa. Aizveriet to un mēģiniet vēlreiz.",
+    "back_no_answer": "Galvenais logs neatbildēja. Jūsu ziņa paliek šeit.",
+    "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
+    "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
+  },
   "desktopReminders": {
     "generic_title": "Atgādinājums",
     "snooze": "Atlikt par {count} min",

@@ -6989,6 +6989,21 @@
     "copy_failed": "無法複製檔案。",
     "reply_lost": "無法保留您輸入的回覆。請開啟郵件並在其中回覆。"
   },
+  "desktopQuickCompose": {
+    "label": "快速撰寫",
+    "menu": "快速撰寫",
+    "description": "{keys} 可從任何其他應用程式開啟用於新郵件的小視窗。",
+    "description_off": "從任何其他應用程式開啟用於新郵件的小視窗。",
+    "taken": "另一個應用程式正在使用 {keys}，所以在這裡沒有作用。請選擇其他按鍵，或關閉該應用程式。",
+    "change": "變更按鍵：{keys}",
+    "recording": "請按下按鍵…",
+    "recording_hint": "按住 Ctrl（Mac 上為 Cmd）和 Alt 或 Shift，再按一個字母、數字、Enter 或功能鍵。按 Esc 取消。",
+    "back_to_main": "移到主視窗",
+    "back_busy": "主視窗已有開啟的郵件。請先關閉它，然後再試一次。",
+    "back_no_answer": "主視窗沒有回應。您的郵件仍在這裡。",
+    "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
+    "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
+  },
   "desktopReminders": {
     "generic_title": "提醒",
     "snooze": "{count} 分鐘後再提醒",
