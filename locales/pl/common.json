@@ -1342,6 +1342,30 @@
     "apply": "Użyj tego tekstu",
     "apply_hint": "Zastępuje temat i tekst poniżej."
   },
+  "uxs_vacation": {
+    "default_subject": "Poza biurem",
+    "default_message": "Dziękuję za wiadomość. Jestem poza biurem i odpowiem po powrocie.",
+    "write_message_first": "Najpierw napisz wiadomość. Bez niej ludzie dostaliby pustą odpowiedź.",
+    "enter_address_first": "Najpierw wpisz adres, na który przekazywać.",
+    "message_title": "Twoja odpowiedź",
+    "message_label": "Wiadomość",
+    "message_description": "To dostaną osoby, które do Ciebie piszą. Możesz używać formatowania i linków.",
+    "from_label": "Od (opcjonalnie)",
+    "from_description": "Zostaw puste, aby zacząć od razu.",
+    "until_label": "Do (opcjonalnie)",
+    "until_description": "Zostaw puste, aby odpowiadać, dopóki tego nie wyłączysz.",
+    "audience_all": "Wszystkim",
+    "audience_internal": "Tylko mojej organizacji ({domains})",
+    "audience_external": "Tylko osobom spoza mojej organizacji",
+    "signature_label": "Podpis",
+    "signature_plain_label": "Podpis (zwykły tekst)",
+    "signature_plain_description": "Piszesz tylko zwykłym tekstem (Tworzenie), więc podpis też jest zwykłym tekstem.",
+    "edit_as_html": "Edytuj jako HTML",
+    "edit_formatted": "Wróć do edytora z formatowaniem",
+    "html_source_label": "Podpis w HTML",
+    "signature_size": "Użyto {bytes} z {max} bajtów",
+    "signature_too_long": "Za długi dla serwera ({bytes} z {max} bajtów). Skróć go."
+  },
   "retention_notice": {
     "line": "Wiadomości są tu usuwane {count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}} po przeniesieniu."
   },

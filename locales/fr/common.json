@@ -1342,6 +1342,30 @@
     "apply": "Utiliser ce texte",
     "apply_hint": "Remplace l'objet et le texte ci-dessous."
   },
+  "uxs_vacation": {
+    "default_subject": "Absent du bureau",
+    "default_message": "Merci pour votre message. Je suis absent du bureau et répondrai à mon retour.",
+    "write_message_first": "Écrivez d'abord un message. Sans lui, les gens recevraient une réponse vide.",
+    "enter_address_first": "Saisissez d'abord l'adresse vers laquelle transférer.",
+    "message_title": "Votre réponse",
+    "message_label": "Message",
+    "message_description": "Ce que reçoivent les personnes qui vous écrivent. Vous pouvez utiliser la mise en forme et des liens.",
+    "from_label": "Du (facultatif)",
+    "from_description": "Laissez vide pour commencer tout de suite.",
+    "until_label": "Au (facultatif)",
+    "until_description": "Laissez vide pour continuer à répondre jusqu'à ce que vous le désactiviez.",
+    "audience_all": "Tout le monde",
+    "audience_internal": "Seulement mon organisation ({domains})",
+    "audience_external": "Seulement les personnes hors de mon organisation",
+    "signature_label": "Signature",
+    "signature_plain_label": "Signature (texte brut)",
+    "signature_plain_description": "Vous écrivez uniquement en texte brut (Rédaction), votre signature l'est donc aussi.",
+    "edit_as_html": "Modifier en HTML",
+    "edit_formatted": "Revenir à l'éditeur avec mise en forme",
+    "html_source_label": "Signature en HTML",
+    "signature_size": "{bytes} octets utilisés sur {max}",
+    "signature_too_long": "Trop longue pour le serveur ({bytes} octets sur {max}). Raccourcissez-la."
+  },
   "retention_notice": {
     "line": "Les messages ici sont supprimés {count, plural, one {# jour} other {# jours}} après y avoir été déplacés."
   },

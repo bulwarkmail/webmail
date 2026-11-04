@@ -1342,6 +1342,30 @@
     "apply": "Bruk denne teksten",
     "apply_hint": "Erstatter emnet og teksten nedenfor."
   },
+  "uxs_vacation": {
+    "default_subject": "Ikke på kontoret",
+    "default_message": "Takk for e-posten. Jeg er ikke på kontoret og svarer når jeg er tilbake.",
+    "write_message_first": "Skriv en melding først. Uten den ville folk fått et tomt svar.",
+    "enter_address_first": "Skriv først inn adressen det skal videresendes til.",
+    "message_title": "Svaret ditt",
+    "message_label": "Melding",
+    "message_description": "Dette får de som skriver til deg. Du kan bruke formatering og lenker.",
+    "from_label": "Fra (valgfritt)",
+    "from_description": "La feltet stå tomt for å starte med en gang.",
+    "until_label": "Til (valgfritt)",
+    "until_description": "La feltet stå tomt for å fortsette å svare til du slår det av.",
+    "audience_all": "Alle",
+    "audience_internal": "Bare organisasjonen min ({domains})",
+    "audience_external": "Bare folk utenfor organisasjonen min",
+    "signature_label": "Signatur",
+    "signature_plain_label": "Signatur (ren tekst)",
+    "signature_plain_description": "Du skriver bare ren tekst (Skriving), så signaturen din er også ren tekst.",
+    "edit_as_html": "Rediger som HTML",
+    "edit_formatted": "Tilbake til redigeringsverktøyet med formatering",
+    "html_source_label": "Signatur som HTML",
+    "signature_size": "{bytes} av {max} byte brukt",
+    "signature_too_long": "For lang for serveren ({bytes} av {max} byte). Gjør den kortere."
+  },
   "retention_notice": {
     "line": "Meldinger her slettes {count, plural, one {# dag} other {# dager}} etter at de ble flyttet hit."
   },

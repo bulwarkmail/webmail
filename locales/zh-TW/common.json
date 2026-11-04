@@ -1342,6 +1342,30 @@
     "apply": "使用此文字",
     "apply_hint": "取代下方的主旨和內文。"
   },
+  "uxs_vacation": {
+    "default_subject": "外出",
+    "default_message": "感謝您的來信。我目前不在辦公室，回來後會盡快回覆。",
+    "write_message_first": "請先寫一則訊息。沒有訊息的話，對方會收到空白回覆。",
+    "enter_address_first": "請先輸入要轉寄到的地址。",
+    "message_title": "您的回覆",
+    "message_label": "訊息",
+    "message_description": "寫信給您的人會收到的內容。可以使用格式和連結。",
+    "from_label": "開始（選填）",
+    "from_description": "留空即立即開始。",
+    "until_label": "結束（選填）",
+    "until_description": "留空即持續回覆，直到您關閉。",
+    "audience_all": "所有人",
+    "audience_internal": "僅限我的組織（{domains}）",
+    "audience_external": "僅限組織外的人",
+    "signature_label": "簽名",
+    "signature_plain_label": "簽名（純文字）",
+    "signature_plain_description": "您設定為只寫純文字（撰寫），所以簽名也是純文字。",
+    "edit_as_html": "以 HTML 編輯",
+    "edit_formatted": "返回格式編輯器",
+    "html_source_label": "HTML 簽名",
+    "signature_size": "已用 {bytes} / {max} 位元組",
+    "signature_too_long": "對伺服器來說太長（{bytes} / {max} 位元組）。請縮短。"
+  },
   "retention_notice": {
     "line": "此處的郵件會在移入 {count, plural, other {# 天}} 後刪除。"
   },

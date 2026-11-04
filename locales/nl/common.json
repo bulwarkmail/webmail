@@ -1342,6 +1342,30 @@
     "apply": "Deze tekst gebruiken",
     "apply_hint": "Vervangt het onderwerp en de tekst hieronder."
   },
+  "uxs_vacation": {
+    "default_subject": "Afwezig",
+    "default_message": "Bedankt voor je e-mail. Ik ben niet op kantoor en antwoord zodra ik terug ben.",
+    "write_message_first": "Schrijf eerst een bericht. Zonder bericht krijgen mensen een leeg antwoord.",
+    "enter_address_first": "Vul eerst het adres in om naar door te sturen.",
+    "message_title": "Je antwoord",
+    "message_label": "Bericht",
+    "message_description": "Wat mensen krijgen als ze je mailen. Je kunt opmaak en links gebruiken.",
+    "from_label": "Vanaf (optioneel)",
+    "from_description": "Laat leeg om meteen te beginnen.",
+    "until_label": "Tot (optioneel)",
+    "until_description": "Laat leeg om te blijven antwoorden tot je het uitzet.",
+    "audience_all": "Iedereen",
+    "audience_internal": "Alleen mijn organisatie ({domains})",
+    "audience_external": "Alleen mensen buiten mijn organisatie",
+    "signature_label": "Handtekening",
+    "signature_plain_label": "Handtekening (platte tekst)",
+    "signature_plain_description": "Je schrijft alleen platte tekst (Opstellen), dus je handtekening is ook platte tekst.",
+    "edit_as_html": "Bewerken als HTML",
+    "edit_formatted": "Terug naar de editor met opmaak",
+    "html_source_label": "Handtekening als HTML",
+    "signature_size": "{bytes} van {max} bytes gebruikt",
+    "signature_too_long": "Te lang voor de server ({bytes} van {max} bytes). Maak hem korter."
+  },
   "retention_notice": {
     "line": "Berichten hier worden {count, plural, one {# dag} other {# dagen}} nadat ze hierheen zijn verplaatst verwijderd."
   },

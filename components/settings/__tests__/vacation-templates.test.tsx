@@ -22,6 +22,13 @@ vi.mock('next-intl', () => {
   const t = (key: string, values?: Record<string, unknown>) => (values ? `${key} ${Object.values(values).join(' ')}` : key);
   return { useTranslations: () => t, useLocale: () => 'en-GB' };
 });
+// The message editor hands the card its HTML as typed.
+vi.mock('@/components/email/rich-text-editor', () => ({
+  RichTextEditor: ({ content, onChange }: { content: string; onChange: (html: string) => void }) => (
+    <textarea data-testid="message-editor" value={content} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
+const editor = () => screen.getByTestId('message-editor') as HTMLTextAreaElement;
 
 const TEMPLATE: VacationTemplate = {
   id: 'holiday',
@@ -78,7 +85,7 @@ describe('out-of-office templates', () => {
     fireEvent.change(screen.getByTestId('vacation-template-select'), { target: { value: 'holiday' } });
     await settle();
     expect(server.client.setVacationResponse).not.toHaveBeenCalled();
-    expect((screen.getByPlaceholderText('message.body_placeholder') as HTMLTextAreaElement).value).toBe('Old text');
+    expect(editor().value).toBe('<p>Old text</p>');
 
     // Applying without a deputy refuses and says why.
     fireEvent.click(screen.getByTestId('vacation-template-apply'));
@@ -92,11 +99,11 @@ describe('out-of-office templates', () => {
 
     fireEvent.click(screen.getByTestId('vacation-template-apply'));
     // ICU versions differ in commas, not in the day.
-    const filled = (screen.getByPlaceholderText('message.body_placeholder') as HTMLTextAreaElement).value;
-    expect(filled).toMatch(/^I am away until Monday,? 4 January 2027\.\nPlease write to bob@example\.org\.\nAlice Example$/);
+    // The text template goes into the one message editor, line by line.
+    expect(editor().value).toMatch(/^<p>I am away until Monday,? 4 January 2027\.<br>Please write to bob@example\.org\.<br>Alice Example<\/p>$/);
     await waitFor(() => expect(server.client.setVacationResponse).toHaveBeenCalledTimes(1), { timeout: 3000 });
     const sent = server.client.setVacationResponse.mock.calls[0][0] as { subject: string; textBody: string };
-    expect(sent.textBody).toBe(filled);
+    expect(sent.textBody).toMatch(/^I am away until Monday,? 4 January 2027\.\nPlease write to bob@example\.org\.\nAlice Example$/);
     expect(sent.subject).toMatch(/^Away until Monday,? 4 January 2027$/);
   });
 
@@ -122,7 +129,6 @@ describe('out-of-office templates', () => {
     expect((inputs[1] as HTMLInputElement).value).toBe('2027-01-04T08:00');
     fireEvent.change(screen.getByTestId('vacation-template-select'), { target: { value: 'holiday' } });
     fireEvent.click(screen.getByTestId('vacation-template-apply'));
-    expect((screen.getByPlaceholderText('message.body_placeholder') as HTMLTextAreaElement).value)
-      .toMatch(/^Back Monday,? 4 January 2027 at 0?8:00$/);
+    expect(editor().value).toMatch(/^<p>Back Monday,? 4 January 2027 at 0?8:00<\/p>$/);
   });
 });

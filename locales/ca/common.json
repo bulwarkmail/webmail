@@ -1342,6 +1342,30 @@
     "apply": "Utilitza aquest text",
     "apply_hint": "Substitueix l'assumpte i el text de sota."
   },
+  "uxs_vacation": {
+    "default_subject": "Fora de l'oficina",
+    "default_message": "Gràcies pel teu correu. Soc fora de l'oficina i respondré quan torni.",
+    "write_message_first": "Escriu primer un missatge. Sense missatge, la gent rebria una resposta buida.",
+    "enter_address_first": "Escriu primer l'adreça a la qual reenviar.",
+    "message_title": "La teva resposta",
+    "message_label": "Missatge",
+    "message_description": "El que rep qui t'escriu. Pots fer servir format i enllaços.",
+    "from_label": "Des de (opcional)",
+    "from_description": "Deixa-ho buit per començar ara mateix.",
+    "until_label": "Fins a (opcional)",
+    "until_description": "Deixa-ho buit per continuar responent fins que ho desactivis.",
+    "audience_all": "Tothom",
+    "audience_internal": "Només la meva organització ({domains})",
+    "audience_external": "Només persones de fora de la meva organització",
+    "signature_label": "Signatura",
+    "signature_plain_label": "Signatura (text sense format)",
+    "signature_plain_description": "Escrius només text sense format (Redacció), així que la signatura també ho és.",
+    "edit_as_html": "Edita com a HTML",
+    "edit_formatted": "Torna a l'editor amb format",
+    "html_source_label": "Signatura en HTML",
+    "signature_size": "{bytes} de {max} bytes utilitzats",
+    "signature_too_long": "Massa llarga per al servidor ({bytes} de {max} bytes). Escurça-la."
+  },
   "retention_notice": {
     "line": "Els missatges d'aquí s'eliminen {count, plural, one {# dia} other {# dies}} després de moure'ls aquí."
   },

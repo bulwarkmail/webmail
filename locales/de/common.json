@@ -1342,6 +1342,30 @@
     "apply": "Diesen Text verwenden",
     "apply_hint": "Ersetzt Betreff und Text unten."
   },
+  "uxs_vacation": {
+    "default_subject": "Abwesend",
+    "default_message": "Vielen Dank für Ihre E-Mail. Ich bin zurzeit nicht im Büro und antworte, sobald ich zurück bin.",
+    "write_message_first": "Schreiben Sie zuerst eine Nachricht. Ohne Text bekämen die Leute eine leere Antwort.",
+    "enter_address_first": "Geben Sie zuerst die Adresse ein, an die weitergeleitet wird.",
+    "message_title": "Ihre Antwort",
+    "message_label": "Nachricht",
+    "message_description": "Das bekommen Leute, die Ihnen schreiben. Sie können Formatierung und Links verwenden.",
+    "from_label": "Von (optional)",
+    "from_description": "Leer lassen, um sofort zu beginnen.",
+    "until_label": "Bis (optional)",
+    "until_description": "Leer lassen, um weiter zu antworten, bis Sie es ausschalten.",
+    "audience_all": "Allen",
+    "audience_internal": "Nur meiner Organisation ({domains})",
+    "audience_external": "Nur Leuten außerhalb meiner Organisation",
+    "signature_label": "Signatur",
+    "signature_plain_label": "Signatur (nur Text)",
+    "signature_plain_description": "Sie schreiben nur einfachen Text (Verfassen), daher ist auch Ihre Signatur einfacher Text.",
+    "edit_as_html": "Als HTML bearbeiten",
+    "edit_formatted": "Zurück zum Editor mit Formatierung",
+    "html_source_label": "Signatur als HTML",
+    "signature_size": "{bytes} von {max} Byte belegt",
+    "signature_too_long": "Zu lang für den Server ({bytes} von {max} Byte). Kürzen Sie die Signatur."
+  },
   "retention_notice": {
     "line": "Nachrichten hier werden {count, plural, one {# Tag} other {# Tage}} nach dem Verschieben hierher gelöscht."
   },

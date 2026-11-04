@@ -1354,6 +1354,30 @@
     "apply": "Dùng nội dung này",
     "apply_hint": "Thay thế tiêu đề và nội dung bên dưới."
   },
+  "uxs_vacation": {
+    "default_subject": "Vắng mặt",
+    "default_message": "Cảm ơn bạn đã gửi thư. Tôi đang vắng mặt và sẽ trả lời khi quay lại.",
+    "write_message_first": "Hãy viết thư trước. Nếu không, mọi người sẽ nhận được thư trả lời trống.",
+    "enter_address_first": "Hãy nhập địa chỉ cần chuyển tiếp đến trước.",
+    "message_title": "Thư trả lời của bạn",
+    "message_label": "Nội dung",
+    "message_description": "Những gì người gửi thư cho bạn sẽ nhận được. Bạn có thể dùng định dạng và liên kết.",
+    "from_label": "Từ (không bắt buộc)",
+    "from_description": "Để trống để bắt đầu ngay.",
+    "until_label": "Đến (không bắt buộc)",
+    "until_description": "Để trống để tiếp tục trả lời cho đến khi bạn tắt.",
+    "audience_all": "Mọi người",
+    "audience_internal": "Chỉ tổ chức của tôi ({domains})",
+    "audience_external": "Chỉ người ngoài tổ chức của tôi",
+    "signature_label": "Chữ ký",
+    "signature_plain_label": "Chữ ký (văn bản thuần)",
+    "signature_plain_description": "Bạn chỉ viết văn bản thuần (Soạn thư), nên chữ ký cũng là văn bản thuần.",
+    "edit_as_html": "Sửa dưới dạng HTML",
+    "edit_formatted": "Quay lại trình soạn thảo có định dạng",
+    "html_source_label": "Chữ ký dạng HTML",
+    "signature_size": "Đã dùng {bytes}/{max} byte",
+    "signature_too_long": "Quá dài đối với máy chủ ({bytes}/{max} byte). Hãy rút ngắn."
+  },
   "retention_notice": {
     "line": "Thư ở đây sẽ bị xóa {count, plural, other {# ngày}} sau khi được chuyển vào đây."
   },
