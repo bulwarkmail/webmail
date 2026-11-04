@@ -54,6 +54,8 @@
       <string id="AuthNegotiateDelegateAllowlist_Explain">The servers the app may delegate Kerberos credentials to, separated by commas. Takes effect when the app restarts.</string>
       <string id="AutoSelectCertificateForUrls">Choose client certificates automatically</string>
       <string id="AutoSelectCertificateForUrls_Explain">One JSON rule per line, in the format Chrome uses: {&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}. The app then picks the matching certificate for that site without asking.</string>
+      <string id="KeystoreEnabled">Allow the system certificate store</string>
+      <string id="KeystoreEnabled_Explain">When disabled, nothing in the app can sign or decrypt with the certificates and smart cards in the operating system&apos;s store, and nobody is asked. This overrides the list of sites below. It also holds when plugins are turned off. Imported keys are not affected.</string>
       <string id="KeystoreAllowedOrigins">Sites that may use the system certificate store</string>
       <string id="KeystoreAllowedOrigins_Explain">The Bulwark servers, by https address, whose plugins may sign and decrypt with the certificates in the operating system&apos;s store, without the user being asked for each site. One per line.</string>
       <string id="BrowserSignIn">Offer sign-in through the browser</string>

@@ -4009,8 +4009,10 @@ useAuthStore.subscribe((state, prev) => {
   const wasReady = prev.isAuthenticated && !!prev.client && !!prev.activeAccountId;
   if (ready && !wasReady) void authHooks.onAuthReady.emit({ accountId: state.activeAccountId });
   if (state.activeAccountId !== prev.activeAccountId) noteDesktopCertificateAccount(state.activeAccountId);
+  // Whenever the account in use goes, not only at a sign-out: an expired or refused session
+  // ends with no account, and the next person at this computer has to be asked.
+  if (prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) clearKeystoreGrants();
   if (state.activeAccountId && prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) {
-    clearKeystoreGrants();
     clearDesktopCrashFiles();
     void authHooks.onAccountSwitch.emit({ accountId: state.activeAccountId, previousAccountId: prev.activeAccountId });
   }

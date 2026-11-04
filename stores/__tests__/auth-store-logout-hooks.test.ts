@@ -158,6 +158,17 @@ describe('sign-out with plugins', () => {
       expect(clearGrants).toHaveBeenCalledTimes(1);
     });
 
+    it('and when a session ends with no sign-out at all', () => {
+      const clearGrants = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearGrants);
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      expect(clearGrants).not.toHaveBeenCalled();
+      useAuthStore.setState({ client: null, isAuthenticated: false, activeAccountId: null });
+      expect(clearGrants).toHaveBeenCalledTimes(1);
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      expect(clearGrants, 'nothing to take back when one starts').toHaveBeenCalledTimes(1);
+    });
+
     it('signs out all the same on a shell without the call, or one that fails', async () => {
       withBridge(undefined);
       await useAuthStore.getState().logout();

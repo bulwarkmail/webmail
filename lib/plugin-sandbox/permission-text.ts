@@ -40,6 +40,20 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'settings:change',
 ]);
 
+/**
+ * What a manifest asks for, as an install grants it (checkPluginManifest): optional
+ * permissions count, minus what this version doesn't offer and what the tier can't have.
+ * Everything that shows permissions from a manifest goes through this.
+ */
+export function declaredPermissions(manifest: unknown): string[] {
+  const m = (manifest ?? {}) as { permissions?: unknown; optionalPermissions?: unknown; tier?: unknown };
+  const strings = (value: unknown) => (Array.isArray(value) ? value.filter((p): p is string => typeof p === 'string') : []);
+  const known = new Set<string>(ALL_PERMISSIONS);
+  return [...new Set([...strings(m.permissions), ...strings(m.optionalPermissions)])]
+    .filter((p) => known.has(p))
+    .filter((p) => p !== 'keystore' || m.tier === 'privileged');
+}
+
 /** Locale key segment for a permission: `email:read` → `email_read`. */
 export function permissionKey(perm: string): string {
   return perm.replace(/[:-]/g, '_');

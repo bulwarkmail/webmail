@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin/session';
 import { logger } from '@/lib/logger';
+import { getPluginRegistry } from '@/lib/admin/plugin-registry';
+import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import {
   APP_VERSION,
   DirectoryError,
@@ -19,7 +21,8 @@ import {
 
 export interface UpdatesAnswer {
   /** `changelogs` is missing from directories older than 2026-10-30; `changelog` is then the offered version's alone. */
-  updates: Array<DirectoryVersion & { slug: string; currentVersion: string; changelog: string | null; changelogs?: DirectoryChangelogEntry[] }>;
+  /** `addedPermissions` is what the directory lists against what's installed; the install itself reads the bundle. */
+  updates: Array<DirectoryVersion & { slug: string; currentVersion: string; changelog: string | null; changelogs?: DirectoryChangelogEntry[]; addedPermissions?: string[] }>;
   yanked: Array<{ slug: string; version: string; reason: string | null; at: string }>;
   deprecated: Array<{ slug: string; message: string | null; replacement: string | null }>;
   suspended: string[];
@@ -66,6 +69,13 @@ export async function GET(request: NextRequest) {
           body: JSON.stringify({ appVersion: APP_VERSION || undefined, channel, installed: ask }),
         });
         answer = { ...EMPTY, ...res.data };
+        const { plugins } = await getPluginRegistry();
+        const held = new Map(plugins.map((p) => [p.id, new Set<string>(p.permissions ?? [])]));
+        const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
+        answer.updates = answer.updates.map((u) => ({
+          ...u,
+          addedPermissions: (u.permissions ?? []).filter((p) => !implicit.has(p) && !(held.get(u.slug)?.has(p) ?? true)),
+        }));
       } catch (err) {
         // The installed list is still useful without the directory; say what
         // went wrong instead of failing the whole view.

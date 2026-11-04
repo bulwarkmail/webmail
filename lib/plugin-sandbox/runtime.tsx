@@ -512,18 +512,24 @@ function buildCoreApi(manifest: PluginManifest) {
      * with the `keystore` permission, when api.host.features.keystore is true. The
      * shell asks the user first, so any call can answer keystore:cancelled. Key
      * operations have no timeout here: the OS may be showing a PIN prompt, and the shell
-     * gives up by itself. Errors are bare codes: keystore:cancelled, not-found,
-     * unsupported, locked, invalid, failed.
+     * gives up by itself. Errors are bare codes: keystore:cancelled, ask-first, not-found,
+     * unsupported, locked, invalid, failed. `{ quiet: true }` never opens a dialog: it
+     * answers from what's already allowed, or with ask-first. Use it for anything the user
+     * didn't just ask for.
      */
     keystore: {
       /** Certificates fit for mail that have a private key. The OS doesn't prompt, and it has the usual timeout. */
-      list: () => callApi('keystore.list', []),
-      /** Signs a digest. scheme: { scheme: 'rsa-pkcs1' | 'rsa-pss' | 'ecdsa', hash }. RSA gives the raw signature, ECDSA DER. */
-      sign: (id: string, digest: Uint8Array, scheme: unknown) => callApi('keystore.sign', [id, digest, scheme], 0) as Promise<Uint8Array>,
+      list: (options?: { quiet?: boolean }) => callApi('keystore.list', [options]),
+      /**
+       * Signs a CMS message's signed attributes, given as their DER (a SET): content type,
+       * message digest and signing time at least. The shell hashes them, and asks every time.
+       * scheme: { scheme: 'rsa-pkcs1' | 'rsa-pss' | 'ecdsa', hash }. RSA gives the raw signature, ECDSA DER.
+       */
+      sign: (id: string, signedAttributes: Uint8Array, scheme: unknown) => callApi('keystore.sign', [id, signedAttributes, scheme], 0) as Promise<Uint8Array>,
       /** Unwraps a content key. scheme: { scheme: 'rsa-pkcs1' } or { scheme: 'rsa-oaep', hash, label? }. */
-      decrypt: (id: string, data: Uint8Array, scheme: unknown) => callApi('keystore.decrypt', [id, data, scheme], 0) as Promise<Uint8Array>,
+      decrypt: (id: string, data: Uint8Array, scheme: unknown, options?: { quiet?: boolean }) => callApi('keystore.decrypt', [id, data, scheme, options], 0) as Promise<Uint8Array>,
       /** ECDH: the raw shared secret, big-endian, from the peer's SubjectPublicKeyInfo. */
-      agree: (id: string, peerPublicKey: Uint8Array) => callApi('keystore.agree', [id, peerPublicKey], 0) as Promise<Uint8Array>,
+      agree: (id: string, peerPublicKey: Uint8Array, options?: { quiet?: boolean }) => callApi('keystore.agree', [id, peerPublicKey, options], 0) as Promise<Uint8Array>,
     },
     /** The app the plugin runs in: product, the administrator's name for it, version, edition. No permission needed. */
     app: {

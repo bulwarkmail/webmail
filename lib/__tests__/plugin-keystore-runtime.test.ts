@@ -20,10 +20,10 @@ function post(source: unknown, data: unknown): void {
 }
 
 interface KeystoreFacade {
-  list(): Promise<unknown>;
-  sign(id: string, digest: Uint8Array, scheme: unknown): Promise<Uint8Array>;
-  decrypt(id: string, data: Uint8Array, scheme: unknown): Promise<Uint8Array>;
-  agree(id: string, peer: Uint8Array): Promise<Uint8Array>;
+  list(options?: { quiet?: boolean }): Promise<unknown>;
+  sign(id: string, signedAttributes: Uint8Array, scheme: unknown): Promise<Uint8Array>;
+  decrypt(id: string, data: Uint8Array, scheme: unknown, options?: { quiet?: boolean }): Promise<Uint8Array>;
+  agree(id: string, peer: Uint8Array, options?: { quiet?: boolean }): Promise<Uint8Array>;
 }
 
 describe('api.keystore in the sandbox', () => {
@@ -104,6 +104,12 @@ describe('api.keystore in the sandbox', () => {
     const signing = api.sign('the-id', digest, scheme);
     const sent = requests().at(-1)!;
     expect(sent.args).toEqual(['the-id', digest, scheme]);
+    void api.list({ quiet: true }).catch(() => {});
+    expect(requests().at(-1)!.args).toEqual([{ quiet: true }]);
+    void api.decrypt('the-id', new Uint8Array(4), { scheme: 'rsa-pkcs1' }, { quiet: true }).catch(() => {});
+    expect(requests().at(-1)!.args).toEqual(['the-id', new Uint8Array(4), { scheme: 'rsa-pkcs1' }, { quiet: true }]);
+    void api.agree('the-id', new Uint8Array(4), { quiet: true }).catch(() => {});
+    expect(requests().at(-1)!.args).toEqual(['the-id', new Uint8Array(4), { quiet: true }]);
     post(hostWindow, { type: 'api-response', id: sent.id, ok: false, error: 'keystore:cancelled' });
     await expect(signing).rejects.toThrow(/^keystore:cancelled$/);
 

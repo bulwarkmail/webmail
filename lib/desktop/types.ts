@@ -331,23 +331,32 @@ export type DesktopKeystoreDecryptScheme =
   /** MGF1 on the same hash. */
   | { scheme: 'rsa-oaep'; hash: DesktopKeystoreHash; label?: Uint8Array };
 
+/** `quiet`: answer from what's already allowed, with keystore:ask-first in place of a dialog. */
+export interface DesktopKeystoreUseOptions {
+  quiet?: boolean;
+}
+
 /**
  * The OS certificate store and smart cards. Present only where the native helper
- * loaded and the OS has one. Failures reject with a bare code as the message:
- * keystore:cancelled, not-found, unsupported, locked, invalid, failed. The shell asks the
- * user in a native dialog before any of this, on top of which the OS has its own prompts,
- * so a call may take a while. On an instance it stays off until policy or the user allows
- * it. The key never leaves the OS.
+ * loaded, the OS has one and policy allows it. Failures reject with a bare code as the
+ * message: keystore:cancelled, ask-first, not-found, unsupported, locked, invalid, failed.
+ * The shell asks the user in a native dialog before any of this, on top of which the OS
+ * has its own prompts, so a call may take a while. On an instance it stays off until
+ * policy or the user allows it. The key never leaves the OS.
  */
 export interface DesktopKeystoreBridge {
   /** Certificates fit for mail that have a private key. The OS doesn't prompt. */
-  list: () => Promise<DesktopKeystoreCertificate[]>;
-  /** RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value. */
-  sign: (id: string, digest: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
+  list: (options?: DesktopKeystoreUseOptions) => Promise<DesktopKeystoreCertificate[]>;
+  /**
+   * Signs a CMS message's signed attributes, given as their DER (a SET): content type,
+   * message digest and signing time at least. The shell checks them and hashes them itself,
+   * and asks at every call. RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value.
+   */
+  sign: (id: string, signedAttributes: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
   /** Unwraps a CMS content key. */
-  decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme) => Promise<Uint8Array>;
+  decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme, options?: DesktopKeystoreUseOptions) => Promise<Uint8Array>;
   /** The raw shared secret, big-endian. The peer's key is an EC SubjectPublicKeyInfo. */
-  agree: (id: string, peerPublicKey: Uint8Array) => Promise<Uint8Array>;
+  agree: (id: string, peerPublicKey: Uint8Array, options?: DesktopKeystoreUseOptions) => Promise<Uint8Array>;
   accessState: () => Promise<DesktopKeystoreAccessState>;
   /** Takes back a stored yes and this session's grants. Only ever narrows. */
   revokeAccess: () => Promise<void>;
