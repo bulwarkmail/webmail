@@ -1094,6 +1094,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setCursorOnly(false);
     },
     onCloseEmail: () => {
+      // Escape with nothing open or ticked leaves a search (mail-p3-3).
+      const { selectedEmailKeys: ticked } = useEmailStore.getState();
+      if (!selectedEmail && ticked.size === 0 && (searchQuery || !isFilterEmpty(searchFilters))) {
+        void handleClearSearch();
+        return;
+      }
       setCursorOnly(false);
       selectEmail(null);
       if (isMobile) {
@@ -4069,8 +4075,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // across folders). Returns true when it cleared, so the caller browses
   // rather than re-searching. Reads the current query/filters from the
   // closure to decide whether there was anything to clear.
-  const clearSearchIfFolderChangeResets = (): boolean => {
-    if (!useSettingsStore.getState().clearSearchOnFolderChange) return false;
+  // A click on the folder already open always leaves the search and shows
+  // the folder, as in Gmail, Outlook and Thunderbird (mail-p3-3); another
+  // folder keeps the search unless the user chose to reset it.
+  const clearSearchIfFolderChangeResets = (sameFolder = false): boolean => {
+    if (!sameFolder && !useSettingsStore.getState().clearSearchOnFolderChange) return false;
     if (isFilterEmpty(searchFilters) && !searchQuery) return false;
     setSearchQuery("");
     clearSearchFilters();
@@ -4122,6 +4131,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleMailboxSelect = async (mailboxId: string) => {
+    const sameFolder = mailboxId === selectedMailbox;
     // A shared account's Scheduled row arrives as "__scheduled__:<accountId>";
     // the store only ever sees the plain virtual id plus the account scope.
     const scheduledSelection = parseScheduledMailboxId(mailboxId);
@@ -4161,7 +4171,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // Another folder was picked while the accounts loaded; entering this
       // view now would put it over that folder (#1102).
       if (!isSameView()) return;
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       // Keep an active search across the switch and re-run it in this view
       // (mirrors normal mailboxes), preserving advanced filters; otherwise browse.
       if (client && !searchCleared && (!isFilterEmpty(searchFilters) || searchQuery)) {
@@ -4194,7 +4204,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const isSameView = captureViewToken();
       const populated = await buildPopulatedUnifiedAccounts();
       if (!isSameView()) return;
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       // Keep an active search across the switch and re-run it in this view
       // (mirrors normal mailboxes), preserving advanced filters; otherwise browse.
       if (client && !searchCleared && (!isFilterEmpty(searchFilters) || searchQuery)) {
@@ -4231,7 +4241,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // through advancedSearch (which also includes the text query) — falling
       // back to fetchEmails would silently drop them while the UI still shows
       // them as active (#553).
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       if (!searchCleared && !isFilterEmpty(searchFilters)) {
         await advancedSearch(client);
       } else if (!searchCleared && searchQuery) {
