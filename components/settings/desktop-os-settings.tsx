@@ -7,6 +7,9 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsDefaultAppStatus, DesktopOsSettings as Settings, DesktopOsStatus } from "@/lib/desktop/types";
 import { DesktopQuickComposeSetting } from "./desktop-quick-compose-setting";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
+import { goToSettings, SettingsLinkRow } from "./privacy-settings";
+import { productName } from "@/lib/product-name";
+import { useConfig } from "@/hooks/use-config";
 
 /** On Windows and Linux this is what a press of the keys shows; macOS maps it to Cmd. */
 const SHOW_SHORTCUT = "CommandOrControl+Shift+B";
@@ -23,6 +26,9 @@ function shortcutLabel(platform: string | undefined): string {
  */
 export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notifications" } = {}) {
   const t = useTranslations("desktopOs");
+  const tP2 = useTranslations("uxp2_settings.desktop_notifications");
+  const tTabs = useTranslations("settings.tabs");
+  const appName = productName(useConfig().appName);
   const [status, setStatus] = useState<DesktopOsStatus | null>(null);
   const [defaultApp, setDefaultApp] = useState<DesktopOsDefaultAppStatus | null>(null);
   const bridge = getDesktopBridge();
@@ -52,7 +58,14 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
 
   if (part === "notifications") {
     return (
-      <SettingsSection id="desktop-notifications" title={t("section_title")}>
+      <SettingsSection id="desktop-notifications" title={tP2("title")}>
+        {/* The app tells about new mail as long as it runs; a browser's push section has nothing to add (settings-p2-4). */}
+        <SettingsLinkRow
+          label={tP2("closed_label")}
+          description={tP2("closed_description", { appName, page: tTabs("general") })}
+          button={tTabs("general")}
+          onClick={() => goToSettings("general", "desktop-app")}
+        />
         <SettingItem
           label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
           description={t("attention_description")}

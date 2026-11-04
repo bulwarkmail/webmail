@@ -3498,6 +3498,48 @@
       "description": "Logi sellest kontost selles seadmes välja."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "salv süsteemisalv teavitusala taust minimeeri salve tray",
+      "autostart": "automaatne käivitus käivitus käivita koos Windowsiga sisselogimisel",
+      "default_app": "vaikimisi meilirakendus vaikimisi e-posti programm mailto meililingid",
+      "menu_bar": "menüüriba menüüd Alt-klahv Fail Redigeeri Vaade",
+      "updates": "uuendused uuendus uus versioon beeta kanal",
+      "devtools": "arendustööriistad devtools konsool uuri F12 silumine",
+      "taskbar": "tegumiriba vilkumine Dock tähelepanu",
+      "quiet_hours": "vaikne aeg ära sega vaigista öö",
+      "telemetry": "kasutusandmed telemeetria statistika analüütika",
+      "crash": "krahhiaruanded vearaportid krahh",
+      "threads": "lõimed vestlused rühmita threads",
+      "block_images": "blokeeri pildid välised pildid laadi pildid",
+      "dark_mode": "tume režiim hele režiim öörežiim dark mode",
+      "timezone": "ajavöönd timezone",
+      "reading_pane": "lugemispaan eelvaatepaan jagatud vaade",
+      "week_start": "nädala algus esimene päev esmaspäev pühapäev",
+      "empty_trash": "tühjenda prügikast prügikast kustutatud üksused",
+      "do_not_disturb": "vaikne aeg vaigista vaikus"
+    },
+    "desktop_notifications": {
+      "title": "Selles arvutis",
+      "closed_label": "Suletud aknaga",
+      "closed_description": "{appName} annab uutest kirjadest teada, kuni see töötab. Et see pärast akna sulgemist salves edasi töötaks, lülita see sisse jaotises {page}."
+    },
+    "push_unsupported": "See brauser ei saa teavitusi näidata, kui veebileht on suletud.",
+    "backup_description_app": "Kasuta samu seadeid oma teistes seadmetes.",
+    "sender_favicons": {
+      "label": "Pildid ettevõtete veebisaitidelt",
+      "description": "Näita äriliste saatjate profiilipiltidena veebisaitide ikoone"
+    },
+    "privacy_push": {
+      "label": "Teavituste relee",
+      "description": "Teavitused ajal, mil {appName} on suletud, käivad läbi push-relee, mis ei näe kunagi sinu kirju. Lülitad need sisse või välja lehel {page}."
+    },
+    "reset": {
+      "message": "Taastab kõik seaded algsel kujul. Sinu kirjad, filtrid, automaatvastus ja allkirjad jäävad samaks.",
+      "sync_on": "Sinu teised seadmed kasutavad samu seadeid, seega muutuvad ka need.",
+      "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",
     "subtitle": "Seadista oma veebipostiteenus brauseris.",

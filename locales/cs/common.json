@@ -3498,6 +3498,48 @@
       "description": "Odhlásit tento účet na tomto zařízení."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "oznamovací oblast systémová lišta tray na pozadí minimalizovat",
+      "autostart": "automatické spuštění po startu spustit s Windows při přihlášení",
+      "default_app": "výchozí poštovní aplikace výchozí e-mailový program mailto odkazy na e-mail",
+      "menu_bar": "panel nabídek nabídka klávesa Alt Soubor Úpravy Zobrazení",
+      "updates": "aktualizace nová verze beta kanál",
+      "devtools": "nástroje pro vývojáře devtools konzole prozkoumat F12 ladění",
+      "taskbar": "hlavní panel blikání Dock pozornost",
+      "quiet_hours": "tiché hodiny nerušit ztlumit noc",
+      "telemetry": "údaje o používání telemetrie statistiky analytika",
+      "crash": "hlášení o pádu chybová hlášení pád",
+      "threads": "vlákna konverzace seskupit threads",
+      "block_images": "blokovat obrázky externí obrázky načítat obrázky",
+      "dark_mode": "tmavý režim světlý režim noční režim dark mode",
+      "timezone": "časové pásmo timezone",
+      "reading_pane": "podokno čtení náhled rozdělené zobrazení",
+      "week_start": "začátek týdne první den pondělí neděle",
+      "empty_trash": "vysypat koš koš smazané položky",
+      "do_not_disturb": "tiché hodiny ztlumit ticho"
+    },
+    "desktop_notifications": {
+      "title": "Na tomto počítači",
+      "closed_label": "Při zavřeném okně",
+      "closed_description": "{appName} vás upozorní na novou poštu, dokud běží. Aby po zavření okna běžel dál v oznamovací oblasti, zapněte to v části {page}."
+    },
+    "push_unsupported": "Tento prohlížeč nemůže zobrazovat oznámení, když je web zavřený.",
+    "backup_description_app": "Používejte stejná nastavení na svých dalších zařízeních.",
+    "sender_favicons": {
+      "label": "Obrázky z webů firem",
+      "description": "Zobrazovat ikony webových stránek jako profilové obrázky firemních odesílatelů"
+    },
+    "privacy_push": {
+      "label": "Relay pro oznámení",
+      "description": "Oznámení při zavřeném {appName} jdou přes push relay, který nikdy nevidí vaši poštu. Zapínáte a vypínáte je na stránce {page}."
+    },
+    "reset": {
+      "message": "Vrátí všechna nastavení do původního stavu. Vaše pošta, filtry, automatická odpověď a podpisy zůstanou, jak jsou.",
+      "sync_on": "Vaše další zařízení používají stejná nastavení, takže se změní také.",
+      "sync_off": "Vaše další zařízení si nastavení ponechají."
+    }
+  },
   "setup": {
     "title": "Nastavení Bulwark Webmail",
     "subtitle": "Nastavte svou instanci webmailu v prohlížeči.",

@@ -3498,6 +3498,48 @@
       "description": "Deconectați acest cont pe acest dispozitiv."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zona de notificări bara de sistem fundal minimizare tray",
+      "autostart": "pornire automată la pornire pornește cu Windows la conectare",
+      "default_app": "aplicație de e-mail implicită program de e-mail implicit mailto linkuri de e-mail",
+      "menu_bar": "bara de meniu meniuri tasta Alt Fișier Editare Vizualizare",
+      "updates": "actualizări actualizare versiune nouă beta canal",
+      "devtools": "instrumente pentru dezvoltatori devtools consolă inspectare F12 depanare",
+      "taskbar": "bara de activități clipire Dock atenție",
+      "quiet_hours": "ore de liniște nu deranjați silențios fără sunet noapte",
+      "telemetry": "informații de utilizare telemetrie statistici analiză",
+      "crash": "rapoarte de blocare rapoarte de erori blocare",
+      "threads": "fire conversații grupare threads",
+      "block_images": "blocare imagini imagini externe încărcare imagini",
+      "dark_mode": "mod întunecat mod luminos mod noapte dark mode",
+      "timezone": "fus orar timezone",
+      "reading_pane": "panou de citire panou de previzualizare vizualizare împărțită",
+      "week_start": "începutul săptămânii prima zi luni duminică",
+      "empty_trash": "golire coș de gunoi coș de gunoi elemente șterse",
+      "do_not_disturb": "ore de liniște fără sunet liniște"
+    },
+    "desktop_notifications": {
+      "title": "Pe acest computer",
+      "closed_label": "Cu fereastra închisă",
+      "closed_description": "{appName} vă anunță despre e-mailurile noi cât timp rulează. Ca să ruleze în continuare în zona de notificări după ce închideți fereastra, activați asta în {page}."
+    },
+    "push_unsupported": "Acest browser nu poate afișa notificări când site-ul este închis.",
+    "backup_description_app": "Folosiți aceleași setări pe celelalte dispozitive.",
+    "sender_favicons": {
+      "label": "Imagini de pe site-urile companiilor",
+      "description": "Afișați pictogramele site-urilor web ca imagini de profil pentru expeditorii de afaceri"
+    },
+    "privacy_push": {
+      "label": "Releu pentru notificări",
+      "description": "Notificările cu {appName} închis trec printr-un releu push, care nu vă vede niciodată e-mailurile. Le activați sau dezactivați pe pagina {page}."
+    },
+    "reset": {
+      "message": "Readuce toate setările la cum erau la început. E-mailurile, filtrele, răspunsul automat și semnăturile rămân cum sunt.",
+      "sync_on": "Celelalte dispozitive folosesc aceleași setări, așa că se schimbă și ele.",
+      "sync_off": "Celelalte dispozitive își păstrează setările."
+    }
+  },
   "setup": {
     "title": "Configurarea Bulwark Webmail",
     "subtitle": "Configurați instanța de webmail din browser.",

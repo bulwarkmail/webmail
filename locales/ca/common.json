@@ -3498,6 +3498,48 @@
       "description": "Tanca la sessió d’aquest compte en aquest dispositiu."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "safata safata del sistema àrea de notificació segon pla minimitzar",
+      "autostart": "inici automàtic arrencada iniciar amb Windows en iniciar la sessió",
+      "default_app": "aplicació de correu predeterminada programa de correu mailto enllaços de correu",
+      "menu_bar": "barra de menús menús tecla Alt Fitxer Edita Visualitza",
+      "updates": "actualitzacions actualitzar versió nova beta canal",
+      "devtools": "eines de desenvolupament devtools consola inspeccionar F12 depuració",
+      "taskbar": "barra de tasques parpelleig Dock atenció",
+      "quiet_hours": "hores de silenci no molestis silenci mut nit",
+      "telemetry": "informació d’ús telemetria estadístiques analítica",
+      "crash": "informes d’error informes de fallada fallada",
+      "threads": "fils converses conversa agrupar threads",
+      "block_images": "bloquejar imatges imatges externes carregar imatges",
+      "dark_mode": "mode fosc mode clar mode nocturn tema fosc",
+      "timezone": "fus horari zona horària timezone",
+      "reading_pane": "panell de lectura panell de previsualització vista dividida",
+      "week_start": "inici de la setmana primer dia dilluns diumenge",
+      "empty_trash": "buidar la paperera paperera elements suprimits",
+      "do_not_disturb": "hores de silenci silenci mut"
+    },
+    "desktop_notifications": {
+      "title": "En aquest ordinador",
+      "closed_label": "Amb la finestra tancada",
+      "closed_description": "{appName} us avisa del correu nou mentre s’executa. Perquè continuï a la safata quan tanqueu la finestra, activeu-ho a {page}."
+    },
+    "push_unsupported": "Aquest navegador no pot mostrar notificacions quan el lloc web està tancat.",
+    "backup_description_app": "Feu servir la mateixa configuració als altres dispositius.",
+    "sender_favicons": {
+      "label": "Imatges dels llocs web de les empreses",
+      "description": "Mostra icones de llocs web com a imatges de perfil per als remitents d'empresa"
+    },
+    "privacy_push": {
+      "label": "Repetidor de notificacions",
+      "description": "Les notificacions amb {appName} tancat passen per un repetidor push, que mai no veu el vostre correu. Les activeu o desactiveu a la pàgina {page}."
+    },
+    "reset": {
+      "message": "Torna tota la configuració a com era al principi. El correu, els filtres, la resposta automàtica i les signatures es queden com estan.",
+      "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
+      "sync_off": "Els altres dispositius mantenen la seva configuració."
+    }
+  },
   "setup": {
     "title": "Configuració de Bulwark Webmail",
     "subtitle": "Configureu la vostra instància de correu web des del navegador.",

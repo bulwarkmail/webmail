@@ -3498,6 +3498,48 @@
       "description": "Odhlásiť tento účet na tomto zariadení."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "oblasť oznámení systémová lišta pozadie minimalizovať tray",
+      "autostart": "automatické spustenie po štarte spustiť s Windows pri prihlásení",
+      "default_app": "predvolená poštová aplikácia predvolený e-mailový program mailto odkazy na e-mail",
+      "menu_bar": "panel ponúk ponuky kláves Alt Súbor Upraviť Zobraziť",
+      "updates": "aktualizácie aktualizácia nová verzia beta kanál",
+      "devtools": "nástroje pre vývojárov devtools konzola preskúmať F12 ladenie",
+      "taskbar": "panel úloh blikanie Dock pozornosť",
+      "quiet_hours": "tiché hodiny nerušiť stlmiť noc",
+      "telemetry": "údaje o používaní telemetria štatistiky analytika",
+      "crash": "hlásenia o páde chybové hlásenia pád",
+      "threads": "vlákna konverzácie zoskupiť threads",
+      "block_images": "blokovať obrázky externé obrázky načítať obrázky",
+      "dark_mode": "tmavý režim svetlý režim nočný režim dark mode",
+      "timezone": "časové pásmo timezone",
+      "reading_pane": "tabla čítania tabla ukážky rozdelené zobrazenie",
+      "week_start": "začiatok týždňa prvý deň pondelok nedeľa",
+      "empty_trash": "vyprázdniť kôš kôš odstránené položky",
+      "do_not_disturb": "tiché hodiny stlmiť ticho"
+    },
+    "desktop_notifications": {
+      "title": "Na tomto počítači",
+      "closed_label": "Pri zatvorenom okne",
+      "closed_description": "{appName} vás upozorní na novú poštu, kým beží. Aby po zatvorení okna bežal ďalej v oblasti oznámení, zapnite to v časti {page}."
+    },
+    "push_unsupported": "Tento prehliadač nemôže zobrazovať upozornenia, keď je web zatvorený.",
+    "backup_description_app": "Používajte rovnaké nastavenia na ďalších zariadeniach.",
+    "sender_favicons": {
+      "label": "Obrázky z webov firiem",
+      "description": "Zobrazovať ikony webových stránok ako profilové obrázky firemných odosielateľov"
+    },
+    "privacy_push": {
+      "label": "Relay pre upozornenia",
+      "description": "Upozornenia pri zatvorenom {appName} idú cez push relay, ktorý nikdy nevidí vašu poštu. Zapínate a vypínate ich na stránke {page}."
+    },
+    "reset": {
+      "message": "Vráti všetky nastavenia do pôvodného stavu. Vaša pošta, filtre, automatická odpoveď a podpisy zostanú, ako sú.",
+      "sync_on": "Vaše ďalšie zariadenia používajú rovnaké nastavenia, takže sa zmenia tiež.",
+      "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
+    }
+  },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",
     "subtitle": "Nastavte svoju inštanciu webmailu v prehliadači.",

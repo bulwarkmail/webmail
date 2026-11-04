@@ -3498,6 +3498,48 @@
       "description": "このデバイスでこのアカウントからサインアウトします。"
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "トレイ システムトレイ 通知領域 バックグラウンド 最小化 tray",
+      "autostart": "自動起動 スタートアップ Windows と一緒に起動 サインイン時に起動",
+      "default_app": "既定のメールアプリ 既定のメールプログラム mailto メールリンク",
+      "menu_bar": "メニューバー メニュー Alt キー ファイル 編集 表示",
+      "updates": "アップデート 更新 新しいバージョン ベータ チャンネル",
+      "devtools": "開発者ツール devtools コンソール 検証 F12 デバッグ",
+      "taskbar": "タスクバー 点滅 Dock 注意",
+      "quiet_hours": "おやすみ時間 通知停止 サイレント ミュート 夜間",
+      "telemetry": "使用状況 テレメトリ 統計 分析",
+      "crash": "クラッシュレポート エラーレポート クラッシュ",
+      "threads": "スレッド 会話 グループ化 threads",
+      "block_images": "画像をブロック 外部画像 画像の読み込み",
+      "dark_mode": "ダークモード ライトモード 夜間モード dark mode",
+      "timezone": "タイムゾーン 時間帯 timezone",
+      "reading_pane": "閲覧ウィンドウ プレビューウィンドウ 分割表示",
+      "week_start": "週の始まり 週の最初の日 月曜日 日曜日",
+      "empty_trash": "ごみ箱を空にする ごみ箱 削除済み",
+      "do_not_disturb": "おやすみ時間 ミュート 消音"
+    },
+    "desktop_notifications": {
+      "title": "このコンピューター",
+      "closed_label": "ウィンドウを閉じたとき",
+      "closed_description": "{appName} は動いている間、新着メールをお知らせします。ウィンドウを閉じた後もトレイで動かし続けるには、{page} でオンにしてください。"
+    },
+    "push_unsupported": "このブラウザでは、サイトを閉じていると通知を表示できません。",
+    "backup_description_app": "ほかのデバイスでも同じ設定を使います。",
+    "sender_favicons": {
+      "label": "会社のウェブサイトの画像",
+      "description": "ビジネス送信者のプロフィール画像としてウェブサイトアイコンを表示"
+    },
+    "privacy_push": {
+      "label": "通知のリレー",
+      "description": "{appName} を閉じているときの通知はプッシュリレーを通りますが、リレーがメールを見ることはありません。オン・オフは {page} ページで切り替えます。"
+    },
+    "reset": {
+      "message": "すべての設定を最初の状態に戻します。メール、フィルター、自動返信、署名はそのまま残ります。",
+      "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
+      "sync_off": "ほかのデバイスの設定はそのままです。"
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",
     "subtitle": "ブラウザーから Web メールのインスタンスを設定します。",

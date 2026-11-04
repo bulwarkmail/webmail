@@ -3510,6 +3510,48 @@
       "description": "Đăng xuất tài khoản này trên thiết bị này."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "khay hệ thống vùng thông báo chạy nền thu nhỏ xuống khay tray",
+      "autostart": "tự khởi động khởi động cùng Windows khi đăng nhập",
+      "default_app": "ứng dụng thư mặc định chương trình email mặc định mailto liên kết email",
+      "menu_bar": "thanh menu menu phím Alt Tệp Sửa Xem",
+      "updates": "cập nhật phiên bản mới beta kênh",
+      "devtools": "công cụ nhà phát triển devtools bảng điều khiển kiểm tra F12 gỡ lỗi",
+      "taskbar": "thanh tác vụ nhấp nháy Dock chú ý",
+      "quiet_hours": "giờ yên lặng không làm phiền tắt tiếng ban đêm",
+      "telemetry": "thông tin sử dụng đo lường từ xa thống kê phân tích",
+      "crash": "báo cáo sự cố báo cáo lỗi sự cố",
+      "threads": "chuỗi thư hội thoại nhóm threads",
+      "block_images": "chặn hình ảnh hình ảnh bên ngoài tải hình ảnh",
+      "dark_mode": "chế độ tối chế độ sáng chế độ ban đêm dark mode",
+      "timezone": "múi giờ timezone",
+      "reading_pane": "ngăn đọc ngăn xem trước chia đôi màn hình",
+      "week_start": "đầu tuần ngày đầu tiên thứ Hai Chủ nhật",
+      "empty_trash": "dọn sạch thùng rác thùng rác mục đã xóa",
+      "do_not_disturb": "giờ yên lặng tắt tiếng im lặng"
+    },
+    "desktop_notifications": {
+      "title": "Trên máy tính này",
+      "closed_label": "Khi đóng cửa sổ",
+      "closed_description": "{appName} báo cho bạn thư mới khi ứng dụng đang chạy. Để ứng dụng tiếp tục chạy ở khay hệ thống sau khi đóng cửa sổ, hãy bật mục đó trong {page}."
+    },
+    "push_unsupported": "Trình duyệt này không thể hiển thị thông báo khi trang web đã đóng.",
+    "backup_description_app": "Dùng cùng cài đặt trên các thiết bị khác của bạn.",
+    "sender_favicons": {
+      "label": "Hình ảnh từ trang web của công ty",
+      "description": "Với người gửi là công ty, dùng biểu tượng trang web làm ảnh người gửi"
+    },
+    "privacy_push": {
+      "label": "Máy chuyển tiếp thông báo",
+      "description": "Thông báo khi {appName} đóng đi qua một máy chuyển tiếp đẩy, máy này không bao giờ thấy thư của bạn. Bạn bật hoặc tắt chúng trên trang {page}."
+    },
+    "reset": {
+      "message": "Đưa tất cả cài đặt về như lúc ban đầu. Thư, bộ lọc, trả lời tự động và chữ ký của bạn vẫn giữ nguyên.",
+      "sync_on": "Các thiết bị khác của bạn dùng cùng cài đặt, nên cũng thay đổi theo.",
+      "sync_off": "Các thiết bị khác của bạn giữ nguyên cài đặt."
+    }
+  },
   "setup": {
     "title": "Thiết lập webmail Bulwark",
     "subtitle": "Định cấu hình phiên bản webmail của bạn từ trình duyệt.",

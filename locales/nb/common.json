@@ -3498,6 +3498,48 @@
       "description": "Logg ut av denne kontoen på denne enheten."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systemstatusfelt varslingsområde bakgrunn minimer tray",
+      "autostart": "autostart oppstart start med Windows ved pålogging",
+      "default_app": "standard e-postapp standard e-postprogram mailto e-postlenker",
+      "menu_bar": "menylinje menyer Alt-tast Fil Rediger Vis",
+      "updates": "oppdateringer oppdatering ny versjon beta kanal",
+      "devtools": "utviklerverktøy devtools konsoll inspiser F12 feilsøking",
+      "taskbar": "oppgavelinje blink Dock oppmerksomhet",
+      "quiet_hours": "stille timer ikke forstyrr lydløs natt",
+      "telemetry": "bruksdata telemetri statistikk analyse",
+      "crash": "krasjrapporter feilrapporter krasj",
+      "threads": "tråder samtaler samtalevisning threads",
+      "block_images": "blokker bilder eksterne bilder last inn bilder",
+      "dark_mode": "mørk modus lys modus nattmodus dark mode",
+      "timezone": "tidssone timezone",
+      "reading_pane": "leserute forhåndsvisningsrute delt visning",
+      "week_start": "ukestart første ukedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stillhet"
+    },
+    "desktop_notifications": {
+      "title": "På denne datamaskinen",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} varsler om ny e-post så lenge den kjører. Slå det på under {page} hvis den skal kjøre videre i systemstatusfeltet når du lukker vinduet."
+    },
+    "push_unsupported": "Denne nettleseren kan ikke vise varsler når nettstedet er lukket.",
+    "backup_description_app": "Bruk de samme innstillingene på de andre enhetene dine.",
+    "sender_favicons": {
+      "label": "Bilder fra bedriftenes nettsteder",
+      "description": "Vis nettstedsikoner som profilbilder for bedriftsavsendere"
+    },
+    "privacy_push": {
+      "label": "Relé for varsler",
+      "description": "Varsler mens {appName} er lukket går gjennom et push-relé, som aldri ser e-posten din. Du slår dem av og på på siden {page}."
+    },
+    "reset": {
+      "message": "Setter alle innstillinger tilbake til slik de var fra start. E-post, filtre, autosvar og signaturer blir som de er.",
+      "sync_on": "De andre enhetene dine bruker de samme innstillingene, så de endres også.",
+      "sync_off": "De andre enhetene dine beholder innstillingene sine."
+    }
+  },
   "setup": {
     "title": "Oppsett av Bulwark Webmail",
     "subtitle": "Sett opp webmail-instansen din i nettleseren.",

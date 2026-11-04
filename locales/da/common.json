@@ -3498,6 +3498,48 @@
       "description": "Log ud af denne konto på denne enhed."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systembakke meddelelsesområde baggrund minimer til bakke tray",
+      "autostart": "autostart opstart start med Windows ved login",
+      "default_app": "standardmailapp standard e-mailprogram mailto mail-links",
+      "menu_bar": "menulinje menuer Alt-tast Filer Rediger Vis",
+      "updates": "opdateringer opdatering ny version beta kanal",
+      "devtools": "udviklerværktøjer devtools konsol inspicer F12 fejlfinding",
+      "taskbar": "proceslinje blink Dock opmærksomhed",
+      "quiet_hours": "stille timer forstyr ikke lydløs nat",
+      "telemetry": "brugsdata telemetri statistik analyse",
+      "crash": "nedbrudsrapporter fejlrapporter nedbrud",
+      "threads": "tråde samtaler samtalevisning threads",
+      "block_images": "bloker billeder eksterne billeder indlæs billeder",
+      "dark_mode": "mørk tilstand lys tilstand nattilstand dark mode",
+      "timezone": "tidszone timezone",
+      "reading_pane": "læserude eksempelrude opdelt visning",
+      "week_start": "ugestart første ugedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stilhed"
+    },
+    "desktop_notifications": {
+      "title": "På denne computer",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} giver besked om ny mail, så længe den kører. Slå det til under {page}, hvis den skal køre videre i systembakken, når du lukker vinduet."
+    },
+    "push_unsupported": "Denne browser kan ikke vise notifikationer, når websiden er lukket.",
+    "backup_description_app": "Brug de samme indstillinger på dine andre enheder.",
+    "sender_favicons": {
+      "label": "Billeder fra virksomheders websteder",
+      "description": "Vis hjemmesideikoner som profilbilleder for forretningsafsendere"
+    },
+    "privacy_push": {
+      "label": "Relæ til notifikationer",
+      "description": "Notifikationer mens {appName} er lukket går gennem et push-relæ, som aldrig ser din mail. Du slår dem til og fra på siden {page}."
+    },
+    "reset": {
+      "message": "Sæt alle indstillinger tilbage til, hvordan de var fra start. Din mail, dine filtre, dit autosvar og dine signaturer forbliver, som de er.",
+      "sync_on": "Dine andre enheder bruger de samme indstillinger, så de ændres også.",
+      "sync_off": "Dine andre enheder beholder deres indstillinger."
+    }
+  },
   "setup": {
     "title": "Opsætning af Bulwark Webmail",
     "subtitle": "Opsæt din webmailinstans i browseren.",

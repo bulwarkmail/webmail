@@ -3498,6 +3498,48 @@
       "description": "Esci da questo account su questo dispositivo."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "area di notifica barra di sistema background riduci a icona tray",
+      "autostart": "avvio automatico avvio avvia con Windows all’accesso",
+      "default_app": "app di posta predefinita programma di posta predefinito mailto link email",
+      "menu_bar": "barra dei menu menu tasto Alt File Modifica Visualizza",
+      "updates": "aggiornamenti aggiornamento nuova versione beta canale",
+      "devtools": "strumenti per sviluppatori devtools console ispeziona F12 debug",
+      "taskbar": "barra delle applicazioni lampeggia Dock attenzione",
+      "quiet_hours": "ore di silenzio non disturbare silenzioso muto notte",
+      "telemetry": "dati di utilizzo telemetria statistiche analisi",
+      "crash": "segnalazioni di arresto anomalo segnalazioni errori crash",
+      "threads": "thread conversazioni raggruppa",
+      "block_images": "blocca immagini immagini esterne carica immagini",
+      "dark_mode": "modalità scura modalità chiara modalità notte tema scuro",
+      "timezone": "fuso orario timezone",
+      "reading_pane": "riquadro di lettura riquadro anteprima vista divisa",
+      "week_start": "inizio settimana primo giorno lunedì domenica",
+      "empty_trash": "svuota il cestino cestino elementi eliminati",
+      "do_not_disturb": "ore di silenzio muto silenzio"
+    },
+    "desktop_notifications": {
+      "title": "Su questo computer",
+      "closed_label": "Con la finestra chiusa",
+      "closed_description": "{appName} ti avvisa della nuova posta finché è in esecuzione. Per farlo restare nell’area di notifica dopo aver chiuso la finestra, attivalo in {page}."
+    },
+    "push_unsupported": "Questo browser non può mostrare notifiche quando il sito è chiuso.",
+    "backup_description_app": "Usa le stesse impostazioni sugli altri dispositivi.",
+    "sender_favicons": {
+      "label": "Immagini dai siti delle aziende",
+      "description": "Mostra le icone dei siti web come immagini profilo per i mittenti aziendali"
+    },
+    "privacy_push": {
+      "label": "Relay per le notifiche",
+      "description": "Le notifiche con {appName} chiuso passano da un relay push, che non vede mai la tua posta. Le attivi o disattivi nella pagina {page}."
+    },
+    "reset": {
+      "message": "Riporta tutte le impostazioni a come erano all’inizio. Posta, filtri, risposta automatica e firme restano come sono.",
+      "sync_on": "Gli altri dispositivi usano le stesse impostazioni, quindi cambiano anche loro.",
+      "sync_off": "Gli altri dispositivi mantengono le loro impostazioni."
+    }
+  },
   "setup": {
     "title": "Configurazione di Bulwark Webmail",
     "subtitle": "Configura la tua istanza webmail dal browser.",

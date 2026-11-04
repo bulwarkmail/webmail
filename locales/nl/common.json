@@ -3498,6 +3498,48 @@
       "description": "Dit account op dit apparaat afmelden."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systeemvak meldingsgebied achtergrond minimaliseren tray",
+      "autostart": "automatisch starten opstarten starten met Windows bij aanmelden",
+      "default_app": "standaard mail-app standaard e-mailprogramma mailto e-maillinks",
+      "menu_bar": "menubalk menu’s Alt-toets Bestand Bewerken Beeld",
+      "updates": "updates bijwerken nieuwe versie bèta kanaal",
+      "devtools": "ontwikkelaarstools devtools console inspecteren F12 debuggen",
+      "taskbar": "taakbalk knipperen Dock aandacht",
+      "quiet_hours": "stille uren niet storen stil dempen nacht",
+      "telemetry": "gebruiksgegevens telemetrie statistieken analyse",
+      "crash": "crashrapporten foutrapporten crash",
+      "threads": "threads gesprekken groeperen conversatie",
+      "block_images": "afbeeldingen blokkeren externe afbeeldingen afbeeldingen laden",
+      "dark_mode": "donkere modus lichte modus nachtmodus dark mode",
+      "timezone": "tijdzone timezone",
+      "reading_pane": "leesvenster voorbeeldvenster gesplitste weergave",
+      "week_start": "begin van de week eerste dag maandag zondag",
+      "empty_trash": "prullenbak legen prullenbak verwijderde items",
+      "do_not_disturb": "stille uren dempen stilte"
+    },
+    "desktop_notifications": {
+      "title": "Op deze computer",
+      "closed_label": "Met het venster dicht",
+      "closed_description": "{appName} meldt nieuwe mail zolang het draait. Zet dit aan bij {page} als het na het sluiten van het venster in het systeemvak moet blijven draaien."
+    },
+    "push_unsupported": "Deze browser kan geen meldingen tonen als de website dicht is.",
+    "backup_description_app": "Gebruik dezelfde instellingen op uw andere apparaten.",
+    "sender_favicons": {
+      "label": "Afbeeldingen van bedrijfswebsites",
+      "description": "Toon websitepictogrammen als profielfoto's voor zakelijke afzenders"
+    },
+    "privacy_push": {
+      "label": "Relay voor meldingen",
+      "description": "Meldingen terwijl {appName} dicht is gaan via een push-relay, die uw mail nooit ziet. U zet ze aan of uit op de pagina {page}."
+    },
+    "reset": {
+      "message": "Zet alle instellingen terug zoals ze in het begin waren. Uw mail, filters, afwezigheidsbericht en handtekeningen blijven zoals ze zijn.",
+      "sync_on": "Uw andere apparaten gebruiken dezelfde instellingen, dus die veranderen ook.",
+      "sync_off": "Uw andere apparaten houden hun instellingen."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail instellen",
     "subtitle": "Stel je webmailinstantie in vanuit de browser.",
