@@ -294,7 +294,7 @@ export async function proxy(request: NextRequest) {
   // bundles via `new Function`. The untrusted route is null-origin
   // (sandbox="allow-scripts"); the privileged route is same-origin
   // (allow-same-origin) so a vetted plugin gets real WebCrypto + IndexedDB.
-  // Both get the SAME CSP relaxations (unsafe-eval, frame-ancestors 'self');
+  // Both get the SAME CSP relaxations (unsafe-eval);
   // the privileged route's extra power comes from the iframe sandbox flag the
   // host sets, gated by signature + admin approval, NOT from a wider CSP.
   const isSandboxPath =
@@ -310,8 +310,8 @@ export async function proxy(request: NextRequest) {
   // They also disappear entirely while the plugin feature is off, so a stock
   // install never serves a document carrying 'unsafe-eval'
   // (GHSA-96cx-gx36-3g79). Other destinations pass - `iframe` for the bridge,
-  // `empty` for the router's own RSC refetches - and cross-site framing is
-  // already blocked by the `frame-ancestors 'self'` below.
+  // `empty` for the router's own RSC refetches - and framing by any site
+  // outside the mail UI's frame-ancestors is blocked by the CSP below.
   if (isSandboxPath) {
     const pluginsEnabled = configManager.getPolicy().features?.pluginsEnabled === true;
     if (!pluginsEnabled || request.headers.get("sec-fetch-dest") === "document") {
@@ -360,10 +360,14 @@ export async function proxy(request: NextRequest) {
   // The admin dashboard and the setup wizard are never framed. The embedding
   // allowance is for the mail UI a portal wraps; a framed admin page is a
   // clickjacking target with nothing to gain from being embedded.
+  //
+  // The sandbox routes get the mail UI's list. The browser checks
+  // frame-ancestors against every ancestor, not just the parent, so with
+  // 'self' alone a portal that frames the mail UI blocks every plugin frame
+  // inside it (#1533). The parent is still the webmail itself: the runtime
+  // only takes messages from its parent posting from its own origin.
   const isAdminOrSetupPath = /^\/(?:admin|setup)(?:\/|$)/.test(pathname);
-  const frameAncestors = isSandboxPath
-    ? `'self'`
-    : isAdminOrSetupPath
+  const frameAncestors = isAdminOrSetupPath
     ? "'none'"
     : mailFrameAncestors(configManager.get<string>("allowedFrameAncestors", ""));
 
