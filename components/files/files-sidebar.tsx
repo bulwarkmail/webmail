@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { sharedFilePages, type FileResource } from "@/stores/file-store";
 import { getFileIconByName } from "@/components/files/file-icons";
 import { isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { AccountScopeLabel } from "@/components/layout/account-scope-label";
 
 const COLLAPSED_KEY = "files-sidebar-collapsed";
 const RECENT_LIMIT = 8;
@@ -286,7 +287,11 @@ export function FilesSidebar({
     <div className="flex flex-col h-full bg-secondary">
       {/* Same h-14 box as the mail sidebar's account switcher, so the apps line up. */}
       <div className="px-3 h-14 box-content border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
+        {/* Which account it shows, when there are several: the address, which switches. */}
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm font-semibold truncate">{t("title")}</span>
+          <AccountScopeLabel />
+        </div>
         {canCreate && (
           <IconButton
             ref={newButtonRef}

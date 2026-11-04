@@ -7552,6 +7552,18 @@
     "import_calendar": "Хуанли…",
     "import_contacts": "Харилцагчид…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Шинэчлэх",
+    "menu_today": "Өнөөдөр",
+    "menu_next_period": "Дараагийн үе",
+    "menu_previous_period": "Өмнөх үе",
+    "account_scope_label": "{address}-г харуулж байна. Бүртгэл солих",
+    "account_scope_menu": "Бүртгэл солих",
+    "merge_links": "Холбоосууд",
+    "merge_photo": "Зураг",
+    "merge_kept": "Хадгалагдана",
+    "import_show": "Харуулах"
+  },
   "desktopEdit": {
     "edit": "Засах",
     "edit_named": "{name} засах",

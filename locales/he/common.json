@@ -7553,6 +7553,18 @@
     "import_calendar": "לוח שנה…",
     "import_contacts": "אנשי קשר…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "רענון",
+    "menu_today": "היום",
+    "menu_next_period": "התקופה הבאה",
+    "menu_previous_period": "התקופה הקודמת",
+    "account_scope_label": "מוצג {address}. החלפת חשבון",
+    "account_scope_menu": "החלפת חשבון",
+    "merge_links": "קישורים",
+    "merge_photo": "תמונה",
+    "merge_kept": "נשמר",
+    "import_show": "הצגה"
+  },
   "desktopEdit": {
     "edit": "עריכה",
     "edit_named": "עריכת {name}",

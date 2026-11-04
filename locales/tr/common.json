@@ -7552,6 +7552,18 @@
     "import_calendar": "Takvim…",
     "import_contacts": "Kişiler…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Yenile",
+    "menu_today": "Bugün",
+    "menu_next_period": "Sonraki dönem",
+    "menu_previous_period": "Önceki dönem",
+    "account_scope_label": "{address} gösteriliyor. Hesap değiştir",
+    "account_scope_menu": "Hesap değiştir",
+    "merge_links": "Bağlantılar",
+    "merge_photo": "Fotoğraf",
+    "merge_kept": "Korunur",
+    "import_show": "Göster"
+  },
   "desktopEdit": {
     "edit": "Düzenle",
     "edit_named": "{name} dosyasını düzenle",

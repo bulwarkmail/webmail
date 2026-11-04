@@ -7552,6 +7552,18 @@
     "import_calendar": "Kalendář…",
     "import_contacts": "Kontakty…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Obnovit",
+    "menu_today": "Dnes",
+    "menu_next_period": "Další období",
+    "menu_previous_period": "Předchozí období",
+    "account_scope_label": "Zobrazuje se {address}. Přepnout účet",
+    "account_scope_menu": "Přepnout účet",
+    "merge_links": "Odkazy",
+    "merge_photo": "Fotka",
+    "merge_kept": "Zůstane",
+    "import_show": "Zobrazit"
+  },
   "desktopEdit": {
     "edit": "Upravit",
     "edit_named": "Upravit {name}",

@@ -1714,7 +1714,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
     "import-calendar": () => { if (!demoMode) setShowImportModal(true); },
   }, true);
-  // Its View menu's Day, Week, Month and Agenda, and Edit > Search events.
+  // Its View menu's Day, Week, Month and Agenda, Go's Today and periods, and Edit > Search events.
   const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
   useDesktopCommands({
     "view.calendar.day": viewFromMenu("day"),
@@ -1722,7 +1722,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "view.calendar.month": viewFromMenu("month"),
     "view.calendar.agenda": viewFromMenu("agenda"),
     "edit.search": openSearch,
+    // Go > Today, Next period and Previous period: the toolbar's arrows and T.
+    "go.today": () => { leaveSearch(); goToToday(); },
+    "go.nextPeriod": () => { leaveSearch(); navigateNext(); },
+    "go.previousPeriod": () => { leaveSearch(); navigatePrev(); },
   }, {
+    "go.today": normalizedViewMode !== "tasks",
+    "go.nextPeriod": normalizedViewMode !== "tasks",
+    "go.previousPeriod": normalizedViewMode !== "tasks",
     "view.calendar.day": { enabled: true, checked: normalizedViewMode === "day" },
     "view.calendar.week": { enabled: true, checked: normalizedViewMode === "week" },
     "view.calendar.month": { enabled: true, checked: normalizedViewMode === "month" },

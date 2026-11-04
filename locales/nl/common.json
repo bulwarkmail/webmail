@@ -7552,6 +7552,18 @@
     "import_calendar": "Agenda…",
     "import_contacts": "Contacten…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Vernieuwen",
+    "menu_today": "Vandaag",
+    "menu_next_period": "Volgende periode",
+    "menu_previous_period": "Vorige periode",
+    "account_scope_label": "Toont {address}. Ander account kiezen",
+    "account_scope_menu": "Ander account kiezen",
+    "merge_links": "Links",
+    "merge_photo": "Foto",
+    "merge_kept": "Blijft bewaard",
+    "import_show": "Tonen"
+  },
   "desktopEdit": {
     "edit": "Bewerken",
     "edit_named": "{name} bewerken",

@@ -7564,6 +7564,18 @@
     "import_calendar": "Lịch…",
     "import_contacts": "Danh bạ…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Làm mới",
+    "menu_today": "Hôm nay",
+    "menu_next_period": "Khoảng thời gian sau",
+    "menu_previous_period": "Khoảng thời gian trước",
+    "account_scope_label": "Đang hiển thị {address}. Chuyển tài khoản",
+    "account_scope_menu": "Chuyển tài khoản",
+    "merge_links": "Liên kết",
+    "merge_photo": "Ảnh",
+    "merge_kept": "Được giữ lại",
+    "import_show": "Hiển thị"
+  },
   "desktopEdit": {
     "edit": "Chỉnh sửa",
     "edit_named": "Chỉnh sửa {name}",

@@ -7552,6 +7552,18 @@
     "import_calendar": "Kalender…",
     "import_contacts": "Kontaktid…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Värskenda",
+    "menu_today": "Täna",
+    "menu_next_period": "Järgmine periood",
+    "menu_previous_period": "Eelmine periood",
+    "account_scope_label": "Kuvatakse {address}. Vaheta kontot",
+    "account_scope_menu": "Vaheta kontot",
+    "merge_links": "Lingid",
+    "merge_photo": "Foto",
+    "merge_kept": "Jääb alles",
+    "import_show": "Näita"
+  },
   "desktopEdit": {
     "edit": "Muuda",
     "edit_named": "Muuda faili {name}",

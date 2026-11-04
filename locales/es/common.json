@@ -7552,6 +7552,18 @@
     "import_calendar": "Calendario…",
     "import_contacts": "Contactos…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualizar",
+    "menu_today": "Hoy",
+    "menu_next_period": "Periodo siguiente",
+    "menu_previous_period": "Periodo anterior",
+    "account_scope_label": "Se muestra {address}. Cambiar de cuenta",
+    "account_scope_menu": "Cambiar de cuenta",
+    "merge_links": "Enlaces",
+    "merge_photo": "Foto",
+    "merge_kept": "Se conserva",
+    "import_show": "Mostrar"
+  },
   "desktopEdit": {
     "edit": "Editar",
     "edit_named": "Editar {name}",

@@ -30,6 +30,7 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => config }));
 
 import { CalendarApp } from '../calendar-app';
 import { requestAppCommand } from '@/lib/app-commands';
+import { mergedDesktopState, resetDesktopCommands, runDesktopCommand } from '@/lib/desktop/commands';
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -82,5 +83,34 @@ describe('Calendar in the desktop menus', () => {
     render(<CalendarApp />);
     act(() => { requestAppCommand('import-calendar'); });
     expect(screen.queryByRole('dialog', { name: 'title' })).toBeNull();
+  });
+});
+
+// pim-p2-9 (2026-11-04): the desktop app's Go menu in Calendar moves through time
+// (Today, Next period, Previous period) instead of offering Mail's folders.
+describe('Calendar in the desktop Go menu', () => {
+  beforeEach(() => {
+    resetDesktopCommands();
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: vi.fn(), onCommand: vi.fn() } };
+  });
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    resetDesktopCommands();
+  });
+
+  it('offers Today, Next period and Previous period, and each moves the week', () => {
+    render(<CalendarApp />);
+    const state = mergedDesktopState();
+    expect(state['go.today']).toBe(true);
+    expect(state['go.nextPeriod']).toBe(true);
+    expect(state['go.previousPeriod']).toBe(true);
+    const day = () => useCalendarStore.getState().selectedDate.toDateString();
+    act(() => { expect(runDesktopCommand('go.nextPeriod')).toBe(true); });
+    expect(day()).toBe(new Date(2026, 9, 19).toDateString());
+    act(() => { runDesktopCommand('go.previousPeriod'); });
+    act(() => { runDesktopCommand('go.previousPeriod'); });
+    expect(day()).toBe(new Date(2026, 9, 5).toDateString());
+    act(() => { runDesktopCommand('go.today'); });
+    expect(day()).toBe(new Date().toDateString());
   });
 });

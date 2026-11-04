@@ -7552,6 +7552,18 @@
     "import_calendar": "行事曆…",
     "import_contacts": "聯絡人…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "重新整理",
+    "menu_today": "今天",
+    "menu_next_period": "下一個期間",
+    "menu_previous_period": "上一個期間",
+    "account_scope_label": "正在顯示 {address}。切換帳號",
+    "account_scope_menu": "切換帳號",
+    "merge_links": "連結",
+    "merge_photo": "相片",
+    "merge_kept": "保留",
+    "import_show": "顯示"
+  },
   "desktopEdit": {
     "edit": "編輯",
     "edit_named": "編輯 {name}",

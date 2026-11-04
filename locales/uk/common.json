@@ -7552,6 +7552,18 @@
     "import_calendar": "Календар…",
     "import_contacts": "Контакти…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Оновити",
+    "menu_today": "Сьогодні",
+    "menu_next_period": "Наступний період",
+    "menu_previous_period": "Попередній період",
+    "account_scope_label": "Показано {address}. Змінити обліковий запис",
+    "account_scope_menu": "Змінити обліковий запис",
+    "merge_links": "Посилання",
+    "merge_photo": "Фото",
+    "merge_kept": "Залишиться",
+    "import_show": "Показати"
+  },
   "desktopEdit": {
     "edit": "Редагувати",
     "edit_named": "Редагувати {name}",

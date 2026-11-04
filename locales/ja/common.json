@@ -7552,6 +7552,18 @@
     "import_calendar": "カレンダー…",
     "import_contacts": "連絡先…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "更新",
+    "menu_today": "今日",
+    "menu_next_period": "次の期間",
+    "menu_previous_period": "前の期間",
+    "account_scope_label": "{address} を表示中。アカウントを切り替え",
+    "account_scope_menu": "アカウントを切り替え",
+    "merge_links": "リンク",
+    "merge_photo": "写真",
+    "merge_kept": "残ります",
+    "import_show": "表示"
+  },
   "desktopEdit": {
     "edit": "編集",
     "edit_named": "{name} を編集",

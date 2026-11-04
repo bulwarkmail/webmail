@@ -7552,6 +7552,18 @@
     "import_calendar": "日历…",
     "import_contacts": "联系人…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "刷新",
+    "menu_today": "今天",
+    "menu_next_period": "下一时段",
+    "menu_previous_period": "上一时段",
+    "account_scope_label": "正在显示 {address}。切换账户",
+    "account_scope_menu": "切换账户",
+    "merge_links": "链接",
+    "merge_photo": "照片",
+    "merge_kept": "保留",
+    "import_show": "显示"
+  },
   "desktopEdit": {
     "edit": "编辑",
     "edit_named": "编辑 {name}",

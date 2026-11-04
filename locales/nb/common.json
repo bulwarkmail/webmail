@@ -7552,6 +7552,18 @@
     "import_calendar": "Kalender…",
     "import_contacts": "Kontakter…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Oppdater",
+    "menu_today": "I dag",
+    "menu_next_period": "Neste periode",
+    "menu_previous_period": "Forrige periode",
+    "account_scope_label": "Viser {address}. Bytt konto",
+    "account_scope_menu": "Bytt konto",
+    "merge_links": "Lenker",
+    "merge_photo": "Bilde",
+    "merge_kept": "Beholdes",
+    "import_show": "Vis"
+  },
   "desktopEdit": {
     "edit": "Rediger",
     "edit_named": "Rediger {name}",

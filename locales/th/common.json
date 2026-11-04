@@ -7560,6 +7560,18 @@
     "import_calendar": "ปฏิทิน…",
     "import_contacts": "ผู้ติดต่อ…"
   },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "รีเฟรช",
+    "menu_today": "วันนี้",
+    "menu_next_period": "ช่วงถัดไป",
+    "menu_previous_period": "ช่วงก่อนหน้า",
+    "account_scope_label": "กำลังแสดง {address} สลับบัญชี",
+    "account_scope_menu": "สลับบัญชี",
+    "merge_links": "ลิงก์",
+    "merge_photo": "รูปภาพ",
+    "merge_kept": "เก็บไว้",
+    "import_show": "แสดง"
+  },
   "desktopEdit": {
     "edit": "แก้ไข",
     "edit_named": "แก้ไข {name}",
