@@ -67,9 +67,9 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({ useProMultiAccountI
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
-const device = vi.hoisted(() => ({ isMobile: true, isTablet: false }));
+const device = vi.hoisted(() => ({ isMobile: true, isCompact: false }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: device.isMobile, isTablet: device.isTablet, isDesktop: !device.isMobile && !device.isTablet }),
+  useDeviceDetection: () => ({ isMobile: device.isMobile, isCompact: device.isCompact, isDesktop: !device.isMobile }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -112,13 +112,13 @@ beforeEach(() => {
 });
 afterEach(() => {
   device.isMobile = true;
-  device.isTablet = false;
+  device.isCompact = false;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
-/** On a phone only one of list and reading pane shows; the other gets max-md:hidden. */
-const listHidden = () => screen.getByText('message list').closest('.max-md\\:hidden') !== null;
+/** On a phone only one of list and reading pane shows; the other gets max-desk:hidden. */
+const listHidden = () => screen.getByText('message list').closest('.max-desk\\:hidden') !== null;
 
 describe('Mail after the tour on a phone', () => {
   it('shows the list when it opens with the reader left on and nothing to read', () => {
@@ -138,16 +138,17 @@ describe('Mail after the tour on a phone', () => {
     expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
   });
 
-  // mail-27: a tablet drew the header's ⋮ and the list's ⋮ one above the
-  // other, with the same entries; the header's one has them all now.
-  it('draws the list ⋮ on a desktop but not on a tablet, under the header ⋮', () => {
+  // mail-27 kept the tablet from drawing the header's ⋮ and the list's ⋮ one
+  // above the other. The tablet widths are a compact desktop now, which has
+  // no phone header: the list's ⋮ is the only one there.
+  it('draws the list ⋮ on a desktop, compact or full', () => {
     device.isMobile = false;
     const view = render(<MailApp />);
     expect(screen.queryByTestId('mail-folder-menu')).not.toBeNull();
 
-    device.isTablet = true;
+    device.isCompact = true;
     view.rerender(<MailApp />);
-    expect(screen.queryByTestId('mail-folder-menu')).toBeNull();
+    expect(screen.queryByTestId('mail-folder-menu')).not.toBeNull();
   });
 
   it('keeps an open composer in view when the window narrows to a phone', async () => {

@@ -5,17 +5,18 @@ const KEY = 'returnToListAfterAction';
 
 /**
  * Whether the message list and the reading pane are on screen side by side:
- * the split and horizontal layouts on a desktop. Phones, tablets, the focused
- * layout, Simple mode and Mountain View put the message in the list's place.
+ * the split and horizontal layouts on a desktop. Phones, the focused layout,
+ * Simple mode and Mountain View put the message in the list's place, and so
+ * does the split layout in a window too narrow for both (pass the layout as
+ * drawn, useDrawnMailLayout).
  */
 export function listBesideReader(opts: {
   mailLayout: MailLayout;
   interfaceLayout: InterfaceLayout;
   simpleMode?: boolean;
   isMobile: boolean;
-  isTablet: boolean;
 }): boolean {
-  if (opts.isMobile || opts.isTablet) return false;
+  if (opts.isMobile) return false;
   return effectiveMailLayout(opts.mailLayout, opts.interfaceLayout, opts.simpleMode) !== 'focus';
 }
 

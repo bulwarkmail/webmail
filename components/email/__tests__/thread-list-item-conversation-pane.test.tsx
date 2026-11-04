@@ -52,7 +52,7 @@ function renderRow(conversationInReader: boolean) {
 }
 
 beforeEach(() => {
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   useSettingsStore.setState({
     emailKeywords: [...DEFAULT_KEYWORDS], showPreview: true, mailLayout: 'split',
     interfaceLayout: 'default', listColumns: false,

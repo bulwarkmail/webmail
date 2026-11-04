@@ -8,7 +8,7 @@
  */
 
 /* Mountain View shell. Its geometry only applies on desktop, so pair it with
-   lg: in markup (lg:mv:hidden), except the phone bottom bar, which follows
+   desk: in markup (desk:mv:hidden), except the phone bottom bar, which follows
    the layout at every width. */
 @custom-variant mv (&:where([data-interface-layout="mountain-view"] *));
 
@@ -16,6 +16,19 @@
 @custom-variant boot-split (&:where([data-boot-mail-layout="split"] *));
 @custom-variant boot-horizontal (&:where([data-boot-mail-layout="horizontal"] *));
 @custom-variant boot-focus (&:where([data-boot-mail-layout="focus"] *));
+/* One pane at a time: the focused layout, and the split layout in a window
+   too narrow for the list and the reader side by side (SPLIT_PANES_MIN,
+   useDrawnMailLayout). The rows keep the split layout's shape (boot-focus). */
+@custom-variant boot-onepane {
+  &:where([data-boot-mail-layout="focus"] *) {
+    @slot;
+  }
+  @media (width < 52.5rem) {
+    &:where([data-boot-mail-layout="split"] *) {
+      @slot;
+    }
+  }
+}
 
 /* A message, thread, contact, settings page or admin page is open. */
 @custom-variant boot-open (&:where([data-boot-pane] *));

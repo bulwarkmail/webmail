@@ -157,10 +157,11 @@ describe('plugin UI kit components', () => {
   });
 
   it('makes sidebar rows as tall as folder rows on touch screens', () => {
-    // The page sets --touch-row-min-h to 44px below lg, where folder rows
-    // are max-lg:min-h-[44px]; the frame can't see the page's width itself.
-    expect(source('components/layout/sidebar.tsx')).toContain('max-lg:min-h-[44px]');
-    expect(source('app/globals.css')).toMatch(/@media \(width < 64rem\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
+    // The page sets --touch-row-min-h to 44px where folder rows are
+    // tap:min-h-[44px] (phones, touch screens below the full desktop); the
+    // frame can't see the page's width itself.
+    expect(source('components/layout/sidebar.tsx')).toContain('tap:min-h-[44px]');
+    expect(source('app/globals.css')).toMatch(/@media \(width < 37\.5rem\), \(width < 64rem\) and \(pointer: coarse\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
     render(<kit.SidebarRow label="Anna" onClick={() => {}} />);
     expect(screen.getByRole('button', { name: 'Anna' }).style.minHeight).toBe('var(--touch-row-min-h, 0px)');
   });

@@ -205,7 +205,7 @@ export function ThreadConversationView({
   const t = useTranslations();
   const externalContent = useConversationExternalContent();
   const emailIdList = emails.map((email) => email.id).join(',');
-  const { isMobile: summaryOnPhone, isTablet: summaryOnTablet } = useDeviceDetection();
+  const { isMobile: summaryOnPhone, isCompact: summaryOnTablet } = useDeviceDetection();
   const threadSummaryProps = useMemo(
     () => ({ threadId: thread.latestEmail.threadId ?? null, emailIds: emailIdList ? emailIdList.split(',') : [], deviceType: summaryOnPhone ? 'mobile' : summaryOnTablet ? 'tablet' : 'desktop' }),
     [thread.latestEmail.threadId, emailIdList, summaryOnPhone, summaryOnTablet],
@@ -336,8 +336,8 @@ function useConversationPluginProps(email: Email) {
   const belowSubjectOffers = usePluginSlotOffers('reader-below-subject').length;
   const bannerOffers = usePluginSlotOffers('email-banner').length;
   const wantsView = headerOffers + belowSubjectOffers + bannerOffers > 0;
-  const { isMobile, isTablet } = useDeviceDetection();
-  const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+  const { isMobile, isCompact } = useDeviceDetection();
+  const deviceType = isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop';
   const emailProps = useMemo(() => ({ email: wantsView ? emailToReadView(email) : null, deviceType }), [email, wantsView, deviceType]);
   const idProps = useMemo(() => ({ emailId: email.id }), [email.id]);
   const actionTarget = useMessageActionTarget(email);

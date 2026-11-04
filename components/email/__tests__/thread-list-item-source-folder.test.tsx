@@ -67,7 +67,7 @@ const conversation = () => [
 
 describe('ThreadListItem folder chip in search results (#1172)', () => {
   beforeEach(() => {
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
@@ -165,7 +165,7 @@ describe('ThreadListItem sender line in a narrow list', () => {
   };
 
   beforeEach(() => {
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split', interfaceLayout: 'default', showColorNames: false });
     useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox', isUnifiedView: false, selectedKeyword: null, searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS }, searchMailboxId: 'archive' });
   });

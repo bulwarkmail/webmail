@@ -69,11 +69,14 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({ useProMultiAccountI
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
+// A compact desktop: rail and folders beside the list, the composer in the pane.
+const device = vi.hoisted(() => ({ current: { isMobile: false, isCompact: true, isDesktop: true } }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: false, isTablet: true, isDesktop: false }),
+  useDeviceDetection: () => device.current,
   useMediaQuery: () => false,
-  useIsDesktop: () => false,
+  useIsDesktop: () => true,
   atLeast: (px: number) => `(width >= ${px}px)`,
+  PHONE_BELOW: 600,
 }));
 vi.mock('@/lib/push-bindings', () => ({ reconcilePushBindings: () => {}, releasePushBindings: () => {} }));
 vi.mock('@/components/email/email-list', () => ({ EmailList: () => <div>message list</div> }));
@@ -208,8 +211,11 @@ describe('a composer coming back from its own window', () => {
     expect(seen.sourceEmailId).toBe('a');
   });
 
+  // Mountain View docks the composer of a desktop in its own window; on a
+  // phone it fills the reading pane as in the default layout.
   it('under Mountain View too', async () => {
     useSettingsStore.setState({ interfaceLayout: 'mountain-view' } as never);
+    device.current = { isMobile: true, isCompact: false, isDesktop: false };
     render(<MailApp />);
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
     const answer = comeBack('r1');
@@ -217,6 +223,7 @@ describe('a composer coming back from its own window', () => {
     await waitFor(() => expect(answer).toHaveBeenCalledWith('shown'));
     expect(seen.sourceEmailId).toBe('a');
     useSettingsStore.setState({ interfaceLayout: 'default' } as never);
+    device.current = { isMobile: false, isCompact: true, isDesktop: true };
   });
 
   it('under Pro it becomes a tab that answers its own message, not the one selected in the list', async () => {

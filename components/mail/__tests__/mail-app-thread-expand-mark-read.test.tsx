@@ -12,8 +12,9 @@ import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 // The `x` shortcut expands the selected conversation and marks it read. It has
 // to follow markAsReadDelay like the reading pane, and a delayed mark must not
 // land once the user has moved on (`j`/`k`) to a message outside it. The
-// default layout shows the conversation in the reading pane instead, so this
-// runs where the list still unfolds it: Mountain View on a tablet.
+// default layout shows the conversation in the reading pane instead, and
+// Mountain View's desktop shell has Gmail's `x` (select), so this runs where
+// the list still unfolds it: Mountain View on a phone with a keyboard.
 
 vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => null }));
 vi.mock('@/components/email/email-viewer', () => ({ EmailViewer: () => null }));
@@ -34,10 +35,10 @@ vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMa
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: false, isTablet: true, isDesktop: false }),
+  useDeviceDetection: () => ({ isMobile: true, isCompact: false, isDesktop: false }),
   useMediaQuery: () => false,
-  useIsDesktop: () => true,
-  useIsMobile: () => false,
+  useIsDesktop: () => false,
+  useIsMobile: () => true,
 }));
 vi.mock('@/lib/push-bindings', () => ({ reconcilePushBindings: () => {}, releasePushBindings: () => {} }));
 vi.mock('@/components/email/email-list', () => ({ EmailList: () => <div>message list</div> }));

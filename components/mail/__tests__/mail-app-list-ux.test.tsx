@@ -14,7 +14,7 @@ import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 // and, with messages selected, the selection's count and buttons (mail-10).
 // The New folder dialogs are titled without the menu item's "…" (mail-29).
 
-const device = vi.hoisted(() => ({ current: { isMobile: false, isTablet: false, isDesktop: true } }));
+const device = vi.hoisted(() => ({ current: { isMobile: false, isCompact: false, isDesktop: true } }));
 const listProps = vi.hoisted(() => ({ host: undefined as HTMLElement | null | undefined }));
 
 vi.mock('@/hooks/use-media-query', () => ({
@@ -71,7 +71,7 @@ const inbox = { id: 'inbox', name: 'Inbox', role: 'inbox', totalEmails: 1, unrea
 const message = { id: 'm1', threadId: 't-m1', subject: 'm1', receivedAt: '2026-10-31T10:00:00Z', keywords: { $seen: true }, mailboxIds: { inbox: true } } as unknown as Email;
 
 beforeEach(() => {
-  device.current = { isMobile: false, isTablet: false, isDesktop: true };
+  device.current = { isMobile: false, isCompact: false, isDesktop: true };
   listProps.host = undefined;
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Unexpected network request')));
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
@@ -87,7 +87,7 @@ beforeEach(() => {
     getAllConnectedClients: () => new Map([['login-a', client]]) as never,
   });
   useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split' } as never);
-  useUIStore.setState({ activeView: 'list', tabletListVisible: true, sidebarOpen: false });
+  useUIStore.setState({ activeView: 'list', sidebarOpen: false });
   useEmailStore.setState({
     emails: [message], selectedEmail: null, selectedMailbox: 'inbox', selectedKeyword: null, mailboxes: [inbox],
     viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false, unifiedRole: null,
@@ -121,7 +121,7 @@ describe('the first-run tips', () => {
   });
 
   it('stay above the list on a phone', () => {
-    device.current = { isMobile: true, isTablet: false, isDesktop: false };
+    device.current = { isMobile: true, isCompact: false, isDesktop: false };
     render(<MailApp />);
     expect(screen.getByTestId('welcome-list')).toBeTruthy();
     expect(screen.queryByTestId('welcome-pane')).toBeNull();

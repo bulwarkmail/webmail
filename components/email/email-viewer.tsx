@@ -130,11 +130,10 @@ import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
 import { useShallow } from "zustand/react/shallow";
-import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
+import { useDrawnMailLayout } from "@/hooks/use-effective-mail-layout";
 import { pluginRenderKey } from "@/hooks/use-plugin-rendered-body";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import { useExternalRecipientConfirmStore } from "@/stores/external-recipient-confirm-store";
-import { useUIStore } from "@/stores/ui-store";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
 import { rescheduleFailureToast, sendFailureMessage } from "@/lib/send-failure-message";
@@ -1452,7 +1451,7 @@ export function EmailViewer({
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
   const showToolbarLabelsSetting = useSettingsStore((state) => state.showToolbarLabels);
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
-  const mailLayout = useEffectiveMailLayout();
+  const mailLayout = useDrawnMailLayout();
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
   const readReceiptResponse = useSettingsStore((state) => state.readReceiptResponse);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
@@ -1503,8 +1502,7 @@ export function EmailViewer({
   const canCancelScheduled = isScheduled && email?.scheduledUndoStatus === 'pending';
 
 
-  // Tablet list visibility
-  const { isTablet, isMobile } = useDeviceDetection();
+  const { isCompact, isMobile } = useDeviceDetection();
   // The top toolbar leaves the message column on desktops and tablets, so
   // it runs over the side panels to the right edge.
   const liftToolbar = !isMobile;
@@ -1525,8 +1523,8 @@ export function EmailViewer({
   const mvAfter = mvOpenIndex >= 0 ? mvConversation!.slice(mvOpenIndex + 1) : [];
   const mvConversationIds = mvOpenIndex >= 0 ? mvConversation!.map((e) => e.id).join(',') : '';
   const threadSummaryProps = useMemo(
-    () => ({ threadId: email?.threadId ?? null, emailIds: mvConversationIds ? mvConversationIds.split(',') : [], deviceType: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop' }),
-    [email?.threadId, mvConversationIds, isMobile, isTablet],
+    () => ({ threadId: email?.threadId ?? null, emailIds: mvConversationIds ? mvConversationIds.split(',') : [], deviceType: isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop' }),
+    [email?.threadId, mvConversationIds, isMobile, isCompact],
   );
   // Mountain View: which other messages of the conversation are unfolded. A
   // conversation opens with its unread messages unfolded, as Gmail does, so
@@ -1594,7 +1592,6 @@ export function EmailViewer({
   // `sm:hidden` must not be trusted - the viewport may be desktop-sized
   // while the pane is phone-sized.
   const isPaneScoped = useIsPaneScoped();
-  const { tabletListVisible } = useUIStore(useShallow((state) => ({ tabletListVisible: state.tabletListVisible })));
   const { identities, client, isDemoMode, activeAccountId } = useAuthStore(useShallow((state) => ({ identities: state.identities, client: state.client, isDemoMode: state.isDemoMode, activeAccountId: state.activeAccountId })));
   const activeAccount = useAccountStore((s) => s.accounts.find((a) => a.id === activeAccountId));
   // The standard mail UI supplies message routing for preview/download,
@@ -1909,7 +1906,7 @@ export function EmailViewer({
   );
   // Reader frames learn the layout: the bar a plugin shows on phones has no
   // place next to a side panel on a desktop.
-  const pluginDeviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+  const pluginDeviceType = isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop';
   const pluginEmailProps = useMemo(() => ({ email: pluginEmailView, deviceType: pluginDeviceType }), [pluginEmailView, pluginDeviceType]);
   // The text selected in the body, for the side panel (a plugin working on
   // what the user highlights) and the right-click menu on it. Reset per
@@ -2089,7 +2086,7 @@ export function EmailViewer({
 
     // Everything the decision depends on that can be read without a layout.
     const layoutKey = (items: HTMLElement[]) => [
-      toolbarWidthRef.current, toolbarPosition, showToolbarLabels, isTablet, tabletListVisible,
+      toolbarWidthRef.current, toolbarPosition, showToolbarLabels, isFocusedMailLayout,
       ...items.map((item) => `${item.dataset.overflowPriority}:${item.className}:${item.textContent}`),
     ].join('|');
 
@@ -2223,8 +2220,7 @@ export function EmailViewer({
     emailKeywords.length,
     currentColor,
     isInJunkFolder,
-    isTablet,
-    tabletListVisible,
+    isFocusedMailLayout,
     onBack,
     onMarkAsSpam,
     onUndoSpam,
@@ -4369,7 +4365,7 @@ ${printWatermark ? printWatermark.html : ''}
     <>
       {/* Left: Reply actions */}
       <div className={cn("flex items-center gap-0", showBackButton ? "sm:gap-1" : "sm:gap-0.5")}>
-        {showBackButton && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
+        {showBackButton && (isMobile || isFocusedMailLayout) && onBack && (
           <Button
             variant="ghost"
             size="icon"
@@ -4831,7 +4827,7 @@ ${printWatermark ? printWatermark.html : ''}
       className={cn(
         "bg-background flex-shrink-0",
         !mvViewer && "border-b border-border",
-        "max-lg:sticky max-lg:top-0 max-lg:z-10"
+        "max-desk:sticky max-desk:top-0 max-desk:z-10"
       )}
     >
       <div className={cn("px-2 sm:px-4 lg:px-6 flex items-center", mvViewer ? "h-12 lg:ps-4" : "h-14")}>
@@ -4963,14 +4959,14 @@ ${printWatermark ? printWatermark.html : ''}
       <div className={cn(
         "bg-background",
         !mvViewer && "border-b border-border",
-        toolbarPosition === 'below-subject' && "max-lg:sticky max-lg:top-0 max-lg:z-10"
+        toolbarPosition === 'below-subject' && "max-desk:sticky max-desk:top-0 max-desk:z-10"
       )}>
         {/* Mountain View lines the subject up with the sender's name below it. */}
         <div className={cn("px-4 lg:px-6", mvViewer && "lg:ps-[80px] pt-3 pb-1")} style={mvViewer ? undefined : { paddingBlock: 'var(--density-header-py)' }}>
           {/* In a narrow pane the date takes its own line instead of squeezing the subject to a column. */}
           <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1 lg:gap-x-4">
             {/* Back button (for below-subject mode on tablet) */}
-            {toolbarPosition === 'below-subject' && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
+            {toolbarPosition === 'below-subject' && (isMobile || isFocusedMailLayout) && onBack && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -5042,7 +5038,7 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
             {/* Mountain View: print and full screen at the end of the subject line. */}
             {mvViewer && (
-              <div className="hidden lg:flex items-center flex-shrink-0 -me-2" data-mv-subject-actions="">
+              <div className="hidden desk:flex items-center flex-shrink-0 -me-2" data-mv-subject-actions="">
                 {!devices.noPrint && (
                 <button
                   type="button"
@@ -5137,7 +5133,7 @@ ${printWatermark ? printWatermark.html : ''}
       ) : (<>
       {/* === SENDER INFO (Desktop) === */}
       <div
-        className={cn("hidden lg:block bg-background px-6", !mvViewer && "border-b border-border", (mvViewer || conversationPane) && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
+        className={cn("hidden desk:block bg-background px-6", !mvViewer && "border-b border-border", (mvViewer || conversationPane) && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
         style={mvViewer ? { paddingBlock: '0.75rem 0.5rem' } : { paddingBlock: 'var(--density-header-py)' }}
         data-mv-open-header={mvOpenIndex >= 0 ? "" : undefined}
         onClick={mvOpenIndex >= 0 ? (e) => {
@@ -5328,7 +5324,7 @@ ${printWatermark ? printWatermark.html : ''}
 
         {/* Mobile/Tablet Sender Info - scrolls with content */}
         <div
-          className={cn("lg:hidden bg-background border-b border-border px-4", mvOpenIndex >= 0 && "cursor-pointer", mvOpenIndex >= 0 && mvBefore.length > 0 && "border-t")}
+          className={cn("desk:hidden bg-background border-b border-border px-4", mvOpenIndex >= 0 && "cursor-pointer", mvOpenIndex >= 0 && mvBefore.length > 0 && "border-t")}
           style={{ paddingBlock: 'var(--density-header-py)' }}
           data-mv-open-header-mobile={mvOpenIndex >= 0 ? "" : undefined}
           onClick={mvOpenIndex >= 0 ? (e) => {

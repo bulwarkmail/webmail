@@ -61,8 +61,7 @@ import { isAppShortcutBlocked, isEventInside } from "@/lib/keyboard";
 import { Mailbox } from "@/lib/jmap/types";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useLongPress } from "@/hooks/use-long-press";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { usePaneSize } from "@/hooks/use-pane-size";
+import { useDeviceDetection, useMediaQuery } from "@/hooks/use-media-query";
 import { IconButton } from "@/components/ui/icon-button";
 import { MailboxContextMenu, type MailboxContextTarget, type MailboxNotificationActions } from "./mailbox-context-menu";
 import { useAccountStore } from '@/stores/account-store';
@@ -73,7 +72,7 @@ import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useMailboxDrop } from "@/hooks/use-mailbox-drop";
 import { MAILBOX_DRAG_MIME } from "@/components/pro/pro-shell-drop";
 import { useTagDrop } from "@/hooks/use-tag-drop";
-import { useUIStore } from "@/stores/ui-store";
+import { sidebarFolded, useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { unifiedLoadProgress } from "@/lib/unified-mailbox";
 import { useVacationStore } from "@/stores/vacation-store";
@@ -441,7 +440,7 @@ function SidebarRow({
       data-has-unread={(unread ?? 0) > 0 && testRole !== 'drafts' ? '' : undefined}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
-        "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
+        "group w-full flex items-center tap:min-h-[44px] text-sm transition-colors duration-150",
         isCollapsed ? "justify-center px-1" : "pe-2",
         openFromRow && "cursor-pointer select-none",
         isVirtual
@@ -1135,7 +1134,11 @@ function SidebarImpl({
   mvShell = false,
 }: SidebarProps) {
   const router = useRouter();
-  const { sidebarCollapsed, toggleSidebarCollapsed } = useUIStore(useShallow((state) => ({ sidebarCollapsed: state.sidebarCollapsed, toggleSidebarCollapsed: state.toggleSidebarCollapsed })));
+  // The rail is a desktop thing. Below that the sidebar is a drawer, opened to
+  // read the folder names, whatever the collapse button last said on a wider
+  // window. A compact desktop (or Pro pane) starts with the rail.
+  const { isMobile: isDrawer, isCompact } = useDeviceDetection();
+  const { sidebarCollapsed, toggleSidebarCollapsed } = useUIStore(useShallow((state) => ({ sidebarCollapsed: sidebarFolded(state, isCompact), toggleSidebarCollapsed: state.toggleSidebarCollapsed })));
   // Mountain View's collapsed rail is a peek, not a commitment: putting the pointer on
   // it slides the full list back out over the message list and takes it away
   // again on leaving, so a folder two clicks deep costs no clicks at all. It
@@ -1143,11 +1146,6 @@ function SidebarImpl({
   // list behind it.
   const [railHovered, setRailHovered] = useState(false);
   const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
-  // The rail is a desktop thing. Below that the sidebar is a drawer, opened to
-  // read the folder names, whatever the collapse button last said on a wider window.
-  const paneWidth = usePaneSize();
-  const narrowWindow = useMediaQuery('(width < 64rem)');
-  const isDrawer = paneWidth !== null ? paneWidth < 1024 : narrowWindow;
   const isCollapsed = sidebarCollapsed && !hoverExpanded && !isDrawer;
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -1881,14 +1879,14 @@ function SidebarImpl({
         // Mountain View's navigation sits on the canvas, with no rule between
         // it and the content card.
         mvShell ? "bg-[var(--mv-canvas)] border-transparent" : "bg-secondary border-border",
-        "max-lg:w-full",
+        "max-desk:w-full",
         // Mountain View's collapsed column is 72px (--mv-rail-w), wide enough
         // for its round compose button; the default layout's rail is 48px.
-        isCollapsed && !mvShell ? "lg:w-12" : "lg:w-full",
+        isCollapsed && !mvShell ? "desk:w-12" : "desk:w-full",
         // Floats out of the rail's own column rather than widening it, so the
         // message list underneath never moves while the pointer passes over.
         // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
-        hoverExpanded && "lg:absolute lg:inset-y-0 lg:start-0 lg:z-40 lg:shadow-xl",
+        hoverExpanded && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl",
         className
       )}
     >
@@ -1903,7 +1901,7 @@ function SidebarImpl({
               variant="ghost"
               size="icon"
               onClick={onSidebarClose}
-              className="lg:hidden h-9 w-9 flex-shrink-0"
+              className="desk:hidden h-9 w-9 flex-shrink-0"
               aria-label={t("close")}
             >
               <X className="w-5 h-5" />
@@ -1913,7 +1911,7 @@ function SidebarImpl({
               variant="ghost"
               size="icon"
               onClick={toggleSidebarCollapsed}
-              className="hidden lg:flex h-8 w-8 flex-shrink-0"
+              className="hidden desk:flex h-8 w-8 flex-shrink-0"
               title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
             >
               {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}

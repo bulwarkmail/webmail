@@ -46,7 +46,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountContacts } from "@/hooks/use-pro-multi-account-contacts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
@@ -174,7 +174,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const hasFetched = useRef(false);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const isMobile = useIsMobile();
-  const isDesktop = useIsDesktop();
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
   const locale = useLocale();
   usePrintListener();
   const printing = usePrinting();
@@ -190,7 +191,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const intentAppliedRef = useRef(false);
   // Narrow pane (Pro split or small window): the categories sidebar collapses
   // into a burger-toggled overlay.
-  const isNarrow = !isDesktop;
+  const isNarrow = !isFullDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   // A new view (a form, a group, a contact) replaces whatever the drawer was for.

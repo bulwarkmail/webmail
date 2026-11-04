@@ -21,7 +21,7 @@ const classes = (el: Element | null | undefined) => (el?.getAttribute('class') ?
 describe('AppShellSkeleton under the Pro interface', () => {
   const page = () =>
     html(
-      <AppShellSkeleton surface="calendar" label="Loading" railBelow="md" active="calendar">
+      <AppShellSkeleton surface="calendar" label="Loading" active="calendar">
         <div data-testid="calendar-body" />
       </AppShellSkeleton>,
     );

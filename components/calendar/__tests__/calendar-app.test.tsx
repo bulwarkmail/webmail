@@ -15,7 +15,9 @@ import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 const media = vi.hoisted(() => ({ mobile: false, desktop: true }));
 vi.mock('@/hooks/use-media-query', () => ({
   useIsMobile: () => media.mobile,
-  useIsDesktop: () => media.desktop,
+  useIsDesktop: () => !media.mobile,
+  // `desktop` is the full desktop: below it the sidebar opens over the page.
+  useIsFullDesktop: () => media.desktop,
   useIsTablet: () => !media.mobile && !media.desktop,
   useMediaQuery: () => false,
 }));
