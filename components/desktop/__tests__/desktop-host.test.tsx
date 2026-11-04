@@ -6,6 +6,7 @@ import { readDesktopPrefs, resetDesktopPrefsCache, setDesktopPref } from '@/lib/
 import { resetDesktopLanguages } from '@/lib/desktop/languages';
 import { registerComposeFlush, resetComposeFlushRegistry } from '@/lib/compose-flush-registry';
 import { useToastStore } from '@/stores/toast-store';
+import { closeFirstStartNotice, firstStartNoticesWaiting, resetFirstStartNotices } from '@/lib/first-start-notices';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useOfflineStore } from '@/lib/offline/state';
@@ -114,6 +115,13 @@ describe('DesktopHost', () => {
     expect(push).toHaveBeenLastCalledWith('/calendar');
     shell.run('go.contacts');
     expect(push).toHaveBeenLastCalledWith('/contacts');
+  });
+
+  it('Help > Settings opens settings as a page of this window', () => {
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('go.settings');
+    expect(push).toHaveBeenLastCalledWith('/settings');
   });
 
   it('a link to a folder goes through the router, encoded', () => {
@@ -233,8 +241,10 @@ describe('DesktopHost', () => {
   });
 
   describe('a language with no checker in the OS', () => {
+    beforeEach(() => resetFirstStartNotices());
     afterEach(() => resetComposeFlushRegistry());
-    const toasts = () => useToastStore.getState().toasts;
+    // A first-start notice above the message list, not a toast over the composer.
+    const toasts = () => firstStartNoticesWaiting();
 
     it('the composer asks once, and only a yes opens the downloads', async () => {
       useToastStore.setState({ toasts: [] });
@@ -246,10 +256,29 @@ describe('DesktopHost', () => {
       expect(toasts()).toHaveLength(0);
       const stop = registerComposeFlush(async () => {});
       await waitFor(() => expect(toasts()).toHaveLength(1));
+      expect(useToastStore.getState().toasts).toHaveLength(0);
       expect(shell.allowDownload).not.toHaveBeenCalled();
       act(() => toasts()[0].action!.onClick());
       expect(shell.allowDownload).toHaveBeenCalledTimes(1);
       expect(readDesktopPrefs().dictionaryDownload).toBe('yes');
+      stop();
+    });
+
+    it("closing it says no, and it doesn't come back", async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      await act(async () => {});
+      const stop = registerComposeFlush(async () => {});
+      shell.missing('nl-NL');
+      await waitFor(() => expect(toasts()).toHaveLength(1));
+      // Only asked: nothing decided until the user closes it.
+      expect(readDesktopPrefs().dictionaryDownload).toBe('ask');
+      act(() => closeFirstStartNotice(toasts()[0].id));
+      expect(readDesktopPrefs().dictionaryDownload).toBe('no');
+      shell.missing('fr-FR');
+      await act(async () => {});
+      expect(toasts()).toHaveLength(0);
+      expect(shell.allowDownload).not.toHaveBeenCalled();
       stop();
     });
 

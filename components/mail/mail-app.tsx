@@ -104,7 +104,8 @@ import type { Attachment, SendEmailResult } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { peekListAttachments, requestListAttachments, type ListAttachmentSource, type LoadListAttachments } from "@/lib/list-attachments";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
-import { WelcomeBanner } from "@/components/ui/welcome-banner";
+import { useWelcomeBannerDue, WelcomeBanner } from "@/components/ui/welcome-banner";
+import { FirstStartNoticeBar } from "@/components/ui/first-start-notice";
 import { NavigationRail } from "@/components/layout/navigation-rail";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
@@ -253,6 +254,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
   const t = useTranslations();
+  // First-start notices wait until the welcome tips are closed: one thing at a time.
+  const welcomeDue = useWelcomeBannerDue();
   // The page skeleton the gates below draw: the same one the server sent.
   const skeletonLabels = useSkeletonLabels();
   const tNotifications = useTranslations('notifications');
@@ -5718,6 +5721,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 unless an enabled plugin registered tabs via api.tabs.set. */}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
+            <FirstStartNoticeBar hidden={welcomeDue} />
 
             <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
