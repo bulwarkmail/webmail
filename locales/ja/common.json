@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "その他のオプション"
   },
+  "windowChrome": {
+    "hide_offline_notice": "オフラインのお知らせを非表示"
+  },
   "shell": {
     "resize": "サイズを変更",
     "update_available": "アップデートがあります",

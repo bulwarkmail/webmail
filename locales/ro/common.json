@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Mai multe opțiuni"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ascunde notificarea offline"
+  },
   "shell": {
     "resize": "Redimensionează",
     "update_available": "Actualizare disponibilă",

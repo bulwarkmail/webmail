@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "További lehetőségek"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline értesítés elrejtése"
+  },
   "shell": {
     "resize": "Átméretezés",
     "update_available": "Frissítés érhető el",

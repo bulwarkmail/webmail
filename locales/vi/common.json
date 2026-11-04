@@ -6437,6 +6437,9 @@
   "top_bar": {
     "more": "Nhiều lựa chọn hơn"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ẩn thông báo ngoại tuyến"
+  },
   "shell": {
     "resize": "Thay đổi kích thước",
     "update_available": "Đã có bản cập nhật",

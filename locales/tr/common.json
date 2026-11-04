@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Diğer seçenekler"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Çevrimdışı bildirimini gizle"
+  },
   "shell": {
     "resize": "Yeniden boyutlandır",
     "update_available": "Güncelleme var",

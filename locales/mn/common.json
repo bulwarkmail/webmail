@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Бусад сонголт"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Офлайн мэдэгдлийг нуух"
+  },
   "shell": {
     "resize": "Хэмжээ өөрчлөх",
     "update_available": "Шинэчлэл гарсан",

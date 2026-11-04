@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Інші дії"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Сховати сповіщення про офлайн-режим"
+  },
   "shell": {
     "resize": "Змінити розмір",
     "update_available": "Доступне оновлення",

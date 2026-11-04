@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Altre opzioni"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Nascondi l'avviso offline"
+  },
   "shell": {
     "resize": "Ridimensiona",
     "update_available": "Aggiornamento disponibile",

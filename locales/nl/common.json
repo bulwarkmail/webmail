@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Meer opties"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offlinemelding verbergen"
+  },
   "shell": {
     "resize": "Formaat wijzigen",
     "update_available": "Update beschikbaar",

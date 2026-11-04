@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "Flere muligheder"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul offline-besked"
+  },
   "shell": {
     "resize": "Tilpas størrelse",
     "update_available": "Opdatering tilgængelig",

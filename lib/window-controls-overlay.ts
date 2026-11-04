@@ -44,6 +44,14 @@ export const ROW_ATTRIBUTE = 'data-window-row';
 /** The window's controls are over this end of it. */
 export const ROW_RIGHT_ATTRIBUTE = 'data-window-row-right';
 export const ROW_LEFT_ATTRIBUTE = 'data-window-row-left';
+/**
+ * The end of this row or pane head, where its own close usually goes, is at the
+ * window's controls: a close there would read as a second one for the window, so
+ * it goes to the other end (hooks/use-close-beside-controls.ts).
+ */
+export const CLOSE_MOVES_ATTRIBUTE = 'data-window-close-moves';
+/** The head of a pane at the window's end, a row below the controls: its close can sit right under the window's. */
+export const PANE_HEAD_ATTRIBUTE = 'data-window-pane-head';
 
 function overlay(): OverlayLike | null {
   if (typeof navigator === 'undefined') return null;
@@ -110,6 +118,8 @@ const MAX_ROW_HEIGHT = 96;
 export function markWindowRows(area: TitlebarArea, doc: Document = document): HTMLElement[] {
   const viewportWidth = doc.defaultView?.innerWidth ?? 0;
   const { left, right } = controlsInsets(area, viewportWidth);
+  // A row's own close is at its end: the right, or the left in a right-to-left page.
+  const rtl = doc.documentElement.dir === 'rtl';
   const seen = new Set<HTMLElement>();
   for (const el of Array.from(doc.querySelectorAll<HTMLElement>(ROW_CANDIDATES))) {
     const rect = el.getBoundingClientRect();
@@ -127,12 +137,21 @@ export function markWindowRows(area: TitlebarArea, doc: Document = document): HT
       el.removeAttribute(ROW_ATTRIBUTE);
       el.removeAttribute(ROW_RIGHT_ATTRIBUTE);
       el.removeAttribute(ROW_LEFT_ATTRIBUTE);
+      el.removeAttribute(CLOSE_MOVES_ATTRIBUTE);
       continue;
     }
     seen.add(el);
+    const onRight = right > 0 && rect.right > viewportWidth - right;
+    const onLeft = left > 0 && rect.left < left;
     el.toggleAttribute(ROW_ATTRIBUTE, atTop);
-    el.toggleAttribute(ROW_RIGHT_ATTRIBUTE, right > 0 && rect.right > viewportWidth - right);
-    el.toggleAttribute(ROW_LEFT_ATTRIBUTE, left > 0 && rect.left < left);
+    el.toggleAttribute(ROW_RIGHT_ATTRIBUTE, onRight);
+    el.toggleAttribute(ROW_LEFT_ATTRIBUTE, onLeft);
+    el.toggleAttribute(CLOSE_MOVES_ATTRIBUTE, rtl ? onLeft : onRight);
+  }
+  for (const el of Array.from(doc.querySelectorAll<HTMLElement>(`[${PANE_HEAD_ATTRIBUTE}]`))) {
+    const rect = el.getBoundingClientRect();
+    const near = rect.height > 0 && rect.top < area.height * 2;
+    el.toggleAttribute(CLOSE_MOVES_ATTRIBUTE, near && (rtl ? left > 0 && rect.left < left : right > 0 && rect.right > viewportWidth - right));
   }
   return [...seen];
 }

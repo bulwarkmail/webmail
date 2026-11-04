@@ -6425,6 +6425,9 @@
   "top_bar": {
     "more": "更多选项"
   },
+  "windowChrome": {
+    "hide_offline_notice": "隐藏离线提示"
+  },
   "shell": {
     "resize": "调整大小",
     "update_available": "有可用更新",

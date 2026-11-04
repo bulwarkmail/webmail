@@ -35,7 +35,7 @@ vi.mock('@/lib/popout/window-role', async (importOriginal) => ({
 }));
 const moveDialog = vi.hoisted(() => ({ current: null as { emails: unknown[] } | null }));
 vi.mock('@/components/email/move-to-dialog', () => ({
-  MoveToDialog: (props: { email: unknown }) => {
+  MoveToDialog: (props: { emails: unknown[] }) => {
     moveDialog.current = props;
     return null;
   },

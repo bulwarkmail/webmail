@@ -44,6 +44,9 @@
   "top_bar": {
     "more": "ตัวเลือกเพิ่มเติม"
   },
+  "windowChrome": {
+    "hide_offline_notice": "ซ่อนประกาศออฟไลน์"
+  },
   "shell": {
     "resize": "ปรับขนาด",
     "update_available": "มีอัปเดต",
