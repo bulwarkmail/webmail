@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Åpne stave- eller grammatikkfeil: {count}",
     "empty_text_title": "Sende uten tekst?",
     "empty_text_message": "Denne meldingen har verken tekst eller vedlegg. Sende den likevel?",
-    "scheduled_for": "Planlagt til {when}"
+    "scheduled_for": "Planlagt til {when}",
+    "sending": "Sender…",
+    "sent": "Sendt",
+    "view": "Vis"
   },
   "org_templates": {
     "section_personal": "Mine maler",

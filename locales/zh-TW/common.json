@@ -3907,7 +3907,10 @@
     "warning_proofreading": "未處理的拼字或文法問題：{count}",
     "empty_text_title": "不寫內文就傳送？",
     "empty_text_message": "這封郵件沒有內文，也沒有附件。仍然傳送？",
-    "scheduled_for": "已排定於 {when} 傳送"
+    "scheduled_for": "已排定於 {when} 傳送",
+    "sending": "正在傳送…",
+    "sent": "已傳送",
+    "view": "檢視"
   },
   "org_templates": {
     "section_personal": "我的範本",

@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
     "empty_text_title": "Vols enviar-lo sense text?",
     "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?",
-    "scheduled_for": "Programat per a {when}"
+    "scheduled_for": "Programat per a {when}",
+    "sending": "S'està enviant…",
+    "sent": "Enviat",
+    "view": "Mostra"
   },
   "org_templates": {
     "section_personal": "Les meves plantilles",

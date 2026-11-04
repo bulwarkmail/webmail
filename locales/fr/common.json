@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Fautes d'orthographe ou de grammaire restantes : {count}",
     "empty_text_title": "Envoyer sans texte ?",
     "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?",
-    "scheduled_for": "Programmé pour {when}"
+    "scheduled_for": "Programmé pour {when}",
+    "sending": "Envoi…",
+    "sent": "Envoyé",
+    "view": "Afficher"
   },
   "org_templates": {
     "section_personal": "Mes modèles",

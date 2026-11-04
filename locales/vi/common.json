@@ -3919,7 +3919,10 @@
     "warning_proofreading": "Lỗi chính tả hoặc ngữ pháp chưa sửa: {count}",
     "empty_text_title": "Gửi mà không có nội dung?",
     "empty_text_message": "Thư này không có nội dung và không có tệp đính kèm. Vẫn gửi?",
-    "scheduled_for": "Đã lên lịch gửi lúc {when}"
+    "scheduled_for": "Đã lên lịch gửi lúc {when}",
+    "sending": "Đang gửi…",
+    "sent": "Đã gửi",
+    "view": "Xem"
   },
   "org_templates": {
     "section_personal": "Mẫu của tôi",

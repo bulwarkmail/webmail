@@ -1158,7 +1158,10 @@
     "warning_proofreading": "ปัญหาการสะกดหรือไวยากรณ์ที่ยังค้างอยู่: {count}",
     "empty_text_title": "ส่งโดยไม่มีข้อความหรือไม่",
     "empty_text_message": "ข้อความนี้ไม่มีเนื้อหาและไม่มีไฟล์แนบ ส่งต่อไปหรือไม่",
-    "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}"
+    "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}",
+    "sending": "กำลังส่ง…",
+    "sent": "ส่งแล้ว",
+    "view": "ดู"
   },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",

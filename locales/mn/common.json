@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Засаагүй зөв бичгийн болон дүрмийн алдаа: {count}",
     "empty_text_title": "Текстгүй илгээх үү?",
     "empty_text_message": "Энэ захиад текст ч, хавсралт ч алга. Ямар ч байсан илгээх үү?",
-    "scheduled_for": "{when}-д илгээхээр товлосон"
+    "scheduled_for": "{when}-д илгээхээр товлосон",
+    "sending": "Илгээж байна…",
+    "sent": "Илгээгдлээ",
+    "view": "Харах"
   },
   "org_templates": {
     "section_personal": "Миний загварууд",

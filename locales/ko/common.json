@@ -3907,7 +3907,10 @@
     "warning_proofreading": "남은 맞춤법 또는 문법 문제: {count}",
     "empty_text_title": "본문 없이 보낼까요?",
     "empty_text_message": "이 메일에는 본문도 첨부 파일도 없어요. 그래도 보낼까요?",
-    "scheduled_for": "{when}에 보내기 예약됨"
+    "scheduled_for": "{when}에 보내기 예약됨",
+    "sending": "보내는 중…",
+    "sent": "보냈어요",
+    "view": "보기"
   },
   "org_templates": {
     "section_personal": "내 템플릿",

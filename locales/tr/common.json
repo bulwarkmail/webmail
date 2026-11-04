@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Açık yazım veya dilbilgisi sorunları: {count}",
     "empty_text_title": "Metin olmadan gönderilsin mi?",
     "empty_text_message": "Bu iletide metin ve ek yok. Yine de gönderilsin mi?",
-    "scheduled_for": "{when} için zamanlandı"
+    "scheduled_for": "{when} için zamanlandı",
+    "sending": "Gönderiliyor…",
+    "sent": "Gönderildi",
+    "view": "Görüntüle"
   },
   "org_templates": {
     "section_personal": "Şablonlarım",

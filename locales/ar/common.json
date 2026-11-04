@@ -3907,7 +3907,10 @@
     "warning_proofreading": "مشكلات إملائية أو نحوية مفتوحة: {count}",
     "empty_text_title": "هل تريد الإرسال بدون نص؟",
     "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟",
-    "scheduled_for": "مجدولة في {when}"
+    "scheduled_for": "مجدولة في {when}",
+    "sending": "جارٍ الإرسال…",
+    "sent": "تم الإرسال",
+    "view": "عرض"
   },
   "org_templates": {
     "section_personal": "قوالبي",

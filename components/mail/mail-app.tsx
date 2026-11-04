@@ -44,6 +44,7 @@ import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-
 import { toast } from "@/stores/toast-store";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
+import { startSendProgress } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
@@ -2547,6 +2548,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // the user's message without so much as a toast (#702).
     let submitted = false;
 
+    // The composer closes at once and "Sending…" shows meanwhile. A send that
+    // fails comes back through onSendFailed, which opens the composer again.
+    setShowComposer(false);
+    setPendingDraft(null);
+    if (isMobile && !useEmailStore.getState().selectedEmail) setActiveView('list');
+    const progress = startSendProgress({
+      sending: t('compose_send.sending'),
+      sent: t('compose_send.sent'),
+      view: t('compose_send.view'),
+    });
+
     try {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
       const originalEmailId = answeredEmailId;
@@ -2554,7 +2566,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, composerSendOptions(data));
       submitted = true;
       announceSent(result, data);
-      setShowComposer(false);
+      // "Sent" with View. A delayed or scheduled send gets the undo toast, and
+      // a filing error, a refused recipient or the offline outbox say so themselves.
+      if (result.scheduled || result.filingError || result.rejectedRecipients?.length || result.queued) {
+        progress.dismiss();
+      } else {
+        const sentId = result.emailId;
+        const ownerAccountId = result.emailAccountId && result.emailAccountId !== sendClient.getAccountId() ? result.emailAccountId : undefined;
+        progress.sent(sentId && sendClient === client
+          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId })
+          : undefined);
+      }
       // Sending an edited draft destroys it server-side - and every autosave
       // before that already replaced it under a fresh id (createDraft is a
       // destroy+create). If the email on display is the draft this session
@@ -2639,11 +2661,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         return;
       }
 
-      // Delayed sends get the undo toast instead; a filing error or a refused
-      // recipient already warned.
-      // A message kept in the offline outbox said so itself (#523).
-      if (!result.filingError && !result.rejectedRecipients?.length && !result.queued) toast.success(t('notifications.email_sent'));
-
       // Refresh the current mailbox to update the UI
       if (!isScheduledView) {
         await refreshCurrentMailbox(client);
@@ -2651,6 +2668,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     } catch (error) {
       console.error("Failed to send email:", error);
+      if (submitted) progress.sent();
+      else progress.dismiss();
       // Post-send bookkeeping - refreshing Sent, flagging the original as
       // answered, re-reading the thread - is cosmetic once the mail is out.
       if (!submitted) throw error;
@@ -5249,6 +5268,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           setPendingDraft(null);
           setComposerPrefill(null);
           return outcome;
+        }}
+        onSendFailed={(state) => {
+          setPendingDraft(state);
+          setShowComposer(true);
+          if (isMobile) setActiveView('viewer');
         }}
         onScheduledSendCreated={async () => {
           if (client) {

@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Nyitott helyesírási vagy nyelvtani hibák: {count}",
     "empty_text_title": "Küldés szöveg nélkül?",
     "empty_text_message": "Ennek az üzenetnek nincs szövege és melléklete. Elküldi így is?",
-    "scheduled_for": "Ütemezve: {when}"
+    "scheduled_for": "Ütemezve: {when}",
+    "sending": "Küldés…",
+    "sent": "Elküldve",
+    "view": "Megtekintés"
   },
   "org_templates": {
     "section_personal": "Saját sablonok",

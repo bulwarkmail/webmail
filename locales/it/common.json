@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Errori di ortografia o grammatica aperti: {count}",
     "empty_text_title": "Inviare senza testo?",
     "empty_text_message": "Questo messaggio non ha testo né allegati. Inviarlo comunque?",
-    "scheduled_for": "Programmato per {when}"
+    "scheduled_for": "Programmato per {when}",
+    "sending": "Invio in corso…",
+    "sent": "Inviato",
+    "view": "Visualizza"
   },
   "org_templates": {
     "section_personal": "I miei modelli",

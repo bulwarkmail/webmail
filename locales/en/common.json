@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Open spelling or grammar issues: {count}",
     "empty_text_title": "Send without text?",
     "empty_text_message": "This message has no text and no attachment. Send it anyway?",
-    "scheduled_for": "Scheduled for {when}"
+    "scheduled_for": "Scheduled for {when}",
+    "sending": "Sending…",
+    "sent": "Sent",
+    "view": "View"
   },
   "org_templates": {
     "section_personal": "My templates",

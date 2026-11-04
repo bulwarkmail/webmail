@@ -3907,7 +3907,10 @@
     "warning_proofreading": "خطاهای املایی یا دستوری باز: {count}",
     "empty_text_title": "بدون متن ارسال شود؟",
     "empty_text_message": "این پیام متن و پیوست ندارد. به هر حال ارسال شود؟",
-    "scheduled_for": "زمان‌بندی‌شده برای {when}"
+    "scheduled_for": "زمان‌بندی‌شده برای {when}",
+    "sending": "در حال ارسال…",
+    "sent": "ارسال شد",
+    "view": "مشاهده"
   },
   "org_templates": {
     "section_personal": "قالب‌های من",

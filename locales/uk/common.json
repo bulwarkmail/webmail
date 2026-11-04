@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Невиправлені орфографічні чи граматичні помилки: {count}",
     "empty_text_title": "Надіслати без тексту?",
     "empty_text_message": "У цьому листі немає ні тексту, ні вкладень. Усе одно надіслати?",
-    "scheduled_for": "Заплановано на {when}"
+    "scheduled_for": "Заплановано на {when}",
+    "sending": "Надсилання…",
+    "sent": "Надіслано",
+    "view": "Переглянути"
   },
   "org_templates": {
     "section_personal": "Мої шаблони",

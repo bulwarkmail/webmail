@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Неисправленные орфографические или грамматические ошибки: {count}",
     "empty_text_title": "Отправить без текста?",
     "empty_text_message": "В этом письме нет ни текста, ни вложений. Всё равно отправить?",
-    "scheduled_for": "Запланировано на {when}"
+    "scheduled_for": "Запланировано на {when}",
+    "sending": "Отправка…",
+    "sent": "Отправлено",
+    "view": "Открыть"
   },
   "org_templates": {
     "section_personal": "Мои шаблоны",

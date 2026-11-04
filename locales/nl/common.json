@@ -3907,7 +3907,10 @@
     "warning_proofreading": "Openstaande spel- of grammaticafouten: {count}",
     "empty_text_title": "Verzenden zonder tekst?",
     "empty_text_message": "Dit bericht heeft geen tekst en geen bijlage. Toch verzenden?",
-    "scheduled_for": "Gepland voor {when}"
+    "scheduled_for": "Gepland voor {when}",
+    "sending": "Bezig met verzenden…",
+    "sent": "Verzonden",
+    "view": "Bekijken"
   },
   "org_templates": {
     "section_personal": "Mijn sjablonen",

@@ -368,6 +368,11 @@ interface EmailComposerProps {
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
   }) => void | false | Promise<void | false>;
+  /**
+   * onSend failed. A host that closes the composer as soon as onSend starts
+   * gets the message back here, to open it again: it must never vanish.
+   */
+  onSendFailed?: (state: ComposerDraftData) => void;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
   /**
@@ -572,6 +577,7 @@ const OFFLINE_SEND_ERRORS: Record<string, string> = {
 
 export function EmailComposer({
   onSend,
+  onSendFailed,
   onScheduledSendCreated,
   onClose,
   requestCloseRef,
@@ -4052,6 +4058,9 @@ export function EmailComposer({
     const lastStage = (html: string | undefined, text: string) =>
       finalizeOutgoing({ html: html || undefined, text }, outgoingContext, 'last');
     const inlineAttachments = rewritten?.attachments ?? [];
+    // The message as it is now, once onSend has it: the host may close the
+    // composer before the send is through.
+    let handedToHost: ComposerDraftData | null = null;
 
     try {
       const effectiveDelayedUntil = await resolveDelayedUntil(delayedUntil);
@@ -4251,6 +4260,13 @@ export function EmailComposer({
         // Read when the close is reported: the host tears the composer down
         // while onSend is still running. Reset below if the send fails.
         sentRef.current = true;
+        handedToHost = {
+          ...snapshotStateRef.current(),
+          // The save before the send may have moved the draft to a new id.
+          draftId: draftIdRef.current,
+          draftAccountId: draftAccountIdRef.current,
+          draftLocalAccountId: draftLocalAccountIdRef.current,
+        };
         const outcome = await onSend?.({
           to: outgoing.to,
           cc: outgoing.cc,
@@ -4326,6 +4342,8 @@ export function EmailComposer({
       explicitCloseRef.current = false;
       sentRef.current = false;
       debug.error('Failed to send email:', err);
+      // A host that closed the composer at Send opens it again with the text.
+      if (handedToHost) onSendFailed?.(handedToHost);
       if (isLabelRequiredError(err)) {
         setLabelInvalid(true);
         toast.error(tClassification('required_toast'));

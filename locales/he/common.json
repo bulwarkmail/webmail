@@ -3804,7 +3804,10 @@
     "warning_proofreading": "שגיאות כתיב או דקדוק פתוחות: {count}",
     "empty_text_title": "לשלוח ללא טקסט?",
     "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?",
-    "scheduled_for": "מתוזמן ל-{when}"
+    "scheduled_for": "מתוזמן ל-{when}",
+    "sending": "שולח…",
+    "sent": "נשלח",
+    "view": "הצג"
   },
   "org_templates": {
     "section_personal": "התבניות שלי",
