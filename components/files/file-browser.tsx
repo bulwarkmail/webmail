@@ -28,7 +28,6 @@ import { FilesSidebar, type CreateKind } from "@/components/files/files-sidebar"
 import { FilesHeader, type Crumb, type SortDir, type SortKey, type ViewMode } from "@/components/files/files-header";
 import { FileGridView, FileListView, type FileItemHandlers } from "@/components/files/file-views";
 import { FileDetailsPanel } from "@/components/files/file-details-panel";
-import { ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
 import { INTERNAL_DRAG_TYPE, anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
@@ -36,6 +35,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 import { useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
+import { ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
 import { resourceToView, useFileStore, isSharedFilesPage, sharedFilePages, type FileResource } from "@/stores/file-store";
 import { TRASH_LOCATION, TRASH_PATH, isTrashLocation } from "@/lib/files-trash";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
