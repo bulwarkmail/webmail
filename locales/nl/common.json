@@ -132,7 +132,9 @@
     "progress_contacts": "Contacten worden gedownload",
     "progress_files_list": "Bestanden worden opgesomd",
     "progress_other": "Bezig met downloaden",
-    "keep_description": "Bewaart uw e-mail, agenda, contacten en de bestanden die u offline houdt in Bestanden versleuteld op dit apparaat. Offline kunt u e-mail lezen, markeren en verplaatsen, en wat u schrijft wacht in Postvak UIT. Afmelden verwijdert alles."
+    "keep_description": "Bewaart uw e-mail, agenda, contacten en de bestanden die u offline houdt in Bestanden versleuteld op dit apparaat. Offline kunt u e-mail lezen, markeren en verplaatsen, en wat u schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
+    "filter_value_placeholder": "Waarde",
+    "filter_values_hint": "Scheid meerdere waarden met komma's."
   },
   "sidebar": {
     "close": "Sluiten",

@@ -132,7 +132,9 @@
     "progress_contacts": "Download dei contatti",
     "progress_files_list": "Elenco dei file",
     "progress_other": "Download in corso",
-    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che tieni offline in File, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto."
+    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che tieni offline in File, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto.",
+    "filter_value_placeholder": "Valore",
+    "filter_values_hint": "Per più valori, separali con virgole."
   },
   "sidebar": {
     "close": "Chiudi",

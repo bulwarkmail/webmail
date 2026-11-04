@@ -132,7 +132,9 @@
     "progress_contacts": "Descargando contactos",
     "progress_files_list": "Listando archivos",
     "progress_other": "Descargando",
-    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que mantienes sin conexión en Archivos, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo."
+    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que mantienes sin conexión en Archivos, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",
+    "filter_value_placeholder": "Valor",
+    "filter_values_hint": "Para buscar varios valores, sepáralos con comas."
   },
   "sidebar": {
     "close": "Cerrar",

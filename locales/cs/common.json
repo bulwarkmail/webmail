@@ -132,7 +132,9 @@
     "progress_contacts": "Stahují se kontakty",
     "progress_files_list": "Načítá se seznam souborů",
     "progress_other": "Stahuje se",
-    "keep_description": "Uchovává vaši poštu, kalendář, kontakty a soubory, které máte v Souborech k dispozici offline, zašifrované v tomto zařízení. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v odesílané poště. Odhlášení vše odstraní."
+    "keep_description": "Uchovává vaši poštu, kalendář, kontakty a soubory, které máte v Souborech k dispozici offline, zašifrované v tomto zařízení. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v odesílané poště. Odhlášení vše odstraní.",
+    "filter_value_placeholder": "Hodnota",
+    "filter_values_hint": "Více hodnot oddělte čárkami."
   },
   "sidebar": {
     "close": "Zavřít",

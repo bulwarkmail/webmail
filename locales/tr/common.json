@@ -132,7 +132,9 @@
     "progress_contacts": "Kişiler indiriliyor",
     "progress_files_list": "Dosyalar listeleniyor",
     "progress_other": "İndiriliyor",
-    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve Dosyalar'da çevrimdışı tuttuğunuz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir."
+    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve Dosyalar'da çevrimdışı tuttuğunuz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
+    "filter_value_placeholder": "Değer",
+    "filter_values_hint": "Birden fazla değeri virgülle ayırın."
   },
   "sidebar": {
     "close": "Kapat",

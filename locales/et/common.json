@@ -132,7 +132,9 @@
     "progress_contacts": "Kontaktide allalaadimine",
     "progress_files_list": "Failide loetlemine",
     "progress_other": "Allalaadimine",
-    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja faile, mida hoiad rakenduses Failid võrguta kasutamiseks, krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik."
+    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja faile, mida hoiad rakenduses Failid võrguta kasutamiseks, krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
+    "filter_value_placeholder": "Väärtus",
+    "filter_values_hint": "Mitme väärtuse jaoks eralda need komadega."
   },
   "sidebar": {
     "close": "Sulge",

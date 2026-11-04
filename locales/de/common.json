@@ -132,7 +132,9 @@
     "progress_contacts": "Kontakte werden geladen",
     "progress_files_list": "Dateien werden aufgelistet",
     "progress_other": "Wird geladen",
-    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und die Dateien, die Sie in Dateien offline halten, verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt."
+    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und die Dateien, die Sie in Dateien offline halten, verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
+    "filter_value_placeholder": "Wert",
+    "filter_values_hint": "Mehrere Werte trennen Sie durch Kommas."
   },
   "sidebar": {
     "close": "Schließen",

@@ -132,7 +132,9 @@
     "progress_contacts": "Téléchargement des contacts",
     "progress_files_list": "Liste des fichiers en cours",
     "progress_other": "Téléchargement",
-    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous gardez hors ligne dans Fichiers, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout."
+    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous gardez hors ligne dans Fichiers, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
+    "filter_value_placeholder": "Valeur",
+    "filter_values_hint": "Pour plusieurs valeurs, séparez-les par des virgules."
   },
   "sidebar": {
     "close": "Fermer",

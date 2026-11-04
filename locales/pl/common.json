@@ -132,7 +132,9 @@
     "progress_contacts": "Pobieranie kontaktów",
     "progress_files_list": "Pobieranie listy plików",
     "progress_other": "Pobieranie",
-    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i pliki, które trzymasz offline w Plikach, zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko."
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i pliki, które trzymasz offline w Plikach, zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
+    "filter_value_placeholder": "Wartość",
+    "filter_values_hint": "Kilka wartości oddziel przecinkami."
   },
   "sidebar": {
     "close": "Zamknij",

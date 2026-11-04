@@ -132,7 +132,9 @@
     "progress_contacts": "Sťahujú sa kontakty",
     "progress_files_list": "Načítava sa zoznam súborov",
     "progress_other": "Sťahuje sa",
-    "keep_description": "Uchováva vašu poštu, kalendár, kontakty a súbory, ktoré máte v Súboroch dostupné offline, zašifrované v tomto zariadení. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni."
+    "keep_description": "Uchováva vašu poštu, kalendár, kontakty a súbory, ktoré máte v Súboroch dostupné offline, zašifrované v tomto zariadení. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni.",
+    "filter_value_placeholder": "Hodnota",
+    "filter_values_hint": "Viac hodnôt oddeľte čiarkami."
   },
   "sidebar": {
     "unified_mailbox": "Zjednotená schránka",

@@ -132,7 +132,9 @@
     "progress_contacts": "Downloading contacts",
     "progress_files_list": "Listing files",
     "progress_other": "Downloading",
-    "keep_description": "Keeps your mail, calendar, contacts and the files you keep offline in Files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it."
+    "keep_description": "Keeps your mail, calendar, contacts and the files you keep offline in Files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
+    "filter_value_placeholder": "Value",
+    "filter_values_hint": "To match several values, separate them with commas."
   },
   "sidebar": {
     "close": "Close",

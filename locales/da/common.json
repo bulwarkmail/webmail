@@ -132,7 +132,9 @@
     "progress_contacts": "Henter kontakter",
     "progress_files_list": "Viser filer",
     "progress_other": "Henter",
-    "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du holder offline i Filer, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele."
+    "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du holder offline i Filer, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
+    "filter_value_placeholder": "Værdi",
+    "filter_values_hint": "Adskil flere værdier med kommaer."
   },
   "sidebar": {
     "close": "Luk",

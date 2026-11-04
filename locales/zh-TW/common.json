@@ -132,7 +132,9 @@
     "progress_contacts": "正在下載聯絡人",
     "progress_files_list": "正在列出檔案",
     "progress_other": "正在下載",
-    "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人，以及你在「檔案」中設為離線可用的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。"
+    "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人，以及你在「檔案」中設為離線可用的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",
+    "filter_value_placeholder": "值",
+    "filter_values_hint": "若要比對多個值，請以逗號分隔。"
   },
   "sidebar": {
     "close": "關閉",

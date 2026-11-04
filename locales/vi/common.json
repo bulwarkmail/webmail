@@ -132,7 +132,9 @@
     "progress_contacts": "Đang tải danh bạ xuống",
     "progress_files_list": "Đang liệt kê tệp",
     "progress_other": "Đang tải xuống",
-    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn giữ ngoại tuyến trong Tệp, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa."
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn giữ ngoại tuyến trong Tệp, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+    "filter_value_placeholder": "Giá trị",
+    "filter_values_hint": "Để khớp nhiều giá trị, hãy phân tách bằng dấu phẩy."
   },
   "sidebar": {
     "close": "Đóng",

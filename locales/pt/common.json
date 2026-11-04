@@ -132,7 +132,9 @@
     "progress_contacts": "A transferir contactos",
     "progress_files_list": "A listar ficheiros",
     "progress_other": "A transferir",
-    "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que mantém offline em Ficheiros, cifrados neste dispositivo. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo."
+    "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que mantém offline em Ficheiros, cifrados neste dispositivo. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",
+    "filter_value_placeholder": "Valor",
+    "filter_values_hint": "Para vários valores, separe-os com vírgulas."
   },
   "sidebar": {
     "close": "Fechar",

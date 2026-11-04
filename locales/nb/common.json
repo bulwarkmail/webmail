@@ -132,7 +132,9 @@
     "progress_contacts": "Laster ned kontakter",
     "progress_files_list": "Henter fillisten",
     "progress_other": "Laster ned",
-    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt."
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "filter_value_placeholder": "Verdi",
+    "filter_values_hint": "Skill flere verdier med komma."
   },
   "sidebar": {
     "close": "Lukk",

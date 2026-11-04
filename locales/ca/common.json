@@ -132,7 +132,9 @@
     "progress_contacts": "Baixant els contactes",
     "progress_files_list": "Llistant els fitxers",
     "progress_other": "Baixant",
-    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que manteniu sense connexió a Fitxers, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot."
+    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que manteniu sense connexió a Fitxers, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
+    "filter_value_placeholder": "Valor",
+    "filter_values_hint": "Per coincidir amb diversos valors, separeu-los amb comes."
   },
   "sidebar": {
     "close": "Tanca",

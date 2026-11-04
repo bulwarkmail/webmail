@@ -132,7 +132,9 @@
     "progress_contacts": "Kontaktpersonu lejupielāde",
     "progress_files_list": "Failu saraksta iegūšana",
     "progress_other": "Lejupielāde",
-    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un failus, ko sadaļā Faili glabājat bezsaistei, šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts."
+    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un failus, ko sadaļā Faili glabājat bezsaistei, šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",
+    "filter_value_placeholder": "Vērtība",
+    "filter_values_hint": "Vairākas vērtības atdaliet ar komatiem."
   },
   "sidebar": {
     "close": "Aizvērt",

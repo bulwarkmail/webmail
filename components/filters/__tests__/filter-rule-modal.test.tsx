@@ -77,7 +77,7 @@ describe('FilterRuleModal incomplete action', () => {
     const onSave = vi.fn();
     render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
-    fireEvent.change(screen.getByPlaceholderText('value_placeholder_multi'), { target: { value: 'news@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('filter_value_placeholder'), { target: { value: 'news@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'save' }));
 
     expect(onSave).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('FilterRuleModal incomplete action', () => {
     const onSave = vi.fn();
     render(<FilterRuleModal mailboxes={mailboxes} onSave={onSave} onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('rule_name_placeholder'), { target: { value: 'News' } });
-    fireEvent.change(screen.getByPlaceholderText('value_placeholder_multi'), { target: { value: 'news@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('filter_value_placeholder'), { target: { value: 'news@example.com' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'move_to_folder' }), { target: { value: 'news' } });
     fireEvent.click(screen.getByText('add_action'));
     fireEvent.click(screen.getByRole('button', { name: 'save' }));

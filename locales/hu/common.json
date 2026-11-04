@@ -132,7 +132,9 @@
     "progress_contacts": "Névjegyek letöltése",
     "progress_files_list": "Fájlok listázása",
     "progress_other": "Letöltés",
-    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a Fájlokban offline tartott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik."
+    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a Fájlokban offline tartott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
+    "filter_value_placeholder": "Érték",
+    "filter_values_hint": "Több értéket vesszővel válasszon el."
   },
   "sidebar": {
     "close": "Bezárás",
