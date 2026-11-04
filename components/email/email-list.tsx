@@ -463,9 +463,10 @@ export function EmailList({
     let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
     if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
-      // a line (23px) shorter than a real one.
+      // a line (23px) shorter than a real one. Only comfortable rows show a
+      // second preview line (mail-15).
       const emptyPreview = !!latest && !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
-      size += emptyPreview ? 36 - 23 : 36;
+      size += emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
     }
     // The chip row (attachments, verification code): a 22px chip plus 6px margin.
     const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);

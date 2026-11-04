@@ -975,7 +975,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                     <p dir="auto" className={cn(
                       "text-sm leading-relaxed",
-                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                       isUnread
                         ? "text-muted-foreground"
                         : "text-muted-foreground"
@@ -1754,7 +1754,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                       <p dir="auto" className={cn(
                         "text-sm leading-relaxed",
-                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                         hasUnread
                           ? "text-muted-foreground"
                           : "text-muted-foreground"

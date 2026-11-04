@@ -181,6 +181,12 @@ function previewClass(o: RowOptions): string | null {
   return o.preview === false || o.density === "compact" || o.density === "extra-compact" ? null : "";
 }
 
+/** Classes for the preview's second line, which only comfortable rows have (mail-15). */
+function secondPreviewLineClass(o: RowOptions): string | null {
+  if (o.density === undefined) return "boot-one-preview-line:hidden";
+  return o.density === "comfortable" ? "" : null;
+}
+
 /*
  * The rows below are drawn dozens of times, so they use the short classes in
  * app/boot-skeleton.css (mail section) for what every row repeats: sk-mrow
@@ -202,6 +208,7 @@ function L({ className, w }: { className?: string; w: string }) {
 function StackedRow({ i, o }: { i: number; o: RowOptions }) {
   const avatar = avatarClass(o);
   const preview = previewClass(o);
+  const secondLine = secondPreviewLineClass(o);
   return (
     <div className="sk-mrow max-md:mv:border-b-transparent">
       <div className="sk-mcell sk-mcell-min">
@@ -220,7 +227,9 @@ function StackedRow({ i, o }: { i: number; o: RowOptions }) {
             <span className={cn("block", preview)}>
               {/* Mountain View's phone rows keep the preview to one line, beside a 32px star. */}
               <L className="text-sm leading-relaxed max-md:mv:h-8" w="95%" />
-              <L className="text-sm leading-relaxed max-md:mv:hidden" w={textWidth(i + 5, 45, 40)} />
+              {secondLine !== null && (
+                <L className={cn("text-sm leading-relaxed max-md:mv:hidden", secondLine)} w={textWidth(i + 5, 45, 40)} />
+              )}
             </span>
           )}
         </span>
