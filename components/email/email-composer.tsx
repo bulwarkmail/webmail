@@ -247,6 +247,10 @@ function createChipDragPreview(label: string): HTMLElement {
 // inserts as a single chip and expands into its members on send.
 type SuggestionItem = { name: string; email: string; group?: { id: string; memberCount: number } };
 
+/** The From list's entries that aren't identities. */
+const FROM_SUB_ADDRESS = '__sub_address';
+const FROM_EDIT_SENDER = '__edit_sender';
+
 // Which `initialFiles` arrays are attached: a remount gets the same array.
 const attachedInitialFiles = new WeakSet<File[]>();
 
@@ -1244,6 +1248,8 @@ export function EmailComposer({
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
+  // The sub-address popover, opened from the From list.
+  const [subAddressOpen, setSubAddressOpen] = useState(false);
   // Closing saves without asking; the question comes only when that save failed.
   const [closeSaveFailed, setCloseSaveFailed] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
@@ -4774,6 +4780,14 @@ export function EmailComposer({
   // Only asked while offline: it reads the organisation's policy and the store's support.
   const offlineHint = browserOnline ? '' : tComposeWindows(offlineActive(composingAccountId ?? null) ? 'offline_hint_outbox' : 'offline_hint');
 
+  // "Edit sender…": From becomes a name and an address to type, starting
+  // from the identity's.
+  const startFromOverride = () => {
+    setFromOverrideEnabled(true);
+    if (!fromOverrideEmail && currentIdentity?.email) setFromOverrideEmail(currentIdentity.email);
+    if (!fromOverrideName && currentIdentity?.name) setFromOverrideName(currentIdentity.name);
+  };
+
   const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.defaultPrevented) return;
     // Keys from a dialog the composer opened (Insert link, ...) reach here
@@ -5112,11 +5126,20 @@ export function EmailComposer({
                     aria-label={t('from_override.email_label')}
                   />
                 </div>
-              ) : identities.length > 1 ? (
+              ) : identities.length > 0 ? (
                 <select
                   data-testid="composer-from"
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => {
+                    // The sender's rarer options sit at the end of the list.
+                    if (e.target.value === FROM_SUB_ADDRESS) {
+                      setSubAddressOpen(true);
+                      return;
+                    }
+                    if (e.target.value === FROM_EDIT_SENDER) {
+                      startFromOverride();
+                      return;
+                    }
                     setSelectedIdentityId(e.target.value);
                     setIdentityPickedByUser(true);
                     notifyIdentitySelected(identities, e.target.value);
@@ -5148,6 +5171,8 @@ export function EmailComposer({
                           </option>
                         );
                       })}
+                  <option value={FROM_SUB_ADDRESS}>{tUx('from_sub_address')}</option>
+                  {customFromEnabled && <option value={FROM_EDIT_SENDER}>{tUx('from_edit_sender')}</option>}
                 </select>
               ) : (
                 <span data-testid="composer-from" className="text-sm text-foreground flex-1 truncate">
@@ -5166,6 +5191,9 @@ export function EmailComposer({
               )}
               {!fromOverrideEnabled && (
                 <SubAddressHelper
+                  hideTrigger={identities.length > 0}
+                  open={identities.length > 0 ? subAddressOpen : undefined}
+                  onOpenChange={setSubAddressOpen}
                   baseEmail={
                     (selectedIdentityId
                       ? identities.find(id => id.id === selectedIdentityId)?.email
@@ -5187,7 +5215,7 @@ export function EmailComposer({
                   <X className="w-3 h-3" />
                 </Button>
               )}
-              {customFromEnabled && (
+              {customFromEnabled && (fromOverrideEnabled || identities.length === 0) && (
                 <Button
                   type="button"
                   variant={fromOverrideEnabled ? 'outline' : 'ghost'}
@@ -5196,13 +5224,7 @@ export function EmailComposer({
                     if (fromOverrideEnabled) {
                       setFromOverrideEnabled(false);
                     } else {
-                      setFromOverrideEnabled(true);
-                      if (!fromOverrideEmail && currentIdentity?.email) {
-                        setFromOverrideEmail(currentIdentity.email);
-                      }
-                      if (!fromOverrideName && currentIdentity?.name) {
-                        setFromOverrideName(currentIdentity.name);
-                      }
+                      startFromOverride();
                     }
                   }}
                   className="h-6 px-2 text-xs shrink-0"
