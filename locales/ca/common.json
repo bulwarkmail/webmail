@@ -1537,8 +1537,8 @@
       "title": "Aparença",
       "description": "Personalitzeu l'aspecte del vostre correu web",
       "theme": {
-        "label": "Tema",
-        "description": "Trieu l'esquema de colors preferit",
+        "label": "Clar o fosc",
+        "description": "Sistema segueix la configuració del dispositiu",
         "light": "Clar",
         "dark": "Fosc",
         "system": "Sistema"
@@ -1566,7 +1566,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Barra de cerca a dalt, aplicacions a l'esquerra"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -1610,7 +1610,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Icones de colors a la barra lateral",
-        "description": "Acoloreix les icones de carpetes i etiquetes segons el tipus (blau per a la safata d'entrada, vermell per a la brossa, verd per als enviats, etc.). Desactiveu-ho per a una barra lateral monocroma."
+        "description": "Acoloreix les icones de carpetes i etiquetes per tipus (Safata d'entrada en blau, Correu brossa en vermell, Enviats en verd, etc.). Desactiveu-ho per tenir icones grises."
       },
       "tint_list_rows": {
         "label": "Acoloreix les files de la llista segons l'etiqueta",
@@ -1936,13 +1936,13 @@
       },
       "mail_layout": {
         "label": "Disposició del correu",
-        "description": "Trieu entre la vista dividida clàssica, un flux de lectura centrat a l'estil Gmail, o una subfinestra de lectura inferior a l'estil Zimbra.",
+        "description": "On van la llista de missatges i el missatge obert a la pantalla.",
         "split": "Vista dividida",
-        "split_description": "Manté la llista de missatges i la subfinestra de lectura visibles una al costat de l'altra.",
+        "split_description": "Llista i missatge un al costat de l'altre",
         "focus": "Llista centrada",
-        "focus_description": "Mostra una línia per missatge i obre el correu a amplada completa mantenint visible la barra lateral de carpetes.",
+        "focus_description": "La llista i després el missatge a tota amplada",
         "horizontal": "Subfinestra de lectura a baix",
-        "horizontal_description": "Mostra la llista de missatges a dalt i obre el missatge seleccionat en una subfinestra de lectura a sota."
+        "horizontal_description": "Missatge sota la llista"
       },
       "list_columns": {
         "label": "Mostra la llista en columnes",
@@ -2279,7 +2279,7 @@
       },
       "totp": {
         "section_title": "Autenticació de dos factors",
-        "label": "Autenticació TOTP",
+        "label": "Inici de sessió en dos passos",
         "description": "Afegiu una capa addicional de seguretat amb una contrasenya d'un sol ús basada en el temps",
         "active": "Activada",
         "inactive": "Desactivada",
@@ -2359,12 +2359,12 @@
         "enabled_success": "Xifratge en repòs activat"
       },
       "email_client": {
-        "title": "Configuració del client de correu",
-        "description": "Utilitzeu aquestes credencials per configurar el client de correu d'escriptori o mòbil (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "Nom d'usuari JMAP",
+        "title": "Feu servir el correu en altres aplicacions",
+        "description": "Thunderbird, Apple Mail, Outlook i les aplicacions de correu del mòbil poden fer servir aquests paràmetres.",
+        "jmap_username_label": "Nom d'usuari",
         "copy": "Copia",
         "copied": "Copiat",
-        "password_instructions": "Utilitzeu el nom d'usuari JMAP anterior juntament amb una contrasenya d'aplicació per iniciar la sessió al client de correu. Creeu una contrasenya d'aplicació a la secció següent si encara no ho heu fet."
+        "password_instructions": "Com a contrasenya, feu servir una contrasenya d'aplicació, no la normal. En podeu crear una més avall en aquesta pàgina."
       },
       "link_device": {
         "title": "Enllaça l'aplicació mòbil",
@@ -2684,8 +2684,8 @@
       "manage_description": "Afegiu, editeu o elimineu aplicacions personalitzades de la barra lateral"
     },
     "contacts": {
-      "title": "Contactes",
-      "description": "Importeu i exporteu els contactes",
+      "title": "Llista de contactes",
+      "description": "Com es mostren els contactes, i fitxers de contactes per importar o exportar",
       "group_by_letter_label": "Agrupa per lletra inicial",
       "sort_by_last_name_label": "Ordena per cognom",
       "sort_by_last_name_description": "Ordena la llista de contactes per cognom perquè els membres d'una família apareguin junts",
@@ -4352,6 +4352,28 @@
       "menu": "Obre el menú del contacte"
     }
   },
+  "uxs_wording": {
+    "more_options": "Més opcions",
+    "use_in_other_apps": "Fes-ho servir en altres aplicacions",
+    "default_address_book": "Contactes",
+    "default_calendar": "Calendari",
+    "preview_documents": "Documents",
+    "preview_photos": "Fotos",
+    "sample_subject": "Notes de la reunió al cafè",
+    "mail_apps": {
+      "imap": "Correu entrant (IMAP)",
+      "smtp": "Correu sortint (SMTP)",
+      "caldav": "Calendaris (CalDAV)",
+      "carddav": "Contactes (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Sense xifratge",
+      "copy_label": "Copia {name}",
+      "loading": "S'estan llegint els paràmetres del servidor de correu…",
+      "not_found": "El servidor de correu no ha indicat els noms dels servidors per a altres aplicacions. Demaneu-los al vostre administrador."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendaris: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "Mostra avisos per als esdeveniments propers del calendari",
       "notification_sound": "So de notificació",
       "notification_sound_desc": "Reprodueix un so per als avisos del calendari",
-      "invitation_parsing": "Analitza les invitacions per correu",
+      "invitation_parsing": "Mostra les invitacions del correu",
       "invitation_parsing_desc": "Detecta les invitacions de calendari als fitxers adjunts del correu i mostra les accions del calendari",
       "show_time_in_month_view": "Mostra l'hora a la vista mensual",
       "show_time_in_month_view_desc": "Mostra l'hora dels esdeveniments a la vista mensual del calendari. En pantalles petites, això mostra entrades completes d'esdeveniment en lloc de punts.",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "Mostra els números de setmana al minicalendari",
       "calendar_free_scroll": "Desplaçament lliure",
       "calendar_free_scroll_desc": "Desplaça't de manera contínua per mesos, setmanes i dies en lloc d'un període cada vegada",
-      "enable_tasks": "Activa les tasques",
+      "enable_tasks": "Tasques",
       "enable_tasks_desc": "Mostra una vista de tasques al calendari per gestionar pendents",
       "show_tasks_on_calendar": "Mostra les tasques al calendari",
       "show_tasks_on_calendar_desc": "Mostra les tasques a les vistes de mes, setmana i dia del calendari",
@@ -4802,8 +4824,8 @@
       "error_update": "No s'ha pogut actualitzar el calendari",
       "error_delete": "No s'ha pogut suprimir el calendari",
       "caldav_url": "URL de CalDAV",
-      "copy_url": "Copia l'URL de CalDAV",
-      "url_copied": "URL de CalDAV copiat al porta-retalls",
+      "copy_url": "Copia l'adreça per a altres aplicacions",
+      "url_copied": "S'ha copiat l'adreça",
       "share": "Comparteix el calendari…",
       "new_event_in_calendar": "Esdeveniment nou en aquest calendari",
       "shared_with": "Compartit amb {names}",
@@ -4823,8 +4845,8 @@
       "default_alerts_updated": "Recordatoris predeterminats actualitzats"
     },
     "subscription": {
-      "title": "Subscripció iCal",
-      "section_title": "Subscripcions iCal",
+      "title": "Subscriu-te a un calendari",
+      "section_title": "Calendaris subscrits",
       "description": "Subscriviu-vos a un canal iCalendar extern. Els esdeveniments se sincronitzaran automàticament en el seu propi calendari. Admet URL https:// i webcal://.",
       "url_label": "URL del calendari",
       "url_placeholder": "https://example.com/calendar.ics or webcal://...",

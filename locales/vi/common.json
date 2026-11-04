@@ -1549,8 +1549,8 @@
       "title": "Giao diện",
       "description": "Tùy chỉnh diện mạo và cách hiển thị của webmail",
       "theme": {
-        "label": "Tiêu đề",
-        "description": "Chọn bảng màu bạn muốn dùng",
+        "label": "Sáng hoặc tối",
+        "description": "Tùy chọn Hệ thống làm theo cài đặt của thiết bị",
         "light": "Sáng",
         "dark": "Tối",
         "system": "Theo hệ thống"
@@ -1578,7 +1578,7 @@
         "label": "Bố cục giao diện",
         "description": "Vị trí của tìm kiếm, điều hướng và thanh công cụ",
         "default": "Mặc định",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Thanh tìm kiếm ở trên, ứng dụng bên trái"
       },
       "animations": {
         "label": "Bật hiệu ứng chuyển động",
@@ -1622,7 +1622,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Biểu tượng thanh bên nhiều màu",
-        "description": "Tô màu biểu tượng thư mục và nhãn theo loại (Hộp thư đến màu xanh dương, Thư rác màu đỏ, Đã gửi màu xanh lá, v.v.). Tắt để dùng thanh bên đơn sắc."
+        "description": "Tô màu biểu tượng thư mục và thẻ (Hộp thư đến màu xanh dương, Thư rác màu đỏ, Đã gửi màu xanh lá cây, v.v.). Tắt để dùng biểu tượng màu xám."
       },
       "tint_list_rows": {
         "label": "Tô màu hàng trong danh sách theo nhãn",
@@ -1948,13 +1948,13 @@
       },
       "mail_layout": {
         "label": "Bố cục thư",
-        "description": "Chọn giữa khung đọc chia đôi kiểu cổ điển, luồng đọc tập trung kiểu Gmail hoặc khung đọc phía dưới kiểu Zimbra.",
+        "description": "Vị trí của danh sách thư và thư đang mở trên màn hình.",
         "split": "Khung chia đôi",
-        "split_description": "Hiển thị danh sách thư và khung đọc cạnh nhau.",
+        "split_description": "Danh sách và thư cạnh nhau",
         "focus": "Danh sách tập trung",
-        "focus_description": "Hiển thị mỗi thư trên một dòng và mở thư toàn chiều rộng, đồng thời giữ thanh bên thư mục.",
+        "focus_description": "Danh sách, rồi thư toàn chiều rộng",
         "horizontal": "Khung đọc phía dưới",
-        "horizontal_description": "Hiển thị danh sách thư ở trên và mở thư đã chọn trong khung đọc bên dưới."
+        "horizontal_description": "Thư bên dưới danh sách"
       },
       "list_columns": {
         "label": "Hiển thị danh sách dạng cột",
@@ -2291,7 +2291,7 @@
       },
       "totp": {
         "section_title": "Xác thực hai yếu tố",
-        "label": "Xác thực TOTP",
+        "label": "Đăng nhập hai bước",
         "description": "Thêm một lớp bảo mật bổ sung bằng mật khẩu dùng một lần theo thời gian",
         "active": "Đã bật",
         "inactive": "Đã tắt",
@@ -2387,12 +2387,12 @@
         "delete_message": "{name} bị xóa khỏi máy chủ."
       },
       "email_client": {
-        "title": "Thiết lập ứng dụng khách email",
-        "description": "Sử dụng những thông tin xác thực này để định cấu hình ứng dụng email khách trên máy tính để bàn hoặc thiết bị di động của bạn (Thunderbird, Apple Mail, Outlook, v.v.)",
-        "jmap_username_label": "Tên người dùng JMAP",
+        "title": "Dùng thư trong ứng dụng khác",
+        "description": "Thunderbird, Apple Mail, Outlook và ứng dụng thư trên điện thoại có thể dùng các cài đặt này.",
+        "jmap_username_label": "Tên người dùng",
         "copy": "Sao chép",
         "copied": "Đã sao chép",
-        "password_instructions": "Sử dụng tên người dùng JMAP ở trên cùng với mật khẩu ứng dụng để đăng nhập vào ứng dụng email của bạn. Tạo mật khẩu ứng dụng trong phần bên dưới nếu bạn chưa làm như vậy."
+        "password_instructions": "Hãy dùng mật khẩu ứng dụng làm mật khẩu, không dùng mật khẩu thường. Bạn có thể tạo ở phần dưới của trang này."
       },
       "link_device": {
         "title": "Liên kết ứng dụng di động",
@@ -2696,8 +2696,8 @@
       "manage_description": "Thêm, chỉnh sửa hoặc xóa ứng dụng tùy chỉnh khỏi thanh bên của bạn"
     },
     "contacts": {
-      "title": "Danh bạ",
-      "description": "Nhập và xuất danh bạ của bạn",
+      "title": "Danh sách liên hệ",
+      "description": "Cách hiển thị danh bạ, và tệp danh bạ để nhập hoặc xuất",
       "group_by_letter_label": "Nhóm theo chữ cái đầu tiên",
       "group_by_letter_description": "Hiển thị tiêu đề phần theo thứ tự bảng chữ cái trong danh sách liên hệ",
       "sort_by_last_name_label": "Sắp xếp theo họ",
@@ -4364,6 +4364,28 @@
       "menu": "Mở menu của liên hệ"
     }
   },
+  "uxs_wording": {
+    "more_options": "Tùy chọn khác",
+    "use_in_other_apps": "Dùng trong ứng dụng khác",
+    "default_address_book": "Danh bạ",
+    "default_calendar": "Lịch",
+    "preview_documents": "Tài liệu",
+    "preview_photos": "Ảnh",
+    "sample_subject": "Ghi chú buổi họp ở quán cà phê",
+    "mail_apps": {
+      "imap": "Thư đến (IMAP)",
+      "smtp": "Thư đi (SMTP)",
+      "caldav": "Lịch (CalDAV)",
+      "carddav": "Danh bạ (CardDAV)",
+      "port_security": "Cổng {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Không mã hóa",
+      "copy_label": "Sao chép {name}",
+      "loading": "Đang đọc cài đặt từ máy chủ thư…",
+      "not_found": "Máy chủ thư không cung cấp tên máy chủ cho ứng dụng khác. Hãy hỏi quản trị viên."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Lịch: {names}",
@@ -4618,7 +4640,7 @@
       "notifications_enabled_desc": "Hiển thị thông báo cho các sự kiện lịch sắp tới",
       "notification_sound": "Âm thanh thông báo",
       "notification_sound_desc": "Phát âm thanh để thông báo lịch",
-      "invitation_parsing": "Phân tích lời mời email",
+      "invitation_parsing": "Hiển thị lời mời từ thư",
       "invitation_parsing_desc": "Phát hiện lời mời lịch trong tệp đính kèm email và hiển thị các hành động trên lịch",
       "show_time_in_month_view": "Hiển thị thời gian trong chế độ xem tháng",
       "show_time_in_month_view_desc": "Hiển thị thời gian sự kiện trong chế độ xem lịch tháng. Trên màn hình nhỏ, phần này hiển thị đầy đủ các mục sự kiện thay vì dấu chấm.",
@@ -4633,7 +4655,7 @@
       "show_week_numbers_desc": "Hiển thị số tuần trong lịch nhỏ",
       "calendar_free_scroll": "Cuộn tự do",
       "calendar_free_scroll_desc": "Cuộn liên tục qua các tháng, tuần và ngày thay vì từng khoảng thời gian một",
-      "enable_tasks": "Bật tác vụ",
+      "enable_tasks": "Công việc",
       "enable_tasks_desc": "Hiển thị chế độ xem công việc trong lịch để quản lý việc cần làm",
       "show_tasks_on_calendar": "Hiển thị công việc trên lịch",
       "show_tasks_on_calendar_desc": "Hiển thị công việc trên dạng xem lịch tháng, tuần, ngày",
@@ -4814,8 +4836,8 @@
       "error_update": "Không thể cập nhật lịch",
       "error_delete": "Không thể xóa lịch",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Sao chép URL CalDAV",
-      "url_copied": "Đã sao chép URL CalDAV vào bảng nhớ tạm",
+      "copy_url": "Sao chép địa chỉ cho ứng dụng khác",
+      "url_copied": "Đã sao chép địa chỉ",
       "share": "Chia sẻ lịch…",
       "new_event_in_calendar": "Sự kiện mới trong lịch này",
       "shared_with": "Đã chia sẻ với {names}",
@@ -4835,8 +4857,8 @@
       "default_alerts_updated": "Đã cập nhật lời nhắc mặc định"
     },
     "subscription": {
-      "title": "Đăng ký iCal",
-      "section_title": "Đăng ký iCal",
+      "title": "Đăng ký một lịch",
+      "section_title": "Lịch đã đăng ký",
       "description": "Đăng ký nguồn cấp dữ liệu iCalendar bên ngoài. Các sự kiện sẽ được tự động đồng bộ hóa vào lịch riêng của chúng. Hỗ trợ URL https:// và webcal://.",
       "url_label": "URL lịch",
       "url_placeholder": "https://example.com/calendar.ics hoặc webcal://...",

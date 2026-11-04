@@ -1534,8 +1534,8 @@
       "title": "Aparência",
       "description": "Personalize a aparência do seu webmail",
       "theme": {
-        "label": "Tema",
-        "description": "Escolha seu esquema de cores preferido",
+        "label": "Claro ou escuro",
+        "description": "Sistema segue a definição do seu dispositivo",
         "light": "Claro",
         "dark": "Escuro",
         "system": "Sistema"
@@ -1563,7 +1563,7 @@
         "label": "Esquema da interface",
         "description": "Onde ficam a pesquisa, a navegação e as barras de ferramentas",
         "default": "Predefinido",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Pesquisa em cima, aplicações à esquerda"
       },
       "animations": {
         "label": "Habilitar Animações",
@@ -1607,7 +1607,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Ícones coloridos na barra lateral",
-        "description": "Colorir ícones de pastas e etiquetas por tipo (Caixa de entrada azul, Spam vermelho, Enviados verde, etc.). Desative para uma barra lateral monocromática."
+        "description": "Dar cores aos ícones de pastas e etiquetas por tipo (Caixa de Entrada a azul, Spam a vermelho, Enviados a verde, etc.). Desative para ícones cinzentos."
       },
       "tint_list_rows": {
         "label": "Colorir as linhas da lista de acordo com a cor da etiqueta",
@@ -1933,13 +1933,13 @@
       },
       "mail_layout": {
         "label": "Layout do e-mail",
-        "description": "Escolha entre o painel de leitura dividido clássico e um fluxo de leitura focado estilo Gmail.",
+        "description": "Onde ficam no ecrã a lista de mensagens e a mensagem aberta.",
         "split": "Painel dividido",
-        "split_description": "Manter a lista de mensagens e o painel de leitura visíveis lado a lado.",
+        "split_description": "Lista e mensagem lado a lado",
         "focus": "Lista focada",
-        "focus_description": "Mostrar uma linha por mensagem e abrir o e-mail em largura total mantendo a barra lateral de pastas visível.",
+        "focus_description": "A lista, depois a mensagem em largura total",
         "horizontal": "Painel de leitura em baixo",
-        "horizontal_description": "Mostre a lista de mensagens em cima e abra a mensagem selecionada num painel de leitura abaixo."
+        "horizontal_description": "Mensagem por baixo da lista"
       },
       "list_columns": {
         "label": "Mostrar a lista em colunas",
@@ -2272,7 +2272,7 @@
       },
       "totp": {
         "section_title": "Autenticação de dois fatores",
-        "label": "Autenticação TOTP",
+        "label": "Início de sessão em dois passos",
         "description": "Adicione uma camada extra de segurança com uma senha única baseada em tempo",
         "active": "Habilitado",
         "inactive": "Desabilitado",
@@ -2352,12 +2352,12 @@
         "enabled_success": "Criptografia em repouso habilitada"
       },
       "email_client": {
-        "title": "Configuração do Cliente de E-mail",
-        "description": "Use estas credenciais para configurar seu cliente de e-mail desktop ou móvel (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "Nome de Usuário JMAP",
+        "title": "Usar o seu correio noutras aplicações",
+        "description": "O Thunderbird, o Apple Mail, o Outlook e as aplicações de correio do telemóvel podem usar estas definições.",
+        "jmap_username_label": "Nome de utilizador",
         "copy": "Copiar",
         "copied": "Copiado",
-        "password_instructions": "Use seu nome de usuário JMAP acima junto com uma senha de aplicativo para entrar no seu cliente de e-mail. Crie uma senha de aplicativo na seção abaixo se ainda não tiver uma."
+        "password_instructions": "Como palavra-passe, use uma palavra-passe de aplicação, não a habitual. Pode criar uma mais abaixo nesta página."
       },
       "link_device": {
         "title": "Vincular aplicativo móvel",
@@ -2677,8 +2677,8 @@
       "manage_description": "Adicionar, editar ou remover apps personalizados da barra lateral"
     },
     "contacts": {
-      "title": "Contatos",
-      "description": "Importar e exportar os seus contatos",
+      "title": "Lista de contactos",
+      "description": "Como os contactos são listados, e ficheiros de contactos para importar ou exportar",
       "import_label": "Importar contatos",
       "import_description": "Importar contatos de um arquivo vCard (.vcf)",
       "export_label": "Exportar contatos",
@@ -4352,6 +4352,28 @@
     "open_categories": "Abrir categorias",
     "row_actions": "Ações para {name}"
   },
+  "uxs_wording": {
+    "more_options": "Mais opções",
+    "use_in_other_apps": "Usar noutras aplicações",
+    "default_address_book": "Contactos",
+    "default_calendar": "Calendário",
+    "preview_documents": "Documentos",
+    "preview_photos": "Fotos",
+    "sample_subject": "Notas da reunião no café da Conceição",
+    "mail_apps": {
+      "imap": "Correio recebido (IMAP)",
+      "smtp": "Correio enviado (SMTP)",
+      "caldav": "Calendários (CalDAV)",
+      "carddav": "Contactos (CardDAV)",
+      "port_security": "Porta {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Sem encriptação",
+      "copy_label": "Copiar {name}",
+      "loading": "A ler as definições do servidor de correio…",
+      "not_found": "O seu servidor de correio não indicou os nomes de servidor para outras aplicações. Peça-os ao seu administrador."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendários: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "Mostrar alertas para eventos próximos",
       "notification_sound": "Som de notificação",
       "notification_sound_desc": "Reproduzir um som para alertas do calendário",
-      "invitation_parsing": "Analisar convites por e-mail",
+      "invitation_parsing": "Mostrar convites do correio",
       "invitation_parsing_desc": "Detectar convites de calendário em anexos de e-mail e mostrar ações do calendário",
       "show_time_in_month_view": "Mostrar horário na visualização mensal",
       "show_time_in_month_view_desc": "Exibir horários dos eventos na visualização mensal do calendário",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "Exibir números da semana no minicalendário",
       "calendar_free_scroll": "Deslocamento livre",
       "calendar_free_scroll_desc": "Percorrer meses, semanas e dias de forma contínua em vez de um período de cada vez",
-      "enable_tasks": "Ativar tarefas",
+      "enable_tasks": "Tarefas",
       "enable_tasks_desc": "Mostrar uma visualização de tarefas no calendário para gerenciar pendências",
       "show_tasks_on_calendar": "Mostrar tarefas no calendário",
       "show_tasks_on_calendar_desc": "Exibir tarefas nas visualizações mensal, semanal e diária do calendário",
@@ -4792,8 +4814,8 @@
       "error_update": "Falha ao atualizar calendário",
       "error_delete": "Falha ao excluir calendário",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Copiar URL CalDAV",
-      "url_copied": "URL CalDAV copiada para a área de transferência",
+      "copy_url": "Copiar endereço para outras aplicações",
+      "url_copied": "Endereço copiado",
       "confirm_clear": "Limpar todos os eventos de \"{name}\"? Esta ação não pode ser desfeita.",
       "set_default": "Definir como padrão",
       "default_updated": "Calendário padrão atualizado",
@@ -4820,8 +4842,8 @@
       "default_alerts_updated": "Lembretes padrão atualizados"
     },
     "subscription": {
-      "title": "Assinatura iCal",
-      "section_title": "Assinaturas iCal",
+      "title": "Subscrever um calendário",
+      "section_title": "Calendários subscritos",
       "description": "Assine um feed externo do iCalendar. Os eventos serão sincronizados automaticamente em seu próprio calendário. Suporta URLs https:// e webcal://.",
       "url_label": "URL do calendário",
       "url_placeholder": "https://example.com/calendar.ics ou webcal://...",

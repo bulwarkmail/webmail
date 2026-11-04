@@ -1537,8 +1537,8 @@
       "title": "ظاهر",
       "description": "ظاهر و حس ایمیل تحت وب خود را سفارشی کنید",
       "theme": {
-        "label": "تم",
-        "description": "طرح رنگی مورد نظر خود را انتخاب کنید",
+        "label": "روشن یا تیره",
+        "description": "گزینهٔ «سیستم» از تنظیم دستگاه شما پیروی می‌کند",
         "light": "روشن",
         "dark": "تاریک",
         "system": "سیستم"
@@ -1566,7 +1566,7 @@
         "label": "چیدمان رابط",
         "description": "جای جست‌وجو، ناوبری و نوارهای ابزار",
         "default": "پیش‌فرض",
-        "mountain_view": "Mountain View"
+        "mountain_view": "نوار جستجو در بالا، برنامه‌ها در چپ"
       },
       "animations": {
         "label": "فعال کردن انیمیشن‌ها",
@@ -1610,7 +1610,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "آیکون‌های رنگی نوار کناری",
-        "description": "رنگ‌آمیزی آیکون‌های پوشه و برچسب بر اساس نوع"
+        "description": "رنگ‌آمیزی نمادهای پوشه و برچسب بر اساس نوع (صندوق ورودی آبی، هرزنامه قرمز، ارسال شده سبز و غیره). برای نمادهای خاکستری خاموش کنید."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1936,13 +1936,13 @@
       },
       "mail_layout": {
         "label": "چیدمان ایمیل",
-        "description": "انتخاب چیدمان",
+        "description": "جای فهرست پیام‌ها و پیام باز روی صفحه.",
         "split": "پنل تقسیم شده",
-        "split_description": "لیست و پنل کنار هم",
+        "split_description": "فهرست و پیام کنار هم",
         "focus": "لیست متمرکز",
-        "focus_description": "نمای متمرکز",
+        "focus_description": "فهرست، سپس پیام با عرض کامل",
         "horizontal": "پنل پایین",
-        "horizontal_description": "لیست بالا، پنل پایین"
+        "horizontal_description": "پیام زیر فهرست"
       },
       "list_columns": {
         "label": "نمایش فهرست به‌صورت ستونی",
@@ -2279,7 +2279,7 @@
       },
       "totp": {
         "section_title": "احراز هویت دو مرحله‌ای",
-        "label": "TOTP",
+        "label": "ورود دومرحله‌ای",
         "description": "لایه امنیتی اضافی",
         "active": "فعال",
         "inactive": "غیرفعال",
@@ -2359,12 +2359,12 @@
         "enabled_success": "فعال شد"
       },
       "email_client": {
-        "title": "تنظیم برنامه ایمیل",
-        "description": "اطلاعات برای برنامه دسکتاپ",
-        "jmap_username_label": "نام کاربری JMAP",
+        "title": "استفاده از ایمیل در برنامه‌های دیگر",
+        "description": "Thunderbird، Apple Mail، Outlook و برنامه‌های ایمیل گوشی می‌توانند از این تنظیمات استفاده کنند.",
+        "jmap_username_label": "نام کاربری",
         "copy": "کپی",
         "copied": "کپی شد",
-        "password_instructions": "از نام کاربری JMAP بالا همراه با یک رمز برنامه برای ورود به برنامهٔ ایمیل خود استفاده کنید. اگر هنوز رمز برنامه نساخته‌اید، آن را در بخش زیر بسازید."
+        "password_instructions": "برای گذرواژه از گذرواژهٔ برنامه استفاده کنید، نه گذرواژهٔ معمول خود. می‌توانید آن را پایین‌تر در همین صفحه بسازید."
       },
       "link_device": {
         "title": "اتصال موبایل",
@@ -2684,8 +2684,8 @@
       "manage_description": "افزودن، ویرایش یا حذف برنامه‌های سفارشی از نوار کناری"
     },
     "contacts": {
-      "title": "مخاطبین",
-      "description": "وارد کردن و خروجی مخاطبین",
+      "title": "فهرست مخاطبین",
+      "description": "نحوهٔ نمایش مخاطبین، و فایل‌های مخاطب برای وارد یا صادر کردن",
       "group_by_letter_label": "گروه‌بندی بر اساس حرف اول",
       "sort_by_last_name_label": "مرتب‌سازی بر اساس نام خانوادگی",
       "sort_by_last_name_description": "لیست مخاطبین را بر اساس نام خانوادگی مرتب کنید تا اعضای خانواده کنار هم نمایش داده شوند",
@@ -4352,6 +4352,28 @@
       "menu": "باز کردن منوی مخاطب"
     }
   },
+  "uxs_wording": {
+    "more_options": "گزینه‌های بیشتر",
+    "use_in_other_apps": "استفاده در برنامه‌های دیگر",
+    "default_address_book": "مخاطبین",
+    "default_calendar": "تقویم",
+    "preview_documents": "اسناد",
+    "preview_photos": "عکس‌ها",
+    "sample_subject": "یادداشت‌های جلسه در کافه",
+    "mail_apps": {
+      "imap": "نامه‌های ورودی (IMAP)",
+      "smtp": "نامه‌های خروجی (SMTP)",
+      "caldav": "تقویم‌ها (CalDAV)",
+      "carddav": "مخاطبین (CardDAV)",
+      "port_security": "درگاه {port}، {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "بدون رمزگذاری",
+      "copy_label": "کپی {name}",
+      "loading": "در حال خواندن تنظیمات از سرور ایمیل…",
+      "not_found": "سرور ایمیل شما نام سرورها را برای برنامه‌های دیگر اعلام نکرد. آن‌ها را از مدیر خود بپرسید."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "تقویم‌ها: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "نمایش هشدار برای رویدادهای تقویم پیش رو",
       "notification_sound": "صدای اعلان",
       "notification_sound_desc": "پخش صدا برای هشدارهای تقویم",
-      "invitation_parsing": "پردازش دعوت‌نامه‌های ایمیل",
+      "invitation_parsing": "نمایش دعوت‌نامه‌ها از ایمیل",
       "invitation_parsing_desc": "تشخیص دعوت‌نامه‌های تقویم در پیوست ایمیل",
       "show_time_in_month_view": "نمایش زمان در نمای ماه",
       "show_time_in_month_view_desc": "نمایش زمان رویدادها در نمای ماه تقویم",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "نمایش شماره هفته در تقویم کوچک",
       "calendar_free_scroll": "پیمایش آزاد",
       "calendar_free_scroll_desc": "پیمایش پیوسته در ماه‌ها، هفته‌ها و روزها به جای یک بازه در هر بار",
-      "enable_tasks": "فعال کردن وظایف",
+      "enable_tasks": "کارها",
       "enable_tasks_desc": "نمایش نمای وظایف در تقویم برای مدیریت کارها",
       "show_tasks_on_calendar": "نمایش وظایف روی تقویم",
       "show_tasks_on_calendar_desc": "نمایش وظایف در نماهای ماه، هفته و روز",
@@ -4802,8 +4824,8 @@
       "error_update": "به‌روزرسانی تقویم ناموفق بود",
       "error_delete": "حذف تقویم ناموفق بود",
       "caldav_url": "آدرس CalDAV",
-      "copy_url": "کپی آدرس CalDAV",
-      "url_copied": "آدرس CalDAV در کلیپ‌بورد کپی شد",
+      "copy_url": "کپی نشانی برای برنامه‌های دیگر",
+      "url_copied": "نشانی کپی شد",
       "share": "اشتراک‌گذاری تقویم…",
       "new_event_in_calendar": "رویداد جدید در این تقویم",
       "shared_with": "به اشتراک گذاشته شده با {names}",
@@ -4823,8 +4845,8 @@
       "default_alerts_updated": "یادآورهای پیش‌فرض به‌روزرسانی شد"
     },
     "subscription": {
-      "title": "اشتراک iCal",
-      "section_title": "اشتراک‌های iCal",
+      "title": "اشتراک در یک تقویم",
+      "section_title": "تقویم‌های مشترک‌شده",
       "description": "اشتراک در فید خارجی iCalendar. رویدادها به صورت خودکار در تقویم خودشان همگام می‌شوند.",
       "url_label": "آدرس تقویم",
       "url_placeholder": "https://example.com/calendar.ics یا webcal://...",

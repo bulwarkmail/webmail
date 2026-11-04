@@ -138,9 +138,6 @@
         "unsupported_note": "Ihr Mailserver kann nicht nach gelesen oder ungelesen, Stern oder Label sortieren. Diese Stufen fallen weg, und die neuesten E-Mails kommen zuerst."
       },
       "description": "Ändern Sie, wie das Webmail aussieht",
-      "theme": {
-        "description": "Wählen Sie helle oder dunkle Farben"
-      },
       "font_size": {
         "description": "Machen Sie den Text größer oder kleiner"
       },
@@ -174,9 +171,6 @@
       },
       "all_mail": {
         "folders_description": "Wählen Sie, welche Ordner dieses Kontos zu den Listen „Alle Mails“, „Ungelesen“ und „Markiert“ gehören."
-      },
-      "colorful_sidebar_icons": {
-        "description": "Ordner- und Label-Symbole farbig zeigen (blauer Posteingang, roter Spam, grünes Gesendet und so weiter). Schalten Sie das aus für graue Symbole."
       },
       "tint_list_rows": {
         "description": "Jede E-Mail in der Liste in der Farbe ihres ersten Labels einfärben. Ist das aus, zeigen die kleinen Punkte die Label-Farbe trotzdem."
@@ -295,12 +289,6 @@
       },
       "confirm_bulk_delete": {
         "description": "Fragen, bevor mehrere ausgewählte E-Mails in den Papierkorb kommen. Beim endgültigen Löschen wird immer gefragt."
-      },
-      "mail_layout": {
-        "description": "Wählen Sie, wie die E-Mail-Liste und die geöffnete E-Mail auf dem Bildschirm stehen.",
-        "split_description": "Die E-Mail-Liste und die geöffnete E-Mail stehen nebeneinander.",
-        "focus_description": "Jede E-Mail hat eine Zeile. Eine geöffnete E-Mail nutzt die ganze Breite. Die Ordnerliste bleibt sichtbar.",
-        "horizontal_description": "Die E-Mail-Liste steht oben. Die geöffnete E-Mail steht darunter."
       },
       "list_columns": {
         "description": "Die Liste als Tabelle mit den Spalten Von, Betreff, Datum und Größe zeigen."
@@ -436,7 +424,6 @@
         "error": "Ihr Name konnte nicht geändert werden. Versuchen Sie es noch einmal."
       },
       "totp": {
-        "label": "Code aus einer Authenticator-App",
         "description": "Schützen Sie Ihr Konto besser: Bei der Anmeldung geben Sie zusätzlich einen Code aus einer App auf Ihrem Handy ein",
         "enable_error": "Die Zwei-Faktor-Authentifizierung konnte nicht eingeschaltet werden. Versuchen Sie es noch einmal.",
         "disable_error": "Die Zwei-Faktor-Authentifizierung konnte nicht ausgeschaltet werden. Versuchen Sie es noch einmal.",
@@ -476,11 +463,6 @@
         "key_label": "Öffentlicher Schlüssel (S/MIME oder PGP, als Text)",
         "add_error": "Der öffentliche Schlüssel konnte nicht hinzugefügt werden. Prüfen Sie, ob Sie ihn ganz eingefügt haben.",
         "remove_error": "Der öffentliche Schlüssel konnte nicht gelöscht werden. Versuchen Sie es noch einmal."
-      },
-      "email_client": {
-        "description": "Mit diesen Angaben richten Sie E-Mail auf Ihrem Computer oder Handy ein, zum Beispiel in Thunderbird, Apple Mail oder Outlook",
-        "jmap_username_label": "Benutzername für Mail-Apps",
-        "password_instructions": "Nutzen Sie in Ihrer Mail-App den Benutzernamen oben und ein App-Passwort. Ein App-Passwort erstellen Sie weiter unten auf dieser Seite."
       },
       "link_device": {
         "description": "Melden Sie sich in der Bulwark-Mail-App auf Ihrem Handy an, ohne Ihr Passwort einzutippen. Ihr Handy bekommt eine eigene Anmeldung. Wenn Sie sich hier abmelden, bleibt Ihr Handy angemeldet.",

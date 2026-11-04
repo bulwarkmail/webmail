@@ -1534,8 +1534,8 @@
       "title": "外観",
       "description": "ウェブメールの見た目をカスタマイズ",
       "theme": {
-        "label": "テーマ",
-        "description": "お好みの配色を選択",
+        "label": "ライトまたはダーク",
+        "description": "「システム」はデバイスの設定に従います",
         "light": "ライト",
         "dark": "ダーク",
         "system": "システム"
@@ -1563,7 +1563,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "Mountain View"
+        "mountain_view": "検索バーを上、アプリを左に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -1607,7 +1607,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "カラフルなサイドバーアイコン",
-        "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。モノクロのサイドバーにするには無効にしてください。"
+        "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。グレーのアイコンにするにはオフにします。"
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1933,13 +1933,13 @@
       },
       "mail_layout": {
         "label": "メールレイアウト",
-        "description": "クラシックな分割読み取りペインとGmailスタイルの集中読み取りフローから選択します。",
+        "description": "メッセージ一覧と開いたメッセージを画面のどこに表示するか。",
         "split": "分割ペイン",
-        "split_description": "メッセージリストと読み取りペインを並べて表示します。",
+        "split_description": "一覧とメッセージを横に並べる",
         "focus": "集中リスト",
-        "focus_description": "メッセージごとに1行表示し、フォルダサイドバーを表示したままメールを全幅で開きます。",
+        "focus_description": "一覧の次にメッセージを全幅で表示",
         "horizontal": "閲覧ペインを下に表示",
-        "horizontal_description": "メッセージ一覧を上に表示し、選択したメッセージを下の閲覧ペインで開きます。"
+        "horizontal_description": "一覧の下にメッセージ"
       },
       "list_columns": {
         "label": "リストを列で表示",
@@ -2272,7 +2272,7 @@
       },
       "totp": {
         "section_title": "二要素認証",
-        "label": "TOTP認証",
+        "label": "2段階サインイン",
         "description": "時間ベースのワンタイムパスワードで追加のセキュリティレイヤーを追加",
         "active": "有効",
         "inactive": "無効",
@@ -2352,12 +2352,12 @@
         "enabled_success": "保存時の暗号化が有効になりました"
       },
       "email_client": {
-        "title": "メールクライアントの設定",
-        "description": "これらの資格情報を使用して、デスクトップまたはモバイルのメールクライアント（Thunderbird、Apple Mail、Outlookなど）を設定します",
-        "jmap_username_label": "JMAPユーザー名",
+        "title": "ほかのアプリでメールを使う",
+        "description": "Thunderbird、Apple Mail、Outlook、スマートフォンのメールアプリでこの設定を使えます。",
+        "jmap_username_label": "ユーザー名",
         "copy": "コピー",
         "copied": "コピー済み",
-        "password_instructions": "上記のJMAPユーザー名とアプリパスワードを使用してメールクライアントにサインインします。まだ作成していない場合は、下のセクションでアプリパスワードを作成してください。"
+        "password_instructions": "パスワードには通常のパスワードではなく、アプリパスワードを使ってください。このページの下のほうで作成できます。"
       },
       "link_device": {
         "title": "モバイルアプリを連携",
@@ -2677,8 +2677,8 @@
       "manage_description": "サイドバーのカスタムアプリを追加、編集、削除"
     },
     "contacts": {
-      "title": "連絡先",
-      "description": "連絡先のインポートとエクスポート",
+      "title": "連絡先リスト",
+      "description": "連絡先の表示方法と、インポート・エクスポートする連絡先ファイル",
       "import_label": "連絡先をインポート",
       "import_description": "vCardファイル（.vcf）から連絡先をインポート",
       "export_label": "連絡先をエクスポート",
@@ -4352,6 +4352,28 @@
     "open_categories": "カテゴリを開く",
     "row_actions": "{name} の操作"
   },
+  "uxs_wording": {
+    "more_options": "その他のオプション",
+    "use_in_other_apps": "ほかのアプリで使う",
+    "default_address_book": "連絡先",
+    "default_calendar": "カレンダー",
+    "preview_documents": "ドキュメント",
+    "preview_photos": "写真",
+    "sample_subject": "カフェでの打ち合わせメモ",
+    "mail_apps": {
+      "imap": "受信メール (IMAP)",
+      "smtp": "送信メール (SMTP)",
+      "caldav": "カレンダー (CalDAV)",
+      "carddav": "連絡先 (CardDAV)",
+      "port_security": "ポート {port}、{security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "暗号化なし",
+      "copy_label": "{name} をコピー",
+      "loading": "メールサーバーから設定を読み込んでいます…",
+      "not_found": "メールサーバーから、ほかのアプリ用のサーバー名を取得できませんでした。管理者に問い合わせてください。"
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "カレンダー: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "予定のイベントのアラートを表示する",
       "notification_sound": "通知音",
       "notification_sound_desc": "カレンダーアラートの音を鳴らす",
-      "invitation_parsing": "メール招待を解析する",
+      "invitation_parsing": "メールの招待を表示",
       "invitation_parsing_desc": "メール添付のカレンダー招待を検出してカレンダー操作を表示する",
       "show_time_in_month_view": "月表示で時刻を表示",
       "show_time_in_month_view_desc": "月カレンダー表示でイベントの時刻を表示する",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "ミニカレンダーに週番号を表示する",
       "calendar_free_scroll": "自由スクロール",
       "calendar_free_scroll_desc": "1つの期間ずつではなく、月・週・日を連続してスクロールします",
-      "enable_tasks": "タスクを有効化",
+      "enable_tasks": "タスク",
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",
       "show_tasks_on_calendar_desc": "月表示・週表示・日表示にタスクを表示します",
@@ -4766,8 +4788,8 @@
       "error_update": "カレンダーの更新に失敗しました",
       "error_delete": "カレンダーの削除に失敗しました",
       "caldav_url": "CalDAV URL",
-      "copy_url": "CalDAV URLをコピー",
-      "url_copied": "CalDAV URLをクリップボードにコピーしました",
+      "copy_url": "ほかのアプリ用のアドレスをコピー",
+      "url_copied": "アドレスをコピーしました",
       "confirm_clear": "\"{name}\"のすべてのイベントを削除しますか？この操作は元に戻せません。",
       "set_default": "デフォルトに設定",
       "default_updated": "デフォルトのカレンダーを更新しました",
@@ -4794,8 +4816,8 @@
       "default_alerts_updated": "デフォルトのリマインダーを更新しました"
     },
     "subscription": {
-      "title": "iCal購読",
-      "section_title": "iCal購読",
+      "title": "カレンダーを購読",
+      "section_title": "購読中のカレンダー",
       "description": "外部のiCalendarフィードを購読します。イベントは自動的に専用のカレンダーに同期されます。https://およびwebcal://のURLに対応しています。",
       "url_label": "カレンダーURL",
       "url_placeholder": "https://example.com/calendar.ics または webcal://...",

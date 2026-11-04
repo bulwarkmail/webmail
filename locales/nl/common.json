@@ -1534,8 +1534,8 @@
       "title": "Uiterlijk",
       "description": "Pas het uiterlijk van je webmail aan",
       "theme": {
-        "label": "Thema",
-        "description": "Kies je voorkeurkleurenschema",
+        "label": "Licht of donker",
+        "description": "Systeem volgt de instelling van je apparaat",
         "light": "Licht",
         "dark": "Donker",
         "system": "Systeem"
@@ -1563,7 +1563,7 @@
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
         "default": "Standaard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Zoekbalk boven, apps links"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -1607,7 +1607,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Gekleurde zijbalkpictogrammen",
-        "description": "Kleur map- en tagpictogrammen op type (blauw Postvak IN, rood Spam, groen Verzonden, enz.). Schakel uit voor een monochrome zijbalk."
+        "description": "Geef map- en labelpictogrammen kleuren (blauw Postvak IN, rood Spam, groen Verzonden enzovoort). Zet uit voor grijze pictogrammen."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1933,13 +1933,13 @@
       },
       "mail_layout": {
         "label": "E-mailindeling",
-        "description": "Kies tussen het klassieke gesplitste leesvenster en een gefocuste leesstroom in Gmail-stijl.",
+        "description": "Waar de berichtenlijst en het geopende bericht op het scherm staan.",
         "split": "Gesplitst venster",
-        "split_description": "Houd de berichtenlijst en het leesvenster naast elkaar zichtbaar.",
+        "split_description": "Lijst en bericht naast elkaar",
         "focus": "Gefocuste lijst",
-        "focus_description": "Toon één regel per bericht en open e-mail op volledige breedte terwijl de mappenzijbalk zichtbaar blijft.",
+        "focus_description": "De lijst, dan het bericht over de volle breedte",
         "horizontal": "Leesvenster onderaan",
-        "horizontal_description": "Toon de berichtenlijst bovenaan en open het geselecteerde bericht in een leesvenster eronder."
+        "horizontal_description": "Bericht onder de lijst"
       },
       "list_columns": {
         "label": "Lijst in kolommen weergeven",
@@ -2272,7 +2272,7 @@
       },
       "totp": {
         "section_title": "Tweefactorauthenticatie",
-        "label": "TOTP-authenticatie",
+        "label": "Inloggen in twee stappen",
         "description": "Voeg een extra beveiligingslaag toe met een op tijd gebaseerd eenmalig wachtwoord",
         "active": "Ingeschakeld",
         "inactive": "Uitgeschakeld",
@@ -2352,12 +2352,12 @@
         "enabled_success": "Versleuteling in rust ingeschakeld"
       },
       "email_client": {
-        "title": "E-mailclient instellen",
-        "description": "Gebruik deze inloggegevens om uw desktop- of mobiele e-mailclient te configureren (Thunderbird, Apple Mail, Outlook, enz.)",
-        "jmap_username_label": "JMAP-gebruikersnaam",
+        "title": "Je mail in andere apps gebruiken",
+        "description": "Thunderbird, Apple Mail, Outlook en mailapps op je telefoon kunnen deze instellingen gebruiken.",
+        "jmap_username_label": "Gebruikersnaam",
         "copy": "Kopiëren",
         "copied": "Gekopieerd",
-        "password_instructions": "Gebruik uw hierboven vermelde JMAP-gebruikersnaam samen met een app-wachtwoord om in te loggen bij uw e-mailclient. Maak een app-wachtwoord aan in het gedeelte hieronder als u dat nog niet heeft gedaan."
+        "password_instructions": "Gebruik als wachtwoord een app-wachtwoord, niet je gewone wachtwoord. Je maakt er een verderop op deze pagina."
       },
       "link_device": {
         "title": "Mobiele app koppelen",
@@ -2677,8 +2677,8 @@
       "manage_description": "Aangepaste apps toevoegen, bewerken of verwijderen uit de zijbalk"
     },
     "contacts": {
-      "title": "Contacten",
-      "description": "Importeer en exporteer uw contacten",
+      "title": "Contactenlijst",
+      "description": "Hoe contacten worden getoond, en contactbestanden om te importeren of exporteren",
       "import_label": "Contacten importeren",
       "import_description": "Contacten importeren uit een vCard-bestand (.vcf)",
       "export_label": "Contacten exporteren",
@@ -4352,6 +4352,28 @@
     "open_categories": "Categorieën openen",
     "row_actions": "Acties voor {name}"
   },
+  "uxs_wording": {
+    "more_options": "Meer opties",
+    "use_in_other_apps": "Gebruiken in andere apps",
+    "default_address_book": "Contacten",
+    "default_calendar": "Agenda",
+    "preview_documents": "Documenten",
+    "preview_photos": "Foto's",
+    "sample_subject": "Notities van het overleg in het café",
+    "mail_apps": {
+      "imap": "Inkomende mail (IMAP)",
+      "smtp": "Uitgaande mail (SMTP)",
+      "caldav": "Agenda's (CalDAV)",
+      "carddav": "Contacten (CardDAV)",
+      "port_security": "Poort {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Geen versleuteling",
+      "copy_label": "{name} kopiëren",
+      "loading": "De instellingen worden van je mailserver gelezen…",
+      "not_found": "Je mailserver heeft geen servernamen voor andere apps gegeven. Vraag ze aan je beheerder."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Agenda's: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "Meldingen weergeven voor aankomende evenementen",
       "notification_sound": "Meldingsgeluid",
       "notification_sound_desc": "Geluid afspelen voor agendameldingen",
-      "invitation_parsing": "E-mailuitnodigingen verwerken",
+      "invitation_parsing": "Uitnodigingen uit mail tonen",
       "invitation_parsing_desc": "Kalenderuitnodigingen in e-mailbijlagen detecteren en kalenderacties tonen",
       "show_time_in_month_view": "Tijd weergeven in maandweergave",
       "show_time_in_month_view_desc": "Evenementtijden weergeven in de maandkalenderweergave",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "Weeknummers weergeven in de minikalender",
       "calendar_free_scroll": "Vrij scrollen",
       "calendar_free_scroll_desc": "Doorlopend door maanden, weken en dagen scrollen in plaats van één periode tegelijk",
-      "enable_tasks": "Taken inschakelen",
+      "enable_tasks": "Taken",
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
       "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
@@ -4766,8 +4788,8 @@
       "error_update": "Agenda bijwerken mislukt",
       "error_delete": "Agenda verwijderen mislukt",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "CalDAV-URL kopiëren",
-      "url_copied": "CalDAV-URL gekopieerd naar klembord",
+      "copy_url": "Adres voor andere apps kopiëren",
+      "url_copied": "Adres gekopieerd",
       "confirm_clear": "Alle afspraken uit \"{name}\" verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "set_default": "Als standaard instellen",
       "default_updated": "Standaardagenda bijgewerkt",
@@ -4794,8 +4816,8 @@
       "default_alerts_updated": "Standaardherinneringen bijgewerkt"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementen",
+      "title": "Abonneren op een agenda",
+      "section_title": "Geabonneerde agenda's",
       "description": "Abonneer op een externe iCalendar-feed. Afspraken worden automatisch gesynchroniseerd in een eigen agenda. Ondersteunt https://- en webcal://-URL's.",
       "url_label": "Agenda-URL",
       "url_placeholder": "https://example.com/calendar.ics of webcal://...",

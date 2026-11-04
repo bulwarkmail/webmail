@@ -1534,8 +1534,8 @@
       "title": "화면 설정",
       "description": "웹메일의 디자인과 화면을 내 취향에 맞게 꾸며보세요",
       "theme": {
-        "label": "테마",
-        "description": "선호하는 색상 테마를 선택해 주세요",
+        "label": "밝게 또는 어둡게",
+        "description": "'시스템'은 기기 설정을 따릅니다",
         "light": "라이트",
         "dark": "다크",
         "system": "시스템"
@@ -1563,7 +1563,7 @@
         "label": "인터페이스 레이아웃",
         "description": "검색, 탐색, 도구 모음의 위치",
         "default": "기본",
-        "mountain_view": "Mountain View"
+        "mountain_view": "검색창은 위, 앱은 왼쪽"
       },
       "animations": {
         "label": "애니메이션 켜기",
@@ -1607,7 +1607,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "컬러풀한 사이드바 아이콘",
-        "description": "폴더와 태그 아이콘을 유형별로 색상 표시합니다(받은편지함 파란색, 스팸 빨간색, 보낸편지함 녹색 등). 모노크롬 사이드바를 원하면 비활성화하세요."
+        "description": "폴더와 태그 아이콘을 종류별로 색칠합니다(받은편지함은 파란색, 스팸함은 빨간색, 보낸편지함은 초록색 등). 회색 아이콘을 원하면 끄세요."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1933,13 +1933,13 @@
       },
       "mail_layout": {
         "label": "메일 레이아웃",
-        "description": "기존의 분할 화면 방식과 Gmail 스타일의 집중형 화면 중 선택해 주세요.",
+        "description": "메시지 목록과 열린 메시지가 화면 어디에 놓이는지 정합니다.",
         "split": "화면 분할",
-        "split_description": "메일 목록과 읽기 창을 나란히 보여줘요.",
+        "split_description": "목록과 메시지를 나란히",
         "focus": "집중형 목록",
-        "focus_description": "메일을 한 줄로 보여주고, 클릭하면 폴더 사이드바는 남겨둔 채 메일 내용을 넓게 보여줘요.",
+        "focus_description": "목록, 그다음 메시지를 전체 너비로",
         "horizontal": "읽기 창 하단 표시",
-        "horizontal_description": "메시지 목록을 상단에 표시하고 선택한 메시지를 하단 읽기 창에서 엽니다."
+        "horizontal_description": "목록 아래에 메시지"
       },
       "list_columns": {
         "label": "목록을 열로 표시",
@@ -2272,7 +2272,7 @@
       },
       "totp": {
         "section_title": "2단계 인증 (2FA)",
-        "label": "TOTP 인증",
+        "label": "2단계 로그인",
         "description": "시간 기반 일회용 비밀번호로 보안을 한 층 더 강화해 보세요",
         "active": "사용 중",
         "inactive": "사용 안 함",
@@ -2352,12 +2352,12 @@
         "enabled_success": "저장 데이터 암호화가 켜졌어요"
       },
       "email_client": {
-        "title": "이메일 클라이언트 설정",
-        "description": "데스크톱이나 모바일 이메일 클라이언트(Thunderbird, Apple Mail, Outlook 등)를 설정할 때 사용할 정보예요",
-        "jmap_username_label": "JMAP 사용자 이름",
+        "title": "다른 앱에서 메일 사용",
+        "description": "Thunderbird, Apple Mail, Outlook, 휴대폰 메일 앱에서 이 설정을 사용할 수 있습니다.",
+        "jmap_username_label": "사용자 이름",
         "copy": "복사",
         "copied": "복사되었어요",
-        "password_instructions": "위의 JMAP 사용자 이름과 앱 비밀번호를 사용해서 이메일 클라이언트에 로그인하세요. 아직 만들지 않았다면 아래에서 앱 비밀번호를 먼저 만들어 주세요."
+        "password_instructions": "비밀번호로는 평소 비밀번호가 아닌 앱 비밀번호를 사용하세요. 이 페이지 아래쪽에서 만들 수 있습니다."
       },
       "link_device": {
         "title": "모바일 앱 연결",
@@ -2677,8 +2677,8 @@
       "manage_description": "사이드바에 나만의 앱을 추가, 수정, 삭제해 보세요"
     },
     "contacts": {
-      "title": "연락처",
-      "description": "연락처를 가져오거나 내보낼 수 있어요",
+      "title": "연락처 목록",
+      "description": "연락처 표시 방식과 가져오거나 내보낼 연락처 파일",
       "import_label": "연락처 가져오기",
       "import_description": "vCard(.vcf) 파일에서 연락처를 가져와요",
       "export_label": "연락처 내보내기",
@@ -4352,6 +4352,28 @@
     "open_categories": "카테고리 열기",
     "row_actions": "{name} 작업"
   },
+  "uxs_wording": {
+    "more_options": "옵션 더 보기",
+    "use_in_other_apps": "다른 앱에서 사용",
+    "default_address_book": "연락처",
+    "default_calendar": "캘린더",
+    "preview_documents": "문서",
+    "preview_photos": "사진",
+    "sample_subject": "카페 회의 메모",
+    "mail_apps": {
+      "imap": "받는 메일 (IMAP)",
+      "smtp": "보내는 메일 (SMTP)",
+      "caldav": "캘린더 (CalDAV)",
+      "carddav": "연락처 (CardDAV)",
+      "port_security": "포트 {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "암호화 없음",
+      "copy_label": "{name} 복사",
+      "loading": "메일 서버에서 설정을 읽는 중…",
+      "not_found": "메일 서버가 다른 앱용 서버 이름을 알려 주지 않았습니다. 관리자에게 문의하세요."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "캘린더: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "다가오는 일정에 대한 알림을 보여줘요",
       "notification_sound": "알림음",
       "notification_sound_desc": "일정 알림 시 소리를 재생해요",
-      "invitation_parsing": "이메일 초대장 분석",
+      "invitation_parsing": "메일의 초대 표시",
       "invitation_parsing_desc": "이메일 첨부파일에서 캘린더 초대장을 감지하고 보여줘요",
       "show_time_in_month_view": "월간 보기에 시간 표시",
       "show_time_in_month_view_desc": "월간 캘린더에서도 일정 시간을 표시해요",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "미니 캘린더에 1년 중 몇 주 차인지 표시해요",
       "calendar_free_scroll": "자유 스크롤",
       "calendar_free_scroll_desc": "한 번에 한 기간씩 보는 대신 월, 주, 일을 연속으로 스크롤합니다",
-      "enable_tasks": "할 일 사용",
+      "enable_tasks": "할 일",
       "enable_tasks_desc": "캘린더에 할 일을 관리할 수 있는 메뉴를 추가해요",
       "show_tasks_on_calendar": "캘린더에 할 일 표시",
       "show_tasks_on_calendar_desc": "월간, 주간 및 일간 캘린더에 할 일을 보여줘요",
@@ -4773,8 +4795,8 @@
       "error_update": "캘린더를 업데이트하지 못했어요",
       "error_delete": "캘린더를 삭제하지 못했어요",
       "caldav_url": "CalDAV URL",
-      "copy_url": "CalDAV URL 복사",
-      "url_copied": "CalDAV URL이 클립보드에 복사되었어요",
+      "copy_url": "다른 앱용 주소 복사",
+      "url_copied": "주소를 복사했습니다",
       "share": "캘린더 공유…",
       "new_event_in_calendar": "이 캘린더에 새 일정",
       "shared_with": "공유 대상: {names}",
@@ -4794,8 +4816,8 @@
       "default_alerts_updated": "기본 알림이 업데이트되었어요"
     },
     "subscription": {
-      "title": "iCal 구독",
-      "section_title": "iCal 구독",
+      "title": "캘린더 구독",
+      "section_title": "구독한 캘린더",
       "description": "외부 iCalendar 피드를 구독해 보세요. 일정들이 전용 캘린더에 자동으로 동기화돼요. (https:// 및 webcal:// 지원)",
       "url_label": "캘린더 URL",
       "url_placeholder": "https://example.com/calendar.ics 또는 webcal://...",

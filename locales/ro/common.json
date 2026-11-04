@@ -1537,8 +1537,8 @@
       "title": "Aspect",
       "description": "Personalizați aspectul și funcționalitatea serviciului dvs. de webmail",
       "theme": {
-        "label": "Tema",
-        "description": "Alegeți schema de culori preferată",
+        "label": "Luminos sau întunecat",
+        "description": "Sistem urmează setarea dispozitivului",
         "light": "Ușor",
         "dark": "Întunecat",
         "system": "Sistem"
@@ -1566,7 +1566,7 @@
         "label": "Aspectul interfeței",
         "description": "Unde se află căutarea, navigarea și barele de instrumente",
         "default": "Implicit",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Căutarea sus, aplicațiile în stânga"
       },
       "animations": {
         "label": "Activați animațiile",
@@ -1610,7 +1610,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Pictograme colorate în bara laterală",
-        "description": "Colorați pictogramele folderelor și etichetelor în funcție de tip (albastru pentru „Inbox”, roșu pentru „Junk”, verde pentru „Sent” etc.). Dezactivați această opțiune pentru o bară laterală monocromă."
+        "description": "Colorează pictogramele dosarelor și etichetelor după tip (Primite albastru, Spam roșu, Trimise verde etc.). Dezactivați pentru pictograme gri."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1936,13 +1936,13 @@
       },
       "mail_layout": {
         "label": "Structura e-mailului",
-        "description": "Alegeți între panoul de citire clasic divizat, un flux de citire concentrat în stilul Gmail sau un panou de citire în partea de jos, în stilul Zimbra.",
+        "description": "Unde stau pe ecran lista de mesaje și mesajul deschis.",
         "split": "Panou divizat",
-        "split_description": "Mențineți lista de mesaje și panoul de citire vizibile unul lângă celălalt.",
+        "split_description": "Lista și mesajul alăturate",
         "focus": "Listă cu elemente evidențiate",
-        "focus_description": "Afișați câte o linie pe mesaj și deschideți e-mailul pe toată lățimea ecranului, menținând în același timp vizibilă bara laterală a folderelor.",
+        "focus_description": "Lista, apoi mesajul pe toată lățimea",
         "horizontal": "Panoul de citire în partea de jos",
-        "horizontal_description": "Afișați lista de mesaje în partea de sus și deschideți mesajul selectat într-un panou de citire situat sub aceasta."
+        "horizontal_description": "Mesajul sub listă"
       },
       "list_columns": {
         "label": "Afișează lista pe coloane",
@@ -2279,7 +2279,7 @@
       },
       "totp": {
         "section_title": "Autentificare în doi pași",
-        "label": "Autentificare TOTP",
+        "label": "Conectare în doi pași",
         "description": "Adăugați un nivel suplimentar de securitate cu o parolă unică, valabilă o singură dată, bazată pe timp",
         "active": "Activat",
         "inactive": "Dezactivat",
@@ -2359,12 +2359,12 @@
         "enabled_success": "Criptarea datelor stocate este activată"
       },
       "email_client": {
-        "title": "Configurarea clientului de e-mail",
-        "description": "Utilizați aceste date de autentificare pentru a configura clientul de e-mail de pe desktop sau de pe dispozitivul mobil (Thunderbird, Apple Mail, Outlook etc.)",
-        "jmap_username_label": "JMAP Nume de utilizator",
+        "title": "Folosiți e-mailul în alte aplicații",
+        "description": "Thunderbird, Apple Mail, Outlook și aplicațiile de e-mail de pe telefon pot folosi aceste setări.",
+        "jmap_username_label": "Nume de utilizator",
         "copy": "Copiere",
         "copied": "Copiat",
-        "password_instructions": "Folosiți numele de utilizator de la JMAP menționat mai sus, împreună cu o parolă de aplicație, pentru a vă autentifica în clientul de e-mail. Creați o parolă de aplicație în secțiunea de mai jos, dacă nu ați făcut-o deja."
+        "password_instructions": "Ca parolă, folosiți o parolă de aplicație, nu parola obișnuită. Puteți crea una mai jos pe această pagină."
       },
       "link_device": {
         "title": "Aplicație mobilă",
@@ -2684,8 +2684,8 @@
       "manage_description": "Adăugați, editați sau eliminați aplicații personalizate din bara laterală"
     },
     "contacts": {
-      "title": "Contacte",
-      "description": "Importați și exportați contactele",
+      "title": "Lista de contacte",
+      "description": "Cum sunt afișate contactele, și fișiere de contacte de importat sau exportat",
       "group_by_letter_label": "Grupați după prima literă",
       "sort_by_last_name_label": "Sortare după nume de familie",
       "sort_by_last_name_description": "Ordonați lista de contacte după numele de familie, astfel încât membrii familiei să apară împreună",
@@ -4352,6 +4352,28 @@
       "menu": "Deschideți meniul contactului"
     }
   },
+  "uxs_wording": {
+    "more_options": "Mai multe opțiuni",
+    "use_in_other_apps": "Folosește în alte aplicații",
+    "default_address_book": "Contacte",
+    "default_calendar": "Calendar",
+    "preview_documents": "Documente",
+    "preview_photos": "Fotografii",
+    "sample_subject": "Notițe de la întâlnirea din cafenea",
+    "mail_apps": {
+      "imap": "E-mail primit (IMAP)",
+      "smtp": "E-mail trimis (SMTP)",
+      "caldav": "Calendare (CalDAV)",
+      "carddav": "Contacte (CardDAV)",
+      "port_security": "Portul {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Fără criptare",
+      "copy_label": "Copiază {name}",
+      "loading": "Se citesc setările de pe serverul de e-mail…",
+      "not_found": "Serverul de e-mail nu a comunicat numele serverelor pentru alte aplicații. Cereți-le administratorului."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendare: {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "Afișați alerte pentru evenimentele viitoare din calendar",
       "notification_sound": "Sunet de notificare",
       "notification_sound_desc": "Redă un sunet pentru alertele din calendar",
-      "invitation_parsing": "Analizați invitațiile prin e-mail",
+      "invitation_parsing": "Afișează invitațiile din e-mail",
       "invitation_parsing_desc": "Detectați invitațiile din calendar din atașamentele de e-mail și afișați acțiunile din calendar",
       "show_time_in_month_view": "Afișați ora în vizualizarea lunară",
       "show_time_in_month_view_desc": "Afișați orele evenimentelor în vizualizarea calendarului lunar",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "Afișați numerele săptămânilor în mini-calendar",
       "calendar_free_scroll": "Derulare liberă",
       "calendar_free_scroll_desc": "Derulează continuu prin luni, săptămâni și zile în loc de o singură perioadă odată",
-      "enable_tasks": "Activați sarcinile",
+      "enable_tasks": "Sarcini",
       "enable_tasks_desc": "Afișați o vizualizare a sarcinilor în calendar pentru gestionarea sarcinilor de îndeplinit",
       "show_tasks_on_calendar": "Afișați sarcinile în calendar",
       "show_tasks_on_calendar_desc": "Afișați sarcinile în vizualizările lunare, săptămânale și zilnice ale calendarului",
@@ -4802,8 +4824,8 @@
       "error_update": "Nu s-a putut actualiza calendarul",
       "error_delete": "Nu s-a putut șterge calendarul",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Copiați CalDAV URL",
-      "url_copied": "CalDAV URL copiat în clipboard",
+      "copy_url": "Copiază adresa pentru alte aplicații",
+      "url_copied": "Adresa a fost copiată",
       "share": "Partajare calendar…",
       "new_event_in_calendar": "Eveniment nou în acest calendar",
       "shared_with": "Partajat cu {names}",
@@ -4823,8 +4845,8 @@
       "default_alerts_updated": "Mementourile implicite au fost actualizate"
     },
     "subscription": {
-      "title": "iCal Abonament",
-      "section_title": "iCal Abonamente",
+      "title": "Abonare la un calendar",
+      "section_title": "Calendare abonate",
       "description": "Abonați-vă la un flux extern de tip iCalendar. Evenimentele vor fi sincronizate automat în propriul calendar. Suportă adresele URL de tip https:// și webcal://.",
       "url_label": "URL de calendar",
       "url_placeholder": "https://example.com/calendar.ics sau webcal://...",

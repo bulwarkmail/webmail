@@ -1534,8 +1534,8 @@
       "title": "Apparence",
       "description": "Personnalisez l'apparence de votre webmail",
       "theme": {
-        "label": "Thème",
-        "description": "Choisissez votre schéma de couleurs préféré",
+        "label": "Clair ou sombre",
+        "description": "Système suit le réglage de votre appareil",
         "light": "Clair",
         "dark": "Sombre",
         "system": "Système"
@@ -1563,7 +1563,7 @@
         "label": "Disposition de l'interface",
         "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
         "default": "Par défaut",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Recherche en haut, applications à gauche"
       },
       "animations": {
         "label": "Activer les animations",
@@ -1607,7 +1607,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Icônes colorées dans la barre latérale",
-        "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Indésirable en rouge, Envoyés en vert, etc.). Désactivez pour une barre latérale monochrome."
+        "description": "Colore les icônes de dossiers et d'étiquettes par type (Boîte de réception en bleu, Spam en rouge, Envoyés en vert, etc.). Désactivez pour des icônes grises."
       },
       "tint_list_rows": {
         "label": "Lignes de liste colorées selon la couleur d'étiquette",
@@ -1933,13 +1933,13 @@
       },
       "mail_layout": {
         "label": "Disposition du courrier",
-        "description": "Choisissez entre le volet de lecture divisé classique et un flux de lecture focalisé style Gmail.",
+        "description": "Où se placent la liste des messages et le message ouvert à l'écran.",
         "split": "Volet divisé",
-        "split_description": "Garder la liste des messages et le volet de lecture visibles côte à côte.",
+        "split_description": "Liste et message côte à côte",
         "focus": "Liste focalisée",
-        "focus_description": "Afficher une ligne par message et ouvrir le courrier en pleine largeur tout en gardant la barre latérale des dossiers visible.",
+        "focus_description": "La liste, puis le message sur toute la largeur",
         "horizontal": "Volet de lecture en bas",
-        "horizontal_description": "Afficher la liste des messages en haut et ouvrir le message sélectionné dans un volet de lecture en dessous."
+        "horizontal_description": "Message sous la liste"
       },
       "list_columns": {
         "label": "Afficher la liste en colonnes",
@@ -2272,7 +2272,7 @@
       },
       "totp": {
         "section_title": "Authentification à deux facteurs",
-        "label": "Authentification TOTP",
+        "label": "Connexion en deux étapes",
         "description": "Ajoutez une couche de sécurité supplémentaire avec un mot de passe à usage unique basé sur le temps",
         "active": "Activé",
         "inactive": "Désactivé",
@@ -2352,12 +2352,12 @@
         "enabled_success": "Chiffrement au repos activé"
       },
       "email_client": {
-        "title": "Configuration du client de messagerie",
-        "description": "Utilisez ces identifiants pour configurer votre client de messagerie de bureau ou mobile (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "Nom d'utilisateur JMAP",
+        "title": "Utiliser vos e-mails dans d'autres applications",
+        "description": "Thunderbird, Apple Mail, Outlook et les applications de messagerie du téléphone peuvent utiliser ces réglages.",
+        "jmap_username_label": "Nom d'utilisateur",
         "copy": "Copier",
         "copied": "Copié",
-        "password_instructions": "Utilisez votre nom d'utilisateur JMAP ci-dessus avec un mot de passe d'application pour vous connecter à votre client de messagerie. Créez un mot de passe d'application dans la section ci-dessous si vous ne l'avez pas encore fait."
+        "password_instructions": "Comme mot de passe, utilisez un mot de passe d'application, pas votre mot de passe habituel. Vous pouvez en créer un plus bas sur cette page."
       },
       "link_device": {
         "title": "Associer l'application mobile",
@@ -2677,8 +2677,8 @@
       "manage_description": "Ajouter, modifier ou supprimer des apps personnalisées de la barre latérale"
     },
     "contacts": {
-      "title": "Contacts",
-      "description": "Importer et exporter vos contacts",
+      "title": "Liste des contacts",
+      "description": "Comment les contacts sont affichés, et fichiers de contacts à importer ou exporter",
       "import_label": "Importer des contacts",
       "import_description": "Importer des contacts depuis un fichier vCard (.vcf)",
       "export_label": "Exporter des contacts",
@@ -4352,6 +4352,28 @@
     "open_categories": "Ouvrir les catégories",
     "row_actions": "Actions pour {name}"
   },
+  "uxs_wording": {
+    "more_options": "Plus d'options",
+    "use_in_other_apps": "Utiliser dans d'autres applications",
+    "default_address_book": "Contacts",
+    "default_calendar": "Agenda",
+    "preview_documents": "Documents",
+    "preview_photos": "Photos",
+    "sample_subject": "Notes de la réunion au café de Noël",
+    "mail_apps": {
+      "imap": "Courrier entrant (IMAP)",
+      "smtp": "Courrier sortant (SMTP)",
+      "caldav": "Agendas (CalDAV)",
+      "carddav": "Contacts (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Sans chiffrement",
+      "copy_label": "Copier {name}",
+      "loading": "Lecture des réglages sur votre serveur de messagerie…",
+      "not_found": "Votre serveur de messagerie n'a pas indiqué les noms de serveur pour d'autres applications. Demandez-les à votre administrateur."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendriers : {names}",
@@ -4606,7 +4628,7 @@
       "notifications_enabled_desc": "Afficher les alertes pour les événements à venir",
       "notification_sound": "Son de notification",
       "notification_sound_desc": "Jouer un son pour les alertes de calendrier",
-      "invitation_parsing": "Analyser les invitations par e-mail",
+      "invitation_parsing": "Afficher les invitations reçues par e-mail",
       "invitation_parsing_desc": "Détecter les invitations de calendrier dans les pièces jointes des e-mails et afficher les actions du calendrier",
       "show_time_in_month_view": "Afficher l'heure dans la vue mensuelle",
       "show_time_in_month_view_desc": "Afficher les heures des événements dans la vue mensuelle du calendrier",
@@ -4621,7 +4643,7 @@
       "show_week_numbers_desc": "Afficher les numéros de semaine dans le mini-calendrier",
       "calendar_free_scroll": "Défilement libre",
       "calendar_free_scroll_desc": "Faire défiler les mois, semaines et jours en continu au lieu d'une période à la fois",
-      "enable_tasks": "Activer les tâches",
+      "enable_tasks": "Tâches",
       "enable_tasks_desc": "Afficher une vue des tâches dans le calendrier pour gérer les choses à faire",
       "show_tasks_on_calendar": "Afficher les tâches dans le calendrier",
       "show_tasks_on_calendar_desc": "Afficher les tâches dans les vues mois, semaine et jour du calendrier",
@@ -4792,8 +4814,8 @@
       "error_update": "Échec de la mise à jour du calendrier",
       "error_delete": "Échec de la suppression du calendrier",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Copier l'URL CalDAV",
-      "url_copied": "URL CalDAV copiée dans le presse-papiers",
+      "copy_url": "Copier l'adresse pour d'autres applications",
+      "url_copied": "Adresse copiée",
       "confirm_clear": "Supprimer tous les événements de \"{name}\" ? Cette action est irréversible.",
       "set_default": "Définir par défaut",
       "default_updated": "Calendrier par défaut mis à jour",
@@ -4820,8 +4842,8 @@
       "default_alerts_updated": "Rappels par défaut mis à jour"
     },
     "subscription": {
-      "title": "Abonnement iCal",
-      "section_title": "Abonnements iCal",
+      "title": "S'abonner à un agenda",
+      "section_title": "Agendas abonnés",
       "description": "Abonnez-vous à un flux iCalendar externe. Les événements seront synchronisés automatiquement dans leur propre calendrier. Prend en charge les URL https:// et webcal://.",
       "url_label": "URL du calendrier",
       "url_placeholder": "https://example.com/calendar.ics ou webcal://...",
