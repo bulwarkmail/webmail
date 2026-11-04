@@ -649,7 +649,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       <ConfirmDialog {...confirmDialogProps} />
       {inOwnWindow && (
         <MoveToDialog
-          email={moveDialogOpen ? email : null}
+          emails={moveDialogOpen && email ? [email] : []}
           mailboxes={mailboxes}
           selectedMailbox=""
           onClose={() => setMoveDialogOpen(false)}
