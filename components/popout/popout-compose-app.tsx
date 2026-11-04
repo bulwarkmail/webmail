@@ -67,6 +67,17 @@ interface ReopenTarget {
   ownerAccountId?: string;
 }
 
+/** "Sending…" or "Sent", where the composer was, with the send icon. */
+function SendStatus({ text, children }: { text: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending">
+      <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+      <p role="status" className="text-sm text-foreground">{text}</p>
+      {children}
+    </div>
+  );
+}
+
 /**
  * A send held for undo, shown in the window it was sent from: that's where the
  * user is looking, and quick compose is used with the main window out of sight.
@@ -79,6 +90,7 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   onGone: () => void;
 }) {
   const tViewer = useTranslations("email_viewer");
+  const tSend = useTranslations("compose_send");
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const sendAt = Date.parse(held.sendAt);
@@ -122,17 +134,17 @@ function SendingWithUndo({ held, onUndone, onGone }: {
     onUndone(held.isSmime ? null : restored);
   };
 
-  const seconds = Math.max(0, Math.ceil((sendAt - now) / 1000));
+  const seconds = Math.max(1, Math.ceil((sendAt - now) / 1000));
+  // Once Undo is over, "Sent" for the moment before the window goes, as the
+  // main window's toast says it.
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending">
-      <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-      <p role="status" className="text-sm text-foreground">{tViewer("sending_in", { seconds })}</p>
+    <SendStatus text={over && !busy ? tSend("sent") : tViewer("sending_in", { seconds })}>
       {!over && (
         <Button onClick={() => void undo()} disabled={busy} data-testid="popout-undo-send">
           {tViewer("undo_send")}
         </Button>
       )}
-    </div>
+    </SendStatus>
   );
 }
 
@@ -320,7 +332,11 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       : t("email_composer.new_message"),
   );
 
-  const handleSend = useCallback(async (data: SendData) => {
+  // "Sending…" from the moment Send goes through, as the main window says it
+  // (compose-24); the composer waited greyed out for the server before. It
+  // stays mounted behind, and comes back with the text if the send fails.
+  const [sending, setSending] = useState(false);
+  const sendFromWindow = useCallback(async (data: SendData) => {
     if (!client) return false;
     const sendClient = data.localAccountId
       ? (useAuthStore.getState().getClientForAccount(data.localAccountId) ?? client)
@@ -386,6 +402,16 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       await new Promise((resolve) => setTimeout(resolve, WARNING_READ_MS));
     }
   }, [client, mode, payload.sourceEmailId, payload.sourceEmailSource, t]);
+  const handleSend = useCallback(async (data: SendData) => {
+    if (!client) return false;
+    if (!data.delayedUntil) setSending(true);
+    try {
+      return await sendFromWindow(data);
+    } catch (error) {
+      setSending(false);
+      throw error;
+    }
+  }, [client, sendFromWindow]);
 
   const handleDiscardDraft = useCallback(async (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => {
     if (!client) return;
@@ -507,6 +533,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   if (held) return <SendingWithUndo held={held} onUndone={heldUndone} onGone={heldGone} />;
 
   return (
+    <>
+    {sending && <SendStatus text={t("compose_send.sending")} />}
+    <div className={sending ? "hidden" : "contents"}>
     <ErrorBoundary fallback={ComposerErrorFallback}>
       <EmailComposer
         mode={mode}
@@ -527,6 +556,8 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
         className="min-h-0 flex-1"
       />
     </ErrorBoundary>
+    </div>
+    </>
   );
 }
 
