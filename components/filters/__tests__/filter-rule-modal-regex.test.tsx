@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { FilterRule } from '@/lib/jmap/sieve-types';
 import { FilterRuleModal } from '../filter-rule-modal';
+import { useSettingsStore } from '@/stores/settings-store';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }));
 
@@ -28,6 +29,15 @@ const comparatorOptions = () => [...comparatorSelect().options].map((o) => o.val
 const valueInput = () => screen.getByLabelText('condition_value') as HTMLInputElement;
 
 describe('the "matches regex" comparator', () => {
+  // Regular expressions are an advanced choice (settings-13).
+  beforeEach(() => useSettingsStore.setState({ showAdvancedSettings: true }));
+
+  it('is hidden while the advanced settings are off', () => {
+    useSettingsStore.setState({ showAdvancedSettings: false });
+    openModal({ regexSupported: true });
+    expect(comparatorOptions()).not.toContain('regex');
+  });
+
   it('is offered only when the server lists the regex extension', () => {
     openModal();
     expect(comparatorOptions()).not.toContain('regex');

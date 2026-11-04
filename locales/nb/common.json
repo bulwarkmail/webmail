@@ -126,7 +126,7 @@
     "sign_out_of": "Logg ut av {account}",
     "sign_out_all": "Logg ut av alle kontoer",
     "add_account": "Legg til konto",
-    "set_as_default": "Sett som standard",
+    "set_as_default": "Åpne denne kontoen ved oppstart",
     "switch_account": "Bytt konto",
     "contacts": "Kontakter",
     "calendar": "Kalender",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "E-postetiketter",
-      "description": "Definer etiketter for å organisere e-postene dine. De lagres som JMAP-nøkkelord på serveren.",
+      "description": "Lag etiketter for å sortere meldingene dine. Etikettene lagres sammen med meldingene på serveren.",
       "add_keyword": "Legg til etikett",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. arbeid, personlig, haster",
@@ -1708,8 +1708,8 @@
         "hide": "Skjul"
       },
       "unrecognized": {
-        "title": "Gjenopprett etiketter fra serveren",
-        "description": "Navn og farger på etiketter lagres i denne nettleseren, men selve etikettene finnes på meldingene som JMAP-nøkkelord. Søk gjennom meldingene etter nøkkelord som ikke er definert her, og legg dem til igjen.",
+        "title": "Finn etiketter på meldingene som mangler her",
+        "description": "Denne nettleseren lagrer navn og farger på etikettene dine. Selve etikettene er lagret på meldingene. Søk i e-posten etter etiketter som mangler her, og legg dem til igjen.",
         "scan": "Søk etter etiketter",
         "rescan": "Søk på nytt",
         "scanning": "Søker... {scanned} av {total} meldinger",
@@ -2191,8 +2191,8 @@
         "title": "Innloggede kontoer",
         "description": "Dra for å endre rekkefølgen på kontoene i kontomenyen",
         "active": "Aktiv konto",
-        "default_badge": "Standardkonto",
-        "set_default": "Sett som standard",
+        "default_badge": "Åpnes ved oppstart",
+        "set_default": "Åpne denne kontoen ved oppstart",
         "switch_to": "Bytt til denne kontoen",
         "move_up": "Flytt opp",
         "move_down": "Flytt ned",
@@ -2780,15 +2780,15 @@
       "not_supported": "E-postserveren din støtter ikke e-postfiltre.",
       "rule_name": "Regelnavn",
       "rule_name_placeholder": "f.eks. sorter nyhetsbrev",
-      "match_all": "ALLE vilkår må samsvare",
-      "match_any": "Minst ETT vilkår må samsvare",
+      "match_all": "Alle vilkår må samsvare",
+      "match_any": "Minst ett vilkår må samsvare",
       "conditions": "Vilkår",
       "add_condition": "Legg til vilkår",
       "actions": "Handlinger",
       "add_action": "Legg til handling",
       "remove_condition": "Fjern betingelse",
       "remove_action": "Fjern handling",
-      "stop_processing": "Ikke behandle flere regler",
+      "stop_processing": "Ikke bruk senere regler",
       "include_spam": "Flytt også meldinger som er merket som søppelpost",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Verdi (skill flere verdier med komma)",
@@ -2830,7 +2830,7 @@
         "discard": "Forkast (slett uten varsel)",
         "reject": "Avvis med melding",
         "keep": "Behold i innboksen",
-        "stop": "Stopp behandlingen"
+        "stop": "Ikke bruk senere regler"
       },
       "move_to_folder": "Velg mappe",
       "copy_to_folder": "Velg mappe",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
     "delete_with_contents_confirm": "Slett mappe og meldinger"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Administrer kontoer…",
+    "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"
   },
   "shortcuts": {
     "title": "Tastatursnarveier",

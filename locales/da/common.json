@@ -126,7 +126,7 @@
     "sign_out_of": "Log ud af {account}",
     "sign_out_all": "Log ud af alle konti",
     "add_account": "Tilføj konto",
-    "set_as_default": "Angiv som standard",
+    "set_as_default": "Åbn denne konto ved start",
     "switch_account": "Skift konto",
     "contacts": "Kontakter",
     "calendar": "Kalender",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "E-mail-tags",
-      "description": "Definér tags til at organisere dine e-mails med farver. Disse gemmes som JMAP-nøgleord på serveren.",
+      "description": "Lav tags til at sortere dine beskeder. Taggene gemmes sammen med beskederne på serveren.",
       "add_keyword": "Tilføj tag",
       "label_field": "Visningsnavn",
       "label_placeholder": "f.eks. Arbejde, Privat, Vigtigt",
@@ -1708,8 +1708,8 @@
         "hide": "Skjul"
       },
       "unrecognized": {
-        "title": "Gendan tags fra serveren",
-        "description": "Tagnavne og farver gemmes i denne browser, men selve taggene ligger på dine e-mails som JMAP-nøgleord. Scan din post for nøgleord, som intet tag her forklarer, og tilføj dem igen.",
+        "title": "Find tags på dine beskeder, som mangler her",
+        "description": "Denne browser gemmer navne og farver på dine tags. Selve taggene er gemt på dine beskeder. Søg i din post efter tags, der mangler her, og tilføj dem igen.",
         "scan": "Søg efter tags",
         "rescan": "Scan igen",
         "scanning": "Scanner… {scanned} af {total} e-mails",
@@ -2191,8 +2191,8 @@
         "title": "Indloggede konti",
         "description": "Træk for at ændre rækkefølgen af konti i kontomenuen",
         "active": "Aktuelt aktiv konto",
-        "default_badge": "Standardkonto",
-        "set_default": "Indstil som standard",
+        "default_badge": "Åbnes ved start",
+        "set_default": "Åbn denne konto ved start",
         "switch_to": "Skift til denne konto",
         "move_up": "Flyt op",
         "move_down": "Flyt ned",
@@ -2776,7 +2776,7 @@
       "not_supported": "Din mailserver understøtter ikke e-mail-filtre.",
       "rule_name": "Regelnavn",
       "rule_name_placeholder": "f.eks. Sorter nyhedsbreve",
-      "match_all": "Match ALLE betingelser",
+      "match_all": "Match alle betingelser",
       "match_any": "Match en af betingelserne",
       "conditions": "Betingelser",
       "add_condition": "Tilføj betingelse",
@@ -2784,7 +2784,7 @@
       "add_action": "Tilføj handling",
       "remove_condition": "Fjern betingelse",
       "remove_action": "Fjern handling",
-      "stop_processing": "Stop behandling af efterfølgende regler",
+      "stop_processing": "Anvend ikke senere regler",
       "include_spam": "Flyt også beskeder, der er markeret som spam",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Værdi (flere adskilt med komma)",
@@ -2826,7 +2826,7 @@
         "discard": "Kassér (slet stille)",
         "reject": "Afvis med besked",
         "keep": "Behold i indbakke",
-        "stop": "Stop behandling"
+        "stop": "Anvend ikke senere regler"
       },
       "move_to_folder": "Vælg mappe",
       "copy_to_folder": "Vælg mappe",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "Mappen er ikke tom",
     "delete_with_contents_message": "Mappen \"{name}\" indeholder stadig {count, plural, one {1 besked} other {# beskeder}}. Slet mappen og alle dens beskeder? Dette kan ikke fortrydes.",
     "delete_with_contents_confirm": "Slet mappe og beskeder"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Administrer konti…",
+    "apply_to_existing": "{count, plural, one {Anvend på # eksisterende besked i {folder}} other {Anvend på # eksisterende beskeder i {folder}}}"
   },
   "shortcuts": {
     "title": "Tastaturgenveje",

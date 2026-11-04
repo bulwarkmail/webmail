@@ -126,7 +126,7 @@
     "sign_out_of": "Sign out of {account}",
     "sign_out_all": "Sign out of all accounts",
     "add_account": "Add account",
-    "set_as_default": "Set as default",
+    "set_as_default": "Open this account at start",
     "switch_account": "Switch account",
     "contacts": "Contacts",
     "calendar": "Calendar",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "Email tags",
-      "description": "Define tags to organize your emails. These are stored as JMAP keywords on the server.",
+      "description": "Make tags to sort your messages. The tags are saved with your messages on the server.",
       "add_keyword": "New tag",
       "label_field": "Display name",
       "label_placeholder": "e.g. Work, Personal, Urgent",
@@ -1708,8 +1708,8 @@
         "hide": "Hide"
       },
       "unrecognized": {
-        "title": "Recover tags from the server",
-        "description": "Tag names and colors are stored in this browser, but the tags themselves live on your messages as JMAP keywords. Scan your mail for keywords no tag here explains, then add them back.",
+        "title": "Find tags on your messages that are missing here",
+        "description": "This browser keeps the names and colors of your tags. The tags themselves are saved on your messages. Search your mail for tags that are missing here and add them again.",
         "scan": "Scan for tags",
         "rescan": "Scan again",
         "scanning": "Scanning… {scanned} of {total} messages",
@@ -2191,8 +2191,8 @@
         "title": "Logged-in accounts",
         "description": "Drag to reorder how accounts appear in the account dropdown",
         "active": "Currently active account",
-        "default_badge": "Default account",
-        "set_default": "Set as default",
+        "default_badge": "Opens at start",
+        "set_default": "Open this account at start",
         "switch_to": "Switch to this account",
         "move_up": "Move up",
         "move_down": "Move down",
@@ -2780,15 +2780,15 @@
       "not_supported": "Your mail server does not support email filters.",
       "rule_name": "Rule name",
       "rule_name_placeholder": "e.g., Sort newsletters",
-      "match_all": "Match ALL conditions",
-      "match_any": "Match ANY condition",
+      "match_all": "Match all conditions",
+      "match_any": "Match any condition",
       "conditions": "Conditions",
       "add_condition": "Add condition",
       "actions": "Actions",
       "add_action": "Add action",
       "remove_condition": "Remove condition",
       "remove_action": "Remove action",
-      "stop_processing": "Stop processing subsequent rules",
+      "stop_processing": "Don't apply later rules",
       "include_spam": "Also move messages marked as spam",
       "attachment_type_placeholder": "e.g. pdf, doc, jpg",
       "value_placeholder_multi": "Value (multiple separated by commas)",
@@ -2830,7 +2830,7 @@
         "discard": "Discard (delete silently)",
         "reject": "Reject with message",
         "keep": "Keep in inbox",
-        "stop": "Stop processing"
+        "stop": "Don't apply later rules"
       },
       "move_to_folder": "Select folder",
       "copy_to_folder": "Select folder",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "Folder is not empty",
     "delete_with_contents_message": "The folder \"{name}\" still contains {count, plural, one {1 message} other {# messages}}. Delete the folder and all of its messages? This cannot be undone.",
     "delete_with_contents_confirm": "Delete folder and messages"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Manage accounts…",
+    "apply_to_existing": "{count, plural, one {Apply to # existing message in {folder}} other {Apply to # existing messages in {folder}}}"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

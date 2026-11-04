@@ -127,7 +127,7 @@
     "sign_out_of": "Odhlásiť sa z {account}",
     "sign_out_all": "Odhlásiť sa zo všetkých účtov",
     "add_account": "Pridať účet",
-    "set_as_default": "Nastaviť ako predvolený",
+    "set_as_default": "Otvárať tento účet pri spustení",
     "switch_account": "Prepnúť účet",
     "contacts": "Kontakty",
     "calendar": "Kalendár",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "E-mailové štítky",
-      "description": "Definujte štítky na organizáciu e-mailov s farbami.",
+      "description": "Vytvorte štítky na triedenie správ. Štítky sa ukladajú so správami na serveri.",
       "add_keyword": "Pridať štítok",
       "label_field": "Zobrazovaný názov",
       "label_placeholder": "napr. Práca, Osobné, Naliehavé",
@@ -1708,8 +1708,8 @@
         "hide": "Skryť"
       },
       "unrecognized": {
-        "title": "Obnoviť štítky zo servera",
-        "description": "Názvy a farby štítkov sú uložené v tomto prehliadači, ale samotné štítky sú na vašich správach ako kľúčové slová JMAP. Prehľadajte poštu na kľúčové slová, ku ktorým tu nie je štítok, a pridajte ich späť.",
+        "title": "Nájsť štítky na správach, ktoré tu chýbajú",
+        "description": "Tento prehliadač ukladá názvy a farby štítkov. Samotné štítky sú uložené na správach. Vyhľadajte v pošte štítky, ktoré tu chýbajú, a znova ich pridajte.",
         "scan": "Vyhľadať štítky",
         "rescan": "Hľadať znova",
         "scanning": "Prehľadávanie… {scanned} z {total} správ",
@@ -2191,8 +2191,8 @@
         "title": "Prihlásené účty",
         "description": "Presuňte na zmenu poradia účtov v rozbaľovacom zozname",
         "active": "Aktuálne aktívny účet",
-        "default_badge": "Predvolený účet",
-        "set_default": "Nastaviť ako predvolený",
+        "default_badge": "Otvára sa pri spustení",
+        "set_default": "Otvárať tento účet pri spustení",
         "switch_to": "Prepnúť na tento účet",
         "move_up": "Posunúť nahor",
         "move_down": "Posunúť nadol",
@@ -2780,15 +2780,15 @@
       "not_supported": "Váš poštový server nepodporuje e-mailové filtre.",
       "rule_name": "Názov pravidla",
       "rule_name_placeholder": "napr. Triediť newslettery",
-      "match_all": "Splňuje VŠETKY podmienky",
-      "match_any": "Splňuje AKÚKOĽVEK podmienku",
+      "match_all": "Splňuje všetky podmienky",
+      "match_any": "Splňuje ktorúkoľvek podmienku",
       "conditions": "Podmienky",
       "add_condition": "Pridať podmienku",
       "actions": "Akcie",
       "add_action": "Pridať akciu",
       "remove_condition": "Odobrať podmienku",
       "remove_action": "Odobrať akciu",
-      "stop_processing": "Zastaviť spracovanie ďalších pravidiel",
+      "stop_processing": "Ďalšie pravidlá nepoužívať",
       "include_spam": "Presúvať aj správy označené ako spam",
       "attachment_type_placeholder": "napr. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (viac oddelených čiarkami)",
@@ -2830,7 +2830,7 @@
         "discard": "Zahodiť (ticho odstrániť)",
         "reject": "Odmietnuť so správou",
         "keep": "Ponechať v Doručených",
-        "stop": "Zastaviť spracovanie"
+        "stop": "Ďalšie pravidlá nepoužívať"
       },
       "move_to_folder": "Vybrať priečinok",
       "copy_to_folder": "Vybrať priečinok",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "Priečinok nie je prázdny",
     "delete_with_contents_message": "Priečinok „{name}“ stále obsahuje {count, plural, one {1 správu} few {# správy} other {# správ}}. Odstrániť priečinok aj všetky jeho správy? Túto akciu nie je možné vrátiť späť.",
     "delete_with_contents_confirm": "Odstrániť priečinok a správy"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Spravovať účty…",
+    "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
   },
   "shortcuts": {
     "title": "Klávesové skratky",

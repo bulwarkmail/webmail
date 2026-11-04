@@ -126,7 +126,7 @@
     "sign_out_of": "{account} からサインアウト",
     "sign_out_all": "すべてのアカウントからサインアウト",
     "add_account": "アカウントを追加",
-    "set_as_default": "デフォルトに設定",
+    "set_as_default": "起動時にこのアカウントを開く",
     "switch_account": "アカウントを切り替え",
     "contacts": "連絡先",
     "calendar": "カレンダー",
@@ -1670,7 +1670,7 @@
     },
     "keywords": {
       "title": "メールラベル",
-      "description": "メールをカラーで整理するためのラベルを定義します。サーバーにJMAPキーワードとして保存されます。",
+      "description": "ラベルを作ってメッセージを整理します。ラベルはメッセージと一緒にサーバーに保存されます。",
       "add_keyword": "ラベルを追加",
       "label_field": "表示名",
       "label_placeholder": "例：仕事、個人、緊急",
@@ -1705,8 +1705,8 @@
         "hide": "表示しない"
       },
       "unrecognized": {
-        "title": "サーバーからラベルを復元",
-        "description": "ラベルの名前と色はこのブラウザーに保存されますが、ラベル自体はJMAPキーワードとしてメールに保存されています。ここに定義のないキーワードをメールから検索し、ラベルとして追加し直せます。",
+        "title": "ここにないラベルをメッセージから探す",
+        "description": "このブラウザーはラベルの名前と色を保存します。ラベル自体はメッセージに保存されています。ここにないラベルをメールから探して、もう一度追加します。",
         "scan": "ラベルを検索",
         "rescan": "再検索",
         "scanning": "検索中… {total}件中{scanned}件",
@@ -2188,8 +2188,8 @@
         "title": "ログイン中のアカウント",
         "description": "ドラッグしてアカウントメニューに表示される順序を変更",
         "active": "現在アクティブなアカウント",
-        "default_badge": "デフォルトアカウント",
-        "set_default": "デフォルトに設定",
+        "default_badge": "起動時に開きます",
+        "set_default": "起動時にこのアカウントを開く",
         "switch_to": "このアカウントに切り替え",
         "move_up": "上に移動",
         "move_down": "下に移動",
@@ -2781,7 +2781,7 @@
       "add_action": "アクションを追加",
       "remove_condition": "条件を削除",
       "remove_action": "操作を削除",
-      "stop_processing": "以降のルールの処理を停止",
+      "stop_processing": "以降のルールを適用しない",
       "include_spam": "迷惑メールと判定されたメッセージも移動する",
       "attachment_type_placeholder": "例: pdf, doc, jpg",
       "value_placeholder_multi": "値（カンマで複数指定可）",
@@ -2823,7 +2823,7 @@
         "discard": "サイレント削除",
         "reject": "メッセージ付きで拒否",
         "keep": "受信トレイに保持",
-        "stop": "処理を停止"
+        "stop": "以降のルールを適用しない"
       },
       "move_to_folder": "フォルダーを選択",
       "copy_to_folder": "フォルダーを選択",
@@ -3694,6 +3694,10 @@
     "placeholder_folder_name": "フォルダー名",
     "create": "作成",
     "rename_confirm": "名前を変更"
+  },
+  "uxs_folders": {
+    "manage_accounts": "アカウントを管理…",
+    "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"
   },
   "shortcuts": {
     "title": "キーボードショートカット",

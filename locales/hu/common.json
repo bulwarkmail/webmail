@@ -126,7 +126,7 @@
     "sign_out_of": "Kijelentkezés erről: {account}",
     "sign_out_all": "Kijelentkezés minden fiókból",
     "add_account": "Fiók hozzáadása",
-    "set_as_default": "Beállítás alapértelmezettként",
+    "set_as_default": "Ez a fiók nyíljon meg induláskor",
     "switch_account": "Fiók váltása",
     "contacts": "Névjegyek",
     "calendar": "Naptár",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "E-mail címkék",
-      "description": "Címkék definiálása az e-mailek színekkel történő rendezéséhez. Ezek JMAP kulcsszavakként tárolódnak a szerveren.",
+      "description": "Hozzon létre címkéket az üzenetei rendezéséhez. A címkék az üzenetekkel együtt a szerveren tárolódnak.",
       "add_keyword": "Címke hozzáadása",
       "label_field": "Megjelenített név",
       "label_placeholder": "pl. Munka, Személyes, Sürgős",
@@ -1708,8 +1708,8 @@
         "hide": "Elrejtés"
       },
       "unrecognized": {
-        "title": "Címkék helyreállítása a szerverről",
-        "description": "A címkék nevét és színét ez a böngésző tárolja, maguk a címkék azonban JMAP kulcsszavakként az e-mailjein vannak. Keresse meg a levelein azokat a kulcsszavakat, amelyekhez itt nem tartozik címke, majd adja hozzá őket újra.",
+        "title": "Az üzeneteken lévő, innen hiányzó címkék keresése",
+        "description": "Ez a böngésző tárolja a címkék nevét és színét. Maguk a címkék az üzeneteken vannak. Keresse meg a leveleiben az innen hiányzó címkéket, és adja hozzá őket újra.",
         "scan": "Címkék keresése",
         "rescan": "Keresés újra",
         "scanning": "Keresés… {total} e-mailből {scanned}",
@@ -2191,8 +2191,8 @@
         "title": "Bejelentkezett fiókok",
         "description": "Húzd át a sorrend módosításához, hogy a fiókok hogyan jelenjenek meg a fiók legördülőben",
         "active": "Jelenleg aktív fiók",
-        "default_badge": "Alapértelmezett fiók",
-        "set_default": "Beállítás alapértelmezettként",
+        "default_badge": "Induláskor nyílik meg",
+        "set_default": "Ez a fiók nyíljon meg induláskor",
         "switch_to": "Váltás erre a fiókra",
         "move_up": "Mozgatás fel",
         "move_down": "Mozgatás le",
@@ -2776,15 +2776,15 @@
       "not_supported": "A levelezőszervered nem támogatja az e-mail szűrőket.",
       "rule_name": "Szabály neve",
       "rule_name_placeholder": "pl. Hírlevelek rendezése",
-      "match_all": "MINDEN feltétel teljesüljön",
-      "match_any": "BÁRMELYIK feltétel teljesüljön",
+      "match_all": "Minden feltétel teljesüljön",
+      "match_any": "Bármelyik feltétel teljesüljön",
       "conditions": "Feltételek",
       "add_condition": "Feltétel hozzáadása",
       "actions": "Műveletek",
       "add_action": "Művelet hozzáadása",
       "remove_condition": "Feltétel eltávolítása",
       "remove_action": "Művelet eltávolítása",
-      "stop_processing": "További szabályok feldolgozásának leállítása",
+      "stop_processing": "A későbbi szabályok ne fussanak",
       "include_spam": "A levélszemétnek jelölt üzenetek áthelyezése is",
       "attachment_type_placeholder": "pl. pdf, doc, jpg",
       "value_placeholder_multi": "Érték (több érték vesszővel elválasztva)",
@@ -2826,7 +2826,7 @@
         "discard": "Elvetés (csendes törlés)",
         "reject": "Elutasítás üzenettel",
         "keep": "Megtartás a beérkezőben",
-        "stop": "Feldolgozás leállítása"
+        "stop": "A későbbi szabályok ne fussanak"
       },
       "move_to_folder": "Mappa kiválasztása",
       "copy_to_folder": "Mappa kiválasztása",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "A mappa nem üres",
     "delete_with_contents_message": "A(z) „{name}” mappa még {count, plural, one {1 üzenetet} other {# üzenetet}} tartalmaz. Törlöd a mappát az összes üzenetével együtt? Ez nem vonható vissza.",
     "delete_with_contents_confirm": "Mappa és üzenetek törlése"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Fiókok kezelése…",
+    "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
   },
   "shortcuts": {
     "title": "Billentyűparancsok",

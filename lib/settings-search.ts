@@ -280,7 +280,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   filters: [
     { label: 'settings.filters.title' },
     { label: 'settings.filters.add_rule' },
-    { label: 'settings.filters.raw_editor' },
+    { label: 'settings.filters.raw_editor', advanced: true },
   ],
   organize: [
     { label: 'settings.folders.folder_list' },

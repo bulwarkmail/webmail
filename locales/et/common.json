@@ -126,7 +126,7 @@
     "sign_out_of": "Logi välja kontolt {account}",
     "sign_out_all": "Logi välja kõigist kontodest",
     "add_account": "Lisa konto",
-    "set_as_default": "Määra vaikimisi",
+    "set_as_default": "Ava see konto käivitamisel",
     "switch_account": "Vaheta kontot",
     "contacts": "Kontaktid",
     "calendar": "Kalender",
@@ -1673,7 +1673,7 @@
     },
     "keywords": {
       "title": "E-kirjade sildid",
-      "description": "Määra sildid, et oma e-kirju korrastada. Need salvestatakse serveris JMAP võtmesõnadena.",
+      "description": "Loo sildid, et kirju sorteerida. Sildid salvestatakse koos kirjadega serveris.",
       "add_keyword": "Lisa silt",
       "label_field": "Kuvatav nimi",
       "label_placeholder": "nt Töö, Isiklik, Kiireloomuline",
@@ -1708,8 +1708,8 @@
         "hide": "Peida"
       },
       "unrecognized": {
-        "title": "Taasta sildid serverist",
-        "description": "Siltide nimed ja värvid salvestatakse selles brauseris, kuid sildid ise elavad su kirjadel JMAP võtmesõnadena. Skanni oma posti võtmesõnade suhtes, mida ükski siinne silt ei seleta, ja lisa need tagasi.",
+        "title": "Leia kirjadelt sildid, mis siit puuduvad",
+        "description": "See brauser hoiab sinu siltide nimesid ja värve. Sildid ise on salvestatud kirjadele. Otsi oma postist silte, mis siit puuduvad, ja lisa need uuesti.",
         "scan": "Skanni silte",
         "rescan": "Skanni uuesti",
         "scanning": "Skannimine… {scanned} / {total} kirja",
@@ -2191,8 +2191,8 @@
         "title": "Sisselogitud kontod",
         "description": "Lohista, et muuta kontode järjekorda konto rippmenüüs",
         "active": "Praegu aktiivne konto",
-        "default_badge": "Vaikimisi konto",
-        "set_default": "Määra vaikimisi kontoks",
+        "default_badge": "Avaneb käivitamisel",
+        "set_default": "Ava see konto käivitamisel",
         "switch_to": "Lülitu sellele kontole",
         "move_up": "Liiguta üles",
         "move_down": "Liiguta alla",
@@ -2780,15 +2780,15 @@
       "not_supported": "Sinu meiliserver ei toeta e-posti filtreid.",
       "rule_name": "Reegli nimi",
       "rule_name_placeholder": "nt uudiskirjade sortimine",
-      "match_all": "Vasta KÕIGILE tingimustele",
-      "match_any": "Vasta MISTAHES tingimusele",
+      "match_all": "Vasta kõigile tingimustele",
+      "match_any": "Vasta mõnele tingimusele",
       "conditions": "Tingimused",
       "add_condition": "Lisa tingimus",
       "actions": "Tegevused",
       "add_action": "Lisa tegevus",
       "remove_condition": "Eemalda tingimus",
       "remove_action": "Eemalda toiming",
-      "stop_processing": "Peata järgmiste reeglite töötlemine",
+      "stop_processing": "Ära rakenda järgmisi reegleid",
       "include_spam": "Liiguta ka rämpspostiks märgitud kirjad",
       "attachment_type_placeholder": "nt pdf, doc, jpg",
       "value_placeholder_multi": "Väärtus (mitu, komadega eraldatud)",
@@ -2830,7 +2830,7 @@
         "discard": "Hülga (kustuta vaikselt)",
         "reject": "Lükka tagasi sõnumiga",
         "keep": "Jäta sisendkasti",
-        "stop": "Peata töötlemine"
+        "stop": "Ära rakenda järgmisi reegleid"
       },
       "move_to_folder": "Vali kaust",
       "copy_to_folder": "Vali kaust",
@@ -3694,6 +3694,10 @@
     "delete_with_contents_title": "Kaust ei ole tühi",
     "delete_with_contents_message": "Kaust \"{name}\" sisaldab veel {count, plural, one {1 sõnum} other {# sõnumit}}. Kas kustutada kaust ja kõik selle sõnumid? Seda ei saa tagasi võtta.",
     "delete_with_contents_confirm": "Kustuta kaust ja sõnumid"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Halda kontosid…",
+    "apply_to_existing": "{count, plural, one {Rakenda # olemasolevale kirjale kaustas {folder}} other {Rakenda # olemasolevale kirjale kaustas {folder}}}"
   },
   "shortcuts": {
     "title": "Kiirklahvid",

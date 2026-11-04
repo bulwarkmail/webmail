@@ -126,7 +126,7 @@
     "sign_out_of": "Đăng xuất khỏi {account}",
     "sign_out_all": "Đăng xuất khỏi tất cả các tài khoản",
     "add_account": "Thêm tài khoản",
-    "set_as_default": "Đặt làm mặc định",
+    "set_as_default": "Mở tài khoản này khi khởi động",
     "switch_account": "Chuyển đổi tài khoản",
     "contacts": "Danh bạ",
     "calendar": "Lịch",
@@ -1685,7 +1685,7 @@
     },
     "keywords": {
       "title": "Nhãn thư",
-      "description": "Tạo nhãn để sắp xếp thư. Nhãn được lưu dưới dạng từ khóa JMAP trên máy chủ.",
+      "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
       "add_keyword": "Nhãn mới",
       "label_field": "Tên hiển thị",
       "label_placeholder": "Ví dụ: Công việc, Cá nhân, Khẩn cấp",
@@ -1720,8 +1720,8 @@
         "hide": "Ẩn"
       },
       "unrecognized": {
-        "title": "Khôi phục nhãn từ máy chủ",
-        "description": "Tên và màu nhãn được lưu trong trình duyệt này, còn nhãn được lưu trên thư dưới dạng từ khóa JMAP. Quét thư để tìm từ khóa chưa có nhãn tương ứng, rồi thêm lại chúng.",
+        "title": "Tìm các thẻ trên thư còn thiếu ở đây",
+        "description": "Trình duyệt này lưu tên và màu thẻ. Bản thân các thẻ được lưu trên thư. Hãy tìm các thẻ còn thiếu trong thư của bạn rồi thêm lại vào đây.",
         "scan": "Quét tìm nhãn",
         "rescan": "Quét lại",
         "scanning": "Đang quét… {scanned}/{total} thư",
@@ -2203,8 +2203,8 @@
         "title": "Tài khoản đã đăng nhập",
         "description": "Kéo để sắp xếp lại cách các tài khoản xuất hiện trong danh sách tài khoản thả xuống",
         "active": "Tài khoản hiện đang hoạt động",
-        "default_badge": "Tài khoản mặc định",
-        "set_default": "Đặt làm mặc định",
+        "default_badge": "Mở khi khởi động",
+        "set_default": "Mở tài khoản này khi khởi động",
         "switch_to": "Chuyển sang tài khoản này",
         "move_up": "Di chuyển lên",
         "move_down": "Di chuyển xuống",
@@ -2792,15 +2792,15 @@
       "not_supported": "Máy chủ thư của bạn không hỗ trợ bộ lọc email.",
       "rule_name": "Tên quy tắc",
       "rule_name_placeholder": "Ví dụ: Sắp xếp các bản tin",
-      "match_all": "Phù hợp với TẤT CẢ các điều kiện",
-      "match_any": "Phù hợp với bất kỳ điều kiện nào",
+      "match_all": "Tất cả điều kiện phải đúng",
+      "match_any": "Chỉ cần một điều kiện đúng",
       "conditions": "Điều kiện",
       "add_condition": "Thêm điều kiện",
       "actions": "Thao tác",
       "add_action": "Thêm hành động",
       "remove_condition": "Xóa điều kiện",
       "remove_action": "Xóa hành động",
-      "stop_processing": "Dừng xử lý các quy tắc tiếp theo",
+      "stop_processing": "Không áp dụng các quy tắc sau",
       "include_spam": "Đồng thời di chuyển các thư bị đánh dấu là thư rác",
       "attachment_type_placeholder": "Ví dụ: pdf, doc, jpg",
       "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
@@ -2842,7 +2842,7 @@
         "discard": "Hủy (xóa âm thầm)",
         "reject": "Từ chối bằng thư",
         "keep": "Giữ trong hộp thư đến",
-        "stop": "Dừng xử lý"
+        "stop": "Không áp dụng các quy tắc sau"
       },
       "move_to_folder": "Chọn thư mục",
       "copy_to_folder": "Chọn thư mục",
@@ -3706,6 +3706,10 @@
     "delete_with_contents_title": "Thư mục không trống",
     "delete_with_contents_message": "Thư mục \"{name}\" vẫn chứa {count, plural, one {1 thư} other {# thư}}. Xóa thư mục và tất cả thư của nó? Điều này không thể hoàn tác được.",
     "delete_with_contents_confirm": "Xóa thư mục và thư"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Quản lý tài khoản…",
+    "apply_to_existing": "{count, plural, one {Áp dụng cho # thư hiện có trong {folder}} other {Áp dụng cho # thư hiện có trong {folder}}}"
   },
   "shortcuts": {
     "title": "Phím tắt",
