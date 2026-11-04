@@ -19,7 +19,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from '@/components/icons';
-import { useTranslations, useFormatter } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { isDocumentRTL } from '@/i18n/direction';
 import { useAuthStore } from '@/stores/auth-store';
@@ -35,6 +35,8 @@ import {
   getInvitationTrustAssessment,
   formatEventSummary,
   formatInvitationSchedule,
+  invitationAnsweredAt,
+  invitationAnsweredKey,
   findParticipantByEmails,
   extractMethodFromRawIcs,
   type EventSummary,
@@ -50,6 +52,7 @@ import { sanitizeColor } from '@/components/calendar/event-card';
 import { RecipientPopover } from './recipient-popover';
 import { useCalendarErrorMessage } from '@/hooks/use-calendar-error-message';
 import { useAccountOwner } from '@/components/calendar/answer-bars';
+import { resolveTimeZone } from '@/lib/timezone';
 
 interface InvitationChangeItem {
   label: string;
@@ -377,8 +380,9 @@ type BannerState = 'loading' | 'parsed' | 'rsvp-sent' | 'imported' | 'error';
 
 export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProps) {
   const t = useTranslations('email_viewer.calendar_invitation');
+  const tEvent = useTranslations('ux_pim_event');
   const describeError = useCalendarErrorMessage();
-  const format = useFormatter();
+  const locale = useLocale();
   const router = useRouter();
   const client = useAuthStore((s) => s.client);
   const getClientForAccount = useAuthStore((s) => s.getClientForAccount);
@@ -440,6 +444,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     ? { sentBy: `mailto:${identityEmails[0]}` }
     : undefined;
   const timeFormat = useSettingsStore((s) => s.timeFormat);
+  // The user's zone, as getEffectiveTimeZone resolves it.
+  const userTimeZone = resolveTimeZone(useSettingsStore((s) => s.timeZone));
   const { calendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, deleteEvent, events: storeEvents, setSelectedDate } = useCalendarStore(useShallow((state) => ({
     calendars: state.calendars,
     supportsCalendar: state.supportsCalendar,
@@ -454,6 +460,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const [state, setState] = useState<BannerState>('loading');
   const [parsedEvent, setParsedEvent] = useState<Partial<CalendarEvent> | null>(null);
   const [rsvpStatus, setRsvpStatus] = useState<string | null>(null);
+  const [answeredAt, setAnsweredAt] = useState<Date | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -652,7 +659,23 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const senderAddress = email.from?.[0]?.email?.toLowerCase();
   const userIsSender = Boolean(senderAddress && identityEmails.includes(senderAddress));
   const bannerTitle = getBannerTitle(t, method);
-  const bannerInfo = getBannerInfo(t, method, userIsOrganizer, supportsCalendar);
+  // Once answered, the banner says so instead of asking (pim-23).
+  const answeredDate = myParticipant
+    ? invitationAnsweredAt(
+      rsvpStatus ? answeredAt : null,
+      myParticipant.participant,
+      currentUserParticipant ? existingEvent?.updated : null,
+    )
+    : null;
+  const answeredKey = myParticipant && supportsCalendar ? invitationAnsweredKey(method, currentRsvp, !!answeredDate) : null;
+  const answeredInfo = answeredKey
+    ? tEvent(answeredKey, {
+      date: answeredDate
+        ? new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric', timeZone: userTimeZone }).format(answeredDate)
+        : '',
+    })
+    : null;
+  const bannerInfo = answeredInfo ?? getBannerInfo(t, method, userIsOrganizer, supportsCalendar);
   const trustAssessment = parsedEvent && !userIsSender ? getInvitationTrustAssessment(parsedEvent, email, method, identityEmails) : null;
   const trustMessage = trustAssessment ? getTrustMessage(t, trustAssessment) : null;
   const participationLabel = getParticipationLabel(t, currentRsvp);
@@ -735,6 +758,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       // 'stopped': a plugin stopped it and said why; keep the old answer.
       if (outcome === 'answered') {
         setRsvpStatus(status);
+        setAnsweredAt(new Date());
         setActionNotice(t('rsvp_sent'));
         setState('parsed');
       } else if (outcome === 'added') {
@@ -794,11 +818,11 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     }
   };
 
-  const formatSchedule = (eventSummary: EventSummary) => formatInvitationSchedule(
-    eventSummary,
-    (date, options) => format.dateTime(date, options),
-    timeFormat === '12h',
-  );
+  const formatSchedule = (eventSummary: EventSummary) => formatInvitationSchedule(eventSummary, {
+    locale,
+    timeZone: userTimeZone,
+    hour12: timeFormat === '12h',
+  });
 
   const proposedChanges = method === 'counter' && proposalTarget && parsedEvent
     ? buildInvitationChangeItems(t, proposalTarget, parsedEvent, formatSchedule)
@@ -996,7 +1020,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
             {summary.start && (
               <span className="flex items-center gap-1.5 min-w-0">
                 <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">
+                <span className="truncate" data-testid="invitation-when">
                   {formatSchedule(summary)}
                 </span>
               </span>
