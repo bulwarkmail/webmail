@@ -279,6 +279,7 @@ export function ComposerPanelHead({
   name = null,
   onToggle,
   className,
+  childrenClassName,
   children,
 }: {
   side: ComposerSidebarSide;
@@ -286,8 +287,10 @@ export function ComposerPanelHead({
   width?: number;
   name?: string | null;
   onToggle: () => void;
-  /** Padding and gaps of the row it is part of. */
+  /** Padding of the row it is part of. */
   className?: string;
+  /** The gap between what it holds besides Hide, as in the row it is part of. */
+  childrenClassName?: string;
   children?: ReactNode;
 }) {
   if (!isPanelOpen(mode)) return null;
@@ -308,7 +311,8 @@ export function ComposerPanelHead({
     >
       {side === "right" && hide}
       <div className="hidden md:block flex-1" />
-      {children}
+      {/* No gap of the head's own around Hide and the space: a 260 px panel in the desktop app has just enough room for the buttons. */}
+      {children && <div className={cn("contents md:flex items-center", childrenClassName)}>{children}</div>}
       {side === "left" && hide}
     </div>
   );

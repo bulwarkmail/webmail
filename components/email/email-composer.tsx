@@ -3630,7 +3630,7 @@ export function EmailComposer({
     ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} onToggle={() => pluginSidebars.toggle('right')} />
     : null;
   const rightPanelOpen = isPanelOpen(pluginSidebars.modes.right);
-  const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode) => (
+  const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode, childrenClassName?: string) => (
     <ComposerPanelHead
       side={side}
       mode={pluginSidebars.modes[side]}
@@ -3638,6 +3638,7 @@ export function EmailComposer({
       name={pluginSidebars.names[side]}
       onToggle={() => pluginSidebars.toggle(side)}
       className={className}
+      childrenClassName={childrenClassName}
     >
       {children}
     </ComposerPanelHead>
@@ -5155,7 +5156,7 @@ export function EmailComposer({
             {rightPanelToggle}
             {!rightPanelOpen && mvInlineButtons}
           </div>
-          {panelHead('right', 'gap-2 ps-1.5 pe-1.5', mvInlineButtons)}
+          {panelHead('right', 'ps-1.5 pe-1.5', mvInlineButtons, 'gap-2')}
         </div>
       ) : mvWindow ? (
         <div
@@ -5179,7 +5180,7 @@ export function EmailComposer({
             {mvWindow.state !== "minimized" && rightPanelToggle}
             {(mvWindow.state === "minimized" || !rightPanelOpen) && mvWindowButtons}
           </div>
-          {mvWindow.state !== "minimized" && panelHead('right', 'gap-1 ps-1.5 pe-1.5', mvWindowButtons)}
+          {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
         </div>
       ) : (
       <div ref={setComposerHeader} className="flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
@@ -5258,7 +5259,7 @@ export function EmailComposer({
         {rightPanelToggle}
         {!rightPanelOpen && windowButtons}
         </div>
-        {panelHead('right', 'gap-3 ps-2 pe-4', windowButtons)}
+        {panelHead('right', 'ps-1.5 pe-4', windowButtons, 'gap-3')}
       </div>
       )}
 
