@@ -283,6 +283,12 @@ export interface ComposerDraftData {
   selectedIdentityId: string | null;
   subAddressTag: string;
   mode: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * What a re-opened draft is, for its title: it re-opens in "compose" mode
+   * (see inReplyTo below), and was titled "New message" even when it was a
+   * reply (compose-p3-6). Absent, In-Reply-To makes it a reply.
+   */
+  kind?: 'reply' | 'replyAll' | 'forward';
   replyTo?: EmailComposerProps['replyTo'];
   draftId: string | null;
   /**
@@ -1347,6 +1353,11 @@ export function EmailComposer({
   // scopes decide the organisation signature and disclaimer: the identity's
   // own account, else the one the composer was opened in.
   const composingAccountId = currentIdentityParts.localAccountId ?? composerAccountIdRef.current;
+  // What the header calls it. A re-opened draft is in "compose" mode; a reply
+  // draft is still a reply (compose-p3-6).
+  const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = mode !== 'compose'
+    ? mode
+    : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose');
   // Classification label (enterprise pack): the labels of the account and
   // identity the message goes out from; replies and forwards start with
   // the original's label, re-opened drafts with theirs.
@@ -5221,13 +5232,13 @@ export function EmailComposer({
         <div className="flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
           {panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
-            {mode === 'replyAll'
+            {titleMode === 'replyAll'
               ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              : mode === 'forward'
+              : titleMode === 'forward'
                 ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
             <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
-              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
             {leftPanelToggle}
@@ -5249,7 +5260,7 @@ export function EmailComposer({
           {mvWindow.state !== "minimized" && panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-1 ps-4 pe-1.5">
             <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
-              {mode === 'reply' || mode === 'replyAll' || mode === 'forward'
+              {titleMode !== 'compose'
                 ? (subject || t('new_message'))
                 : t('new_message')}
             </h3>
@@ -5270,7 +5281,7 @@ export function EmailComposer({
         <div className="flex-1 min-w-0 flex items-center gap-3">
           <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
             <h3 className="font-semibold text-base">
-              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">

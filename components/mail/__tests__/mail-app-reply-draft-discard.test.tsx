@@ -34,14 +34,21 @@ vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
 vi.mock('@/components/email/email-composer', () => ({
   EmailComposer: (props: ComposerProps) => {
     server.composer = props;
-    return <div data-testid="stub-composer" data-mode={props.mode} data-draft={String(props.initialData?.draftId ?? '')}>stub composer</div>;
+    return (
+      <div
+        data-testid="stub-composer" data-mode={props.mode} data-draft={String(props.initialData?.draftId ?? '')}
+        data-to={String(props.initialData?.to ?? '')} data-cc={String(props.initialData?.cc ?? '')} data-kind={String(props.initialData?.kind ?? '')}
+      >stub composer</div>
+    );
   },
 }));
 vi.mock('@/components/search/mv-search-form', () => ({ MvSearchForm: () => null }));
 vi.mock('@/components/email/email-viewer', () => ({
-  EmailViewer: ({ onReply, replyDraft }: { onReply: () => void; replyDraft?: { onEdit: () => void } | null }) => (
+  EmailViewer: ({ onReply, onReplyAll, replyDraft }: { onReply: () => void; onReplyAll: (arg?: unknown) => void; replyDraft?: { onEdit: () => void } | null }) => (
     <div data-testid="viewer">
       <button onClick={() => onReply()}>stub reply</button>
+      {/* As the reader's buttons did: the click event reaches the host. */}
+      <button onClick={(event) => onReplyAll(event)}>stub reply all</button>
       {replyDraft && <button data-testid="reply-draft-edit" onClick={replyDraft.onEdit}>edit draft</button>}
     </div>
   ),
@@ -79,7 +86,8 @@ const { MailApp } = await import('../mail-app');
 const inbox = { id: 'inbox', name: 'Inbox', role: 'inbox', totalEmails: 0, unreadEmails: 0 } as Mailbox;
 const MESSAGE = {
   id: 'm1', threadId: 't1', mailboxIds: { inbox: true }, keywords: { $seen: true }, messageId: ['m1@example.org'],
-  from: [{ name: 'Ann', email: 'ann@example.org' }], to: [{ email: 'a@example.org' }],
+  from: [{ name: 'Ann', email: 'ann@example.org' }], to: [{ email: 'a@example.org' }, { name: 'Carol', email: 'carol@example.org' }],
+  cc: [{ name: 'Dave', email: 'dave@example.org' }],
   subject: 'Plans', receivedAt: '2026-11-01T10:00:00Z', preview: 'Hi', size: 10,
   hasAttachment: false, textBody: [], htmlBody: [], bodyValues: {},
 } as never;
@@ -105,6 +113,8 @@ beforeEach(() => {
     getSieveAccountId: () => null, hasDelayedSend: () => false, getSession: () => null,
     getEmail: vi.fn(async (id: string) => server.drafts.find((d) => d.id === id) ?? null),
     deleteEmail,
+    getThread: async () => ({ emailIds: ['m1', ...server.drafts.map((d) => d.id)] }),
+    getSomeEmails: async () => server.drafts,
   };
   useAuthStore.setState({
     isAuthenticated: true, isLoading: false, client: client as never, activeAccountId: 'login-a', identities: [],
@@ -185,5 +195,25 @@ describe('the bin on a resumed reply draft (compose-p3-2)', () => {
     act(() => server.composer!.onClose());
     expect(await screen.findByTestId('reply-draft-edit')).toBeTruthy();
     expect(deleteEmail).not.toHaveBeenCalled();
+  });
+});
+
+// compose-p3-3: Reply all on a message with a reply draft opened an empty
+// reply beside it; closing that left a second draft.
+describe('Reply all on a message with a reply draft (compose-p3-3)', () => {
+  it('resumes the draft and adds the others Reply all writes to', async () => {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    await screen.findByTestId('stub-composer');
+    server.drafts = [DRAFT];
+    act(() => server.composer!.onClose());
+    await screen.findByTestId('reply-draft-edit');
+
+    fireEvent.click(screen.getByText('stub reply all'));
+    await waitFor(() => expect(composerDraft()).toBe('d1'));
+    const composer = screen.getByTestId('stub-composer');
+    expect(composer.getAttribute('data-to')).toBe('Ann <ann@example.org>, Carol <carol@example.org>');
+    expect(composer.getAttribute('data-cc')).toBe('Dave <dave@example.org>');
+    expect(composer.getAttribute('data-kind')).toBe('replyAll');
   });
 });

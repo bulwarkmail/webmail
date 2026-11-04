@@ -89,7 +89,8 @@ import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
 import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
-import { composerDataFromDraft } from "@/lib/draft-composer-data";
+import { composerDataFromDraft, withReplyAllRecipients } from "@/lib/draft-composer-data";
+import { ownReplyAddresses } from "@/lib/reply-recipients";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
@@ -2995,7 +2996,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Reply on a message with a reply draft opens that draft (compose-p2-6).
   // After a composer closed (it may have saved that very draft under a new
   // id) the drafts are read fresh.
-  const resumeReplyDraft = async (open: Email | null, composerWasOpen: boolean): Promise<boolean> => {
+  const resumeReplyDraft = async (open: Email | null, composerWasOpen: boolean, mode: 'reply' | 'replyAll' = 'reply'): Promise<boolean> => {
     if (!client || !open || open.keywords?.$draft || mvShell || isScheduledView) return false;
     let found = replyDraft?.emailId === open.id ? replyDraft : null;
     // A phone's conversation holds its drafts in full.
@@ -3013,13 +3014,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       } : null;
     }
     if (!found || discardingDraftIdsRef.current.has(found.draft.id)) return false;
-    await handleEditDraft(found.draft, found.source, { underMessage: true });
+    await handleEditDraft(found.draft, found.source, { underMessage: true, replyAllTo: mode === 'replyAll' ? open : undefined });
     return true;
   };
 
   const handleReply = async (draftText?: string) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
+    // Only a string is text to start with: a click event handed on by a
+    // button skipped the reply draft (compose-p3-3).
+    if (typeof draftText !== 'string') draftText = undefined;
     if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen)) return;
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
@@ -3054,7 +3058,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
    */
   // `underMessage`: a reply draft resumed from the message it answers docks
   // under that message, as a new reply does (compose-p2-6).
-  const handleEditDraft = async (email?: Email, source?: DraftSource, { underMessage = false }: { underMessage?: boolean } = {}) => {
+  const handleEditDraft = async (email?: Email, source?: DraftSource, { underMessage = false, replyAllTo }: { underMessage?: boolean; replyAllTo?: Email } = {}) => {
     if (!client) return;
     const draftCandidate = email && typeof email === 'object' && typeof email.id === 'string'
       ? email
@@ -3106,12 +3110,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const nextSession = composerSessionRef.current + 1;
     setComposerSessionId(nextSession);
     setResumedReplySession(underMessage ? nextSession : null);
-    setPendingDraft(composerDataFromDraft(draft, {
+    const opened = composerDataFromDraft(draft, {
       accountId,
       localAccountId,
       identities: composerIdentities,
       noSubject: t('email_composer.no_subject'),
-    }));
+    });
+    // Reply all on the message the draft answers: its other recipients join.
+    setPendingDraft(replyAllTo
+      ? withReplyAllRecipients(opened, {
+          from: replyAllTo.from ?? undefined,
+          replyToAddresses: replyAllTo.replyTo ?? undefined,
+          to: replyAllTo.to ?? undefined,
+          cc: replyAllTo.cc ?? undefined,
+        }, ownReplyAddresses(composerIdentities.map((i) => i.email), [draftClient.getUsername?.()]))
+      : opened);
     setComposerMode('compose');
     setShowComposer(true);
     if (isMobile) setActiveView('viewer');
@@ -3407,7 +3420,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleReplyAll = async (draftText?: string) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
-    if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen)) return;
+    // Only a string is text to start with: the reader's Reply all handed on
+    // its click event, which skipped the reply draft (compose-p3-3).
+    if (typeof draftText !== 'string') draftText = undefined;
+    if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen, 'replyAll')) return;
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
       const enrichedEmail = await emailHooks.onBeforeComposeOpenToReplyAll.transform(selectedEmail);
@@ -5610,7 +5626,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleConversationReplyAll = async (email: Email) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
-    if (await resumeReplyDraft(email, composerWasOpen)) return;
+    if (await resumeReplyDraft(email, composerWasOpen, 'replyAll')) return;
     email = await emailHooks.onBeforeComposeOpenToReplyAll.transform(email);
     selectEmail(email);
     await prepareComposerQuoteHeader(email, 'replyAll');
