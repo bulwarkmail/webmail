@@ -32,12 +32,29 @@ describe('the schema', () => {
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
+      'OpenWithEnabled', 'DeveloperToolsAvailability',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
       expect(title.en && title.de && description.en && description.de, key).toBeTruthy();
       expect(description.en, key).not.toBe(description.de);
     }
+  });
+});
+
+describe('developer tools and Open with', () => {
+  it("takes Chrome values for developer tools, forced only, and a value nobody can read locks them off", () => {
+    expect(resolvePolicies(layers({ forcedMachine: { DeveloperToolsAvailability: 2 } })).DeveloperToolsAvailability).toMatchObject({ value: 2, locked: true });
+    expect(resolvePolicies(layers({ recommendedMachine: { DeveloperToolsAvailability: 2 } })).DeveloperToolsAvailability).toMatchObject({ value: null, locked: false });
+    // Not 0 or 1: the shell reads a locked entry that isn't an explicit yes as off.
+    expect(resolvePolicies(layers({ forcedUser: { DeveloperToolsAvailability: 7 } })).DeveloperToolsAvailability).toMatchObject({ value: null, locked: true });
+  });
+
+  it('turn Open with off only by force, and a value nobody can read leaves it off', () => {
+    expect(resolvePolicies(layers({})).OpenWithEnabled).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ recommendedUser: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
+    expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 'maybe' } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
   });
 });
 
