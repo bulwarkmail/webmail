@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Reddettiniz.",
     "answered_tentative_nodate": "Belki dediniz."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Tekrarlanır: {rule}",
+    "declined_dates": "{dates} toplantısını reddettiniz.",
+    "declined_many": "Bu serideki {count} toplantıyı reddettiniz.",
+    "answers_series": "Yanıtınız serideki tüm toplantılar için geçerlidir."
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",

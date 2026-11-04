@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Você recusou.",
     "answered_tentative_nodate": "Você respondeu talvez."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Repete-se: {rule}",
+    "declined_dates": "Você recusou {dates}.",
+    "declined_many": "Você recusou {count} reuniões desta série.",
+    "answers_series": "Sua resposta vale para todas as reuniões da série."
+  },
   "advanced_search": {
     "title": "Pesquisa avançada",
     "from": "De",

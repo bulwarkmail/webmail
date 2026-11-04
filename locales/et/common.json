@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Keeldusite.",
     "answered_tentative_nodate": "Vastasite võib-olla."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Kordub: {rule}",
+    "declined_dates": "Lükkasite tagasi kuupäeva {dates}.",
+    "declined_many": "Lükkasite tagasi {count} selle sarja kohtumist.",
+    "answers_series": "Teie vastus kehtib sarja kõigile kohtumistele."
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",

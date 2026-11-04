@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Ви відхилили.",
     "answered_tentative_nodate": "Ви відповіли «можливо»."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Повторюється: {rule}",
+    "declined_dates": "Ви відхилили зустріч {dates}.",
+    "declined_many": "Ви відхилили зустрічей цієї серії: {count}.",
+    "answers_series": "Ваша відповідь стосується всіх зустрічей серії."
+  },
   "advanced_search": {
     "title": "Розширений пошук",
     "from": "Від",

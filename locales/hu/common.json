@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Ön elutasította.",
     "answered_tentative_nodate": "Ön talánnal válaszolt."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Ismétlődik: {rule}",
+    "declined_dates": "Elutasította: {dates}.",
+    "declined_many": "A sorozat {count} alkalmát utasította el.",
+    "answers_series": "A válasza a sorozat minden alkalmára vonatkozik."
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",

@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Du avslo.",
     "answered_tentative_nodate": "Du svarte kanskje."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Gjentas: {rule}",
+    "declined_dates": "Du avslo {dates}.",
+    "declined_many": "Du avslo {count} møter i denne serien.",
+    "answers_series": "Svaret ditt gjelder alle møtene i serien."
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",

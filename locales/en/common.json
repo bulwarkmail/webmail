@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "You declined.",
     "answered_tentative_nodate": "You answered maybe."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Repeats: {rule}",
+    "declined_dates": "You declined {dates}.",
+    "declined_many": "You declined {count} meetings of this series.",
+    "answers_series": "Your answer counts for every meeting in the series."
+  },
   "calendar_event_notifications": {
     "someone": "Someone",
     "invited": "{name} invited you to \"{title}\"",

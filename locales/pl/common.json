@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Odrzucono.",
     "answered_tentative_nodate": "Odpowiedziano „może”."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Powtarza się: {rule}",
+    "declined_dates": "Odrzucono {dates}.",
+    "declined_many": "Odrzucono {count} spotkań z tej serii.",
+    "answers_series": "Twoja odpowiedź dotyczy wszystkich spotkań z serii."
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",

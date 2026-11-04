@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Jūs noraidījāt.",
     "answered_tentative_nodate": "Jūs atbildējāt varbūt."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Atkārtojas: {rule}",
+    "declined_dates": "Jūs atteicāt {dates}.",
+    "declined_many": "Jūs atteicāt {count} šīs sērijas sapulces.",
+    "answers_series": "Jūsu atbilde attiecas uz visām sērijas sapulcēm."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",

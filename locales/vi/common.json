@@ -5238,6 +5238,12 @@
     "answered_declined_nodate": "Bạn đã từ chối.",
     "answered_tentative_nodate": "Bạn đã trả lời có thể."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Lặp lại: {rule}",
+    "declined_dates": "Bạn đã từ chối ngày {dates}.",
+    "declined_many": "Bạn đã từ chối {count} cuộc họp trong chuỗi này.",
+    "answers_series": "Câu trả lời của bạn áp dụng cho mọi cuộc họp trong chuỗi."
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",

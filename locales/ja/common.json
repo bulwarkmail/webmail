@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "辞退しました。",
     "answered_tentative_nodate": "未定と回答しました。"
   },
+  "ux_p2_pim_calx": {
+    "repeats": "繰り返し: {rule}",
+    "declined_dates": "{dates} は辞退しました。",
+    "declined_many": "このシリーズの {count} 件を辞退しました。",
+    "answers_series": "回答はシリーズのすべての会議に適用されます。"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",

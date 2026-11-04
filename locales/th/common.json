@@ -4638,6 +4638,12 @@
     "answered_declined_nodate": "คุณปฏิเสธแล้ว",
     "answered_tentative_nodate": "คุณตอบว่าอาจจะ"
   },
+  "ux_p2_pim_calx": {
+    "repeats": "ทำซ้ำ: {rule}",
+    "declined_dates": "คุณปฏิเสธวันที่ {dates}",
+    "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
+    "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "org_locked": "กำหนดโดยองค์กรของคุณ",

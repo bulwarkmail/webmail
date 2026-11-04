@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Heu rebutjat.",
     "answered_tentative_nodate": "Heu respost potser."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Es repeteix: {rule}",
+    "declined_dates": "Has rebutjat el {dates}.",
+    "declined_many": "Has rebutjat {count} reunions d'aquesta sèrie.",
+    "answers_series": "La teva resposta val per a totes les reunions de la sèrie."
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",

@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Sie haben abgesagt.",
     "answered_tentative_nodate": "Sie haben mit Vielleicht geantwortet."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Wiederholung: {rule}",
+    "declined_dates": "Sie haben am {dates} abgesagt.",
+    "declined_many": "Sie haben {count} Termine dieser Serie abgesagt.",
+    "answers_series": "Ihre Antwort gilt für alle Termine der Serie."
+  },
   "advanced_search": {
     "title": "Erweiterte Suche",
     "from": "Von",

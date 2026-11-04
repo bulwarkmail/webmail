@@ -5120,6 +5120,12 @@
     "answered_declined_nodate": "דחית.",
     "answered_tentative_nodate": "ענית 'אולי'."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "חוזר: {rule}",
+    "declined_dates": "דחית את {dates}.",
+    "declined_many": "דחית {count} פגישות בסדרה הזו.",
+    "answers_series": "התשובה שלך חלה על כל הפגישות בסדרה."
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",

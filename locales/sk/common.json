@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Odmietli ste.",
     "answered_tentative_nodate": "Odpovedali ste možno."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Opakuje sa: {rule}",
+    "declined_dates": "Odmietli ste {dates}.",
+    "declined_many": "Odmietli ste {count} stretnutí tejto série.",
+    "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",

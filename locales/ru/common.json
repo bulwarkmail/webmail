@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "Вы отклонили.",
     "answered_tentative_nodate": "Вы ответили «может быть»."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Повторяется: {rule}",
+    "declined_dates": "Вы отклонили встречу {dates}.",
+    "declined_many": "Вы отклонили встреч этой серии: {count}.",
+    "answers_series": "Ваш ответ относится ко всем встречам серии."
+  },
   "advanced_search": {
     "title": "Расширенный поиск",
     "from": "От",

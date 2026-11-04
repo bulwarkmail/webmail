@@ -5226,6 +5226,12 @@
     "answered_declined_nodate": "거절했습니다.",
     "answered_tentative_nodate": "미정으로 응답했습니다."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "반복: {rule}",
+    "declined_dates": "{dates} 일정을 거절했습니다.",
+    "declined_many": "이 시리즈의 일정 {count}개를 거절했습니다.",
+    "answers_series": "답변은 시리즈의 모든 일정에 적용됩니다."
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",
