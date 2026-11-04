@@ -245,7 +245,6 @@
     "select_account_title": "Hesap seç",
     "select_mailto_account": "Bu e-posta bağlantısını hangi hesabın açacağını seçin.",
     "select_webcal_account": "Bu takvim bağlantısını hangi hesabın açacağını seçin.",
-    "select_account_note": "Bu seçim yalnızca bu protokol bağlantısı için geçerlidir.",
     "detail_to": "Kime",
     "detail_subject": "Konu",
     "detail_no_subject": "Konu yok",
@@ -1069,7 +1068,7 @@
     "recipients_partly_refused": "Sunucu şu alıcıları reddetti: {recipients}. Diğer alıcılar iletiyi alır.",
     "send_offline": "Çevrimdışı görünüyorsunuz. İleti hâlâ burada; yeniden çevrimiçi olduğunuzda tekrar gönderin.",
     "formatting": "Biçimlendirme",
-    "send_recipients_rejected": "Gönderilmedi - sunucu tüm alıcıları reddetti.",
+    "send_recipients_rejected": "Gönderilmedi: sunucu tüm alıcıları reddetti.",
     "send_plugin_failed": "Gönderilmedi - gönderimi üstlenen bir eklenti başarısız oldu ya da çok uzun sürdü. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin.",
     "send_some_recipients_rejected": "Gönderildi, ancak bu alıcılara değil - sunucu onları reddetti.",
     "continue_draft": "Taslağa devam et",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Önce kilitlenme raporlarını açın.",
     "send_no_url": "Adres ayarlanmadı, bu yüzden gönderilecek yer yok. Yukarıya bir adres girin.",
     "send_failed": "Kilitlenme raporu gönderilemedi."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Görev çubuğu simgesinde okunmamış sayısı",
+    "unread_badge_description": "Başka bir uygulamada çalışırken yeni postayı görmeniz için.",
+    "tip_compose_keys": "Yeni bir ileti yazmak için {keys} tuşlarına basın",
+    "tip_palette_keys": "Herhangi bir komutu bulmak için {keys} tuşlarına basın"
   }
 }

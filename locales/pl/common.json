@@ -245,7 +245,6 @@
     "select_account_title": "Wybierz konto",
     "select_mailto_account": "Wybierz konto, które ma otworzyć ten link e-mail.",
     "select_webcal_account": "Wybierz konto, które ma otworzyć ten link kalendarza.",
-    "select_account_note": "Ten wybór dotyczy tylko tego linku protokołu.",
     "detail_to": "Do",
     "detail_subject": "Temat",
     "detail_no_subject": "Bez tematu",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Najpierw włącz raporty o awariach.",
     "send_no_url": "Nie ustawiono adresu, więc nie ma dokąd tego wysłać. Wpisz go powyżej.",
     "send_failed": "Nie udało się wysłać raportu o awarii."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Liczba nieprzeczytanych na ikonie na pasku zadań",
+    "unread_badge_description": "Aby widzieć nową pocztę, gdy pracujesz w innej aplikacji.",
+    "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
+    "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
   }
 }

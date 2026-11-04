@@ -145,7 +145,8 @@ import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-ident
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
-import { MoveToDialog, MoveToDialogHost } from "@/components/email/move-to-dialog";
+import { MoveToDialog, MoveToDialogHost, useMoveDialogStore } from "@/components/email/move-to-dialog";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,7 @@ import { mailTitleContext } from "@/lib/tab-title";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
-import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
+import { consumePendingMailto, mailLinkAccountId, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
 import { setMailLinkOpener } from "@/lib/desktop/mail-links";
 import { requestTabReply } from "@/lib/pwa-notify/tab-reply";
@@ -1366,7 +1367,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The desktop app's menu bar: the same handlers as the keys, and what's enabled
   // from what's on screen (lib/desktop/commands.ts).
   const desktopTarget = !showComposer && (!!selectedEmail || selectedEmailKeys.size > 0);
-  const desktopSingle = !showComposer && !!selectedEmail;
+  // With several selected, a menu line acts on all of them or isn't offered: Reply to one
+  // of seven, or Move for the open one only, would act on mail nobody picked.
+  const desktopMulti = selectedEmailKeys.size > 1;
+  const desktopSingle = !showComposer && !!selectedEmail && !desktopMulti;
+  const tListExtra = useTranslations('mail_list_extra');
+  /** Message > Move to… on the selection, as the selection bar's Move does: one toast with the count. */
+  const moveSelectionTo = async (mailboxId: string) => {
+    if (!client) return;
+    const count = selectedEmailKeys.size;
+    const restore = restoreBatchesForSelection(client);
+    const receipts: CrossAccountMoveReceipt[] = [];
+    const destination = mailboxes.find((m) => m.id === mailboxId);
+    await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
+      success: destination
+        ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
+        : tNotifications('emails_moved', { count }),
+      error: tNotifications('move_failed'),
+      undo: undoMoveAction(client, restore, undo, receipts),
+    });
+  };
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
   // A shared folder you may only read from: nothing can leave it.
@@ -1384,7 +1404,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': () => void keyboardHandlers.onMarkAsRead?.(),
     'message.markUnread': () => void keyboardHandlers.onMarkAsUnread?.(),
     'message.star': () => void keyboardHandlers.onToggleStar?.(),
-    'message.move': () => { if (selectedEmail) setMoveDialogEmail(selectedEmail); },
+    'message.move': () => {
+      if (shortcutsTargetSelection) {
+        const state = useEmailStore.getState();
+        const picked = resolveSelectedEmails({ emails: state.emails, threadEmailsCache: state.threadEmailsCache, selectedEmailKeys });
+        if (picked.length > 0) useMoveDialogStore.getState().open({ emails: picked, onMove: (mailboxId) => void moveSelectionTo(mailboxId) });
+      } else if (selectedEmail) {
+        setMoveDialogEmail(selectedEmail);
+      }
+    },
     'message.archive': keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
     'message.spam': () => void keyboardHandlers.onToggleSpam?.(),
     'message.delete': () => void keyboardHandlers.onDelete?.(),
@@ -1408,7 +1436,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
     'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
     'message.star': desktopSingle,
-    'message.move': desktopSingle && desktopMayRemove,
+    'message.move': desktopTarget && desktopMayRemove,
     'message.archive': desktopTarget && archiveActionEnabled && desktopMayRemove,
     'message.spam': desktopTarget && desktopMayRemove,
     'message.delete': desktopTarget && desktopMayRemove,
@@ -1497,6 +1525,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle });
   }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle]);
   useDocumentTitle(titleContext);
+  // The Window menu names this window by its folder, never by the open message (desktop-p2-5).
+  const windowView = useMemo(() => {
+    const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
+    return mailbox ? localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`)) : t('sidebar.mail');
+  }, [selectedMailbox, mailboxes, t]);
+  useDesktopWindowName(windowView, { withAccount: true });
 
   // When this page is rendered inside the Pro shell as the Mail tab body,
   // we hoist every "show composer" intent into its own Pro tab and reset
@@ -1682,8 +1716,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // A mail link from another program, in the desktop app: a compose window of its own,
   // as Outlook and Thunderbird do, and the main window stays where it was. Plugins get
   // their say first. False when it has to open here instead.
-  const openMailtoInWindow = useCallback(async (pending: DraftRequest): Promise<boolean> => {
-    if (!pending.fromOs || pending.initialFiles?.length || !hasDesktopWindows() || !popoutsAvailable()) return false;
+  const openMailtoInWindow = useCallback(async (pending: DraftRequest, accountId?: string): Promise<boolean> => {
+    if (!pending.fromOs || !hasDesktopWindows() || !popoutsAvailable()) return false;
     let prefill: ComposePrefill | null = null;
     if (emailHooks.onBeforeCompose.size > 0) {
       prefill = await runBeforeCompose(composeOptionsFor('compose', {
@@ -1695,12 +1729,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // A plugin said no: nothing opens, here or there.
       if (!prefill) return true;
     }
-    const opened = openComposerWindow(useAuthStore.getState().activeAccountId);
+    // The account the link goes out from, in its own window: the main window keeps the one it shows.
+    const opened = openComposerWindow(accountId ?? useAuthStore.getState().activeAccountId);
     if (!opened) return false;
     void opened.handOver({
       mode: 'compose',
       initialData: mailtoComposerDraft(pending, useSettingsStore.getState().plainTextMode),
       prefill: prefill && Object.keys(prefill).length > 0 ? prefill : null,
+      // Send to and Open with: the files go along (desktop-p2-6).
+      ...(pending.initialFiles?.length ? { initialFiles: pending.initialFiles } : {}),
     });
     return true;
   }, [identities, t]);
@@ -1732,6 +1769,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [openMailtoInWindow, openMailtoHere]);
 
   const openMailtoForAccount = useCallback(async (pending: DraftRequest, accountId: string) => {
+    if (await openMailtoInWindow(pending, accountId)) {
+      setPendingMailtoAccountChoice(null);
+      return;
+    }
     setIsProtocolAccountSwitching(true);
     try {
       if (useAuthStore.getState().activeAccountId !== accountId) {
@@ -1742,7 +1783,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     } finally {
       setIsProtocolAccountSwitching(false);
     }
-  }, [openMailtoDraft, switchAccount]);
+  }, [openMailtoDraft, openMailtoInWindow, switchAccount]);
 
   // onMailtoIntercept: a plugin may stop a mailto: from opening the composer.
   const mailtoAllowed = useCallback(async (pending: ParsedMailto & { href?: string }): Promise<boolean> => {
@@ -1755,17 +1796,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
   }, []);
 
-  // A draft that comes from outside: which account it goes out from.
+  // A draft that comes from outside goes out from the default account, as in Outlook and
+  // Thunderbird, with no question: the composer's From changes it (desktop-p2-8).
   const routeOutsideDraft = useCallback(async (pending: DraftRequest): Promise<void> => {
-    const protocolAccounts = getMailtoProtocolAccounts();
-    if (protocolAccounts.length > 1) {
-      // The question is asked in this window: bring it up.
-      if (pending.fromOs) getDesktopBridge()?.windows?.focus?.();
-      setPendingMailtoAccountChoice(pending);
-      return;
-    }
-
-    const accountId = protocolAccounts[0]?.id ?? activeAccountId;
+    const accountId = mailLinkAccountId(getMailtoProtocolAccounts(), useAccountStore.getState().defaultAccountId, activeAccountId);
     if (accountId) {
       await openMailtoForAccount(pending, accountId);
       return;
@@ -1823,6 +1857,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         body: handoff.body ?? '',
         initialFiles: handoff.files,
         unedited: true,
+        ...(handoff.fromOs ? { fromOs: true } : {}),
       });
     };
 

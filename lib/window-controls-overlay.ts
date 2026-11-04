@@ -94,9 +94,14 @@ export function applyControlsArea(area: TitlebarArea | null, root: HTMLElement =
 
 /**
  * Calls `listener` now and whenever the overlay's size or visibility changes
- * (`geometrychange`). Without the API it calls it once with null and listens
- * to nothing, so a browser without it runs no extra code. Returns the
- * unsubscribe.
+ * (`geometrychange`), and again when the page's width does (`resize`).
+ * Without the API it calls it once with null and listens to nothing, so a
+ * browser without it runs no extra code. Returns the unsubscribe.
+ *
+ * `geometrychange` comes before the page has its new width: after a maximise,
+ * restore, snap or drag the rect is the new one and innerWidth still the old,
+ * so the room worked out from the two is wrong (none at all after growing, more
+ * than the window after shrinking). The `resize` that follows has both.
  */
 export function watchTitlebarArea(listener: (area: TitlebarArea | null) => void): () => void {
   listener(readTitlebarArea());
@@ -104,7 +109,11 @@ export function watchTitlebarArea(listener: (area: TitlebarArea | null) => void)
   if (!current) return () => {};
   const onChange = () => listener(readTitlebarArea());
   current.addEventListener('geometrychange', onChange);
-  return () => current.removeEventListener('geometrychange', onChange);
+  window.addEventListener('resize', onChange);
+  return () => {
+    current.removeEventListener('geometrychange', onChange);
+    window.removeEventListener('resize', onChange);
+  };
 }
 
 const ROW_CANDIDATES = '[data-window-top-row], [data-composer-header], header, div.h-14, div.min-h-14, div.h-12, div.h-16, div.min-h-16';

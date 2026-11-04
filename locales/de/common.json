@@ -245,7 +245,6 @@
     "select_account_title": "Account auswählen",
     "select_mailto_account": "Wählen Sie aus, mit welchem Account dieser E-Mail-Link geöffnet werden soll.",
     "select_webcal_account": "Wählen Sie aus, mit welchem Account dieser Kalender-Link geöffnet werden soll.",
-    "select_account_note": "Diese Auswahl gilt nur für diesen Protokoll-Link.",
     "detail_to": "An",
     "detail_subject": "Betreff",
     "detail_no_subject": "Ohne Betreff",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Schalten Sie zuerst die Absturzberichte ein.",
     "send_no_url": "Es ist keine Adresse eingetragen, daher gibt es kein Ziel. Geben Sie oben eine ein.",
     "send_failed": "Der Absturzbericht konnte nicht gesendet werden."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Anzahl ungelesener Nachrichten am Taskleistensymbol",
+    "unread_badge_description": "So sehen Sie neue Mail, während Sie in einer anderen App arbeiten.",
+    "tip_compose_keys": "Drücken Sie {keys}, um eine neue Nachricht zu schreiben",
+    "tip_palette_keys": "Drücken Sie {keys}, um jeden Befehl zu finden"
   }
 }

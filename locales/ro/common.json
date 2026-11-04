@@ -245,7 +245,6 @@
     "select_account_title": "Alegeți contul",
     "select_mailto_account": "Alegeți contul în care să se deschidă acest link de e-mail.",
     "select_webcal_account": "Alegeți contul care ar trebui să deschidă acest link către calendar.",
-    "select_account_note": "Aceasta se aplică numai acestui link de protocol.",
     "detail_to": "Către",
     "detail_subject": "Subiect",
     "detail_no_subject": "Fără subiect",
@@ -1069,7 +1068,7 @@
     "recipients_partly_refused": "Serverul a respins {recipients}. Ceilalți destinatari primesc mesajul.",
     "send_offline": "Se pare că ești offline. Mesajul este încă aici; trimite-l din nou când revii online.",
     "formatting": "Formatare",
-    "send_recipients_rejected": "Netrimis - serverul a respins toți destinatarii.",
+    "send_recipients_rejected": "Netrimis: serverul a respins toți destinatarii.",
     "send_plugin_failed": "Nu a fost trimis - un plugin care se ocupă de trimitere a eșuat sau a durat prea mult. Verifică dosarul Trimise înainte de a trimite din nou.",
     "send_some_recipients_rejected": "Trimis, dar nu și acestor destinatari - serverul i-a respins.",
     "continue_draft": "Continuă schița",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Porniți mai întâi rapoartele de blocare.",
     "send_no_url": "Nu este setată nicio adresă, deci nu există unde să fie trimis. Introduceți una mai sus.",
     "send_failed": "Raportul de blocare nu a putut fi trimis."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Numărul de necitite pe pictograma din bara de activități",
+    "unread_badge_description": "Ca să vedeți e-mailurile noi în timp ce lucrați în altă aplicație.",
+    "tip_compose_keys": "Apăsați {keys} pentru a scrie un mesaj nou",
+    "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
   }
 }

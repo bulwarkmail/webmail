@@ -357,3 +357,14 @@ export function subscribeToPendingWebcal(callback: () => void): () => void {
 export function hasPendingWebcal(): boolean {
   return hasPending(WEBCAL_KEY, isParsedWebcal);
 }
+
+/**
+ * The account a mail link from outside goes out from, with no question: the one marked
+ * default, else the one in use, as Outlook and Thunderbird do. The composer's From can
+ * change it. Only signed-in accounts count.
+ */
+export function mailLinkAccountId(accounts: readonly { id: string }[], defaultId: string | null, activeId: string | null): string | null {
+  if (defaultId && accounts.some((account) => account.id === defaultId)) return defaultId;
+  if (activeId && accounts.some((account) => account.id === activeId)) return activeId;
+  return accounts[0]?.id ?? activeId ?? null;
+}

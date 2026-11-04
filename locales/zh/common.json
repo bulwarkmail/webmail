@@ -245,7 +245,6 @@
     "select_account_title": "选择账户",
     "select_mailto_account": "选择用于打开此电子邮件链接的账户。",
     "select_webcal_account": "选择用于打开此日历链接的账户。",
-    "select_account_note": "此选择仅适用于此协议链接。",
     "detail_to": "收件人",
     "detail_subject": "主题",
     "detail_no_subject": "无主题",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "请先开启崩溃报告。",
     "send_no_url": "未设置地址，因此无处发送。请在上方输入一个。",
     "send_failed": "无法发送崩溃报告。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "在任务栏图标上显示未读数",
+    "unread_badge_description": "这样您在其他应用中工作时也能看到新邮件。",
+    "tip_compose_keys": "按 {keys} 写新邮件",
+    "tip_palette_keys": "按 {keys} 查找任何命令"
   }
 }

@@ -95,6 +95,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { useDesktopWindowName } from '@/lib/desktop/window-name';
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { scrollBehavior } from '@/lib/reduced-motion';
@@ -816,6 +817,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       ? `${activeTabLabel} - ${tSidebar('settings')}`
       : tSidebar('settings'),
   );
+  useDesktopWindowName(tSidebar('settings'), { withAccount: true });
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);

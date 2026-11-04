@@ -256,3 +256,26 @@ describe('NotificationSettings - push errors', () => {
     expect(text).toBe('Relay register failed: 502');
   });
 });
+
+describe('NotificationSettings - the unread count in the desktop app', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailNotificationsEnabled: true });
+    useAuthStore.setState({ client: fakeClient, username: 'me@example.com' });
+    usePolicyStore.setState({ ...usePolicyStore.getState(), policy: {}, isSettingLocked: () => false, isSettingHidden: () => false } as never);
+  });
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+  });
+
+  it('speaks of the taskbar icon there, not of a tab', async () => {
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32' };
+    const { findByText, queryByText } = render(<NotificationSettings />);
+    await findByText('unread_badge_label');
+    expect(queryByText('favicon_unread_badge.label')).toBeNull();
+  });
+
+  it('keeps the tab in a browser', async () => {
+    const { findByText } = render(<NotificationSettings />);
+    await findByText('favicon_unread_badge.label');
+  });
+});

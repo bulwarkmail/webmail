@@ -245,7 +245,6 @@
     "select_account_title": "Elegir cuenta",
     "select_mailto_account": "Elige qué cuenta debe abrir este enlace de correo.",
     "select_webcal_account": "Elige qué cuenta debe abrir este enlace de calendario.",
-    "select_account_note": "Esta selección solo se aplica a este enlace de protocolo.",
     "detail_to": "Para",
     "detail_subject": "Asunto",
     "detail_no_subject": "Sin asunto",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Activa primero los informes de fallos.",
     "send_no_url": "No hay ninguna dirección, así que no hay adónde enviarlo. Escribe una arriba.",
     "send_failed": "No se ha podido enviar el informe de fallo."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Número de no leídos en el icono de la barra de tareas",
+    "unread_badge_description": "Para ver el correo nuevo mientras trabaja en otra aplicación.",
+    "tip_compose_keys": "Pulse {keys} para escribir un mensaje nuevo",
+    "tip_palette_keys": "Pulse {keys} para buscar cualquier comando"
   }
 }

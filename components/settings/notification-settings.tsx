@@ -33,6 +33,7 @@ import {
 import { webPushErrorKey } from '@/lib/web-push-errors';
 import type { PushDevice } from '@/lib/web-push';
 import { IS_LITE } from '@/lib/lite';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
 import {
   resolveActiveRelayUrl,
@@ -55,6 +56,7 @@ type DevicesState =
 export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
   const tAppearance = useTranslations('settings.appearance');
+  const tDesktopP2 = useTranslations('uxp2_desktop');
   const tUnread = useTranslations('account_unread');
   const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
@@ -354,8 +356,11 @@ export function NotificationSettings() {
         </SettingItem>
         )}
 
-        {/* The tab/app icon badge is a new-mail signal too; people look for it here. */}
-        <SettingItem label={tAppearance('favicon_unread_badge.label')} description={tAppearance('favicon_unread_badge.description')}>
+        {/* The tab/app icon badge is a new-mail signal too; people look for it here. The desktop app has no tab: the taskbar icon. */}
+        <SettingItem
+          label={isDesktopApp() ? tDesktopP2('unread_badge_label') : tAppearance('favicon_unread_badge.label')}
+          description={isDesktopApp() ? tDesktopP2('unread_badge_description') : tAppearance('favicon_unread_badge.description')}
+        >
           <ToggleSwitch
             checked={faviconUnreadBadge}
             onChange={(checked) => updateSetting('faviconUnreadBadge', checked)}

@@ -245,7 +245,6 @@
     "select_account_title": "Choisir un compte",
     "select_mailto_account": "Choisissez le compte qui doit ouvrir ce lien e-mail.",
     "select_webcal_account": "Choisissez le compte qui doit ouvrir ce lien de calendrier.",
-    "select_account_note": "Cette sélection s'applique uniquement à ce lien de protocole.",
     "detail_to": "À",
     "detail_subject": "Objet",
     "detail_no_subject": "Sans objet",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Activez d'abord les rapports de plantage.",
     "send_no_url": "Aucune adresse n'est définie, il n'y a donc nulle part où envoyer ce rapport. Saisissez-en une ci-dessus.",
     "send_failed": "Le rapport de plantage n'a pas pu être envoyé."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de non-lus sur l'icône de la barre des tâches",
+    "unread_badge_description": "Pour voir les nouveaux messages pendant que vous travaillez dans une autre application.",
+    "tip_compose_keys": "Appuyez sur {keys} pour écrire un nouveau message",
+    "tip_palette_keys": "Appuyez sur {keys} pour trouver n'importe quelle commande"
   }
 }

@@ -245,7 +245,6 @@
     "select_account_title": "Vybrat účet",
     "select_mailto_account": "Vyberte účet, ve kterém se má tento e-mailový odkaz otevřít.",
     "select_webcal_account": "Vyberte účet, ve kterém se má tento kalendářový odkaz otevřít.",
-    "select_account_note": "Tato volba platí jen pro tento odkaz protokolu.",
     "detail_to": "Komu",
     "detail_subject": "Předmět",
     "detail_no_subject": "Bez předmětu",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Nejprve zapněte hlášení o pádech.",
     "send_no_url": "Není nastavena žádná adresa, takže to nejde kam odeslat. Zadejte ji výše.",
     "send_failed": "Hlášení o pádu se nepodařilo odeslat."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Počet nepřečtených na ikoně na hlavním panelu",
+    "unread_badge_description": "Abyste viděli novou poštu, i když pracujete v jiné aplikaci.",
+    "tip_compose_keys": "Stiskněte {keys} a napište novou zprávu",
+    "tip_palette_keys": "Stiskněte {keys} a najděte jakýkoli příkaz"
   }
 }

@@ -245,7 +245,6 @@
     "select_account_title": "Trieu un compte",
     "select_mailto_account": "Trieu quin compte ha d'obrir aquest enllaç de correu.",
     "select_webcal_account": "Trieu quin compte ha d'obrir aquest enllaç de calendari.",
-    "select_account_note": "Això només s'aplica a aquest enllaç de protocol.",
     "detail_to": "Per a",
     "detail_subject": "Assumpte",
     "detail_no_subject": "Sense assumpte",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "Activa primer els informes d'errors greus.",
     "send_no_url": "No hi ha cap adreça, així que no hi ha on enviar-ho. Escriu-ne una a dalt.",
     "send_failed": "No s'ha pogut enviar l'informe d'error."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de no llegits a la icona de la barra de tasques",
+    "unread_badge_description": "Per veure el correu nou mentre treballeu en una altra aplicació.",
+    "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
+    "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
   }
 }

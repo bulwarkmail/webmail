@@ -17,6 +17,8 @@ export interface DesktopWindowInfo {
   id: number;
   type: DesktopWindowType;
   title: string;
+  /** What the page calls the window in the Window menu (`setMenuName`), if it said. */
+  menuName?: string;
   focused: boolean;
   /** False for a main window hidden while pop-outs are open. */
   visible?: boolean;
@@ -46,6 +48,8 @@ export interface DesktopWindowsBridge {
   /** What this window's open drafts come back as at the next start: pop-out composer addresses. */
   setRestore?: (urls: string[]) => void;
   setRestoreEnabled?: (enabled: boolean) => void;
+  /** This window's name in the Window menu: lib/desktop/window-name.ts. */
+  setMenuName?: (name: string) => void;
   /** Signed in, with a session to lend: windows from last time can open. */
   sessionReady?: () => void;
   /** Nobody is signed in any more: a pop-out would find no session. */

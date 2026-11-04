@@ -991,7 +991,7 @@
     "recipients_partly_refused": "השרת דחה את {recipients}. שאר הנמענים יקבלו את ההודעה.",
     "send_offline": "נראה שאין חיבור לרשת. ההודעה עדיין כאן, שלחו אותה שוב כשתחזרו לרשת.",
     "formatting": "עיצוב",
-    "send_recipients_rejected": "לא נשלח - השרת דחה את כל הנמענים.",
+    "send_recipients_rejected": "לא נשלח: השרת דחה את כל הנמענים.",
     "send_plugin_failed": "לא נשלח - תוסף שמטפל בשליחה נכשל או לקח יותר מדי זמן. בדקו את תיקיית דואר יוצא לפני שליחה חוזרת.",
     "send_some_recipients_rejected": "נשלח, אך לא לנמענים האלה - השרת דחה אותם.",
     "continue_draft": "המשך טיוטה",
@@ -5521,7 +5521,6 @@
     "select_account_title": "בחר חשבון",
     "select_mailto_account": "בחר איזה חשבון צריך לפתוח קישור דוא״ל זה.",
     "select_webcal_account": "בחר איזה חשבון צריך לפתוח קישור לוח שנה זה.",
-    "select_account_note": "זה חל רק על קישור פרוטוקול זה.",
     "detail_to": "אל",
     "detail_subject": "נושא",
     "detail_no_subject": "אין נושא",
@@ -7592,5 +7591,11 @@
     "send_no_consent": "הפעילו קודם את דוחות הקריסה.",
     "send_no_url": "לא הוגדרה כתובת, ולכן אין לאן לשלוח. הזינו כתובת למעלה.",
     "send_failed": "לא ניתן היה לשלוח את דוח הקריסה."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "מספר ההודעות שלא נקראו על הסמל בשורת המשימות",
+    "unread_badge_description": "כדי לראות דואר חדש בזמן שאתם עובדים באפליקציה אחרת.",
+    "tip_compose_keys": "הקישו {keys} כדי לכתוב הודעה חדשה",
+    "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
   }
 }

@@ -245,7 +245,6 @@
     "select_account_title": "選擇帳號",
     "select_mailto_account": "選擇用於開啟此電子郵件連結的帳號。",
     "select_webcal_account": "選擇用於開啟此行事曆連結的帳號。",
-    "select_account_note": "此選擇僅適用於此協議連結。",
     "detail_to": "收件者",
     "detail_subject": "主題",
     "detail_no_subject": "無主題",
@@ -7591,5 +7590,11 @@
     "send_no_consent": "請先開啟當機報告。",
     "send_no_url": "未設定地址，因此無處傳送。請在上方輸入一個。",
     "send_failed": "無法傳送當機報告。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "在工作列圖示上顯示未讀數",
+    "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
+    "tip_compose_keys": "按 {keys} 撰寫新郵件",
+    "tip_palette_keys": "按 {keys} 尋找任何指令"
   }
 }
