@@ -6,6 +6,7 @@ import { assertWritable, isConfigReadOnly } from './paths';
 import { adminConfigDocs, adminStateDocs, isStoreUnavailable } from './admin-store';
 import type { AdminConfigData, AdminStateData } from './types';
 import { readFileEnv } from '../read-file-env';
+import { desktopServerSecret } from '@/lib/desktop/server-secrets';
 
 const SCRYPT_KEYLEN = 64;
 const SCRYPT_COST = 16384; // 2^14
@@ -269,7 +270,7 @@ export async function initAdminPassword(): Promise<boolean> {
     return true;
   }
 
-  const envPassword = process.env.ADMIN_PASSWORD;
+  const envPassword = desktopServerSecret('adminPassword') || process.env.ADMIN_PASSWORD;
   if (!envPassword) {
     if (!cache.initialized) logger.info('Admin dashboard disabled (no ADMIN_PASSWORD set)');
     cache.initialized = true;
