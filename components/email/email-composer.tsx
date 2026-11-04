@@ -4993,7 +4993,8 @@ export function EmailComposer({
         "flex h-full bg-background relative",
         className,
         // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
-        maximized && "fixed inset-0 z-40 h-auto pt-[var(--titlebar-row-height)]",
+        // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
+        maximized && "fixed inset-0 z-50 h-auto pt-[var(--titlebar-row-height)]",
       )}
       data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
