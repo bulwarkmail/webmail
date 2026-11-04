@@ -90,7 +90,7 @@ import {
 } from "@/components/error";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScheduleSendDialog } from "@/components/email/schedule-send-dialog";
-import { MailFolderMenu, MailFolderMenuItems } from "@/components/email/mail-list-menus";
+import { MailFolderMenu, MailFolderMenuItems, MailSortSubMenu } from "@/components/email/mail-list-menus";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
@@ -5492,6 +5492,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     disabled={!client || isManualRefreshing}
                     onClick={() => { close(); void handleManualRefresh(); }}
                   />
+                  {/* A tablet shows the list's own ⋮ nowhere else (see below). */}
+                  {isTablet && <MailSortSubMenu folderRole={conversationRole} onPicked={close} />}
                   <MailFolderMenuItems
                     onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
@@ -5597,8 +5599,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       </ToolbarSearchAction>
                     }
                   />
-                  {/* The folder's actions, as the Mountain View list ⋮ has them. */}
-                  <MailFolderMenu
+                  {/* The folder's actions, as the Mountain View list ⋮ has them. A
+                      tablet has them in the header's ⋮ right above, and two ⋮
+                      stacked read as one menu twice (mail-27). */}
+                  {!isTablet && <MailFolderMenu
                     disabled={isScheduledView}
                     folderRole={conversationRole}
                     onRefresh={handleManualRefresh}
@@ -5606,7 +5610,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onMarkFolderRead={selectedMailbox ? folderMenuMarkRead : undefined}
                     onMarkAllFoldersRead={folderMenuMarkAllRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? folderMenuEmpty : undefined}
-                  />
+                  />}
                   {/* Plugin buttons (top-bar-actions). On phones they sit in
                       the header's overflow menu instead (MobileHeader). */}
                   {!isMobile && (
@@ -5814,9 +5818,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button - on desktop Mountain View puts Compose
-                at the top of the navigation rail instead. */}
-            {!mvShell && <Button
+            {/* Floating Compose Button - on desktop the folder sidebar has
+                Compose at its top instead (and Mountain View its rail), so the
+                button no longer sits on the list's rows. */}
+            {!mvShell && (isMobile || isTablet || isEmbedded) && <Button
               onClick={() => {
                 void withComposeGate('compose', {}, () => {
                   startFreshComposerSession();

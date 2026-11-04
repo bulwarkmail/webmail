@@ -28,6 +28,8 @@ import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
+import { useIsDesktop } from "@/hooks/use-media-query";
+import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
@@ -185,6 +187,8 @@ export function EmailList({
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
+  const isDesktopPane = useIsDesktop();
+  const isEmbeddedList = useIsEmbedded();
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
@@ -986,10 +990,11 @@ export function EmailList({
   );
 
   // Room under the last row for the round Compose button, which would otherwise
-  // sit on that row's actions (Mountain View has no such button). A spacer and
+  // sit on that row's actions (Mountain View has no such button, and a desktop
+  // has Compose in the folder sidebar instead). A spacer and
   // not padding on the list: padding is a minimum height the list can't go
   // under, and on a short screen it pushed the rows over the tab bar.
-  const composeButtonRoom = !mountainViewList ? <div aria-hidden="true" className="h-20" /> : null;
+  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
 
   return (
     <TagDisplayContext.Provider value={tagDisplay}>

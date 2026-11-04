@@ -29,7 +29,10 @@ vi.mock('@/components/email/email-composer', () => ({
     return <p>stub composer</p>;
   },
 }));
-vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
+// On a desktop Compose sits at the head of the folder sidebar (mail-13).
+vi.mock('@/components/layout/sidebar', () => ({
+  Sidebar: ({ onCompose }: { onCompose?: () => void }) => (device.isMobile ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>),
+}));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
@@ -64,9 +67,9 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({ useProMultiAccountI
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
-const device = vi.hoisted(() => ({ isMobile: true }));
+const device = vi.hoisted(() => ({ isMobile: true, isTablet: false }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: device.isMobile, isTablet: false, isDesktop: !device.isMobile }),
+  useDeviceDetection: () => ({ isMobile: device.isMobile, isTablet: device.isTablet, isDesktop: !device.isMobile && !device.isTablet }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -109,6 +112,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   device.isMobile = true;
+  device.isTablet = false;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -121,6 +125,29 @@ describe('Mail after the tour on a phone', () => {
     useUIStore.setState({ activeView: 'viewer' });
     render(<MailApp />);
     expect(listHidden()).toBe(false);
+  });
+
+  // Usability test 2026-11-04, mail-13: on a desktop the round button sat on
+  // the list's rows; Compose is at the head of the folder sidebar there.
+  it('draws the round Compose button on a phone, not on a desktop', () => {
+    const view = render(<MailApp />);
+    expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
+
+    device.isMobile = false;
+    view.rerender(<MailApp />);
+    expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
+  });
+
+  // mail-27: a tablet drew the header's ⋮ and the list's ⋮ one above the
+  // other, with the same entries; the header's one has them all now.
+  it('draws the list ⋮ on a desktop but not on a tablet, under the header ⋮', () => {
+    device.isMobile = false;
+    const view = render(<MailApp />);
+    expect(screen.queryByTestId('mail-folder-menu')).not.toBeNull();
+
+    device.isTablet = true;
+    view.rerender(<MailApp />);
+    expect(screen.queryByTestId('mail-folder-menu')).toBeNull();
   });
 
   it('keeps an open composer in view when the window narrows to a phone', async () => {

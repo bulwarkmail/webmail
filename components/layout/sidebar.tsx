@@ -35,6 +35,7 @@ import {
   AlertTriangle,
   NotebookPen,
   Pencil,
+  PenSquare,
   Plus,
   CalendarClock,
   BellOff,
@@ -83,7 +84,6 @@ import { trashAndJunkIds } from "@/lib/unified-mailbox";
 import { toast } from "@/stores/toast-store";
 import { toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { debug } from "@/lib/debug";
-import { AccountSwitcher } from "./account-switcher";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
 import { useTour } from "@/components/tour/tour-provider";
@@ -1208,10 +1208,6 @@ function SidebarImpl({
   const selectedKeywordAccountId = useEmailStore(s => s.selectedKeywordAccountId);
   const personalSelectedKeyword = selectedKeywordAccountId ? null : selectedKeyword;
   const isEmbedded = useIsEmbedded();
-  // The Pro shell owns the global chrome (rail + tab bar), so the sidebar's
-  // own AccountSwitcher would be a redundant second account UI in the same
-  // pane.
-  const hideAccountSwitcher = useSettingsStore(s => s.hideAccountSwitcher) || isEmbedded;
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
@@ -1920,10 +1916,38 @@ function SidebarImpl({
               {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
             </Button>
 
-            {!isCollapsed && !hideAccountSwitcher && (
-              <AccountSwitcher variant="expanded" className="flex-1" />
+            {/* Compose at the head of the folders on a desktop, as in Gmail
+                and Outlook; the round button over the list stays for phones
+                and tablets, where this pane is a drawer. The account switcher
+                that sat here was a second one beside the rail's avatar, which
+                every app shows (usability test 2026-11-04, mail-13, mail-27). */}
+            {!isCollapsed && !isDrawer && onCompose && (
+              <Button
+                onClick={onCompose}
+                className="flex-1 min-w-0 h-9 justify-start gap-2 px-3"
+                data-sidebar-compose=""
+                data-tour="compose-button"
+                title={t("compose_hint")}
+              >
+                <PenSquare className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{t("compose")}</span>
+              </Button>
             )}
           </div>
+          {isCollapsed && !isDrawer && onCompose && (
+            <div className="flex justify-center pb-2">
+              <IconButton
+                onClick={onCompose}
+                variant="default"
+                data-sidebar-compose=""
+                data-tour="compose-button"
+                label={t("compose")}
+                title={t("compose_hint")}
+              >
+                <PenSquare />
+              </IconButton>
+            </div>
+          )}
         </div>
       )}
 

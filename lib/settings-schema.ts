@@ -171,7 +171,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showToolbarLabels', 'appearance', `${AP}toolbar_labels.label`),
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
-  bool('hideAccountSwitcher', 'appearance', `${AP}hide_account_switcher.label`),
   bool('showRailAccountList', 'appearance', `${AP}show_rail_account_list.label`),
   bool('proInterface', 'appearance', `${AP}pro_interface.label`),
   bool('enableUnifiedMailbox', 'appearance', `${AP}unified_mailbox.label`),
@@ -419,8 +418,9 @@ export const DENIED_SETTINGS: readonly string[] = [
   'externalContentPolicy', 'trustedSenders', 'trustedSendersAddressBook',
   // Free text that ends up in file names or in every sent mail.
   'emailDownloadTemplate', 'attachmentDownloadTemplate', 'bundleDownloadTemplate', 'signatureDetails',
-  // Never read by the app (defaultReplyMode), or on the account page (the delimiter).
-  'defaultReplyMode', 'subAddressDelimiter',
+  // Never read by the app (defaultReplyMode, hideAccountSwitcher: the sidebar's
+  // switcher it hid is gone), or on the account page (the delimiter).
+  'defaultReplyMode', 'hideAccountSwitcher', 'subAddressDelimiter',
   // Sends push metadata to another server.
   'pushRelayUrl',
   // Turning proofreading on sends what the user writes to a checker plugin.

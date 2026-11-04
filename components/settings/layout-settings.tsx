@@ -188,7 +188,7 @@ export function LayoutSection() {
 /** The Appearance page's Sidebar section: what the folder sidebar and rail show. */
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
-  const { hideAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
+  const { showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
@@ -208,17 +208,9 @@ export function SidebarSection() {
         />
       </SettingItem>
 
-      {/* The account switcher and the rail avatars only mean something with
-          a second account; a single-account user never sees either. */}
-      {multiAccount && (
-        <SettingItem label={t('hide_account_switcher.label')} description={t('hide_account_switcher.description')}>
-          <ToggleSwitch
-            checked={hideAccountSwitcher}
-            onChange={(checked) => updateSetting('hideAccountSwitcher', checked)}
-          />
-        </SettingItem>
-      )}
-
+      {/* The rail avatars only mean something with a second account. The
+          sidebar's own account switcher is gone (the rail's avatar is the
+          one), and with it the switch that hid it. */}
       {multiAccount && (
         <SettingItem label={t('show_rail_account_list.label')} description={t('show_rail_account_list.description')}>
           <ToggleSwitch
