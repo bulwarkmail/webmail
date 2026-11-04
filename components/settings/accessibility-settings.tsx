@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { openKeyboardShortcuts } from '@/lib/app-commands';
 import { voicesForLocale } from '@/lib/read-aloud';
 import { wordingFor } from '@/lib/desktop/wording';
+import { percentLabel } from '@/lib/percent-label';
 import { useSpeechVoices } from '@/hooks/use-read-aloud';
 import {
   ACCESSIBILITY_KEYS,
@@ -383,7 +384,7 @@ export function AccessibilitySettings() {
             onChange={(value) => set('mailTextScale', Number(value))}
             options={MAIL_TEXT_SCALES.map((scale) => ({
               value: String(scale),
-              label: scale === 0 ? t('mail_text_size.follow') : `${Math.round(scale * 100)} %`,
+              label: scale === 0 ? t('mail_text_size.follow') : percentLabel(scale, locale),
             }))}
           />
         </SettingItem>
@@ -443,7 +444,8 @@ export function AccessibilitySettings() {
             onChange={(value) => set('composeFontSize', value)}
             options={[
               { value: '', label: t('compose_size.default') },
-              ...COMPOSE_FONT_SIZES.map((size) => ({ value: size, label: size })),
+              // "14 px", as the smallest-text list above writes it, not "14px".
+              ...COMPOSE_FONT_SIZES.map((size) => ({ value: size, label: t('mail_min_font_size.px', { size: parseInt(size, 10) }) })),
             ]}
           />
         </SettingItem>
