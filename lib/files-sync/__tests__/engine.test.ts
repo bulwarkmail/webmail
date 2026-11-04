@@ -414,6 +414,47 @@ describe('offline', () => {
   });
 });
 
+describe('before a root stops (files-p3-2)', () => {
+  it('names what waits here, uploads it, and says done once nothing waits', async () => {
+    const s = await setup({ seed: (server, disk, rootId) => disk.write(rootId, 'a.txt', 'v1') });
+    s.server.offline = true;
+    s.disk.write('r1', 'a.txt', 'v2');
+    s.disk.write('r1', 'Docs/b.txt', 'new');
+    s.disk.write('r1', 'desktop.ini', '[x]');
+    expect((await s.engine.pendingHere('r1'))?.sort()).toEqual(['Docs/b.txt', 'a.txt']);
+    const seen: number[] = [];
+    expect(await s.engine.flushRoot('r1', { onProgress: (waiting) => seen.push(waiting.length) })).toBe('offline');
+    expect(seen).toEqual([2, 2]);
+    s.server.offline = false;
+    expect(await s.engine.flushRoot('r1')).toBe('done');
+    expect(s.server.content(s.server.find('Sync/a.txt')!.id)).toBe('v2');
+    expect(s.server.content(s.server.find('Sync/Docs/b.txt')!.id)).toBe('new');
+    expect(await s.engine.pendingHere('r1')).toEqual([]);
+  });
+
+  it('gives up on a file the server will never take, and stops when asked', async () => {
+    const s = await setup({ server: { maxSizeUpload: 10 } });
+    s.disk.write('r1', 'huge.bin', 'x'.repeat(20));
+    expect(await s.engine.flushRoot('r1')).toBe('stuck');
+    expect(await s.engine.pendingHere('r1')).toEqual(['huge.bin']);
+    const abort = new AbortController();
+    abort.abort();
+    expect(await s.engine.flushRoot('r1', { signal: abort.signal })).toBe('cancelled');
+    expect(await s.engine.flushRoot('nope')).toBe('gone');
+  });
+
+  it("the drive: only what was written here waits, not placeholders or files opened", async () => {
+    const s = await setup({ drive: true, seed: (server) => { server.file('online.txt', null, 'online'); server.file('opened.txt', null, 'opened'); server.file('edited.txt', null, 'v1'); } });
+    const request = s.disk.requestFetch('r1', 'opened.txt');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(s.disk.fetchFailed.has(request.fetchId)).toBe(false);
+    s.server.offline = true;
+    s.disk.write('r1', 'edited.txt', 'v2');
+    s.disk.write('r1', 'made here.txt', 'new');
+    expect((await s.engine.pendingHere('r1'))?.sort()).toEqual(['edited.txt', 'made here.txt']);
+  });
+});
+
 describe('changes in Files', () => {
   it('reads FileNode/changes, and lists everything again only when the server cannot say', async () => {
     const s = await setup({ seed: (server, disk, rootId) => disk.write(rootId, 'a.txt', 'a') });

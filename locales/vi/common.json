@@ -7786,6 +7786,32 @@
     "state_offline": "Ngoại tuyến",
     "state_error": "Đã dừng"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Đang tải lên thay đổi trước khi tắt ổ đĩa",
+      "title_sign_out": "Đang tải lên thay đổi trước khi đăng xuất",
+      "title_stop_folder": "Đang tải lên thay đổi trước khi ngừng đồng bộ thư mục",
+      "cannot_title": "Hiện không thể tải lên một số thay đổi",
+      "waiting": "Còn phải tải lên: {names}",
+      "progress": "Đã tải lên {done}/{total}",
+      "cannot_offline": "Không thể kết nối máy chủ. Chưa tải lên: {names}",
+      "cannot_other": "Không thể tải lên: {names}. Hoạt động gần đây trong Cài đặt cho biết lý do.",
+      "go_note_drive": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ được sao chép vào Tài liệu\\Bulwark – not uploaded. Không mất gì cả.",
+      "go_note_folder": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ vẫn ở trong thư mục trên máy tính này.",
+      "keep_turn_off": "Giữ ổ đĩa",
+      "keep_sign_out": "Tiếp tục đăng nhập",
+      "keep_stop_folder": "Tiếp tục đồng bộ",
+      "go_turn_off": "Tắt ngay",
+      "go_sign_out": "Đăng xuất ngay",
+      "go_stop_folder": "Ngừng đồng bộ ngay"
+    },
+    "drive": {
+      "off_note": "Tắt sẽ gỡ ổ đĩa khỏi Trình khám phá Tệp. Tệp của bạn vẫn ở trong Tệp.",
+      "rescued": "Các tệp chưa tải lên ({count}) hiện nằm trong {folder}.",
+      "rescued_open": "Mở thư mục",
+      "rescued_dismiss": "Bỏ qua"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",

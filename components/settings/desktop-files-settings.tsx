@@ -17,6 +17,7 @@ import { cn, formatFileSize } from "@/lib/utils";
 import type { FilesDriveState, FilesError, FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncActivity, FilesSyncActivityKind } from "@/lib/files-sync/types";
 import { filesQuotaLevel } from "@/lib/files-sync/drive-status";
+import { requestFlush } from "@/lib/files-sync/flush-requests";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
 import { OrgLockedNote } from "./org-locked-note";
@@ -107,6 +108,8 @@ function addErrorKey(error: FilesError): string | null {
 
 function DriveSection({ drive }: { drive: FilesDriveState }) {
   const t = useTranslations("files_sync");
+  const tx = useTranslations("files_sync_extra.drive");
+  const rescued = useFilesSyncStore((s) => s.rescued);
   const account = useFilesSyncStore((s) => s.account);
   const roots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);
@@ -124,11 +127,16 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
     if (!controller) return;
     setError(null);
     setBusy(true);
-    // Straight from the click: turning it on needs the click it came from.
-    void controller.setDriveEnabled(next).then(
+    // Off: what waits here goes up first, or the user keeps the drive (files-p3-2). Nothing
+    // waiting answers at once. On: straight from the click, which turning it on needs.
+    const apply = () => controller.setDriveEnabled(next).then(
       (result) => { if (!result.ok) setError(addErrorKey(result.error)); },
       () => setError("folders.add_failed.failed"),
-    ).finally(() => setBusy(false));
+    );
+    const done = next || !driveRoot
+      ? apply()
+      : requestFlush({ rootId: driveRoot.id, kind: "drive", purpose: "turn-off" }).then((go) => (go ? apply() : undefined));
+    void done.finally(() => setBusy(false));
   };
   const chooseLetter = (value: string) => {
     if (!controller) return;
@@ -154,6 +162,16 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
         />
       </SettingItem>
       {on && driveRoot && <FilesSyncStatusLine status={status[driveRoot.id]} paused={driveRoot.paused} />}
+      {on && <p className="text-xs text-muted-foreground" data-testid="files-sync-drive-off-note">{tx("off_note")}</p>}
+      {rescued && (
+        <div role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 space-y-2" data-testid="files-sync-rescued">
+          <p className="text-sm text-foreground break-words" dir="auto">{tx("rescued", { count: rescued.count, folder: rescued.folder })}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => { void controller?.openRescue(); }}>{tx("rescued_open")}</Button>
+            <Button size="sm" variant="ghost" onClick={() => controller?.dismissRescue()}>{tx("rescued_dismiss")}</Button>
+          </div>
+        </div>
+      )}
       {on && driveRoot && status[driveRoot.id]?.state === "confirm-delete" && status[driveRoot.id]?.massDelete && (
         <MassDeleteQuestion root={driveRoot} status={status[driveRoot.id]} />
       )}
@@ -270,7 +288,14 @@ function FoldersSection() {
       <ConfirmDialog
         isOpen={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => { if (removing && controller) void controller.removeRoot(removing.id).catch(() => {}); }}
+        onConfirm={() => {
+          if (!removing || !controller) return;
+          const rootId = removing.id;
+          // What waits here goes up first; whatever can't stays in the folder (files-p3-2).
+          void requestFlush({ rootId, kind: "folder", purpose: "stop-folder" }).then((go) => {
+            if (go) return controller.removeRoot(rootId);
+          }).catch(() => {});
+        }}
         title={t("folders.remove_title")}
         message={t("folders.remove_message")}
         confirmText={t("folders.remove_confirm")}

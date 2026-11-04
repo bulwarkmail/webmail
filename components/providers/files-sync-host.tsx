@@ -12,6 +12,7 @@ import { FilesSyncHost as Host, type HostAccount } from "@/lib/files-sync/host";
 import { registerFilesSyncLifecycle, setRunningFilesSyncHost } from "@/lib/files-sync/lifecycle";
 import { scopeDecided } from "@/lib/offline/offline-mode";
 import { subscribePushStateChanges } from "@/lib/push-events";
+import { addSignOutGate } from "@/lib/sign-out-cleanup";
 import { formatFileSize } from "@/lib/utils";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -81,11 +82,15 @@ export function FilesSyncHost() {
       }
     });
     const stopPolicy = onDesktopPolicyChange(() => host.policyChanged());
+    // Signing out on purpose: what waits in the drive goes up first, or the user stays signed in.
+    // Synced folders keep their files, so they don't ask.
+    const stopGate = addSignOutGate((accountId) => host.signOutGate(accountId));
     const online = () => host.online();
     window.addEventListener("online", online);
     return () => {
       stopPush();
       stopPolicy();
+      stopGate();
       window.removeEventListener("online", online);
       setRunningFilesSyncHost(null);
       host.stop();

@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Interrotto"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Caricamento delle modifiche prima di disattivare l'unità",
+      "title_sign_out": "Caricamento delle modifiche prima di uscire",
+      "title_stop_folder": "Caricamento delle modifiche prima di interrompere la sincronizzazione della cartella",
+      "cannot_title": "Alcune modifiche non possono essere caricate ora",
+      "waiting": "Ancora da caricare: {names}",
+      "progress": "{done} di {total} caricati",
+      "cannot_offline": "Il server non è raggiungibile. Non ancora caricati: {names}",
+      "cannot_other": "Non è possibile caricare: {names}. L'attività recente nelle impostazioni spiega il motivo.",
+      "go_note_drive": "Se continui ora, ciò che non è stato caricato viene copiato in Documenti\\Bulwark – not uploaded. Non si perde nulla.",
+      "go_note_folder": "Se continui ora, ciò che non è stato caricato resta nella cartella su questo computer.",
+      "keep_turn_off": "Mantieni l'unità",
+      "keep_sign_out": "Resta connesso",
+      "keep_stop_folder": "Continua a sincronizzare",
+      "go_turn_off": "Disattiva ora",
+      "go_sign_out": "Esci ora",
+      "go_stop_folder": "Interrompi ora la sincronizzazione"
+    },
+    "drive": {
+      "off_note": "Disattivandolo, l'unità sparisce da Esplora file. I tuoi file restano in File.",
+      "rescued": "I file non caricati ({count}) ora si trovano in {folder}.",
+      "rescued_open": "Apri cartella",
+      "rescued_dismiss": "Ignora"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scrittura rapida",
     "menu": "Scrittura rapida",

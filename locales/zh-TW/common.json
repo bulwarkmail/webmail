@@ -7774,6 +7774,32 @@
     "state_offline": "離線",
     "state_error": "已停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "正在上傳變更，然後關閉磁碟機",
+      "title_sign_out": "正在上傳變更，然後登出",
+      "title_stop_folder": "正在上傳變更，然後停止同步資料夾",
+      "cannot_title": "部分變更現在無法上傳",
+      "waiting": "待上傳：{names}",
+      "progress": "已上傳 {done}/{total}",
+      "cannot_offline": "無法連線到伺服器。尚未上傳：{names}",
+      "cannot_other": "無法上傳：{names}。原因請見設定中的最近活動。",
+      "go_note_drive": "如果現在繼續，未上傳的內容會複製到 文件\\Bulwark – not uploaded，不會遺失。",
+      "go_note_folder": "如果現在繼續，未上傳的內容會留在這部電腦上的資料夾中。",
+      "keep_turn_off": "保留磁碟機",
+      "keep_sign_out": "保持登入",
+      "keep_stop_folder": "繼續同步",
+      "go_turn_off": "立即關閉",
+      "go_sign_out": "立即登出",
+      "go_stop_folder": "立即停止同步"
+    },
+    "drive": {
+      "off_note": "關閉後，磁碟機會從檔案總管中移除。你的檔案仍在檔案中。",
+      "rescued": "未上傳的檔案（{count}）現在位於 {folder}。",
+      "rescued_open": "開啟資料夾",
+      "rescued_dismiss": "關閉"
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰寫",
     "menu": "快速撰寫",

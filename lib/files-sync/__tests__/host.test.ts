@@ -14,6 +14,7 @@ import type { FilesSyncController, FilesSyncSnapshot } from '../types';
 import { claimFilesControls, resetFilesControlsForTests } from '../controls';
 import type { DriveStatusText } from '../drive-status';
 import { FilesSyncHost, type HostAccount, type QuotaTiming } from '../host';
+import { answerFlush, currentFlushRequest, subscribeFlushRequests, type FilesFlushRequest } from '../flush-requests';
 import { registerFilesSyncLifecycle, resetFilesSyncLifecycleForTests, setRunningFilesSyncHost } from '../lifecycle';
 import { FakeDisk } from './helpers/fake-disk';
 import { FakeServer } from './helpers/fake-server';
@@ -161,6 +162,83 @@ describe('the host', () => {
     r.host.stop();
   });
 
+  it('a sign-out nobody chose only disconnects the drive: folder, edits and record stay, and the next sign-in uploads the edit', async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    r.server.file('a.txt', null, 'a');
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    r.server.offline = true;
+    r.disk.write('drive-a1', 'edit.txt', 'made while the server was away');
+    await r.host.signedOut('a1', false);
+    expect(r.disk.driveCalls.at(-1)).toEqual({ call: 'disable', args: ['a1', 'suspended'] });
+    expect(r.disk.states.get('drive-a1')).toContain('a.txt');
+    r.server.offline = false;
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    expect(r.server.content(r.server.find('edit.txt')!.id)).toBe('made while the server was away');
+    r.host.stop();
+  });
+
+  it('turning the drive off says where the files that weren\'t uploaded went, and opens that folder', async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    r.disk.rescueAnswer = { folder: 'C:\\Users\\ann\\Documents\\Bulwark – not uploaded\\2026-11-04', count: 2, failed: 0 };
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    const controller = r.controller()!;
+    await controller.setDriveEnabled(false);
+    await settle(r.host);
+    expect(r.snapshot().rescued).toEqual(r.disk.rescueAnswer);
+    expect(await controller.openRescue()).toBe(true);
+    controller.dismissRescue();
+    await settle(r.host);
+    expect(r.snapshot().rescued).toBeNull();
+    r.host.stop();
+  });
+
+  it('the sign-out gate asks the drive to upload first, and keeps the user signed in if they say so', async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    const asked: FilesFlushRequest[] = [];
+    const stop = subscribeFlushRequests(() => {
+      const request = currentFlushRequest();
+      if (request) asked.push(request);
+    });
+    const kept = r.host.signOutGate('a1');
+    await expect.poll(() => asked.length).toBe(1);
+    expect(asked[0]).toMatchObject({ rootId: 'drive-a1', kind: 'drive', purpose: 'sign-out' });
+    answerFlush(asked[0].id, false);
+    expect(await kept).toBe(false);
+    const gone = r.host.signOutGate('all');
+    await expect.poll(() => asked.length).toBe(2);
+    answerFlush(asked[1].id, true);
+    expect(await gone).toBe(true);
+    // Another account's drive isn't asked about.
+    expect(await r.host.signOutGate('a2')).toBe(true);
+    expect(asked).toHaveLength(2);
+    stop();
+    r.host.stop();
+  });
+
+  it('uploads what waits when main asks before the policy removes the drive, then answers', async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await settle(r.host);
+    r.disk.write('drive-a1', 'last minute.txt', 'up it goes');
+    for (const listener of r.disk.flushListeners) listener({ requestId: 'q1', accounts: ['a1'] });
+    await expect.poll(() => r.disk.flushed).toEqual(['q1']);
+    expect(r.server.content(r.server.find('last minute.txt')!.id)).toBe('up it goes');
+    r.host.stop();
+  });
+
   it('removes the drive and forgets the folders of a wiped account, and keeps their files', async () => {
     const r = rig({ drive: true, wanted: ['a1', 'a2'] });
     r.disk.addRoot({ id: 'r1', account: 'a1', remoteId: null });
@@ -219,21 +297,24 @@ describe('sign-out, wipe and refused logins', () => {
     expect(r.disk.calls).toContain('removeRoot r1');
   });
 
-  it('a refused login the server is sure of does the same, an unsure one nothing', async () => {
+  it('a refused login, sure or not, and a session limit only disconnect the drive and forget nothing', async () => {
     noteCredentialsRejected('a1', false, 'refused');
     noteCredentialsRejected('a1', true, 'session');
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(r.disk.driveCalls.filter((call) => call.call === 'disable')).toEqual([]);
     noteCredentialsRejected('a1', true, 'refused');
     await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(r.disk.driveCalls).toContainEqual({ call: 'disable', args: ['a1', 'refused'] });
-    expect(r.disk.calls).toContain('removeRoot r1');
+    const disables = r.disk.driveCalls.filter((call) => call.call === 'disable');
+    expect(disables.length).toBeGreaterThan(0);
+    for (const call of disables) expect(call.args).toEqual(['a1', 'suspended']);
+    expect(r.disk.calls).toEqual([]);
   });
 
-  it('a sign-out takes the drive down and keeps the folders', async () => {
-    await runBeforeSignOut('a1');
+  it('a sign-out the user chose takes the drive down and keeps the folders; one the app made only disconnects it', async () => {
+    await runBeforeSignOut('a1', { userInitiated: true });
     expect(r.disk.driveCalls).toContainEqual({ call: 'disable', args: ['a1', 'signed-out'] });
     expect(r.disk.calls).toEqual([]);
+    r.disk.driveCalls.length = 0;
+    await runBeforeSignOut('a1');
+    expect(r.disk.driveCalls.filter((call) => call.call === 'disable')).toEqual([{ call: 'disable', args: ['a1', 'suspended'] }]);
   });
 });
 

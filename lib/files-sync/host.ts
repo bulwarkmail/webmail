@@ -8,23 +8,26 @@
  * Authorization header the app's client holds, read when a request goes and renewed through
  * it (as offline mode does). Nothing here writes a token or a password anywhere.
  *
- * What happens to an account's roots when it leaves (FILES-SYNC-BRIEF.md):
- * - sign-out: the drive goes (`signed-out` keeps the wish, so the next sign-in brings it back
- *   without a click), and the folders stop syncing until then;
- * - a wipe (lib/offline/wipe-registry.ts): the drive goes with everything in it, and the
- *   folders are forgotten; their files stay, they were the user's;
- * - a refused login the server was sure of: the same as a wipe for these.
+ * What happens to an account's roots when it leaves (FILES-SYNC-BRIEF.md, pass-3 files-p3-3):
+ * - a sign-out the user chose: what waits is uploaded first (the sign-out gate asks), then the
+ *   drive goes (`signed-out` keeps the wish and the pins; main copies anything still not
+ *   uploaded to Documents), and the folders stop syncing until the next sign-in;
+ * - a sign-out nobody chose (the session ran out, the login was refused): the drive is only
+ *   disconnected (`suspended`), its folder, edits and pins stay, and the next sign-in goes on;
+ * - a wipe (lib/offline/wipe-registry.ts): the drive goes with everything in it, unuploaded
+ *   edits too, and the folders are forgotten; their files stay, they were the user's.
  *
  * It also keeps each account's storage (Quota/get, at the start, after FileNode changes at most
  * once a minute, and every five minutes) for the settings page, the Files screen and Explorer,
  * and tells main what Explorer should show for each drive (drive-status.ts).
  */
 
-import type { FilesControls, FilesDriveState, FilesDriveStatus, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
 import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
 import { driveStatusFor, filesQuotaOf, type DriveStatusText } from './drive-status';
 import { FilesSyncEngine, type EngineTiming } from './engine';
+import { requestFlush } from './flush-requests';
 import type { FilesSyncErrorName } from './errors';
 import { namingFor } from './names';
 import { FilesRemote } from './remote';
@@ -74,6 +77,8 @@ export interface QuotaTiming {
 }
 
 const QUOTA_TIMING: QuotaTiming = { minGapMs: 60_000, everyMs: 5 * 60_000, statusGapMs: 1_000 };
+/** The policy is turning the drive off: this long for what waits to go up. Main waits a little longer. */
+const POLICY_FLUSH_MS = 100_000;
 
 interface QuotaState {
   /** undefined: not asked yet; null: the server sets no limit. */
@@ -126,6 +131,8 @@ export class FilesSyncHost {
   /** What main last heard for Explorer, per account, and when. */
   private readonly sentStatus = new Map<string, { json: string; at: number }>();
   private statusTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Turning the drive off copied files that weren't uploaded: the settings page says where. */
+  private rescued: FilesRescued | null = null;
 
   constructor(private readonly deps: HostDeps) {
     this.quotaTiming = { ...QUOTA_TIMING, ...deps.quotaTiming };
@@ -162,6 +169,7 @@ export class FilesSyncHost {
         this.schedulePublish();
         void this.engine.refreshRoots();
       }));
+      if (drive.onFlush) this.unsubscribe.push(drive.onFlush((request) => void this.flushForPolicy(request.requestId, request.accounts)));
     }
     this.deps.setController(this.controller());
     this.quotaTimer = setInterval(() => {
@@ -361,19 +369,46 @@ export class FilesSyncHost {
   }
 
   /**
-   * Signed out ('all': everyone). The drive goes, and comes back at the next sign-in; its record
-   * goes first, since its folder goes with it. The folders stop until then.
+   * The sign-out gate: what waits in the account's drive goes up first (FilesFlushDialog shows
+   * it), or the user stays signed in. Synced folders keep their files, so they don't ask.
    */
-  async signedOut(account: string): Promise<void> {
+  async signOutGate(accountId: string): Promise<boolean> {
+    const drives = this.engine.roots.filter((root) => root.kind === 'drive' && (accountId === 'all' || root.account === accountId));
+    for (const root of drives) {
+      if (!(await requestFlush({ rootId: root.id, kind: 'drive', purpose: 'sign-out' }))) return false;
+    }
+    return true;
+  }
+
+  /** Main is removing the drives (the policy said off): what waits goes up first, as far as it can. */
+  private async flushForPolicy(requestId: string, accounts: string[]): Promise<void> {
+    try {
+      for (const account of accounts) {
+        const root = this.engine.roots.find((entry) => entry.kind === 'drive' && entry.account === account);
+        if (root) await this.engine.flushRoot(root.id, { timeoutMs: POLICY_FLUSH_MS }).catch(() => 'gone');
+      }
+    } finally {
+      this.deps.controls.drive?.flushed?.(requestId);
+    }
+  }
+
+  /**
+   * Signed out ('all': everyone). `chosen`: the user signed out. The drive goes, and comes back
+   * with its pins at the next sign-in; its record goes first, since its folder goes with it,
+   * and main keeps what wasn't uploaded in Documents. Not chosen (the session ran out, the
+   * login was refused): the drive only disconnects and keeps its folder, record and pins. The
+   * folders stop until the next sign-in either way.
+   */
+  async signedOut(account: string, chosen = true): Promise<void> {
     const ids = account === 'all' ? [...new Set([...this.accounts.keys(), ...this.engine.roots.map((root) => root.account)])] : [account];
     for (const id of ids) {
       const drive = await this.driveRootOf(id);
-      if (drive) await this.engine.forgetRoot(drive.id);
+      if (drive && chosen) await this.engine.forgetRoot(drive.id);
       this.accounts.delete(id);
       this.driveStarted.delete(id);
       this.forgetQuota(id);
       this.engine.dropAccount(id);
-      await this.deps.controls.drive?.disable(id, 'signed-out').catch(() => {});
+      await this.deps.controls.drive?.disable(id, chosen ? 'signed-out' : 'suspended').catch(() => {});
     }
     await this.engine.refreshRoots();
   }
@@ -420,6 +455,7 @@ export class FilesSyncHost {
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
       quota: current ? this.quotaOf(current) : null,
+      rescued: this.rescued,
     });
     this.sendDriveStatus();
   }
@@ -454,8 +490,12 @@ export class FilesSyncHost {
           await this.engine.refreshRoots();
           return result;
         }
-        await drive.disable(account, 'user');
+        const done = await drive.disable(account, 'user');
         this.driveStarted.delete(account);
+        if (done && done.rescued && done.rescued.count > 0) {
+          this.rescued = done.rescued;
+          this.schedulePublish();
+        }
         await this.engine.refreshRoots();
         return { ok: true, value: null };
       },
@@ -471,6 +511,13 @@ export class FilesSyncHost {
         return controls.showInFolder(coverage.rootId, coverage.path);
       },
       clearActivity: () => this.engine.clearActivity(),
+      pendingHere: async (rootId) => (await this.engine.pendingHere(rootId)) ?? [],
+      flushRoot: (rootId, options) => this.engine.flushRoot(rootId, options),
+      openRescue: async () => (await controls.drive?.openRescue?.().catch(() => false)) ?? false,
+      dismissRescue: () => {
+        this.rescued = null;
+        this.schedulePublish();
+      },
     };
   }
 }

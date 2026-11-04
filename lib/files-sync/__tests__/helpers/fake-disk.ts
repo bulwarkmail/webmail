@@ -76,6 +76,13 @@ export class FakeDisk implements FilesControls {
   /** What the page told main for Explorer, in order. */
   readonly driveStatuses: { account: string; status: FilesDriveStatus }[] = [];
   driveWanted: string[] = [];
+  /** What `disable` answers about files that weren't uploaded (main copies them to Documents). */
+  rescueAnswer: { folder: string; count: number; failed: number } | null = null;
+  /** Main asking the page to upload what waits before the policy removes the drive. */
+  readonly flushListeners = new Set<(request: { requestId: string; accounts: string[] }) => void>();
+  readonly flushed: string[] = [];
+  /** Drive roots disconnected by a sign-out nobody chose: their folders stay. */
+  private readonly suspended = new Map<string, FilesRoot>();
   readonly drive?: FilesDriveControls;
   private nextWrite = 1;
 
@@ -452,16 +459,36 @@ export class FakeDisk implements FilesControls {
         record('enable', account, label);
         if (!disk.driveWanted.includes(account)) disk.driveWanted.push(account);
         const existing = disk.rootsList.find((root) => root.kind === 'drive' && root.account === account);
+        const back = disk.suspended.get(account);
+        if (!existing && back) {
+          disk.suspended.delete(account);
+          disk.rootsList.push(back);
+          return ok(back);
+        }
         return ok(existing ?? disk.addRoot({ id: `drive-${account}`, account, kind: 'drive', remoteId: null, remoteLabel: label }));
       },
       disable: async (account, reason) => {
         record('disable', account, reason);
-        if (reason !== 'signed-out') disk.driveWanted = disk.driveWanted.filter((entry) => entry !== account);
+        if (reason !== 'signed-out' && reason !== 'suspended') disk.driveWanted = disk.driveWanted.filter((entry) => entry !== account);
         const at = disk.rootsList.findIndex((root) => root.kind === 'drive' && root.account === account);
         if (at >= 0) {
           const [root] = disk.rootsList.splice(at, 1);
-          disk.trees.set(root.id, new Map());
+          // Disconnected only: the folder and what's in it stay.
+          if (reason === 'suspended') disk.suspended.set(account, root);
+          else disk.trees.set(root.id, new Map());
         }
+        return { rescued: reason === 'user' || reason === 'signed-out' ? disk.rescueAnswer : null };
+      },
+      onFlush: (listener) => {
+        disk.flushListeners.add(listener);
+        return () => disk.flushListeners.delete(listener);
+      },
+      flushed: (requestId) => {
+        disk.flushed.push(requestId);
+      },
+      openRescue: async () => {
+        record('openRescue');
+        return disk.rescueAnswer !== null;
       },
       place: async (rootId, entries: FilesPlaceholder[]) => {
         record('place', rootId, entries.length);

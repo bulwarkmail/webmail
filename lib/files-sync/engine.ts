@@ -21,9 +21,11 @@ import { isOffline, type FilesSyncErrorName } from './errors';
 import type { DiskNaming } from './names';
 import { RemoteTree, type FilesRemote } from './remote';
 import { RootSync, type AccountLink, type ActivityInput } from './root-sync';
-import type { FilesSyncActivity, FilesSyncCoverage, FilesSyncItemStatus, FilesSyncRootStatus } from './types';
+import type { FilesFlushOptions, FilesFlushOutcome, FilesSyncActivity, FilesSyncCoverage, FilesSyncItemStatus, FilesSyncRootStatus } from './types';
 
 export const ACTIVITY_LIMIT = 200;
+/** How long uploading what waits before a root stops may take at most. */
+const FLUSH_LIMIT_MS = 10 * 60_000;
 const PIECE = 1024 * 1024;
 const MOST_SOON = 5;
 
@@ -528,6 +530,45 @@ export class FilesSyncEngine {
     if (!runner) return;
     runner.sync.answerMassDelete(allow);
     runner.request(0);
+  }
+
+  /** What a root would leave behind if it stopped now. Null: the root isn't running (locked, gone). */
+  async pendingHere(rootId: string): Promise<string[] | null> {
+    const runner = this.runners.get(rootId);
+    if (!runner) return null;
+    return runner.sync.pendingHere().catch(() => null);
+  }
+
+  /**
+   * Before a drive goes or a folder stops: passes until nothing waits here, or a pass gets no
+   * further (offline, too large, refused, paused, a question open), or the user stops waiting.
+   */
+  async flushRoot(rootId: string, options: FilesFlushOptions = {}): Promise<FilesFlushOutcome> {
+    const runner = this.runners.get(rootId);
+    if (!runner) return 'gone';
+    let waiting = await this.pendingHere(rootId);
+    if (waiting === null) return 'gone';
+    const total = waiting.length;
+    options.onProgress?.(waiting, total);
+    if (total === 0) return 'done';
+    const until = this.now() + (options.timeoutMs ?? FLUSH_LIMIT_MS);
+    for (;;) {
+      if (options.signal?.aborted || this.stopped) return 'cancelled';
+      runner.request(0);
+      await runner.settle();
+      if (options.signal?.aborted) return 'cancelled';
+      if (this.runners.get(rootId) !== runner) return 'gone';
+      const next = await this.pendingHere(rootId);
+      if (next === null) return 'gone';
+      options.onProgress?.(next, total);
+      if (next.length === 0) return 'done';
+      const state = runner.sync.status.state;
+      if (state === 'offline') return 'offline';
+      if (state !== 'idle' && state !== 'syncing' && state !== 'starting') return 'stuck';
+      // A whole pass and nothing went: it won't.
+      if (next.length >= waiting.length || this.now() > until) return 'stuck';
+      waiting = next;
+    }
   }
 
   /** The drive's record goes before its folder does (sign-out): the next sign-in starts from an empty folder. */

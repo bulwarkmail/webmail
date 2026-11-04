@@ -7774,6 +7774,32 @@
     "state_offline": "Hors ligne",
     "state_error": "Arrêté"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Envoi des modifications avant la désactivation du lecteur",
+      "title_sign_out": "Envoi des modifications avant la déconnexion",
+      "title_stop_folder": "Envoi des modifications avant l'arrêt de la synchronisation du dossier",
+      "cannot_title": "Certaines modifications ne peuvent pas être envoyées maintenant",
+      "waiting": "Reste à envoyer : {names}",
+      "progress": "{done} sur {total} envoyés",
+      "cannot_offline": "Le serveur est injoignable. Pas encore envoyé : {names}",
+      "cannot_other": "Impossible d'envoyer : {names}. L'activité récente dans les paramètres indique pourquoi.",
+      "go_note_drive": "Si vous continuez maintenant, ce qui n'est pas envoyé est copié dans Documents\\Bulwark – not uploaded. Rien n'est perdu.",
+      "go_note_folder": "Si vous continuez maintenant, ce qui n'est pas envoyé reste dans le dossier sur cet ordinateur.",
+      "keep_turn_off": "Garder le lecteur",
+      "keep_sign_out": "Rester connecté",
+      "keep_stop_folder": "Continuer la synchronisation",
+      "go_turn_off": "Désactiver maintenant",
+      "go_sign_out": "Se déconnecter maintenant",
+      "go_stop_folder": "Arrêter la synchronisation maintenant"
+    },
+    "drive": {
+      "off_note": "Désactiver ceci retire le lecteur de l'Explorateur de fichiers. Vos fichiers restent dans Fichiers.",
+      "rescued": "Les fichiers non envoyés ({count}) sont maintenant dans {folder}.",
+      "rescued_open": "Ouvrir le dossier",
+      "rescued_dismiss": "Masquer"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rédaction rapide",
     "menu": "Rédaction rapide",

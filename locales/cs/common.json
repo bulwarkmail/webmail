@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Zastaveno"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Nahrávání změn před vypnutím jednotky",
+      "title_sign_out": "Nahrávání změn před odhlášením",
+      "title_stop_folder": "Nahrávání změn před zastavením synchronizace složky",
+      "cannot_title": "Některé změny teď nelze nahrát",
+      "waiting": "Zbývá nahrát: {names}",
+      "progress": "Nahráno {done} z {total}",
+      "cannot_offline": "Server není dostupný. Zatím nenahráno: {names}",
+      "cannot_other": "Nelze nahrát: {names}. Důvod najdete v nedávné aktivitě v nastavení.",
+      "go_note_drive": "Pokud teď budete pokračovat, co není nahrané, se zkopíruje do Dokumenty\\Bulwark – not uploaded. Nic se neztratí.",
+      "go_note_folder": "Pokud teď budete pokračovat, co není nahrané, zůstane ve složce v tomto počítači.",
+      "keep_turn_off": "Ponechat jednotku",
+      "keep_sign_out": "Zůstat přihlášen",
+      "keep_stop_folder": "Pokračovat v synchronizaci",
+      "go_turn_off": "Vypnout hned",
+      "go_sign_out": "Odhlásit hned",
+      "go_stop_folder": "Zastavit synchronizaci hned"
+    },
+    "drive": {
+      "off_note": "Vypnutím jednotka zmizí z Průzkumníka souborů. Vaše soubory zůstanou v Souborech.",
+      "rescued": "Nenahrané soubory ({count}) jsou teď v {folder}.",
+      "rescued_open": "Otevřít složku",
+      "rescued_dismiss": "Skrýt"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rychlá zpráva",
     "menu": "Rychlá zpráva",

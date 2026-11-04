@@ -7774,6 +7774,32 @@
     "state_offline": "オフライン",
     "state_error": "停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "ドライブをオフにする前に変更をアップロードしています",
+      "title_sign_out": "サインアウトする前に変更をアップロードしています",
+      "title_stop_folder": "フォルダーの同期を止める前に変更をアップロードしています",
+      "cannot_title": "一部の変更は今アップロードできません",
+      "waiting": "アップロード待ち: {names}",
+      "progress": "{total} 件中 {done} 件をアップロード済み",
+      "cannot_offline": "サーバーに接続できません。未アップロード: {names}",
+      "cannot_other": "アップロードできません: {names}。理由は設定の最近のアクティビティにあります。",
+      "go_note_drive": "今続けると、アップロードされていないものは ドキュメント\\Bulwark – not uploaded にコピーされます。何も失われません。",
+      "go_note_folder": "今続けると、アップロードされていないものはこのパソコンのフォルダーに残ります。",
+      "keep_turn_off": "ドライブをオンのままにする",
+      "keep_sign_out": "サインインしたままにする",
+      "keep_stop_folder": "同期を続ける",
+      "go_turn_off": "今すぐオフにする",
+      "go_sign_out": "今すぐサインアウト",
+      "go_stop_folder": "今すぐ同期を止める"
+    },
+    "drive": {
+      "off_note": "オフにすると、ドライブはエクスプローラーから消えます。ファイルはファイルに残ります。",
+      "rescued": "アップロードされなかったファイル ({count}) は {folder} にあります。",
+      "rescued_open": "フォルダーを開く",
+      "rescued_dismiss": "閉じる"
+    }
+  },
   "desktopQuickCompose": {
     "label": "クイック作成",
     "menu": "クイック作成",

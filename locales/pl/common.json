@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Zatrzymano"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wysyłanie zmian przed wyłączeniem dysku",
+      "title_sign_out": "Wysyłanie zmian przed wylogowaniem",
+      "title_stop_folder": "Wysyłanie zmian przed zatrzymaniem synchronizacji folderu",
+      "cannot_title": "Niektórych zmian nie można teraz wysłać",
+      "waiting": "Pozostało do wysłania: {names}",
+      "progress": "Wysłano {done} z {total}",
+      "cannot_offline": "Nie można połączyć się z serwerem. Jeszcze niewysłane: {names}",
+      "cannot_other": "Nie można wysłać: {names}. Ostatnia aktywność w ustawieniach podaje powód.",
+      "go_note_drive": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie skopiowane do Dokumenty\\Bulwark – not uploaded. Nic nie zginie.",
+      "go_note_folder": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie w folderze na tym komputerze.",
+      "keep_turn_off": "Zostaw dysk włączony",
+      "keep_sign_out": "Pozostań zalogowany",
+      "keep_stop_folder": "Synchronizuj dalej",
+      "go_turn_off": "Wyłącz teraz",
+      "go_sign_out": "Wyloguj teraz",
+      "go_stop_folder": "Zatrzymaj synchronizację teraz"
+    },
+    "drive": {
+      "off_note": "Wyłączenie usuwa dysk z Eksploratora plików. Twoje pliki zostają w Plikach.",
+      "rescued": "Niewysłane pliki ({count}) są teraz w {folder}.",
+      "rescued_open": "Otwórz folder",
+      "rescued_dismiss": "Ukryj"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Szybka wiadomość",
     "menu": "Szybka wiadomość",

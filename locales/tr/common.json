@@ -7774,6 +7774,32 @@
     "state_offline": "Çevrimdışı",
     "state_error": "Durduruldu"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Sürücü kapanmadan önce değişiklikler yükleniyor",
+      "title_sign_out": "Oturum kapatılmadan önce değişiklikler yükleniyor",
+      "title_stop_folder": "Klasör eşitlemesi durmadan önce değişiklikler yükleniyor",
+      "cannot_title": "Bazı değişiklikler şu anda yüklenemiyor",
+      "waiting": "Yüklenecekler: {names}",
+      "progress": "{total} öğeden {done} tanesi yüklendi",
+      "cannot_offline": "Sunucuya ulaşılamıyor. Henüz yüklenmedi: {names}",
+      "cannot_other": "Yüklenemiyor: {names}. Nedeni Ayarlar'daki son etkinlikte yazıyor.",
+      "go_note_drive": "Şimdi devam ederseniz, yüklenmeyenler Belgeler\\Bulwark – not uploaded konumuna kopyalanır. Hiçbir şey kaybolmaz.",
+      "go_note_folder": "Şimdi devam ederseniz, yüklenmeyenler bu bilgisayardaki klasörde kalır.",
+      "keep_turn_off": "Sürücüyü açık tut",
+      "keep_sign_out": "Oturumu açık tut",
+      "keep_stop_folder": "Eşitlemeye devam et",
+      "go_turn_off": "Şimdi kapat",
+      "go_sign_out": "Şimdi oturumu kapat",
+      "go_stop_folder": "Eşitlemeyi şimdi durdur"
+    },
+    "drive": {
+      "off_note": "Bunu kapatmak sürücüyü Dosya Gezgini'nden kaldırır. Dosyalarınız Dosyalar'da kalır.",
+      "rescued": "Yüklenmeyen dosyalar ({count}) artık {folder} konumunda.",
+      "rescued_open": "Klasörü aç",
+      "rescued_dismiss": "Kapat"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hızlı ileti",
     "menu": "Hızlı ileti",

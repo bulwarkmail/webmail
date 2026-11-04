@@ -15,6 +15,7 @@ vi.mock('@/lib/debug', () => ({ debug: { log: () => {}, warn: () => {}, error: (
 const { useFilesSyncStore } = await import('@/stores/files-sync-store');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { DesktopFilesSettings } = await import('../desktop-files-settings');
+const { FilesFlushDialog } = await import('@/components/files-sync/files-sync-flush');
 
 type Fake = { [K in keyof FilesSyncController]: ReturnType<typeof vi.fn> };
 
@@ -29,6 +30,14 @@ function fakeController(): Fake {
     coverage: vi.fn(() => null),
     showInFolder: vi.fn(async () => true),
     clearActivity: vi.fn(),
+    // Nothing waits here unless a test says otherwise.
+    pendingHere: vi.fn(async () => []),
+    flushRoot: vi.fn(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.([], 0);
+      return 'done';
+    }),
+    openRescue: vi.fn(async () => true),
+    dismissRescue: vi.fn(),
   } as never;
 }
 
@@ -58,6 +67,7 @@ function renderPage() {
   return render(
     <NextIntlClientProvider locale="en" messages={en} timeZone="UTC">
       <DesktopFilesSettings />
+      <FilesFlushDialog />
     </NextIntlClientProvider>,
   );
 }
@@ -95,13 +105,61 @@ describe('Files on this computer settings page', () => {
     expect(controller.setDriveEnabled).toHaveBeenCalledWith(true);
   });
 
-  it('shows the drive on, and turns it off', () => {
+  it('shows the drive on, and turns it off', async () => {
     setup({ drive: drive({ wanted: ['acc'] }) });
     renderPage();
     const toggle = screen.getByRole('switch', { name: 'Show Files as a drive' });
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(toggle);
-    expect(controller.setDriveEnabled).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false));
+  });
+
+  it('uploads what waits before turning the drive off, and keeps it on when the user says so (files-p3-2)', async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc' })] });
+    let finish: (outcome: string) => void = () => {};
+    controller.flushRoot.mockImplementation((_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['Notes/notes.txt', 'unsynced new.txt'], 3);
+      return new Promise((resolve) => { finish = resolve; });
+    });
+    renderPage();
+    expect(screen.getByTestId('files-sync-drive-off-note')).toHaveTextContent('Your files stay in Files.');
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Uploading changes before the drive turns off' });
+    expect(controller.flushRoot).toHaveBeenCalledWith('d1', expect.anything());
+    expect(dialog).toHaveTextContent('Still to upload: notes.txt, unsynced new.txt');
+    expect(within(dialog).getByRole('progressbar', { name: '1 of 3 uploaded' })).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('Documents\\Bulwark – not uploaded');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep the drive on' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    finish('cancelled');
+    expect(controller.setDriveEnabled).not.toHaveBeenCalled();
+  });
+
+  it('turns the drive off once everything is uploaded, or right away when the server is away and the user goes on', async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc' })] });
+    controller.flushRoot.mockImplementation(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['a.txt'], 1);
+      return 'offline';
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    const dialog = await screen.findByRole('alertdialog', { name: "Some changes can't be uploaded now" });
+    expect(dialog).toHaveTextContent("The server can't be reached. Not uploaded yet: a.txt");
+    expect(controller.setDriveEnabled).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off now' }));
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false));
+  });
+
+  it("says where the files that weren't uploaded went, and opens that folder", () => {
+    const folder = 'C:\\Users\\ann\\Documents\\Bulwark – not uploaded\\2026-11-04';
+    setup({ drive: drive(), rescued: { folder, count: 2, failed: 0 } });
+    renderPage();
+    const notice = screen.getByTestId('files-sync-rescued');
+    expect(notice).toHaveTextContent(`Files that weren't uploaded (2) are in ${folder} now.`);
+    fireEvent.click(within(notice).getByRole('button', { name: 'Open folder' }));
+    expect(controller.openRescue).toHaveBeenCalled();
+    fireEvent.click(within(notice).getByRole('button', { name: 'Dismiss' }));
+    expect(controller.dismissRescue).toHaveBeenCalled();
   });
 
   it('says the organisation turned the drive off and keeps the switch off', () => {
@@ -153,7 +211,7 @@ describe('Files on this computer settings page', () => {
     expect(controller.setPaused).toHaveBeenLastCalledWith('r1', false);
   });
 
-  it('asks before removing a folder, saying its files stay', () => {
+  it('asks before removing a folder, saying its files stay', async () => {
     setup({ roots: [folderRoot()] });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Remove…' }));
@@ -161,7 +219,24 @@ describe('Files on this computer settings page', () => {
     expect(dialog).toHaveTextContent('The files on this computer stay where they are');
     expect(controller.removeRoot).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Stop syncing' }));
-    expect(controller.removeRoot).toHaveBeenCalledWith('r1');
+    await waitFor(() => expect(controller.removeRoot).toHaveBeenCalledWith('r1'));
+    expect(controller.flushRoot).toHaveBeenCalledWith('r1', expect.anything());
+  });
+
+  it("uploads a folder's changes before it stops; what can't go stays in the folder", async () => {
+    setup({ roots: [folderRoot()] });
+    controller.flushRoot.mockImplementation(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['big.iso'], 1);
+      return 'stuck';
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove…' }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Stop syncing' }));
+    const dialog = await screen.findByRole('alertdialog', { name: "Some changes can't be uploaded now" });
+    expect(dialog).toHaveTextContent('stays in the folder on this computer');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep syncing' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(controller.removeRoot).not.toHaveBeenCalled();
   });
 
   it('says how each folder is doing', () => {

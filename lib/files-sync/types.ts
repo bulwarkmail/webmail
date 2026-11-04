@@ -8,7 +8,7 @@
  * it and registers a controller there; the UI never talks to the bridge itself.
  */
 
-import type { FilesDriveLetterState, FilesDriveState, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { FilesDriveLetterState, FilesDriveState, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
 
 export type FilesSyncRootState =
   /** Reading both sides for the first time since the app started. */
@@ -103,6 +103,22 @@ export type FilesSyncItemStatus =
   /** The drive: only in Files, fetched when opened. */
   | 'online-only';
 
+/**
+ * How uploading what waits went, before a drive or folder stops (FilesSyncController.flushRoot).
+ * `done`: nothing waits. `offline`: the server can't be reached. `stuck`: a pass changed nothing
+ * (too large, refused, paused, waiting for an answer). `cancelled`: the user stopped waiting.
+ * `gone`: the root isn't there any more.
+ */
+export type FilesFlushOutcome = 'done' | 'offline' | 'stuck' | 'cancelled' | 'gone';
+
+export interface FilesFlushOptions {
+  signal?: AbortSignal;
+  /** What still waits, by path in the root, and how many waited at the start. */
+  onProgress?: (waiting: string[], total: number) => void;
+  /** Gives up as `stuck` after this long. */
+  timeoutMs?: number;
+}
+
 /** What the UI can ask of the engine. Registered by the engine in the store. */
 export interface FilesSyncController {
   /** Shows the folder picker; needs the click it came from. */
@@ -120,6 +136,14 @@ export interface FilesSyncController {
   /** Explorer, Finder or the file manager, on that file or folder. */
   showInFolder: (nodeId: string) => Promise<boolean>;
   clearActivity: () => void;
+  /** Files changed or made here that aren't in Files yet: what stopping this root now would leave behind. */
+  pendingHere: (rootId: string) => Promise<string[]>;
+  /** Uploads what waits in a root, pass after pass, until nothing does or it can't go on. */
+  flushRoot: (rootId: string, options?: FilesFlushOptions) => Promise<FilesFlushOutcome>;
+  /** Opens the folder the last files that weren't uploaded went to. */
+  openRescue: () => Promise<boolean>;
+  /** The settings page's notice about them was read. */
+  dismissRescue: () => void;
 }
 
 /**
@@ -152,4 +176,6 @@ export interface FilesSyncSnapshot {
   items: Record<string, FilesSyncItemStatus>;
   /** The current account's storage. Null until known. */
   quota: FilesQuota | null;
+  /** Turning the drive off copied files that weren't uploaded here. Null: nothing to say. */
+  rescued: FilesRescued | null;
 }

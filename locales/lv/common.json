@@ -7774,6 +7774,32 @@
     "state_offline": "Bezsaistē",
     "state_error": "Apturēts"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Augšupielādē izmaiņas pirms diska izslēgšanas",
+      "title_sign_out": "Augšupielādē izmaiņas pirms izrakstīšanās",
+      "title_stop_folder": "Augšupielādē izmaiņas pirms mapes sinhronizācijas apturēšanas",
+      "cannot_title": "Dažas izmaiņas pašlaik nevar augšupielādēt",
+      "waiting": "Vēl jāaugšupielādē: {names}",
+      "progress": "Augšupielādēti {done} no {total}",
+      "cannot_offline": "Serveris nav sasniedzams. Vēl nav augšupielādēts: {names}",
+      "cannot_other": "Nevar augšupielādēt: {names}. Iemesls ir redzams iestatījumu nesenajās darbībās.",
+      "go_note_drive": "Ja turpināsiet tagad, neaugšupielādētais tiks nokopēts uz Dokumenti\\Bulwark – not uploaded. Nekas netiks zaudēts.",
+      "go_note_folder": "Ja turpināsiet tagad, neaugšupielādētais paliks mapē šajā datorā.",
+      "keep_turn_off": "Paturēt disku",
+      "keep_sign_out": "Palikt pierakstītam",
+      "keep_stop_folder": "Turpināt sinhronizēt",
+      "go_turn_off": "Izslēgt tūlīt",
+      "go_sign_out": "Izrakstīties tūlīt",
+      "go_stop_folder": "Apturēt sinhronizāciju tūlīt"
+    },
+    "drive": {
+      "off_note": "Izslēdzot disks pazūd no failu pārlūka. Jūsu faili paliek sadaļā Faili.",
+      "rescued": "Neaugšupielādētie faili ({count}) tagad ir šeit: {folder}.",
+      "rescued_open": "Atvērt mapi",
+      "rescued_dismiss": "Nerādīt"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Ātrā rakstīšana",
     "menu": "Ātrā rakstīšana",

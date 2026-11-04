@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Gestoppt"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Änderungen werden hochgeladen, bevor das Laufwerk ausgeschaltet wird",
+      "title_sign_out": "Änderungen werden hochgeladen, bevor Sie sich abmelden",
+      "title_stop_folder": "Änderungen werden hochgeladen, bevor der Ordner nicht mehr synchronisiert wird",
+      "cannot_title": "Einige Änderungen können gerade nicht hochgeladen werden",
+      "waiting": "Noch hochzuladen: {names}",
+      "progress": "{done} von {total} hochgeladen",
+      "cannot_offline": "Der Server ist nicht erreichbar. Noch nicht hochgeladen: {names}",
+      "cannot_other": "Diese können nicht hochgeladen werden: {names}. Unter „Letzte Aktivität“ in den Einstellungen steht, warum.",
+      "go_note_drive": "Wenn Sie jetzt fortfahren, wird alles, was nicht hochgeladen ist, nach Dokumente\\Bulwark – not uploaded kopiert. Es geht nichts verloren.",
+      "go_note_folder": "Wenn Sie jetzt fortfahren, bleibt alles, was nicht hochgeladen ist, im Ordner auf diesem Computer.",
+      "keep_turn_off": "Laufwerk eingeschaltet lassen",
+      "keep_sign_out": "Angemeldet bleiben",
+      "keep_stop_folder": "Weiter synchronisieren",
+      "go_turn_off": "Jetzt ausschalten",
+      "go_sign_out": "Jetzt abmelden",
+      "go_stop_folder": "Synchronisierung jetzt beenden"
+    },
+    "drive": {
+      "off_note": "Wenn Sie dies ausschalten, verschwindet das Laufwerk aus dem Explorer. Ihre Dateien bleiben in Dateien.",
+      "rescued": "Nicht hochgeladene Dateien ({count}) liegen jetzt in {folder}.",
+      "rescued_open": "Ordner öffnen",
+      "rescued_dismiss": "Ausblenden"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Schnell schreiben",
     "menu": "Schnell schreiben",

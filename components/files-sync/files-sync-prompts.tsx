@@ -9,6 +9,7 @@ import { useFilesSyncStore } from "@/stores/files-sync-store";
 import type { FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncRootStatus } from "@/lib/files-sync/types";
 import { rootName } from "./files-sync-text";
+import { FilesFlushDialog } from "./files-sync-flush";
 
 /*
  * The mass-delete question (FILES-SYNC-BRIEF: more than 50 items or more than half a
@@ -129,11 +130,23 @@ function PromptDialog({ root, status, onLater }: { root: FilesRoot; status: File
 }
 
 /**
- * App-wide: asks about a mass delete wherever the user is, one root at a time.
+ * App-wide: the questions Files on this computer asks wherever the user is. Uploading what
+ * waits before a root stops (FilesFlushDialog), and a mass delete, one root at a time.
+ */
+export function FilesSyncPrompts() {
+  return (
+    <>
+      <FilesFlushDialog />
+      <MassDeletePrompt />
+    </>
+  );
+}
+
+/**
  * "Decide later" hides it for this question; the folder's row on the settings page
  * still asks, and the pair stays paused until then.
  */
-export function FilesSyncPrompts() {
+function MassDeletePrompt() {
   const available = useFilesSyncStore((s) => s.available);
   const roots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);

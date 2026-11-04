@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Gestopt"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wijzigingen uploaden voordat het station uitgaat",
+      "title_sign_out": "Wijzigingen uploaden voordat u zich afmeldt",
+      "title_stop_folder": "Wijzigingen uploaden voordat de map stopt met synchroniseren",
+      "cannot_title": "Sommige wijzigingen kunnen nu niet worden geüpload",
+      "waiting": "Nog te uploaden: {names}",
+      "progress": "{done} van {total} geüpload",
+      "cannot_offline": "De server is niet bereikbaar. Nog niet geüpload: {names}",
+      "cannot_other": "Deze kunnen niet worden geüpload: {names}. Recente activiteit in Instellingen vertelt waarom.",
+      "go_note_drive": "Als u nu doorgaat, wordt wat niet is geüpload gekopieerd naar Documenten\\Bulwark – not uploaded. Er gaat niets verloren.",
+      "go_note_folder": "Als u nu doorgaat, blijft wat niet is geüpload in de map op deze computer.",
+      "keep_turn_off": "Station aan laten",
+      "keep_sign_out": "Aangemeld blijven",
+      "keep_stop_folder": "Blijven synchroniseren",
+      "go_turn_off": "Nu uitzetten",
+      "go_sign_out": "Nu afmelden",
+      "go_stop_folder": "Nu stoppen met synchroniseren"
+    },
+    "drive": {
+      "off_note": "Als u dit uitzet, verdwijnt het station uit Verkenner. Uw bestanden blijven in Bestanden.",
+      "rescued": "Niet-geüploade bestanden ({count}) staan nu in {folder}.",
+      "rescued_open": "Map openen",
+      "rescued_dismiss": "Sluiten"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Snel opstellen",
     "menu": "Snel opstellen",

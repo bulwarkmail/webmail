@@ -25,6 +25,7 @@ const EMPTY: FilesSyncSnapshot = {
   folderSyncForcedOff: false,
   items: {},
   quota: null,
+  rescued: null,
 };
 
 export const useFilesSyncStore = create<FilesSyncStore>((set) => ({

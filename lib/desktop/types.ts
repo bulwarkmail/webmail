@@ -1149,10 +1149,17 @@ export interface FilesDriveControls {
   enable: (account: string, label: string) => Promise<FilesResult<FilesRoot>>;
   /**
    * `user`: turned off. `signed-out`: the account signed out, and comes back at the next
-   * sign-in. `wipe` and `refused`: a wipe or a refused login. Each unregisters the sync root
-   * and deletes it with everything in it; only `signed-out` keeps the wish.
+   * sign-in, pins included. Both unregister the sync root and delete its folder, after
+   * copying what wasn't uploaded to `Documents\Bulwark – not uploaded\<date>` (`rescued`;
+   * older shells answer nothing and copy nothing). `suspended`: a sign-out nobody chose; only
+   * disconnects, the folder stays. `wipe` and `refused` delete everything, nothing is copied.
    */
-  disable: (account: string, reason: 'user' | 'signed-out' | 'wipe' | 'refused') => Promise<void>;
+  disable: (account: string, reason: 'user' | 'signed-out' | 'suspended' | 'wipe' | 'refused') => Promise<FilesDriveDisableResult | void>;
+  /** Main is about to remove these accounts' drives (the policy): upload what waits, then `flushed`. */
+  onFlush?: (listener: (request: { requestId: string; accounts: string[] }) => void) => () => void;
+  flushed?: (requestId: string) => void;
+  /** Opens the folder files that weren't uploaded went to last. False when there's none. */
+  openRescue?: () => Promise<boolean>;
   /** New placeholders, parents first. One answer per entry. */
   place: (rootId: string, entries: FilesPlaceholder[]) => Promise<FilesResult<{ path: string; error?: FilesError }[]>>;
   /**
@@ -1175,6 +1182,19 @@ export interface FilesDriveControls {
 
 export interface FilesBridge {
   claim: () => FilesControls | null;
+}
+
+/** What turning the drive off did with the files that weren't uploaded. */
+export interface FilesDriveDisableResult {
+  rescued: FilesRescued | null;
+}
+
+export interface FilesRescued {
+  /** Where they are now. */
+  folder: string;
+  count: number;
+  /** Couldn't be copied: still in the drive's folder, which then stays. */
+  failed: number;
 }
 
 export interface BulwarkDesktopBridge {

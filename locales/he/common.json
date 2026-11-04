@@ -7775,6 +7775,32 @@
     "state_offline": "לא מקוון",
     "state_error": "נעצר"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "מעלה שינויים לפני כיבוי הכונן",
+      "title_sign_out": "מעלה שינויים לפני היציאה מהחשבון",
+      "title_stop_folder": "מעלה שינויים לפני הפסקת הסנכרון של התיקייה",
+      "cannot_title": "לא ניתן להעלות כרגע חלק מהשינויים",
+      "waiting": "נותר להעלות: {names}",
+      "progress": "הועלו {done} מתוך {total}",
+      "cannot_offline": "אין חיבור לשרת. עדיין לא הועלו: {names}",
+      "cannot_other": "לא ניתן להעלות: {names}. הסיבה מופיעה בפעילות האחרונה בהגדרות.",
+      "go_note_drive": "אם ממשיכים עכשיו, מה שלא הועלה מועתק אל מסמכים\\Bulwark – not uploaded. שום דבר לא הולך לאיבוד.",
+      "go_note_folder": "אם ממשיכים עכשיו, מה שלא הועלה נשאר בתיקייה במחשב הזה.",
+      "keep_turn_off": "להשאיר את הכונן",
+      "keep_sign_out": "להישאר מחובר",
+      "keep_stop_folder": "להמשיך לסנכרן",
+      "go_turn_off": "לכבות עכשיו",
+      "go_sign_out": "לצאת עכשיו",
+      "go_stop_folder": "להפסיק לסנכרן עכשיו"
+    },
+    "drive": {
+      "off_note": "כיבוי מסיר את הכונן מסייר הקבצים. הקבצים שלך נשארים בקבצים.",
+      "rescued": "קבצים שלא הועלו ({count}) נמצאים עכשיו ב-{folder}.",
+      "rescued_open": "פתיחת התיקייה",
+      "rescued_dismiss": "סגירה"
+    }
+  },
   "desktopQuickCompose": {
     "label": "כתיבה מהירה",
     "menu": "כתיבה מהירה",

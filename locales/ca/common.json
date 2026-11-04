@@ -7774,6 +7774,32 @@
     "state_offline": "Sense connexió",
     "state_error": "Aturat"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "S'estan pujant els canvis abans de desactivar la unitat",
+      "title_sign_out": "S'estan pujant els canvis abans de tancar la sessió",
+      "title_stop_folder": "S'estan pujant els canvis abans d'aturar la sincronització de la carpeta",
+      "cannot_title": "Alguns canvis no es poden pujar ara",
+      "waiting": "Pendent de pujar: {names}",
+      "progress": "{done} de {total} pujats",
+      "cannot_offline": "No es pot connectar amb el servidor. Encara sense pujar: {names}",
+      "cannot_other": "No es poden pujar: {names}. L'activitat recent de la configuració n'explica el motiu.",
+      "go_note_drive": "Si continueu ara, el que no s'hagi pujat es copia a Documents\\Bulwark – not uploaded. No es perd res.",
+      "go_note_folder": "Si continueu ara, el que no s'hagi pujat es queda a la carpeta d'aquest ordinador.",
+      "keep_turn_off": "Mantén la unitat",
+      "keep_sign_out": "Mantén la sessió",
+      "keep_stop_folder": "Continua sincronitzant",
+      "go_turn_off": "Desactiva ara",
+      "go_sign_out": "Tanca la sessió ara",
+      "go_stop_folder": "Atura la sincronització ara"
+    },
+    "drive": {
+      "off_note": "En desactivar-ho, la unitat desapareix de l'Explorador de fitxers. Els fitxers es queden a Fitxers.",
+      "rescued": "Els fitxers que no s'han pujat ({count}) ara són a {folder}.",
+      "rescued_open": "Obre la carpeta",
+      "rescued_dismiss": "Descarta"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacció ràpida",
     "menu": "Redacció ràpida",

@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Stopped"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Uploading changes before the drive turns off",
+      "title_sign_out": "Uploading changes before you sign out",
+      "title_stop_folder": "Uploading changes before the folder stops syncing",
+      "cannot_title": "Some changes can't be uploaded now",
+      "waiting": "Still to upload: {names}",
+      "progress": "{done} of {total} uploaded",
+      "cannot_offline": "The server can't be reached. Not uploaded yet: {names}",
+      "cannot_other": "These can't be uploaded: {names}. Recent activity in Settings says why.",
+      "go_note_drive": "If you go on now, what isn't uploaded is copied to Documents\\Bulwark – not uploaded. Nothing is lost.",
+      "go_note_folder": "If you go on now, what isn't uploaded stays in the folder on this computer.",
+      "keep_turn_off": "Keep the drive on",
+      "keep_sign_out": "Stay signed in",
+      "keep_stop_folder": "Keep syncing",
+      "go_turn_off": "Turn off now",
+      "go_sign_out": "Sign out now",
+      "go_stop_folder": "Stop syncing now"
+    },
+    "drive": {
+      "off_note": "Turning this off removes the drive from File Explorer. Your files stay in Files.",
+      "rescued": "Files that weren't uploaded ({count}) are in {folder} now.",
+      "rescued_open": "Open folder",
+      "rescued_dismiss": "Dismiss"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Quick compose",
     "menu": "Quick compose",

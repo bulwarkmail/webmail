@@ -69,6 +69,11 @@ export interface SignOutCleanupOptions {
   keepLocalStore?: boolean;
   /** A forgotten PIN goes through this with the lock still up: it lifts the lock itself, last. */
   keepAppLock?: boolean;
+  /**
+   * The user signed out (a click), past the sign-out gates. Not set: the app did (a session or
+   * idle limit, a refused login). The Files drive keeps its folder then (lib/files-sync/lifecycle.ts).
+   */
+  userInitiated?: boolean;
 }
 
 /** Run `cleanup` when everyone signs out in this tab. */

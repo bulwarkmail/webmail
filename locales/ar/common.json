@@ -7774,6 +7774,32 @@
     "state_offline": "غير متصل",
     "state_error": "متوقف"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "جارٍ رفع التغييرات قبل إيقاف محرك الأقراص",
+      "title_sign_out": "جارٍ رفع التغييرات قبل تسجيل الخروج",
+      "title_stop_folder": "جارٍ رفع التغييرات قبل إيقاف مزامنة المجلد",
+      "cannot_title": "تعذّر رفع بعض التغييرات الآن",
+      "waiting": "متبقٍّ للرفع: {names}",
+      "progress": "تم رفع {done} من {total}",
+      "cannot_offline": "تعذّر الوصول إلى الخادم. لم يُرفع بعد: {names}",
+      "cannot_other": "تعذّر رفع: {names}. يوضح النشاط الأخير في الإعدادات السبب.",
+      "go_note_drive": "إذا تابعت الآن، يُنسخ ما لم يُرفع إلى المستندات\\Bulwark – not uploaded. لن يضيع شيء.",
+      "go_note_folder": "إذا تابعت الآن، يبقى ما لم يُرفع في المجلد على هذا الحاسوب.",
+      "keep_turn_off": "إبقاء محرك الأقراص",
+      "keep_sign_out": "البقاء مسجّلًا",
+      "keep_stop_folder": "متابعة المزامنة",
+      "go_turn_off": "إيقاف الآن",
+      "go_sign_out": "تسجيل الخروج الآن",
+      "go_stop_folder": "إيقاف المزامنة الآن"
+    },
+    "drive": {
+      "off_note": "إيقاف هذا يزيل محرك الأقراص من مستكشف الملفات. تبقى ملفاتك في الملفات.",
+      "rescued": "الملفات التي لم تُرفع ({count}) موجودة الآن في {folder}.",
+      "rescued_open": "فتح المجلد",
+      "rescued_dismiss": "تجاهل"
+    }
+  },
   "desktopQuickCompose": {
     "label": "كتابة سريعة",
     "menu": "كتابة سريعة",

@@ -7774,6 +7774,32 @@
     "state_offline": "Võrguühenduseta",
     "state_error": "Seisatud"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Muudatuste üleslaadimine enne draivi väljalülitamist",
+      "title_sign_out": "Muudatuste üleslaadimine enne väljalogimist",
+      "title_stop_folder": "Muudatuste üleslaadimine enne kausta sünkroonimise lõpetamist",
+      "cannot_title": "Mõnda muudatust ei saa praegu üles laadida",
+      "waiting": "Veel üles laadida: {names}",
+      "progress": "{done}/{total} üles laaditud",
+      "cannot_offline": "Server pole kättesaadav. Veel üles laadimata: {names}",
+      "cannot_other": "Ei saa üles laadida: {names}. Põhjus on seadete viimases tegevuses.",
+      "go_note_drive": "Kui jätkate kohe, kopeeritakse üles laadimata osa kausta Dokumendid\\Bulwark – not uploaded. Midagi ei lähe kaotsi.",
+      "go_note_folder": "Kui jätkate kohe, jääb üles laadimata osa selle arvuti kausta.",
+      "keep_turn_off": "Jäta draiv sisse",
+      "keep_sign_out": "Jää sisselogituks",
+      "keep_stop_folder": "Jätka sünkroonimist",
+      "go_turn_off": "Lülita kohe välja",
+      "go_sign_out": "Logi kohe välja",
+      "go_stop_folder": "Lõpeta sünkroonimine kohe"
+    },
+    "drive": {
+      "off_note": "Väljalülitamisel kaob draiv Failihaldurist. Teie failid jäävad Failidesse.",
+      "rescued": "Üles laadimata failid ({count}) on nüüd kaustas {folder}.",
+      "rescued_open": "Ava kaust",
+      "rescued_dismiss": "Peida"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Kiirkiri",
     "menu": "Kiirkiri",

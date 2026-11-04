@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Oprit"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Se încarcă modificările înainte de oprirea unității",
+      "title_sign_out": "Se încarcă modificările înainte de deconectare",
+      "title_stop_folder": "Se încarcă modificările înainte de oprirea sincronizării folderului",
+      "cannot_title": "Unele modificări nu pot fi încărcate acum",
+      "waiting": "De încărcat: {names}",
+      "progress": "{done} din {total} încărcate",
+      "cannot_offline": "Serverul nu poate fi accesat. Încă neîncărcate: {names}",
+      "cannot_other": "Nu pot fi încărcate: {names}. Activitatea recentă din Setări arată motivul.",
+      "go_note_drive": "Dacă continuați acum, ce nu s-a încărcat se copiază în Documente\\Bulwark – not uploaded. Nu se pierde nimic.",
+      "go_note_folder": "Dacă continuați acum, ce nu s-a încărcat rămâne în folderul de pe acest computer.",
+      "keep_turn_off": "Păstrează unitatea",
+      "keep_sign_out": "Rămâi conectat",
+      "keep_stop_folder": "Continuă sincronizarea",
+      "go_turn_off": "Oprește acum",
+      "go_sign_out": "Deconectează-te acum",
+      "go_stop_folder": "Oprește sincronizarea acum"
+    },
+    "drive": {
+      "off_note": "Dacă dezactivați, unitatea dispare din Explorer. Fișierele rămân în Fișiere.",
+      "rescued": "Fișierele neîncărcate ({count}) sunt acum în {folder}.",
+      "rescued_open": "Deschide folderul",
+      "rescued_dismiss": "Ascunde"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scriere rapidă",
     "menu": "Scriere rapidă",

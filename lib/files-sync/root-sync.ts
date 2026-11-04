@@ -291,6 +291,29 @@ export class RootSync {
     await this.host.controls.saveState(this.root.id, serializeRecord(this.record)).catch(() => {});
   }
 
+  /**
+   * Files changed or made on this computer that Files doesn't have yet, by local path: what a
+   * drive going (or a folder that stops) now would leave behind. The drive: a placeholder in
+   * sync, or with its content not here, is in Files. Anything else counts unless the record
+   * has it with the same size and time (Windows drops "in sync" for an attribute too).
+   */
+  async pendingHere(): Promise<string[]> {
+    await this.load();
+    const entries = await this.scan();
+    const naming = this.host.naming;
+    const known = new Map<string, BaseItem>();
+    for (const item of this.base.values()) if (item.kind === 'file') known.set(pathKey(item.path, naming), item);
+    const out: string[] = [];
+    for (const entry of entries) {
+      if (entry.kind !== 'file' || isSystemFileName(baseName(entry.path))) continue;
+      if (this.isDrive && entry.placeholder?.identity && (entry.placeholder.inSync || !entry.placeholder.hydrated)) continue;
+      const item = known.get(pathKey(entry.path, naming));
+      if (item && item.fileId && item.localSize === entry.size && item.mtimeMs === entry.mtimeMs) continue;
+      out.push(entry.path);
+    }
+    return out;
+  }
+
   // ─── Mass delete ────────────────────────────────────────────
 
   /** The user's answer. No: what was deleted on one side comes back from the other. */

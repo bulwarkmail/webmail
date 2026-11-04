@@ -7774,6 +7774,32 @@
     "state_offline": "Offline",
     "state_error": "Leállítva"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Változások feltöltése a meghajtó kikapcsolása előtt",
+      "title_sign_out": "Változások feltöltése kijelentkezés előtt",
+      "title_stop_folder": "Változások feltöltése a mappa szinkronizálásának leállítása előtt",
+      "cannot_title": "Néhány változás most nem tölthető fel",
+      "waiting": "Még feltöltendő: {names}",
+      "progress": "{done}/{total} feltöltve",
+      "cannot_offline": "A kiszolgáló nem érhető el. Még nincs feltöltve: {names}",
+      "cannot_other": "Nem tölthető fel: {names}. Az ok a beállítások legutóbbi tevékenységei között látható.",
+      "go_note_drive": "Ha most folytatja, ami nincs feltöltve, a(z) Dokumentumok\\Bulwark – not uploaded mappába kerül. Semmi sem vész el.",
+      "go_note_folder": "Ha most folytatja, ami nincs feltöltve, a mappában marad ezen a számítógépen.",
+      "keep_turn_off": "Meghajtó megtartása",
+      "keep_sign_out": "Bejelentkezve maradok",
+      "keep_stop_folder": "Szinkronizálás folytatása",
+      "go_turn_off": "Kikapcsolás most",
+      "go_sign_out": "Kijelentkezés most",
+      "go_stop_folder": "Szinkronizálás leállítása most"
+    },
+    "drive": {
+      "off_note": "Kikapcsoláskor a meghajtó eltűnik a Fájlkezelőből. A fájljai a Fájlokban maradnak.",
+      "rescued": "A fel nem töltött fájlok ({count}) most itt vannak: {folder}.",
+      "rescued_open": "Mappa megnyitása",
+      "rescued_dismiss": "Elrejtés"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Gyors levélírás",
     "menu": "Gyors levélírás",
