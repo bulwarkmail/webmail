@@ -113,8 +113,17 @@ export function ComposerToolbarMenuCheckItem({ checked, onToggle, description, t
       data-testid={testId}
       className={cn(CONTEXT_MENU_ITEM_CLASS, "items-start")}
     >
-      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden="true">
-        {checked && <Check className="w-4 h-4" />}
+      {/* A box, empty when off: with nothing drawn, an option that is off
+          didn't look like something to switch on (compose-p3-17). */}
+      <span
+        className={cn(
+          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border",
+          checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/60",
+        )}
+        aria-hidden="true"
+        data-check-box={checked ? "on" : "off"}
+      >
+        {checked && <Check className="w-3 h-3" />}
       </span>
       <span className="flex-1">
         <span className="block" data-menu-label="">{children}</span>

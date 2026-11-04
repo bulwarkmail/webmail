@@ -29,6 +29,19 @@ describe('ComposerToolbarMenu', () => {
     expect(label.className).not.toMatch(/(^|\s)sm:inline/);
   });
 
+  // compose-p3-17: an option that was off showed only its label, no box.
+  it('draws an empty box for an option that is off and a ticked one when on', () => {
+    const { rerender } = render(<ComposerToolbarMenuCheckItem checked={false} onToggle={() => {}} testId="opt">Plain text</ComposerToolbarMenuCheckItem>);
+    const off = screen.getByTestId('opt').querySelector('[data-check-box]')!;
+    expect(off.getAttribute('data-check-box')).toBe('off');
+    expect(off.className).toContain('border');
+    expect(off.querySelector('svg')).toBeNull();
+    rerender(<ComposerToolbarMenuCheckItem checked onToggle={() => {}} testId="opt">Plain text</ComposerToolbarMenuCheckItem>);
+    const on = screen.getByTestId('opt').querySelector('[data-check-box]')!;
+    expect(on.getAttribute('data-check-box')).toBe('on');
+    expect(on.querySelector('svg')).not.toBeNull();
+  });
+
   it('keeps the menu open while toggling options and closes on Escape or outside click', async () => {
     const onToggle = vi.fn();
     render(
