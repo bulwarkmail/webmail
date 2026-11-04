@@ -6950,6 +6950,14 @@
     "revoke": "Retirar",
     "revoked": "Permissão retirada"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} pede um certificado",
+    "picker_detail": "O servidor quer saber quem é. O certificado que escolher vai apenas para este servidor. Se não conhece este servidor, não envie nenhum.",
+    "picker_issued": "Emitido por {issuer}, válido até {date}",
+    "picker_remember": "Lembrar para {host}",
+    "picker_none": "Não enviar um certificado",
+    "picker_more": "Mais certificados…"
+  },
   "desktopOs": {
     "section_title": "Aplicação de ambiente de trabalho",
     "section_description": "Como a aplicação funciona com o seu computador.",

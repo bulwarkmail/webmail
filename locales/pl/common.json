@@ -6950,6 +6950,14 @@
     "revoke": "Cofnij",
     "revoked": "Zgoda została cofnięta"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} prosi o certyfikat",
+    "picker_detail": "Serwer chce wiedzieć, kim jesteś. Wybrany certyfikat trafi tylko do tego serwera. Jeśli nie znasz tego serwera, nie wysyłaj go.",
+    "picker_issued": "Wystawca: {issuer}, ważny do {date}",
+    "picker_remember": "Zapamiętaj dla {host}",
+    "picker_none": "Nie wysyłaj certyfikatu",
+    "picker_more": "Więcej certyfikatów…"
+  },
   "desktopOs": {
     "section_title": "Aplikacja na komputer",
     "section_description": "Jak aplikacja współpracuje z Twoim komputerem.",

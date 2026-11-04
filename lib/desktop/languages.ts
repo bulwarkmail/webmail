@@ -5,6 +5,7 @@
  */
 
 import { getDesktopBridge } from './bridge';
+import { certificateLabels } from './certificate-labels';
 import { updateLabels } from './update-labels';
 
 let ui = '';
@@ -54,6 +55,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     signInWrongPassword: t('desktop_browser_sign_in.page_wrong_password'),
     signInCodeNeeded: t('desktop_browser_sign_in.page_code_needed'),
     signInNoAnswer: t('desktop_browser_sign_in.page_no_answer'),
+    ...certificateLabels(t),
     menuFile: t('desktopUi.menu.file'),
     menuEdit: t('desktopUi.menu.edit'),
     menuView: t('desktopUi.menu.view'),

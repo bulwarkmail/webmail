@@ -6950,6 +6950,14 @@
     "revoke": "Intrekken",
     "revoked": "Toestemming ingetrokken"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} vraagt om een certificaat",
+    "picker_detail": "De server wil weten wie je bent. Een certificaat dat je kiest, gaat alleen naar deze server. Ken je deze server niet, stuur er dan geen.",
+    "picker_issued": "Uitgegeven door {issuer}, geldig tot {date}",
+    "picker_remember": "Onthouden voor {host}",
+    "picker_none": "Geen certificaat sturen",
+    "picker_more": "Meer certificaten…"
+  },
   "desktopOs": {
     "section_title": "Desktop-app",
     "section_description": "Hoe de app samenwerkt met je computer.",

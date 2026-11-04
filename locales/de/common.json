@@ -6950,6 +6950,14 @@
     "revoke": "Zurücknehmen",
     "revoked": "Erlaubnis zurückgenommen"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} fragt nach einem Zertifikat",
+    "picker_detail": "Der Server möchte wissen, wer Sie sind. Ein Zertifikat, das Sie wählen, geht nur an diesen Server. Wenn Sie den Server nicht kennen, senden Sie keines.",
+    "picker_issued": "Ausgestellt von {issuer}, gültig bis {date}",
+    "picker_remember": "Für {host} merken",
+    "picker_none": "Kein Zertifikat senden",
+    "picker_more": "Weitere Zertifikate…"
+  },
   "desktopOs": {
     "section_title": "Desktop-App",
     "section_description": "Wie die App mit Ihrem Computer zusammenarbeitet.",

@@ -6950,6 +6950,14 @@
     "revoke": "پس گرفتن",
     "revoked": "اجازه پس گرفته شد"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} یک گواهی می‌خواهد",
+    "picker_detail": "سرور می‌خواهد بداند شما چه کسی هستید. گواهی‌ای که انتخاب می‌کنید فقط به این سرور فرستاده می‌شود. اگر این سرور را نمی‌شناسید، گواهی نفرستید.",
+    "picker_issued": "صادرشده توسط {issuer}، معتبر تا {date}",
+    "picker_remember": "برای {host} به خاطر بسپار",
+    "picker_none": "گواهی نفرست",
+    "picker_more": "گواهی‌های بیشتر…"
+  },
   "desktopOs": {
     "section_title": "برنامه دسکتاپ",
     "section_description": "نحوه کار برنامه با رایانه شما.",

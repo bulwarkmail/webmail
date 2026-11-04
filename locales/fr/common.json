@@ -6950,6 +6950,14 @@
     "revoke": "Retirer",
     "revoked": "Autorisation retirée"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} demande un certificat",
+    "picker_detail": "Le serveur veut savoir qui vous êtes. Le certificat que vous choisissez n'est envoyé qu'à ce serveur. Si vous ne connaissez pas ce serveur, n'en envoyez pas.",
+    "picker_issued": "Émis par {issuer}, valable jusqu'au {date}",
+    "picker_remember": "Mémoriser pour {host}",
+    "picker_none": "Ne pas envoyer de certificat",
+    "picker_more": "Plus de certificats…"
+  },
   "desktopOs": {
     "section_title": "Application de bureau",
     "section_description": "Comment l'application fonctionne avec votre ordinateur.",

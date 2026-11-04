@@ -6950,6 +6950,14 @@
     "revoke": "Geri al",
     "revoked": "İzin geri alındı"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} bir sertifika istiyor",
+    "picker_detail": "Sunucu kim olduğunuzu bilmek istiyor. Seçtiğiniz sertifika yalnızca bu sunucuya gider. Bu sunucuyu tanımıyorsanız göndermeyin.",
+    "picker_issued": "Veren: {issuer}, geçerlilik: {date} tarihine kadar",
+    "picker_remember": "{host} için hatırla",
+    "picker_none": "Sertifika gönderme",
+    "picker_more": "Daha fazla sertifika…"
+  },
   "desktopOs": {
     "section_title": "Masaüstü uygulaması",
     "section_description": "Uygulamanın bilgisayarınızla nasıl çalıştığı.",

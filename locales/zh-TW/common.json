@@ -6950,6 +6950,14 @@
     "revoke": "收回",
     "revoked": "已收回許可"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} 要求提供憑證",
+    "picker_detail": "伺服器想確認你的身分。你選擇的憑證只會傳送到此伺服器。如果你不認識此伺服器，請不要傳送。",
+    "picker_issued": "發行者：{issuer}，有效期限至 {date}",
+    "picker_remember": "為 {host} 記住此選擇",
+    "picker_none": "不傳送憑證",
+    "picker_more": "更多憑證…"
+  },
   "desktopOs": {
     "section_title": "桌面應用程式",
     "section_description": "應用程式如何與您的電腦配合。",

@@ -6950,6 +6950,14 @@
     "revoke": "Ritira",
     "revoked": "Permesso ritirato"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} chiede un certificato",
+    "picker_detail": "Il server vuole sapere chi sei. Il certificato che scegli va solo a questo server. Se non conosci questo server, non inviarne nessuno.",
+    "picker_issued": "Emesso da {issuer}, valido fino al {date}",
+    "picker_remember": "Ricorda per {host}",
+    "picker_none": "Non inviare un certificato",
+    "picker_more": "Altri certificati…"
+  },
   "desktopOs": {
     "section_title": "App desktop",
     "section_description": "Come l'app funziona con il tuo computer.",
