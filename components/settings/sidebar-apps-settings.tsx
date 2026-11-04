@@ -302,7 +302,7 @@ export function SidebarAppsSettings() {
       <SettingsSection id="sidebar-apps" title={t("title")} description={t("description")}>
         <div className="space-y-3">
           {sidebarApps.length === 0 && !showAddForm && (
-            <p className="text-sm text-muted-foreground py-4 text-center">{tApps("no_apps_hint")}</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">{tApps("no_apps")}</p>
           )}
 
           {sidebarApps.map((app, index) => {
