@@ -79,6 +79,7 @@ import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -2593,28 +2594,35 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Pro can mount two mail panes at once, so the sidebar id must be per-instance.
   const sidebarId = useId();
   const listHeadingId = useId();
-  const sidebarContainerRef = useRef<HTMLDivElement>(null);
+  // The phone drawer keeps Tab inside until it closes, and Escape closes it.
+  const phoneDrawerOpen = isMobile && sidebarOpen;
+  const sidebarContainerRef = useFocusTrap({
+    isActive: phoneDrawerOpen,
+    onEscape: () => setSidebarOpen(false),
+    restoreFocus: false,
+  });
   const sidebarWasOpen = useRef(false);
   useEffect(() => {
-    const isOverlay = isMobile;
-    if (isOverlay && sidebarOpen) {
+    if (phoneDrawerOpen) {
       sidebarWasOpen.current = true;
-      const frame = requestAnimationFrame(() => {
-        const first = sidebarContainerRef.current?.querySelector<HTMLElement>(
-          'button:not(:disabled),[href],input:not(:disabled),[tabindex]:not([tabindex="-1"])'
-        );
-        first?.focus();
-      });
-      return () => cancelAnimationFrame(frame);
+      return;
     }
     if (!sidebarWasOpen.current) return;
     sidebarWasOpen.current = false;
-    // The toggle lives in whichever MobileHeader the current view renders, so
+    // Back to the toggle however it closed (Escape, X, a pick, the scrim),
+    // unless the focus has moved on to something outside the drawer. The
+    // toggle lives in whichever MobileHeader the current view renders, so
     // look it up inside this app instance rather than threading a ref through.
     const active = document.activeElement;
-    if (active && active !== document.body) return;
+    if (active && active !== document.body && !sidebarContainerRef.current?.contains(active)) return;
     appRootRef.current?.querySelector<HTMLElement>('[data-sidebar-toggle]')?.focus();
-  }, [isMobile, sidebarOpen]);
+  }, [phoneDrawerOpen, sidebarContainerRef]);
+  // The folded column's tree open over the page as a drawer (Sidebar's
+  // onDrawerChange): the function that closes it, for the scrim.
+  const [closeFolderDrawer, setCloseFolderDrawer] = useState<(() => void) | null>(null);
+  const handleFolderDrawerChange = useCallback((close: (() => void) | null) => {
+    setCloseFolderDrawer(() => close);
+  }, []);
 
   // The message a composer session answers, pinned when the session starts.
   // Mountain View keeps its compose window open while other mail is read
@@ -5841,13 +5849,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             `desk:hidden` viewport-variant alone wouldn't gate this overlay;
             scope to the pane via `absolute` so the backdrop stays inside
             the pane instead of covering the whole window. */}
-        {isMobile && sidebarOpen && !inlineApp && (
+        {((isMobile && sidebarOpen) || closeFolderDrawer) && !inlineApp && (
           <div
+            aria-hidden="true"
+            data-testid="folder-drawer-scrim"
+            data-drawer-scrim=""
             className={cn(
               "inset-0 bg-black/50 z-40",
-              isEmbedded ? "absolute" : "fixed desk:hidden"
+              // The folded column's drawer opens on a desktop, so only the
+              // phone's scrim goes with the phone layout.
+              isEmbedded ? "absolute" : cn("fixed", !closeFolderDrawer && "desk:hidden")
             )}
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => {
+              if (closeFolderDrawer) closeFolderDrawer();
+              else setSidebarOpen(false);
+            }}
           />
         )}
 
@@ -5861,9 +5877,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
              `inert` it stays in the accessibility tree and screen readers can
              reach a menu the Toggle menu button reports as collapsed (#721). */
           inert={isMobile && !sidebarOpen}
-          onKeyDown={isMobile && sidebarOpen ? (e) => {
-            if (e.key === 'Escape') setSidebarOpen(false);
-          } : undefined}
           className={cn(
             "flex-shrink-0 h-full z-50",
             // The z-index is for the phone drawer. On a desktop under Mountain
@@ -5880,16 +5893,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       // sign or the drawer slides off the wrong edge.
                       !sidebarOpen && "-translate-x-full rtl:translate-x-full"
                     )
-                  : "relative translate-x-0")
+                  // No translate here: it would make this column the box the
+                  // folded column's drawer is placed in.
+                  : "relative")
               : cn(
-                  // Mobile/Tablet: fixed overlay
+                  // Phone: a drawer from the window's start edge, from under
+                  // the top bar and the window's controls (--drawer-top).
                   // start-0 rather than left-0: in RTL the drawer belongs on
                   // the right, matching the hamburger that opens it.
-                  "max-desk:fixed max-desk:inset-y-0 max-desk:start-0 max-desk:w-72 max-desk:pt-[var(--app-top-inset)]",
+                  "max-desk:fixed max-desk:start-0 max-desk:top-[var(--drawer-top)] max-desk:bottom-0 max-desk:h-auto max-desk:w-72",
                   "max-desk:transform max-desk:transition-transform max-desk:duration-300 max-desk:ease-in-out",
                   !sidebarOpen && "max-desk:-translate-x-full max-desk:rtl:translate-x-full",
-                  // Desktop: normal flow
-                  "desk:relative desk:translate-x-0"
+                  // Desktop: normal flow. translate-none, not translate-x-0:
+                  // any translate makes this column the containing block of
+                  // the folded column's fixed drawer, which then opens beside
+                  // the app rail instead of at the window's edge.
+                  "desk:relative desk:translate-none"
                 ),
             inlineApp && "hidden",
             fullscreenReading && "hidden"
@@ -5916,6 +5935,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               accountMailboxes={accountMailboxes}
               accountSharedMailboxes={accountSharedMailboxes}
               viewingAccountId={viewingAccountId}
+              onDrawerChange={handleFolderDrawerChange}
             />
           </ErrorBoundary>
         </div>
