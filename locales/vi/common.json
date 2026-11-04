@@ -6939,6 +6939,14 @@
     "revoke": "Thu hồi",
     "revoked": "Đã thu hồi quyền"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} yêu cầu một chứng chỉ",
+    "picker_detail": "Máy chủ muốn biết bạn là ai. Chứng chỉ bạn chọn chỉ được gửi đến máy chủ này. Nếu bạn không biết máy chủ này, đừng gửi.",
+    "picker_issued": "Do {issuer} cấp, có hiệu lực đến {date}",
+    "picker_remember": "Ghi nhớ cho {host}",
+    "picker_none": "Không gửi chứng chỉ",
+    "picker_more": "Thêm chứng chỉ…"
+  },
   "desktopOs": {
     "section_title": "Ứng dụng máy tính",
     "section_description": "Cách ứng dụng hoạt động với máy tính của bạn.",

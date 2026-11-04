@@ -6927,6 +6927,14 @@
     "revoke": "취소",
     "revoked": "허용을 취소했습니다"
   },
+  "desktop_certificates": {
+    "picker_title": "{host}에서 인증서를 요청합니다",
+    "picker_detail": "서버에서 사용자를 확인하려고 합니다. 선택한 인증서는 이 서버로만 전송됩니다. 모르는 서버라면 보내지 마세요.",
+    "picker_issued": "발급자: {issuer}, 유효 기간: {date}까지",
+    "picker_remember": "{host}에 대해 기억",
+    "picker_none": "인증서 보내지 않기",
+    "picker_more": "다른 인증서…"
+  },
   "desktopOs": {
     "section_title": "데스크톱 앱",
     "section_description": "앱이 컴퓨터와 함께 작동하는 방식입니다.",

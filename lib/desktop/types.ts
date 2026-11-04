@@ -323,6 +323,19 @@ export interface DesktopKeystoreBridge {
   clearGrants?: () => Promise<void>;
 }
 
+export interface DesktopCertificatesBridge {
+  /**
+   * Forgets client certificates chosen for servers. `account`: those chosen while that account was
+   * active, at its own sign-out. `last`: all of them, and what the app keeps of them in memory, at
+   * the sign-out that leaves nobody. Only narrows.
+   */
+  clearChoices: (scope: { account?: string; last?: boolean }) => Promise<void>;
+  /** The account a choice made from now on belongs to. */
+  setAccount: (account: string | null) => Promise<void>;
+  /** The app's connections were closed: a request under way will never settle by itself. */
+  onConnectionsReset: (listener: () => void) => () => void;
+}
+
 export interface DesktopPolicyBridge {
   /** What's in force now. Synchronous: a page can read it in its first render. */
   get: () => PolicySnapshot;
@@ -623,6 +636,8 @@ export interface BulwarkDesktopBridge {
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  /** Absent on older shells. */
+  certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;

@@ -5,6 +5,7 @@
  */
 
 import { getDesktopBridge } from './bridge';
+import { certificateLabels } from './certificate-labels';
 import { updateLabels } from './update-labels';
 
 let ui = '';
@@ -42,6 +43,7 @@ export function noteComposerLanguage(key: string, language: string | null): void
 export function shellLabels(t: (key: string, values?: Record<string, string>) => string): Record<string, string> {
   return {
     ...updateLabels(t),
+    ...certificateLabels(t),
     menuFile: t('desktopUi.menu.file'),
     menuEdit: t('desktopUi.menu.edit'),
     menuView: t('desktopUi.menu.view'),

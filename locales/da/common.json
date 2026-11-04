@@ -6927,6 +6927,14 @@
     "revoke": "Træk tilbage",
     "revoked": "Tilladelsen er trukket tilbage"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} beder om et certifikat",
+    "picker_detail": "Serveren vil vide, hvem du er. Et certifikat, du vælger, sendes kun til denne server. Hvis du ikke kender serveren, så send ikke noget.",
+    "picker_issued": "Udstedt af {issuer}, gyldigt til {date}",
+    "picker_remember": "Husk dette for {host}",
+    "picker_none": "Send ikke et certifikat",
+    "picker_more": "Flere certifikater…"
+  },
   "desktopOs": {
     "section_title": "Skrivebordsapp",
     "section_description": "Sådan arbejder appen sammen med din computer.",

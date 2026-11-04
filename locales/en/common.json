@@ -6927,6 +6927,14 @@
     "revoke": "Take back",
     "revoked": "Permission taken back"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} asks for a certificate",
+    "picker_detail": "The server wants to know who you are. A certificate you choose goes to this server only. If you don't know this server, don't send one.",
+    "picker_issued": "Issued by {issuer}, valid until {date}",
+    "picker_remember": "Remember this for {host}",
+    "picker_none": "Don't send a certificate",
+    "picker_more": "More certificates…"
+  },
   "desktopOs": {
     "section_title": "Desktop app",
     "section_description": "How the app works with your computer.",

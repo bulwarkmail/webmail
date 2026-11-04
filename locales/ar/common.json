@@ -6927,6 +6927,14 @@
     "revoke": "سحب الإذن",
     "revoked": "تم سحب الإذن"
   },
+  "desktop_certificates": {
+    "picker_title": "يطلب {host} شهادة",
+    "picker_detail": "يريد الخادم معرفة هويتك. الشهادة التي تختارها تذهب إلى هذا الخادم فقط. إذا كنت لا تعرف هذا الخادم، فلا ترسل شهادة.",
+    "picker_issued": "صادرة عن {issuer}، صالحة حتى {date}",
+    "picker_remember": "تذكّر هذا لـ {host}",
+    "picker_none": "عدم إرسال شهادة",
+    "picker_more": "المزيد من الشهادات…"
+  },
   "desktopOs": {
     "section_title": "تطبيق سطح المكتب",
     "section_description": "طريقة عمل التطبيق مع حاسوبك.",
