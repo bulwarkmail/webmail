@@ -349,7 +349,12 @@ describe('BookingCalendarActions', () => {
     expect(document.activeElement).toBe(items[2]);
     fireEvent.keyDown(menu, { key: 'Home' });
     expect(document.activeElement).toBe(items[0]);
-    expect(menu.querySelector('div')?.getAttribute('role')).toBe('presentation');
+    // The heading is the app menu's header row: not an item, so the keys skip it.
+    const header = menu.querySelector<HTMLElement>('[data-context-menu-header]');
+    expect(header?.textContent).toBe('select_calendar');
+    expect(header?.closest('[role="menuitem"]')).toBeNull();
+    expect(header?.hasAttribute('tabindex')).toBe(false);
+    expect(items.map((item) => item.textContent)).toEqual(['Personal', 'Work', 'Travel']);
   });
 
   it('closes the picker on Escape and gives focus back to its button', async () => {
@@ -361,9 +366,12 @@ describe('BookingCalendarActions', () => {
 
   it('stays open while its own list scrolls, and closes when the page scrolls', async () => {
     const { menu } = await openPicker();
-    fireEvent.scroll(menu);
+    // The menu starts listening a tick after it opens, so the click that opened it doesn't close it.
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    fireEvent.scroll(menu.firstElementChild ?? menu);
     expect(screen.queryByRole('menu')).not.toBeNull();
-    fireEvent.scroll(window);
+    // A page scroll is fired at the document.
+    fireEvent.scroll(document);
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
@@ -378,6 +386,13 @@ describe('BookingCalendarActions', () => {
     useCalendarStore.setState({ calendars: [cal('Personal', { isDefault: true }), cal('Work')] });
     const width = window.innerWidth;
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    // jsdom lays nothing out: the menu measures as 208 px wide, as it is on a phone.
+    const measure = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const isMenu = this.getAttribute('role') === 'menu';
+      const w = isMenu ? 208 : 0;
+      const h = isMenu ? 120 : 0;
+      return { left: 0, right: w, top: 0, bottom: h, width: w, height: h, x: 0, y: 0, toJSON: () => ({}) };
+    });
     try {
       render(<BookingCalendarActions booking={await bookingFrom([OUT])} email={EMAIL} />);
       const button = await screen.findByRole('button', { name: /add_to_calendar/ });
@@ -388,6 +403,7 @@ describe('BookingCalendarActions', () => {
       expect(left).toBeGreaterThanOrEqual(8);
       expect(left + 208).toBeLessThanOrEqual(390 - 8);
     } finally {
+      measure.mockRestore();
       Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
     }
   });
