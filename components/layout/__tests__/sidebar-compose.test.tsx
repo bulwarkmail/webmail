@@ -2,9 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
-// Usability test 2026-11-04: on a desktop the round Compose button covered the
-// list's rows (mail-13), and the folder sidebar's header held a second account
-// switcher beside the rail's avatar (mail-27). The header now holds Compose.
+// The folder sidebar's header holds the account switcher by default, with the
+// round Compose button over the list. With sidebarAccountSwitcher off it holds
+// Compose instead (usability test 2026-11-04: the round button covered the
+// list's rows, mail-13, and the switcher was a second one beside the rail's
+// avatar, mail-27).
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({
@@ -42,9 +44,36 @@ function narrowWindow(narrow: boolean) {
   })) as typeof window.matchMedia;
 }
 
-describe('folder sidebar header', () => {
+describe('folder sidebar header, by default', () => {
   beforeEach(() => {
-    useSettingsStore.setState({ interfaceLayout: 'default', enableUnifiedMailbox: false } as never);
+    useSettingsStore.setState({
+      interfaceLayout: 'default',
+      enableUnifiedMailbox: false,
+      sidebarAccountSwitcher: useSettingsStore.getInitialState().sidebarAccountSwitcher,
+    } as never);
+    useUIStore.setState({ sidebarCollapsed: false } as never);
+    narrowWindow(false);
+  });
+  afterEach(() => {
+    window.matchMedia = realMatchMedia;
+  });
+
+  it('starts with the account switcher and leaves Compose to the round button', () => {
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
+    expect(screen.getByTestId('account-switcher')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'compose' })).toBeNull();
+  });
+
+  it('has no Compose icon when the sidebar is collapsed', () => {
+    useUIStore.setState({ sidebarCollapsed: true } as never);
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'compose' })).toBeNull();
+  });
+});
+
+describe('folder sidebar header, with Compose at the top', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ interfaceLayout: 'default', enableUnifiedMailbox: false, sidebarAccountSwitcher: false } as never);
     useUIStore.setState({ sidebarCollapsed: false } as never);
     narrowWindow(false);
   });

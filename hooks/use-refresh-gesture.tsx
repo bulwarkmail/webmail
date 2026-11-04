@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import {
   PullToRefreshIndicator,
   createPullToRefreshStore,
@@ -93,7 +94,11 @@ export function useRefreshGesture({ onRefresh, enabled = true }: UseRefreshGestu
   const t = useTranslations("common");
   const onRefreshRef = useRef(onRefresh);
   const runningRef = useRef(false);
+  const triggerRef = useRef<(() => void) | null>(null);
   const store = useMemo(() => createPullToRefreshStore(), []);
+
+  // The desktop app's View > Refresh (F9, F5) runs the same refresh for the screen in front.
+  useDesktopCommands({ "view.refresh": () => triggerRef.current?.() }, { "view.refresh": enabled }, enabled);
 
   useEffect(() => {
     onRefreshRef.current = onRefresh;
@@ -135,6 +140,7 @@ export function useRefreshGesture({ onRefresh, enabled = true }: UseRefreshGestu
         }
       })();
     };
+    triggerRef.current = trigger;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const isReloadKey =
@@ -240,6 +246,7 @@ export function useRefreshGesture({ onRefresh, enabled = true }: UseRefreshGestu
       window.removeEventListener("touchcancel", cancelPull);
       timers.forEach(clearTimeout);
       timers.clear();
+      if (triggerRef.current === trigger) triggerRef.current = null;
       store.set({ phase: "idle", distance: 0 });
     };
   }, [enabled, store]);

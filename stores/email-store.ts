@@ -467,8 +467,11 @@ interface EmailStore {
   // times; later calls are no-ops while a prior one is in flight.
   prefetchInitialData: (client: IJMAPClient) => Promise<void>;
   loadMoreEmails: (client: IJMAPClient) => Promise<void>;
-  /** `ownerAccountId`: the JMAP account a link names for the message (#1351). */
-  fetchEmailContent: (client: IJMAPClient, emailId: string, ownerAccountId?: string) => Promise<Email | null>;
+  /**
+   * `ownerAccountId`: the JMAP account a link names for the message (#1351).
+   * `select: false`: hand the message back without opening it.
+   */
+  fetchEmailContent: (client: IJMAPClient, emailId: string, ownerAccountId?: string, options?: { select?: boolean }) => Promise<Email | null>;
   fetchQuota: (client: IJMAPClient) => Promise<void>;
   /**
    * `options.outbox`: a send from the composer or quick reply, which offline
@@ -4349,7 +4352,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
   },
 
-  fetchEmailContent: async (client, emailId, ownerAccountId) => {
+  fetchEmailContent: async (client, emailId, ownerAccountId, options) => {
     try {
       // Route to the owning account. In aggregate views (All Mail, unified,
       // cross-account) the selected mailbox is virtual, so derive the client +
@@ -4382,7 +4385,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         annotatedEmail.accountId = listEmail?.accountId;
         annotatedEmail.accountLabel = listEmail?.accountLabel;
         annotatedEmail.sourceFolder = listEmail?.sourceFolder;
-        set({ selectedEmail: annotatedEmail });
+        if (options?.select !== false) set({ selectedEmail: annotatedEmail });
         return annotatedEmail;
       }
       return email;

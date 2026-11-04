@@ -1658,6 +1658,10 @@
         "label": "Accountwisselaar in zijbalk verbergen",
         "description": "Verberg de accountselector bovenaan de mappenzijbalk. U kunt nog steeds van account wisselen via de onderste navigatiebalk."
       },
+      "sidebar_account_switcher": {
+        "label": "Accountwisselaar boven in de zijbalk",
+        "description": "Toont de accountwisselaar boven de mappen en de ronde knop Nieuw bericht boven de berichtenlijst. Zet dit uit om Nieuw bericht in plaats daarvan boven de mappen te zetten."
+      },
       "show_rail_account_list": {
         "label": "Accountavatars tonen op navigatiebalk",
         "description": "Toon individuele accountcirkels onderaan de navigatiebalk voor snel wisselen, met een afmeldknop eronder."
@@ -5234,6 +5238,13 @@
     "caldav_shared_by": "Gedeeld door {name}:",
     "freebusy_description": "Wie je deelt, ziet wanneer je bezet bent, niet wat je afspraken zijn. ‘Tijden voorstellen’ gebruikt dit."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lijst",
+    "task_list_not_in_calendar": "{name} (takenlijst, niet zichtbaar in de agenda)",
+    "copy_to_account": "Kopiëren naar {address}",
+    "copied_to_account": "Gekopieerd naar {address}",
+    "delete_original": "Origineel verwijderen"
+  },
   "calendar_offline": {
     "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
   },
@@ -5254,6 +5265,12 @@
     "answered_accepted_nodate": "Je hebt geaccepteerd.",
     "answered_declined_nodate": "Je hebt geweigerd.",
     "answered_tentative_nodate": "Je hebt misschien geantwoord."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Herhaalt: {rule}",
+    "declined_dates": "U hebt {dates} afgeslagen.",
+    "declined_many": "U hebt {count} afspraken van deze reeks afgeslagen.",
+    "answers_series": "Uw antwoord geldt voor alle afspraken in de reeks."
   },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
@@ -5546,6 +5563,26 @@
     "send_message": "Bericht sturen",
     "share_mail_subject": "Ik heb {name} met je gedeeld",
     "share_mail_body": "Hoi,\n\nIk heb \"{name}\" met je gedeeld. Je kunt het hier openen:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Alles aan agenda toevoegen",
+    "zone_contacts_all": "Alles aan contacten toevoegen",
+    "save_to_files": "Opslaan in Bestanden",
+    "saved": "{name} opgeslagen in Bestanden.",
+    "saved_copy": "Opgeslagen in Bestanden als {name}.",
+    "save_failed": "{name} kon niet in Bestanden worden opgeslagen.",
+    "changed_on_server": "{name} is in Bestanden gewijzigd nadat je het opende.",
+    "gone_on_server": "{name} staat niet meer in Bestanden.",
+    "keep_both": "Beide behouden",
+    "replace": "Vervangen",
+    "cancel": "Annuleren",
+    "save_as_new": "Opslaan als nieuw bestand",
+    "import_to_mail": "Importeren in een mailmap…",
+    "import_to_mail_title": "Importeren in een mailmap",
+    "imported_to_mail": "Geïmporteerd in {folder}.",
+    "import_to_mail_failed": "{name} kon niet worden geïmporteerd.",
+    "import_contacts": "Importeren in contacten…",
+    "add_to_calendar": "Aan agenda toevoegen…"
   },
   "smime": {
     "your_certificates": "Uw certificaten",
@@ -7555,6 +7592,18 @@
     "import_mail": "E-mail…",
     "import_calendar": "Agenda…",
     "import_contacts": "Contacten…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Vernieuwen",
+    "menu_today": "Vandaag",
+    "menu_next_period": "Volgende periode",
+    "menu_previous_period": "Vorige periode",
+    "account_scope_label": "Toont {address}. Ander account kiezen",
+    "account_scope_menu": "Ander account kiezen",
+    "merge_links": "Links",
+    "merge_photo": "Foto",
+    "merge_kept": "Blijft bewaard",
+    "import_show": "Tonen"
   },
   "desktopEdit": {
     "edit": "Bewerken",

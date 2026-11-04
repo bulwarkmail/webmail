@@ -58,7 +58,13 @@ export function useDisplayHours({ scrollRef, minHourHeight, headerRef, revealAt 
   useLayoutEffect(() => {
     const root = scrollRef.current;
     if (!root) return;
-    const measure = () => setAvailable(Math.max(0, root.clientHeight - (headerRef?.current?.offsetHeight ?? 0)));
+    const measure = () => {
+      const headerHeight = headerRef?.current?.offsetHeight ?? 0;
+      setAvailable(Math.max(0, root.clientHeight - headerHeight));
+      // Where an event's title sticks while its block runs above the visible
+      // hours: an overnight event's morning part (pim-p2-19).
+      root.style?.setProperty("--grid-header-height", `${headerHeight}px`);
+    };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(measure);

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info, Pin, PinOff,
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
-  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput, ExternalLink,
+  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput, ExternalLink, Inbox, Calendar, UserPlus,
 } from "@/components/icons";
 import { useIsFullDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -28,11 +28,13 @@ import { FilesSidebar, type CreateKind } from "@/components/files/files-sidebar"
 import { FilesHeader, type Crumb, type SortDir, type SortKey, type ViewMode } from "@/components/files/files-header";
 import { FileGridView, FileListView, type FileItemHandlers } from "@/components/files/file-views";
 import { FileDetailsPanel } from "@/components/files/file-details-panel";
-import { INTERNAL_DRAG_TYPE, anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
+import { INTERNAL_DRAG_TYPE, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
+import { getFilePreviewKind } from "@/lib/file-preview";
+import type { FileAppAction } from "@/lib/files-app-actions";
 import { useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
 import { ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
@@ -75,8 +77,11 @@ interface FileBrowserProps {
   clipboard: ClipboardState | null;
   onNavigate: (path: string, resourceId?: string | null) => void;
   onCreateFolder: (name: string) => Promise<void>;
-  onUploadFiles: (files: File[]) => Promise<void>;
-  onUploadFolder: (files: File[]) => Promise<void>;
+  /** What the app itself does with a file: "Import into contacts…" and the like (pim-p2-7). */
+  appActionFor?: (resource: FileResource) => { kind: FileAppAction; label: string; onRun: () => void } | null;
+  /** `into`: a folder of the one in view, when files are dropped on its row. */
+  onUploadFiles: (files: File[], into?: FileResource) => Promise<void>;
+  onUploadFolder: (files: File[], into?: FileResource) => Promise<void>;
   onCancelUpload: () => void;
   /** Delete: into the trash, or for good when in the trash or a shared drive. */
   onDelete: (name: string) => Promise<void>;
@@ -150,7 +155,8 @@ interface FileBrowserProps {
 }
 
 function isPreviewable(name: string): boolean {
-  return isImageFile(name) || isTextFile(name) || isPdfFile(name) || isAudioFile(name) || isVideoFile(name);
+  // A saved message opens like a mail (pim-p2-7).
+  return isImageFile(name) || isTextFile(name) || isPdfFile(name) || isAudioFile(name) || isVideoFile(name) || getFilePreviewKind(name) === "eml";
 }
 
 type MenuData = { kind: "item"; resource: FileResource } | { kind: "empty" } | { kind: "new" };
@@ -232,6 +238,7 @@ export function FileBrowser({
   onShowFileInfo,
   canOpenInApp,
   onOpenInApp,
+  appActionFor,
   onShared,
 }: FileBrowserProps) {
   const t = useTranslations("files");
@@ -616,6 +623,16 @@ export function FileBrowser({
     void onMoveTo(names, targetId);
   }, [onMoveTo]);
 
+  // Files from outside dropped on a folder's row go into that folder (pim-p2-6).
+  const uploadIntoRef = useRef<(files: File[], asFolder: boolean, into: FileResource) => Promise<void>>(async () => {});
+  uploadIntoRef.current = async (files, asFolder, into) => {
+    if (files.length === 0) return;
+    if (asFolder) await onUploadFolder(files, into);
+    else await onUploadFiles(files, into);
+  };
+  const takesFilesFromOutside = useCallback((e: React.DragEvent, resource: FileResource) =>
+    resource.isDirectory && !resource.isSymlink && canCreate && !isInternalDrag(e) && Array.from(e.dataTransfer.types ?? []).includes("Files"), [canCreate]);
+
   const itemDragProps = useCallback((resource: FileResource) => ({
     draggable: !touch && !inTrash,
     onDragStart: (e: React.DragEvent) => {
@@ -624,6 +641,12 @@ export function FileBrowser({
       e.dataTransfer.effectAllowed = "move";
     },
     onDragOver: (e: React.DragEvent) => {
+      if (takesFilesFromOutside(e, resource)) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setDropTarget(resource.name);
+        return;
+      }
       if (!resource.isDirectory || !isInternalDrag(e)) return;
       e.preventDefault();
       e.stopPropagation();
@@ -632,6 +655,16 @@ export function FileBrowser({
     },
     onDragLeave: () => setDropTarget((cur) => (cur === resource.name ? null : cur)),
     onDrop: (e: React.DragEvent) => {
+      if (takesFilesFromOutside(e, resource)) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDropTarget(null);
+        dragDepth.current = 0;
+        setIsDraggingFiles(false);
+        const transfer = e.dataTransfer;
+        void getDroppedFilesAndFolders(transfer).then(({ files, hasDirectories }) => uploadIntoRef.current(files, hasDirectories, resource));
+        return;
+      }
       if (!resource.isDirectory || !isInternalDrag(e)) return;
       e.preventDefault();
       e.stopPropagation();
@@ -639,7 +672,7 @@ export function FileBrowser({
       const names = readDraggedNames(e).filter((n) => n !== resource.name);
       if (names.length > 0) moveNames(names, resource.id);
     },
-  }), [touch, inTrash, selectedResources, moveNames]);
+  }), [touch, inTrash, selectedResources, moveNames, takesFilesFromOutside]);
 
   const runUpload = useCallback(async (files: File[], asFolder: boolean) => {
     if (files.length === 0) return;
@@ -881,6 +914,7 @@ export function FileBrowser({
 
   // ---- Context menu ----------------------------------------------------------
   const openMenu = menu.openContextMenu;
+  const openMenuFrom = menu.openContextMenuFrom;
   const openItemMenu = useCallback((e: React.MouseEvent, resource: FileResource) => {
     // Acting on an item outside the selection makes it the selection, like a
     // desktop file manager.
@@ -892,9 +926,9 @@ export function FileBrowser({
     setKeyboardNav(false);
     const target = e.currentTarget as HTMLElement | null;
     // The "..." button opens the menu under itself; a right-click at the pointer.
-    if (e.type === "click" && target) openMenu(anchorEvent(target, "end"), { kind: "item", resource });
+    if (e.type === "click" && target) openMenuFrom(target, { kind: "item", resource }, "end");
     else openMenu(e, { kind: "item", resource });
-  }, [selectedResources, onSetSelection, openMenu]);
+  }, [selectedResources, onSetSelection, openMenu, openMenuFrom]);
 
   const closeMenu = menu.closeContextMenu;
   const menuData = menu.contextMenu.data;
@@ -974,6 +1008,12 @@ export function FileBrowser({
             {canOpenInApp?.(resource) && onOpenInApp && (
               <ContextMenuItem icon={ExternalLink} label={tUx("open_in_app")} onClick={() => { closeMenu(); onOpenInApp(resource); }} />
             )}
+            {(() => {
+              const action = appActionFor?.(resource);
+              if (!action) return null;
+              const icon = action.kind === "import-mail" ? Inbox : action.kind === "add-calendar" ? Calendar : UserPlus;
+              return <ContextMenuItem icon={icon} label={action.label} onClick={() => { closeMenu(); action.onRun(); }} />;
+            })()}
           </>
         )}
         {canKeepOffline(resource) && (
@@ -1419,7 +1459,7 @@ export function FileBrowser({
               size="icon-lg"
               className="absolute bottom-4 end-4 z-20 rounded-full shadow-lg"
               aria-label={t("new")}
-              onClick={(e) => menu.openContextMenu(anchorEvent(e.currentTarget, "end"), { kind: "new" })}
+              onClick={(e) => menu.openContextMenuFrom(e.currentTarget, { kind: "new" }, "end")}
             >
               <Plus className="w-5 h-5" />
             </Button>

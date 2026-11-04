@@ -1658,6 +1658,10 @@
         "label": "サイドバーのアカウント切替を非表示",
         "description": "フォルダサイドバー上部のアカウント選択を非表示にします。下部のナビゲーションレールからアカウントを切り替えることは引き続き可能です。"
       },
+      "sidebar_account_switcher": {
+        "label": "サイドバー上部のアカウント切替",
+        "description": "フォルダの上にアカウント切替を、メッセージ一覧の上に丸い「作成」ボタンを表示します。オフにすると、代わりに「作成」がフォルダの上に表示されます。"
+      },
       "show_rail_account_list": {
         "label": "ナビゲーションレールにアカウントアバターを表示",
         "description": "ナビゲーションレールの下部に個々のアカウントの丸を表示して素早く切り替えできるようにし、その下にサインアウトボタンを配置します。"
@@ -5234,6 +5238,13 @@
     "caldav_shared_by": "{name} が共有:",
     "freebusy_description": "共有した相手には予定がある時間だけが見え、予定の内容は見えません。「時間を提案」で使われます。"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "リスト",
+    "task_list_not_in_calendar": "{name}（タスクリスト、カレンダーには表示されません）",
+    "copy_to_account": "{address} にコピー",
+    "copied_to_account": "{address} にコピーしました",
+    "delete_original": "元の予定を削除"
+  },
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
   },
@@ -5254,6 +5265,12 @@
     "answered_accepted_nodate": "承諾しました。",
     "answered_declined_nodate": "辞退しました。",
     "answered_tentative_nodate": "未定と回答しました。"
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "繰り返し: {rule}",
+    "declined_dates": "{dates} は辞退しました。",
+    "declined_many": "このシリーズの {count} 件を辞退しました。",
+    "answers_series": "回答はシリーズのすべての会議に適用されます。"
   },
   "advanced_search": {
     "title": "詳細検索",
@@ -5546,6 +5563,26 @@
     "send_message": "メッセージを送信",
     "share_mail_subject": "{name} を共有しました",
     "share_mail_body": "こんにちは。\n\n「{name}」を共有しました。こちらから開けます:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "すべてカレンダーに追加",
+    "zone_contacts_all": "すべて連絡先に追加",
+    "save_to_files": "ファイルに保存",
+    "saved": "{name} をファイルに保存しました。",
+    "saved_copy": "{name} としてファイルに保存しました。",
+    "save_failed": "{name} をファイルに保存できませんでした。",
+    "changed_on_server": "{name} は開いた後にファイルで変更されました。",
+    "gone_on_server": "{name} はファイルにもうありません。",
+    "keep_both": "両方残す",
+    "replace": "置き換える",
+    "cancel": "キャンセル",
+    "save_as_new": "新しいファイルとして保存",
+    "import_to_mail": "メールフォルダーにインポート…",
+    "import_to_mail_title": "メールフォルダーにインポート",
+    "imported_to_mail": "{folder} にインポートしました。",
+    "import_to_mail_failed": "{name} をインポートできませんでした。",
+    "import_contacts": "連絡先にインポート…",
+    "add_to_calendar": "カレンダーに追加…"
   },
   "smime": {
     "your_certificates": "あなたの証明書",
@@ -7555,6 +7592,18 @@
     "import_mail": "メール…",
     "import_calendar": "カレンダー…",
     "import_contacts": "連絡先…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "更新",
+    "menu_today": "今日",
+    "menu_next_period": "次の期間",
+    "menu_previous_period": "前の期間",
+    "account_scope_label": "{address} を表示中。アカウントを切り替え",
+    "account_scope_menu": "アカウントを切り替え",
+    "merge_links": "リンク",
+    "merge_photo": "写真",
+    "merge_kept": "残ります",
+    "import_show": "表示"
   },
   "desktopEdit": {
     "edit": "編集",

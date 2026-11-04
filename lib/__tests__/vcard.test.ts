@@ -1177,6 +1177,17 @@ describe("detectDuplicates", () => {
     expect(dupes.get(0)).toBe("existing-1");
   });
 
+  // pim-p2-15 (2026-11-04): a CSV with the same address on two rows imported both.
+  it("marks a later card of the same file with the same address as a duplicate of the first", () => {
+    const incoming: ContactCard[] = [
+      { id: "row-1", addressBookIds: {}, emails: { e0: { address: "anna@example.org" } } },
+      { id: "row-2", addressBookIds: {}, emails: { e0: { address: "bob@example.org" } } },
+      { id: "row-3", addressBookIds: {}, emails: { e0: { address: " Anna@Example.org" } } },
+    ];
+    const dupes = detectDuplicates([], incoming);
+    expect([...dupes.entries()]).toEqual([[2, "row-1"]]);
+  });
+
   it("returns empty map when no duplicates", () => {
     const existing: ContactCard[] = [
       {

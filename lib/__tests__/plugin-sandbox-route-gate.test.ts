@@ -13,10 +13,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 let pluginsEnabled = true;
+let allowedFrameAncestors = '';
 vi.mock('@/lib/admin/config-manager', () => ({
   configManager: {
     ensureLoaded: vi.fn(async () => {}),
-    get: vi.fn((_key: string, fallback: unknown) => fallback),
+    get: vi.fn((key: string, fallback: unknown) => (key === 'allowedFrameAncestors' ? allowedFrameAncestors : fallback)),
     getPolicy: vi.fn(() => ({ features: { pluginsEnabled } })),
   },
 }));
@@ -41,6 +42,7 @@ const IFRAME_LOAD = { 'sec-fetch-dest': 'iframe', 'sec-fetch-site': 'same-origin
 beforeEach(() => {
   vi.clearAllMocks();
   pluginsEnabled = true;
+  allowedFrameAncestors = '';
 });
 
 describe('plugin sandbox routes (GHSA-96cx-gx36-3g79)', () => {
@@ -51,6 +53,17 @@ describe('plugin sandbox routes (GHSA-96cx-gx36-3g79)', () => {
     const csp = response.headers.get('content-security-policy') ?? '';
     expect(csp).toContain("'unsafe-eval'");
     expect(csp).toContain("frame-ancestors 'self'");
+  });
+
+  // frame-ancestors is checked against every ancestor, so a portal allowed to
+  // frame the mail UI must be allowed on the plugin frames inside it too (#1533).
+  it.each(SANDBOX_ROUTES)('lets %s load inside a mail UI framed by an allowed portal', async (path) => {
+    allowedFrameAncestors = 'https://portal.example';
+    const response = await load(path, IFRAME_LOAD);
+
+    expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'self' https://portal.example;");
+    // X-Frame-Options can't name the portal and would block it in browsers that read it.
+    expect(response.headers.get('x-frame-options')).toBeNull();
   });
 
   it.each(SANDBOX_ROUTES)('refuses %s as a top-level document opened by another site', async (path) => {

@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { ZoomableImage } from "@/components/files/zoomable-image";
 import { getFilePreviewKind, imageBlobUrl, isMimeTypeSafeForInlinePreview, previewBlobType } from "@/lib/file-preview";
 import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
 import { EmlPreview, type EmlAttachment, type ParsedEml } from "@/components/files/eml-preview";
 import { FilePreviewPluginSection } from "@/components/files/file-preview-plugin-section";
 import { canOpenUrlInNewWindow } from "@/lib/standalone-display";
@@ -76,6 +77,12 @@ interface FilePreviewModalProps {
    * accounts signed in here.
    */
   policyAccount?: string | { sourceClientAccountId?: string | null } | null;
+  /**
+   * What the app itself does with this kind of file, as a labelled button in
+   * the header: "Import to a mail folder…" for a saved message, "Import into
+   * contacts…" for a .csv (pim-p2-7).
+   */
+  extraAction?: { label: string; onClick: () => void };
 }
 
 function SimpleMarkdown({ content }: { content: string }) {
@@ -169,7 +176,7 @@ function processInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
-export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount }: FilePreviewModalProps) {
+export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction }: FilePreviewModalProps) {
   const t = useTranslations("files");
   // No downloads: no download button, no new tab, no save from the
   // browser's own PDF viewer or media controls. No printing: the PDF goes
@@ -375,11 +382,20 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
       neighbours={neighbours}
       // An installed app hands the new window to the system browser, which
       // cannot load our blob: URL (#865): no dead button there.
-      actions={objectUrl && canOpenInNewTab && !downloadsOff && canOpenUrlInNewWindow(objectUrl) ? (
-        <IconButton label={t("open_in_new_tab")} onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}>
-          <ExternalLink />
-        </IconButton>
-      ) : undefined}
+      actions={(
+        <>
+          {extraAction && (
+            <Button size="sm" variant="outline" className="me-1" data-testid="preview-extra-action" onClick={extraAction.onClick}>
+              {extraAction.label}
+            </Button>
+          )}
+          {objectUrl && canOpenInNewTab && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
+            <IconButton label={t("open_in_new_tab")} onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}>
+              <ExternalLink />
+            </IconButton>
+          )}
+        </>
+      )}
     >
       <div className="relative flex-1 min-h-0 flex items-center justify-center overflow-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
         {loading && <Spinner label={t("loading")} className="w-8 h-8 text-white/80" />}

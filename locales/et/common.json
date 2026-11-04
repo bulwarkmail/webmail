@@ -1661,6 +1661,10 @@
         "label": "Peida külgriba kontovahetaja",
         "description": "Peida kontovaliku menüü kaustade külgriba ülaosast. Kontosid saab endiselt vahetada alumiselt navigeerimisribalt."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontovahetaja külgriba ülaosas",
+        "description": "Näita kontovahetajat kaustade kohal ja ümmargust nuppu Koosta kirjade loendi kohal. Lülita see välja, et nupp Koosta oleks hoopis kaustade kohal."
+      },
       "show_rail_account_list": {
         "label": "Näita kontode avatare navigeerimisribal",
         "description": "Kuva navigeerimisriba allosas eraldi kontoringid kiireks vahetamiseks ning nende all väljalogimise nupp."
@@ -5234,6 +5238,13 @@
     "caldav_shared_by": "Jagas {name}:",
     "freebusy_description": "Kellega jagad, näeb, millal oled hõivatud, aga mitte sinu sündmusi. Seda kasutab „Soovita aegu“."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Loend",
+    "task_list_not_in_calendar": "{name} (ülesannete loend, kalendris ei näidata)",
+    "copy_to_account": "Kopeeri kontole {address}",
+    "copied_to_account": "Kopeeritud kontole {address}",
+    "delete_original": "Kustuta originaal"
+  },
   "calendar_offline": {
     "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
   },
@@ -5254,6 +5265,12 @@
     "answered_accepted_nodate": "Nõustusite.",
     "answered_declined_nodate": "Keeldusite.",
     "answered_tentative_nodate": "Vastasite võib-olla."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Kordub: {rule}",
+    "declined_dates": "Lükkasite tagasi kuupäeva {dates}.",
+    "declined_many": "Lükkasite tagasi {count} selle sarja kohtumist.",
+    "answers_series": "Teie vastus kehtib sarja kõigile kohtumistele."
   },
   "calendar_event_notifications": {
     "someone": "Keegi",
@@ -5808,6 +5825,26 @@
     "send_message": "Saada sõnum",
     "share_mail_subject": "Jagasin sinuga faili {name}",
     "share_mail_body": "Tere\n\nJagasin sinuga „{name}“. Saad selle avada siin:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Lisa kõik kalendrisse",
+    "zone_contacts_all": "Lisa kõik kontaktidesse",
+    "save_to_files": "Salvesta kausta Failid",
+    "saved": "{name} salvestati kausta Failid.",
+    "saved_copy": "Salvestati kausta Failid nimega {name}.",
+    "save_failed": "Faili {name} ei saanud kausta Failid salvestada.",
+    "changed_on_server": "Faili {name} muudeti kaustas Failid pärast seda, kui selle avasid.",
+    "gone_on_server": "Faili {name} pole enam kaustas Failid.",
+    "keep_both": "Jäta mõlemad",
+    "replace": "Asenda",
+    "cancel": "Tühista",
+    "save_as_new": "Salvesta uue failina",
+    "import_to_mail": "Impordi meilikausta…",
+    "import_to_mail_title": "Impordi meilikausta",
+    "imported_to_mail": "Imporditi kausta {folder}.",
+    "import_to_mail_failed": "Faili {name} ei saanud importida.",
+    "import_contacts": "Impordi kontaktidesse…",
+    "add_to_calendar": "Lisa kalendrisse…"
   },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
@@ -7555,6 +7592,18 @@
     "import_mail": "Post…",
     "import_calendar": "Kalender…",
     "import_contacts": "Kontaktid…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Värskenda",
+    "menu_today": "Täna",
+    "menu_next_period": "Järgmine periood",
+    "menu_previous_period": "Eelmine periood",
+    "account_scope_label": "Kuvatakse {address}. Vaheta kontot",
+    "account_scope_menu": "Vaheta kontot",
+    "merge_links": "Lingid",
+    "merge_photo": "Foto",
+    "merge_kept": "Jääb alles",
+    "import_show": "Näita"
   },
   "desktopEdit": {
     "edit": "Muuda",

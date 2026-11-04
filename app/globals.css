@@ -617,6 +617,9 @@ optgroup {
   --titlebar-right-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
   --titlebar-left-inset: env(titlebar-area-x, 0px);
   --titlebar-row-height: env(titlebar-area-height, 0px);
+  /* Where a drawer from the window's edge starts (the folder drawer): under
+     the top bar, and under the window's controls when they are over the page. */
+  --drawer-top: max(var(--app-top-inset), var(--titlebar-row-height));
 }
 
 /* A skeleton's row that will hold the controls has them from the first frame. */
@@ -638,6 +641,14 @@ html[data-window-controls]:not([data-interface-layout="mountain-view"]) [data-wi
 /* A composer that is its own window closes with the window's button, one row over. */
 html[data-window-controls] [data-own-window-close] {
   display: none;
+}
+
+/*
+ * A sheet docked at the window's end (the calendar's event and task panels) has its title
+ * and close at the top and Save at the foot: toasts stand beside it, not on it (pim-p2-19).
+ */
+body:has([data-end-sheet]) [data-toast-container] {
+  inset-inline-end: calc(var(--end-sheet-width, 400px) + 1.25rem);
 }
 
 /* Toasts that step out of the focus's way go to the top end corner: below the controls there. */
@@ -1577,6 +1588,15 @@ html[data-window-controls-left] [data-window-rail] {
   [data-interface-layout="mountain-view"] [data-mv-rail-peek] {
     width: var(--mv-rail-peek-w);
   }
+}
+
+/* The folded folder column's drawer (components/layout/sidebar.tsx) is at its
+   full width from the first frame, Reduce motion included, whose rule makes
+   everything transition for 0.01ms. Grown from the column's 48px at the
+   window's edge, it left the pointer that opened it outside for a frame, and
+   the leave closed it again. Specificity (0,3,0) beats that rule's (0,2,0). */
+:root [data-folder-drawer][data-folder-drawer] {
+  transition: none !important;
 }
 
 /* A list row while its right-click menu is open (components/ui/context-menu.tsx). */

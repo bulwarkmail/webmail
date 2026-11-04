@@ -79,6 +79,7 @@ import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -396,6 +397,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     threadId: string; emailId: string; startedAt: number; promise: Promise<Email[] | null>;
   } | null>(null);
   const mvConversationOpenSeqRef = useRef(0);
+  // The open that put a message on screen together with its conversation (or
+  // with none, a message alone in its thread). The effect below then has
+  // nothing to fetch, and resetting and setting it again would draw the whole
+  // mail view twice more for each message opened.
+  const mvConversationSettledRef = useRef<{
+    emailId: string; threadId: string; client: EmailBlobContext['client']; accountId?: string;
+  } | null>(null);
   // compose-p2-6: a reply to the open message saved as a draft. The reader
   // shows it under the message, and Reply opens it again. The conversation
   // fetch notes the thread's drafts; a scan reads them fresh after a composer
@@ -493,6 +501,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Desktop lifts search into a global header. Mobile keeps its native
   // one-pane flow, with Mountain View's own app chrome.
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isEmbedded;
+  const sidebarAccountSwitcher = useSettingsStore((state) => state.sidebarAccountSwitcher);
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
   // Mountain View reads a thread as one conversation in the viewer, on the
   // phone as on the desktop, so both show the same order and details. (#1224)
@@ -2298,10 +2307,29 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       setLoadingEmail(true);
       try {
-        const email = await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
+        // With the conversation in the reader, the message waits for it, as on
+        // a click: shown alone first, it would move down once it came.
+        const withConversation = readerConversationView && !cursorOnly;
+        const email = withConversation
+          ? await fetchEmailContent(activeClient, link.id, link.ownerAccountId, { select: false })
+          : await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
+        }
+        if (withConversation) {
+          const source = resolveEmailBlobContext(email, activeClient);
+          const conversation = await Promise.race([
+            loadMvConversation(email, activeClient),
+            new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
+          ]);
+          if (conversation !== undefined) {
+            setMvConversationResult(conversation ? { emails: conversation, source, threadId: email.threadId } : null);
+            mvConversationSettledRef.current = {
+              emailId: email.id, threadId: email.threadId, client: source.client, accountId: source.accountId,
+            };
+          }
+          useEmailStore.setState({ selectedEmail: email });
         }
         await showInOwningFolder(activeClient, email);
         if (link.fullscreen && !isMobile) {
@@ -2593,28 +2621,35 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Pro can mount two mail panes at once, so the sidebar id must be per-instance.
   const sidebarId = useId();
   const listHeadingId = useId();
-  const sidebarContainerRef = useRef<HTMLDivElement>(null);
+  // The phone drawer keeps Tab inside until it closes, and Escape closes it.
+  const phoneDrawerOpen = isMobile && sidebarOpen;
+  const sidebarContainerRef = useFocusTrap({
+    isActive: phoneDrawerOpen,
+    onEscape: () => setSidebarOpen(false),
+    restoreFocus: false,
+  });
   const sidebarWasOpen = useRef(false);
   useEffect(() => {
-    const isOverlay = isMobile;
-    if (isOverlay && sidebarOpen) {
+    if (phoneDrawerOpen) {
       sidebarWasOpen.current = true;
-      const frame = requestAnimationFrame(() => {
-        const first = sidebarContainerRef.current?.querySelector<HTMLElement>(
-          'button:not(:disabled),[href],input:not(:disabled),[tabindex]:not([tabindex="-1"])'
-        );
-        first?.focus();
-      });
-      return () => cancelAnimationFrame(frame);
+      return;
     }
     if (!sidebarWasOpen.current) return;
     sidebarWasOpen.current = false;
-    // The toggle lives in whichever MobileHeader the current view renders, so
+    // Back to the toggle however it closed (Escape, X, a pick, the scrim),
+    // unless the focus has moved on to something outside the drawer. The
+    // toggle lives in whichever MobileHeader the current view renders, so
     // look it up inside this app instance rather than threading a ref through.
     const active = document.activeElement;
-    if (active && active !== document.body) return;
+    if (active && active !== document.body && !sidebarContainerRef.current?.contains(active)) return;
     appRootRef.current?.querySelector<HTMLElement>('[data-sidebar-toggle]')?.focus();
-  }, [isMobile, sidebarOpen]);
+  }, [phoneDrawerOpen, sidebarContainerRef]);
+  // The folded column's tree open over the page as a drawer (Sidebar's
+  // onDrawerChange): the function that closes it, for the scrim.
+  const [closeFolderDrawer, setCloseFolderDrawer] = useState<(() => void) | null>(null);
+  const handleFolderDrawerChange = useCallback((close: (() => void) | null) => {
+    setCloseFolderDrawer(() => close);
+  }, []);
 
   // The message a composer session answers, pinned when the session starts.
   // Mountain View keeps its compose window open while other mail is read
@@ -4989,10 +5024,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   useEffect(() => {
     ++mvConversationOpenSeqRef.current;
+    const settled = mvConversationSettledRef.current;
+    mvConversationSettledRef.current = null;
     if (!mvConversationThreadId || !client || !mvConversationRef) {
       setMvConversationResult(null);
       setMvConversationLoading(null);
       return;
+    }
+    if (settled && settled.emailId === mvConversationRef.id && settled.threadId === mvConversationThreadId
+      && settled.client === mvBlobSource.client && settled.accountId === mvBlobSource.accountId) {
+      // The open already has the conversation on screen with the message.
+      setMvConversationLoading(null);
+      return () => { ++mvConversationOpenSeqRef.current; };
     }
     let cancelled = false;
     setMvConversationResult(null);
@@ -5441,9 +5484,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
           if (openSeq !== emailOpenSeqRef.current) return 'opened';
-          if (conversation !== undefined) setMvConversationResult(conversation ? {
-            emails: conversation, source, threadId: fullEmail.threadId,
-          } : null);
+          if (conversation !== undefined) {
+            setMvConversationResult(conversation ? {
+              emails: conversation, source, threadId: fullEmail.threadId,
+            } : null);
+            mvConversationSettledRef.current = {
+              emailId: fullEmail.id, threadId: fullEmail.threadId, client: source.client, accountId: source.accountId,
+            };
+          }
         }
         // One write: the message, and the end of its loading state.
         finishOpenEmail(fullEmail);
@@ -5841,13 +5889,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             `desk:hidden` viewport-variant alone wouldn't gate this overlay;
             scope to the pane via `absolute` so the backdrop stays inside
             the pane instead of covering the whole window. */}
-        {isMobile && sidebarOpen && !inlineApp && (
+        {((isMobile && sidebarOpen) || closeFolderDrawer) && !inlineApp && (
           <div
+            aria-hidden="true"
+            data-testid="folder-drawer-scrim"
+            data-drawer-scrim=""
             className={cn(
               "inset-0 bg-black/50 z-40",
-              isEmbedded ? "absolute" : "fixed desk:hidden"
+              // The folded column's drawer opens on a desktop, so only the
+              // phone's scrim goes with the phone layout.
+              isEmbedded ? "absolute" : cn("fixed", !closeFolderDrawer && "desk:hidden")
             )}
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => {
+              if (closeFolderDrawer) closeFolderDrawer();
+              else setSidebarOpen(false);
+            }}
           />
         )}
 
@@ -5861,9 +5917,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
              `inert` it stays in the accessibility tree and screen readers can
              reach a menu the Toggle menu button reports as collapsed (#721). */
           inert={isMobile && !sidebarOpen}
-          onKeyDown={isMobile && sidebarOpen ? (e) => {
-            if (e.key === 'Escape') setSidebarOpen(false);
-          } : undefined}
           className={cn(
             "flex-shrink-0 h-full z-50",
             // The z-index is for the phone drawer. On a desktop under Mountain
@@ -5880,16 +5933,22 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       // sign or the drawer slides off the wrong edge.
                       !sidebarOpen && "-translate-x-full rtl:translate-x-full"
                     )
-                  : "relative translate-x-0")
+                  // No translate here: it would make this column the box the
+                  // folded column's drawer is placed in.
+                  : "relative")
               : cn(
-                  // Mobile/Tablet: fixed overlay
+                  // Phone: a drawer from the window's start edge, from under
+                  // the top bar and the window's controls (--drawer-top).
                   // start-0 rather than left-0: in RTL the drawer belongs on
                   // the right, matching the hamburger that opens it.
-                  "max-desk:fixed max-desk:inset-y-0 max-desk:start-0 max-desk:w-72 max-desk:pt-[var(--app-top-inset)]",
+                  "max-desk:fixed max-desk:start-0 max-desk:top-[var(--drawer-top)] max-desk:bottom-0 max-desk:h-auto max-desk:w-72",
                   "max-desk:transform max-desk:transition-transform max-desk:duration-300 max-desk:ease-in-out",
                   !sidebarOpen && "max-desk:-translate-x-full max-desk:rtl:translate-x-full",
-                  // Desktop: normal flow
-                  "desk:relative desk:translate-x-0"
+                  // Desktop: normal flow. translate-none, not translate-x-0:
+                  // any translate makes this column the containing block of
+                  // the folded column's fixed drawer, which then opens beside
+                  // the app rail instead of at the window's edge.
+                  "desk:relative desk:translate-none"
                 ),
             inlineApp && "hidden",
             fullscreenReading && "hidden"
@@ -5916,6 +5975,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               accountMailboxes={accountMailboxes}
               accountSharedMailboxes={accountSharedMailboxes}
               viewingAccountId={viewingAccountId}
+              onDrawerChange={handleFolderDrawerChange}
             />
           </ErrorBoundary>
         </div>
@@ -6329,10 +6389,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button - on desktop the folder sidebar has
-                Compose at its top instead (and Mountain View its rail), so the
-                button no longer sits on the list's rows. */}
-            {!mvShell && (isMobile || isEmbedded) && <Button
+            {/* Floating Compose Button - Mountain View has Compose in its rail,
+                and a desktop with sidebarAccountSwitcher off at the top of the
+                folder sidebar, so there the button doesn't sit on the rows. */}
+            {!mvShell && (isMobile || isEmbedded || sidebarAccountSwitcher) && <Button
               onClick={() => {
                 void handleCompose();
               }}

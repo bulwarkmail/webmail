@@ -1658,6 +1658,10 @@
         "label": "Masquer le sélecteur de compte de la barre latérale",
         "description": "Masquer le sélecteur de compte en haut de la barre latérale des dossiers. Vous pouvez toujours changer de compte depuis la barre de navigation inférieure."
       },
+      "sidebar_account_switcher": {
+        "label": "Sélecteur de compte en haut de la barre latérale",
+        "description": "Affiche le sélecteur de compte au-dessus des dossiers et le bouton rond Composer sur la liste des messages. Désactivez cette option pour placer Composer au-dessus des dossiers."
+      },
       "show_rail_account_list": {
         "label": "Afficher les avatars de compte sur la barre de navigation",
         "description": "Afficher les cercles de comptes individuels en bas de la barre de navigation pour un changement rapide, avec un bouton de déconnexion en dessous."
@@ -5234,6 +5238,13 @@
     "caldav_shared_by": "Partagé par {name} :",
     "freebusy_description": "Les personnes avec qui vous partagez voient quand vous êtes occupé, pas le contenu de vos événements. « Suggérer des créneaux » s’en sert."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (liste de tâches, non affichée dans le calendrier)",
+    "copy_to_account": "Copier vers {address}",
+    "copied_to_account": "Copié vers {address}",
+    "delete_original": "Supprimer l'original"
+  },
   "calendar_offline": {
     "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."
   },
@@ -5254,6 +5265,12 @@
     "answered_accepted_nodate": "Vous avez accepté.",
     "answered_declined_nodate": "Vous avez refusé.",
     "answered_tentative_nodate": "Vous avez répondu peut-être."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Se répète : {rule}",
+    "declined_dates": "Vous avez refusé le {dates}.",
+    "declined_many": "Vous avez refusé {count} réunions de cette série.",
+    "answers_series": "Votre réponse vaut pour toutes les réunions de la série."
   },
   "advanced_search": {
     "title": "Recherche avancée",
@@ -5546,6 +5563,26 @@
     "send_message": "Envoyer un message",
     "share_mail_subject": "J’ai partagé {name} avec vous",
     "share_mail_body": "Bonjour,\n\nJ’ai partagé « {name} » avec vous. Vous pouvez l’ouvrir ici :\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Tout ajouter au calendrier",
+    "zone_contacts_all": "Tout ajouter aux contacts",
+    "save_to_files": "Enregistrer dans Fichiers",
+    "saved": "{name} enregistré dans Fichiers.",
+    "saved_copy": "Enregistré dans Fichiers sous {name}.",
+    "save_failed": "Impossible d'enregistrer {name} dans Fichiers.",
+    "changed_on_server": "{name} a été modifié dans Fichiers après que vous l'avez ouvert.",
+    "gone_on_server": "{name} n'est plus dans Fichiers.",
+    "keep_both": "Conserver les deux",
+    "replace": "Remplacer",
+    "cancel": "Annuler",
+    "save_as_new": "Enregistrer comme nouveau fichier",
+    "import_to_mail": "Importer dans un dossier de messagerie…",
+    "import_to_mail_title": "Importer dans un dossier de messagerie",
+    "imported_to_mail": "Importé dans {folder}.",
+    "import_to_mail_failed": "Impossible d'importer {name}.",
+    "import_contacts": "Importer dans les contacts…",
+    "add_to_calendar": "Ajouter au calendrier…"
   },
   "smime": {
     "your_certificates": "Vos certificats",
@@ -7555,6 +7592,18 @@
     "import_mail": "Courrier…",
     "import_calendar": "Calendrier…",
     "import_contacts": "Contacts…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualiser",
+    "menu_today": "Aujourd’hui",
+    "menu_next_period": "Période suivante",
+    "menu_previous_period": "Période précédente",
+    "account_scope_label": "Affiche {address}. Changer de compte",
+    "account_scope_menu": "Changer de compte",
+    "merge_links": "Liens",
+    "merge_photo": "Photo",
+    "merge_kept": "Conservé",
+    "import_show": "Afficher"
   },
   "desktopEdit": {
     "edit": "Modifier",

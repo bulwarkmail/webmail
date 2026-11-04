@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { editForbidden, followEditSessions, getEditBridge, parkFilesForReply, parseEditSource, readEditedFile, useEditSessions } from "@/lib/desktop/edit-attachments";
+import { filesClientFor, refreshFilesFor, saveBackToNode, saveBesideNode, type NodeEditSource } from "@/lib/desktop/save-to-files";
 import { openMailLink } from "@/lib/desktop/mail-links";
 import { contentHiddenFor } from "@/lib/desktop/mail-notifications";
 import type { DesktopEditSession } from "@/lib/desktop/types";
@@ -35,7 +36,10 @@ function useSignedInAccounts(): Set<string> {
  */
 export function EditedFilesHost() {
   const t = useTranslations("desktopEdit");
+  const tFiles = useTranslations("ux_p2_pim_files");
   const router = useRouter();
+  // A file from Files that changed on the server, or went, since it was opened: what to do is asked on its card.
+  const [conflicts, setConflicts] = useState<Record<string, "changed" | "gone">>({});
   const tRef = useRef(t);
   tRef.current = t;
   const sessions = useEditSessions((s) => s.sessions);
@@ -148,6 +152,42 @@ export function EditedFilesHost() {
     if (saveBlobAs(file, file.name, { kind: "attachment", subject: session.account })) void getEditBridge()?.taken(session.id, hash);
   });
 
+  /**
+   * Save to Files (pim-p2-1): back into the node it came from, unless that changed on the
+   * server meanwhile; then the card asks Keep both or Replace. `how`: "check" first,
+   * "replace" over a change, "beside" as a new file next to it.
+   */
+  const saveToFiles = (session: DesktopEditSession, source: NodeEditSource, how: "check" | "replace" | "beside") => withFile(session, async (file, hash) => {
+    const client = filesClientFor(session.account);
+    const bridge = getEditBridge();
+    if (!client || !bridge) {
+      toast.error(tFiles("save_failed", { name: session.name }));
+      return;
+    }
+    try {
+      if (how === "beside") {
+        const saved = await saveBesideNode(client, source, file);
+        bridge.setSource(session.id, JSON.stringify(saved.source));
+        await bridge.taken(session.id, hash);
+        toast.success(tFiles("saved_copy", { name: saved.name }));
+      } else {
+        const result = await saveBackToNode(client, source, file, how === "replace");
+        if (result.status !== "saved") {
+          setConflicts((all) => ({ ...all, [session.id]: result.status }));
+          return;
+        }
+        bridge.setSource(session.id, JSON.stringify({ ...source, blobId: result.blobId }));
+        await bridge.taken(session.id, hash);
+        toast.success(tFiles("saved", { name: session.name }));
+      }
+      setConflicts(({ [session.id]: _done, ...rest }) => rest);
+      refreshFilesFor(client);
+    } catch (error) {
+      console.error("Could not save an edited file to Files:", error);
+      toast.error(tFiles("save_failed", { name: session.name }));
+    }
+  });
+
   const accountLabel = (session: DesktopEditSession) => {
     if (accountList.length < 2) return null;
     const entry = accountList.find((a) => a.id === session.account);
@@ -172,6 +212,8 @@ export function EditedFilesHost() {
         const source = parseEditSource(session.source);
         const draftId = source.kind === "draft" && !session.savedAs ? source.draftId : null;
         const account = accountLabel(session);
+        const node = source.kind === "node" ? source : null;
+        const conflict = node ? conflicts[session.id] : undefined;
         return (
           <div key={session.id} data-testid="edited-file" className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 shadow-lg">
             <div className="flex items-start gap-2">
@@ -181,6 +223,11 @@ export function EditedFilesHost() {
                 {account && <p className="truncate text-xs text-muted-foreground" data-testid="edited-file-account">{account}</p>}
                 <p className="text-xs text-muted-foreground">{t("changed_body")}</p>
                 {session.lastChance && <p className="text-xs font-medium text-foreground" data-testid="edited-file-last-chance">{t("last_chance")}</p>}
+                {conflict && (
+                  <p className="text-xs font-medium text-foreground" role="alert" data-testid="edited-file-conflict">
+                    {conflict === "changed" ? tFiles("changed_on_server", { name: session.name }) : tFiles("gone_on_server", { name: session.name })}
+                  </p>
+                )}
               </div>
               <button
                 type="button"
@@ -192,7 +239,21 @@ export function EditedFilesHost() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+            {node && conflict ? (
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" disabled={busy === session.id} onClick={() => void saveToFiles(session, node, "beside")}>
+                  {conflict === "changed" ? tFiles("keep_both") : tFiles("save_as_new")}
+                </Button>
+                {conflict === "changed" && (
+                  <Button size="sm" variant="outline" disabled={busy === session.id} onClick={() => void saveToFiles(session, node, "replace")}>{tFiles("replace")}</Button>
+                )}
+                <Button size="sm" variant="ghost" disabled={busy === session.id} onClick={() => setConflicts(({ [session.id]: _gone, ...rest }) => rest)}>{tFiles("cancel")}</Button>
+              </div>
+            ) : (
             <div className="flex flex-wrap gap-2">
+              {node && (
+                <Button size="sm" disabled={busy === session.id} onClick={() => void saveToFiles(session, node, "check")}>{tFiles("save_to_files")}</Button>
+              )}
               {source.kind === "mail" && (
                 <Button size="sm" disabled={busy === session.id} onClick={() => void attachToReply(session, source.emailId, source.ownerAccountId)}>{t("reply")}</Button>
               )}
@@ -200,10 +261,11 @@ export function EditedFilesHost() {
                 <Button size="sm" onClick={() => openDraftWindow({ draftId, localAccountId: session.account, ownerAccountId: source.kind === "draft" ? source.ownerAccountId : undefined })}>{t("open_draft")}</Button>
               )}
               {source.kind !== "mail" && !draftId && (
-                <Button size="sm" disabled={busy === session.id} onClick={() => void attachToNew(session)}>{t("new_message")}</Button>
+                <Button size="sm" variant={node ? "outline" : "default"} disabled={busy === session.id} onClick={() => void attachToNew(session)}>{t("new_message")}</Button>
               )}
               <Button size="sm" variant="outline" disabled={busy === session.id} onClick={() => void saveCopy(session)}>{t("save_copy")}</Button>
             </div>
+            )}
           </div>
         );
       })}

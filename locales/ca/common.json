@@ -1661,6 +1661,10 @@
         "label": "Amaga el selector de comptes de la barra lateral",
         "description": "Amaga el selector de comptes a la part superior de la barra lateral de carpetes. Encara podreu canviar de compte des de la barra de navegació inferior."
       },
+      "sidebar_account_switcher": {
+        "label": "Selector de comptes a la part superior de la barra lateral",
+        "description": "Mostra el selector de comptes damunt de les carpetes i el botó rodó Redacta damunt de la llista de missatges. Desactiveu-ho per posar Redacta damunt de les carpetes."
+      },
       "show_rail_account_list": {
         "label": "Mostra els avatars dels comptes a la barra de navegació",
         "description": "Mostra cercles individuals per a cada compte a la part inferior de la barra de navegació per canviar-hi ràpidament, amb un botó de tancament de sessió a sota."
@@ -5234,6 +5238,13 @@
     "caldav_shared_by": "Compartit per {name}:",
     "freebusy_description": "Qui rebi la compartició veu quan esteu ocupat, no quins esdeveniments teniu. «Suggereix horaris» ho fa servir."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Llista",
+    "task_list_not_in_calendar": "{name} (llista de tasques, no es mostra al calendari)",
+    "copy_to_account": "Copia a {address}",
+    "copied_to_account": "S'ha copiat a {address}",
+    "delete_original": "Suprimeix l'original"
+  },
   "calendar_offline": {
     "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
   },
@@ -5254,6 +5265,12 @@
     "answered_accepted_nodate": "Heu acceptat.",
     "answered_declined_nodate": "Heu rebutjat.",
     "answered_tentative_nodate": "Heu respost potser."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Es repeteix: {rule}",
+    "declined_dates": "Has rebutjat el {dates}.",
+    "declined_many": "Has rebutjat {count} reunions d'aquesta sèrie.",
+    "answers_series": "La teva resposta val per a totes les reunions de la sèrie."
   },
   "calendar_event_notifications": {
     "someone": "Algú",
@@ -5808,6 +5825,26 @@
     "send_message": "Envia un missatge",
     "share_mail_subject": "He compartit {name} amb tu",
     "share_mail_body": "Hola,\n\nHe compartit «{name}» amb tu. El pots obrir aquí:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Afegeix-ho tot al calendari",
+    "zone_contacts_all": "Afegeix-ho tot als contactes",
+    "save_to_files": "Desa a Fitxers",
+    "saved": "{name} s'ha desat a Fitxers.",
+    "saved_copy": "S'ha desat a Fitxers com a {name}.",
+    "save_failed": "No s'ha pogut desar {name} a Fitxers.",
+    "changed_on_server": "{name} ha canviat a Fitxers després que l'obrissis.",
+    "gone_on_server": "{name} ja no és a Fitxers.",
+    "keep_both": "Conserva’ls tots dos",
+    "replace": "Substitueix",
+    "cancel": "Cancel·la",
+    "save_as_new": "Desa com a fitxer nou",
+    "import_to_mail": "Importa a una carpeta de correu…",
+    "import_to_mail_title": "Importa a una carpeta de correu",
+    "imported_to_mail": "S'ha importat a {folder}.",
+    "import_to_mail_failed": "No s'ha pogut importar {name}.",
+    "import_contacts": "Importa als contactes…",
+    "add_to_calendar": "Afegeix al calendari…"
   },
   "smime": {
     "your_certificates": "Els vostres certificats",
@@ -7555,6 +7592,18 @@
     "import_mail": "Correu…",
     "import_calendar": "Calendari…",
     "import_contacts": "Contactes…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualitza",
+    "menu_today": "Avui",
+    "menu_next_period": "Període següent",
+    "menu_previous_period": "Període anterior",
+    "account_scope_label": "Es mostra {address}. Canvia de compte",
+    "account_scope_menu": "Canvia de compte",
+    "merge_links": "Enllaços",
+    "merge_photo": "Foto",
+    "merge_kept": "Es conserva",
+    "import_show": "Mostra"
   },
   "desktopEdit": {
     "edit": "Edita",

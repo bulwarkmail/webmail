@@ -131,7 +131,7 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
               {/* A compact desktop folds the sidebar to its icons (sidebarFolded). */}
               <ChevronsRight className="w-4 h-4 hidden desk:max-lg:block" />
             </span>
-            <span className="flex flex-1 min-w-0 items-center gap-2 px-2 py-1.5 desk:max-lg:hidden">
+            <span className="flex flex-1 min-w-0 items-center gap-2 px-2 py-1.5 desk:max-lg:hidden desk:boot-sidebar-compose:hidden">
               <Circle className="w-9 h-9" />
               <span className="min-w-0 flex-1">
                 <TextLine className="text-sm" w="70%" />
@@ -139,9 +139,11 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             </span>
+            {/* Compose in place of the account switcher (sidebarAccountSwitcher off). */}
+            <Block className="hidden desk:boot-sidebar-compose:block desk:max-lg:hidden flex-1 min-w-0 h-9 rounded-md" />
           </div>
-          {/* The folded sidebar's Compose button. */}
-          <div className="hidden desk:max-lg:flex justify-center pb-2">
+          {/* The folded sidebar's Compose button (sidebarAccountSwitcher off). */}
+          <div className="hidden desk:max-lg:boot-sidebar-compose:flex justify-center pb-2">
             <Block className="w-10 h-10 rounded-md" />
           </div>
         </div>
@@ -665,8 +667,8 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
               className={cn(
                 "absolute z-40 shadow-lg bottom-4 end-4 h-12 w-12 max-desk:h-14 max-desk:w-14",
                 "max-desk:mv:w-36 max-desk:mv:rounded-2xl",
-                // A desktop has Compose in the folder sidebar; a Pro pane keeps the round one.
-                !embedded && "desk:hidden",
+                // A desktop can have Compose in the folder sidebar instead; a Pro pane keeps the round one.
+                !embedded && "desk:mv:hidden desk:boot-sidebar-compose:hidden",
               )}
             />
           </div>

@@ -88,12 +88,15 @@ export async function getDroppedFilesAndFolders(dataTransfer: DataTransfer): Pro
   const items = dataTransfer.items;
 
   // Check if the browser supports webkitGetAsEntry
+  const entries: FileSystemEntry[] = [];
   if (items && items.length > 0 && typeof items[0].webkitGetAsEntry === 'function') {
-    const entries: FileSystemEntry[] = [];
     for (let i = 0; i < items.length; i++) {
       const entry = items[i].webkitGetAsEntry();
       if (entry) entries.push(entry);
     }
+  }
+  // Files a page made itself have no entries: they come through `files` below.
+  if (entries.length > 0) {
 
     let hasDirectories = false;
     const filePromises: Promise<FileWithPath[]>[] = [];

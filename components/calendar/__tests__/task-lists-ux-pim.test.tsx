@@ -123,8 +123,10 @@ describe('where a new task goes (pim-8)', () => {
   });
 
   it('opens the task form on the task-only list', () => {
-    render(<TaskModal calendars={[home, work, todo]} onSave={vi.fn()} onClose={() => {}} />);
-    expect((screen.getByLabelText('tasks.calendar') as HTMLSelectElement).value).toBe('todo');
+    // The select lists task lists only (pim-p2-13), so a second one makes it show.
+    const errands = { ...todo, id: 'errands', name: 'Errands' } as Calendar;
+    render(<TaskModal calendars={[home, work, todo, errands]} onSave={vi.fn()} onClose={() => {}} />);
+    expect((screen.getByLabelText('task_list_label') as HTMLSelectElement).value).toBe('todo');
   });
 });
 
