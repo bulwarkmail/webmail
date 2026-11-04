@@ -3845,6 +3845,15 @@
     "create": "Создать",
     "rename_confirm": "Переименовать"
   },
+  "mail_p2_folders": {
+    "all_folders": "Все папки",
+    "empty_trash": "Очистить корзину",
+    "empty_spam": "Очистить спам",
+    "empty_trash_confirm": "Удалить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} в корзине навсегда? Это нельзя отменить.",
+    "empty_spam_confirm": "Удалить {count, plural, =1 {письмо} one {все # письмо} few {все # письма} many {все # писем} other {все # письма}} в спаме навсегда? Это нельзя отменить.",
+    "title_all_accounts": "{name} ({count}, {total} во всех аккаунтах)",
+    "title_all_accounts_only": "{name} ({total} во всех аккаунтах)"
+  },
   "uxs_folders": {
     "manage_accounts": "Управление аккаунтами…",
     "apply_to_existing": "{count, plural, one {Применить к # имеющемуся письму в папке {folder}} few {Применить к # имеющимся письмам в папке {folder}} many {Применить к # имеющимся письмам в папке {folder}} other {Применить к # имеющегося письма в папке {folder}}}"

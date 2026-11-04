@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "\"{name}\" хавтсанд одоо ч {count} зурвас байна. Хавтас болон бүх зурвасыг устгах уу? Үүнийг буцаах боломжгүй.",
     "delete_with_contents_confirm": "Хавтас болон зурвасыг устгах"
   },
+  "mail_p2_folders": {
+    "all_folders": "Бүх хавтас",
+    "empty_trash": "Хогийн савыг хоослох",
+    "empty_spam": "Спамыг хоослох",
+    "empty_trash_confirm": "Хогийн саван дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "empty_spam_confirm": "Спам дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
+    "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "Данснуудыг удирдах…",
     "apply_to_existing": "{count, plural, one {{folder} доторх байгаа # захианд хэрэглэх} other {{folder} доторх байгаа # захианд хэрэглэх}}"

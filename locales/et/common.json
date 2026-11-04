@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "Kaust \"{name}\" sisaldab veel {count, plural, one {1 sõnum} other {# sõnumit}}. Kas kustutada kaust ja kõik selle sõnumid? Seda ei saa tagasi võtta.",
     "delete_with_contents_confirm": "Kustuta kaust ja sõnumid"
   },
+  "mail_p2_folders": {
+    "all_folders": "Kõik kaustad",
+    "empty_trash": "Tühjenda prügikast",
+    "empty_spam": "Tühjenda rämpspost",
+    "empty_trash_confirm": "Kas kustutada prügikastist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "empty_spam_confirm": "Kas kustutada rämpspostist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
+    "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
+  },
   "uxs_folders": {
     "manage_accounts": "Halda kontosid…",
     "apply_to_existing": "{count, plural, one {Rakenda # olemasolevale kirjale kaustas {folder}} other {Rakenda # olemasolevale kirjale kaustas {folder}}}"

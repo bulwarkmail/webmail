@@ -3845,6 +3845,15 @@
     "create": "Créer",
     "rename_confirm": "Renommer"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tous les dossiers",
+    "empty_trash": "Vider la corbeille",
+    "empty_spam": "Vider le spam",
+    "empty_trash_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de la corbeille ? Impossible de revenir en arrière.",
+    "empty_spam_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} du spam ? Impossible de revenir en arrière.",
+    "title_all_accounts": "{name} ({count}, {total} dans tous les comptes)",
+    "title_all_accounts_only": "{name} ({total} dans tous les comptes)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gérer les comptes…",
     "apply_to_existing": "{count, plural, one {Appliquer à # message existant dans {folder}} other {Appliquer à # messages existants dans {folder}}}"

@@ -3845,6 +3845,15 @@
     "create": "Aanmaken",
     "rename_confirm": "Hernoemen"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mappen",
+    "empty_trash": "Prullenbak legen",
+    "empty_spam": "Spam legen",
+    "empty_trash_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in de prullenbak definitief verwijderen? Dit kan niet ongedaan worden.",
+    "empty_spam_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in spam definitief verwijderen? Dit kan niet ongedaan worden.",
+    "title_all_accounts": "{name} ({count}, {total} in alle accounts)",
+    "title_all_accounts_only": "{name} ({total} in alle accounts)"
+  },
   "uxs_folders": {
     "manage_accounts": "Accounts beheren…",
     "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"

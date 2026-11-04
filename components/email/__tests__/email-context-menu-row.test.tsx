@@ -125,6 +125,25 @@ describe('Restore in Trash', () => {
     expect(onMoveToMailbox).toHaveBeenCalledWith('inbox');
   });
 
+  // Pass 2, mail-9: Trash's Delete removes for good, so it says so, and
+  // reporting spam from the bin makes no sense.
+  it('says Delete forever and offers no Report spam', () => {
+    renderMenu({ email: trashed, selectedMailbox: 'trash', currentMailboxRole: 'trash' });
+    expect(screen.getByTestId('ctx-delete').textContent).toContain('delete_forever');
+    expect(screen.queryByTestId('ctx-spam')).toBeNull();
+    fireEvent.click(screen.getByTestId('ctx-more'));
+    expect(screen.queryByTestId('ctx-spam')).toBeNull();
+  });
+
+  it('says Delete forever for a selection in Trash too', () => {
+    renderMenu({
+      email: trashed, selectedMailbox: 'trash', currentMailboxRole: 'trash', isMultiSelect: true, selectedCount: 2,
+      batchEmails: [trashed, { ...trashed, id: 'e2' } as Email], onBatchDelete: vi.fn(), onBatchMarkAsSpam: vi.fn(),
+    });
+    expect(screen.getByTestId('ctx-delete').textContent).toContain('delete_forever');
+    expect(screen.queryByTestId('ctx-spam')).toBeNull();
+  });
+
   it('is in the selection menu too', () => {
     rememberTrashOrigins([{ id: 'e1', mailboxIds: { work: true } }, { id: 'e2', mailboxIds: { work: true } }], mailboxes);
     const onBatchMoveToMailbox = vi.fn();

@@ -2,8 +2,9 @@
 
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
+import { useEmailStore, removalFolder, canRemoveFromFolder, bulkDeleteIsPermanent } from "@/stores/email-store";
 import { useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { Email, Mailbox } from "@/lib/jmap/types";
 import {
@@ -248,8 +249,10 @@ export function EmailContextMenu({
   const showBatchActions = isMultiSelect && selectedCount > 1;
   const isInJunkFolder = currentMailboxRole === 'junk';
   // Marking your own outgoing mail as spam makes no sense - hide the action
-  // in Sent, Drafts and Scheduled.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
+  // in Sent, Drafts and Scheduled, and in Trash, where it is already thrown out.
+  const spamApplicable = spamApplicableIn(currentMailboxRole);
+  const deleteForever = bulkDeleteIsPermanent({ role: currentMailboxRole });
+  const tActions = useTranslations("reader_actions");
   const isScheduled = email.isScheduled === true;
   // One report per selected message, behind one confirm (enterprise pack).
   const batchPhishing = usePhishingReport(showBatchActions ? (batchEmails ?? []) : [], currentMailboxRole);
@@ -397,7 +400,7 @@ export function EmailContextMenu({
         {/* Delete */}
         <ContextMenuItem
           icon={Trash2}
-          label={t("delete")}
+          label={deleteForever ? tActions("delete_forever") : t("delete")}
           testId="ctx-delete"
           shortcut={shortcutOf("delete")}
           onClick={() => handleAction(onBatchDelete!)}

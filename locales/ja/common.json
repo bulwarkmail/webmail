@@ -3845,6 +3845,15 @@
     "create": "作成",
     "rename_confirm": "名前を変更"
   },
+  "mail_p2_folders": {
+    "all_folders": "すべてのフォルダー",
+    "empty_trash": "ゴミ箱を空にする",
+    "empty_spam": "迷惑メールを空にする",
+    "empty_trash_confirm": "ゴミ箱の{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "empty_spam_confirm": "迷惑メールの{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
+    "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"

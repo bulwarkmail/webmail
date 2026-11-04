@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "The folder \"{name}\" still contains {count, plural, one {1 message} other {# messages}}. Delete the folder and all of its messages? This cannot be undone.",
     "delete_with_contents_confirm": "Delete folder and messages"
   },
+  "mail_p2_folders": {
+    "all_folders": "All folders",
+    "empty_trash": "Empty Trash",
+    "empty_spam": "Empty Spam",
+    "empty_trash_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Trash forever? You can't undo this.",
+    "empty_spam_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Spam forever? You can't undo this.",
+    "title_all_accounts": "{name} ({count}, {total} in all accounts)",
+    "title_all_accounts_only": "{name} ({total} in all accounts)"
+  },
   "uxs_folders": {
     "manage_accounts": "Manage accounts…",
     "apply_to_existing": "{count, plural, one {Apply to # existing message in {folder}} other {Apply to # existing messages in {folder}}}"

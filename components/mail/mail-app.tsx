@@ -97,6 +97,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScheduleSendDialog } from "@/components/email/schedule-send-dialog";
 import { MailFolderMenu, MailFolderMenuItems } from "@/components/email/mail-list-menus";
+import { emptyFolderPrompt } from "@/lib/empty-folder-text";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
@@ -152,7 +153,8 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
-import { mailTitleContext } from "@/lib/tab-title";
+import { mailTitleContext, mailboxTitleLine } from "@/lib/tab-title";
+import { useOtherAccountsUnread } from "@/hooks/use-all-inboxes-unread";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
@@ -1474,6 +1476,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The subject is kept out until the policy has loaded: a gate that keeps
   // subjects out of browser history must not let one through while unknown.
   const subjectInTabTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled('tabTitleSubjectEnabled'));
+  const otherAccountsUnread = useOtherAccountsUnread();
   const titleContext = useMemo(() => {
     // Composing email
     const composer = showComposer
@@ -1493,12 +1496,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
     if (mailbox) {
       const mailboxName = localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`));
-      const unreadCount = mailbox.unreadEmails || 0;
-      mailboxLine = unreadCount > 0 ? `${mailboxName} (${unreadCount})` : mailboxName;
+      // The open account's own Inbox also counts the other accounts' (mail-6).
+      mailboxLine = mailboxTitleLine({
+        name: mailboxName,
+        unread: mailbox.unreadEmails || 0,
+        otherUnread: otherAccountsUnread,
+        ownInbox: mailbox.role === 'inbox' && !mailbox.isShared && !isUnifiedView,
+      }, t);
     }
 
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle });
-  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle]);
+  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView]);
   useDocumentTitle(titleContext);
 
   // When this page is rendered inside the Pro shell as the Mail tab body,
@@ -4075,12 +4083,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const mailbox = mailboxes.find(mb => mb.id === mailboxId);
     if (!mailbox) return;
 
+    // "Empty Trash", with how many messages go (p2-14).
+    const prompt = emptyFolderPrompt(mailbox, emptyFolderMovesToTrash(mailbox));
     const confirmed = await confirmDialog({
-      title: tCtxMenu('email_list.empty_folder.confirm_title'),
-      message: emptyFolderMovesToTrash(mailbox)
-        ? tCtxMenu('email_list.empty_folder.confirm_message_trash')
-        : tCtxMenu('email_list.empty_folder.confirm_message'),
-      confirmText: tCtxMenu('email_list.empty_folder.confirm_button'),
+      title: tCtxMenu(prompt.title),
+      message: tCtxMenu(prompt.message, prompt.values),
+      confirmText: tCtxMenu(prompt.confirm),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -5623,6 +5631,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
+                    folderRole={conversationRole}
                     onPicked={close}
                   />
                 </>

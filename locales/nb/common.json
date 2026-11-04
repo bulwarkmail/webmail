@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
     "delete_with_contents_confirm": "Slett mappe og meldinger"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mapper",
+    "empty_trash": "Tøm papirkurven",
+    "empty_spam": "Tøm søppelpost",
+    "empty_trash_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i papirkurven for godt? Dette kan ikke angres.",
+    "empty_spam_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i søppelpost for godt? Dette kan ikke angres.",
+    "title_all_accounts": "{name} ({count}, {total} i alle kontoer)",
+    "title_all_accounts_only": "{name} ({total} i alle kontoer)"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer kontoer…",
     "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"

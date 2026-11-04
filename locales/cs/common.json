@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "Složka „{name}“ stále obsahuje {count, plural, one {1 zprávu} few {# zprávy} other {# zpráv}}. Smazat složku i všechny její zprávy? Tuto akci nelze vrátit.",
     "delete_with_contents_confirm": "Smazat složku i zprávy"
   },
+  "mail_p2_folders": {
+    "all_folders": "Všechny složky",
+    "empty_trash": "Vysypat koš",
+    "empty_spam": "Vyprázdnit spam",
+    "empty_trash_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} v koši? Nelze to vrátit zpět.",
+    "empty_spam_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} ve spamu? Nelze to vrátit zpět.",
+    "title_all_accounts": "{name} ({count}, {total} ve všech účtech)",
+    "title_all_accounts_only": "{name} ({total} ve všech účtech)"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovat účty…",
     "apply_to_existing": "{count, plural, one {Použít na # existující zprávu ve složce {folder}} few {Použít na # existující zprávy ve složce {folder}} many {Použít na # existující zprávy ve složce {folder}} other {Použít na # existujících zpráv ve složce {folder}}}"

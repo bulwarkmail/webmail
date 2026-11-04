@@ -63,3 +63,29 @@ describe.each([
     expect(link.textContent).not.toContain('2');
   });
 });
+
+// Usability test 2026-11-04, mail-6: with two accounts the rail said 10 while
+// 30 were unread in all; the favicon already counted every account.
+describe('Mail entry with several accounts', () => {
+  const twoAccounts = async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    useAccountStore.setState({ accounts: [{ id: 'acc-a', isConnected: true }, { id: 'acc-b', isConnected: true }] } as never);
+    useAuthStore.setState({ activeAccountId: 'acc-a' } as never);
+    useEmailStore.setState({ accountMailboxes: { 'acc-b': [{ id: 'b-in', role: 'inbox', unreadEmails: 5 }] } } as never);
+  };
+
+  it('counts the other accounts\' inboxes too', async () => {
+    await twoAccounts();
+    useSettingsStore.setState({ unreadBadgeAllAccounts: true });
+    render(<NavigationRail orientation="vertical" collapsed />);
+    expect(screen.getAllByRole('link', { name: 'mail, 7 unread' }).length).toBeGreaterThan(0);
+  });
+
+  it('counts the open account only when Notifications says so', async () => {
+    await twoAccounts();
+    useSettingsStore.setState({ unreadBadgeAllAccounts: false });
+    render(<NavigationRail orientation="vertical" collapsed />);
+    expect(screen.getAllByRole('link', { name: 'mail, 2 unread' }).length).toBeGreaterThan(0);
+  });
+});

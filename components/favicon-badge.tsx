@@ -1,13 +1,9 @@
 "use client";
 
-import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useFaviconBadge } from "@/hooks/use-favicon-badge";
 import { useAppBadge } from "@/hooks/use-app-badge";
-import { useShallow } from "zustand/react/shallow";
-import { useAccountStore } from "@/stores/account-store";
-import { useAuthStore } from "@/stores/auth-store";
-import { totalInboxUnread } from "@/lib/account-inbox-unread";
+import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 
 /**
  * Badges the browser-tab favicon, and — where supported — the installed PWA's
@@ -31,33 +27,14 @@ import { totalInboxUnread } from "@/lib/account-inbox-unread";
  * Renders nothing.
  */
 export function FaviconBadge() {
-  // The store's canonical inbox selector. `role === 'inbox'` alone is not
-  // enough: shared and group inboxes ship in the same `mailboxes` array, so on
-  // a delegated setup the first match can be somebody else's inbox.
-  const inboxUnread = useEmailStore(
-    (s) => s.mailboxes.find((m) => m.role === "inbox" && !m.isShared)?.unreadEmails ?? 0,
-  );
   const enabled = useSettingsStore((s) => s.faviconUnreadBadge);
-  const allAccounts = useSettingsStore((s) => s.unreadBadgeAllAccounts);
   // With several accounts the badge counts the inbox of each (on by default):
   // new mail in an account that is not on screen still shows on the icon and
-  // in the desktop tray. The other accounts' folder lists are what the
-  // account switcher reads (useProMultiAccountMailboxes); one not loaded yet
-  // adds nothing.
-  const othersUnread = useOtherAccountsUnread(allAccounts);
-  const count = inboxUnread + othersUnread;
+  // in the desktop tray.
+  const count = useAllInboxesUnread();
 
   useFaviconBadge(count, enabled);
   useAppBadge(count, enabled);
 
   return null;
-}
-
-function useOtherAccountsUnread(enabled: boolean): number {
-  const activeAccountId = useAuthStore((s) => s.activeAccountId);
-  const otherIds = useAccountStore(
-    useShallow((s) => (enabled ? s.accounts.filter((a) => a.isConnected && a.id !== activeAccountId).map((a) => a.id) : [])),
-  );
-  const accountMailboxes = useEmailStore((s) => s.accountMailboxes);
-  return totalInboxUnread(otherIds, accountMailboxes);
 }

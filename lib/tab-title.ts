@@ -34,3 +34,25 @@ export function mailTitleContext(
 ): string | null {
   return view.composer || (showSubject ? view.subject : null) || view.mailbox || null;
 }
+
+type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+/**
+ * The mailbox line of the tab title: "Inbox (10)", or for the open account's
+ * own Inbox while other accounts have unread mail too, "Inbox (10, 30 in all
+ * accounts)", the number the favicon and the rail show (usability test
+ * 2026-11-04, mail-6). `otherUnread` is 0 when Notifications counts the open
+ * account only.
+ */
+export function mailboxTitleLine(
+  { name, unread, otherUnread = 0, ownInbox = false }: { name: string; unread: number; otherUnread?: number; ownInbox?: boolean },
+  t: Translate,
+): string {
+  if (ownInbox && otherUnread > 0) {
+    const total = unread + otherUnread;
+    return unread > 0
+      ? t('mail_p2_folders.title_all_accounts', { name, count: unread, total })
+      : t('mail_p2_folders.title_all_accounts_only', { name, total });
+  }
+  return unread > 0 ? `${name} (${unread})` : name;
+}

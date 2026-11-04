@@ -159,6 +159,7 @@ export function MailboxContextMenu({
   notifications,
 }: MailboxContextMenuProps) {
   const t = useTranslations("mailbox_context_menu");
+  const tP2 = useTranslations("mail_p2_folders");
   const tSidebar = useTranslations("sidebar");
   const tImport = useTranslations("mail_import");
   const tExport = useTranslations("mail_export");
@@ -251,6 +252,8 @@ export function MailboxContextMenu({
   }
 
   const mailbox = target.mailbox;
+  // Emptying is offered where people expect it, as "Empty Trash" and "Empty
+  // Spam"; rules and notifications mean nothing there (mail-20, pass 2 p2-14).
   const isTrashOrJunk = mailbox.role === "trash" || mailbox.role === "junk";
   const isSystem =
     !!mailbox.role &&
@@ -305,13 +308,16 @@ export function MailboxContextMenu({
         disabled={!onCreateSubfolder || !canCreateChild || offline}
         testId="mailbox-new-subfolder"
       />
-      <ContextMenuItem
-        icon={Pencil}
-        label={t("rename")}
-        onClick={() => handleAction(() => onRenameFolder?.(mailbox.id))}
-        disabled={!onRenameFolder || !canRename || offline}
-        testId="mailbox-rename"
-      />
+      {/* The server's own folders can't be renamed or deleted: not shown greyed out. */}
+      {!isSystem && (
+        <ContextMenuItem
+          icon={Pencil}
+          label={t("rename")}
+          onClick={() => handleAction(() => onRenameFolder?.(mailbox.id))}
+          disabled={!onRenameFolder || !canRename || offline}
+          testId="mailbox-rename"
+        />
+      )}
       {onShareFolder && (
         <ContextMenuItem
           icon={Users}
@@ -321,8 +327,8 @@ export function MailboxContextMenu({
           testId="mailbox-share"
         />
       )}
-      <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} disabled={offline} />
-      {notifications && (() => {
+      {!isTrashOrJunk && <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} disabled={offline} />}
+      {notifications && !isTrashOrJunk && (() => {
         const muted = notifications.isMailboxMuted(mailbox);
         return (
           <ContextMenuItem
@@ -373,23 +379,28 @@ export function MailboxContextMenu({
       />
 
       {/* Destructive entries last (R6). */}
-      <ContextMenuSeparator />
+      {(isTrashOrJunk || !isSystem) && <ContextMenuSeparator />}
 
-      <ContextMenuItem
-        icon={FolderX}
-        label={isTrashOrJunk ? t("empty_folder") : t("empty_folder_generic")}
-        onClick={() => handleAction(() => onEmptyFolder?.(mailbox.id))}
-        disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
-        destructive
-      />
-      <ContextMenuItem
-        icon={Trash2}
-        label={t("delete_folder")}
-        onClick={() => handleAction(() => onDeleteFolder?.(mailbox.id))}
-        disabled={!onDeleteFolder || !canDelete || offline}
-        destructive
-        testId="mailbox-delete"
-      />
+      {isTrashOrJunk && (
+        <ContextMenuItem
+          icon={FolderX}
+          label={mailbox.role === "trash" ? tP2("empty_trash") : tP2("empty_spam")}
+          onClick={() => handleAction(() => onEmptyFolder?.(mailbox.id))}
+          disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
+          destructive
+          testId="mailbox-empty"
+        />
+      )}
+      {!isSystem && (
+        <ContextMenuItem
+          icon={Trash2}
+          label={t("delete_folder")}
+          onClick={() => handleAction(() => onDeleteFolder?.(mailbox.id))}
+          disabled={!onDeleteFolder || !canDelete || offline}
+          destructive
+          testId="mailbox-delete"
+        />
+      )}
     </ContextMenu>
   );
 }

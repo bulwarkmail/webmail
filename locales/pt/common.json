@@ -3845,6 +3845,15 @@
     "create": "Criar",
     "rename_confirm": "Renomear"
   },
+  "mail_p2_folders": {
+    "all_folders": "Todas as pastas",
+    "empty_trash": "Esvaziar lixeira",
+    "empty_spam": "Esvaziar spam",
+    "empty_trash_confirm": "Excluir para sempre {count, plural, one {a mensagem} other {as # mensagens}} da lixeira? Não é possível desfazer.",
+    "empty_spam_confirm": "Excluir para sempre {count, plural, one {a mensagem} other {as # mensagens}} do spam? Não é possível desfazer.",
+    "title_all_accounts": "{name} ({count}, {total} em todas as contas)",
+    "title_all_accounts_only": "{name} ({total} em todas as contas)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gerir contas…",
     "apply_to_existing": "{count, plural, one {Aplicar a # mensagem existente em {folder}} other {Aplicar a # mensagens existentes em {folder}}}"

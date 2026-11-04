@@ -1,5 +1,6 @@
 "use client";
 
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { MemoizedThreadListItem, listMailboxRole } from "./thread-list-item";
 import { ListColumnsHeader } from "./list-columns";
@@ -288,7 +289,7 @@ export function EmailList({
     mailboxes.find(m => m.id === selectedMailbox)?.role
     ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
   // Spam is pointless on your own outgoing mail, as in the context menu.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(effectiveMailboxRole || '');
+  const spamApplicable = spamApplicableIn(effectiveMailboxRole);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread

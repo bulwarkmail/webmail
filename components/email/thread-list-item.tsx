@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
 import { emailListDate } from "@/lib/email-date";
@@ -1037,7 +1038,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             onMarkAsSpam={onMarkAsSpam}
             onUndoSpam={onUndoSpam}
             isInJunk={currentMailboxRole === 'junk'}
-            spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+            spamApplicable={spamApplicableIn(currentMailboxRole)}
             mailboxRole={currentMailboxRole ?? null}
             pinToFirstLine={mvRow}
           />
@@ -1835,7 +1836,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
               onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
               isInJunk={currentMailboxRole === 'junk'}
-              spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+              spamApplicable={spamApplicableIn(currentMailboxRole)}
               mailboxRole={currentMailboxRole ?? null}
               pinToFirstLine={mvRow}
             />

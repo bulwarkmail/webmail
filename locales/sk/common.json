@@ -3845,6 +3845,15 @@
     "delete_with_contents_message": "Priečinok „{name}“ stále obsahuje {count, plural, one {1 správu} few {# správy} other {# správ}}. Odstrániť priečinok aj všetky jeho správy? Túto akciu nie je možné vrátiť späť.",
     "delete_with_contents_confirm": "Odstrániť priečinok a správy"
   },
+  "mail_p2_folders": {
+    "all_folders": "Všetky priečinky",
+    "empty_trash": "Vyprázdniť kôš",
+    "empty_spam": "Vyprázdniť spam",
+    "empty_trash_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši? Nedá sa to vrátiť späť.",
+    "empty_spam_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v spame? Nedá sa to vrátiť späť.",
+    "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
+    "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",
     "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
