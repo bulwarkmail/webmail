@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } fr
 import { useTranslations } from "next-intl";
 import { editAllowed, editFileInfo, followEditSessions, getEditBridge, parseEditSource, readEditedFile, takeFilesForReply, useEditSessions, type EditSource } from "@/lib/desktop/edit-attachments";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { askInWindow } from "@/lib/desktop/dialog-window";
 import { useEditAttachment } from "@/hooks/use-edit-attachment";
 import { toast } from "@/stores/toast-store";
 
@@ -203,8 +204,18 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
       const session = att.editSessionId ? all.find((s) => s.id === att.editSessionId) : undefined;
       return session?.changed && editFileInfo(att.file)?.hash !== session.hash ? [session] : [];
     });
+    if (stale.length === 0) return true;
+    // A window of the app's own; an older shell asks with the OS's message box.
+    const asked = askInWindow({
+      title: t("send_stale_title", { name: stale[0].name }),
+      message: t("send_stale_detail"),
+      buttons: [{ label: t("send_stale_back"), variant: "secondary" }, { label: t("send_stale_send") }],
+      defaultIndex: 0,
+    });
+    const answer = asked ? await asked.answer : "failed";
+    if (answer !== "failed") return Boolean(answer && "button" in answer && answer.button === 1);
     const dialogs = getDesktopBridge()?.dialogs;
-    if (stale.length === 0 || !dialogs) return true;
+    if (!dialogs) return true;
     const choice = await dialogs.confirm({
       type: "warning",
       message: t("send_stale_title", { name: stale[0].name }),
