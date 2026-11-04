@@ -496,6 +496,8 @@ export function RichTextEditor({
   // Images waiting for a description, one dialog at a time: a new image is
   // found by its src (it has no alt yet), an existing one by its position.
   const [altQueue, setAltQueue] = useState<AltRequest[]>([]);
+  // Insert link, for the key handler set up with the editor.
+  const addLinkRef = useRef<(() => void) | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -596,6 +598,12 @@ export function RichTextEditor({
       handleKeyDown: (_view, event) => {
         if (event.altKey && event.key === "F10" && focusToolbarRef.current?.()) {
           event.preventDefault();
+          return true;
+        }
+        // Ctrl+K inserts a link, as in Gmail, Outlook and Word.
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "k" && addLinkRef.current) {
+          event.preventDefault();
+          addLinkRef.current();
           return true;
         }
         return false;
@@ -727,6 +735,7 @@ export function RichTextEditor({
     const { from, to } = editor.state.selection;
     setLinkDialog({ href: previousUrl ?? "", from, to });
   }, [editor]);
+  addLinkRef.current = addLink;
   const applyLink = useCallback((url: string) => {
     if (!editor || !linkDialog) return;
     editor

@@ -4805,6 +4805,25 @@ export function EmailComposer({
     const isSendShortcut = e.key === 'Enter' && hasPrimaryModifier && !e.altKey && !e.shiftKey;
     const isScheduleShortcut = e.key === 'Enter' && hasPrimaryModifier && !e.altKey && e.shiftKey;
     if (!isPlainEscape && !isSendShortcut && !isScheduleShortcut) {
+      // Ctrl+S saves the draft (Outlook, Thunderbird, Apple Mail), not the
+      // page; Ctrl+Shift+C and Ctrl+Shift+B show Cc and Bcc (Gmail).
+      const key = e.key.toLowerCase();
+      if (hasPrimaryModifier && !e.altKey && !e.shiftKey && key === 's') {
+        e.preventDefault();
+        if (!isSavingAndClosing) void saveDraft({ announce: true });
+        return;
+      }
+      if (hasPrimaryModifier && !e.altKey && e.shiftKey && (key === 'c' || key === 'b')) {
+        e.preventDefault();
+        if (key === 'c') {
+          setShowCc(true);
+          setTimeout(() => ccInputRef.current?.focus(), 0);
+        } else {
+          setShowBcc(true);
+          setTimeout(() => bccInputRef.current?.focus(), 0);
+        }
+        return;
+      }
       // A plugin's composer button with a shortcut (composer-toolbar-actions)
       // works while the composer has focus, also while typing.
       if (!e.altKey && !hasPrimaryModifier) return;

@@ -38,7 +38,11 @@ export const MAIL_SHORTCUTS = {
   composer: [
     { key: "Mod + Enter", description: "shortcuts.composer.send" },
     { key: "Mod + Shift + Enter", description: "shortcuts.composer.schedule_send" },
-    { key: "t", description: "shortcuts.composer.template_picker" },
+    // "t" opens templates only outside a text field, so it isn't listed: in the composer it types a t.
+    { key: "Mod + S", description: "compose_ux.shortcut_save_draft" },
+    { key: "Mod + K", description: "compose_ux.shortcut_insert_link" },
+    { key: "Mod + Shift + C", description: "compose_ux.shortcut_show_cc" },
+    { key: "Mod + Shift + B", description: "compose_ux.shortcut_show_bcc" },
     // Proofreading (components/email/proofreading); shown even without a checker.
     { key: "Mod + '", description: "proofreading.shortcuts.next_issue" },
     { key: "Mod + ;", description: "proofreading.shortcuts.previous_issue" },

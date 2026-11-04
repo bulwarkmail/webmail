@@ -411,6 +411,24 @@ describe('composer close guard with a follow-up', () => {
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-9', expect.anything());
   });
 
+  // compose-19: the keys people bring from other mail apps.
+  it('saves the draft on Ctrl+S, and keeps the browser from saving the page', async () => {
+    const createDraft = savingClient();
+    renderWithCloseRef();
+    const subject = screen.getByDisplayValue('Half-written more');
+    expect(fireEvent.keyDown(subject, { key: 's', ctrlKey: true })).toBe(false);
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1));
+  });
+
+  it('shows Cc on Ctrl+Shift+C and Bcc on Ctrl+Shift+B, and puts the cursor there', async () => {
+    renderWithCloseRef();
+    const subject = screen.getByDisplayValue('Half-written more');
+    expect(fireEvent.keyDown(subject, { key: 'C', ctrlKey: true, shiftKey: true })).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'cc_label' })));
+    expect(fireEvent.keyDown(subject, { key: 'B', ctrlKey: true, shiftKey: true })).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'bcc_label' })));
+  });
+
   it('closes straight through when there is nothing to lose', async () => {
     draftToast.showDraftSavedToast.mockClear();
     const requestCloseRef = { current: null } as React.MutableRefObject<((afterClose?: () => void) => void) | null>;
