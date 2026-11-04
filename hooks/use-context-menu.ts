@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { ContextMenuPosition } from "@/components/ui/context-menu";
-import { nativeMenuIsOpen } from "@/lib/desktop/native-menu";
 
 interface ContextMenuState<T> {
   isOpen: boolean;
@@ -115,14 +114,12 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
     };
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (nativeMenuIsOpen()) return;
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         closeContextMenu();
       }
     };
 
     const handleScroll = (e: Event) => {
-      if (nativeMenuIsOpen()) return;
       if (menuRef.current && e.target instanceof Node && menuRef.current.contains(e.target)) {
         return;
       }
@@ -133,8 +130,6 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
       // A focused control in the menu may have opened a system dialog that
       // took the focus from the window, such as a color input's (#1366).
       if (menuRef.current?.contains(document.activeElement)) return;
-      // In the desktop app the menu is native: it closes itself, and says what was picked.
-      if (nativeMenuIsOpen()) return;
       closeContextMenu();
     };
 

@@ -7884,5 +7884,9 @@
     "unread_badge_description": "تا ایمیل جدید را هنگام کار در برنامه‌ای دیگر ببینید.",
     "tip_compose_keys": "برای نوشتن پیام جدید {keys} را فشار دهید",
     "tip_palette_keys": "برای یافتن هر فرمانی {keys} را فشار دهید"
+  },
+  "selectionView": {
+    "starred": "ستاره‌دار شد",
+    "unstarred": "ستاره برداشته شد"
   }
 }

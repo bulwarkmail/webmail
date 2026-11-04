@@ -7884,5 +7884,9 @@
     "unread_badge_description": "So sehen Sie neue Mail, während Sie in einer anderen App arbeiten.",
     "tip_compose_keys": "Drücken Sie {keys}, um eine neue Nachricht zu schreiben",
     "tip_palette_keys": "Drücken Sie {keys}, um jeden Befehl zu finden"
+  },
+  "selectionView": {
+    "starred": "Mit Stern markiert",
+    "unstarred": "Stern entfernt"
   }
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ArrowRight,
@@ -13,31 +12,26 @@ import {
   Loader2,
 } from '@/components/icons';
 import { sanitizeColor } from '@/components/calendar/event-card';
-import { isDocumentRTL } from '@/i18n/direction';
+import { ContextMenu, ContextMenuHeader, ContextMenuItem } from '@/components/ui/context-menu';
+import { useContextMenu } from '@/hooks/use-context-menu';
+import { cn } from '@/lib/utils';
 import type { Email } from '@/lib/jmap/types';
 import type { StructuredCard } from '@/lib/structured-mail';
 import { useBookingCalendar } from './use-booking-calendar';
 import { useCollectionNames } from "@/hooks/use-collection-names";
 
 const BUTTON = 'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50';
-const PICKER_WIDTH = 208;
-const EDGE = 8;
-
-interface PickerPosition { top: number; left?: number; right?: number; maxHeight: number }
-
-/** Where the picker goes: under the trigger, flipped above when there's no room, always inside the viewport. */
-function pickerPosition(rect: DOMRect, count: number): PickerPosition {
-  const width = Math.min(PICKER_WIDTH, window.innerWidth - 2 * EDGE);
-  const wanted = Math.min(36 * count + 40, 320);
-  const below = window.innerHeight - rect.bottom - 4 - EDGE;
-  const above = rect.top - 4 - EDGE;
-  const placeBelow = below >= wanted || below >= above;
-  const maxHeight = Math.max(120, Math.min(wanted, placeBelow ? below : above));
-  const top = placeBelow ? rect.bottom + 4 : Math.max(EDGE, rect.top - 4 - maxHeight);
-  const clamp = (value: number) => Math.max(EDGE, Math.min(value, window.innerWidth - width - EDGE));
-  return isDocumentRTL()
-    ? { top, right: clamp(window.innerWidth - rect.right), maxHeight }
-    : { top, left: clamp(rect.left), maxHeight };
+/** A calendar's colour as a menu row's icon, one component per colour. */
+const dots = new Map<string, React.ComponentType<{ className?: string }>>();
+function colorDot(color: string): React.ComponentType<{ className?: string }> {
+  let Dot = dots.get(color);
+  if (!Dot) {
+    Dot = function CalendarDot({ className }: { className?: string }) {
+      return <span className={cn(className, "rounded-full")} style={{ backgroundColor: color }} aria-hidden="true" />;
+    };
+    dots.set(color, Dot);
+  }
+  return Dot;
 }
 
 /**
@@ -52,49 +46,15 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
   const t = useTranslations('structured_mail_calendar');
   const calendar = useBookingCalendar(booking, email);
   const { status, calendars, busy, error, notice } = calendar;
-  const [picker, setPicker] = useState<PickerPosition | null>(null);
+  const picker = useContextMenu<null>();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   // An action was started from here: once it is done, focus goes to its
   // outcome instead of being lost with the button or picker that vanished.
   const focusAfterAction = useRef(false);
 
-  const closePicker = useCallback(() => setPicker(null), []);
-  const pickerOpen = picker !== null;
-
-  useEffect(() => {
-    if (!pickerOpen) return;
-    pickerRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-    const onPointer = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (pickerRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      closePicker();
-    };
-    // Scrolling the list itself must not close it; scrolling the page moves the trigger away.
-    const onScroll = (event: Event) => {
-      if (event.target instanceof Node && pickerRef.current?.contains(event.target)) return;
-      closePicker();
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closePicker();
-        triggerRef.current?.focus();
-      }
-    };
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', closePicker);
-    document.addEventListener('mousedown', onPointer);
-    document.addEventListener('touchstart', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', closePicker);
-      document.removeEventListener('mousedown', onPointer);
-      document.removeEventListener('touchstart', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [pickerOpen, closePicker]);
+  const closePicker = picker.closeContextMenu;
+  const pickerOpen = picker.contextMenu.isOpen;
 
   useEffect(() => {
     if (busy || !focusAfterAction.current) return;
@@ -106,21 +66,6 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       ?? row.querySelector<HTMLElement>('button');
     target?.focus();
   }, [busy, status, notice, error]);
-
-  const onMenuKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    const items = Array.from(pickerRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
-    if (items.length === 0) return;
-    const at = items.indexOf(document.activeElement as HTMLElement);
-    let next: number | null = null;
-    if (event.key === 'ArrowDown') next = at < 0 ? 0 : (at + 1) % items.length;
-    else if (event.key === 'ArrowUp') next = at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = items.length - 1;
-    else if (event.key === 'Tab') closePicker();
-    if (next === null) return;
-    event.preventDefault();
-    items[next].focus();
-  };
 
   const act = (action: () => Promise<void>) => {
     focusAfterAction.current = true;
@@ -137,11 +82,11 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       act(() => calendar.add(calendars[0]?.id));
       return;
     }
-    if (picker) {
+    if (pickerOpen) {
       closePicker();
       return;
     }
-    if (triggerRef.current) setPicker(pickerPosition(triggerRef.current.getBoundingClientRect(), calendars.length));
+    if (triggerRef.current) picker.openContextMenuFrom(triggerRef.current, null, 'start');
   };
 
   const noticeText = notice === 'added' ? t('added') : notice === 'updated' ? t('updated') : notice === 'removed' ? t('removed') : null;
@@ -158,41 +103,34 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
             onClick={onAdd}
             disabled={busy}
             aria-haspopup={calendars.length > 1 ? 'menu' : undefined}
-            aria-expanded={calendars.length > 1 ? Boolean(picker) : undefined}
+            aria-expanded={calendars.length > 1 ? pickerOpen : undefined}
             className={BUTTON}
           >
             <CalendarPlus className="w-3.5 h-3.5" />
             {t('add_to_calendar')}
             {calendars.length > 1 && <ChevronDown className="w-3 h-3" />}
           </button>
-          {picker && calendars.length > 1 && typeof document !== 'undefined' && createPortal(
-            <div
-              ref={pickerRef}
-              role="menu"
-              aria-label={t('select_calendar')}
-              onKeyDown={onMenuKey}
-              className="fixed bg-background rounded-lg shadow-lg border border-border z-50 py-1 overflow-y-auto"
-              style={{ top: picker.top, left: picker.left, right: picker.right, maxHeight: picker.maxHeight, width: `min(${PICKER_WIDTH}px, calc(100vw - ${2 * EDGE}px))` }}
+          {calendars.length > 1 && (
+            <ContextMenu
+              ref={picker.menuRef}
+              isOpen={pickerOpen}
+              position={picker.contextMenu.position}
+              onClose={closePicker}
+              label={t('select_calendar')}
             >
-              <div role="presentation" className="px-3 py-1.5 text-xs font-medium text-muted-foreground">{t('select_calendar')}</div>
+              <ContextMenuHeader>{t('select_calendar')}</ContextMenuHeader>
               {calendars.map((cal) => (
-                <button
+                <ContextMenuItem
                   key={cal.id}
-                  type="button"
-                  role="menuitem"
-                  tabIndex={-1}
+                  icon={colorDot(sanitizeColor(cal.color))}
+                  label={shownName.calendar(cal)}
                   onClick={() => {
                     closePicker();
                     act(() => calendar.add(cal.id));
                   }}
-                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted focus:bg-muted focus:outline-none flex items-center gap-2 min-h-[36px]"
-                >
-                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: sanitizeColor(cal.color) }} />
-                  <span className="truncate text-foreground">{shownName.calendar(cal)}</span>
-                </button>
+                />
               ))}
-            </div>,
-            document.body,
+            </ContextMenu>
           )}
         </>
       )}

@@ -30,47 +30,50 @@ describe('the right-click menu in the desktop app', () => {
     cleanup();
   });
 
-  const openMenu = async (popupAnswer: (items: { id?: string; label?: string }[]) => string | null, overrides: Partial<Parameters<typeof ReaderAttachments>[0]> = {}) => {
-    const popup = vi.fn(async (items: { id?: string; label?: string }[]) => popupAnswer(items));
-    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: () => {}, popup } } as never;
+  // The same HTML menu as everywhere else in the app (it was a native menu).
+  const openMenu = async (overrides: Partial<Parameters<typeof ReaderAttachments>[0]> = {}) => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: () => {} } } as never;
     const props = renderBar([file('1', 'report.pdf')], { onCopyFile: vi.fn(), ...overrides });
     fireEvent.contextMenu(await screen.findByTestId('attachment'), { clientX: 5, clientY: 5 });
-    await waitFor(() => expect(popup).toHaveBeenCalled());
-    return { props, popup };
+    const menu = await screen.findByRole('menu');
+    const labels = within(menu).queryAllByRole('menuitem').map((item) => item.querySelector('[data-menu-label]')?.textContent ?? '');
+    const pick = (label: string) => fireEvent.click(within(menu).getAllByRole('menuitem').find((item) => item.querySelector('[data-menu-label]')?.textContent === label)!);
+    return { props, labels, pick };
   };
 
-  it('has Open, Save as and Copy, natively', async () => {
-    const { popup } = await openMenu(() => null);
-    expect(popup.mock.calls[0][0].map((item) => item.label)).toEqual(['open', 'save_as', 'copy']);
+  it('has Open, Save as and Copy', async () => {
+    const { labels } = await openMenu();
+    expect(labels).toEqual(['open', 'save_as', 'copy']);
   });
 
   it.each([['open', 'onOpen'], ['save_as', 'onDownload'], ['copy', 'onCopyFile']] as const)('%s runs the action', async (label, handler) => {
-    const { props } = await openMenu((items) => items.find((item) => item.label === label)!.id!);
+    const { props, pick } = await openMenu();
+    pick(label);
     await waitFor(() => expect((props as unknown as Record<string, ReturnType<typeof vi.fn>>)[handler]).toHaveBeenCalledTimes(1));
     expect((props as unknown as Record<string, ReturnType<typeof vi.fn>>)[handler].mock.calls[0][0]).toMatchObject({ id: '1' });
   });
 
-  it('with downloads off there\'s nothing to save or copy', async () => {
-    const { popup } = await openMenu(() => null, { downloadsOff: true, opensPreview: () => true });
-    expect(popup.mock.calls[0][0].map((item) => item.label)).toEqual(['open']);
+  it('with downloads off there is nothing to save or copy', async () => {
+    const { labels } = await openMenu({ downloadsOff: true, opensPreview: () => true });
+    expect(labels).toEqual(['open']);
   });
 
   it('Edit shows when the file can be edited and runs the action', async () => {
     const onEdit = vi.fn();
-    const { props, popup } = await openMenu((items) => items.find((i) => i.label === 'edit')?.id ?? null, { onEdit, canEdit: () => true });
-    const labels = popup.mock.calls[0][0].flatMap((i: { label?: string }) => (i.label ? [i.label] : []));
+    const { props, labels, pick } = await openMenu({ onEdit, canEdit: () => true });
     expect(labels).toEqual(['open', 'save_as', 'edit', 'copy']);
+    pick('edit');
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(props.attachments[0]));
   });
 
   it('Edit stays out for a file it cannot take', async () => {
-    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => false });
-    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+    const { labels } = await openMenu({ onEdit: vi.fn(), canEdit: () => false });
+    expect(labels).not.toContain('edit');
   });
 
   it('Edit stays out with downloads off, whatever else says yes', async () => {
-    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => true, downloadsOff: true });
-    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+    const { labels } = await openMenu({ onEdit: vi.fn(), canEdit: () => true, downloadsOff: true });
+    expect(labels).not.toContain('edit');
   });
 
   it('a browser keeps its own menu', async () => {

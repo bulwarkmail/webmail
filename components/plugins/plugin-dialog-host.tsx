@@ -30,6 +30,8 @@ import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { toast } from '@/stores/toast-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
+import { useContextMenu } from '@/hooks/use-context-menu';
 import { iconForName, Loader2, MoreVertical, Power, Puzzle, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { askInWindow, dialogWindowsAvailable } from '@/lib/desktop/dialog-window';
@@ -538,21 +540,13 @@ function FooterIcon({ name }: { name?: string }) {
 /** The "⋯" menu in a plugin dialog's header: the way out of a plugin that keeps asking. */
 function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOff: () => void; compact?: boolean }) {
   const t = useTranslations('plugins.dialog');
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDown, true);
-    return () => document.removeEventListener('mousedown', onDown, true);
-  }, [open]);
+  const menu = useContextMenu<null>();
+  const open = menu.contextMenu.isOpen;
   return (
-    <div ref={ref} className="relative flex-shrink-0">
+    <div className="relative flex-shrink-0">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => (open ? menu.closeContextMenu() : menu.openContextMenuFrom(e.currentTarget, null, 'end'))}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t('plugin_menu', { name })}
@@ -561,19 +555,14 @@ function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOf
       >
         <MoreVertical className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
       </button>
-      {open && (
-        <div role="menu" className="absolute end-0 top-full z-10 mt-1 min-w-[200px] rounded-md border border-border bg-background py-1 shadow-lg">
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => { setOpen(false); onTurnOff(); }}
-            className="w-full px-3 py-1.5 text-sm text-start flex items-center gap-2 transition-colors duration-150 text-destructive hover:bg-destructive/10 focus:outline-none focus:bg-destructive/10"
-          >
-            <Power className="w-4 h-4 flex-shrink-0" />
-            <span className="flex-1">{t('turn_off', { name })}</span>
-          </button>
-        </div>
-      )}
+      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={menu.closeContextMenu} label={t('plugin_menu', { name })}>
+        <ContextMenuItem
+          icon={Power}
+          label={t('turn_off', { name })}
+          destructive
+          onClick={() => { menu.closeContextMenu(); onTurnOff(); }}
+        />
+      </ContextMenu>
     </div>
   );
 }

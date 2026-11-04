@@ -106,11 +106,13 @@ describe('Remove from this folder in the message menu', () => {
     const onBatchRemoveFromFolder = vi.fn();
     const batch = { isMultiSelect: true, selectedCount: 2, onBatchRemoveFromFolder };
     const { unmount } = renderMenu({ ...batch, batchEmails: [inBoth, inboxOnly] });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     expect(screen.queryByTestId('ctx-remove-from-folder')).toBeNull();
     unmount();
 
     const both = { ...inBoth, id: 'e3' } as Email;
     renderMenu({ ...batch, batchEmails: [inBoth, both] });
+    fireEvent.click(screen.getByTestId('ctx-more'));
     fireEvent.click(screen.getByTestId('ctx-remove-from-folder'));
     expect(onBatchRemoveFromFolder).toHaveBeenCalledTimes(1);
   });

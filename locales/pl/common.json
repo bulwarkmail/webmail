@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Aby widzieć nową pocztę, gdy pracujesz w innej aplikacji.",
     "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
     "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
+  },
+  "selectionView": {
+    "starred": "Oznaczono gwiazdką",
+    "unstarred": "Usunięto gwiazdkę"
   }
 }

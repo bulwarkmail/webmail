@@ -80,7 +80,10 @@ export interface DesktopSystemTheme {
 
 export type DesktopMenuState = Record<string, boolean | { enabled?: boolean; checked?: boolean }>;
 
-/** A native menu built from an HTML one (lib/desktop/native-menu.ts). */
+/**
+ * A native menu the shell can show. The page shows its own HTML menus in the desktop app
+ * too, so they have their icons and the app's key names; this stays for older pages.
+ */
 export interface DesktopNativeMenuItem {
   /** Handed back when this item is chosen. Left out of separators and submenus. */
   id?: string;
@@ -116,6 +119,8 @@ export interface DesktopMenuBarEvent {
 export interface DesktopMenuBarItem {
   /** Its place in the app menu: handed back with its text when it's picked. */
   key: string;
+  /** The line's command id (`message.reply`), or `role.<role>`: the page draws its icon by it. Newer shells only. */
+  id?: string;
   label: string;
   type: 'normal' | 'checkbox' | 'radio' | 'separator' | 'submenu';
   enabled: boolean;

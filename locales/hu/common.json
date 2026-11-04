@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Így akkor is látja az új leveleket, ha egy másik alkalmazásban dolgozik.",
     "tip_compose_keys": "Új üzenet írásához nyomja meg: {keys}",
     "tip_palette_keys": "Bármely parancs kereséséhez nyomja meg: {keys}"
+  },
+  "selectionView": {
+    "starred": "Csillagozva",
+    "unstarred": "Csillag eltávolítva"
   }
 }

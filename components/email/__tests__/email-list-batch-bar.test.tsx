@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -61,6 +61,7 @@ describe('selection bar', () => {
     fireEvent.click(screen.getByTestId('batch-more'));
     expect(screen.getByText('items_selected')).toBeTruthy();
     expect(screen.getByTestId('ctx-move-to')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('ctx-more'));
     expect(screen.getByTestId('ctx-batch-forward-as-attachment')).toBeTruthy();
   });
 });
@@ -99,7 +100,8 @@ describe('selection bar: Move, read state and the reading pane', () => {
     const pane = host.querySelector('[data-testid="selection-pane"]') as HTMLElement;
     expect(pane).not.toBeNull();
     expect(pane.textContent).toContain('selected_conversations');
-    for (const id of ['archive', 'delete', 'move', 'mark-read']) {
+    // All read: the pane offers Mark as unread, as the selection's menu does.
+    for (const id of ['archive', 'delete', 'move', 'mark-unread', 'star', 'tag', 'spam', 'more']) {
       expect(pane.querySelector(`[data-testid="pane-batch-${id}"]`)).not.toBeNull();
     }
     fireEvent.click(pane.querySelector('[data-testid="pane-batch-archive"]')!);
@@ -136,12 +138,68 @@ describe('the reading pane for a selection (mail-p2-15)', () => {
     document.body.appendChild(host);
     render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
     const pane = host.querySelector('[data-testid="selection-pane"]') as HTMLElement;
-    for (const id of ['archive', 'delete', 'move', 'mark-read', 'tag']) {
-      const button = pane.querySelector(`[data-testid="pane-batch-${id}"]`) as HTMLElement;
-      expect(button.textContent?.trim()).toBe(button.getAttribute('aria-label'));
+    for (const button of Array.from(pane.querySelectorAll('button'))) {
+      expect(button.textContent?.trim()).not.toBe('');
     }
     expect(screen.getByTestId('batch-archive').textContent).toBe('');
     host.remove();
+  });
+});
+
+// The selection view shows the selection menu's top level as buttons, in its order,
+// with More actions as a labelled button, not a bare icon.
+describe('the selection view', () => {
+  const paneLabels = (pane: HTMLElement) =>
+    Array.from(pane.querySelectorAll('[data-testid="selection-actions"] button'))
+      .map((button) => button.querySelector('[data-selection-label]')?.textContent ?? '');
+
+  it('has the same buttons as the selection menu has entries, in the same order', () => {
+    const emails = useEmailStore.getState().emails.map((email, i) => (i === 0 ? { ...email, keywords: {} } : email));
+    useEmailStore.setState({ emails });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(<EmailList emails={emails} selectionPaneHost={host} />);
+    const pane = host.querySelector('[data-testid="selection-pane"]') as HTMLElement;
+    fireEvent.click(screen.getByTestId('batch-more'));
+    const menu = screen.getAllByRole('menu').find((m) => m.textContent?.includes('items_selected'))!;
+    const menuTop = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+      .filter((row) => row.parentElement?.closest('[role="menu"]') === menu)
+      .map((row) => row.querySelector('[data-menu-label]')?.textContent ?? '');
+    expect(paneLabels(pane)).toEqual(menuTop);
+    expect(paneLabels(pane)).toEqual(['archive', 'delete', 'move_to', 'mark_read', 'mark_unread', 'star', 'tag', 'mark_as_spam', 'more_actions']);
+    host.remove();
+  });
+
+  it('opens what the menu has under More actions from its More actions button', () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
+    fireEvent.click(host.querySelector('[data-testid="pane-batch-more"]')!);
+    const menu = screen.getByRole('menu', { name: 'more_actions' });
+    expect(within(menu).getByTestId('ctx-batch-forward-as-attachment')).toBeTruthy();
+    expect(within(menu).queryByTestId('ctx-archive')).toBeNull();
+    host.remove();
+  });
+
+  const lineLengths = (width: number) => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(width);
+    const emails = useEmailStore.getState().emails.map((email, i) => (i === 0 ? { ...email, keywords: {} } : email));
+    useEmailStore.setState({ emails });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const { unmount } = render(<EmailList emails={emails} selectionPaneHost={host} />);
+    const lengths = Array.from(host.querySelectorAll('[data-selection-line]')).map((line) => line.querySelectorAll('button').length);
+    unmount();
+    host.remove();
+    vi.restoreAllMocks();
+    return lengths;
+  };
+
+  it('leaves no button alone on a line in a narrow pane', () => {
+    // Nine buttons, room for three a line: three even lines, not 3 + 3 + 2 + 1.
+    expect(lineLengths(560)).toEqual([3, 3, 3]);
+    // Room for two: pairs, and More actions across the width at the end.
+    expect(lineLengths(360)).toEqual([2, 2, 2, 2, 1]);
   });
 });
 

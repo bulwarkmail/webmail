@@ -7884,5 +7884,9 @@
     "unread_badge_description": "別のアプリで作業中でも新着メールがわかります。",
     "tip_compose_keys": "{keys} を押して新しいメッセージを作成",
     "tip_palette_keys": "{keys} を押してコマンドを検索"
+  },
+  "selectionView": {
+    "starred": "スターを付けました",
+    "unstarred": "スターを外しました"
   }
 }

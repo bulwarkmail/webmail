@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ToolbarButton } from "@/components/ui/toolbar";
 import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu, MoreVertical, RefreshCw, Search, Printer } from "@/components/icons";
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator, MenuShortcut } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuCheckItem, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { startOfWeek } from "date-fns";
 import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
@@ -473,21 +473,14 @@ export function CalendarToolbar({
         </Button>
         <ContextMenu ref={viewMenuRef} isOpen={viewMenu.isOpen} position={viewMenu.position} onClose={closeViewMenu}>
           {menuViews.map((v) => (
-            <button
+            <ContextMenuCheckItem
               key={v}
-              type="button"
-              role="menuitemradio"
-              aria-checked={v === viewMode}
+              kind="radio"
+              checked={v === viewMode}
+              label={t(`views.${v}`)}
+              shortcut={VIEW_SHORTCUTS[v]}
               onClick={() => { closeViewMenu(); onViewModeChange(v); }}
-              className={cn(
-                "flex items-center justify-between gap-6 w-full px-3 py-2 rounded-md text-sm transition-colors outline-none focus-visible:bg-accent",
-                v === viewMode ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground",
-              )}
-            >
-              <span data-menu-label="">{t(`views.${v}`)}</span>
-              {/* The key, on devices with a keyboard (R8). */}
-              <MenuShortcut keys={VIEW_SHORTCUTS[v]} />
-            </button>
+            />
           ))}
         </ContextMenu>
       </div>

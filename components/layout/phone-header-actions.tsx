@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { MoreVertical, Terminal, Bell } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
-import { ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { AppSidePanelPhoneButton } from "@/components/plugins/app-side-panel";
-import { useMenuNavigation } from "@/hooks/use-menu-navigation";
+import { useContextMenu } from "@/hooks/use-context-menu";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { openCommandPalette } from "@/lib/app-commands";
 import { cn } from "@/lib/utils";
@@ -41,29 +41,17 @@ export function PhoneHeaderMenu({ menuItems }: PhoneHeaderMenuProps) {
   const tNotifications = useTranslations("notification_center");
   const unread = useUnreadNotificationCount();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const close = useCallback(() => setOpen(false), []);
-  const { menuRef, onKeyDown } = useMenuNavigation<HTMLDivElement>({ open, onClose: close, triggerRef });
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (triggerRef.current?.contains(e.target as Node) || menuRef.current?.contains(e.target as Node)) return;
-      setOpen(false);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [open, menuRef]);
+  const menu = useContextMenu<null>();
+  const open = menu.contextMenu.isOpen;
+  const close = menu.closeContextMenu;
 
   const appItems = menuItems?.(close);
 
   return (
     <div className="relative">
       <IconButton
-        ref={triggerRef}
         size="icon-lg"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => (open ? close() : menu.openContextMenuFrom(e.currentTarget, null, "end"))}
         className={cn(open && "bg-accent")}
         label={unread > 0 ? `${t("more")} (${tNotifications("unread_count", { count: unread })})` : t("more")}
         title=""
@@ -75,14 +63,7 @@ export function PhoneHeaderMenu({ menuItems }: PhoneHeaderMenuProps) {
           <span className="absolute top-2 end-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-background" aria-hidden="true" />
         )}
       </IconButton>
-      {open && (
-        <div
-          ref={menuRef}
-          onKeyDown={onKeyDown}
-          role="menu"
-          aria-label={t("more")}
-          className="absolute end-0 top-full mt-1 z-50 min-w-[200px] max-w-[calc(100vw-2rem)] rounded-md border border-border bg-background py-1 shadow-lg"
-        >
+      <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={close} label={t("more")}>
           {appItems && (
             <>
               {appItems}
@@ -101,8 +82,7 @@ export function PhoneHeaderMenu({ menuItems }: PhoneHeaderMenuProps) {
             onClick={() => { close(); openCommandPalette(); }}
           />
           <PluginActions surface="top-bar-actions" context={TOP_BAR_CONTEXT} variant="menu" onRan={close} />
-        </div>
-      )}
+      </ContextMenu>
       {showNotifications && <NotificationSheet onClose={() => setShowNotifications(false)} />}
     </div>
   );

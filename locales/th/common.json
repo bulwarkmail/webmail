@@ -7892,5 +7892,9 @@
     "unread_badge_description": "เพื่อให้เห็นอีเมลใหม่ขณะทำงานในแอปอื่น",
     "tip_compose_keys": "กด {keys} เพื่อเขียนข้อความใหม่",
     "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
+  },
+  "selectionView": {
+    "starred": "ติดดาวแล้ว",
+    "unstarred": "นำดาวออกแล้ว"
   }
 }

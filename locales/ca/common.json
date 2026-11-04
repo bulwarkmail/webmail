@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Per veure el correu nou mentre treballeu en una altra aplicació.",
     "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
     "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
+  },
+  "selectionView": {
+    "starred": "Marcat amb estrella",
+    "unstarred": "Estrella eliminada"
   }
 }

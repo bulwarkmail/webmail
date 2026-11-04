@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Zo ziet u nieuwe mail terwijl u in een andere app werkt.",
     "tip_compose_keys": "Druk op {keys} om een nieuw bericht te schrijven",
     "tip_palette_keys": "Druk op {keys} om elke opdracht te vinden"
+  },
+  "selectionView": {
+    "starred": "Met ster gemarkeerd",
+    "unstarred": "Ster verwijderd"
   }
 }

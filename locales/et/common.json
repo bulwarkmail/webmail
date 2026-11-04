@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Nii näete uut kirja ka siis, kui töötate teises rakenduses.",
     "tip_compose_keys": "Uue kirja kirjutamiseks vajutage {keys}",
     "tip_palette_keys": "Mis tahes käsu leidmiseks vajutage {keys}"
+  },
+  "selectionView": {
+    "starred": "Tärniga märgitud",
+    "unstarred": "Tärn eemaldatud"
   }
 }

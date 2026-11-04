@@ -7884,5 +7884,9 @@
     "unread_badge_description": "这样您在其他应用中工作时也能看到新邮件。",
     "tip_compose_keys": "按 {keys} 写新邮件",
     "tip_palette_keys": "按 {keys} 查找任何命令"
+  },
+  "selectionView": {
+    "starred": "已加星标",
+    "unstarred": "已取消星标"
   }
 }

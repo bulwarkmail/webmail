@@ -7884,5 +7884,9 @@
     "unread_badge_description": "Başka bir uygulamada çalışırken yeni postayı görmeniz için.",
     "tip_compose_keys": "Yeni bir ileti yazmak için {keys} tuşlarına basın",
     "tip_palette_keys": "Herhangi bir komutu bulmak için {keys} tuşlarına basın"
+  },
+  "selectionView": {
+    "starred": "Yıldız eklendi",
+    "unstarred": "Yıldız kaldırıldı"
   }
 }

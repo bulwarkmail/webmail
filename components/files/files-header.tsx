@@ -3,14 +3,14 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Menu, ChevronRight, Search, X, ArrowUpDown, Check, LayoutGrid, LayoutList,
+  Menu, ChevronRight, Search, X, ArrowUpDown, LayoutGrid, LayoutList,
   PanelRight, Download, Trash2, Scissors, Copy, Pencil, Share2, Clipboard,
   MoreHorizontal, FolderOpen, Folder, ArrowUp, ArrowDown, RefreshCw, RotateCcw, FolderInput,
 } from "@/components/icons";
 import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ToolbarButton, ToolbarSearch, TOOLBAR_ACTIVE } from "@/components/ui/toolbar";
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuCheckItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
@@ -465,27 +465,13 @@ function DetailsToggle({ showDetails, onToggle, label }: { showDetails: boolean;
   );
 }
 
-function SortItem({ label, checked, onClick, icon: Icon }: {
+function SortItem({ label, checked, onClick }: {
   label: string;
   checked: boolean;
   onClick: () => void;
   icon?: React.ComponentType<{ className?: string }>;
 }) {
-  return (
-    <button
-      type="button"
-      role="menuitemradio"
-      aria-checked={checked}
-      onClick={onClick}
-      className="w-full px-3 py-1.5 text-sm text-start flex items-center gap-2 hover:bg-muted focus:outline-none focus:bg-muted"
-    >
-      <span className="w-4 h-4 shrink-0 flex items-center justify-center">
-        {checked && <Check className="w-4 h-4" />}
-      </span>
-      {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground" />}
-      <span className="flex-1">{label}</span>
-    </button>
-  );
+  return <ContextMenuCheckItem kind="radio" label={label} checked={checked} onClick={onClick} />;
 }
 
 /**

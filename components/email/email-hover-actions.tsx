@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useMemo } from "react";
 import { Email } from "@/lib/jmap/types";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
@@ -11,6 +10,8 @@ import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { TagPicker } from "@/components/email/tag-picker";
+import { ContextMenu } from "@/components/ui/context-menu";
+import { useContextMenu } from "@/hooks/use-context-menu";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { PluginActions, useMessageActionTarget, usePluginActions } from "@/components/plugins/plugin-actions";
@@ -100,8 +101,6 @@ const CORNER_CLASSES = {
 } as const;
 
 /** Roughly the picker's height; used to flip it above the row near the viewport bottom. */
-const TAG_PICKER_MAX_HEIGHT = 320;
-const TAG_PICKER_WIDTH = 224;
 
 export function EmailHoverActions({
   email,
@@ -142,40 +141,9 @@ export function EmailHoverActions({
   // pane use. It is portalled to the body because every row sits inside a
   // `transform`ed virtual item, which would make a `fixed` child scroll with the
   // list and clip it at the scroller's edge.
-  const [tagPickerPos, setTagPickerPos] = useState<{ top: number; left: number } | null>(null);
-  const pickerRef = useRef<HTMLDivElement | null>(null);
-  const tagButtonRef = useRef<HTMLElement | null>(null);
-  const closeTagPicker = useCallback(() => setTagPickerPos(null), []);
-
-  useEffect(() => {
-    if (!tagPickerPos) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      // The anchor is left to its own click handler, which toggles the picker
-      // shut - closing here first would let that click reopen it.
-      if (tagButtonRef.current?.contains(target)) return;
-      if (!pickerRef.current?.contains(target)) closeTagPicker();
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeTagPicker();
-    };
-    // The anchor moves with the list, so scrolling dismisses rather than chases
-    // it - but the picker's own tag list scrolls too, and that must not close it.
-    const onScroll = (event: Event) => {
-      if (pickerRef.current?.contains(event.target as Node)) return;
-      closeTagPicker();
-    };
-    document.addEventListener("pointerdown", onPointerDown, true);
-    document.addEventListener("keydown", onKeyDown);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", closeTagPicker);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
-      document.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", closeTagPicker);
-    };
-  }, [tagPickerPos, closeTagPicker]);
+  // The app's menu, under the button, with the picker in it.
+  const tagMenu = useContextMenu<null>();
+  const tagPickerOpen = tagMenu.contextMenu.isOpen;
 
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
@@ -205,22 +173,8 @@ export function EmailHoverActions({
         // Previously this cleared every tag on the message, which is a no-op on
         // an untagged one - hence "clicking it does nothing". Open the picker.
         if (!onSetTag) break;
-        tagButtonRef.current = e.currentTarget as HTMLElement;
-        const rect = e.currentTarget.getBoundingClientRect();
-        setTagPickerPos((open) =>
-          open
-            ? null
-            : {
-                top:
-                  rect.bottom + TAG_PICKER_MAX_HEIGHT > window.innerHeight
-                    ? Math.max(8, rect.top - TAG_PICKER_MAX_HEIGHT - 4)
-                    : rect.bottom + 4,
-                left: Math.max(
-                  8,
-                  Math.min(rect.left, window.innerWidth - TAG_PICKER_WIDTH - 8),
-                ),
-              },
-        );
+        if (tagPickerOpen) tagMenu.closeContextMenu();
+        else tagMenu.openContextMenuFrom(e.currentTarget as HTMLElement, null, "start");
         break;
       }
       case "spam":
@@ -264,7 +218,7 @@ export function EmailHoverActions({
         title={title}
         aria-label={title}
         aria-haspopup={actionId === "tag" ? "menu" : undefined}
-        aria-expanded={actionId === "tag" ? tagPickerPos !== null : undefined}
+        aria-expanded={actionId === "tag" ? tagPickerOpen : undefined}
         className={cn(
           "transition-colors duration-100 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
           // Gmail's are round 40px targets that darken rather than change hue.
@@ -297,34 +251,32 @@ export function EmailHoverActions({
     );
   }
 
-  const tagPicker =
-    tagPickerPos && onSetTag
-      ? createPortal(
-          <div
-            ref={pickerRef}
-            data-testid="hover-tag-picker"
-            role="menu"
-            className="fixed z-50 w-56 max-w-[18rem] rounded-lg border border-border bg-popover py-1 shadow-lg"
-            style={{ top: tagPickerPos.top, left: tagPickerPos.left }}
-            onClick={(e) => e.stopPropagation()}
-            onContextMenu={(e) => e.stopPropagation()}
-          >
-            <TagPicker
-              selectedIds={currentTagIds}
-              scope={tagScope}
-              onToggle={(tagId) => onSetTag(tagId)}
-            />
-          </div>,
-          document.body,
-        )
-      : null;
+  const tagPicker = onSetTag ? (
+    <ContextMenu
+      ref={tagMenu.menuRef}
+      isOpen={tagPickerOpen}
+      position={tagMenu.contextMenu.position}
+      onClose={tagMenu.closeContextMenu}
+      label={t("tag")}
+    >
+      {/* The menu is rendered in a portal, but React still bubbles its clicks to the row. */}
+      <div
+        data-testid="hover-tag-picker"
+        className="w-56 max-w-[18rem]"
+        onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => e.stopPropagation()}
+      >
+        <TagPicker selectedIds={currentTagIds} scope={tagScope} onToggle={(tagId) => onSetTag(tagId)} />
+      </div>
+    </ContextMenu>
+  ) : null;
 
   // While the picker is open the row is no longer hovered, so the toolbar has to
   // stay mounted and visible or the picker would close under its own anchor.
   // Shown on keyboard focus too (R7), not only on hover. Only a control inside
   // the row counts, and only from the keyboard: a click focuses the row itself
   // (or the button clicked), and focus-within kept the toolbar on the open row.
-  const visibilityClass = tagPickerPos ? "flex" : "hidden group-hover:flex group-has-[:focus-visible]:flex";
+  const visibilityClass = tagPickerOpen ? "flex" : "hidden group-hover:flex group-has-[:focus-visible]:flex";
 
   if (hoverActionsMode === 'floating') {
     return (
