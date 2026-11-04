@@ -6,6 +6,7 @@ import { RescheduleRestoredError } from "@/lib/jmap/reschedule-error";
 import { create } from "zustand";
 import { Email, Mailbox, StateChange, ScheduledEmail, SendEmailResult, isUnifiedMailboxId, isCrossViewId } from "@/lib/jmap/types";
 import type { UnifiedMailboxRole, CrossView } from "@/lib/jmap/types";
+import type { HeldSendCounts } from "@/lib/held-send";
 import type { IJMAPClient, SearchEmailsResult } from "@/lib/jmap/client-interface";
 import { jmapErrorFailedIds } from "@/lib/jmap/jmap-error";
 import type { MessagePriority } from "@/lib/message-priority";
@@ -70,6 +71,8 @@ type PendingUndoSend = {
    *  was sent from a shared identity (#874). Distinct from localAccountId,
    *  which selects *which login's client* to talk to. */
   submissionAccountId?: string;
+  /** Sent's and Scheduled's counts before the send, shown during the Undo window (lib/held-send.ts). */
+  countsBefore?: HeldSendCounts;
 };
 
 // Nothing ticked stays the same object: a new empty set re-renders all that reads the selection.
@@ -4410,6 +4413,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // under "Loading emails…" until the message was out.
     set({ error: null });
     try {
+      // What Sent and Scheduled counted before: a send in its Undo window
+      // doesn't count yet (mail-p2-8).
+      const countsBefore: HeldSendCounts = {
+        sent: useAuthStore.getState().client === client ? get().mailboxes.find((mb) => mb.role === 'sent' && !mb.isShared)?.totalEmails : undefined,
+        scheduled: get().scheduledTotal,
+      };
       // Files attached while offline are uploaded now that the server answers.
       const sendAttachments = attachments && getOutboxHooks() ? await getOutboxHooks()!.resolveHeldAttachments(client, attachments) : attachments;
       const result = await client.sendEmail(to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, sendAttachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options);
@@ -4434,6 +4443,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
               // Cross-account send: undo/send-now must talk to the account that
               // holds the submission, not the active one (#461).
               localAccountId: options?.localAccountId,
+              countsBefore,
             }
           : get().pendingUndoSend,
       });

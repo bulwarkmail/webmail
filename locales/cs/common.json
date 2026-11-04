@@ -427,6 +427,18 @@
     "new_folder_title": "Nová složka",
     "new_subfolder_title": "Nová podsložka"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konverzace archivována} few {# konverzace archivovány} many {# konverzace archivováno} other {# konverzací archivováno}}",
+    "conversations_to_trash": "{count, plural, one {# konverzace přesunuta do koše} few {# konverzace přesunuty do koše} many {# konverzace přesunuto do koše} other {# konverzací přesunuto do koše}}",
+    "conversations_deleted": "{count, plural, one {# konverzace smazána} few {# konverzace smazány} many {# konverzace smazáno} other {# konverzací smazáno}}",
+    "conversations_moved_to": "{count, plural, one {# konverzace přesunuta do složky {mailbox}} few {# konverzace přesunuty do složky {mailbox}} many {# konverzace přesunuto do složky {mailbox}} other {# konverzací přesunuto do složky {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# konverzace přesunuta} few {# konverzace přesunuty} many {# konverzace přesunuto} other {# konverzací přesunuto}}",
+    "select_all_in_folder": "{count, plural, one {Vybrat # konverzaci ve složce {folder}} few {Vybrat všechny # konverzace ve složce {folder}} many {Vybrat všech # konverzace ve složce {folder}} other {Vybrat všech # konverzací ve složce {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vybrat # zprávu ve složce {folder}} few {Vybrat všechny # zprávy ve složce {folder}} many {Vybrat všech # zprávy ve složce {folder}} other {Vybrat všech # zpráv ve složce {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vybrat # konverzaci} few {Vybrat všechny # konverzace} many {Vybrat všech # konverzace} other {Vybrat všech # konverzací}}",
+    "select_all_emails": "{count, plural, one {Vybrat # zprávu} few {Vybrat všechny # zprávy} many {Vybrat všech # zprávy} other {Vybrat všech # zpráv}}",
+    "selecting_all": "Vybírání…"
+  },
   "shared_tags": {
     "title": "Sdílené štítky",
     "description": "Štítky vašich skupinových schránek. Všichni ve skupině vidí u její pošty stejné názvy a barvy.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "Složka „{name}“ stále obsahuje {count, plural, one {1 zprávu} few {# zprávy} other {# zpráv}}. Smazat složku i všechny její zprávy? Tuto akci nelze vrátit.",
     "delete_with_contents_confirm": "Smazat složku i zprávy"
   },
+  "mail_p2_folders": {
+    "all_folders": "Všechny složky",
+    "empty_trash": "Vysypat koš",
+    "empty_spam": "Vyprázdnit spam",
+    "empty_trash_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} v koši? Nelze to vrátit zpět.",
+    "empty_spam_confirm": "Trvale smazat {count, plural, one {zprávu} few {všechny # zprávy} many {všech # zprávy} other {všech # zpráv}} ve spamu? Nelze to vrátit zpět.",
+    "title_all_accounts": "{name} ({count}, {total} ve všech účtech)",
+    "title_all_accounts_only": "{name} ({total} ve všech účtech)"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovat účty…",
     "apply_to_existing": "{count, plural, one {Použít na # existující zprávu ve složce {folder}} few {Použít na # existující zprávy ve složce {folder}} many {Použít na # existující zprávy ve složce {folder}} other {Použít na # existujících zpráv ve složce {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobrazit # starší zprávu} few {Zobrazit # starší zprávy} many {Zobrazit # starší zprávy} other {Zobrazit # starších zpráv}}",
     "return_to_list_follows_layout": "Dokud to nezměníte, řídí se to rozvržením: vypnuto, když jsou seznam a zpráva vedle sebe, jinak zapnuto."
+  },
+  "mail_p2_conv": {
+    "show_message": "Zobrazit zprávu",
+    "back_to_reply": "Zpět k odpovědi"
   },
   "identities": {
     "modal_title": "Správa identit odesílatele",
@@ -5289,7 +5314,7 @@
     "title": "Vítejte ve své poštovní schránce",
     "tip_compose": "Stiskněte c pro napsání nové zprávy",
     "tip_shortcuts": "Stiskněte ? pro zobrazení všech klávesových zkratek",
-    "tip_sidebar": "Kalendář, Kontakty a Nastavení najdete v postranním panelu",
+    "tip_sidebar": "Kalendář, Kontakty a Nastavení najdete na liště vlevo",
     "tip_settings": "Přizpůsobte si aplikaci v Nastavení",
     "tip_compose_touch": "Klepnutím na tlačítko s tužkou napíšete nový e-mail",
     "tip_sidebar_touch": "Kalendář, Kontakty a Nastavení najdete na liště dole",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Hledat v poště „{text}“"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Jste offline. Tato zpráva se otevře jen s připojením.",
+    "reader_failed": "Tuto zprávu se nepodařilo načíst.",
+    "retry": "Zkusit znovu",
+    "action_offline": "Jste offline. K tomu je potřeba připojení.",
+    "offline_bar": "Jste offline. Ke čtení a úpravám pošty je potřeba připojení.",
+    "offline_default_on": "Vaše pošta je uložena v tomto zařízení, takže ji můžete číst offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Vždy zobrazovat řádek nabídek",

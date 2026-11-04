@@ -37,8 +37,10 @@ describe('MoveFolderList', () => {
     const onPick = vi.fn();
     render(<MoveFolderList model={buildMoveMenu(short, { currentMailboxId: 'inbox' })} onPick={onPick} />);
     // The i18n mock returns the key: the role's name, not the server's.
-    expect(screen.queryByText('Sent Items')).toBeNull();
-    expect(screen.getByText('mailboxes.sent')).toBeTruthy();
+    expect(screen.queryByText('Junk Mail')).toBeNull();
+    expect(screen.getByText('mailboxes.archive')).toBeTruthy();
+    // Sent is no Move target (pass 2 p2-18).
+    expect(screen.queryByText('mailboxes.sent')).toBeNull();
     fireEvent.click(screen.getByText('mailboxes.spam'));
     expect(onPick).toHaveBeenCalledWith('junk');
   });

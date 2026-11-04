@@ -56,7 +56,7 @@ async function viewer(folder: string, h = handlers()) {
   return h;
 }
 
-const archiveButton = () => document.querySelector('button[title="tooltips.archive"]');
+const archiveButton = () => document.querySelector('button[title="archive (E)"]');
 
 beforeEach(() => {
   useSettingsStore.setState({ deleteAction: 'trash', permanentlyDeleteJunk: false, quickReplyEnabled: true });
@@ -74,7 +74,7 @@ describe('reader toolbar in Spam', () => {
 
   it('has no quick reply', async () => {
     await viewer('junk');
-    expect(screen.queryByPlaceholderText('quick_reply_placeholder')).toBeNull();
+    expect(screen.queryByPlaceholderText(/^quick_reply/)).toBeNull();
   });
 });
 
@@ -84,6 +84,20 @@ describe('reader toolbar in Trash', () => {
     expect(archiveButton()).toBeNull();
     fireEvent.click(screen.getByTestId('reader-restore'));
     expect(h.onMoveToMailbox).toHaveBeenCalledWith('inbox');
+  });
+
+  // Pass 2, mail-9: the button said "Move back to Inbox" while the row
+  // menu and ⋮ said "Restore", for the same action.
+  it('names Restore as the menus do', async () => {
+    await viewer('trash');
+    const button = screen.getByTestId('reader-restore');
+    expect(button.getAttribute('title')).toBe('restore');
+    expect(button.getAttribute('aria-label')).toBe('restore');
+  });
+
+  it('offers no Report spam', async () => {
+    await viewer('trash');
+    expect(document.querySelector('button[title="spam.button_title"]')).toBeNull();
   });
 
   it('says Delete forever', async () => {
@@ -99,7 +113,7 @@ describe('reader toolbar in the Inbox', () => {
     expect(screen.queryByTestId('reader-restore')).toBeNull();
     expect(screen.queryByTestId('reader-not-spam')).toBeNull();
     expect(screen.getByTestId('reader-delete').textContent).not.toContain('delete_forever');
-    expect(screen.getByPlaceholderText('quick_reply_placeholder')).toBeTruthy();
+    expect(screen.getByPlaceholderText(/^quick_reply/)).toBeTruthy();
   });
 });
 

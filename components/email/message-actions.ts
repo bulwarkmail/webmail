@@ -2,8 +2,9 @@
 
 import type { ComponentType } from "react";
 import { useTranslations } from "next-intl";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { useSettingsStore } from "@/stores/settings-store";
-import { emailLinkSource } from "@/stores/email-store";
+import { emailLinkSource, bulkDeleteIsPermanent } from "@/stores/email-store";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
@@ -161,6 +162,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tPhishing = useTranslations("phishing_report");
   const tWindows = useTranslations("pwaWindows");
   const tRecover = useTranslations("recover_deleted");
+  const tActions = useTranslations("reader_actions");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -175,8 +177,11 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const isDraft = email.keywords?.["$draft"] === true;
   const isScheduled = email.isScheduled === true;
   const inJunk = o.currentMailboxRole === "junk";
-  // Marking your own outgoing mail as spam makes no sense.
-  const spamApplicable = !["sent", "drafts", "scheduled"].includes(o.currentMailboxRole || "");
+  // Marking your own outgoing mail as spam makes no sense, nor reporting
+  // what already sits in the bin.
+  const spamApplicable = spamApplicableIn(o.currentMailboxRole);
+  // Deleting from Trash (or with deletes set to be permanent) can't be undone.
+  const deleteForever = bulkDeleteIsPermanent({ role: o.currentMailboxRole });
 
   const item = (
     key: MessageActionKey,
@@ -243,7 +248,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
       : [];
     const archive = archiveEnabled ? [item("archive", Archive, t("archive"), o.onArchive)] : [];
-    const del = item("delete", Trash2, t("delete"), o.onDelete, { destructive: !mountainView, testId: "ctx-delete" });
+    const del = item("delete", Trash2, deleteForever ? tActions("delete_forever") : t("delete"), o.onDelete, { destructive: !mountainView, testId: "ctx-delete" });
     const read = item("read", isUnread ? MailOpen : Mail, isUnread ? t("mark_read") : t("mark_unread"), () => o.onMarkAsRead?.(isUnread), {
       disabled: false,
       testId: isUnread ? "ctx-mark-read" : "ctx-mark-unread",

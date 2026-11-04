@@ -427,6 +427,18 @@
     "new_folder_title": "새 폴더",
     "new_subfolder_title": "새 하위 폴더"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {대화 #개를 보관했어요}}",
+    "conversations_to_trash": "{count, plural, other {대화 #개를 휴지통으로 이동했어요}}",
+    "conversations_deleted": "{count, plural, other {대화 #개를 삭제했어요}}",
+    "conversations_moved_to": "{count, plural, other {대화 #개를 {mailbox}(으)로 이동했어요}}",
+    "conversations_moved": "{count, plural, other {대화 #개를 이동했어요}}",
+    "select_all_in_folder": "{count, plural, other {{folder}의 대화 #개 모두 선택}}",
+    "select_all_emails_in_folder": "{count, plural, other {{folder}의 메일 #개 모두 선택}}",
+    "select_all_conversations": "{count, plural, other {대화 #개 모두 선택}}",
+    "select_all_emails": "{count, plural, other {메일 #개 모두 선택}}",
+    "selecting_all": "선택하는 중…"
+  },
   "shared_tags": {
     "title": "공유 태그",
     "description": "그룹 사서함의 태그예요. 그룹의 모든 사람이 해당 메일에서 같은 이름과 색상을 봐요.",
@@ -3882,6 +3894,15 @@
     "create": "만들기",
     "rename_confirm": "이름 바꾸기"
   },
+  "mail_p2_folders": {
+    "all_folders": "모든 폴더",
+    "empty_trash": "휴지통 비우기",
+    "empty_spam": "스팸 비우기",
+    "empty_trash_confirm": "휴지통의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요.",
+    "empty_spam_confirm": "스팸의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요.",
+    "title_all_accounts": "{name} ({count}, 모든 계정에 {total})",
+    "title_all_accounts_only": "{name} (모든 계정에 {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "계정 관리…",
     "apply_to_existing": "{count, plural, other {{folder}의 기존 메일 #개에 적용}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {이전 메시지 #개 보기}}",
     "return_to_list_follows_layout": "변경하기 전까지는 레이아웃을 따릅니다. 목록과 메시지가 나란히 있으면 꺼지고, 그 밖에는 켜집니다."
+  },
+  "mail_p2_conv": {
+    "show_message": "메시지 보기",
+    "back_to_reply": "답장으로 돌아가기"
   },
   "identities": {
     "modal_title": "보내는 사람 관리",
@@ -5289,7 +5314,7 @@
     "title": "웹메일에 오신 것을 환영해요!",
     "tip_compose": "c 키를 누르면 바로 새 메일을 쓸 수 있어요",
     "tip_shortcuts": "? 키를 누르면 모든 단축키를 확인할 수 있어요",
-    "tip_sidebar": "캘린더, 연락처, 설정은 사이드바 메뉴에 있어요",
+    "tip_sidebar": "캘린더, 연락처, 설정은 왼쪽 막대에 있습니다",
     "tip_settings": "설정에서 나만의 스타일로 꾸며보세요",
     "tip_compose_touch": "연필 버튼을 눌러 새 메일을 작성하세요",
     "tip_sidebar_touch": "캘린더, 연락처, 설정은 하단 막대에 있습니다",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "메일에서 “{text}” 검색"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "오프라인 상태입니다. 이 메시지를 열려면 연결이 필요합니다.",
+    "reader_failed": "이 메시지를 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "action_offline": "오프라인 상태입니다. 이 작업에는 연결이 필요합니다.",
+    "offline_bar": "오프라인 상태입니다. 메일을 읽고 변경하려면 연결이 필요합니다.",
+    "offline_default_on": "메일이 이 기기에 보관되어 오프라인에서도 읽을 수 있습니다."
   },
   "desktopMenuBar": {
     "always_show_label": "메뉴 막대 항상 표시",

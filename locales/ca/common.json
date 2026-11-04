@@ -427,6 +427,18 @@
     "new_folder_title": "Carpeta nova",
     "new_subfolder_title": "Subcarpeta nova"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversa arxivada} other {# converses arxivades}}",
+    "conversations_to_trash": "{count, plural, one {# conversa moguda a la Paperera} other {# converses mogudes a la Paperera}}",
+    "conversations_deleted": "{count, plural, one {# conversa suprimida} other {# converses suprimides}}",
+    "conversations_moved_to": "{count, plural, one {# conversa moguda a {mailbox}} other {# converses mogudes a {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversa moguda} other {# converses mogudes}}",
+    "select_all_in_folder": "{count, plural, one {Selecciona la # conversa de {folder}} other {Selecciona les # converses de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selecciona el # correu de {folder}} other {Selecciona els # correus de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selecciona la # conversa} other {Selecciona les # converses}}",
+    "select_all_emails": "{count, plural, one {Selecciona el # correu} other {Selecciona els # correus}}",
+    "selecting_all": "S'està seleccionant…"
+  },
   "shared_tags": {
     "title": "Etiquetes compartides",
     "description": "Etiquetes de les vostres bústies de grup. Tothom del grup veu els mateixos noms i colors al seu correu.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "La carpeta \"{name}\" encara conté {count, plural, one {1 missatge} other {# missatges}}. Vols suprimir la carpeta i tots els seus missatges? No es pot desfer.",
     "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges"
   },
+  "mail_p2_folders": {
+    "all_folders": "Totes les carpetes",
+    "empty_trash": "Buida la paperera",
+    "empty_spam": "Buida el correu brossa",
+    "empty_trash_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera? No es pot desfer.",
+    "empty_spam_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} del correu brossa? No es pot desfer.",
+    "title_all_accounts": "{name} ({count}, {total} a tots els comptes)",
+    "title_all_accounts_only": "{name} ({total} a tots els comptes)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestiona els comptes…",
     "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostra # missatge anterior} other {Mostra # missatges anteriors}}",
     "return_to_list_follows_layout": "Mentre no ho canviïs, segueix el disseny: desactivat quan la llista i el missatge són l'un al costat de l'altre, activat en els altres casos."
+  },
+  "mail_p2_conv": {
+    "show_message": "Mostra el missatge",
+    "back_to_reply": "Torna a la resposta"
   },
   "identities": {
     "modal_title": "Gestiona les identitats d'enviament",
@@ -5551,7 +5576,7 @@
     "title": "Us donem la benvinguda a la bústia",
     "tip_compose": "Premeu c per redactar un correu nou",
     "tip_shortcuts": "Premeu ? per veure totes les dreceres de teclat",
-    "tip_sidebar": "Trobeu el Calendari, els Contactes i la Configuració al menú de la barra lateral",
+    "tip_sidebar": "Calendari, Contactes i Configuració són a la barra de l'esquerra",
     "tip_settings": "Personalitzeu la vostra experiència a la Configuració",
     "tip_compose_touch": "Toca el botó del llapis per escriure un correu nou",
     "tip_sidebar_touch": "Trobaràs el Calendari, els Contactes i la Configuració a la barra inferior",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Cerca «{text}» al correu"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "No tens connexió. Aquest missatge necessita connexió per obrir-se.",
+    "reader_failed": "No s'ha pogut carregar aquest missatge.",
+    "retry": "Torna-ho a provar",
+    "action_offline": "No tens connexió. Això necessita connexió.",
+    "offline_bar": "No tens connexió. Llegir i canviar el correu necessita connexió.",
+    "offline_default_on": "El teu correu es guarda en aquest dispositiu, així el pots llegir sense connexió."
   },
   "desktopMenuBar": {
     "always_show_label": "Mostra sempre la barra de menús",

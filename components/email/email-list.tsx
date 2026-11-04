@@ -1,5 +1,6 @@
 "use client";
 
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { MemoizedThreadListItem, listMailboxRole } from "./thread-list-item";
 import { ListColumnsHeader } from "./list-columns";
@@ -25,6 +26,7 @@ import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
@@ -37,7 +39,7 @@ import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useListRowShape } from "@/hooks/use-list-row-shape";
+import { useListRowShape, showsPreviewOnSubjectLine } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
 import type { Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
@@ -142,6 +144,9 @@ type ListItem =
   | { kind: 'header'; section: 'unread' | 'rest' }
   | { kind: 'unread-empty' };
 
+/** The most messages "Select all N conversations" loads to tick them (mail-p2-11). */
+const SELECT_ALL_LIMIT = 5000;
+
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
 const BATCH_TOOLBAR_WIDE = 640;
 
@@ -206,6 +211,7 @@ export function EmailList({
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
   const tListExtra = useTranslations('mail_list_extra');
+  const tRoot = useTranslations();
   const tUnread = useTranslations('account_unread');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const isDesktopPane = useIsDesktop();
@@ -283,7 +289,7 @@ export function EmailList({
     mailboxes.find(m => m.id === selectedMailbox)?.role
     ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
   // Spam is pointless on your own outgoing mail, as in the context menu.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(effectiveMailboxRole || '');
+  const spamApplicable = spamApplicableIn(effectiveMailboxRole);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread
@@ -486,7 +492,11 @@ export function EmailList({
     // up after a jump down (scrollbar drag, End). So guess per row.
     const latest = item?.kind === 'row' ? item.thread.latestEmail : undefined;
     let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    if (showPreview && density !== 'extra-compact') {
+    if (showsPreviewOnSubjectLine({ showPreview, density, isMobile, mountainView: mountainViewList })) {
+      // The preview follows the subject on its line, and the subject line
+      // drops its margin (mail-15).
+      size -= 4;
+    } else if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
       // a line (23px) shorter than a real one. Only comfortable rows show a
       // second preview line (mail-15).
@@ -497,7 +507,7 @@ export function EmailList({
     const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
     if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
     return size;
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments, isMobile, mountainViewList]);
 
   // Stable per list, so the virtualizer does not rebuild every row's
   // measurement on each scroll render.
@@ -571,6 +581,9 @@ export function EmailList({
     () => (hasSelection ? resolveSelectedEmails({ emails, threadEmailsCache, selectedEmailKeys }) : []),
     [hasSelection, emails, threadEmailsCache, selectedEmailKeys],
   );
+  // The rows the selection covers: what the bar, the pane and the toasts
+  // count (mail-18). A conversation row ticks all its loaded messages.
+  const selectionRows = selectionRowCount(selectedEmailsForRemoval, selectedEmailKeys.size, disableThreading);
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionPhishing = usePhishingReport(selectedEmailsForRemoval, effectiveMailboxRole);
   const tPhishing = useTranslations('phishing_report');
@@ -680,11 +693,11 @@ export function EmailList({
     if (!client || isProcessing) return;
     if (!(await confirmMailRemoval('archive', selectedEmailKeys.size, confirmDialog, tRemove))) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchArchive(client), {
-        success: tNotifications('emails_archived', { count }),
+        success: batchToastTitle(tRoot, 'archive', rows, disableThreading),
         error: tNotifications('error_archiving'),
         describeError: (error) => error instanceof ArchiveMailboxNotFoundError
           ? tViewer('archive_mailbox_not_found')
@@ -699,7 +712,7 @@ export function EmailList({
   const handleBatchMoveToMailbox = async (mailboxId: string) => {
     if (!client || isProcessing) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     // Undo puts the messages back; those a mixed-account list moved to
     // another account move back the same way (the receipts).
     const restore = restoreBatchesForSelection(client);
@@ -707,10 +720,8 @@ export function EmailList({
     try {
       const destination = mailboxes.find((m) => m.id === mailboxId);
       await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-        // "3 emails moved to Family" (mail-18).
-        success: destination
-          ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
-          : tNotifications('emails_moved', { count }),
+        // "3 conversations moved to Family" (mail-18).
+        success: batchToastTitle(tRoot, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
         error: tNotifications('move_failed'),
         undo: undoMoveAction(client, restore, undo, receipts),
       });
@@ -744,11 +755,11 @@ export function EmailList({
     }
 
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = isInTrash ? null : restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchDelete(client, isInTrash), {
-        success: tNotifications('emails_deleted', { count }),
+        success: batchToastTitle(tRoot, isInTrash ? 'delete' : 'trash', rows, disableThreading),
         error: tNotifications('error_deleting'),
         undo: undoMoveAction(client, restore, undo),
       });
@@ -773,11 +784,17 @@ export function EmailList({
   // reading pane. The pane's copies get their own test ids.
   const selectionButtons = (where: 'bar' | 'pane') => {
     const testId = (id: string) => (where === 'bar' ? id : `pane-${id}`);
+    // The pane has room: its buttons say what they do (mail-p2-15). The
+    // bar beside the list stays icons with tooltips.
+    const labelled = where === 'pane';
+    const shape = labelled ? { size: 'sm' as const, title: '', className: 'gap-1.5' } : {};
+    const name = (label: string) => (labelled ? <span data-selection-label="">{label}</span> : null);
     return (
       <>
         {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
-          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')}>
+          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')} {...shape}>
             <Archive />
+            {name(tContextMenu('archive'))}
           </IconButton>
         )}
         <IconButton
@@ -785,9 +802,11 @@ export function EmailList({
           onClick={handleBatchDelete}
           disabled={isProcessing}
           data-testid={testId('batch-delete')}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          {...shape}
+          className={cn("text-destructive hover:text-destructive hover:bg-destructive/10", labelled && "gap-1.5")}
         >
           <Trash2 />
+          {name(t('batch_actions.delete'))}
         </IconButton>
         {!moveMenuIsEmpty(selectionMoveModel) && (
           <IconButton
@@ -797,8 +816,10 @@ export function EmailList({
             onClick={(e) => moveMenu.openContextMenuFrom(e.currentTarget, null, 'end')}
             disabled={isProcessing}
             data-testid={testId('batch-move')}
+            {...shape}
           >
             <FolderInput />
+            {name(tContextMenu('move_to'))}
           </IconButton>
         )}
         <IconButton
@@ -806,10 +827,13 @@ export function EmailList({
           onClick={() => handleBatchMarkAsRead(selectionHasUnread)}
           disabled={isProcessing}
           data-testid={testId('batch-mark-read')}
+          {...shape}
         >
           {selectionHasUnread ? <MailOpen /> : <Mail />}
+          {name(selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread'))}
         </IconButton>
         <BatchTagButton
+          showLabel={labelled}
           key={hasSelection ? 'selection' : 'none'}
           title={tContextMenu('tag')}
           selectedIds={selectionTags.all}
@@ -827,10 +851,61 @@ export function EmailList({
   // shows them, or emails when conversations are off.
   const selectionTitle = disableThreading
     ? t('batch_actions.selected_messages', { count: selectedEmailKeys.size })
-    : tListExtra('selected_conversations', { count: selectedEmailKeys.size });
+    : tListExtra('selected_conversations', { count: selectionRows });
 
   const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
   const isEmptyableFolder = currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk';
+
+  // Every loaded row ticked and more on the server: offer the rest, as Gmail
+  // does (mail-p2-11). Taking it loads the remaining pages and ticks them,
+  // so the batch actions, their Undo and their counts work as for any
+  // selection. At most SELECT_ALL_LIMIT messages are loaded for it.
+  const [selectingAll, setSelectingAll] = useState(false);
+  const allLoadedSelected = hasSelection && emails.length > 0 && emails.every((e) => selectedEmailKeys.has(emailKeyFor(e)));
+  const offerSelectAll = allLoadedSelected && footerHasMore && !isScheduledView && !hideBatchToolbar && !!client
+    && emails.length < SELECT_ALL_LIMIT;
+  const inPlainFolder = !!currentMailbox && !searchQuery.trim() && isFilterEmpty(searchFilters) && !isUnifiedView;
+  const viewTotal = Math.max(
+    inPlainFolder
+      ? (disableThreading ? currentMailbox.totalEmails : (currentMailbox.totalThreads || currentMailbox.totalEmails))
+      : totalEmails,
+    selectionRows + 1,
+  );
+  const selectAllLabel = inPlainFolder
+    ? tRoot(disableThreading ? 'mail_p2_list.select_all_emails_in_folder' : 'mail_p2_list.select_all_in_folder', {
+        count: viewTotal,
+        folder: localizeMailboxName(currentMailbox.role, currentMailbox.name, (k) => tSidebar(`mailboxes.${k}`)),
+      })
+    : tRoot(disableThreading ? 'mail_p2_list.select_all_emails' : 'mail_p2_list.select_all_conversations', { count: viewTotal });
+  const handleSelectAllInView = async () => {
+    if (!client || selectingAll) return;
+    const view = () => {
+      const state = useEmailStore.getState();
+      return `${state.selectedMailbox}|${state.searchQuery}|${state.isUnifiedView}|${state.unifiedRole}`;
+    };
+    const startedIn = view();
+    setSelectingAll(true);
+    try {
+      for (let pages = 0; pages < 1000; pages++) {
+        const state = useEmailStore.getState();
+        if (view() !== startedIn || state.selectedEmailKeys.size === 0) return;
+        if (!state.hasMoreEmails || state.emails.length >= SELECT_ALL_LIMIT) break;
+        if (state.isLoadingMore) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          continue;
+        }
+        const before = state.emails.length;
+        await state.loadMoreEmails(client);
+        const after = useEmailStore.getState();
+        if (after.emails.length === before && !after.isLoadingMore) break;
+      }
+      // Another folder opened or the selection was cleared meanwhile: leave it.
+      if (view() !== startedIn || useEmailStore.getState().selectedEmailKeys.size === 0) return;
+      useEmailStore.getState().selectAllEmails();
+    } finally {
+      setSelectingAll(false);
+    }
+  };
 
   const handleEmptyFolder = async () => {
     if (!client || isProcessing || !currentMailbox) return;
@@ -1106,7 +1181,7 @@ export function EmailList({
         inert={!(hasSelection && !isScheduledView && !hideBatchToolbar)}
         className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          hasSelection && !isScheduledView && !hideBatchToolbar ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+          hasSelection && !isScheduledView && !hideBatchToolbar ? (offerSelectAll || selectingAll ? "max-h-28 opacity-100" : "max-h-16 opacity-100") : "max-h-0 opacity-0"
         )}
       >
         {/* Only drawn while shown: collapsed it would still render every button. */}
@@ -1115,7 +1190,7 @@ export function EmailList({
           <div className="flex items-center gap-2 min-w-0 animate-in fade-in slide-in-from-left-3 duration-300">
             {/* "5 conversations": the bar is narrow beside its buttons. */}
             <span className="text-sm font-medium text-foreground whitespace-nowrap truncate" title={selectionTitle}>
-              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectedEmailKeys.size })}
+              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectionRows })}
             </span>
           </div>
           <div className={cn("flex items-center flex-shrink-0 animate-in fade-in slide-in-from-right-3 duration-300", batchNarrow ? "gap-0" : "gap-0.5")}>
@@ -1201,6 +1276,19 @@ export function EmailList({
             )}
           </div>
         </div>
+        )}
+        {hasSelection && !isScheduledView && !hideBatchToolbar && (offerSelectAll || selectingAll) && (
+          <div className="px-4 py-1.5 border-b border-border bg-accent/20 text-center text-sm" data-testid="select-all-in-view">
+            <button
+              type="button"
+              onClick={() => void handleSelectAllInView()}
+              disabled={selectingAll}
+              aria-busy={selectingAll || undefined}
+              className="text-primary font-medium hover:underline disabled:no-underline disabled:opacity-70"
+            >
+              {selectingAll ? tRoot('mail_p2_list.selecting_all') : selectAllLabel}
+            </button>
+          </div>
         )}
       </div>
 
@@ -1430,7 +1518,7 @@ export function EmailList({
             <CheckSquare className="w-10 h-10 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-4">{selectionTitle}</h2>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             {selectionButtons('pane')}
             <IconButton
               label={t('batch_actions.more')}

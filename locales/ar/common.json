@@ -427,6 +427,18 @@
     "new_folder_title": "مجلد جديد",
     "new_subfolder_title": "مجلد فرعي جديد"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {تمت أرشفة محادثة واحدة} two {تمت أرشفة محادثتين} few {تمت أرشفة # محادثات} many {تمت أرشفة # محادثة} other {تمت أرشفة # محادثة}}",
+    "conversations_to_trash": "{count, plural, one {تم نقل محادثة واحدة إلى المهملات} two {تم نقل محادثتين إلى المهملات} few {تم نقل # محادثات إلى المهملات} many {تم نقل # محادثة إلى المهملات} other {تم نقل # محادثة إلى المهملات}}",
+    "conversations_deleted": "{count, plural, one {تم حذف محادثة واحدة} two {تم حذف محادثتين} few {تم حذف # محادثات} many {تم حذف # محادثة} other {تم حذف # محادثة}}",
+    "conversations_moved_to": "{count, plural, one {تم نقل محادثة واحدة إلى {mailbox}} two {تم نقل محادثتين إلى {mailbox}} few {تم نقل # محادثات إلى {mailbox}} many {تم نقل # محادثة إلى {mailbox}} other {تم نقل # محادثة إلى {mailbox}}}",
+    "conversations_moved": "{count, plural, one {تم نقل محادثة واحدة} two {تم نقل محادثتين} few {تم نقل # محادثات} many {تم نقل # محادثة} other {تم نقل # محادثة}}",
+    "select_all_in_folder": "{count, plural, one {تحديد المحادثة في {folder}} two {تحديد المحادثتين في {folder}} few {تحديد كل المحادثات الـ # في {folder}} many {تحديد كل المحادثات الـ # في {folder}} other {تحديد كل المحادثات الـ # في {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {تحديد الرسالة في {folder}} two {تحديد الرسالتين في {folder}} few {تحديد كل الرسائل الـ # في {folder}} many {تحديد كل الرسائل الـ # في {folder}} other {تحديد كل الرسائل الـ # في {folder}}}",
+    "select_all_conversations": "{count, plural, one {تحديد المحادثة} two {تحديد المحادثتين} few {تحديد كل المحادثات الـ #} many {تحديد كل المحادثات الـ #} other {تحديد كل المحادثات الـ #}}",
+    "select_all_emails": "{count, plural, one {تحديد الرسالة} two {تحديد الرسالتين} few {تحديد كل الرسائل الـ #} many {تحديد كل الرسائل الـ #} other {تحديد كل الرسائل الـ #}}",
+    "selecting_all": "جارٍ التحديد…"
+  },
   "shared_tags": {
     "title": "الوسوم المشتركة",
     "description": "وسوم صناديق البريد الجماعية الخاصة بك. يرى كل من في المجموعة الأسماء والألوان نفسها على رسائلها.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "لا يزال المجلد \"{name}\" يحتوي على {count, plural, one {رسالة واحدة} other {# رسائل}}. هل تريد حذف المجلد وكل رسائله؟ لا يمكن التراجع عن هذا.",
     "delete_with_contents_confirm": "حذف المجلد والرسائل"
   },
+  "mail_p2_folders": {
+    "all_folders": "كل المجلدات",
+    "empty_trash": "إفراغ المهملات",
+    "empty_spam": "إفراغ البريد العشوائي",
+    "empty_trash_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في المهملات نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "empty_spam_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في البريد العشوائي نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
+    "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
+  },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",
     "apply_to_existing": "{count, plural, one {تطبيق على رسالة موجودة واحدة في {folder}} other {تطبيق على # رسائل موجودة في {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}",
     "return_to_list_follows_layout": "ما لم تغيّره، يتبع هذا التخطيط: متوقف عندما تكون القائمة والرسالة جنبًا إلى جنب، ومفعّل في غير ذلك."
+  },
+  "mail_p2_conv": {
+    "show_message": "عرض الرسالة",
+    "back_to_reply": "العودة إلى ردك"
   },
   "identities": {
     "modal_title": "إدارة هويات الإرسال",
@@ -5551,7 +5576,7 @@
     "title": "مرحبًا بك في صندوق بريدك",
     "tip_compose": "اضغط c لإنشاء رسالة جديدة",
     "tip_shortcuts": "اضغط ؟ لعرض جميع اختصارات لوحة المفاتيح",
-    "tip_sidebar": "ستجد التقويم وجهات الاتصال والإعدادات في قائمة الشريط الجانبي",
+    "tip_sidebar": "التقويم وجهات الاتصال والإعدادات في الشريط على اليمين",
     "tip_settings": "خصّص تجربتك من الإعدادات",
     "tip_compose_touch": "اضغط زر القلم لكتابة رسالة جديدة",
     "tip_sidebar_touch": "ستجد التقويم وجهات الاتصال والإعدادات في الشريط السفلي",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "البحث في البريد عن «{text}»"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "أنت غير متصل. تحتاج هذه الرسالة إلى اتصال لفتحها.",
+    "reader_failed": "تعذّر تحميل هذه الرسالة.",
+    "retry": "إعادة المحاولة",
+    "action_offline": "أنت غير متصل. يحتاج هذا إلى اتصال.",
+    "offline_bar": "أنت غير متصل. قراءة البريد وتغييره يحتاجان إلى اتصال.",
+    "offline_default_on": "يُحفظ بريدك على هذا الجهاز، لذا يمكنك قراءته دون اتصال."
   },
   "desktopMenuBar": {
     "always_show_label": "إظهار شريط القوائم دائمًا",

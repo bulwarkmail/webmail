@@ -427,6 +427,18 @@
     "new_folder_title": "Nieuwe map",
     "new_subfolder_title": "Nieuwe submap"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# gesprek gearchiveerd} other {# gesprekken gearchiveerd}}",
+    "conversations_to_trash": "{count, plural, one {# gesprek naar de prullenbak verplaatst} other {# gesprekken naar de prullenbak verplaatst}}",
+    "conversations_deleted": "{count, plural, one {# gesprek verwijderd} other {# gesprekken verwijderd}}",
+    "conversations_moved_to": "{count, plural, one {# gesprek verplaatst naar {mailbox}} other {# gesprekken verplaatst naar {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# gesprek verplaatst} other {# gesprekken verplaatst}}",
+    "select_all_in_folder": "{count, plural, one {Het # gesprek in {folder} selecteren} other {Alle # gesprekken in {folder} selecteren}}",
+    "select_all_emails_in_folder": "{count, plural, one {De # e-mail in {folder} selecteren} other {Alle # e-mails in {folder} selecteren}}",
+    "select_all_conversations": "{count, plural, one {Het # gesprek selecteren} other {Alle # gesprekken selecteren}}",
+    "select_all_emails": "{count, plural, one {De # e-mail selecteren} other {Alle # e-mails selecteren}}",
+    "selecting_all": "Selecteren…"
+  },
   "shared_tags": {
     "title": "Gedeelde labels",
     "description": "Labels van je groepspostvakken. Iedereen in de groep ziet dezelfde namen en kleuren bij de e-mail ervan.",
@@ -3882,6 +3894,15 @@
     "create": "Aanmaken",
     "rename_confirm": "Hernoemen"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mappen",
+    "empty_trash": "Prullenbak legen",
+    "empty_spam": "Spam legen",
+    "empty_trash_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in de prullenbak definitief verwijderen? Dit kan niet ongedaan worden.",
+    "empty_spam_confirm": "{count, plural, one {Het bericht} other {Alle # berichten}} in spam definitief verwijderen? Dit kan niet ongedaan worden.",
+    "title_all_accounts": "{name} ({count}, {total} in alle accounts)",
+    "title_all_accounts_only": "{name} ({total} in alle accounts)"
+  },
   "uxs_folders": {
     "manage_accounts": "Accounts beheren…",
     "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
+  },
+  "mail_p2_conv": {
+    "show_message": "Bericht tonen",
+    "back_to_reply": "Terug naar je antwoord"
   },
   "identities": {
     "modal_title": "Verzendidentiteiten beheren",
@@ -5289,7 +5314,7 @@
     "title": "Welkom bij uw mailbox",
     "tip_compose": "Druk op c om een nieuwe e-mail te schrijven",
     "tip_shortcuts": "Druk op ? om alle sneltoetsen te bekijken",
-    "tip_sidebar": "Vind Agenda, Contacten en Instellingen in het zijmenu",
+    "tip_sidebar": "Agenda, Contacten en Instellingen staan in de balk links",
     "tip_settings": "Pas uw ervaring aan in Instellingen",
     "tip_compose_touch": "Tik op de potloodknop om een nieuwe e-mail te schrijven",
     "tip_sidebar_touch": "Agenda, Contacten en Instellingen vind je in de balk onderaan",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Zoek ‘{text}’ in e-mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Je bent offline. Dit bericht heeft een verbinding nodig om te openen.",
+    "reader_failed": "Dit bericht kon niet worden geladen.",
+    "retry": "Opnieuw proberen",
+    "action_offline": "Je bent offline. Hiervoor is een verbinding nodig.",
+    "offline_bar": "Je bent offline. Voor het lezen en wijzigen van mail is een verbinding nodig.",
+    "offline_default_on": "Je mail wordt op dit apparaat bewaard, zodat je hem offline kunt lezen."
   },
   "desktopMenuBar": {
     "always_show_label": "Menubalk altijd tonen",

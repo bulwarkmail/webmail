@@ -211,7 +211,11 @@ export function ThreadConversationView({
 }: ThreadConversationViewProps) {
   const t = useTranslations();
   const externalContent = useConversationExternalContent();
-  const emailIdList = emails.map((email) => email.id).join(',');
+  // Oldest first, the newest at the bottom, as on every other layout and in
+  // Gmail (mail-p2-6). The thread arrives newest first.
+  const ordered = useMemo(() => oldestFirst(emails), [emails]);
+  const newestId = newestReadable(ordered)?.id ?? null;
+  const emailIdList = ordered.map((email) => email.id).join(',');
   const { isMobile: summaryOnPhone, isCompact: summaryOnTablet } = useDeviceDetection();
   const threadSummaryProps = useMemo(
     () => ({ threadId: thread.latestEmail.threadId ?? null, emailIds: emailIdList ? emailIdList.split(',') : [], deviceType: summaryOnPhone ? 'mobile' : summaryOnTablet ? 'tablet' : 'desktop' }),
@@ -220,17 +224,19 @@ export function ThreadConversationView({
 
   // Track which emails are expanded (most recent by default)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const scrolledThreadRef = useRef<string | null>(null);
 
-  // Auto-expand most recent email AND all unread emails when thread opens
+  // Auto-expand the newest email (your own reply too) AND all unread emails
+  // when the thread opens.
   useEffect(() => {
-    if (emails.length > 0) {
+    if (ordered.length > 0) {
       const idsToExpand = new Set<string>();
 
-      // Always expand the most recent message; a draft isn't one.
-      idsToExpand.add((emails.find((e) => !e.keywords?.$draft) ?? emails[0]).id);
+      if (newestId) idsToExpand.add(newestId);
 
       // Also expand all unread emails
-      emails.forEach(email => {
+      ordered.forEach(email => {
         if (!email.keywords?.$seen && !email.keywords?.$draft) {
           idsToExpand.add(email.id);
         }
@@ -238,10 +244,21 @@ export function ThreadConversationView({
 
       setExpandedIds(idsToExpand);
     }
-  }, [emails]);
+  }, [ordered, newestId]);
+
+  // Once per conversation, show the newest message: it is at the bottom.
+  useEffect(() => {
+    const threadId = ordered[0]?.threadId ?? null;
+    if (!newestId || !threadId || scrolledThreadRef.current === threadId) return;
+    scrolledThreadRef.current = threadId;
+    const frame = requestAnimationFrame(() => {
+      cardsRef.current?.querySelector<HTMLElement>(`[data-thread-email-id="${CSS.escape(newestId)}"]`)?.scrollIntoView?.({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [ordered, newestId]);
 
   const toggleExpanded = (emailId: string) => {
-    const target = emails.find((e) => e.id === emailId);
+    const target = ordered.find((e) => e.id === emailId);
     if (target) emitThreadExpand(target.threadId, [target], !expandedIds.has(emailId));
     setExpandedIds(prev => {
       const next = new Set(prev);
@@ -286,15 +303,15 @@ export function ThreadConversationView({
       {/* Email Cards */}
       <div className="flex-1 overflow-y-auto">
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
-        <div className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
-          {emails.map((email, index) => {
+        <div ref={cardsRef} className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
+          {ordered.map((email) => {
             const draft = !!email.keywords?.$draft;
             return (
+            <div key={email.id} data-thread-email-id={email.id} className="scroll-mt-16">
             <EmailCard
-              key={email.id}
               email={email}
               isExpanded={expandedIds.has(email.id)}
-              isLatest={index === 0}
+              isLatest={email.id === newestId}
               allowExternal={externalContent.isAllowed(email)}
               onToggleExpanded={() => toggleExpanded(email.id)}
               onAllowExternal={() => externalContent.allow(email.id)}
@@ -310,12 +327,27 @@ export function ThreadConversationView({
               onMarkAsRead={onMarkAsRead}
               mailboxRole={mailboxRole}
             />
+            </div>
             );
           })}
         </div>
       </div>
     </div>
   );
+}
+
+/** A conversation's messages from the oldest to the newest. */
+export function oldestFirst(emails: Email[]): Email[] {
+  return [...emails].sort((a, b) => (Date.parse(a.receivedAt) || 0) - (Date.parse(b.receivedAt) || 0));
+}
+
+/** The newest message that isn't a draft or waiting to be sent. */
+export function newestReadable(ordered: Email[]): Email | undefined {
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const e = ordered[i];
+    if (!e.keywords?.$draft && !e.isScheduled) return e;
+  }
+  return ordered[ordered.length - 1];
 }
 
 // Individual email card component

@@ -371,6 +371,18 @@
     "new_folder_title": "תיקייה חדשה",
     "new_subfolder_title": "תת־תיקייה חדשה"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {שיחה אחת הועברה לארכיון} two {שתי שיחות הועברו לארכיון} other {# שיחות הועברו לארכיון}}",
+    "conversations_to_trash": "{count, plural, one {שיחה אחת הועברה לאשפה} two {שתי שיחות הועברו לאשפה} other {# שיחות הועברו לאשפה}}",
+    "conversations_deleted": "{count, plural, one {שיחה אחת נמחקה} two {שתי שיחות נמחקו} other {# שיחות נמחקו}}",
+    "conversations_moved_to": "{count, plural, one {שיחה אחת הועברה אל {mailbox}} two {שתי שיחות הועברו אל {mailbox}} other {# שיחות הועברו אל {mailbox}}}",
+    "conversations_moved": "{count, plural, one {שיחה אחת הועברה} two {שתי שיחות הועברו} other {# שיחות הועברו}}",
+    "select_all_in_folder": "{count, plural, one {בחירת השיחה בתיקייה {folder}} two {בחירת שתי השיחות בתיקייה {folder}} other {בחירת כל # השיחות בתיקייה {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {בחירת ההודעה בתיקייה {folder}} two {בחירת שתי ההודעות בתיקייה {folder}} other {בחירת כל # ההודעות בתיקייה {folder}}}",
+    "select_all_conversations": "{count, plural, one {בחירת השיחה} two {בחירת שתי השיחות} other {בחירת כל # השיחות}}",
+    "select_all_emails": "{count, plural, one {בחירת ההודעה} two {בחירת שתי ההודעות} other {בחירת כל # ההודעות}}",
+    "selecting_all": "הבחירה מתבצעת…"
+  },
   "shared_tags": {
     "title": "תגים משותפים",
     "description": "התגים של תיבות הדואר הקבוצתיות שלך. כל חברי הקבוצה רואים את אותם שמות וצבעים בדואר שלה.",
@@ -3855,6 +3867,10 @@
     "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
     "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
+  "mail_p2_conv": {
+    "show_message": "הצגת ההודעה",
+    "back_to_reply": "חזרה לתשובה שלך"
+  },
   "identities": {
     "modal_title": "ניהול זהויות שליחה",
     "create_new": "צור זהות חדשה",
@@ -5183,7 +5199,7 @@
     "title": "ברוך הבא לתיבת הדואר שלך",
     "tip_compose": "הקש c כדי לכתוב דוא\"ל חדש",
     "tip_shortcuts": "לחץ על? כדי לראות את כל קיצורי המקלדת",
-    "tip_sidebar": "מצא את לוח השנה, אנשי הקשר וההגדרות בתפריט סרגל הצד",
+    "tip_sidebar": "לוח השנה, אנשי הקשר וההגדרות נמצאים בסרגל שבצד ימין",
     "tip_settings": "התאם אישית את החוויה שלך בהגדרות",
     "tip_compose_touch": "הקישו על כפתור העיפרון כדי לכתוב הודעה חדשה",
     "tip_sidebar_touch": "יומן, אנשי קשר והגדרות נמצאים בסרגל התחתון",
@@ -5650,6 +5666,15 @@
     "delete_with_contents_title": "התיקייה אינה ריקה",
     "delete_with_contents_message": "התיקייה \"{name}\" עדיין מכילה {count, plural, one {הודעה אחת} other {# הודעות}}. למחוק את התיקייה ואת כל ההודעות שבה? לא ניתן לבטל פעולה זו.",
     "delete_with_contents_confirm": "מחיקת התיקייה וההודעות"
+  },
+  "mail_p2_folders": {
+    "all_folders": "כל התיקיות",
+    "empty_trash": "ריקון האשפה",
+    "empty_spam": "ריקון הספאם",
+    "empty_trash_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} באשפה? אי אפשר לבטל את זה.",
+    "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה.",
+    "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
+    "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
   },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",
@@ -7247,6 +7272,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "חיפוש “{text}” בדואר"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "אין חיבור. כדי לפתוח הודעה זו צריך חיבור.",
+    "reader_failed": "לא ניתן היה לטעון הודעה זו.",
+    "retry": "לנסות שוב",
+    "action_offline": "אין חיבור. לפעולה זו צריך חיבור.",
+    "offline_bar": "אין חיבור. כדי לקרוא ולשנות דואר צריך חיבור.",
+    "offline_default_on": "הדואר שלך נשמר במכשיר הזה, כך שאפשר לקרוא אותו גם בלי חיבור."
   },
   "desktopMenuBar": {
     "always_show_label": "תמיד להציג את סרגל התפריטים",

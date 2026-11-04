@@ -427,6 +427,18 @@
     "new_folder_title": "Uus kaust",
     "new_subfolder_title": "Uus alamkaust"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# vestlus arhiveeritud} other {# vestlust arhiveeritud}}",
+    "conversations_to_trash": "{count, plural, one {# vestlus liigutati prügikasti} other {# vestlust liigutati prügikasti}}",
+    "conversations_deleted": "{count, plural, one {# vestlus kustutatud} other {# vestlust kustutatud}}",
+    "conversations_moved_to": "{count, plural, one {# vestlus liigutati kausta {mailbox}} other {# vestlust liigutati kausta {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# vestlus liigutatud} other {# vestlust liigutatud}}",
+    "select_all_in_folder": "{count, plural, one {Vali # vestlus kaustas {folder}} other {Vali kõik # vestlust kaustas {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vali # e-kiri kaustas {folder}} other {Vali kõik # e-kirja kaustas {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vali # vestlus} other {Vali kõik # vestlust}}",
+    "select_all_emails": "{count, plural, one {Vali # e-kiri} other {Vali kõik # e-kirja}}",
+    "selecting_all": "Valimine…"
+  },
   "shared_tags": {
     "title": "Jagatud sildid",
     "description": "Sinu grupipostkastide sildid. Kõik grupis näevad selle kirjadel samu nimesid ja värve.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "Kaust \"{name}\" sisaldab veel {count, plural, one {1 sõnum} other {# sõnumit}}. Kas kustutada kaust ja kõik selle sõnumid? Seda ei saa tagasi võtta.",
     "delete_with_contents_confirm": "Kustuta kaust ja sõnumid"
   },
+  "mail_p2_folders": {
+    "all_folders": "Kõik kaustad",
+    "empty_trash": "Tühjenda prügikast",
+    "empty_spam": "Tühjenda rämpspost",
+    "empty_trash_confirm": "Kas kustutada prügikastist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "empty_spam_confirm": "Kas kustutada rämpspostist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
+    "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
+  },
   "uxs_folders": {
     "manage_accounts": "Halda kontosid…",
     "apply_to_existing": "{count, plural, one {Rakenda # olemasolevale kirjale kaustas {folder}} other {Rakenda # olemasolevale kirjale kaustas {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
     "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
+  },
+  "mail_p2_conv": {
+    "show_message": "Näita kirja",
+    "back_to_reply": "Tagasi vastuse juurde"
   },
   "identities": {
     "modal_title": "Halda saatja identiteete",
@@ -5551,7 +5576,7 @@
     "title": "Tere tulemast sinu postkasti",
     "tip_compose": "Vajuta c uue e-kirja kirjutamiseks",
     "tip_shortcuts": "Vajuta ? kõigi kiirklahvide nägemiseks",
-    "tip_sidebar": "Kalender, Kontaktid ja Seaded leiad külgmenüüst",
+    "tip_sidebar": "Kalender, Kontaktid ja Seaded on vasakul ribal",
     "tip_settings": "Kohanda oma kogemust seadetes",
     "tip_compose_touch": "Uue kirja kirjutamiseks puuduta pliiatsinuppu",
     "tip_sidebar_touch": "Kalender, kontaktid ja seaded asuvad alumisel ribal",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Otsi kirjadest „{text}”"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Oled võrguühenduseta. Selle kirja avamiseks on vaja ühendust.",
+    "reader_failed": "Seda kirja ei saanud laadida.",
+    "retry": "Proovi uuesti",
+    "action_offline": "Oled võrguühenduseta. Selleks on vaja ühendust.",
+    "offline_bar": "Oled võrguühenduseta. Kirjade lugemiseks ja muutmiseks on vaja ühendust.",
+    "offline_default_on": "Sinu kirjad hoitakse selles seadmes, nii et saad neid ka ühenduseta lugeda."
   },
   "desktopMenuBar": {
     "always_show_label": "Näita menüüriba alati",

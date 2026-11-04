@@ -93,7 +93,9 @@ describe('message list rows under the bottom reading pane (#262)', () => {
   it('keeps stacked rows in the split layout', () => {
     useSettingsStore.setState({ mailLayout: 'split' });
     const { container } = renderEmails([makeEmail()]);
-    expect(container.querySelector('p')).not.toBeNull();
+    // Stacked: a preview line of its own, or the preview after the subject
+    // on the subject's line at the regular density (mail-15).
+    expect(container.querySelector('p, [data-row-preview]')).not.toBeNull();
   });
 
   describe('as columns', () => {

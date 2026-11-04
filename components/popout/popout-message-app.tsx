@@ -198,6 +198,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
         liveState={liveState}
         onMailChanged={handleMailChanged}
         noAutomaticActions={fromLink}
+        conversation
         className="min-h-0 w-full flex-1"
       />
     </>

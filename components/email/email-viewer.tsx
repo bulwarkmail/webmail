@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
@@ -38,6 +39,8 @@ import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-m
 import { EmailContextMenu } from "./email-context-menu";
 import { rememberedTrashOrigin } from "@/lib/trash-origin";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
+import { useMessageActionShortcut } from "./message-action-shortcuts";
+import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
 import { turnOffLinks } from "@/lib/phishing-links";
 import { usePhishingMarked } from "@/hooks/use-phishing-report";
@@ -100,7 +103,7 @@ import {
   Minus,
   ShieldCheck,
   ShieldAlert,
-  RotateCcw,
+  Undo,
   Copy,
   Brain,
   Keyboard,
@@ -146,7 +149,6 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
 import { trashRestoreTarget } from "@/lib/trash-restore-target";
-import { localizeMailboxName } from "@/lib/mailbox-label";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
@@ -231,6 +233,8 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
 const REQUIRED_TOOLBAR_PRIORITIES = [5, 3, 2, 4, 1] as const;
 /** Set on the toolbar while it shows icons without their labels. */
 const TOOLBAR_COMPACT_ATTRIBUTE = 'data-toolbar-compact';
+/** Which labels the reader toolbar has dropped: none, all but the main four, or all. */
+type ToolbarCompact = false | 'secondary' | 'all';
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
 const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 
@@ -300,6 +304,8 @@ interface EmailViewerProps {
   /** Mountain View: reply to one message of the conversation. */
   onReplyConversationEmail?: (email: Email) => void;
   onReplyAllConversationEmail?: (email: Email) => void;
+  /** Forward on a message of the conversation. */
+  onForwardConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
   /** A reply or forward to this message is open under it: no quick reply box as well. */
@@ -787,10 +793,81 @@ function mvSenderDate(date: Date | string, timeFormat: '12h' | '24h'): string {
 }
 
 /**
+ * The date on a conversation message in the default layout: the time today,
+ * "Oct 21, 13:40" this year, "Oct 21, 2025" before. The full date is on hover.
+ */
+export function conversationShortDate(date: Date | string, timeFormat: '12h' | '24h', now: Date = new Date()): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const zone = getEffectiveTimeZone();
+  const day = Number.isNaN(d.getTime()) ? null : getWallClock(d, zone);
+  const today = getWallClock(now, zone);
+  if (day && day.year === today.year && day.month === today.month && day.day === today.day) return formatDateTime(d, timeFormat);
+  if (day && day.year === today.year) return formatDateTime(d, timeFormat, { month: 'short', day: 'numeric' });
+  return formatDateTime(d, timeFormat, { year: 'numeric', month: 'short', day: 'numeric', dateOnly: true });
+}
+
+function conversationFullDate(date: Date | string, timeFormat: '12h' | '24h'): string {
+  return formatDateTime(date, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/**
+ * The date on a conversation message's sender line: Mountain View keeps
+ * Gmail's "Oct 21, 2026, 13:40 (14 days ago)", the phone the list's date, the
+ * default layout the short date. Every style has the full date on hover.
+ */
+/**
+ * How a conversation opens around the open message (mail-p2-4): its unread
+ * messages unfolded, as Gmail does, and the newest one too, also when it is
+ * your own reply. The open message folds when a newer one is shown and it had
+ * been read already. Drafts and messages still waiting to be sent are never
+ * "the newest".
+ */
+export function conversationOpenPlan(conversation: Email[], openId: string): { expanded: string[]; foldOpen: boolean; newestId: string | null } {
+  const expanded = conversation.filter((e) => e.id !== openId && !e.keywords?.$seen).map((e) => e.id);
+  const open = conversation.find((e) => e.id === openId);
+  const candidates = conversation.filter((e) => !e.keywords?.$draft && !e.isScheduled && !e.sentEcho);
+  const newest = candidates[candidates.length - 1];
+  if (!open || !newest || newest.id === openId) return { expanded, foldOpen: false, newestId: null };
+  if (!expanded.includes(newest.id)) expanded.push(newest.id);
+  return { expanded, foldOpen: !!open.keywords?.$seen, newestId: newest.id };
+}
+
+/**
+ * The reading pane's scroll position that shows the message being answered
+ * above a docked reply: its end at the pane's bottom edge, or its start at
+ * the top when the whole message doesn't fit.
+ */
+export function replyScrollTop(pane: HTMLElement, end: HTMLElement, start: HTMLElement | null): number {
+  const paneTop = pane.getBoundingClientRect().top;
+  const endY = end.getBoundingClientRect().top - paneTop + pane.scrollTop;
+  const startY = start ? start.getBoundingClientRect().top - paneTop + pane.scrollTop : 0;
+  const toEnd = endY - pane.clientHeight;
+  return Math.max(0, startY > toEnd ? toEnd : startY);
+}
+
+/** A button's tooltip with the key the menus and the shortcut help show (mail-p2-13). */
+function useKeyTip() {
+  const shortcut = useMessageActionShortcut();
+  return (label: string, action: MessageActionKey) => {
+    const key = shortcut(action);
+    return key ? `${label} (${key})` : label;
+  };
+}
+
+function ConversationDate({ date, timeFormat, variant, className }: { date: string; timeFormat: '12h' | '24h'; variant: 'mv' | 'list' | 'short'; className?: string }) {
+  const shown = variant === 'mv' ? mvSenderDate(date, timeFormat) : variant === 'list' ? formatDate(date) : conversationShortDate(date, timeFormat);
+  return (
+    <time dateTime={date} title={conversationFullDate(date, timeFormat)} className={cn("text-xs text-muted-foreground whitespace-nowrap", className ?? "ms-auto ps-2")} data-conversation-date="">
+      {shown}
+    </time>
+  );
+}
+
+/**
  * One message of a Mountain View conversation, folded to its sender, date and
  * snippet. Clicking it unfolds the message in place.
  */
-function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean }) {
+function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean; shortDates?: boolean }) {
   const tSidebar = useTranslations('sidebar');
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
@@ -815,9 +892,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Ema
               {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
             </span>
           )}
-          <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
-            {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
-          </span>
+          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
         </span>
         <span className="block text-sm text-muted-foreground truncate">{cleanPreview(email.preview)}</span>
       </span>
@@ -877,22 +952,28 @@ export function MvExpandedConversationCard({
   onMarkRead,
   onReply,
   onReplyAll,
+  onForward,
   onDownloadAttachment,
   blobSource,
   compact,
+  shortDates,
 }: {
   email: Email;
   timeFormat: '12h' | '24h';
   compact?: boolean;
+  /** The default layout's short date instead of Gmail's long one. */
+  shortDates?: boolean;
   onCollapse: (email: Email) => void;
   onLoadBody?: (email: Email) => void;
   onMarkRead?: (email: Email) => void;
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
+  onForward?: (email: Email) => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   blobSource?: EmailBlobContext;
 }) {
   const t = useTranslations('email_viewer');
+  const keyTip = useKeyTip();
   const tSidebar = useTranslations('sidebar');
   const externalContent = useConversationExternalContent();
   const sender = email.from?.[0];
@@ -945,9 +1026,7 @@ export function MvExpandedConversationCard({
             <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
-            <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
-              {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
-            </span>
+            <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
           </span>
           <button
             type="button"
@@ -964,14 +1043,14 @@ export function MvExpandedConversationCard({
             {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
           </button>
         </span>
-        {(onReply || onReplyAll) && !email.keywords?.$draft && !email.isScheduled && (
+        {(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
             {onReply && (
               <button
                 type="button"
                 onClick={() => onReply(email)}
                 className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title={t('tooltips.reply')}
+                title={keyTip(t('reply'), 'reply')}
                 aria-label={t('reply')}
               >
                 <Reply className="w-5 h-5" />
@@ -982,10 +1061,21 @@ export function MvExpandedConversationCard({
                 type="button"
                 onClick={() => onReplyAll(email)}
                 className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title={t('tooltips.reply_all')}
+                title={keyTip(t('reply_all'), 'reply_all')}
                 aria-label={t('reply_all')}
               >
                 <ReplyAll className="w-5 h-5" />
+              </button>
+            )}
+            {onForward && (
+              <button
+                type="button"
+                onClick={() => onForward(email)}
+                className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                title={keyTip(t('forward'), 'forward')}
+                aria-label={t('forward')}
+              >
+                <Forward className="w-5 h-5" />
               </button>
             )}
           </span>
@@ -1027,9 +1117,10 @@ export function MvExpandedConversationCard({
  * run of folded messages before it shows only its first and last message
  * around a count, as Gmail does, and the count unfolds the rest.
  */
-export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun, expandedIds, renderExpanded, compact }: {
+export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun, expandedIds, renderExpanded, compact, shortDates }: {
   emails: Email[];
   compact?: boolean;
+  shortDates?: boolean;
   /** A folded message was clicked. */
   onOpen?: (email: Email) => void;
   timeFormat: '12h' | '24h';
@@ -1043,7 +1134,7 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
   const isExpanded = (e: Email) => !!renderExpanded && !!expandedIds?.has(e.id);
   const renderOne = (e: Email) => isExpanded(e)
     ? <Fragment key={e.id}>{renderExpanded!(e)}</Fragment>
-    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} />;
+    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />;
   const middle = emails.slice(1, -1);
   if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded)) {
     return <>{emails.map(renderOne)}</>;
@@ -1379,6 +1470,7 @@ export function EmailViewer({
   onMarkConversationEmailRead,
   onReplyConversationEmail,
   onReplyAllConversationEmail,
+  onForwardConversationEmail,
   mvInlineComposer,
   replyComposerOpen,
   replyDraft,
@@ -1498,14 +1590,13 @@ export function EmailViewer({
   // destroys the mail, Delete says "Delete forever".
   const isInTrashFolder = currentMailboxRole === 'trash';
   const tActions = useTranslations('reader_actions');
-  const tSidebarNames = useTranslations('sidebar');
   // Read for the re-render: bulkDeleteIsPermanent reads them from the store.
   useSettingsStore((state) => state.deleteAction);
   useSettingsStore((state) => state.permanentlyDeleteJunk);
   const deleteIsPermanent = bulkDeleteIsPermanent({ role: currentMailboxRole });
   // Marking your own outgoing mail as spam makes no sense - hide the action
   // in Sent, Drafts and Scheduled.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
+  const spamApplicable = spamApplicableIn(currentMailboxRole);
 
   // Detect if the email is a draft
   const isDraft = email?.keywords?.['$draft'] === true;
@@ -1544,6 +1635,11 @@ export function EmailViewer({
   const mvExpandedIdsRef = useRef(mvExpandedIds);
   mvExpandedIdsRef.current = mvExpandedIds;
   const mvExpandedThreadRef = useRef<string | null>(null);
+  // The open message folds too, but only inside a conversation.
+  const [mvOpenCollapsed, setMvOpenCollapsed] = useState(false);
+  useEffect(() => setMvOpenCollapsed(false), [email?.id]);
+  // The newest message to unfold and scroll to once the conversation is drawn.
+  const [mvNewestToShow, setMvNewestToShow] = useState<string | null>(null);
   useEffect(() => {
     if (!mvConversation || mvConversation.length === 0 || !email) {
       mvExpandedThreadRef.current = null;
@@ -1552,8 +1648,36 @@ export function EmailViewer({
     const key = mvConversation[0].threadId;
     if (mvExpandedThreadRef.current === key) return;
     mvExpandedThreadRef.current = key;
-    setMvExpandedIds(new Set(mvConversation.filter((e) => e.id !== email.id && !e.keywords?.$seen).map((e) => e.id)));
+    const plan = conversationOpenPlan(mvConversation, email.id);
+    setMvExpandedIds(new Set(plan.expanded));
+    if (plan.foldOpen) setMvOpenCollapsed(true);
+    setMvNewestToShow(plan.newestId);
   }, [mvConversation, email]);
+  useEffect(() => {
+    if (!mvNewestToShow) return;
+    const target = mvNewestToShow;
+    setMvNewestToShow(null);
+    const frame = requestAnimationFrame(() => {
+      const card = document.querySelector<HTMLElement>(`[data-mv-conversation-expanded][data-email-id="${CSS.escape(target)}"]`);
+      const pane = card?.closest<HTMLElement>('[data-reader-scroll]');
+      if (!card || !pane) return;
+      // Bring the newest message's start into view when it's below the fold.
+      const cardTop = card.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+      if (cardTop > pane.clientHeight - 96) pane.scrollTop += cardTop - 8;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mvNewestToShow]);
+  // A reply just sent joins the end of the conversation, folded like the
+  // others: bring it into view so it's seen to be there (mail-p2-1).
+  const lastEchoId = mvConversation?.filter((e) => e.sentEcho).at(-1)?.id ?? null;
+  useEffect(() => {
+    if (!lastEchoId) return;
+    const frame = requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-mv-conversation-card][data-email-id="${CSS.escape(lastEchoId)}"]`)
+        ?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [lastEchoId]);
   const toggleMvExpanded = useCallback((target: Email) => {
     emitThreadExpand(target.threadId, [target], !mvExpandedIdsRef.current.has(target.id));
     setMvExpandedIds((prev) => {
@@ -1563,10 +1687,11 @@ export function EmailViewer({
       return next;
     });
   }, []);
-  // The open message folds too, but only inside a conversation.
-  const [mvOpenCollapsed, setMvOpenCollapsed] = useState(false);
-  useEffect(() => setMvOpenCollapsed(false), [email?.id]);
   const mvOpenFolded = mvOpenIndex >= 0 && mvOpenCollapsed;
+  // The default layout's conversation (not Mountain View): the open message
+  // gets the same header as the others, with its date and its reply actions
+  // on the sender's line, and the subject line no date (mail-p2-4).
+  const inConversation = mvOpenIndex >= 0 && !mvViewer;
   // Folding or unfolding the open message of a conversation, told to plugins
   // like any other conversation message (onThreadExpand).
   const setMvOpenFolded = (folded: boolean) => {
@@ -1586,6 +1711,8 @@ export function EmailViewer({
       onMarkRead={onMarkConversationEmailRead}
       onReply={onReplyConversationEmail}
       onReplyAll={onReplyAllConversationEmail}
+      onForward={onForwardConversationEmail}
+      shortDates={!mvViewer}
       blobSource={target.sourceClientAccountId || target.sourceAccountId
         ? resolveEmailBlobContext(target, client)
         : blobSource ?? resolveEmailBlobContext(target, client)}
@@ -1597,6 +1724,13 @@ export function EmailViewer({
   const simpleMode = useSettingsStore((state) => state.simpleMode);
   // Simple mode always names the toolbar's buttons in words.
   const showToolbarLabels = (showToolbarLabelsSetting || simpleMode) && interfaceLayout !== 'mountain-view';
+  // Tooltips name the same key the message menus and the shortcut help do
+  // (mail-p2-13), and none when single keys are off.
+  const messageActionShortcut = useMessageActionShortcut();
+  const withShortcut = (label: string, action: MessageActionKey) => {
+    const key = messageActionShortcut(action);
+    return key ? `${label} (${key})` : label;
+  };
   // Inside a Pro pane, `isMobile` above is pane-width based: overlays that
   // would go viewport-fixed must instead cover just the pane (via
   // PaneOverlay + absolute positioning), and viewport CSS breakpoints like
@@ -1668,7 +1802,13 @@ export function EmailViewer({
   }, [onRescheduleScheduled, t, tComposer, scheduledSendAt, timeFormat]);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { startTour } = useTour();
-  const [showFullHeaders, setShowFullHeaders] = useState(false);
+  // The details panel belongs to the message it was opened on: the next
+  // message opens without it (mail-7).
+  const shownEmailId = email?.id ?? null;
+  const [details, setDetails] = useState<{ emailId: string | null; open: boolean }>({ emailId: shownEmailId, open: false });
+  if (details.emailId !== shownEmailId) setDetails({ emailId: shownEmailId, open: false });
+  const showFullHeaders = details.open && details.emailId === shownEmailId;
+  const setShowFullHeaders = (open: boolean) => setDetails({ emailId: shownEmailId, open });
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
   const [allowExternalContent, setAllowExternalContent] = useState(false);
@@ -1861,7 +2001,7 @@ export function EmailViewer({
   // looked like (see layoutKey), and the width it last had: an open that
   // brings back a toolbar already measured at this width needs no measuring.
   // A loading message and a loaded one can differ, so a few are kept.
-  const measuredToolbarRef = useRef(new Map<string, { hidden: Set<number>; compact: boolean }>());
+  const measuredToolbarRef = useRef(new Map<string, { hidden: Set<number>; compact: ToolbarCompact }>());
   const toolbarWidthRef = useRef<number | undefined>(undefined);
   const currentTagIds = getEmailTagIds(email?.keywords);
   const sortedTagIds = sortTagIds(currentTagIds);
@@ -2124,7 +2264,8 @@ export function EmailViewer({
       const key = layoutKey(items);
       const known = toolbarWidthRef.current !== undefined ? measuredToolbarRef.current.get(key) : undefined;
       if (known) {
-        el.toggleAttribute(TOOLBAR_COMPACT_ATTRIBUTE, known.compact);
+        if (known.compact) el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, known.compact);
+        else el.removeAttribute(TOOLBAR_COMPACT_ATTRIBUTE);
         for (const item of items) item.style.display = known.hidden.has(Number(item.dataset.overflowPriority)) ? 'none' : '';
         applyHidden(known.hidden);
         return;
@@ -2142,10 +2283,13 @@ export function EmailViewer({
       const containerWidth = el.clientWidth;
       const overflowNow = () => leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
       let overflow = overflowNow();
-      // The labels go before any button does (icons keep their tooltips).
-      const compact = overflow > 0;
-      if (compact) {
-        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, '');
+      // The labels go before any button does (icons keep their tooltips):
+      // first all but Reply, Archive, Delete and Move, then those too.
+      let compact: ToolbarCompact = false;
+      for (const step of ['secondary', 'all'] as const) {
+        if (overflow <= 0) break;
+        compact = step;
+        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, step);
         overflow = overflowNow();
       }
       const hidden = new Set<number>();
@@ -2388,6 +2532,23 @@ export function EmailViewer({
     setEmbeddedEmailText(null);
     setEmbeddedEmailAttachments(NO_POSTAL_ATTACHMENTS);
   }, [email?.id, externalContentPolicy]);
+
+  // Undo send on a quick reply puts its text back here, where it was
+  // written (mail-p2-8). After the reset above, which runs on the same open.
+  const quickReplyRestoreWaiting = useQuickReplyRestoreStore((s) => !!email && s.pending?.emailId === email.id);
+  useEffect(() => {
+    if (!quickReplyRestoreWaiting || !email) return;
+    const text = useQuickReplyRestoreStore.getState().take(email.id);
+    if (text === null) return;
+    setQuickReplyText(text);
+    setIsQuickReplyFocused(true);
+    requestAnimationFrame(() => {
+      const box = quickReplyRef.current;
+      if (!box) return;
+      box.focus();
+      box.setSelectionRange(box.value.length, box.value.length);
+    });
+  }, [quickReplyRestoreWaiting, email]);
 
   // Crypto-plugin body takeover (S/MIME, PGP, …). A privileged crypto plugin
   // can fetch the raw message via api.jmap.fetchBlob, decrypt/verify it, and
@@ -3521,6 +3682,27 @@ export function EmailViewer({
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
   // Not on spam: a reply confirms the address to the sender.
+  // A reply docks under the message it answers: keep that message in view
+  // above it, its end just over the dock, or its start when it is taller
+  // than what is left of the pane (mail-p2-2).
+  useEffect(() => {
+    if (!replyComposerOpen || !email) return;
+    // The message answered is read while answering: unfold it.
+    setMvOpenCollapsed(false);
+    let frame = 0;
+    const place = () => {
+      const pane = document.querySelector<HTMLElement>('[data-reader-scroll]');
+      const end = pane?.querySelector<HTMLElement>('[data-open-message-end]');
+      if (!pane || !end) return;
+      const start = pane.querySelector<HTMLElement>('[data-mv-open-header]') ?? pane.querySelector<HTMLElement>('[data-mv-open-folded]');
+      pane.scrollTop = replyScrollTop(pane, end, start);
+    };
+    // Once the dock has taken its room, and again when its height settles.
+    frame = requestAnimationFrame(() => { frame = requestAnimationFrame(place); });
+    const timer = setTimeout(place, 250);
+    return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
+  }, [replyComposerOpen, email?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per reply opened
+
   const showReplyDraft = !!email && !!replyDraft && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled;
   const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !showReplyDraft && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
@@ -4498,10 +4680,10 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="1"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-          title={t('tooltips.reply')}
+          title={withShortcut(t('reply'), 'reply')}
         >
           <Reply className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4510,7 +4692,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="2"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
-          title={t('tooltips.reply_all')}
+          title={withShortcut(t('reply_all'), 'reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
@@ -4522,7 +4704,7 @@ ${printWatermark ? printWatermark.html : ''}
           data-overflow-item
           data-overflow-priority="3"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
-          title={t('tooltips.forward')}
+          title={withShortcut(t('forward'), 'forward')}
         >
           <Forward className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
@@ -4559,7 +4741,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('spam.not_spam_title')}
           >
             <ShieldCheck className={cn("h-4 w-4", !mvViewer && "text-emerald-600 dark:text-emerald-400")} />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('spam.not_spam_title')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('spam.not_spam_title')}</span>}
           </Button>
         )}
         {isInTrashFolder && restoreTarget && onMoveToMailbox && (
@@ -4572,10 +4754,11 @@ ${printWatermark ? printWatermark.html : ''}
             data-overflow-action=""
             data-testid="reader-restore"
             className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
-            title={tActions('restore_to', { folder: localizeMailboxName(restoreTarget.role, restoreTarget.name, (key) => tSidebarNames(`mailboxes.${key}`)) })}
+            title={tActions('restore')}
+            aria-label={tActions('restore')}
           >
-            <RotateCcw className="w-4 h-4" />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
+            <Undo className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
         {archiveActionEnabled && !isInJunkFolder && !isInTrashFolder && (
@@ -4586,10 +4769,10 @@ ${printWatermark ? printWatermark.html : ''}
             data-overflow-item
             data-overflow-priority="4"
             className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
-            title={t('tooltips.archive')}
+            title={withShortcut(t('archive'), 'archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4598,11 +4781,11 @@ ${printWatermark ? printWatermark.html : ''}
           size="sm"
           onClick={onDelete}
           className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-3")}
-          title={deleteIsPermanent ? tActions('delete_forever') : t('tooltips.delete')}
+          title={deleteIsPermanent ? tActions('delete_forever') : withShortcut(t('delete'), 'delete')}
           data-testid="reader-delete"
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {canMoveAnywhere && onMoveToMailbox && (
@@ -4622,7 +4805,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
+              {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-64 max-w-full" data-reader-move-menu="">
@@ -5116,7 +5299,7 @@ ${printWatermark ? printWatermark.html : ''}
             {/* Date/time on the right of subject row - hidden on mobile, shown next to sender.
                 Mountain View puts it on the sender's row instead. The size is
                 in the details. */}
-            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && "sm:block")}>
+            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && !inConversation && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -5139,7 +5322,7 @@ ${printWatermark ? printWatermark.html : ''}
       {/* Email Content Area. Mountain View reads the conversation on one plain
           sheet, so the reply buttons under the message sit on the page colour
           rather than on a tinted strip. */}
-      <div className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
+      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
       <div className="min-h-full flex flex-col">
 
       {/* Above the messages of the open conversation. */}
@@ -5150,14 +5333,14 @@ ${printWatermark ? printWatermark.html : ''}
       {/* Mountain View: the conversation's earlier messages, folded. */}
       {mvBefore.length > 0 && (
         <div className="bg-background" data-mv-conversation-before="">
-          <MvConversationRun emails={mvBefore} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} collapseLongRun />
+          <MvConversationRun emails={mvBefore} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} collapseLongRun />
         </div>
       )}
 
       {/* Mountain View: the open message folded like the rest of the conversation. */}
       {mvOpenFolded && email ? (
         <div className="bg-background" data-mv-open-folded="">
-          <MvConversationCard email={email} onOpen={() => setMvOpenFolded(false)} timeFormat={timeFormat} compact={mvMobileViewer} />
+          <MvConversationCard email={email} onOpen={() => setMvOpenFolded(false)} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
         </div>
       ) : mvAwaitingConversation ? (
         <div className={cn("flex items-start py-3 animate-pulse", mvMobileViewer ? "gap-3 px-4" : "gap-4 px-6")} data-mv-conversation-pending="">
@@ -5217,6 +5400,9 @@ ${printWatermark ? printWatermark.html : ''}
                     {mvViewer && sender?.email && sender?.name && (
                       <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
                     )}
+                    {inConversation && sender?.email && sender?.name && (
+                      <span className="text-xs text-muted-foreground truncate min-w-0">&lt;<AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />&gt;</span>
+                    )}
                     <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
@@ -5234,12 +5420,12 @@ ${printWatermark ? printWatermark.html : ''}
                         }}
                       />
                     )}
-                    {mvViewer && (
+                    {(mvViewer || inConversation) && (
                       <span className="ms-auto ps-2 flex items-center gap-1 -my-2 -me-2" data-mv-sender-actions="">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap me-1" data-mv-sender-date="">
-                          {mvSenderDate(emailDisplayDate(email), timeFormat)}
+                        <span className="me-1" data-mv-sender-date="">
+                          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
                         </span>
-                        <button
+                        {mvViewer && (<button
                           type="button"
                           onClick={onToggleStar}
                           className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -5248,13 +5434,13 @@ ${printWatermark ? printWatermark.html : ''}
                           aria-pressed={!!isStarred}
                         >
                           <Star className={cn("w-5 h-5", isStarred && "fill-amber-400 text-amber-400")} />
-                        </button>
+                        </button>)}
                         {!isDraft && !isScheduled && (
                           <button
                             type="button"
                             onClick={() => onReply?.()}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                            title={t('tooltips.reply')}
+                            title={withShortcut(t('reply'), 'reply')}
                             aria-label={t('reply')}
                           >
                             <Reply className="w-5 h-5" />
@@ -5265,17 +5451,28 @@ ${printWatermark ? printWatermark.html : ''}
                             type="button"
                             onClick={onReplyAll}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                            title={t('tooltips.reply_all')}
+                            title={withShortcut(t('reply_all'), 'reply_all')}
                             aria-label={t('reply_all')}
                           >
                             <ReplyAll className="w-5 h-5" />
                           </button>
                         )}
+                        {inConversation && !isDraft && !isScheduled && onForward && (
+                          <button
+                            type="button"
+                            onClick={() => onForward()}
+                            className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title={withShortcut(t('forward'), 'forward')}
+                            aria-label={t('forward')}
+                          >
+                            <Forward className="w-5 h-5" />
+                          </button>
+                        )}
                       </span>
                     )}
                   </div>
-                  {/* Email address under name (on the name's line under Mountain View) */}
-                  {!mvViewer && sender?.email && sender?.name && (
+                  {/* Email address under name (on the name's line under Mountain View and in a conversation) */}
+                  {!mvViewer && !inConversation && sender?.email && sender?.name && (
                     <div className="text-sm text-muted-foreground mt-0.5 truncate"><AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} /></div>
                   )}
                 </div>
@@ -5486,7 +5683,7 @@ ${printWatermark ? printWatermark.html : ''}
                   type="button"
                   onClick={() => onReply?.()}
                   className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  title={t('tooltips.reply')}
+                  title={withShortcut(t('reply'), 'reply')}
                   aria-label={t('reply')}
                 >
                   <Reply className="w-5 h-5" />
@@ -5496,7 +5693,7 @@ ${printWatermark ? printWatermark.html : ''}
                     type="button"
                     onClick={onReplyAll}
                     className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    title={t('tooltips.reply_all')}
+                    title={withShortcut(t('reply_all'), 'reply_all')}
                     aria-label={t('reply_all')}
                   >
                     <ReplyAll className="w-5 h-5" />
@@ -5526,8 +5723,10 @@ ${printWatermark ? printWatermark.html : ''}
           };
           const replyToDifferent = !!email.replyTo?.length &&
             (!email.from || email.replyTo[0].email !== email.from[0]?.email);
+          // Received before it was sent means a wrong clock somewhere, not a
+          // delivery time (mail-29).
           const deliveryDeltaMs = email.sentAt && email.receivedAt
-            ? Math.abs(new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime())
+            ? new Date(email.receivedAt).getTime() - new Date(email.sentAt).getTime()
             : 0;
           const formatDelta = (diff: number) => {
             const minutes = Math.floor(diff / 60000);
@@ -6179,10 +6378,13 @@ ${printWatermark ? printWatermark.html : ''}
 
           <PluginSlot name="email-footer" extraProps={pluginFooterProps} />
 
+          {/* Where the open message ends: a reply docked under it scrolls to here. */}
+          <div data-open-message-end="" aria-hidden="true" />
+
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (
             <div className="mt-4 border-b border-border bg-background" data-mv-conversation-after="">
-              <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} />
+              <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
             </div>
           )}
 

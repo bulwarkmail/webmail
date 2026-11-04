@@ -427,6 +427,18 @@
     "new_folder_title": "Nowy folder",
     "new_subfolder_title": "Nowy podfolder"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {Zarchiwizowano # konwersację} few {Zarchiwizowano # konwersacje} many {Zarchiwizowano # konwersacji} other {Zarchiwizowano # konwersacji}}",
+    "conversations_to_trash": "{count, plural, one {Przeniesiono # konwersację do kosza} few {Przeniesiono # konwersacje do kosza} many {Przeniesiono # konwersacji do kosza} other {Przeniesiono # konwersacji do kosza}}",
+    "conversations_deleted": "{count, plural, one {Usunięto # konwersację} few {Usunięto # konwersacje} many {Usunięto # konwersacji} other {Usunięto # konwersacji}}",
+    "conversations_moved_to": "{count, plural, one {Przeniesiono # konwersację do {mailbox}} few {Przeniesiono # konwersacje do {mailbox}} many {Przeniesiono # konwersacji do {mailbox}} other {Przeniesiono # konwersacji do {mailbox}}}",
+    "conversations_moved": "{count, plural, one {Przeniesiono # konwersację} few {Przeniesiono # konwersacje} many {Przeniesiono # konwersacji} other {Przeniesiono # konwersacji}}",
+    "select_all_in_folder": "{count, plural, one {Zaznacz # konwersację w folderze {folder}} few {Zaznacz wszystkie # konwersacje w folderze {folder}} many {Zaznacz wszystkie # konwersacji w folderze {folder}} other {Zaznacz wszystkie # konwersacji w folderze {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Zaznacz # wiadomość w folderze {folder}} few {Zaznacz wszystkie # wiadomości w folderze {folder}} many {Zaznacz wszystkie # wiadomości w folderze {folder}} other {Zaznacz wszystkie # wiadomości w folderze {folder}}}",
+    "select_all_conversations": "{count, plural, one {Zaznacz # konwersację} few {Zaznacz wszystkie # konwersacje} many {Zaznacz wszystkie # konwersacji} other {Zaznacz wszystkie # konwersacji}}",
+    "select_all_emails": "{count, plural, one {Zaznacz # wiadomość} few {Zaznacz wszystkie # wiadomości} many {Zaznacz wszystkie # wiadomości} other {Zaznacz wszystkie # wiadomości}}",
+    "selecting_all": "Zaznaczanie…"
+  },
   "shared_tags": {
     "title": "Wspólne etykiety",
     "description": "Etykiety Twoich skrzynek grupowych. Wszyscy w grupie widzą te same nazwy i kolory przy jej wiadomościach.",
@@ -3882,6 +3894,15 @@
     "create": "Utwórz",
     "rename_confirm": "Zmień nazwę"
   },
+  "mail_p2_folders": {
+    "all_folders": "Wszystkie foldery",
+    "empty_trash": "Opróżnij kosz",
+    "empty_spam": "Opróżnij spam",
+    "empty_trash_confirm": "Trwale usunąć {count, plural, one {wiadomość} few {wszystkie # wiadomości} many {wszystkie # wiadomości} other {wszystkie # wiadomości}} z kosza? Nie można tego cofnąć.",
+    "empty_spam_confirm": "Trwale usunąć {count, plural, one {wiadomość} few {wszystkie # wiadomości} many {wszystkie # wiadomości} other {wszystkie # wiadomości}} ze spamu? Nie można tego cofnąć.",
+    "title_all_accounts": "{name} ({count}, {total} we wszystkich kontach)",
+    "title_all_accounts_only": "{name} ({total} we wszystkich kontach)"
+  },
   "uxs_folders": {
     "manage_accounts": "Zarządzaj kontami…",
     "apply_to_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości w folderze {folder}} few {Zastosuj do # istniejących wiadomości w folderze {folder}} many {Zastosuj do # istniejących wiadomości w folderze {folder}} other {Zastosuj do # istniejącej wiadomości w folderze {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Pokaż # starszą wiadomość} few {Pokaż # starsze wiadomości} many {Pokaż # starszych wiadomości} other {Pokaż # starszej wiadomości}}",
     "return_to_list_follows_layout": "Dopóki tego nie zmienisz, ustawienie zależy od układu: wyłączone, gdy lista i wiadomość są obok siebie, w innych przypadkach włączone."
+  },
+  "mail_p2_conv": {
+    "show_message": "Pokaż wiadomość",
+    "back_to_reply": "Wróć do odpowiedzi"
   },
   "identities": {
     "modal_title": "Zarządzaj tożsamościami nadawcy",
@@ -5289,7 +5314,7 @@
     "title": "Witaj w swojej skrzynce pocztowej",
     "tip_compose": "Naciśnij c, aby napisać nową wiadomość e-mail",
     "tip_shortcuts": "Naciśnij ?, aby zobaczyć wszystkie skróty klawiszowe",
-    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia znajdziesz w menu bocznym",
+    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia są na pasku po lewej",
     "tip_settings": "Dostosuj działanie aplikacji w Ustawieniach",
     "tip_compose_touch": "Stuknij przycisk z ołówkiem, aby napisać nowy e-mail",
     "tip_sidebar_touch": "Kalendarz, Kontakty i Ustawienia znajdziesz na dolnym pasku",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Szukaj „{text}” w poczcie"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Jesteś offline. Ta wiadomość otworzy się tylko z połączeniem.",
+    "reader_failed": "Nie udało się wczytać tej wiadomości.",
+    "retry": "Spróbuj ponownie",
+    "action_offline": "Jesteś offline. To wymaga połączenia.",
+    "offline_bar": "Jesteś offline. Czytanie i zmienianie poczty wymaga połączenia.",
+    "offline_default_on": "Twoja poczta jest przechowywana na tym urządzeniu, więc możesz ją czytać offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Zawsze pokazuj pasek menu",

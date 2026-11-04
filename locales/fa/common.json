@@ -427,6 +427,18 @@
     "new_folder_title": "پوشه جدید",
     "new_subfolder_title": "زیرپوشه جدید"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# مکالمه بایگانی شد} other {# مکالمه بایگانی شد}}",
+    "conversations_to_trash": "{count, plural, one {# مکالمه به زباله‌دان منتقل شد} other {# مکالمه به زباله‌دان منتقل شد}}",
+    "conversations_deleted": "{count, plural, one {# مکالمه حذف شد} other {# مکالمه حذف شد}}",
+    "conversations_moved_to": "{count, plural, one {# مکالمه به {mailbox} منتقل شد} other {# مکالمه به {mailbox} منتقل شد}}",
+    "conversations_moved": "{count, plural, one {# مکالمه منتقل شد} other {# مکالمه منتقل شد}}",
+    "select_all_in_folder": "{count, plural, one {انتخاب # مکالمه در {folder}} other {انتخاب همه # مکالمه در {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {انتخاب # ایمیل در {folder}} other {انتخاب همه # ایمیل در {folder}}}",
+    "select_all_conversations": "{count, plural, one {انتخاب # مکالمه} other {انتخاب همه # مکالمه}}",
+    "select_all_emails": "{count, plural, one {انتخاب # ایمیل} other {انتخاب همه # ایمیل}}",
+    "selecting_all": "در حال انتخاب…"
+  },
   "shared_tags": {
     "title": "برچسب‌های مشترک",
     "description": "برچسب‌های صندوق‌های گروهی شما. همهٔ اعضای گروه نام‌ها و رنگ‌های یکسانی روی ایمیل‌های آن می‌بینند.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "پوشه «{name}» هنوز شامل {count, plural, one {۱ پیام} other {# پیام}} است. پوشه و همه پیام‌های آن حذف شود؟ این عمل قابل بازگشت نیست.",
     "delete_with_contents_confirm": "حذف پوشه و پیام‌ها"
   },
+  "mail_p2_folders": {
+    "all_folders": "همه پوشه‌ها",
+    "empty_trash": "خالی کردن زباله‌دان",
+    "empty_spam": "خالی کردن هرزنامه",
+    "empty_trash_confirm": "{count, plural, one {پیام} other {همه # پیام}} زباله‌دان برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
+    "empty_spam_confirm": "{count, plural, one {پیام} other {همه # پیام}} هرزنامه برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
+    "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
+    "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
+  },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",
     "apply_to_existing": "{count, plural, one {اعمال روی # پیام موجود در {folder}} other {اعمال روی # پیام موجود در {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}",
     "return_to_list_follows_layout": "تا وقتی آن را تغییر ندهید، از چیدمان پیروی می‌کند: وقتی فهرست و پیام کنار هم هستند خاموش، در غیر این صورت روشن."
+  },
+  "mail_p2_conv": {
+    "show_message": "نمایش پیام",
+    "back_to_reply": "بازگشت به پاسخ شما"
   },
   "identities": {
     "modal_title": "مدیریت هویت‌های ارسال",
@@ -5551,7 +5576,7 @@
     "title": "به صندوق پستی خود خوش آمدید",
     "tip_compose": "کلید c را برای ایمیل جدید فشار دهید",
     "tip_shortcuts": "کلید ? را برای مشاهده میانبرها فشار دهید",
-    "tip_sidebar": "تقویم، مخاطبین و تنظیمات در نوار کناری",
+    "tip_sidebar": "تقویم، مخاطبان و تنظیمات در نوار سمت راست هستند",
     "tip_settings": "تجربه خود را در تنظیمات سفارشی کنید",
     "tip_compose_touch": "برای نوشتن ایمیل جدید روی دکمه مداد بزنید",
     "tip_sidebar_touch": "تقویم، مخاطبین و تنظیمات در نوار پایین هستند",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "جستجوی «{text}» در نامه‌ها"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "آفلاین هستید. برای باز کردن این پیام اتصال لازم است.",
+    "reader_failed": "این پیام بارگیری نشد.",
+    "retry": "تلاش دوباره",
+    "action_offline": "آفلاین هستید. برای این کار اتصال لازم است.",
+    "offline_bar": "آفلاین هستید. برای خواندن و تغییر ایمیل اتصال لازم است.",
+    "offline_default_on": "ایمیل‌های شما روی این دستگاه نگه داشته می‌شود تا آفلاین هم بخوانید."
   },
   "desktopMenuBar": {
     "always_show_label": "همیشه نوار منو نمایش داده شود",

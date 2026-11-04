@@ -37,7 +37,15 @@ describe('moved-undo', () => {
 
   it('with no main window to take it, the message window keeps the Undo itself', async () => {
     await offerMoveUndo('archive', alice as never, [{ client: alice as never, points: POINTS }], t, true);
-    expect(useToastStore.getState().toasts.map((toast) => toast.title)).toEqual(['email_archived']);
+    // The main window's words (mail-18), not "Email archived".
+    expect(useToastStore.getState().toasts.map((toast) => toast.title)).toEqual(['mail_list_extra.archived']);
     expect(undoHistory()).toHaveLength(1);
+  });
+
+  it('says "Moved to Trash" for a delete with Undo, and "Email deleted" only for one for good', async () => {
+    await offerMoveUndo('delete', alice as never, [{ client: alice as never, points: POINTS }], t, true);
+    await offerMoveUndo('delete', alice as never, null, t, true);
+    expect(useToastStore.getState().toasts.map((toast) => toast.title))
+      .toEqual(expect.arrayContaining(['mail_list_extra.moved_to_trash', 'notifications.email_deleted']));
   });
 });

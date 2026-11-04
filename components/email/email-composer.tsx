@@ -386,7 +386,10 @@ interface EmailComposerProps {
     labelHeaders?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
-  }) => void | false | Promise<void | false>;
+  },
+  /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
+  state?: ComposerDraftData,
+  ) => void | false | Promise<void | false>;
   /**
    * onSend failed. A host that closes the composer as soon as onSend starts
    * gets the message back here, to open it again: it must never vanish.
@@ -426,6 +429,12 @@ interface EmailComposerProps {
   popOut?: () => ComposerPopOut | null;
   /** The move goes back to the main window: the button says that, and shows at any width. */
   popOutToMainLabel?: string;
+  /**
+   * Docked under the message it answers (mail-p2-2): the composer starts
+   * compact, without the Subject line, the From line when there's nothing to
+   * pick, and the formatting bar until asked for. Full screen shows them all.
+   */
+  docked?: boolean;
   /**
    * This composer is all a window shows (lib/popout). It closes itself once a
    * message has gone. Closing the window with unsaved text hands the draft to
@@ -617,6 +626,7 @@ export function EmailComposer({
   onRestoreDiscarded,
   popOut,
   popOutToMainLabel,
+  docked = false,
   ownWindow,
   onSubjectChange,
   className,
@@ -1258,6 +1268,8 @@ export function EmailComposer({
   // button or Escape puts it back. Not in a window of its own, which is all composer.
   const [maximized, setMaximized] = useState(false);
   const canMaximize = !ownWindow && !mvWindow;
+  const dockCompact = docked && !maximized;
+  const [showDockFormatting, setShowDockFormatting] = useState(false);
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
@@ -4416,7 +4428,7 @@ export function EmailComposer({
           labelHeaders: labelled.labelHeaders,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
-        });
+        }, handedToHost);
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
 
@@ -5230,7 +5242,7 @@ export function EmailComposer({
       >
       <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
           {/* From field */}
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
+          <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50", dockCompact && identities.length <= 1 && !fromOverrideEnabled && "hidden")} data-composer-from="">
             <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
             <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
@@ -5532,7 +5544,7 @@ export function EmailComposer({
           )}
 
           {/* Subject field */}
-          <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+          <div className={cn("flex flex-wrap items-center gap-2 px-4 py-2.5", dockCompact && "hidden")} data-composer-subject="">
             <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('subject_label')}</label>
             <Input
               id={`${fieldIdBase}-subject`}
@@ -5631,7 +5643,7 @@ export function EmailComposer({
               ariaDescribedBy={`${fieldIdBase}-body-error`}
               defaultTextStyle={composeStyle}
               collapseToolbarOnMobile={phoneLayout && !showFormattingOnMobile}
-              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : 'top'}
+              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : dockCompact && !showDockFormatting ? 'hidden' : 'top'}
               onEditorReady={handleEditorReady}
               mentionCandidates={recipientMentionsEnabled ? mentionCandidates : undefined}
               findMentionContacts={recipientMentionsEnabled && mentionAddsRecipientTo !== 'off' ? findMentionContacts : undefined}
@@ -5914,16 +5926,17 @@ export function EmailComposer({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : setShowFormattingOnMobile((v) => !v)}
+                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : dockCompact ? setShowDockFormatting((v) => !v) : setShowFormattingOnMobile((v) => !v)}
                 className={cn(
                   "h-9 w-9 max-md:h-11 max-md:w-11",
-                  !mvWindow && "md:hidden",
-                  (mvWindow ? mvShowFormatting : showFormattingOnMobile) && "bg-accent text-accent-foreground",
+                  !mvWindow && !dockCompact && "md:hidden",
+                  (mvWindow ? mvShowFormatting : dockCompact ? showDockFormatting : showFormattingOnMobile) && "bg-accent text-accent-foreground",
                 )}
                 data-mv-formatting-toggle={mvWindow ? "" : undefined}
+                data-dock-formatting-toggle={dockCompact ? "" : undefined}
                 title={t('formatting')}
                 aria-label={t('formatting')}
-                aria-pressed={mvWindow ? mvShowFormatting : showFormattingOnMobile}
+                aria-pressed={mvWindow ? mvShowFormatting : dockCompact ? showDockFormatting : showFormattingOnMobile}
               >
                 <Type className="w-4 h-4" />
               </Button>

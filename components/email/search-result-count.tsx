@@ -18,6 +18,9 @@ export function SearchResultCount({ emails, hasMore }: { emails: Email[]; hasMor
     () => (disableThreading ? emails.length : groupEmailsByThread(emails).length),
     [emails, disableThreading],
   );
+  // More to load: the rows are conversations when the list groups them, so
+  // "100+ results" above them reads wrong as well (mail-16).
+  if (hasMore && !disableThreading) return <>{t("email_list.conversations_count_plus", { count: conversations })}</>;
   if (hasMore) return <>{t("advanced_search.results_found_more", { count: emails.length })}</>;
   if (conversations === emails.length) return <>{t("advanced_search.results_found", { count: emails.length })}</>;
   return <>{t("mail_list_extra.search_count", { conversations, messages: emails.length })}</>;

@@ -427,6 +427,18 @@
     "new_folder_title": "Ny mappe",
     "new_subfolder_title": "Ny undermappe"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# samtale arkivert} other {# samtaler arkivert}}",
+    "conversations_to_trash": "{count, plural, one {# samtale flyttet til papirkurven} other {# samtaler flyttet til papirkurven}}",
+    "conversations_deleted": "{count, plural, one {# samtale slettet} other {# samtaler slettet}}",
+    "conversations_moved_to": "{count, plural, one {# samtale flyttet til {mailbox}} other {# samtaler flyttet til {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# samtale flyttet} other {# samtaler flyttet}}",
+    "select_all_in_folder": "{count, plural, one {Velg den # samtalen i {folder}} other {Velg alle # samtaler i {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Velg den # e-posten i {folder}} other {Velg alle # e-poster i {folder}}}",
+    "select_all_conversations": "{count, plural, one {Velg den # samtalen} other {Velg alle # samtaler}}",
+    "select_all_emails": "{count, plural, one {Velg den # e-posten} other {Velg alle # e-poster}}",
+    "selecting_all": "Velger…"
+  },
   "shared_tags": {
     "title": "Delte etiketter",
     "description": "Etiketter i gruppepostkassene dine. Alle i gruppen ser de samme navnene og fargene på e-posten der.",
@@ -3882,6 +3894,15 @@
     "delete_with_contents_message": "Mappen «{name}» inneholder fortsatt {count, plural, one {1 melding} other {# meldinger}}. Slette mappen og alle meldingene i den? Dette kan ikke angres.",
     "delete_with_contents_confirm": "Slett mappe og meldinger"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mapper",
+    "empty_trash": "Tøm papirkurven",
+    "empty_spam": "Tøm søppelpost",
+    "empty_trash_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i papirkurven for godt? Dette kan ikke angres.",
+    "empty_spam_confirm": "Slette {count, plural, one {meldingen} other {alle # meldingene}} i søppelpost for godt? Dette kan ikke angres.",
+    "title_all_accounts": "{name} ({count}, {total} i alle kontoer)",
+    "title_all_accounts_only": "{name} ({total} i alle kontoer)"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer kontoer…",
     "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"
@@ -3960,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
     "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
+  },
+  "mail_p2_conv": {
+    "show_message": "Vis meldingen",
+    "back_to_reply": "Tilbake til svaret ditt"
   },
   "identities": {
     "modal_title": "Administrer avsenderidentiteter",
@@ -5551,7 +5576,7 @@
     "title": "Velkommen til postkassen din",
     "tip_compose": "Trykk c for å skrive en ny e-post",
     "tip_shortcuts": "Trykk på ? for å se alle tastatursnarveier",
-    "tip_sidebar": "Finn kalender, kontakter og innstillinger i menyen i sidefeltet",
+    "tip_sidebar": "Kalender, Kontakter og Innstillinger finner du i feltet til venstre",
     "tip_settings": "Tilpass nettposten under Innstillinger",
     "tip_compose_touch": "Trykk på blyantknappen for å skrive en ny e-post",
     "tip_sidebar_touch": "Kalender, Kontakter og Innstillinger finner du i linjen nederst",
@@ -7246,6 +7271,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Søk etter «{text}» i e-post"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Du er frakoblet. Denne meldingen trenger tilkobling for å åpnes.",
+    "reader_failed": "Meldingen kunne ikke lastes inn.",
+    "retry": "Prøv igjen",
+    "action_offline": "Du er frakoblet. Dette trenger tilkobling.",
+    "offline_bar": "Du er frakoblet. Å lese og endre e-post trenger tilkobling.",
+    "offline_default_on": "E-posten din lagres på denne enheten, så du kan lese den uten nett."
   },
   "desktopMenuBar": {
     "always_show_label": "Vis alltid menylinjen",

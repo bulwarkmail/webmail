@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Fish,
 } from "@/components/icons";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
@@ -115,6 +116,7 @@ export function MvListToolbar({
   const tBatch = useTranslations("email_list.batch_actions");
   const archiveActionEnabled = useArchiveActionEnabled();
   const tFolder = useTranslations("mailbox_context_menu");
+  const tP2 = useTranslations("mail_p2_folders");
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
   const tCommon = useTranslations("common");
@@ -200,7 +202,7 @@ export function MvListToolbar({
   const isInJunk = currentRole === "junk";
   const isInTrash = currentRole === "trash";
   // Marking your own drafts or sent mail as spam is meaningless.
-  const spamApplicable = !["sent", "drafts", "scheduled"].includes(currentRole ?? "");
+  const spamApplicable = spamApplicableIn(currentRole);
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionForPhishing = useEmailStore(useShallow((state) => resolveSelectedEmails(state)));
   const phishing = usePhishingReport(selectionForPhishing, currentRole);
@@ -429,7 +431,7 @@ export function MvListToolbar({
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   icon={FolderX}
-                  label={tFolder("empty_folder")}
+                  label={isInTrash ? tP2("empty_trash") : tP2("empty_spam")}
                   destructive
                   onClick={() => {
                     closeMenu();
