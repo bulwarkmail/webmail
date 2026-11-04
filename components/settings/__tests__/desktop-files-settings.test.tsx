@@ -333,9 +333,13 @@ describe('storage on the Files on this computer page', () => {
     expect(within(section).queryByRole('progressbar')).toBeNull();
   });
 
-  it('says nothing about storage before it is known', () => {
+  // The section is there before the numbers, so a settings search for storage lands on it.
+  it('shows the storage section as loading, with no numbers, before they are known', () => {
     setup({ quota: null });
     renderPage();
-    expect(screen.queryByTestId('files-sync-storage')).toBeNull();
+    const section = screen.getByTestId('files-sync-storage');
+    expect(section).toHaveAttribute('aria-busy', 'true');
+    expect(section.textContent).toBe('');
+    expect(screen.queryByRole('progressbar')).toBeNull();
   });
 });

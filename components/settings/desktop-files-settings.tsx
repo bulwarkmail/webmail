@@ -51,7 +51,17 @@ export function DesktopFilesSettings() {
 function StorageSection() {
   const t = useTranslations("files_storage");
   const quota = useFilesSyncStore((s) => s.quota);
-  if (!quota) return null;
+  // Shown while the numbers load too, so a settings search for storage lands on it.
+  if (!quota) {
+    return (
+      <SettingsSection id="storage" title={t("title")}>
+        <div className="space-y-2" data-testid="files-sync-storage" aria-busy="true">
+          <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+          <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+        </div>
+      </SettingsSection>
+    );
+  }
   const level = filesQuotaLevel(quota);
   const used = formatFileSize(quota.used);
   const percent = quota.total ? Math.min(100, (quota.used / quota.total) * 100) : 0;
