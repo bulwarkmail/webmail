@@ -7650,6 +7650,112 @@
     "signout_changed": "Henüz eklenmedi veya kaydedilmedi, şimdi siliniyor: {names}.",
     "signout_held": "Hâlâ başka bir programda açık, bu yüzden ancak orada kapatınca silinir: {names}."
   },
+  "files_sync": {
+    "title": "Bu bilgisayardaki dosyalar",
+    "drive": {
+      "title": "Dosyalar sürücüsü",
+      "label": "Dosyalar'ı sürücü olarak göster",
+      "description": "Dosyalar'ınız Dosya Gezgini'nde bir sürücü gibi görünür. Bir dosya, onu açtığınızda indirilir.",
+      "unsupported": "Windows 10 sürüm 1809 veya üstü gerekir.",
+      "root_name": "Dosyalar sürücüsü",
+      "letter_label": "Sürücü harfi",
+      "letter_description": "Sürücüye Dosya Gezgini'nde kendi harfini verir.",
+      "letter_none": "Harf yok"
+    },
+    "folders": {
+      "title": "Eşitlenen klasörler",
+      "description": "Bu bilgisayardaki bir klasör ile Dosyalar'daki bir klasör her iki yönde de aynı tutulur.",
+      "empty": "Henüz eşitlenen klasör yok.",
+      "forced_off": "Kuruluşunuz klasör eşitlemeyi kapattı. İçlerindeki dosyalar bu bilgisayarda kalır.",
+      "add": "Klasör ekle…",
+      "loading": "Klasörleriniz yükleniyor…",
+      "load_failed": "Dosyalar'daki klasörleriniz yüklenemedi. Yeniden deneyin.",
+      "pick_title": "Dosyalar'daki hangi klasör?",
+      "pick_confirm": "Bu bilgisayarda klasör seç…",
+      "paired_with": "Dosyalar'daki {folder} ile",
+      "pause": "Duraklat",
+      "resume": "Sürdür",
+      "remove": "Kaldır…",
+      "remove_title": "Bu klasörün eşitlenmesi durdurulsun mu?",
+      "remove_message": "Bu bilgisayardaki dosyalar yerinde kalır, Dosyalar'daki dosyalar da öyle. Değişiklikler artık birinden diğerine aktarılmaz.",
+      "remove_confirm": "Eşitlemeyi durdur",
+      "add_failed": {
+        "overlap": "Bu klasör eşitlenen bir klasörün içinde, böyle bir klasör içeriyor ya da bir sistem klasörü. Başka bir klasör seçin.",
+        "denied": "Uygulama bu klasörü kullanamıyor. Başka bir klasör seçin.",
+        "policy": "Kuruluşunuz buna izin vermiyor.",
+        "failed": "Klasör eklenemedi. Yeniden deneyin."
+      }
+    },
+    "status": {
+      "starting": "Başlatılıyor…",
+      "idle": "Güncel. Son eşitleme: {time}",
+      "idle_never": "Güncel",
+      "syncing": "Eşitleniyor: {done} tamamlandı, {pending} kaldı",
+      "paused": "Duraklatıldı",
+      "offline": "Çevrimdışı. {count, plural, =0 {Değişiklikler sunucuyu bekliyor} one {# değişiklik sunucuyu bekliyor} other {# değişiklik sunucuyu bekliyor}}",
+      "error": "Durdu: {reason}",
+      "confirm_delete": "Aşağıdaki soruyu yanıtlayana kadar duraklatıldı",
+      "blocked": "Kuruluşunuz tarafından kapatıldı"
+    },
+    "mass_delete": {
+      "title": "{count, plural, one {# öğe} other {# öğe}} silinsin mi?",
+      "local": "Bu bilgisayarda {folder} klasöründen {count, plural, one {# öğe} other {# öğe}} silindi. Dosyalar'da da {count, plural, one {silinsin} other {silinsinler}} mi?",
+      "remote": "Dosyalar'da {folder} klasöründen {count, plural, one {# öğe} other {# öğe}} silindi. Bu bilgisayarda da {count, plural, one {silinsin} other {silinsinler}} mi?",
+      "allow": "{count, plural, one {Sil} other {Hepsini sil}}",
+      "restore": "{count, plural, one {Geri getir} other {Hepsini geri getir}}",
+      "later": "Sonra karar ver"
+    },
+    "activity": {
+      "title": "Son etkinlik",
+      "empty": "Henüz bir şey olmadı.",
+      "clear": "Temizle",
+      "to_files": "Dosyalar'a",
+      "to_computer": "Bu bilgisayara",
+      "mark_conflict": "Çakışma",
+      "mark_error": "Hata",
+      "mark_question": "Yanıtınızı bekliyor",
+      "uploaded": "Yüklendi: {path}",
+      "downloaded": "İndirildi: {path}",
+      "folder-created": "Klasör oluşturuldu: {path}",
+      "renamed": "Yeniden adlandırıldı: {detail} → {path}",
+      "moved": "Taşındı: {detail} → {path}",
+      "deleted": "Silindi: {path}",
+      "trashed": "Çöp kutusuna taşındı: {path}",
+      "conflict": "{path} iki yerde de değiştirildi. Diğer sürüm {detail} olarak saklandı",
+      "renamed-for-disk": "{path}, adına burada izin verilmediği için bu bilgisayarda {detail} olarak adlandırıldı",
+      "too-large": "{path}, Dosyalar'ın izin verdiğinden büyük ({detail}). Yalnızca bu bilgisayarda kalır",
+      "waiting": "{path} sunucuyu bekliyor",
+      "mass-delete": "Çok sayıda öğe silinmeden önce duraklatıldı",
+      "error": "{path} eşitlenemedi"
+    },
+    "errors": {
+      "offline": "Sunucuya ulaşılamıyor",
+      "server_refused": "Sunucu değişikliği reddetti",
+      "too_large": "Dosya, Dosyalar için çok büyük",
+      "name_invalid": "Bu ada izin verilmiyor",
+      "disk_full": "Disk dolu",
+      "denied": "İzin verilmiyor",
+      "busy": "Başka bir program kullanıyor",
+      "quota": "Dosyalar'daki depolama alanınız dolu",
+      "not_found": "Artık mevcut değil",
+      "policy": "Kuruluşunuz buna izin vermiyor",
+      "failed": "Bir sorun oluştu"
+    },
+    "item": {
+      "label": "Bu bilgisayarda",
+      "synced": "Eşitlendi",
+      "syncing": "Eşitleniyor",
+      "pending": "Eşitlenmeyi bekliyor",
+      "error": "Eşitlenemedi",
+      "online-only": "Yalnızca Dosyalar'da, açıldığında indirilir"
+    },
+    "show_in": {
+      "explorer": "Dosya Gezgini'nde göster",
+      "finder": "Finder'da göster",
+      "file_manager": "Dosya yöneticisinde göster",
+      "failed": "Klasör açılamadı."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hızlı ileti",
     "menu": "Hızlı ileti",
@@ -7664,6 +7770,14 @@
     "back_no_answer": "Ana pencere yanıt vermedi. İletiniz burada kalıyor.",
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
+  },
+  "desktopAttachRecent": {
+    "heading": "Son dosyalar",
+    "browse": "Bu bilgisayara göz at…",
+    "from_files": "Dosyalar'dan…",
+    "missing": "\"{name}\" artık yok.",
+    "too_large": "\"{name}\" {max} boyutundan büyük ve eklenemez.",
+    "failed": "\"{name}\" eklenemedi. Yeniden deneyin."
   },
   "compose_windows": {
     "more_formatting": "Daha fazla biçimlendirme",

@@ -27,6 +27,8 @@ const OPTIONAL: Partial<Record<SettingsSearchTab, string>> = {
   calendar: "boot-no-calendar:hidden boot-no-settings-calendar:hidden",
   contacts: "boot-no-settings-contacts:hidden",
   files: "boot-no-files:hidden boot-no-settings-files:hidden",
+  // Desktop app only, while the files sync runs.
+  files_sync: "hidden boot-settings-files-sync:flex",
   addons: "boot-no-settings-addons:hidden",
   // Not in the static Lite build.
   offline: "boot-no-settings-offline:hidden",

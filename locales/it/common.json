@@ -7650,6 +7650,112 @@
     "signout_changed": "Non ancora allegati o salvati, ed eliminati ora: {names}.",
     "signout_held": "Ancora aperti in un altro programma, quindi eliminati solo quando li chiudi lì: {names}."
   },
+  "files_sync": {
+    "title": "File su questo computer",
+    "drive": {
+      "title": "Unità File",
+      "label": "Mostra File come unità",
+      "description": "I tuoi File appaiono in Esplora file come un'unità. Un file viene scaricato quando lo apri.",
+      "unsupported": "Richiede Windows 10 versione 1809 o successiva.",
+      "root_name": "Unità File",
+      "letter_label": "Lettera di unità",
+      "letter_description": "Assegna all'unità una lettera propria in Esplora file.",
+      "letter_none": "Nessuna lettera"
+    },
+    "folders": {
+      "title": "Cartelle sincronizzate",
+      "description": "Una cartella su questo computer e una cartella in File restano uguali, in entrambe le direzioni.",
+      "empty": "Nessuna cartella è ancora sincronizzata.",
+      "forced_off": "La tua organizzazione ha disattivato la sincronizzazione delle cartelle. I file al loro interno restano su questo computer.",
+      "add": "Aggiungi cartella…",
+      "loading": "Caricamento delle tue cartelle…",
+      "load_failed": "Impossibile caricare le tue cartelle in File. Riprova.",
+      "pick_title": "Quale cartella in File?",
+      "pick_confirm": "Scegli una cartella su questo computer…",
+      "paired_with": "Con {folder} in File",
+      "pause": "Metti in pausa",
+      "resume": "Riprendi",
+      "remove": "Rimuovi…",
+      "remove_title": "Interrompere la sincronizzazione di questa cartella?",
+      "remove_message": "I file su questo computer restano dove sono, e così quelli in File. Le modifiche non passano più dall'uno all'altro.",
+      "remove_confirm": "Interrompi sincronizzazione",
+      "add_failed": {
+        "overlap": "Questa cartella si trova in una cartella sincronizzata, ne contiene una o è una cartella di sistema. Scegline un'altra.",
+        "denied": "L'app non può usare questa cartella. Scegline un'altra.",
+        "policy": "La tua organizzazione non lo consente.",
+        "failed": "Impossibile aggiungere la cartella. Riprova."
+      }
+    },
+    "status": {
+      "starting": "Avvio…",
+      "idle": "Aggiornato. Ultima sincronizzazione {time}",
+      "idle_never": "Aggiornato",
+      "syncing": "Sincronizzazione: {done} completati, {pending} rimanenti",
+      "paused": "In pausa",
+      "offline": "Offline. {count, plural, =0 {Le modifiche attendono il server} one {# modifica attende il server} other {# modifiche attendono il server}}",
+      "error": "Interrotto: {reason}",
+      "confirm_delete": "In pausa finché non rispondi alla domanda qui sotto",
+      "blocked": "Disattivato dalla tua organizzazione"
+    },
+    "mass_delete": {
+      "title": "Eliminare {count, plural, one {# elemento} other {# elementi}}?",
+      "local": "{count, plural, one {# elemento è stato eliminato} other {# elementi sono stati eliminati}} da {folder} su questo computer. {count, plural, one {Eliminarlo} other {Eliminarli}} anche in File?",
+      "remote": "{count, plural, one {# elemento è stato eliminato} other {# elementi sono stati eliminati}} da {folder} in File. {count, plural, one {Eliminarlo} other {Eliminarli}} anche su questo computer?",
+      "allow": "{count, plural, one {Eliminalo} other {Eliminali}}",
+      "restore": "{count, plural, one {Ripristinalo} other {Ripristinali}}",
+      "later": "Decidi più tardi"
+    },
+    "activity": {
+      "title": "Attività recente",
+      "empty": "Non è ancora successo nulla.",
+      "clear": "Cancella",
+      "to_files": "Verso File",
+      "to_computer": "Verso questo computer",
+      "mark_conflict": "Conflitto",
+      "mark_error": "Errore",
+      "mark_question": "Serve una tua risposta",
+      "uploaded": "Caricato {path}",
+      "downloaded": "Scaricato {path}",
+      "folder-created": "Creata la cartella {path}",
+      "renamed": "Rinominato {detail} in {path}",
+      "moved": "Spostato {detail} in {path}",
+      "deleted": "Eliminato {path}",
+      "trashed": "Spostato {path} nel cestino",
+      "conflict": "{path} è stato modificato in entrambi i posti. L'altra versione è conservata come {detail}",
+      "renamed-for-disk": "{path} si chiama {detail} su questo computer, perché il suo nome qui non è consentito",
+      "too-large": "{path} è più grande di quanto consente File ({detail}). Resta solo su questo computer",
+      "waiting": "{path} è in attesa del server",
+      "mass-delete": "In pausa prima di eliminare molti elementi",
+      "error": "Impossibile sincronizzare {path}"
+    },
+    "errors": {
+      "offline": "Il server non è raggiungibile",
+      "server_refused": "Il server ha rifiutato la modifica",
+      "too_large": "Il file è troppo grande per File",
+      "name_invalid": "Il nome non è consentito",
+      "disk_full": "Il disco è pieno",
+      "denied": "Accesso negato",
+      "busy": "Un altro programma lo sta usando",
+      "quota": "Lo spazio di archiviazione in File è pieno",
+      "not_found": "Non esiste più",
+      "policy": "La tua organizzazione non lo consente",
+      "failed": "Qualcosa è andato storto"
+    },
+    "item": {
+      "label": "Su questo computer",
+      "synced": "Sincronizzato",
+      "syncing": "Sincronizzazione in corso",
+      "pending": "In attesa di sincronizzazione",
+      "error": "Sincronizzazione non riuscita",
+      "online-only": "Solo in File, scaricato all'apertura"
+    },
+    "show_in": {
+      "explorer": "Mostra in Esplora file",
+      "finder": "Mostra nel Finder",
+      "file_manager": "Mostra nel file manager",
+      "failed": "Impossibile aprire la cartella."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scrittura rapida",
     "menu": "Scrittura rapida",
@@ -7664,6 +7770,14 @@
     "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui.",
     "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
     "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
+  },
+  "desktopAttachRecent": {
+    "heading": "File recenti",
+    "browse": "Sfoglia questo computer…",
+    "from_files": "Da File…",
+    "missing": "\"{name}\" non esiste più.",
+    "too_large": "\"{name}\" supera {max} e non può essere allegato.",
+    "failed": "Impossibile allegare \"{name}\". Riprova."
   },
   "compose_windows": {
     "more_formatting": "Altre opzioni di formattazione",

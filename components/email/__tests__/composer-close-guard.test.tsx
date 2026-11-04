@@ -334,6 +334,42 @@ describe('composer close guard with a follow-up', () => {
       await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
       expect(confirm).not.toHaveBeenCalled();
     });
+
+    describe('with a shell that has windows of its own', () => {
+      const windowBridge = (answer: unknown) => {
+        const confirm = vi.fn(async () => 2);
+        const show = vi.fn(async () => answer);
+        window.bulwarkDesktop = { version: 1, platform: 'win32', dialogs: { confirm, show, cancel: vi.fn() } } as never;
+        return { confirm, show };
+      };
+
+      it('asks in the app\'s own window, not the OS box, with Try again as the default', async () => {
+        const { confirm, show } = windowBridge(null);
+        const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+        act(() => requestCloseRef.current!(afterClose));
+        await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+        expect(confirm).not.toHaveBeenCalled();
+        expect(show.mock.calls[0]).toMatchObject([{
+          title: 'close_draft_title',
+          message: [{ text: 'save_failed_close' }],
+          buttons: [{ label: 'cancel', variant: 'secondary' }, { label: 'discard', variant: 'destructive' }, { label: 'try_again' }],
+          defaultIndex: 2,
+        }]);
+        expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
+        // Escape: nothing happens.
+        await act(async () => {});
+        expect(onClose).not.toHaveBeenCalled();
+        expect(afterClose).not.toHaveBeenCalled();
+      });
+
+      it('Discard in the window discards, and the follow-up runs', async () => {
+        windowBridge({ button: 1 });
+        const { requestCloseRef, afterClose, onClose } = renderWithCloseRef();
+        act(() => requestCloseRef.current!(afterClose));
+        await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
+      });
+    });
   });
 
   it('runs the follow-up after discarding a draft that could not be saved', async () => {

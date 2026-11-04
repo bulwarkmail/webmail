@@ -20,6 +20,8 @@ export type SettingsSearchTab =
   | 'calendar'
   | 'contacts'
   | 'files'
+  /** Files on this computer, in the desktop app. */
+  | 'files_sync'
   | 'addons'
   | 'offline'
   | 'privacy'
@@ -369,6 +371,13 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.files.behavior.title', advanced: true },
     { label: 'settings.files.show_hidden.label', advanced: true },
   ],
+  // Desktop app only; the page is in the nav only while the sync engine runs.
+  files_sync: [
+    { label: 'files_sync.drive.title', when: 'desktop' },
+    { label: 'files_sync.drive.label', when: 'desktop' },
+    { label: 'files_sync.folders.title', when: 'desktop' },
+    { label: 'files_sync.activity.title', when: 'desktop' },
+  ],
   addons: [
     { label: 'settings.sidebar_apps.title' },
     { label: 'settings.sidebar_apps.keep_loaded', advanced: true },
@@ -417,6 +426,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
 /** Pages added after `settings.tabs` keep their names in their own namespace. */
 const NEW_TAB_LABELS: Partial<Record<Tab, string>> = {
   offline: 'uxs_structure.tabs.offline',
+  files_sync: 'files_sync.title',
   privacy: 'uxs_structure.tabs.privacy',
   about: 'uxs_structure.tabs.about',
 };
@@ -449,6 +459,7 @@ export const tabKeywords: Record<Tab, string> = {
   calendar: 'event schedule appointment meeting timezone invitation ics ical webcal subscribe subscription tasks birthday working hours',
   contacts: 'address book contact',
   files: 'attachments cloud drive storage upload',
+  files_sync: 'sync synchronize folder drive explorer finder computer local disk letter',
   addons: 'apps webview iframe plugins extensions addons sidebar',
   offline: 'offline connection storage device sync outbox local kept',
   privacy: 'privacy tracking remote images content read receipts favicons pictures telemetry crash reports',
