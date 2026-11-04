@@ -312,7 +312,7 @@
         "description": "Alle E-Mails als reinen Text schreiben, ohne Fettdruck, Farben oder Bilder. Das gilt auch für Antworten und Weiterleitungen."
       },
       "auto_select_reply_identity": {
-        "description": "Wenn Sie antworten, geht die Antwort von der Adresse aus, an die die E-Mail ging. Das klappt mit all Ihren eigenen Adressen. Weiter unten wählen Sie, ob auch andere Adressen Ihrer Domain zählen."
+        "description": "Wenn Sie antworten, geht die Antwort von der Adresse aus, an die die E-Mail ging. Das klappt mit all Ihren eigenen Adressen."
       },
       "reply_identity_match": {
         "label": "Welche Adressen als Ihre gelten",
@@ -576,10 +576,10 @@
         "description": "Alle Einstellungen auf den Anfangszustand zurücksetzen"
       },
       "export_settings": {
-        "description": "Ihre Einstellungen als Datei auf Ihrem Gerät speichern"
+        "description": "Eine Kopie Ihrer Einstellungen herunterladen"
       },
       "import_settings": {
-        "description": "Ihre Einstellungen aus einer früher gespeicherten Datei laden"
+        "description": "Einstellungen aus einer Datei wiederherstellen"
       },
       "sections": {
         "backup_description": "Dieselben Einstellungen in anderen Browsern und auf anderen Geräten nutzen.",

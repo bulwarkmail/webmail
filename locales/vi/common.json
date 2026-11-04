@@ -1979,7 +1979,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Trả lời bằng địa chỉ nhận thư",
-        "description": "Khi trả lời, gửi thư từ địa chỉ mà thư ban đầu được gửi đến. Các danh tính bạn đã cấu hình luôn được khớp; tùy chọn “Khớp địa chỉ nhận” bên dưới quyết định có tính các địa chỉ khác trong miền của bạn (catch-all) hay không."
+        "description": "Khi trả lời, gửi từ địa chỉ mà thư đã được gửi đến."
       },
       "reply_identity_match": {
         "label": "Khớp địa chỉ nhận",
@@ -2627,7 +2627,7 @@
       },
       "refresh_cache": {
         "label": "Làm mới dữ liệu được lưu trong bộ nhớ đệm",
-        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Giữ lại các tài khoản và phiên của bạn — sửa chế độ xem cũ hoặc sai mà không cần đăng xuất.",
+        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Bạn vẫn đăng nhập.",
         "button": "Làm mới",
         "confirm_title": "Làm mới dữ liệu đã lưu vào bộ nhớ đệm?"
       },
@@ -2640,12 +2640,12 @@
       },
       "export_settings": {
         "label": "Xuất cài đặt",
-        "description": "Tải xuống cài đặt của bạn dưới dạng JSON",
+        "description": "Tải xuống bản sao cài đặt",
         "button": "Xuất"
       },
       "import_settings": {
         "label": "Nhập cài đặt",
-        "description": "Tải lên cài đặt từ tệp JSON",
+        "description": "Khôi phục cài đặt từ tệp",
         "button": "Nhập"
       },
       "about": {
@@ -5960,7 +5960,7 @@
     "clear_confirm_unsent": "{count, plural, other {# thư chưa gửi sẽ bị mất.}}",
     "clear_confirm": "Xóa",
     "persist_refused": "Trình duyệt này có thể xóa thư đã giữ khi sắp hết dung lượng. Cài đặt ứng dụng thường giúp tránh điều này.",
-    "persist_retry": "Hỏi lại",
+    "persist_retry": "Đề nghị trình duyệt giữ lại",
     "safari_hint": "Safari xóa dữ liệu của một trang web sau 7 ngày không truy cập. Hãy thêm Bulwark vào Màn hình chính hoặc Dock để giữ thư trên thiết bị này.",
     "evicted": "Trình duyệt đã xóa thư được giữ trên thiết bị này. Đang tải lại.",
     "evicted_lost": "{count, plural, other {# thư hoặc thay đổi chưa gửi đã bị mất.}}",

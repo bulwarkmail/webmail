@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "پاسخ از آدرس دریافتی",
-        "description": "ارسال با آدرس دریافت شده"
+        "description": "هنگام پاسخ، از نشانی‌ای که پیام به آن فرستاده شده ارسال شود."
       },
       "reply_identity_match": {
         "label": "تطبیق نشانی دریافت",
@@ -2615,7 +2615,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "بارگیری دوباره مخاطبان، تقویم‌ها و پوشه‌ها از سرور. وارد حساب می‌مانید.",
         "button": "Refresh",
         "confirm_title": "داده‌های ذخیره‌شده موقت تازه شوند؟"
       },
@@ -2628,12 +2628,12 @@
       },
       "export_settings": {
         "label": "خروجی تنظیمات",
-        "description": "دانلود تنظیمات به صورت JSON",
+        "description": "دانلود یک نسخه از تنظیمات",
         "button": "خروجی"
       },
       "import_settings": {
         "label": "وارد کردن تنظیمات",
-        "description": "بارگذاری تنظیمات از فایل JSON",
+        "description": "بازیابی تنظیمات از یک فایل",
         "button": "وارد کردن"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# پیام ارسال‌نشده از بین می‌رود.} other {# پیام ارسال‌نشده از بین می‌روند.}}",
     "clear_confirm": "پاک‌کردن",
     "persist_refused": "وقتی فضا کم شود، این مرورگر ممکن است ایمیل‌های نگه‌داشته‌شده را حذف کند. نصب برنامه معمولاً جلوی این را می‌گیرد.",
-    "persist_retry": "دوباره بپرس",
+    "persist_retry": "از مرورگر بخواهید آن را نگه دارد",
     "safari_hint": "Safari داده‌های یک سایت را پس از ۷ روز بدون بازدید حذف می‌کند. Bulwark را به صفحه اصلی یا Dock اضافه کنید تا ایمیل‌هایتان روی این دستگاه بماند.",
     "evicted": "مرورگر ایمیل‌های نگه‌داشته‌شده روی این دستگاه را حذف کرد. دوباره دانلود می‌شوند.",
     "evicted_lost": "{count, plural, one {# پیام یا تغییر ارسال‌نشده از بین رفت.} other {# پیام یا تغییر ارسال‌نشده از بین رفتند.}}",

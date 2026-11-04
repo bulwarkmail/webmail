@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Vasta kirja saanud aadressilt",
-        "description": "Vastamisel saada kiri aadressilt, millele algne kiri saadeti. Sinu seadistatud identiteedid vastavad alati; kas ka teised sinu domeenide aadressid loetakse sobivaks (catch-all), määrab allpool olev „Vastuvõetud aadressi sobitamine“."
+        "description": "Vastamisel saada aadressilt, kuhu kiri saadeti."
       },
       "reply_identity_match": {
         "label": "Vastuvõetud aadressi sobitamine",
@@ -2615,7 +2615,7 @@
       },
       "refresh_cache": {
         "label": "Värskenda vahemällu salvestatud andmeid",
-        "description": "Laadi kontaktid, kalendrid ja kaustad serverist uuesti. Kontod ja seansid jäävad alles — parandab aegunud või vale kuva ilma välja logimata.",
+        "description": "Laadi kontaktid, kalendrid ja kaustad serverist uuesti. Jääd sisselogituks.",
         "button": "Värskenda",
         "confirm_title": "Värskendada vahemälu andmed?"
       },
@@ -2628,12 +2628,12 @@
       },
       "export_settings": {
         "label": "Ekspordi seaded",
-        "description": "Laadi oma seaded alla JSON-ina",
+        "description": "Laadi alla oma seadete koopia",
         "button": "Ekspordi"
       },
       "import_settings": {
         "label": "Impordi seaded",
-        "description": "Lae seaded üles JSON-failist",
+        "description": "Taasta seaded failist",
         "button": "Impordi"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# saatmata kiri läheb kaotsi.} other {# saatmata kirja lähevad kaotsi.}}",
     "clear_confirm": "Tühjenda",
     "persist_refused": "See brauser võib hoitud kirjad kustutada, kui ruumi napib. Rakenduse paigaldamine hoiab selle tavaliselt ära.",
-    "persist_retry": "Küsi uuesti",
+    "persist_retry": "Palu brauseril need alles hoida",
     "safari_hint": "Safari kustutab saidi andmed, kui seda pole 7 päeva külastatud. Lisa Bulwark avaekraanile või Dockile, et su kirjad sellesse seadmesse alles jääksid.",
     "evicted": "Brauser kustutas selles seadmes hoitud kirjad. Need laaditakse uuesti alla.",
     "evicted_lost": "{count, plural, one {# saatmata kiri või muudatus läks kaotsi.} other {# saatmata kirja või muudatust läks kaotsi.}}",

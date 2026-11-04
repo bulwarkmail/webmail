@@ -1955,7 +1955,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Sélection automatique de l'adresse de réponse",
-        "description": "Lors d'une réponse, bascule automatiquement l'adresse d'expédition vers l'identité qui a reçu le message d'origine"
+        "description": "Lors d’une réponse, envoyer depuis l’adresse à laquelle le message a été envoyé."
       },
       "reply_identity_match": {
         "label": "Correspondance de l'adresse de réception",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Actualiser les données en cache",
-        "description": "Actualiser les contacts, calendriers et dossiers depuis le serveur. Vos comptes et sessions sont conservés. Corrige un affichage obsolète ou incorrect sans vous déconnecter.",
+        "description": "Recharger les contacts, calendriers et dossiers depuis le serveur. Vous restez connecté.",
         "button": "Actualiser",
         "confirm_title": "Actualiser les données en cache ?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Exporter les paramètres",
-        "description": "Télécharger vos paramètres au format JSON",
+        "description": "Télécharger une copie de vos réglages",
         "button": "Exporter"
       },
       "import_settings": {
         "label": "Importer les paramètres",
-        "description": "Charger les paramètres depuis un fichier JSON",
+        "description": "Restaurer les réglages depuis un fichier",
         "button": "Importer"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# message non envoyé sera perdu.} other {# messages non envoyés seront perdus.}}",
     "clear_confirm": "Vider",
     "persist_refused": "Ce navigateur peut supprimer les e-mails gardés quand la place manque. Installer l'application l'évite en général.",
-    "persist_retry": "Redemander",
+    "persist_retry": "Demander au navigateur de les garder",
     "safari_hint": "Safari supprime les données d'un site après 7 jours sans visite. Ajoutez Bulwark à votre écran d'accueil ou au Dock pour garder vos e-mails sur cet appareil.",
     "evicted": "Le navigateur a supprimé les e-mails gardés sur cet appareil. Ils sont de nouveau en cours de téléchargement.",
     "evicted_lost": "{count, plural, one {# message ou modification non envoyé a été perdu.} other {# messages ou modifications non envoyés ont été perdus.}}",

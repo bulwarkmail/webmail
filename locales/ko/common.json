@@ -1964,7 +1964,7 @@
       },
       "auto_select_reply_identity": {
         "label": "답장 시 보내는 사람 자동 선택",
-        "description": "답장할 때 메일을 받았던 주소로 보내는 사람을 자동으로 변경해요"
+        "description": "답장할 때 메시지를 받은 주소로 보내요."
       },
       "reply_identity_match": {
         "label": "수신 주소 일치 방식",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "서버에서 연락처, 캘린더, 폴더를 다시 불러와요. 로그인 상태는 유지돼요.",
         "button": "Refresh",
         "confirm_title": "캐시된 데이터를 새로 고칠까요?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "설정 내보내기",
-        "description": "내 설정을 JSON 파일로 다운로드해요",
+        "description": "설정 사본 다운로드",
         "button": "내보내기"
       },
       "import_settings": {
         "label": "설정 가져오기",
-        "description": "JSON 파일에서 설정을 불러와요",
+        "description": "파일에서 설정 복원",
         "button": "가져오기"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, other {보내지 않은 메시지 #개가 사라집니다.}}",
     "clear_confirm": "비우기",
     "persist_refused": "저장 공간이 부족해지면 이 브라우저가 보관한 메일을 삭제할 수 있습니다. 앱을 설치하면 대개 막을 수 있습니다.",
-    "persist_retry": "다시 요청",
+    "persist_retry": "브라우저에 보관을 요청",
     "safari_hint": "Safari는 7일 동안 방문하지 않은 사이트의 데이터를 삭제합니다. 이 기기에 메일을 계속 보관하려면 Bulwark를 홈 화면이나 Dock에 추가하세요.",
     "evicted": "브라우저가 이 기기에 보관한 메일을 삭제했습니다. 다시 다운로드하는 중입니다.",
     "evicted_lost": "{count, plural, other {보내지 않은 메시지 또는 변경 사항 #개가 사라졌습니다.}}",

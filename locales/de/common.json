@@ -1964,7 +1964,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Antwortadresse automatisch wählen",
-        "description": "Beim Antworten die Absenderadresse automatisch auf die Identität umstellen, die die ursprüngliche Nachricht erhalten hat"
+        "description": "Beim Antworten von der Adresse senden, an die die E-Mail ursprünglich ging."
       },
       "reply_identity_match": {
         "label": "Abgleich der Empfangsadresse",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Zwischengespeicherte Daten aktualisieren",
-        "description": "Kontakte, Kalender und Ordner vom Server neu laden. Konten und Sitzungen bleiben erhalten; veraltete oder fehlerhafte Ansichten werden korrigiert, ohne dass Sie sich abmelden müssen.",
+        "description": "Kontakte, Kalender und Ordner neu vom Server laden. Sie bleiben angemeldet.",
         "button": "Aktualisieren",
         "confirm_title": "Zwischengespeicherte Daten aktualisieren?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Einstellungen exportieren",
-        "description": "Ihre Einstellungen als JSON herunterladen",
+        "description": "Eine Kopie Ihrer Einstellungen herunterladen",
         "button": "Exportieren"
       },
       "import_settings": {
         "label": "Einstellungen importieren",
-        "description": "Einstellungen aus JSON-Datei hochladen",
+        "description": "Einstellungen aus einer Datei wiederherstellen",
         "button": "Importieren"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# ungesendete Nachricht geht verloren.} other {# ungesendete Nachrichten gehen verloren.}}",
     "clear_confirm": "Leeren",
     "persist_refused": "Dieser Browser kann die behaltenen E-Mails löschen, wenn der Platz knapp wird. Die App zu installieren verhindert das meistens.",
-    "persist_retry": "Erneut fragen",
+    "persist_retry": "Browser bitten, sie zu behalten",
     "safari_hint": "Safari löscht die Daten einer Website nach 7 Tagen ohne Besuch. Fügen Sie Bulwark zum Home-Bildschirm oder zum Dock hinzu, damit Ihre E-Mails auf diesem Gerät bleiben.",
     "evicted": "Der Browser hat die auf diesem Gerät behaltenen E-Mails gelöscht. Sie werden neu geladen.",
     "evicted_lost": "{count, plural, one {# ungesendete Nachricht oder Änderung ging verloren.} other {# ungesendete Nachrichten oder Änderungen gingen verloren.}}",

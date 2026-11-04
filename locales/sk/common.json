@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Odpovedať z prijatej adresy",
-        "description": "Pri odpovedaní automaticky prepnúť adresu odosielateľa na identitu, ktorá pôvodne prijala správu"
+        "description": "Pri odpovedaní odoslať z adresy, na ktorú bola správa poslaná."
       },
       "reply_identity_match": {
         "label": "Porovnávanie prijímacej adresy",
@@ -2615,7 +2615,7 @@
       },
       "refresh_cache": {
         "label": "Obnoviť uložené údaje",
-        "description": "Znova načíta kontakty, kalendáre a priečinky zo servera. Zachová vaše účty a prihlásenia — opraví zastarané alebo nesprávne zobrazenie bez odhlásenia.",
+        "description": "Znova načítať kontakty, kalendáre a priečinky zo servera. Zostanete prihlásení.",
         "button": "Obnoviť",
         "confirm_title": "Obnoviť údaje vo vyrovnávacej pamäti?"
       },
@@ -2628,12 +2628,12 @@
       },
       "export_settings": {
         "label": "Exportovať nastavenia",
-        "description": "Stiahnuť svoje nastavenia ako súbor JSON",
+        "description": "Stiahnuť kópiu nastavení",
         "button": "Exportovať"
       },
       "import_settings": {
         "label": "Importovať nastavenia",
-        "description": "Nahrať nastavenia zo súboru JSON",
+        "description": "Obnoviť nastavenia zo súboru",
         "button": "Importovať"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# neodoslaná správa sa stratí.} few {# neodoslané správy sa stratia.} many {# neodoslanej správy sa stratí.} other {# neodoslaných správ sa stratí.}}",
     "clear_confirm": "Vymazať",
     "persist_refused": "Tento prehliadač môže uchovanú poštu zmazať, keď dôjde miesto. Inštalácia aplikácie tomu zvyčajne zabráni.",
-    "persist_retry": "Opýtať sa znova",
+    "persist_retry": "Požiadať prehliadač o zachovanie",
     "safari_hint": "Safari zmaže dáta webu po 7 dňoch bez návštevy. Pridajte Bulwark na plochu alebo do Docku, aby vaša pošta na tomto zariadení zostala.",
     "evicted": "Prehliadač zmazal poštu uchovanú na tomto zariadení. Sťahuje sa znova.",
     "evicted_lost": "{count, plural, one {# neodoslaná správa alebo zmena sa stratila.} few {# neodoslané správy alebo zmeny sa stratili.} many {# neodoslanej správy alebo zmeny sa stratilo.} other {# neodoslaných správ alebo zmien sa stratilo.}}",

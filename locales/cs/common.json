@@ -1964,7 +1964,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Automaticky vybírat adresu pro odpověď",
-        "description": "Při odpovídání automaticky přepnout adresu odesílatele na identitu, která původně obdržela zprávu"
+        "description": "Při odpovídání odeslat z adresy, na kterou byla zpráva poslána."
       },
       "reply_identity_match": {
         "label": "Porovnávání přijímací adresy",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Obnovit data z mezipaměti",
-        "description": "Znovu načíst kontakty, kalendáře a složky ze serveru. Účty a přihlášení zůstanou zachovány – opraví zastaralé nebo chybné zobrazení bez odhlášení.",
+        "description": "Znovu načíst kontakty, kalendáře a složky ze serveru. Zůstanete přihlášeni.",
         "button": "Obnovit",
         "confirm_title": "Obnovit data v mezipaměti?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Exportovat nastavení",
-        "description": "Stáhnout svá nastavení jako soubor JSON",
+        "description": "Stáhnout kopii nastavení",
         "button": "Exportovat"
       },
       "import_settings": {
         "label": "Importovat nastavení",
-        "description": "Nahrát nastavení ze souboru JSON",
+        "description": "Obnovit nastavení ze souboru",
         "button": "Importovat"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# neodeslaná zpráva se ztratí.} few {# neodeslané zprávy se ztratí.} many {# neodeslané zprávy se ztratí.} other {# neodeslaných zpráv se ztratí.}}",
     "clear_confirm": "Vymazat",
     "persist_refused": "Tento prohlížeč může uchovanou poštu smazat, když dojde místo. Instalace aplikace tomu obvykle zabrání.",
-    "persist_retry": "Zeptat se znovu",
+    "persist_retry": "Požádat prohlížeč o zachování",
     "safari_hint": "Safari smaže data webu po 7 dnech bez návštěvy. Přidejte Bulwark na plochu nebo do Docku, aby vaše pošta na tomto zařízení zůstala.",
     "evicted": "Prohlížeč smazal poštu uchovanou na tomto zařízení. Stahuje se znovu.",
     "evicted_lost": "{count, plural, one {# neodeslaná zpráva nebo změna se ztratila.} few {# neodeslané zprávy nebo změny se ztratily.} many {# neodeslané zprávy nebo změny se ztratily.} other {# neodeslaných zpráv nebo změn se ztratilo.}}",

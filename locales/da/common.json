@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Svar fra modtaget adresse",
-        "description": "Når du svarer, send fra den adresse som beskeden oprindeligt blev sendt til. Matcher først identiteter; for domæne catch-all-leveringer omskriver Fra-headeren til aliaset, mens der sendes gennem din primære identitet."
+        "description": "Når du svarer, send fra den adresse, beskeden blev sendt til."
       },
       "reply_identity_match": {
         "label": "Matchning af modtageradresse",
@@ -2611,7 +2611,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Indlæs kontakter, kalendere og mapper fra serveren igen. Du forbliver logget ind.",
         "button": "Refresh",
         "confirm_title": "Opdater cachelagrede data?"
       },
@@ -2624,12 +2624,12 @@
       },
       "export_settings": {
         "label": "Eksportér indstillinger",
-        "description": "Download dine indstillinger som JSON",
+        "description": "Hent en kopi af dine indstillinger",
         "button": "Eksportér"
       },
       "import_settings": {
         "label": "Importér indstillinger",
-        "description": "Upload indstillinger fra JSON-fil",
+        "description": "Gendan indstillinger fra en fil",
         "button": "Importér"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# usendt besked går tabt.} other {# usendte beskeder går tabt.}}",
     "clear_confirm": "Ryd",
     "persist_refused": "Denne browser kan slette den beholdte mail, når pladsen bliver knap. Det hjælper normalt at installere appen.",
-    "persist_retry": "Spørg igen",
+    "persist_retry": "Bed browseren om at beholde den",
     "safari_hint": "Safari sletter et websteds data efter 7 dage uden besøg. Føj Bulwark til din hjemmeskærm eller til Dock for at beholde din mail på denne enhed.",
     "evicted": "Browseren slettede den mail, der var beholdt på denne enhed. Den hentes igen.",
     "evicted_lost": "{count, plural, one {# usendt besked eller ændring gik tabt.} other {# usendte beskeder eller ændringer gik tabt.}}",

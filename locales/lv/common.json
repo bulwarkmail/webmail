@@ -1955,7 +1955,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Automātiski izvēlēties atbildes adresi",
-        "description": "Atbildot automātiski izmantot to kontu, uz kuru vēstule tika saņemta"
+        "description": "Atbildot sūtīt no adreses, uz kuru vēstule tika nosūtīta."
       },
       "reply_identity_match": {
         "label": "Saņemšanas adreses atbilstība",
@@ -2589,7 +2589,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Vēlreiz ielādēt kontaktus, kalendārus un mapes no servera. Jūs paliekat pierakstījies.",
         "button": "Refresh",
         "confirm_title": "Atsvaidzināt kešatmiņas datus?"
       },
@@ -2602,12 +2602,12 @@
       },
       "export_settings": {
         "label": "Eksportēt iestatījumus",
-        "description": "Lejupielādēt iestatījumus JSON formātā",
+        "description": "Lejupielādēt iestatījumu kopiju",
         "button": "Eksportēt"
       },
       "import_settings": {
         "label": "Importēt iestatījumus",
-        "description": "Augšupielādēt iestatījumus no JSON faila",
+        "description": "Atjaunot iestatījumus no faila",
         "button": "Importēt"
       },
       "debug_categories": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, zero {# neizsūtītu vēstuļu tiks zaudēts.} one {Tiks zaudēta # neizsūtīta vēstule.} other {Tiks zaudētas # neizsūtītas vēstules.}}",
     "clear_confirm": "Notīrīt",
     "persist_refused": "Šis pārlūks var izdzēst glabāto e-pastu, kad pietrūkst vietas. Lietotnes instalēšana to parasti novērš.",
-    "persist_retry": "Pajautāt vēlreiz",
+    "persist_retry": "Lūgt pārlūku to saglabāt",
     "safari_hint": "Safari izdzēš vietnes datus pēc 7 dienām bez apmeklējuma. Pievienojiet Bulwark sākuma ekrānam vai Dock, lai e-pasts paliktu šajā ierīcē.",
     "evicted": "Pārlūks izdzēsa šajā ierīcē glabāto e-pastu. Tas tiek lejupielādēts no jauna.",
     "evicted_lost": "{count, plural, zero {Tika zaudētas # neizsūtītu vēstuļu vai izmaiņu.} one {Tika zaudēta # neizsūtīta vēstule vai izmaiņa.} other {Tika zaudētas # neizsūtītas vēstules vai izmaiņas.}}",

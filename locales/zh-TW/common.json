@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "使用收件地址回覆",
-        "description": "回覆時，使用原始郵件的收件地址寄送。系統會先比對寄件身分；若是網域 catch-all 收件，則透過主要寄件身分傳送，但將 From 標頭改寫為別名地址。"
+        "description": "回覆時，從郵件寄達的地址寄出。"
       },
       "reply_identity_match": {
         "label": "接收地址比對",
@@ -2615,7 +2615,7 @@
       },
       "refresh_cache": {
         "label": "重新整理快取資料",
-        "description": "從伺服器重新載入聯絡人、行事曆與信件匣。保留帳號與工作階段，不需登出即可修正過時或錯誤的畫面。",
+        "description": "從伺服器重新載入聯絡人、行事曆與信件匣。你會保持登入。",
         "button": "重新整理",
         "confirm_title": "重新整理快取資料?"
       },
@@ -2628,12 +2628,12 @@
       },
       "export_settings": {
         "label": "匯出設定",
-        "description": "將設定匯出為 JSON 檔案",
+        "description": "下載設定的副本",
         "button": "匯出"
       },
       "import_settings": {
         "label": "匯入設定",
-        "description": "從 JSON 檔案匯入設定",
+        "description": "從檔案還原設定",
         "button": "匯入"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, other {# 封未寄出的郵件將會遺失。}}",
     "clear_confirm": "清除",
     "persist_refused": "儲存空間不足時，此瀏覽器可能會刪除保留的郵件。安裝應用程式通常可以避免這種情況。",
-    "persist_retry": "再次請求",
+    "persist_retry": "請瀏覽器保留",
     "safari_hint": "Safari 會在網站 7 天未造訪後刪除其資料。把 Bulwark 加入主畫面或 Dock，郵件就能保留在此裝置上。",
     "evicted": "瀏覽器刪除了此裝置上保留的郵件。正在重新下載。",
     "evicted_lost": "{count, plural, other {# 封未寄出的郵件或變更已遺失。}}",

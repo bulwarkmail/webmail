@@ -1955,7 +1955,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Seleziona automaticamente l'indirizzo di risposta",
-        "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
+        "description": "Quando rispondi, invia dall’indirizzo a cui è stato inviato il messaggio."
       },
       "reply_identity_match": {
         "label": "Corrispondenza dell'indirizzo di ricezione",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Ricarica contatti, calendari e cartelle dal server. Resti connesso.",
         "button": "Refresh",
         "confirm_title": "Aggiornare i dati nella cache?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Esporta impostazioni",
-        "description": "Scarica le tue impostazioni come JSON",
+        "description": "Scarica una copia delle impostazioni",
         "button": "Esporta"
       },
       "import_settings": {
         "label": "Importa impostazioni",
-        "description": "Carica impostazioni da file JSON",
+        "description": "Ripristina le impostazioni da un file",
         "button": "Importa"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# messaggio non inviato andrà perso.} other {# messaggi non inviati andranno persi.}}",
     "clear_confirm": "Svuota",
     "persist_refused": "Questo browser può eliminare la posta conservata quando lo spazio scarseggia. Installare l'app di solito lo evita.",
-    "persist_retry": "Chiedi di nuovo",
+    "persist_retry": "Chiedi al browser di conservarla",
     "safari_hint": "Safari elimina i dati di un sito dopo 7 giorni senza visite. Aggiungi Bulwark alla schermata Home o al Dock per conservare la tua posta su questo dispositivo.",
     "evicted": "Il browser ha eliminato la posta conservata su questo dispositivo. Viene scaricata di nuovo.",
     "evicted_lost": "{count, plural, one {# messaggio o modifica non inviati sono andati persi.} other {# messaggi o modifiche non inviati sono andati persi.}}",

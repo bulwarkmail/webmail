@@ -1967,7 +1967,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Răspunde de la adresa de la care a fost primit mesajul",
-        "description": "Când răspundeți, trimiteți mesajul de la adresa la care a fost trimis inițial. Se potrivesc mai întâi identitățile; pentru livrările de tip „catch-all” ale domeniului, antetul „De la” este rescris cu aliasul, în timp ce trimiterea se face prin identitatea dvs. principală."
+        "description": "Când răspundeți, trimiteți de la adresa la care a fost trimis mesajul."
       },
       "reply_identity_match": {
         "label": "Potrivirea adresei de primire",
@@ -2615,7 +2615,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Reîncărcați contactele, calendarele și dosarele de pe server. Rămâneți conectat.",
         "button": "Refresh",
         "confirm_title": "Reîmprospătați datele din cache?"
       },
@@ -2628,12 +2628,12 @@
       },
       "export_settings": {
         "label": "Setări de export",
-        "description": "Descărcați setările în format JSON",
+        "description": "Descărcați o copie a setărilor",
         "button": "Export"
       },
       "import_settings": {
         "label": "Importați setările",
-        "description": "Încărcați setările dintr-un fișier JSON",
+        "description": "Restaurați setările dintr-un fișier",
         "button": "Import"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# mesaj netrimis se pierde.} few {# mesaje netrimise se pierd.} other {# de mesaje netrimise se pierd.}}",
     "clear_confirm": "Golește",
     "persist_refused": "Acest browser poate șterge e-mailurile păstrate când se termină spațiul. Instalarea aplicației de obicei previne asta.",
-    "persist_retry": "Întreabă din nou",
+    "persist_retry": "Cereți browserului să le păstreze",
     "safari_hint": "Safari șterge datele unui site după 7 zile fără vizite. Adăugați Bulwark pe ecranul principal sau în Dock ca să păstrați e-mailurile pe acest dispozitiv.",
     "evicted": "Browserul a șters e-mailurile păstrate pe acest dispozitiv. Se descarcă din nou.",
     "evicted_lost": "{count, plural, one {# mesaj sau modificare netrimis s-a pierdut.} few {# mesaje sau modificări netrimise s-au pierdut.} other {# de mesaje sau modificări netrimise s-au pierdut.}}",

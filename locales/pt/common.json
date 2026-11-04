@@ -1955,7 +1955,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Selecionar automaticamente o endereço de resposta",
-        "description": "Ao responder, muda automaticamente o endereço do remetente para a identidade que recebeu a mensagem original"
+        "description": "Ao responder, enviar do endereço para o qual a mensagem foi enviada."
       },
       "reply_identity_match": {
         "label": "Correspondência do endereço de receção",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Atualizar dados armazenados em cache",
-        "description": "Atualize os contatos, calendários e pastas do servidor. Mantém suas contas e sessões — corrige uma visualização desatualizada ou incorreta sem precisar sair da conta.",
+        "description": "Recarregar contatos, calendários e pastas do servidor. Você continua conectado.",
         "button": "Recarregar",
         "confirm_title": "Atualizar os dados em cache?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Exportar Configurações",
-        "description": "Baixar suas configurações como JSON",
+        "description": "Baixar uma cópia das suas configurações",
         "button": "Exportar"
       },
       "import_settings": {
         "label": "Importar Configurações",
-        "description": "Fazer upload de configurações de arquivo JSON",
+        "description": "Restaurar as configurações de um arquivo",
         "button": "Importar"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {# mensagem por enviar será perdida.} other {# mensagens por enviar serão perdidas.}}",
     "clear_confirm": "Limpar",
     "persist_refused": "Este navegador pode eliminar o correio mantido quando o espaço escasseia. Instalar a aplicação costuma evitá-lo.",
-    "persist_retry": "Perguntar novamente",
+    "persist_retry": "Pedir ao navegador para manter",
     "safari_hint": "O Safari elimina os dados de um site após 7 dias sem visitas. Adicione o Bulwark ao Ecrã Principal ou ao Dock para manter o seu correio neste dispositivo.",
     "evicted": "O navegador eliminou o correio mantido neste dispositivo. Está a ser transferido novamente.",
     "evicted_lost": "{count, plural, one {# mensagem ou alteração por enviar foi perdida.} other {# mensagens ou alterações por enviar foram perdidas.}}",

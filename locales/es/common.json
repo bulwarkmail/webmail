@@ -1955,7 +1955,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Seleccionar dirección de respuesta automáticamente",
-        "description": "Al responder, cambia automáticamente la dirección del remitente a la identidad que recibió el mensaje original"
+        "description": "Al responder, enviar desde la dirección a la que se envió el mensaje."
       },
       "reply_identity_match": {
         "label": "Coincidencia de la dirección de recepción",
@@ -2608,7 +2608,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Volver a cargar contactos, calendarios y carpetas desde el servidor. Sigues con la sesión iniciada.",
         "button": "Refresh",
         "confirm_title": "¿Actualizar los datos en caché?"
       },
@@ -2621,12 +2621,12 @@
       },
       "export_settings": {
         "label": "Exportar Configuración",
-        "description": "Descargar su configuración como JSON",
+        "description": "Descargar una copia de tus ajustes",
         "button": "Exportar"
       },
       "import_settings": {
         "label": "Importar Configuración",
-        "description": "Cargar configuración desde archivo JSON",
+        "description": "Restaurar los ajustes desde un archivo",
         "button": "Importar"
       },
       "about": {
@@ -5948,7 +5948,7 @@
     "clear_confirm_unsent": "{count, plural, one {Se perderá # mensaje sin enviar.} other {Se perderán # mensajes sin enviar.}}",
     "clear_confirm": "Vaciar",
     "persist_refused": "Este navegador puede borrar el correo guardado cuando falte espacio. Instalar la aplicación suele evitarlo.",
-    "persist_retry": "Preguntar de nuevo",
+    "persist_retry": "Pedir al navegador que lo conserve",
     "safari_hint": "Safari borra los datos de un sitio tras 7 días sin visitarlo. Añade Bulwark a tu pantalla de inicio o al Dock para conservar tu correo en este dispositivo.",
     "evicted": "El navegador borró el correo guardado en este dispositivo. Se está descargando de nuevo.",
     "evicted_lost": "{count, plural, one {Se perdió # mensaje o cambio sin enviar.} other {Se perdieron # mensajes o cambios sin enviar.}}",
