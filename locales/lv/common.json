@@ -7673,6 +7673,10 @@
     "offline_send_saved": "Jūs esat bezsaistē. Ziņojums ir saglabāts melnrakstos.",
     "offline_send_unsaved": "Jūs esat bezsaistē. Ziņojums paliek šeit un tiks saglabāts melnrakstos, kad atkal būsiet tiešsaistē."
   },
+  "composer_panel": {
+    "show_panel": "Rādīt {name}",
+    "hide_panel": "Paslēpt {name}"
+  },
   "desktopDevTools": {
     "section_title": "Problēmu novēršana",
     "label": "Izstrādātāju rīki ({shortcut})",

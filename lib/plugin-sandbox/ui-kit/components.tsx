@@ -103,11 +103,15 @@ export const Button = React.forwardRef<HTMLButtonElement, KitButtonProps>(functi
   );
 });
 
-/** A text link styled like the app's inline links ("Add condition"). */
+/**
+ * A text link styled like the app's inline links ("Add condition"). A long one
+ * wraps like a paragraph: lines start at the icon's side (a button centres its
+ * text otherwise), with the icon beside the first line.
+ */
 export function LinkButton({ icon, children, className, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: string }) {
   return (
-    <button type="button" className={cn('bk inline-flex items-center gap-1 text-sm text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none', className)} {...rest}>
-      {icon && <Icon name={icon} size="sm" />}
+    <button type="button" className={cn('bk inline-flex items-start gap-1 text-start text-sm text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none', className)} {...rest}>
+      {icon && <Icon name={icon} size="sm" className="mt-[0.1875rem]" />}
       {children}
     </button>
   );
