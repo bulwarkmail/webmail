@@ -20,7 +20,7 @@ vi.mock('@/components/error', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
   EmailViewerErrorFallback: () => null,
 }));
-vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
+vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key, useLocale: () => 'en' }));
 vi.mock('@/stores/toast-store', () => ({ toast: { error: () => {}, success: () => {} } }));
 vi.mock('@/lib/mail-removal-confirm', () => ({ confirmMailRemoval: async () => true }));
 
