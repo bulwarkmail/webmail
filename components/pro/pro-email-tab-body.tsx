@@ -34,6 +34,7 @@ import { takeTabReply, useNotificationTabReply } from '@/lib/pwa-notify/tab-repl
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
+import { phishingMarkedNow } from '@/hooks/use-phishing-report';
 import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
 import { useDesktopCommands } from '@/lib/desktop/commands';
@@ -123,6 +124,7 @@ function replyLogin(email: Email, source: EmailWriteSource): string | undefined 
 
 function buildReplyContext(email: Email, source: EmailWriteSource): ProReplyContext {
   return {
+    phishingMarked: phishingMarkedNow(email),
     from: email.from,
     replyToAddresses: email.replyTo,
     to: email.to,

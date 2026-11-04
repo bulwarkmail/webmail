@@ -101,6 +101,11 @@ async function handleNotification(action: string, rawContext: string, reply: str
   }
   if (await handleReminderCommand(action, rawContext, env)) return;
   const context = parseContext(rawContext);
+  // A saved file's toast: the offer is on the main window, wherever it was.
+  if (context.editedFile) {
+    showWindow();
+    return;
+  }
   if (action === 'reply') {
     await openFromNotification(context, env, { text: reply ?? '' });
     return;

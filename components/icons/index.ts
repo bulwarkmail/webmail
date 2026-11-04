@@ -87,6 +87,7 @@ export {
   IconDatabase as Database,
   IconDownload as Download,
   IconEdit as EditIcon,
+  IconFilePencil as FilePen,
   IconDots as Ellipsis,
   IconEraser as Eraser,
   IconExternalLink as ExternalLink,

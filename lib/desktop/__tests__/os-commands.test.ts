@@ -228,6 +228,17 @@ describe('a toast\'s buttons', () => {
     stop();
   });
 
+  it('a toast for a saved attachment only brings the window up, and leaves the page where it is', async () => {
+    const { setMailLinkOpener } = await import('../mail-links');
+    const opener = vi.fn();
+    const stop = setMailLinkOpener(opener);
+    await run({ type: 'notification', action: 'open', context: JSON.stringify({ editedFile: true }) });
+    expect(focus).toHaveBeenCalled();
+    expect(opener).not.toHaveBeenCalled();
+    expect(leaveFor).not.toHaveBeenCalled();
+    stop();
+  });
+
   it('a click on a summary toast opens the Inbox of that login', async () => {
     const { setMailLinkOpener } = await import('../mail-links');
     const opener = vi.fn();
