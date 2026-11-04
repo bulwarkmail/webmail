@@ -97,6 +97,15 @@ export function addEcho(conversation: Email[], echo: Email): Email[] {
  */
 export function mergeEchoes(server: Email[], shown: Email[]): Email[] {
   const ids = new Set(server.map((e) => e.id));
+  const byId = new Map(shown.map((e) => [e.id, e]));
+  // The thread read carries list properties only: a message already unfolded
+  // keeps the body it loaded, with the server's flags and folders.
+  const merged = server.map((e) => {
+    const had = byId.get(e.id);
+    return had?.bodyValues && !e.bodyValues && !had.sentEcho
+      ? { ...had, keywords: e.keywords, mailboxIds: e.mailboxIds }
+      : e;
+  });
   const echoes = shown.filter((e) => e.sentEcho && !ids.has(e.id));
-  return echoes.length ? [...server, ...echoes] : server;
+  return echoes.length ? [...merged, ...echoes] : merged;
 }

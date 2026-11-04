@@ -61,4 +61,13 @@ describe('echoes of sent replies', () => {
     expect(mergeEchoes([...server, { id: 'c' } as Email], [...server, echo]).map((e) => (e.sentEcho ? 'echo' : e.id))).toEqual(['a', 'b', 'c']);
     expect(mergeEchoes(server, [...server, echo]).map((e) => (e.sentEcho ? 'echo' : e.id))).toEqual(['a', 'b', 'echo']);
   });
+
+  it('keeps the body of a message already unfolded', () => {
+    const loaded = { id: 'a', keywords: {}, mailboxIds: { inbox: true }, bodyValues: { 1: { value: 'Hi' } } } as unknown as Email;
+    const listed = { id: 'a', keywords: { $seen: true }, mailboxIds: { archive: true } } as unknown as Email;
+    const [merged] = mergeEchoes([listed], [loaded]);
+    expect(merged.bodyValues).toEqual(loaded.bodyValues);
+    expect(merged.keywords).toEqual({ $seen: true });
+    expect(merged.mailboxIds).toEqual({ archive: true });
+  });
 });
