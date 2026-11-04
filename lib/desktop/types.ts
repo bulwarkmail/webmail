@@ -675,6 +675,23 @@ export interface DesktopPrivacyBridge {
   onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
 }
 
+/** `forcedOff`: the DeveloperToolsAvailability policy says no. `locked`: the app lock is on, so nothing changes. */
+export interface DesktopDevToolsState {
+  on: boolean;
+  forcedOff: boolean;
+  locked: boolean;
+}
+
+/**
+ * Chromium's developer tools on Ctrl+Shift+I and F12, off by default. Main keeps the switch.
+ * Turning it on takes a real click and a native warning; the app lock turns it off again.
+ */
+export interface DesktopDevToolsBridge {
+  get: () => Promise<DesktopDevToolsState>;
+  set: (on: boolean) => Promise<DesktopDevToolsState>;
+  onChange: (listener: (state: DesktopDevToolsState) => void) => () => void;
+}
+
 /** An attachment copied to a private folder and open in its default program. */
 export interface DesktopEditSession {
   id: string;
@@ -793,6 +810,8 @@ export interface BulwarkDesktopBridge {
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
   edit?: DesktopEditBridge;
+  /** Absent on older shells. */
+  devTools?: DesktopDevToolsBridge;
 }
 
 declare global {

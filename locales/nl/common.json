@@ -7058,6 +7058,14 @@
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
   },
+  "desktopDevTools": {
+    "section_title": "Probleemoplossing",
+    "label": "Ontwikkelaarstools ({shortcut})",
+    "description": "Met {shortcut} en F12 openen de ontwikkelaarstools voor het venster waarin je bent. Gaat weer uit als de app vergrendelt.",
+    "forced_off": "Uitgezet door je organisatie.",
+    "locked": "Ontgrendel de app om dit te wijzigen.",
+    "menu_toggle": "Ontwikkelaarstools tonen of verbergen"
+  },
   "fileDrop": {
     "overlay_label": "Bestanden neerzetten",
     "overlay_title": "Waar moeten de bestanden heen?",

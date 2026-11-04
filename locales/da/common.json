@@ -7058,6 +7058,14 @@
     "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
     "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
   },
+  "desktopDevTools": {
+    "section_title": "Fejlfinding",
+    "label": "Udviklerværktøjer ({shortcut})",
+    "description": "Lader {shortcut} og F12 åbne udviklerværktøjerne for det vindue, du er i. Slås fra igen, når appen låses.",
+    "forced_off": "Slået fra af din organisation.",
+    "locked": "Lås appen op for at ændre dette.",
+    "menu_toggle": "Vis eller skjul udviklerværktøjer"
+  },
   "fileDrop": {
     "overlay_label": "Slip filer",
     "overlay_title": "Hvor skal filerne hen?",

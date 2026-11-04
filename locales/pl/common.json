@@ -7058,6 +7058,14 @@
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
   },
+  "desktopDevTools": {
+    "section_title": "Rozwiązywanie problemów",
+    "label": "Narzędzia dla deweloperów ({shortcut})",
+    "description": "Pozwala, by {shortcut} i F12 otwierały narzędzia dla deweloperów w oknie, w którym jesteś. Wyłącza się, gdy aplikacja się zablokuje.",
+    "forced_off": "Wyłączone przez Twoją organizację.",
+    "locked": "Odblokuj aplikację, aby to zmienić.",
+    "menu_toggle": "Pokaż lub ukryj narzędzia dla deweloperów"
+  },
   "fileDrop": {
     "overlay_label": "Upuść pliki",
     "overlay_title": "Gdzie mają trafić pliki?",

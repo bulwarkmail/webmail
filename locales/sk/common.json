@@ -7058,6 +7058,14 @@
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
+  "desktopDevTools": {
+    "section_title": "Riešenie problémov",
+    "label": "Nástroje pre vývojárov ({shortcut})",
+    "description": "Umožní, aby {shortcut} a F12 otvorili nástroje pre vývojárov v okne, kde ste. Vypne sa, keď sa aplikácia zamkne.",
+    "forced_off": "Vypnuté vašou organizáciou.",
+    "locked": "Na zmenu aplikáciu odomknite.",
+    "menu_toggle": "Zobraziť alebo skryť nástroje pre vývojárov"
+  },
   "fileDrop": {
     "overlay_label": "Pustiť súbory",
     "overlay_title": "Kam majú súbory ísť?",

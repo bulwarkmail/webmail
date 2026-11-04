@@ -7058,6 +7058,14 @@
     "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
     "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
   },
+  "desktopDevTools": {
+    "section_title": "Risoluzione dei problemi",
+    "label": "Strumenti per sviluppatori ({shortcut})",
+    "description": "{shortcut} e F12 aprono gli strumenti per sviluppatori nella finestra in cui ti trovi. Si disattiva quando l'app si blocca.",
+    "forced_off": "Disattivato dalla tua organizzazione.",
+    "locked": "Sblocca l'app per modificare questa opzione.",
+    "menu_toggle": "Mostra o nascondi strumenti per sviluppatori"
+  },
   "fileDrop": {
     "overlay_label": "Rilascia file",
     "overlay_title": "Dove vanno i file?",

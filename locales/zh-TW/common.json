@@ -7058,6 +7058,14 @@
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
   },
+  "desktopDevTools": {
+    "section_title": "疑難排解",
+    "label": "開發人員工具（{shortcut}）",
+    "description": "允許 {shortcut} 和 F12 為您所在的視窗開啟開發人員工具。應用程式鎖定時會再次關閉。",
+    "forced_off": "您的組織已關閉此功能。",
+    "locked": "請解除鎖定應用程式以變更此設定。",
+    "menu_toggle": "顯示或隱藏開發人員工具"
+  },
   "fileDrop": {
     "overlay_label": "放開檔案",
     "overlay_title": "要把檔案放到哪裡？",

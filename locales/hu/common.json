@@ -7058,6 +7058,14 @@
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
+  "desktopDevTools": {
+    "section_title": "Hibaelhárítás",
+    "label": "Fejlesztői eszközök ({shortcut})",
+    "description": "A(z) {shortcut} és az F12 megnyitja a fejlesztői eszközöket abban az ablakban, ahol éppen van. Kikapcsol, amikor az alkalmazás zárolódik.",
+    "forced_off": "A szervezete kikapcsolta.",
+    "locked": "A módosításhoz oldja fel az alkalmazást.",
+    "menu_toggle": "Fejlesztői eszközök megjelenítése vagy elrejtése"
+  },
   "fileDrop": {
     "overlay_label": "Fájlok ejtése",
     "overlay_title": "Hová kerüljenek a fájlok?",

@@ -15,6 +15,7 @@
       <string id="Category_security">Offline-E-Mails und App-Sperre</string>
       <string id="Category_privacy">Datenschutz</string>
       <string id="Category_signIn">Anmeldung und Zertifikate</string>
+      <string id="Category_system">Systemintegration und Fehlerbehebung</string>
       <string id="InstanceUrl">Bulwark-Server</string>
       <string id="InstanceUrl_Explain">Die Adresse Ihres Bulwark-Servers, beginnend mit https://. Wenn erzwungen, öffnet sich die App auf diesem Server, die Serverauswahl ist ausgeblendet und das Fenster bleibt auf diesem Server. Eine ungültige Adresse zeigt eine Fehlerseite mit dem Namen dieser Richtlinie, und die App weicht auf nichts anderes aus. Als Standardwert öffnet sich die App auf diesem Server, bis der Benutzer etwas anderes wählt.</string>
       <string id="AllowStandalone">Direkte Verbindungen zu Mailservern zulassen</string>
@@ -62,6 +63,10 @@
       <string id="BrowserSignIn_Explain">Wenn aktiviert oder nicht konfiguriert, bietet die Anmeldeseite „Mit Ihrem Browser anmelden“ an, damit Benutzer dort ihren Passwort-Manager, Passkeys und Ihr Single Sign-on verwenden können. Wenn deaktiviert, fehlt die Schaltfläche und die App lehnt den Vorgang ab. Das Formular in der App bleibt, sofern der Server nicht nur OAuth erlaubt.</string>
       <string id="WipeOfflineData">Auf dem Gerät behaltene E-Mails löschen</string>
       <string id="WipeOfflineData_Explain">Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen.</string>
+      <string id="OpenWithEnabled">App unter „Öffnen mit“ und „Senden an“ anbieten</string>
+      <string id="OpenWithEnabled_Explain">Wenn aktiviert oder nicht konfiguriert, trägt sich die App unter Windows in die Liste „Öffnen mit“ für gängige Dokumente und Bilder und in das Menü „Senden an“ ein, damit Benutzer eine Datei aus dem Dateimanager an eine neue Nachricht anhängen können. Sie wird nie zum Standardprogramm für diese Dateien. Wenn deaktiviert, entfernt die App diese Einträge für den Benutzer. Mail-Links und .eml-, .ics- und .vcf-Dateien sind nicht betroffen.</string>
+      <string id="DeveloperToolsAvailability">Entwicklertools</string>
+      <string id="DeveloperToolsAvailability_Explain">Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Adresse des Bulwark-Servers</label></textBox></presentation>
@@ -80,6 +85,7 @@
       <presentation id="AutoSelectCertificateForUrls"><listBox refId="AutoSelectCertificateForUrls_Value">Regeln</listBox></presentation>
       <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Adressen</listBox></presentation>
       <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Löschcode</label></textBox></presentation>
+      <presentation id="DeveloperToolsAvailability"><decimalTextBox refId="DeveloperToolsAvailability_Value" defaultValue="2">Wert (0, 1 oder 2)</decimalTextBox></presentation>
     </presentationTable>
   </resources>
 </policyDefinitionResources>

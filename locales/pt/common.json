@@ -7058,6 +7058,14 @@
     "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
+  "desktopDevTools": {
+    "section_title": "Resolução de problemas",
+    "label": "Ferramentas de programador ({shortcut})",
+    "description": "Permite que {shortcut} e F12 abram as ferramentas de programador na janela em que está. Desliga-se quando a app bloqueia.",
+    "forced_off": "Desligado pela sua organização.",
+    "locked": "Desbloqueie a app para alterar isto.",
+    "menu_toggle": "Mostrar ou ocultar ferramentas de programador"
+  },
   "fileDrop": {
     "overlay_label": "Soltar arquivos",
     "overlay_title": "Para onde vão os arquivos?",

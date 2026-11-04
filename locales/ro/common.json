@@ -7058,6 +7058,14 @@
     "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
+  "desktopDevTools": {
+    "section_title": "Depanare",
+    "label": "Instrumente pentru dezvoltatori ({shortcut})",
+    "description": "Permite ca {shortcut} și F12 să deschidă instrumentele pentru dezvoltatori în fereastra în care sunteți. Se oprește când aplicația se blochează.",
+    "forced_off": "Oprit de organizația dvs.",
+    "locked": "Deblocați aplicația pentru a schimba asta.",
+    "menu_toggle": "Afișați sau ascundeți instrumentele pentru dezvoltatori"
+  },
   "fileDrop": {
     "overlay_label": "Plasați fișiere",
     "overlay_title": "Unde merg fișierele?",

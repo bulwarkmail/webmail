@@ -7058,6 +7058,14 @@
     "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
   },
+  "desktopDevTools": {
+    "section_title": "문제 해결",
+    "label": "개발자 도구 ({shortcut})",
+    "description": "{shortcut} 및 F12로 현재 창의 개발자 도구를 열 수 있게 합니다. 앱이 잠기면 다시 꺼집니다.",
+    "forced_off": "조직에서 이 기능을 껐습니다.",
+    "locked": "변경하려면 앱 잠금을 해제하세요.",
+    "menu_toggle": "개발자 도구 표시/숨기기"
+  },
   "fileDrop": {
     "overlay_label": "파일 놓기",
     "overlay_title": "파일을 어디에 둘까요?",

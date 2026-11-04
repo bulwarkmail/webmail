@@ -27,6 +27,8 @@
     "https://mail.example.com"
   ],
   "BrowserSignIn": true,
+  "OpenWithEnabled": true,
+  "DeveloperToolsAvailability": 2,
   "Recommended": {
     "UpdateChannel": "stable"
   }

@@ -7070,6 +7070,14 @@
     "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
     "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
   },
+  "desktopDevTools": {
+    "section_title": "Khắc phục sự cố",
+    "label": "Công cụ cho nhà phát triển ({shortcut})",
+    "description": "Cho phép {shortcut} và F12 mở công cụ cho nhà phát triển của cửa sổ bạn đang dùng. Tự tắt lại khi ứng dụng khóa.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "locked": "Hãy mở khóa ứng dụng để thay đổi.",
+    "menu_toggle": "Hiện hoặc ẩn công cụ cho nhà phát triển"
+  },
   "fileDrop": {
     "overlay_label": "Thả tệp",
     "overlay_title": "Đưa tệp đi đâu?",

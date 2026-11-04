@@ -20,6 +20,7 @@
     <category name="Bulwark_Desktop_security" displayName="$(string.Category_security)"><parentCategory ref="Bulwark_Desktop"/></category>
     <category name="Bulwark_Desktop_privacy" displayName="$(string.Category_privacy)"><parentCategory ref="Bulwark_Desktop"/></category>
     <category name="Bulwark_Desktop_signIn" displayName="$(string.Category_signIn)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_system" displayName="$(string.Category_system)"><parentCategory ref="Bulwark_Desktop"/></category>
   </categories>
   <policies>
   <policy name="InstanceUrl" class="Both" displayName="$(string.InstanceUrl)" explainText="$(string.InstanceUrl_Explain)" presentation="$(presentation.InstanceUrl)" key="Software\Policies\Bulwark\Desktop">
@@ -232,6 +233,19 @@
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <elements>
       <text id="WipeOfflineData_Value" valueName="WipeOfflineData" required="true" maxLength="128"/>
+    </elements>
+  </policy>
+  <policy name="OpenWithEnabled" class="Both" displayName="$(string.OpenWithEnabled)" explainText="$(string.OpenWithEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="OpenWithEnabled">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="DeveloperToolsAvailability" class="Both" displayName="$(string.DeveloperToolsAvailability)" explainText="$(string.DeveloperToolsAvailability_Explain)" presentation="$(presentation.DeveloperToolsAvailability)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_system"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <decimal id="DeveloperToolsAvailability_Value" valueName="DeveloperToolsAvailability" required="true" minValue="0" maxValue="2"/>
     </elements>
   </policy>
   </policies>

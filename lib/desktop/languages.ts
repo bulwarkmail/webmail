@@ -99,6 +99,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuZoomOut: t('desktopUi.menu.zoom_out'),
     menuZoomReset: t('desktopUi.menu.zoom_reset'),
     menuFullScreen: t('desktopUi.menu.full_screen'),
+    menuToggleDevTools: t('desktopDevTools.menu_toggle'),
     menuReply: t('context_menu.reply'),
     menuReplyAll: t('context_menu.reply_all'),
     menuForward: t('context_menu.forward'),

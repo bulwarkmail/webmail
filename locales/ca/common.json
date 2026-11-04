@@ -7058,6 +7058,14 @@
     "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
     "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
+  "desktopDevTools": {
+    "section_title": "Resolució de problemes",
+    "label": "Eines per a desenvolupadors ({shortcut})",
+    "description": "Permet que {shortcut} i F12 obrin les eines per a desenvolupadors a la finestra on ets. Es desactiva quan l'app es bloqueja.",
+    "forced_off": "Desactivat per la teva organització.",
+    "locked": "Desbloqueja l'app per canviar-ho.",
+    "menu_toggle": "Mostra o amaga les eines per a desenvolupadors"
+  },
   "fileDrop": {
     "overlay_label": "Deixa anar fitxers",
     "overlay_title": "On han d'anar els fitxers?",

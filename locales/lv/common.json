@@ -7058,6 +7058,14 @@
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
+  "desktopDevTools": {
+    "section_title": "Problēmu novēršana",
+    "label": "Izstrādātāju rīki ({shortcut})",
+    "description": "Ļauj {shortcut} un F12 atvērt izstrādātāju rīkus logā, kurā esat. Izslēdzas, kad lietotne tiek bloķēta.",
+    "forced_off": "Jūsu organizācija to ir izslēgusi.",
+    "locked": "Atbloķējiet lietotni, lai to mainītu.",
+    "menu_toggle": "Rādīt vai paslēpt izstrādātāju rīkus"
+  },
   "fileDrop": {
     "overlay_label": "Nometiet failus",
     "overlay_title": "Kur likt failus?",

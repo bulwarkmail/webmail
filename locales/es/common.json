@@ -7058,6 +7058,14 @@
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
   },
+  "desktopDevTools": {
+    "section_title": "Solución de problemas",
+    "label": "Herramientas para desarrolladores ({shortcut})",
+    "description": "Permite que {shortcut} y F12 abran las herramientas para desarrolladores en la ventana en la que estás. Se desactiva al bloquearse la app.",
+    "forced_off": "Desactivado por tu organización.",
+    "locked": "Desbloquea la app para cambiar esto.",
+    "menu_toggle": "Mostrar u ocultar herramientas para desarrolladores"
+  },
   "fileDrop": {
     "overlay_label": "Soltar archivos",
     "overlay_title": "¿Dónde van los archivos?",

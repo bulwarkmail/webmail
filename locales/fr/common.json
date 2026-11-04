@@ -7058,6 +7058,14 @@
     "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
     "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
+  "desktopDevTools": {
+    "section_title": "Dépannage",
+    "label": "Outils de développement ({shortcut})",
+    "description": "{shortcut} et F12 ouvrent les outils de développement pour la fenêtre où vous êtes. Se désactive quand l'app se verrouille.",
+    "forced_off": "Désactivé par votre organisation.",
+    "locked": "Déverrouillez l'app pour modifier ce réglage.",
+    "menu_toggle": "Afficher ou masquer les outils de développement"
+  },
   "fileDrop": {
     "overlay_label": "Déposer des fichiers",
     "overlay_title": "Où mettre les fichiers ?",

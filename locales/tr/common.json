@@ -7058,6 +7058,14 @@
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
+  "desktopDevTools": {
+    "section_title": "Sorun giderme",
+    "label": "Geliştirici araçları ({shortcut})",
+    "description": "{shortcut} ve F12 ile bulunduğunuz pencere için geliştirici araçları açılır. Uygulama kilitlenince yeniden kapanır.",
+    "forced_off": "Kuruluşunuz tarafından kapatıldı.",
+    "locked": "Bunu değiştirmek için uygulamanın kilidini açın.",
+    "menu_toggle": "Geliştirici araçlarını göster veya gizle"
+  },
   "fileDrop": {
     "overlay_label": "Dosyaları bırakın",
     "overlay_title": "Dosyalar nereye gitsin?",

@@ -7058,6 +7058,14 @@
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
+  "desktopDevTools": {
+    "section_title": "Feilsøking",
+    "label": "Utviklerverktøy ({shortcut})",
+    "description": "Lar {shortcut} og F12 åpne utviklerverktøyene for vinduet du er i. Slås av igjen når appen låses.",
+    "forced_off": "Slått av av organisasjonen din.",
+    "locked": "Lås opp appen for å endre dette.",
+    "menu_toggle": "Vis eller skjul utviklerverktøy"
+  },
   "fileDrop": {
     "overlay_label": "Slipp filer",
     "overlay_title": "Hvor skal filene?",

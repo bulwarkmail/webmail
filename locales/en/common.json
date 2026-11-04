@@ -7058,6 +7058,14 @@
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
   },
+  "desktopDevTools": {
+    "section_title": "Troubleshooting",
+    "label": "Developer tools ({shortcut})",
+    "description": "Lets {shortcut} and F12 open developer tools for the window you are in. Turns off again when the app locks.",
+    "forced_off": "Turned off by your organisation.",
+    "locked": "Unlock the app to change this.",
+    "menu_toggle": "Toggle developer tools"
+  },
   "fileDrop": {
     "overlay_label": "Drop files",
     "overlay_title": "Where should the files go?",

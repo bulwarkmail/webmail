@@ -7058,6 +7058,14 @@
     "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
     "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
   },
+  "desktopDevTools": {
+    "section_title": "Fehlerbehebung",
+    "label": "Entwicklertools ({shortcut})",
+    "description": "Mit {shortcut} und F12 öffnen sich die Entwicklertools für das Fenster, in dem Sie sind. Schaltet sich wieder aus, wenn die App gesperrt wird.",
+    "forced_off": "Von Ihrer Organisation ausgeschaltet.",
+    "locked": "Entsperren Sie die App, um das zu ändern.",
+    "menu_toggle": "Entwicklertools ein- oder ausblenden"
+  },
   "fileDrop": {
     "overlay_label": "Dateien ablegen",
     "overlay_title": "Wohin sollen die Dateien?",

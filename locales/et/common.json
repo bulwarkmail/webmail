@@ -7058,6 +7058,14 @@
     "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
   },
+  "desktopDevTools": {
+    "section_title": "Tõrkeotsing",
+    "label": "Arendaja tööriistad ({shortcut})",
+    "description": "Laseb klahvidel {shortcut} ja F12 avada arendaja tööriistad aknas, kus sa oled. Lülitub välja, kui rakendus lukustub.",
+    "forced_off": "Teie organisatsioon on selle välja lülitanud.",
+    "locked": "Selle muutmiseks ava rakenduse lukk.",
+    "menu_toggle": "Näita või peida arendaja tööriistad"
+  },
   "fileDrop": {
     "overlay_label": "Lohista failid siia",
     "overlay_title": "Kuhu failid lähevad?",

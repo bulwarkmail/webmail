@@ -7058,6 +7058,14 @@
     "types_character": "这些键在您的键盘上会输入一个字符，占用后该字符在所有应用中都无法输入。请试试其他按键。",
     "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
   },
+  "desktopDevTools": {
+    "section_title": "故障排除",
+    "label": "开发者工具（{shortcut}）",
+    "description": "允许 {shortcut} 和 F12 为您所在的窗口打开开发者工具。应用锁定时会再次关闭。",
+    "forced_off": "您的组织已关闭此功能。",
+    "locked": "请解锁应用以更改此设置。",
+    "menu_toggle": "显示或隐藏开发者工具"
+  },
   "fileDrop": {
     "overlay_label": "放下文件",
     "overlay_title": "要把文件放到哪里？",
