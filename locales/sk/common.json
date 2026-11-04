@@ -1012,7 +1012,7 @@
     "cc": "Kópia",
     "bcc": "Skrytá kópia",
     "subject": "Predmet",
-    "body_placeholder": "Napíšte správu...",
+    "body_placeholder": "Napíšte správu…",
     "send": "Odoslať",
     "cancel": "Zrušiť",
     "attach": "Priložiť",
@@ -1069,10 +1069,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ak váš server túto adresu neprijme ako odosielateľa obálky, použije sa namiesto nej {identity} a príjemcovia ju uvidia v hlavičke Return-Path."
     },
-    "save_as_template": "Uložiť ako šablónu",
+    "save_as_template": "Uložiť ako šablónu…",
     "attach_from_device": "Nahrať z tohto zariadenia",
     "templates_menu": "Šablóny",
-    "insert_template": "Vložiť šablónu",
+    "insert_template": "Vložiť šablónu…",
     "options": "Možnosti",
     "option_plain_text": "Obyčajný text",
     "option_plain_text_hint": "Odoslať bez formátovania",
@@ -5299,6 +5299,12 @@
     "declined_many": "Odmietli ste {count} stretnutí tejto série.",
     "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobraziť celý týždeň",
+    "week_days_short": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
+    "print": "Tlačiť…"
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",
@@ -5877,6 +5883,12 @@
     "import_to_mail_failed": "{name} sa nepodarilo importovať.",
     "import_contacts": "Importovať do kontaktov…",
     "add_to_calendar": "Pridať do kalendára…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené súbory",
+    "hide": "Skryť",
+    "discard_detail_file": "Vaše úpravy tejto kópie sa odstránia. Súbor v Súboroch sa nezmení.",
+    "saved_auto": "{name} uložený do Súborov. Ďalšie uloženia z jeho programu tam pôjdu samy."
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Zostane",
     "import_show": "Zobraziť"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybraný # kontakt} few {Vybrané # kontakty} other {Vybraných # kontaktov}}",
+    "selection_more": "a ďalšie {count}",
+    "no_addresses": "Žiadny z vybraných kontaktov nemá e-mailovú adresu.",
+    "task_open": "Otvoriť",
+    "due_next_week": "Budúci týždeň",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrať dátum…",
+    "move_to_list": "Presunúť do zoznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktoch:} few {# už sú v Kontaktoch:} other {# už je v Kontaktoch:}}",
+    "dupes_skip": "Preskočiť",
+    "dupes_update": "Aktualizovať existujúce kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávanie zrušené",
+    "upload_cancelled_partial": "Pred zrušením {count, plural, one {sa nahral 1 súbor} few {sa nahrali # súbory} many {sa nahralo # súboru} other {sa nahralo # súborov}}",
+    "download_cancelled": "Sťahovanie zrušené"
+  },
   "desktopEdit": {
     "edit": "Upraviť",
     "edit_named": "Upraviť {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Offline",
     "state_error": "Zastavené"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Nahrávanie zmien pred vypnutím jednotky",
+      "title_sign_out": "Nahrávanie zmien pred odhlásením",
+      "title_stop_folder": "Nahrávanie zmien pred zastavením synchronizácie priečinka",
+      "cannot_title": "Niektoré zmeny teraz nemožno nahrať",
+      "waiting": "Zostáva nahrať: {names}",
+      "progress": "Nahraté {done} z {total}",
+      "cannot_offline": "Server nie je dostupný. Zatiaľ nenahraté: {names}",
+      "cannot_other": "Nemožno nahrať: {names}. Dôvod nájdete v nedávnej aktivite v nastaveniach.",
+      "go_note_drive": "Ak teraz budete pokračovať, čo nie je nahraté, sa skopíruje do Dokumenty\\Bulwark – not uploaded. Nič sa nestratí.",
+      "go_note_folder": "Ak teraz budete pokračovať, čo nie je nahraté, zostane v priečinku v tomto počítači.",
+      "keep_turn_off": "Ponechať jednotku",
+      "keep_sign_out": "Zostať prihlásený",
+      "keep_stop_folder": "Pokračovať v synchronizácii",
+      "go_turn_off": "Vypnúť hneď",
+      "go_sign_out": "Odhlásiť hneď",
+      "go_stop_folder": "Zastaviť synchronizáciu hneď"
+    },
+    "drive": {
+      "off_note": "Vypnutím jednotka zmizne z Prieskumníka. Vaše súbory zostanú v Súboroch.",
+      "rescued": "Nenahraté súbory ({count}) sú teraz v {folder}.",
+      "rescued_open": "Otvoriť priečinok",
+      "rescued_dismiss": "Skryť",
+      "start_at_login": "Spúšťať Bulwark po prihlásení do Windows",
+      "start_at_login_why": "Jednotka potrebuje spustený Bulwark, rovnako ako OneDrive.",
+      "closed_warning": "Súbory na jednotke sa neotvoria, keď je Bulwark zatvorený.",
+      "where": "V Prieskumníkovi ako Bulwark Files",
+      "where_letter": "V Prieskumníkovi ako Bulwark Files ({letter}:)",
+      "open": "Otvoriť",
+      "letter_note": "Cez písmeno jednotky Prieskumník neukazuje stav synchronizácie ani „Vždy ponechať v tomto zariadení“. Nájdete ich pod Bulwark Files v Prieskumníkovi.",
+      "letter_failed": "Písmeno jednotky sa nepodarilo nastaviť. Skúste to znova."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktuálne",
+      "syncing": "Bulwark Files: Synchronizácia. Zostáva: {count}",
+      "paused": "Bulwark Files: Pozastavené",
+      "offline": "Bulwark Files: Offline. Čaká: {count}",
+      "question": "Bulwark Files: Čaká na vašu odpoveď",
+      "error": "Bulwark Files: Chyba"
+    },
+    "notify": {
+      "conflict_title": "Súbor sa zmenil na dvoch miestach",
+      "problem_title": "Súbor nemožno synchronizovať"
+    },
+    "activity": {
+      "waiting_count": "Zmeny čakajúce na server: {count}",
+      "disk_name": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo niektoré jeho znaky tu nie sú povolené",
+      "disk_case": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo tu už je názov, ktorý sa líši len veľkosťou písmen",
+      "disk_group": "Názvy v Súboroch, ktoré tento počítač nepovoľuje: {count}. Tu majú trochu iné názvy.",
+      "show": "Zobraziť",
+      "hide": "Skryť"
+    },
+    "cant_sync": {
+      "title": "Nemožno synchronizovať"
+    },
+    "folders": {
+      "stop": "Zastaviť synchronizáciu…",
+      "pick_title_known": "S ktorým priečinkom v Súboroch má byť {name} rovnaký?",
+      "pick_confirm_known": "Udržiavať rovnaké"
+    },
+    "pin": {
+      "keep": "Vždy ponechať v tomto zariadení",
+      "free": "Uvoľniť miesto",
+      "failed": "Nepodarilo sa. Skúste to znova v Prieskumníkovi."
+    },
+    "account": {
+      "of": "Súbory účtu {address}",
+      "choose": "Súbory účtu"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rýchla správa",
     "menu": "Rýchla správa",
@@ -7845,6 +7945,10 @@
     "missing": "„{name}“ už neexistuje.",
     "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
     "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
+  },
+  "composeRecentLimit": {
+    "too_large": "Príliš veľký",
+    "too_large_hint": "Väčší, než server prijme ({max})"
   },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",

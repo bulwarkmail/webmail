@@ -301,6 +301,22 @@ describe('recent files in the Attach menu', () => {
     expect(budget).toHaveTextContent('3 hours ago');
   });
 
+  // compose-p3-5: each row was 24rem in a menu of at most 22rem, so the dates
+  // were cut ("yester…") and the menu scrolled sideways.
+  it('fits the rows to the menu and never cuts the date', async () => {
+    desktop();
+    useAuthStore.setState({ client: client() as never });
+    render(<EmailComposer onClose={vi.fn()} />);
+    await openMenu();
+    for (const row of rows()) {
+      expect(row.className).toContain('w-full');
+      expect(row.className).not.toMatch(/w-\[min\(24rem/);
+      const when = row.querySelector('[data-testid="composer-recent-file-when"]')!;
+      expect(when.className).toContain('shrink-0');
+      expect(when.className).toContain('whitespace-nowrap');
+    }
+  });
+
   it('one click attaches that file through the composer\'s own checks and closes the menu', async () => {
     const { attach } = desktop();
     useAuthStore.setState({ client: client() as never });
@@ -334,6 +350,24 @@ describe('recent files in the Attach menu', () => {
     await act(async () => {});
     expect(hoisted.toastError).toHaveBeenCalledWith('attachment_too_large');
     expect(screen.queryByText('Quarterly report.docx')).toBeNull();
+  });
+
+  // compose-p3-18: a 70 MB file was offered like the others; picking it
+  // only then said the server takes 48 MB.
+  it('greys out a file larger than the server takes, with "Too large" for its date', async () => {
+    const { attach } = desktop({ files: [{ ...RECENT[0], size: 70 * 1024 * 1024 }, { ...RECENT[1], size: 1000 }] });
+    useAuthStore.setState({ client: client({ getMaxSizeUpload: () => 48 * 1024 * 1024 }) as never });
+    render(<EmailComposer onClose={vi.fn()} />);
+    await openMenu();
+    const [big, small] = rows();
+    expect(big).toHaveAttribute('aria-disabled', 'true');
+    expect(big).toHaveTextContent('too_large');
+    expect(big).not.toHaveTextContent('minutes ago');
+    expect(small).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(big);
+    await act(async () => {});
+    expect(attach).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
   it('says so when the file is gone or too large for the app', async () => {

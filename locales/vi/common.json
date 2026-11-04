@@ -1009,10 +1009,10 @@
     "forward_message": "Chuyển tiếp",
     "from": "Người gửi",
     "to": "Người nhận",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Tiêu đề",
-    "body_placeholder": "Viết nội dung thư...",
+    "body_placeholder": "Viết nội dung thư…",
     "formatting": "Định dạng",
     "send": "Gửi",
     "cancel": "Hủy",
@@ -1070,10 +1070,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Nếu máy chủ không chấp nhận địa chỉ này làm địa chỉ người gửi trong phong bì SMTP, địa chỉ {identity} sẽ được dùng thay thế; người nhận có thể thấy địa chỉ đó trong tiêu đề Return-Path."
     },
-    "save_as_template": "Lưu làm mẫu",
+    "save_as_template": "Lưu làm mẫu…",
     "attach_from_device": "Tải lên từ thiết bị này",
     "templates_menu": "Mẫu",
-    "insert_template": "Chèn mẫu",
+    "insert_template": "Chèn mẫu…",
     "options": "Tùy chọn",
     "option_plain_text": "Văn bản thuần",
     "option_plain_text_hint": "Gửi không kèm định dạng",
@@ -5311,6 +5311,12 @@
     "declined_many": "Bạn đã từ chối {count} cuộc họp trong chuỗi này.",
     "answers_series": "Câu trả lời của bạn áp dụng cho mọi cuộc họp trong chuỗi."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "đến {time}",
+    "week_all_days": "Hiện cả tuần",
+    "week_days_short": "{count, plural, other {# ngày}}",
+    "print": "In…"
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
@@ -5889,6 +5895,12 @@
     "import_to_mail_failed": "Không thể nhập {name}.",
     "import_contacts": "Nhập vào danh bạ…",
     "add_to_calendar": "Thêm vào lịch…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Tệp đã chỉnh sửa",
+    "hide": "Ẩn",
+    "discard_detail_file": "Các chỉnh sửa của bạn trên bản sao này sẽ bị xóa. Tệp trong Tệp không thay đổi.",
+    "saved_auto": "Đã lưu {name} vào Tệp. Những lần lưu sau từ chương trình của nó sẽ tự vào đó."
   },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
@@ -7671,6 +7683,23 @@
     "merge_kept": "Được giữ lại",
     "import_show": "Hiển thị"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {Đã chọn # liên hệ}}",
+    "selection_more": "và {count} người khác",
+    "no_addresses": "Không liên hệ nào được chọn có địa chỉ email.",
+    "task_open": "Mở",
+    "due_next_week": "Tuần sau",
+    "due_none": "Không có hạn",
+    "due_pick": "Chọn ngày…",
+    "move_to_list": "Chuyển sang danh sách",
+    "dupes_legend": "{count, plural, other {# mục đã có trong Danh bạ:}}",
+    "dupes_skip": "Bỏ qua",
+    "dupes_update": "Cập nhật các liên hệ hiện có",
+    "dupes_updates": "Cập nhật liên hệ",
+    "upload_cancelled": "Đã hủy tải lên",
+    "upload_cancelled_partial": "{count, plural, one {Đã tải lên 1 tệp} other {Đã tải lên # tệp}} trước khi bạn hủy",
+    "download_cancelled": "Đã hủy tải xuống"
+  },
   "desktopEdit": {
     "edit": "Chỉnh sửa",
     "edit_named": "Chỉnh sửa {name}",
@@ -7835,6 +7864,77 @@
     "state_offline": "Ngoại tuyến",
     "state_error": "Đã dừng"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Đang tải lên thay đổi trước khi tắt ổ đĩa",
+      "title_sign_out": "Đang tải lên thay đổi trước khi đăng xuất",
+      "title_stop_folder": "Đang tải lên thay đổi trước khi ngừng đồng bộ thư mục",
+      "cannot_title": "Hiện không thể tải lên một số thay đổi",
+      "waiting": "Còn phải tải lên: {names}",
+      "progress": "Đã tải lên {done}/{total}",
+      "cannot_offline": "Không thể kết nối máy chủ. Chưa tải lên: {names}",
+      "cannot_other": "Không thể tải lên: {names}. Hoạt động gần đây trong Cài đặt cho biết lý do.",
+      "go_note_drive": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ được sao chép vào Tài liệu\\Bulwark – not uploaded. Không mất gì cả.",
+      "go_note_folder": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ vẫn ở trong thư mục trên máy tính này.",
+      "keep_turn_off": "Giữ ổ đĩa",
+      "keep_sign_out": "Tiếp tục đăng nhập",
+      "keep_stop_folder": "Tiếp tục đồng bộ",
+      "go_turn_off": "Tắt ngay",
+      "go_sign_out": "Đăng xuất ngay",
+      "go_stop_folder": "Ngừng đồng bộ ngay"
+    },
+    "drive": {
+      "off_note": "Tắt sẽ gỡ ổ đĩa khỏi Trình khám phá Tệp. Tệp của bạn vẫn ở trong Tệp.",
+      "rescued": "Các tệp chưa tải lên ({count}) hiện nằm trong {folder}.",
+      "rescued_open": "Mở thư mục",
+      "rescued_dismiss": "Bỏ qua",
+      "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
+      "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
+      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng.",
+      "where": "Trong Trình khám phá Tệp với tên Bulwark Files",
+      "where_letter": "Trong Trình khám phá Tệp với tên Bulwark Files ({letter}:)",
+      "open": "Mở",
+      "letter_note": "Qua ký tự ổ đĩa, Trình khám phá Tệp không hiện trạng thái đồng bộ và “Luôn giữ trên thiết bị này”. Chúng hiện dưới Bulwark Files trong Trình khám phá.",
+      "letter_failed": "Không thể đặt ký tự ổ đĩa. Hãy thử lại."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Đã cập nhật",
+      "syncing": "Bulwark Files: Đang đồng bộ. Còn lại: {count}",
+      "paused": "Bulwark Files: Đã tạm dừng",
+      "offline": "Bulwark Files: Ngoại tuyến. Đang chờ: {count}",
+      "question": "Bulwark Files: Cần bạn trả lời",
+      "error": "Bulwark Files: Lỗi"
+    },
+    "notify": {
+      "conflict_title": "Một tệp đã bị thay đổi ở hai nơi",
+      "problem_title": "Không thể đồng bộ một tệp"
+    },
+    "activity": {
+      "waiting_count": "Thay đổi đang chờ máy chủ: {count}",
+      "disk_name": "{path} trong Tệp có tên {detail} trên máy tính này vì một số ký tự không được phép ở đây",
+      "disk_case": "{path} trong Tệp có tên {detail} trên máy tính này vì ở đây đã có tên chỉ khác chữ hoa và chữ thường",
+      "disk_group": "Tên trong Tệp mà máy tính này không cho phép: {count}. Ở đây chúng có tên hơi khác.",
+      "show": "Hiện",
+      "hide": "Ẩn"
+    },
+    "cant_sync": {
+      "title": "Không thể đồng bộ"
+    },
+    "folders": {
+      "stop": "Ngừng đồng bộ…",
+      "pick_title_known": "Giữ {name} giống với thư mục nào trong Tệp?",
+      "pick_confirm_known": "Giữ giống nhau"
+    },
+    "pin": {
+      "keep": "Luôn giữ trên thiết bị này",
+      "free": "Giải phóng dung lượng",
+      "failed": "Không thành công. Hãy thử lại trong Trình khám phá Tệp."
+    },
+    "account": {
+      "of": "Tệp của {address}",
+      "choose": "Tệp của"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",
@@ -7857,6 +7957,10 @@
     "missing": "\"{name}\" không còn nữa.",
     "too_large": "\"{name}\" lớn hơn {max} nên không thể đính kèm.",
     "failed": "Không thể đính kèm \"{name}\". Hãy thử lại."
+  },
+  "composeRecentLimit": {
+    "too_large": "Quá lớn",
+    "too_large_hint": "Lớn hơn mức máy chủ nhận ({max})"
   },
   "compose_windows": {
     "more_formatting": "Thêm định dạng",

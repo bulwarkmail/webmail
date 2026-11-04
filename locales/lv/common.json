@@ -1012,7 +1012,7 @@
     "cc": "Kopija",
     "bcc": "Slepenā kopija",
     "subject": "Temats",
-    "body_placeholder": "Rakstiet ziņojumu...",
+    "body_placeholder": "Rakstiet ziņojumu…",
     "send": "Sūtīt",
     "cancel": "Atcelt",
     "attach": "Pievienot",
@@ -1066,10 +1066,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ja jūsu serveris nepieņem šo adresi kā aploksnes sūtītāju, tās vietā tiek izmantota {identity}, un adresāti to var redzēt galvenē Return-Path."
     },
-    "save_as_template": "Saglabāt kā veidni",
+    "save_as_template": "Saglabāt kā veidni…",
     "attach_from_device": "Augšupielādēt no šīs ierīces",
     "templates_menu": "Veidnes",
-    "insert_template": "Ievietot veidni",
+    "insert_template": "Ievietot veidni…",
     "options": "Opcijas",
     "option_plain_text": "Vienkāršs teksts",
     "option_plain_text_hint": "Sūtīt bez formatējuma",
@@ -5299,6 +5299,12 @@
     "declined_many": "Jūs atteicāt {count} šīs sērijas sapulces.",
     "answers_series": "Jūsu atbilde attiecas uz visām sērijas sapulcēm."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "līdz {time}",
+    "week_all_days": "Rādīt visu nedēļu",
+    "week_days_short": "{count, plural, zero {# dienas} one {# diena} other {# dienas}}",
+    "print": "Drukāt…"
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",
@@ -5610,6 +5616,12 @@
     "import_to_mail_failed": "{name} neizdevās importēt.",
     "import_contacts": "Importēt kontaktos…",
     "add_to_calendar": "Pievienot kalendāram…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Rediģētie faili",
+    "hide": "Paslēpt",
+    "discard_detail_file": "Jūsu labojumi šajā kopijā tiek dzēsti. Fails sadaļā Faili nemainās.",
+    "saved_auto": "{name} saglabāts sadaļā Faili. Turpmākās saglabāšanas no tā programmas nonāks tur pašas."
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Saglabājas",
     "import_show": "Rādīt"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Atlasīts # kontakts} other {Atlasīti # kontakti}}",
+    "selection_more": "un vēl {count}",
+    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses.",
+    "task_open": "Atvērt",
+    "due_next_week": "Nākamnedēļ",
+    "due_none": "Bez termiņa",
+    "due_pick": "Izvēlēties datumu…",
+    "move_to_list": "Pārvietot uz sarakstu",
+    "dupes_legend": "{count, plural, one {# jau ir kontaktos:} other {# jau ir kontaktos:}}",
+    "dupes_skip": "Izlaist",
+    "dupes_update": "Atjaunināt esošos kontaktus",
+    "dupes_updates": "Atjaunina kontaktu",
+    "upload_cancelled": "Augšupielāde atcelta",
+    "upload_cancelled_partial": "{count, plural, zero {# faili tika augšupielādēti} one {# fails tika augšupielādēts} other {# faili tika augšupielādēti}} pirms atcelšanas",
+    "download_cancelled": "Lejupielāde atcelta"
+  },
   "desktopEdit": {
     "edit": "Rediģēt",
     "edit_named": "Rediģēt {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Bezsaistē",
     "state_error": "Apturēts"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Augšupielādē izmaiņas pirms diska izslēgšanas",
+      "title_sign_out": "Augšupielādē izmaiņas pirms izrakstīšanās",
+      "title_stop_folder": "Augšupielādē izmaiņas pirms mapes sinhronizācijas apturēšanas",
+      "cannot_title": "Dažas izmaiņas pašlaik nevar augšupielādēt",
+      "waiting": "Vēl jāaugšupielādē: {names}",
+      "progress": "Augšupielādēti {done} no {total}",
+      "cannot_offline": "Serveris nav sasniedzams. Vēl nav augšupielādēts: {names}",
+      "cannot_other": "Nevar augšupielādēt: {names}. Iemesls ir redzams iestatījumu nesenajās darbībās.",
+      "go_note_drive": "Ja turpināsiet tagad, neaugšupielādētais tiks nokopēts uz Dokumenti\\Bulwark – not uploaded. Nekas netiks zaudēts.",
+      "go_note_folder": "Ja turpināsiet tagad, neaugšupielādētais paliks mapē šajā datorā.",
+      "keep_turn_off": "Paturēt disku",
+      "keep_sign_out": "Palikt pierakstītam",
+      "keep_stop_folder": "Turpināt sinhronizēt",
+      "go_turn_off": "Izslēgt tūlīt",
+      "go_sign_out": "Izrakstīties tūlīt",
+      "go_stop_folder": "Apturēt sinhronizāciju tūlīt"
+    },
+    "drive": {
+      "off_note": "Izslēdzot disks pazūd no failu pārlūka. Jūsu faili paliek sadaļā Faili.",
+      "rescued": "Neaugšupielādētie faili ({count}) tagad ir šeit: {folder}.",
+      "rescued_open": "Atvērt mapi",
+      "rescued_dismiss": "Nerādīt",
+      "start_at_login": "Startēt Bulwark, piesakoties sistēmā Windows",
+      "start_at_login_why": "Diskam vajadzīgs, lai Bulwark darbotos, tāpat kā OneDrive.",
+      "closed_warning": "Diska failus nevar atvērt, kamēr Bulwark ir aizvērts.",
+      "where": "Failu pārlūkā kā Bulwark Files",
+      "where_letter": "Failu pārlūkā kā Bulwark Files ({letter}:)",
+      "open": "Atvērt",
+      "letter_note": "Caur diska burtu failu pārlūks nerāda sinhronizācijas statusu un “Vienmēr saglabāt šajā ierīcē”. Tie redzami failu pārlūkā sadaļā Bulwark Files.",
+      "letter_failed": "Diska burtu neizdevās iestatīt. Mēģiniet vēlreiz."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Atjaunināts",
+      "syncing": "Bulwark Files: Sinhronizē. Atlikuši: {count}",
+      "paused": "Bulwark Files: Pauzēts",
+      "offline": "Bulwark Files: Bezsaistē. Gaida: {count}",
+      "question": "Bulwark Files: Gaida jūsu atbildi",
+      "error": "Bulwark Files: Kļūda"
+    },
+    "notify": {
+      "conflict_title": "Fails mainīts divās vietās",
+      "problem_title": "Failu nevar sinhronizēt"
+    },
+    "activity": {
+      "waiting_count": "Izmaiņas, kas gaida serveri: {count}",
+      "disk_name": "{path} sadaļā Faili šajā datorā saucas {detail}, jo dažas rakstzīmes šeit nav atļautas",
+      "disk_case": "{path} sadaļā Faili šajā datorā saucas {detail}, jo šeit jau ir nosaukums, kas atšķiras tikai ar lielajiem un mazajiem burtiem",
+      "disk_group": "Nosaukumi sadaļā Faili, ko šis dators neatļauj: {count}. Šeit tiem ir nedaudz citi nosaukumi.",
+      "show": "Rādīt",
+      "hide": "Paslēpt"
+    },
+    "cant_sync": {
+      "title": "Nevar sinhronizēt"
+    },
+    "folders": {
+      "stop": "Apturēt sinhronizāciju…",
+      "pick_title_known": "Ar kuru mapi sadaļā Faili saglabāt {name} vienādu?",
+      "pick_confirm_known": "Saglabāt vienādas"
+    },
+    "pin": {
+      "keep": "Vienmēr saglabāt šajā ierīcē",
+      "free": "Atbrīvot vietu",
+      "failed": "Neizdevās. Mēģiniet vēlreiz failu pārlūkā."
+    },
+    "account": {
+      "of": "{address} faili",
+      "choose": "Faili:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Ātrā rakstīšana",
     "menu": "Ātrā rakstīšana",
@@ -7845,6 +7945,10 @@
     "missing": "“{name}” vairs nav pieejams.",
     "too_large": "“{name}” ir lielāks par {max}, un to nevar pievienot.",
     "failed": "Neizdevās pievienot “{name}”. Mēģiniet vēlreiz."
+  },
+  "composeRecentLimit": {
+    "too_large": "Pārāk liels",
+    "too_large_hint": "Lielāks, nekā serveris pieņem ({max})"
   },
   "compose_windows": {
     "more_formatting": "Vairāk formatēšanas",

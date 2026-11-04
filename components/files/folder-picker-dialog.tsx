@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Folder, FolderOpen, HardDrive } from "@/components/icons";
+import { ChevronDown, ChevronRight, Folder, FolderOpen, FolderPlus, HardDrive } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,12 @@ interface FolderPickerDialogProps {
   currentId?: string | null;
   /** A folder selected and ready to pick when the dialog opens; null is My files. */
   initialSelectedId?: string | null;
+  /**
+   * Offers "New folder" in the selected folder: makes it and answers it (or null), and the
+   * caller adds it to `folders`; it's selected then. `newFolderName` is the name it starts with.
+   */
+  onCreateFolder?: (parentId: string | null, name: string) => Promise<PickerFolder | null>;
+  newFolderName?: string;
 }
 
 const ROOT = "";
@@ -37,7 +43,7 @@ const ROOT = "";
  * tree with My files at the top, browsed with the mouse or the arrow keys.
  */
 export function FolderPickerDialog({
-  isOpen, onClose, onPick, title, confirmText, folders, excludeIds, currentId = null, initialSelectedId,
+  isOpen, onClose, onPick, title, confirmText, folders, excludeIds, currentId = null, initialSelectedId, onCreateFolder, newFolderName = "",
 }: FolderPickerDialogProps) {
   const t = useTranslations("files");
   const [selected, setSelected] = useState<string | null>(
@@ -45,6 +51,10 @@ export function FolderPickerDialog({
   );
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([ROOT]));
   const listRef = useRef<HTMLDivElement>(null);
+  /** The name of a folder being made, or null while nobody is. */
+  const [making, setMaking] = useState<string | null>(null);
+  const [makeBusy, setMakeBusy] = useState(false);
+  const [makeFailed, setMakeFailed] = useState(false);
 
   const childrenOf = useMemo(() => {
     const map = new Map<string, PickerFolder[]>();
@@ -115,6 +125,23 @@ export function FolderPickerDialog({
     onClose();
   };
 
+  const make = () => {
+    const name = making?.trim();
+    if (!onCreateFolder || !name || makeBusy) return;
+    const parent = selected === null || selected === ROOT ? null : selected;
+    setMakeBusy(true);
+    setMakeFailed(false);
+    void onCreateFolder(parent, name).then((folder) => {
+      if (!folder) {
+        setMakeFailed(true);
+        return;
+      }
+      setMaking(null);
+      toggle(parent ?? ROOT, true);
+      setSelected(folder.id);
+    }, () => setMakeFailed(true)).finally(() => setMakeBusy(false));
+  };
+
   return (
     <Dialog
       isOpen={isOpen}
@@ -123,11 +150,35 @@ export function FolderPickerDialog({
       onSubmit={(e) => { e.preventDefault(); pick(); }}
       footer={
         <>
+          {onCreateFolder && making === null && (
+            <Button type="button" variant="ghost" className="me-auto gap-1.5" onClick={() => { setMakeFailed(false); setMaking(newFolderName); }} data-testid="folder-picker-new">
+              <FolderPlus className="w-4 h-4" />{t("new_folder")}
+            </Button>
+          )}
           <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
           <Button type="submit" disabled={!canPick}>{confirmText}</Button>
         </>
       }
     >
+      {making !== null && (
+        <div className="mt-4 flex items-center gap-2">
+          <input
+            autoFocus
+            aria-label={t("new_folder")}
+            value={making}
+            onChange={(e) => setMaking(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); make(); }
+              if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setMaking(null); }
+            }}
+            className="flex-1 min-w-0 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            data-testid="folder-picker-new-name"
+          />
+          <Button type="button" size="sm" disabled={!making.trim() || makeBusy} onClick={make}>{t("create")}</Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setMaking(null)}>{t("cancel")}</Button>
+        </div>
+      )}
+      {makeFailed && <p role="alert" className="mt-2 text-sm text-destructive">{t("create_folder_error")}</p>}
       <div
         ref={listRef}
         role="tree"

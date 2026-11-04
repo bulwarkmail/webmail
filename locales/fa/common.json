@@ -1012,7 +1012,7 @@
     "cc": "رونوشت",
     "bcc": "رونوشت مخفی",
     "subject": "موضوع",
-    "body_placeholder": "پیام خود را بنویسید...",
+    "body_placeholder": "پیام خود را بنویسید…",
     "send": "ارسال",
     "cancel": "انصراف",
     "attach": "پیوست",
@@ -1069,10 +1069,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "اگر سرور شما این آدرس را به‌عنوان فرستندهٔ پاکت نپذیرد، به‌جای آن {identity} استفاده می‌شود و گیرندگان می‌توانند آن را در سرآیند Return-Path ببینند."
     },
-    "save_as_template": "ذخیره به عنوان قالب",
+    "save_as_template": "ذخیره به عنوان قالب…",
     "attach_from_device": "بارگذاری از این دستگاه",
     "templates_menu": "قالب‌ها",
-    "insert_template": "درج قالب",
+    "insert_template": "درج قالب…",
     "options": "گزینه‌ها",
     "option_plain_text": "متن ساده",
     "option_plain_text_hint": "ارسال بدون قالب‌بندی",
@@ -5299,6 +5299,12 @@
     "declined_many": "{count} جلسه از این سری را رد کردید.",
     "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "تا {time}",
+    "week_all_days": "نمایش کل هفته",
+    "week_days_short": "{count, plural, one {# روز} other {# روز}}",
+    "print": "چاپ…"
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",
@@ -5877,6 +5883,12 @@
     "import_to_mail_failed": "وارد کردن {name} ممکن نشد.",
     "import_contacts": "وارد کردن به مخاطبان…",
     "add_to_calendar": "افزودن به تقویم…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "پرونده‌های ویرایش‌شده",
+    "hide": "پنهان کردن",
+    "discard_detail_file": "ویرایش‌های شما در این نسخه حذف می‌شود. پرونده در «پرونده‌ها» تغییر نمی‌کند.",
+    "saved_auto": "{name} در «پرونده‌ها» ذخیره شد. ذخیره‌های بعدی از برنامه‌اش خودکار به آنجا می‌رود."
   },
   "smime": {
     "your_certificates": "گواهی‌های شما",
@@ -7659,6 +7671,23 @@
     "merge_kept": "حفظ می‌شود",
     "import_show": "نمایش"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# مخاطب انتخاب شد} other {# مخاطب انتخاب شد}}",
+    "selection_more": "و {count} مورد دیگر",
+    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند.",
+    "task_open": "باز کردن",
+    "due_next_week": "هفتهٔ بعد",
+    "due_none": "بدون موعد",
+    "due_pick": "انتخاب تاریخ…",
+    "move_to_list": "انتقال به فهرست",
+    "dupes_legend": "{count, plural, one {۱ مورد از قبل در مخاطبان است:} other {# مورد از قبل در مخاطبان است:}}",
+    "dupes_skip": "رد کردن",
+    "dupes_update": "به‌روزرسانی مخاطبان موجود",
+    "dupes_updates": "مخاطب را به‌روز می‌کند",
+    "upload_cancelled": "بارگذاری لغو شد",
+    "upload_cancelled_partial": "{count, plural, one {۱ فایل} other {# فایل}} پیش از لغو بارگذاری شد",
+    "download_cancelled": "دانلود لغو شد"
+  },
   "desktopEdit": {
     "edit": "ویرایش",
     "edit_named": "ویرایش {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "آفلاین",
     "state_error": "متوقف شد"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "در حال بارگذاری تغییرات پیش از خاموش شدن درایو",
+      "title_sign_out": "در حال بارگذاری تغییرات پیش از خروج",
+      "title_stop_folder": "در حال بارگذاری تغییرات پیش از توقف همگام‌سازی پوشه",
+      "cannot_title": "برخی تغییرات اکنون بارگذاری نمی‌شوند",
+      "waiting": "مانده برای بارگذاری: {names}",
+      "progress": "{done} از {total} بارگذاری شد",
+      "cannot_offline": "سرور در دسترس نیست. هنوز بارگذاری نشده: {names}",
+      "cannot_other": "بارگذاری نمی‌شوند: {names}. دلیل آن در فعالیت اخیر در تنظیمات آمده است.",
+      "go_note_drive": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در اسناد\\Bulwark – not uploaded کپی می‌شود. چیزی از دست نمی‌رود.",
+      "go_note_folder": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در پوشهٔ این رایانه می‌ماند.",
+      "keep_turn_off": "درایو بماند",
+      "keep_sign_out": "وارد بمانید",
+      "keep_stop_folder": "ادامهٔ همگام‌سازی",
+      "go_turn_off": "اکنون خاموش شود",
+      "go_sign_out": "اکنون خارج شوید",
+      "go_stop_folder": "اکنون همگام‌سازی متوقف شود"
+    },
+    "drive": {
+      "off_note": "با خاموش کردن، درایو از کاوشگر فایل حذف می‌شود. فایل‌های شما در فایل‌ها می‌مانند.",
+      "rescued": "فایل‌های بارگذاری‌نشده ({count}) اکنون در {folder} هستند.",
+      "rescued_open": "باز کردن پوشه",
+      "rescued_dismiss": "بستن",
+      "start_at_login": "اجرای Bulwark هنگام ورود به Windows",
+      "start_at_login_why": "درایو مانند OneDrive به اجرای Bulwark نیاز دارد.",
+      "closed_warning": "تا وقتی Bulwark بسته است، فایل‌های درایو باز نمی‌شوند.",
+      "where": "در کاوشگر فایل با نام Bulwark Files",
+      "where_letter": "در کاوشگر فایل با نام Bulwark Files ({letter}:)",
+      "open": "باز کردن",
+      "letter_note": "از راه حرف درایو، کاوشگر فایل وضعیت همگام‌سازی و «همیشه در این دستگاه نگه دار» را نشان نمی‌دهد. این‌ها زیر Bulwark Files در کاوشگر دیده می‌شوند.",
+      "letter_failed": "حرف درایو تنظیم نشد. دوباره امتحان کنید."
+    },
+    "tray": {
+      "idle": "Bulwark Files: به‌روز",
+      "syncing": "Bulwark Files: در حال همگام‌سازی. مانده: {count}",
+      "paused": "Bulwark Files: متوقف شده",
+      "offline": "Bulwark Files: آفلاین. در انتظار: {count}",
+      "question": "Bulwark Files: منتظر پاسخ شما",
+      "error": "Bulwark Files: خطا"
+    },
+    "notify": {
+      "conflict_title": "فایلی در دو جا تغییر کرد",
+      "problem_title": "یک فایل همگام نمی‌شود"
+    },
+    "activity": {
+      "waiting_count": "تغییرهای در انتظار سرور: {count}",
+      "disk_name": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون برخی نویسه‌هایش اینجا مجاز نیستند",
+      "disk_case": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون نامی که فقط در حروف بزرگ و کوچک فرق دارد اینجا هست",
+      "disk_group": "نام‌هایی در فایل‌ها که این رایانه اجازه نمی‌دهد: {count}. اینجا نامشان کمی فرق دارد.",
+      "show": "نمایش",
+      "hide": "پنهان کردن"
+    },
+    "cant_sync": {
+      "title": "همگام‌سازی ممکن نیست"
+    },
+    "folders": {
+      "stop": "توقف همگام‌سازی…",
+      "pick_title_known": "{name} با کدام پوشه در فایل‌ها یکسان بماند؟",
+      "pick_confirm_known": "یکسان نگه دار"
+    },
+    "pin": {
+      "keep": "همیشه در این دستگاه نگه دار",
+      "free": "آزاد کردن فضا",
+      "failed": "انجام نشد. در کاوشگر فایل دوباره امتحان کنید."
+    },
+    "account": {
+      "of": "فایل‌های {address}",
+      "choose": "فایل‌های"
+    }
+  },
   "desktopQuickCompose": {
     "label": "نوشتن سریع",
     "menu": "نوشتن سریع",
@@ -7845,6 +7945,10 @@
     "missing": "«{name}» دیگر وجود ندارد.",
     "too_large": "«{name}» بزرگ‌تر از {max} است و نمی‌توان آن را پیوست کرد.",
     "failed": "پیوست «{name}» ممکن نشد. دوباره امتحان کنید."
+  },
+  "composeRecentLimit": {
+    "too_large": "خیلی بزرگ",
+    "too_large_hint": "بزرگ‌تر از حدی که سرور می‌پذیرد ({max})"
   },
   "compose_windows": {
     "more_formatting": "قالب‌بندی بیشتر",

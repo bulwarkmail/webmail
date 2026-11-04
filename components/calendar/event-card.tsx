@@ -15,6 +15,8 @@ import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-s
 import { readableTextOn } from "@/lib/color-transform";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { endEventDragGrab, startEventDragGrab } from "@/lib/calendar/event-drag-grab";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -160,6 +162,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const t = useTranslations("calendar");
   const tEvent = useTranslations("ux_pim_event");
   const tGrid = useTranslations("ux_pim_grid");
+  const shownName = useCollectionNames();
   // The addresses of the login the event is in (pim-12, pim-9).
   const userEmails = useEventUserEmails(currentUserEmails ?? [])(event);
   const [isBeingDragged, setIsBeingDragged] = useState(false);
@@ -174,7 +177,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const showColorNames = useSettingsStore((state) => state.showColorNames);
   const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
 
-  const calendarName = calendar?.name || "";
+  const calendarName = calendar ? shownName.calendar(calendar) : "";
   const visibleCalendarName = showColorNames && calendarName ? calendarName : null;
   const durationMinutes = parseDuration(event.duration);
   const endTime = getEventEndDate(event);
@@ -247,8 +250,18 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   ) : card;
   const ariaLabel = `${event.title || t("events.no_title")}, ${spokenTime}${calendarName ? `, ${calendarName}` : ""}${statusLabel ? `, ${statusLabel}` : ""}`;
 
+  // A click that ends a drag isn't one: no popover under the moved event (pim-p3-2).
+  const dragEndedAt = useRef(0);
+  const openFromClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (Date.now() - dragEndedAt.current < 300) return;
+    onClick?.(e.currentTarget.getBoundingClientRect());
+  };
+
   const handleDragStart = useCallback((e: DragEvent) => {
     e.stopPropagation();
+    // Where it was grabbed: a drop moves it by the distance dragged from here (pim-p3-2).
+    startEventDragGrab(event.id, e.currentTarget as Element, e.clientY);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("application/x-calendar-event", JSON.stringify({
       type: "calendar-event",
@@ -266,6 +279,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   }, [event, color, t, durationMinutes, timeString]);
 
   const handleDragEnd = useCallback(() => {
+    endEventDragGrab();
+    dragEndedAt.current = Date.now();
     setIsBeingDragged(false);
   }, []);
 
@@ -314,7 +329,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   if (variant === "chip") {
     return withMarker(
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+        onClick={openFromClick}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
         onContextMenu={handleContextMenu}
@@ -323,6 +338,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-event-id={event.id}
         data-reply-state={replyState ?? undefined}
         className={cn(
           "flex items-center w-full text-start text-xs font-medium px-1.5 py-0.5 rounded-xs truncate",
@@ -355,7 +371,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     if (textStyle) {
       return (
         <button
-          onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+          onClick={openFromClick}
           onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
           onMouseLeave={() => onMouseLeave?.()}
           onContextMenu={handleContextMenu}
@@ -364,6 +380,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           aria-label={ariaLabel}
           tabIndex={tabbable ? undefined : -1}
           {...dragProps}
+          data-event-id={event.id}
           data-timed-style={textStyle}
           className={cn(
             "w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
@@ -394,7 +411,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     }
     return withMarker(
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+        onClick={openFromClick}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
         onContextMenu={handleContextMenu}
@@ -403,6 +420,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-event-id={event.id}
         data-reply-state={replyState ?? undefined}
         className={cn(
           "w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
@@ -435,7 +453,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
 
   return withMarker(
     <button
-      onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+      onClick={openFromClick}
       onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
       onMouseLeave={() => onMouseLeave?.()}
       onContextMenu={handleContextMenu}
@@ -444,6 +462,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       aria-label={ariaLabel}
       tabIndex={tabbable ? undefined : -1}
       {...dragProps}
+      data-event-id={event.id}
       data-calendar-event
       data-reply-state={replyState ?? undefined}
       data-continues-before={continuesBefore || undefined}

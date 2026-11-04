@@ -1,7 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { AlertCircle, CheckCircle2, Clock, Cloud, FolderOpen, RefreshCw, type AppIcon } from "@/components/icons";
+import { AlertCircle, CheckCircle2, Clock, Cloud, CloudOff, FolderOpen, Pin, RefreshCw, type AppIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
@@ -50,6 +51,55 @@ export function useShowInFolder(nodeId: string | null | undefined): { label: str
       );
     },
   };
+}
+
+/**
+ * The Files screen's header: the folder on screen in Explorer (Finder, file manager), when a
+ * root covers it; at the top of Files with the drive on, the drive itself (files-p3-9).
+ */
+export function useShowFolderOnScreen(folderId: string | null): { label: string; run: () => void } | null {
+  const t = useTranslations("files_sync");
+  const available = useFilesSyncStore((s) => s.available);
+  const controller = useFilesSyncStore((s) => s.controller);
+  const account = useFilesSyncStore((s) => s.account);
+  const roots = useFilesSyncStore((s) => s.roots);
+  useFilesSyncStore((s) => s.items);
+  if (!available || !controller) return null;
+  const label = t(showInKey(getDesktopBridge()?.platform));
+  const fail = () => toast.error(t("show_in.failed"));
+  if (folderId && controller.coverage(folderId)) {
+    return { label, run: () => { void controller.showInFolder(folderId).then((shown) => { if (!shown) fail(); }, fail); } };
+  }
+  const drive = folderId === null ? roots.find((root) => root.kind === "drive" && root.account === account) : undefined;
+  if (!drive) return null;
+  return { label, run: () => { void controller.openRoot(drive.id).then((shown) => { if (!shown) fail(); }, fail); } };
+}
+
+/**
+ * "Keep offline" on a row: in the drive it's Explorer's "Always keep on this device" / "Free up
+ * space", the same state both ways (files-p3-8); anywhere else the app's own offline copy
+ * (`fallback`) as before.
+ */
+export function KeepOnDeviceMenuItem({ nodeId, onRan, fallback }: { nodeId: string; onRan: () => void; fallback: ReactNode }) {
+  const t = useTranslations("files_sync_extra.pin");
+  const controller = useFilesSyncStore((s) => s.controller);
+  const available = useFilesSyncStore((s) => s.available);
+  const kept = useFilesSyncStore((s) => !!s.keptOnDevice[nodeId]);
+  useFilesSyncStore((s) => s.items);
+  const setKept = controller?.setKeptOnDevice;
+  const inDrive = available && !!setKept && controller?.coverage(nodeId)?.kind === "drive";
+  if (!inDrive || !setKept) return <>{fallback}</>;
+  return (
+    <ContextMenuItem
+      icon={kept ? CloudOff : Pin}
+      label={kept ? t("free") : t("keep")}
+      testId="files-sync-keep-on-device"
+      onClick={() => {
+        onRan();
+        void setKept(nodeId, !kept).then((done) => { if (!done) toast.error(t("failed")); }, () => toast.error(t("failed")));
+      }}
+    />
+  );
 }
 
 /** The menu entry of a row on the Files screen. */

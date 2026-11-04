@@ -8,27 +8,32 @@
  * Authorization header the app's client holds, read when a request goes and renewed through
  * it (as offline mode does). Nothing here writes a token or a password anywhere.
  *
- * What happens to an account's roots when it leaves (FILES-SYNC-BRIEF.md):
- * - sign-out: the drive goes (`signed-out` keeps the wish, so the next sign-in brings it back
- *   without a click), and the folders stop syncing until then;
- * - a wipe (lib/offline/wipe-registry.ts): the drive goes with everything in it, and the
- *   folders are forgotten; their files stay, they were the user's;
- * - a refused login the server was sure of: the same as a wipe for these.
+ * What happens to an account's roots when it leaves (FILES-SYNC-BRIEF.md, pass-3 files-p3-3):
+ * - a sign-out the user chose: what waits is uploaded first (the sign-out gate asks), then the
+ *   drive goes (`signed-out` keeps the wish and the pins; main copies anything still not
+ *   uploaded to Documents), and the folders stop syncing until the next sign-in;
+ * - a sign-out nobody chose (the session ran out, the login was refused): the drive is only
+ *   disconnected (`suspended`), its folder, edits and pins stay, and the next sign-in goes on;
+ * - a wipe (lib/offline/wipe-registry.ts): the drive goes with everything in it, unuploaded
+ *   edits too, and the folders are forgotten; their files stay, they were the user's.
  *
  * It also keeps each account's storage (Quota/get, at the start, after FileNode changes at most
  * once a minute, and every five minutes) for the settings page, the Files screen and Explorer,
  * and tells main what Explorer should show for each drive (drive-status.ts).
  */
 
-import type { FilesControls, FilesDriveState, FilesDriveStatus, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { DesktopOsNotification, FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
 import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
+import type { ActivityStore } from './activity-store';
 import { driveStatusFor, filesQuotaOf, type DriveStatusText } from './drive-status';
 import { FilesSyncEngine, type EngineTiming } from './engine';
+import { requestFlush } from './flush-requests';
 import type { FilesSyncErrorName } from './errors';
 import { namingFor } from './names';
 import { FilesRemote } from './remote';
-import type { FilesQuota, FilesSyncController, FilesSyncSnapshot } from './types';
+import { FILES_NOTIFY_ACTIONS, type FilesNotificationContext, type FilesNotifyText } from './notify';
+import type { FilesQuota, FilesSyncActivity, FilesSyncController, FilesSyncSnapshot } from './types';
 
 /** What the host needs of the app's JMAP client. */
 export interface SessionClient {
@@ -60,6 +65,11 @@ export interface HostDeps {
   readUrl?: (url: string) => Promise<Uint8Array>;
   /** The words for Explorer's status, in the page's language. Null: none sent. */
   driveStatusText?: () => DriveStatusText | null;
+  /** Shows an OS notification; main shows none while the main window has the focus. */
+  notify?: (notification: DesktopOsNotification) => void;
+  notifyText?: () => FilesNotifyText | null;
+  /** Where Recent activity is kept across restarts. None: it isn't. */
+  activityStore?: ActivityStore;
   quotaTiming?: Partial<QuotaTiming>;
   now?: () => number;
 }
@@ -74,6 +84,8 @@ export interface QuotaTiming {
 }
 
 const QUOTA_TIMING: QuotaTiming = { minGapMs: 60_000, everyMs: 5 * 60_000, statusGapMs: 1_000 };
+/** The policy is turning the drive off: this long for what waits to go up. Main waits a little longer. */
+const POLICY_FLUSH_MS = 100_000;
 
 interface QuotaState {
   /** undefined: not asked yet; null: the server sets no limit. */
@@ -126,6 +138,12 @@ export class FilesSyncHost {
   /** What main last heard for Explorer, per account, and when. */
   private readonly sentStatus = new Map<string, { json: string; at: number }>();
   private statusTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Turning the drive off copied files that weren't uploaded: the settings page says where. */
+  private rescued: FilesRescued | null = null;
+  /** Accounts whose kept activity was read back this run. */
+  private readonly activityRestored = new Set<string>();
+  /** What was last written per account, to write only when it changed. */
+  private readonly activitySaved = new Map<string, string>();
 
   constructor(private readonly deps: HostDeps) {
     this.quotaTiming = { ...QUOTA_TIMING, ...deps.quotaTiming };
@@ -139,6 +157,7 @@ export class FilesSyncHost {
       blocked: (root) => this.blocked(root),
       downloadsAllowed: (account) => !deps.downloadsForbidden(account),
       onUpdate: () => this.schedulePublish(),
+      onActivity: (entry) => this.announce(entry),
     });
   }
 
@@ -160,8 +179,10 @@ export class FilesSyncHost {
         // A drive turned on again starts with nothing in Explorer: say it again.
         this.sentStatus.clear();
         this.schedulePublish();
+        this.driveStateChanged(state);
         void this.engine.refreshRoots();
       }));
+      if (drive.onFlush) this.unsubscribe.push(drive.onFlush((request) => void this.flushForPolicy(request.requestId, request.accounts)));
     }
     this.deps.setController(this.controller());
     this.quotaTimer = setInterval(() => {
@@ -204,6 +225,12 @@ export class FilesSyncHost {
       this.engine.dropAccount(id);
     }
     for (const account of accounts) {
+      if (!this.activityRestored.has(account.id)) {
+        this.activityRestored.add(account.id);
+        const kept = this.deps.activityStore?.load(account.id) ?? [];
+        if (kept.length > 0) this.engine.restoreActivity(account.id, kept);
+        this.activitySaved.set(account.id, signatureOf(this.engine.activityOf(account.id)));
+      }
       const known = this.accounts.get(account.id);
       if (known && known.client === account.client) continue;
       const remote = (this.deps.remoteFor ?? ((entry: HostAccount) => remoteForClient(entry.client)))(account);
@@ -216,6 +243,12 @@ export class FilesSyncHost {
     this.startDrives();
     void this.engine.refreshRoots();
     this.schedulePublish();
+  }
+
+  /** The organisation's word on the drive changed: one it turned off comes back by itself once it's allowed (files-p3-19). */
+  private driveStateChanged(state: FilesDriveState): void {
+    if (state.forcedOff) this.driveStarted.clear();
+    this.startDrives();
   }
 
   /** A sign-in brings back the drive of an account that had it, without a click. */
@@ -346,6 +379,43 @@ export class FilesSyncHost {
     }
   }
 
+  /**
+   * The mass-delete question, a conflict, a file that can't sync: an OS notification too, so
+   * someone working in Explorer or Word sees it (files-p3-5). Main shows none while the app's
+   * window has the focus; the settings page says it there. A click opens that page; the
+   * question's buttons answer it.
+   */
+  private announce(entry: FilesSyncActivity): void {
+    const notify = this.deps.notify;
+    const text = this.deps.notifyText?.();
+    if (!notify || !text || !['mass-delete', 'conflict', 'error', 'too-large'].includes(entry.kind)) return;
+    const root = this.engine.roots.find((candidate) => candidate.id === entry.rootId);
+    if (!root || !this.accounts.has(root.account)) return;
+    const context = JSON.stringify({ filesSync: root.id } satisfies FilesNotificationContext);
+    try {
+      if (entry.kind === 'mass-delete') {
+        // Logged as the pass stops to ask, before its status says so: the line has it all.
+        const count = Number(entry.detail);
+        if (!Number.isFinite(count) || count <= 0) return;
+        const massDelete = { count, deletedOn: entry.direction === 'up' ? 'this-computer' as const : 'files' as const };
+        const words = text.massDelete(root, massDelete);
+        notify({
+          id: `files-sync:mass:${root.id}:${massDelete.deletedOn}:${massDelete.count}`,
+          group: 'files-sync',
+          title: words.title,
+          body: words.body,
+          context,
+          actions: [{ id: FILES_NOTIFY_ACTIONS.restore, label: words.restore }, { id: FILES_NOTIFY_ACTIONS.allow, label: words.allow }],
+        });
+        return;
+      }
+      const words = entry.kind === 'conflict' ? text.conflict(root, entry) : text.problem(root, entry);
+      notify({ id: `files-sync:${entry.kind}:${root.id}:${entry.path}`, group: 'files-sync', title: words.title, body: words.body, context });
+    } catch {
+      // A notification is extra.
+    }
+  }
+
   online(): void {
     this.engine.retryNow();
   }
@@ -361,19 +431,49 @@ export class FilesSyncHost {
   }
 
   /**
-   * Signed out ('all': everyone). The drive goes, and comes back at the next sign-in; its record
-   * goes first, since its folder goes with it. The folders stop until then.
+   * The sign-out gate: what waits in the account's drive goes up first (FilesFlushDialog shows
+   * it), or the user stays signed in. Synced folders keep their files, so they don't ask.
    */
-  async signedOut(account: string): Promise<void> {
+  async signOutGate(accountId: string): Promise<boolean> {
+    const drives = this.engine.roots.filter((root) => root.kind === 'drive' && (accountId === 'all' || root.account === accountId));
+    for (const root of drives) {
+      if (!(await requestFlush({ rootId: root.id, kind: 'drive', purpose: 'sign-out' }))) return false;
+    }
+    return true;
+  }
+
+  /** Main is removing the drives (the policy said off): what waits goes up first, as far as it can. */
+  private async flushForPolicy(requestId: string, accounts: string[]): Promise<void> {
+    this.deps.controls.drive?.flushed?.(requestId, 'working');
+    try {
+      for (const account of accounts) {
+        const root = this.engine.roots.find((entry) => entry.kind === 'drive' && entry.account === account);
+        if (root) await this.engine.flushRoot(root.id, { timeoutMs: POLICY_FLUSH_MS }).catch(() => 'gone');
+      }
+    } finally {
+      this.deps.controls.drive?.flushed?.(requestId);
+    }
+  }
+
+  /**
+   * Signed out ('all': everyone). `chosen`: the user signed out. The drive goes, and comes back
+   * with its pins at the next sign-in; its record goes first, since its folder goes with it,
+   * and main keeps what wasn't uploaded in Documents. Not chosen (the session ran out, the
+   * login was refused): the drive only disconnects and keeps its folder, record and pins. The
+   * folders stop until the next sign-in either way.
+   */
+  async signedOut(account: string, chosen = true): Promise<void> {
     const ids = account === 'all' ? [...new Set([...this.accounts.keys(), ...this.engine.roots.map((root) => root.account)])] : [account];
     for (const id of ids) {
       const drive = await this.driveRootOf(id);
-      if (drive) await this.engine.forgetRoot(drive.id);
+      if (drive && chosen) await this.engine.forgetRoot(drive.id);
+      // Its Recent activity goes with a sign-out the user chose; one nobody chose goes on later.
+      if (chosen) this.forgetActivity(id);
       this.accounts.delete(id);
       this.driveStarted.delete(id);
       this.forgetQuota(id);
       this.engine.dropAccount(id);
-      await this.deps.controls.drive?.disable(id, 'signed-out').catch(() => {});
+      await this.deps.controls.drive?.disable(id, chosen ? 'signed-out' : 'suspended').catch(() => {});
     }
     await this.engine.refreshRoots();
   }
@@ -384,13 +484,34 @@ export class FilesSyncHost {
    */
   async removeAccountData(account: string | null, reason: 'wipe' | 'refused'): Promise<void> {
     await removeAccountData(this.deps.controls, account, reason, [...this.accounts.keys(), ...this.engine.roots.map((root) => root.account)]);
-    for (const id of account === null ? [...this.accounts.keys()] : [account]) {
+    for (const id of account === null ? [...new Set([...this.accounts.keys(), ...this.activityRestored])] : [account]) {
       this.accounts.delete(id);
       this.driveStarted.delete(id);
       this.forgetQuota(id);
       this.engine.dropAccount(id);
+      this.forgetActivity(id);
     }
     await this.engine.refreshRoots();
+  }
+
+  private forgetActivity(account: string): void {
+    this.engine.clearActivity(account);
+    this.deps.activityStore?.remove(account);
+    this.activitySaved.delete(account);
+    this.activityRestored.delete(account);
+  }
+
+  /** Writes an account's Recent activity when it changed. */
+  private saveActivity(): void {
+    const store = this.deps.activityStore;
+    if (!store) return;
+    for (const account of this.activityRestored) {
+      const lines = this.engine.activityOf(account);
+      const signature = signatureOf(lines);
+      if (this.activitySaved.get(account) === signature) continue;
+      this.activitySaved.set(account, signature);
+      store.save(account, lines);
+    }
   }
 
   // ─── The store ──────────────────────────────────────────────
@@ -403,47 +524,64 @@ export class FilesSyncHost {
     }, 50);
   }
 
-  /** What the UI shows: the account on screen's roots, their status and activity. */
+  /**
+   * What the UI shows: the signed-in accounts' roots, their status and activity (the settings
+   * page shows one account at a time, files-p3-20), and for the Files screen the account on
+   * screen's items.
+   */
   publishNow(): void {
     if (this.stopped) return;
     const current = this.current;
-    const roots = current ? this.engine.roots.filter((root) => root.account === current) : [];
+    const signedIn = new Set([...this.accounts.keys(), ...(current ? [current] : [])]);
+    const roots = this.engine.roots.filter((root) => signedIn.has(root.account));
     const ids = new Set(roots.map((root) => root.id));
     const status = Object.fromEntries(Object.entries(this.engine.status()).filter(([id]) => ids.has(id)));
     this.deps.publish({
       available: true,
       account: current,
+      accounts: [...this.accounts.values()].map((entry) => ({ id: entry.id, label: entry.label })),
       roots,
       status,
-      activity: this.engine.activity.filter((entry) => ids.has(entry.rootId)),
+      // With the lines of roots that went since (files-p3-11, settings-p3-12).
+      activity: this.engine.activity.filter((entry) => (entry.account ? signedIn.has(entry.account) : ids.has(entry.rootId))),
       drive: this.drive,
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
+      keptOnDevice: current ? this.engine.keptOnDevice(current) : {},
       quota: current ? this.quotaOf(current) : null,
+      rescued: this.rescued,
     });
     this.sendDriveStatus();
+    this.saveActivity();
   }
 
   controller(): FilesSyncController {
     const controls = this.deps.controls;
     return {
       // Main wants the click this came from: the bridge call goes first, before any await.
-      addFolder: async (remoteId, remoteLabel) => {
-        const account = this.current;
+      addFolder: async (remoteId, remoteLabel, options) => {
+        const account = options?.account ?? this.current;
         if (!account) return fail('inactive');
         // A folder of someone else's shared drive: the engine syncs the account's own Files.
         if (remoteId !== null && remoteId.includes(':')) return fail('unsupported');
-        const result = await controls.addFolder({ account, remoteId, remoteLabel });
+        const result = await controls.addFolder({ account, remoteId, remoteLabel, ...(options?.chosen ? { chosen: options.chosen } : {}) });
         await this.engine.refreshRoots();
         return result;
       },
       removeRoot: (rootId) => this.engine.removeRoot(rootId),
       setPaused: (rootId, paused) => this.engine.setPaused(rootId, paused),
+      setAllPaused: async (paused) => {
+        for (const root of this.engine.roots) {
+          if (root.paused !== paused && this.accounts.has(root.account)) await controls.setPaused(root.id, paused).catch(() => {});
+        }
+        await this.engine.refreshRoots();
+      },
       confirmMassDelete: async (rootId, allow) => {
         this.engine.confirmMassDelete(rootId, allow);
       },
-      setDriveEnabled: async (enabled) => {
-        const account = this.current;
+      chooseFolder: controls.chooseFolder ? () => controls.chooseFolder!() : null,
+      setDriveEnabled: async (enabled, chosenAccount) => {
+        const account = chosenAccount ?? this.current;
         const drive = controls.drive;
         if (!drive) return fail('unsupported');
         if (!account) return fail('inactive');
@@ -454,8 +592,12 @@ export class FilesSyncHost {
           await this.engine.refreshRoots();
           return result;
         }
-        await drive.disable(account, 'user');
+        const done = await drive.disable(account, 'user');
         this.driveStarted.delete(account);
+        if (done && done.rescued && done.rescued.count > 0) {
+          this.rescued = done.rescued;
+          this.schedulePublish();
+        }
         await this.engine.refreshRoots();
         return { ok: true, value: null };
       },
@@ -470,9 +612,34 @@ export class FilesSyncHost {
         if (!coverage) return false;
         return controls.showInFolder(coverage.rootId, coverage.path);
       },
-      clearActivity: () => this.engine.clearActivity(),
+      clearActivity: (account) => {
+        const which = account ?? this.current;
+        if (which) this.engine.clearActivity(which);
+      },
+      openRoot: (rootId) => controls.showInFolder(rootId, '').catch(() => false),
+      setKeptOnDevice: controls.drive?.setPin ? async (nodeId, keep) => {
+        const coverage = this.current ? this.engine.coverage(this.current, nodeId) : null;
+        const setPin = controls.drive?.setPin;
+        if (!coverage || coverage.kind !== 'drive' || !coverage.path || !setPin) return false;
+        const result = await setPin(coverage.rootId, coverage.path, keep ? 'pinned' : 'unpinned').catch(() => null);
+        // The next scan shows the new state on the row.
+        this.engine.syncNow(coverage.rootId);
+        return !!result?.ok;
+      } : null,
+      pendingHere: async (rootId) => (await this.engine.pendingHere(rootId)) ?? [],
+      flushRoot: (rootId, options) => this.engine.flushRoot(rootId, options),
+      openRescue: async () => (await controls.drive?.openRescue?.().catch(() => false)) ?? false,
+      dismissRescue: () => {
+        this.rescued = null;
+        this.schedulePublish();
+      },
     };
   }
+}
+
+/** Changes when lines come or go. */
+function signatureOf(lines: { id: string }[]): string {
+  return `${lines.length}:${lines[0]?.id ?? ''}:${lines.at(-1)?.id ?? ''}`;
 }
 
 /**

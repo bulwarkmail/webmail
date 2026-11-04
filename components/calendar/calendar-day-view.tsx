@@ -545,6 +545,7 @@ export function CalendarDayView({
                     key={key}
                     className="relative border-s border-border"
                     role="gridcell"
+                    data-time-column={key}
                     onPointerDown={(e) => handleGridPointerDown(e, key, day)}
                     onPointerMove={handleGridPointerMove}
                     onPointerUp={handleGridPointerUp}
@@ -691,6 +692,19 @@ export function CalendarDayView({
                       </div>
                     )}
 
+                    {dropTarget?.dayKey === key && dropTarget.durationMinutes !== undefined && (
+                      // The event itself where it will land, as the drag-create selection is drawn (pim-p3-2).
+                      <div
+                        data-drop-ghost
+                        className="absolute left-1 right-1 z-30 rounded-md pointer-events-none border-2 border-primary/60 border-dashed"
+                        style={{
+                          backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, var(--color-background))",
+                          top: ((dropTarget.minutes - hours.startMinutes) / 60) * hourHeight,
+                          height: (dropTarget.durationMinutes / 60) * hourHeight,
+                        }}
+                      />
+                    )}
+
                     {dropTarget?.dayKey === key && (
                       <div
                         className="absolute left-0 right-0 z-30 pointer-events-none"
@@ -701,7 +715,7 @@ export function CalendarDayView({
                           <div className="flex-1 h-0.5 bg-primary rounded-full" />
                         </div>
                         <div className="absolute -top-4 start-2 text-[0.625rem] font-medium text-primary bg-background/90 px-1 rounded shadow-sm">
-                          {formatSnapTime(dropTarget.minutes, timeFormat)}
+                          <bdi dir="ltr">{formatSnapTime(dropTarget.minutes, timeFormat)}{dropTarget.durationMinutes !== undefined && ` – ${formatSnapTime((dropTarget.minutes + dropTarget.durationMinutes) % 1440, timeFormat)}`}</bdi>
                         </div>
                       </div>
                     )}

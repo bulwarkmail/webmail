@@ -2646,7 +2646,7 @@ export const useAuthStore = create<AuthState>()(
         // the offline outbox would be lost); an automatic one may not.
         if (userInitiated && !(await passSignOutGates(accountId ?? 'all'))) return;
 
-        await beforeLogoutHooks(accountId ?? 'all', { keepLocalStore: keepLocalData });
+        await beforeLogoutHooks(accountId ?? 'all', { keepLocalStore: keepLocalData, userInitiated });
         // A session that only ran out comes back with the next sign-in, push included.
         if (state.client && !wasDemoMode && !keepLocalData) await endPushForSignOut([state.client]);
 
@@ -2821,13 +2821,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logoutAll: async (options) => {
-        if (options?.endProviderSession !== false && !(await passSignOutGates('all'))) return;
+        const userInitiated = options?.endProviderSession !== false;
+        if (userInitiated && !(await passSignOutGates('all'))) return;
         const keepLocalData = options?.keepLocalData === true;
         // Before anything goes, while the accounts are still there to be named.
         if (options?.sessionLimit) {
           for (const account of useAccountStore.getState().accounts) noteRefusedLogin(account.id, true, 'session');
         }
-        await beforeLogoutHooks('all', { keepLocalStore: keepLocalData });
+        await beforeLogoutHooks('all', { keepLocalStore: keepLocalData, userInitiated });
         if (!get().isDemoMode && !keepLocalData) {
           // Each connected login first, on a budget that one unreachable server can
           // use up. What's left, and whoever had no connection, only needs the relay.

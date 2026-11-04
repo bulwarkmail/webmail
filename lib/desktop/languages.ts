@@ -137,6 +137,8 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuNewEvent: t('calendar.events.new_event'),
     menuNewTask: t('calendar.events.new_task'),
     menuNewContact: t('contacts.create_new'),
+    menuNewFolder: t('menuAudit.files_new_folder'),
+    menuUploadFiles: t('menuAudit.files_upload_files'),
     menuImport: t('mail_import.menu_import'),
     menuSearchEvents: t('calendar.search.title'),
     menuSearchContacts: t('ux_pim_menu.search_contacts'),

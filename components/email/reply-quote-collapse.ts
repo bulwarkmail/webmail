@@ -78,13 +78,25 @@ export function userTextEnd(state: EditorState): number | null {
     if (isSignature(node) && (boundary === null || pos < boundary)) boundary = pos;
   });
   if (boundary === null) return null;
+  // The empty line and the line break a reply keeps between the user's text
+  // and the quote aren't the end of the text: a click there wrote on a new
+  // line under the first (compose-p3-13). The end is after the last
+  // character typed; an empty reply starts on its first line.
   let end: number | null = null;
+  let firstEmpty: number | null = null;
   state.doc.forEach((node, pos) => {
     if (pos + node.nodeSize > boundary! || !node.isTextblock || isSignature(node)) return;
     if (ranges.some((range) => pos >= range.from && pos < range.to)) return;
-    end = pos + node.nodeSize - 1;
+    let close = pos + node.nodeSize - 1;
+    let index = node.childCount - 1;
+    while (index >= 0 && node.child(index).type.name === 'hardBreak') {
+      close -= node.child(index).nodeSize;
+      index -= 1;
+    }
+    if (index >= 0) end = close;
+    else if (firstEmpty === null) firstEmpty = pos + 1;
   });
-  return end;
+  return end ?? firstEmpty;
 }
 
 /**
@@ -106,6 +118,23 @@ function clickBelowCollapsedQuote(state: EditorState, pos: number): boolean {
     if (!node.isTextblock || isSignature(node) || node.content.size > 0) hiddenOrEmpty = false;
   });
   return hiddenOrEmpty;
+}
+
+/**
+ * A click on the blank lines between the user's text and a folded quote (the
+ * line break and the empty line a reply keeps there) goes to the end of the
+ * text, so the next word continues it instead of starting a line of its own
+ * (compose-p3-13).
+ */
+function clickInGapAboveQuote(state: EditorState, pos: number, end: number): boolean {
+  const first = collapsedRanges(state)[0];
+  if (!first || pos <= end || pos >= first.from) return false;
+  let blank = true;
+  state.doc.nodesBetween(end, first.from, (node) => {
+    if (node.isText ? !!node.text?.trim() : node.isLeaf && node.type.name !== 'hardBreak') blank = false;
+    return blank;
+  });
+  return blank;
 }
 
 /** Visibility is a view decoration, never a document edit or an undo step. */
@@ -156,10 +185,32 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string 
         },
       },
       props: {
+        handleDOMEvents: {
+          // A click between the blocks or under the last one hits the editor
+          // itself, and the browser put the caret at the end of the message,
+          // below the folded quote: what came next was hidden under it
+          // (compose-p3-13). Under the user's text, it goes to the text's end.
+          mousedown(view, event) {
+            if (event.button !== 0 || event.target !== view.dom || collapsedRanges(view.state).length === 0) return false;
+            const end = userTextEnd(view.state);
+            if (end === null) return false;
+            let below: number;
+            try {
+              below = view.coordsAtPos(end).bottom;
+            } catch {
+              return false;
+            }
+            if (event.clientY <= below) return false;
+            event.preventDefault();
+            view.focus();
+            view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+            return true;
+          },
+        },
         handleClick(view, pos) {
-          if (!clickBelowCollapsedQuote(view.state, pos)) return false;
           const end = userTextEnd(view.state);
           if (end === null) return false;
+          if (!clickBelowCollapsedQuote(view.state, pos) && !clickInGapAboveQuote(view.state, pos, end)) return false;
           view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
           return true;
         },

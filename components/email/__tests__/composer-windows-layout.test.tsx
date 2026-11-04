@@ -234,6 +234,10 @@ describe('full screen', () => {
     expect(root.className).toContain('inset-0');
     // The folder sidebar sits at z-50 (compose-p2-5): at 40 it covered the composer's left part.
     expect(root.className).toMatch(/(^|\s)z-50(\s|$)/);
+    // compose-p3-16: no empty band for the desktop app's controls above the
+    // header; the header is the window's top row (lib/window-controls-overlay.ts).
+    expect(root.className).not.toContain('pt-[var(--titlebar-row-height)]');
+    expect(root.className).toContain('top-[var(--titlebar-inset)]');
 
     fireEvent.click(screen.getByRole('button', { name: 'restore' }));
     expect(root).not.toHaveAttribute('data-maximized');

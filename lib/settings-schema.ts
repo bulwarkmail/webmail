@@ -454,7 +454,7 @@ export const DENIED_SETTINGS: readonly string[] = [
  */
 export const NOT_YET_SETTINGS: readonly string[] = [
   'messageListOrder', 'filesSettings', 'activeThemeId', 'birthdayCalendarColor', 'vacationBlockCalendar',
-  'writingLanguage',
+  'writingLanguage', 'calendarNarrowWeekAllDays',
 ];
 
 /** Line breaks, tabs and other control characters. */

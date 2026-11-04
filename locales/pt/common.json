@@ -1009,10 +1009,10 @@
     "forward_message": "Encaminhar",
     "from": "De",
     "to": "Para",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCO",
     "subject": "Assunto",
-    "body_placeholder": "Escreva sua mensagem...",
+    "body_placeholder": "Escreva sua mensagem…",
     "send": "Enviar",
     "cancel": "Cancelar",
     "attach": "Anexar",
@@ -1066,10 +1066,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Se o seu servidor não aceitar este endereço como remetente do envelope, {identity} é usado em seu lugar, e os destinatários podem vê-lo no cabeçalho Return-Path."
     },
-    "save_as_template": "Salvar como modelo",
+    "save_as_template": "Salvar como modelo…",
     "attach_from_device": "Enviar deste dispositivo",
     "templates_menu": "Modelos",
-    "insert_template": "Inserir modelo",
+    "insert_template": "Inserir modelo…",
     "options": "Opções",
     "option_plain_text": "Texto simples",
     "option_plain_text_hint": "Enviar sem formatação",
@@ -5299,6 +5299,12 @@
     "declined_many": "Você recusou {count} reuniões desta série.",
     "answers_series": "Sua resposta vale para todas as reuniões da série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "até {time}",
+    "week_all_days": "Mostrar a semana inteira",
+    "week_days_short": "{count, plural, one {# dia} other {# dias}}",
+    "print": "Imprimir…"
+  },
   "advanced_search": {
     "title": "Pesquisa avançada",
     "from": "De",
@@ -5610,6 +5616,12 @@
     "import_to_mail_failed": "Não foi possível importar {name}.",
     "import_contacts": "Importar para os contactos…",
     "add_to_calendar": "Adicionar ao calendário…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Ficheiros editados",
+    "hide": "Ocultar",
+    "discard_detail_file": "As suas alterações a esta cópia são eliminadas. O ficheiro em Ficheiros não muda.",
+    "saved_auto": "{name} guardado em Ficheiros. As próximas gravações a partir do programa vão para lá sozinhas."
   },
   "smime": {
     "your_certificates": "Seus certificados",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Mantém-se",
     "import_show": "Mostrar"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacto selecionado} other {# contactos selecionados}}",
+    "selection_more": "e mais {count}",
+    "no_addresses": "Nenhum dos contactos selecionados tem endereço de email.",
+    "task_open": "Abrir",
+    "due_next_week": "Na próxima semana",
+    "due_none": "Sem data limite",
+    "due_pick": "Escolher uma data…",
+    "move_to_list": "Mover para a lista",
+    "dupes_legend": "{count, plural, one {1 já está em Contactos:} other {# já estão em Contactos:}}",
+    "dupes_skip": "Ignorá-los",
+    "dupes_update": "Atualizar os contactos existentes",
+    "dupes_updates": "Atualiza o contacto",
+    "upload_cancelled": "Carregamento cancelado",
+    "upload_cancelled_partial": "{count, plural, one {1 arquivo foi carregado} other {# arquivos foram carregados}} antes de cancelar",
+    "download_cancelled": "Download cancelado"
+  },
   "desktopEdit": {
     "edit": "Editar",
     "edit_named": "Editar {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Offline",
     "state_error": "Parado"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Enviando alterações antes de desativar a unidade",
+      "title_sign_out": "Enviando alterações antes de sair",
+      "title_stop_folder": "Enviando alterações antes de parar de sincronizar a pasta",
+      "cannot_title": "Algumas alterações não podem ser enviadas agora",
+      "waiting": "Ainda por enviar: {names}",
+      "progress": "{done} de {total} enviados",
+      "cannot_offline": "Não é possível acessar o servidor. Ainda não enviados: {names}",
+      "cannot_other": "Não é possível enviar: {names}. A atividade recente nas configurações explica o motivo.",
+      "go_note_drive": "Se continuar agora, o que não foi enviado é copiado para Documentos\\Bulwark – not uploaded. Nada se perde.",
+      "go_note_folder": "Se continuar agora, o que não foi enviado fica na pasta deste computador.",
+      "keep_turn_off": "Manter a unidade",
+      "keep_sign_out": "Continuar conectado",
+      "keep_stop_folder": "Continuar sincronizando",
+      "go_turn_off": "Desativar agora",
+      "go_sign_out": "Sair agora",
+      "go_stop_folder": "Parar de sincronizar agora"
+    },
+    "drive": {
+      "off_note": "Desativar remove a unidade do Explorador de Arquivos. Seus arquivos continuam em Arquivos.",
+      "rescued": "Os arquivos não enviados ({count}) estão agora em {folder}.",
+      "rescued_open": "Abrir pasta",
+      "rescued_dismiss": "Dispensar",
+      "start_at_login": "Iniciar o Bulwark ao entrar no Windows",
+      "start_at_login_why": "A unidade precisa do Bulwark aberto, como o OneDrive.",
+      "closed_warning": "Os arquivos da unidade não abrem enquanto o Bulwark estiver fechado.",
+      "where": "No Explorador de Arquivos como Bulwark Files",
+      "where_letter": "No Explorador de Arquivos como Bulwark Files ({letter}:)",
+      "open": "Abrir",
+      "letter_note": "Pela letra, o Explorador de Arquivos não mostra o status de sincronização nem “Sempre manter neste dispositivo”. Eles aparecem em Bulwark Files, no Explorador.",
+      "letter_failed": "Não foi possível definir a letra da unidade. Tente de novo."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Atualizado",
+      "syncing": "Bulwark Files: Sincronizando. Faltam: {count}",
+      "paused": "Bulwark Files: Pausado",
+      "offline": "Bulwark Files: Offline. Aguardando: {count}",
+      "question": "Bulwark Files: Precisa da sua resposta",
+      "error": "Bulwark Files: Erro"
+    },
+    "notify": {
+      "conflict_title": "Um arquivo foi alterado em dois lugares",
+      "problem_title": "Um arquivo não pode ser sincronizado"
+    },
+    "activity": {
+      "waiting_count": "Alterações aguardando o servidor: {count}",
+      "disk_name": "{path} em Arquivos se chama {detail} neste computador, porque alguns caracteres não são permitidos aqui",
+      "disk_case": "{path} em Arquivos se chama {detail} neste computador, porque já existe aqui um nome que só difere em maiúsculas e minúsculas",
+      "disk_group": "Nomes em Arquivos que este computador não permite: {count}. Aqui eles têm nomes um pouco diferentes.",
+      "show": "Mostrar",
+      "hide": "Ocultar"
+    },
+    "cant_sync": {
+      "title": "Não é possível sincronizar"
+    },
+    "folders": {
+      "stop": "Parar de sincronizar…",
+      "pick_title_known": "Com qual pasta de Arquivos {name} deve ficar igual?",
+      "pick_confirm_known": "Manter iguais"
+    },
+    "pin": {
+      "keep": "Sempre manter neste dispositivo",
+      "free": "Liberar espaço",
+      "failed": "Não deu certo. Tente de novo no Explorador de Arquivos."
+    },
+    "account": {
+      "of": "Arquivos de {address}",
+      "choose": "Arquivos de"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Escrita rápida",
     "menu": "Escrita rápida",
@@ -7845,6 +7945,10 @@
     "missing": "\"{name}\" não existe mais.",
     "too_large": "\"{name}\" é maior que {max} e não pode ser anexado.",
     "failed": "Não foi possível anexar \"{name}\". Tente novamente."
+  },
+  "composeRecentLimit": {
+    "too_large": "Grande demais",
+    "too_large_hint": "Maior do que o servidor aceita ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mais formatação",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info, Pin, PinOff,
@@ -39,7 +39,7 @@ import { getFilePreviewKind } from "@/lib/file-preview";
 import type { FileAppAction } from "@/lib/files-app-actions";
 import { useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
-import { ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
+import { KeepOnDeviceMenuItem, ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
 import { resourceToView, useFileStore, isSharedFilesPage, sharedFilePages, type FileResource } from "@/stores/file-store";
 import { TRASH_LOCATION, TRASH_PATH, isTrashLocation } from "@/lib/files-trash";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
@@ -527,6 +527,26 @@ export function FileBrowser({
     else navigateCrumb(parent);
   }, [crumbs, accountLabel, onNavigate, navigateCrumb]);
 
+  // The focused item went (Del, moved away): the focus goes to the one now in its place,
+  // as in Explorer, not to the whole list, which drew a frame round everything (pim-p3-17).
+  const shownNamesRef = useRef<{ path: string; names: string[] }>({ path: "", names: [] });
+  useLayoutEffect(() => {
+    const before = shownNamesRef.current;
+    const names = displayResources.map((r) => r.name);
+    shownNamesRef.current = { path: currentPath, names };
+    // Another folder opened: nothing went from this one.
+    if (before.path !== currentPath || !focusedName || names.includes(focusedName)) return;
+    const was = before.names.indexOf(focusedName);
+    const active = document.activeElement;
+    if (was === -1 || (active && active !== document.body)) return;
+    const next = names[Math.min(was, names.length - 1)];
+    if (!next) return;
+    setFocusedName(next);
+    anchorName.current = next;
+    onSetSelection(new Set([next]));
+    scrollAreaRef.current?.querySelector<HTMLElement>(`[data-resource="${CSS.escape(next)}"]`)?.focus({ preventScroll: true });
+  }, [displayResources, currentPath, focusedName, onSetSelection]);
+
   // ---- Opening ---------------------------------------------------------------
   const openResource = useCallback((resource: FileResource) => {
     // A symlink has nothing to open (Stalwart 1.0).
@@ -806,8 +826,12 @@ export function FileBrowser({
     return Math.max(1, tops.filter((top) => top === tops[0]).length);
   }, [focusedName]);
 
-  // Edit > Search files in the desktop app's menus.
-  useDesktopCommands({ "edit.search": () => searchInputRef.current?.focus() }, { "edit.search": !accountPickerMode });
+  // Edit > Search files in the desktop app's menus, and File > New folder… and Upload files… (pim-p3-18).
+  useDesktopCommands({
+    "edit.search": () => searchInputRef.current?.focus(),
+    "file.newFolder": () => { if (canCreate) setShowNewFolder(true); },
+    "file.uploadFiles": () => { if (canCreate) fileInputRef.current?.click(); },
+  }, { "edit.search": !accountPickerMode, "file.newFolder": canCreate, "file.uploadFiles": canCreate });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -1021,13 +1045,17 @@ export function FileBrowser({
             })()}
           </>
         )}
-        {canKeepOffline(resource) && (
-          <ContextMenuItem
-            icon={keptOffline.has(resource.id) ? PinOff : Pin}
-            label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
-            onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
-          />
-        )}
+        <KeepOnDeviceMenuItem
+          nodeId={resource.id}
+          onRan={closeMenu}
+          fallback={canKeepOffline(resource) && (
+            <ContextMenuItem
+              icon={keptOffline.has(resource.id) ? PinOff : Pin}
+              label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
+              onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
+            />
+          )}
+        />
         {(canShare(resource) || (resource.isDirectory && !resource.isShared)) && <ContextMenuSeparator />}
         {canShare(resource) && (
           <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
@@ -1083,7 +1111,12 @@ export function FileBrowser({
   const handlers: FileItemHandlers = useMemo(() => ({
     onSelectClick: handleSelectClick,
     onToggleSelect: handleToggleSelect,
-    onOpen: openResource,
+    // A double-click's first click selected the file; opening it isn't choosing it, so the
+    // toolbar stays the folder's own when the preview closes (pim-p3-11).
+    onOpen: (r) => {
+      if (!r.isDirectory) onSetSelection(new Set());
+      openResource(r);
+    },
     onContextMenu: openItemMenu,
     onDownload: downloadsOff ? undefined : (r) => void onDownload(r.name),
     onShare: (r) => setShareTargetId(r.id),
@@ -1091,7 +1124,7 @@ export function FileBrowser({
     dragProps: itemDragProps,
     // Tab onto an item: the arrows go on from there.
     onFocusItem: (r) => setFocusedName(r.name),
-  }), [handleSelectClick, handleToggleSelect, openResource, openItemMenu, onDownload, downloadsOff, canShare, itemDragProps]);
+  }), [handleSelectClick, handleToggleSelect, openResource, onSetSelection, openItemMenu, onDownload, downloadsOff, canShare, itemDragProps]);
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));

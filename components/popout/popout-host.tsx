@@ -135,7 +135,13 @@ export function PopoutHost() {
 
     const takeOverSent = (notice: PopoutSentNotice) => {
       const translate = tRef.current;
-      if (notice.releasesAt) refreshScheduledAfter(notice.releasesAt);
+      // Its Undo time runs in the pop-out: Scheduled here leaves it out and
+      // asks again once it went (compose-p3-9). It said "Scheduled 2" for
+      // minutes in the desktop app.
+      const holdClient = useAuthStore.getState().client;
+      if (notice.releasesAt && notice.heldSubmissionId && holdClient) {
+        useEmailStore.getState().noteUndoHold(holdClient, notice.heldSubmissionId, notice.releasesAt);
+      } else if (notice.releasesAt) refreshScheduledAfter(notice.releasesAt);
       if (notice.filingError) toast.warning(translate("email_composer.send_filing_warning"));
       if (notice.rejectedRecipients) {
         toast.warning(translate("email_composer.send_some_recipients_rejected"), { message: notice.rejectedRecipients, duration: 15000 });

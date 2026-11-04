@@ -1009,10 +1009,10 @@
     "forward_message": "Reenviar",
     "from": "De",
     "to": "Para",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCO",
     "subject": "Asunto",
-    "body_placeholder": "Escriba su mensaje...",
+    "body_placeholder": "Escriba su mensaje…",
     "send": "Enviar",
     "cancel": "Cancelar",
     "attach": "Adjuntar",
@@ -1066,10 +1066,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Si tu servidor no acepta esta dirección como remitente del sobre, se usa {identity} en su lugar, y los destinatarios pueden verla en el encabezado Return-Path."
     },
-    "save_as_template": "Guardar como plantilla",
+    "save_as_template": "Guardar como plantilla…",
     "attach_from_device": "Subir desde este dispositivo",
     "templates_menu": "Plantillas",
-    "insert_template": "Insertar plantilla",
+    "insert_template": "Insertar plantilla…",
     "options": "Opciones",
     "option_plain_text": "Texto sin formato",
     "option_plain_text_hint": "Enviar sin formato",
@@ -5299,6 +5299,12 @@
     "declined_many": "Rechazaste {count} reuniones de esta serie.",
     "answers_series": "Tu respuesta vale para todas las reuniones de la serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "hasta las {time}",
+    "week_all_days": "Mostrar toda la semana",
+    "week_days_short": "{count, plural, one {# día} other {# días}}",
+    "print": "Imprimir…"
+  },
   "advanced_search": {
     "title": "Búsqueda avanzada",
     "from": "De",
@@ -5610,6 +5616,12 @@
     "import_to_mail_failed": "No se pudo importar {name}.",
     "import_contacts": "Importar a contactos…",
     "add_to_calendar": "Añadir al calendario…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Archivos editados",
+    "hide": "Ocultar",
+    "discard_detail_file": "Se eliminan tus cambios en esta copia. El archivo de Archivos no cambia.",
+    "saved_auto": "{name} guardado en Archivos. Lo que guardes después desde su programa irá allí solo."
   },
   "smime": {
     "your_certificates": "Tus certificados",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Se conserva",
     "import_show": "Mostrar"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacto seleccionado} other {# contactos seleccionados}}",
+    "selection_more": "y {count} más",
+    "no_addresses": "Ninguno de los contactos seleccionados tiene dirección de correo.",
+    "task_open": "Abrir",
+    "due_next_week": "La próxima semana",
+    "due_none": "Sin fecha de vencimiento",
+    "due_pick": "Elegir una fecha…",
+    "move_to_list": "Mover a la lista",
+    "dupes_legend": "{count, plural, one {1 ya está en Contactos:} other {# ya están en Contactos:}}",
+    "dupes_skip": "Omitirlos",
+    "dupes_update": "Actualizar los contactos existentes",
+    "dupes_updates": "Actualiza el contacto",
+    "upload_cancelled": "Subida cancelada",
+    "upload_cancelled_partial": "{count, plural, one {Se subió 1 archivo} other {Se subieron # archivos}} antes de cancelar",
+    "download_cancelled": "Descarga cancelada"
+  },
   "desktopEdit": {
     "edit": "Editar",
     "edit_named": "Editar {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Sin conexión",
     "state_error": "Detenido"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Subiendo cambios antes de desactivar la unidad",
+      "title_sign_out": "Subiendo cambios antes de cerrar sesión",
+      "title_stop_folder": "Subiendo cambios antes de dejar de sincronizar la carpeta",
+      "cannot_title": "Algunos cambios no se pueden subir ahora",
+      "waiting": "Pendiente de subir: {names}",
+      "progress": "{done} de {total} subidos",
+      "cannot_offline": "No se puede conectar con el servidor. Aún sin subir: {names}",
+      "cannot_other": "No se pueden subir: {names}. La actividad reciente en Ajustes indica el motivo.",
+      "go_note_drive": "Si continúas ahora, lo que no se haya subido se copia en Documentos\\Bulwark – not uploaded. No se pierde nada.",
+      "go_note_folder": "Si continúas ahora, lo que no se haya subido se queda en la carpeta de este ordenador.",
+      "keep_turn_off": "Mantener la unidad",
+      "keep_sign_out": "Seguir con la sesión iniciada",
+      "keep_stop_folder": "Seguir sincronizando",
+      "go_turn_off": "Desactivar ahora",
+      "go_sign_out": "Cerrar sesión ahora",
+      "go_stop_folder": "Dejar de sincronizar ahora"
+    },
+    "drive": {
+      "off_note": "Al desactivarlo, la unidad desaparece del Explorador de archivos. Tus archivos siguen en Archivos.",
+      "rescued": "Los archivos que no se subieron ({count}) están ahora en {folder}.",
+      "rescued_open": "Abrir carpeta",
+      "rescued_dismiss": "Descartar",
+      "start_at_login": "Iniciar Bulwark al iniciar sesión en Windows",
+      "start_at_login_why": "La unidad necesita que Bulwark esté abierto, como OneDrive.",
+      "closed_warning": "Los archivos de la unidad no se abren mientras Bulwark esté cerrado.",
+      "where": "En el Explorador de archivos como Bulwark Files",
+      "where_letter": "En el Explorador de archivos como Bulwark Files ({letter}:)",
+      "open": "Abrir",
+      "letter_note": "Con la letra, el Explorador de archivos no muestra el estado de sincronización ni «Mantener siempre en este dispositivo». Aparecen en Bulwark Files, en el Explorador.",
+      "letter_failed": "No se ha podido asignar la letra de unidad. Vuelve a intentarlo."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualizado",
+      "syncing": "Bulwark Files: Sincronizando. Pendientes: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sin conexión. En espera: {count}",
+      "question": "Bulwark Files: Necesita tu respuesta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un archivo se cambió en dos sitios",
+      "problem_title": "Un archivo no se puede sincronizar"
+    },
+    "activity": {
+      "waiting_count": "Cambios que esperan al servidor: {count}",
+      "disk_name": "{path} en Archivos se llama {detail} en este ordenador, porque algunos de sus caracteres no se permiten aquí",
+      "disk_case": "{path} en Archivos se llama {detail} en este ordenador, porque ya hay un nombre que solo cambia en mayúsculas y minúsculas",
+      "disk_group": "Nombres en Archivos que este ordenador no permite: {count}. Aquí tienen nombres un poco distintos.",
+      "show": "Mostrar",
+      "hide": "Ocultar"
+    },
+    "cant_sync": {
+      "title": "No se puede sincronizar"
+    },
+    "folders": {
+      "stop": "Dejar de sincronizar…",
+      "pick_title_known": "¿Con qué carpeta de Archivos debe mantenerse igual {name}?",
+      "pick_confirm_known": "Mantenerlas iguales"
+    },
+    "pin": {
+      "keep": "Mantener siempre en este dispositivo",
+      "free": "Liberar espacio",
+      "failed": "No ha funcionado. Vuelve a intentarlo en el Explorador de archivos."
+    },
+    "account": {
+      "of": "Archivos de {address}",
+      "choose": "Archivos de"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacción rápida",
     "menu": "Redacción rápida",
@@ -7845,6 +7945,10 @@
     "missing": "\"{name}\" ya no existe.",
     "too_large": "\"{name}\" supera {max} y no se puede adjuntar.",
     "failed": "No se pudo adjuntar \"{name}\". Inténtalo de nuevo."
+  },
+  "composeRecentLimit": {
+    "too_large": "Demasiado grande",
+    "too_large_hint": "Más grande de lo que acepta el servidor ({max})"
   },
   "compose_windows": {
     "more_formatting": "Más formato",

@@ -4665,7 +4665,7 @@ ${printWatermark ? printWatermark.html : ''}
         <Button
           variant="ghost"
           size="sm"
-          onClick={onReplyAll}
+          onClick={() => onReplyAll?.()}
           data-overflow-item
           data-overflow-priority="2"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
@@ -4677,7 +4677,7 @@ ${printWatermark ? printWatermark.html : ''}
         <Button
           variant="ghost"
           size="sm"
-          onClick={onForward}
+          onClick={() => onForward?.()}
           data-overflow-item
           data-overflow-priority="3"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
@@ -5426,7 +5426,7 @@ ${printWatermark ? printWatermark.html : ''}
                         {!isDraft && !isScheduled && onReplyAll && (
                           <button
                             type="button"
-                            onClick={onReplyAll}
+                            onClick={() => onReplyAll?.()}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                             title={withShortcut(t('reply_all'), 'reply_all')}
                             aria-label={t('reply_all')}
@@ -5668,7 +5668,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {onReplyAll && (
                   <button
                     type="button"
-                    onClick={onReplyAll}
+                    onClick={() => onReplyAll?.()}
                     className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     title={withShortcut(t('reply_all'), 'reply_all')}
                     aria-label={t('reply_all')}
@@ -6253,8 +6253,8 @@ ${printWatermark ? printWatermark.html : ''}
 
         <div className="grow shrink-0 flex flex-col">
 
-          {/* Email Body */}
-          <div ref={bodyWrapRef} className={cn(
+          {/* Email Body. data-reader-body: a reply dock keeps some of it in view (compose-p3-7). */}
+          <div ref={bodyWrapRef} data-reader-body="" className={cn(
             "email-content-wrapper overflow-x-auto relative",
             // Folded, the body stays mounted so unfolding does not reload it.
             (mvOpenFolded || mvAwaitingConversation) && "hidden",
@@ -6382,11 +6382,11 @@ ${printWatermark ? printWatermark.html : ''}
                 <Reply className="w-4 h-4" />
                 {t('reply')}
               </Button>
-              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReplyAll?.()}>
                 <ReplyAll className="w-4 h-4" />
                 {t('reply_all')}
               </Button>
-              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onForward?.()}>
                 <Forward className="w-4 h-4" />
                 {t('forward')}
               </Button>
@@ -6585,14 +6585,14 @@ ${printWatermark ? printWatermark.html : ''}
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
           </button>
           <button
-            onClick={onReplyAll}
+            onClick={() => onReplyAll?.()}
             className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <ReplyAll className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
           </button>
           <button
-            onClick={onForward}
+            onClick={() => onForward?.()}
             className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Forward className="w-5 h-5" />

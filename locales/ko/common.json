@@ -1012,7 +1012,7 @@
     "cc": "참조",
     "bcc": "숨은 참조",
     "subject": "제목",
-    "body_placeholder": "내용을 작성해 주세요...",
+    "body_placeholder": "내용을 작성해 주세요…",
     "send": "보내기",
     "cancel": "취소",
     "attach": "첨부",
@@ -1066,10 +1066,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "서버가 이 주소를 봉투 발신자로 허용하지 않으면 대신 {identity}이(가) 사용되며, 수신자는 Return-Path 헤더에서 이 주소를 볼 수 있습니다."
     },
-    "save_as_template": "템플릿으로 저장",
+    "save_as_template": "템플릿으로 저장…",
     "attach_from_device": "이 기기에서 업로드",
     "templates_menu": "템플릿",
-    "insert_template": "템플릿 삽입",
+    "insert_template": "템플릿 삽입…",
     "options": "옵션",
     "option_plain_text": "일반 텍스트",
     "option_plain_text_hint": "서식 없이 보내기",
@@ -5299,6 +5299,12 @@
     "declined_many": "이 시리즈의 일정 {count}개를 거절했습니다.",
     "answers_series": "답변은 시리즈의 모든 일정에 적용됩니다."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time}까지",
+    "week_all_days": "한 주 전체 보기",
+    "week_days_short": "{count, plural, other {#일}}",
+    "print": "인쇄…"
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",
@@ -5610,6 +5616,12 @@
     "import_to_mail_failed": "{name}을(를) 가져오지 못했습니다.",
     "import_contacts": "연락처로 가져오기…",
     "add_to_calendar": "캘린더에 추가…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "편집한 파일",
+    "hide": "숨기기",
+    "discard_detail_file": "이 사본의 편집 내용이 삭제됩니다. 파일에 있는 파일은 바뀌지 않습니다.",
+    "saved_auto": "{name}을(를) 파일에 저장했습니다. 이후 해당 프로그램에서 저장하면 자동으로 그곳에 저장됩니다."
   },
   "smime": {
     "your_certificates": "내 인증서",
@@ -7659,6 +7671,23 @@
     "merge_kept": "유지됨",
     "import_show": "보기"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {연락처 #개 선택됨}}",
+    "selection_more": "외 {count}개",
+    "no_addresses": "선택한 연락처 중 이메일 주소가 있는 연락처가 없습니다.",
+    "task_open": "열기",
+    "due_next_week": "다음 주",
+    "due_none": "마감일 없음",
+    "due_pick": "날짜 선택…",
+    "move_to_list": "목록으로 이동",
+    "dupes_legend": "{count, plural, other {#개는 이미 연락처에 있음:}}",
+    "dupes_skip": "건너뛰기",
+    "dupes_update": "기존 연락처 업데이트",
+    "dupes_updates": "연락처 업데이트",
+    "upload_cancelled": "업로드가 취소되었어요",
+    "upload_cancelled_partial": "취소하기 전에 {count, plural, other {#개의 파일}}이 업로드되었어요",
+    "download_cancelled": "다운로드를 취소했습니다"
+  },
   "desktopEdit": {
     "edit": "편집",
     "edit_named": "{name} 편집",
@@ -7823,6 +7852,77 @@
     "state_offline": "오프라인",
     "state_error": "중지됨"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "드라이브를 끄기 전에 변경 내용을 업로드하는 중",
+      "title_sign_out": "로그아웃하기 전에 변경 내용을 업로드하는 중",
+      "title_stop_folder": "폴더 동기화를 멈추기 전에 변경 내용을 업로드하는 중",
+      "cannot_title": "일부 변경 내용을 지금 업로드할 수 없습니다",
+      "waiting": "업로드 대기: {names}",
+      "progress": "{total}개 중 {done}개 업로드됨",
+      "cannot_offline": "서버에 연결할 수 없습니다. 아직 업로드되지 않음: {names}",
+      "cannot_other": "업로드할 수 없음: {names}. 이유는 설정의 최근 활동에 있습니다.",
+      "go_note_drive": "지금 계속하면 업로드되지 않은 항목은 문서\\Bulwark – not uploaded에 복사됩니다. 잃어버리는 것은 없습니다.",
+      "go_note_folder": "지금 계속하면 업로드되지 않은 항목은 이 컴퓨터의 폴더에 남습니다.",
+      "keep_turn_off": "드라이브 유지",
+      "keep_sign_out": "로그인 유지",
+      "keep_stop_folder": "계속 동기화",
+      "go_turn_off": "지금 끄기",
+      "go_sign_out": "지금 로그아웃",
+      "go_stop_folder": "지금 동기화 중지"
+    },
+    "drive": {
+      "off_note": "끄면 파일 탐색기에서 드라이브가 사라집니다. 파일은 파일에 그대로 있습니다.",
+      "rescued": "업로드되지 않은 파일({count})은 이제 {folder}에 있습니다.",
+      "rescued_open": "폴더 열기",
+      "rescued_dismiss": "닫기",
+      "start_at_login": "Windows에 로그인하면 Bulwark 시작",
+      "start_at_login_why": "OneDrive처럼 드라이브는 Bulwark가 실행 중이어야 합니다.",
+      "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다.",
+      "where": "파일 탐색기에서 Bulwark Files",
+      "where_letter": "파일 탐색기에서 Bulwark Files ({letter}:)",
+      "open": "열기",
+      "letter_note": "드라이브 문자로 열면 파일 탐색기에 동기화 상태와 '이 장치에 항상 유지'가 표시되지 않습니다. 탐색기의 Bulwark Files 아래에 표시됩니다.",
+      "letter_failed": "드라이브 문자를 설정하지 못했습니다. 다시 시도하세요."
+    },
+    "tray": {
+      "idle": "Bulwark Files: 최신 상태",
+      "syncing": "Bulwark Files: 동기화 중. 남은 항목: {count}",
+      "paused": "Bulwark Files: 일시 중지됨",
+      "offline": "Bulwark Files: 오프라인. 대기 중: {count}",
+      "question": "Bulwark Files: 답변이 필요합니다",
+      "error": "Bulwark Files: 오류"
+    },
+    "notify": {
+      "conflict_title": "파일이 두 곳에서 변경되었습니다",
+      "problem_title": "파일을 동기화할 수 없습니다"
+    },
+    "activity": {
+      "waiting_count": "서버를 기다리는 변경 내용: {count}",
+      "disk_name": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 일부 문자를 여기서 쓸 수 없기 때문입니다",
+      "disk_case": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 대소문자만 다른 이름이 이미 있기 때문입니다",
+      "disk_group": "이 컴퓨터에서 허용되지 않는 파일 이름: {count}. 여기서는 이름이 조금 다릅니다.",
+      "show": "보기",
+      "hide": "숨기기"
+    },
+    "cant_sync": {
+      "title": "동기화할 수 없음"
+    },
+    "folders": {
+      "stop": "동기화 중지…",
+      "pick_title_known": "{name}을(를) 파일의 어떤 폴더와 같게 유지할까요?",
+      "pick_confirm_known": "같게 유지"
+    },
+    "pin": {
+      "keep": "이 장치에 항상 유지",
+      "free": "공간 확보",
+      "failed": "실패했습니다. 파일 탐색기에서 다시 시도하세요."
+    },
+    "account": {
+      "of": "{address}의 파일",
+      "choose": "파일:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "빠른 작성",
     "menu": "빠른 작성",
@@ -7845,6 +7945,10 @@
     "missing": "\"{name}\"이(가) 더 이상 없어요.",
     "too_large": "\"{name}\"이(가) {max}보다 커서 첨부할 수 없어요.",
     "failed": "\"{name}\"을(를) 첨부하지 못했어요. 다시 시도해 주세요."
+  },
+  "composeRecentLimit": {
+    "too_large": "너무 큼",
+    "too_large_hint": "서버가 받을 수 있는 크기({max})보다 큽니다"
   },
   "compose_windows": {
     "more_formatting": "추가 서식",

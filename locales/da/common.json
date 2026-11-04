@@ -1009,10 +1009,10 @@
     "forward_message": "Videresend",
     "from": "Fra",
     "to": "Til",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Emne",
-    "body_placeholder": "Skriv din besked...",
+    "body_placeholder": "Skriv din besked…",
     "send": "Send",
     "cancel": "Annuller",
     "attach": "Vedhæft",
@@ -1068,10 +1068,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis din server ikke accepterer denne adresse som konvolutafsender, bruges {identity} i stedet, og modtagerne kan se den i Return-Path-headeren."
     },
-    "save_as_template": "Gem som skabelon",
+    "save_as_template": "Gem som skabelon…",
     "attach_from_device": "Upload fra denne enhed",
     "templates_menu": "Skabeloner",
-    "insert_template": "Indsæt skabelon",
+    "insert_template": "Indsæt skabelon…",
     "options": "Indstillinger",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uden formatering",
@@ -5299,6 +5299,12 @@
     "declined_many": "Du afslog {count} møder i denne serie.",
     "answers_series": "Dit svar gælder alle møder i serien."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele ugen",
+    "week_days_short": "{count, plural, one {# dag} other {# dage}}",
+    "print": "Udskriv…"
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",
@@ -5877,6 +5883,12 @@
     "import_to_mail_failed": "{name} kunne ikke importeres.",
     "import_contacts": "Importér til kontakter…",
     "add_to_calendar": "Føj til kalender…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerede filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Dine ændringer i denne kopi slettes. Filen i Filer ændres ikke.",
+    "saved_auto": "{name} er gemt i Filer. Senere gemninger fra programmet havner der af sig selv."
   },
   "smime": {
     "your_certificates": "Dine certifikater",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Beholdes",
     "import_show": "Vis"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} mere",
+    "no_addresses": "Ingen af de valgte kontakter har en e-mailadresse.",
+    "task_open": "Åbn",
+    "due_next_week": "Næste uge",
+    "due_none": "Ingen forfaldsdato",
+    "due_pick": "Vælg en dato…",
+    "move_to_list": "Flyt til liste",
+    "dupes_legend": "{count, plural, one {1 findes allerede i Kontakter:} other {# findes allerede i Kontakter:}}",
+    "dupes_skip": "Spring dem over",
+    "dupes_update": "Opdater de eksisterende kontakter",
+    "dupes_updates": "Opdaterer kontakten",
+    "upload_cancelled": "Upload annulleret",
+    "upload_cancelled_partial": "{count, plural, one {1 fil blev} other {# filer blev}} uploadet, før du annullerede",
+    "download_cancelled": "Download annulleret"
+  },
   "desktopEdit": {
     "edit": "Rediger",
     "edit_named": "Rediger {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Offline",
     "state_error": "Stoppet"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Uploader ændringer, før drevet slås fra",
+      "title_sign_out": "Uploader ændringer, før du logger ud",
+      "title_stop_folder": "Uploader ændringer, før mappen stopper med at synkronisere",
+      "cannot_title": "Nogle ændringer kan ikke uploades lige nu",
+      "waiting": "Mangler at uploade: {names}",
+      "progress": "{done} af {total} uploadet",
+      "cannot_offline": "Serveren kan ikke nås. Ikke uploadet endnu: {names}",
+      "cannot_other": "Kan ikke uploades: {names}. Seneste aktivitet i Indstillinger fortæller hvorfor.",
+      "go_note_drive": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, kopieret til Dokumenter\\Bulwark – not uploaded. Intet går tabt.",
+      "go_note_folder": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, i mappen på denne computer.",
+      "keep_turn_off": "Behold drevet",
+      "keep_sign_out": "Forbliv logget ind",
+      "keep_stop_folder": "Fortsæt synkronisering",
+      "go_turn_off": "Slå fra nu",
+      "go_sign_out": "Log ud nu",
+      "go_stop_folder": "Stop synkronisering nu"
+    },
+    "drive": {
+      "off_note": "Når du slår dette fra, forsvinder drevet fra Stifinder. Dine filer bliver i Filer.",
+      "rescued": "Filer, der ikke blev uploadet ({count}), ligger nu i {folder}.",
+      "rescued_open": "Åbn mappe",
+      "rescued_dismiss": "Luk",
+      "start_at_login": "Start Bulwark, når du logger på Windows",
+      "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
+      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket.",
+      "where": "I Stifinder som Bulwark Files",
+      "where_letter": "I Stifinder som Bulwark Files ({letter}:)",
+      "open": "Åbn",
+      "letter_note": "Via drevbogstavet viser Stifinder hverken synkroniseringsstatus eller “Behold altid på denne enhed”. De vises under Bulwark Files i Stifinder.",
+      "letter_failed": "Drevbogstavet kunne ikke angives. Prøv igen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Opdateret",
+      "syncing": "Bulwark Files: Synkroniserer. Mangler: {count}",
+      "paused": "Bulwark Files: Sat på pause",
+      "offline": "Bulwark Files: Offline. Venter: {count}",
+      "question": "Bulwark Files: Venter på dit svar",
+      "error": "Bulwark Files: Fejl"
+    },
+    "notify": {
+      "conflict_title": "En fil blev ændret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Ændringer, der venter på serveren: {count}",
+      "disk_name": "{path} i Filer hedder {detail} på denne computer, fordi nogle af tegnene ikke er tilladt her",
+      "disk_case": "{path} i Filer hedder {detail} på denne computer, fordi der allerede er et navn her, der kun adskiller sig i store og små bogstaver",
+      "disk_group": "Navne i Filer, som denne computer ikke tillader: {count}. De har lidt andre navne her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stop synkronisering…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes ens med?",
+      "pick_confirm_known": "Hold dem ens"
+    },
+    "pin": {
+      "keep": "Behold altid på denne enhed",
+      "free": "Frigør plads",
+      "failed": "Det lykkedes ikke. Prøv igen i Stifinder."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hurtig skrivning",
     "menu": "Hurtig skrivning",
@@ -7845,6 +7945,10 @@
     "missing": "\"{name}\" findes ikke længere.",
     "too_large": "\"{name}\" er større end {max} og kan ikke vedhæftes.",
     "failed": "\"{name}\" kunne ikke vedhæftes. Prøv igen."
+  },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større end serveren tager imod ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mere formatering",

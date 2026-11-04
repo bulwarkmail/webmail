@@ -1009,10 +1009,10 @@
     "forward_message": "Переслати",
     "from": "Від",
     "to": "до",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Тема",
-    "body_placeholder": "Напишіть своє повідомлення...",
+    "body_placeholder": "Напишіть своє повідомлення…",
     "send": "Надіслати",
     "cancel": "Скасувати",
     "attach": "Прикріпити",
@@ -1066,10 +1066,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Якщо ваш сервер не приймає цю адресу як відправника конверта, замість неї використовується {identity}, і одержувачі бачитимуть її в заголовку Return-Path."
     },
-    "save_as_template": "Зберегти як шаблон",
+    "save_as_template": "Зберегти як шаблон…",
     "attach_from_device": "Завантажити з цього пристрою",
     "templates_menu": "Шаблони",
-    "insert_template": "Вставити шаблон",
+    "insert_template": "Вставити шаблон…",
     "options": "Параметри",
     "option_plain_text": "Звичайний текст",
     "option_plain_text_hint": "Надіслати без форматування",
@@ -5299,6 +5299,12 @@
     "declined_many": "Ви відхилили зустрічей цієї серії: {count}.",
     "answers_series": "Ваша відповідь стосується всіх зустрічей серії."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "до {time}",
+    "week_all_days": "Показати весь тиждень",
+    "week_days_short": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
+    "print": "Друк…"
+  },
   "advanced_search": {
     "title": "Розширений пошук",
     "from": "Від",
@@ -5610,6 +5616,12 @@
     "import_to_mail_failed": "Не вдалося імпортувати {name}.",
     "import_contacts": "Імпортувати в контакти…",
     "add_to_calendar": "Додати до календаря…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Змінені файли",
+    "hide": "Сховати",
+    "discard_detail_file": "Ваші зміни в цій копії буде видалено. Файл у розділі «Файли» не зміниться.",
+    "saved_auto": "{name} збережено у «Файли». Наступні збереження з програми потраплятимуть туди самі."
   },
   "smime": {
     "your_certificates": "Ваші сертифікати",
@@ -7659,6 +7671,23 @@
     "merge_kept": "Залишиться",
     "import_show": "Показати"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Вибрано # контакт} few {Вибрано # контакти} many {Вибрано # контактів} other {Вибрано # контакту}}",
+    "selection_more": "і ще {count}",
+    "no_addresses": "Жоден із вибраних контактів не має адреси ел. пошти.",
+    "task_open": "Відкрити",
+    "due_next_week": "Наступного тижня",
+    "due_none": "Без терміну",
+    "due_pick": "Вибрати дату…",
+    "move_to_list": "Перемістити до списку",
+    "dupes_legend": "{count, plural, one {# вже є в контактах:} few {# вже є в контактах:} many {# вже є в контактах:} other {# вже є в контактах:}}",
+    "dupes_skip": "Пропустити",
+    "dupes_update": "Оновити наявні контакти",
+    "dupes_updates": "Оновить контакт",
+    "upload_cancelled": "Завантаження скасовано",
+    "upload_cancelled_partial": "{count, plural, one {# файл було завантажено} few {# файли було завантажено} many {# файлів було завантажено} other {# файлу було завантажено}} до скасування",
+    "download_cancelled": "Завантаження скасовано"
+  },
   "desktopEdit": {
     "edit": "Редагувати",
     "edit_named": "Редагувати {name}",
@@ -7823,6 +7852,77 @@
     "state_offline": "Офлайн",
     "state_error": "Зупинено"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Вивантаження змін перед вимкненням диска",
+      "title_sign_out": "Вивантаження змін перед виходом",
+      "title_stop_folder": "Вивантаження змін перед зупиненням синхронізації папки",
+      "cannot_title": "Деякі зміни зараз не вдається вивантажити",
+      "waiting": "Ще вивантажити: {names}",
+      "progress": "Вивантажено {done} з {total}",
+      "cannot_offline": "Сервер недоступний. Ще не вивантажено: {names}",
+      "cannot_other": "Не вдається вивантажити: {names}. Причину видно в нещодавніх діях у налаштуваннях.",
+      "go_note_drive": "Якщо продовжити зараз, усе невивантажене буде скопійовано в Документи\\Bulwark – not uploaded. Нічого не втратиться.",
+      "go_note_folder": "Якщо продовжити зараз, усе невивантажене залишиться в папці на цьому комп’ютері.",
+      "keep_turn_off": "Залишити диск",
+      "keep_sign_out": "Не виходити",
+      "keep_stop_folder": "Продовжити синхронізацію",
+      "go_turn_off": "Вимкнути зараз",
+      "go_sign_out": "Вийти зараз",
+      "go_stop_folder": "Зупинити синхронізацію зараз"
+    },
+    "drive": {
+      "off_note": "Якщо вимкнути, диск зникне з Провідника. Ваші файли залишаться у «Файлах».",
+      "rescued": "Невивантажені файли ({count}) тепер у {folder}.",
+      "rescued_open": "Відкрити папку",
+      "rescued_dismiss": "Приховати",
+      "start_at_login": "Запускати Bulwark під час входу у Windows",
+      "start_at_login_why": "Диску потрібен запущений Bulwark, як OneDrive.",
+      "closed_warning": "Файли на диску не відкриються, поки Bulwark закритий.",
+      "where": "У Провіднику як Bulwark Files",
+      "where_letter": "У Провіднику як Bulwark Files ({letter}:)",
+      "open": "Відкрити",
+      "letter_note": "Через літеру диска Провідник не показує стан синхронізації та «Завжди зберігати на цьому пристрої». Вони видні в розділі Bulwark Files у Провіднику.",
+      "letter_failed": "Не вдалося призначити літеру диска. Спробуйте ще раз."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Синхронізовано",
+      "syncing": "Bulwark Files: Синхронізація. Залишилося: {count}",
+      "paused": "Bulwark Files: Призупинено",
+      "offline": "Bulwark Files: Немає зв’язку. Очікують: {count}",
+      "question": "Bulwark Files: Потрібна ваша відповідь",
+      "error": "Bulwark Files: Помилка"
+    },
+    "notify": {
+      "conflict_title": "Файл змінено у двох місцях",
+      "problem_title": "Файл не вдається синхронізувати"
+    },
+    "activity": {
+      "waiting_count": "Зміни, що чекають на сервер: {count}",
+      "disk_name": "{path} у «Файлах» на цьому комп’ютері називається {detail}: деякі символи тут не дозволені",
+      "disk_case": "{path} у «Файлах» на цьому комп’ютері називається {detail}: тут уже є назва, що відрізняється лише регістром",
+      "disk_group": "Назви у «Файлах», недопустимі на цьому комп’ютері: {count}. Тут вони мають трохи інші назви.",
+      "show": "Показати",
+      "hide": "Приховати"
+    },
+    "cant_sync": {
+      "title": "Не вдається синхронізувати"
+    },
+    "folders": {
+      "stop": "Зупинити синхронізацію…",
+      "pick_title_known": "З якою папкою у «Файлах» синхронізувати {name}?",
+      "pick_confirm_known": "Синхронізувати"
+    },
+    "pin": {
+      "keep": "Завжди зберігати на цьому пристрої",
+      "free": "Звільнити місце",
+      "failed": "Не вдалося. Спробуйте ще раз у Провіднику."
+    },
+    "account": {
+      "of": "Файли {address}",
+      "choose": "Файли"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Швидкий лист",
     "menu": "Швидкий лист",
@@ -7845,6 +7945,10 @@
     "missing": "«{name}» більше не існує.",
     "too_large": "«{name}» більший за {max}, його не можна прикріпити.",
     "failed": "Не вдалося прикріпити «{name}». Спробуйте ще раз."
+  },
+  "composeRecentLimit": {
+    "too_large": "Завеликий",
+    "too_large_hint": "Більший, ніж приймає сервер ({max})"
   },
   "compose_windows": {
     "more_formatting": "Додаткове форматування",
