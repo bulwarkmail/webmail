@@ -35,6 +35,9 @@ jobs:
         # covers the jsdom-heavy suites.
         run: npx vitest run --pool=forks --maxWorkers=2 --testTimeout=15000
 
+      - name: Verify upstream Git merge helper
+        run: node --test .memail/sync-upstream.test.mjs
+
   # The pre-commit hook lints only staged files and never runs on fork PRs,
   # so this is the one place the whole tree is checked.
   lint:

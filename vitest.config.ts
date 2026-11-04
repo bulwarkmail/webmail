@@ -15,7 +15,8 @@ export default defineConfig({
     // must be globbed at any depth or the nested repos/*/node_modules trees
     // get collected too.
     // scripts/lite/smoke/** is the Playwright smoke for the static Lite export.
-    exclude: ['integration/**', 'examples/**', 'repos/**', '**/node_modules/**', '.next/**', 'out/**', 'scripts/lite/smoke/**', 'scripts/perf-guard/**', 'scripts/a11y-guard/**'],
+    // This Git helper runs with node:test in CI, outside jsdom/Vitest.
+    exclude: ['.memail/sync-upstream.test.mjs', 'integration/**', 'examples/**', 'repos/**', '**/node_modules/**', '.next/**', 'out/**', 'scripts/lite/smoke/**', 'scripts/perf-guard/**', 'scripts/a11y-guard/**'],
     // The default node_modules/.vitest-cache sits inside the tree Turbopack
     // watches, so every test run made a running `next dev` rebuild and reload
     // the open page about once a second.
