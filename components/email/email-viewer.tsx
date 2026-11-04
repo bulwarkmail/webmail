@@ -23,6 +23,7 @@ import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, re
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
+import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
@@ -3733,6 +3734,8 @@ export function EmailViewer({
           onSelection: (text) => { if (iframe.contentDocument === doc) onBodySelection(text); },
           onContextMenu: (point, text) => selectionMenu.openRef.current(point, { emailId: emailIdRef.current, text }),
         });
+        // j, k, e and the other shortcuts keep working after a click into the body.
+        forwardFrameKeys(doc, iframe);
 
       }
     } catch {
