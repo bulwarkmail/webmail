@@ -4,8 +4,9 @@ import type { BulwarkDesktopBridge } from '@/lib/desktop/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useSettingsStore } from '@/stores/settings-store';
 
-/** The main window's OS host: which logins get a new-mail baseline. */
+/** The main window's OS host: which logins get a new-mail baseline, and when the tray's summary is read again. */
 
 const intl = vi.hoisted(() => ({ locale: 'en' }));
 vi.mock('next-intl', () => ({
@@ -31,6 +32,7 @@ beforeEach(() => {
   intl.locale = 'en';
   clients.clear();
   window.bulwarkDesktop = { version: 1, platform: 'win32', os: { setLocked: vi.fn() } } as unknown as BulwarkDesktopBridge;
+  useSettingsStore.setState({ timeFormat: '24h' });
   useAccountStore.setState({ accounts: [entry('work'), entry('home')] as never });
   useAuthStore.setState({
     isAuthenticated: true,
@@ -59,5 +61,26 @@ describe('new-mail baselines', () => {
     clients.set('work', work);
     act(() => useAuthStore.setState((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 })));
     expect(mail.seed.mock.calls.map(([client]) => client)).toContain(work);
+  });
+});
+
+describe('the tray summary', () => {
+  it('is read again at once when the language or the time format changes', () => {
+    const view = render(<DesktopOsHost />);
+    summary.refresh.mockClear();
+    intl.locale = 'de';
+    view.rerender(<DesktopOsHost />);
+    expect(summary.refresh).toHaveBeenCalledWith(true);
+
+    summary.refresh.mockClear();
+    act(() => useSettingsStore.setState({ timeFormat: '12h' }));
+    expect(summary.refresh).toHaveBeenCalledWith(true);
+  });
+
+  it('not on a render that changed neither', () => {
+    const view = render(<DesktopOsHost />);
+    summary.refresh.mockClear();
+    view.rerender(<DesktopOsHost />);
+    expect(summary.refresh).not.toHaveBeenCalledWith(true);
   });
 });
