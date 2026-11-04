@@ -7867,7 +7867,11 @@
     "devtools_label": "Ontwikkelaarstools",
     "updates_label": "Naar updates zoeken",
     "search": {
-      "quick_compose": "snel opstellen nieuw bericht overal sneltoets"
+      "quick_compose": "snel opstellen nieuw bericht overal sneltoets",
+      "files_drive": "ruimte vrijmaken OneDrive Dropbox Verkenner Finder stationsletter bestanden op aanvraag",
+      "offline_space": "ruimte vrijmaken schijfruimte opslag",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID vingerafdruk gezicht passkey toegangssleutel"
     }
   },
   "desktop_policy": {

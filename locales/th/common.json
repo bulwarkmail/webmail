@@ -7875,7 +7875,11 @@
     "devtools_label": "เครื่องมือนักพัฒนา",
     "updates_label": "ตรวจหาอัปเดต",
     "search": {
-      "quick_compose": "เขียนด่วน ข้อความใหม่จากทุกที่ ทางลัดทั่วระบบ"
+      "quick_compose": "เขียนด่วน ข้อความใหม่จากทุกที่ ทางลัดทั่วระบบ",
+      "files_drive": "เพิ่มพื้นที่ว่าง OneDrive Dropbox File Explorer Finder อักษรไดรฟ์ ไฟล์ตามต้องการ",
+      "offline_space": "เพิ่มพื้นที่ว่าง พื้นที่ดิสก์ ที่เก็บข้อมูล",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID ลายนิ้วมือ ใบหน้า พาสคีย์ passkey"
     }
   },
   "desktop_policy": {

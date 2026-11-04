@@ -7868,7 +7868,11 @@
     "devtools_label": "כלי מפתחים",
     "updates_label": "בדיקת עדכונים",
     "search": {
-      "quick_compose": "כתיבה מהירה הודעה חדשה מכל מקום קיצור מקשים כללי"
+      "quick_compose": "כתיבה מהירה הודעה חדשה מכל מקום קיצור מקשים כללי",
+      "files_drive": "פינוי מקום OneDrive Dropbox סייר הקבצים Finder אות כונן קבצים לפי דרישה",
+      "offline_space": "פינוי מקום שטח דיסק אחסון",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID טביעת אצבע פנים מפתח גישה passkey"
     }
   },
   "desktop_policy": {

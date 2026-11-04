@@ -7867,7 +7867,11 @@
     "devtools_label": "Хөгжүүлэгчийн хэрэгслүүд",
     "updates_label": "Шинэчлэл шалгах",
     "search": {
-      "quick_compose": "хурдан бичих хаанаас ч шинэ захидал товчлол"
+      "quick_compose": "хурдан бичих хаанаас ч шинэ захидал товчлол",
+      "files_drive": "зай чөлөөлөх OneDrive Dropbox File Explorer Finder дискийн үсэг шаардлагатай үед файл",
+      "offline_space": "зай чөлөөлөх дискийн зай хадгалах сан",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID хурууны хээ нүүр нэвтрэх түлхүүр passkey"
     }
   },
   "desktop_policy": {

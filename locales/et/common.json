@@ -7867,7 +7867,11 @@
     "devtools_label": "Arendaja tööriistad",
     "updates_label": "Otsi uuendusi",
     "search": {
-      "quick_compose": "kiirkirjutamine uus kiri kõikjalt kiirklahv"
+      "quick_compose": "kiirkirjutamine uus kiri kõikjalt kiirklahv",
+      "files_drive": "vabasta ruumi OneDrive Dropbox Explorer Finder kettatäht failid nõudmisel",
+      "offline_space": "vabasta ruumi kettaruum salvestusruum",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID sõrmejälg nägu pääsuvõti passkey"
     }
   },
   "desktop_policy": {

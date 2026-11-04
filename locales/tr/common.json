@@ -7867,7 +7867,11 @@
     "devtools_label": "Geliştirici araçları",
     "updates_label": "Güncellemeleri denetle",
     "search": {
-      "quick_compose": "hızlı yazma her yerden yeni ileti genel kısayol"
+      "quick_compose": "hızlı yazma her yerden yeni ileti genel kısayol",
+      "files_drive": "yer aç alan boşalt OneDrive Dropbox Dosya Gezgini Finder sürücü harfi isteğe bağlı dosyalar",
+      "offline_space": "yer aç disk alanı depolama",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID parmak izi yüz geçiş anahtarı passkey"
     }
   },
   "desktop_policy": {

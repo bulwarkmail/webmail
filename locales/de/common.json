@@ -7867,7 +7867,11 @@
     "devtools_label": "Entwicklertools",
     "updates_label": "Nach Updates suchen",
     "search": {
-      "quick_compose": "Schnell schreiben neue Nachricht von überall Tastenkürzel Hotkey"
+      "quick_compose": "Schnell schreiben neue Nachricht von überall Tastenkürzel Hotkey",
+      "files_drive": "Speicher freigeben Speicherplatz freigeben OneDrive Dropbox Explorer Finder Laufwerksbuchstabe Dateien bei Bedarf",
+      "offline_space": "Speicher freigeben Speicherplatz Platz",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID Fingerabdruck Gesicht Passkey"
     }
   },
   "desktop_policy": {

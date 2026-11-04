@@ -7867,7 +7867,11 @@
     "devtools_label": "Інструменти розробника",
     "updates_label": "Перевірити оновлення",
     "search": {
-      "quick_compose": "швидкий лист новий лист звідусіль глобальне сполучення клавіш"
+      "quick_compose": "швидкий лист новий лист звідусіль глобальне сполучення клавіш",
+      "files_drive": "звільнити місце OneDrive Dropbox Провідник Finder буква диска файли на вимогу",
+      "offline_space": "звільнити місце місце на диску сховище",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID відбиток пальця обличчя ключ доступу passkey"
     }
   },
   "desktop_policy": {

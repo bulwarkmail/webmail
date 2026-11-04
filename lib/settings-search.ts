@@ -100,7 +100,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.language_region.time_zone.label', synonyms: syn2('timezone') },
     { label: 'settings.language_region.first_day.label', synonyms: syn2('week_start') },
     { label: 'appLock.section_title' },
-    { label: 'appLock.enable_label', synonyms: syn('app_lock') },
+    // Windows Hello and Touch ID are set up under the PIN lock, once it is on.
+    { label: 'appLock.enable_label', synonyms: [syn('app_lock'), syn3('app_lock_hello')] },
     { label: 'desktopOs.section_title', when: 'desktop' },
     { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
     { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
@@ -382,7 +383,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   files_sync: [
     { label: 'files_storage.title', when: 'desktop' },
     { label: 'files_sync.drive.title', when: 'desktop' },
-    { label: 'files_sync.drive.label', when: 'desktop' },
+    { label: 'files_sync.drive.label', when: 'desktop', synonyms: syn3('files_drive') },
     { label: 'files_sync.folders.title', when: 'desktop' },
     { label: 'files_sync.activity.title', when: 'desktop' },
   ],
@@ -392,7 +393,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   offline: [
     { label: 'offline.settings.title' },
-    { label: 'offline.settings.keep_label', synonyms: syn('offline') },
+    { label: 'offline.settings.keep_label', synonyms: [syn('offline'), syn3('offline_space')] },
     { label: 'offlineWipe.settings_title', synonyms: syn('wipe') },
     { label: 'offline.outbox.title', synonyms: syn('outbox') },
   ],
@@ -419,7 +420,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.advanced.export_settings.label' },
     { label: 'settings.advanced.import_settings.label' },
     { label: 'mail_import.section_title' },
-    { label: 'mail_import.settings_label' },
+    { label: 'mail_import.settings_label', synonyms: syn3('mail_import') },
     { label: 'mail_export.settings_label' },
     { label: 'settings.advanced.sections.fix' },
     { label: 'settings.advanced.refresh_cache.label' },

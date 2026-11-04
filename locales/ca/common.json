@@ -7867,7 +7867,11 @@
     "devtools_label": "Eines per a desenvolupadors",
     "updates_label": "Cerca actualitzacions",
     "search": {
-      "quick_compose": "redacció ràpida missatge nou des de qualsevol lloc drecera global"
+      "quick_compose": "redacció ràpida missatge nou des de qualsevol lloc drecera global",
+      "files_drive": "allibera espai OneDrive Dropbox Explorador Finder lletra d'unitat fitxers a petició",
+      "offline_space": "allibera espai espai al disc emmagatzematge",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID empremta digital cara clau d'accés passkey"
     }
   },
   "desktop_policy": {

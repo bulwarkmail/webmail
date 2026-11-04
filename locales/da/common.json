@@ -7867,7 +7867,11 @@
     "devtools_label": "Udviklerværktøjer",
     "updates_label": "Søg efter opdateringer",
     "search": {
-      "quick_compose": "hurtig skrivning ny besked hvor som helst global genvej"
+      "quick_compose": "hurtig skrivning ny besked hvor som helst global genvej",
+      "files_drive": "frigør plads OneDrive Dropbox Stifinder Finder drevbogstav filer efter behov",
+      "offline_space": "frigør plads diskplads lagerplads",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeraftryk ansigt adgangsnøgle passkey"
     }
   },
   "desktop_policy": {

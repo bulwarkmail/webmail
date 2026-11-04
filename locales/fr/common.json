@@ -7867,7 +7867,11 @@
     "devtools_label": "Outils de développement",
     "updates_label": "Rechercher des mises à jour",
     "search": {
-      "quick_compose": "rédaction rapide nouveau message depuis partout raccourci global"
+      "quick_compose": "rédaction rapide nouveau message depuis partout raccourci global",
+      "files_drive": "libérer de l'espace OneDrive Dropbox Explorateur Finder lettre de lecteur fichiers à la demande",
+      "offline_space": "libérer de l'espace espace disque stockage place",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID empreinte digitale visage clé d'accès passkey"
     }
   },
   "desktop_policy": {

@@ -7867,7 +7867,11 @@
     "devtools_label": "開發人員工具",
     "updates_label": "檢查更新",
     "search": {
-      "quick_compose": "快速撰寫 隨處新增郵件 全域快速鍵"
+      "quick_compose": "快速撰寫 隨處新增郵件 全域快速鍵",
+      "files_drive": "釋放空間 OneDrive Dropbox 檔案總管 Finder 磁碟機代號 隨選檔案",
+      "offline_space": "釋放空間 磁碟空間 儲存空間",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指紋 臉部 密碼金鑰 passkey"
     }
   },
   "desktop_policy": {

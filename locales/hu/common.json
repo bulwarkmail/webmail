@@ -7867,7 +7867,11 @@
     "devtools_label": "Fejlesztői eszközök",
     "updates_label": "Frissítések keresése",
     "search": {
-      "quick_compose": "gyors írás új üzenet bárhonnan globális billentyűparancs"
+      "quick_compose": "gyors írás új üzenet bárhonnan globális billentyűparancs",
+      "files_drive": "hely felszabadítása OneDrive Dropbox Fájlkezelő Finder meghajtóbetűjel igény szerinti fájlok",
+      "offline_space": "hely felszabadítása lemezterület tárhely",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID ujjlenyomat arc jelkulcs passkey"
     }
   },
   "desktop_policy": {

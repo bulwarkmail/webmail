@@ -7867,7 +7867,11 @@
     "devtools_label": "開発者ツール",
     "updates_label": "アップデートを確認",
     "search": {
-      "quick_compose": "クイック作成 どこからでも新規メッセージ グローバルショートカット"
+      "quick_compose": "クイック作成 どこからでも新規メッセージ グローバルショートカット",
+      "files_drive": "空き容量を増やす OneDrive Dropbox エクスプローラー Finder ドライブ文字 ファイルオンデマンド",
+      "offline_space": "空き容量を増やす ディスク容量 ストレージ",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指紋 顔認証 パスキー passkey"
     }
   },
   "desktop_policy": {

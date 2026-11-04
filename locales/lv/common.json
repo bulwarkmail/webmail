@@ -7867,7 +7867,11 @@
     "devtools_label": "Izstrādātāja rīki",
     "updates_label": "Meklēt atjauninājumus",
     "search": {
-      "quick_compose": "ātrā rakstīšana jauna vēstule no jebkuras vietas globālais īsinājumtaustiņš"
+      "quick_compose": "ātrā rakstīšana jauna vēstule no jebkuras vietas globālais īsinājumtaustiņš",
+      "files_drive": "atbrīvot vietu OneDrive Dropbox Pārlūks Finder diska burts faili pēc pieprasījuma",
+      "offline_space": "atbrīvot vietu diska vieta krātuve",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID pirkstu nospiedums seja piekļuves atslēga passkey"
     }
   },
   "desktop_policy": {

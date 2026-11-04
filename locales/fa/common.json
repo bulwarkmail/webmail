@@ -7867,7 +7867,11 @@
     "devtools_label": "ابزارهای توسعه‌دهنده",
     "updates_label": "بررسی به‌روزرسانی‌ها",
     "search": {
-      "quick_compose": "نوشتن سریع پیام تازه از هر جا میان‌بر سراسری"
+      "quick_compose": "نوشتن سریع پیام تازه از هر جا میان‌بر سراسری",
+      "files_drive": "آزاد کردن فضا OneDrive Dropbox File Explorer Finder حرف درایو فایل‌ها هنگام نیاز",
+      "offline_space": "آزاد کردن فضا فضای دیسک فضای ذخیره‌سازی",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID اثر انگشت چهره کلید عبور passkey"
     }
   },
   "desktop_policy": {

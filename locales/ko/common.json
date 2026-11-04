@@ -7867,7 +7867,11 @@
     "devtools_label": "개발자 도구",
     "updates_label": "업데이트 확인",
     "search": {
-      "quick_compose": "빠른 작성 어디서나 새 메시지 전역 단축키"
+      "quick_compose": "빠른 작성 어디서나 새 메시지 전역 단축키",
+      "files_drive": "공간 확보 OneDrive Dropbox 파일 탐색기 Finder 드라이브 문자 주문형 파일",
+      "offline_space": "공간 확보 디스크 공간 저장 공간",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 지문 얼굴 패스키 passkey"
     }
   },
   "desktop_policy": {

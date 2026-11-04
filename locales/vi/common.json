@@ -7879,7 +7879,11 @@
     "devtools_label": "Công cụ nhà phát triển",
     "updates_label": "Kiểm tra bản cập nhật",
     "search": {
-      "quick_compose": "soạn nhanh thư mới từ mọi nơi phím tắt toàn cục"
+      "quick_compose": "soạn nhanh thư mới từ mọi nơi phím tắt toàn cục",
+      "files_drive": "giải phóng dung lượng OneDrive Dropbox File Explorer Finder ký tự ổ đĩa tệp theo yêu cầu",
+      "offline_space": "giải phóng dung lượng dung lượng đĩa bộ nhớ",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID vân tay khuôn mặt khóa truy cập passkey"
     }
   },
   "desktop_policy": {

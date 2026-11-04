@@ -7867,7 +7867,11 @@
     "devtools_label": "أدوات المطوّر",
     "updates_label": "التحقق من وجود تحديثات",
     "search": {
-      "quick_compose": "كتابة سريعة رسالة جديدة من أي مكان اختصار عام"
+      "quick_compose": "كتابة سريعة رسالة جديدة من أي مكان اختصار عام",
+      "files_drive": "تحرير مساحة OneDrive Dropbox مستكشف الملفات Finder حرف محرك الأقراص ملفات عند الطلب",
+      "offline_space": "تحرير مساحة مساحة القرص التخزين",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID بصمة الإصبع الوجه مفتاح المرور passkey"
     }
   },
   "desktop_policy": {

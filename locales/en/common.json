@@ -7867,7 +7867,11 @@
     "devtools_label": "Developer tools",
     "updates_label": "Check for updates",
     "search": {
-      "quick_compose": "quick compose new message from anywhere global shortcut hotkey"
+      "quick_compose": "quick compose new message from anywhere global shortcut hotkey",
+      "files_drive": "free up space OneDrive Dropbox File Explorer Finder drive letter files on demand",
+      "offline_space": "free up space disk space storage room",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingerprint face passkey"
     }
   },
   "desktop_policy": {

@@ -7867,7 +7867,11 @@
     "devtools_label": "Vývojářské nástroje",
     "updates_label": "Zkontrolovat aktualizace",
     "search": {
-      "quick_compose": "rychlé psaní nová zpráva odkudkoli globální zkratka"
+      "quick_compose": "rychlé psaní nová zpráva odkudkoli globální zkratka",
+      "files_drive": "uvolnit místo OneDrive Dropbox Průzkumník Finder písmeno jednotky soubory na vyžádání",
+      "offline_space": "uvolnit místo místo na disku úložiště",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID otisk prstu obličej přístupový klíč passkey"
     }
   },
   "desktop_policy": {

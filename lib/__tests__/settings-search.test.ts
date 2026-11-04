@@ -289,6 +289,26 @@ describe('settings search in the desktop app', () => {
     expect(matchesAllWords(`composing ${tabKeywords.composing}`, 'quick compose')).toBe(false);
   });
 
+  // settings-p3-20: words people searched for that found nothing, or a page without its row.
+  it.each([
+    ['free up space', 'files_sync: Show Files as a drive'],
+    ['onedrive', 'files_sync: Show Files as a drive'],
+    ['drive letter', 'files_sync: Show Files as a drive'],
+    ['pst', 'backup: Import mail'],
+    ['windows hello', 'general: Lock with a PIN'],
+    ['touch id', 'general: Lock with a PIN'],
+  ])('finds "%s" on its row', (query, row) => {
+    expect(inAppResults(query)).toContain(row);
+  });
+
+  it.each([
+    ['free up space', 'offline: Keep mail on this device'],
+    ['pst', 'backup: Import mail'],
+    ['outlook', 'backup: Import mail'],
+  ])('in a browser too: finds "%s" on its row', (query, row) => {
+    expect(inBrowser(query)).toContain(row);
+  });
+
   it('keeps the app rows out of a browser, and the browser push rows out of the app', () => {
     expect(inBrowser('tray')).not.toContain('general: Keep running in the tray when closed');
     expect(inBrowser('quiet hours')).not.toContain('notifications: Quiet hours');

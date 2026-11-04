@@ -7867,7 +7867,11 @@
     "devtools_label": "Narzędzia deweloperskie",
     "updates_label": "Sprawdź aktualizacje",
     "search": {
-      "quick_compose": "szybkie pisanie nowa wiadomość z dowolnego miejsca skrót globalny"
+      "quick_compose": "szybkie pisanie nowa wiadomość z dowolnego miejsca skrót globalny",
+      "files_drive": "zwolnij miejsce OneDrive Dropbox Eksplorator Finder litera dysku pliki na żądanie",
+      "offline_space": "zwolnij miejsce miejsce na dysku pamięć",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID odcisk palca twarz klucz dostępu passkey"
     }
   },
   "desktop_policy": {

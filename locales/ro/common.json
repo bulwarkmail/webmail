@@ -7867,7 +7867,11 @@
     "devtools_label": "Instrumente pentru dezvoltatori",
     "updates_label": "Caută actualizări",
     "search": {
-      "quick_compose": "scriere rapidă mesaj nou de oriunde comandă rapidă globală"
+      "quick_compose": "scriere rapidă mesaj nou de oriunde comandă rapidă globală",
+      "files_drive": "eliberează spațiu OneDrive Dropbox Explorer Finder literă de unitate fișiere la cerere",
+      "offline_space": "eliberează spațiu spațiu pe disc stocare",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID amprentă față cheie de acces passkey"
     }
   },
   "desktop_policy": {

@@ -7867,7 +7867,11 @@
     "devtools_label": "Utviklerverktøy",
     "updates_label": "Se etter oppdateringer",
     "search": {
-      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei"
+      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei",
+      "files_drive": "frigjør plass OneDrive Dropbox Filutforsker Finder stasjonsbokstav filer ved behov",
+      "offline_space": "frigjør plass diskplass lagringsplass",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeravtrykk ansikt tilgangsnøkkel passkey"
     }
   },
   "desktop_policy": {
