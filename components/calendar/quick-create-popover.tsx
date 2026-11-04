@@ -148,7 +148,8 @@ export function QuickCreatePopover({
     };
   }, [onClose]);
 
-  const canSave = draft.title.trim().length > 0 && !!draft.calendarId;
+  // An empty title saves as "(No title)", as in Google Calendar.
+  const canSave = !!draft.calendarId;
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (canSave) onSave();

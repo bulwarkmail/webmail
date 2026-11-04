@@ -595,6 +595,21 @@ describe('CalendarApp task feedback', () => {
   });
 });
 
+describe('CalendarApp quick editor', () => {
+  // Usability report 2026-11-04: Save stayed off until a title was typed.
+  // Google Calendar saves "(No title)"; so does the quick editor now.
+  it('saves an event without a title as "(No title)"', async () => {
+    renderApp();
+    fireEvent.click(slots()[3]);
+    const quick = await screen.findByRole('dialog', { name: 'quick_create.aria_label' }, { timeout: 2000 });
+    const save = within(quick).getByRole('button', { name: 'form.save' });
+    expect(save).toBeEnabled();
+    fireEvent.click(save);
+    await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
+    expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: 'events.no_title', showWithoutTime: false });
+  });
+});
+
 describe('CalendarApp creating in the month view', () => {
   it('opens the quick editor for an all-day event on a single click', async () => {
     setUp([], 'month');

@@ -1287,12 +1287,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleQuickCreateSave = useCallback(async () => {
     if (!quickDraft) return;
-    const { start, end, title, calendarId, allDay } = quickDraft;
+    const { start, end, calendarId, allDay } = quickDraft;
+    // Saving without a title is allowed, as in Google Calendar: the event
+    // is called "(No title)" in the user's language.
+    const title = quickDraft.title.trim() || t("events.no_title");
     if (allDay) {
       setQuickDraft(null);
       await handleSaveEvent({
         uid: generateUUID(),
-        title: title.trim(),
+        title,
         start: format(start, "yyyy-MM-dd'T'00:00:00"),
         duration: "P1D",
         timeZone: null,
@@ -1313,7 +1316,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // as the full editor's fields, so they are labelled with that zone.
     await handleSaveEvent({
       uid: generateUUID(),
-      title: title.trim(),
+      title,
       start: format(start, "yyyy-MM-dd'T'HH:mm:ss"),
       duration,
       timeZone: getEffectiveTimeZone(),
@@ -1323,7 +1326,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       freeBusyStatus: "busy",
       privacy: "public",
     });
-  }, [quickDraft, handleSaveEvent]);
+  }, [quickDraft, handleSaveEvent, t]);
 
   // While the quick editor is open its placeholder takes the preview slot.
   const gridPreview = useMemo<PendingEventPreview | null>(() => {
