@@ -7532,6 +7532,17 @@
     "trouble_cors": "Váš poštový server musí povoliť prihlasovanie z tejto webovej stránky. Ak prihlásenie zlyhá, požiadajte správcu poštového servera, aby to povolil.",
     "provider_unsupported": "{provider} neponúka JMAP, spôsob, akým Bulwark komunikuje s poštovými servermi, takže sa k nemu Bulwark zatiaľ nemôže pripojiť priamo."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Obrázok",
+      "title": "Vložiť obrázok",
+      "address": "Webová adresa obrázka",
+      "address_hint": "Obrázok zostane na webe a zobrazí sa odtiaľ.",
+      "description": "Popis",
+      "invalid": "Zadajte webovú adresu, ktorá začína https://.",
+      "insert": "Vložiť"
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizácie",
     "version_label": "Bulwark {version}",

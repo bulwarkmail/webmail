@@ -7532,6 +7532,17 @@
     "trouble_cors": "Votre serveur de messagerie doit autoriser les connexions depuis ce site. Si la connexion échoue, demandez à la personne qui gère votre serveur de l'autoriser.",
     "provider_unsupported": "{provider} ne propose pas JMAP, la façon dont Bulwark communique avec les serveurs de messagerie, donc Bulwark ne peut pas encore s'y connecter directement."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Image",
+      "title": "Insérer une image",
+      "address": "Adresse web de l'image",
+      "address_hint": "L'image reste sur le web et s'affiche depuis là.",
+      "description": "Description",
+      "invalid": "Saisissez une adresse web qui commence par https://.",
+      "insert": "Insérer"
+    }
+  },
   "desktop_updates": {
     "title": "Mises à jour",
     "version_label": "Bulwark {version}",

@@ -7532,6 +7532,17 @@
     "trouble_cors": "يجب أن يسمح خادم بريدك بتسجيل الدخول من هذا الموقع. إذا فشل تسجيل الدخول، فاطلب من مسؤول خادم بريدك السماح بذلك.",
     "provider_unsupported": "لا يوفّر {provider} بروتوكول JMAP الذي يتواصل به Bulwark مع خوادم البريد، لذلك لا يستطيع Bulwark الاتصال به مباشرة بعد."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "صورة",
+      "title": "إدراج صورة",
+      "address": "عنوان الصورة على الويب",
+      "address_hint": "تبقى الصورة على الويب وتُعرض من هناك.",
+      "description": "الوصف",
+      "invalid": "أدخل عنوان ويب يبدأ بـ https://.",
+      "insert": "إدراج"
+    }
+  },
   "desktop_updates": {
     "title": "التحديثات",
     "version_label": "Bulwark {version}",

@@ -7532,6 +7532,17 @@
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Obraz",
+      "title": "Wstaw obraz",
+      "address": "Adres internetowy obrazu",
+      "address_hint": "Obraz zostaje w sieci i jest wyświetlany stamtąd.",
+      "description": "Opis",
+      "invalid": "Wpisz adres internetowy zaczynający się od https://.",
+      "insert": "Wstaw"
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizacje",
     "version_label": "Bulwark {version}",

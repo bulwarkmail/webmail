@@ -7532,6 +7532,17 @@
     "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Resim",
+      "title": "Resim ekle",
+      "address": "Resmin web adresi",
+      "address_hint": "Resim web'de kalır ve oradan gösterilir.",
+      "description": "Açıklama",
+      "invalid": "https:// ile başlayan bir web adresi girin.",
+      "insert": "Ekle"
+    }
+  },
   "desktop_updates": {
     "title": "Güncellemeler",
     "version_label": "Bulwark {version}",

@@ -7532,6 +7532,17 @@
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "圖片",
+      "title": "插入圖片",
+      "address": "圖片的網址",
+      "address_hint": "圖片會留在網路上，並從那裡顯示。",
+      "description": "說明",
+      "invalid": "請輸入以 https:// 開頭的網址。",
+      "insert": "插入"
+    }
+  },
   "desktop_updates": {
     "title": "更新",
     "version_label": "Bulwark {version}",

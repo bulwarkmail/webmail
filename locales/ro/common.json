@@ -7532,6 +7532,17 @@
     "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Imagine",
+      "title": "Inserează imagine",
+      "address": "Adresa web a imaginii",
+      "address_hint": "Imaginea rămâne pe web și este afișată de acolo.",
+      "description": "Descriere",
+      "invalid": "Introduceți o adresă web care începe cu https://.",
+      "insert": "Inserează"
+    }
+  },
   "desktop_updates": {
     "title": "Actualizări",
     "version_label": "Bulwark {version}",

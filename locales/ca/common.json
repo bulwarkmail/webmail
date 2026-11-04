@@ -7532,6 +7532,17 @@
     "trouble_cors": "El teu servidor de correu ha de permetre iniciar sessió des d'aquest lloc web. Si no funciona, demana a qui gestiona el servidor que ho permeti.",
     "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Imatge",
+      "title": "Insereix una imatge",
+      "address": "Adreça web de la imatge",
+      "address_hint": "La imatge es queda al web i es mostra des d'allà.",
+      "description": "Descripció",
+      "invalid": "Introduïu una adreça web que comenci per https://.",
+      "insert": "Insereix"
+    }
+  },
   "desktop_updates": {
     "title": "Actualitzacions",
     "version_label": "Bulwark {version}",

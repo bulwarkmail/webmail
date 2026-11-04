@@ -7532,6 +7532,17 @@
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Picture",
+      "title": "Insert picture",
+      "address": "Web address of the picture",
+      "address_hint": "The picture stays on the web and is shown from there.",
+      "description": "Description",
+      "invalid": "Enter a web address that starts with https://.",
+      "insert": "Insert"
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",

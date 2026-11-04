@@ -7532,6 +7532,17 @@
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Imagen",
+      "title": "Insertar imagen",
+      "address": "Dirección web de la imagen",
+      "address_hint": "La imagen se queda en la web y se muestra desde allí.",
+      "description": "Descripción",
+      "invalid": "Introduce una dirección web que empiece por https://.",
+      "insert": "Insertar"
+    }
+  },
   "desktop_updates": {
     "title": "Actualizaciones",
     "version_label": "Bulwark {version}",

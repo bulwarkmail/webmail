@@ -7533,6 +7533,17 @@
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "תמונה",
+      "title": "הוספת תמונה",
+      "address": "כתובת האינטרנט של התמונה",
+      "address_hint": "התמונה נשארת ברשת ומוצגת משם.",
+      "description": "תיאור",
+      "invalid": "יש להזין כתובת אינטרנט שמתחילה ב-https://.",
+      "insert": "הוספה"
+    }
+  },
   "desktop_updates": {
     "title": "עדכונים",
     "version_label": "Bulwark {version}",

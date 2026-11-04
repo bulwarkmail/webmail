@@ -7532,6 +7532,17 @@
     "trouble_cors": "Jūsu pasta serverim jāatļauj pieteikšanās no šīs vietnes. Ja pieteikties neizdodas, palūdziet pasta servera uzturētājam to atļaut.",
     "provider_unsupported": "{provider} nepiedāvā JMAP, veidu, kā Bulwark sazinās ar pasta serveriem, tāpēc Bulwark tam vēl nevar pieslēgties tieši."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Attēls",
+      "title": "Ievietot attēlu",
+      "address": "Attēla tīmekļa adrese",
+      "address_hint": "Attēls paliek tīmeklī un tiek rādīts no turienes.",
+      "description": "Apraksts",
+      "invalid": "Ievadiet tīmekļa adresi, kas sākas ar https://.",
+      "insert": "Ievietot"
+    }
+  },
   "desktop_updates": {
     "title": "Atjauninājumi",
     "version_label": "Bulwark {version}",

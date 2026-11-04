@@ -7532,6 +7532,17 @@
     "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Bilde",
+      "title": "Sett inn bilde",
+      "address": "Nettadressen til bildet",
+      "address_hint": "Bildet blir liggende på nettet og vises derfra.",
+      "description": "Beskrivelse",
+      "invalid": "Skriv inn en nettadresse som begynner med https://.",
+      "insert": "Sett inn"
+    }
+  },
   "desktop_updates": {
     "title": "Oppdateringer",
     "version_label": "Bulwark {version}",

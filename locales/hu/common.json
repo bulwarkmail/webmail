@@ -7532,6 +7532,17 @@
     "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Kép",
+      "title": "Kép beszúrása",
+      "address": "A kép webcíme",
+      "address_hint": "A kép a weben marad, és onnan jelenik meg.",
+      "description": "Leírás",
+      "invalid": "Adjon meg egy https:// kezdetű webcímet.",
+      "insert": "Beszúrás"
+    }
+  },
   "desktop_updates": {
     "title": "Frissítések",
     "version_label": "Bulwark {version}",

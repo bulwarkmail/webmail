@@ -7532,6 +7532,17 @@
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Afbeelding",
+      "title": "Afbeelding invoegen",
+      "address": "Webadres van de afbeelding",
+      "address_hint": "De afbeelding blijft op het web en wordt van daar getoond.",
+      "description": "Beschrijving",
+      "invalid": "Voer een webadres in dat begint met https://.",
+      "insert": "Invoegen"
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",

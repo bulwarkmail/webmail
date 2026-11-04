@@ -7532,6 +7532,17 @@
     "trouble_cors": "Sinu meiliserver peab lubama sisselogimist sellelt veebisaidilt. Kui sisselogimine ei õnnestu, palu meiliserveri haldajal see lubada.",
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Pilt",
+      "title": "Lisa pilt",
+      "address": "Pildi veebiaadress",
+      "address_hint": "Pilt jääb veebi ja seda näidatakse sealt.",
+      "description": "Kirjeldus",
+      "invalid": "Sisestage veebiaadress, mis algab https://.",
+      "insert": "Lisa"
+    }
+  },
   "desktop_updates": {
     "title": "Uuendused",
     "version_label": "Bulwark {version}",

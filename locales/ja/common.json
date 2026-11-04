@@ -7532,6 +7532,17 @@
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "画像",
+      "title": "画像を挿入",
+      "address": "画像のウェブアドレス",
+      "address_hint": "画像はウェブ上に置かれたまま、そこから表示されます。",
+      "description": "説明",
+      "invalid": "https:// で始まるウェブアドレスを入力してください。",
+      "insert": "挿入"
+    }
+  },
   "desktop_updates": {
     "title": "アップデート",
     "version_label": "Bulwark {version}",

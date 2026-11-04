@@ -7532,6 +7532,17 @@
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Bild",
+      "title": "Bild einfügen",
+      "address": "Webadresse des Bildes",
+      "address_hint": "Das Bild bleibt im Web und wird von dort angezeigt.",
+      "description": "Beschreibung",
+      "invalid": "Geben Sie eine Webadresse ein, die mit https:// beginnt.",
+      "insert": "Einfügen"
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",

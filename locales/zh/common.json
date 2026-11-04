@@ -7532,6 +7532,17 @@
     "trouble_cors": "你的邮件服务器需要允许从这个网站登录。如果登录失败，请让管理邮件服务器的人允许。",
     "provider_unsupported": "{provider} 不支持 JMAP（Bulwark 与邮件服务器通信的方式），所以 Bulwark 暂时无法直接连接它。"
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "图片",
+      "title": "插入图片",
+      "address": "图片的网址",
+      "address_hint": "图片保留在网上，并从那里显示。",
+      "description": "说明",
+      "invalid": "请输入以 https:// 开头的网址。",
+      "insert": "插入"
+    }
+  },
   "desktop_updates": {
     "title": "更新",
     "version_label": "Bulwark {version}",

@@ -7544,6 +7544,17 @@
     "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."
   },
+  "ux_p3_settings": {
+    "picture": {
+      "button": "Hình ảnh",
+      "title": "Chèn hình ảnh",
+      "address": "Địa chỉ web của hình ảnh",
+      "address_hint": "Hình ảnh vẫn ở trên web và được hiển thị từ đó.",
+      "description": "Mô tả",
+      "invalid": "Nhập địa chỉ web bắt đầu bằng https://.",
+      "insert": "Chèn"
+    }
+  },
   "desktop_updates": {
     "title": "Cập nhật",
     "version_label": "Bulwark {version}",
