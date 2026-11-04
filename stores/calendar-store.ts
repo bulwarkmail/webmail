@@ -156,6 +156,20 @@ export function resolveMutationTarget(
       isOccurrence: false,
     };
   }
+  // Not in the store (any more): a login's namespaced id still says which
+  // login it belongs to, and that login's server wants the raw id (pim-12).
+  const sep = id.indexOf(CROSS_ACCOUNT_ID_DELIMITER);
+  if (sep > 0) {
+    const raw = id.slice(sep + CROSS_ACCOUNT_ID_DELIMITER.length);
+    // `<accountId>:<id>`: an event of a calendar shared into that login.
+    const shared = raw.indexOf(':');
+    return {
+      realId: shared > 0 ? raw.slice(shared + 1) : raw,
+      ...(shared > 0 ? { targetAccountId: raw.slice(0, shared) } : {}),
+      localAccountId: id.slice(0, sep),
+      isOccurrence: false,
+    };
+  }
   return { realId: id, isOccurrence: false };
 }
 
@@ -590,6 +604,23 @@ const refreshInFlight = new Map<string, Promise<void>>();
 // Subscriptions whose first fetch is running inside addICalSubscription.
 const subscriptionsBeingAdded = new Set<string>();
 
+/**
+ * A calendar one login sees as shared that another signed-in login owns
+ * shows once, under its owner (pim-12): listed twice, each of its events
+ * showed twice in the grid.
+ */
+function withoutOwnedElsewhere(calendars: Calendar[]): Calendar[] {
+  const owned = new Set(calendars
+    .filter((c) => !c.isShared && c.accountId)
+    .map((c) => `${c.accountId}|${c.accountName ?? ''}|${c.originalId ?? c.id}`));
+  return calendars.filter((c) => !c.isShared || !owned.has(`${c.accountId}|${c.accountName ?? ''}|${c.originalId ?? c.id}`));
+}
+
+// Each calendar list load gets a number: only the latest one's answer is
+// kept, so a one-login load that answers after the merged one (pim-12)
+// doesn't put plain ids back.
+let calendarsLoadSeq = 0;
+
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda' | 'tasks';
 
 const CALENDAR_VIEW_MODES: CalendarViewMode[] = ['month', 'week', 'day', 'agenda', 'tasks'];
@@ -839,6 +870,15 @@ interface CalendarStore {
   setSupported: (supported: boolean) => void;
   fetchCalendars: (client: IJMAPClient) => Promise<void>;
   fetchEvents: (client: IJMAPClient, start: string, end: string, options?: FetchEventsOptions) => Promise<void>;
+  /**
+   * The logins the calendar shows while it shows several (Pro shell, or two
+   * signed-in logins: pim-12); null for the active login only. While set,
+   * fetchCalendars and fetchEvents load all of them, so a push or a refresh
+   * that names one client keeps the merged list.
+   */
+  accountClients: CalendarAccountClient[] | null;
+  accountClientsActiveId: string | null;
+  setAccountClients: (accounts: CalendarAccountClient[] | null, activeLocalAccountId?: string | null) => void;
   /** `activeLocalAccountId`: the login whose calendars un-namespaced selected ids name. */
   fetchAllAccountsCalendars: (accounts: CalendarAccountClient[], activeLocalAccountId?: string | null) => Promise<void>;
   fetchAllAccountsEvents: (accounts: CalendarAccountClient[], start: string, end: string, options?: FetchEventsOptions) => Promise<void>;
@@ -881,6 +921,13 @@ interface CalendarStore {
   setSelectedDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
+  /**
+   * Task lists the tasks view leaves out. The tasks view filters by these,
+   * not by the grid's calendar selection, so a task-only list (which the
+   * grid never shows) has its tasks listed (pim-1).
+   */
+  hiddenTaskListIds: string[];
+  toggleTaskListVisibility: (calendarId: string) => void;
   setSelectedEventId: (id: string | null) => void;
   clearState: () => void;
 
@@ -912,6 +959,9 @@ const initialState = {
   selectedCalendarIds: [] as string[],
   calendarSelectionChosen: false,
   knownCalendarIds: null as string[] | null,
+  hiddenTaskListIds: [] as string[],
+  accountClients: null as CalendarAccountClient[] | null,
+  accountClientsActiveId: null as string | null,
   selectedEventId: null as string | null,
   isLoading: false,
   isLoadingEvents: false,
@@ -935,6 +985,10 @@ export const useCalendarStore = create<CalendarStore>()(
       viewMode: 'month' as CalendarViewMode,
 
       setSupported: (supported) => set({ supportsCalendar: supported }),
+
+      setAccountClients: (accounts, activeLocalAccountId) => {
+        set({ accountClients: accounts && accounts.length > 0 ? accounts : null, accountClientsActiveId: activeLocalAccountId ?? null });
+      },
 
       fetchParticipantIdentities: async (client) => {
         if (!client.getParticipantIdentities) return;
@@ -960,7 +1014,10 @@ export const useCalendarStore = create<CalendarStore>()(
       // (lib/store-epoch.ts): a slow answer for account A must not become
       // account B's calendar list or month view.
       fetchCalendars: async (client) => {
+        const merged = get().accountClients;
+        if (merged) return get().fetchAllAccountsCalendars(merged, get().accountClientsActiveId);
         const epoch = currentStoreEpoch();
+        const seq = ++calendarsLoadSeq;
         set({ isLoading: true, error: null });
         // Identities are independent of the calendar list; load them
         // alongside without blocking the grid.
@@ -969,7 +1026,7 @@ export const useCalendarStore = create<CalendarStore>()(
           // Throws when the primary account fails, so a failed fetch leaves the
           // list and the selection as they were.
           const { calendars: fetched, failedAccountIds } = await client.getAllCalendarsWithFailures();
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== calendarsLoadSeq) return;
           const calendars = sortCalendars(fetched);
           // Default the visible selection to event calendars only - tasks-only
           // calendars stay out of the event grid.
@@ -1002,6 +1059,8 @@ export const useCalendarStore = create<CalendarStore>()(
       },
 
       fetchEvents: async (client, start, end, options) => {
+        const merged = get().accountClients;
+        if (merged) return get().fetchAllAccountsEvents(merged, start, end, options);
         const epoch = currentStoreEpoch();
         refetchVisibleRange = () => get().fetchEvents(client, start, end, { silent: true });
         const seq = ++rangeLoadSeq;
@@ -1049,6 +1108,7 @@ export const useCalendarStore = create<CalendarStore>()(
 
       fetchAllAccountsCalendars: async (accounts, activeLocalAccountId) => {
         const epoch = currentStoreEpoch();
+        const seq = ++calendarsLoadSeq;
         set({ isLoading: true, error: null });
         try {
           // Id prefixes of the calendars that could not be loaded this time.
@@ -1067,9 +1127,10 @@ export const useCalendarStore = create<CalendarStore>()(
               }
             }),
           );
-          if (currentStoreEpoch() !== epoch) return;
-          const calendars = sortCalendars(results.flat());
-          const defaultSelected = calendars.map(c => c.id);
+          if (currentStoreEpoch() !== epoch || seq !== calendarsLoadSeq) return;
+          const calendars = sortCalendars(withoutOwnedElsewhere(results.flat()));
+          // As for one account: tasks-only calendars stay out of the grid.
+          const defaultSelected = calendars.filter(c => !c.isTasksOnly).map(c => c.id);
           set({
             calendars,
             isLoading: false,
@@ -1177,7 +1238,9 @@ export const useCalendarStore = create<CalendarStore>()(
             selectedCalendarIds: get().selectedCalendarIds,
           });
           const created = await client.createCalendarEvent(cleanEvent, sendSchedulingMessages, targetAccountId);
-          const mappedCreated = mapServerEventToStoreEvent(created, get().calendars, targetAccountId);
+          // Raw calendar ids repeat across logins: map onto the login's own (pim-12).
+          const loginCalendars = localAccountId ? get().calendars.filter((c) => c.localAccountId === localAccountId) : get().calendars;
+          const mappedCreated = mapServerEventToStoreEvent(created, loginCalendars, targetAccountId);
           const selectedCalendarIds = get().selectedCalendarIds;
           const createdCalendarIds = Object.keys(mappedCreated.calendarIds || {});
           const isVisible = createdCalendarIds.some((calendarId) => selectedCalendarIds.includes(calendarId));
@@ -1738,6 +1801,14 @@ export const useCalendarStore = create<CalendarStore>()(
         void calendarHooks.onCalendarVisibilityToggle.emit({ calendarId, visible });
       },
 
+      toggleTaskListVisibility: (calendarId) => {
+        set((state) => ({
+          hiddenTaskListIds: state.hiddenTaskListIds.includes(calendarId)
+            ? state.hiddenTaskListIds.filter((id) => id !== calendarId)
+            : [...state.hiddenTaskListIds, calendarId],
+        }));
+      },
+
       setSelectedEventId: (id) => set({ selectedEventId: id }),
 
       // iCal subscriptions
@@ -2143,6 +2214,7 @@ export const useCalendarStore = create<CalendarStore>()(
         selectedCalendarIds: state.selectedCalendarIds,
         calendarSelectionChosen: state.calendarSelectionChosen,
         knownCalendarIds: state.knownCalendarIds,
+        hiddenTaskListIds: state.hiddenTaskListIds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
         deletedSubscriptionIds: state.deletedSubscriptionIds,

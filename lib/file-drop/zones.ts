@@ -15,7 +15,8 @@ import { kindForFile, type HandoffKind } from '@/lib/launch-handoff';
 
 export type FileDropZoneId = 'attach-here' | 'insert-inline' | 'new-message' | 'upload' | 'calendar' | 'contacts' | 'open-eml' | 'import-eml';
 
-export type DroppedKind = Exclude<HandoffKind, 'compose'> | 'image' | 'other';
+/** `csv`: a contacts import on the Contacts screen (Outlook, Google), anything else elsewhere. */
+export type DroppedKind = Exclude<HandoffKind, 'compose'> | 'image' | 'csv' | 'other';
 
 export interface DropFiles {
   /** Unknown during a drag in some browsers (Safari gives no items). */
@@ -39,6 +40,8 @@ export interface DropPlace {
   filesFolder: string | null;
   calendar: boolean;
   contacts: boolean;
+  /** The Contacts screen is open: a CSV dropped there is a contacts import. */
+  contactsScreen?: boolean;
   /** On the mail screen, a real folder in view that takes new messages. */
   importFolder: string | null;
   /** No connection to the mail server. */
@@ -71,6 +74,8 @@ export const MAX_ZONES = 4;
 /** What a mail can show in its text. Not SVG: it can carry script, and mail clients drop it. */
 const INLINE_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
 const INLINE_IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp']);
+/** Windows names .csv after Excel when Excel is installed. */
+const CSV_TYPES = new Set(['text/csv', 'application/csv', 'text/comma-separated-values', 'application/vnd.ms-excel']);
 
 function dropped(kind: HandoffKind | null): DroppedKind {
   return kind && kind !== 'compose' ? kind : 'other';
@@ -78,6 +83,7 @@ function dropped(kind: HandoffKind | null): DroppedKind {
 
 export function kindForType(type: string): DroppedKind {
   if (INLINE_IMAGE_TYPES.has(type.toLowerCase())) return 'image';
+  if (CSV_TYPES.has(type.toLowerCase())) return 'csv';
   return dropped(kindForFile({ name: '', type }));
 }
 
@@ -85,6 +91,7 @@ export function kindForName(file: { name: string; type?: string }): DroppedKind 
   const dot = file.name.lastIndexOf('.');
   const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : '';
   if (INLINE_IMAGE_TYPES.has((file.type ?? '').toLowerCase()) || INLINE_IMAGE_EXTENSIONS.has(extension)) return 'image';
+  if (extension === '.csv') return 'csv';
   return dropped(kindForFile(file));
 }
 
@@ -126,6 +133,7 @@ export function fileDropZones(files: DropFiles, place: DropPlace): FileDropZone[
     if (kind === 'eml' && place.importFolder) special.push(serverOnly(place, { id: 'import-eml', folder: place.importFolder }));
     if (kind === 'calendar' && one && place.calendar) special.push({ id: 'calendar' });
     if (kind === 'contacts' && one && place.contacts) special.push({ id: 'contacts' });
+    if (kind === 'csv' && one && place.contacts && place.contactsScreen) special.push({ id: 'contacts' });
   }
 
   const room = Math.max(0, MAX_ZONES - main.length);

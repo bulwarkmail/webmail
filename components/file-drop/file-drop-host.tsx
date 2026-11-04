@@ -74,6 +74,7 @@ function currentPlace(pathname: string, translate: (key: string) => string): { p
     filesFolder: filesDropTarget()?.folder ?? null,
     calendar: useCalendarStore.getState().supportsCalendar && features.isFeatureEnabled("calendarEnabled"),
     contacts: !!client?.supportsContacts?.() && features.isFeatureEnabled("contactsEnabled"),
+    contactsScreen: matchSurface(pathname)?.surface === "contacts",
     importFolder: folder?.name ?? null,
     offline: isOfflineNow(account?.serverUrl),
     keepsOffline: !!auth.activeAccountId && useOfflineStore.getState().enabled.includes(auth.activeAccountId),

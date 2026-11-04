@@ -15,12 +15,15 @@ import { freeBusyShareGroups } from '@/lib/free-busy-share';
  */
 export function FreeBusyShareSetting() {
   const t = useTranslations('free_busy_share');
+  const tUx = useTranslations('ux_pim_calendar');
   const client = useAuthStore((s) => s.client);
   const adminGroup = usePolicyStore((s) => s.policy.organisation?.calendars?.freeBusyGroup ?? '');
   const groups = useMemo(() => freeBusyShareGroups(client, adminGroup), [client, adminGroup]);
   if (!client?.supportsCalendars() || groups.length === 0) return null;
   return (
-    <SettingItem label={t('title')} description={t('description')}>
+    // The button names whom it shares with, which may be one person: the
+    // text doesn't say "group" (pim-26).
+    <SettingItem label={t('title')} description={tUx('freebusy_description')}>
       <FreeBusyShareButton />
     </SettingItem>
   );

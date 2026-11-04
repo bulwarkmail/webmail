@@ -164,6 +164,7 @@ export {
   IconMapPin as MapPin,
   IconMaximize as Maximize2,
   IconMenu2 as Menu,
+  IconArrowMerge as Merge,
   IconMessage as MessageSquare,
   IconMessages as MessagesSquare,
   IconMinimize as Minimize2,

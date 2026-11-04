@@ -40,29 +40,37 @@ beforeEach(() => {
 const row = (name: string) => screen.getAllByTestId('calendar-settings-item').find((el) => el.dataset.calendarName === name)!;
 const buttonIn = (name: string, label: string) =>
   Array.from(row(name).querySelectorAll('button')).find((b) => b.getAttribute('aria-label') === label)!;
+// Up and down left the row for its ⋮ menu (pim-20): the drag handle stays.
+async function menuItemFor(name: string, label: string) {
+  fireEvent.click(buttonIn(name, 'row_actions'));
+  const menu = await screen.findByRole('menu');
+  return Array.from(menu.querySelectorAll('[role="menuitem"]')).find((el) => el.textContent === label) as HTMLElement | undefined;
+}
 
 describe('Calendar order in settings', () => {
   it('moves a calendar up past its neighbour', async () => {
     render(<CalendarManagementSettings />);
-    fireEvent.click(buttonIn('Holidays', 'move_up'));
+    fireEvent.click((await menuItemFor('Holidays', 'move_up'))!);
     await waitFor(() => expect(reorderCalendars).toHaveBeenCalledWith(client, ['work', 'holidays', 'home']));
   });
 
   it('moves a calendar down past its neighbour', async () => {
     render(<CalendarManagementSettings />);
-    fireEvent.click(buttonIn('Work', 'move_down'));
+    fireEvent.click((await menuItemFor('Work', 'move_down'))!);
     await waitFor(() => expect(reorderCalendars).toHaveBeenCalledWith(client, ['home', 'work', 'holidays']));
   });
 
-  it('disables moving the first calendar up and the last one down', () => {
+  it('disables moving the first calendar up and the last one down', async () => {
+    const { unmount } = render(<CalendarManagementSettings />);
+    expect(await menuItemFor('Work', 'move_up')).toBeDisabled();
+    unmount();
     render(<CalendarManagementSettings />);
-    expect(buttonIn('Work', 'move_up')).toBeDisabled();
-    expect(buttonIn('Holidays', 'move_down')).toBeDisabled();
+    expect(await menuItemFor('Holidays', 'move_down')).toBeDisabled();
   });
 
-  it('offers no reordering for a calendar shared with the user', () => {
+  it('offers no reordering for a calendar shared with the user', async () => {
     render(<CalendarManagementSettings />);
-    expect(buttonIn('Team', 'move_up')).toBeUndefined();
+    expect(await menuItemFor('Team', 'move_up')).toBeUndefined();
     expect(row('Team')).not.toHaveAttribute('draggable', 'true');
   });
 

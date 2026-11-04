@@ -19,7 +19,7 @@ const calendars = [{ id: 'cal', name: 'Privat', color: '#123456' }] as unknown a
 describe('TaskListView due dates', () => {
   it('writes the due date in the app language', () => {
     const task = { id: 't', title: 'Steuer', calendarIds: { cal: true }, progress: 'needs-action', priority: 0, due: '2031-10-30', showWithoutTime: true } as unknown as CalendarTask;
-    render(<TaskListView tasks={[task]} calendars={calendars} selectedCalendarIds={['cal']} filter="all" onSelectTask={() => {}} onToggleComplete={() => {}} />);
+    render(<TaskListView tasks={[task]} calendars={calendars} filter="all" onSelectTask={() => {}} onToggleComplete={() => {}} />);
     expect(screen.getByText('30. Okt.')).toBeInTheDocument();
     expect(screen.queryByText('Oct 30')).toBeNull();
   });
