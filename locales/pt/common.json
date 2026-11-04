@@ -7650,6 +7650,112 @@
     "signout_changed": "Ainda não anexados nem guardados, e eliminados agora: {names}.",
     "signout_held": "Ainda abertos noutro programa, por isso só são eliminados depois de os fechar lá: {names}."
   },
+  "files_sync": {
+    "title": "Arquivos neste computador",
+    "drive": {
+      "title": "Unidade Arquivos",
+      "label": "Mostrar Arquivos como uma unidade",
+      "description": "Seus Arquivos aparecem no Explorador de Arquivos como uma unidade. Um arquivo é baixado quando você o abre.",
+      "unsupported": "Requer o Windows 10 versão 1809 ou posterior.",
+      "root_name": "Unidade Arquivos",
+      "letter_label": "Letra da unidade",
+      "letter_description": "Dá à unidade uma letra própria no Explorador de Arquivos.",
+      "letter_none": "Sem letra"
+    },
+    "folders": {
+      "title": "Pastas sincronizadas",
+      "description": "Uma pasta neste computador e uma pasta em Arquivos ficam iguais, nos dois sentidos.",
+      "empty": "Nenhuma pasta está sincronizada ainda.",
+      "forced_off": "Sua organização desativou a sincronização de pastas. Os arquivos nelas continuam neste computador.",
+      "add": "Adicionar pasta…",
+      "loading": "Carregando suas pastas…",
+      "load_failed": "Não foi possível carregar suas pastas em Arquivos. Tente novamente.",
+      "pick_title": "Qual pasta em Arquivos?",
+      "pick_confirm": "Escolher pasta neste computador…",
+      "paired_with": "Com {folder} em Arquivos",
+      "pause": "Pausar",
+      "resume": "Retomar",
+      "remove": "Remover…",
+      "remove_title": "Parar de sincronizar esta pasta?",
+      "remove_message": "Os arquivos neste computador ficam onde estão, assim como os de Arquivos. As alterações deixam de passar de um para o outro.",
+      "remove_confirm": "Parar de sincronizar",
+      "add_failed": {
+        "overlap": "Esta pasta está dentro de uma pasta sincronizada, contém uma ou é uma pasta do sistema. Escolha outra.",
+        "denied": "O aplicativo não pode usar esta pasta. Escolha outra.",
+        "policy": "Sua organização não permite isso.",
+        "failed": "Não foi possível adicionar a pasta. Tente novamente."
+      }
+    },
+    "status": {
+      "starting": "Iniciando…",
+      "idle": "Atualizado. Última sincronização {time}",
+      "idle_never": "Atualizado",
+      "syncing": "Sincronizando: {done} concluídos, {pending} restantes",
+      "paused": "Pausado",
+      "offline": "Offline. {count, plural, =0 {As alterações aguardam o servidor} one {# alteração aguarda o servidor} other {# alterações aguardam o servidor}}",
+      "error": "Parado: {reason}",
+      "confirm_delete": "Pausado até você responder à pergunta abaixo",
+      "blocked": "Desativado pela sua organização"
+    },
+    "mass_delete": {
+      "title": "Excluir {count, plural, one {# item} other {# itens}}?",
+      "local": "{count, plural, one {# item foi excluído} other {# itens foram excluídos}} de {folder} neste computador. {count, plural, one {Excluí-lo} other {Excluí-los}} também em Arquivos?",
+      "remote": "{count, plural, one {# item foi excluído} other {# itens foram excluídos}} de {folder} em Arquivos. {count, plural, one {Excluí-lo} other {Excluí-los}} também neste computador?",
+      "allow": "{count, plural, one {Excluir} other {Excluir todos}}",
+      "restore": "{count, plural, one {Restaurar} other {Restaurar todos}}",
+      "later": "Decidir depois"
+    },
+    "activity": {
+      "title": "Atividade recente",
+      "empty": "Nada aconteceu ainda.",
+      "clear": "Limpar",
+      "to_files": "Para Arquivos",
+      "to_computer": "Para este computador",
+      "mark_conflict": "Conflito",
+      "mark_error": "Erro",
+      "mark_question": "Precisa da sua resposta",
+      "uploaded": "{path} enviado",
+      "downloaded": "{path} baixado",
+      "folder-created": "Pasta {path} criada",
+      "renamed": "{detail} renomeado para {path}",
+      "moved": "{detail} movido para {path}",
+      "deleted": "{path} excluído",
+      "trashed": "{path} movido para a lixeira",
+      "conflict": "{path} foi alterado nos dois lugares. A outra versão foi mantida como {detail}",
+      "renamed-for-disk": "{path} se chama {detail} neste computador, porque o nome não é permitido aqui",
+      "too-large": "{path} é maior do que Arquivos permite ({detail}). Fica só neste computador",
+      "waiting": "{path} está aguardando o servidor",
+      "mass-delete": "Pausado antes de excluir muitos itens",
+      "error": "Não foi possível sincronizar {path}"
+    },
+    "errors": {
+      "offline": "Não é possível acessar o servidor",
+      "server_refused": "O servidor recusou a alteração",
+      "too_large": "O arquivo é grande demais para Arquivos",
+      "name_invalid": "O nome não é permitido",
+      "disk_full": "O disco está cheio",
+      "denied": "Acesso negado",
+      "busy": "Outro programa está usando",
+      "quota": "Seu armazenamento em Arquivos está cheio",
+      "not_found": "Não existe mais",
+      "policy": "Sua organização não permite isso",
+      "failed": "Algo deu errado"
+    },
+    "item": {
+      "label": "Neste computador",
+      "synced": "Sincronizado",
+      "syncing": "Sincronizando",
+      "pending": "Aguardando sincronização",
+      "error": "Falha na sincronização",
+      "online-only": "Só em Arquivos, baixado ao abrir"
+    },
+    "show_in": {
+      "explorer": "Mostrar no Explorador de Arquivos",
+      "finder": "Mostrar no Finder",
+      "file_manager": "Mostrar no gerenciador de arquivos",
+      "failed": "Não foi possível abrir a pasta."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Escrita rápida",
     "menu": "Escrita rápida",

@@ -7650,6 +7650,112 @@
     "signout_changed": "尚未附加或保存,现在将删除:{names}。",
     "signout_held": "仍在其他程序中打开,因此要在那里关闭后才会删除:{names}。"
   },
+  "files_sync": {
+    "title": "此电脑上的文件",
+    "drive": {
+      "title": "文件驱动器",
+      "label": "将文件显示为驱动器",
+      "description": "你的文件会像驱动器一样显示在文件资源管理器中。文件在打开时才会下载。",
+      "unsupported": "需要 Windows 10 版本 1809 或更高版本。",
+      "root_name": "文件驱动器",
+      "letter_label": "驱动器号",
+      "letter_description": "在文件资源管理器中为驱动器分配专用的驱动器号。",
+      "letter_none": "无驱动器号"
+    },
+    "folders": {
+      "title": "同步的文件夹",
+      "description": "此电脑上的一个文件夹和文件中的一个文件夹会双向保持一致。",
+      "empty": "还没有同步任何文件夹。",
+      "forced_off": "你的组织已关闭文件夹同步。其中的文件会保留在此电脑上。",
+      "add": "添加文件夹…",
+      "loading": "正在加载你的文件夹…",
+      "load_failed": "无法加载你在文件中的文件夹。请重试。",
+      "pick_title": "与文件中的哪个文件夹同步？",
+      "pick_confirm": "选择此电脑上的文件夹…",
+      "paired_with": "与文件中的 {folder} 同步",
+      "pause": "暂停",
+      "resume": "继续",
+      "remove": "移除…",
+      "remove_title": "停止同步此文件夹？",
+      "remove_message": "此电脑上的文件和文件中的文件都会保持原样。更改将不再在两者之间同步。",
+      "remove_confirm": "停止同步",
+      "add_failed": {
+        "overlap": "此文件夹位于已同步的文件夹中、包含已同步的文件夹，或者是系统文件夹。请选择其他文件夹。",
+        "denied": "应用无法使用此文件夹。请选择其他文件夹。",
+        "policy": "你的组织不允许此操作。",
+        "failed": "无法添加文件夹。请重试。"
+      }
+    },
+    "status": {
+      "starting": "正在启动…",
+      "idle": "已是最新。上次同步于 {time}",
+      "idle_never": "已是最新",
+      "syncing": "正在同步：已完成 {done} 个，还剩 {pending} 个",
+      "paused": "已暂停",
+      "offline": "离线。{count, plural, =0 {更改正在等待服务器} other {# 项更改正在等待服务器}}",
+      "error": "已停止：{reason}",
+      "confirm_delete": "已暂停，请先回答下面的问题",
+      "blocked": "已被你的组织关闭"
+    },
+    "mass_delete": {
+      "title": "删除 {count, plural, other {# 个项目}}？",
+      "local": "已从此电脑上的 {folder} 中删除 {count, plural, other {# 个项目}}。也要在文件中删除吗？",
+      "remote": "已从文件中的 {folder} 删除 {count, plural, other {# 个项目}}。也要在此电脑上删除吗？",
+      "allow": "{count, plural, other {删除}}",
+      "restore": "{count, plural, other {恢复}}",
+      "later": "稍后决定"
+    },
+    "activity": {
+      "title": "最近活动",
+      "empty": "还没有任何活动。",
+      "clear": "清除",
+      "to_files": "到文件",
+      "to_computer": "到此电脑",
+      "mark_conflict": "冲突",
+      "mark_error": "错误",
+      "mark_question": "需要你回答",
+      "uploaded": "已上传 {path}",
+      "downloaded": "已下载 {path}",
+      "folder-created": "已创建文件夹 {path}",
+      "renamed": "已将 {detail} 重命名为 {path}",
+      "moved": "已将 {detail} 移动到 {path}",
+      "deleted": "已删除 {path}",
+      "trashed": "已将 {path} 移到回收站",
+      "conflict": "{path} 在两处都被更改。另一个版本已保留为 {detail}",
+      "renamed-for-disk": "{path} 的名称在此处不允许使用，因此在此电脑上名为 {detail}",
+      "too-large": "{path} 超出了文件允许的大小（{detail}）。它只保留在此电脑上",
+      "waiting": "{path} 正在等待服务器",
+      "mass-delete": "在删除大量项目前已暂停",
+      "error": "无法同步 {path}"
+    },
+    "errors": {
+      "offline": "无法连接到服务器",
+      "server_refused": "服务器拒绝了此更改",
+      "too_large": "该文件超出了文件允许的大小",
+      "name_invalid": "不允许使用此名称",
+      "disk_full": "磁盘已满",
+      "denied": "不允许",
+      "busy": "另一个程序正在使用它",
+      "quota": "你在文件中的存储空间已满",
+      "not_found": "它已不存在",
+      "policy": "你的组织不允许此操作",
+      "failed": "出了点问题"
+    },
+    "item": {
+      "label": "在此电脑上",
+      "synced": "已同步",
+      "syncing": "正在同步",
+      "pending": "等待同步",
+      "error": "无法同步",
+      "online-only": "仅在文件中，打开时下载"
+    },
+    "show_in": {
+      "explorer": "在文件资源管理器中显示",
+      "finder": "在 Finder 中显示",
+      "file_manager": "在文件管理器中显示",
+      "failed": "无法打开文件夹。"
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰写",
     "menu": "快速撰写",

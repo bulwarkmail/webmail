@@ -7662,6 +7662,112 @@
     "signout_changed": "Chưa đính kèm hoặc lưu, và bị xóa ngay: {names}.",
     "signout_held": "Vẫn đang mở trong chương trình khác nên chỉ bị xóa sau khi bạn đóng ở đó: {names}."
   },
+  "files_sync": {
+    "title": "Tệp trên máy tính này",
+    "drive": {
+      "title": "Ổ đĩa Tệp",
+      "label": "Hiển thị Tệp dưới dạng ổ đĩa",
+      "description": "Tệp của bạn hiển thị trong Trình khám phá Tệp như một ổ đĩa. Mỗi tệp chỉ được tải xuống khi bạn mở nó.",
+      "unsupported": "Cần Windows 10 phiên bản 1809 trở lên.",
+      "root_name": "Ổ đĩa Tệp",
+      "letter_label": "Ký tự ổ đĩa",
+      "letter_description": "Gán cho ổ đĩa một ký tự riêng trong Trình khám phá Tệp.",
+      "letter_none": "Không có ký tự"
+    },
+    "folders": {
+      "title": "Thư mục đồng bộ",
+      "description": "Một thư mục trên máy tính này và một thư mục trong Tệp được giữ giống nhau, theo cả hai chiều.",
+      "empty": "Chưa có thư mục nào được đồng bộ.",
+      "forced_off": "Tổ chức của bạn đã tắt đồng bộ thư mục. Các tệp trong đó vẫn ở trên máy tính này.",
+      "add": "Thêm thư mục…",
+      "loading": "Đang tải thư mục của bạn…",
+      "load_failed": "Không tải được thư mục của bạn trong Tệp. Hãy thử lại.",
+      "pick_title": "Thư mục nào trong Tệp?",
+      "pick_confirm": "Chọn thư mục trên máy tính này…",
+      "paired_with": "Với {folder} trong Tệp",
+      "pause": "Tạm dừng",
+      "resume": "Tiếp tục",
+      "remove": "Gỡ bỏ…",
+      "remove_title": "Ngừng đồng bộ thư mục này?",
+      "remove_message": "Các tệp trên máy tính này vẫn ở nguyên chỗ cũ, các tệp trong Tệp cũng vậy. Thay đổi sẽ không còn được chuyển từ bên này sang bên kia.",
+      "remove_confirm": "Ngừng đồng bộ",
+      "add_failed": {
+        "overlap": "Thư mục này nằm trong một thư mục đồng bộ, chứa một thư mục đồng bộ, hoặc là thư mục hệ thống. Hãy chọn thư mục khác.",
+        "denied": "Ứng dụng không thể dùng thư mục này. Hãy chọn thư mục khác.",
+        "policy": "Tổ chức của bạn không cho phép việc này.",
+        "failed": "Không thêm được thư mục. Hãy thử lại."
+      }
+    },
+    "status": {
+      "starting": "Đang khởi động…",
+      "idle": "Đã cập nhật. Đồng bộ lần cuối {time}",
+      "idle_never": "Đã cập nhật",
+      "syncing": "Đang đồng bộ: xong {done}, còn {pending}",
+      "paused": "Đã tạm dừng",
+      "offline": "Ngoại tuyến. {count, plural, =0 {Các thay đổi đang chờ máy chủ} other {# thay đổi đang chờ máy chủ}}",
+      "error": "Đã dừng: {reason}",
+      "confirm_delete": "Tạm dừng cho đến khi bạn trả lời câu hỏi bên dưới",
+      "blocked": "Đã bị tổ chức của bạn tắt"
+    },
+    "mass_delete": {
+      "title": "Xóa {count, plural, other {# mục}}?",
+      "local": "{count, plural, other {# mục}} đã bị xóa khỏi {folder} trên máy tính này. Cũng xóa chúng trong Tệp?",
+      "remote": "{count, plural, other {# mục}} đã bị xóa khỏi {folder} trong Tệp. Cũng xóa chúng trên máy tính này?",
+      "allow": "{count, plural, other {Xóa}}",
+      "restore": "{count, plural, other {Khôi phục}}",
+      "later": "Quyết định sau"
+    },
+    "activity": {
+      "title": "Hoạt động gần đây",
+      "empty": "Chưa có gì xảy ra.",
+      "clear": "Xóa danh sách",
+      "to_files": "Đến Tệp",
+      "to_computer": "Đến máy tính này",
+      "mark_conflict": "Xung đột",
+      "mark_error": "Lỗi",
+      "mark_question": "Cần bạn trả lời",
+      "uploaded": "Đã tải lên {path}",
+      "downloaded": "Đã tải xuống {path}",
+      "folder-created": "Đã tạo thư mục {path}",
+      "renamed": "Đã đổi tên {detail} thành {path}",
+      "moved": "Đã di chuyển {detail} đến {path}",
+      "deleted": "Đã xóa {path}",
+      "trashed": "Đã chuyển {path} vào thùng rác",
+      "conflict": "{path} đã bị thay đổi ở cả hai nơi. Phiên bản kia được giữ với tên {detail}",
+      "renamed-for-disk": "{path} có tên {detail} trên máy tính này, vì tên gốc không được phép ở đây",
+      "too-large": "{path} lớn hơn mức Tệp cho phép ({detail}). Tệp này chỉ ở trên máy tính này",
+      "waiting": "{path} đang chờ máy chủ",
+      "mass-delete": "Đã tạm dừng trước khi xóa nhiều mục",
+      "error": "Không đồng bộ được {path}"
+    },
+    "errors": {
+      "offline": "Không kết nối được máy chủ",
+      "server_refused": "Máy chủ đã từ chối thay đổi",
+      "too_large": "Tệp này lớn hơn mức Tệp cho phép",
+      "name_invalid": "Tên này không được phép",
+      "disk_full": "Ổ đĩa đã đầy",
+      "denied": "Không được phép",
+      "busy": "Một chương trình khác đang dùng nó",
+      "quota": "Dung lượng lưu trữ của bạn trong Tệp đã đầy",
+      "not_found": "Không còn ở đó nữa",
+      "policy": "Tổ chức của bạn không cho phép việc này",
+      "failed": "Đã xảy ra lỗi"
+    },
+    "item": {
+      "label": "Trên máy tính này",
+      "synced": "Đã đồng bộ",
+      "syncing": "Đang đồng bộ",
+      "pending": "Đang chờ đồng bộ",
+      "error": "Không đồng bộ được",
+      "online-only": "Chỉ có trong Tệp, tải xuống khi mở"
+    },
+    "show_in": {
+      "explorer": "Hiển thị trong Trình khám phá Tệp",
+      "finder": "Hiển thị trong Finder",
+      "file_manager": "Hiển thị trong trình quản lý tệp",
+      "failed": "Không mở được thư mục."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",

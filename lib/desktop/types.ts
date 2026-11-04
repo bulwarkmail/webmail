@@ -190,7 +190,65 @@ export interface DesktopDialogsBridge {
     defaultId?: number;
     type?: 'none' | 'info' | 'warning' | 'question';
   }) => Promise<number>;
+  /**
+   * A short question in a window of the app's own, modal to this one and drawn like the
+   * in-page dialog (lib/desktop/dialog-window.ts). One at a time per page; the next waits.
+   * Absent on older shells.
+   */
+  show?: (request: DesktopDialogWindowRequest) => Promise<DesktopDialogWindowAnswer>;
+  /** Takes back a question asked with `show`, showing or waiting. */
+  cancel?: (id: string) => void;
 }
+
+/** Plain text throughout: the shell sets textContent only. */
+export interface DesktopDialogWindowRequest {
+  /** The page's own name for it, for `cancel`. */
+  id: string;
+  title: string;
+  /** The text under the title, in runs; `bold` runs are drawn bold. */
+  message?: { text: string; bold?: boolean }[];
+  /** "From the plugin …": who is asking, when it isn't the app. Drawn under the title. */
+  source?: string;
+  /** The warning sign of a destructive confirm. */
+  icon?: 'warning';
+  /** In the order they stand, start to end. At most four. */
+  buttons: { label: string; variant?: 'primary' | 'secondary' | 'destructive' }[];
+  /** The button Enter takes and the focus starts on. */
+  defaultIndex?: number;
+  /** The ⋮ menu at the top end: a plugin's options. */
+  menu?: { label: string; items: { id: string; label: string; destructive?: boolean }[] };
+  theme?: DesktopDialogWindowTheme;
+  lang?: string;
+  dir?: 'ltr' | 'rtl';
+}
+
+export interface DesktopDialogWindowTheme {
+  dark?: boolean;
+  /** #rrggbb[aa] or rgb(a)(); anything else is dropped by the shell. */
+  colours?: Partial<Record<DesktopDialogWindowColour, string>>;
+  font?: string;
+  fontSize?: number;
+  radius?: number;
+  radiusSmall?: number;
+}
+
+export type DesktopDialogWindowColour =
+  | 'background'
+  | 'foreground'
+  | 'muted'
+  | 'mutedForeground'
+  | 'border'
+  | 'input'
+  | 'primary'
+  | 'primaryForeground'
+  | 'destructive'
+  | 'destructiveForeground'
+  | 'accent'
+  | 'accentForeground'
+  | 'ring';
+
+/** A button by its index, a menu item by its id. Null: closed without an answer (Escape, Alt+F4, the page went). */
+export type DesktopDialogWindowAnswer = { button: number } | { menu: string } | null;
 
 export interface DesktopClipboardBridge {
   /** Puts a file on the clipboard, for pasting into a folder. False when that didn't work. */
@@ -878,6 +936,223 @@ export interface DesktopEditBridge {
   onChange: (listener: (sessions: DesktopEditSession[]) => void) => () => void;
 }
 
+/*
+ * Files on this computer: folders kept the same as a Files folder, and on Windows the
+ * Files drive (Cloud Files API placeholders). The sync engine is the page's
+ * (lib/files-sync in the webmail): it holds the JMAP session and decides. Main only does
+ * what the page can't: the disk, the folder picker, the OS's sync root, and the
+ * callbacks Windows makes when someone opens a file that isn't on the disk yet.
+ *
+ * Paths here are always relative to a root, with `/` between parts, never `..`, never
+ * absolute. Main resolves them inside the root and refuses anything that leaves it,
+ * through a link or otherwise.
+ */
+
+/** A place on this computer kept the same as Files: a folder the user picked, or the drive. */
+export interface FilesRoot {
+  /** Main's id for it. Random, never a path. */
+  id: string;
+  kind: 'folder' | 'drive';
+  /** The page's local account id it belongs to. */
+  account: string;
+  /** Where it is on disk, to show and nothing else. */
+  path: string;
+  /** A folder: the Files folder it pairs with (null: the top of Files). The drive: null. */
+  remoteId: string | null;
+  /** What the page called the Files side when it was added, to show. */
+  remoteLabel: string;
+  paused: boolean;
+  createdAt: number;
+}
+
+/** One file or folder under a root, as it is on disk now. */
+export interface FilesLocalEntry {
+  /** Relative to the root, `/` between parts. */
+  path: string;
+  kind: 'file' | 'directory';
+  size: number;
+  mtimeMs: number;
+  /** The same across a rename on the same volume (file id, inode), to tell a move from a delete and a create. */
+  fileId: string;
+  /** The drive only: what the placeholder says. */
+  placeholder?: FilesPlaceholderState;
+}
+
+export interface FilesPlaceholderState {
+  /** The FileNode id written into it. Null for something made in Explorer that isn't a placeholder yet. */
+  identity: string | null;
+  /** Main or the page marked it in sync and nobody changed it since. */
+  inSync: boolean;
+  /** The content is on this disk. */
+  hydrated: boolean;
+  pin: 'pinned' | 'unpinned' | 'unspecified';
+}
+
+/** What the page expects a path to be, so main refuses to act on something that changed meanwhile. */
+export interface FilesExpect {
+  fileId: string;
+  size: number;
+  mtimeMs: number;
+}
+
+export type FilesError =
+  /** Not there. */
+  | 'missing'
+  /** Something is already at the target. */
+  | 'exists'
+  /** It changed since the page looked (`expect` didn't match). */
+  | 'changed'
+  /** Another program has it open. */
+  | 'busy'
+  | 'denied'
+  /** The path leaves the root, or goes through a link. */
+  | 'outside'
+  /** A name this file system can't hold. */
+  | 'name'
+  /** The disk is full. */
+  | 'full'
+  /** The organisation's policy says no. */
+  | 'policy'
+  /** No real click came with a call that needs one. */
+  | 'gesture'
+  /** The user closed the picker. */
+  | 'cancelled'
+  /** The folder is inside another root, holds one, or is a system folder. */
+  | 'overlap'
+  /** The root is paused, gone, or the app is locked. */
+  | 'inactive'
+  | 'unsupported'
+  | 'failed';
+
+export type FilesResult<T> = { ok: true; value: T } | { ok: false; error: FilesError };
+
+/** Something on disk under a root changed. `paths: null`: too much at once, scan it all. */
+export interface FilesChangeEvent {
+  rootId: string;
+  paths: string[] | null;
+}
+
+/** Windows wants bytes of a file that isn't on the disk yet: someone opened it. */
+export interface FilesFetchRequest {
+  fetchId: string;
+  rootId: string;
+  /** The FileNode id in the placeholder. */
+  identity: string;
+  path: string;
+  /** What Windows asked for. Supplying from 0 to the end is always fine. */
+  offset: number;
+  length: number;
+  /** The size in the placeholder. */
+  total: number;
+}
+
+/** A remote file or folder the drive should show, before any content is fetched. */
+export interface FilesPlaceholder {
+  path: string;
+  kind: 'file' | 'directory';
+  size: number;
+  mtimeMs: number;
+  identity: string;
+}
+
+export interface FilesDriveLetterState {
+  /** In use now. */
+  letter: string | null;
+  /** The user's own choice, kept even while a policy overrides it. */
+  chosen: string | null;
+  /** `FilesDriveLetter` forces it (a letter, or `none`). */
+  locked: boolean;
+  /** Letters free now, D to Z. */
+  available: string[];
+}
+
+export interface FilesDriveState {
+  /** Windows 10 1809 or later with the helper loaded. */
+  supported: boolean;
+  /** `FilesDriveEnabled` is off. */
+  forcedOff: boolean;
+  /** Accounts the user turned the drive on for, whether or not it's registered right now. */
+  wanted: string[];
+  letter: FilesDriveLetterState;
+}
+
+/**
+ * What the main page takes once, in its first render (`files.claim()`), like `auth.claim`:
+ * a same-origin frame reaches the bridge through `parent`, and main can't tell its calls
+ * apart. Main also takes these calls only from the main window.
+ */
+export interface FilesControls {
+  roots: () => Promise<FilesRoot[]>;
+  /** Shows the OS folder picker. Needs a real click. */
+  addFolder: (request: { account: string; remoteId: string | null; remoteLabel: string }) => Promise<FilesResult<FilesRoot>>;
+  /** A folder: forgotten, its files stay. The drive: as `drive.disable(account, 'user')`. */
+  removeRoot: (rootId: string) => Promise<void>;
+  setPaused: (rootId: string, paused: boolean) => Promise<void>;
+  /** Everything under `under` (default: the whole root). Skips links and main's own temporary files. */
+  scan: (rootId: string, under?: string) => Promise<FilesResult<FilesLocalEntry[]>>;
+  stat: (rootId: string, path: string) => Promise<FilesResult<FilesLocalEntry | null>>;
+  /** A URL the page fetches once for the file's bytes (Range works). Refused for a drive file that isn't on the disk. */
+  openRead: (rootId: string, path: string) => Promise<FilesResult<{ url: string; entry: FilesLocalEntry }>>;
+  /**
+   * Writing a file: chunks go to a temporary file next to it, `commitWrite` puts it in place
+   * if what's there is still `expect` (null: nothing may be there), and sets `mtimeMs`.
+   */
+  beginWrite: (rootId: string, path: string, options: { expect: FilesExpect | null; mtimeMs: number; size: number }) => Promise<FilesResult<string>>;
+  writeChunk: (writeId: string, data: Uint8Array) => Promise<FilesResult<null>>;
+  commitWrite: (writeId: string) => Promise<FilesResult<FilesLocalEntry>>;
+  abortWrite: (writeId: string) => Promise<void>;
+  mkdir: (rootId: string, path: string) => Promise<FilesResult<FilesLocalEntry>>;
+  /** Never overwrites. A case-only rename works on a case-insensitive disk. */
+  move: (rootId: string, from: string, to: string, expect: FilesExpect | null) => Promise<FilesResult<FilesLocalEntry>>;
+  /** A folder: to the OS's trash where it has one. Refused when it changed since `expect`. */
+  remove: (rootId: string, path: string, expect: FilesExpect | null) => Promise<FilesResult<'trash' | 'deleted'>>;
+  onChange: (listener: (event: FilesChangeEvent) => void) => () => void;
+  /** The engine's own record of a root (what both sides looked like at the last sync). */
+  loadState: (rootId: string) => Promise<string | null>;
+  saveState: (rootId: string, state: string) => Promise<void>;
+  /** Opens Explorer, Finder or the file manager on it. */
+  showInFolder: (rootId: string, path: string) => Promise<boolean>;
+  /** Windows only. Absent elsewhere. */
+  drive?: FilesDriveControls;
+}
+
+export interface FilesDriveControls {
+  state: () => Promise<FilesDriveState>;
+  onStateChange: (listener: (state: FilesDriveState) => void) => () => void;
+  /**
+   * Registers and connects the account's sync root. Needs a real click unless the user
+   * turned it on before (a sign-in brings it back). `label` is the address, shown when
+   * there are several accounts.
+   */
+  enable: (account: string, label: string) => Promise<FilesResult<FilesRoot>>;
+  /**
+   * `user`: turned off. `signed-out`: the account signed out, and comes back at the next
+   * sign-in. `wipe` and `refused`: a wipe or a refused login. Each unregisters the sync root
+   * and deletes it with everything in it; only `signed-out` keeps the wish.
+   */
+  disable: (account: string, reason: 'user' | 'signed-out' | 'wipe' | 'refused') => Promise<void>;
+  /** New placeholders, parents first. One answer per entry. */
+  place: (rootId: string, entries: FilesPlaceholder[]) => Promise<FilesResult<{ path: string; error?: FilesError }[]>>;
+  /**
+   * New metadata from the server for a placeholder that is in sync. `dehydrate`: the
+   * content changed, drop the copy on disk (a pinned one is fetched again). Refused
+   * with `changed` when someone edited it here meanwhile.
+   */
+  update: (rootId: string, path: string, meta: { size: number; mtimeMs: number; identity: string; dehydrate: boolean }, expect: FilesExpect | null) => Promise<FilesResult<FilesLocalEntry>>;
+  /** After an upload: makes it a placeholder with this identity if it isn't one, and marks it in sync. */
+  markInSync: (rootId: string, path: string, identity: string, expect: FilesExpect) => Promise<FilesResult<FilesLocalEntry>>;
+  onFetch: (listener: (request: FilesFetchRequest) => void) => () => void;
+  onFetchCancel: (listener: (fetchId: string) => void) => () => void;
+  /** Bytes for a fetch, in order from `offset`. False when Windows no longer wants them. */
+  supply: (fetchId: string, offset: number, data: Uint8Array) => Promise<boolean>;
+  fail: (fetchId: string, error: 'offline' | 'missing' | 'failed') => void;
+  setLetter: (letter: string | null) => Promise<FilesResult<FilesDriveLetterState>>;
+}
+
+export interface FilesBridge {
+  claim: () => FilesControls | null;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -907,6 +1182,8 @@ export interface BulwarkDesktopBridge {
   edit?: DesktopEditBridge;
   /** Absent on older shells. */
   devTools?: DesktopDevToolsBridge;
+  /** Files on this computer. Absent on older shells. */
+  files?: FilesBridge;
   /** Absent on older shells. */
   recentFiles?: DesktopRecentFilesBridge;
 }

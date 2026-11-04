@@ -7650,6 +7650,112 @@
     "signout_changed": "Encara sense adjuntar ni desar, i eliminats ara: {names}.",
     "signout_held": "Encara oberts en un altre programa, així que no s’eliminen fins que els tanqueu allà: {names}."
   },
+  "files_sync": {
+    "title": "Fitxers en aquest ordinador",
+    "drive": {
+      "title": "Unitat Fitxers",
+      "label": "Mostra Fitxers com una unitat",
+      "description": "Els vostres Fitxers apareixen a l'Explorador de fitxers com una unitat. Un fitxer es baixa quan l'obriu.",
+      "unsupported": "Cal el Windows 10 versió 1809 o posterior.",
+      "root_name": "Unitat Fitxers",
+      "letter_label": "Lletra d'unitat",
+      "letter_description": "Dona a la unitat una lletra pròpia a l'Explorador de fitxers.",
+      "letter_none": "Sense lletra"
+    },
+    "folders": {
+      "title": "Carpetes sincronitzades",
+      "description": "Una carpeta d'aquest ordinador i una carpeta de Fitxers es mantenen iguals, en tots dos sentits.",
+      "empty": "Encara no se sincronitza cap carpeta.",
+      "forced_off": "La vostra organització ha desactivat la sincronització de carpetes. Els fitxers que contenen es queden en aquest ordinador.",
+      "add": "Afegeix una carpeta…",
+      "loading": "S'estan carregant les vostres carpetes…",
+      "load_failed": "No s'han pogut carregar les vostres carpetes de Fitxers. Torneu-ho a provar.",
+      "pick_title": "Quina carpeta de Fitxers?",
+      "pick_confirm": "Trieu una carpeta d'aquest ordinador…",
+      "paired_with": "Amb {folder} a Fitxers",
+      "pause": "Posa en pausa",
+      "resume": "Reprèn",
+      "remove": "Elimina…",
+      "remove_title": "Voleu deixar de sincronitzar aquesta carpeta?",
+      "remove_message": "Els fitxers d'aquest ordinador es queden on són, i els de Fitxers també. Els canvis ja no passen de l'un a l'altre.",
+      "remove_confirm": "Deixa de sincronitzar",
+      "add_failed": {
+        "overlap": "Aquesta carpeta és dins d'una carpeta sincronitzada, en conté una o és una carpeta del sistema. Trieu-ne una altra.",
+        "denied": "L'aplicació no pot fer servir aquesta carpeta. Trieu-ne una altra.",
+        "policy": "La vostra organització no ho permet.",
+        "failed": "No s'ha pogut afegir la carpeta. Torneu-ho a provar."
+      }
+    },
+    "status": {
+      "starting": "S'està iniciant…",
+      "idle": "Al dia. Darrera sincronització {time}",
+      "idle_never": "Al dia",
+      "syncing": "S'està sincronitzant: {done} fets, {pending} pendents",
+      "paused": "En pausa",
+      "offline": "Sense connexió. {count, plural, =0 {Els canvis esperen el servidor} one {# canvi espera el servidor} other {# canvis esperen el servidor}}",
+      "error": "Aturat: {reason}",
+      "confirm_delete": "En pausa fins que respongueu la pregunta de sota",
+      "blocked": "Desactivat per la vostra organització"
+    },
+    "mass_delete": {
+      "title": "Voleu suprimir {count, plural, one {# element} other {# elements}}?",
+      "local": "{count, plural, one {S'ha suprimit # element} other {S'han suprimit # elements}} de {folder} en aquest ordinador. Voleu {count, plural, one {suprimir-lo} other {suprimir-los}} també a Fitxers?",
+      "remote": "{count, plural, one {S'ha suprimit # element} other {S'han suprimit # elements}} de {folder} a Fitxers. Voleu {count, plural, one {suprimir-lo} other {suprimir-los}} també en aquest ordinador?",
+      "allow": "{count, plural, one {Suprimeix-lo} other {Suprimeix-los}}",
+      "restore": "{count, plural, one {Recupera'l} other {Recupera'ls}}",
+      "later": "Decideix més tard"
+    },
+    "activity": {
+      "title": "Activitat recent",
+      "empty": "Encara no ha passat res.",
+      "clear": "Esborra",
+      "to_files": "Cap a Fitxers",
+      "to_computer": "Cap a aquest ordinador",
+      "mark_conflict": "Conflicte",
+      "mark_error": "Ha fallat",
+      "mark_question": "Cal la vostra resposta",
+      "uploaded": "S'ha pujat {path}",
+      "downloaded": "S'ha baixat {path}",
+      "folder-created": "S'ha creat la carpeta {path}",
+      "renamed": "S'ha canviat el nom de {detail} a {path}",
+      "moved": "S'ha mogut {detail} a {path}",
+      "deleted": "S'ha suprimit {path}",
+      "trashed": "S'ha mogut {path} a la paperera",
+      "conflict": "{path} s'ha canviat als dos llocs. L'altra versió es desa com a {detail}",
+      "renamed-for-disk": "{path} es diu {detail} en aquest ordinador, perquè el seu nom no s'hi permet",
+      "too-large": "{path} supera la mida que permet Fitxers ({detail}). Es queda només en aquest ordinador",
+      "waiting": "{path} espera el servidor",
+      "mass-delete": "En pausa abans de suprimir molts elements",
+      "error": "No s'ha pogut sincronitzar {path}"
+    },
+    "errors": {
+      "offline": "No es pot connectar amb el servidor",
+      "server_refused": "El servidor ha rebutjat el canvi",
+      "too_large": "El fitxer és massa gran per a Fitxers",
+      "name_invalid": "El nom no està permès",
+      "disk_full": "El disc és ple",
+      "denied": "Accés denegat",
+      "busy": "Un altre programa l'està fent servir",
+      "quota": "L'emmagatzematge de Fitxers és ple",
+      "not_found": "Ja no hi és",
+      "policy": "La vostra organització no ho permet",
+      "failed": "Alguna cosa ha anat malament"
+    },
+    "item": {
+      "label": "En aquest ordinador",
+      "synced": "Sincronitzat",
+      "syncing": "S'està sincronitzant",
+      "pending": "Pendent de sincronitzar",
+      "error": "No s'ha pogut sincronitzar",
+      "online-only": "Només a Fitxers, es baixa en obrir-lo"
+    },
+    "show_in": {
+      "explorer": "Mostra a l'Explorador de fitxers",
+      "finder": "Mostra al Finder",
+      "file_manager": "Mostra al gestor de fitxers",
+      "failed": "No s'ha pogut obrir la carpeta."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacció ràpida",
     "menu": "Redacció ràpida",

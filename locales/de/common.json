@@ -7650,6 +7650,112 @@
     "signout_changed": "Noch nicht angehängt oder gespeichert, und jetzt gelöscht: {names}.",
     "signout_held": "Noch in einem anderen Programm geöffnet, daher erst gelöscht, wenn Sie sie dort schließen: {names}."
   },
+  "files_sync": {
+    "title": "Dateien auf diesem Computer",
+    "drive": {
+      "title": "Dateien-Laufwerk",
+      "label": "Dateien als Laufwerk anzeigen",
+      "description": "Ihre Dateien erscheinen im Explorer wie ein Laufwerk. Eine Datei wird heruntergeladen, wenn Sie sie öffnen.",
+      "unsupported": "Erfordert Windows 10 Version 1809 oder neuer.",
+      "root_name": "Dateien-Laufwerk",
+      "letter_label": "Laufwerksbuchstabe",
+      "letter_description": "Gibt dem Laufwerk einen eigenen Buchstaben im Explorer.",
+      "letter_none": "Kein Buchstabe"
+    },
+    "folders": {
+      "title": "Synchronisierte Ordner",
+      "description": "Ein Ordner auf diesem Computer und ein Ordner in Dateien werden gleich gehalten, in beide Richtungen.",
+      "empty": "Es werden noch keine Ordner synchronisiert.",
+      "forced_off": "Ihre Organisation hat das Synchronisieren von Ordnern ausgeschaltet. Die Dateien darin bleiben auf diesem Computer.",
+      "add": "Ordner hinzufügen…",
+      "loading": "Ihre Ordner werden geladen…",
+      "load_failed": "Ihre Ordner in Dateien konnten nicht geladen werden. Versuchen Sie es erneut.",
+      "pick_title": "Welcher Ordner in Dateien?",
+      "pick_confirm": "Ordner auf diesem Computer wählen…",
+      "paired_with": "Mit {folder} in Dateien",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "remove": "Entfernen…",
+      "remove_title": "Synchronisierung dieses Ordners beenden?",
+      "remove_message": "Die Dateien auf diesem Computer bleiben, wo sie sind, und die in Dateien auch. Änderungen werden nicht mehr übertragen.",
+      "remove_confirm": "Synchronisierung beenden",
+      "add_failed": {
+        "overlap": "Dieser Ordner liegt in einem synchronisierten Ordner, enthält einen oder ist ein Systemordner. Wählen Sie einen anderen.",
+        "denied": "Die App kann diesen Ordner nicht verwenden. Wählen Sie einen anderen.",
+        "policy": "Ihre Organisation erlaubt das nicht.",
+        "failed": "Der Ordner konnte nicht hinzugefügt werden. Versuchen Sie es erneut."
+      }
+    },
+    "status": {
+      "starting": "Wird gestartet…",
+      "idle": "Aktuell. Zuletzt synchronisiert {time}",
+      "idle_never": "Aktuell",
+      "syncing": "Wird synchronisiert: {done} erledigt, {pending} ausstehend",
+      "paused": "Pausiert",
+      "offline": "Offline. {count, plural, =0 {Änderungen warten auf den Server} one {# Änderung wartet auf den Server} other {# Änderungen warten auf den Server}}",
+      "error": "Gestoppt: {reason}",
+      "confirm_delete": "Pausiert, bis Sie die Frage unten beantworten",
+      "blocked": "Von Ihrer Organisation ausgeschaltet"
+    },
+    "mass_delete": {
+      "title": "{count, plural, one {# Element} other {# Elemente}} löschen?",
+      "local": "{count, plural, one {# Element wurde} other {# Elemente wurden}} auf diesem Computer aus {folder} gelöscht. {count, plural, one {Soll es} other {Sollen sie}} auch in Dateien gelöscht werden?",
+      "remote": "{count, plural, one {# Element wurde} other {# Elemente wurden}} in Dateien aus {folder} gelöscht. {count, plural, one {Soll es} other {Sollen sie}} auch auf diesem Computer gelöscht werden?",
+      "allow": "{count, plural, one {Löschen} other {Alle löschen}}",
+      "restore": "{count, plural, one {Wiederherstellen} other {Alle wiederherstellen}}",
+      "later": "Später entscheiden"
+    },
+    "activity": {
+      "title": "Letzte Aktivitäten",
+      "empty": "Bisher ist nichts passiert.",
+      "clear": "Leeren",
+      "to_files": "Nach Dateien",
+      "to_computer": "Auf diesen Computer",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Fehler",
+      "mark_question": "Wartet auf Ihre Antwort",
+      "uploaded": "{path} hochgeladen",
+      "downloaded": "{path} heruntergeladen",
+      "folder-created": "Ordner {path} erstellt",
+      "renamed": "{detail} in {path} umbenannt",
+      "moved": "{detail} nach {path} verschoben",
+      "deleted": "{path} gelöscht",
+      "trashed": "{path} in den Papierkorb verschoben",
+      "conflict": "{path} wurde an beiden Stellen geändert. Die andere Version bleibt als {detail} erhalten",
+      "renamed-for-disk": "{path} heißt auf diesem Computer {detail}, weil der Name hier nicht erlaubt ist",
+      "too-large": "{path} ist größer, als Dateien erlaubt ({detail}). Die Datei bleibt nur auf diesem Computer",
+      "waiting": "{path} wartet auf den Server",
+      "mass-delete": "Vor dem Löschen vieler Elemente angehalten",
+      "error": "{path} konnte nicht synchronisiert werden"
+    },
+    "errors": {
+      "offline": "Der Server ist nicht erreichbar",
+      "server_refused": "Der Server hat die Änderung abgelehnt",
+      "too_large": "Die Datei ist zu groß für Dateien",
+      "name_invalid": "Der Name ist nicht erlaubt",
+      "disk_full": "Der Datenträger ist voll",
+      "denied": "Kein Zugriff",
+      "busy": "Wird von einem anderen Programm verwendet",
+      "quota": "Ihr Speicher in Dateien ist voll",
+      "not_found": "Nicht mehr vorhanden",
+      "policy": "Ihre Organisation erlaubt das nicht",
+      "failed": "Etwas ist schiefgelaufen"
+    },
+    "item": {
+      "label": "Auf diesem Computer",
+      "synced": "Synchronisiert",
+      "syncing": "Wird synchronisiert",
+      "pending": "Wartet auf Synchronisierung",
+      "error": "Synchronisierung fehlgeschlagen",
+      "online-only": "Nur in Dateien, wird beim Öffnen heruntergeladen"
+    },
+    "show_in": {
+      "explorer": "Im Explorer anzeigen",
+      "finder": "Im Finder anzeigen",
+      "file_manager": "Im Dateimanager anzeigen",
+      "failed": "Der Ordner konnte nicht geöffnet werden."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Schnell schreiben",
     "menu": "Schnell schreiben",

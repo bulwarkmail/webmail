@@ -189,6 +189,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
 import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
+import { askInWindow } from "@/lib/desktop/dialog-window";
 import { readRecentFile, RECENT_FILE_MAX_BYTES, useRecentFilesOffered } from "@/lib/desktop/recent-files";
 import type { DesktopRecentFile } from "@/lib/desktop/types";
 import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
@@ -4880,15 +4881,39 @@ export function EmailComposer({
     emitClose();
   };
 
-  /** The question before closing or discarding: the OS's own in the desktop app. */
+  /**
+   * The question before closing or discarding. In the desktop app it is a window of its
+   * own; an older shell asks with the OS's message box.
+   */
   const openCloseDialog = (kind: 'discard' | 'close') => {
-    const dialogs = getDesktopBridge()?.dialogs;
-    if (!dialogs) {
+    const inPage = () => {
       setCloseDialogKind(kind);
       setShowCloseDialog(true);
+    };
+    const discarding = kind === 'discard';
+    const asked = askInWindow({
+      title: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      message: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
+      buttons: discarding
+        ? [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }]
+        : [{ label: t('cancel'), variant: 'secondary' }, { label: t('discard'), variant: 'destructive' }, { label: tUx('try_again') }],
+      defaultIndex: discarding ? 0 : 2,
+    });
+    if (asked) {
+      void asked.answer.then((answer) => {
+        const button = answer && answer !== 'failed' && 'button' in answer ? answer.button : -1;
+        if (answer === 'failed') inPage();
+        else if (button === 1) handleDiscardAndClose();
+        else if (button === 2) void handleSaveDraftAndClose({ fromClose: true });
+        else afterCloseRef.current = null;
+      });
       return;
     }
-    const discarding = kind === 'discard';
+    const dialogs = getDesktopBridge()?.dialogs;
+    if (!dialogs) {
+      inPage();
+      return;
+    }
     const buttons = discarding ? [t('discard'), t('cancel')] : [tUx('try_again'), t('discard'), t('cancel')];
     void dialogs.confirm({
       type: 'warning',

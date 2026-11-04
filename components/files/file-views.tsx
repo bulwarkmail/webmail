@@ -10,6 +10,7 @@ import {
   FileSize, MiddleCutName, ResourceIcon, ShareBadge, Thumbnail, canShowThumbnail, formatFullDate, formatShortDate,
   type IconOptions,
 } from "@/components/files/file-item-parts";
+import { FilesSyncBadge } from "@/components/files-sync/files-sync-item";
 import type { SortDir, SortKey } from "@/components/files/files-header";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import { FILE_LIST_COLUMNS } from "./file-list-layout";
@@ -274,6 +275,7 @@ function FileListRow({ resource, isSelected, isFocused, isTabStop, isDropTarget,
             </span>
             {isStarred && <Star className="w-3.5 h-3.5 shrink-0 text-amber-400 fill-amber-400" aria-label={t("favorites")} />}
             <ShareBadge resource={resource} t={t} />
+            <FilesSyncBadge nodeId={resource.id} />
           </div>
           {touch && (
             <div className="text-xs text-muted-foreground truncate">
@@ -487,6 +489,7 @@ function FileTile({ resource, isSelected, isFocused, isTabStop, isCut, selecting
               {!resource.isSymlink && <><FileSize bytes={resource.contentLength} /> · </>}{formatShortDate(resource.lastModified)}
             </span>
             <ShareBadge resource={resource} t={t} className="w-3 h-3" />
+            <FilesSyncBadge nodeId={resource.id} className="w-3 h-3" />
           </div>
         </div>
         <IconButton
