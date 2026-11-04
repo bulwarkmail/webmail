@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-channel';
 import { openPopoutChannel, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
-import { createComposeHandoff, rememberComposePayload } from '@/lib/popout/compose-handoff';
+import { createComposeHandoff, rememberComposePayload, rememberedComposePayload } from '@/lib/popout/compose-handoff';
 import { useAuthStore } from '@/stores/auth-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -309,5 +309,241 @@ describe('PopoutComposeApp', () => {
     await settle();
     expect(heard.find((message) => message.type === 'draft-rescue')).toMatchObject({ draft: { localAccountId: 'alice', rescueKey: 'h3' } });
     main.close();
+  });
+});
+
+describe('back into the main window', () => {
+  const focus = vi.fn();
+
+  beforeEach(() => {
+    focus.mockClear();
+    window.history.replaceState(null, '', '/en/popout/compose');
+  });
+
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+  });
+
+  /** A main window that holds these logins, and answers a move as told. */
+  function mainWindowAnswers(status: 'shown' | 'busy' | null, accountIds = ['alice']) {
+    const channel = openPopoutChannel((message) => {
+      if (message.type === 'main-ping') channel?.post({ type: 'main-pong', windowId: 'main', accountIds });
+      if (message.type === 'composer-return' && status === 'busy') channel?.post({ type: 'composer-return-answer', returnId: message.returnId, status });
+      if (message.type === 'composer-return' && status === 'shown') channel?.post({ type: 'composer-return-ready', returnId: message.returnId });
+      if (message.type === 'composer-return-commit' && status) channel?.post({ type: 'composer-return-answer', returnId: message.returnId, status });
+    })!;
+    return channel;
+  }
+
+  const openComposer = async () => {
+    render(<PopoutComposeApp />);
+    await settle();
+    return composer as unknown as {
+      popOut?: () => { handOver: (state: object) => Promise<boolean>; notShownMessage: () => string };
+      popOutToMainLabel?: string;
+    };
+  };
+
+  it('is offered while a main window holds the login', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('shown');
+    const props = await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy(), { timeout: 5000 });
+    expect((composer as unknown as { popOutToMainLabel: string }).popOutToMainLabel).toBe('back_to_main');
+    expect(props).toBeTruthy();
+    main.close();
+  });
+
+  it('is not offered with no main window, or one holding another login', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    cleanup();
+    const main = mainWindowAnswers('shown', ['bob']);
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    main.close();
+  });
+
+  it('is not offered in a browser, which behaves as it did', async () => {
+    const main = mainWindowAnswers('shown');
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    main.close();
+  });
+
+  it('hands over what the composer holds, and brings the main window up once it is there', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('shown');
+    await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy(), { timeout: 5000 });
+    const target = (composer as unknown as { popOut: () => { handOver: (state: object) => Promise<boolean> } }).popOut();
+    const state = { mode: 'reply', subject: 'Back', draftId: 'd9', draftLocalAccountId: 'carol' };
+    await act(async () => {
+      await expect(target.handOver(state)).resolves.toBe(true);
+    });
+    expect(heard.map((message) => message.type)).toContain('composer-return-commit');
+    const sent = heard.find((message) => message.type === 'composer-return') as Extract<PopoutMessage, { type: 'composer-return' }>;
+    expect(sent.payload).toMatchObject({ mode: 'reply', initialData: state });
+    // The draft's own login, which isn't always the window's.
+    expect(sent.accountId).toBe('carol');
+    expect(focus).toHaveBeenCalledOnce();
+    main.close();
+  });
+
+  it('a busy main window keeps the text here, says why, and stays out of sight', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('busy');
+    await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy(), { timeout: 5000 });
+    const target = (composer as unknown as { popOut: () => { handOver: (state: object) => Promise<boolean>; notShownMessage: () => string } }).popOut();
+    await act(async () => {
+      await expect(target.handOver({ mode: 'compose' })).resolves.toBe(false);
+    });
+    expect(target.notShownMessage()).toBe('back_busy');
+    expect(focus).not.toHaveBeenCalled();
+    main.close();
+  });
+});
+
+describe('a new message, with nothing handed over', () => {
+  const hooks: Array<() => void> = [];
+  const listen = (handler: (...args: never[]) => unknown) => {
+    const held = emailHooks.onBeforeCompose.register('test', handler as never);
+    hooks.push(() => held.dispose());
+  };
+
+  beforeEach(() => {
+    window.history.replaceState(null, '', '/en/popout/compose');
+    usePluginStore.setState({ initializePlugins: vi.fn(async () => {}) } as never);
+    useIdentityStore.setState({ identities: [{ id: 'id-1', email: 'me@example.org', name: 'Me' }] } as never);
+  });
+
+  afterEach(() => {
+    for (const stop of hooks.splice(0)) stop();
+    window.bulwarkDesktop = undefined;
+  });
+
+  type Prefill = { prefill?: { to?: string[]; subject?: string } | null };
+
+  it('with no plugin listening, opens empty', async () => {
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy());
+    expect((composer as unknown as Prefill).prefill ?? null).toBeNull();
+  });
+
+  it('a plugin that fills in fields fills them in, as in the main window', async () => {
+    const seen: unknown[] = [];
+    listen((options: unknown) => {
+      seen.push(options);
+      return { ...(options as object), to: ['from-plugin@example.org'], subject: 'From a plugin' };
+    });
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy());
+    expect((composer as unknown as Prefill).prefill).toEqual({ to: ['from-plugin@example.org'], subject: 'From a plugin' });
+    expect(seen).toHaveLength(1);
+  });
+
+  it('a plugin that stops it stops it: no composer, and the window goes', async () => {
+    const closeSelf = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { closeSelf } } as never;
+    listen(() => false);
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(closeSelf).toHaveBeenCalled());
+    expect(screen.queryByTestId('composer')).toBeNull();
+  });
+
+  it('waits for plugins that are still starting before it asks them', async () => {
+    let started: () => void = () => {};
+    usePluginStore.setState({ initializePlugins: vi.fn(() => new Promise<void>((resolve) => { started = resolve; })) } as never);
+    render(<PopoutComposeApp />);
+    await settle();
+    expect(screen.queryByTestId('composer')).toBeNull();
+    listen(() => false);
+    const closeSelf = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { closeSelf } } as never;
+    await act(async () => started());
+    await waitFor(() => expect(closeSelf).toHaveBeenCalled());
+    expect(screen.queryByTestId('composer')).toBeNull();
+  });
+
+  it('a draft or a handoff isn\'t asked about again: it was at its start', async () => {
+    const hook = vi.fn(() => false);
+    listen(hook);
+    const handoff = createComposeHandoff()!;
+    void handoff.complete(PAYLOAD);
+    openAt(handoff.id);
+    await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy());
+    expect(hook).not.toHaveBeenCalled();
+  });
+});
+
+describe('after this page crashed', () => {
+  const LOGIN = 'alice@example.org@mail.example.org';
+  const MAILBOXES = [{ id: 'mDrafts', role: 'drafts' }];
+  const draft = {
+    id: 'd7', subject: 'Saved before the crash', to: [], cc: [], bcc: [], from: [{ name: 'Me', email: 'me@example.org' }],
+    keywords: { $draft: true }, mailboxIds: { mDrafts: true }, bodyValues: { t: { value: 'Text' } }, textBody: [{ partId: 't', type: 'text/plain' }], htmlBody: [], attachments: [],
+  };
+  const search = () => new URLSearchParams(window.location.search);
+
+  beforeEach(() => {
+    useIdentityStore.setState({ identities: [{ id: 'id-1', email: 'me@example.org', name: 'Me' }] } as never);
+    usePluginStore.setState({ initializePlugins: vi.fn(async () => {}) } as never);
+    identityMocks.multi = { enabled: false, allIdentities: [], groups: [] };
+  });
+
+  it('each save puts the draft, its login and its account in the address, on a window that started empty', async () => {
+    window.history.replaceState(null, '', '/en/popout/compose');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy());
+    const own = (composer as unknown as { ownWindow: { onDraftSaved: (id: string, where: object) => void } }).ownWindow;
+    act(() => own.onDraftSaved('d1', { localAccountId: LOGIN, accountId: 'shared' }));
+    expect([search().get('draft'), search().get('account'), search().get('owner')]).toEqual(['d1', LOGIN, 'shared']);
+    act(() => own.onDraftSaved('d2', { localAccountId: LOGIN }));
+    expect([search().get('draft'), search().get('account'), search().get('owner')]).toEqual(['d2', LOGIN, null]);
+  });
+
+  it('comes back on the saved draft, not blank', async () => {
+    const getEmail = vi.fn(async () => draft);
+    const client = { getEmail, getMailboxes: vi.fn(async () => MAILBOXES) };
+    useAuthStore.setState({ getClientForAccount: (id: string) => (id === LOGIN ? client : undefined) } as never);
+    window.history.replaceState(null, '', `/en/popout/compose?draft=d7&account=${encodeURIComponent(LOGIN)}`);
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Saved before the crash'));
+    expect(getEmail).toHaveBeenCalledWith('d7', undefined);
+  });
+
+  it('with a handoff in the address too, the saved draft wins: nothing was remembered, so the page died', async () => {
+    const getEmail = vi.fn(async () => draft);
+    const client = { getEmail, getMailboxes: vi.fn(async () => MAILBOXES) };
+    useAuthStore.setState({ getClientForAccount: (id: string) => (id === LOGIN ? client : undefined) } as never);
+    window.history.replaceState(null, '', `/en/popout/compose?handoff=gone&draft=d7&account=${encodeURIComponent(LOGIN)}`);
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Saved before the crash'));
+  });
+
+  it('an ordinary reload goes on from what it remembered as it unloaded, which is newer than the draft', async () => {
+    const getEmail = vi.fn(async () => draft);
+    const client = { getEmail, getMailboxes: vi.fn(async () => MAILBOXES) };
+    useAuthStore.setState({ getClientForAccount: (id: string) => (id === LOGIN ? client : undefined) } as never);
+    rememberComposePayload('h1', { mode: 'compose', initialData: { subject: 'Typed since the save' } as never });
+    window.history.replaceState(null, '', `/en/popout/compose?handoff=h1&draft=d7&account=${encodeURIComponent(LOGIN)}`);
+    render(<PopoutComposeApp />);
+    // A reload first hears what became of the text it handed over on the way out.
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Typed since the save'), { timeout: 5000 });
+    expect(getEmail).not.toHaveBeenCalled();
+  });
+
+  it('a save forgets what was remembered, so a later crash can\'t bring back older text', async () => {
+    rememberComposePayload('h2', { mode: 'compose', initialData: { subject: 'Older' } as never });
+    window.history.replaceState(null, '', '/en/popout/compose?handoff=h2');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy(), { timeout: 5000 });
+    act(() => (composer as unknown as { ownWindow: { onDraftSaved: (id: string, where: object) => void } }).ownWindow.onDraftSaved('d3', {}));
+    expect(rememberedComposePayload('h2')).toBeNull();
   });
 });

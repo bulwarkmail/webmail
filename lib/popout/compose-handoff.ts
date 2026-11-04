@@ -115,6 +115,18 @@ export function rememberComposePayload(handoffId: string, payload: ComposePopout
   }
 }
 
+/**
+ * A newer version is on the server. What's remembered was written as the page last unloaded,
+ * and a page that crashes writes nothing, so it would bring back older text than the draft.
+ */
+export function forgetComposePayload(handoffId: string): void {
+  try {
+    sessionStorage.removeItem(STORAGE_PREFIX + handoffId);
+  } catch {
+    // Unavailable: there's nothing remembered either.
+  }
+}
+
 /** The draft this window holds from before a reload. */
 export function rememberedComposePayload(handoffId: string): ComposePopoutPayload | null {
   try {

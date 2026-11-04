@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -9,6 +9,10 @@ import { usePluginStore } from '@/stores/plugin-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { handOffComposeTab, useProTabStore } from '@/stores/pro-tab-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
+import { emailHooks } from '@/lib/plugin-hooks';
+import { handOffNewMessage } from '@/lib/launch-handoff';
+import { commitReturnedComposer, dropReturnedComposer, offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return-to-main';
+import { EmbeddedContext } from '@/hooks/use-is-embedded';
 
 // A reply crossing between a Pro compose tab and the standard composer answers
 // the message it was started from. The message selected in the mail list can be
@@ -18,6 +22,7 @@ const seen = vi.hoisted(() => ({ sourceEmailId: undefined as string | undefined 
 
 vi.mock('@/components/email/email-composer', async () => {
   const { useEffect, useRef, useState } = await import('react');
+  const { registerComposeFlush } = await import('@/lib/compose-flush-registry');
   return {
     EmailComposer: ({ initialData, onSaveState, onSend, sourceEmailId }: {
       initialData?: { subject?: string; mode?: string } | null;
@@ -26,6 +31,7 @@ vi.mock('@/components/email/email-composer', async () => {
       sourceEmailId?: string;
     }) => {
       seen.sourceEmailId = sourceEmailId;
+      useEffect(() => registerComposeFlush(async () => {}), []);
       const [subject, setSubject] = useState(initialData?.subject ?? '');
       const initial = useRef(subject);
       const latest = useRef(subject);
@@ -170,5 +176,120 @@ describe('a reply handed from a Pro compose tab to the standard composer', () =>
     expect(tab?.composeData?.initialData?.subject).toBe('Re: A, typed');
     expect(tab?.composeData?.sourceEmailId).toBe('a');
     expect(tab?.composeData?.sourceEmailSource).toEqual(SOURCE_OF_A);
+  });
+});
+
+describe('a composer coming back from its own window', () => {
+  const REPLY = { mode: 'reply' as const, sourceEmailId: 'a', sourceEmailSource: SOURCE_OF_A, initialData: { subject: 'Re: A', mode: 'reply' } as never };
+
+  afterEach(() => {
+    takeReturnedComposer();
+    cleanup();
+    useProTabStore.setState({ tabs: [], activeTabId: null } as never);
+  });
+
+  function comeBack(id: string, payload: Parameters<typeof offerReturnedComposer>[0]['payload'] = REPLY, ready: 'commit' | 'silent' = 'commit') {
+    const answer = vi.fn();
+    act(() => offerReturnedComposer({ returnId: id, payload, answer, sendReady: () => { if (ready === 'commit') commitReturnedComposer(id); } }));
+    return answer;
+  }
+
+  const showsMail = async () => {
+    await screen.findByText('message list');
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+  };
+
+  it('opens with its text, says so, and answers its own message', async () => {
+    render(<MailApp />);
+    await showsMail();
+    const answer = comeBack('r1');
+    expect(await screen.findByLabelText('stub subject')).toHaveProperty('value', 'Re: A');
+    await waitFor(() => expect(answer).toHaveBeenCalledWith('shown'));
+    expect(seen.sourceEmailId).toBe('a');
+  });
+
+  it('under Mountain View too', async () => {
+    useSettingsStore.setState({ interfaceLayout: 'mountain-view' } as never);
+    render(<MailApp />);
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    const answer = comeBack('r1');
+    expect(await screen.findByLabelText('stub subject')).toHaveProperty('value', 'Re: A');
+    await waitFor(() => expect(answer).toHaveBeenCalledWith('shown'));
+    expect(seen.sourceEmailId).toBe('a');
+    useSettingsStore.setState({ interfaceLayout: 'default' } as never);
+  });
+
+  it('under Pro it becomes a tab that answers its own message, not the one selected in the list', async () => {
+    render(<EmbeddedContext.Provider value><MailApp /></EmbeddedContext.Provider>);
+    await showsMail();
+    comeBack('r1');
+    await waitFor(() => expect(useProTabStore.getState().tabs.some((tab) => tab.kind === 'compose')).toBe(true));
+    const tab = useProTabStore.getState().tabs.find((candidate) => candidate.kind === 'compose');
+    expect(tab?.composeData?.initialData?.subject).toBe('Re: A');
+    expect(tab?.composeData?.sourceEmailId).toBe('a');
+    expect(tab?.composeData?.sourceEmailSource).toEqual(SOURCE_OF_A);
+  });
+
+  it('a new message moved back under Pro answers nothing, whatever is selected', async () => {
+    render(<EmbeddedContext.Provider value><MailApp /></EmbeddedContext.Provider>);
+    await showsMail();
+    comeBack('r1', { mode: 'compose', initialData: { subject: 'New', mode: 'compose' } as never });
+    await waitFor(() => expect(useProTabStore.getState().tabs.some((tab) => tab.kind === 'compose')).toBe(true));
+    const tab = useProTabStore.getState().tabs.find((candidate) => candidate.kind === 'compose');
+    expect(tab?.composeData?.sourceEmailId).toBeNull();
+    expect(tab?.composeData?.sourceEmailSource).toBeNull();
+  });
+
+  it('with one open already it says busy and leaves that one be', async () => {
+    render(<MailApp />);
+    await showsMail();
+    comeBack('r1');
+    const first = await screen.findByLabelText('stub subject');
+    fireEvent.change(first, { target: { value: 'Being written' } });
+    const answer = comeBack('r2', { mode: 'compose', initialData: { subject: 'Second', mode: 'compose' } as never });
+    await waitFor(() => expect(answer).toHaveBeenCalledWith('busy'));
+    expect(screen.getByLabelText('stub subject')).toHaveProperty('value', 'Being written');
+  });
+
+  it('a pop-out that gave up as this took it: nothing opens, so the draft has one owner', async () => {
+    render(<MailApp />);
+    await showsMail();
+    const answer = comeBack('r1', REPLY, 'silent');
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+    act(() => dropReturnedComposer('r1'));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+    expect(screen.queryByLabelText('stub subject')).toBeNull();
+    expect(answer).not.toHaveBeenCalledWith('shown');
+  });
+
+  it('a new message held up by a slow plugin gate says busy, and nothing replaces what comes after', async () => {
+    let letThrough: (value: unknown) => void = () => {};
+    const held = emailHooks.onBeforeCompose.register('test', ((options: unknown) => new Promise((resolve) => { letThrough = () => resolve(options); })) as never);
+    try {
+      render(<MailApp />);
+      await showsMail();
+      act(() => handOffNewMessage());
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+      const answer = comeBack('r1');
+      await waitFor(() => expect(answer).toHaveBeenCalledWith('busy'));
+      expect(screen.queryByLabelText('stub subject')).toBeNull();
+      await act(async () => { letThrough(undefined); await new Promise((resolve) => setTimeout(resolve, 20)); });
+      expect(await screen.findByLabelText('stub subject')).toHaveProperty('value', '');
+    } finally {
+      held.dispose();
+    }
+  });
+
+  it('a handoff arriving while it is being claimed waits for it, and takes nothing over', async () => {
+    render(<MailApp />);
+    await showsMail();
+    const answer = comeBack('r1', REPLY, 'silent');
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)); });
+    act(() => handOffNewMessage());
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+    expect(screen.queryByLabelText('stub subject')).toBeNull();
+    act(() => commitReturnedComposer('r1'));
+    expect(await screen.findByLabelText('stub subject')).toHaveProperty('value', 'Re: A');
+    await waitFor(() => expect(answer).toHaveBeenCalledWith('shown'));
   });
 });

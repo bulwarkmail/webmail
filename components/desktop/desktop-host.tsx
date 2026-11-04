@@ -17,6 +17,7 @@ import type { DesktopSystemTheme } from "@/lib/desktop/types";
 import { canDownloadAnywhere, canPrintAnywhere } from "@/lib/device-policy";
 import { useOfflineStore } from "@/lib/offline/state";
 import { openNewComposerWindow } from "@/lib/popout/open";
+import { onReturnedComposerElsewhere } from "@/lib/popout/return-to-main";
 import { isPopoutWindow } from "@/lib/popout/window-role";
 import { onBeforeSignOut, onFullSignOut } from "@/lib/sign-out-cleanup";
 import { useAuthStore } from "@/stores/auth-store";
@@ -118,7 +119,7 @@ export function DesktopHost() {
   // Menus and spellcheck follow the interface.
   useEffect(() => {
     const ui = uiLocale || document.documentElement.lang;
-    if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as (key: string) => string));
+    if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as Parameters<typeof shellLabels>[0]));
   }, [uiLocale]);
 
   // What the user writes in, whichever composer asks for it too.
@@ -185,11 +186,20 @@ export function DesktopHost() {
     getDesktopBridge()?.windows?.setRestoreEnabled?.(restoreWindows);
   }, [restoreWindows]);
 
-  // Signed in: this window has a session to lend, for pop-outs from last time and links.
+  // Signed in: this window has a session to lend, for pop-outs from last time, links and
+  // quick compose. Signed out: they'd find nothing, and the shell shows this window instead.
   useEffect(() => {
-    if (!isAuthenticated || isPopoutWindow()) return;
-    getDesktopBridge()?.windows?.sessionReady?.();
+    if (isPopoutWindow()) return;
+    const windows = getDesktopBridge()?.windows;
+    if (isAuthenticated) windows?.sessionReady?.();
+    else windows?.sessionEnded?.();
   }, [isAuthenticated]);
+
+  // A composer coming back from its own window, with no mail page here to take it.
+  useEffect(() => {
+    if (!getDesktopBridge()?.windows || isPopoutWindow()) return;
+    return onReturnedComposerElsewhere(() => routerRef.current.push("/"));
+  }, []);
 
   // A quit asks for this: mail that hasn't left is worth a question.
   useEffect(() => {

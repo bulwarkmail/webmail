@@ -15,6 +15,7 @@ import { MailImportDialog } from "./mail-import-dialog";
 import { MailExportDialog } from "./mail-export-dialog";
 import { LocalExportDialog } from "./local-export-dialog";
 import { formatClock } from "./transfer-progress";
+import { forgetLocalImportFor, isDeviceOnlyClient, resumeLocalImport, stopTryingRefused } from "./local-import-job";
 
 /** How long sign-out waits for a cancelled job to stop (its budget is 2 s). */
 const SIGN_OUT_WAIT_MS = 1500;
@@ -61,12 +62,14 @@ export function MailTransferHost() {
   // goes after the job has stopped, so a late write can't bring it back.
   useEffect(() => onBeforeSignOut(async (accountId) => {
     await stopJobOf(accountId);
+    await forgetLocalImportFor(accountId);
     if (accountId !== "all") await clearCheckpointsFor(accountId);
   }), []);
 
   // A wipe takes the same, and every spool no tab holds. `null` is everything on this device.
   useEffect(() => onDeviceWipe(async (account) => {
     await stopJobOf(account ?? "all");
+    await forgetLocalImportFor(account ?? "all");
     await sweepPrivateExports({ force: account === null });
   }), []);
 
@@ -78,22 +81,49 @@ export function MailTransferHost() {
   }, [activeAccountId]);
 
   // The desktop app shows a running export on its taskbar button.
-  const exportPhase = job?.kind === "export" ? job.progress.phase : null;
-  const exportFraction = job?.kind === "export" ? job.progress.fraction : 0;
+  const jobPhase = job?.progress.phase ?? null;
+  const jobFraction = job?.progress.fraction ?? 0;
   const onTaskbar = useRef(false);
   useEffect(() => {
-    if (exportPhase === "running" || exportPhase === "paused") {
+    if (jobPhase === "running" || jobPhase === "paused") {
       onTaskbar.current = true;
-      showTaskbarProgress(exportFraction, exportPhase === "paused" ? "paused" : "normal");
+      showTaskbarProgress(jobFraction, jobPhase === "paused" ? "paused" : "normal");
     } else if (onTaskbar.current) {
       onTaskbar.current = false;
       showTaskbarProgress(null);
     }
-  }, [exportPhase, exportFraction]);
+  }, [jobPhase, jobFraction]);
 
   // A job that ends while its dialog is hidden says so, with a way back to its summary.
   const tImport = useTranslations("mail_import");
   const tExport = useTranslations("mail_export");
+  const tLocal = useTranslations("desktopImport");
+
+  // The desktop app: an import from this computer that a quit, a crash or a restart cut off
+  // goes on, after the shell asked. Once per account per run: "Not now" means not now.
+  const client = useAuthStore((s) => s.client);
+  const asked = useRef<string | null>(null);
+  useEffect(() => {
+    // The real client replaces a device-only one after a start, and this runs again then.
+    if (!client || isDeviceOnlyClient(client)) return;
+    const scope = activeAccountId ?? "default";
+    if (asked.current === scope) return;
+    asked.current = scope;
+    void resumeLocalImport().then(({ outcome, thunderbirdRunning, refused, handPicked }) => {
+      if (thunderbirdRunning) toast.warning(tLocal("thunderbird_running"));
+      if (outcome === "gone") {
+        toast.warning(refused?.length ? tLocal("files_refused", { names: refused.join(", ") }) : tLocal("resume_gone"));
+      } else if (refused?.length) {
+        toast.warning(tLocal("resume_refused", { names: refused.join(", ") }), {
+          action: { label: tLocal("resume_stop_trying"), onClick: () => void stopTryingRefused(scope) },
+        });
+      }
+      if (handPicked?.length) toast.warning(tLocal("resume_hand_picked", { names: handPicked.join(", ") }));
+    }).catch(() => {});
+    // The translator is a new function on every render in tests; the account is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, activeAccountId]);
+
   const lastPhase = useRef<string | undefined>(undefined);
   useEffect(() => {
     const phase = job?.progress.phase;

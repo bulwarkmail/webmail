@@ -48,6 +48,8 @@ export interface DesktopWindowsBridge {
   setRestoreEnabled?: (enabled: boolean) => void;
   /** Signed in, with a session to lend: windows from last time can open. */
   sessionReady?: () => void;
+  /** Nobody is signed in any more: a pop-out would find no session. */
+  sessionEnded?: () => void;
   /** The warm spare's page, see components/popout/popout-spare-app.tsx. */
   spare?: {
     ready: () => void;
@@ -213,6 +215,43 @@ export interface DesktopPluginsBridge {
   install: (slug: string, version?: string) => Promise<DesktopPluginInstallResult>;
 }
 
+export type DesktopUpdateChannel = 'stable' | 'beta';
+
+export interface DesktopUpdateState {
+  /** The running version. */
+  version: string;
+  channel: DesktopUpdateChannel;
+  /** Set by the `UpdateChannel` policy. */
+  channelLocked: boolean;
+  /** False when the `AutoUpdate` policy turned updates off. */
+  allowed: boolean;
+  /** `install`: replaces itself. `notify`: an MSI, deb, rpm or unsigned macOS, says a version exists. `none`: a development run. */
+  ability: 'install' | 'notify' | 'none';
+  /** Windows, and not the per-user installer: an MSI, whose updates come the way it did. */
+  perMachine: boolean;
+  /**
+   * `available`: a newer version, for `notify` installs. `older-available`: on stable, with
+   * a beta running, and the newest stable is older than it. `off`: the policy.
+   */
+  status: 'idle' | 'checking' | 'up-to-date' | 'downloading' | 'ready' | 'available' | 'older-available' | 'error' | 'off';
+  /** The version the status is about. */
+  target?: string;
+  percent?: number;
+}
+
+export interface DesktopUpdatesBridge {
+  state: () => Promise<DesktopUpdateState>;
+  check: () => Promise<DesktopUpdateState>;
+  /** Going to beta asks natively first. A locked channel stays as it is. */
+  setChannel: (channel: DesktopUpdateChannel) => Promise<DesktopUpdateState>;
+  /** Beta to stable, with a native question that says what it means. */
+  installOlder: () => Promise<DesktopUpdateState>;
+  /** Saves drafts through the normal quit, then installs. Nothing happens unless an update is ready. */
+  restart: () => void;
+  openDownload: () => void;
+  onChanged: (listener: (state: DesktopUpdateState) => void) => () => void;
+}
+
 export type DesktopKeystoreHash = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export interface DesktopKeystoreCertificate {
@@ -286,6 +325,19 @@ export interface DesktopKeystoreBridge {
   clearGrants?: () => Promise<void>;
 }
 
+export interface DesktopCertificatesBridge {
+  /**
+   * Forgets client certificates chosen for servers. `account`: those chosen while that account was
+   * active, at its own sign-out. `last`: all of them, and what the app keeps of them in memory, at
+   * the sign-out that leaves nobody. Only narrows.
+   */
+  clearChoices: (scope: { account?: string; last?: boolean }) => Promise<void>;
+  /** The account a choice made from now on belongs to. */
+  setAccount: (account: string | null) => Promise<void>;
+  /** The app's connections were closed: a request under way will never settle by itself. */
+  onConnectionsReset: (listener: () => void) => () => void;
+}
+
 export interface DesktopPolicyBridge {
   /** What's in force now. Synchronous: a page can read it in its first render. */
   get: () => PolicySnapshot;
@@ -325,6 +377,88 @@ export interface DesktopAppLockBridge {
   onLockRequest: (listener: () => void) => () => void;
 }
 
+export type DesktopLocalImportKind = 'mbox' | 'maildir' | 'pst';
+
+/** Something a scan found. The handle is all the page can ask for it by. */
+export interface DesktopLocalImportCandidate {
+  handle: string;
+  app: 'thunderbird' | 'outlook';
+  kind: DesktopLocalImportKind;
+  /** The Thunderbird profile's name, or "Outlook". */
+  group: string;
+  account?: string;
+  /** Where the mail goes: `Archives.sbd/2020` is ["Archives", "2020"]. Empty for a PST, which has its own. */
+  folder: string[];
+  name: string;
+  size: number;
+  lastModified: number;
+  /** Maildir only. */
+  messages?: number;
+}
+
+export interface DesktopLocalImportBook {
+  handle: string;
+  group: string;
+  name: string;
+  contacts: number;
+}
+
+export type DesktopLocalImportScanResult =
+  | {
+      ok: true;
+      candidates: DesktopLocalImportCandidate[];
+      books: DesktopLocalImportBook[];
+      /** Seen and not offered. */
+      refused: { name: string; reason: 'ost' | 'in-use' }[];
+      /** Thunderbird calendars seen, which aren't read. */
+      calendars: number;
+      thunderbirdRunning: boolean;
+      /** The search took too long and was stopped: this is what it found until then. */
+      incomplete?: boolean;
+    }
+  | { ok: false; reason: 'declined' | 'busy' | 'failed' };
+
+/** A file the user confirmed. `url` takes Range requests; a Maildir's messages are at `url/<position>`. */
+export interface DesktopLocalImportFile {
+  url: string;
+  name: string;
+  kind: DesktopLocalImportKind;
+  folder: string[];
+  size: number;
+  lastModified: number;
+  entrySizes?: number[];
+}
+
+export type DesktopLocalImportGrantResult =
+  | {
+      ok: true;
+      jobId: string;
+      files: DesktopLocalImportFile[];
+      /** Contacts of the confirmed address books, as vCard text. */
+      contacts: string[];
+      /** Names that couldn't be read after all. */
+      refused: string[];
+      thunderbirdRunning: boolean;
+    }
+  | { ok: false; reason: 'declined' | 'busy' | 'invalid'; refused?: string[] };
+
+export type DesktopLocalImportResumeResult =
+  | Extract<DesktopLocalImportGrantResult, { ok: true }>
+  /** `in-use`: none can be read right now, which may pass, so the job stays. `invalid`: they're gone, and so is the job. */
+  | { ok: false; reason: 'later' | 'stopped' | 'busy' | 'invalid' | 'in-use' | 'unknown'; refused?: string[] };
+
+/**
+ * Thunderbird and Outlook data on this computer. Each step that widens access asks the
+ * user natively in main: looking, reading the confirmed files, going on after a restart.
+ */
+export interface DesktopLocalImportBridge {
+  scan: () => Promise<DesktopLocalImportScanResult>;
+  grant: (handles: string[]) => Promise<DesktopLocalImportGrantResult>;
+  resume: (jobId: string) => Promise<DesktopLocalImportResumeResult>;
+  release: (jobId: string) => Promise<void>;
+  releaseAll: () => Promise<void>;
+}
+
 export interface DesktopOsSettings {
   /** Closing the main window leaves the app running in the tray. */
   closeToTray: boolean;
@@ -339,6 +473,19 @@ export interface DesktopOsSettings {
   quietHoursEnd: string;
   /** "Show Bulwark", an Electron accelerator. Null: off. */
   showShortcut: string | null;
+  /** Quick compose, an Electron accelerator. Null: off. Unset: nobody chose, so the policy's or the built-in one. */
+  quickComposeShortcut?: string | null;
+}
+
+export interface DesktopQuickComposeStatus {
+  /** What's in force after policy and the user's choice. Null: off. */
+  shortcut: string | null;
+  /** Really held. False with a shortcut: another app has it. */
+  active: boolean;
+  /** Set by the `QuickComposeShortcut` policy. */
+  locked: boolean;
+  /** What turning it on again gives. */
+  builtIn: string | null;
 }
 
 export interface DesktopOsStatus {
@@ -346,6 +493,7 @@ export interface DesktopOsStatus {
   pausedUntil: number | null;
   /** The shortcut in settings is really held. Another app can have it. */
   shortcutActive: boolean;
+  quickCompose?: DesktopQuickComposeStatus;
 }
 
 export interface DesktopOsFile {
@@ -497,13 +645,17 @@ export interface BulwarkDesktopBridge {
   spellcheck?: DesktopSpellcheckBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
+  updates?: DesktopUpdatesBridge;
   os?: DesktopOsBridge;
   policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  /** Absent on older shells. */
+  certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
+  localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
 }
 

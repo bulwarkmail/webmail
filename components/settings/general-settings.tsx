@@ -13,6 +13,7 @@ import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
 import { IS_LITE } from '@/lib/lite';
+import { DesktopUpdateSettings } from './desktop-update-settings';
 import { DesktopWindowSettings } from './desktop-window-settings';
 
 /**
@@ -58,6 +59,8 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
           />
         </SettingItem>
       </SettingsSection>
+
+      {!IS_LITE && <DesktopUpdateSettings />}
     </div>
   );
 }

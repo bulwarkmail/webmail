@@ -1,6 +1,6 @@
 /**
- * Opens pop-out windows: one message, or a composer. Shared with the desktop
- * app's quick compose, which only has to call openComposerWindow.
+ * Opens pop-out windows: one message, or a composer. The desktop app's quick
+ * compose opens the same address from the shell.
  */
 
 import { appPath } from '@/lib/deep-links';

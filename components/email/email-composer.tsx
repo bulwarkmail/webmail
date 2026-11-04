@@ -318,6 +318,8 @@ export interface ComposerPopOut {
   /** True once the composer is on screen there. Until then this one keeps the text. */
   handOver(data: ComposerDraftData): Promise<boolean>;
   cancel(): void;
+  /** What to say when handOver answered false, if not that the new window was late. */
+  notShownMessage?: () => string;
 }
 
 interface EmailComposerProps {
@@ -390,6 +392,8 @@ interface EmailComposerProps {
    * hands the draft over under the same draft id, and closes here.
    */
   popOut?: () => ComposerPopOut | null;
+  /** The move goes back to the main window: the button says that, and shows at any width. */
+  popOutToMainLabel?: string;
   /**
    * This composer is all a window shows (lib/popout). It closes itself once a
    * message has gone. Closing the window with unsaved text hands the draft to
@@ -398,8 +402,12 @@ interface EmailComposerProps {
   ownWindow?: {
     /** The state as the window unloads, for a reload to start from. */
     onUnloadState?: (data: ComposerDraftData) => void;
-    /** A save reached the server, for other windows showing the Drafts folder. */
-    onDraftSaved?: (draftId: string) => void;
+    /**
+     * A save reached the server, for other windows showing the Drafts folder and for a
+     * reload to find it. `accountId`: the account it lives in, when not the own one.
+     * `localAccountId`: the login it was saved through.
+     */
+    onDraftSaved?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
     /**
      * Hands a draft to another window to save as this one closes: a request
      * started now wouldn't survive. False when that can't be done safely.
@@ -561,6 +569,7 @@ export function EmailComposer({
   onDiscardDraft,
   onSaveState,
   popOut,
+  popOutToMainLabel,
   ownWindow,
   onSubjectChange,
   className,
@@ -3150,7 +3159,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
-      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id);
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id, { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current });
       return id;
     })();
     inflightSaveRef.current = promise;
@@ -4447,7 +4456,7 @@ export function EmailComposer({
       // Not on screen there, so this is still the only copy of the text.
       if (!shown) {
         target.cancel();
-        toast.error(tWindows('window_not_ready'));
+        toast.error(target.notShownMessage?.() ?? tWindows('window_not_ready'));
         return;
       }
       explicitCloseRef.current = true;
@@ -4464,12 +4473,12 @@ export function EmailComposer({
       type="button"
       onClick={(event) => { event.stopPropagation(); void handlePopOut(); }}
       disabled={isPoppingOut || isSending}
-      className={className}
-      aria-label={tWindows('open_in_window')}
-      title={tWindows('open_in_window')}
-      data-testid="composer-open-in-window"
+      className={popOutToMainLabel ? className.replace("hidden md:grid", "grid") : className}
+      aria-label={popOutToMainLabel ?? tWindows('open_in_window')}
+      title={popOutToMainLabel ?? tWindows('open_in_window')}
+      data-testid={popOutToMainLabel ? "composer-back-to-main" : "composer-open-in-window"}
     >
-      <ExternalLink className={iconClassName} />
+      {popOutToMainLabel ? <Minimize2 className={iconClassName} /> : <ExternalLink className={iconClassName} />}
     </button>
   );
 

@@ -5,19 +5,27 @@ import { useLocale, useTranslations } from "next-intl";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { FileArchive, FileText, Upload, X } from "@/components/icons";
+import { FileArchive, FileText, Upload, X, FolderOpen } from "@/components/icons";
 import { useEmailStore } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isJobActive, useMailTransferStore, type ImportRequest } from "@/stores/mail-transfer-store";
 import { checkpointKey, readCheckpoint } from "@/lib/mail-import/checkpoints";
 import { hasFolders, sniffFormat, type ImportFormat, type SkipReason } from "@/lib/mail-import/sources";
-import type { ImportProgress } from "@/lib/mail-import/engine";
+import type { ImportFile, ImportProgress } from "@/lib/mail-import/engine";
+import { durationWords, importHours, WORTH_SAYING_HOURS } from "@/lib/mail-import/estimate";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { isOstFile, LOCAL_FILE_UNAVAILABLE, toImportFile } from "@/lib/desktop/local-import";
 import type { Mailbox } from "@/lib/jmap/types";
-import { formatFileSize, getMailboxPath } from "@/lib/utils";
+import { cn, formatFileSize, getMailboxPath } from "@/lib/utils";
 import { formatClock, serverMegabytes, TransferBar, useFocusOnStage } from "./transfer-progress";
 import { startImport } from "./start-import";
+import { importLocalContacts, startLocalImport } from "./local-import-job";
+import { durationText, LocalImportPanel, ThunderbirdWarning, type LocalPick } from "./local-import-panel";
+import { toast } from "@/stores/toast-store";
 
 const ACCEPT = ".eml,.zip,.mbox,.mbx,.pst,.ost,message/rfc822,application/zip,application/mbox";
+/** The desktop app doesn't take .ost files: no real one was ever tested (decision 7). */
+const ACCEPT_DESKTOP = ".eml,.zip,.mbox,.mbx,.pst,message/rfc822,application/zip,application/mbox";
 const TOP = "\u0000top";
 const SKIP_ORDER: SkipReason[] = ["too_large", "deleted", "embedded", "unreadable", "contact", "calendar", "other"];
 
@@ -33,6 +41,7 @@ function mailboxValue(m: Mailbox): string {
 
 export function MailImportDialog({ request }: { request: ImportRequest }) {
   const t = useTranslations("mail_import");
+  const tLocal = useTranslations("desktopImport");
   const locale = useLocale();
   const id = useId();
   const visible = useMailTransferStore((s) => s.visible);
@@ -61,13 +70,21 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
     : targets.find((x) => x.mailbox.role === "inbox" && !x.mailbox.isShared)?.mailbox.id ?? targets[0]?.mailbox.id ?? TOP;
 
   const [picked, setPicked] = useState<Picked[]>([]);
+  // What the desktop app's search brought: its files are in the checkpoint check through this list too.
+  const [local, setLocal] = useState<LocalPick | null>(null);
+  const [skipSeen, setSkipSeen] = useState(true);
+  const [listing, setListing] = useState(false);
+  const [ostChosen, setOstChosen] = useState<string[]>([]);
+  const [lockHeld, setLockHeld] = useState(false);
+  const inDesktopApp = !!getDesktopBridge()?.localImport;
+  const localFiles = useMemo(() => (local?.files ?? []).map(toImportFile), [local]);
   const [target, setTarget] = useState<string>(initialTarget);
   const [keepFolders, setKeepFolders] = useState(true);
   const [resume, setResume] = useState(true);
   const [resumable, setResumable] = useState(0);
   const [checking, setChecking] = useState(false);
 
-  const anyFolders = picked.some((p) => p.folders);
+  const anyFolders = picked.some((p) => p.folders) || localFiles.length > 0;
   const targetMailbox = targets.find((x) => x.mailbox.id === target)?.mailbox;
   const accountId = targetMailbox?.accountId || client?.getAccountId() || "";
   const targetId = target === TOP ? null : targetMailbox ? targetMailbox.originalId || targetMailbox.id : null;
@@ -87,21 +104,27 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   // An earlier import of the same file into the same place that stopped part way.
   useEffect(() => {
     let current = true;
-    if (picked.length === 0 || !accountId) { setResumable(0); setChecking(false); return; }
+    const all = [...picked.map((p) => p.file), ...localFiles.map((f) => f.file)];
+    if (all.length === 0 || !accountId) { setResumable(0); setChecking(false); return; }
     // Import waits for this: starting before it knows would throw the checkpoint away.
     setChecking(true);
-    void Promise.all(picked.map((p) => readCheckpoint(checkpointKey({
-      scope: activeAccountId ?? "default", accountId, target: targetId, keepFolders: effectiveKeep, file: p.file,
+    void Promise.all(all.map((file) => readCheckpoint(checkpointKey({
+      scope: activeAccountId ?? "default", accountId, target: targetId, keepFolders: effectiveKeep, file,
     })))).then((found) => {
       if (!current) return;
       setResumable(found.reduce((n, c) => n + (c?.done ?? 0) + (c?.ahead?.length ?? 0), 0));
       setChecking(false);
     }, () => { if (current) setChecking(false); });
     return () => { current = false; };
-  }, [picked, accountId, targetId, effectiveKeep, activeAccountId]);
+  }, [picked, localFiles, accountId, targetId, effectiveKeep, activeAccountId]);
 
   const addFiles = async (list: FileList | null) => {
-    const files = Array.from(list ?? []);
+    let files = Array.from(list ?? []);
+    if (inDesktopApp) {
+      const ost = await Promise.all(files.map((file) => isOstFile(file)));
+      setOstChosen(files.filter((_, i) => ost[i]).map((file) => file.name));
+      files = files.filter((_, i) => !ost[i]);
+    }
     const next = await Promise.all(files.map(async (file) => {
       const format = await sniffFormat(file);
       return { file, format, folders: await hasFolders(file, format) };
@@ -116,8 +139,29 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   useFocusOnStage(stageButton, progress ? (active ? "running" : "ended") : "setup");
 
   const onStart = () => {
-    if (picked.length === 0 || !accountId) return;
+    if ((picked.length === 0 && !local) || !accountId) return;
     if (target === TOP && !effectiveKeep) return;
+    if (local) {
+      if (local.contacts.length > 0) {
+        void importLocalContacts(local.contacts).then((count) => {
+          if (count > 0) toast.success(tLocal("contacts_added", { count }));
+        }).catch(() => toast.warning(tLocal("contacts_failed")));
+      }
+      const files: ImportFile[] = [...localFiles, ...picked.map((p) => ({ file: p.file, format: p.format }))];
+      if (files.length === 0) { close(); return; }
+      setLockHeld(false);
+      void startLocalImport({
+        jobId: local.jobId,
+        files,
+        handPicked: picked.map((p) => p.file.name),
+        accountId,
+        targetMailboxId: targetId,
+        keepFolders: effectiveKeep,
+        resume: resume && resumable > 0,
+        dedupe: skipSeen,
+      }).then((started) => setLockHeld(!started));
+      return;
+    }
     startImport({
       files: picked.map((p) => ({ file: p.file, format: p.format })),
       accountId,
@@ -128,6 +172,11 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   };
 
   const onClose = () => (active ? hide() : close());
+  // Left without starting: the shell gives up the files the user confirmed, and their paths.
+  const leaveSetup = () => {
+    if (local) void getDesktopBridge()?.localImport?.release(local.jobId).catch(() => {});
+    close();
+  };
 
   if (!visible) return null;
 
@@ -149,36 +198,84 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
           <Button ref={stageButton} onClick={() => close()}>{t("close")}</Button>
         )}
       >
-        <ProgressBody progress={progress} t={t} locale={locale} statusId={`${id}-status`} />
+        <ProgressBody progress={progress} t={t} tLocal={tLocal} locale={locale} statusId={`${id}-status`} />
       </Dialog>
     );
   }
 
-  const canStart = picked.length > 0 && !!accountId && !checking && !(target === TOP && !effectiveKeep);
+  const canStart = (picked.length > 0 || !!local) && !listing && !!accountId && !checking && !(target === TOP && !effectiveKeep);
+  const localBytes = localFiles.reduce((n, f) => n + f.file.size, 0);
+  const localHours = importHours({ bytes: localBytes, messages: local?.files.reduce((n, f) => n + (f.entrySizes?.length ?? 0), 0) ?? 0 });
 
   return (
     <Dialog
       isOpen
-      onClose={() => close()}
+      onClose={leaveSetup}
       size="full-on-phone"
       title={t("title")}
-      description={t("description")}
+      description={inDesktopApp ? tLocal("description") : t("description")}
       testId="mail-import-dialog"
       initialFocus={chooseButton}
       footer={(
         <>
-          <Button variant="outline" onClick={() => close()}>{t("cancel")}</Button>
+          <Button variant="outline" onClick={leaveSetup}>{t("cancel")}</Button>
           <Button onClick={onStart} disabled={!canStart} data-testid="mail-import-start">{t("start")}</Button>
         </>
       )}
     >
       <div className="mt-4 space-y-5">
+        {lockHeld && <p role="status" className="text-sm text-destructive" data-testid="local-import-busy">{t("error_busy")}</p>}
+        {inDesktopApp && !local && (
+          <LocalImportPanel
+            onListing={setListing}
+            onPick={(pick) => {
+              setLocal(pick);
+              // Thunderbird's Inbox and Sent belong in the account's own, so the top level fits.
+              if (pick.files.length > 0) setTarget(TOP);
+            }}
+          />
+        )}
+        {local && (
+          <div className="space-y-3" data-testid="local-import-picked">
+            {local.files.length > 0 && (
+              <div className="flex items-center gap-3 rounded-md border border-border px-3 py-2 text-sm">
+                <FolderOpen className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-foreground">{tLocal("picked", { count: local.files.length })}</span>
+                  <span className="block text-xs text-muted-foreground">{formatFileSize(localBytes)}</span>
+                </span>
+                <IconButton
+                  label={tLocal("remove_picked")}
+                  onClick={() => {
+                    void getDesktopBridge()?.localImport?.release(local.jobId).catch(() => {});
+                    setLocal(null);
+                  }}
+                >
+                  <X aria-hidden="true" />
+                </IconButton>
+              </div>
+            )}
+            {local.contacts.length > 0 && <p className="text-sm text-foreground">{tLocal("contacts_picked", { count: local.contacts.length })}</p>}
+            {local.refused.length > 0 && <p className="text-sm text-muted-foreground">{tLocal("files_refused", { names: local.refused.join(", ") })}</p>}
+            {local.thunderbirdRunning && <ThunderbirdWarning t={tLocal} />}
+            {localHours >= WORTH_SAYING_HOURS && (
+              <p className="text-sm text-foreground" data-testid="local-import-estimate">
+                {tLocal("estimate", { size: formatFileSize(localBytes), time: durationText(tLocal, durationWords(localHours)) })}
+              </p>
+            )}
+            <label className="flex items-start gap-2 text-sm text-foreground">
+              <input type="checkbox" className="mt-0.5 rounded border-border" checked={skipSeen} onChange={(e) => setSkipSeen(e.target.checked)} data-testid="local-import-skip-seen" />
+              <span>{tLocal("skip_seen")}</span>
+            </label>
+          </div>
+        )}
+        <div className={cn("space-y-5", listing && "hidden")}>
         <div>
           <input
             ref={fileInput}
             type="file"
             multiple
-            accept={ACCEPT}
+            accept={inDesktopApp ? ACCEPT_DESKTOP : ACCEPT}
             className="hidden"
             tabIndex={-1}
             aria-hidden="true"
@@ -189,6 +286,11 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
             <Upload className="me-2" aria-hidden="true" />
             {t("choose_files")}
           </Button>
+          {ostChosen.length > 0 && (
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="local-import-ost-chosen">
+              {tLocal("ost_refused", { names: ostChosen.join(", ") })}
+            </p>
+          )}
           {picked.length > 0 && (
             <ul className="mt-3 divide-y divide-border rounded-md border border-border" aria-label={t("chosen_files")}>
               {picked.map((p, i) => (
@@ -253,8 +355,9 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
           </label>
         )}
 
-        {picked.some((p) => p.format === "pst") && <p className="text-xs text-muted-foreground">{t("pst_note")}</p>}
+        {(picked.some((p) => p.format === "pst") || local?.files.some((f) => f.kind === "pst")) && <p className="text-xs text-muted-foreground">{t("pst_note")}</p>}
         <p className="text-xs text-muted-foreground">{t("quota_note")}</p>
+        </div>
       </div>
     </Dialog>
   );
@@ -266,7 +369,8 @@ const PST_ERRORS = ["encrypted", "not_pst", "unreadable", "worker"];
 const IMPORT_ERRORS = ["over_quota", "forbidden", "failures", "network", "busy"];
 
 /** Why an import stopped, in words; anything else as the server or browser said it. */
-function errorText(t: T, error: string): string {
+function errorText(t: T, tLocal: T, error: string): string {
+  if (error === LOCAL_FILE_UNAVAILABLE) return tLocal("file_unavailable");
   const pst = /^pst:(\w+):/.exec(error)?.[1];
   if (pst && PST_ERRORS.includes(pst)) return t(`pst_error_${pst}`);
   const own = /^import:(\w+)$/.exec(error)?.[1];
@@ -281,9 +385,13 @@ function progressTitle(t: T, p: ImportProgress): string {
   return t("running_title");
 }
 
-function ProgressBody({ progress: p, t, locale, statusId }: { progress: ImportProgress; t: T; locale: string; statusId: string }) {
+function ProgressBody({ progress: p, t, tLocal, locale, statusId }: { progress: ImportProgress; t: T; tLocal: T; locale: string; statusId: string }) {
   const running = p.phase === "running" || p.phase === "paused";
   const skipped = SKIP_ORDER.filter((r) => (p.skipped[r] ?? 0) > 0);
+  // Only the desktop app imports what can take days, and says so: browsers stay as they were.
+  const hoursLeft = running && p.totalBytes && getDesktopBridge()
+    ? importHours({ bytes: p.totalBytes * (1 - p.fraction) }, p.quota)
+    : 0;
   let status: string;
   if (p.phase === "paused" && p.pausedUntil) {
     const time = formatClock(p.pausedUntil, locale);
@@ -304,6 +412,11 @@ function ProgressBody({ progress: p, t, locale, statusId }: { progress: ImportPr
       <p id={statusId} role="status" aria-live="polite" className="text-sm text-muted-foreground" data-testid="mail-import-status">
         {status}
       </p>
+      {hoursLeft >= WORTH_SAYING_HOURS && (
+        <p className="text-sm text-muted-foreground" data-testid="local-import-time-left">
+          {tLocal("time_left", { time: durationText(tLocal, durationWords(hoursLeft)) })}
+        </p>
+      )}
       {!running && (
         <div className="space-y-3 text-sm">
           {p.foldersCreated > 0 && <p>{t("summary_folders", { count: p.foldersCreated })}</p>}
@@ -315,19 +428,20 @@ function ProgressBody({ progress: p, t, locale, statusId }: { progress: ImportPr
               </ul>
             </div>
           )}
+          {(p.skipped.duplicate ?? 0) > 0 && <p className="text-muted-foreground" data-testid="local-import-duplicates">{tLocal("skip_duplicate", { count: p.skipped.duplicate ?? 0 })}</p>}
           {p.failed > 0 && (
             <div>
               <p className="font-medium text-destructive">{t("summary_failed", { count: p.failed })}</p>
               <ul className="mt-1 list-disc ps-5 text-muted-foreground">
                 {p.failures.map((f, i) => (
-                  <li key={i} className="break-words">{f.label || t("untitled")}: {f.reason === "invalid" ? t("failure_invalid") : f.reason}</li>
+                  <li key={i} className="break-words">{f.label || t("untitled")}: {f.reason === "invalid" ? t("failure_invalid") : f.reason === LOCAL_FILE_UNAVAILABLE ? tLocal("file_unavailable") : f.reason}</li>
                 ))}
               </ul>
             </div>
           )}
           {p.phase === "cancelled" && <p className="text-muted-foreground">{t("cancelled_hint")}</p>}
           {p.phase === "done" && (p.retryable ?? 0) > 0 && <p className="text-muted-foreground">{t("retry_hint")}</p>}
-          {p.phase === "failed" && p.error && <p className="text-destructive break-words">{errorText(t, p.error)}</p>}
+          {p.phase === "failed" && p.error && <p className="text-destructive break-words">{errorText(t, tLocal, p.error)}</p>}
         </div>
       )}
     </div>

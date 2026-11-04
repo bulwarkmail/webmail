@@ -5,6 +5,8 @@
  */
 
 import { getDesktopBridge } from './bridge';
+import { certificateLabels } from './certificate-labels';
+import { updateLabels } from './update-labels';
 
 let ui = '';
 let labels: Record<string, string> | undefined;
@@ -33,9 +35,15 @@ export function noteComposerLanguage(key: string, language: string | null): void
   push();
 }
 
-/** The shell's text in the interface language, by its keys in src/main/strings.ts. */
-export function shellLabels(t: (key: string) => string): Record<string, string> {
+/**
+ * The shell's text in the interface language, by its keys in src/main/strings.ts. The
+ * shell fills in `{word}` and `{count}` itself when it shows them, so they go over as
+ * they are. Without a value next-intl gives back the key, and that would be the label.
+ */
+export function shellLabels(t: (key: string, values?: Record<string, string>) => string): Record<string, string> {
   return {
+    ...updateLabels(t),
+    ...certificateLabels(t),
     menuFile: t('desktopUi.menu.file'),
     menuEdit: t('desktopUi.menu.edit'),
     menuView: t('desktopUi.menu.view'),
@@ -44,6 +52,7 @@ export function shellLabels(t: (key: string) => string): Record<string, string> 
     menuWindow: t('desktopUi.menu.window'),
     menuHelp: t('desktopUi.menu.help'),
     menuNewMessage: t('email_composer.new_message'),
+    menuQuickCompose: t('desktopQuickCompose.menu'),
     menuNewWindow: t('desktopUi.menu.new_window'),
     menuPrint: t('desktopUi.menu.print'),
     menuSavePdf: t('desktopUi.menu.save_pdf'),
@@ -99,7 +108,7 @@ export function shellLabels(t: (key: string) => string): Record<string, string> 
     contextCopy: t('desktopUi.menu.copy'),
     contextPaste: t('desktopUi.menu.paste'),
     contextSelectAll: t('desktopUi.menu.select_all'),
-    contextAddToDictionary: t('desktopUi.context.add_to_dictionary'),
+    contextAddToDictionary: t('desktopUi.context.add_to_dictionary', { word: '{word}' }),
     contextNoSuggestions: t('desktopUi.context.no_suggestions'),
     contextOpenLink: t('desktopUi.context.open_link'),
     contextCopyLink: t('desktopUi.context.copy_link'),
@@ -111,7 +120,7 @@ export function shellLabels(t: (key: string) => string): Record<string, string> 
     closeAnyway: t('desktopUi.closing.close_anyway'),
     unsentTitle: t('desktopUi.closing.unsent_title'),
     unsentOne: t('desktopUi.closing.unsent_one'),
-    unsentMany: t('desktopUi.closing.unsent_many'),
+    unsentMany: t('desktopUi.closing.unsent_many', { count: '{count}' }),
     closeNow: t('desktopUi.closing.quit'),
     leaveTitle: t('desktopUi.closing.leave_title'),
     leaveDetail: t('desktopUi.closing.leave_detail'),
