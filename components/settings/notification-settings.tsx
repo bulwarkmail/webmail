@@ -6,6 +6,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
+import { DesktopOsSettings } from './desktop-os-settings';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,6 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MultiAccountPushSettings } from './multi-account-push';
-import { DesktopNotificationOsSettings } from './desktop-os-settings';
 import { productName } from '@/lib/product-name';
 import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
@@ -413,7 +413,8 @@ export function NotificationSettings() {
         </SettingItem>
       </SettingsSection>
 
-      <DesktopNotificationOsSettings />
+      {/* The desktop app's taskbar flash and quiet hours. Nothing in a browser. */}
+      <DesktopOsSettings part="notifications" />
 
       <SettingsSection id="push" title={t('push.title', { appName })} description={t('push.description')} term="push">
         <SettingItem label={t('push.enable')} description={statusDescription}>

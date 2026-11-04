@@ -81,12 +81,6 @@
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>
   </policy>
-  <policy name="AutoUpdate_Recommended" class="Both" displayName="$(string.AutoUpdate)" explainText="$(string.AutoUpdate_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AutoUpdate">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
   <policy name="PluginsMode" class="Both" displayName="$(string.PluginsMode)" explainText="$(string.PluginsMode_Explain)" presentation="$(presentation.PluginsMode)" key="Software\Policies\Bulwark\Desktop">
     <parentCategory ref="Bulwark_Desktop_plugins"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
@@ -123,12 +117,6 @@
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>
   </policy>
-  <policy name="AppLockRequired_Recommended" class="Both" displayName="$(string.AppLockRequired)" explainText="$(string.AppLockRequired_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AppLockRequired">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
   <policy name="AppLockTimeoutMinutes" class="Both" displayName="$(string.AppLockTimeoutMinutes)" explainText="$(string.AppLockTimeoutMinutes_Explain)" presentation="$(presentation.AppLockTimeoutMinutes)" key="Software\Policies\Bulwark\Desktop">
     <parentCategory ref="Bulwark_Desktop_security"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
@@ -149,20 +137,8 @@
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>
   </policy>
-  <policy name="TelemetryAllowed_Recommended" class="Both" displayName="$(string.TelemetryAllowed)" explainText="$(string.TelemetryAllowed_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="TelemetryAllowed">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
   <policy name="CrashReportsAllowed" class="Both" displayName="$(string.CrashReportsAllowed)" explainText="$(string.CrashReportsAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="CrashReportsAllowed">
     <parentCategory ref="Bulwark_Desktop_privacy"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
-  <policy name="CrashReportsAllowed_Recommended" class="Both" displayName="$(string.CrashReportsAllowed)" explainText="$(string.CrashReportsAllowed_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="CrashReportsAllowed">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>

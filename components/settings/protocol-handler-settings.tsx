@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/use-config";
-import { useIsDesktopApp } from "@/hooks/use-is-desktop-app";
 import { getPathPrefix } from "@/lib/browser-navigation";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { productName } from "@/lib/product-name";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { ProtocolOpenMode } from "@/stores/settings-store";
@@ -42,12 +42,13 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
   const protocolOpenMode = useSettingsStore((state) => state.protocolOpenMode);
   const updateSetting = useSettingsStore((state) => state.updateSetting);
   const [supported, setSupported] = useState(false);
-  // The desktop app opens mail links itself ("Default mail app" under Desktop
-  // app); the browser's handler registration means nothing there.
-  const desktop = useIsDesktopApp();
+  // The desktop app is a mail app of its own: its "Default mail app" row (Desktop app
+  // section) is the one that counts, and a browser's handler means nothing there.
+  const [desktop, setDesktop] = useState(false);
 
   useEffect(() => {
     setSupported(canRegisterProtocolHandler());
+    setDesktop(!!getDesktopBridge());
   }, []);
 
   const handleOpenModeChange = async (value: string) => {
