@@ -1766,7 +1766,7 @@
         "choose_desc": "Seleziona un tono di notifica e clicca sull'icona dell'altoparlante per l'anteprima"
       },
       "email": {
-        "title": "Notifiche e-mail",
+        "title": "Nuova posta",
         "description": "Configura le notifiche per le e-mail in arrivo",
         "enabled": "Notifiche e-mail",
         "enabled_desc": "Mostra notifiche all'arrivo di nuove e-mail",
@@ -2988,7 +2988,7 @@
         "description": "Configura come vengono visualizzati file e cartelle"
       },
       "default_view": {
-        "label": "Vista predefinita",
+        "label": "Mostra i file come",
         "description": "Scegli tra layout a griglia e a lista",
         "list": "Lista",
         "grid": "Griglia"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Togli dalla vista settimanale i giorni in cui non lavori. I loro eventi restano visibili nelle viste mese, giorno e agenda.",
       "working_days": "Giorni lavorativi",
       "title": "Impostazioni calendario",
-      "default_view": "Vista predefinita",
+      "default_view": "Il calendario si apre in",
       "week_starts_on": "La settimana inizia il",
       "time_format": "Formato ora",
       "default_calendar": "Calendario predefinito",

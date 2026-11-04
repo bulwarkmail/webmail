@@ -1769,7 +1769,7 @@
         "choose_desc": "Vyberte tón oznámenia a kliknutím na ikonu reproduktora si ho vypočujte"
       },
       "email": {
-        "title": "E-mailové oznámenia",
+        "title": "Nová pošta",
         "description": "Nakonfigurujte oznámenia pre prichádzajúce e-maily",
         "enabled": "E-mailové oznámenia",
         "enabled_desc": "Zobrazovať oznámenia pri príchode nových e-mailov",
@@ -2995,7 +2995,7 @@
         "description": "Nakonfigurujte spôsob zobrazenia súborov a priečinkov"
       },
       "default_view": {
-        "label": "Predvolené zobrazenie",
+        "label": "Zobraziť súbory ako",
         "description": "Vyberte rozloženie do mriežky alebo zoznamu",
         "list": "Zoznam",
         "grid": "Mriežka"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Vynechať z týždenného zobrazenia dni, keď nepracujete. Ich udalosti sa naďalej zobrazujú v mesačnom, dennom a agendovom zobrazení.",
       "working_days": "Pracovné dni",
       "title": "Nastavenia kalendára",
-      "default_view": "Predvolené zobrazenie",
+      "default_view": "Kalendár sa otvorí v",
       "week_starts_on": "Týždeň začína v",
       "time_format": "Formát času",
       "default_calendar": "Predvolený kalendár",

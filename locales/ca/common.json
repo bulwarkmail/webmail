@@ -1814,7 +1814,7 @@
         "choose_desc": "Seleccioneu un to de notificació i feu clic a la icona de l'altaveu per escoltar-lo"
       },
       "email": {
-        "title": "Notificacions de correu",
+        "title": "Correu nou",
         "description": "Configureu les notificacions per als correus entrants",
         "enabled": "Notificacions de correu",
         "enabled_desc": "Mostra notificacions quan arribin correus nous",
@@ -2995,7 +2995,7 @@
         "description": "Configureu com es mostren els fitxers i les carpetes"
       },
       "default_view": {
-        "label": "Vista predeterminada",
+        "label": "Mostra els fitxers com a",
         "description": "Trieu entre disposició de quadrícula i de llista",
         "list": "Llista",
         "grid": "Quadrícula"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Treu de la vista setmanal els dies que no treballes. Els seus esdeveniments continuen apareixent a les vistes de mes, dia i agenda.",
       "working_days": "Dies laborables",
       "title": "Configuració del calendari",
-      "default_view": "Vista predeterminada",
+      "default_view": "El calendari s'obre a",
       "week_starts_on": "La setmana comença el",
       "time_format": "Format d'hora",
       "default_calendar": "Calendari predeterminat",

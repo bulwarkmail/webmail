@@ -1766,7 +1766,7 @@
         "choose_desc": "选择通知音并单击扬声器图标进行预览"
       },
       "email": {
-        "title": "邮件通知",
+        "title": "新邮件",
         "description": "配置传入邮件的通知",
         "enabled": "邮件通知",
         "enabled_desc": "新邮件到达时显示通知",
@@ -2988,7 +2988,7 @@
         "description": "配置文件和文件夹的显示方式"
       },
       "default_view": {
-        "label": "默认视图",
+        "label": "文件显示方式",
         "description": "在网格布局和列表布局之间进行选择",
         "list": "列表",
         "grid": "网格"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "在周视图中省略你不工作的日子。这些日子的日程仍会显示在月、日和日程列表视图中。",
       "working_days": "工作日",
       "title": "日历设置",
-      "default_view": "默认视图",
+      "default_view": "日历打开时显示",
       "week_starts_on": "一周开始于",
       "time_format": "时间格式",
       "default_calendar": "默认日历",

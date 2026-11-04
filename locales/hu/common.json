@@ -1814,7 +1814,7 @@
         "choose_desc": "Válassz ki egy értesítési hangot, és kattints a hangszóró ikonra az előnézethez"
       },
       "email": {
-        "title": "E-mail értesítések",
+        "title": "Új levelek",
         "description": "Értesítések beállítása a beérkező e-mailekhez",
         "enabled": "E-mail értesítések",
         "enabled_desc": "Értesítések megjelenítése új e-mailek érkezésekor",
@@ -2991,7 +2991,7 @@
         "description": "Fájlok és mappák megjelenésének beállítása"
       },
       "default_view": {
-        "label": "Alapértelmezett nézet",
+        "label": "Fájlok megjelenítése",
         "description": "Válassz rács vagy lista elrendezés között",
         "list": "Lista",
         "grid": "Rács"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "A heti nézetből kimaradnak azok a napok, amikor nem dolgozol. Eseményeik továbbra is megjelennek a havi, napi és napirend nézetben.",
       "working_days": "Munkanapok",
       "title": "Naptár beállítások",
-      "default_view": "Alapértelmezett nézet",
+      "default_view": "A naptár ebben a nézetben nyílik meg",
       "week_starts_on": "Hét kezdőnapja",
       "time_format": "Idő formátum",
       "default_calendar": "Alapértelmezett naptár",

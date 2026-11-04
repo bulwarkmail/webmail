@@ -123,8 +123,8 @@ describe('settings search: words, word starts and synonyms', () => {
     ['vacation', 'vacation: Reply automatically'],
     ['logout', 'account: Sign out'],
     ['sign out', 'account: Sign out'],
-    ['2fa', 'security: TOTP authentication'],
-    ['two-factor', 'security: TOTP authentication'],
+    ['2fa', 'security: Two-step sign-in'],
+    ['two-factor', 'security: Two-step sign-in'],
     ['password', 'security: Change password'],
     ['signature', 'composing: Signatures'],
     ['font size', 'accessibility: Text size'],
@@ -160,7 +160,7 @@ describe('settings search: no two rows with the same name', () => {
   // Renamed on other branches of the same fix (settings-27 on the
   // notification sound and mail rows, the Default view rows of Calendar and
   // Files still to decide). Empty this list once they're merged.
-  const PENDING_RENAMES = new Set(['email notifications', 'notification sound', 'default view']);
+  const PENDING_RENAMES = new Set<string>([]);
 
   it('names every indexed row and section differently, across all pages', () => {
     const seen = new Map<string, string>();

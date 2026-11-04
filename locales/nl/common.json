@@ -1766,7 +1766,7 @@
         "choose_desc": "Selecteer een meldingstoon en klik op het luidsprekerpictogram voor een voorbeeld"
       },
       "email": {
-        "title": "E-mailmeldingen",
+        "title": "Nieuwe e-mail",
         "description": "Meldingen voor inkomende e-mails configureren",
         "enabled": "E-mailmeldingen",
         "enabled_desc": "Meldingen tonen wanneer nieuwe e-mails binnenkomen",
@@ -2988,7 +2988,7 @@
         "description": "Configureer hoe bestanden en mappen worden weergegeven"
       },
       "default_view": {
-        "label": "Standaardweergave",
+        "label": "Bestanden tonen als",
         "description": "Kies tussen raster- en lijstweergave",
         "list": "Lijst",
         "grid": "Raster"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Laat de dagen waarop je niet werkt weg uit de weekweergave. Hun evenementen blijven zichtbaar in de maand-, dag- en agendaweergave.",
       "working_days": "Werkdagen",
       "title": "Agenda-instellingen",
-      "default_view": "Standaardweergave",
+      "default_view": "Agenda opent in",
       "week_starts_on": "Week begint op",
       "time_format": "Tijdnotatie",
       "default_calendar": "Standaardagenda",

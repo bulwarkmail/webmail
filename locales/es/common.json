@@ -1766,7 +1766,7 @@
         "choose_desc": "Selecciona un tono de notificación y haz clic en el icono del altavoz para previsualizarlo"
       },
       "email": {
-        "title": "Notificaciones de correo",
+        "title": "Correo nuevo",
         "description": "Configurar notificaciones para correos entrantes",
         "enabled": "Notificaciones de correo",
         "enabled_desc": "Mostrar notificaciones cuando lleguen nuevos correos",
@@ -2988,7 +2988,7 @@
         "description": "Configura cómo se muestran los archivos y carpetas"
       },
       "default_view": {
-        "label": "Vista predeterminada",
+        "label": "Mostrar archivos como",
         "description": "Elige entre diseño de cuadrícula y lista",
         "list": "Lista",
         "grid": "Cuadrícula"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Quitar de la vista semanal los días que no trabajas. Sus eventos siguen apareciendo en las vistas de mes, día y agenda.",
       "working_days": "Días laborables",
       "title": "Configuración del calendario",
-      "default_view": "Vista predeterminada",
+      "default_view": "El calendario se abre en",
       "week_starts_on": "La semana comienza el",
       "time_format": "Formato de hora",
       "default_calendar": "Calendario predeterminado",

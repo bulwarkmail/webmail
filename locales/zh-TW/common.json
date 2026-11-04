@@ -1814,7 +1814,7 @@
         "choose_desc": "選擇通知音並點擊揚聲器圖示進行預覽"
       },
       "email": {
-        "title": "郵件通知",
+        "title": "新郵件",
         "description": "設定傳入郵件的通知",
         "enabled": "郵件通知",
         "enabled_desc": "新郵件到達時顯示通知",
@@ -2995,7 +2995,7 @@
         "description": "設定檔案和資料夾的顯示方式"
       },
       "default_view": {
-        "label": "預設檢視",
+        "label": "檔案顯示方式",
         "description": "選擇網格或清單版面配置",
         "list": "清單",
         "grid": "網格"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "在週檢視中省略你不工作的日子。這些日子的活動仍會顯示在月、日和行程檢視中。",
       "working_days": "工作日",
       "title": "行事曆設定",
-      "default_view": "預設檢視",
+      "default_view": "行事曆開啟時顯示",
       "week_starts_on": "一週開始於",
       "time_format": "時間格式",
       "default_calendar": "預設行事曆",

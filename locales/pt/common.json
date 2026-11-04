@@ -1766,7 +1766,7 @@
         "choose_desc": "Selecione um toque de notificação e clique no ícone do alto-falante para pré-visualizar"
       },
       "email": {
-        "title": "Notificações de e-mail",
+        "title": "Novos e-mails",
         "description": "Configurar notificações para e-mails recebidos",
         "enabled": "Notificações de e-mail",
         "enabled_desc": "Mostrar notificações quando novos e-mails chegarem",
@@ -2988,7 +2988,7 @@
         "description": "Configure como arquivos e pastas são exibidos"
       },
       "default_view": {
-        "label": "Visualização padrão",
+        "label": "Mostrar ficheiros como",
         "description": "Escolha entre layout em grade e lista",
         "list": "Lista",
         "grid": "Grade"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Remover da visualização semanal os dias em que você não trabalha. Os eventos desses dias continuam aparecendo nas visualizações de mês, dia e agenda.",
       "working_days": "Dias úteis",
       "title": "Configurações do calendário",
-      "default_view": "Visualização padrão",
+      "default_view": "O calendário abre em",
       "week_starts_on": "Semana começa em",
       "time_format": "Formato de hora",
       "default_calendar": "Calendário padrão",

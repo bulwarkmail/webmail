@@ -1766,7 +1766,7 @@
         "choose_desc": "알림음을 선택하고 스피커 아이콘을 눌러 미리 들어보세요"
       },
       "email": {
-        "title": "이메일 알림",
+        "title": "새 메일",
         "description": "새 이메일이 올 때의 알림을 설정해요",
         "enabled": "이메일 알림",
         "enabled_desc": "새 이메일이 도착하면 알림을 보여줘요",
@@ -2988,7 +2988,7 @@
         "description": "파일과 폴더를 보여주는 방식을 설정해요"
       },
       "default_view": {
-        "label": "기본 뷰",
+        "label": "파일 표시 방식",
         "description": "그리드와 리스트 레이아웃 중 선택해 주세요",
         "list": "리스트",
         "grid": "그리드"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "근무하지 않는 요일을 주간 보기에서 제외합니다. 해당 일정은 월간, 일간, 일정 목록 보기에 계속 표시됩니다.",
       "working_days": "근무일",
       "title": "캘린더 설정",
-      "default_view": "기본 뷰",
+      "default_view": "캘린더 시작 보기",
       "week_starts_on": "한 주의 시작",
       "time_format": "시간 형식",
       "default_calendar": "기본 캘린더",

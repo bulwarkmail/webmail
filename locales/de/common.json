@@ -1766,7 +1766,7 @@
         "choose_desc": "Wählen Sie einen Benachrichtigungston und klicken Sie auf das Lautsprechersymbol zur Vorschau"
       },
       "email": {
-        "title": "E-Mail-Benachrichtigungen",
+        "title": "Neue E-Mails",
         "description": "Benachrichtigungen für eingehende E-Mails konfigurieren",
         "enabled": "E-Mail-Benachrichtigungen",
         "enabled_desc": "Benachrichtigungen anzeigen, wenn neue E-Mails eintreffen",
@@ -2988,7 +2988,7 @@
         "description": "Konfigurieren Sie die Anzeige von Dateien und Ordnern"
       },
       "default_view": {
-        "label": "Standardansicht",
+        "label": "Dateien anzeigen als",
         "description": "Wählen Sie zwischen Raster- und Listenansicht",
         "list": "Liste",
         "grid": "Raster"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Tage, an denen Sie nicht arbeiten, in der Wochenansicht weglassen. Ihre Termine erscheinen weiterhin in der Monats-, Tages- und Agendaansicht.",
       "working_days": "Arbeitstage",
       "title": "Kalendereinstellungen",
-      "default_view": "Standardansicht",
+      "default_view": "Kalender öffnet in",
       "week_starts_on": "Woche beginnt am",
       "time_format": "Zeitformat",
       "default_calendar": "Standardkalender",

@@ -1766,7 +1766,7 @@
         "choose_desc": "Bir bildirim tonu seçin ve önizlemek için hoparlör simgesine tıklayın"
       },
       "email": {
-        "title": "E-posta Bildirimleri",
+        "title": "Yeni e-posta",
         "description": "Gelen e-postalar için bildirimleri yapılandırın",
         "enabled": "E-posta bildirimleri",
         "enabled_desc": "Yeni e-postalar geldiğinde bildirim göster",
@@ -2988,7 +2988,7 @@
         "description": "Dosya ve klasörlerin nasıl görüntüleneceğini yapılandırın"
       },
       "default_view": {
-        "label": "Varsayılan Görünüm",
+        "label": "Dosyaları şöyle göster",
         "description": "Izgara ve liste düzeni arasında seçin",
         "list": "Liste",
         "grid": "Izgara"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Çalışmadığınız günleri hafta görünümünden çıkar. Bu günlerin etkinlikleri ay, gün ve ajanda görünümlerinde görünmeye devam eder.",
       "working_days": "Çalışma günleri",
       "title": "Takvim ayarları",
-      "default_view": "Varsayılan görünüm",
+      "default_view": "Takvim şu görünümde açılır",
       "week_starts_on": "Hafta başlangıcı",
       "time_format": "Saat biçimi",
       "default_calendar": "Varsayılan takvim",

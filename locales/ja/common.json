@@ -1766,7 +1766,7 @@
         "choose_desc": "通知音を選択し、スピーカーアイコンをクリックしてプレビュー"
       },
       "email": {
-        "title": "メール通知",
+        "title": "新着メール",
         "description": "受信メールの通知を設定",
         "enabled": "メール通知",
         "enabled_desc": "新しいメールが届いたときに通知を表示",
@@ -2988,7 +2988,7 @@
         "description": "ファイルとフォルダーの表示方法を設定します"
       },
       "default_view": {
-        "label": "デフォルトビュー",
+        "label": "ファイルの表示方法",
         "description": "グリッドまたはリストレイアウトを選択します",
         "list": "リスト",
         "grid": "グリッド"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "勤務しない曜日を週表示から除外します。その日の予定は月表示・日表示・予定リストに引き続き表示されます。",
       "working_days": "勤務日",
       "title": "カレンダー設定",
-      "default_view": "デフォルトの表示",
+      "default_view": "カレンダーの初期表示",
       "week_starts_on": "週の開始曜日",
       "time_format": "時刻の形式",
       "default_calendar": "デフォルトのカレンダー",

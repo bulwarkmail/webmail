@@ -1766,7 +1766,7 @@
         "choose_desc": "Izvēlieties paziņojuma skaņu un nospiediet skaļruņa ikonu, lai to noklausītos"
       },
       "email": {
-        "title": "E-pasta paziņojumi",
+        "title": "Jauns pasts",
         "description": "Iestatiet paziņojumus par ienākošajām vēstulēm",
         "enabled": "E-pasta paziņojumi",
         "enabled_desc": "Rādīt paziņojumus, saņemot jaunas vēstules",
@@ -2988,7 +2988,7 @@
         "description": "Pielāgojiet failu un mapju attēlošanu"
       },
       "default_view": {
-        "label": "Noklusējuma skats",
+        "label": "Rādīt failus kā",
         "description": "Izvēlieties starp režģi un sarakstu",
         "list": "Saraksts",
         "grid": "Režģis"
@@ -4712,7 +4712,7 @@
       "hide_non_working_days_desc": "Izlaist no nedēļas skata dienas, kurās nestrādājat. To notikumi joprojām redzami mēneša, dienas un darba kārtības skatā.",
       "working_days": "Darba dienas",
       "title": "Kalendāra iestatījumi",
-      "default_view": "Noklusējuma skats",
+      "default_view": "Kalendārs atveras skatā",
       "week_starts_on": "Nedēļa sākas ar",
       "time_format": "Laika formāts",
       "default_calendar": "Noklusējuma kalendārs",

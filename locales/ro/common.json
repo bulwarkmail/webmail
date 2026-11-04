@@ -1814,7 +1814,7 @@
         "choose_desc": "Selectați un ton de notificare și faceți clic pe pictograma difuzorului pentru a-l asculta"
       },
       "email": {
-        "title": "Notificări prin e-mail",
+        "title": "E-mailuri noi",
         "description": "Configurați notificările pentru e-mailurile primite",
         "enabled": "Notificări prin e-mail",
         "enabled_desc": "Afișați notificări la primirea de e-mailuri noi",
@@ -2995,7 +2995,7 @@
         "description": "Configurați modul de afișare a fișierelor și folderelor"
       },
       "default_view": {
-        "label": "Vizualizare implicită",
+        "label": "Afișează fișierele ca",
         "description": "Alegeți între afișarea sub formă de grilă și cea sub formă de listă",
         "list": "Listă",
         "grid": "Tabel"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Omite din vizualizarea pe săptămână zilele în care nu lucrezi. Evenimentele lor apar în continuare în vizualizările pe lună, pe zi și agendă.",
       "working_days": "Zile lucrătoare",
       "title": "Setări calendar",
-      "default_view": "Vizualizare implicită",
+      "default_view": "Calendarul se deschide în",
       "week_starts_on": "Săptămâna începe pe",
       "time_format": "Formatul orei",
       "default_calendar": "Calendarul implicit",

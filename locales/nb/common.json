@@ -1814,7 +1814,7 @@
         "choose_desc": "Velg en varseltone og klikk på høyttalerikonet for å forhåndsvise den"
       },
       "email": {
-        "title": "E-postvarsler",
+        "title": "Ny e-post",
         "description": "Velg innstillinger for varsler om innkommende e-post",
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
@@ -2995,7 +2995,7 @@
         "description": "Velg hvordan filer og mapper skal vises"
       },
       "default_view": {
-        "label": "Standardvisning",
+        "label": "Vis filer som",
         "description": "Velg mellom rutenett og listeoppsett",
         "list": "Liste",
         "grid": "Rutenett"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Utelat dagene du ikke jobber, fra ukevisningen. Hendelsene deres vises fortsatt i måneds-, dag- og agendavisningen.",
       "working_days": "Arbeidsdager",
       "title": "Kalenderinnstillinger",
-      "default_view": "Standardvisning",
+      "default_view": "Kalenderen åpner i",
       "week_starts_on": "Uken starter på",
       "time_format": "Tidsformat",
       "default_calendar": "Standardkalender",

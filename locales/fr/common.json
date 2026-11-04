@@ -1766,7 +1766,7 @@
         "choose_desc": "Sélectionnez une sonnerie et cliquez sur l'icône du haut-parleur pour l'écouter"
       },
       "email": {
-        "title": "Notifications par e-mail",
+        "title": "Nouveaux e-mails",
         "description": "Configurer les notifications pour les e-mails entrants",
         "enabled": "Notifications par e-mail",
         "enabled_desc": "Afficher des notifications à l'arrivée de nouveaux e-mails",
@@ -2988,7 +2988,7 @@
         "description": "Configurez l'affichage des fichiers et dossiers"
       },
       "default_view": {
-        "label": "Vue par défaut",
+        "label": "Afficher les fichiers en",
         "description": "Choisissez entre la disposition en grille et en liste",
         "list": "Liste",
         "grid": "Grille"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Retirer de la vue semaine les jours où vous ne travaillez pas. Leurs événements restent visibles dans les vues mois, jour et agenda.",
       "working_days": "Jours travaillés",
       "title": "Paramètres du calendrier",
-      "default_view": "Vue par défaut",
+      "default_view": "Le calendrier s'ouvre en",
       "week_starts_on": "La semaine commence le",
       "time_format": "Format de l'heure",
       "default_calendar": "Calendrier par défaut",

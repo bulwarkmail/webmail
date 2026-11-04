@@ -1814,7 +1814,7 @@
         "choose_desc": "Vali teavitusheli ja kliki eelvaate kuulamiseks kõlariikoonil"
       },
       "email": {
-        "title": "E-kirja teavitused",
+        "title": "Uus post",
         "description": "Seadista saabuvate kirjade teavitused",
         "enabled": "E-kirja teavitused",
         "enabled_desc": "Kuva teavitus uue kirja saabumisel",
@@ -2995,7 +2995,7 @@
         "description": "Seadista, kuidas faile ja kaustu kuvatakse"
       },
       "default_view": {
-        "label": "Vaikevaade",
+        "label": "Näita faile kui",
         "description": "Vali ruudustiku- ja loendipaigutuse vahel",
         "list": "Loend",
         "grid": "Ruudustik"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Jäta päevad, mil ei tööta, nädalavaatest välja. Nende sündmused on endiselt näha kuu-, päeva- ja päevakavavaates.",
       "working_days": "Tööpäevad",
       "title": "Kalendri seaded",
-      "default_view": "Vaikevaade",
+      "default_view": "Kalender avaneb vaates",
       "week_starts_on": "Nädal algab",
       "time_format": "Ajavorming",
       "default_calendar": "Vaikekalender",

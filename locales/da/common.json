@@ -1814,7 +1814,7 @@
         "choose_desc": "Vælg en notifikationstone og klik på højttalerikonet for at forhåndsvise den"
       },
       "email": {
-        "title": "E-mail-notifikationer",
+        "title": "Ny post",
         "description": "Konfigurér notifikationer for indkommende e-mails",
         "enabled": "E-mail-notifikationer",
         "enabled_desc": "Vis notifikationer, når nye e-mails ankommer",
@@ -2991,7 +2991,7 @@
         "description": "Konfigurér hvordan filer og mapper vises"
       },
       "default_view": {
-        "label": "Standardvisning",
+        "label": "Vis filer som",
         "description": "Vælg mellem gitter- og listelayout",
         "list": "Liste",
         "grid": "Gitter"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Udelad de dage, du ikke arbejder, fra ugevisningen. Deres begivenheder vises stadig i måneds-, dags- og agendavisningen.",
       "working_days": "Arbejdsdage",
       "title": "Kalenderindstillinger",
-      "default_view": "Standardvisning",
+      "default_view": "Kalenderen åbner i",
       "week_starts_on": "Ugen starter på",
       "time_format": "Tidsformat",
       "default_calendar": "Standardkalender",

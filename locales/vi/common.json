@@ -1826,7 +1826,7 @@
         "choose_desc": "Chọn âm báo rồi nhấn biểu tượng loa để nghe thử"
       },
       "email": {
-        "title": "Thông báo qua email",
+        "title": "Thư mới",
         "description": "Cấu hình thông báo khi có thư đến",
         "enabled": "Thông báo qua email",
         "enabled_desc": "Hiển thị thông báo khi có thư mới",
@@ -3007,7 +3007,7 @@
         "description": "Định cấu hình cách hiển thị tệp và thư mục"
       },
       "default_view": {
-        "label": "Chế độ xem mặc định",
+        "label": "Hiển thị tệp dạng",
         "description": "Chọn giữa bố cục lưới và danh sách",
         "list": "Danh sách",
         "grid": "Lưới"
@@ -4725,7 +4725,7 @@
       "hide_non_working_days_desc": "Ẩn các ngày bạn không làm việc khỏi chế độ xem tuần. Sự kiện trong những ngày đó vẫn xuất hiện trong chế độ xem tháng, ngày và lịch trình.",
       "working_days": "Ngày làm việc",
       "title": "Cài đặt lịch",
-      "default_view": "Chế độ xem mặc định",
+      "default_view": "Lịch mở ở chế độ",
       "week_starts_on": "Tuần bắt đầu vào",
       "time_format": "Định dạng thời gian",
       "default_calendar": "Lịch mặc định",

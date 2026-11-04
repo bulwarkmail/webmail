@@ -1766,7 +1766,7 @@
         "choose_desc": "Wybierz ton powiadomienia i kliknij ikonę głośnika, aby go odsłuchać"
       },
       "email": {
-        "title": "Powiadomienia e-mail",
+        "title": "Nowa poczta",
         "description": "Skonfiguruj powiadomienia dla przychodzących wiadomości e-mail",
         "enabled": "Powiadomienia e-mail",
         "enabled_desc": "Pokazuj powiadomienia po nadejściu nowych wiadomości e-mail",
@@ -2988,7 +2988,7 @@
         "description": "Skonfiguruj sposób wyświetlania plików i folderów"
       },
       "default_view": {
-        "label": "Domyślny widok",
+        "label": "Pokaż pliki jako",
         "description": "Wybierz układ siatki lub listy",
         "list": "Lista",
         "grid": "Siatka"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Pomijaj w widoku tygodnia dni, w które nie pracujesz. Ich wydarzenia nadal widać w widokach miesiąca, dnia i agendy.",
       "working_days": "Dni robocze",
       "title": "Ustawienia kalendarza",
-      "default_view": "Domyślny widok",
+      "default_view": "Kalendarz otwiera się w widoku",
       "week_starts_on": "Tydzień zaczyna się w",
       "time_format": "Format czasu",
       "default_calendar": "Domyślny kalendarz",

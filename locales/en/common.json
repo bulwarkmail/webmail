@@ -1814,7 +1814,7 @@
         "choose_desc": "Select a notification tone and click the speaker icon to preview it"
       },
       "email": {
-        "title": "Email notifications",
+        "title": "New mail",
         "description": "Configure notifications for incoming emails",
         "enabled": "Email notifications",
         "enabled_desc": "Show notifications when new emails arrive",
@@ -2995,7 +2995,7 @@
         "description": "Configure how files and folders are displayed"
       },
       "default_view": {
-        "label": "Default view",
+        "label": "Show files as",
         "description": "Choose between grid and list layout",
         "list": "List",
         "grid": "Grid"
@@ -4713,7 +4713,7 @@
       "hide_non_working_days_desc": "Leave the days you don't work out of the week view. Their events still show in the month, day and agenda views.",
       "working_days": "Working days",
       "title": "Calendar settings",
-      "default_view": "Default view",
+      "default_view": "Calendar opens in",
       "week_starts_on": "Week starts on",
       "time_format": "Time format",
       "default_calendar": "Default calendar",
