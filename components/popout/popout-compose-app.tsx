@@ -401,6 +401,7 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       rejectedRecipients,
       pendingUndoSend: keepHere ? null : withLogin,
       releasesAt: keepHere?.sendAt,
+      heldSubmissionId: keepHere?.submissionId,
     });
     // No main window to say so, and this is the only notice these get (#1123).
     if (!taken && (result.filingError || rejectedRecipients)) {

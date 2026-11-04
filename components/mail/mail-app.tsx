@@ -3408,11 +3408,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         clearPendingUndoSend();
       }
     }, undoDurationMs);
-    // Once the server has released the message, the Scheduled count in the
-    // sidebar no longer includes it. Not cleared with the effect: clearing the
-    // pending undo above re-runs this effect before the release.
+    // Not scheduled mail: Scheduled leaves it out, and asks again once the
+    // server let it go (compose-p3-9). Not undone with the effect: clearing
+    // the pending undo above re-runs this effect before the release.
     if (isUndoWindow) {
-      setTimeout(() => { void refreshScheduledMetadata(client); }, remainingMs + 3000);
+      useEmailStore.getState().noteUndoHold(client, pending.submissionId, pending.sendAt);
     }
 
     return () => clearTimeout(timer);

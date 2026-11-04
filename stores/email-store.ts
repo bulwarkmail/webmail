@@ -390,6 +390,16 @@ interface EmailStore {
    */
   scheduledAccountScope: string | null;
   pendingUndoSend: PendingUndoSend | null;
+  /** Submission ids the last Scheduled refresh got from the server, Undo holds included. */
+  lastScheduledSubmissionIds: ReadonlySet<string>;
+  /**
+   * Sends in their Undo time, from this window or a pop-out, by submission id:
+   * when the server lets each go. They aren't scheduled mail, so Scheduled
+   * neither counts nor lists them (compose-p3-9).
+   */
+  undoHolds: ReadonlyMap<string, number>;
+  /** A send in its Undo time: kept out of Scheduled, which is asked again once it went. */
+  noteUndoHold: (client: IJMAPClient, submissionId: string, sendAt: string) => void;
 
   setEmails: (emails: Email[]) => void;
   setMailboxes: (mailboxes: Mailbox[]) => void;
@@ -835,6 +845,37 @@ export function annotateScheduledEmail(
 /** One scheduled send: submission and email ids repeat across accounts. */
 function isSameScheduledSend(a: ScheduledEmail, b: ScheduledEmail): boolean {
   return a.emailSubmissionId === b.emailSubmissionId && a.scheduledAccountId === b.scheduledAccountId;
+}
+
+/** How long after an Undo send's release Scheduled is asked again, while the server still lists it. */
+const UNDO_HOLD_RECHECK_MS = [3_000, 15_000, 60_000];
+
+/**
+ * The scheduled list and counts without the sends in their Undo time
+ * (EmailStore.undoHolds). The count went up by one as "Sent" showed and
+ * down a few seconds later; in the desktop app a pop-out's send stayed in
+ * it for minutes (compose-p3-9).
+ */
+export function withoutUndoHolds(
+  holds: ReadonlyMap<string, number>,
+  emails: ScheduledEmail[],
+  total: number,
+  totalByAccount: Record<string, number>,
+  ownAccountId: string,
+): { emails: ScheduledEmail[]; total: number; totalByAccount: Record<string, number> } {
+  if (holds.size === 0) return { emails, total, totalByAccount };
+  const held = emails.filter((email) => holds.has(email.emailSubmissionId));
+  if (held.length === 0) return { emails, total, totalByAccount };
+  const byAccount = { ...totalByAccount };
+  for (const email of held) {
+    const account = email.scheduledAccountId ?? ownAccountId;
+    if (byAccount[account]) byAccount[account] = Math.max(0, byAccount[account] - 1);
+  }
+  return {
+    emails: emails.filter((email) => !holds.has(email.emailSubmissionId)),
+    total: Math.max(0, total - held.length),
+    totalByAccount: byAccount,
+  };
 }
 
 function shouldClearPendingUndoSend(pending: PendingUndoSend | null, scheduledEmails: ScheduledEmail[]): boolean {
@@ -3436,6 +3477,35 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   isScheduledView: false,
   scheduledAccountScope: null,
   pendingUndoSend: null,
+  undoHolds: new Map(),
+  lastScheduledSubmissionIds: new Set(),
+
+  noteUndoHold: (client, submissionId, sendAt) => {
+    const releasesAt = Date.parse(sendAt);
+    if (!Number.isFinite(releasesAt) || get().undoHolds.has(submissionId)) return;
+    set((state) => ({ undoHolds: new Map(state.undoHolds).set(submissionId, releasesAt) }));
+    // A refresh may have counted it already: count again without it.
+    void get().refreshScheduledMetadata(client);
+    const forget = () => set((state) => {
+      if (!state.undoHolds.has(submissionId)) return {};
+      const next = new Map(state.undoHolds);
+      next.delete(submissionId);
+      return { undoHolds: next };
+    });
+    // Nothing reports the release: ask again a moment after it, and again
+    // while the server still lists it as waiting.
+    const ask = async (attempt: number) => {
+      await get().refreshScheduledMetadata(client);
+      const stillListed = get().lastScheduledSubmissionIds.has(submissionId);
+      if (!stillListed || attempt >= UNDO_HOLD_RECHECK_MS.length - 1) {
+        forget();
+        if (stillListed) void get().refreshScheduledMetadata(client);
+        return;
+      }
+      setTimeout(() => void ask(attempt + 1), UNDO_HOLD_RECHECK_MS[attempt + 1]);
+    };
+    setTimeout(() => void ask(0), Math.max(0, releasesAt - Date.now()) + UNDO_HOLD_RECHECK_MS[0]);
+  },
 
   // Spam undo cache
   spamUndoCache: new Map(),
@@ -8220,16 +8290,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       const result = await client.getScheduledEmails(emailsPerPage, 0);
       result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
-      const scheduledEmailIds = new Set(result.emails.map(email => email.id));
-      const scheduledSubmissionByEmailId = scheduledSubmissionMap(client, result.emails);
+      const listed = withoutUndoHolds(get().undoHolds, result.emails, result.total, result.totalByAccount ?? {}, client.getAccountId());
+      const scheduledEmailIds = new Set(listed.emails.map(email => email.id));
+      const scheduledSubmissionByEmailId = scheduledSubmissionMap(client, listed.emails);
       const pendingUndoSend = get().pendingUndoSend;
       set({
-        scheduledEmails: result.emails,
+        scheduledEmails: listed.emails,
         scheduledEmailIds,
         scheduledSubmissionByEmailId,
         emails: annotateScheduledEmails(get().emails, scheduledSubmissionByEmailId),
-        scheduledTotal: result.total,
-        scheduledTotalByAccount: result.totalByAccount ?? {},
+        scheduledTotal: listed.total,
+        scheduledTotalByAccount: listed.totalByAccount,
         scheduledHasMore: result.hasMore,
         scheduledNextPosition: result.nextPosition,
         isLoadingScheduled: false,
@@ -8298,17 +8369,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         position = page.nextPosition;
       }
       const pendingUndoSend = get().pendingUndoSend;
-      const scheduledSubmissionByEmailId = scheduledSubmissionMap(client, allEmails);
+      const listed = withoutUndoHolds(get().undoHolds, allEmails, total, totalByAccount, client.getAccountId());
+      const scheduledSubmissionByEmailId = scheduledSubmissionMap(client, listed.emails);
       set({
-        scheduledEmails: get().isScheduledView ? allEmails : get().scheduledEmails,
-        scheduledEmailIds: new Set(allEmails.map(email => email.id)),
+        lastScheduledSubmissionIds: new Set(allEmails.map(email => email.emailSubmissionId)),
+        scheduledEmails: get().isScheduledView ? listed.emails : get().scheduledEmails,
+        scheduledEmailIds: new Set(listed.emails.map(email => email.id)),
         scheduledSubmissionByEmailId,
         // Re-annotate the visible list: this refresh runs concurrently with
         // the initial fetchEmails, so rows fetched before the metadata landed
         // still get their scheduled badges.
         emails: annotateScheduledEmails(get().emails, scheduledSubmissionByEmailId),
-        scheduledTotal: total,
-        scheduledTotalByAccount: totalByAccount,
+        scheduledTotal: listed.total,
+        scheduledTotalByAccount: listed.totalByAccount,
         scheduledHasMore: false,
         scheduledNextPosition: position,
         pendingUndoSend: shouldClearPendingUndoSend(pendingUndoSend, allEmails) ? null : pendingUndoSend,

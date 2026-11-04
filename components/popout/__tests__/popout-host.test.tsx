@@ -326,6 +326,18 @@ describe('PopoutHost', () => {
     expect(refreshScheduledMetadata).toHaveBeenCalledWith(client);
   });
 
+  // compose-p3-9: in the desktop app the count still held it minutes later.
+  it('keeps a send in its Undo time in a pop-out out of Scheduled', async () => {
+    const noteUndoHold = vi.fn();
+    useEmailStore.setState({ noteUndoHold: noteUndoHold as never });
+    render(<PopoutHost />);
+    await settle();
+    const releasesAt = new Date(Date.now() + 5000).toISOString();
+    popout.post({ type: 'sent', requestId: 'r3', notice: { accountId: 'alice', scheduled: true, releasesAt, heldSubmissionId: 'sub-9' } });
+    await settle();
+    expect(noteUndoHold).toHaveBeenCalledWith(client, 'sub-9', releasesAt);
+  });
+
   it('says once that a closed pop-out kept its draft, with Discard', async () => {
     render(<><PopoutHost /><PopoutHost /></>);
     await settle();
