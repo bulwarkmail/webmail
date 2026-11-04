@@ -80,6 +80,8 @@ import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcement
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { stepListEmail } from "@/lib/list-step";
+import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -732,6 +734,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     [scheduledEmails, scheduledAccountScope],
   );
   const activeEmails = isScheduledView ? scopedScheduledEmails : emails;
+  // The default layout reads a thread as one conversation in the reading pane
+  // too, as Mountain View does, on every width but a phone's (those keep their
+  // own conversation view). The list then has one row per conversation.
+  // "Show emails as individual messages" keeps the single message.
+  const disableThreading = useSettingsStore((s) => s.disableThreading);
+  const paneConversationView = interfaceLayout !== 'mountain-view' && !isMobile && !disableThreading && !isScheduledView;
+  const readerConversationView = mvConversationView || paneConversationView;
   // In an account-scoped scheduled view the visible rows are a filtered subset
   // of the loaded page, so "has more" must reflect that account's own total
   // rather than the combined one — otherwise the list looks complete while
@@ -973,23 +982,33 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     );
   };
 
+  // The open message's list key, kept after the reader closes.
+  const lastOpenedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedEmail) lastOpenedKeyRef.current = emailKeyFor(selectedEmail);
+  }, [selectedEmail]);
   // Keyboard shortcuts handlers
+  // j / k go on from the open message, or from the last one opened once the
+  // reader is closed (Escape), not from the top. With the conversation in the
+  // reading pane they step by conversation, as the list's rows do.
+  const stepFrom = (direction: 1 | -1) => stepListEmail(
+    activeEmails,
+    selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
+    direction,
+    paneConversationView ? useEmailStore.getState().listRows : null,
+  );
   const keyboardHandlers = useMemo(() => ({
     onNextEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : -1;
-      const nextIndex = currentIndex < activeEmails.length - 1 ? currentIndex + 1 : currentIndex;
-      if (nextIndex >= 0 && nextIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[nextIndex]);
+      const next = stepFrom(1);
+      if (next) {
+        void handleEmailSelect(next);
         if (mvShell) setCursorOnly(true);
       }
     },
     onPreviousEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : activeEmails.length;
-      const prevIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-      if (prevIndex >= 0 && prevIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[prevIndex]);
+      const previous = stepFrom(-1);
+      if (previous) {
+        void handleEmailSelect(previous);
         if (mvShell) setCursorOnly(true);
       }
     },
@@ -1242,7 +1261,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // thread's messages and marks them read (following markAsReadDelay),
     // collapsing only toggles. (#683)
     onToggleThreadExpansion: () => {
-      if (isScheduledView || !client) return;
+      // The reading pane shows the conversation; the list never unfolds it.
+      if (isScheduledView || !client || paneConversationView) return;
       if (!selectedEmail?.threadId) return;
       const threadKey = threadKeyFor(selectedEmail);
       const store = useEmailStore.getState();
@@ -3330,12 +3350,41 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // holds (a quick filter dropped it) stays selected: the store finds it
   // through the selection (#695), and with no row to go on from it opens
   // nothing after it anyway. (#1458)
+  //
+  // Left alone, the setting follows the layout (lib/return-to-list): with the
+  // list beside the reading pane the next message opens instead, as in
+  // Outlook. With the conversation in the reading pane that is the next
+  // conversation down the list (the one above at the end), as its row opens it.
+  const returnsToList = () => returnToListAfterAction(
+    !fullscreenReading && listBesideReader({ mailLayout, interfaceLayout, isMobile, isTablet }),
+  );
   const leaveIfOpen = (email: Email) => {
-    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
+    const { selectedEmail: open, emails: rows, listRows } = useEmailStore.getState();
     const key = emailKeyFor(email);
     if (!open || emailKeyFor(open) !== key || (mvShell && cursorOnly)) return;
     if (!rows.some((row) => emailKeyFor(row) === key)) return;
-    if (useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
+    if (returnsToList()) {
+      handleMobileBack();
+      return;
+    }
+    if (!paneConversationView || !listRows) return;
+    const below = stepListEmail(rows, key, 1, listRows);
+    const next = below && emailKeyFor(below) !== key ? below : stepListEmail(rows, key, -1, listRows);
+    if (!next || emailKeyFor(next) === key || threadKeyFor(next) === threadKeyFor(email)) return;
+    handleMobileBack();
+    void handleEmailSelect(next);
+  };
+  // Undo puts back the message that was open, and opens it again, where it
+  // was open in the reading pane. Phones stay in the list.
+  const reopenEmailRef = useRef<((email: Email) => Promise<unknown>) | null>(null);
+  const reopenAfterUndo = (email: Email) => {
+    const { selectedEmail: open } = useEmailStore.getState();
+    if (isMobile || !open || emailKeyFor(open) !== emailKeyFor(email)) return undefined;
+    const key = emailKeyFor(email);
+    return () => {
+      const restored = useEmailStore.getState().emails.find((e) => emailKeyFor(e) === key);
+      if (restored) void reopenEmailRef.current?.(restored);
+    };
   };
 
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
@@ -3379,6 +3428,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       return;
     }
 
+    const reopen = reopenAfterUndo(emailToDelete);
     leaveIfOpen(emailToDelete);
 
     // The store's delete reads the "Delete action" setting: move to the
@@ -3387,7 +3437,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     try {
       // false: a plugin stopped it and said why, so no "deleted" here.
       if (await deleteEmail(client, emailToDelete.id, isInTrash, emailKeyFor(emailToDelete))) {
-        toastWithUndo(permanent ? t('notifications.email_deleted') : t('mail_list_extra.moved_to_trash'), undoMoveAction(client, restore, undo));
+        toastWithUndo(permanent ? t('notifications.email_deleted') : t('mail_list_extra.moved_to_trash'), undoMoveAction(client, restore, undo, undefined, reopen));
       }
     } catch (error) {
       console.error("Failed to delete email:", error);
@@ -3487,6 +3537,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
 
       let restore: EmailRestoreBatch[] | null = null;
+      const reopen = reopenAfterUndo(emailToArchive);
       leaveIfOpen(emailToArchive);
       const archived = await moveThreadToMailbox(client, emailToArchive.id, destination.id, emailKeyFor(emailToArchive), (batches) => { restore = batches; });
       if (!archived) return;
@@ -3498,7 +3549,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails([]);
       }
 
-      toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(client, restore, undo));
+      toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(client, restore, undo, undefined, reopen));
       void refreshMailboxes();
     } catch (error) {
       console.error("Failed to archive email:", error);
@@ -4594,8 +4645,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Mountain View reads a message inside its conversation, as Gmail does: load
   // the rest of the thread (list properties only) whenever another opens.
-  const mvConversationThreadId = mvConversationView && !cursorOnly ? (selectedEmail?.threadId ?? null) : null;
-  const mvConversationRef = mvConversationView && !cursorOnly ? selectedEmail : null;
+  const mvConversationThreadId = readerConversationView && !cursorOnly ? (selectedEmail?.threadId ?? null) : null;
+  const mvConversationRef = readerConversationView && !cursorOnly ? selectedEmail : null;
   const mvConversationRoute = (ref: Email, fallback: NonNullable<typeof client>) => {
     const source = resolveEmailBlobContext(ref, fallback);
     return { threadClient: source.client, accountId: source.accountId };
@@ -4902,7 +4953,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // hand) and let the body follow; the viewer shows a row without body
     // values as loading. Mountain View shows the message inside its
     // conversation, which is fetched alongside, so it waits for both.
-    const rowEmail = !mvConversationView && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
+    const rowEmail = !readerConversationView && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
     if (rowEmail) {
       beginOpenEmail(rowEmail);
     } else {
@@ -4931,7 +4982,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       // Mountain View shows the message inside its conversation: fetch that
       // alongside the message, so the two appear together. (#1223)
-      const conversationPrefetch = mvConversationView && listEmail?.id && listEmail.threadId
+      const conversationPrefetch = readerConversationView && listEmail?.id && listEmail.threadId
         ? loadMvConversation(listEmail as Email, client)
         : null;
       // The request a mouse press on the row already started, if any.
@@ -4994,6 +5045,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   pluginOpenEmailRef.current = handleEmailSelect;
+  reopenEmailRef.current = handleEmailSelect;
 
   // Handle back navigation from viewer on mobile.
   // Reset to list state directly. We can't just call window.history.back()
@@ -5765,6 +5817,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   }, { pane: targetPane, reuseReader: hasSplit });
                 })}
                 onOpenConversation={handleOpenConversation}
+                conversationInReader={paneConversationView}
                 // Context menu handlers
                 onReply={(email) => {
                   selectEmail(email);
@@ -6052,7 +6105,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         // Marking the open message unread returns to the list
                         // (Gmail-style, gated on returnToListAfterAction). Staying
                         // in the reading pane would just re-mark it read on view.
-                        if (!read && useSettingsStore.getState().returnToListAfterAction) {
+                        if (!read && returnsToList()) {
                           handleMobileBack();
                         }
                       }
@@ -6069,16 +6122,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? (isUnifiedView ? listQueryTotal : 0)),
                     } : undefined}
                     mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
-                    mvConversation={mvConversationView ? mvConversation ?? undefined : undefined}
-                    mvConversationPending={mvConversationView && !!selectedEmail && mvConversationLoading === selectedEmail.threadId}
-                    onLoadConversationEmail={mvConversationView ? (e) => void handleLoadConversationEmail(e) : undefined}
-                    onMarkConversationEmailRead={mvConversationView ? (e) => void handleMarkConversationEmailRead(e) : undefined}
-                    onReplyConversationEmail={mvConversationView ? async (e) => {
+                    mvConversation={readerConversationView ? mvConversation ?? undefined : undefined}
+                    conversationPane={paneConversationView}
+                    mvConversationPending={readerConversationView && !!selectedEmail && mvConversationLoading === selectedEmail.threadId}
+                    onLoadConversationEmail={readerConversationView ? (e) => void handleLoadConversationEmail(e) : undefined}
+                    onMarkConversationEmailRead={readerConversationView ? (e) => void handleMarkConversationEmailRead(e) : undefined}
+                    onReplyConversationEmail={readerConversationView ? async (e) => {
                       // The reply quotes the message, so it needs the body.
                       const full = e.bodyValues ? e : await handleLoadConversationEmail(e);
                       await handleConversationReply(full ?? e);
                     } : undefined}
-                    onReplyAllConversationEmail={mvConversationView ? async (e) => {
+                    onReplyAllConversationEmail={readerConversationView ? async (e) => {
                       const full = e.bodyValues ? e : await handleLoadConversationEmail(e);
                       await handleConversationReplyAll(full ?? e);
                     } : undefined}

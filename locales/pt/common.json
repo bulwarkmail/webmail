@@ -3790,6 +3790,10 @@
     "expand_named": "Expandir conversa: {subject}",
     "collapse_named": "Recolher conversa: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostrar # mensagem anterior} other {Mostrar # mensagens anteriores}}",
+    "return_to_list_follows_layout": "Enquanto não alterar, segue o layout: desligado quando a lista e a mensagem estão lado a lado, ligado nos outros casos."
+  },
   "identities": {
     "modal_title": "Gerenciar Identidades de Envio",
     "create_new": "Criar Nova Identidade",

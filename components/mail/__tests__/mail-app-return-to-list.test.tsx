@@ -273,6 +273,75 @@ describe.each([
   });
 });
 
+// With the list beside the reading pane (split, horizontal) the setting,
+// while nobody has changed it, opens the next message instead, as Outlook
+// does. A choice the user made wins, on every layout and device.
+describe('Archive with the list beside the reading pane', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ interfaceLayout: 'default', mailLayout: 'split', explicitSettings: [] } as never);
+    useEmailStore.setState({ listRows: null } as never);
+  });
+
+  it('opens the next message while the setting is untouched', async () => {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub archive', {}, { timeout: 5000 }));
+    await waitFor(() => expect(client.moveEmail).toHaveBeenCalledWith('m1', 'archive', undefined));
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+  });
+
+  it('opens the next row in the order the list shows', async () => {
+    useEmailStore.setState({
+      listRows: [{ key: 'm1', members: ['m1'] }, { key: 'm3', members: ['m3'] }, { key: 'm2', members: ['m2'] }],
+    } as never);
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub archive', {}, { timeout: 5000 }));
+    await waitFor(() => expect(client.moveEmail).toHaveBeenCalledWith('m1', 'archive', undefined));
+    await waitFor(() => expect(selectedId()).toBe('m3'));
+    expect(opened).not.toContain('m2');
+  });
+
+  it('goes back to the list when the user switched the setting on', async () => {
+    useSettingsStore.setState({ returnToListAfterAction: true, explicitSettings: ['returnToListAfterAction'] } as never);
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub archive', {}, { timeout: 5000 }));
+    await waitFor(() => expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['m2', 'm3']));
+    expect(selectedId()).toBeNull();
+    expect(opened).not.toContain('m2');
+  });
+
+  it('opens the archived message again on Undo', async () => {
+    client.restoreEmails = vi.fn().mockResolvedValue(undefined);
+    useEmailStore.setState({
+      refreshCurrentMailbox: vi.fn(async () => { useEmailStore.setState({ emails: inbox() } as never); }),
+    } as never);
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub archive', {}, { timeout: 5000 }));
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+    const archived = await waitFor(() => {
+      const found = useToastStore.getState().toasts.find((toast) => toast.title === 'notifications.email_archived');
+      expect(found?.action).toBeTruthy();
+      return found!;
+    });
+    act(() => { archived.action!.onClick(); });
+    await waitFor(() => expect(client.restoreEmails).toHaveBeenCalled());
+    await waitFor(() => expect(selectedId()).toBe('m1'));
+  });
+});
+
+describe('Delete with the list beside the reading pane', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ interfaceLayout: 'default', mailLayout: 'horizontal', explicitSettings: [] } as never);
+    useEmailStore.setState({ listRows: null } as never);
+  });
+
+  it('opens the next message while the setting is untouched', async () => {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
+    await waitFor(() => expect(client.moveToTrash).toHaveBeenCalled());
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+  });
+});
+
 describe('A list collapsed under an open message (focused layout)', () => {
   const list = () => screen.getByText('message list').closest('section')!;
 

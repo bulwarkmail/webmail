@@ -3790,6 +3790,10 @@
     "expand_named": "Rozbalit konverzaci: {subject}",
     "collapse_named": "Sbalit konverzaci: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Zobrazit # starší zprávu} few {Zobrazit # starší zprávy} many {Zobrazit # starší zprávy} other {Zobrazit # starších zpráv}}",
+    "return_to_list_follows_layout": "Dokud to nezměníte, řídí se to rozvržením: vypnuto, když jsou seznam a zpráva vedle sebe, jinak zapnuto."
+  },
   "identities": {
     "modal_title": "Správa identit odesílatele",
     "create_new": "Vytvořit novou identitu",

@@ -3790,6 +3790,10 @@
     "expand_named": "Expand conversation: {subject}",
     "collapse_named": "Collapse conversation: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
+    "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
+  },
   "identities": {
     "modal_title": "Manage sending identities",
     "create_new": "New identity",

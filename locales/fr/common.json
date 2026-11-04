@@ -3790,6 +3790,10 @@
     "expand_named": "Développer la conversation: {subject}",
     "collapse_named": "Réduire la conversation: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Afficher # message plus ancien} other {Afficher # messages plus anciens}}",
+    "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
+  },
   "identities": {
     "modal_title": "Gérer les identités d'envoi",
     "create_new": "Créer une nouvelle identité",

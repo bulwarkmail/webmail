@@ -3790,6 +3790,10 @@
     "expand_named": "Konversation aufklappen: {subject}",
     "collapse_named": "Konversation zuklappen: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
+    "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
+  },
   "identities": {
     "modal_title": "Sendeidentitäten verwalten",
     "create_new": "Neue Identität erstellen",

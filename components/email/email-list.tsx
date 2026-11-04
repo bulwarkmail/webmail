@@ -87,6 +87,11 @@ interface EmailListProps {
   hasMore?: boolean;
   isLoadingMoreItems?: boolean;
   onOpenConversation?: (thread: ThreadGroup) => void;
+  /**
+   * The reading pane shows the whole conversation: a row opens its newest
+   * message there instead of unfolding the thread in the list.
+   */
+  conversationInReader?: boolean;
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
   onForward?: (email: Email) => void;
@@ -164,6 +169,7 @@ export function EmailList({
   hasMore,
   isLoadingMoreItems,
   onOpenConversation,
+  conversationInReader = false,
   onReply,
   onReplyAll,
   onForward,
@@ -456,14 +462,14 @@ export function EmailList({
     const rows: ListRow[] = [];
     for (const thread of threadGroups) {
       rows.push({ key: emailKeyFor(thread.latestEmail), members: thread.emails.map(emailKeyFor) });
-      if (thread.emails.length > 1 && expandedThreadIds.has(thread.threadKey) && !isMobile) {
+      if (thread.emails.length > 1 && expandedThreadIds.has(thread.threadKey) && !isMobile && !conversationInReader) {
         for (const email of threadEmailsCache.get(thread.threadKey) ?? thread.emails) {
           rows.push({ key: emailKeyFor(email), members: [emailKeyFor(email)] });
         }
       }
     }
     setListRows(rows);
-  }, [threadGroups, expandedThreadIds, threadEmailsCache, isMobile, setListRows]);
+  }, [threadGroups, expandedThreadIds, threadEmailsCache, isMobile, conversationInReader, setListRows]);
   useEffect(() => () => setListRows(null), [setListRows]);
 
   // The virtualizer's guesses follow the rows' shape (see useListRowShape).
@@ -1013,7 +1019,8 @@ export function EmailList({
         )}
         {thread && <MemoizedThreadListItem
           thread={thread}
-          isExpanded={expandedThreadIds.has(thread.threadKey)}
+          isExpanded={!conversationInReader && expandedThreadIds.has(thread.threadKey)}
+          conversationInReader={conversationInReader}
           selectedEmailKey={selectedEmailKey}
           isLoading={isLoadingThread === thread.threadKey}
           expandedEmails={threadEmailsCache.get(thread.threadKey)}

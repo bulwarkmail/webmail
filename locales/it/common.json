@@ -3790,6 +3790,10 @@
     "expand_named": "Espandi conversazione: {subject}",
     "collapse_named": "Comprimi conversazione: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
+    "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
+  },
   "identities": {
     "modal_title": "Gestisci identità di invio",
     "create_new": "Crea nuova identità",

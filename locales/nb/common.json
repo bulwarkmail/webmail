@@ -3790,6 +3790,10 @@
     "expand_named": "Utvid samtalen: {subject}",
     "collapse_named": "Fold sammen samtalen: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
+    "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
+  },
   "identities": {
     "modal_title": "Administrer avsenderidentiteter",
     "create_new": "Opprett ny identitet",

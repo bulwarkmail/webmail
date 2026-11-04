@@ -11,6 +11,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useContactStore } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRemoteContentBlockedByOrg } from '@/hooks/use-third-party-mode';
+import { useReturnToListAfterAction } from '@/hooks/use-return-to-list';
 
 /**
  * The Reading page: the open message. Opening it, how its body is drawn,
@@ -26,12 +27,14 @@ export function ReadingSettings() {
   const tLock = useTranslations('remote_content_lock');
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.reading_page');
+  const tPane = useTranslations('conversation_pane');
+  // As it applies in this layout: left alone, it follows the layout.
+  const returnToList = useReturnToListAfterAction();
   const [showTrustedModal, setShowTrustedModal] = useState(false);
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
 
   const {
     markAsReadDelay,
-    returnToListAfterAction,
     mailAttachmentAction,
     attachmentPosition,
     hideInlineImageAttachments,
@@ -78,9 +81,14 @@ export function ReadingSettings() {
         </SettingItem>
         )}
 
-        <SettingItem label={t('return_to_list_after_action.label')} description={t('return_to_list_after_action.description')}>
+        <SettingItem
+          label={t('return_to_list_after_action.label')}
+          description={returnToList.followsLayout
+            ? `${t('return_to_list_after_action.description')} ${tPane('return_to_list_follows_layout')}`
+            : t('return_to_list_after_action.description')}
+        >
           <ToggleSwitch
-            checked={returnToListAfterAction}
+            checked={returnToList.checked}
             onChange={(checked) => updateSetting('returnToListAfterAction', checked)}
           />
         </SettingItem>
