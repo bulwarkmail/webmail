@@ -10,6 +10,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
+import { localizeMailboxName } from '@/lib/mailbox-label';
 
 const MAIL_LAYOUT_PREVIEW_ROWS = [
   { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
@@ -238,6 +239,7 @@ export function SidebarSection() {
  */
 export function MultipleAccountsSection() {
   const t = useTranslations('settings.appearance');
+  const tSidebar = useTranslations('sidebar');
   const { enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, tintListRowsByAccount, showAccountDot, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
@@ -391,7 +393,9 @@ export function MultipleAccountsSection() {
                       {checked && <Check className="w-3 h-3" />}
                     </span>
                     <Folder className={cn("w-4 h-4 flex-shrink-0", mb.role ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-sm text-foreground truncate">{mb.name}</span>
+                    <span className="text-sm text-foreground truncate">
+                      {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
+                    </span>
                   </button>
                 );
               })}
