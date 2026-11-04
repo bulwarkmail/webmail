@@ -76,7 +76,7 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
   const renderRegistrationControl = (protocol: Protocol) => {
     return (
       <Button size="sm" onClick={() => handleRegister(protocol)} disabled={!supported}>
-        {protocol === "mailto" ? t("register_mailto") : t("register_webcal")}
+        {protocol === "mailto" ? t("register_mailto", { appName }) : t("register_webcal", { appName })}
       </Button>
     );
   };
@@ -91,12 +91,12 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
         </div>
       )}
 
-      <SettingItem label={t("mailto_label")} description={t("mailto_description", { appName })}>
+      <SettingItem label={t("mailto_label", { appName })} description={t("mailto_description", { appName })}>
         {renderRegistrationControl("mailto")}
       </SettingItem>
 
       {supportsCalendar && (
-        <SettingItem label={t("webcal_label")} description={t("webcal_description", { appName })}>
+        <SettingItem label={t("webcal_label", { appName })} description={t("webcal_description", { appName })}>
           {renderRegistrationControl("webcal")}
         </SettingItem>
       )}

@@ -13,6 +13,8 @@ import { EmlPreview, type EmlAttachment, type ParsedEml } from "@/components/fil
 import { FilePreviewPluginSection } from "@/components/files/file-preview-plugin-section";
 import { canOpenUrlInNewWindow } from "@/lib/standalone-display";
 import { saveBlobAs } from "@/lib/download-guard";
+import { emailExportFilename } from "@/lib/download-filename";
+import type { Email } from "@/lib/jmap/types";
 import { noMediaSavingProps } from "@/lib/device-frame";
 import { useDevicePolicy, useStrictestDevices } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
@@ -48,6 +50,14 @@ const PdfMobileViewer = dynamic(
   () => import("@/components/files/pdf-mobile-viewer").then((m) => m.PdfMobileViewer),
   { ssr: false },
 );
+
+/**
+ * A message attached without a file name gets one made up from its type or
+ * the download fallback: "Email.eml", "attachment".
+ */
+function isUnnamedMessagePart(name: string): boolean {
+  return /^(attachment|email|download)(\.eml)?$/i.test(name.trim());
+}
 
 interface FilePreviewModalProps {
   name: string;
@@ -185,6 +195,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   // (text/html, image/svg+xml, ...) in a new tab would execute it in-origin.
   const [canOpenInNewTab, setCanOpenInNewTab] = useState(false);
   const [emlContent, setEmlContent] = useState<ParsedEml | null>(null);
+  const [emlBlob, setEmlBlob] = useState<Blob | null>(null);
   // The PDF blob itself, kept alongside its object URL: the pdf.js mobile
   // viewer needs the bytes, because fetching the blob: URL is blocked by CSP
   // connect-src (#871). The URL is still what the <iframe> and the
@@ -235,6 +246,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
     setObjectUrl(null);
     setCanOpenInNewTab(false);
     setEmlContent(null);
+    setEmlBlob(null);
     setPdfBlob(null);
     setHtmlDoc(null);
     setLoading(true);
@@ -263,7 +275,10 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
           // stays off the bundle) and render it like an email via EmlPreview.
           const { default: PostalMime } = await import("postal-mime");
           const parsed = await new PostalMime().parse(await blob.arrayBuffer());
-          if (!cancelled) setEmlContent(parsed as ParsedEml);
+          if (!cancelled) {
+            setEmlContent(parsed as ParsedEml);
+            setEmlBlob(blob);
+          }
         } else {
           // Re-type the blob to one its viewer can show; a blob: URL with a
           // type the browser cannot display is silently downloaded instead.
@@ -339,11 +354,23 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
     );
   }
 
+  // An attached message that came without a file name of its own is called
+  // by its subject, not "attachment", and saved under it.
+  const emlSubject = fileType === "eml" && isUnnamedMessagePart(name) ? emlContent?.subject?.trim() || null : null;
+  const download = () => {
+    if (emlSubject && emlBlob) {
+      const filename = emailExportFilename({ subject: emlSubject } as Email, { template: "{subject}" });
+      saveBlobAs(emlBlob, filename, { kind: "attachment", subject: policyAccount });
+      return;
+    }
+    void onDownload();
+  };
+
   return (
     <PreviewShell
-      name={name}
+      name={emlSubject ?? name}
       onClose={onClose}
-      onDownload={downloadsOff ? undefined : () => void onDownload()}
+      onDownload={downloadsOff ? undefined : download}
       neighbours={neighbours}
       // An installed app hands the new window to the system browser, which
       // cannot load our blob: URL (#865): no dead button there.

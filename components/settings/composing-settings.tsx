@@ -9,13 +9,14 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TemplateSettings } from './template-settings';
 import { ProofreadingSettings } from './proofreading-settings';
+import { PrivacyLinkRow } from './privacy-settings';
 import { Button } from '@/components/ui/button';
 import { X, ChevronRight } from '@/components/icons';
 
 /**
  * The Composing page: the editor, replying, what happens before a send,
- * read receipts, templates (their own tab before) and a pointer to where
- * signatures live, since people look for them here.
+ * templates (their own tab before) and pointers to where signatures and
+ * read receipts live, since people look for them here.
  */
 export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -43,8 +44,6 @@ export function ComposingSettings() {
     signatureNewMailEnabled,
     signatureReplyForwardEnabled,
     signatureSeparatorEnabled,
-    requestReadReceiptDefault,
-    readReceiptResponse,
     updateSetting,
   } = useSettingsStore();
   const { client } = useAuthStore();
@@ -245,27 +244,8 @@ export function ComposingSettings() {
             onChange={(checked) => updateSetting('placeholderWarningEnabled', checked)}
           />
         </SettingItem>
-      </SettingsSection>
 
-      <SettingsSection id="receipts" title={tPage('sections.receipts')}>
-        <SettingItem label={t('request_read_receipt.label')} description={t('request_read_receipt.description')}>
-          <ToggleSwitch
-            checked={requestReadReceiptDefault}
-            onChange={(checked) => updateSetting('requestReadReceiptDefault', checked)}
-          />
-        </SettingItem>
-
-        <SettingItem label={t('read_receipt_response.label')} description={t('read_receipt_response.description')}>
-          <Select
-            value={readReceiptResponse}
-            onChange={(value) => updateSetting('readReceiptResponse', value as 'ask' | 'always' | 'never')}
-            options={[
-              { value: 'ask', label: t('read_receipt_response.ask') },
-              { value: 'always', label: t('read_receipt_response.always') },
-              { value: 'never', label: t('read_receipt_response.never') },
-            ]}
-          />
-        </SettingItem>
+        <PrivacyLinkRow topic="receipts" />
       </SettingsSection>
 
       {templatesEnabled && <TemplateSettings />}

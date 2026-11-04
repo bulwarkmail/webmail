@@ -8,6 +8,27 @@
 /* The app's font stack replaces Tailwind's default --font-sans, so the
    font-sans utility and body use the same stack, and a theme's
    typography.fontSans (compiled to --font-sans on :root) restyles both. */
+/* The layout breakpoint (PHONE_BELOW in hooks/use-media-query.ts): below
+   37.5rem (600px) the phone layout, from there up the desktop layout, compact
+   up to lg. `desk:` and `max-desk:` decide what is drawn (rail or bottom bar,
+   sidebar in the flow or as a drawer, panes side by side or one at a time);
+   md: and lg: stay for spacing and type sizes. */
+@theme {
+  --breakpoint-desk: 37.5rem;
+}
+
+/* Rows and buttons sized for a finger (44px): on phones, and on touch screens
+   below the full desktop, which get the compact desktop layout. A mouse in a
+   narrow window keeps the desktop's row heights. */
+@custom-variant tap {
+  @media (width < 37.5rem) {
+    @slot;
+  }
+  @media (width < 64rem) and (pointer: coarse) {
+    @slot;
+  }
+}
+
 @theme {
   --font-sans:
     -apple-system,
@@ -90,13 +111,13 @@
   --density-card-p: 16px;
   --density-sidebar-py: 4px;
 
-  /* Minimum height of a tappable list row below the lg breakpoint, where
-   * folder rows use max-lg:min-h-[44px]. Plugin frames get it as a variable
-   * because their own viewport is the frame, not the page. */
+  /* Minimum height of a tappable list row where folder rows use
+   * tap:min-h-[44px]. Plugin frames get it as a variable because their own
+   * viewport is the frame, not the page. */
   --touch-row-min-h: 0px;
 }
 
-@media (width < 64rem) {
+@media (width < 37.5rem), (width < 64rem) and (pointer: coarse) {
   :root {
     --touch-row-min-h: 44px;
   }
@@ -570,6 +591,11 @@ optgroup {
 
 .toast-exit {
   animation: toast-exit 0.28s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+}
+
+/* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips. */
+[data-toolbar-compact] [data-toolbar-label] {
+  display: none !important;
 }
 
 /* Mobile Responsive Utilities */
@@ -1543,9 +1569,9 @@ html[data-window-controls-left] [data-window-rail] {
 
 /* The collapsed rail's hover peek. Only on desktop: below that breakpoint the
    sidebar is already a drawer, opened by a tap rather than by a pointer that
-   does not exist. The width beats Tailwind's own `lg:w-full` on specificity,
+   does not exist. The width beats Tailwind's own `desk:w-full` on specificity,
    which is what keeps the floating panel from filling the 72px column. */
-@media (min-width: 1024px) {
+@media (width >= 37.5rem) {
   [data-interface-layout="mountain-view"] [data-mv-rail-peek] {
     width: var(--mv-rail-peek-w);
   }

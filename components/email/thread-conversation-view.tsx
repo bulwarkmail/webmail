@@ -20,6 +20,7 @@ import { ReceivedLabelChip } from "./received-label-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
+import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { mailLanguage } from "@/lib/mail-language";
 import { htmlToReadableText } from "@/lib/html-to-readable-text";
@@ -204,7 +205,7 @@ export function ThreadConversationView({
   const t = useTranslations();
   const externalContent = useConversationExternalContent();
   const emailIdList = emails.map((email) => email.id).join(',');
-  const { isMobile: summaryOnPhone, isTablet: summaryOnTablet } = useDeviceDetection();
+  const { isMobile: summaryOnPhone, isCompact: summaryOnTablet } = useDeviceDetection();
   const threadSummaryProps = useMemo(
     () => ({ threadId: thread.latestEmail.threadId ?? null, emailIds: emailIdList ? emailIdList.split(',') : [], deviceType: summaryOnPhone ? 'mobile' : summaryOnTablet ? 'tablet' : 'desktop' }),
     [thread.latestEmail.threadId, emailIdList, summaryOnPhone, summaryOnTablet],
@@ -335,8 +336,8 @@ function useConversationPluginProps(email: Email) {
   const belowSubjectOffers = usePluginSlotOffers('reader-below-subject').length;
   const bannerOffers = usePluginSlotOffers('email-banner').length;
   const wantsView = headerOffers + belowSubjectOffers + bannerOffers > 0;
-  const { isMobile, isTablet } = useDeviceDetection();
-  const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+  const { isMobile, isCompact } = useDeviceDetection();
+  const deviceType = isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop';
   const emailProps = useMemo(() => ({ email: wantsView ? emailToReadView(email) : null, deviceType }), [email, wantsView, deviceType]);
   const idProps = useMemo(() => ({ emailId: email.id }), [email.id]);
   const actionTarget = useMessageActionTarget(email);
@@ -926,6 +927,8 @@ export function ConversationEmailBody({
         emailId: email.id,
         onContextMenu: (point, text) => selectionMenu.openRef.current(point, { emailId: email.id, text }),
       });
+      // j, k, e and the other shortcuts keep working after a click into the body.
+      forwardFrameKeys(doc, iframe);
       setHtmlBodyEl(doc.body);
     } catch {
       // contentDocument may be inaccessible under stricter sandboxes; ignore.

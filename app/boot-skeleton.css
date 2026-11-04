@@ -8,7 +8,7 @@
  */
 
 /* Mountain View shell. Its geometry only applies on desktop, so pair it with
-   lg: in markup (lg:mv:hidden), except the phone bottom bar, which follows
+   desk: in markup (desk:mv:hidden), except the phone bottom bar, which follows
    the layout at every width. */
 @custom-variant mv (&:where([data-interface-layout="mountain-view"] *));
 
@@ -16,6 +16,19 @@
 @custom-variant boot-split (&:where([data-boot-mail-layout="split"] *));
 @custom-variant boot-horizontal (&:where([data-boot-mail-layout="horizontal"] *));
 @custom-variant boot-focus (&:where([data-boot-mail-layout="focus"] *));
+/* One pane at a time: the focused layout, and the split layout in a window
+   too narrow for the list and the reader side by side (SPLIT_PANES_MIN,
+   useDrawnMailLayout). The rows keep the split layout's shape (boot-focus). */
+@custom-variant boot-onepane {
+  &:where([data-boot-mail-layout="focus"] *) {
+    @slot;
+  }
+  @media (width < 52.5rem) {
+    &:where([data-boot-mail-layout="split"] *) {
+      @slot;
+    }
+  }
+}
 
 /* A message, thread, contact, settings page or admin page is open. */
 @custom-variant boot-open (&:where([data-boot-pane] *));
@@ -208,7 +221,10 @@
   [data-boot-settings-tab="contacts"] [data-sk-settings-tab="contacts"],
   [data-boot-settings-tab="files"] [data-sk-settings-tab="files"],
   [data-boot-settings-tab="addons"] [data-sk-settings-tab="addons"],
-  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"]
+  [data-boot-settings-tab="offline"] [data-sk-settings-tab="offline"],
+  [data-boot-settings-tab="privacy"] [data-sk-settings-tab="privacy"],
+  [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"],
+  [data-boot-settings-tab="about"] [data-sk-settings-tab="about"]
 ));
 
 /* Settings pages the nav listed last time (bulwark-boot-hints). Without
@@ -221,6 +237,7 @@
 @custom-variant boot-no-settings-contacts (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="contacts"]) *));
 @custom-variant boot-no-settings-files (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="files"]) *));
 @custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
+@custom-variant boot-no-settings-offline (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="offline"]) *));
 @custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
 
 /* Settings pages with one section have no section jump row (SectionNav). */
@@ -362,6 +379,8 @@
 @custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
 /* Message previews turned off (showPreview). */
 @custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));
+/* The preview is one line except in comfortable rows. */
+@custom-variant boot-one-preview-line (&:where(:root:not([data-boot-density="comfortable"]) *));
 /* The default interface layout, the opposite of mv: (both can't be told apart by order). */
 @custom-variant boot-std (&:where(:root:not([data-interface-layout="mountain-view"]) *));
 /* Mountain View's side panel shows only with calendar or contacts. */

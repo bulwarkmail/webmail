@@ -235,7 +235,7 @@ describe('tour text on a phone', () => {
     const step = tour.steps[0] as { phoneDescriptionKey?: string };
     step.phoneDescriptionKey = 'one_desc_phone';
     const spy = vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
-      matches: query === '(width < 48rem)', media: query, onchange: null,
+      matches: query === '(width < 37.5rem)', media: query, onchange: null,
       addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {},
       dispatchEvent: () => false,
     }) as MediaQueryList);

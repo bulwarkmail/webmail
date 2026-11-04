@@ -19,6 +19,7 @@ import { IS_LITE } from '@/lib/lite';
 import { isPasswordSession } from '@/lib/auth/password-session';
 import { usePolicyStore } from '@/stores/policy-store';
 import { AccountArchiveSettings } from './account-archive-settings';
+import { SignOutRow } from './sign-out-row';
 import { DisplayNameSection } from './account-security-settings';
 import { EmailAddressesSection } from './identity-settings';
 import { MultipleAccountsSection } from './layout-settings';
@@ -216,6 +217,8 @@ export function AccountSettings() {
             </span>
           </SettingItem>
         )}
+
+        <SignOutRow />
       </SettingsSection>
 
       <EmailAddressesSection />

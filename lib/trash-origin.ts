@@ -72,10 +72,14 @@ export function restoreTarget(
   mailboxes: Mailbox[],
   selectedMailboxId?: string | null,
 ): string | undefined {
+  return rememberedTrashOrigin(email, mailboxes)?.id ?? inboxFor(email, mailboxes, selectedMailboxId)?.id;
+}
+
+/** The folder this device saw a message leave for Trash, if it still exists and takes mail. */
+export function rememberedTrashOrigin(email: Pick<Email, "id">, mailboxes: Mailbox[]): Mailbox | undefined {
   const origin = read()[email.id];
   const mailbox = origin ? mailboxes.find((m) => m.id === origin) : undefined;
-  if (mailbox && mailbox.role !== "trash" && mailbox.myRights?.mayAddItems !== false) return mailbox.id;
-  return inboxFor(email, mailboxes, selectedMailboxId)?.id;
+  return mailbox && mailbox.role !== "trash" && mailbox.myRights?.mayAddItems !== false ? mailbox : undefined;
 }
 
 /** One place for several messages: where they all came from, or the Inbox when they differ. */

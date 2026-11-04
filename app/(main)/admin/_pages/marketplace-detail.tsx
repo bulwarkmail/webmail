@@ -39,6 +39,8 @@ import { Badge } from '@/components/admin/badge';
 import { ScreenshotGallery } from '@/components/admin/screenshot-gallery';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { installVersion } from './marketplace';
+import { offerToTurnOnPlugins, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
+import { pluginTypeLabel } from './plugin-type-label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { scrollBehavior } from '@/lib/reduced-motion';
@@ -207,11 +209,12 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     }
     const warnings = result.warnings.length ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'})` : '';
     const signed = result.signature === 'verified' ? ', signed by the directory' : '';
+    const outcome: TurnOnOutcome = !isUpdate && data.extension.type === 'plugin' ? await offerToTurnOnPlugins(confirm) : 'already-on';
     setMessage({
       type: 'success',
       text: isUpdate
         ? `"${data.extension.name}" is now v${version}${signed}${warnings}`
-        : `"${data.extension.name}" installed (v${version})${signed}${warnings}`,
+        : `"${data.extension.name}" installed (v${version})${signed}${warnings}.${turnOnNote(outcome)}`,
     });
     fetchPreview(selected ?? null);
   }
@@ -384,7 +387,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
         )}
         description={(
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Badge tone={isPlugin ? 'info' : 'accent'}>{isPlugin ? (ext.pluginType || 'plugin') : 'theme'}</Badge>
+            <Badge tone={isPlugin ? 'info' : 'accent'}>{isPlugin ? pluginTypeLabel(ext.pluginType) : 'Theme'}</Badge>
             {ext.author && (
               <span className="inline-flex items-center gap-1">
                 by {ext.author.displayName}

@@ -62,6 +62,12 @@ export interface ServerPlugin {
   entrypoint: string;
   enabled: boolean;
   forceEnabled?: boolean;
+  /**
+   * Users get it off and turn it on themselves ("Off until users turn it
+   * on"). Unset is the default: on for every user, who may turn it off.
+   * `forceEnabled` wins over it.
+   */
+  defaultOff?: boolean;
   configSchema?: Record<string, PluginConfigField>;
   settingsSchema?: Record<string, PluginSettingsField>;
   /**
@@ -446,13 +452,13 @@ async function savePluginNow(
   if (isSharedMode()) cacheBundle(bundleHash, code, signature);
 }
 
-export async function updatePluginMeta(id: string, updates: Partial<Pick<ServerPlugin, 'enabled' | 'forceEnabled'>>): Promise<ServerPlugin | null> {
+export async function updatePluginMeta(id: string, updates: Partial<Pick<ServerPlugin, 'enabled' | 'forceEnabled' | 'defaultOff'>>): Promise<ServerPlugin | null> {
   const updated = await withRegistryLock('plugins', () => updatePluginMetaNow(id, updates));
   if (updated) await announceChange('plugins');
   return updated;
 }
 
-async function updatePluginMetaNow(id: string, updates: Partial<Pick<ServerPlugin, 'enabled' | 'forceEnabled'>>): Promise<ServerPlugin | null> {
+async function updatePluginMetaNow(id: string, updates: Partial<Pick<ServerPlugin, 'enabled' | 'forceEnabled' | 'defaultOff'>>): Promise<ServerPlugin | null> {
   assertWritable('update plugin metadata');
   const now = new Date().toISOString();
   let updated: ServerPlugin | null = null;

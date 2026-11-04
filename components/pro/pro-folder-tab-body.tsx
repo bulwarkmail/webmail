@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Folder, Loader2, Paperclip, RefreshCw, Star } from "@/components/icons";
 import { cn, cleanPreview, formatDate } from "@/lib/utils";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
@@ -255,7 +255,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
                       {who}
                     </span>
                     <span className="flex-shrink-0 text-xs text-muted-foreground">
-                      {formatDate(emailDisplayDate(email))}
+                      {formatDate(emailListDate(email))}
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5">

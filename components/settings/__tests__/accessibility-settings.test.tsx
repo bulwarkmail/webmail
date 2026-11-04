@@ -154,3 +154,49 @@ describe('read aloud voice', () => {
     }
   });
 });
+
+// settings-10 (2026-11-04): Accessibility repeated about twenty settings of
+// other pages, two rows of it called "Notification sound". Only access
+// settings stay; a link row in each section leads to the page with the rest.
+describe('one setting, one place', () => {
+  const borrowed = [
+    'settings.appearance.list_density.label',
+    'settings.appearance.toolbar_labels.label',
+    'settings.email_behavior.always_light_mode.label',
+    'calendar.settings.hover_preview',
+    'settings.email_behavior.group_conversations.label',
+    'settings.email_behavior.show_preview.label',
+    'settings.advanced.sender_favicons.label',
+    'settings.email_behavior.mark_read.label',
+    'settings.email_behavior.return_to_list_after_action.label',
+    'settings.email_behavior.send_delay.label',
+    'settings.email_behavior.confirm_bulk_delete.label',
+    'settings.notifications.email.sound',
+    'settings.notifications.calendar.sound',
+    'settings.notifications.sound_selection.choose',
+    'settings.appearance.favicon_unread_badge.label',
+  ];
+
+  it('draws no row that belongs to another page', () => {
+    const { container } = render(<AccessibilitySettings />);
+    const rows = Array.from(container.querySelectorAll('[data-search-label]')).map((el) => el.getAttribute('data-search-label'));
+    expect(rows.filter((row) => borrowed.includes(row ?? ''))).toEqual([]);
+  });
+
+  it('links to the pages that have them', () => {
+    const goTo: unknown[] = [];
+    const listener = (e: Event) => goTo.push((e as CustomEvent).detail);
+    window.addEventListener('settings-tab-change', listener);
+    try {
+      render(<AccessibilitySettings />);
+      for (const link of ['text', 'light_mode', 'list', 'reading', 'bulk_delete', 'sounds']) {
+        expect(screen.getByText(`uxs_structure.a11y_links.${link}.label`)).toBeTruthy();
+      }
+      const soundsRow = screen.getByText('uxs_structure.a11y_links.sounds.label').closest('[data-search-label]') as HTMLElement;
+      fireEvent.click(within(soundsRow).getByRole('button'));
+      expect(goTo).toEqual([{ tab: 'notifications', section: 'sound' }]);
+    } finally {
+      window.removeEventListener('settings-tab-change', listener);
+    }
+  });
+});

@@ -6,9 +6,6 @@
     "username_placeholder": "gebruiker@voorbeeld.nl",
     "password_label": "Wachtwoord",
     "password_placeholder": "Voer je wachtwoord in",
-    "jmap_endpoint_label": "JMAP-server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "De server moet CORS-verzoeken van dit domein toestaan.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server geselecteerd op basis van je e-maildomein.",
     "sign_in": "Aanmelden",
@@ -29,7 +26,7 @@
     },
     "show_password": "Wachtwoord tonen",
     "hide_password": "Wachtwoord verbergen",
-    "totp_toggle": "Ik heb een 2FA-code",
+    "totp_toggle": "Ik heb een code uit mijn authenticator-app",
     "token_toggle": "Aanmelden met een toegangstoken",
     "password_toggle": "Aanmelden met een wachtwoord",
     "token_label": "Toegangstoken",
@@ -126,7 +123,7 @@
     "sign_out_of": "Uitloggen van {account}",
     "sign_out_all": "Uitloggen van alle accounts",
     "add_account": "Account toevoegen",
-    "set_as_default": "Als standaard instellen",
+    "set_as_default": "Dit account openen bij het starten",
     "switch_account": "Account wisselen",
     "contacts": "Contacten",
     "calendar": "Agenda",
@@ -215,22 +212,30 @@
     "mv_storage_used": "{percent}% van {total} gebruikt",
     "accessibility": "Toegankelijkheid"
   },
+  "account_unread": {
+    "others": "Ongelezen in andere accounts: {count}",
+    "badge_all_accounts": {
+      "label": "Ongelezen mail van alle accounts tellen",
+      "description": "Het getal op het tabblad, het app-pictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op."
+    },
+    "empty_hint": "U kunt de map {folder} legen om alle berichten permanent te verwijderen."
+  },
   "protocol_handlers": {
     "title": "Standaardapps",
-    "description": "Kies of e-mail- en kalenderlinks in {appName} worden geopend. Technisch registreert {appName} zich als protocolhandler voor mailto:- en webcal:-links.",
+    "description": "Kies of e-mail- en agendalinks in {appName} openen.",
     "unsupported": "Deze browser of verbinding ondersteunt geen handmatige registratie van protocolhandlers. Mogelijk kun je de geïnstalleerde PWA nog gebruiken via de browser- of systeeminstellingen.",
-    "mailto_label": "E-maillinks",
-    "mailto_description": "Opent mailto:-links in {appName} met een vooraf ingevulde opsteller.",
-    "protocol_open_mode_label": "Bij het openen van protocollinks",
+    "mailto_label": "E-maillinks openen in {appName}",
+    "mailto_description": "Klikken op een e-mailadres op een website begint een nieuw bericht in {appName}.",
+    "protocol_open_mode_label": "Hoe links openen",
     "protocol_open_mode_description": "Kies of {appName} mailto:- en webcal:-links in een nieuw tabblad opent of een geopende sessie hergebruikt. Voor de optie actieve sessie is toestemming voor meldingen nodig, zodat je op een fallbackmelding kunt klikken om {appName} naar voren te halen als de browser focus blokkeert.",
     "protocol_open_mode_active_session": "Indien mogelijk openen in actieve sessie",
     "protocol_open_mode_new_tab": "Altijd een nieuw tabblad openen",
     "focus_notification_title": "{appName} openen",
     "focus_notification_body": "De link is geopend in {appName}. Klik om het venster naar voren te halen.",
-    "webcal_label": "Kalenderlinks",
-    "webcal_description": "Opent webcal:-links in {appName} met een vooraf ingevuld dialoogvenster voor kalenderabonnementen.",
-    "register_mailto": "E-mailapp registreren",
-    "register_webcal": "Kalenderapp registreren",
+    "webcal_label": "Agendalinks openen in {appName}",
+    "webcal_description": "Klikken op een agendalink op een website voegt de agenda toe in {appName}.",
+    "register_mailto": "{appName} gebruiken voor e-maillinks",
+    "register_webcal": "{appName} gebruiken voor agendalinks",
     "mailto_registered": "Registratie van e-mailhandler aangevraagd",
     "webcal_registered": "Registratie van kalenderhandler aangevraagd",
     "registration_failed": "Registratie van protocolhandler mislukt",
@@ -410,6 +415,17 @@
       "next": "Volgende pagina",
       "position": "{more, select, yes {Pagina {page} van {pages} of meer} other {Pagina {page} van {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# gesprek geselecteerd} other {# gesprekken geselecteerd}}",
+    "search_count": "{conversations, plural, one {# gesprek} other {# gesprekken}} ({messages, plural, one {# bericht} other {# berichten}})",
+    "conversation_count": "{count, plural, one {# gesprek} other {# gesprekken}}",
+    "archived": "Gearchiveerd",
+    "moved_to_trash": "Naar de prullenbak verplaatst",
+    "moved_to": "Verplaatst naar {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail verplaatst naar {mailbox}} other {# e-mails verplaatst naar {mailbox}}}",
+    "new_folder_title": "Nieuwe map",
+    "new_subfolder_title": "Nieuwe submap"
   },
   "shared_tags": {
     "title": "Gedeelde labels",
@@ -893,6 +909,11 @@
     "read_aloud_stop": "Voorlezen stoppen",
     "reader_view": "Leesweergave"
   },
+  "reader_actions": {
+    "restore": "Terugzetten",
+    "restore_to": "Terugzetten naar {folder}",
+    "delete_forever": "Definitief verwijderen"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Van {domain}, buiten je organisatie",
@@ -1360,6 +1381,30 @@
     "apply": "Deze tekst gebruiken",
     "apply_hint": "Vervangt het onderwerp en de tekst hieronder."
   },
+  "uxs_vacation": {
+    "default_subject": "Afwezig",
+    "default_message": "Bedankt voor je e-mail. Ik ben niet op kantoor en antwoord zodra ik terug ben.",
+    "write_message_first": "Schrijf eerst een bericht. Zonder bericht krijgen mensen een leeg antwoord.",
+    "enter_address_first": "Vul eerst het adres in om naar door te sturen.",
+    "message_title": "Je antwoord",
+    "message_label": "Bericht",
+    "message_description": "Wat mensen krijgen als ze je mailen. Je kunt opmaak en links gebruiken.",
+    "from_label": "Vanaf (optioneel)",
+    "from_description": "Laat leeg om meteen te beginnen.",
+    "until_label": "Tot (optioneel)",
+    "until_description": "Laat leeg om te blijven antwoorden tot je het uitzet.",
+    "audience_all": "Iedereen",
+    "audience_internal": "Alleen mijn organisatie ({domains})",
+    "audience_external": "Alleen mensen buiten mijn organisatie",
+    "signature_label": "Handtekening",
+    "signature_plain_label": "Handtekening (platte tekst)",
+    "signature_plain_description": "Je schrijft alleen platte tekst (Opstellen), dus je handtekening is ook platte tekst.",
+    "edit_as_html": "Bewerken als HTML",
+    "edit_formatted": "Terug naar de editor met opmaak",
+    "html_source_label": "Handtekening als HTML",
+    "signature_size": "{bytes} van {max} bytes gebruikt",
+    "signature_too_long": "Te lang voor de server ({bytes} van {max} bytes). Maak hem korter."
+  },
   "retention_notice": {
     "line": "Berichten hier worden {count, plural, one {# dag} other {# dagen}} nadat ze hierheen zijn verplaatst verwijderd."
   },
@@ -1549,8 +1594,8 @@
       "title": "Uiterlijk",
       "description": "Pas het uiterlijk van je webmail aan",
       "theme": {
-        "label": "Thema",
-        "description": "Kies je voorkeurkleurenschema",
+        "label": "Licht of donker",
+        "description": "Systeem volgt de instelling van je apparaat",
         "light": "Licht",
         "dark": "Donker",
         "system": "Systeem"
@@ -1578,7 +1623,7 @@
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
         "default": "Standaard",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Zoekbalk boven, apps links"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -1622,7 +1667,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Gekleurde zijbalkpictogrammen",
-        "description": "Kleur map- en tagpictogrammen op type (blauw Postvak IN, rood Spam, groen Verzonden, enz.). Schakel uit voor een monochrome zijbalk."
+        "description": "Geef map- en labelpictogrammen kleuren (blauw Postvak IN, rood Spam, groen Verzonden enzovoort). Zet uit voor grijze pictogrammen."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1634,7 +1679,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Zo ziet u nieuwe mail terwijl u in een ander tabblad of andere app werkt."
       },
       "show_shared_mail_accounts": {
         "label": "Gedeelde mailaccounts tonen",
@@ -1685,7 +1730,7 @@
     },
     "keywords": {
       "title": "E-maillabels",
-      "description": "Definieer labels om uw e-mails te organiseren. Deze worden opgeslagen als JMAP-trefwoorden op de server.",
+      "description": "Maak labels om uw berichten te ordenen. De labels worden met uw berichten op de server opgeslagen.",
       "add_keyword": "Label toevoegen",
       "label_field": "Weergavenaam",
       "label_placeholder": "bijv. Werk, Persoonlijk, Urgent",
@@ -1720,8 +1765,8 @@
         "hide": "Verbergen"
       },
       "unrecognized": {
-        "title": "Labels van de server herstellen",
-        "description": "Labelnamen en -kleuren worden in deze browser bewaard, maar de labels zelf staan als JMAP-trefwoorden op uw e-mails. Doorzoek uw e-mail op trefwoorden waarvoor hier geen label bestaat en voeg ze weer toe.",
+        "title": "Labels op uw berichten zoeken die hier ontbreken",
+        "description": "Deze browser bewaart de namen en kleuren van uw labels. De labels zelf staan op uw berichten. Zoek in uw e-mail naar labels die hier ontbreken en voeg ze opnieuw toe.",
         "scan": "Zoeken naar labels",
         "rescan": "Opnieuw zoeken",
         "scanning": "Bezig met zoeken… {scanned} van {total} e-mails",
@@ -1754,17 +1799,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Meldingsgeluid",
+        "title": "Geluid",
         "description": "Kies welk geluid wordt afgespeeld voor meldingen",
-        "choose": "Geluid",
+        "choose": "Toon",
         "choose_desc": "Selecteer een meldingstoon en klik op het luidsprekerpictogram voor een voorbeeld"
       },
       "email": {
-        "title": "E-mailmeldingen",
+        "title": "Nieuwe e-mail",
         "description": "Meldingen voor inkomende e-mails configureren",
         "enabled": "E-mailmeldingen",
         "enabled_desc": "Meldingen tonen wanneer nieuwe e-mails binnenkomen",
-        "sound": "Meldingsgeluid",
+        "sound": "Geluid bij nieuwe mail",
         "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1774,7 +1819,7 @@
         "description": "Meldingen voor agenda-evenementen configureren",
         "enabled": "Evenementmeldingen",
         "enabled_desc": "Waarschuwingen tonen voor aankomende agenda-evenementen",
-        "sound": "Meldingsgeluid",
+        "sound": "Geluid bij herinneringen",
         "sound_desc": "Een geluid afspelen voor agendaherinneringen"
       },
       "push": {
@@ -1782,7 +1827,7 @@
         "confirm_disable_title": "Achtergrondmeldingen uitschakelen?",
         "description": "Ontvang systeemmeldingen voor nieuwe e-mail wanneer deze site gesloten is. Geleverd via de Bulwark-pushrelay; de relay ziet nooit e-mailinhoud.",
         "disable": "Uitschakelen",
-        "enable": "Inschakelen",
+        "enable": "Aanzetten op dit apparaat",
         "dismiss_aria": "Meldingsvenster sluiten",
         "ios_hint": "Installeer de site op iOS eerst op het beginscherm – Safari levert Web Push alleen aan geïnstalleerde PWA's.",
         "reenable": "Opnieuw registreren",
@@ -1796,7 +1841,7 @@
         "status_unsupported": "Deze browser ondersteunt geen Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Achtergrondmeldingen zijn niet beschikbaar in de demo.",
-        "title": "Achtergrondmeldingen",
+        "title": "Meldingen als {appName} gesloten is",
         "devices_title": "Geregistreerde apparaten",
         "devices_desc": "Alle apparaten die achtergrondmeldingen voor dit account ontvangen. Trek je er een in, dan stopt de ontvangst meteen.",
         "devices_loading": "Geregistreerde apparaten laden…",
@@ -1858,7 +1903,7 @@
       },
       "first_day": {
         "label": "Eerste dag van de week",
-        "description": "Begin de week op zondag of maandag",
+        "description": "Eerste dag van de week in agenda's",
         "sunday": "Zondag",
         "monday": "Maandag"
       },
@@ -1948,13 +1993,13 @@
       },
       "mail_layout": {
         "label": "E-mailindeling",
-        "description": "Kies tussen het klassieke gesplitste leesvenster en een gefocuste leesstroom in Gmail-stijl.",
+        "description": "Waar de berichtenlijst en het geopende bericht op het scherm staan.",
         "split": "Gesplitst venster",
-        "split_description": "Houd de berichtenlijst en het leesvenster naast elkaar zichtbaar.",
+        "split_description": "Lijst en bericht naast elkaar",
         "focus": "Gefocuste lijst",
-        "focus_description": "Toon één regel per bericht en open e-mail op volledige breedte terwijl de mappenzijbalk zichtbaar blijft.",
+        "focus_description": "De lijst, dan het bericht over de volle breedte",
         "horizontal": "Leesvenster onderaan",
-        "horizontal_description": "Toon de berichtenlijst bovenaan en open het geselecteerde bericht in een leesvenster eronder."
+        "horizontal_description": "Bericht onder de lijst"
       },
       "list_columns": {
         "label": "Lijst in kolommen weergeven",
@@ -1970,7 +2015,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Antwoordadres automatisch selecteren",
-        "description": "Schakel bij het beantwoorden automatisch het Van-adres om naar de identiteit die het oorspronkelijke bericht ontving"
+        "description": "Bij beantwoorden verzenden vanaf het adres waarnaar het bericht is gestuurd."
       },
       "reply_identity_match": {
         "label": "Overeenkomst van ontvangstadres",
@@ -2203,8 +2248,8 @@
         "title": "Aangemelde accounts",
         "description": "Sleep om de volgorde aan te passen waarin accounts in het accountmenu verschijnen",
         "active": "Momenteel actief account",
-        "default_badge": "Standaardaccount",
-        "set_default": "Als standaard instellen",
+        "default_badge": "Opent bij het starten",
+        "set_default": "Dit account openen bij het starten",
         "switch_to": "Overschakelen naar dit account",
         "move_up": "Omhoog verplaatsen",
         "move_down": "Omlaag verplaatsen",
@@ -2287,7 +2332,7 @@
       },
       "totp": {
         "section_title": "Tweefactorauthenticatie",
-        "label": "TOTP-authenticatie",
+        "label": "Inloggen in twee stappen",
         "description": "Voeg een extra beveiligingslaag toe met een op tijd gebaseerd eenmalig wachtwoord",
         "active": "Ingeschakeld",
         "inactive": "Uitgeschakeld",
@@ -2367,12 +2412,12 @@
         "enabled_success": "Versleuteling in rust ingeschakeld"
       },
       "email_client": {
-        "title": "E-mailclient instellen",
-        "description": "Gebruik deze inloggegevens om uw desktop- of mobiele e-mailclient te configureren (Thunderbird, Apple Mail, Outlook, enz.)",
-        "jmap_username_label": "JMAP-gebruikersnaam",
+        "title": "Je mail in andere apps gebruiken",
+        "description": "Thunderbird, Apple Mail, Outlook en mailapps op je telefoon kunnen deze instellingen gebruiken.",
+        "jmap_username_label": "Gebruikersnaam",
         "copy": "Kopiëren",
         "copied": "Gekopieerd",
-        "password_instructions": "Gebruik uw hierboven vermelde JMAP-gebruikersnaam samen met een app-wachtwoord om in te loggen bij uw e-mailclient. Maak een app-wachtwoord aan in het gedeelte hieronder als u dat nog niet heeft gedaan."
+        "password_instructions": "Gebruik als wachtwoord een app-wachtwoord, niet je gewone wachtwoord. Je maakt er een verderop op deze pagina."
       },
       "link_device": {
         "title": "Mobiele app koppelen",
@@ -2623,7 +2668,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Contacten, agenda’s en mappen opnieuw van de server laden. U blijft aangemeld.",
         "button": "Refresh",
         "confirm_title": "Gegevens in de cache vernieuwen?"
       },
@@ -2636,12 +2681,12 @@
       },
       "export_settings": {
         "label": "Instellingen exporteren",
-        "description": "Download je instellingen als JSON",
+        "description": "Een kopie van uw instellingen downloaden",
         "button": "Exporteren"
       },
       "import_settings": {
         "label": "Instellingen importeren",
-        "description": "Upload instellingen vanuit JSON-bestand",
+        "description": "Instellingen herstellen uit een bestand",
         "button": "Importeren"
       },
       "about": {
@@ -2692,8 +2737,8 @@
       "manage_description": "Aangepaste apps toevoegen, bewerken of verwijderen uit de zijbalk"
     },
     "contacts": {
-      "title": "Contacten",
-      "description": "Importeer en exporteer uw contacten",
+      "title": "Contactenlijst",
+      "description": "Hoe contacten worden getoond, en contactbestanden om te importeren of exporteren",
       "import_label": "Contacten importeren",
       "import_description": "Contacten importeren uit een vCard-bestand (.vcf)",
       "export_label": "Contacten exporteren",
@@ -2788,15 +2833,15 @@
       "not_supported": "Uw mailserver ondersteunt geen e-mailfilters.",
       "rule_name": "Regelnaam",
       "rule_name_placeholder": "bijv. Nieuwsbrieven sorteren",
-      "match_all": "Aan ALLE voorwaarden voldoen",
-      "match_any": "Aan EEN willekeurige voorwaarde voldoen",
+      "match_all": "Aan alle voorwaarden voldoen",
+      "match_any": "Aan een van de voorwaarden voldoen",
       "conditions": "Voorwaarden",
       "add_condition": "Voorwaarde toevoegen",
       "actions": "Acties",
       "add_action": "Actie toevoegen",
       "remove_condition": "Voorwaarde verwijderen",
       "remove_action": "Actie verwijderen",
-      "stop_processing": "Verwerking van volgende regels stoppen",
+      "stop_processing": "Latere regels niet toepassen",
       "include_spam": "Ook berichten verplaatsen die als spam zijn gemarkeerd",
       "attachment_type_placeholder": "bijv. pdf, doc, jpg",
       "value_placeholder_multi": "Waarde (meerdere met komma's gescheiden)",
@@ -2838,7 +2883,7 @@
         "discard": "Stilletjes verwijderen",
         "reject": "Afwijzen met bericht",
         "keep": "In postvak IN houden",
-        "stop": "Verwerking stoppen"
+        "stop": "Latere regels niet toepassen"
       },
       "move_to_folder": "Map selecteren",
       "copy_to_folder": "Map selecteren",
@@ -2982,7 +3027,7 @@
         "description": "Configureer hoe bestanden en mappen worden weergegeven"
       },
       "default_view": {
-        "label": "Standaardweergave",
+        "label": "Bestanden tonen als",
         "description": "Kies tussen raster- en lijstweergave",
         "list": "Lijst",
         "grid": "Raster"
@@ -3185,10 +3230,6 @@
         "label": "Leesmasker",
         "description": "Dimt alles in een bericht behalve een paar regels rond de aanwijzer, zodat je je plek niet kwijtraakt."
       },
-      "plain_language": {
-        "label": "Makkelijke taal",
-        "description": "Eenvoudigere formuleringen bij instellingen en foutmeldingen, en korte uitleg bij technische termen. Beschikbaar in het Engels en Duits."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "Meer contrast maakt tekst, randen en de focusrand donkerder of lichter in elk thema en onderstreept links. Systeem volgt je apparaat.",
@@ -3380,6 +3421,81 @@
         "description": "De stem die berichten voorleest. De lijst toont de stemmen die je browser heeft voor de taal van de interface.",
         "default": "Standaard van de browser"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "Over"
+    },
+    "search": {
+      "signature": "handtekening e-mailhandtekening ondertekening voettekst",
+      "sign_out": "afmelden uitloggen logout",
+      "app_lock": "PIN vergrendeling code vergrendelscherm",
+      "text_size": "lettergrootte grotere tekst zoom vergroten",
+      "vacation": "automatisch antwoord afwezig vakantie buiten kantoor autoreply",
+      "two_factor": "2FA tweestaps twee-factor MFA OTP authenticator eenmalige code",
+      "encryption": "S/MIME smime PGP OpenPGP versleuteling certificaat",
+      "password": "wachtwoord wijzigen nieuw wachtwoord",
+      "offline": "offline zonder verbinding zonder internet downloaden opslag synchroniseren",
+      "wipe": "verwijderen wissen apparaat gegevens",
+      "outbox": "postvak uit niet verzonden wachtend wachtrij",
+      "remote_content": "externe afbeeldingen externe inhoud tracking pixels vertrouwde afzenders",
+      "push": "push relay achtergrond meldingen",
+      "version": "versie update over broncode GitHub licentie"
+    },
+    "privacy": {
+      "push_title": "Meldingen",
+      "push_link": {
+        "label": "Relay voor meldingen",
+        "description": "Meldingen terwijl de app dicht is gaan via een push-relay, die uw mail nooit ziet. U kiest die op de pagina Meldingen.",
+        "button": "Meldingen"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Externe afbeeldingen en vertrouwde afzenders",
+      "receipts_label": "Leesbevestigingen",
+      "senders_label": "Afzenderafbeeldingen",
+      "description": "Deze instellingen staan op de pagina Privacy.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Dichtheid en knoplabels",
+        "description": "Hoe dicht de rijen in de lijst staan en of knoppen hun naam tonen, stelt u in op de pagina Weergave."
+      },
+      "light_mode": {
+        "label": "Lichte achtergrond voor berichten",
+        "description": "Berichten op een lichte achtergrond tonen in donkere modus stelt u in op de pagina Lezen."
+      },
+      "calendar": {
+        "label": "Voorbeeld van afspraken in de agenda",
+        "description": "Of wijzen naar een afspraak de details toont, stelt u in op de pagina Agenda."
+      },
+      "list": {
+        "label": "Gesprekken en voorbeeldregels",
+        "description": "Groeperen per gesprek en de voorbeeldregel onder elk bericht stelt u in op de pagina Berichtenlijst."
+      },
+      "reading": {
+        "label": "Als gelezen markeren",
+        "description": "Wanneer een bericht als gelezen telt, en waar u na verwijderen of verplaatsen heen gaat, stelt u in op de pagina Lezen."
+      },
+      "send_warnings_description": "Verzenden ongedaan maken en de waarschuwingen voor een ontbrekend onderwerp, een vergeten bijlage of opvultekst.",
+      "bulk_delete": {
+        "label": "Vragen voor het verwijderen van meerdere berichten",
+        "description": "Dit stelt u in op de pagina Berichtenlijst."
+      },
+      "sounds": {
+        "label": "Geluiden en de teller voor ongelezen",
+        "description": "Meldingsgeluiden en het aantal ongelezen op het tabblad stelt u in op de pagina Meldingen."
+      }
+    },
+    "about": {
+      "title": "Over {appName}"
+    },
+    "sign_out": {
+      "description": "Dit account op dit apparaat afmelden."
     }
   },
   "setup": {
@@ -3717,6 +3833,10 @@
     "create": "Aanmaken",
     "rename_confirm": "Hernoemen"
   },
+  "uxs_folders": {
+    "manage_accounts": "Accounts beheren…",
+    "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"
+  },
   "shortcuts": {
     "title": "Sneltoetsen",
     "tip": "Druk op ? om deze hulp te tonen",
@@ -3787,6 +3907,10 @@
     "messages_count": "{count, plural, one {# bericht} other {# berichten}}",
     "expand_named": "Gesprek uitklappen: {subject}",
     "collapse_named": "Gesprek inklappen: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
+    "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
   "identities": {
     "modal_title": "Verzendidentiteiten beheren",
@@ -4399,6 +4523,28 @@
     "open_categories": "Categorieën openen",
     "row_actions": "Acties voor {name}"
   },
+  "uxs_wording": {
+    "more_options": "Meer opties",
+    "use_in_other_apps": "Gebruiken in andere apps",
+    "default_address_book": "Contacten",
+    "default_calendar": "Agenda",
+    "preview_documents": "Documenten",
+    "preview_photos": "Foto's",
+    "sample_subject": "Notities van het overleg in het café",
+    "mail_apps": {
+      "imap": "Inkomende mail (IMAP)",
+      "smtp": "Uitgaande mail (SMTP)",
+      "caldav": "Agenda's (CalDAV)",
+      "carddav": "Contacten (CardDAV)",
+      "port_security": "Poort {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Geen versleuteling",
+      "copy_label": "{name} kopiëren",
+      "loading": "De instellingen worden van je mailserver gelezen…",
+      "not_found": "Je mailserver heeft geen servernamen voor andere apps gegeven. Vraag ze aan je beheerder."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Agenda's: {names}",
@@ -4642,7 +4788,7 @@
       "hide_non_working_days_desc": "Laat de dagen waarop je niet werkt weg uit de weekweergave. Hun evenementen blijven zichtbaar in de maand-, dag- en agendaweergave.",
       "working_days": "Werkdagen",
       "title": "Agenda-instellingen",
-      "default_view": "Standaardweergave",
+      "default_view": "Agenda opent in",
       "week_starts_on": "Week begint op",
       "time_format": "Tijdnotatie",
       "default_calendar": "Standaardagenda",
@@ -4653,7 +4799,7 @@
       "notifications_enabled_desc": "Meldingen weergeven voor aankomende evenementen",
       "notification_sound": "Meldingsgeluid",
       "notification_sound_desc": "Geluid afspelen voor agendameldingen",
-      "invitation_parsing": "E-mailuitnodigingen verwerken",
+      "invitation_parsing": "Uitnodigingen uit mail tonen",
       "invitation_parsing_desc": "Kalenderuitnodigingen in e-mailbijlagen detecteren en kalenderacties tonen",
       "show_time_in_month_view": "Tijd weergeven in maandweergave",
       "show_time_in_month_view_desc": "Evenementtijden weergeven in de maandkalenderweergave",
@@ -4668,7 +4814,7 @@
       "show_week_numbers_desc": "Weeknummers weergeven in de minikalender",
       "calendar_free_scroll": "Vrij scrollen",
       "calendar_free_scroll_desc": "Doorlopend door maanden, weken en dagen scrollen in plaats van één periode tegelijk",
-      "enable_tasks": "Taken inschakelen",
+      "enable_tasks": "Taken",
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
       "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
@@ -4813,8 +4959,8 @@
       "error_update": "Agenda bijwerken mislukt",
       "error_delete": "Agenda verwijderen mislukt",
       "caldav_url": "CalDAV-URL",
-      "copy_url": "CalDAV-URL kopiëren",
-      "url_copied": "CalDAV-URL gekopieerd naar klembord",
+      "copy_url": "Adres voor andere apps kopiëren",
+      "url_copied": "Adres gekopieerd",
       "confirm_clear": "Alle afspraken uit \"{name}\" verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "set_default": "Als standaard instellen",
       "default_updated": "Standaardagenda bijgewerkt",
@@ -4841,8 +4987,8 @@
       "default_alerts_updated": "Standaardherinneringen bijgewerkt"
     },
     "subscription": {
-      "title": "iCal-abonnement",
-      "section_title": "iCal-abonnementen",
+      "title": "Abonneren op een agenda",
+      "section_title": "Geabonneerde agenda's",
       "description": "Abonneer op een externe iCalendar-feed. Afspraken worden automatisch gesynchroniseerd in een eigen agenda. Ondersteunt https://- en webcal://-URL's.",
       "url_label": "Agenda-URL",
       "url_placeholder": "https://example.com/calendar.ics of webcal://...",
@@ -5920,7 +6066,7 @@
     "clear_confirm_unsent": "{count, plural, one {# niet-verzonden bericht gaat verloren.} other {# niet-verzonden berichten gaan verloren.}}",
     "clear_confirm": "Wissen",
     "persist_refused": "Deze browser kan de bewaarde e-mail verwijderen als de ruimte opraakt. De app installeren voorkomt dat meestal.",
-    "persist_retry": "Opnieuw vragen",
+    "persist_retry": "Browser vragen het te bewaren",
     "safari_hint": "Safari verwijdert de gegevens van een site na 7 dagen zonder bezoek. Zet Bulwark op je beginscherm of in het Dock om je e-mail op dit apparaat te houden.",
     "evicted": "De browser heeft de e-mail verwijderd die op dit apparaat was bewaard. Ze wordt opnieuw gedownload.",
     "evicted_lost": "{count, plural, one {# niet-verzonden bericht of wijziging is verloren gegaan.} other {# niet-verzonden berichten of wijzigingen zijn verloren gegaan.}}",
@@ -6806,7 +6952,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Vensters",
+      "title": "Vensters van de app",
       "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
       "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
       "restore_label": "Vensters opnieuw openen bij het starten",
@@ -6899,6 +7045,9 @@
       "close": "Sluit"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Zoek ‘{text}’ in e-mail"
+  },
   "desktopMenuBar": {
     "always_show_label": "Menubalk altijd tonen",
     "always_show_description": "Anders verschijnt hij bij een druk op Alt.",
@@ -6920,9 +7069,9 @@
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
     "enable_label": "Vergrendelen met een pincode",
-    "enable_desc": "Standaard uit. De pincode blijft op dit apparaat.",
+    "enable_desc": "De pincode blijft op dit apparaat.",
     "protects_desc": "Waartegen dit beschermt: de pincode houdt iemand bij dit apparaat uit de app. De mail die hier staat krijgt een nieuwe sleutel als je de vergrendeling aanzet of de pincode wijzigt, wat even kan duren. Het kan niet tegenhouden: een programma op deze computer, een browserextensie die je hebt geïnstalleerd, of iemand die de bestanden van de app kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is voor het proberen van pincodes ook je aanmelding op deze computer nodig. Je account op de server verandert hierdoor niet.",
-    "enable_body": "Kies een pincode. Die heeft u nodig telkens als de app vergrendelt, en na herladen of opnieuw starten.",
+    "enable_body": "U heeft hem nodig telkens als de app vergrendelt en na een herstart.",
     "set_pin_title": "Kies een pincode",
     "change_pin": "Pincode wijzigen…",
     "change_pin_title": "De pincode wijzigen",
@@ -6984,6 +7133,19 @@
     "blocked_seconds": "Te veel pogingen. Probeer het over {count, plural, one {# seconde} other {# seconden}} opnieuw.",
     "blocked_minutes": "Te veel pogingen. Probeer het over {count, plural, one {# minuut} other {# minuten}} opnieuw."
   },
+  "uxs_general": {
+    "time_zone_common": "Veelgebruikte tijdzones",
+    "time_zone_all": "Alle tijdzones",
+    "time_zone_search": "Tijdzone zoeken",
+    "time_zone_no_match": "Geen tijdzone gevonden",
+    "time_zone_desktop_description": "Toon de tijden van mail en afspraken in deze tijdzone. Als u er geen kiest, wordt de tijdzone van uw computer gebruikt.",
+    "app_lock_desc_desktop": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
+    "app_lock_timeout_desc_desktop": "Tijd zonder gebruik in een venster.",
+    "app_lock_now_desc_desktop": "Vergrendelt alle vensters meteen.",
+    "app_lock_protects_toggle": "Waartegen beschermt dit?",
+    "app_lock_timeout_hours": "{count, plural, one {# uur} other {# uur}}",
+    "desktop_attention_title": "Op deze computer"
+  },
   "desktop_sign_in": {
     "server_needed": "Vul eerst het adres van de server in.",
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
@@ -7018,6 +7180,21 @@
     "declined": "Je hebt in je browser nee gezegd, dus er is niet ingelogd.",
     "too_many": "Te veel inlogpogingen vanaf dit netwerk. Wacht een paar minuten en probeer het opnieuw.",
     "page_declined": "Er is niets overgedragen. Je kunt dit tabblad sluiten."
+  },
+  "uxs_login": {
+    "theme_button": "Licht of donker",
+    "server_label": "Mailserver",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Je mailserver wordt gezocht…",
+    "server_found": "Mailserver: {server}",
+    "server_change": "Wijzigen",
+    "server_not_found": "We hebben de mailserver voor dit adres niet gevonden. Vul hem hier in, bijvoorbeeld mail.example.com.",
+    "server_needed": "Vul het adres van je mailserver in.",
+    "server_invalid": "Dit is geen serveradres. Schrijf het zoals mail.example.com.",
+    "email_needed": "Vul eerst je e-mailadres in.",
+    "trouble": "Lukt het niet?",
+    "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
+    "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."
   },
   "desktop_updates": {
     "title": "Updates",
@@ -7239,7 +7416,7 @@
     "section_title": "Gebruiksgegevens en crashrapporten",
     "section_description": "Beide staan uit totdat je ze aanzet, en elk heeft een eigen schakelaar.",
     "telemetry_label": "Gebruiksgegevens verzenden",
-    "telemetry_description": "Eén keer per dag: een willekeurige ID, de appversie, de Node-versie, je besturingssysteem, hoe lang de app al draait en hoe hij verbinding maakt. Met je eigen mailserver ook welke functies aan staan, een ruw aantal accounts en hoeveel plug-ins en thema's je hebt. Nooit e-mail, adressen of servernamen.",
+    "telemetry_description": "Eén keer per dag: een willekeurige ID, de versienummers van de app, je besturingssysteem, hoe lang de app al draait en hoe hij verbinding maakt. Met je eigen mailserver ook welke functies aan staan, een ruw aantal accounts en hoeveel plug-ins en thema's je hebt. Nooit e-mail, adressen of servernamen.",
     "crash_label": "Crashrapporten verzenden",
     "crash_description": "Fouten in de app gaan mee met een willekeurige ID, bestandsnamen uit de eigen code van de app en korte, opgeschoonde meldingen. Als de app zelf crasht, blijft er een crashbestand op deze computer staan dat alleen weggaat als jij het verzendt.",
     "crash_memory": "Een crashbestand is een kopie van een deel van het geheugen van de app op het moment van de crash. Bulwark verwijdert gebruikersnamen, adressen en aanmeldtokens die het vindt, maar een crashbestand kan nog steeds de tekst van je e-mail bevatten.",

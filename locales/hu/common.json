@@ -6,9 +6,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "Jelszó",
     "password_placeholder": "Add meg a jelszavad",
-    "jmap_endpoint_label": "JMAP Szerver",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "A szervernek engedélyeznie kell a CORS kéréseket erről a tartományról.",
     "jmap_server_label": "Szerver",
     "jmap_server_auto_picked": "Szerver kiválasztva az e-mail tartományodból.",
     "sign_in": "Bejelentkezés",
@@ -29,7 +26,7 @@
     },
     "show_password": "Jelszó megjelenítése",
     "hide_password": "Jelszó elrejtése",
-    "totp_toggle": "Van egy 2FA kódom",
+    "totp_toggle": "Van egy kódom a hitelesítő alkalmazásomból",
     "token_toggle": "Bejelentkezés hozzáférési tokennel",
     "password_toggle": "Bejelentkezés jelszóval",
     "token_label": "Hozzáférési token",
@@ -126,7 +123,7 @@
     "sign_out_of": "Kijelentkezés erről: {account}",
     "sign_out_all": "Kijelentkezés minden fiókból",
     "add_account": "Fiók hozzáadása",
-    "set_as_default": "Beállítás alapértelmezettként",
+    "set_as_default": "Ez a fiók nyíljon meg induláskor",
     "switch_account": "Fiók váltása",
     "contacts": "Névjegyek",
     "calendar": "Naptár",
@@ -215,22 +212,30 @@
     "mv_storage_used": "{total} {percent}%-a foglalt",
     "accessibility": "Kisegítő lehetőségek"
   },
+  "account_unread": {
+    "others": "Olvasatlan a többi fiókban: {count}",
+    "badge_all_accounts": {
+      "label": "Az összes fiók olvasatlan leveleinek számlálása",
+      "description": "A lapon, az alkalmazásikonon és a tálcán látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze."
+    },
+    "empty_hint": "A(z) {folder} mappa ürítésével véglegesen eltávolíthatod az összes üzenetet."
+  },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",
-    "description": "Válaszd ki, hogy az e-mail és naptár hivatkozások a(z) {appName} alkalmazásban nyíljanak meg. Technikailag a(z) {appName} protokollkezelőként regisztrálja magát a mailto: és webcal: hivatkozásokhoz.",
+    "description": "Válassza ki, hogy az e-mail- és naptárhivatkozások a(z) {appName} alkalmazásban nyíljanak-e meg.",
     "unsupported": "Ez a böngésző vagy kapcsolat nem támogatja a kézi protokollkezelő regisztrációt. Lehetőség lehet a telepített PWA használatára a böngésző vagy operációs rendszer beállításain keresztül.",
-    "mailto_label": "E-mail hivatkozások",
-    "mailto_description": "Mailto: hivatkozások megnyitása a(z) {appName} alkalmazásban egy előre kitöltött szerkesztővel.",
-    "protocol_open_mode_label": "Protokoll hivatkozások megnyitásakor",
+    "mailto_label": "E-mail-hivatkozások megnyitása itt: {appName}",
+    "mailto_description": "Ha egy weboldalon e-mail-címre kattint, új üzenet indul itt: {appName}.",
+    "protocol_open_mode_label": "Hivatkozások megnyitása",
     "protocol_open_mode_description": "Válaszd ki, hogy a(z) {appName} a mailto: és webcal: hivatkozásokat új lapon vagy a meglévő munkamenetben nyissa meg. Az aktív munkamenet opcióhoz értesítési engedély szükséges, hogy egy értesítésre kattintva előtérbe hozd a(z) {appName} alkalmazást, ha a böngésző blokkolja a fókuszt.",
     "protocol_open_mode_active_session": "Megnyitás aktív munkamenetben, ha lehetséges",
     "protocol_open_mode_new_tab": "Mindig új lapon nyisson",
     "focus_notification_title": "{appName} megnyitása",
     "focus_notification_body": "A hivatkozás megnyílt a(z) {appName} alkalmazásban. Kattints az ablak előtérbe hozásához.",
-    "webcal_label": "Naptár hivatkozások",
-    "webcal_description": "Webcal: hivatkozások megnyitása a(z) {appName} alkalmazásban egy előre kitöltött naptárfeliratkozási párbeszédpanellel.",
-    "register_mailto": "E-mail alkalmazás regisztrálása",
-    "register_webcal": "Naptár alkalmazás regisztrálása",
+    "webcal_label": "Naptárhivatkozások megnyitása itt: {appName}",
+    "webcal_description": "Ha egy weboldalon naptárhivatkozásra kattint, a naptár bekerül ide: {appName}.",
+    "register_mailto": "{appName} használata e-mail-hivatkozásokhoz",
+    "register_webcal": "{appName} használata naptárhivatkozásokhoz",
     "mailto_registered": "E-mail kezelő regisztráció kérve",
     "webcal_registered": "Naptár kezelő regisztráció kérve",
     "registration_failed": "Protokollkezelő regisztráció sikertelen",
@@ -410,6 +415,17 @@
       "next": "Következő oldal",
       "position": "{more, select, yes {{page}. oldal, összesen {pages} vagy több} other {{page}. oldal, összesen {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# beszélgetés kijelölve} other {# beszélgetés kijelölve}}",
+    "search_count": "{conversations, plural, one {# beszélgetés} other {# beszélgetés}} ({messages, plural, one {# üzenet} other {# üzenet}})",
+    "conversation_count": "{count, plural, one {# beszélgetés} other {# beszélgetés}}",
+    "archived": "Archiválva",
+    "moved_to_trash": "Áthelyezve a kukába",
+    "moved_to": "Áthelyezve ide: {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail áthelyezve ide: {mailbox}} other {# e-mail áthelyezve ide: {mailbox}}}",
+    "new_folder_title": "Új mappa",
+    "new_subfolder_title": "Új almappa"
   },
   "shared_tags": {
     "title": "Megosztott címkék",
@@ -893,6 +909,11 @@
     "read_aloud_stop": "Felolvasás leállítása",
     "reader_view": "Olvasó nézet"
   },
+  "reader_actions": {
+    "restore": "Visszaállítás",
+    "restore_to": "Visszahelyezés ide: {folder}",
+    "delete_forever": "Végleges törlés"
+  },
   "external_mail": {
     "sender_label": "Külső",
     "sender_tooltip": "Innen: {domain}, a szervezeteden kívülről",
@@ -1360,6 +1381,30 @@
     "apply": "Ennek a szövegnek a használata",
     "apply_hint": "Lecseréli a lenti tárgyat és szöveget."
   },
+  "uxs_vacation": {
+    "default_subject": "Házon kívül",
+    "default_message": "Köszönöm a levelét. Jelenleg nem vagyok az irodában, visszatérésem után válaszolok.",
+    "write_message_first": "Előbb írjon üzenetet. Nélküle az emberek üres választ kapnának.",
+    "enter_address_first": "Előbb adja meg a címet, ahová továbbítson.",
+    "message_title": "Az Ön válasza",
+    "message_label": "Üzenet",
+    "message_description": "Ezt kapják, akik írnak Önnek. Használhat formázást és hivatkozásokat.",
+    "from_label": "Ettől (nem kötelező)",
+    "from_description": "Hagyja üresen az azonnali kezdéshez.",
+    "until_label": "Eddig (nem kötelező)",
+    "until_description": "Hagyja üresen, hogy a válaszolás addig tartson, amíg ki nem kapcsolja.",
+    "audience_all": "Mindenkinek",
+    "audience_internal": "Csak a szervezetemnek ({domains})",
+    "audience_external": "Csak a szervezetemen kívülieknek",
+    "signature_label": "Aláírás",
+    "signature_plain_label": "Aláírás (egyszerű szöveg)",
+    "signature_plain_description": "Csak egyszerű szöveget ír (Írás), ezért az aláírása is egyszerű szöveg.",
+    "edit_as_html": "Szerkesztés HTML-ként",
+    "edit_formatted": "Vissza a formázó szerkesztőhöz",
+    "html_source_label": "Aláírás HTML-ként",
+    "signature_size": "{bytes} / {max} bájt felhasználva",
+    "signature_too_long": "Túl hosszú a szervernek ({bytes} / {max} bájt). Rövidítse le."
+  },
   "retention_notice": {
     "line": "Az itt lévő üzenetek az ide helyezésük után {count, plural, one {# nappal} other {# nappal}} törlődnek."
   },
@@ -1552,8 +1597,8 @@
       "title": "Megjelenés",
       "description": "Webmail megjelenésének testreszabása",
       "theme": {
-        "label": "Téma",
-        "description": "Válaszd ki a preferált színösszeállítást",
+        "label": "Világos vagy sötét",
+        "description": "A Rendszer az eszköz beállítását követi",
         "light": "Világos",
         "dark": "Sötét",
         "system": "Rendszer"
@@ -1581,7 +1626,7 @@
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
         "default": "Alapértelmezett",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Keresősáv felül, alkalmazások balra"
       },
       "animations": {
         "label": "Animációk engedélyezése",
@@ -1625,7 +1670,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Színes oldalsáv ikonok",
-        "description": "Mappa és címke ikonok színezése típus szerint (kék Beérkező, piros Spam, zöld Elküldött, stb.). Kapcsold ki az egyszínű oldalsávhoz."
+        "description": "A mappa- és címkeikonok színezése típus szerint (kék Beérkező levelek, piros Spam, zöld Elküldött stb.). Kapcsolja ki a szürke ikonokhoz."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1637,7 +1682,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Így akkor is látja az új levelet, ha egy másik lapon vagy alkalmazásban dolgozik."
       },
       "show_shared_mail_accounts": {
         "label": "Megosztott levelezőfiókok megjelenítése",
@@ -1688,7 +1733,7 @@
     },
     "keywords": {
       "title": "E-mail címkék",
-      "description": "Címkék definiálása az e-mailek színekkel történő rendezéséhez. Ezek JMAP kulcsszavakként tárolódnak a szerveren.",
+      "description": "Hozzon létre címkéket az üzenetei rendezéséhez. A címkék az üzenetekkel együtt a szerveren tárolódnak.",
       "add_keyword": "Címke hozzáadása",
       "label_field": "Megjelenített név",
       "label_placeholder": "pl. Munka, Személyes, Sürgős",
@@ -1723,8 +1768,8 @@
         "hide": "Elrejtés"
       },
       "unrecognized": {
-        "title": "Címkék helyreállítása a szerverről",
-        "description": "A címkék nevét és színét ez a böngésző tárolja, maguk a címkék azonban JMAP kulcsszavakként az e-mailjein vannak. Keresse meg a levelein azokat a kulcsszavakat, amelyekhez itt nem tartozik címke, majd adja hozzá őket újra.",
+        "title": "Az üzeneteken lévő, innen hiányzó címkék keresése",
+        "description": "Ez a böngésző tárolja a címkék nevét és színét. Maguk a címkék az üzeneteken vannak. Keresse meg a leveleiben az innen hiányzó címkéket, és adja hozzá őket újra.",
         "scan": "Címkék keresése",
         "rescan": "Keresés újra",
         "scanning": "Keresés… {total} e-mailből {scanned}",
@@ -1745,7 +1790,7 @@
         "relax": "Pihenés"
       },
       "push": {
-        "title": "Háttérértesítések",
+        "title": "Értesítések, amikor a(z) {appName} be van zárva",
         "description": "Rendszerértesítések fogadása új levelekről, amikor ez az oldal be van zárva. A Bulwark push relén keresztül kézbesítve; a relay soha nem látja a levél tartalmát.",
         "relay_label": "Push relé",
         "relay_desc": "Alapértelmezés szerint a tárolt Bulwark relay. Csak akkor módosítsd, ha sajátot üzemeltetsz.",
@@ -1757,7 +1802,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "A háttérértesítések nem érhetők el a bemutatóban.",
         "status_busy": "Munka...",
-        "enable": "Engedélyezés",
+        "enable": "Bekapcsolás ezen az eszközön",
         "reenable": "Újraregisztráció",
         "disable": "Letiltás",
         "confirm_disable_title": "Háttérértesítések letiltása?",
@@ -1802,17 +1847,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Értesítési hang",
+        "title": "Hang",
         "description": "Válaszd ki az értesítésekhez használt hangot",
-        "choose": "Hang",
+        "choose": "Hangjelzés",
         "choose_desc": "Válassz ki egy értesítési hangot, és kattints a hangszóró ikonra az előnézethez"
       },
       "email": {
-        "title": "E-mail értesítések",
+        "title": "Új levelek",
         "description": "Értesítések beállítása a beérkező e-mailekhez",
         "enabled": "E-mail értesítések",
         "enabled_desc": "Értesítések megjelenítése új e-mailek érkezésekor",
-        "sound": "Értesítési hang",
+        "sound": "Hang új levélnél",
         "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1822,7 +1867,7 @@
         "description": "Értesítések beállítása a naptári eseményekhez",
         "enabled": "Esemény értesítések",
         "enabled_desc": "Figyelmeztetések megjelenítése a közelgő naptári eseményekhez",
-        "sound": "Értesítési hang",
+        "sound": "Hang emlékeztetőknél",
         "sound_desc": "Hangjelzés lejátszása naptári emlékeztetőkhöz"
       }
     },
@@ -1861,7 +1906,7 @@
       },
       "first_day": {
         "label": "Hét első napja",
-        "description": "Hét kezdése vasárnappal vagy hétfővel",
+        "description": "A hét első napja a naptárakban",
         "sunday": "Vasárnap",
         "monday": "Hétfő"
       },
@@ -1951,13 +1996,13 @@
       },
       "mail_layout": {
         "label": "Levelezés elrendezés",
-        "description": "Válassz a klasszikus osztott olvasóablak, a Gmail-stílusú fókuszált olvasás vagy a Zimbra-stílusú alsó olvasóablak között.",
+        "description": "Hol jelenik meg a képernyőn az üzenetlista és a megnyitott üzenet.",
         "split": "Osztott ablak",
-        "split_description": "Üzenetlista és olvasóablak egymás mellett.",
+        "split_description": "Lista és üzenet egymás mellett",
         "focus": "Fókuszált lista",
-        "focus_description": "Egy sor üzenetenként, és a levél teljes szélességben nyílik meg, miközben a mappa oldalsáv látható marad.",
+        "focus_description": "A lista, aztán az üzenet teljes szélességben",
         "horizontal": "Olvasóablak alul",
-        "horizontal_description": "Üzenetlista felül, a kiválasztott üzenet pedig egy olvasóablakban alatta."
+        "horizontal_description": "Üzenet a lista alatt"
       },
       "list_columns": {
         "label": "Lista megjelenítése oszlopokban",
@@ -1982,7 +2027,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Válasz a fogadott címről",
-        "description": "Válaszküldéskor arról a címről küldjön, amelyre az üzenet eredetileg érkezett. Először identitásokat keres; tartományi catch-all kézbesítések esetén átírja a Feladó fejlécet az aliasra, miközben az elsődleges identitáson keresztül küld."
+        "description": "Válaszkor arról a címről küldjön, amelyre az üzenet érkezett."
       },
       "reply_identity_match": {
         "label": "Fogadó cím egyeztetése",
@@ -2206,8 +2251,8 @@
         "title": "Bejelentkezett fiókok",
         "description": "Húzd át a sorrend módosításához, hogy a fiókok hogyan jelenjenek meg a fiók legördülőben",
         "active": "Jelenleg aktív fiók",
-        "default_badge": "Alapértelmezett fiók",
-        "set_default": "Beállítás alapértelmezettként",
+        "default_badge": "Induláskor nyílik meg",
+        "set_default": "Ez a fiók nyíljon meg induláskor",
         "switch_to": "Váltás erre a fiókra",
         "move_up": "Mozgatás fel",
         "move_down": "Mozgatás le",
@@ -2290,7 +2335,7 @@
       },
       "totp": {
         "section_title": "Kétfaktoros hitelesítés",
-        "label": "TOTP hitelesítés",
+        "label": "Kétlépéses bejelentkezés",
         "description": "Extra biztonsági réteg egy időalapú egyszeri jelszóval",
         "active": "Engedélyezve",
         "inactive": "Letiltva",
@@ -2370,12 +2415,12 @@
         "enabled_success": "Titkosítás nyugalmi állapotban engedélyezve"
       },
       "email_client": {
-        "title": "E-mail kliens beállítás",
-        "description": "Használd ezeket a hitelesítő adatokat az asztali vagy mobil e-mail kliensed beállításához (Thunderbird, Apple Mail, Outlook, stb.)",
-        "jmap_username_label": "JMAP felhasználónév",
+        "title": "A levelek használata más alkalmazásokban",
+        "description": "A Thunderbird, az Apple Mail, az Outlook és a telefonos levelezőalkalmazások ezekkel a beállításokkal működnek.",
+        "jmap_username_label": "Felhasználónév",
         "copy": "Másolás",
         "copied": "Másolva",
-        "password_instructions": "Használd a fenti JMAP felhasználóneved egy alkalmazás jelszóval együtt az e-mail kliensbe való bejelentkezéshez. Hozz létre egy alkalmazás jelszót a lenti részben, ha még nem tetted."
+        "password_instructions": "Jelszóként alkalmazásjelszót használjon, ne a szokásos jelszavát. Ezen az oldalon lejjebb hozhat létre egyet."
       },
       "link_device": {
         "title": "Mobilalkalmazás összekapcsolása",
@@ -2626,7 +2671,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Névjegyek, naptárak és mappák újratöltése a szerverről. Bejelentkezve marad.",
         "button": "Refresh",
         "confirm_title": "Frissíti a gyorsítótárazott adatokat?"
       },
@@ -2639,12 +2684,12 @@
       },
       "export_settings": {
         "label": "Beállítások exportálása",
-        "description": "Beállítások letöltése JSON-ként",
+        "description": "Másolat letöltése a beállításokról",
         "button": "Exportálás"
       },
       "import_settings": {
         "label": "Beállítások importálása",
-        "description": "Beállítások feltöltése JSON fájlból",
+        "description": "Beállítások visszaállítása fájlból",
         "button": "Importálás"
       },
       "about": {
@@ -2695,8 +2740,8 @@
       "manage_description": "Egyedi alkalmazások hozzáadása, szerkesztése vagy eltávolítása az oldalsávról"
     },
     "contacts": {
-      "title": "Névjegyek",
-      "description": "Névjegyek importálása és exportálása",
+      "title": "Névjegylista",
+      "description": "A névjegyek megjelenítése, és névjegyfájlok importálása vagy exportálása",
       "group_by_letter_label": "Csoportosítás kezdőbetű szerint",
       "sort_by_last_name_label": "Rendezés vezetéknév szerint",
       "sort_by_last_name_description": "A névjegylista vezetéknév szerinti rendezése, hogy a családtagok egymás mellett legyenek",
@@ -2791,15 +2836,15 @@
       "not_supported": "A levelezőszervered nem támogatja az e-mail szűrőket.",
       "rule_name": "Szabály neve",
       "rule_name_placeholder": "pl. Hírlevelek rendezése",
-      "match_all": "MINDEN feltétel teljesüljön",
-      "match_any": "BÁRMELYIK feltétel teljesüljön",
+      "match_all": "Minden feltétel teljesüljön",
+      "match_any": "Bármelyik feltétel teljesüljön",
       "conditions": "Feltételek",
       "add_condition": "Feltétel hozzáadása",
       "actions": "Műveletek",
       "add_action": "Művelet hozzáadása",
       "remove_condition": "Feltétel eltávolítása",
       "remove_action": "Művelet eltávolítása",
-      "stop_processing": "További szabályok feldolgozásának leállítása",
+      "stop_processing": "A későbbi szabályok ne fussanak",
       "include_spam": "A levélszemétnek jelölt üzenetek áthelyezése is",
       "attachment_type_placeholder": "pl. pdf, doc, jpg",
       "value_placeholder_multi": "Érték (több érték vesszővel elválasztva)",
@@ -2841,7 +2886,7 @@
         "discard": "Elvetés (csendes törlés)",
         "reject": "Elutasítás üzenettel",
         "keep": "Megtartás a beérkezőben",
-        "stop": "Feldolgozás leállítása"
+        "stop": "A későbbi szabályok ne fussanak"
       },
       "move_to_folder": "Mappa kiválasztása",
       "copy_to_folder": "Mappa kiválasztása",
@@ -2985,7 +3030,7 @@
         "description": "Fájlok és mappák megjelenésének beállítása"
       },
       "default_view": {
-        "label": "Alapértelmezett nézet",
+        "label": "Fájlok megjelenítése",
         "description": "Válassz rács vagy lista elrendezés között",
         "list": "Lista",
         "grid": "Rács"
@@ -3185,10 +3230,6 @@
         "label": "Olvasómaszk",
         "description": "Az üzenetben a mutató körüli néhány sor kivételével mindent elhomályosít, hogy ne veszítse el a helyét."
       },
-      "plain_language": {
-        "label": "Egyszerű nyelv",
-        "description": "Egyszerűbb megfogalmazás a beállításokban és a hibaüzenetekben, valamint rövid magyarázatok a szakkifejezésekhez. Angolul és németül érhető el."
-      },
       "contrast": {
         "label": "Kontraszt",
         "description": "A nagyobb kontraszt minden témán sötétebbé vagy világosabbá teszi a szöveget, a kereteket és a fókuszkeretet, és aláhúzza a hivatkozásokat. A Rendszer az eszköze beállítását követi.",
@@ -3380,6 +3421,81 @@
         "description": "A hang, amely felolvassa az üzeneteket. A lista a böngésző által a felület nyelvéhez kínált hangokat mutatja.",
         "default": "A böngésző alapértelmezése"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Adatvédelem",
+      "about": "Névjegy"
+    },
+    "search": {
+      "signature": "aláírás e-mail aláírás lábléc",
+      "sign_out": "kijelentkezés kilépés logout",
+      "app_lock": "PIN zár kód zárolás képernyő",
+      "text_size": "betűméret nagyobb szöveg nagyítás zoom",
+      "vacation": "automatikus válasz házon kívül távol szabadság autoreply",
+      "two_factor": "2FA kétlépcsős kéttényezős MFA OTP hitelesítő egyszeri kód",
+      "encryption": "S/MIME smime PGP OpenPGP titkosítás tanúsítvány",
+      "password": "jelszó jelszócsere új jelszó",
+      "offline": "offline kapcsolat nélkül internet nélkül letöltés tárhely szinkronizálás",
+      "wipe": "eltávolítás törlés kiürítés eszköz adatok",
+      "outbox": "kimenő elküldetlen várakozó sor",
+      "remote_content": "távoli képek külső tartalom követés pixelek megbízható feladók",
+      "push": "push továbbító háttér értesítések",
+      "version": "verzió frissítés névjegy forráskód GitHub licenc"
+    },
+    "privacy": {
+      "push_title": "Értesítések",
+      "push_link": {
+        "label": "Értesítési továbbító",
+        "description": "A bezárt alkalmazás értesítései egy push továbbítón mennek át, amely soha nem látja a leveleit. Az Értesítések oldalon választhatja ki.",
+        "button": "Értesítések"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Távoli képek és megbízható feladók",
+      "receipts_label": "Olvasási visszaigazolások",
+      "senders_label": "Feladók képei",
+      "description": "Ezek a beállítások az Adatvédelem oldalon vannak.",
+      "button": "Adatvédelem"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Sűrűség és gombfeliratok",
+        "description": "A lista sorainak sűrűségét és azt, hogy a gombok mutatják-e a nevüket, a Megjelenés oldalon állíthatja be."
+      },
+      "light_mode": {
+        "label": "Világos háttér az üzeneteknek",
+        "description": "Az üzenetek világos háttéren való megjelenítését sötét módban az Olvasás oldalon állíthatja be."
+      },
+      "calendar": {
+        "label": "Események előnézete a naptárban",
+        "description": "Azt, hogy egy eseményre mutatva megjelennek-e a részletei, a Naptár oldalon állíthatja be."
+      },
+      "list": {
+        "label": "Beszélgetések és előnézeti sorok",
+        "description": "A beszélgetések szerinti csoportosítást és az üzenetek alatti előnézeti sort az Üzenetlista oldalon állíthatja be."
+      },
+      "reading": {
+        "label": "Olvasottnak jelölés",
+        "description": "Azt, hogy mikor számít olvasottnak egy üzenet, és hová kerül törlés vagy áthelyezés után, az Olvasás oldalon állíthatja be."
+      },
+      "send_warnings_description": "Küldés visszavonása és a figyelmeztetések hiányzó tárgy, elfelejtett melléklet vagy helykitöltő szöveg esetén.",
+      "bulk_delete": {
+        "label": "Kérdés több üzenet törlése előtt",
+        "description": "Ezt az Üzenetlista oldalon állíthatja be."
+      },
+      "sounds": {
+        "label": "Hangok és az olvasatlanok száma",
+        "description": "Az értesítési hangokat és a lapon látható olvasatlan számot az Értesítések oldalon állíthatja be."
+      }
+    },
+    "about": {
+      "title": "Névjegy: {appName}"
+    },
+    "sign_out": {
+      "description": "Kijelentkezés ebből a fiókból ezen az eszközön."
     }
   },
   "setup": {
@@ -3717,6 +3833,10 @@
     "delete_with_contents_message": "A(z) „{name}” mappa még {count, plural, one {1 üzenetet} other {# üzenetet}} tartalmaz. Törlöd a mappát az összes üzenetével együtt? Ez nem vonható vissza.",
     "delete_with_contents_confirm": "Mappa és üzenetek törlése"
   },
+  "uxs_folders": {
+    "manage_accounts": "Fiókok kezelése…",
+    "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
+  },
   "shortcuts": {
     "title": "Billentyűparancsok",
     "tip": "Nyomd meg a ? gombot bármikor a súgó megjelenítéséhez",
@@ -3787,6 +3907,10 @@
     "messages_count": "{count, plural, one {# üzenet} other {# üzenet}}",
     "expand_named": "Beszélgetés kibontása: {subject}",
     "collapse_named": "Beszélgetés összecsukása: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
+    "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
   },
   "identities": {
     "modal_title": "Küldő azonosságok kezelése",
@@ -4399,6 +4523,28 @@
       "menu": "Névjegy menüjének megnyitása"
     }
   },
+  "uxs_wording": {
+    "more_options": "További beállítások",
+    "use_in_other_apps": "Használat más alkalmazásokban",
+    "default_address_book": "Névjegyek",
+    "default_calendar": "Naptár",
+    "preview_documents": "Dokumentumok",
+    "preview_photos": "Fényképek",
+    "sample_subject": "Jegyzetek a kávézói megbeszélésről",
+    "mail_apps": {
+      "imap": "Bejövő levelek (IMAP)",
+      "smtp": "Kimenő levelek (SMTP)",
+      "caldav": "Naptárak (CalDAV)",
+      "carddav": "Névjegyek (CardDAV)",
+      "port_security": "Port: {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Titkosítás nélkül",
+      "copy_label": "{name} másolása",
+      "loading": "A beállítások beolvasása a levelezőszerverről…",
+      "not_found": "A levelezőszerver nem adta meg a szerverneveket más alkalmazásokhoz. Kérje el őket a rendszergazdától."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Naptárak: {names}",
@@ -4642,7 +4788,7 @@
       "hide_non_working_days_desc": "A heti nézetből kimaradnak azok a napok, amikor nem dolgozol. Eseményeik továbbra is megjelennek a havi, napi és napirend nézetben.",
       "working_days": "Munkanapok",
       "title": "Naptár beállítások",
-      "default_view": "Alapértelmezett nézet",
+      "default_view": "A naptár ebben a nézetben nyílik meg",
       "week_starts_on": "Hét kezdőnapja",
       "time_format": "Idő formátum",
       "default_calendar": "Alapértelmezett naptár",
@@ -4653,7 +4799,7 @@
       "notifications_enabled_desc": "Figyelmeztetések megjelenítése a közelgő naptári eseményekhez",
       "notification_sound": "Értesítési hang",
       "notification_sound_desc": "Hang lejátszása naptári figyelmeztetésekhez",
-      "invitation_parsing": "E-mail meghívók feldolgozása",
+      "invitation_parsing": "Meghívók megjelenítése a levelekből",
       "invitation_parsing_desc": "Naptármeghívók észlelése az e-mail csatolmányokban és naptár műveletek megjelenítése",
       "show_time_in_month_view": "Idő mutatása a hónap nézetben",
       "show_time_in_month_view_desc": "Események időpontjának mutatása a havi naptár nézetben",
@@ -4668,7 +4814,7 @@
       "show_week_numbers_desc": "Hétszámok mutatása a mini naptárban",
       "calendar_free_scroll": "Szabad görgetés",
       "calendar_free_scroll_desc": "Folyamatos görgetés hónapok, hetek és napok között egyetlen időszak helyett",
-      "enable_tasks": "Feladatok engedélyezése",
+      "enable_tasks": "Feladatok",
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",
       "show_tasks_on_calendar_desc": "Feladatok mutatása a havi, heti és napi naptárnézetben",
@@ -4849,8 +4995,8 @@
       "error_update": "Nem sikerült frissíteni a naptárat",
       "error_delete": "Nem sikerült törölni a naptárat",
       "caldav_url": "CalDAV URL",
-      "copy_url": "CalDAV URL másolása",
-      "url_copied": "CalDAV URL a vágólapra másolva",
+      "copy_url": "Cím másolása más alkalmazásokhoz",
+      "url_copied": "A cím másolva",
       "share": "Naptár megosztása…",
       "new_event_in_calendar": "Új esemény ebben a naptárban",
       "shared_with": "Megosztva: {names}",
@@ -4870,8 +5016,8 @@
       "default_alerts_updated": "Alapértelmezett emlékeztetők frissítve"
     },
     "subscription": {
-      "title": "iCal feliratkozás",
-      "section_title": "iCal feliratkozások",
+      "title": "Feliratkozás naptárra",
+      "section_title": "Feliratkozott naptárak",
       "description": "Feliratkozás külső iCalendar feed-re. Az események automatikusan szinkronizálódnak a saját naptárukba. https:// és webcal:// URL-ek támogatottak.",
       "url_label": "Naptár URL",
       "url_placeholder": "https://example.com/calendar.ics vagy webcal://...",
@@ -5920,7 +6066,7 @@
     "clear_confirm_unsent": "{count, plural, one {# el nem küldött levél elvész.} other {# el nem küldött levél elvész.}}",
     "clear_confirm": "Kiürítés",
     "persist_refused": "Ez a böngésző törölheti a megtartott leveleket, ha fogy a hely. Az alkalmazás telepítése ezt általában megakadályozza.",
-    "persist_retry": "Újra rákérdez",
+    "persist_retry": "A böngésző megkérése a megőrzésre",
     "safari_hint": "A Safari 7 nap látogatás nélkül törli egy webhely adatait. Adja hozzá a Bulwarkot a Főképernyőhöz vagy a Dockhoz, hogy a levelei az eszközön maradjanak.",
     "evicted": "A böngésző törölte az ezen az eszközön megtartott leveleket. Újra letöltődnek.",
     "evicted_lost": "{count, plural, one {# el nem küldött levél vagy módosítás elveszett.} other {# el nem küldött levél vagy módosítás elveszett.}}",
@@ -6806,7 +6952,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Ablakok",
+      "title": "Az alkalmazás ablakai",
       "double_click_label": "Üzenetek megnyitása új ablakban dupla kattintással",
       "double_click_description": "Egy kattintás továbbra is a lista mellett nyitja meg az üzenetet.",
       "restore_label": "Ablakok újranyitása indításkor",
@@ -6899,6 +7045,9 @@
       "close": "Bezárás"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "„{text}” keresése a levelek között"
+  },
   "desktopMenuBar": {
     "always_show_label": "Menüsor mindig látható",
     "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",
@@ -6920,9 +7069,9 @@
     "section_title": "Alkalmazászár",
     "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
     "enable_label": "Zárolás PIN-kóddal",
-    "enable_desc": "Alapból ki van kapcsolva. A PIN-kód ezen az eszközön marad.",
+    "enable_desc": "A PIN-kód ezen az eszközön marad.",
     "protects_desc": "Mi ellen véd: a PIN-kód kint tartja az alkalmazásból azt, aki ennél az eszköznél van. Az itt tárolt levelek új kulcsot kapnak, amikor bekapcsolja a zárolást vagy módosítja a PIN-kódot, ami eltarthat egy ideig. Nem tudja megállítani a számítógépen futó programot, az Ön által telepített böngészőbővítményt, sem azt, aki lemásolja az alkalmazás fájljait, és van ideje sok PIN-kódot kipróbálni, ezért érdemes hosszabb PIN-kódot választani. Az asztali alkalmazásban a PIN-kódok kipróbálásához az Ön bejelentkezése is kell ezen a számítógépen. A kiszolgálón lévő fiókját ez nem érinti.",
-    "enable_body": "Válasszon PIN-kódot. Minden zároláskor, valamint újratöltés vagy új indítás után szükség lesz rá.",
+    "enable_body": "Minden zároláskor és újraindítás után szükség lesz rá.",
     "set_pin_title": "PIN-kód választása",
     "change_pin": "PIN-kód módosítása…",
     "change_pin_title": "A PIN-kód módosítása",
@@ -6984,6 +7133,19 @@
     "blocked_seconds": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# másodperc} other {# másodperc}} múlva.",
     "blocked_minutes": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# perc} other {# perc}} múlva."
   },
+  "uxs_general": {
+    "time_zone_common": "Gyakori időzónák",
+    "time_zone_all": "Minden időzóna",
+    "time_zone_search": "Időzóna keresése",
+    "time_zone_no_match": "Nincs ilyen időzóna",
+    "time_zone_desktop_description": "A levelek és találkozók időpontjai ebben az időzónában jelennek meg. Ha nem választ, a számítógép időzónája érvényes.",
+    "app_lock_desc_desktop": "Egy idő után minden ablakban PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
+    "app_lock_timeout_desc_desktop": "Használat nélküli idő bármelyik ablakban.",
+    "app_lock_now_desc_desktop": "Azonnal zárolja az összes ablakot.",
+    "app_lock_protects_toggle": "Mi ellen véd ez?",
+    "app_lock_timeout_hours": "{count, plural, one {# óra} other {# óra}}",
+    "desktop_attention_title": "Ezen a számítógépen"
+  },
   "desktop_sign_in": {
     "server_needed": "Először adja meg a szerver címét.",
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
@@ -7018,6 +7180,21 @@
     "declined": "A böngészőben nemet mondott, így nem történt bejelentkezés.",
     "too_many": "Túl sok bejelentkezési kísérlet erről a hálózatról. Várjon néhány percet, és próbálja újra.",
     "page_declined": "Semmi nem került átadásra. Bezárhatja ezt a lapot."
+  },
+  "uxs_login": {
+    "theme_button": "Világos vagy sötét",
+    "server_label": "Levelezőszerver",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "A levelezőszerver keresése…",
+    "server_found": "Levelezőszerver: {server}",
+    "server_change": "Módosítás",
+    "server_not_found": "Ehhez a címhez nem találtunk levelezőszervert. Írja be ide, például mail.example.com.",
+    "server_needed": "Írja be a levelezőszervere címét.",
+    "server_invalid": "Ez nem szervercím. Így írja: mail.example.com.",
+    "email_needed": "Először írja be az e-mail-címét.",
+    "trouble": "Probléma van?",
+    "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
+    "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."
   },
   "desktop_updates": {
     "title": "Frissítések",
@@ -7239,7 +7416,7 @@
     "section_title": "Használati adatok és összeomlási jelentések",
     "section_description": "Mindkettő ki van kapcsolva, amíg be nem kapcsolja, és mindegyiknek saját kapcsolója van.",
     "telemetry_label": "Használati adatok küldése",
-    "telemetry_description": "Naponta egyszer: egy véletlenszerű azonosító, az alkalmazás verziója, a Node verziója, az operációs rendszer, az alkalmazás futási ideje és a kapcsolódás módja. Saját levelezőszervernél azt is, mely funkciók vannak bekapcsolva, a fiókok hozzávetőleges számát, valamint a bővítmények és témák számát. Soha nem küld leveleket, címeket vagy szerverneveket.",
+    "telemetry_description": "Naponta egyszer: egy véletlenszerű azonosító, az alkalmazás verziószámai, az operációs rendszer, az alkalmazás futási ideje és a kapcsolódás módja. Saját levelezőszervernél azt is, mely funkciók vannak bekapcsolva, a fiókok hozzávetőleges számát, valamint a bővítmények és témák számát. Soha nem küld leveleket, címeket vagy szerverneveket.",
     "crash_label": "Összeomlási jelentések küldése",
     "crash_description": "Az alkalmazás hibái egy véletlenszerű azonosítóval, az alkalmazás saját kódjának fájlneveivel és rövid, megtisztított üzenetekkel mennek ki. Ha maga az alkalmazás omlik össze, egy összeomlási fájl marad ezen a számítógépen, és csak akkor kerül ki, ha elküldi.",
     "crash_memory": "Az összeomlási fájl az alkalmazás memóriájának egy részéről készült másolat az összeomlás pillanatából. A Bulwark eltávolítja a talált felhasználóneveket, címeket és bejelentkezési tokeneket, de az összeomlási fájl így is tartalmazhatja a levelei szövegét.",

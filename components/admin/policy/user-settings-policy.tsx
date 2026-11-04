@@ -50,7 +50,7 @@ const UNLOCKABLE_NOTE =
   'Text size, contrast, motion, fonts and the reading aids can be given a default below but not locked: a lock could leave someone unable to read or use Bulwark.';
 
 /** The scope this page edits: the one picked on any Organisation page, if it still exists. */
-function useScopeId(policy: SettingsPolicy): [string, (id: string) => void] {
+export function useScopeId(policy: SettingsPolicy): [string, (id: string) => void] {
   const scopeId = useOrgScopeStore((s) => s.scopeId);
   const setScopeId = useOrgScopeStore((s) => s.setScopeId);
   const exists = scopeId === EVERYONE || (policy.scopes ?? []).some((s) => s.id === scopeId);
@@ -58,7 +58,7 @@ function useScopeId(policy: SettingsPolicy): [string, (id: string) => void] {
 }
 
 /** Everyone or one domain or group scope, for the locks and presets below it. */
-function ScopePicker({ policy, scopeId, onPick }: { policy: SettingsPolicy; scopeId: string; onPick: (id: string) => void }) {
+export function ScopePicker({ policy, scopeId, onPick }: { policy: SettingsPolicy; scopeId: string; onPick: (id: string) => void }) {
   const scopes = policy.scopes ?? [];
   if (scopes.length === 0) return null;
   const scope = scopes.find((s) => s.id === scopeId);
@@ -95,7 +95,7 @@ function ScopePicker({ policy, scopeId, onPick }: { policy: SettingsPolicy; scop
 }
 
 /** "From Everyone: On" under a row, with a way back to Everyone's value. */
-function InheritLine({ scoped, own, everyone, onReset }: { scoped: boolean; own: boolean; everyone: string; onReset: () => void }) {
+export function InheritLine({ scoped, own, everyone, onReset }: { scoped: boolean; own: boolean; everyone: string; onReset: () => void }) {
   if (!scoped) return null;
   return (
     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">

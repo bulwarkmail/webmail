@@ -56,12 +56,12 @@ import { CalendarEventNotificationToaster } from "@/components/layout/calendar-e
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInPlace } from '@/stores/auth-store';
 import { useRouter } from '@/i18n/navigation';
 import { useSettingsStore } from "@/stores/settings-store";
-import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
+import { useDrawnMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useOfflineStore } from "@/lib/offline/state";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
-import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
-import { atLeast, useDeviceDetection, useMediaQuery } from "@/hooks/use-media-query";
+import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
+import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -83,6 +83,8 @@ import { useMailStatusAnnouncements } from "@/hooks/use-mail-status-announcement
 import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { stepListEmail } from "@/lib/list-step";
+import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -114,6 +116,7 @@ import { AppMain } from "@/components/layout/app-landmarks";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useAppCommands } from "@/lib/app-commands";
+import { useMailSearchRequests } from "@/lib/mail-search-request";
 import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
 import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
@@ -143,6 +146,7 @@ import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-iden
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog, MoveToDialogHost } from "@/components/email/move-to-dialog";
+import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
@@ -276,7 +280,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The list is the category tabs' panel while the tabs are shown.
   const messageListPanelId = useId();
   const messageListPanelProps = useMessageListPanelProps(messageListPanelId);
-  const mailLayout = useEffectiveMailLayout();
+  const mailLayout = useDrawnMailLayout();
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
   // Phones present search full-screen from the header field rather than
   // giving it a permanent second bar under the header.
@@ -322,6 +326,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   // The message the palette's "Move to…" was picked for.
   const [moveDialogEmail, setMoveDialogEmail] = useState<Email | null>(null);
+  // The empty reading pane's slot for a selection; the list draws into it (mail-10).
+  const [selectionPaneHost, setSelectionPaneHost] = useState<HTMLDivElement | null>(null);
   // The scheduled message Reschedule was picked for in the list's menu.
   const [rescheduleTarget, setRescheduleTarget] = useState<Email | null>(null);
   // Column resize state (disable transitions during drag)
@@ -417,9 +423,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Window, selection and navigation events for plugins are fired app-wide
   // by components/providers/plugin-app-events.tsx.
 
-  // Mobile/tablet responsive hooks
-  const { isMobile, isTablet } = useDeviceDetection();
-  const isShortWindow = useMediaQuery('(max-height: 32rem)');
+  // Phone, compact desktop or desktop (classifyWidth). A phone on its side is
+  // a compact desktop: the rail at the side costs no height.
+  const { isMobile, isCompact } = useDeviceDetection();
   const isEmbedded = useIsEmbedded();
   // A message or conversation link shows the reader from the first frame, as
   // the page skeleton draws it, in its loading state until the link has been
@@ -440,7 +446,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [cursorOnly, setCursorOnly] = useState(false);
   // Desktop lifts search into a global header. Mobile keeps its native
   // one-pane flow, with Mountain View's own app chrome.
-  const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isTablet && !isEmbedded;
+  const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isEmbedded;
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
   // Mountain View reads a thread as one conversation in the viewer, on the
   // phone as on the desktop, so both show the same order and details. (#1224)
@@ -458,13 +464,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // after a split closes and reopens at a different size.
   const clampEmailListWidth = (width: number) =>
     paneWidth !== null ? Math.min(width, Math.max(220, Math.floor(paneWidth * 0.55))) : width;
-  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, tabletListVisible, setTabletListVisible, sidebarWidth, emailListWidth, emailListHeight, setSidebarWidth, setEmailListWidth, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetSidebarWidth, resetEmailListWidth, resetEmailListHeight } = useUIStore(useShallow((state) => ({
+  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, sidebarWidth, emailListWidth, emailListHeight, setSidebarWidth, setEmailListWidth, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetSidebarWidth, resetEmailListWidth, resetEmailListHeight } = useUIStore(useShallow((state) => ({
     activeView: state.activeView,
     sidebarOpen: state.sidebarOpen,
     setSidebarOpen: state.setSidebarOpen,
     setActiveView: state.setActiveView,
-    tabletListVisible: state.tabletListVisible,
-    setTabletListVisible: state.setTabletListVisible,
     sidebarWidth: state.sidebarWidth,
     emailListWidth: state.emailListWidth,
     emailListHeight: state.emailListHeight,
@@ -472,7 +476,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setEmailListWidth: state.setEmailListWidth,
     setEmailListHeight: state.setEmailListHeight,
     persistColumnWidths: state.persistColumnWidths,
-    sidebarCollapsed: state.sidebarCollapsed,
+    // On a compact desktop the folders show as icons until opened.
+    sidebarCollapsed: sidebarFolded(state, isCompact),
     resetSidebarWidth: state.resetSidebarWidth,
     resetEmailListWidth: state.resetEmailListWidth,
     resetEmailListHeight: state.resetEmailListHeight,
@@ -539,7 +544,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen,
     setSearchFilters,
     setSearchMailboxId,
-    scopeSearchToOpenFolder,
     clearSearchFilters,
     toggleAdvancedSearch,
     advancedSearch,
@@ -628,7 +632,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen: state.isAdvancedSearchOpen,
     setSearchFilters: state.setSearchFilters,
     setSearchMailboxId: state.setSearchMailboxId,
-    scopeSearchToOpenFolder: state.scopeSearchToOpenFolder,
     clearSearchFilters: state.clearSearchFilters,
     toggleAdvancedSearch: state.toggleAdvancedSearch,
     advancedSearch: state.advancedSearch,
@@ -740,6 +743,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     [scheduledEmails, scheduledAccountScope],
   );
   const activeEmails = isScheduledView ? scopedScheduledEmails : emails;
+  // The default layout reads a thread as one conversation in the reading pane
+  // too, as Mountain View does, on every width but a phone's (those keep their
+  // own conversation view). The list then has one row per conversation.
+  // "Show emails as individual messages" keeps the single message.
+  const disableThreading = useSettingsStore((s) => s.disableThreading);
+  const paneConversationView = interfaceLayout !== 'mountain-view' && !isMobile && !disableThreading && !isScheduledView;
+  const readerConversationView = mvConversationView || paneConversationView;
   // In an account-scoped scheduled view the visible rows are a filtered subset
   // of the loaded page, so "has more" must reflect that account's own total
   // rather than the combined one — otherwise the list looks complete while
@@ -981,23 +991,33 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     );
   };
 
+  // The open message's list key, kept after the reader closes.
+  const lastOpenedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedEmail) lastOpenedKeyRef.current = emailKeyFor(selectedEmail);
+  }, [selectedEmail]);
   // Keyboard shortcuts handlers
+  // j / k go on from the open message, or from the last one opened once the
+  // reader is closed (Escape), not from the top. With the conversation in the
+  // reading pane they step by conversation, as the list's rows do.
+  const stepFrom = (direction: 1 | -1) => stepListEmail(
+    activeEmails,
+    selectedEmail ? emailKeyFor(selectedEmail) : lastOpenedKeyRef.current,
+    direction,
+    paneConversationView ? useEmailStore.getState().listRows : null,
+  );
   const keyboardHandlers = useMemo(() => ({
     onNextEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : -1;
-      const nextIndex = currentIndex < activeEmails.length - 1 ? currentIndex + 1 : currentIndex;
-      if (nextIndex >= 0 && nextIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[nextIndex]);
+      const next = stepFrom(1);
+      if (next) {
+        void handleEmailSelect(next);
         if (mvShell) setCursorOnly(true);
       }
     },
     onPreviousEmail: () => {
-      if (activeEmails.length === 0) return;
-      const currentIndex = selectedEmail ? activeEmails.findIndex(e => emailKeyFor(e) === emailKeyFor(selectedEmail)) : activeEmails.length;
-      const prevIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-      if (prevIndex >= 0 && prevIndex < activeEmails.length) {
-        void handleEmailSelect(activeEmails[prevIndex]);
+      const previous = stepFrom(-1);
+      if (previous) {
+        void handleEmailSelect(previous);
         if (mvShell) setCursorOnly(true);
       }
     },
@@ -1022,9 +1042,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       selectEmail(null);
       if (isMobile) {
         setActiveView("list");
-      }
-      if (isTablet) {
-        setTabletListVisible(true);
       }
     },
     onReply: () => {
@@ -1250,7 +1267,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // thread's messages and marks them read (following markAsReadDelay),
     // collapsing only toggles. (#683)
     onToggleThreadExpansion: () => {
-      if (isScheduledView || !client) return;
+      // The reading pane shows the conversation; the list never unfolds it.
+      if (isScheduledView || !client || paneConversationView) return;
       if (!selectedEmail?.threadId) return;
       const threadKey = threadKeyFor(selectedEmail);
       const store = useEmailStore.getState();
@@ -1268,7 +1286,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The
@@ -1337,6 +1355,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (showComposer && requestClose) requestClose(backToList);
       else backToList();
     },
+  }, isAuthenticated && !!client);
+  // "Find emails from …" on an address in a message, and the desktop app's
+  // "Search mail for …" on selected text.
+  useMailSearchRequests((request) => {
+    if ("from" in request) void handleSelectContactSuggestion({ name: "", email: request.from }, "from");
+    else void handleSearch(request.text);
   }, isAuthenticated && !!client);
 
   // The desktop app's menu bar: the same handlers as the keys, and what's enabled
@@ -2191,7 +2215,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           setFullscreenReading(true);
         }
         if (isMobile) setActiveView('viewer');
-        if (isTablet) setTabletListVisible(false);
         if (link.reply) {
           // A notification's Reply. The branch above may have skipped
           // selecting, and the reply has to wait for the message to be open.
@@ -2231,7 +2254,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // A shared account's conversation needs its folder open: the open
         // message is acted on in the account of the folder on screen.
         if (email && link.ownerAccountId) await showInOwningFolder(activeClient, email);
-        if (isTablet) setTabletListVisible(false);
       }
     } finally {
       setLoadingEmail(false);
@@ -2362,12 +2384,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEmail?.id, selectedEmail?.sourceClientAccountId, selectedEmail?.sourceAccountId]);
 
-  // Opening a message hides the list on tablet, but plenty of paths clear the
-  // reading pane without going through a "back" handler (delete/move/archive,
-  // a failed fetch, history restore, sending the open draft). Bring the list
-  // back once there is nothing left to read, so tablet never ends up on an
-  // empty reading pane with only the bottom bar.
-  const readingPaneEmpty = !showComposer && !conversationThread && !selectedEmail && !isLoadingEmail;
   // The phone conversation's Report spam / Not spam, as in the list: not on
   // your own outgoing mail.
   const conversationRole = mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
@@ -2388,9 +2404,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const selectedFolderHasUnread = mailboxes.find((m) => m.id === selectedMailbox)?.unreadEmails !== 0;
   const folderMenuMarkAllRead = useCallback(() => folderMenuLatest.current.markAllRead(), []);
   const folderMenuEmpty = useCallback(() => folderMenuLatest.current.empty(), []);
-  useEffect(() => {
-    if (readingPaneEmpty && !tabletListVisible) setTabletListVisible(true);
-  }, [readingPaneEmpty, tabletListVisible, setTabletListVisible]);
 
   // Handle mark-as-read with delay based on settings
   useEffect(() => {
@@ -2460,14 +2473,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // A composer opened from the drawer (a plugin's birthday greeting, a contact)
   // must not stay under it.
   useEffect(() => {
-    if (showComposer && (isMobile || isTablet)) setSidebarOpen(false);
+    if (showComposer && isMobile) setSidebarOpen(false);
     // Only when a composer opens: the drawer may be opened over one later.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showComposer]);
 
-  // Lock body scroll when sidebar is open on mobile/tablet
+  // Lock body scroll when sidebar is open on a phone
   useEffect(() => {
-    if ((isMobile || isTablet) && sidebarOpen) {
+    if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -2475,7 +2488,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobile, isTablet, sidebarOpen]);
+  }, [isMobile, sidebarOpen]);
 
   // Move focus into the sidebar when it opens as an overlay, and back to the
   // toggle when it closes, so keyboard and screen reader users end up where the
@@ -2487,7 +2500,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const sidebarContainerRef = useRef<HTMLDivElement>(null);
   const sidebarWasOpen = useRef(false);
   useEffect(() => {
-    const isOverlay = isMobile || isTablet;
+    const isOverlay = isMobile;
     if (isOverlay && sidebarOpen) {
       sidebarWasOpen.current = true;
       const frame = requestAnimationFrame(() => {
@@ -2505,7 +2518,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const active = document.activeElement;
     if (active && active !== document.body) return;
     appRootRef.current?.querySelector<HTMLElement>('[data-sidebar-toggle]')?.focus();
-  }, [isMobile, isTablet, sidebarOpen]);
+  }, [isMobile, sidebarOpen]);
 
   // The message a composer session answers, pinned when the session starts.
   // Mountain View keeps its compose window open while other mail is read
@@ -2977,8 +2990,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const wasOpen = useEmailStore.getState().selectedEmail?.id === email.id;
     const restored = await cancelScheduledForEdit(email);
     if (restored === undefined) return;
-    // The store closed it in the reader; on a phone or tablet the list comes back.
-    if (wasOpen && (isMobile || isTablet)) handleMobileBack();
+    // The store closed it in the reader; on a phone the list comes back.
+    if (wasOpen && isMobile) handleMobileBack();
     toast.success(
       tViewer('send_cancelled'),
       t('notifications.moved_to_mailbox', { mailbox: t('sidebar.mailboxes.drafts') }),
@@ -3396,12 +3409,41 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // holds (a quick filter dropped it) stays selected: the store finds it
   // through the selection (#695), and with no row to go on from it opens
   // nothing after it anyway. (#1458)
+  //
+  // Left alone, the setting follows the layout (lib/return-to-list): with the
+  // list beside the reading pane the next message opens instead, as in
+  // Outlook. With the conversation in the reading pane that is the next
+  // conversation down the list (the one above at the end), as its row opens it.
+  const returnsToList = () => returnToListAfterAction(
+    !fullscreenReading && listBesideReader({ mailLayout, interfaceLayout, isMobile }),
+  );
   const leaveIfOpen = (email: Email) => {
-    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
+    const { selectedEmail: open, emails: rows, listRows } = useEmailStore.getState();
     const key = emailKeyFor(email);
     if (!open || emailKeyFor(open) !== key || (mvShell && cursorOnly)) return;
     if (!rows.some((row) => emailKeyFor(row) === key)) return;
-    if (useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
+    if (returnsToList()) {
+      handleMobileBack();
+      return;
+    }
+    if (!paneConversationView || !listRows) return;
+    const below = stepListEmail(rows, key, 1, listRows);
+    const next = below && emailKeyFor(below) !== key ? below : stepListEmail(rows, key, -1, listRows);
+    if (!next || emailKeyFor(next) === key || threadKeyFor(next) === threadKeyFor(email)) return;
+    handleMobileBack();
+    void handleEmailSelect(next);
+  };
+  // Undo puts back the message that was open, and opens it again, where it
+  // was open in the reading pane. Phones stay in the list.
+  const reopenEmailRef = useRef<((email: Email) => Promise<unknown>) | null>(null);
+  const reopenAfterUndo = (email: Email) => {
+    const { selectedEmail: open } = useEmailStore.getState();
+    if (isMobile || !open || emailKeyFor(open) !== emailKeyFor(email)) return undefined;
+    const key = emailKeyFor(email);
+    return () => {
+      const restored = useEmailStore.getState().emails.find((e) => emailKeyFor(e) === key);
+      if (restored) void reopenEmailRef.current?.(restored);
+    };
   };
 
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
@@ -3445,6 +3487,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       return;
     }
 
+    const reopen = reopenAfterUndo(emailToDelete);
     leaveIfOpen(emailToDelete);
 
     // The store's delete reads the "Delete action" setting: move to the
@@ -3453,7 +3496,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     try {
       // false: a plugin stopped it and said why, so no "deleted" here.
       if (await deleteEmail(client, emailToDelete.id, isInTrash, emailKeyFor(emailToDelete))) {
-        toastWithUndo(t('notifications.email_deleted'), undoMoveAction(client, restore, undo));
+        toastWithUndo(permanent ? t('notifications.email_deleted') : t('mail_list_extra.moved_to_trash'), undoMoveAction(client, restore, undo, undefined, reopen));
       }
     } catch (error) {
       console.error("Failed to delete email:", error);
@@ -3553,6 +3596,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
 
       let restore: EmailRestoreBatch[] | null = null;
+      const reopen = reopenAfterUndo(emailToArchive);
       leaveIfOpen(emailToArchive);
       const archived = await moveThreadToMailbox(client, emailToArchive.id, destination.id, emailKeyFor(emailToArchive), (batches) => { restore = batches; });
       if (!archived) return;
@@ -3564,7 +3608,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails([]);
       }
 
-      toastWithUndo(t('notifications.email_archived'), undoMoveAction(client, restore, undo));
+      toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(client, restore, undo, undefined, reopen));
       void refreshMailboxes();
     } catch (error) {
       console.error("Failed to archive email:", error);
@@ -3595,12 +3639,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (email) leaveIfOpen(email);
     try {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
+      // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        t('notifications.email_moved'),
-        undoMoveAction(client, restore, undo, receipts),
         destination && destinationList
-          ? t('notifications.moved_to_mailbox', { mailbox: getMailboxPath(destination, destinationList) })
-          : undefined,
+          ? t('mail_list_extra.moved_to', { mailbox: getMailboxPath(destination, destinationList) })
+          : t('notifications.email_moved'),
+        undoMoveAction(client, restore, undo, receipts),
       );
     } catch (error) {
       console.error("Failed to move email:", error);
@@ -3770,10 +3814,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setSidebarOpen(false);
       setActiveView("list");
     }
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
     if (viewingClient) {
       // Keep an active search applied when switching folders (#553), unless
       // the user opted to reset search on folder change. The store actions
@@ -3824,10 +3864,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setSidebarOpen(false);
         setActiveView("list");
       }
-      if (isTablet) {
-        setTabletListVisible(true);
-        setSidebarOpen(false);
-      }
       if (client) await fetchScheduledEmails(client);
       return;
     }
@@ -3843,10 +3879,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (isMobile) {
         setSidebarOpen(false);
         setActiveView("list");
-      }
-      if (isTablet) {
-        setTabletListVisible(true);
-        setSidebarOpen(false);
       }
 
       const isSameView = captureViewToken();
@@ -3883,10 +3915,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setSidebarOpen(false);
         setActiveView("list");
       }
-      if (isTablet) {
-        setTabletListVisible(true);
-        setSidebarOpen(false);
-      }
 
       const isSameView = captureViewToken();
       const populated = await buildPopulatedUnifiedAccounts();
@@ -3922,12 +3950,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setActiveView("list");
     }
 
-    // On tablet, show the list again
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
-
     if (client) {
       // If there's an active search, re-run it in the new mailbox unless the
       // user opted to reset search on folder change. Advanced filters must go
@@ -3955,55 +3977,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setActiveView("list");
     }
 
-    // On tablet, show the list again
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
-
     if (client) {
       await fetchEmails(client);
-    }
-  };
-
-  const handleUnreadFilterClick = async (mailboxId: string) => {
-    const isTogglingOff = selectedMailbox === mailboxId && !selectedKeyword && searchFilters.isUnread === true;
-
-    // Open the mailbox unless it is already the one listed. A tag view keeps
-    // selectedMailbox, so it counts as another view.
-    if (selectedMailbox !== mailboxId || selectedKeyword) {
-      if (isUnifiedView) exitUnifiedView();
-      setScheduledView(false);
-      selectMailbox(mailboxId);
-      selectEmail(null);
-    }
-
-    // On mobile, close sidebar and go to list view
-    if (isMobile) {
-      setSidebarOpen(false);
-      setActiveView("list");
-    }
-
-    // On tablet, show the list again
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
-
-    if (isTogglingOff) {
-      // Disable the unread filter and show all emails
-      clearSearchFilters();
-      if (client) {
-        await fetchEmails(client, mailboxId);
-      }
-    } else {
-      // Enable unread filter, in this folder only
-      clearSearchFilters();
-      scopeSearchToOpenFolder();
-      setSearchFilters({ isUnread: true });
-      if (client) {
-        await advancedSearch(client);
-      }
     }
   };
 
@@ -4117,7 +4092,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_subfolder'),
+      title: tCtxMenu('mail_list_extra.new_subfolder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_subfolder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),
@@ -4133,7 +4108,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateFolderFromContextMenu = async (accountId?: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_folder'),
+      title: tCtxMenu('mail_list_extra.new_folder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_folder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),
@@ -4702,8 +4677,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Mountain View reads a message inside its conversation, as Gmail does: load
   // the rest of the thread (list properties only) whenever another opens.
-  const mvConversationThreadId = mvConversationView && !cursorOnly ? (selectedEmail?.threadId ?? null) : null;
-  const mvConversationRef = mvConversationView && !cursorOnly ? selectedEmail : null;
+  const mvConversationThreadId = readerConversationView && !cursorOnly ? (selectedEmail?.threadId ?? null) : null;
+  const mvConversationRef = readerConversationView && !cursorOnly ? selectedEmail : null;
   const mvConversationRoute = (ref: Email, fallback: NonNullable<typeof client>) => {
     const source = resolveEmailBlobContext(ref, fallback);
     return { threadClient: source.client, accountId: source.accountId };
@@ -4830,7 +4805,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onOpenStarred: mvShell ? goToStarred : undefined,
     onMailboxSelect: handleMailboxSelect,
     onTagSelect: handleTagSelect,
-    onUnreadFilterClick: handleUnreadFilterClick,
     onMarkFolderRead: handleMarkFolderRead,
     onMarkFolderTreeRead: handleMarkFolderTreeRead,
     onMarkAllFoldersRead: handleMarkAllFoldersRead,
@@ -4936,7 +4910,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           : "Inbox";
       })();
   const isFocusedMailLayout = mailLayout === 'focus';
-  const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile && !isTablet;
+  const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile;
   // Under Mountain View on desktop the composer floats over the list in a
   // docked window instead of taking the reading pane.
   const mvInlineReply = mvShell && showComposer && !isEmbedded && !mvReplyPoppedOut
@@ -4957,14 +4931,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
   // A linked message on a phone opens over the list, as one picked there does.
   const mobileView = deepLinkPane !== null && isMobile ? 'viewer' : activeView;
-  const shouldCollapseListPane = (isTablet && ((!tabletListVisible && !readingPaneEmpty) || deepLinkPane !== null)) || (!isMobile && isFocusedMailLayout && hasViewerContent);
+  const shouldCollapseListPane = !isMobile && isFocusedMailLayout && hasViewerContent;
   const shouldHideViewerPane = !isMobile && !hasViewerContent && isFocusedMailLayout;
-  // A phone on its side counts as a tablet, which keeps the bottom bar. In a window
-  // this short the bar takes a sixth of it and leaves a few lines, so it goes where
-  // a phone held upright hides it too: over a composer, or a message filling the
-  // window. With the list beside the message it is the only way to the other apps.
-  const shortWindowHidesTabBar = isShortWindow && ((showComposer && !floatingComposer) || (hasViewerContent && shouldCollapseListPane));
   const shouldHideHorizontalViewerPane = isHorizontalMailLayout && !hasViewerContent;
+  // Where the empty reading pane shows beside the list, it holds the
+  // first-run tips (mail-15) and a selection's actions (mail-10).
+  const emptyPaneBesideList = !isMobile && !isFocusedMailLayout && !isHorizontalMailLayout;
 
   // Handle email selection with mobile view switching
   // A mouse pressed on a row: the click that follows opens the message, so
@@ -5028,7 +5000,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // hand) and let the body follow; the viewer shows a row without body
     // values as loading. Mountain View shows the message inside its
     // conversation, which is fetched alongside, so it waits for both.
-    const rowEmail = !mvConversationView && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
+    const rowEmail = !readerConversationView && listEmail && 'receivedAt' in listEmail ? listEmail as Email : null;
     if (rowEmail) {
       beginOpenEmail(rowEmail);
     } else {
@@ -5038,11 +5010,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // On mobile, switch to viewer
     if (isMobile) {
       setActiveView("viewer");
-    }
-
-    // On tablet, hide the list to maximize viewer space
-    if (isTablet) {
-      setTabletListVisible(false);
     }
 
     // Fetch the full content
@@ -5057,7 +5024,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       // Mountain View shows the message inside its conversation: fetch that
       // alongside the message, so the two appear together. (#1223)
-      const conversationPrefetch = mvConversationView && listEmail?.id && listEmail.threadId
+      const conversationPrefetch = readerConversationView && listEmail?.id && listEmail.threadId
         ? loadMvConversation(listEmail as Email, client)
         : null;
       // The request a mouse press on the row already started, if any.
@@ -5120,6 +5087,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   pluginOpenEmailRef.current = handleEmailSelect;
+  reopenEmailRef.current = handleEmailSelect;
 
   // Handle back navigation from viewer on mobile.
   // Reset to list state directly. We can't just call window.history.back()
@@ -5134,9 +5102,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setConversationEmails([]);
     }
     selectEmail(null);
-    if (isTablet) {
-      setTabletListVisible(true);
-    }
     setActiveView("list");
   };
 
@@ -5317,7 +5282,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
           // The window widened into Pro's width, which takes this page over:
           // the draft goes on in a compose tab.
-          if (!isEmbedded && useSettingsStore.getState().proInterface && window.matchMedia(atLeast(1024)).matches) {
+          if (!isEmbedded && useSettingsStore.getState().proInterface && window.matchMedia(atLeast(PHONE_BELOW)).matches) {
             useProTabStore.getState().openComposeTab({
               sessionId: composerSessionId + 1,
               mode: data.mode,
@@ -5439,7 +5404,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         <div className="flex flex-1 overflow-hidden">
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
-        {!isMobile && !isTablet && !isEmbedded && !mvShell && (
+        {!isMobile && !isEmbedded && !mvShell && (
           <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
             <NavigationRail
               collapsed
@@ -5461,14 +5426,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
         {/* Mobile/Tablet Sidebar Overlay Backdrop.
             When embedded in a Pro pane the viewport is desktop-wide, so the
-            `lg:hidden` viewport-variant alone wouldn't gate this overlay;
+            `desk:hidden` viewport-variant alone wouldn't gate this overlay;
             scope to the pane via `absolute` so the backdrop stays inside
             the pane instead of covering the whole window. */}
-        {(isMobile || isTablet) && sidebarOpen && !inlineApp && (
+        {isMobile && sidebarOpen && !inlineApp && (
           <div
             className={cn(
               "inset-0 bg-black/50 z-40",
-              isEmbedded ? "absolute" : "fixed lg:hidden"
+              isEmbedded ? "absolute" : "fixed desk:hidden"
             )}
             onClick={() => setSidebarOpen(false)}
           />
@@ -5483,8 +5448,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           /* On mobile/tablet the sidebar is only slid off-screen, so without
              `inert` it stays in the accessibility tree and screen readers can
              reach a menu the Toggle menu button reports as collapsed (#721). */
-          inert={(isMobile || isTablet) && !sidebarOpen}
-          onKeyDown={(isMobile || isTablet) && sidebarOpen ? (e) => {
+          inert={isMobile && !sidebarOpen}
+          onKeyDown={isMobile && sidebarOpen ? (e) => {
             if (e.key === 'Escape') setSidebarOpen(false);
           } : undefined}
           className={cn(
@@ -5492,10 +5457,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             // The z-index is for the phone drawer. On a desktop under Mountain
             // View it only has to lift the hover peek over the list: at 40 the
             // compose window, drawn later at the same level, stays on top.
-            mvShell && "lg:z-40",
+            mvShell && "desk:z-40",
             !isResizing && "transition-[width] duration-300",
             isEmbedded
-              ? (isMobile || isTablet
+              ? (isMobile
                   ? cn(
                       "absolute inset-y-0 start-0 w-72 pt-[var(--app-top-inset)]",
                       "transform transition-transform duration-300 ease-in-out",
@@ -5508,16 +5473,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   // Mobile/Tablet: fixed overlay
                   // start-0 rather than left-0: in RTL the drawer belongs on
                   // the right, matching the hamburger that opens it.
-                  "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[var(--app-top-inset)]",
-                  "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
-                  !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
+                  "max-desk:fixed max-desk:inset-y-0 max-desk:start-0 max-desk:w-72 max-desk:pt-[var(--app-top-inset)]",
+                  "max-desk:transform max-desk:transition-transform max-desk:duration-300 max-desk:ease-in-out",
+                  !sidebarOpen && "max-desk:-translate-x-full max-desk:rtl:translate-x-full",
                   // Desktop: normal flow
-                  "lg:relative lg:translate-x-0"
+                  "desk:relative desk:translate-x-0"
                 ),
             inlineApp && "hidden",
             fullscreenReading && "hidden"
           )}
-          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : sidebarWidth } : undefined}
+          style={!isMobile ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : sidebarWidth } : undefined}
         >
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
@@ -5545,7 +5510,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
         {/* Sidebar resize handle (desktop only, hidden when collapsed, and
             absent under Mountain View, whose navigation has a fixed width) */}
-        {!isMobile && !isTablet && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
+        {!isMobile && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
           <ResizeHandle
             pane="sidebar"
             value={sidebarWidth}
@@ -5568,7 +5533,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           data-mv-card={mvShell ? "" : undefined}
           className={cn("flex flex-col flex-1 min-w-0", mvShell ? "mb-4 me-4" : "h-full", inlineApp && "hidden")}
         >
-          <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
+          <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "desk:flex-col")}>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
           <section
             ref={listPaneRef}
@@ -5579,23 +5544,23 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             className={cn(
               "relative flex flex-col bg-background min-w-0",
               isHorizontalMailLayout
-                ? (shouldHideHorizontalViewerPane ? "md:w-full md:min-h-0" : "md:w-full md:h-auto")
+                ? (shouldHideHorizontalViewerPane ? "desk:w-full desk:min-h-0" : "desk:w-full desk:h-auto")
                 : "h-full border-e border-border",
               // Mobile: full width, hidden when viewing email
-              "max-md:flex-1 max-md:border-e-0 max-md:border-b-0",
-              isMobile && mobileView !== "list" && "max-md:hidden",
+              "max-desk:flex-1 max-desk:border-e-0 max-desk:border-b-0",
+              isMobile && mobileView !== "list" && "max-desk:hidden",
               // Pane-mobile (narrow Pro pane on a wide viewport): the
-              // `max-md:` viewport classes above never apply, so mirror
+              // `max-desk:` viewport classes above never apply, so mirror
               // them with pane-scoped equivalents.
               paneMobile && "flex-1 border-e-0 border-b-0",
               paneMobile && activeView !== "list" && "hidden",
               // Tablet/Desktop: fixed width with collapse animation
-              !isHorizontalMailLayout && (shouldHideViewerPane ? "md:flex-1 md:border-e-0" : "md:flex-shrink-0"),
-              isHorizontalMailLayout && (shouldHideHorizontalViewerPane ? "md:flex-1" : "md:flex-shrink-0"),
-              isHorizontalMailLayout && !shouldHideHorizontalViewerPane && "md:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:md:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
-              !isHorizontalMailLayout && "md:shadow-sm",
+              !isHorizontalMailLayout && (shouldHideViewerPane ? "desk:flex-1 desk:border-e-0" : "desk:flex-shrink-0"),
+              isHorizontalMailLayout && (shouldHideHorizontalViewerPane ? "desk:flex-1" : "desk:flex-shrink-0"),
+              isHorizontalMailLayout && !shouldHideHorizontalViewerPane && "desk:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:desk:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
+              !isHorizontalMailLayout && "desk:shadow-sm",
               !isResizing && "transition-all duration-200 ease-out",
-              shouldCollapseListPane && "md:w-0 md:opacity-0 md:overflow-hidden md:border-e-0",
+              shouldCollapseListPane && "desk:w-0 desk:opacity-0 desk:overflow-hidden desk:border-e-0",
               fullscreenReading && "hidden"
             )}
             style={
@@ -5801,9 +5766,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
             {(searchQuery || !isFilterEmpty(searchFilters)) && !activeIsLoading && !isScheduledView && (
               <div className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-muted/20">
-                {activeHasMore
-                  ? t("advanced_search.results_found_more", { count: activeEmails.length })
-                  : t("advanced_search.results_found", { count: activeEmails.length })}
+                <SearchResultCount emails={activeEmails} hasMore={activeHasMore} />
               </div>
             )}
 
@@ -5817,14 +5780,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
-            <WelcomeBanner />
-            <FirstStartNoticeBar hidden={welcomeDue} />
+            {!emptyPaneBesideList && <WelcomeBanner />}
+            <FirstStartNoticeBar hidden={welcomeDue && !emptyPaneBesideList} />
 
             <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
                 onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
                 hideBatchToolbar={mvShell}
+                selectionPaneHost={emptyPaneBesideList ? selectionPaneHost : null}
                 emails={activeEmails}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
                 // Until the first page of the folder has arrived an empty list
@@ -5894,6 +5858,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   }, { pane: targetPane, reuseReader: hasSplit });
                 })}
                 onOpenConversation={handleOpenConversation}
+                conversationInReader={paneConversationView}
                 // Context menu handlers
                 onReply={(email) => {
                   selectEmail(email);
@@ -5959,9 +5924,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </div>
             </div>
 
-            {/* Floating Compose Button - on desktop Mountain View puts Compose
-                at the top of the navigation rail instead. */}
-            {!mvShell && <Button
+            {/* Floating Compose Button - on desktop the folder sidebar has
+                Compose at its top instead (and Mountain View its rail), so the
+                button no longer sits on the list's rows. */}
+            {!mvShell && (isMobile || isEmbedded) && <Button
               onClick={() => {
                 void withComposeGate('compose', {}, () => {
                   startFreshComposerSession();
@@ -5989,7 +5955,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           </section>
 
           {/* Email list resize handle (desktop only) */}
-          {!isMobile && !isTablet && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
+          {!isMobile && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
             <ResizeHandle
               pane="messageList"
               value={emailListWidth}
@@ -6001,7 +5967,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               onDoubleClick={resetEmailListWidth}
             />
           )}
-          {!isMobile && !isTablet && isHorizontalMailLayout && !shouldHideHorizontalViewerPane && !fullscreenReading && (
+          {!isMobile && isHorizontalMailLayout && !shouldHideHorizontalViewerPane && !fullscreenReading && (
             <ResizeHandle
               orientation="horizontal"
               pane="messageList"
@@ -6023,17 +5989,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               "flex flex-col bg-background flex-1 min-w-0",
               isHorizontalMailLayout ? "min-h-0" : "h-full",
               // Mobile: full screen overlay when active
-              "max-md:fixed max-md:inset-0 max-md:z-30",
-              "max-md:h-full max-md:pt-[var(--app-top-inset)]",
-              isMobile && mobileView !== "viewer" && "max-md:hidden",
+              "max-desk:fixed max-desk:inset-0 max-desk:z-30",
+              "max-desk:h-full max-desk:pt-[var(--app-top-inset)]",
+              isMobile && mobileView !== "viewer" && "max-desk:hidden",
               // Tablet/Desktop: relative. Pane-mobile instead overlays the
               // pane (absolute within the relative content row above) - the
-              // viewport `max-md:` classes never fire there, and `fixed`
+              // viewport `max-desk:` classes never fire there, and `fixed`
               // would escape the pane.
-              !paneMobile && "md:relative",
+              !paneMobile && "desk:relative",
               paneMobile && (activeView === "viewer" ? "absolute inset-0 z-30 h-full" : "hidden"),
-              shouldHideViewerPane && "md:hidden",
-              shouldHideHorizontalViewerPane && "md:hidden"
+              shouldHideViewerPane && "desk:hidden",
+              shouldHideHorizontalViewerPane && "desk:hidden"
             )}
           >
             {/* Inline Composer - shown in viewer pane.
@@ -6185,7 +6151,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         // Marking the open message unread returns to the list
                         // (Gmail-style, gated on returnToListAfterAction). Staying
                         // in the reading pane would just re-mark it read on view.
-                        if (!read && useSettingsStore.getState().returnToListAfterAction) {
+                        if (!read && returnsToList()) {
                           handleMobileBack();
                         }
                       }
@@ -6202,16 +6168,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? (isUnifiedView ? listQueryTotal : 0)),
                     } : undefined}
                     mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
-                    mvConversation={mvConversationView ? mvConversation ?? undefined : undefined}
-                    mvConversationPending={mvConversationView && !!selectedEmail && mvConversationLoading === selectedEmail.threadId}
-                    onLoadConversationEmail={mvConversationView ? (e) => void handleLoadConversationEmail(e) : undefined}
-                    onMarkConversationEmailRead={mvConversationView ? (e) => void handleMarkConversationEmailRead(e) : undefined}
-                    onReplyConversationEmail={mvConversationView ? async (e) => {
+                    mvConversation={readerConversationView ? mvConversation ?? undefined : undefined}
+                    conversationPane={paneConversationView}
+                    mvConversationPending={readerConversationView && !!selectedEmail && mvConversationLoading === selectedEmail.threadId}
+                    onLoadConversationEmail={readerConversationView ? (e) => void handleLoadConversationEmail(e) : undefined}
+                    onMarkConversationEmailRead={readerConversationView ? (e) => void handleMarkConversationEmailRead(e) : undefined}
+                    onReplyConversationEmail={readerConversationView ? async (e) => {
                       // The reply quotes the message, so it needs the body.
                       const full = e.bodyValues ? e : await handleLoadConversationEmail(e);
                       await handleConversationReply(full ?? e);
                     } : undefined}
-                    onReplyAllConversationEmail={mvConversationView ? async (e) => {
+                    onReplyAllConversationEmail={readerConversationView ? async (e) => {
                       const full = e.bodyValues ? e : await handleLoadConversationEmail(e);
                       await handleConversationReplyAll(full ?? e);
                     } : undefined}
@@ -6248,6 +6215,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         setShowComposer(true);
                       });
                     }}
+                    emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
+                      ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
+                      : undefined}
+                    emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}
@@ -6276,8 +6247,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           </section>
           </div>
 
-          {/* Bottom Navigation - mobile and tablet (hidden when embedded) */}
-          {(isMobile || isTablet) && mobileView !== "viewer" && !shortWindowHidesTabBar && !isEmbedded && (
+          {/* Bottom Navigation - phones (hidden when embedded) */}
+          {isMobile && mobileView !== "viewer" && !isEmbedded && (
             <NavigationRail
               orientation="horizontal"
               onManageApps={handleManageApps}
@@ -6293,7 +6264,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* The default layout: plugins' panels beside the mail (the
             side-panel slot), with their buttons in a rail at the right edge.
             Desktop only; Mountain View has them in its side panel. */}
-        {!mvShell && !isMobile && !isTablet && !isEmbedded && !inlineApp && !fullscreenReading && <PluginSidePanel />}
+        {!mvShell && !isMobile && !isEmbedded && !inlineApp && !fullscreenReading && <PluginSidePanel />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

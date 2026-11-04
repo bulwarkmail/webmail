@@ -237,7 +237,8 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
                   <Lock className="w-2.5 h-2.5" />
                 </span>
               )}
-              {isDefault && (
+              {/* The built-in theme is called Default already: a badge saying so again is noise. */}
+              {isDefault && !isDefaultTheme && (
                 <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{t('default_badge')}</span>
               )}
               {isActive && <Check className="w-4 h-4 text-primary" />}

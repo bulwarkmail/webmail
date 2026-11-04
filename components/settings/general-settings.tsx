@@ -6,7 +6,6 @@ import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
 import { AppLockSettings } from './app-lock-settings';
 import { DesktopKeystoreSettings } from './desktop-keystore-settings';
-import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
 import { DesktopOsSettings } from './desktop-os-settings';
 import { useTour } from '@/components/tour/tour-provider';
@@ -20,7 +19,9 @@ import { DesktopDevToolsSettings } from './desktop-devtools-settings';
 /**
  * The General page: language and time, which links the browser hands to
  * Bulwark (the former Default apps tab; its handler routes do not exist in
- * the static Lite build), and the getting-started tour.
+ * the static Lite build, and the desktop app has its own "Default mail app"
+ * row instead), and the getting-started tour. Usage info and crash reports
+ * are on the Privacy page.
  */
 export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolean }) {
   const tTour = useTranslations('tour');
@@ -37,7 +38,6 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
       <DesktopKeystoreSettings />
-      <DesktopTelemetrySettings />
 
       <DesktopWindowSettings />
       <SettingsSection id="tour" title={tTour('settings_section')}>

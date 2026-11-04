@@ -8,7 +8,7 @@ export const SETTINGS_TAB_IDS: readonly SettingsSearchTab[] = [
   'account', 'general', 'notifications', 'appearance', 'accessibility',
   'message_list', 'reading', 'composing', 'vacation', 'filters', 'organize',
   'security', 'sharing', 'recovery', 'calendar', 'contacts', 'files',
-  'addons', 'backup',
+  'addons', 'offline', 'privacy', 'backup', 'about',
 ];
 
 // Map legacy tab IDs to current ones; runs once on read of localStorage and
@@ -20,7 +20,7 @@ export const LEGACY_TAB_MAP: Record<string, SettingsSearchTab> = {
   advanced: 'backup',
   layout: 'appearance',
   themes: 'appearance',
-  content_senders: 'reading',
+  content_senders: 'privacy',
   identities: 'account',
   language: 'general',
   protocol_handlers: 'general',

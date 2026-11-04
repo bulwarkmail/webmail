@@ -29,6 +29,13 @@ vi.mock('@/lib/admin/plugin-registry', () => ({
   getPlugin: vi.fn(async (id: string) => registry.get(id) ?? null),
   getPluginRegistry: vi.fn(async () => ({ plugins: [...registry.values()] })),
   deletePlugin: vi.fn(async (id: string) => registry.delete(id)),
+  updatePluginMeta: vi.fn(async (id: string, updates: Record<string, unknown>) => {
+    const current = registry.get(id);
+    if (!current) return null;
+    const next = { ...current, ...updates };
+    registry.set(id, next);
+    return next;
+  }),
 }));
 vi.mock('@/lib/admin/plugin-config', () => ({
   deletePluginConfig: vi.fn(async (id: string) => { removedConfig.push(id); }),
@@ -39,7 +46,7 @@ vi.mock('@/lib/admin/csp-frame-origins', async (orig) => ({
   invalidateFrameOriginsCache: vi.fn(),
 }));
 
-import { DELETE, POST } from '../route';
+import { DELETE, PATCH, POST } from '../route';
 
 const MANIFEST = {
   id: 'demo-plugin', name: 'Demo', version: '1.0.0', author: 'me', description: 'd',
@@ -109,6 +116,29 @@ describe('re-uploading and deleting', () => {
     await upload({ 'manifest.json': JSON.stringify({ ...MANIFEST, version: '1.1.0' }), 'index.js': '' });
 
     expect(registry.get('demo-plugin')).toMatchObject({ version: '1.1.0', enabled: false, forceEnabled: true });
+  });
+
+  it('keeps "Off until users turn it on" when a new version is uploaded', async () => {
+    registry.set('demo-plugin', { id: 'demo-plugin', enabled: true, defaultOff: true });
+
+    await upload({ 'manifest.json': JSON.stringify({ ...MANIFEST, version: '1.1.0' }), 'index.js': '' });
+
+    expect(registry.get('demo-plugin')).toMatchObject({ version: '1.1.0', defaultOff: true });
+  });
+
+  it('stores what users get while they haven\'t chosen', async () => {
+    registry.set('demo-plugin', { id: 'demo-plugin', enabled: true });
+    const patch = (body: Record<string, unknown>) => PATCH(new NextRequest('http://localhost/api/admin/plugins', {
+      method: 'PATCH',
+      body: JSON.stringify({ id: 'demo-plugin', ...body }),
+      headers: { 'content-type': 'application/json' },
+    }));
+
+    expect((await patch({ defaultOff: true })).status).toBe(200);
+    expect(registry.get('demo-plugin')).toMatchObject({ defaultOff: true });
+    expect((await patch({ defaultOff: false })).status).toBe(200);
+    expect(registry.get('demo-plugin')).toMatchObject({ defaultOff: false });
+    expect((await patch({ defaultOff: 'yes' })).status).toBe(400);
   });
 
   it('drops the config and the forced flag when a plugin is deleted', async () => {

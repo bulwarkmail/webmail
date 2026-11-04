@@ -197,7 +197,7 @@ export function TelemetryPage() {
     status.consent === 'on' && status.endpoint && 'Heartbeats are enabled. Thanks for helping us improve!',
     status.consent === 'on' && !status.endpoint && 'Heartbeats are on, but none are sent because the collector URL is empty.',
     status.consent === 'off' && 'Heartbeats are off (default).',
-    noThirdParty && 'Locked off: no third-party traffic is on (Organisation > Security).',
+    noThirdParty && 'Locked off: no third-party traffic is on (Users > Security).',
     envOverridden && !noThirdParty && 'Locked by the BULWARK_TELEMETRY env var.',
   ].filter(Boolean).join(' ');
 

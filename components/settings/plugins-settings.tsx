@@ -257,9 +257,12 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
         >
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="truncate text-sm font-medium text-foreground">{plugin.name}</span>
-            <span className={cn('rounded-full px-1.5 py-0.5 text-[0.625rem] font-medium', STATUS_COLORS[plugin.status])}>
-              {t(`status_${plugin.status}`)}
-            </span>
+            {/* The switch says on or off; only a problem gets a word of its own. */}
+            {plugin.status === 'error' && (
+              <span className={cn('rounded-full px-1.5 py-0.5 text-[0.625rem] font-medium', STATUS_COLORS.error)}>
+                {t('status_error')}
+              </span>
+            )}
             {isForceEnabled && (
               <span className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                 <Lock className="h-2.5 w-2.5" /> {t('badge_forced')}
@@ -279,6 +282,9 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
               </span>
             )}
           </div>
+          {plugin.description && (
+            <p data-testid="plugin-description" className="mt-0.5 line-clamp-2 text-xs text-foreground/80">{plugin.description}</p>
+          )}
           <div className="mt-0.5 flex items-center gap-2">
             <span className="truncate text-xs text-muted-foreground">{plugin.author}</span>
             <span className="text-xs text-muted-foreground">v{plugin.version}</span>
@@ -298,8 +304,6 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
       {isExpanded && (
         <div className="space-y-3 border-t border-border p-3">
           {isForceEnabled && <p className="text-xs text-amber-600 dark:text-amber-400">{t('forced_note')}</p>}
-
-          {plugin.description && <p className="text-xs text-muted-foreground">{plugin.description}</p>}
 
           {errorText && (
             <div className="flex items-start gap-2 rounded bg-destructive/10 p-2 text-xs text-destructive">

@@ -6,9 +6,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "パスワード",
     "password_placeholder": "パスワードを入力",
-    "jmap_endpoint_label": "JMAPサーバー",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "サーバーはこのドメインからのCORSリクエストを許可する必要があります。",
     "jmap_server_label": "サーバー",
     "jmap_server_auto_picked": "メールドメインからサーバーを選択しました。",
     "sign_in": "サインイン",
@@ -29,7 +26,7 @@
     },
     "show_password": "パスワードを表示",
     "hide_password": "パスワードを隠す",
-    "totp_toggle": "2FAコードを入力",
+    "totp_toggle": "認証アプリのコードがあります",
     "token_toggle": "アクセストークンでログイン",
     "password_toggle": "パスワードでログイン",
     "token_label": "アクセストークン",
@@ -126,7 +123,7 @@
     "sign_out_of": "{account} からサインアウト",
     "sign_out_all": "すべてのアカウントからサインアウト",
     "add_account": "アカウントを追加",
-    "set_as_default": "デフォルトに設定",
+    "set_as_default": "起動時にこのアカウントを開く",
     "switch_account": "アカウントを切り替え",
     "contacts": "連絡先",
     "calendar": "カレンダー",
@@ -215,22 +212,30 @@
     "mv_storage_used": "{total} のうち {percent}% を使用中",
     "accessibility": "アクセシビリティ"
   },
+  "account_unread": {
+    "others": "他のアカウントの未読: {count}",
+    "badge_all_accounts": {
+      "label": "すべてのアカウントの未読を数える",
+      "description": "タブ、アプリのアイコン、通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。"
+    },
+    "empty_hint": "{folder}フォルダを空にして、すべてのメールを完全に削除できます。"
+  },
   "protocol_handlers": {
     "title": "既定のアプリ",
-    "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選択します。技術的には、{appName} は mailto: と webcal: リンクのプロトコル ハンドラーとして登録されます。",
+    "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選びます。",
     "unsupported": "このブラウザーまたは接続では、プロトコル ハンドラーの手動登録がサポートされていません。インストール済みの PWA は、ブラウザーまたはシステム設定から使用できる場合があります。",
-    "mailto_label": "メールリンク",
-    "mailto_description": "mailto: リンクを、入力済みの作成画面で {appName} に開きます。",
-    "protocol_open_mode_label": "プロトコルリンクを開くとき",
+    "mailto_label": "メールのリンクを {appName} で開く",
+    "mailto_description": "ウェブサイトのメールアドレスをクリックすると、{appName} で新しいメッセージを作成します。",
+    "protocol_open_mode_label": "リンクの開き方",
     "protocol_open_mode_description": "{appName} が mailto: と webcal: のリンクを新しいタブで開くか、開いているセッションを再利用するかを選択します。アクティブなセッションのオプションでは通知の許可が必要です。ブラウザーがフォーカスをブロックした場合に、代替通知をクリックして {appName} を前面に表示できます。",
     "protocol_open_mode_active_session": "可能な場合はアクティブなセッションで開く",
     "protocol_open_mode_new_tab": "常に新しいタブを開く",
     "focus_notification_title": "{appName} を開く",
     "focus_notification_body": "リンクは {appName} で開かれました。クリックするとウィンドウを前面に表示します。",
-    "webcal_label": "カレンダーリンク",
-    "webcal_description": "webcal: リンクを、入力済みのカレンダー購読ダイアログで {appName} に開きます。",
-    "register_mailto": "メールアプリを登録",
-    "register_webcal": "カレンダーアプリを登録",
+    "webcal_label": "カレンダーのリンクを {appName} で開く",
+    "webcal_description": "ウェブサイトのカレンダーリンクをクリックすると、{appName} にカレンダーを追加します。",
+    "register_mailto": "メールのリンクに {appName} を使う",
+    "register_webcal": "カレンダーのリンクに {appName} を使う",
     "mailto_registered": "メール ハンドラーの登録を要求しました",
     "webcal_registered": "カレンダー ハンドラーの登録を要求しました",
     "registration_failed": "プロトコル ハンドラーの登録に失敗しました",
@@ -410,6 +415,17 @@
       "next": "次のページ",
       "position": "{more, select, yes {{pages} ページ以上中 {page} ページ目} other {{pages} ページ中 {page} ページ目}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {#件の会話を選択中}}",
+    "search_count": "{conversations, plural, other {#件の会話}}（{messages, plural, other {#件のメッセージ}}）",
+    "conversation_count": "{count, plural, other {#件の会話}}",
+    "archived": "アーカイブしました",
+    "moved_to_trash": "ゴミ箱に移動しました",
+    "moved_to": "{mailbox}に移動しました",
+    "moved_count_to": "{count, plural, other {#件のメールを{mailbox}に移動しました}}",
+    "new_folder_title": "新しいフォルダー",
+    "new_subfolder_title": "新しいサブフォルダー"
   },
   "shared_tags": {
     "title": "共有タグ",
@@ -893,6 +909,11 @@
     "read_aloud_stop": "読み上げを停止",
     "reader_view": "リーダー表示"
   },
+  "reader_actions": {
+    "restore": "元に戻す",
+    "restore_to": "{folder} に戻す",
+    "delete_forever": "完全に削除"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "{domain} から（組織外）",
@@ -1360,6 +1381,30 @@
     "apply": "このテキストを使う",
     "apply_hint": "下の件名と本文を置き換えます。"
   },
+  "uxs_vacation": {
+    "default_subject": "不在",
+    "default_message": "メールをありがとうございます。現在不在のため、戻り次第お返事します。",
+    "write_message_first": "先にメッセージを入力してください。入力しないと、空の返信が送られます。",
+    "enter_address_first": "先に転送先のアドレスを入力してください。",
+    "message_title": "返信内容",
+    "message_label": "メッセージ",
+    "message_description": "あなたにメールを送った人が受け取る内容です。書式やリンクを使えます。",
+    "from_label": "開始（任意）",
+    "from_description": "空欄にするとすぐに始まります。",
+    "until_label": "終了（任意）",
+    "until_description": "空欄にすると、オフにするまで返信を続けます。",
+    "audience_all": "全員",
+    "audience_internal": "自分の組織のみ（{domains}）",
+    "audience_external": "組織外の人のみ",
+    "signature_label": "署名",
+    "signature_plain_label": "署名（プレーンテキスト）",
+    "signature_plain_description": "プレーンテキストのみで作成する設定（作成）のため、署名もプレーンテキストです。",
+    "edit_as_html": "HTML で編集",
+    "edit_formatted": "書式エディターに戻る",
+    "html_source_label": "HTML の署名",
+    "signature_size": "{max} バイト中 {bytes} バイト使用",
+    "signature_too_long": "サーバーには長すぎます（{max} バイト中 {bytes} バイト）。短くしてください。"
+  },
   "retention_notice": {
     "line": "ここにあるメッセージは、移動されてから{count, plural, other {#日}}後に削除されます。"
   },
@@ -1549,8 +1594,8 @@
       "title": "外観",
       "description": "ウェブメールの見た目をカスタマイズ",
       "theme": {
-        "label": "テーマ",
-        "description": "お好みの配色を選択",
+        "label": "ライトまたはダーク",
+        "description": "「システム」はデバイスの設定に従います",
         "light": "ライト",
         "dark": "ダーク",
         "system": "システム"
@@ -1578,7 +1623,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "Mountain View"
+        "mountain_view": "検索バーを上、アプリを左に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -1622,7 +1667,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "カラフルなサイドバーアイコン",
-        "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。モノクロのサイドバーにするには無効にしてください。"
+        "description": "フォルダーとタグのアイコンを種類別に色分けします（受信トレイは青、迷惑メールは赤、送信済みは緑など）。グレーのアイコンにするにはオフにします。"
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1634,7 +1679,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "別のタブやアプリで作業中でも新着メールに気付けます。"
       },
       "show_shared_mail_accounts": {
         "label": "共有メールアカウントを表示",
@@ -1685,7 +1730,7 @@
     },
     "keywords": {
       "title": "メールラベル",
-      "description": "メールをカラーで整理するためのラベルを定義します。サーバーにJMAPキーワードとして保存されます。",
+      "description": "ラベルを作ってメッセージを整理します。ラベルはメッセージと一緒にサーバーに保存されます。",
       "add_keyword": "ラベルを追加",
       "label_field": "表示名",
       "label_placeholder": "例：仕事、個人、緊急",
@@ -1720,8 +1765,8 @@
         "hide": "表示しない"
       },
       "unrecognized": {
-        "title": "サーバーからラベルを復元",
-        "description": "ラベルの名前と色はこのブラウザーに保存されますが、ラベル自体はJMAPキーワードとしてメールに保存されています。ここに定義のないキーワードをメールから検索し、ラベルとして追加し直せます。",
+        "title": "ここにないラベルをメッセージから探す",
+        "description": "このブラウザーはラベルの名前と色を保存します。ラベル自体はメッセージに保存されています。ここにないラベルをメールから探して、もう一度追加します。",
         "scan": "ラベルを検索",
         "rescan": "再検索",
         "scanning": "検索中… {total}件中{scanned}件",
@@ -1754,17 +1799,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "通知音",
+        "title": "音",
         "description": "通知に使用する音を選択",
-        "choose": "サウンド",
+        "choose": "音色",
         "choose_desc": "通知音を選択し、スピーカーアイコンをクリックしてプレビュー"
       },
       "email": {
-        "title": "メール通知",
+        "title": "新着メール",
         "description": "受信メールの通知を設定",
         "enabled": "メール通知",
         "enabled_desc": "新しいメールが届いたときに通知を表示",
-        "sound": "通知音",
+        "sound": "新着メールの音",
         "sound_desc": "新しいメールが届いたときに音を鳴らす",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1774,7 +1819,7 @@
         "description": "カレンダーイベントの通知を設定",
         "enabled": "イベント通知",
         "enabled_desc": "今後のカレンダーイベントのアラートを表示",
-        "sound": "通知音",
+        "sound": "リマインダーの音",
         "sound_desc": "カレンダーリマインダーの音を鳴らす"
       },
       "push": {
@@ -1782,7 +1827,7 @@
         "confirm_disable_title": "バックグラウンド通知を無効にしますか？",
         "description": "このサイトが閉じているときに新着メールのシステム通知を受信します。Bulwark プッシュリレー経由で配信され、リレーがメール内容を見ることはありません。",
         "disable": "無効化",
-        "enable": "有効化",
+        "enable": "このデバイスでオンにする",
         "dismiss_aria": "通知プロンプトを閉じる",
         "ios_hint": "iOS では、最初にサイトをホーム画面にインストールしてください。Safari はインストールされた PWA にのみ Web Push を配信します。",
         "reenable": "再登録",
@@ -1796,7 +1841,7 @@
         "status_unsupported": "このブラウザは Web Push をサポートしていません",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "デモではバックグラウンド通知を利用できません。",
-        "title": "バックグラウンド通知",
+        "title": "{appName} を閉じているときの通知",
         "devices_title": "登録済みのデバイス",
         "devices_desc": "このアカウントのバックグラウンド通知を受け取るよう登録されているデバイスの一覧です。取り消すと、そのデバイスはすぐに受信を停止します。",
         "devices_loading": "登録済みのデバイスを読み込んでいます…",
@@ -1858,7 +1903,7 @@
       },
       "first_day": {
         "label": "週の開始日",
-        "description": "日曜日または月曜日から開始",
+        "description": "カレンダーの週の始まり",
         "sunday": "日曜日",
         "monday": "月曜日"
       },
@@ -1948,13 +1993,13 @@
       },
       "mail_layout": {
         "label": "メールレイアウト",
-        "description": "クラシックな分割読み取りペインとGmailスタイルの集中読み取りフローから選択します。",
+        "description": "メッセージ一覧と開いたメッセージを画面のどこに表示するか。",
         "split": "分割ペイン",
-        "split_description": "メッセージリストと読み取りペインを並べて表示します。",
+        "split_description": "一覧とメッセージを横に並べる",
         "focus": "集中リスト",
-        "focus_description": "メッセージごとに1行表示し、フォルダサイドバーを表示したままメールを全幅で開きます。",
+        "focus_description": "一覧の次にメッセージを全幅で表示",
         "horizontal": "閲覧ペインを下に表示",
-        "horizontal_description": "メッセージ一覧を上に表示し、選択したメッセージを下の閲覧ペインで開きます。"
+        "horizontal_description": "一覧の下にメッセージ"
       },
       "list_columns": {
         "label": "リストを列で表示",
@@ -1970,7 +2015,7 @@
       },
       "auto_select_reply_identity": {
         "label": "返信元アドレスを自動選択",
-        "description": "返信時に、元のメッセージを受信したIDへ差出人アドレスを自動的に切り替えます"
+        "description": "返信するとき、メッセージが送られてきたアドレスから送信します。"
       },
       "reply_identity_match": {
         "label": "受信アドレスの照合",
@@ -2203,8 +2248,8 @@
         "title": "ログイン中のアカウント",
         "description": "ドラッグしてアカウントメニューに表示される順序を変更",
         "active": "現在アクティブなアカウント",
-        "default_badge": "デフォルトアカウント",
-        "set_default": "デフォルトに設定",
+        "default_badge": "起動時に開きます",
+        "set_default": "起動時にこのアカウントを開く",
         "switch_to": "このアカウントに切り替え",
         "move_up": "上に移動",
         "move_down": "下に移動",
@@ -2287,7 +2332,7 @@
       },
       "totp": {
         "section_title": "二要素認証",
-        "label": "TOTP認証",
+        "label": "2段階サインイン",
         "description": "時間ベースのワンタイムパスワードで追加のセキュリティレイヤーを追加",
         "active": "有効",
         "inactive": "無効",
@@ -2367,12 +2412,12 @@
         "enabled_success": "保存時の暗号化が有効になりました"
       },
       "email_client": {
-        "title": "メールクライアントの設定",
-        "description": "これらの資格情報を使用して、デスクトップまたはモバイルのメールクライアント（Thunderbird、Apple Mail、Outlookなど）を設定します",
-        "jmap_username_label": "JMAPユーザー名",
+        "title": "ほかのアプリでメールを使う",
+        "description": "Thunderbird、Apple Mail、Outlook、スマートフォンのメールアプリでこの設定を使えます。",
+        "jmap_username_label": "ユーザー名",
         "copy": "コピー",
         "copied": "コピー済み",
-        "password_instructions": "上記のJMAPユーザー名とアプリパスワードを使用してメールクライアントにサインインします。まだ作成していない場合は、下のセクションでアプリパスワードを作成してください。"
+        "password_instructions": "パスワードには通常のパスワードではなく、アプリパスワードを使ってください。このページの下のほうで作成できます。"
       },
       "link_device": {
         "title": "モバイルアプリを連携",
@@ -2623,7 +2668,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "連絡先、カレンダー、フォルダーをサーバーから再読み込みします。サインインしたままです。",
         "button": "Refresh",
         "confirm_title": "キャッシュされたデータを更新しますか?"
       },
@@ -2636,12 +2681,12 @@
       },
       "export_settings": {
         "label": "設定をエクスポート",
-        "description": "設定をJSONとしてダウンロード",
+        "description": "設定のコピーをダウンロード",
         "button": "エクスポート"
       },
       "import_settings": {
         "label": "設定をインポート",
-        "description": "JSONファイルから設定をアップロード",
+        "description": "ファイルから設定を復元",
         "button": "インポート"
       },
       "about": {
@@ -2692,8 +2737,8 @@
       "manage_description": "サイドバーのカスタムアプリを追加、編集、削除"
     },
     "contacts": {
-      "title": "連絡先",
-      "description": "連絡先のインポートとエクスポート",
+      "title": "連絡先リスト",
+      "description": "連絡先の表示方法と、インポート・エクスポートする連絡先ファイル",
       "import_label": "連絡先をインポート",
       "import_description": "vCardファイル（.vcf）から連絡先をインポート",
       "export_label": "連絡先をエクスポート",
@@ -2796,7 +2841,7 @@
       "add_action": "アクションを追加",
       "remove_condition": "条件を削除",
       "remove_action": "操作を削除",
-      "stop_processing": "以降のルールの処理を停止",
+      "stop_processing": "以降のルールを適用しない",
       "include_spam": "迷惑メールと判定されたメッセージも移動する",
       "attachment_type_placeholder": "例: pdf, doc, jpg",
       "value_placeholder_multi": "値（カンマで複数指定可）",
@@ -2838,7 +2883,7 @@
         "discard": "サイレント削除",
         "reject": "メッセージ付きで拒否",
         "keep": "受信トレイに保持",
-        "stop": "処理を停止"
+        "stop": "以降のルールを適用しない"
       },
       "move_to_folder": "フォルダーを選択",
       "copy_to_folder": "フォルダーを選択",
@@ -2982,7 +3027,7 @@
         "description": "ファイルとフォルダーの表示方法を設定します"
       },
       "default_view": {
-        "label": "デフォルトビュー",
+        "label": "ファイルの表示方法",
         "description": "グリッドまたはリストレイアウトを選択します",
         "list": "リスト",
         "grid": "グリッド"
@@ -3185,10 +3230,6 @@
         "label": "閲覧マスク",
         "description": "メッセージ内でポインター周辺の数行以外を暗くして、読んでいる位置を見失わないようにします。"
       },
-      "plain_language": {
-        "label": "やさしい言葉",
-        "description": "設定やエラーメッセージをより簡単な言葉にし、専門用語に短い説明を付けます。英語とドイツ語で利用できます。"
-      },
       "contrast": {
         "label": "コントラスト",
         "description": "コントラストを高めると、どのテーマでも文字、枠線、フォーカス枠がより濃く、または明るくなり、リンクに下線が付きます。「システム」はお使いのデバイスの設定に従います。",
@@ -3380,6 +3421,81 @@
         "description": "メッセージを読み上げる音声です。一覧には、ブラウザーが画面の言語用に持っている音声が表示されます。",
         "default": "ブラウザーの既定"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "オフライン",
+      "privacy": "プライバシー",
+      "about": "情報"
+    },
+    "search": {
+      "signature": "署名 メール署名 フッター",
+      "sign_out": "サインアウト ログアウト logout",
+      "app_lock": "PIN ロック コード ロック画面",
+      "text_size": "文字サイズ フォントサイズ 大きい文字 拡大 ズーム",
+      "vacation": "自動返信 不在 休暇 外出中 autoreply",
+      "two_factor": "2FA 二要素 二段階 MFA OTP 認証アプリ ワンタイムコード",
+      "encryption": "S/MIME smime PGP OpenPGP 暗号化 証明書",
+      "password": "パスワード パスワード変更 新しいパスワード",
+      "offline": "オフライン offline 接続なし インターネットなし ダウンロード ストレージ 同期",
+      "wipe": "削除 消去 デバイス データ",
+      "outbox": "送信トレイ 未送信 送信待ち キュー",
+      "remote_content": "外部画像 外部コンテンツ トラッキング ピクセル 信頼できる差出人",
+      "push": "プッシュ push リレー バックグラウンド 通知",
+      "version": "バージョン 更新 情報 ソースコード GitHub ライセンス"
+    },
+    "privacy": {
+      "push_title": "通知",
+      "push_link": {
+        "label": "通知のリレー",
+        "description": "アプリを閉じているときの通知はプッシュリレーを通りますが、リレーがメールを見ることはありません。通知ページで選択します。",
+        "button": "通知"
+      }
+    },
+    "privacy_links": {
+      "images_label": "外部画像と信頼できる差出人",
+      "receipts_label": "開封確認",
+      "senders_label": "差出人の画像",
+      "description": "これらの設定はプライバシーページにあります。",
+      "button": "プライバシー"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "表示密度とボタンのラベル",
+        "description": "リストの行の間隔とボタンに名前を表示するかどうかは、外観ページで設定します。"
+      },
+      "light_mode": {
+        "label": "メッセージの明るい背景",
+        "description": "ダークモードでメッセージを明るい背景で表示するかどうかは、閲覧ページで設定します。"
+      },
+      "calendar": {
+        "label": "カレンダーの予定のプレビュー",
+        "description": "予定にポインターを合わせたときに詳細を表示するかどうかは、カレンダーページで設定します。"
+      },
+      "list": {
+        "label": "スレッドとプレビュー行",
+        "description": "スレッドでまとめるかどうかと、各メッセージの下のプレビュー行は、メッセージ一覧ページで設定します。"
+      },
+      "reading": {
+        "label": "既読にする",
+        "description": "メッセージをいつ既読にするか、削除や移動の後にどこへ戻るかは、閲覧ページで設定します。"
+      },
+      "send_warnings_description": "送信の取り消しと、件名なし、添付忘れ、仮の文字列の警告。",
+      "bulk_delete": {
+        "label": "複数のメッセージを削除する前に確認",
+        "description": "これはメッセージ一覧ページで設定します。"
+      },
+      "sounds": {
+        "label": "サウンドと未読バッジ",
+        "description": "通知音とタブの未読数は、通知ページで設定します。"
+      }
+    },
+    "about": {
+      "title": "{appName} について"
+    },
+    "sign_out": {
+      "description": "このデバイスでこのアカウントからサインアウトします。"
     }
   },
   "setup": {
@@ -3717,6 +3833,10 @@
     "create": "作成",
     "rename_confirm": "名前を変更"
   },
+  "uxs_folders": {
+    "manage_accounts": "アカウントを管理…",
+    "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"
+  },
   "shortcuts": {
     "title": "キーボードショートカット",
     "tip": "? キーを押すといつでもこのヘルプを表示できます",
@@ -3787,6 +3907,10 @@
     "messages_count": "{count, plural, other {#件のメッセージ}}",
     "expand_named": "会話を展開: {subject}",
     "collapse_named": "会話を折りたたむ: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
+    "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
   },
   "identities": {
     "modal_title": "送信者情報を管理",
@@ -4399,6 +4523,28 @@
     "open_categories": "カテゴリを開く",
     "row_actions": "{name} の操作"
   },
+  "uxs_wording": {
+    "more_options": "その他のオプション",
+    "use_in_other_apps": "ほかのアプリで使う",
+    "default_address_book": "連絡先",
+    "default_calendar": "カレンダー",
+    "preview_documents": "ドキュメント",
+    "preview_photos": "写真",
+    "sample_subject": "カフェでの打ち合わせメモ",
+    "mail_apps": {
+      "imap": "受信メール (IMAP)",
+      "smtp": "送信メール (SMTP)",
+      "caldav": "カレンダー (CalDAV)",
+      "carddav": "連絡先 (CardDAV)",
+      "port_security": "ポート {port}、{security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "暗号化なし",
+      "copy_label": "{name} をコピー",
+      "loading": "メールサーバーから設定を読み込んでいます…",
+      "not_found": "メールサーバーから、ほかのアプリ用のサーバー名を取得できませんでした。管理者に問い合わせてください。"
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "カレンダー: {names}",
@@ -4642,7 +4788,7 @@
       "hide_non_working_days_desc": "勤務しない曜日を週表示から除外します。その日の予定は月表示・日表示・予定リストに引き続き表示されます。",
       "working_days": "勤務日",
       "title": "カレンダー設定",
-      "default_view": "デフォルトの表示",
+      "default_view": "カレンダーの初期表示",
       "week_starts_on": "週の開始曜日",
       "time_format": "時刻の形式",
       "default_calendar": "デフォルトのカレンダー",
@@ -4653,7 +4799,7 @@
       "notifications_enabled_desc": "予定のイベントのアラートを表示する",
       "notification_sound": "通知音",
       "notification_sound_desc": "カレンダーアラートの音を鳴らす",
-      "invitation_parsing": "メール招待を解析する",
+      "invitation_parsing": "メールの招待を表示",
       "invitation_parsing_desc": "メール添付のカレンダー招待を検出してカレンダー操作を表示する",
       "show_time_in_month_view": "月表示で時刻を表示",
       "show_time_in_month_view_desc": "月カレンダー表示でイベントの時刻を表示する",
@@ -4668,7 +4814,7 @@
       "show_week_numbers_desc": "ミニカレンダーに週番号を表示する",
       "calendar_free_scroll": "自由スクロール",
       "calendar_free_scroll_desc": "1つの期間ずつではなく、月・週・日を連続してスクロールします",
-      "enable_tasks": "タスクを有効化",
+      "enable_tasks": "タスク",
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",
       "show_tasks_on_calendar_desc": "月表示・週表示・日表示にタスクを表示します",
@@ -4813,8 +4959,8 @@
       "error_update": "カレンダーの更新に失敗しました",
       "error_delete": "カレンダーの削除に失敗しました",
       "caldav_url": "CalDAV URL",
-      "copy_url": "CalDAV URLをコピー",
-      "url_copied": "CalDAV URLをクリップボードにコピーしました",
+      "copy_url": "ほかのアプリ用のアドレスをコピー",
+      "url_copied": "アドレスをコピーしました",
       "confirm_clear": "\"{name}\"のすべてのイベントを削除しますか？この操作は元に戻せません。",
       "set_default": "デフォルトに設定",
       "default_updated": "デフォルトのカレンダーを更新しました",
@@ -4841,8 +4987,8 @@
       "default_alerts_updated": "デフォルトのリマインダーを更新しました"
     },
     "subscription": {
-      "title": "iCal購読",
-      "section_title": "iCal購読",
+      "title": "カレンダーを購読",
+      "section_title": "購読中のカレンダー",
       "description": "外部のiCalendarフィードを購読します。イベントは自動的に専用のカレンダーに同期されます。https://およびwebcal://のURLに対応しています。",
       "url_label": "カレンダーURL",
       "url_placeholder": "https://example.com/calendar.ics または webcal://...",
@@ -5920,7 +6066,7 @@
     "clear_confirm_unsent": "{count, plural, other {未送信のメッセージ#件が失われます。}}",
     "clear_confirm": "消去",
     "persist_refused": "空き容量が少なくなると、このブラウザーは保存したメールを削除することがあります。アプリをインストールすると、たいていは防げます。",
-    "persist_retry": "もう一度確認",
+    "persist_retry": "保持するようブラウザーに依頼",
     "safari_hint": "Safari は、7日間アクセスがないサイトのデータを削除します。このデバイスにメールを残すには、Bulwark をホーム画面または Dock に追加してください。",
     "evicted": "ブラウザーがこのデバイスに保存していたメールを削除しました。あらためてダウンロードしています。",
     "evicted_lost": "{count, plural, other {未送信のメッセージまたは変更#件が失われました。}}",
@@ -6806,7 +6952,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "ウィンドウ",
+      "title": "アプリのウィンドウ",
       "double_click_label": "ダブルクリックでメッセージを新しいウィンドウで開く",
       "double_click_description": "シングルクリックでは、これまでどおりリストの横に開きます。",
       "restore_label": "起動時にウィンドウを再び開く",
@@ -6899,6 +7045,9 @@
       "close": "閉じる"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "メールで「{text}」を検索"
+  },
   "desktopMenuBar": {
     "always_show_label": "メニューバーを常に表示",
     "always_show_description": "オフにすると、Alt キーを押したときに表示されます。",
@@ -6920,9 +7069,9 @@
     "section_title": "アプリのロック",
     "section_desc": "しばらく使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
     "enable_label": "PIN でロック",
-    "enable_desc": "既定ではオフです。PIN はこのデバイスにだけ保存されます。",
+    "enable_desc": "PIN はこのデバイスにだけ保存されます。",
     "protects_desc": "保護の対象: PIN は、このデバイスの前にいる人をアプリに入れません。ここに保存されたメールは、ロックをオンにしたとき、または PIN を変更したときに新しい鍵に変わります。少し時間がかかることがあります。このコンピューターで動くプログラム、インストールしたブラウザー拡張機能、アプリのファイルをコピーして多くの PIN を試す時間がある人は止められないため、長めの PIN をお勧めします。デスクトップアプリでは、PIN を試すのにこのコンピューターへのログインも必要です。サーバー上のアカウントには影響しません。",
-    "enable_body": "PIN を選んでください。アプリがロックされるたび、また再読み込みや再起動の後に必要です。",
+    "enable_body": "アプリがロックされるたびと、再起動の後に必要です。",
     "set_pin_title": "PIN を選択",
     "change_pin": "PIN を変更…",
     "change_pin_title": "PIN を変更",
@@ -6984,6 +7133,19 @@
     "blocked_seconds": "試行回数が多すぎます。{count, plural, other {# 秒}}後にもう一度お試しください。",
     "blocked_minutes": "試行回数が多すぎます。{count, plural, other {# 分}}後にもう一度お試しください。"
   },
+  "uxs_general": {
+    "time_zone_common": "よく使うタイムゾーン",
+    "time_zone_all": "すべてのタイムゾーン",
+    "time_zone_search": "タイムゾーンを検索",
+    "time_zone_no_match": "タイムゾーンが見つかりません",
+    "time_zone_desktop_description": "メールと予定の時刻をこのタイムゾーンで表示します。選ばない場合は、コンピューターのタイムゾーンを使います。",
+    "app_lock_desc_desktop": "しばらく使わないと、すべてのウィンドウで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
+    "app_lock_timeout_desc_desktop": "どのウィンドウでも使っていない時間です。",
+    "app_lock_now_desc_desktop": "すべてのウィンドウをすぐにロックします。",
+    "app_lock_protects_toggle": "何から守るのですか？",
+    "app_lock_timeout_hours": "{count, plural, other {#時間}}",
+    "desktop_attention_title": "このコンピューター"
+  },
   "desktop_sign_in": {
     "server_needed": "先にサーバーのアドレスを入力してください。",
     "server_declined": "このサーバーを許可しなかったため、何も送信していません。",
@@ -7018,6 +7180,21 @@
     "declined": "ブラウザーで断ったため、サインインしていません。",
     "too_many": "このネットワークからのサインインの試行が多すぎます。数分待ってからもう一度お試しください。",
     "page_declined": "何も渡していません。このタブを閉じてかまいません。"
+  },
+  "uxs_login": {
+    "theme_button": "ライトまたはダーク",
+    "server_label": "メールサーバー",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "メールサーバーを探しています…",
+    "server_found": "メールサーバー: {server}",
+    "server_change": "変更",
+    "server_not_found": "このアドレスのメールサーバーが見つかりませんでした。ここに入力してください（例: mail.example.com）。",
+    "server_needed": "メールサーバーのアドレスを入力してください。",
+    "server_invalid": "サーバーのアドレスではありません。mail.example.com のように入力してください。",
+    "email_needed": "まずメールアドレスを入力してください。",
+    "trouble": "うまくいかない場合",
+    "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
+    "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
   "desktop_updates": {
     "title": "アップデート",
@@ -7239,7 +7416,7 @@
     "section_title": "利用情報とクラッシュレポート",
     "section_description": "どちらもオンにするまでオフのままで、それぞれに専用のスイッチがあります。",
     "telemetry_label": "利用情報を送信",
-    "telemetry_description": "1日に1回、ランダムなID、アプリのバージョン、Node のバージョン、OS、アプリの稼働時間、接続方法を送信します。自分のメールサーバーを使う場合は、有効な機能、おおよそのアカウント数、プラグインとテーマの数も送信します。メール、アドレス、サーバー名は送信しません。",
+    "telemetry_description": "1日に1回、ランダムなID、アプリのバージョン番号、OS、アプリの稼働時間、接続方法を送信します。自分のメールサーバーを使う場合は、有効な機能、おおよそのアカウント数、プラグインとテーマの数も送信します。メール、アドレス、サーバー名は送信しません。",
     "crash_label": "クラッシュレポートを送信",
     "crash_description": "アプリのエラーは、ランダムなID、アプリ自身のコードのファイル名、整理された短いメッセージとともに送信されます。アプリ自体がクラッシュした場合、クラッシュファイルはこのコンピューターに残り、あなたが送信したときだけ外に出ます。",
     "crash_memory": "クラッシュファイルはクラッシュ時のアプリのメモリの一部のコピーです。Bulwark は見つけたユーザー名、アドレス、サインイントークンを削除しますが、クラッシュファイルにはメールの本文が残っていることがあります。",

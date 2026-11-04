@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { getLocale } from 'next-intl/server';
 import { IntlProvider } from '@/components/providers/intl-provider';
 import { defaultLocale } from '@/i18n/routing';
+import { addPlainLanguage } from '@/i18n/plain-language';
 
 /**
  * /setup sits outside the [locale] tree, so it loads the message catalog
@@ -13,9 +14,9 @@ export default async function SetupLayout({ children }: { children: ReactNode })
   const locale = await getLocale();
   let messages;
   try {
-    messages = (await import(`@/locales/${locale}/common.json`)).default;
+    messages = await addPlainLanguage(locale, (await import(`@/locales/${locale}/common.json`)).default);
   } catch {
-    messages = (await import(`@/locales/${defaultLocale}/common.json`)).default;
+    messages = await addPlainLanguage(defaultLocale, (await import(`@/locales/${defaultLocale}/common.json`)).default);
   }
   return (
     <IntlProvider locale={locale} messages={messages}>

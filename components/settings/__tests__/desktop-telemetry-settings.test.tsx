@@ -173,7 +173,7 @@ describe('the text', () => {
   const en = JSON.parse(readFileSync(path.join(process.cwd(), 'locales/en/common.json'), 'utf8')).desktopTelemetry as Record<string, string>;
 
   it('names everything a heartbeat holds, in plain words', () => {
-    for (const word of [/a random ID/, /app version/, /Node version/, /operating system/, /how long the app has been running/, /how many plugins and themes/]) {
+    for (const word of [/a random ID/, /the app's version numbers/, /operating system/, /how long the app has been running/, /how many plugins and themes/]) {
       expect(en.telemetry_description).toMatch(word);
     }
     expect(en.telemetry_description).not.toMatch(/uptime/i);

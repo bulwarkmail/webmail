@@ -6,9 +6,6 @@
     "username_placeholder": "pouzivatel@example.com",
     "password_label": "Heslo",
     "password_placeholder": "Zadajte heslo",
-    "jmap_endpoint_label": "JMAP server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Server musí povoliť požiadavky CORS z tejto domény.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server bol vybratý podľa domény vášho e-mailu.",
     "sign_in": "Prihlásiť sa",
@@ -29,7 +26,7 @@
     },
     "show_password": "Zobraziť heslo",
     "hide_password": "Skryť heslo",
-    "totp_toggle": "Mám kód 2FA",
+    "totp_toggle": "Mám kód z overovacej aplikácie",
     "token_toggle": "Prihlásiť sa prístupovým tokenom",
     "password_toggle": "Prihlásiť sa heslom",
     "token_label": "Prístupový token",
@@ -127,7 +124,7 @@
     "sign_out_of": "Odhlásiť sa z {account}",
     "sign_out_all": "Odhlásiť sa zo všetkých účtov",
     "add_account": "Pridať účet",
-    "set_as_default": "Nastaviť ako predvolený",
+    "set_as_default": "Otvárať tento účet pri spustení",
     "switch_account": "Prepnúť účet",
     "contacts": "Kontakty",
     "calendar": "Kalendár",
@@ -215,22 +212,30 @@
     "mv_storage_used": "Využité {percent} % z {total}",
     "accessibility": "Prístupnosť"
   },
+  "account_unread": {
+    "others": "Neprečítané v ostatných účtoch: {count}",
+    "badge_all_accounts": {
+      "label": "Počítať neprečítanú poštu vo všetkých účtoch",
+      "description": "Číslo na karte, na ikone aplikácie a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov."
+    },
+    "empty_hint": "Môžete vyprázdniť priečinok {folder} a natrvalo odstrániť všetky správy."
+  },
   "protocol_handlers": {
     "title": "Predvolené aplikácie",
-    "description": "Vyberte, či sa e-mailové a kalendárové odkazy otvárajú v aplikácii {appName}. {appName} sa registruje ako obslužná aplikácia protokolu pre odkazy mailto: a webcal:.",
+    "description": "Zvoľte, či sa odkazy na e-mail a kalendár otvárajú v {appName}.",
     "unsupported": "Tento prehľadávač alebo pripojenie nepodporuje manuálnu registráciu obslužnej aplikácie protokolu.",
-    "mailto_label": "E-mailové odkazy",
-    "mailto_description": "Otvoriť odkazy mailto: v aplikácii {appName} s predvyplneným editorom správy.",
-    "protocol_open_mode_label": "Pri otváraní odkazov protokolov",
+    "mailto_label": "Otvárať e-mailové odkazy v {appName}",
+    "mailto_description": "Kliknutie na e-mailovú adresu na webe začne novú správu v {appName}.",
+    "protocol_open_mode_label": "Ako sa odkazy otvárajú",
     "protocol_open_mode_description": "Vyberte, či má {appName} otvárať odkazy mailto: a webcal: v novej karte alebo znovu použiť otvorenú reláciu.",
     "protocol_open_mode_active_session": "Otvoriť v aktívnej relácii, ak je to možné",
     "protocol_open_mode_new_tab": "Vždy otvoriť novú kartu",
     "focus_notification_title": "Otvoriť {appName}",
     "focus_notification_body": "Odkaz bol otvorený v aplikácii {appName}. Kliknutím prenesú okno do popredia.",
-    "webcal_label": "Kalendárové odkazy",
-    "webcal_description": "Otvoriť odkazy webcal: v aplikácii {appName} s predvyplneným dialógom pre odber kalendára.",
-    "register_mailto": "Zaregistrovať e-mailovú aplikáciu",
-    "register_webcal": "Zaregistrovať kalendárovú aplikáciu",
+    "webcal_label": "Otvárať odkazy na kalendár v {appName}",
+    "webcal_description": "Kliknutie na odkaz na kalendár na webe pridá kalendár do {appName}.",
+    "register_mailto": "Používať {appName} pre e-mailové odkazy",
+    "register_webcal": "Používať {appName} pre odkazy na kalendár",
     "mailto_registered": "Registrácia obsluhy e-mailových odkazov bola požiadaná",
     "webcal_registered": "Registrácia obsluhy kalendárových odkazov bola požiadaná",
     "registration_failed": "Registrácia obslužnej aplikácie protokolu zlyhala",
@@ -410,6 +415,17 @@
       "next": "Ďalšia strana",
       "position": "{more, select, yes {Strana {page} z {pages} alebo viac} other {Strana {page} z {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Vybraná # konverzácia} few {Vybrané # konverzácie} many {Vybraných # konverzácií} other {Vybraných # konverzácií}}",
+    "search_count": "{conversations, plural, one {# konverzácia} few {# konverzácie} many {# konverzácií} other {# konverzácií}} ({messages, plural, one {# správa} few {# správy} many {# správ} other {# správ}})",
+    "conversation_count": "{count, plural, one {# konverzácia} few {# konverzácie} many {# konverzácií} other {# konverzácií}}",
+    "archived": "Archivované",
+    "moved_to_trash": "Presunuté do koša",
+    "moved_to": "Presunuté do {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail presunutý do {mailbox}} few {# e-maily presunuté do {mailbox}} many {# e-mailov presunutých do {mailbox}} other {# e-mailov presunutých do {mailbox}}}",
+    "new_folder_title": "Nový priečinok",
+    "new_subfolder_title": "Nový podpriečinok"
   },
   "shared_tags": {
     "title": "Zdieľané štítky",
@@ -893,6 +909,11 @@
     "read_aloud_stop": "Zastaviť čítanie",
     "reader_view": "Zobrazenie na čítanie"
   },
+  "reader_actions": {
+    "restore": "Obnoviť",
+    "restore_to": "Presunúť späť do priečinka {folder}",
+    "delete_forever": "Odstrániť natrvalo"
+  },
   "external_mail": {
     "sender_label": "Externé",
     "sender_tooltip": "Z {domain}, mimo vašej organizácie",
@@ -1360,6 +1381,30 @@
     "apply": "Použiť tento text",
     "apply_hint": "Nahradí predmet a text nižšie."
   },
+  "uxs_vacation": {
+    "default_subject": "Mimo kancelárie",
+    "default_message": "Ďakujem za váš e-mail. Som mimo kancelárie a odpoviem, keď sa vrátim.",
+    "write_message_first": "Najprv napíšte správu. Bez nej by ľudia dostali prázdnu odpoveď.",
+    "enter_address_first": "Najprv zadajte adresu, na ktorú sa má preposielať.",
+    "message_title": "Vaša odpoveď",
+    "message_label": "Správa",
+    "message_description": "Toto dostanú ľudia, ktorí vám napíšu. Môžete použiť formátovanie a odkazy.",
+    "from_label": "Od (nepovinné)",
+    "from_description": "Nechajte prázdne, aby sa začalo hneď.",
+    "until_label": "Do (nepovinné)",
+    "until_description": "Nechajte prázdne, aby sa odpovedalo, kým to nevypnete.",
+    "audience_all": "Všetkým",
+    "audience_internal": "Len mojej organizácii ({domains})",
+    "audience_external": "Len ľuďom mimo mojej organizácie",
+    "signature_label": "Podpis",
+    "signature_plain_label": "Podpis (obyčajný text)",
+    "signature_plain_description": "Píšete len obyčajný text (Písanie), takže aj váš podpis je obyčajný text.",
+    "edit_as_html": "Upraviť ako HTML",
+    "edit_formatted": "Späť do editora s formátovaním",
+    "html_source_label": "Podpis ako HTML",
+    "signature_size": "Využitých {bytes} z {max} bajtov",
+    "signature_too_long": "Pre server príliš dlhý ({bytes} z {max} bajtov). Skráťte ho."
+  },
   "retention_notice": {
     "line": "Správy tu sa vymažú {count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}} po presunutí sem."
   },
@@ -1552,8 +1597,8 @@
       "title": "Vzhľad",
       "description": "Prispôsobte si vzhľad a správanie webmailu",
       "theme": {
-        "label": "Téma",
-        "description": "Vyberte preferovanú farebnú schému",
+        "label": "Svetlý alebo tmavý",
+        "description": "Systém sa riadi nastavením zariadenia",
         "light": "Svetlá",
         "dark": "Tmavá",
         "system": "Systémová"
@@ -1581,7 +1626,7 @@
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
         "default": "Predvolené",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Vyhľadávanie hore, aplikácie vľavo"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -1625,7 +1670,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Farebné ikony postranného panela",
-        "description": "Ofarbí ikony priečinkov a štítkov podľa typu. Vypnite pre jednofarebný postranný panel."
+        "description": "Zafarbiť ikony priečinkov a štítkov podľa typu (Doručené modrou, Spam červenou, Odoslané zelenou atď.). Vypnite pre sivé ikony."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1637,7 +1682,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Aby ste novú poštu videli aj pri práci v inej karte alebo aplikácii."
       },
       "show_shared_mail_accounts": {
         "label": "Zobraziť zdieľané poštové účty",
@@ -1688,7 +1733,7 @@
     },
     "keywords": {
       "title": "E-mailové štítky",
-      "description": "Definujte štítky na organizáciu e-mailov s farbami.",
+      "description": "Vytvorte štítky na triedenie správ. Štítky sa ukladajú so správami na serveri.",
       "add_keyword": "Pridať štítok",
       "label_field": "Zobrazovaný názov",
       "label_placeholder": "napr. Práca, Osobné, Naliehavé",
@@ -1723,8 +1768,8 @@
         "hide": "Skryť"
       },
       "unrecognized": {
-        "title": "Obnoviť štítky zo servera",
-        "description": "Názvy a farby štítkov sú uložené v tomto prehliadači, ale samotné štítky sú na vašich správach ako kľúčové slová JMAP. Prehľadajte poštu na kľúčové slová, ku ktorým tu nie je štítok, a pridajte ich späť.",
+        "title": "Nájsť štítky na správach, ktoré tu chýbajú",
+        "description": "Tento prehliadač ukladá názvy a farby štítkov. Samotné štítky sú uložené na správach. Vyhľadajte v pošte štítky, ktoré tu chýbajú, a znova ich pridajte.",
         "scan": "Vyhľadať štítky",
         "rescan": "Hľadať znova",
         "scanning": "Prehľadávanie… {scanned} z {total} správ",
@@ -1757,17 +1802,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Zvuk oznámenia",
+        "title": "Zvuk",
         "description": "Vyberte zvuk, ktorý sa prehrá pri oznámení",
-        "choose": "Zvuk",
+        "choose": "Tón",
         "choose_desc": "Vyberte tón oznámenia a kliknutím na ikonu reproduktora si ho vypočujte"
       },
       "email": {
-        "title": "E-mailové oznámenia",
+        "title": "Nová pošta",
         "description": "Nakonfigurujte oznámenia pre prichádzajúce e-maily",
         "enabled": "E-mailové oznámenia",
         "enabled_desc": "Zobrazovať oznámenia pri príchode nových e-mailov",
-        "sound": "Zvuk oznámenia",
+        "sound": "Zvuk pri novej pošte",
         "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1777,11 +1822,11 @@
         "description": "Nakonfigurujte oznámenia pre udalosti kalendára",
         "enabled": "Oznámenia o udalostiach",
         "enabled_desc": "Zobrazovať upozornenia na nadchádzajúce udalosti v kalendári",
-        "sound": "Zvuk oznámenia",
+        "sound": "Zvuk pri pripomienkach",
         "sound_desc": "Prehrať zvukové upozornenie pre pripomenutia kalendára"
       },
       "push": {
-        "title": "Oznámenia na pozadí",
+        "title": "Upozornenia, keď je {appName} zatvorený",
         "description": "Prijímať systémové oznámenia o novej pošte, keď je táto stránka zatvorená. Doručované cez push relay Bulwark.",
         "relay_label": "Push relay",
         "relay_desc": "Predvolený je hostovaný relay Bulwark. Zmeňte iba ak používate vlastný hosting.",
@@ -1793,7 +1838,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Oznámenia na pozadí nie sú v ukážke k dispozícii.",
         "status_busy": "Pracujem…",
-        "enable": "Povoliť",
+        "enable": "Zapnúť v tomto zariadení",
         "reenable": "Znovu zaregistrovať",
         "disable": "Zakázať",
         "confirm_disable_title": "Zakázať oznámenia na pozadí?",
@@ -1861,7 +1906,7 @@
       },
       "first_day": {
         "label": "Prvý deň v týždni",
-        "description": "Začiatok týždňa v nedeľu alebo v pondelok",
+        "description": "Prvý deň týždňa v kalendároch",
         "sunday": "Nedeľa",
         "monday": "Pondelok"
       },
@@ -1951,13 +1996,13 @@
       },
       "mail_layout": {
         "label": "Rozloženie pošty",
-        "description": "Vyberte si medzi klasickým rozdeleným zobrazením a sústredením zoznamom.",
+        "description": "Kde sa na obrazovke zobrazí zoznam správ a otvorená správa.",
         "split": "Rozdelené zobrazenie",
-        "split_description": "Zoznam správ a panel na čítanie zostávajú viditeľné vedľa seba.",
+        "split_description": "Zoznam a správa vedľa seba",
         "focus": "Sústredený zoznam",
-        "focus_description": "Zobraziť jeden riadok na správu a otvoriť poštu na plnú šírku.",
+        "focus_description": "Zoznam, potom správa na celú šírku",
         "horizontal": "Panel na čítanie dole",
-        "horizontal_description": "Zobraziť zoznam správ hore a otvoriť vybranú správu v paneli na čítanie pod ním."
+        "horizontal_description": "Správa pod zoznamom"
       },
       "list_columns": {
         "label": "Zobraziť zoznam v stĺpcoch",
@@ -1982,7 +2027,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Odpovedať z prijatej adresy",
-        "description": "Pri odpovedaní automaticky prepnúť adresu odosielateľa na identitu, ktorá pôvodne prijala správu"
+        "description": "Pri odpovedaní odoslať z adresy, na ktorú bola správa poslaná."
       },
       "reply_identity_match": {
         "label": "Porovnávanie prijímacej adresy",
@@ -2206,8 +2251,8 @@
         "title": "Prihlásené účty",
         "description": "Presuňte na zmenu poradia účtov v rozbaľovacom zozname",
         "active": "Aktuálne aktívny účet",
-        "default_badge": "Predvolený účet",
-        "set_default": "Nastaviť ako predvolený",
+        "default_badge": "Otvára sa pri spustení",
+        "set_default": "Otvárať tento účet pri spustení",
         "switch_to": "Prepnúť na tento účet",
         "move_up": "Posunúť nahor",
         "move_down": "Posunúť nadol",
@@ -2294,7 +2339,7 @@
       },
       "totp": {
         "section_title": "Dvojfaktorové overenie",
-        "label": "Overenie TOTP",
+        "label": "Dvojkrokové prihlásenie",
         "description": "Pridajte ďalšiu vrstvu zabezpečenia pomocou jednorazového hesla na báze času",
         "active": "Zapnuté",
         "inactive": "Vypnuté",
@@ -2374,12 +2419,12 @@
         "enabled_success": "Šifrovanie dát v pokoji zapnuté"
       },
       "email_client": {
-        "title": "Konfigurácia poštového klienta",
-        "description": "Použite tieto prihlasovacie údaje na konfiguráciu e-mailového klienta (Thunderbird, Apple Mail, Outlook atd.)",
-        "jmap_username_label": "Používateľské meno JMAP",
+        "title": "Používať poštu v iných aplikáciách",
+        "description": "Thunderbird, Apple Mail, Outlook a poštové aplikácie v telefóne môžu použiť tieto nastavenia.",
+        "jmap_username_label": "Používateľské meno",
         "copy": "Kopírovať",
         "copied": "Skopírované",
-        "password_instructions": "Použite vyššie uvedené používateľské meno JMAP spolu s heslom aplikácie na prihlásenie v poštovom klientovi. Ak ste tak ešte neurobili, vytvorte si heslo aplikácie v sekcii nižšie."
+        "password_instructions": "Ako heslo použite heslo aplikácie, nie svoje bežné heslo. Vytvoríte ho nižšie na tejto stránke."
       },
       "link_device": {
         "title": "Prepojiť mobilnú aplikáciu",
@@ -2630,7 +2675,7 @@
       },
       "refresh_cache": {
         "label": "Obnoviť uložené údaje",
-        "description": "Znova načíta kontakty, kalendáre a priečinky zo servera. Zachová vaše účty a prihlásenia — opraví zastarané alebo nesprávne zobrazenie bez odhlásenia.",
+        "description": "Znova načítať kontakty, kalendáre a priečinky zo servera. Zostanete prihlásení.",
         "button": "Obnoviť",
         "confirm_title": "Obnoviť údaje vo vyrovnávacej pamäti?"
       },
@@ -2643,12 +2688,12 @@
       },
       "export_settings": {
         "label": "Exportovať nastavenia",
-        "description": "Stiahnuť svoje nastavenia ako súbor JSON",
+        "description": "Stiahnuť kópiu nastavení",
         "button": "Exportovať"
       },
       "import_settings": {
         "label": "Importovať nastavenia",
-        "description": "Nahrať nastavenia zo súboru JSON",
+        "description": "Obnoviť nastavenia zo súboru",
         "button": "Importovať"
       },
       "about": {
@@ -2699,8 +2744,8 @@
       "manage_description": "Pridávať, upravovať alebo odstraňovať vlastné aplikácie z postranného panela"
     },
     "contacts": {
-      "title": "Kontakty",
-      "description": "Import a export kontaktov",
+      "title": "Zoznam kontaktov",
+      "description": "Ako sa kontakty zobrazujú a súbory kontaktov na import alebo export",
       "group_by_letter_label": "Zoskupiť podľa prvého písmena",
       "sort_by_last_name_label": "Zoradiť podľa priezviska",
       "sort_by_last_name_description": "Zoradiť zoznam kontaktov podľa priezviska, aby členovia rodiny boli pri sebe",
@@ -2795,15 +2840,15 @@
       "not_supported": "Váš poštový server nepodporuje e-mailové filtre.",
       "rule_name": "Názov pravidla",
       "rule_name_placeholder": "napr. Triediť newslettery",
-      "match_all": "Splňuje VŠETKY podmienky",
-      "match_any": "Splňuje AKÚKOĽVEK podmienku",
+      "match_all": "Splňuje všetky podmienky",
+      "match_any": "Splňuje ktorúkoľvek podmienku",
       "conditions": "Podmienky",
       "add_condition": "Pridať podmienku",
       "actions": "Akcie",
       "add_action": "Pridať akciu",
       "remove_condition": "Odobrať podmienku",
       "remove_action": "Odobrať akciu",
-      "stop_processing": "Zastaviť spracovanie ďalších pravidiel",
+      "stop_processing": "Ďalšie pravidlá nepoužívať",
       "include_spam": "Presúvať aj správy označené ako spam",
       "attachment_type_placeholder": "napr. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (viac oddelených čiarkami)",
@@ -2845,7 +2890,7 @@
         "discard": "Zahodiť (ticho odstrániť)",
         "reject": "Odmietnuť so správou",
         "keep": "Ponechať v Doručených",
-        "stop": "Zastaviť spracovanie"
+        "stop": "Ďalšie pravidlá nepoužívať"
       },
       "move_to_folder": "Vybrať priečinok",
       "copy_to_folder": "Vybrať priečinok",
@@ -2989,7 +3034,7 @@
         "description": "Nakonfigurujte spôsob zobrazenia súborov a priečinkov"
       },
       "default_view": {
-        "label": "Predvolené zobrazenie",
+        "label": "Zobraziť súbory ako",
         "description": "Vyberte rozloženie do mriežky alebo zoznamu",
         "list": "Zoznam",
         "grid": "Mriežka"
@@ -3185,10 +3230,6 @@
         "label": "Maska na čítanie",
         "description": "V správe zatemní všetko okrem niekoľkých riadkov okolo ukazovateľa, aby ste nestratili miesto."
       },
-      "plain_language": {
-        "label": "Jednoduchý jazyk",
-        "description": "Jednoduchšie formulácie v nastaveniach a chybových hláseniach a krátke vysvetlenia odborných pojmov. K dispozícii v angličtine a nemčine."
-      },
       "contrast": {
         "label": "Kontrast",
         "description": "Vyšší kontrast zvýrazní text, orámovanie a rámik zamerania tmavšie alebo svetlejšie v každom motíve a podčiarkne odkazy. Systém sleduje vaše zariadenie.",
@@ -3380,6 +3421,81 @@
         "description": "Hlas, ktorý číta správy nahlas. Zoznam ukazuje hlasy, ktoré má prehliadač pre jazyk rozhrania.",
         "default": "Predvolený v prehliadači"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Súkromie",
+      "about": "O aplikácii"
+    },
+    "search": {
+      "signature": "podpis e-mailový podpis päta",
+      "sign_out": "odhlásiť odhlásenie logout",
+      "app_lock": "PIN zámok kód uzamknúť obrazovka",
+      "text_size": "veľkosť písma väčší text zoom zväčšiť",
+      "vacation": "automatická odpoveď mimo kancelárie neprítomnosť dovolenka autoreply",
+      "two_factor": "2FA dvojfázové dvojfaktorové MFA OTP autentifikátor jednorazový kód",
+      "encryption": "S/MIME smime PGP OpenPGP šifrovanie certifikát",
+      "password": "heslo zmeniť heslo nové heslo",
+      "offline": "offline bez pripojenia bez internetu stiahnuť úložisko synchronizácia",
+      "wipe": "odstrániť zmazať vymazať zariadenie údaje",
+      "outbox": "na odoslanie neodoslané čakajúce front",
+      "remote_content": "vzdialené obrázky externý obsah sledovanie pixely dôveryhodní odosielatelia",
+      "push": "push relay na pozadí upozornenia",
+      "version": "verzia aktualizácia o aplikácii zdrojový kód GitHub licencia"
+    },
+    "privacy": {
+      "push_title": "Upozornenia",
+      "push_link": {
+        "label": "Relay pre upozornenia",
+        "description": "Upozornenia pri zatvorenej aplikácii idú cez push relay, ktorý nikdy nevidí vašu poštu. Vyberiete ho na stránke Upozornenia.",
+        "button": "Upozornenia"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Vzdialené obrázky a dôveryhodní odosielatelia",
+      "receipts_label": "Potvrdenia o prečítaní",
+      "senders_label": "Obrázky odosielateľov",
+      "description": "Tieto nastavenia nájdete na stránke Súkromie.",
+      "button": "Súkromie"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Hustota a popisy panela",
+        "description": "Ako tesne sú riadky zoznamu a či tlačidlá ukazujú svoj názov, nastavíte na stránke Vzhľad."
+      },
+      "light_mode": {
+        "label": "Svetlé pozadie správ",
+        "description": "Zobrazenie správ na svetlom pozadí v tmavom režime nastavíte na stránke Čítanie."
+      },
+      "calendar": {
+        "label": "Náhľad udalostí v kalendári",
+        "description": "Či ukázanie na udalosť zobrazí jej podrobnosti, nastavíte na stránke Kalendár."
+      },
+      "list": {
+        "label": "Konverzácie a riadky náhľadu",
+        "description": "Zoskupenie podľa konverzácie a riadok náhľadu pod každou správou nastavíte na stránke Zoznam správ."
+      },
+      "reading": {
+        "label": "Označenie ako prečítané",
+        "description": "Kedy sa správa počíta ako prečítaná a kam sa dostanete po zmazaní alebo presune, nastavíte na stránke Čítanie."
+      },
+      "send_warnings_description": "Zrušenie odoslania a upozornenia na chýbajúci predmet, zabudnutú prílohu alebo zástupný text.",
+      "bulk_delete": {
+        "label": "Opýtať sa pred zmazaním viacerých správ",
+        "description": "To nastavíte na stránke Zoznam správ."
+      },
+      "sounds": {
+        "label": "Zvuky a počet neprečítaných",
+        "description": "Zvuky upozornení a počet neprečítaných na karte nastavíte na stránke Upozornenia."
+      }
+    },
+    "about": {
+      "title": "O aplikácii {appName}"
+    },
+    "sign_out": {
+      "description": "Odhlásiť tento účet na tomto zariadení."
     }
   },
   "setup": {
@@ -3717,6 +3833,10 @@
     "delete_with_contents_message": "Priečinok „{name}“ stále obsahuje {count, plural, one {1 správu} few {# správy} other {# správ}}. Odstrániť priečinok aj všetky jeho správy? Túto akciu nie je možné vrátiť späť.",
     "delete_with_contents_confirm": "Odstrániť priečinok a správy"
   },
+  "uxs_folders": {
+    "manage_accounts": "Spravovať účty…",
+    "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
+  },
   "shortcuts": {
     "title": "Klávesové skratky",
     "tip": "Kedykoľvek stlačte ? na zobrazenie tejto nápovedy",
@@ -3787,6 +3907,10 @@
     "messages_count": "{count, plural, one {# správa} few {# správy} many {# správy} other {# správ}}",
     "expand_named": "Rozbaliť konverzáciu: {subject}",
     "collapse_named": "Zbaliť konverzáciu: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
+    "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
   },
   "identities": {
     "modal_title": "Správa identít odosielateľa",
@@ -4399,6 +4523,28 @@
       "menu": "Otvoriť ponuku kontaktu"
     }
   },
+  "uxs_wording": {
+    "more_options": "Ďalšie možnosti",
+    "use_in_other_apps": "Použiť v iných aplikáciách",
+    "default_address_book": "Kontakty",
+    "default_calendar": "Kalendár",
+    "preview_documents": "Dokumenty",
+    "preview_photos": "Fotky",
+    "sample_subject": "Poznámky zo stretnutia v kaviarni",
+    "mail_apps": {
+      "imap": "Prichádzajúca pošta (IMAP)",
+      "smtp": "Odchádzajúca pošta (SMTP)",
+      "caldav": "Kalendáre (CalDAV)",
+      "carddav": "Kontakty (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Bez šifrovania",
+      "copy_label": "Kopírovať {name}",
+      "loading": "Načítavajú sa nastavenia z poštového servera…",
+      "not_found": "Poštový server neoznámil názvy serverov pre iné aplikácie. Požiadajte o ne správcu."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Kalendáre: {names}",
@@ -4642,7 +4788,7 @@
       "hide_non_working_days_desc": "Vynechať z týždenného zobrazenia dni, keď nepracujete. Ich udalosti sa naďalej zobrazujú v mesačnom, dennom a agendovom zobrazení.",
       "working_days": "Pracovné dni",
       "title": "Nastavenia kalendára",
-      "default_view": "Predvolené zobrazenie",
+      "default_view": "Kalendár sa otvorí v",
       "week_starts_on": "Týždeň začína v",
       "time_format": "Formát času",
       "default_calendar": "Predvolený kalendár",
@@ -4653,7 +4799,7 @@
       "notifications_enabled_desc": "Zobrazovať upozornenia na nadchádzajúce udalosti v kalendári",
       "notification_sound": "Zvuk oznámenia",
       "notification_sound_desc": "Prehrať zvuk pre upozornenia kalendára",
-      "invitation_parsing": "Analyzovať e-mailové pozvánky",
+      "invitation_parsing": "Zobrazovať pozvánky z pošty",
       "invitation_parsing_desc": "Rozpoznávať pozvánky kalendára v prílohách e-mailov a zobrazovať akcie kalendára",
       "show_time_in_month_view": "Zobraziť čas v mesačnom zobrazení",
       "show_time_in_month_view_desc": "Zobrazovať časy udalostí v mesačnom zobrazení kalendára",
@@ -4668,7 +4814,7 @@
       "show_week_numbers_desc": "Zobrazovať čísla týždňov v minikalendári",
       "calendar_free_scroll": "Voľné posúvanie",
       "calendar_free_scroll_desc": "Plynulo prechádzať mesiace, týždne a dni namiesto jedného obdobia naraz",
-      "enable_tasks": "Povoliť úlohy",
+      "enable_tasks": "Úlohy",
       "enable_tasks_desc": "Zobrazovať zobrazenie úloh v kalendári",
       "show_tasks_on_calendar": "Zobraziť úlohy v kalendári",
       "show_tasks_on_calendar_desc": "Zobrazovať úlohy v mesačnom, týždennom a dennom zobrazení kalendára",
@@ -4849,8 +4995,8 @@
       "error_update": "Aktualizácia kalendára zlyhala",
       "error_delete": "Odstránenie kalendára zlyhalo",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Kopírovať URL CalDAV",
-      "url_copied": "URL CalDAV skopírovaná do schránky",
+      "copy_url": "Kopírovať adresu pre iné aplikácie",
+      "url_copied": "Adresa skopírovaná",
       "share": "Zdieľať kalendár…",
       "new_event_in_calendar": "Nová udalosť v tomto kalendári",
       "shared_with": "Zdieľané s: {names}",
@@ -4870,8 +5016,8 @@
       "default_alerts_updated": "Predvolené pripomenutia boli aktualizované"
     },
     "subscription": {
-      "title": "Odber iCal",
-      "section_title": "Odbery iCal",
+      "title": "Odoberať kalendár",
+      "section_title": "Odoberané kalendáre",
       "description": "Odoberajte externý zdroj iCalendar. Udalosti budú automaticky synchronizované do samostatného kalendára.",
       "url_label": "URL kalendára",
       "url_placeholder": "https://example.com/calendar.ics alebo webcal://...",
@@ -5920,7 +6066,7 @@
     "clear_confirm_unsent": "{count, plural, one {# neodoslaná správa sa stratí.} few {# neodoslané správy sa stratia.} many {# neodoslanej správy sa stratí.} other {# neodoslaných správ sa stratí.}}",
     "clear_confirm": "Vymazať",
     "persist_refused": "Tento prehliadač môže uchovanú poštu zmazať, keď dôjde miesto. Inštalácia aplikácie tomu zvyčajne zabráni.",
-    "persist_retry": "Opýtať sa znova",
+    "persist_retry": "Požiadať prehliadač o zachovanie",
     "safari_hint": "Safari zmaže dáta webu po 7 dňoch bez návštevy. Pridajte Bulwark na plochu alebo do Docku, aby vaša pošta na tomto zariadení zostala.",
     "evicted": "Prehliadač zmazal poštu uchovanú na tomto zariadení. Sťahuje sa znova.",
     "evicted_lost": "{count, plural, one {# neodoslaná správa alebo zmena sa stratila.} few {# neodoslané správy alebo zmeny sa stratili.} many {# neodoslanej správy alebo zmeny sa stratilo.} other {# neodoslaných správ alebo zmien sa stratilo.}}",
@@ -6806,7 +6952,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Okná",
+      "title": "Okná aplikácie",
       "double_click_label": "Otvárať správy v novom okne dvojitým kliknutím",
       "double_click_description": "Jedným kliknutím sa správa stále otvorí vedľa zoznamu.",
       "restore_label": "Pri spustení znova otvoriť okná",
@@ -6899,6 +7045,9 @@
       "close": "Zavrieť"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Hľadať „{text}“ v pošte"
+  },
   "desktopMenuBar": {
     "always_show_label": "Vždy zobrazovať panel ponúk",
     "always_show_description": "Inak sa zobrazí po stlačení klávesu Alt.",
@@ -6920,9 +7069,9 @@
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase nečinnosti žiada PIN v každom okne a na každej karte. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
     "enable_label": "Zamykať kódom PIN",
-    "enable_desc": "V predvolenom stave vypnuté. PIN zostáva na tomto zariadení.",
+    "enable_desc": "PIN zostáva na tomto zariadení.",
     "protects_desc": "Pred čím to chráni: PIN nepustí do aplikácie nikoho, kto je pri tomto zariadení. Pošta uložená tu dostane nový kľúč, keď zámok zapnete alebo zmeníte PIN, čo môže chvíľu trvať. Nezastaví program spustený na tomto počítači, rozšírenie prehliadača, ktoré ste nainštalovali, ani niekoho, kto skopíruje súbory aplikácie a má čas skúšať veľa PIN-ov, takže dlhší PIN sa oplatí. V počítačovej aplikácii je na skúšanie PIN-ov potrebné aj vaše prihlásenie na tomto počítači. Váš účet na serveri to neovplyvní.",
-    "enable_body": "Zvoľte PIN. Budete ho potrebovať pri každom zamknutí aplikácie a po opätovnom načítaní alebo novom spustení.",
+    "enable_body": "Budete ho potrebovať pri každom zamknutí aplikácie a po reštarte.",
     "set_pin_title": "Zvoľte PIN",
     "change_pin": "Zmeniť PIN…",
     "change_pin_title": "Zmeniť PIN",
@@ -6984,6 +7133,19 @@
     "blocked_seconds": "Príliš veľa pokusov. Skúste to o {count, plural, one {# sekundu} few {# sekundy} many {# sekundy} other {# sekúnd}}.",
     "blocked_minutes": "Príliš veľa pokusov. Skúste to o {count, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}."
   },
+  "uxs_general": {
+    "time_zone_common": "Bežné časové pásma",
+    "time_zone_all": "Všetky časové pásma",
+    "time_zone_search": "Hľadať časové pásmo",
+    "time_zone_no_match": "Nenašlo sa žiadne časové pásmo",
+    "time_zone_desktop_description": "Zobrazovať časy pošty a stretnutí v tomto časovom pásme. Ak žiadne nevyberiete, použije sa časové pásmo počítača.",
+    "app_lock_desc_desktop": "Po čase nečinnosti žiada PIN v každom okne. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
+    "app_lock_timeout_desc_desktop": "Čas bez používania v ktoromkoľvek okne.",
+    "app_lock_now_desc_desktop": "Zamkne hneď všetky okná.",
+    "app_lock_protects_toggle": "Pred čím to chráni?",
+    "app_lock_timeout_hours": "{count, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodín}}",
+    "desktop_attention_title": "Na tomto počítači"
+  },
   "desktop_sign_in": {
     "server_needed": "Najprv zadajte adresu servera.",
     "server_declined": "Tento server ste nepovolili, preto sa naň nič neodoslalo.",
@@ -7018,6 +7180,21 @@
     "declined": "V prehliadači ste odmietli, takže k prihláseniu nedošlo.",
     "too_many": "Príliš veľa pokusov o prihlásenie z tejto siete. Počkajte niekoľko minút a skúste to znova.",
     "page_declined": "Nič nebolo odovzdané. Túto kartu môžete zavrieť."
+  },
+  "uxs_login": {
+    "theme_button": "Svetlý alebo tmavý",
+    "server_label": "Poštový server",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Hľadáme váš poštový server…",
+    "server_found": "Poštový server: {server}",
+    "server_change": "Zmeniť",
+    "server_not_found": "Pre túto adresu sme poštový server nenašli. Zadajte ho sem, napríklad mail.example.com.",
+    "server_needed": "Zadajte adresu svojho poštového servera.",
+    "server_invalid": "Toto nie je adresa servera. Napíšte ju ako mail.example.com.",
+    "email_needed": "Najprv zadajte svoju e-mailovú adresu.",
+    "trouble": "Nedarí sa?",
+    "trouble_cors": "Váš poštový server musí povoliť prihlasovanie z tejto webovej stránky. Ak prihlásenie zlyhá, požiadajte správcu poštového servera, aby to povolil.",
+    "provider_unsupported": "{provider} neponúka JMAP, spôsob, akým Bulwark komunikuje s poštovými servermi, takže sa k nemu Bulwark zatiaľ nemôže pripojiť priamo."
   },
   "desktop_updates": {
     "title": "Aktualizácie",
@@ -7239,7 +7416,7 @@
     "section_title": "Údaje o používaní a hlásenia o zlyhaniach",
     "section_description": "Oboje je vypnuté, kým to nezapnete, a každé má vlastný prepínač.",
     "telemetry_label": "Odosielať údaje o používaní",
-    "telemetry_description": "Raz denne: náhodné ID, verzia aplikácie, verzia Node, váš operačný systém, ako dlho aplikácia beží a ako sa pripája. Pri vlastnom poštovom serveri aj zapnuté funkcie, približný počet účtov a počet doplnkov a motívov. Nikdy pošta, adresy ani názvy serverov.",
+    "telemetry_description": "Raz denne: náhodné ID, čísla verzií aplikácie, váš operačný systém, ako dlho aplikácia beží a ako sa pripája. Pri vlastnom poštovom serveri aj zapnuté funkcie, približný počet účtov a počet doplnkov a motívov. Nikdy pošta, adresy ani názvy serverov.",
     "crash_label": "Odosielať hlásenia o zlyhaniach",
     "crash_description": "Chyby v aplikácii sa odosielajú s náhodným ID, názvami súborov z kódu aplikácie a krátkymi, očistenými správami. Keď zlyhá samotná aplikácia, súbor o zlyhaní zostane v tomto počítači a odíde len vtedy, keď ho odošlete.",
     "crash_memory": "Súbor o zlyhaní je kópia časti pamäte aplikácie v okamihu zlyhania. Bulwark odstráni používateľské mená, adresy a prihlasovacie tokeny, ktoré nájde, ale súbor o zlyhaní môže aj tak obsahovať text vašej pošty.",

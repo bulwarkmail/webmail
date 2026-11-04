@@ -10,6 +10,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
+import { takeOverMoved } from "@/lib/popout/moved-undo";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
 import { commitReturnedComposer, dropReturnedComposer, offerReturnedComposer } from "@/lib/popout/return-to-main";
 import { credentialFingerprint, sealFor } from "@/lib/popout/sealed";
@@ -164,6 +165,14 @@ export function PopoutHost() {
           claimOnce(`bulwark-popout-sent:${message.requestId}`, () => {
             channel?.post({ type: "sent-ack", requestId: message.requestId });
             takeOverSent(message.notice);
+          });
+          break;
+        case "moved":
+          // Undo for what a message window archived, deleted or moved: it has closed.
+          claimOnce(`bulwark-popout-moved:${message.requestId}`, () => {
+            channel?.post({ type: "moved-ack", requestId: message.requestId });
+            takeOverMoved(message.notice, (key, values) => tRef.current(`notifications.${key}`, values));
+            refreshList();
           });
           break;
         case "draft-rescue":

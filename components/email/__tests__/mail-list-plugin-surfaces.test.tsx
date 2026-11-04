@@ -71,7 +71,7 @@ beforeEach(() => {
   setActionDispatcher(dispatch);
   useEmailStore.setState(initialEmailState, true);
   useEmailStore.setState({ selectedMailbox: 'inbox', mailboxes, emails: [], selectedEmailKeys: new Set<string>() });
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   useSettingsStore.setState({ interfaceLayout: 'default', hoverActions: ['delete', 'star'], hoverActionsMode: 'inline' } as never);
 });
 

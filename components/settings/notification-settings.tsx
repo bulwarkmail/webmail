@@ -13,8 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, Volume2, XCircle } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MultiAccountPushSettings } from './multi-account-push';
+import { productName } from '@/lib/product-name';
+import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import {
   WebPushUnsupportedError,
@@ -52,7 +55,10 @@ type DevicesState =
 export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
   const tAppearance = useTranslations('settings.appearance');
+  const tUnread = useTranslations('account_unread');
+  const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
+  const appName = productName(useConfig().appName);
   // The relay list depends on it; re-render once the config is known (#903).
   const noThirdParty = useNoThirdPartyTraffic();
   const {
@@ -63,6 +69,7 @@ export function NotificationSettings() {
     calendarNotificationsEnabled,
     calendarNotificationSound,
     faviconUnreadBadge,
+    unreadBadgeAllAccounts,
     pushRelayUrl,
     updateSetting,
   } = useSettingsStore();
@@ -354,6 +361,17 @@ export function NotificationSettings() {
             onChange={(checked) => updateSetting('faviconUnreadBadge', checked)}
           />
         </SettingItem>
+
+        {/* Only means something with a second account. */}
+        {severalAccounts && (
+        <SettingItem label={tUnread('badge_all_accounts.label')} description={tUnread('badge_all_accounts.description')}>
+          <ToggleSwitch
+            checked={unreadBadgeAllAccounts}
+            onChange={(checked) => updateSetting('unreadBadgeAllAccounts', checked)}
+            disabled={!faviconUnreadBadge}
+          />
+        </SettingItem>
+        )}
       </SettingsSection>
 
       <SettingsSection id="calendar" title={t('calendar.title')} description={t('calendar.description')}>
@@ -413,7 +431,7 @@ export function NotificationSettings() {
       {/* The desktop app's taskbar flash and quiet hours. Nothing in a browser. */}
       <DesktopOsSettings part="notifications" />
 
-      <SettingsSection id="push" title={t('push.title')} description={t('push.description')} term="push">
+      <SettingsSection id="push" title={t('push.title', { appName })} description={t('push.description')} term="push">
         <SettingItem label={t('push.enable')} description={statusDescription}>
           <div className="flex items-center gap-2">
             {pushEnabled && (

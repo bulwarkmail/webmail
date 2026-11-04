@@ -21,7 +21,7 @@ describe('AdminShell across the desktop breakpoint', () => {
     let desktop = initial;
     const listeners = new Set<() => void>();
     window.matchMedia = vi.fn((query: string) => ({
-      get matches() { return desktop && query === '(width >= 64rem)'; },
+      get matches() { return desktop && query === '(width >= 37.5rem)'; },
       media: query,
       addEventListener: (_: string, cb: () => void) => listeners.add(cb),
       removeEventListener: (_: string, cb: () => void) => listeners.delete(cb),

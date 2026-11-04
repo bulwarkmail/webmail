@@ -126,6 +126,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",
+  // The sign-in form's mail server lookup: the login page skips it in Lite (IS_LITE).
+  "/api/auth/discover-server",
   "/api/auth/stalwart-context",
   "/api/account/stalwart/jmap",
   // Admin shield probe - skipped in Lite (components/layout/navigation-rail.tsx).

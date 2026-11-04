@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { ToolbarSearch } from "@/components/ui/toolbar";
 import { useContactStore } from "@/stores/contact-store";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
-import { buildSearchSuggestions, type ContactSuggestion, type SearchSuggestion } from "@/lib/search-suggestions";
+import { buildSearchSuggestions, listSenderMatches, type ContactSuggestion, type SearchSuggestion } from "@/lib/search-suggestions";
+import { useEmailStore } from "@/stores/email-store";
 import { SearchSuggestions, suggestionOptionId } from "./search-suggestions";
 
 export type ContactSearchField = "from" | "to";
@@ -66,7 +67,10 @@ export function SearchBox({ value, onChange, onSubmit, onClear, onSelectContact,
   const suggestions = useMemo<SearchSuggestion[]>(() => {
     const query = draft.trim();
     const matches = query ? getAutocomplete(query).filter((r) => !r.group && r.email) : [];
-    return buildSearchSuggestions(draft, recentSearches, matches);
+    // Then the senders of the mail on screen, read as typed (no subscription:
+    // the list changing doesn't need the box drawn again).
+    const senders = query ? listSenderMatches(useEmailStore.getState().emails, query) : [];
+    return buildSearchSuggestions(draft, recentSearches, [...matches, ...senders]);
     // The three store slices are inputs of getAutocomplete (read via get()),
     // not of this closure — list them so the memo recomputes when they load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
