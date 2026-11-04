@@ -606,7 +606,8 @@ optgroup {
 }
 
 /* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips.
-   "secondary" first keeps the names of Reply, Archive, Delete and Move (mail-p2-15). */
+   "secondary" keeps the names of Reply, Reply all, Forward, Archive, Delete and Move; the
+   other buttons go into the More menu before those names go (mail-p2-15). */
 [data-toolbar-compact="secondary"] [data-toolbar-label]:not([data-toolbar-label="primary"]),
 [data-toolbar-compact="all"] [data-toolbar-label] {
   display: none !important;

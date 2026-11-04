@@ -55,7 +55,7 @@ import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
 import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
-import { itemsToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
+import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
@@ -2287,36 +2287,54 @@ export function EmailViewer({
       const containerWidth = el.clientWidth;
       const overflowNow = () => leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
       let overflow = overflowNow();
-      // The labels go before any button does (icons keep their tooltips):
-      // first all but Reply, Archive, Delete and Move, then those too.
+      // Labels and buttons give way in this order (mail-p2-15): the labels
+      // of the optional buttons; then those buttons, into the More menu; then
+      // the names of Reply, Reply all, Forward, Archive, Delete and Move
+      // (icons keep their tooltips); then, in a reader too narrow even for
+      // their icons, the main buttons too.
       let compact: ToolbarCompact = false;
-      for (const step of ['secondary', 'all'] as const) {
-        if (overflow <= 0) break;
-        compact = step;
-        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, step);
+      const hidden = new Set<number>();
+      const priorities = items.map((item) => Number(item.dataset.overflowPriority || 0));
+      const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
+      const groupOf = (item: HTMLElement) => {
+        const parent = item.parentElement;
+        if (!parent) return '';
+        if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
+        return groupIds.get(parent)!;
+      };
+      const gapOf = () => ({
+        left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
+        right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
+      });
+      // Measure every width in one pass and decide from the numbers (see
+      // planToHide) rather than hiding items one by one and re-reading.
+      // fits false: hiding all of `order` still wouldn't make it fit.
+      const planHide = (order: number[]) => {
+        const ordered = order.map((i) => items[i]);
+        const measured = ordered.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
+        const plan = planToHide(measured, overflow, gapOf());
+        return { ordered, plan };
+      };
+      if (overflow > 0) {
+        compact = 'secondary';
+        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, compact);
         overflow = overflowNow();
       }
-      const hidden = new Set<number>();
       if (overflow > 0) {
-        // Measure every width in one pass and decide from the numbers (see
-        // itemsToHide) rather than hiding items one by one and re-reading.
-        const order = toolbarHideOrder(items.map((item) => Number(item.dataset.overflowPriority || 0)), REQUIRED_TOOLBAR_PRIORITIES);
-        const ordered = order.map((i) => items[i]);
-        const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
-        const groupOf = (item: HTMLElement) => {
-          const parent = item.parentElement;
-          if (!parent) return '';
-          if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
-          return groupIds.get(parent)!;
-        };
-        const measured = ordered.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
-        const gapOf = {
-          left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
-          right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
-        };
-        for (const i of itemsToHide(measured, overflow, gapOf)) {
-          ordered[i].style.display = 'none';
-          hidden.add(Number(ordered[i].dataset.overflowPriority));
+        const order = toolbarHideOrder(priorities, REQUIRED_TOOLBAR_PRIORITIES);
+        const optional = order.filter((i) => !(REQUIRED_TOOLBAR_PRIORITIES as readonly number[]).includes(priorities[i]));
+        let { ordered, plan } = planHide(optional);
+        if (!plan.fits) {
+          compact = 'all';
+          el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, compact);
+          overflow = overflowNow();
+          ({ ordered, plan } = planHide(order));
+        }
+        if (overflow > 0) {
+          for (const i of plan.hide) {
+            ordered[i].style.display = 'none';
+            hidden.add(Number(ordered[i].dataset.overflowPriority));
+          }
         }
       }
       // Restore layout
@@ -4683,7 +4701,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={withShortcut(t('reply_all'), 'reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4695,7 +4713,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={withShortcut(t('forward'), 'forward')}
         >
           <Forward className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
