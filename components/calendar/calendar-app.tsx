@@ -70,7 +70,7 @@ import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
 import { accountAddress, buildCopyToCalendarData, copyTargetsFor, distinctAccountDefaultColors, eventTargets, preferredTarget, taskTargets } from "@/lib/calendar-targets";
-import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
+import { canCreateEventsIn, canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { TASKS_LOAD_ERROR, useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
