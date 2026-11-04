@@ -82,11 +82,68 @@ describe("useTimeGridInteractions slot clicks (#435)", () => {
     act(() => result.current.handleGridPointerDown(pointer(160), "2026-09-03", day));
     act(() => result.current.handleGridPointerMove(pointer(400)));
     expect(result.current.dragCreate).toEqual({ dayKey: "2026-09-03", startMinutes: 540, endMinutes: 780 });
+    act(() => result.current.handleGridPointerMove(pointer(2000)));
+    expect(result.current.dragCreate).toEqual({ dayKey: "2026-09-03", startMinutes: 540, endMinutes: 1200 });
     act(() => result.current.handleGridPointerUp(pointer(2000)));
 
     const [start, end] = onCreateRange.mock.calls[0];
     expect(start).toEqual(new Date(2026, 8, 3, 9, 0, 0, 0));
     expect(end).toEqual(new Date(2026, 8, 3, 20, 0, 0, 0));
+  });
+
+  // The selection said 11:15 – 16:15 and the event came out shorter: the
+  // range drawn, its label and the event created must be the same.
+  describe("drag-to-create creates what the selection shows", () => {
+    const day = new Date(2026, 10, 2);
+    let top = 0;
+    const column = {
+      getBoundingClientRect: () => ({ top }),
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+    };
+    const pointer = (clientY: number) => ({
+      pointerType: "mouse", button: 0, pointerId: 1, clientY,
+      target: { closest: () => null }, currentTarget: column,
+    }) as unknown as React.PointerEvent<HTMLDivElement>;
+    beforeEach(() => { top = 0; });
+
+    it("commits the range last drawn, not one measured again on release", () => {
+      const { result, onCreateRange } = renderInteractions();
+      act(() => result.current.handleGridPointerDown(pointer(675), "2026-11-02", day));
+      act(() => result.current.handleGridPointerMove(pointer(975)));
+      expect(result.current.dragCreate).toEqual({ dayKey: "2026-11-02", startMinutes: 675, endMinutes: 975 });
+      // The release reports a slightly different spot (a trackpad lifting).
+      act(() => result.current.handleGridPointerUp(pointer(948)));
+
+      const [start, end] = onCreateRange.mock.calls[0];
+      expect(start).toEqual(new Date(2026, 10, 2, 11, 15));
+      expect(end).toEqual(new Date(2026, 10, 2, 16, 15));
+    });
+
+    it("follows the grid when it scrolls during the drag, and creates what it then shows", () => {
+      const { result, onCreateRange } = renderInteractions();
+      act(() => result.current.handleGridPointerDown(pointer(675), "2026-11-02", day));
+      act(() => result.current.handleGridPointerMove(pointer(975)));
+      // The wheel scrolls the grid up by an hour under a still pointer.
+      top = -60;
+      act(() => { window.dispatchEvent(new Event("scroll")); });
+      expect(result.current.dragCreate).toEqual({ dayKey: "2026-11-02", startMinutes: 675, endMinutes: 1035 });
+      act(() => result.current.handleGridPointerUp(pointer(975)));
+
+      const [start, end] = onCreateRange.mock.calls[0];
+      expect(start).toEqual(new Date(2026, 10, 2, 11, 15));
+      expect(end).toEqual(new Date(2026, 10, 2, 17, 15));
+    });
+
+    it("creates nothing when the browser takes the pointer over", () => {
+      const { result, onCreateRange } = renderInteractions();
+      act(() => result.current.handleGridPointerDown(pointer(675), "2026-11-02", day));
+      act(() => result.current.handleGridPointerMove(pointer(975)));
+      act(() => result.current.handleGridPointerCancel());
+      expect(result.current.dragCreate).toBeNull();
+      act(() => result.current.handleGridPointerUp(pointer(975)));
+      expect(onCreateRange).not.toHaveBeenCalled();
+    });
   });
 
   it("a 23:00 click ends at midnight of the next day", () => {
