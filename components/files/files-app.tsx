@@ -40,7 +40,7 @@ import { formatRecipient } from "@/lib/email-composer-utils";
 import { useRouter } from "@/i18n/navigation";
 import { useEditAttachment } from "@/hooks/use-edit-attachment";
 import { fileAppAction, type FileAppAction } from "@/lib/files-app-actions";
-import { handOffFilesAfterClose } from "@/lib/file-handoff-after-close";
+import { handOffFiles } from "@/lib/launch-handoff";
 import { ImportEmlDialog } from "@/components/files/import-eml-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { resolveConflictsInTurn, type ConflictAnswer, type UploadConflictResolver } from "@/lib/files-upload-conflicts";
@@ -738,9 +738,9 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       setImportEml(file);
       return;
     }
-    setPreviewFile(null);
-    setInfoFile(null);
-    void handOffFilesAfterClose([file], action === "add-calendar" ? "calendar" : "contacts");
+    // The preview stays open: the move to the import closes it with the page.
+    // Closed first, its Back landed after that move and undid it (pim-p2-7).
+    handOffFiles([file], action === "add-calendar" ? "calendar" : "contacts");
   }, [appActionOf, getFileContent, t]);
   const appActionFor = useCallback((r: FileResource) => {
     const action = appActionOf(r);
