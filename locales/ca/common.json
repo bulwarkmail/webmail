@@ -7774,6 +7774,77 @@
     "state_offline": "Sense connexió",
     "state_error": "Aturat"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "S'estan pujant els canvis abans de desactivar la unitat",
+      "title_sign_out": "S'estan pujant els canvis abans de tancar la sessió",
+      "title_stop_folder": "S'estan pujant els canvis abans d'aturar la sincronització de la carpeta",
+      "cannot_title": "Alguns canvis no es poden pujar ara",
+      "waiting": "Pendent de pujar: {names}",
+      "progress": "{done} de {total} pujats",
+      "cannot_offline": "No es pot connectar amb el servidor. Encara sense pujar: {names}",
+      "cannot_other": "No es poden pujar: {names}. L'activitat recent de la configuració n'explica el motiu.",
+      "go_note_drive": "Si continueu ara, el que no s'hagi pujat es copia a Documents\\Bulwark – not uploaded. No es perd res.",
+      "go_note_folder": "Si continueu ara, el que no s'hagi pujat es queda a la carpeta d'aquest ordinador.",
+      "keep_turn_off": "Mantén la unitat",
+      "keep_sign_out": "Mantén la sessió",
+      "keep_stop_folder": "Continua sincronitzant",
+      "go_turn_off": "Desactiva ara",
+      "go_sign_out": "Tanca la sessió ara",
+      "go_stop_folder": "Atura la sincronització ara"
+    },
+    "drive": {
+      "off_note": "En desactivar-ho, la unitat desapareix de l'Explorador de fitxers. Els fitxers es queden a Fitxers.",
+      "rescued": "Els fitxers que no s'han pujat ({count}) ara són a {folder}.",
+      "rescued_open": "Obre la carpeta",
+      "rescued_dismiss": "Descarta",
+      "start_at_login": "Inicia Bulwark en iniciar la sessió al Windows",
+      "start_at_login_why": "La unitat necessita que Bulwark s'executi, com OneDrive.",
+      "closed_warning": "Els fitxers de la unitat no s'obren mentre Bulwark està tancat.",
+      "where": "A l'Explorador de fitxers com a Bulwark Files",
+      "where_letter": "A l'Explorador de fitxers com a Bulwark Files ({letter}:)",
+      "open": "Obre",
+      "letter_note": "Per la lletra, l'Explorador de fitxers no mostra l'estat de sincronització ni «Mantén sempre en aquest dispositiu». Es veuen a Bulwark Files, a l'Explorador.",
+      "letter_failed": "No s'ha pogut assignar la lletra d'unitat. Torneu-ho a provar."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualitzat",
+      "syncing": "Bulwark Files: S'està sincronitzant. Queden: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sense connexió. En espera: {count}",
+      "question": "Bulwark Files: Necessita la vostra resposta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un fitxer s'ha canviat en dos llocs",
+      "problem_title": "Un fitxer no es pot sincronitzar"
+    },
+    "activity": {
+      "waiting_count": "Canvis que esperen el servidor: {count}",
+      "disk_name": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè alguns dels seus caràcters no s'hi permeten",
+      "disk_case": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè ja hi ha un nom que només canvia en majúscules i minúscules",
+      "disk_group": "Noms de Fitxers que aquest ordinador no permet: {count}. Aquí tenen noms una mica diferents.",
+      "show": "Mostra",
+      "hide": "Amaga"
+    },
+    "cant_sync": {
+      "title": "No es pot sincronitzar"
+    },
+    "folders": {
+      "stop": "Atura la sincronització…",
+      "pick_title_known": "Amb quina carpeta de Fitxers s'ha de mantenir igual {name}?",
+      "pick_confirm_known": "Mantén-les iguals"
+    },
+    "pin": {
+      "keep": "Mantén sempre en aquest dispositiu",
+      "free": "Allibera espai",
+      "failed": "No ha funcionat. Torneu-ho a provar a l'Explorador de fitxers."
+    },
+    "account": {
+      "of": "Fitxers de {address}",
+      "choose": "Fitxers de"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacció ràpida",
     "menu": "Redacció ràpida",

@@ -7774,6 +7774,77 @@
     "state_offline": "Hors ligne",
     "state_error": "Arrêté"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Envoi des modifications avant la désactivation du lecteur",
+      "title_sign_out": "Envoi des modifications avant la déconnexion",
+      "title_stop_folder": "Envoi des modifications avant l'arrêt de la synchronisation du dossier",
+      "cannot_title": "Certaines modifications ne peuvent pas être envoyées maintenant",
+      "waiting": "Reste à envoyer : {names}",
+      "progress": "{done} sur {total} envoyés",
+      "cannot_offline": "Le serveur est injoignable. Pas encore envoyé : {names}",
+      "cannot_other": "Impossible d'envoyer : {names}. L'activité récente dans les paramètres indique pourquoi.",
+      "go_note_drive": "Si vous continuez maintenant, ce qui n'est pas envoyé est copié dans Documents\\Bulwark – not uploaded. Rien n'est perdu.",
+      "go_note_folder": "Si vous continuez maintenant, ce qui n'est pas envoyé reste dans le dossier sur cet ordinateur.",
+      "keep_turn_off": "Garder le lecteur",
+      "keep_sign_out": "Rester connecté",
+      "keep_stop_folder": "Continuer la synchronisation",
+      "go_turn_off": "Désactiver maintenant",
+      "go_sign_out": "Se déconnecter maintenant",
+      "go_stop_folder": "Arrêter la synchronisation maintenant"
+    },
+    "drive": {
+      "off_note": "Désactiver ceci retire le lecteur de l'Explorateur de fichiers. Vos fichiers restent dans Fichiers.",
+      "rescued": "Les fichiers non envoyés ({count}) sont maintenant dans {folder}.",
+      "rescued_open": "Ouvrir le dossier",
+      "rescued_dismiss": "Masquer",
+      "start_at_login": "Démarrer Bulwark à l'ouverture de session Windows",
+      "start_at_login_why": "Le lecteur a besoin que Bulwark tourne, comme OneDrive.",
+      "closed_warning": "Les fichiers du lecteur ne s'ouvrent pas quand Bulwark est fermé.",
+      "where": "Dans l'Explorateur de fichiers sous le nom Bulwark Files",
+      "where_letter": "Dans l'Explorateur de fichiers sous le nom Bulwark Files ({letter}:)",
+      "open": "Ouvrir",
+      "letter_note": "Par la lettre, l'Explorateur de fichiers n'affiche ni l'état de synchronisation ni « Toujours conserver sur cet appareil ». Ils s'affichent sous Bulwark Files dans l'Explorateur.",
+      "letter_failed": "La lettre de lecteur n'a pas pu être définie. Réessayez."
+    },
+    "tray": {
+      "idle": "Bulwark Files: À jour",
+      "syncing": "Bulwark Files: Synchronisation. Restant : {count}",
+      "paused": "Bulwark Files: En pause",
+      "offline": "Bulwark Files: Hors ligne. En attente : {count}",
+      "question": "Bulwark Files: Attend votre réponse",
+      "error": "Bulwark Files: Erreur"
+    },
+    "notify": {
+      "conflict_title": "Un fichier a été modifié à deux endroits",
+      "problem_title": "Un fichier ne peut pas être synchronisé"
+    },
+    "activity": {
+      "waiting_count": "Modifications en attente du serveur : {count}",
+      "disk_name": "{path} dans Fichiers s'appelle {detail} sur cet ordinateur, car certains de ses caractères ne sont pas autorisés ici",
+      "disk_case": "{path} dans Fichiers s'appelle {detail} sur cet ordinateur, car un nom qui ne diffère que par les majuscules existe déjà ici",
+      "disk_group": "Noms dans Fichiers que cet ordinateur n'autorise pas : {count}. Ils portent ici un nom un peu différent.",
+      "show": "Afficher",
+      "hide": "Masquer"
+    },
+    "cant_sync": {
+      "title": "Synchronisation impossible"
+    },
+    "folders": {
+      "stop": "Arrêter la synchronisation…",
+      "pick_title_known": "Avec quel dossier de Fichiers garder {name} identique ?",
+      "pick_confirm_known": "Les garder identiques"
+    },
+    "pin": {
+      "keep": "Toujours conserver sur cet appareil",
+      "free": "Libérer de l'espace",
+      "failed": "Cela n'a pas fonctionné. Réessayez dans l'Explorateur de fichiers."
+    },
+    "account": {
+      "of": "Fichiers de {address}",
+      "choose": "Fichiers de"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rédaction rapide",
     "menu": "Rédaction rapide",

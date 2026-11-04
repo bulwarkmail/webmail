@@ -7774,6 +7774,77 @@
     "state_offline": "Frakoblet",
     "state_error": "Stoppet"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Laster opp endringer før stasjonen slås av",
+      "title_sign_out": "Laster opp endringer før du logger av",
+      "title_stop_folder": "Laster opp endringer før mappen slutter å synkronisere",
+      "cannot_title": "Noen endringer kan ikke lastes opp nå",
+      "waiting": "Gjenstår å laste opp: {names}",
+      "progress": "{done} av {total} lastet opp",
+      "cannot_offline": "Serveren kan ikke nås. Ikke lastet opp ennå: {names}",
+      "cannot_other": "Kan ikke lastes opp: {names}. Nylig aktivitet i Innstillinger forteller hvorfor.",
+      "go_note_drive": "Hvis du fortsetter nå, blir det som ikke er lastet opp, kopiert til Dokumenter\\Bulwark – not uploaded. Ingenting går tapt.",
+      "go_note_folder": "Hvis du fortsetter nå, blir det som ikke er lastet opp, i mappen på denne datamaskinen.",
+      "keep_turn_off": "Behold stasjonen",
+      "keep_sign_out": "Forbli pålogget",
+      "keep_stop_folder": "Fortsett synkroniseringen",
+      "go_turn_off": "Slå av nå",
+      "go_sign_out": "Logg av nå",
+      "go_stop_folder": "Stopp synkroniseringen nå"
+    },
+    "drive": {
+      "off_note": "Når du slår av dette, forsvinner stasjonen fra Filutforsker. Filene dine blir i Filer.",
+      "rescued": "Filer som ikke ble lastet opp ({count}), ligger nå i {folder}.",
+      "rescued_open": "Åpne mappe",
+      "rescued_dismiss": "Lukk",
+      "start_at_login": "Start Bulwark når du logger på Windows",
+      "start_at_login_why": "Stasjonen trenger at Bulwark kjører, slik som OneDrive.",
+      "closed_warning": "Filer på stasjonen kan ikke åpnes mens Bulwark er lukket.",
+      "where": "I Filutforsker som Bulwark Files",
+      "where_letter": "I Filutforsker som Bulwark Files ({letter}:)",
+      "open": "Åpne",
+      "letter_note": "Via stasjonsbokstaven viser Filutforsker verken synkroniseringsstatus eller «Behold alltid på denne enheten». De vises under Bulwark Files i Filutforsker.",
+      "letter_failed": "Stasjonsbokstaven kunne ikke angis. Prøv igjen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Oppdatert",
+      "syncing": "Bulwark Files: Synkroniserer. Gjenstår: {count}",
+      "paused": "Bulwark Files: Satt på pause",
+      "offline": "Bulwark Files: Frakoblet. Venter: {count}",
+      "question": "Bulwark Files: Venter på svaret ditt",
+      "error": "Bulwark Files: Feil"
+    },
+    "notify": {
+      "conflict_title": "En fil ble endret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Endringer som venter på serveren: {count}",
+      "disk_name": "{path} i Filer heter {detail} på denne datamaskinen, fordi noen av tegnene ikke er tillatt her",
+      "disk_case": "{path} i Filer heter {detail} på denne datamaskinen, fordi det allerede finnes et navn her som bare skiller seg i store og små bokstaver",
+      "disk_group": "Navn i Filer som denne datamaskinen ikke tillater: {count}. De har litt andre navn her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stopp synkroniseringen…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes lik?",
+      "pick_confirm_known": "Hold dem like"
+    },
+    "pin": {
+      "keep": "Behold alltid på denne enheten",
+      "free": "Frigjør plass",
+      "failed": "Det fungerte ikke. Prøv igjen i Filutforsker."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rask skriving",
     "menu": "Rask skriving",

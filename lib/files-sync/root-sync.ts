@@ -50,13 +50,14 @@ import {
   isUnderPath,
   joinPath,
   nameKey,
+  needsDiskName,
   parentPath,
   pathKey,
   type DiskNaming,
 } from './names';
 import type { FilesRemote, RemoteNode, RemoteTree } from './remote';
 import { emptyRecord, parseRecord, serializeRecord, type BaseItem, type RootRecord } from './state';
-import type { FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus } from './types';
+import type { FilesSyncActivityKind, FilesSyncItemStatus, FilesSyncRootState, FilesSyncRootStatus, MassDeleteOrigin } from './types';
 
 const MAX_ROUNDS = 12;
 /** Both sides have a file of this size or less under one name: compare the bytes before calling it a conflict. */
@@ -100,7 +101,8 @@ export interface RootHost {
 
 interface PendingDelete {
   count: number;
-  side: 'local' | 'remote';
+  /** Where they were deleted. The question is whether to delete them on the other side. */
+  deletedOn: MassDeleteOrigin;
   /** Base ids whose deletion waits for the answer. */
   ids: string[];
 }
@@ -195,6 +197,8 @@ export class RootSync {
   root: FilesRoot;
   status: FilesSyncRootStatus;
   items: Record<string, FilesSyncItemStatus> = {};
+  /** The drive: node ids "Always keep on this device" covers, by its own pin or a folder's above. */
+  keptOnDevice = new Set<string>();
   private record: RootRecord | null = null;
   private readonly base = new Map<string, BaseItem>();
   private massDelete: PendingDelete | null = null;
@@ -208,6 +212,8 @@ export class RootSync {
   private dirty = false;
   private saveChain: Promise<void> = Promise.resolve();
   private waitingSaid = false;
+  /** What waits here, counted when the server went away. */
+  private offlineWaiting: number | null = null;
   /** Nodes being placed by this pass, for items: `syncing`. */
   private busy = new Set<string>();
   /** Says the root was stopped for good: no pass runs again. */
@@ -290,6 +296,29 @@ export class RootSync {
     await this.host.controls.saveState(this.root.id, serializeRecord(this.record)).catch(() => {});
   }
 
+  /**
+   * Files changed or made on this computer that Files doesn't have yet, by local path: what a
+   * drive going (or a folder that stops) now would leave behind. The drive: a placeholder in
+   * sync, or with its content not here, is in Files. Anything else counts unless the record
+   * has it with the same size and time (Windows drops "in sync" for an attribute too).
+   */
+  async pendingHere(): Promise<string[]> {
+    await this.load();
+    const entries = await this.scan();
+    const naming = this.host.naming;
+    const known = new Map<string, BaseItem>();
+    for (const item of this.base.values()) if (item.kind === 'file') known.set(pathKey(item.path, naming), item);
+    const out: string[] = [];
+    for (const entry of entries) {
+      if (entry.kind !== 'file' || isSystemFileName(baseName(entry.path))) continue;
+      if (this.isDrive && entry.placeholder?.identity && (entry.placeholder.inSync || !entry.placeholder.hydrated)) continue;
+      const item = known.get(pathKey(entry.path, naming));
+      if (item && item.fileId && item.localSize === entry.size && item.mtimeMs === entry.mtimeMs) continue;
+      out.push(entry.path);
+    }
+    return out;
+  }
+
   // ─── Mass delete ────────────────────────────────────────────
 
   /** The user's answer. No: what was deleted on one side comes back from the other. */
@@ -332,7 +361,7 @@ export class RootSync {
       return 'idle';
     }
     if (this.massDelete) {
-      this.setStatus({ state: 'confirm-delete', massDelete: { count: this.massDelete.count, side: this.massDelete.side } });
+      this.setStatus({ state: 'confirm-delete', massDelete: { count: this.massDelete.count, deletedOn: this.massDelete.deletedOn } });
       return 'idle';
     }
     this.failed.clear();
@@ -353,6 +382,10 @@ export class RootSync {
       await this.save();
     } catch (error) {
       await this.save();
+      if (isOffline(error) || (error as Stop)?.why === 'offline') {
+        // How much waits, for "Offline. 3 changes wait" (files-p3-6).
+        this.offlineWaiting = await this.pendingHere().then((waiting) => waiting.length, () => null);
+      }
       return this.stopWith(error);
     }
     this.allowDeletes = false;
@@ -360,12 +393,13 @@ export class RootSync {
     // round() may have set it: TypeScript can't see that.
     const asking = this.massDelete as PendingDelete | null;
     if (asking) {
-      this.setStatus({ state: 'confirm-delete', massDelete: { count: asking.count, side: asking.side }, pending: asking.count });
+      this.setStatus({ state: 'confirm-delete', massDelete: { count: asking.count, deletedOn: asking.deletedOn }, pending: asking.count });
       return 'idle';
     }
     this.updateItems();
     const pending = this.failed.size;
-    this.setStatus({ state: 'idle', pending, lastSyncedAt: this.host.now() });
+    this.offlineWaiting = null;
+    this.setStatus({ state: 'idle', pending, lastSyncedAt: this.host.now(), cantSync: this.cantSync() });
     return soon ? 'soon' : 'idle';
   }
 
@@ -386,12 +420,14 @@ export class RootSync {
       return 'retry';
     }
     if (isOffline(error) || why === 'offline') {
+      const pending = this.offlineWaiting ?? Math.max(this.status.pending, this.failed.size);
       if (!this.waitingSaid) {
         this.waitingSaid = true;
-        this.log('waiting', null, '', { messageKey: errorKey('offline') });
+        // No path: the root waits as a whole. `detail`: how many changes.
+        this.log('waiting', null, '', { detail: String(pending), messageKey: errorKey('offline') });
       }
       this.updateItems();
-      this.setStatus({ state: 'offline', pending: Math.max(this.status.pending, this.failed.size) });
+      this.setStatus({ state: 'offline', pending });
       return 'retry';
     }
     if (isAuthRefused(error) || why === 'auth') {
@@ -427,6 +463,10 @@ export class RootSync {
       this.record = emptyRecord(this.root.remoteId);
     }
 
+    // Too large and gone from here since: nothing to say about it any more.
+    const here = new Set(entries.map((entry) => entry.path));
+    for (const path of Object.keys(this.record_.tooLarge)) if (!here.has(path)) delete this.record_.tooLarge[path];
+
     const round = new Round(this, entries, view);
     round.match();
     let did = 0;
@@ -438,11 +478,12 @@ export class RootSync {
     if (deletes.local.count + deletes.remote.count > 0) {
       const total = this.base.size;
       const over = (count: number) => count > MASS_DELETE_COUNT || (total >= MASS_DELETE_MIN_ROOT && count * 2 > total);
-      const side = deletes.remote.count >= deletes.local.count ? 'remote' : 'local';
+      // `deletes.remote` are to be deleted in Files: they were deleted on this computer.
+      const deletedOn: MassDeleteOrigin = deletes.remote.count >= deletes.local.count ? 'this-computer' : 'files';
       if (!this.allowDeletes && (over(deletes.local.count) || over(deletes.remote.count))) {
         const count = deletes.local.count + deletes.remote.count;
-        this.massDelete = { count, side, ids: [...deletes.local.ids, ...deletes.remote.ids] };
-        this.log('mass-delete', side === 'remote' ? 'up' : 'down', '', { detail: String(count) });
+        this.massDelete = { count, deletedOn, ids: [...deletes.local.ids, ...deletes.remote.ids] };
+        this.log('mass-delete', deletedOn === 'this-computer' ? 'up' : 'down', '', { detail: String(count) });
         await this.save();
         return 'confirm';
       }
@@ -452,6 +493,12 @@ export class RootSync {
     this.lastSeen = round.matched;
     if (did > 0) await this.save();
     return did;
+  }
+
+  /** Files over the upload limit that are still here, for the "Can't sync" list (files-p3-13). */
+  private cantSync(): { path: string; limit: number }[] {
+    const limit = this.account.remote.maxUpload() ?? 0;
+    return Object.keys(this.record_.tooLarge).sort().map((path) => ({ path, limit }));
   }
 
   private updateItems(): void {
@@ -468,6 +515,24 @@ export class RootSync {
     }
     for (const id of this.busy) items[id] = 'syncing';
     this.items = items;
+    if (!this.isDrive) return;
+    // A pin goes to what's under it unless that has one of its own (Explorer's rule).
+    const pinOf = new Map<string, 'pinned' | 'unpinned'>();
+    for (const item of this.base.values()) {
+      const pin = this.lastSeen.get(item.id)?.placeholder?.pin;
+      if (pin === 'pinned' || pin === 'unpinned') pinOf.set(pathKey(item.path, this.host.naming), pin);
+    }
+    const kept = new Set<string>();
+    for (const item of this.base.values()) {
+      const parts = pathKey(item.path, this.host.naming).split('/');
+      for (let at = parts.length; at > 0; at -= 1) {
+        const pin = pinOf.get(parts.slice(0, at).join('/'));
+        if (!pin) continue;
+        if (pin === 'pinned') kept.add(item.id);
+        break;
+      }
+    }
+    this.keptOnDevice = kept;
   }
 
   // ─── What a round uses ──────────────────────────────────────
@@ -504,6 +569,14 @@ export class RootSync {
   }
   /** @internal */ logActivity(kind: FilesSyncActivityKind, direction: 'up' | 'down' | null, path: string, extra: { detail?: string; messageKey?: string } = {}): void {
     this.log(kind, direction, path, extra);
+  }
+  /**
+   * @internal A name Files has that this computer can't hold, so it's another here. `path` is the
+   * Files name in its folder here, `detail` the name on disk, `messageKey` why (files-p3-12).
+   */
+  logDiskName(folder: string, filesName: string, diskName: string): void {
+    const why = needsDiskName(filesName, this.host.naming) ? 'disk_name' : 'disk_case';
+    this.log('renamed-for-disk', 'down', joinPath(folder, filesName), { detail: diskName, messageKey: why });
   }
   /** @internal */ logFailure(path: string, name: FilesSyncErrorName, direction: 'up' | 'down' | null = null): void {
     this.logError(path, name, direction);
@@ -746,7 +819,7 @@ class Round {
         this.claim(moved);
         this.remember({ ...this.adoptLocal(this.adoptRemote(item, node), moved) });
         this.sync.logActivity(folder !== parentPath(entry.path) ? 'moved' : 'renamed', 'down', target, { detail: entry.path });
-        if (wanted !== node.name) this.sync.logActivity('renamed-for-disk', 'down', target, { detail: wanted });
+        if (wanted !== node.name) this.sync.logDiskName(folder, node.name, wanted);
         return true;
       });
     }
@@ -1009,14 +1082,14 @@ class Round {
         this.matched.set(node.id, reserved);
         this.remember(this.itemOf(node, null, path));
         places.push({ node, path });
-        if (name !== node.name) this.sync.logActivity('renamed-for-disk', 'down', path, { detail: name });
+        if (name !== node.name) this.sync.logDiskName(folder, node.name, name);
         continue;
       }
       did += await this.step(node.id, path, 'down', async () => {
         await this.bringDown(node.id, node, path);
         if (node.kind === 'directory') this.sync.logActivity('folder-created', 'down', path);
         else this.sync.logActivity('downloaded', 'down', path);
-        if (name !== node.name) this.sync.logActivity('renamed-for-disk', 'down', path, { detail: name });
+        if (name !== node.name) this.sync.logDiskName(folder, node.name, name);
         return true;
       });
     }

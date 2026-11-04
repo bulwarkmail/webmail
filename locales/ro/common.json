@@ -7774,6 +7774,77 @@
     "state_offline": "Offline",
     "state_error": "Oprit"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Se încarcă modificările înainte de oprirea unității",
+      "title_sign_out": "Se încarcă modificările înainte de deconectare",
+      "title_stop_folder": "Se încarcă modificările înainte de oprirea sincronizării folderului",
+      "cannot_title": "Unele modificări nu pot fi încărcate acum",
+      "waiting": "De încărcat: {names}",
+      "progress": "{done} din {total} încărcate",
+      "cannot_offline": "Serverul nu poate fi accesat. Încă neîncărcate: {names}",
+      "cannot_other": "Nu pot fi încărcate: {names}. Activitatea recentă din Setări arată motivul.",
+      "go_note_drive": "Dacă continuați acum, ce nu s-a încărcat se copiază în Documente\\Bulwark – not uploaded. Nu se pierde nimic.",
+      "go_note_folder": "Dacă continuați acum, ce nu s-a încărcat rămâne în folderul de pe acest computer.",
+      "keep_turn_off": "Păstrează unitatea",
+      "keep_sign_out": "Rămâi conectat",
+      "keep_stop_folder": "Continuă sincronizarea",
+      "go_turn_off": "Oprește acum",
+      "go_sign_out": "Deconectează-te acum",
+      "go_stop_folder": "Oprește sincronizarea acum"
+    },
+    "drive": {
+      "off_note": "Dacă dezactivați, unitatea dispare din Explorer. Fișierele rămân în Fișiere.",
+      "rescued": "Fișierele neîncărcate ({count}) sunt acum în {folder}.",
+      "rescued_open": "Deschide folderul",
+      "rescued_dismiss": "Ascunde",
+      "start_at_login": "Pornește Bulwark la conectarea în Windows",
+      "start_at_login_why": "Unitatea are nevoie ca Bulwark să ruleze, ca OneDrive.",
+      "closed_warning": "Fișierele din unitate nu se deschid cât timp Bulwark este închis.",
+      "where": "În Explorer ca Bulwark Files",
+      "where_letter": "În Explorer ca Bulwark Files ({letter}:)",
+      "open": "Deschide",
+      "letter_note": "Prin literă, Explorer nu arată starea sincronizării și nici „Păstrați întotdeauna pe acest dispozitiv”. Le găsiți sub Bulwark Files în Explorer.",
+      "letter_failed": "Litera unității nu a putut fi setată. Încercați din nou."
+    },
+    "tray": {
+      "idle": "Bulwark Files: La zi",
+      "syncing": "Bulwark Files: Se sincronizează. Rămase: {count}",
+      "paused": "Bulwark Files: Întrerupt",
+      "offline": "Bulwark Files: Offline. În așteptare: {count}",
+      "question": "Bulwark Files: Așteaptă răspunsul dvs.",
+      "error": "Bulwark Files: Eroare"
+    },
+    "notify": {
+      "conflict_title": "Un fișier a fost modificat în două locuri",
+      "problem_title": "Un fișier nu poate fi sincronizat"
+    },
+    "activity": {
+      "waiting_count": "Modificări care așteaptă serverul: {count}",
+      "disk_name": "{path} din Fișiere se numește {detail} pe acest computer, pentru că unele caractere nu sunt permise aici",
+      "disk_case": "{path} din Fișiere se numește {detail} pe acest computer, pentru că aici există deja un nume care diferă doar prin majuscule",
+      "disk_group": "Nume din Fișiere pe care acest computer nu le permite: {count}. Aici au nume puțin diferite.",
+      "show": "Afișează",
+      "hide": "Ascunde"
+    },
+    "cant_sync": {
+      "title": "Nu se poate sincroniza"
+    },
+    "folders": {
+      "stop": "Oprește sincronizarea…",
+      "pick_title_known": "Cu ce folder din Fișiere să rămână la fel {name}?",
+      "pick_confirm_known": "Păstrează-le la fel"
+    },
+    "pin": {
+      "keep": "Păstrați întotdeauna pe acest dispozitiv",
+      "free": "Eliberați spațiu",
+      "failed": "Nu a funcționat. Încercați din nou în Explorer."
+    },
+    "account": {
+      "of": "Fișierele lui {address}",
+      "choose": "Fișierele lui"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scriere rapidă",
     "menu": "Scriere rapidă",

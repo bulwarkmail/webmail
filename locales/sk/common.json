@@ -7774,6 +7774,77 @@
     "state_offline": "Offline",
     "state_error": "Zastavené"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Nahrávanie zmien pred vypnutím jednotky",
+      "title_sign_out": "Nahrávanie zmien pred odhlásením",
+      "title_stop_folder": "Nahrávanie zmien pred zastavením synchronizácie priečinka",
+      "cannot_title": "Niektoré zmeny teraz nemožno nahrať",
+      "waiting": "Zostáva nahrať: {names}",
+      "progress": "Nahraté {done} z {total}",
+      "cannot_offline": "Server nie je dostupný. Zatiaľ nenahraté: {names}",
+      "cannot_other": "Nemožno nahrať: {names}. Dôvod nájdete v nedávnej aktivite v nastaveniach.",
+      "go_note_drive": "Ak teraz budete pokračovať, čo nie je nahraté, sa skopíruje do Dokumenty\\Bulwark – not uploaded. Nič sa nestratí.",
+      "go_note_folder": "Ak teraz budete pokračovať, čo nie je nahraté, zostane v priečinku v tomto počítači.",
+      "keep_turn_off": "Ponechať jednotku",
+      "keep_sign_out": "Zostať prihlásený",
+      "keep_stop_folder": "Pokračovať v synchronizácii",
+      "go_turn_off": "Vypnúť hneď",
+      "go_sign_out": "Odhlásiť hneď",
+      "go_stop_folder": "Zastaviť synchronizáciu hneď"
+    },
+    "drive": {
+      "off_note": "Vypnutím jednotka zmizne z Prieskumníka. Vaše súbory zostanú v Súboroch.",
+      "rescued": "Nenahraté súbory ({count}) sú teraz v {folder}.",
+      "rescued_open": "Otvoriť priečinok",
+      "rescued_dismiss": "Skryť",
+      "start_at_login": "Spúšťať Bulwark po prihlásení do Windows",
+      "start_at_login_why": "Jednotka potrebuje spustený Bulwark, rovnako ako OneDrive.",
+      "closed_warning": "Súbory na jednotke sa neotvoria, keď je Bulwark zatvorený.",
+      "where": "V Prieskumníkovi ako Bulwark Files",
+      "where_letter": "V Prieskumníkovi ako Bulwark Files ({letter}:)",
+      "open": "Otvoriť",
+      "letter_note": "Cez písmeno jednotky Prieskumník neukazuje stav synchronizácie ani „Vždy ponechať v tomto zariadení“. Nájdete ich pod Bulwark Files v Prieskumníkovi.",
+      "letter_failed": "Písmeno jednotky sa nepodarilo nastaviť. Skúste to znova."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktuálne",
+      "syncing": "Bulwark Files: Synchronizácia. Zostáva: {count}",
+      "paused": "Bulwark Files: Pozastavené",
+      "offline": "Bulwark Files: Offline. Čaká: {count}",
+      "question": "Bulwark Files: Čaká na vašu odpoveď",
+      "error": "Bulwark Files: Chyba"
+    },
+    "notify": {
+      "conflict_title": "Súbor sa zmenil na dvoch miestach",
+      "problem_title": "Súbor nemožno synchronizovať"
+    },
+    "activity": {
+      "waiting_count": "Zmeny čakajúce na server: {count}",
+      "disk_name": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo niektoré jeho znaky tu nie sú povolené",
+      "disk_case": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo tu už je názov, ktorý sa líši len veľkosťou písmen",
+      "disk_group": "Názvy v Súboroch, ktoré tento počítač nepovoľuje: {count}. Tu majú trochu iné názvy.",
+      "show": "Zobraziť",
+      "hide": "Skryť"
+    },
+    "cant_sync": {
+      "title": "Nemožno synchronizovať"
+    },
+    "folders": {
+      "stop": "Zastaviť synchronizáciu…",
+      "pick_title_known": "S ktorým priečinkom v Súboroch má byť {name} rovnaký?",
+      "pick_confirm_known": "Udržiavať rovnaké"
+    },
+    "pin": {
+      "keep": "Vždy ponechať v tomto zariadení",
+      "free": "Uvoľniť miesto",
+      "failed": "Nepodarilo sa. Skúste to znova v Prieskumníkovi."
+    },
+    "account": {
+      "of": "Súbory účtu {address}",
+      "choose": "Súbory účtu"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rýchla správa",
     "menu": "Rýchla správa",

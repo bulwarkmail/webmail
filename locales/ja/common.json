@@ -7774,6 +7774,77 @@
     "state_offline": "オフライン",
     "state_error": "停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "ドライブをオフにする前に変更をアップロードしています",
+      "title_sign_out": "サインアウトする前に変更をアップロードしています",
+      "title_stop_folder": "フォルダーの同期を止める前に変更をアップロードしています",
+      "cannot_title": "一部の変更は今アップロードできません",
+      "waiting": "アップロード待ち: {names}",
+      "progress": "{total} 件中 {done} 件をアップロード済み",
+      "cannot_offline": "サーバーに接続できません。未アップロード: {names}",
+      "cannot_other": "アップロードできません: {names}。理由は設定の最近のアクティビティにあります。",
+      "go_note_drive": "今続けると、アップロードされていないものは ドキュメント\\Bulwark – not uploaded にコピーされます。何も失われません。",
+      "go_note_folder": "今続けると、アップロードされていないものはこのパソコンのフォルダーに残ります。",
+      "keep_turn_off": "ドライブをオンのままにする",
+      "keep_sign_out": "サインインしたままにする",
+      "keep_stop_folder": "同期を続ける",
+      "go_turn_off": "今すぐオフにする",
+      "go_sign_out": "今すぐサインアウト",
+      "go_stop_folder": "今すぐ同期を止める"
+    },
+    "drive": {
+      "off_note": "オフにすると、ドライブはエクスプローラーから消えます。ファイルはファイルに残ります。",
+      "rescued": "アップロードされなかったファイル ({count}) は {folder} にあります。",
+      "rescued_open": "フォルダーを開く",
+      "rescued_dismiss": "閉じる",
+      "start_at_login": "Windows にサインインしたら Bulwark を起動する",
+      "start_at_login_why": "OneDrive と同じく、ドライブには Bulwark の実行が必要です。",
+      "closed_warning": "Bulwark を閉じている間は、ドライブのファイルを開けません。",
+      "where": "エクスプローラーでは Bulwark Files",
+      "where_letter": "エクスプローラーでは Bulwark Files ({letter}:)",
+      "open": "開く",
+      "letter_note": "ドライブ文字からは、エクスプローラーに同期の状態や「このデバイス上で常に保持する」が表示されません。エクスプローラーの Bulwark Files に表示されます。",
+      "letter_failed": "ドライブ文字を設定できませんでした。もう一度お試しください。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 最新の状態",
+      "syncing": "Bulwark Files: 同期中。残り: {count}",
+      "paused": "Bulwark Files: 一時停止中",
+      "offline": "Bulwark Files: オフライン。待機中: {count}",
+      "question": "Bulwark Files: 回答が必要です",
+      "error": "Bulwark Files: エラー"
+    },
+    "notify": {
+      "conflict_title": "ファイルが 2 か所で変更されました",
+      "problem_title": "ファイルを同期できません"
+    },
+    "activity": {
+      "waiting_count": "サーバーを待っている変更: {count}",
+      "disk_name": "ファイルの {path} は、このパソコンでは {detail} という名前です。一部の文字がここでは使えないためです",
+      "disk_case": "ファイルの {path} は、このパソコンでは {detail} という名前です。大文字と小文字だけが違う名前がすでにあるためです",
+      "disk_group": "このパソコンで使えないファイルの名前: {count}。ここでは少し違う名前になっています。",
+      "show": "表示",
+      "hide": "非表示"
+    },
+    "cant_sync": {
+      "title": "同期できません"
+    },
+    "folders": {
+      "stop": "同期を止める…",
+      "pick_title_known": "{name} をファイルのどのフォルダーと同じにしますか?",
+      "pick_confirm_known": "同じに保つ"
+    },
+    "pin": {
+      "keep": "このデバイス上で常に保持する",
+      "free": "空き容量を増やす",
+      "failed": "うまくいきませんでした。エクスプローラーでもう一度お試しください。"
+    },
+    "account": {
+      "of": "{address} のファイル",
+      "choose": "ファイル:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "クイック作成",
     "menu": "クイック作成",

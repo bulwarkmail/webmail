@@ -7774,6 +7774,77 @@
     "state_offline": "آفلاین",
     "state_error": "متوقف شد"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "در حال بارگذاری تغییرات پیش از خاموش شدن درایو",
+      "title_sign_out": "در حال بارگذاری تغییرات پیش از خروج",
+      "title_stop_folder": "در حال بارگذاری تغییرات پیش از توقف همگام‌سازی پوشه",
+      "cannot_title": "برخی تغییرات اکنون بارگذاری نمی‌شوند",
+      "waiting": "مانده برای بارگذاری: {names}",
+      "progress": "{done} از {total} بارگذاری شد",
+      "cannot_offline": "سرور در دسترس نیست. هنوز بارگذاری نشده: {names}",
+      "cannot_other": "بارگذاری نمی‌شوند: {names}. دلیل آن در فعالیت اخیر در تنظیمات آمده است.",
+      "go_note_drive": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در اسناد\\Bulwark – not uploaded کپی می‌شود. چیزی از دست نمی‌رود.",
+      "go_note_folder": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در پوشهٔ این رایانه می‌ماند.",
+      "keep_turn_off": "درایو بماند",
+      "keep_sign_out": "وارد بمانید",
+      "keep_stop_folder": "ادامهٔ همگام‌سازی",
+      "go_turn_off": "اکنون خاموش شود",
+      "go_sign_out": "اکنون خارج شوید",
+      "go_stop_folder": "اکنون همگام‌سازی متوقف شود"
+    },
+    "drive": {
+      "off_note": "با خاموش کردن، درایو از کاوشگر فایل حذف می‌شود. فایل‌های شما در فایل‌ها می‌مانند.",
+      "rescued": "فایل‌های بارگذاری‌نشده ({count}) اکنون در {folder} هستند.",
+      "rescued_open": "باز کردن پوشه",
+      "rescued_dismiss": "بستن",
+      "start_at_login": "اجرای Bulwark هنگام ورود به Windows",
+      "start_at_login_why": "درایو مانند OneDrive به اجرای Bulwark نیاز دارد.",
+      "closed_warning": "تا وقتی Bulwark بسته است، فایل‌های درایو باز نمی‌شوند.",
+      "where": "در کاوشگر فایل با نام Bulwark Files",
+      "where_letter": "در کاوشگر فایل با نام Bulwark Files ({letter}:)",
+      "open": "باز کردن",
+      "letter_note": "از راه حرف درایو، کاوشگر فایل وضعیت همگام‌سازی و «همیشه در این دستگاه نگه دار» را نشان نمی‌دهد. این‌ها زیر Bulwark Files در کاوشگر دیده می‌شوند.",
+      "letter_failed": "حرف درایو تنظیم نشد. دوباره امتحان کنید."
+    },
+    "tray": {
+      "idle": "Bulwark Files: به‌روز",
+      "syncing": "Bulwark Files: در حال همگام‌سازی. مانده: {count}",
+      "paused": "Bulwark Files: متوقف شده",
+      "offline": "Bulwark Files: آفلاین. در انتظار: {count}",
+      "question": "Bulwark Files: منتظر پاسخ شما",
+      "error": "Bulwark Files: خطا"
+    },
+    "notify": {
+      "conflict_title": "فایلی در دو جا تغییر کرد",
+      "problem_title": "یک فایل همگام نمی‌شود"
+    },
+    "activity": {
+      "waiting_count": "تغییرهای در انتظار سرور: {count}",
+      "disk_name": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون برخی نویسه‌هایش اینجا مجاز نیستند",
+      "disk_case": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون نامی که فقط در حروف بزرگ و کوچک فرق دارد اینجا هست",
+      "disk_group": "نام‌هایی در فایل‌ها که این رایانه اجازه نمی‌دهد: {count}. اینجا نامشان کمی فرق دارد.",
+      "show": "نمایش",
+      "hide": "پنهان کردن"
+    },
+    "cant_sync": {
+      "title": "همگام‌سازی ممکن نیست"
+    },
+    "folders": {
+      "stop": "توقف همگام‌سازی…",
+      "pick_title_known": "{name} با کدام پوشه در فایل‌ها یکسان بماند؟",
+      "pick_confirm_known": "یکسان نگه دار"
+    },
+    "pin": {
+      "keep": "همیشه در این دستگاه نگه دار",
+      "free": "آزاد کردن فضا",
+      "failed": "انجام نشد. در کاوشگر فایل دوباره امتحان کنید."
+    },
+    "account": {
+      "of": "فایل‌های {address}",
+      "choose": "فایل‌های"
+    }
+  },
   "desktopQuickCompose": {
     "label": "نوشتن سریع",
     "menu": "نوشتن سریع",

@@ -7774,6 +7774,77 @@
     "state_offline": "غير متصل",
     "state_error": "متوقف"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "جارٍ رفع التغييرات قبل إيقاف محرك الأقراص",
+      "title_sign_out": "جارٍ رفع التغييرات قبل تسجيل الخروج",
+      "title_stop_folder": "جارٍ رفع التغييرات قبل إيقاف مزامنة المجلد",
+      "cannot_title": "تعذّر رفع بعض التغييرات الآن",
+      "waiting": "متبقٍّ للرفع: {names}",
+      "progress": "تم رفع {done} من {total}",
+      "cannot_offline": "تعذّر الوصول إلى الخادم. لم يُرفع بعد: {names}",
+      "cannot_other": "تعذّر رفع: {names}. يوضح النشاط الأخير في الإعدادات السبب.",
+      "go_note_drive": "إذا تابعت الآن، يُنسخ ما لم يُرفع إلى المستندات\\Bulwark – not uploaded. لن يضيع شيء.",
+      "go_note_folder": "إذا تابعت الآن، يبقى ما لم يُرفع في المجلد على هذا الحاسوب.",
+      "keep_turn_off": "إبقاء محرك الأقراص",
+      "keep_sign_out": "البقاء مسجّلًا",
+      "keep_stop_folder": "متابعة المزامنة",
+      "go_turn_off": "إيقاف الآن",
+      "go_sign_out": "تسجيل الخروج الآن",
+      "go_stop_folder": "إيقاف المزامنة الآن"
+    },
+    "drive": {
+      "off_note": "إيقاف هذا يزيل محرك الأقراص من مستكشف الملفات. تبقى ملفاتك في الملفات.",
+      "rescued": "الملفات التي لم تُرفع ({count}) موجودة الآن في {folder}.",
+      "rescued_open": "فتح المجلد",
+      "rescued_dismiss": "تجاهل",
+      "start_at_login": "تشغيل Bulwark عند تسجيل الدخول إلى Windows",
+      "start_at_login_why": "يحتاج محرك الأقراص إلى تشغيل Bulwark، كما في OneDrive.",
+      "closed_warning": "لا تُفتح ملفات محرك الأقراص ما دام Bulwark مغلقًا.",
+      "where": "في مستكشف الملفات باسم Bulwark Files",
+      "where_letter": "في مستكشف الملفات باسم Bulwark Files ({letter}:)",
+      "open": "فتح",
+      "letter_note": "عبر حرف محرك الأقراص لا يعرض مستكشف الملفات حالة المزامنة ولا «الاحتفاظ دائماً على هذا الجهاز». تظهر تحت Bulwark Files في المستكشف.",
+      "letter_failed": "تعذّر تعيين حرف محرك الأقراص. حاول مرة أخرى."
+    },
+    "tray": {
+      "idle": "Bulwark Files: محدَّث",
+      "syncing": "Bulwark Files: جارٍ المزامنة. المتبقي: {count}",
+      "paused": "Bulwark Files: متوقف مؤقتًا",
+      "offline": "Bulwark Files: غير متصل. بانتظار: {count}",
+      "question": "Bulwark Files: يحتاج إلى ردك",
+      "error": "Bulwark Files: خطأ"
+    },
+    "notify": {
+      "conflict_title": "تغيّر ملف في مكانين",
+      "problem_title": "تعذّرت مزامنة ملف"
+    },
+    "activity": {
+      "waiting_count": "تغييرات بانتظار الخادم: {count}",
+      "disk_name": "{path} في الملفات اسمه {detail} على هذا الحاسوب، لأن بعض أحرفه غير مسموح بها هنا",
+      "disk_case": "{path} في الملفات اسمه {detail} على هذا الحاسوب، لأن هنا اسمًا لا يختلف إلا في حالة الأحرف",
+      "disk_group": "أسماء في الملفات لا يسمح بها هذا الحاسوب: {count}. لها هنا أسماء مختلفة قليلًا.",
+      "show": "إظهار",
+      "hide": "إخفاء"
+    },
+    "cant_sync": {
+      "title": "تتعذّر المزامنة"
+    },
+    "folders": {
+      "stop": "إيقاف المزامنة…",
+      "pick_title_known": "مع أي مجلد في الملفات يبقى {name} متطابقًا؟",
+      "pick_confirm_known": "إبقاؤهما متطابقين"
+    },
+    "pin": {
+      "keep": "الاحتفاظ دائماً على هذا الجهاز",
+      "free": "تحرير مساحة",
+      "failed": "لم ينجح ذلك. حاول مرة أخرى في مستكشف الملفات."
+    },
+    "account": {
+      "of": "ملفات {address}",
+      "choose": "ملفات"
+    }
+  },
   "desktopQuickCompose": {
     "label": "كتابة سريعة",
     "menu": "كتابة سريعة",

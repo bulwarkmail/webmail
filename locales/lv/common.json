@@ -7774,6 +7774,77 @@
     "state_offline": "Bezsaistē",
     "state_error": "Apturēts"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Augšupielādē izmaiņas pirms diska izslēgšanas",
+      "title_sign_out": "Augšupielādē izmaiņas pirms izrakstīšanās",
+      "title_stop_folder": "Augšupielādē izmaiņas pirms mapes sinhronizācijas apturēšanas",
+      "cannot_title": "Dažas izmaiņas pašlaik nevar augšupielādēt",
+      "waiting": "Vēl jāaugšupielādē: {names}",
+      "progress": "Augšupielādēti {done} no {total}",
+      "cannot_offline": "Serveris nav sasniedzams. Vēl nav augšupielādēts: {names}",
+      "cannot_other": "Nevar augšupielādēt: {names}. Iemesls ir redzams iestatījumu nesenajās darbībās.",
+      "go_note_drive": "Ja turpināsiet tagad, neaugšupielādētais tiks nokopēts uz Dokumenti\\Bulwark – not uploaded. Nekas netiks zaudēts.",
+      "go_note_folder": "Ja turpināsiet tagad, neaugšupielādētais paliks mapē šajā datorā.",
+      "keep_turn_off": "Paturēt disku",
+      "keep_sign_out": "Palikt pierakstītam",
+      "keep_stop_folder": "Turpināt sinhronizēt",
+      "go_turn_off": "Izslēgt tūlīt",
+      "go_sign_out": "Izrakstīties tūlīt",
+      "go_stop_folder": "Apturēt sinhronizāciju tūlīt"
+    },
+    "drive": {
+      "off_note": "Izslēdzot disks pazūd no failu pārlūka. Jūsu faili paliek sadaļā Faili.",
+      "rescued": "Neaugšupielādētie faili ({count}) tagad ir šeit: {folder}.",
+      "rescued_open": "Atvērt mapi",
+      "rescued_dismiss": "Nerādīt",
+      "start_at_login": "Startēt Bulwark, piesakoties sistēmā Windows",
+      "start_at_login_why": "Diskam vajadzīgs, lai Bulwark darbotos, tāpat kā OneDrive.",
+      "closed_warning": "Diska failus nevar atvērt, kamēr Bulwark ir aizvērts.",
+      "where": "Failu pārlūkā kā Bulwark Files",
+      "where_letter": "Failu pārlūkā kā Bulwark Files ({letter}:)",
+      "open": "Atvērt",
+      "letter_note": "Caur diska burtu failu pārlūks nerāda sinhronizācijas statusu un “Vienmēr saglabāt šajā ierīcē”. Tie redzami failu pārlūkā sadaļā Bulwark Files.",
+      "letter_failed": "Diska burtu neizdevās iestatīt. Mēģiniet vēlreiz."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Atjaunināts",
+      "syncing": "Bulwark Files: Sinhronizē. Atlikuši: {count}",
+      "paused": "Bulwark Files: Pauzēts",
+      "offline": "Bulwark Files: Bezsaistē. Gaida: {count}",
+      "question": "Bulwark Files: Gaida jūsu atbildi",
+      "error": "Bulwark Files: Kļūda"
+    },
+    "notify": {
+      "conflict_title": "Fails mainīts divās vietās",
+      "problem_title": "Failu nevar sinhronizēt"
+    },
+    "activity": {
+      "waiting_count": "Izmaiņas, kas gaida serveri: {count}",
+      "disk_name": "{path} sadaļā Faili šajā datorā saucas {detail}, jo dažas rakstzīmes šeit nav atļautas",
+      "disk_case": "{path} sadaļā Faili šajā datorā saucas {detail}, jo šeit jau ir nosaukums, kas atšķiras tikai ar lielajiem un mazajiem burtiem",
+      "disk_group": "Nosaukumi sadaļā Faili, ko šis dators neatļauj: {count}. Šeit tiem ir nedaudz citi nosaukumi.",
+      "show": "Rādīt",
+      "hide": "Paslēpt"
+    },
+    "cant_sync": {
+      "title": "Nevar sinhronizēt"
+    },
+    "folders": {
+      "stop": "Apturēt sinhronizāciju…",
+      "pick_title_known": "Ar kuru mapi sadaļā Faili saglabāt {name} vienādu?",
+      "pick_confirm_known": "Saglabāt vienādas"
+    },
+    "pin": {
+      "keep": "Vienmēr saglabāt šajā ierīcē",
+      "free": "Atbrīvot vietu",
+      "failed": "Neizdevās. Mēģiniet vēlreiz failu pārlūkā."
+    },
+    "account": {
+      "of": "{address} faili",
+      "choose": "Faili:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Ātrā rakstīšana",
     "menu": "Ātrā rakstīšana",

@@ -7774,6 +7774,77 @@
     "state_offline": "Offline",
     "state_error": "Stoppet"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Uploader ændringer, før drevet slås fra",
+      "title_sign_out": "Uploader ændringer, før du logger ud",
+      "title_stop_folder": "Uploader ændringer, før mappen stopper med at synkronisere",
+      "cannot_title": "Nogle ændringer kan ikke uploades lige nu",
+      "waiting": "Mangler at uploade: {names}",
+      "progress": "{done} af {total} uploadet",
+      "cannot_offline": "Serveren kan ikke nås. Ikke uploadet endnu: {names}",
+      "cannot_other": "Kan ikke uploades: {names}. Seneste aktivitet i Indstillinger fortæller hvorfor.",
+      "go_note_drive": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, kopieret til Dokumenter\\Bulwark – not uploaded. Intet går tabt.",
+      "go_note_folder": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, i mappen på denne computer.",
+      "keep_turn_off": "Behold drevet",
+      "keep_sign_out": "Forbliv logget ind",
+      "keep_stop_folder": "Fortsæt synkronisering",
+      "go_turn_off": "Slå fra nu",
+      "go_sign_out": "Log ud nu",
+      "go_stop_folder": "Stop synkronisering nu"
+    },
+    "drive": {
+      "off_note": "Når du slår dette fra, forsvinder drevet fra Stifinder. Dine filer bliver i Filer.",
+      "rescued": "Filer, der ikke blev uploadet ({count}), ligger nu i {folder}.",
+      "rescued_open": "Åbn mappe",
+      "rescued_dismiss": "Luk",
+      "start_at_login": "Start Bulwark, når du logger på Windows",
+      "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
+      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket.",
+      "where": "I Stifinder som Bulwark Files",
+      "where_letter": "I Stifinder som Bulwark Files ({letter}:)",
+      "open": "Åbn",
+      "letter_note": "Via drevbogstavet viser Stifinder hverken synkroniseringsstatus eller “Behold altid på denne enhed”. De vises under Bulwark Files i Stifinder.",
+      "letter_failed": "Drevbogstavet kunne ikke angives. Prøv igen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Opdateret",
+      "syncing": "Bulwark Files: Synkroniserer. Mangler: {count}",
+      "paused": "Bulwark Files: Sat på pause",
+      "offline": "Bulwark Files: Offline. Venter: {count}",
+      "question": "Bulwark Files: Venter på dit svar",
+      "error": "Bulwark Files: Fejl"
+    },
+    "notify": {
+      "conflict_title": "En fil blev ændret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Ændringer, der venter på serveren: {count}",
+      "disk_name": "{path} i Filer hedder {detail} på denne computer, fordi nogle af tegnene ikke er tilladt her",
+      "disk_case": "{path} i Filer hedder {detail} på denne computer, fordi der allerede er et navn her, der kun adskiller sig i store og små bogstaver",
+      "disk_group": "Navne i Filer, som denne computer ikke tillader: {count}. De har lidt andre navne her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stop synkronisering…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes ens med?",
+      "pick_confirm_known": "Hold dem ens"
+    },
+    "pin": {
+      "keep": "Behold altid på denne enhed",
+      "free": "Frigør plads",
+      "failed": "Det lykkedes ikke. Prøv igen i Stifinder."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hurtig skrivning",
     "menu": "Hurtig skrivning",

@@ -7774,6 +7774,77 @@
     "state_offline": "离线",
     "state_error": "已停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "正在上传更改，然后关闭驱动器",
+      "title_sign_out": "正在上传更改，然后退出登录",
+      "title_stop_folder": "正在上传更改，然后停止同步文件夹",
+      "cannot_title": "部分更改现在无法上传",
+      "waiting": "待上传：{names}",
+      "progress": "已上传 {done}/{total}",
+      "cannot_offline": "无法连接服务器。尚未上传：{names}",
+      "cannot_other": "无法上传：{names}。原因见设置中的最近活动。",
+      "go_note_drive": "如果现在继续，未上传的内容会复制到 文档\\Bulwark – not uploaded，不会丢失。",
+      "go_note_folder": "如果现在继续，未上传的内容会留在此电脑上的文件夹中。",
+      "keep_turn_off": "保留驱动器",
+      "keep_sign_out": "保持登录",
+      "keep_stop_folder": "继续同步",
+      "go_turn_off": "立即关闭",
+      "go_sign_out": "立即退出登录",
+      "go_stop_folder": "立即停止同步"
+    },
+    "drive": {
+      "off_note": "关闭后，驱动器会从文件资源管理器中移除。你的文件仍在文件中。",
+      "rescued": "未上传的文件（{count}）现在位于 {folder}。",
+      "rescued_open": "打开文件夹",
+      "rescued_dismiss": "关闭",
+      "start_at_login": "登录 Windows 时启动 Bulwark",
+      "start_at_login_why": "和 OneDrive 一样，驱动器需要 Bulwark 在运行。",
+      "closed_warning": "Bulwark 关闭时，无法打开驱动器中的文件。",
+      "where": "在文件资源管理器中显示为 Bulwark Files",
+      "where_letter": "在文件资源管理器中显示为 Bulwark Files ({letter}:)",
+      "open": "打开",
+      "letter_note": "通过驱动器号访问时，文件资源管理器不显示同步状态和“始终保留在此设备上”。它们显示在文件资源管理器的 Bulwark Files 下。",
+      "letter_failed": "无法设置驱动器号。请重试。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 已是最新",
+      "syncing": "Bulwark Files: 正在同步。剩余：{count}",
+      "paused": "Bulwark Files: 已暂停",
+      "offline": "Bulwark Files: 离线。等待中：{count}",
+      "question": "Bulwark Files: 需要你的回答",
+      "error": "Bulwark Files: 错误"
+    },
+    "notify": {
+      "conflict_title": "一个文件在两处被更改",
+      "problem_title": "有文件无法同步"
+    },
+    "activity": {
+      "waiting_count": "等待服务器的更改：{count}",
+      "disk_name": "文件中的 {path} 在此电脑上名为 {detail}，因为其中一些字符在这里不允许使用",
+      "disk_case": "文件中的 {path} 在此电脑上名为 {detail}，因为这里已有一个仅大小写不同的名称",
+      "disk_group": "此电脑不允许的文件名称：{count}。它们在这里的名称略有不同。",
+      "show": "显示",
+      "hide": "隐藏"
+    },
+    "cant_sync": {
+      "title": "无法同步"
+    },
+    "folders": {
+      "stop": "停止同步…",
+      "pick_title_known": "要让 {name} 与文件中的哪个文件夹保持一致？",
+      "pick_confirm_known": "保持一致"
+    },
+    "pin": {
+      "keep": "始终保留在此设备上",
+      "free": "释放空间",
+      "failed": "操作未成功。请在文件资源管理器中重试。"
+    },
+    "account": {
+      "of": "{address} 的文件",
+      "choose": "文件："
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰写",
     "menu": "快速撰写",

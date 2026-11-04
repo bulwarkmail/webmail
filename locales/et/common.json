@@ -7774,6 +7774,77 @@
     "state_offline": "Võrguühenduseta",
     "state_error": "Seisatud"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Muudatuste üleslaadimine enne draivi väljalülitamist",
+      "title_sign_out": "Muudatuste üleslaadimine enne väljalogimist",
+      "title_stop_folder": "Muudatuste üleslaadimine enne kausta sünkroonimise lõpetamist",
+      "cannot_title": "Mõnda muudatust ei saa praegu üles laadida",
+      "waiting": "Veel üles laadida: {names}",
+      "progress": "{done}/{total} üles laaditud",
+      "cannot_offline": "Server pole kättesaadav. Veel üles laadimata: {names}",
+      "cannot_other": "Ei saa üles laadida: {names}. Põhjus on seadete viimases tegevuses.",
+      "go_note_drive": "Kui jätkate kohe, kopeeritakse üles laadimata osa kausta Dokumendid\\Bulwark – not uploaded. Midagi ei lähe kaotsi.",
+      "go_note_folder": "Kui jätkate kohe, jääb üles laadimata osa selle arvuti kausta.",
+      "keep_turn_off": "Jäta draiv sisse",
+      "keep_sign_out": "Jää sisselogituks",
+      "keep_stop_folder": "Jätka sünkroonimist",
+      "go_turn_off": "Lülita kohe välja",
+      "go_sign_out": "Logi kohe välja",
+      "go_stop_folder": "Lõpeta sünkroonimine kohe"
+    },
+    "drive": {
+      "off_note": "Väljalülitamisel kaob draiv Failihaldurist. Teie failid jäävad Failidesse.",
+      "rescued": "Üles laadimata failid ({count}) on nüüd kaustas {folder}.",
+      "rescued_open": "Ava kaust",
+      "rescued_dismiss": "Peida",
+      "start_at_login": "Käivita Bulwark Windowsi sisselogimisel",
+      "start_at_login_why": "Draiv vajab töötavat Bulwarki, nagu OneDrive.",
+      "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud.",
+      "where": "Failihalduris nimega Bulwark Files",
+      "where_letter": "Failihalduris nimega Bulwark Files ({letter}:)",
+      "open": "Ava",
+      "letter_note": "Draivitähe kaudu ei näita Failihaldur sünkroonimise olekut ega valikut „Hoia alati selles seadmes“. Need on näha Failihalduris Bulwark Files all.",
+      "letter_failed": "Draivitähte ei õnnestunud määrata. Proovige uuesti."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Ajakohane",
+      "syncing": "Bulwark Files: Sünkroonimine. Jäänud: {count}",
+      "paused": "Bulwark Files: Peatatud",
+      "offline": "Bulwark Files: Võrguühenduseta. Ootel: {count}",
+      "question": "Bulwark Files: Ootab teie vastust",
+      "error": "Bulwark Files: Viga"
+    },
+    "notify": {
+      "conflict_title": "Faili muudeti kahes kohas",
+      "problem_title": "Faili ei saa sünkroonida"
+    },
+    "activity": {
+      "waiting_count": "Serverit ootavad muudatused: {count}",
+      "disk_name": "Failides olev {path} on selles arvutis nimega {detail}, sest mõni selle märk pole siin lubatud",
+      "disk_case": "Failides olev {path} on selles arvutis nimega {detail}, sest siin on juba nimi, mis erineb vaid suur- ja väiketähtede poolest",
+      "disk_group": "Failide nimed, mida see arvuti ei luba: {count}. Siin on neil veidi teised nimed.",
+      "show": "Näita",
+      "hide": "Peida"
+    },
+    "cant_sync": {
+      "title": "Ei saa sünkroonida"
+    },
+    "folders": {
+      "stop": "Lõpeta sünkroonimine…",
+      "pick_title_known": "Millise Failide kaustaga hoida {name} ühesugusena?",
+      "pick_confirm_known": "Hoia ühesugusena"
+    },
+    "pin": {
+      "keep": "Hoia alati selles seadmes",
+      "free": "Vabasta ruumi",
+      "failed": "See ei õnnestunud. Proovige uuesti Failihalduris."
+    },
+    "account": {
+      "of": "Konto {address} failid",
+      "choose": "Failid:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Kiirkiri",
     "menu": "Kiirkiri",

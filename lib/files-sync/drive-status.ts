@@ -16,8 +16,10 @@ export interface DriveStatusText {
   detail: (status: FilesSyncRootStatus | undefined, state: FilesSyncRootState) => string;
   /** "1 GB of 5 GB used", "1 GB used". */
   quota: (used: number, total: number | null) => string;
-  /** Storage nearly full, or full. */
+  /** Storage nearly full or full, in words. */
   notice: (level: 'warn' | 'full') => string;
+  /** The tray menu's one line: "Bulwark Files: Offline. Waiting: 3". */
+  tray?: (status: FilesSyncRootStatus | undefined, state: FilesSyncRootState) => string;
 }
 
 /** The engine's states as Windows has them. */
@@ -72,5 +74,6 @@ export function driveStatusFor(status: FilesSyncRootStatus | undefined, paused: 
     detail: text.detail(status, engineState),
     quota: quota ? { used: quota.used, total: quota.total, label: text.quota(quota.used, quota.total) } : null,
     notice: level === 'ok' ? null : text.notice(level),
+    ...(text.tray ? { tray: text.tray(status, engineState) } : {}),
   };
 }

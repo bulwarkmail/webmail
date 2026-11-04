@@ -689,7 +689,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const supportsSieve = client?.supportsSieve() ?? false;
   const supportsFiles = client?.supportsFiles() ?? false;
   // Files on this computer: the desktop app's sync engine runs in this window.
-  const filesSyncAvailable = useFilesSyncStore((s) => s.available);
+  // Nothing to set when the organisation turned off both the drive and synced folders and none is left (files-p3-18).
+  const filesSyncAvailable = useFilesSyncStore((s) => s.available && !(s.folderSyncForcedOff && (!s.drive || s.drive.forcedOff || !s.drive.supported) && s.roots.length === 0));
   // Delegates (Settings > Sharing) needs someone to share with and something to share.
   const supportsSharing = !delegationHidden && !!client?.getShareTargets && (client?.supportsPrincipals() ?? false)
     && ((client?.supportsMailboxSharing?.() ?? false)

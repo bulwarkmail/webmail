@@ -7774,6 +7774,77 @@
     "state_offline": "Offline",
     "state_error": "Gestopt"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wijzigingen uploaden voordat het station uitgaat",
+      "title_sign_out": "Wijzigingen uploaden voordat u zich afmeldt",
+      "title_stop_folder": "Wijzigingen uploaden voordat de map stopt met synchroniseren",
+      "cannot_title": "Sommige wijzigingen kunnen nu niet worden geüpload",
+      "waiting": "Nog te uploaden: {names}",
+      "progress": "{done} van {total} geüpload",
+      "cannot_offline": "De server is niet bereikbaar. Nog niet geüpload: {names}",
+      "cannot_other": "Deze kunnen niet worden geüpload: {names}. Recente activiteit in Instellingen vertelt waarom.",
+      "go_note_drive": "Als u nu doorgaat, wordt wat niet is geüpload gekopieerd naar Documenten\\Bulwark – not uploaded. Er gaat niets verloren.",
+      "go_note_folder": "Als u nu doorgaat, blijft wat niet is geüpload in de map op deze computer.",
+      "keep_turn_off": "Station aan laten",
+      "keep_sign_out": "Aangemeld blijven",
+      "keep_stop_folder": "Blijven synchroniseren",
+      "go_turn_off": "Nu uitzetten",
+      "go_sign_out": "Nu afmelden",
+      "go_stop_folder": "Nu stoppen met synchroniseren"
+    },
+    "drive": {
+      "off_note": "Als u dit uitzet, verdwijnt het station uit Verkenner. Uw bestanden blijven in Bestanden.",
+      "rescued": "Niet-geüploade bestanden ({count}) staan nu in {folder}.",
+      "rescued_open": "Map openen",
+      "rescued_dismiss": "Sluiten",
+      "start_at_login": "Bulwark starten bij aanmelden bij Windows",
+      "start_at_login_why": "Het station heeft Bulwark nodig, net als OneDrive.",
+      "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is.",
+      "where": "In Verkenner als Bulwark Files",
+      "where_letter": "In Verkenner als Bulwark Files ({letter}:)",
+      "open": "Openen",
+      "letter_note": "Via de letter toont Verkenner geen synchronisatiestatus en geen ‘Altijd op dit apparaat bewaren’. Die ziet u onder Bulwark Files in Verkenner.",
+      "letter_failed": "De stationsletter kon niet worden ingesteld. Probeer het opnieuw."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Bijgewerkt",
+      "syncing": "Bulwark Files: Synchroniseren. Nog: {count}",
+      "paused": "Bulwark Files: Gepauzeerd",
+      "offline": "Bulwark Files: Offline. Wachtend: {count}",
+      "question": "Bulwark Files: Wacht op uw antwoord",
+      "error": "Bulwark Files: Fout"
+    },
+    "notify": {
+      "conflict_title": "Een bestand is op twee plekken gewijzigd",
+      "problem_title": "Een bestand kan niet worden gesynchroniseerd"
+    },
+    "activity": {
+      "waiting_count": "Wijzigingen die op de server wachten: {count}",
+      "disk_name": "{path} in Bestanden heet op deze computer {detail}, omdat sommige tekens hier niet zijn toegestaan",
+      "disk_case": "{path} in Bestanden heet op deze computer {detail}, omdat hier al een naam staat die alleen in hoofdletters en kleine letters verschilt",
+      "disk_group": "Namen in Bestanden die deze computer niet toestaat: {count}. Ze hebben hier een iets andere naam.",
+      "show": "Weergeven",
+      "hide": "Verbergen"
+    },
+    "cant_sync": {
+      "title": "Kan niet synchroniseren"
+    },
+    "folders": {
+      "stop": "Stoppen met synchroniseren…",
+      "pick_title_known": "Met welke map in Bestanden moet {name} gelijk blijven?",
+      "pick_confirm_known": "Gelijk houden"
+    },
+    "pin": {
+      "keep": "Altijd op dit apparaat bewaren",
+      "free": "Ruimte vrijmaken",
+      "failed": "Dat is niet gelukt. Probeer het opnieuw in Verkenner."
+    },
+    "account": {
+      "of": "Bestanden van {address}",
+      "choose": "Bestanden van"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Snel opstellen",
     "menu": "Snel opstellen",

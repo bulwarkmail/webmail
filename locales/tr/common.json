@@ -7774,6 +7774,77 @@
     "state_offline": "Çevrimdışı",
     "state_error": "Durduruldu"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Sürücü kapanmadan önce değişiklikler yükleniyor",
+      "title_sign_out": "Oturum kapatılmadan önce değişiklikler yükleniyor",
+      "title_stop_folder": "Klasör eşitlemesi durmadan önce değişiklikler yükleniyor",
+      "cannot_title": "Bazı değişiklikler şu anda yüklenemiyor",
+      "waiting": "Yüklenecekler: {names}",
+      "progress": "{total} öğeden {done} tanesi yüklendi",
+      "cannot_offline": "Sunucuya ulaşılamıyor. Henüz yüklenmedi: {names}",
+      "cannot_other": "Yüklenemiyor: {names}. Nedeni Ayarlar'daki son etkinlikte yazıyor.",
+      "go_note_drive": "Şimdi devam ederseniz, yüklenmeyenler Belgeler\\Bulwark – not uploaded konumuna kopyalanır. Hiçbir şey kaybolmaz.",
+      "go_note_folder": "Şimdi devam ederseniz, yüklenmeyenler bu bilgisayardaki klasörde kalır.",
+      "keep_turn_off": "Sürücüyü açık tut",
+      "keep_sign_out": "Oturumu açık tut",
+      "keep_stop_folder": "Eşitlemeye devam et",
+      "go_turn_off": "Şimdi kapat",
+      "go_sign_out": "Şimdi oturumu kapat",
+      "go_stop_folder": "Eşitlemeyi şimdi durdur"
+    },
+    "drive": {
+      "off_note": "Bunu kapatmak sürücüyü Dosya Gezgini'nden kaldırır. Dosyalarınız Dosyalar'da kalır.",
+      "rescued": "Yüklenmeyen dosyalar ({count}) artık {folder} konumunda.",
+      "rescued_open": "Klasörü aç",
+      "rescued_dismiss": "Kapat",
+      "start_at_login": "Windows'ta oturum açınca Bulwark'ı başlat",
+      "start_at_login_why": "Sürücü, OneDrive gibi Bulwark'ın çalışmasına ihtiyaç duyar.",
+      "closed_warning": "Bulwark kapalıyken sürücüdeki dosyalar açılmaz.",
+      "where": "Dosya Gezgini'nde Bulwark Files olarak",
+      "where_letter": "Dosya Gezgini'nde Bulwark Files ({letter}:) olarak",
+      "open": "Aç",
+      "letter_note": "Sürücü harfi üzerinden Dosya Gezgini eşitleme durumunu ve “Her zaman bu cihazda tut” seçeneğini göstermez. Bunlar Gezgin'de Bulwark Files altında görünür.",
+      "letter_failed": "Sürücü harfi ayarlanamadı. Yeniden deneyin."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Güncel",
+      "syncing": "Bulwark Files: Eşitleniyor. Kalan: {count}",
+      "paused": "Bulwark Files: Duraklatıldı",
+      "offline": "Bulwark Files: Çevrimdışı. Bekleyen: {count}",
+      "question": "Bulwark Files: Yanıtınızı bekliyor",
+      "error": "Bulwark Files: Hata"
+    },
+    "notify": {
+      "conflict_title": "Bir dosya iki yerde değiştirildi",
+      "problem_title": "Bir dosya eşitlenemiyor"
+    },
+    "activity": {
+      "waiting_count": "Sunucuyu bekleyen değişiklikler: {count}",
+      "disk_name": "Dosyalar'daki {path} bu bilgisayarda {detail} adını taşıyor, çünkü bazı karakterlerine burada izin verilmiyor",
+      "disk_case": "Dosyalar'daki {path} bu bilgisayarda {detail} adını taşıyor, çünkü burada yalnızca büyük-küçük harfle ayrılan bir ad zaten var",
+      "disk_group": "Bu bilgisayarın izin vermediği Dosyalar adları: {count}. Burada biraz farklı adları var.",
+      "show": "Göster",
+      "hide": "Gizle"
+    },
+    "cant_sync": {
+      "title": "Eşitlenemiyor"
+    },
+    "folders": {
+      "stop": "Eşitlemeyi durdur…",
+      "pick_title_known": "{name}, Dosyalar'daki hangi klasörle aynı tutulsun?",
+      "pick_confirm_known": "Aynı tut"
+    },
+    "pin": {
+      "keep": "Her zaman bu cihazda tut",
+      "free": "Yer aç",
+      "failed": "Olmadı. Dosya Gezgini'nde yeniden deneyin."
+    },
+    "account": {
+      "of": "{address} dosyaları",
+      "choose": "Dosyalar:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hızlı ileti",
     "menu": "Hızlı ileti",

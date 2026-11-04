@@ -7786,6 +7786,77 @@
     "state_offline": "Ngoại tuyến",
     "state_error": "Đã dừng"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Đang tải lên thay đổi trước khi tắt ổ đĩa",
+      "title_sign_out": "Đang tải lên thay đổi trước khi đăng xuất",
+      "title_stop_folder": "Đang tải lên thay đổi trước khi ngừng đồng bộ thư mục",
+      "cannot_title": "Hiện không thể tải lên một số thay đổi",
+      "waiting": "Còn phải tải lên: {names}",
+      "progress": "Đã tải lên {done}/{total}",
+      "cannot_offline": "Không thể kết nối máy chủ. Chưa tải lên: {names}",
+      "cannot_other": "Không thể tải lên: {names}. Hoạt động gần đây trong Cài đặt cho biết lý do.",
+      "go_note_drive": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ được sao chép vào Tài liệu\\Bulwark – not uploaded. Không mất gì cả.",
+      "go_note_folder": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ vẫn ở trong thư mục trên máy tính này.",
+      "keep_turn_off": "Giữ ổ đĩa",
+      "keep_sign_out": "Tiếp tục đăng nhập",
+      "keep_stop_folder": "Tiếp tục đồng bộ",
+      "go_turn_off": "Tắt ngay",
+      "go_sign_out": "Đăng xuất ngay",
+      "go_stop_folder": "Ngừng đồng bộ ngay"
+    },
+    "drive": {
+      "off_note": "Tắt sẽ gỡ ổ đĩa khỏi Trình khám phá Tệp. Tệp của bạn vẫn ở trong Tệp.",
+      "rescued": "Các tệp chưa tải lên ({count}) hiện nằm trong {folder}.",
+      "rescued_open": "Mở thư mục",
+      "rescued_dismiss": "Bỏ qua",
+      "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
+      "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
+      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng.",
+      "where": "Trong Trình khám phá Tệp với tên Bulwark Files",
+      "where_letter": "Trong Trình khám phá Tệp với tên Bulwark Files ({letter}:)",
+      "open": "Mở",
+      "letter_note": "Qua ký tự ổ đĩa, Trình khám phá Tệp không hiện trạng thái đồng bộ và “Luôn giữ trên thiết bị này”. Chúng hiện dưới Bulwark Files trong Trình khám phá.",
+      "letter_failed": "Không thể đặt ký tự ổ đĩa. Hãy thử lại."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Đã cập nhật",
+      "syncing": "Bulwark Files: Đang đồng bộ. Còn lại: {count}",
+      "paused": "Bulwark Files: Đã tạm dừng",
+      "offline": "Bulwark Files: Ngoại tuyến. Đang chờ: {count}",
+      "question": "Bulwark Files: Cần bạn trả lời",
+      "error": "Bulwark Files: Lỗi"
+    },
+    "notify": {
+      "conflict_title": "Một tệp đã bị thay đổi ở hai nơi",
+      "problem_title": "Không thể đồng bộ một tệp"
+    },
+    "activity": {
+      "waiting_count": "Thay đổi đang chờ máy chủ: {count}",
+      "disk_name": "{path} trong Tệp có tên {detail} trên máy tính này vì một số ký tự không được phép ở đây",
+      "disk_case": "{path} trong Tệp có tên {detail} trên máy tính này vì ở đây đã có tên chỉ khác chữ hoa và chữ thường",
+      "disk_group": "Tên trong Tệp mà máy tính này không cho phép: {count}. Ở đây chúng có tên hơi khác.",
+      "show": "Hiện",
+      "hide": "Ẩn"
+    },
+    "cant_sync": {
+      "title": "Không thể đồng bộ"
+    },
+    "folders": {
+      "stop": "Ngừng đồng bộ…",
+      "pick_title_known": "Giữ {name} giống với thư mục nào trong Tệp?",
+      "pick_confirm_known": "Giữ giống nhau"
+    },
+    "pin": {
+      "keep": "Luôn giữ trên thiết bị này",
+      "free": "Giải phóng dung lượng",
+      "failed": "Không thành công. Hãy thử lại trong Trình khám phá Tệp."
+    },
+    "account": {
+      "of": "Tệp của {address}",
+      "choose": "Tệp của"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",

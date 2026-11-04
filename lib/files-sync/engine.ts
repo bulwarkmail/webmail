@@ -21,9 +21,12 @@ import { isOffline, type FilesSyncErrorName } from './errors';
 import type { DiskNaming } from './names';
 import { RemoteTree, type FilesRemote } from './remote';
 import { RootSync, type AccountLink, type ActivityInput } from './root-sync';
-import type { FilesSyncActivity, FilesSyncCoverage, FilesSyncItemStatus, FilesSyncRootStatus } from './types';
+import type { FilesFlushOptions, FilesFlushOutcome, FilesSyncActivity, FilesSyncCoverage, FilesSyncItemStatus, FilesSyncRootStatus } from './types';
 
+/** Lines kept per account (files-p3-11). */
 export const ACTIVITY_LIMIT = 200;
+/** How long uploading what waits before a root stops may take at most. */
+const FLUSH_LIMIT_MS = 10 * 60_000;
 const PIECE = 1024 * 1024;
 const MOST_SOON = 5;
 
@@ -67,6 +70,8 @@ export interface EngineOptions {
   downloadsAllowed?: (account: string) => boolean;
   /** Something the UI shows changed. */
   onUpdate?: () => void;
+  /** A new line in the activity list. */
+  onActivity?: (entry: FilesSyncActivity) => void;
 }
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
@@ -530,6 +535,45 @@ export class FilesSyncEngine {
     runner.request(0);
   }
 
+  /** What a root would leave behind if it stopped now. Null: the root isn't running (locked, gone). */
+  async pendingHere(rootId: string): Promise<string[] | null> {
+    const runner = this.runners.get(rootId);
+    if (!runner) return null;
+    return runner.sync.pendingHere().catch(() => null);
+  }
+
+  /**
+   * Before a drive goes or a folder stops: passes until nothing waits here, or a pass gets no
+   * further (offline, too large, refused, paused, a question open), or the user stops waiting.
+   */
+  async flushRoot(rootId: string, options: FilesFlushOptions = {}): Promise<FilesFlushOutcome> {
+    const runner = this.runners.get(rootId);
+    if (!runner) return 'gone';
+    let waiting = await this.pendingHere(rootId);
+    if (waiting === null) return 'gone';
+    const total = waiting.length;
+    options.onProgress?.(waiting, total);
+    if (total === 0) return 'done';
+    const until = this.now() + (options.timeoutMs ?? FLUSH_LIMIT_MS);
+    for (;;) {
+      if (options.signal?.aborted || this.stopped) return 'cancelled';
+      runner.request(0);
+      await runner.settle();
+      if (options.signal?.aborted) return 'cancelled';
+      if (this.runners.get(rootId) !== runner) return 'gone';
+      const next = await this.pendingHere(rootId);
+      if (next === null) return 'gone';
+      options.onProgress?.(next, total);
+      if (next.length === 0) return 'done';
+      const state = runner.sync.status.state;
+      if (state === 'offline') return 'offline';
+      if (state !== 'idle' && state !== 'syncing' && state !== 'starting') return 'stuck';
+      // A whole pass and nothing went: it won't.
+      if (next.length >= waiting.length || this.now() > until) return 'stuck';
+      waiting = next;
+    }
+  }
+
   /** The drive's record goes before its folder does (sign-out): the next sign-in starts from an empty folder. */
   async forgetRoot(rootId: string): Promise<void> {
     const runner = this.runners.get(rootId);
@@ -544,6 +588,12 @@ export class FilesSyncEngine {
   status(): Record<string, FilesSyncRootStatus> {
     const out: Record<string, FilesSyncRootStatus> = {};
     for (const [id, runner] of this.runners) out[id] = runner.sync.status;
+    return out;
+  }
+
+  keptOnDevice(account: string): Record<string, true> {
+    const out: Record<string, true> = {};
+    for (const runner of this.runnersOf(account)) for (const id of runner.sync.keptOnDevice) out[id] = true;
     return out;
   }
 
@@ -563,15 +613,37 @@ export class FilesSyncEngine {
     return null;
   }
 
-  clearActivity(): void {
-    this.activity = [];
+  /** An account's lines, or every account's without one. */
+  clearActivity(account?: string): void {
+    this.activity = account === undefined ? [] : this.activity.filter((entry) => entry.account !== account);
+    this.update();
+  }
+
+  /** An account's lines, newest first. */
+  activityOf(account: string): FilesSyncActivity[] {
+    return this.activity.filter((entry) => entry.account === account);
+  }
+
+  /** Lines kept from before (the host's store): merged with what came since, newest first, capped per account. */
+  restoreActivity(account: string, entries: FilesSyncActivity[]): void {
+    const known = new Set(this.activity.map((entry) => entry.id));
+    const added = entries.filter((entry) => !known.has(entry.id)).map((entry) => ({ ...entry, account }));
+    if (added.length === 0) return;
+    this.activity = capPerAccount([...this.activity, ...added].sort((a, b) => b.at - a.at));
     this.update();
   }
 
   private addActivity(entry: ActivityInput): void {
     this.activitySeq += 1;
-    this.activity = [{ id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry }, ...this.activity].slice(0, ACTIVITY_LIMIT);
+    const account = this.runners.get(entry.rootId)?.sync.root.account ?? this.roots.find((root) => root.id === entry.rootId)?.account;
+    const line: FilesSyncActivity = { id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry, ...(account ? { account } : {}) };
+    this.activity = capPerAccount([line, ...this.activity]);
     this.update();
+    try {
+      this.options.onActivity?.(line);
+    } catch {
+      // Telling about it is extra.
+    }
   }
 
   private update(): void {
@@ -683,6 +755,17 @@ export class FilesSyncEngine {
     flush(true);
     await chain;
   }
+}
+
+/** At most ACTIVITY_LIMIT lines per account, in the order given. */
+function capPerAccount(lines: FilesSyncActivity[]): FilesSyncActivity[] {
+  const counts = new Map<string, number>();
+  return lines.filter((line) => {
+    const key = line.account ?? '';
+    const count = (counts.get(key) ?? 0) + 1;
+    counts.set(key, count);
+    return count <= ACTIVITY_LIMIT;
+  });
 }
 
 function joinParts(parts: Uint8Array[], size: number): Uint8Array {

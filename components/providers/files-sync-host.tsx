@@ -2,20 +2,24 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { statusLineText } from "@/components/files-sync/files-sync-text";
+import { activityMessage, massDeleteText, statusLineText, trayLineText } from "@/components/files-sync/files-sync-text";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { getDesktopPolicy, onDesktopPolicyChange } from "@/lib/desktop/policy";
 import { canDownload } from "@/lib/device-policy";
 import { claimFilesControls } from "@/lib/files-sync/controls";
 import type { DriveStatusText } from "@/lib/files-sync/drive-status";
 import { FilesSyncHost as Host, type HostAccount } from "@/lib/files-sync/host";
+import type { FilesNotifyText } from "@/lib/files-sync/notify";
+import { localActivityStore } from "@/lib/files-sync/activity-store";
 import { registerFilesSyncLifecycle, setRunningFilesSyncHost } from "@/lib/files-sync/lifecycle";
 import { scopeDecided } from "@/lib/offline/offline-mode";
 import { subscribePushStateChanges } from "@/lib/push-events";
+import { addSignOutGate } from "@/lib/sign-out-cleanup";
 import { formatFileSize } from "@/lib/utils";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
+import { useSettingsStore } from "@/stores/settings-store";
 
 registerFilesSyncLifecycle();
 
@@ -44,18 +48,34 @@ export function FilesSyncHost() {
   const client = useAuthStore((s) => s.client);
   const tSync = useTranslations("files_sync");
   const tStorage = useTranslations("files_storage");
+  const tExtra = useTranslations("files_sync_extra");
   const format = useFormatter();
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   // Explorer's status for the drive, in the page's language (lib/files-sync/drive-status.ts).
   const driveText = useMemo<DriveStatusText>(() => ({
     state: (state) => tStorage(`state_${state}`),
-    detail: (status, state) => statusLineText(tSync, (date, options) => format.dateTime(date, options), status, state),
+    detail: (status, state) => statusLineText(tSync, (date, options) => format.dateTime(date, { ...options, hour12: timeFormat === "12h" }), status, state),
     quota: (used, total) => total === null
       ? tStorage("used", { used: formatFileSize(used) })
       : tStorage("used_of", { used: formatFileSize(used), total: formatFileSize(total) }),
     notice: (level) => tStorage(level === "full" ? "full" : "almost_full"),
-  }), [tSync, tStorage, format]);
+    tray: (status, state) => trayLineText(tExtra, status, state),
+  }), [tSync, tStorage, tExtra, format, timeFormat]);
   const driveTextRef = useRef(driveText);
   driveTextRef.current = driveText;
+  // The OS notifications' words (files-p3-5).
+  const notifyText = useMemo<FilesNotifyText>(() => ({
+    massDelete: (root, massDelete) => ({
+      title: tSync("mass_delete.title", { count: massDelete.count }),
+      body: massDeleteText(tSync, root, massDelete),
+      allow: tSync("mass_delete.allow", { count: massDelete.count }),
+      restore: tSync("mass_delete.restore", { count: massDelete.count }),
+    }),
+    conflict: (_root, entry) => ({ title: tExtra("notify.conflict_title"), body: activityMessage(tSync, entry, formatFileSize, tExtra) }),
+    problem: (_root, entry) => ({ title: tExtra("notify.problem_title"), body: activityMessage(tSync, entry, formatFileSize, tExtra) }),
+  }), [tSync, tExtra]);
+  const notifyTextRef = useRef(notifyText);
+  notifyTextRef.current = notifyText;
 
   useEffect(() => {
     const bridge = getDesktopBridge();
@@ -70,6 +90,11 @@ export function FilesSyncHost() {
       folderSyncForcedOff,
       downloadsForbidden,
       driveStatusText: () => driveTextRef.current,
+      notify: (notification) => {
+        void bridge.os?.notify(notification).catch(() => null);
+      },
+      notifyText: () => notifyTextRef.current,
+      activityStore: localActivityStore(),
     });
     hostRef.current = host;
     setRunningFilesSyncHost(host);
@@ -81,11 +106,15 @@ export function FilesSyncHost() {
       }
     });
     const stopPolicy = onDesktopPolicyChange(() => host.policyChanged());
+    // Signing out on purpose: what waits in the drive goes up first, or the user stays signed in.
+    // Synced folders keep their files, so they don't ask.
+    const stopGate = addSignOutGate((accountId) => host.signOutGate(accountId));
     const online = () => host.online();
     window.addEventListener("online", online);
     return () => {
       stopPush();
       stopPolicy();
+      stopGate();
       window.removeEventListener("online", online);
       setRunningFilesSyncHost(null);
       host.stop();

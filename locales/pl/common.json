@@ -7774,6 +7774,77 @@
     "state_offline": "Offline",
     "state_error": "Zatrzymano"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wysyłanie zmian przed wyłączeniem dysku",
+      "title_sign_out": "Wysyłanie zmian przed wylogowaniem",
+      "title_stop_folder": "Wysyłanie zmian przed zatrzymaniem synchronizacji folderu",
+      "cannot_title": "Niektórych zmian nie można teraz wysłać",
+      "waiting": "Pozostało do wysłania: {names}",
+      "progress": "Wysłano {done} z {total}",
+      "cannot_offline": "Nie można połączyć się z serwerem. Jeszcze niewysłane: {names}",
+      "cannot_other": "Nie można wysłać: {names}. Ostatnia aktywność w ustawieniach podaje powód.",
+      "go_note_drive": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie skopiowane do Dokumenty\\Bulwark – not uploaded. Nic nie zginie.",
+      "go_note_folder": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie w folderze na tym komputerze.",
+      "keep_turn_off": "Zostaw dysk włączony",
+      "keep_sign_out": "Pozostań zalogowany",
+      "keep_stop_folder": "Synchronizuj dalej",
+      "go_turn_off": "Wyłącz teraz",
+      "go_sign_out": "Wyloguj teraz",
+      "go_stop_folder": "Zatrzymaj synchronizację teraz"
+    },
+    "drive": {
+      "off_note": "Wyłączenie usuwa dysk z Eksploratora plików. Twoje pliki zostają w Plikach.",
+      "rescued": "Niewysłane pliki ({count}) są teraz w {folder}.",
+      "rescued_open": "Otwórz folder",
+      "rescued_dismiss": "Ukryj",
+      "start_at_login": "Uruchamiaj Bulwark po zalogowaniu do Windows",
+      "start_at_login_why": "Dysk potrzebuje działającego Bulwark, tak jak OneDrive.",
+      "closed_warning": "Pliki na dysku nie otworzą się, gdy Bulwark jest zamknięty.",
+      "where": "W Eksploratorze plików jako Bulwark Files",
+      "where_letter": "W Eksploratorze plików jako Bulwark Files ({letter}:)",
+      "open": "Otwórz",
+      "letter_note": "Przez literę Eksplorator plików nie pokazuje stanu synchronizacji ani „Zawsze zachowuj na tym urządzeniu”. Widać je pod Bulwark Files w Eksploratorze.",
+      "letter_failed": "Nie udało się ustawić litery dysku. Spróbuj ponownie."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktualne",
+      "syncing": "Bulwark Files: Synchronizacja. Pozostało: {count}",
+      "paused": "Bulwark Files: Wstrzymano",
+      "offline": "Bulwark Files: Offline. Czeka: {count}",
+      "question": "Bulwark Files: Czeka na Twoją odpowiedź",
+      "error": "Bulwark Files: Błąd"
+    },
+    "notify": {
+      "conflict_title": "Plik zmieniono w dwóch miejscach",
+      "problem_title": "Nie można zsynchronizować pliku"
+    },
+    "activity": {
+      "waiting_count": "Zmiany czekające na serwer: {count}",
+      "disk_name": "{path} w Plikach nazywa się na tym komputerze {detail}, bo niektóre znaki nie są tu dozwolone",
+      "disk_case": "{path} w Plikach nazywa się na tym komputerze {detail}, bo jest tu już nazwa różniąca się tylko wielkością liter",
+      "disk_group": "Nazwy w Plikach niedozwolone na tym komputerze: {count}. Mają tu nieco inne nazwy.",
+      "show": "Pokaż",
+      "hide": "Ukryj"
+    },
+    "cant_sync": {
+      "title": "Nie można zsynchronizować"
+    },
+    "folders": {
+      "stop": "Zatrzymaj synchronizację…",
+      "pick_title_known": "Z którym folderem w Plikach ma być zgodny {name}?",
+      "pick_confirm_known": "Utrzymuj je zgodne"
+    },
+    "pin": {
+      "keep": "Zawsze zachowuj na tym urządzeniu",
+      "free": "Zwolnij miejsce",
+      "failed": "Nie udało się. Spróbuj ponownie w Eksploratorze plików."
+    },
+    "account": {
+      "of": "Pliki konta {address}",
+      "choose": "Pliki konta"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Szybka wiadomość",
     "menu": "Szybka wiadomość",

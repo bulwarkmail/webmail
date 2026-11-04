@@ -15,6 +15,7 @@ vi.mock('@/lib/debug', () => ({ debug: { log: () => {}, warn: () => {}, error: (
 const { useFilesSyncStore } = await import('@/stores/files-sync-store');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { DesktopFilesSettings } = await import('../desktop-files-settings');
+const { FilesFlushDialog } = await import('@/components/files-sync/files-sync-flush');
 
 type Fake = { [K in keyof FilesSyncController]: ReturnType<typeof vi.fn> };
 
@@ -29,6 +30,16 @@ function fakeController(): Fake {
     coverage: vi.fn(() => null),
     showInFolder: vi.fn(async () => true),
     clearActivity: vi.fn(),
+    // Nothing waits here unless a test says otherwise.
+    pendingHere: vi.fn(async () => []),
+    flushRoot: vi.fn(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.([], 0);
+      return 'done';
+    }),
+    openRescue: vi.fn(async () => true),
+    openRoot: vi.fn(async () => true),
+    chooseFolder: null,
+    dismissRescue: vi.fn(),
   } as never;
 }
 
@@ -58,6 +69,7 @@ function renderPage() {
   return render(
     <NextIntlClientProvider locale="en" messages={en} timeZone="UTC">
       <DesktopFilesSettings />
+      <FilesFlushDialog />
     </NextIntlClientProvider>,
   );
 }
@@ -92,16 +104,64 @@ describe('Files on this computer settings page', () => {
     expect(screen.queryByText('Drive letter')).toBeNull();
     fireEvent.click(toggle);
     // Synchronously: the shell needs the click it came from.
-    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true);
+    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true, 'acc');
   });
 
-  it('shows the drive on, and turns it off', () => {
+  it('shows the drive on, and turns it off', async () => {
     setup({ drive: drive({ wanted: ['acc'] }) });
     renderPage();
     const toggle = screen.getByRole('switch', { name: 'Show Files as a drive' });
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(toggle);
-    expect(controller.setDriveEnabled).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc'));
+  });
+
+  it('uploads what waits before turning the drive off, and keeps it on when the user says so (files-p3-2)', async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc' })] });
+    let finish: (outcome: string) => void = () => {};
+    controller.flushRoot.mockImplementation((_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['Notes/notes.txt', 'unsynced new.txt'], 3);
+      return new Promise((resolve) => { finish = resolve; });
+    });
+    renderPage();
+    expect(screen.getByTestId('files-sync-drive-off-note')).toHaveTextContent('Your files stay in Files.');
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Uploading changes before the drive turns off' });
+    expect(controller.flushRoot).toHaveBeenCalledWith('d1', expect.anything());
+    expect(dialog).toHaveTextContent('Still to upload: notes.txt, unsynced new.txt');
+    expect(within(dialog).getByRole('progressbar', { name: '1 of 3 uploaded' })).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('Documents\\Bulwark – not uploaded');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep the drive on' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    finish('cancelled');
+    expect(controller.setDriveEnabled).not.toHaveBeenCalled();
+  });
+
+  it('turns the drive off once everything is uploaded, or right away when the server is away and the user goes on', async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc' })] });
+    controller.flushRoot.mockImplementation(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['a.txt'], 1);
+      return 'offline';
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    const dialog = await screen.findByRole('alertdialog', { name: "Some changes can't be uploaded now" });
+    expect(dialog).toHaveTextContent("The server can't be reached. Not uploaded yet: a.txt");
+    expect(controller.setDriveEnabled).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off now' }));
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc'));
+  });
+
+  it("says where the files that weren't uploaded went, and opens that folder", () => {
+    const folder = 'C:\\Users\\ann\\Documents\\Bulwark – not uploaded\\2026-11-04';
+    setup({ drive: drive(), rescued: { folder, count: 2, failed: 0 } });
+    renderPage();
+    const notice = screen.getByTestId('files-sync-rescued');
+    expect(notice).toHaveTextContent(`Files that weren't uploaded (2) are in ${folder} now.`);
+    fireEvent.click(within(notice).getByRole('button', { name: 'Open folder' }));
+    expect(controller.openRescue).toHaveBeenCalled();
+    fireEvent.click(within(notice).getByRole('button', { name: 'Dismiss' }));
+    expect(controller.dismissRescue).toHaveBeenCalled();
   });
 
   it('says the organisation turned the drive off and keeps the switch off', () => {
@@ -153,15 +213,32 @@ describe('Files on this computer settings page', () => {
     expect(controller.setPaused).toHaveBeenLastCalledWith('r1', false);
   });
 
-  it('asks before removing a folder, saying its files stay', () => {
+  it('asks before removing a folder, saying its files stay', async () => {
     setup({ roots: [folderRoot()] });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stop syncing…' }));
     const dialog = screen.getByRole('alertdialog');
     expect(dialog).toHaveTextContent('The files on this computer stay where they are');
     expect(controller.removeRoot).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Stop syncing' }));
-    expect(controller.removeRoot).toHaveBeenCalledWith('r1');
+    await waitFor(() => expect(controller.removeRoot).toHaveBeenCalledWith('r1'));
+    expect(controller.flushRoot).toHaveBeenCalledWith('r1', expect.anything());
+  });
+
+  it("uploads a folder's changes before it stops; what can't go stays in the folder", async () => {
+    setup({ roots: [folderRoot()] });
+    controller.flushRoot.mockImplementation(async (_rootId: string, options?: { onProgress?: (waiting: string[], total: number) => void }) => {
+      options?.onProgress?.(['big.iso'], 1);
+      return 'stuck';
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Stop syncing…' }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Stop syncing' }));
+    const dialog = await screen.findByRole('alertdialog', { name: "Some changes can't be uploaded now" });
+    expect(dialog).toHaveTextContent('stays in the folder on this computer');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep syncing' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(controller.removeRoot).not.toHaveBeenCalled();
   });
 
   it('says how each folder is doing', () => {
@@ -181,7 +258,8 @@ describe('Files on this computer settings page', () => {
     setup({ roots, status });
     renderPage();
     const line = (id: string) => document.querySelector(`[data-files-sync-root="${id}"] [data-files-sync-state]`)!.textContent;
-    expect(line('idle')).toMatch(/^Up to date\. Last synced .*2:05/);
+    // The app's 24-hour setting (the default), not the language's 12-hour clock (settings-p3-12).
+    expect(line('idle')).toBe('Up to date. Last synced 14:05');
     expect(line('syncing')).toBe('Syncing: 3 done, 7 to go');
     expect(line('paused')).toBe('Paused');
     expect(line('offline')).toBe('Offline. 2 changes wait for the server');
@@ -219,7 +297,7 @@ describe('Files on this computer settings page', () => {
     expect(controller.addFolder).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Choose folder on this computer…' }));
     // In the same task as the click: nothing slow is awaited first.
-    expect(controller.addFolder).toHaveBeenCalledWith('n-2026', 'Projects / 2026');
+    expect(controller.addFolder).toHaveBeenCalledWith('n-2026', 'Projects / 2026', { account: 'acc' });
     useAuthStore.setState({ client: null });
   });
 
@@ -250,7 +328,7 @@ describe('Files on this computer settings page', () => {
     expect(screen.queryByRole('button', { name: 'Add folder…' })).toBeNull();
     expect(screen.getByTestId('files-sync-folders-locked')).toHaveTextContent(en.settings.org_locked);
     // The folder can still be removed; its files stay.
-    expect(screen.getByRole('button', { name: 'Remove…' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stop syncing…' })).toBeInTheDocument();
   });
 
   it('lists recent activity newest first, marks conflicts and errors, and clears it', () => {
@@ -286,19 +364,72 @@ describe('Files on this computer settings page', () => {
     for (const row of rows) expect(row.textContent).not.toMatch(/files_sync\.|\{/);
   });
 
-  it('says when nothing happened yet', () => {
+  it('says when nothing happened yet, with no Clear to press', () => {
     setup({ roots: [folderRoot()] });
     renderPage();
     expect(screen.getByText('Nothing has happened yet.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+  });
+
+  it("follows the app's 12-hour setting for times (settings-p3-12)", async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const before = useSettingsStore.getState().timeFormat;
+    useSettingsStore.setState({ timeFormat: '12h' });
+    const at = Date.UTC(2026, 10, 4, 14, 5);
+    vi.useFakeTimers({ now: at + 60_000, toFake: ['Date'] });
+    try {
+      setup({
+        roots: [folderRoot()],
+        status: { r1: { rootId: 'r1', state: 'idle', pending: 0, done: 0, lastSyncedAt: at } },
+        activity: [{ id: 'x', at, rootId: 'r1', account: 'acc', kind: 'uploaded', direction: 'up', path: 'a.txt' }],
+      });
+      renderPage();
+      expect(document.querySelector('[data-files-sync-root="r1"] [data-files-sync-state]')!.textContent).toBe('Up to date. Last synced 2:05 PM');
+      expect(screen.getByTestId('files-sync-activity').querySelector('time')!.textContent).toBe('2:05 PM');
+    } finally {
+      vi.useRealTimers();
+      useSettingsStore.setState({ timeFormat: before });
+    }
+  });
+
+  it('says how many changes wait while offline, names a file Files has under another name here and why, and groups many such lines', () => {
+    const line = (id: string, extra: Partial<FilesSyncActivity>): FilesSyncActivity => ({ id, at: 1, rootId: 'r1', account: 'acc', kind: 'uploaded', direction: null, path: '', ...extra });
+    setup({
+      roots: [folderRoot()],
+      activity: [
+        line('w', { kind: 'waiting', detail: '3', messageKey: 'errors.offline', at: 10 }),
+        line('n', { kind: 'renamed-for-disk', path: 'Seed/back\\slash.txt', detail: 'back＼slash.txt', messageKey: 'disk_name', at: 9 }),
+        line('u', { kind: 'uploaded', path: 'x.txt', at: 8 }),
+        ...[1, 2, 3, 4].map((n) => line(`g${n}`, { kind: 'renamed-for-disk', path: `Seed/Report${n}.txt`, detail: `report${n} (2).txt`, messageKey: 'disk_case', at: 5 - n })),
+      ],
+    });
+    renderPage();
+    const list = screen.getByTestId('files-sync-activity');
+    expect(list).toHaveTextContent("Changes waiting for the server: 3: The server can't be reached");
+    expect(list).toHaveTextContent("Seed/back\\slash.txt in Files is called back＼slash.txt on this computer, because some of its characters aren't allowed here");
+    const group = list.querySelector('[data-activity-kind="renamed-for-disk-group"]') as HTMLElement;
+    expect(group).toHaveTextContent("Names in Files that this computer doesn't allow: 4.");
+    expect(group).not.toHaveTextContent('Seed/Report1.txt');
+    fireEvent.click(within(group).getByRole('button', { name: 'Show' }));
+    expect(group).toHaveTextContent('Seed/Report1.txt in Files is called report1 (2).txt on this computer, because a name that differs only in upper and lower case is already here');
+  });
+
+  it("keeps files that can't sync on top until they're gone (files-p3-13)", () => {
+    setup({
+      roots: [folderRoot()],
+      status: { r1: { rootId: 'r1', state: 'idle', pending: 0, done: 0, lastSyncedAt: null, cantSync: [{ path: 'huge.iso', limit: 50 * 1048576 }] } },
+    });
+    renderPage();
+    expect(screen.getByTestId('files-sync-cant-sync')).toHaveTextContent("Can't sync");
+    expect(screen.getByTestId('files-sync-cant-sync')).toHaveTextContent('huge.iso is bigger than Files allows (50 MB). It stays on this computer only');
   });
 
   it('asks about a mass delete in the folder row, with both answers', () => {
     setup({
       roots: [folderRoot(), folderRoot({ id: 'r2', path: '/home/ann/Photos', remoteLabel: 'Photos' })],
       status: {
-        r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 120, side: 'local' } },
-        r2: { rootId: 'r2', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 64, side: 'remote' } },
+        r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 120, deletedOn: 'this-computer' } },
+        r2: { rootId: 'r2', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 64, deletedOn: 'files' } },
       },
     });
     renderPage();
@@ -310,6 +441,191 @@ describe('Files on this computer settings page', () => {
     expect(controller.confirmMassDelete).toHaveBeenCalledWith('r1', true);
     fireEvent.click(within(second).getByRole('button', { name: 'Bring them back' }));
     expect(controller.confirmMassDelete).toHaveBeenLastCalledWith('r2', false);
+  });
+});
+
+describe('whose Files, and adding a folder with the one on this computer first (files-p3-20, settings-p3-4, settings-p3-11)', () => {
+  it('names the account, and with several shows another one\'s drive and folders on request', () => {
+    setup({
+      drive: drive({ wanted: ['acc2'] }),
+      accounts: [{ id: 'acc', label: 'ann@example.org' }, { id: 'acc2', label: 'bob@example.org' }],
+      roots: [folderRoot(), folderRoot({ id: 'r2', account: 'acc2', path: 'C:\\Users\\bob\\Work', remoteLabel: 'Work' })],
+    });
+    renderPage();
+    const choice = within(screen.getByTestId('files-sync-account')).getByRole('combobox', { name: 'Files of' });
+    expect(choice).toHaveValue('acc');
+    expect(document.querySelector('[data-files-sync-root="r1"]')).not.toBeNull();
+    expect(document.querySelector('[data-files-sync-root="r2"]')).toBeNull();
+    expect(screen.getByRole('switch', { name: 'Show Files as a drive' })).toHaveAttribute('aria-checked', 'false');
+    fireEvent.change(choice, { target: { value: 'acc2' } });
+    expect(document.querySelector('[data-files-sync-root="r2"]')).not.toBeNull();
+    expect(document.querySelector('[data-files-sync-root="r1"]')).toBeNull();
+    expect(screen.getByRole('switch', { name: 'Show Files as a drive' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    return waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc2'));
+  });
+
+  it('says whose Files with one account', () => {
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    renderPage();
+    expect(screen.getByTestId('files-sync-account')).toHaveTextContent('Files of ann@example.org');
+  });
+
+  it('asks for the folder here first, then offers the Files folder of the same name, and adds the pair without a second picker', async () => {
+    const createFileDirectory = vi.fn(async (name: string, parentId: string | null) => ({ id: 'n-new', name, parentId }));
+    const client = {
+      listAllFileNodes: vi.fn(async () => [
+        { id: 'n-docs', name: 'Documents', parentId: null, blobId: null },
+        { id: 'n-proj', name: 'Projects', parentId: null, blobId: null },
+      ]),
+      createFileDirectory,
+    };
+    useAuthStore.setState({ client: client as never });
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-1', name: 'Projects' } }));
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Add folder…' }));
+    expect(controller.chooseFolder).toHaveBeenCalledTimes(1);
+    const dialog = await screen.findByRole('dialog', { name: 'Which folder in Files should Projects be kept the same as?' });
+    // The Files folder named like the one here is ready to pick.
+    expect(within(dialog).getByRole('treeitem', { name: /Projects/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep them the same' }));
+    await waitFor(() => expect(controller.addFolder).toHaveBeenCalledWith('n-proj', 'Projects', { account: 'acc', chosen: 'tok-1' }));
+  });
+
+  it('makes a new Files folder from the picker, named like the folder here', async () => {
+    const createFileDirectory = vi.fn(async (name: string, parentId: string | null) => ({ id: 'n-new', name, parentId }));
+    const client = { listAllFileNodes: vi.fn(async () => [{ id: 'n-docs', name: 'Documents', parentId: null, blobId: null }]), createFileDirectory };
+    useAuthStore.setState({ client: client as never });
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-2', name: 'Photos' } }));
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Add folder…' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'New folder' }));
+    expect(within(dialog).getByRole('textbox', { name: 'New folder' })).toHaveValue('Photos');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
+    await waitFor(() => expect(createFileDirectory).toHaveBeenCalledWith('Photos', null));
+    await waitFor(() => expect(within(dialog).getByRole('treeitem', { name: /Photos/ })).toHaveAttribute('aria-selected', 'true'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep them the same' }));
+    await waitFor(() => expect(controller.addFolder).toHaveBeenCalledWith('n-new', 'Photos', { account: 'acc', chosen: 'tok-2' }));
+  });
+});
+
+describe('opening, pausing and the letter (files-p3-7, p3-10, p3-14 to p3-19, settings-p3-3)', () => {
+  const driveRoot = () => folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc', path: 'C:\\Users\\ann\\Bulwark Files\\ann@example.org' });
+
+  it('says where the drive is, with its letter, and opens it', () => {
+    setup({ drive: drive({ wanted: ['acc'], letter: { letter: 'Z', chosen: 'Z', locked: false, available: ['X'] } }), roots: [driveRoot()] });
+    renderPage();
+    const where = screen.getByTestId('files-sync-drive-where');
+    expect(where).toHaveTextContent('In File Explorer as Bulwark Files (Z:)');
+    expect(where).toHaveTextContent('C:\\Users\\ann\\Bulwark Files\\ann@example.org');
+    fireEvent.click(within(where).getByRole('button', { name: 'Open' }));
+    expect(controller.openRoot).toHaveBeenCalledWith('d1');
+    // The letter option says what Explorer shows through it.
+    expect(screen.getByText(/Through the letter, File Explorer shows no sync status/)).toBeInTheDocument();
+  });
+
+  it('pauses and resumes the drive', () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [driveRoot()] });
+    renderPage();
+    fireEvent.click(within(screen.getByTestId('files-sync-drive-where')).getByRole('button', { name: 'Pause' }));
+    expect(controller.setPaused).toHaveBeenCalledWith('d1', true);
+  });
+
+  it('says Starting… while the drive is wanted and not there yet', () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [] });
+    renderPage();
+    expect(screen.getByText('Starting…')).toBeInTheDocument();
+  });
+
+  it('opens a synced folder from its path and its Open button', () => {
+    setup({ roots: [folderRoot()] });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'C:\\Users\\ann\\Documents\\Projects' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(controller.openRoot).toHaveBeenCalledTimes(2);
+    expect(controller.openRoot).toHaveBeenCalledWith('r1');
+  });
+
+  it('hides Pause while a folder waits for the mass-delete answer', () => {
+    setup({ roots: [folderRoot()], status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 70, deletedOn: 'files' } } } });
+    renderPage();
+    const row = document.querySelector('[data-files-sync-root="r1"]') as HTMLElement;
+    expect(within(row).queryByRole('button', { name: 'Pause' })).toBeNull();
+    expect(within(row).queryByRole('button', { name: 'Resume' })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Bring them back' })).toBeInTheDocument();
+  });
+
+  it('shows no letter row while the organisation keeps the drive off, even with a forced letter', () => {
+    setup({ drive: drive({ forcedOff: true, wanted: ['acc'], letter: { letter: null, chosen: null, locked: true, available: [] } }) });
+    renderPage();
+    expect(screen.queryByRole('combobox', { name: 'Drive letter' })).toBeNull();
+  });
+
+  it("says a letter that couldn't be set in its own words, and nothing when no key press came with it", async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [driveRoot()] });
+    controller.setDriveLetter.mockResolvedValueOnce({ ok: false, error: 'gesture' });
+    renderPage();
+    const select = screen.getByRole('combobox', { name: 'Drive letter' });
+    fireEvent.change(select, { target: { value: 'X' } });
+    await act(async () => {});
+    expect(screen.queryByRole('alert')).toBeNull();
+    controller.setDriveLetter.mockResolvedValueOnce({ ok: false, error: 'exists' });
+    fireEvent.change(select, { target: { value: 'Z' } });
+    expect(await screen.findByRole('alert')).toHaveTextContent("The drive letter couldn't be set. Try again.");
+    expect(screen.queryByText("The folder couldn't be added. Try again.")).toBeNull();
+  });
+});
+
+describe('the drive and starting with Windows (files-p3-4)', () => {
+  function osBridge(startAtLogin: boolean) {
+    let settings = { closeToTray: true, startAtLogin, startMinimized: false, attentionOnNewMail: true, quietHoursEnabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00', showShortcut: null };
+    const listeners = new Set<(status: unknown) => void>();
+    const status = () => ({ settings, pausedUntil: null, shortcutActive: false });
+    const os = {
+      getStatus: vi.fn(async () => status()),
+      onStatusChange: vi.fn((listener: (status: unknown) => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      }),
+      setSettings: vi.fn(async (patch: Record<string, unknown>) => {
+        settings = { ...settings, ...patch };
+        const next = status();
+        for (const listener of listeners) listener(next);
+        return next;
+      }),
+    };
+    (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', os };
+    return os;
+  }
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+  });
+
+  it('turning the drive on also starts Bulwark with Windows, from the same click', async () => {
+    const os = osBridge(false);
+    setup({ drive: drive() });
+    renderPage();
+    await waitFor(() => expect(os.getStatus).toHaveBeenCalled());
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: true });
+    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true, 'acc');
+  });
+
+  it('shows the option checked under the drive, says why, and warns once the user unticks it', async () => {
+    const os = osBridge(true);
+    setup({ drive: drive({ wanted: ['acc'] }) });
+    renderPage();
+    const box = await screen.findByRole('checkbox', { name: /Start Bulwark when you sign in to Windows/ });
+    expect(box).toBeChecked();
+    expect(screen.getByText('The drive needs Bulwark running, as OneDrive does.')).toBeInTheDocument();
+    expect(screen.queryByTestId('files-sync-closed-warning')).toBeNull();
+    fireEvent.click(box);
+    expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: false });
+    expect(await screen.findByTestId('files-sync-closed-warning')).toHaveTextContent("Files in the drive can't open while Bulwark is closed.");
   });
 });
 

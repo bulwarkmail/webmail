@@ -7774,6 +7774,77 @@
     "state_offline": "Sin conexión",
     "state_error": "Detenido"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Subiendo cambios antes de desactivar la unidad",
+      "title_sign_out": "Subiendo cambios antes de cerrar sesión",
+      "title_stop_folder": "Subiendo cambios antes de dejar de sincronizar la carpeta",
+      "cannot_title": "Algunos cambios no se pueden subir ahora",
+      "waiting": "Pendiente de subir: {names}",
+      "progress": "{done} de {total} subidos",
+      "cannot_offline": "No se puede conectar con el servidor. Aún sin subir: {names}",
+      "cannot_other": "No se pueden subir: {names}. La actividad reciente en Ajustes indica el motivo.",
+      "go_note_drive": "Si continúas ahora, lo que no se haya subido se copia en Documentos\\Bulwark – not uploaded. No se pierde nada.",
+      "go_note_folder": "Si continúas ahora, lo que no se haya subido se queda en la carpeta de este ordenador.",
+      "keep_turn_off": "Mantener la unidad",
+      "keep_sign_out": "Seguir con la sesión iniciada",
+      "keep_stop_folder": "Seguir sincronizando",
+      "go_turn_off": "Desactivar ahora",
+      "go_sign_out": "Cerrar sesión ahora",
+      "go_stop_folder": "Dejar de sincronizar ahora"
+    },
+    "drive": {
+      "off_note": "Al desactivarlo, la unidad desaparece del Explorador de archivos. Tus archivos siguen en Archivos.",
+      "rescued": "Los archivos que no se subieron ({count}) están ahora en {folder}.",
+      "rescued_open": "Abrir carpeta",
+      "rescued_dismiss": "Descartar",
+      "start_at_login": "Iniciar Bulwark al iniciar sesión en Windows",
+      "start_at_login_why": "La unidad necesita que Bulwark esté abierto, como OneDrive.",
+      "closed_warning": "Los archivos de la unidad no se abren mientras Bulwark esté cerrado.",
+      "where": "En el Explorador de archivos como Bulwark Files",
+      "where_letter": "En el Explorador de archivos como Bulwark Files ({letter}:)",
+      "open": "Abrir",
+      "letter_note": "Con la letra, el Explorador de archivos no muestra el estado de sincronización ni «Mantener siempre en este dispositivo». Aparecen en Bulwark Files, en el Explorador.",
+      "letter_failed": "No se ha podido asignar la letra de unidad. Vuelve a intentarlo."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Actualizado",
+      "syncing": "Bulwark Files: Sincronizando. Pendientes: {count}",
+      "paused": "Bulwark Files: En pausa",
+      "offline": "Bulwark Files: Sin conexión. En espera: {count}",
+      "question": "Bulwark Files: Necesita tu respuesta",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "Un archivo se cambió en dos sitios",
+      "problem_title": "Un archivo no se puede sincronizar"
+    },
+    "activity": {
+      "waiting_count": "Cambios que esperan al servidor: {count}",
+      "disk_name": "{path} en Archivos se llama {detail} en este ordenador, porque algunos de sus caracteres no se permiten aquí",
+      "disk_case": "{path} en Archivos se llama {detail} en este ordenador, porque ya hay un nombre que solo cambia en mayúsculas y minúsculas",
+      "disk_group": "Nombres en Archivos que este ordenador no permite: {count}. Aquí tienen nombres un poco distintos.",
+      "show": "Mostrar",
+      "hide": "Ocultar"
+    },
+    "cant_sync": {
+      "title": "No se puede sincronizar"
+    },
+    "folders": {
+      "stop": "Dejar de sincronizar…",
+      "pick_title_known": "¿Con qué carpeta de Archivos debe mantenerse igual {name}?",
+      "pick_confirm_known": "Mantenerlas iguales"
+    },
+    "pin": {
+      "keep": "Mantener siempre en este dispositivo",
+      "free": "Liberar espacio",
+      "failed": "No ha funcionado. Vuelve a intentarlo en el Explorador de archivos."
+    },
+    "account": {
+      "of": "Archivos de {address}",
+      "choose": "Archivos de"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Redacción rápida",
     "menu": "Redacción rápida",

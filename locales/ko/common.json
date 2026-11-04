@@ -7774,6 +7774,77 @@
     "state_offline": "오프라인",
     "state_error": "중지됨"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "드라이브를 끄기 전에 변경 내용을 업로드하는 중",
+      "title_sign_out": "로그아웃하기 전에 변경 내용을 업로드하는 중",
+      "title_stop_folder": "폴더 동기화를 멈추기 전에 변경 내용을 업로드하는 중",
+      "cannot_title": "일부 변경 내용을 지금 업로드할 수 없습니다",
+      "waiting": "업로드 대기: {names}",
+      "progress": "{total}개 중 {done}개 업로드됨",
+      "cannot_offline": "서버에 연결할 수 없습니다. 아직 업로드되지 않음: {names}",
+      "cannot_other": "업로드할 수 없음: {names}. 이유는 설정의 최근 활동에 있습니다.",
+      "go_note_drive": "지금 계속하면 업로드되지 않은 항목은 문서\\Bulwark – not uploaded에 복사됩니다. 잃어버리는 것은 없습니다.",
+      "go_note_folder": "지금 계속하면 업로드되지 않은 항목은 이 컴퓨터의 폴더에 남습니다.",
+      "keep_turn_off": "드라이브 유지",
+      "keep_sign_out": "로그인 유지",
+      "keep_stop_folder": "계속 동기화",
+      "go_turn_off": "지금 끄기",
+      "go_sign_out": "지금 로그아웃",
+      "go_stop_folder": "지금 동기화 중지"
+    },
+    "drive": {
+      "off_note": "끄면 파일 탐색기에서 드라이브가 사라집니다. 파일은 파일에 그대로 있습니다.",
+      "rescued": "업로드되지 않은 파일({count})은 이제 {folder}에 있습니다.",
+      "rescued_open": "폴더 열기",
+      "rescued_dismiss": "닫기",
+      "start_at_login": "Windows에 로그인하면 Bulwark 시작",
+      "start_at_login_why": "OneDrive처럼 드라이브는 Bulwark가 실행 중이어야 합니다.",
+      "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다.",
+      "where": "파일 탐색기에서 Bulwark Files",
+      "where_letter": "파일 탐색기에서 Bulwark Files ({letter}:)",
+      "open": "열기",
+      "letter_note": "드라이브 문자로 열면 파일 탐색기에 동기화 상태와 '이 장치에 항상 유지'가 표시되지 않습니다. 탐색기의 Bulwark Files 아래에 표시됩니다.",
+      "letter_failed": "드라이브 문자를 설정하지 못했습니다. 다시 시도하세요."
+    },
+    "tray": {
+      "idle": "Bulwark Files: 최신 상태",
+      "syncing": "Bulwark Files: 동기화 중. 남은 항목: {count}",
+      "paused": "Bulwark Files: 일시 중지됨",
+      "offline": "Bulwark Files: 오프라인. 대기 중: {count}",
+      "question": "Bulwark Files: 답변이 필요합니다",
+      "error": "Bulwark Files: 오류"
+    },
+    "notify": {
+      "conflict_title": "파일이 두 곳에서 변경되었습니다",
+      "problem_title": "파일을 동기화할 수 없습니다"
+    },
+    "activity": {
+      "waiting_count": "서버를 기다리는 변경 내용: {count}",
+      "disk_name": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 일부 문자를 여기서 쓸 수 없기 때문입니다",
+      "disk_case": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 대소문자만 다른 이름이 이미 있기 때문입니다",
+      "disk_group": "이 컴퓨터에서 허용되지 않는 파일 이름: {count}. 여기서는 이름이 조금 다릅니다.",
+      "show": "보기",
+      "hide": "숨기기"
+    },
+    "cant_sync": {
+      "title": "동기화할 수 없음"
+    },
+    "folders": {
+      "stop": "동기화 중지…",
+      "pick_title_known": "{name}을(를) 파일의 어떤 폴더와 같게 유지할까요?",
+      "pick_confirm_known": "같게 유지"
+    },
+    "pin": {
+      "keep": "이 장치에 항상 유지",
+      "free": "공간 확보",
+      "failed": "실패했습니다. 파일 탐색기에서 다시 시도하세요."
+    },
+    "account": {
+      "of": "{address}의 파일",
+      "choose": "파일:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "빠른 작성",
     "menu": "빠른 작성",
