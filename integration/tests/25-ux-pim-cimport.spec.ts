@@ -144,7 +144,8 @@ test.describe('Contacts import and merge (pim-11, pim-14)', () => {
     await expect(into).toHaveValue(work!.id);
     if (TAKE_SHOTS) await page.screenshot({ path: `${SHOTS}/pim-fix-11-after-preview.png` });
     await dialog.getByRole('button', { name: 'Import', exact: true }).click();
-    await expect(dialog.getByText('2 contacts imported')).toBeVisible({ timeout: 30000 });
+    // pim-p2-15: the dialog closes and a toast says it.
+    await expect(page.getByRole('region', { name: 'Notifications' }).getByText('2 contacts imported')).toBeVisible({ timeout: 30000 });
 
     await expect.poll(async () => (await cards(a, `${PREFIX} Import`)).length, { timeout: 30000 }).toBe(2);
     const imported = await cards(a, `${PREFIX} Import`);
@@ -237,7 +238,10 @@ test.describe('Contacts import and merge (pim-11, pim-14)', () => {
     await expect(preview).toBeVisible();
     await expect(preview.getByText(`merge-a-${RUN}@example.org`)).toBeVisible();
     await expect(preview.getByText(`merge-b-${RUN}@example.org`)).toBeVisible();
-    await expect(preview.getByText('Hauptstraße 1, 10115, Berlin')).toBeVisible();
+    // pim-p2-14: laid out on its own lines as the card shows it, not one line of parts.
+    const addressCell = preview.locator('dd').filter({ hasText: 'Hauptstraße' });
+    await expect(addressCell).toContainText('Berlin');
+    await expect(addressCell).not.toContainText('Hauptstraße 1, 10115, Berlin');
     await expect(preview.getByText(`${PREFIX} Group ${RUN}`)).toBeVisible();
     if (TAKE_SHOTS) await page.screenshot({ path: `${SHOTS}/pim-fix-14-after.png` });
     await page.getByRole('button', { name: 'Merge', exact: true }).click();

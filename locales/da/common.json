@@ -5238,6 +5238,13 @@
     "caldav_shared_by": "Delt af {name}:",
     "freebusy_description": "Dem, du deler med, ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (opgaveliste, vises ikke i kalenderen)",
+    "copy_to_account": "Kopiér til {address}",
+    "copied_to_account": "Kopieret til {address}",
+    "delete_original": "Slet originalen"
+  },
   "calendar_offline": {
     "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
   },
@@ -5258,6 +5265,12 @@
     "answered_accepted_nodate": "Du accepterede.",
     "answered_declined_nodate": "Du afslog.",
     "answered_tentative_nodate": "Du svarede måske."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Gentages: {rule}",
+    "declined_dates": "Du afslog {dates}.",
+    "declined_many": "Du afslog {count} møder i denne serie.",
+    "answers_series": "Dit svar gælder alle møder i serien."
   },
   "calendar_event_notifications": {
     "someone": "Nogen",
@@ -5812,6 +5825,26 @@
     "send_message": "Send en besked",
     "share_mail_subject": "Jeg har delt {name} med dig",
     "share_mail_body": "Hej\n\nJeg har delt \"{name}\" med dig. Du kan åbne den her:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Føj alle til kalender",
+    "zone_contacts_all": "Føj alle til kontakter",
+    "save_to_files": "Gem i Filer",
+    "saved": "{name} er gemt i Filer.",
+    "saved_copy": "Gemt i Filer som {name}.",
+    "save_failed": "{name} kunne ikke gemmes i Filer.",
+    "changed_on_server": "{name} blev ændret i Filer, efter du åbnede den.",
+    "gone_on_server": "{name} findes ikke længere i Filer.",
+    "keep_both": "Behold begge",
+    "replace": "Erstat",
+    "cancel": "Annuller",
+    "save_as_new": "Gem som ny fil",
+    "import_to_mail": "Importér til en mailmappe…",
+    "import_to_mail_title": "Importér til en mailmappe",
+    "imported_to_mail": "Importeret til {folder}.",
+    "import_to_mail_failed": "{name} kunne ikke importeres.",
+    "import_contacts": "Importér til kontakter…",
+    "add_to_calendar": "Føj til kalender…"
   },
   "smime": {
     "your_certificates": "Dine certifikater",
@@ -7559,6 +7592,18 @@
     "import_mail": "Mail…",
     "import_calendar": "Kalender…",
     "import_contacts": "Kontakter…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Opdater",
+    "menu_today": "I dag",
+    "menu_next_period": "Næste periode",
+    "menu_previous_period": "Forrige periode",
+    "account_scope_label": "Viser {address}. Skift konto",
+    "account_scope_menu": "Skift konto",
+    "merge_links": "Links",
+    "merge_photo": "Foto",
+    "merge_kept": "Beholdes",
+    "import_show": "Vis"
   },
   "desktopEdit": {
     "edit": "Rediger",

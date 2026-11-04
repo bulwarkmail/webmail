@@ -5250,6 +5250,13 @@
     "caldav_shared_by": "Được chia sẻ bởi {name}:",
     "freebusy_description": "Người được chia sẻ thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Danh sách",
+    "task_list_not_in_calendar": "{name} (danh sách việc cần làm, không hiện trong lịch)",
+    "copy_to_account": "Sao chép sang {address}",
+    "copied_to_account": "Đã sao chép sang {address}",
+    "delete_original": "Xóa bản gốc"
+  },
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
   },
@@ -5270,6 +5277,12 @@
     "answered_accepted_nodate": "Bạn đã chấp nhận.",
     "answered_declined_nodate": "Bạn đã từ chối.",
     "answered_tentative_nodate": "Bạn đã trả lời có thể."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Lặp lại: {rule}",
+    "declined_dates": "Bạn đã từ chối ngày {dates}.",
+    "declined_many": "Bạn đã từ chối {count} cuộc họp trong chuỗi này.",
+    "answers_series": "Câu trả lời của bạn áp dụng cho mọi cuộc họp trong chuỗi."
   },
   "calendar_event_notifications": {
     "someone": "Ai đó",
@@ -5824,6 +5837,26 @@
     "send_message": "Gửi tin nhắn",
     "share_mail_subject": "Tôi đã chia sẻ {name} với bạn",
     "share_mail_body": "Chào bạn,\n\nTôi đã chia sẻ \"{name}\" với bạn. Bạn có thể mở tại đây:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Thêm tất cả vào lịch",
+    "zone_contacts_all": "Thêm tất cả vào danh bạ",
+    "save_to_files": "Lưu vào Tệp",
+    "saved": "Đã lưu {name} vào Tệp.",
+    "saved_copy": "Đã lưu vào Tệp với tên {name}.",
+    "save_failed": "Không thể lưu {name} vào Tệp.",
+    "changed_on_server": "{name} đã bị thay đổi trong Tệp sau khi bạn mở.",
+    "gone_on_server": "{name} không còn trong Tệp.",
+    "keep_both": "Giữ cả hai",
+    "replace": "Thay thế",
+    "cancel": "Hủy",
+    "save_as_new": "Lưu thành tệp mới",
+    "import_to_mail": "Nhập vào thư mục thư…",
+    "import_to_mail_title": "Nhập vào thư mục thư",
+    "imported_to_mail": "Đã nhập vào {folder}.",
+    "import_to_mail_failed": "Không thể nhập {name}.",
+    "import_contacts": "Nhập vào danh bạ…",
+    "add_to_calendar": "Thêm vào lịch…"
   },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
@@ -7571,6 +7604,18 @@
     "import_mail": "Thư…",
     "import_calendar": "Lịch…",
     "import_contacts": "Danh bạ…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Làm mới",
+    "menu_today": "Hôm nay",
+    "menu_next_period": "Khoảng thời gian sau",
+    "menu_previous_period": "Khoảng thời gian trước",
+    "account_scope_label": "Đang hiển thị {address}. Chuyển tài khoản",
+    "account_scope_menu": "Chuyển tài khoản",
+    "merge_links": "Liên kết",
+    "merge_photo": "Ảnh",
+    "merge_kept": "Được giữ lại",
+    "import_show": "Hiển thị"
   },
   "desktopEdit": {
     "edit": "Chỉnh sửa",

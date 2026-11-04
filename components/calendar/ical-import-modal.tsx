@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useId } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { buildRecurrenceSummary } from "./recurrence-editor";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,9 @@ import { apiFetch } from "@/lib/browser-navigation";
 import { explainServerAuthError } from "@/lib/server-auth-status";
 import { IS_LITE } from "@/lib/lite";
 import { isOfflineNow } from "@/lib/offline/state";
-import { useCollectionNames } from "@/hooks/use-collection-names";
+import { eventTargets, preferredTarget } from "@/lib/calendar-targets";
+import { CalendarSelect } from "@/components/calendar/calendar-select";
+import { useAccountStore } from "@/stores/account-store";
 
 interface ICalImportModalProps {
   calendars: Calendar[];
@@ -34,8 +36,15 @@ const ACCEPTED_EXTENSIONS = [".ics", ".ical"];
 type ImportStep = "select" | "preview" | "importing";
 type ImportMode = "file" | "url";
 
-export function ICalImportModal({ calendars, client, onClose, initialUrl, initialFile }: ICalImportModalProps) {
-  const shownName = useCollectionNames();
+export function ICalImportModal({ calendars: allCalendars, client, onClose, initialUrl, initialFile }: ICalImportModalProps) {
+  const isSubscriptionCalendar = useCalendarStore((s) => s.isSubscriptionCalendar);
+  // Events go only where the grid shows them: never a task list or a feed (pim-p2-2).
+  const calendars = useMemo(() => eventTargets(allCalendars, isSubscriptionCalendar), [allCalendars, isSubscriptionCalendar]);
+  const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const rememberEventCalendar = useCalendarStore((s) => s.rememberEventCalendar);
+  // The account on screen's calendar, the one last picked there first (pim-p2-4).
+  const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
+  const preferredId = () => preferredTarget(calendars, activeLocalAccountId, lastEventCalendarIds)?.id ?? "";
   const t = useTranslations("calendar.import");
   const tLaunch = useTranslations("pwaLaunch");
   const tCal = useTranslations("calendar");
@@ -47,10 +56,7 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl, initia
   const [step, setStep] = useState<ImportStep>("select");
   const [parsedEvents, setParsedEvents] = useState<Partial<CalendarEvent>[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-  const [calendarId, setCalendarId] = useState<string>(() => {
-    const defaultCal = calendars.find((c) => c.isDefault);
-    return defaultCal?.id || calendars[0]?.id || "";
-  });
+  const [calendarId, setCalendarId] = useState<string>(preferredId);
   const [isParsing, setIsParsing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +75,8 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl, initia
   // Opened before the calendars had loaded, from a launch: the default once they have.
   useEffect(() => {
     if (calendarId || calendars.length === 0) return;
-    setCalendarId((calendars.find((c) => c.isDefault) ?? calendars[0]).id);
+    setCalendarId(preferredId());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- preferredId reads the same calendars
   }, [calendars, calendarId]);
 
   const validateFile = useCallback((file: File): string | null => {
@@ -244,13 +251,15 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl, initia
         setStep("preview");
         return;
       }
+      const target = calendars.find((c) => c.id === calendarId);
+      if (target) rememberEventCalendar?.(target);
       toast.success(t("success", { count }));
       onClose();
     } catch {
       toast.error(t("error"));
       setStep("preview");
     }
-  }, [parsedEvents, selectedIndices, importEvents, client, calendarId, t, onClose]);
+  }, [parsedEvents, selectedIndices, importEvents, client, calendarId, calendars, rememberEventCalendar, t, onClose]);
 
   const formatEventDate = (event: Partial<CalendarEvent>): string => {
     if (!event.start) return "";
@@ -459,18 +468,13 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl, initia
                   <label htmlFor={targetId} className="text-sm font-medium mb-1 block">
                     {t("target_calendar")}
                   </label>
-                  <select
+                  <CalendarSelect
                     id={targetId}
+                    calendars={calendars}
                     value={calendarId}
-                    onChange={(e) => setCalendarId(e.target.value)}
+                    onChange={setCalendarId}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-                  >
-                    {calendars.map((cal) => (
-                      <option key={cal.id} value={cal.id}>
-                        {shownName.calendar(cal)}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               )}
             </>

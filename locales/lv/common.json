@@ -5238,6 +5238,13 @@
     "caldav_shared_by": "Kopīgoja {name}:",
     "freebusy_description": "Tas, ar kuru kopīgojat, redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Saraksts",
+    "task_list_not_in_calendar": "{name} (uzdevumu saraksts, kalendārā netiek rādīts)",
+    "copy_to_account": "Kopēt uz {address}",
+    "copied_to_account": "Nokopēts uz {address}",
+    "delete_original": "Dzēst oriģinālu"
+  },
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
   },
@@ -5258,6 +5265,12 @@
     "answered_accepted_nodate": "Jūs pieņēmāt.",
     "answered_declined_nodate": "Jūs noraidījāt.",
     "answered_tentative_nodate": "Jūs atbildējāt varbūt."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Atkārtojas: {rule}",
+    "declined_dates": "Jūs atteicāt {dates}.",
+    "declined_many": "Jūs atteicāt {count} šīs sērijas sapulces.",
+    "answers_series": "Jūsu atbilde attiecas uz visām sērijas sapulcēm."
   },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
@@ -5550,6 +5563,26 @@
     "send_message": "Sūtīt ziņu",
     "share_mail_subject": "Es koplietoju ar jums {name}",
     "share_mail_body": "Sveiki!\n\nEs koplietoju ar jums “{name}”. To var atvērt šeit:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Pievienot visus kalendāram",
+    "zone_contacts_all": "Pievienot visus kontaktiem",
+    "save_to_files": "Saglabāt failos",
+    "saved": "{name} saglabāts failos.",
+    "saved_copy": "Saglabāts failos kā {name}.",
+    "save_failed": "{name} neizdevās saglabāt failos.",
+    "changed_on_server": "{name} tika mainīts failos pēc tam, kad to atvērāt.",
+    "gone_on_server": "{name} vairs nav failos.",
+    "keep_both": "Paturēt abus",
+    "replace": "Aizstāt",
+    "cancel": "Atcelt",
+    "save_as_new": "Saglabāt kā jaunu failu",
+    "import_to_mail": "Importēt pasta mapē…",
+    "import_to_mail_title": "Importēt pasta mapē",
+    "imported_to_mail": "Importēts mapē {folder}.",
+    "import_to_mail_failed": "{name} neizdevās importēt.",
+    "import_contacts": "Importēt kontaktos…",
+    "add_to_calendar": "Pievienot kalendāram…"
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
@@ -7559,6 +7592,18 @@
     "import_mail": "Pasts…",
     "import_calendar": "Kalendārs…",
     "import_contacts": "Kontakti…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Atsvaidzināt",
+    "menu_today": "Šodien",
+    "menu_next_period": "Nākamais periods",
+    "menu_previous_period": "Iepriekšējais periods",
+    "account_scope_label": "Rāda {address}. Pārslēgt kontu",
+    "account_scope_menu": "Pārslēgt kontu",
+    "merge_links": "Saites",
+    "merge_photo": "Foto",
+    "merge_kept": "Saglabājas",
+    "import_show": "Rādīt"
   },
   "desktopEdit": {
     "edit": "Rediģēt",

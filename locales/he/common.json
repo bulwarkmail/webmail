@@ -5123,6 +5123,13 @@
     "caldav_shared_by": "משותף על ידי {name}:",
     "freebusy_description": "מי שאתה משתף איתו רואה מתי אתה תפוס, לא מה האירועים שלך. \"הצע זמנים\" משתמש בזה."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "רשימה",
+    "task_list_not_in_calendar": "{name} (רשימת משימות, לא מוצגת בלוח השנה)",
+    "copy_to_account": "העתקה אל {address}",
+    "copied_to_account": "הועתק אל {address}",
+    "delete_original": "מחיקת המקור"
+  },
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
   },
@@ -5143,6 +5150,12 @@
     "answered_accepted_nodate": "אישרת.",
     "answered_declined_nodate": "דחית.",
     "answered_tentative_nodate": "ענית 'אולי'."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "חוזר: {rule}",
+    "declined_dates": "דחית את {dates}.",
+    "declined_many": "דחית {count} פגישות בסדרה הזו.",
+    "answers_series": "התשובה שלך חלה על כל הפגישות בסדרה."
   },
   "advanced_search": {
     "title": "חיפוש מתקדם",
@@ -5435,6 +5448,26 @@
     "send_message": "שליחת הודעה",
     "share_mail_subject": "שיתפתי איתך את {name}",
     "share_mail_body": "שלום,\n\nשיתפתי איתך את \"{name}\". אפשר לפתוח אותו כאן:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "הוספת הכול ללוח השנה",
+    "zone_contacts_all": "הוספת הכול לאנשי הקשר",
+    "save_to_files": "שמירה בקבצים",
+    "saved": "{name} נשמר בקבצים.",
+    "saved_copy": "נשמר בקבצים בשם {name}.",
+    "save_failed": "לא ניתן היה לשמור את {name} בקבצים.",
+    "changed_on_server": "{name} השתנה בקבצים אחרי שפתחת אותו.",
+    "gone_on_server": "{name} כבר לא נמצא בקבצים.",
+    "keep_both": "שמירת שניהם",
+    "replace": "החלפה",
+    "cancel": "ביטול",
+    "save_as_new": "שמירה כקובץ חדש",
+    "import_to_mail": "ייבוא לתיקיית דואר…",
+    "import_to_mail_title": "ייבוא לתיקיית דואר",
+    "imported_to_mail": "יובא אל {folder}.",
+    "import_to_mail_failed": "לא ניתן היה לייבא את {name}.",
+    "import_contacts": "ייבוא לאנשי הקשר…",
+    "add_to_calendar": "הוספה ללוח השנה…"
   },
   "smime": {
     "your_certificates": "התעודות שלך",
@@ -7560,6 +7593,18 @@
     "import_mail": "דואר…",
     "import_calendar": "לוח שנה…",
     "import_contacts": "אנשי קשר…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "רענון",
+    "menu_today": "היום",
+    "menu_next_period": "התקופה הבאה",
+    "menu_previous_period": "התקופה הקודמת",
+    "account_scope_label": "מוצג {address}. החלפת חשבון",
+    "account_scope_menu": "החלפת חשבון",
+    "merge_links": "קישורים",
+    "merge_photo": "תמונה",
+    "merge_kept": "נשמר",
+    "import_show": "הצגה"
   },
   "desktopEdit": {
     "edit": "עריכה",

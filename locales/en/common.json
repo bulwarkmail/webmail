@@ -5238,6 +5238,13 @@
     "caldav_shared_by": "Shared by {name}:",
     "freebusy_description": "Whoever you share with sees when you’re busy, not what your events are. Suggest times uses it."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "List",
+    "task_list_not_in_calendar": "{name} (task list, not shown in the calendar)",
+    "copy_to_account": "Copy to {address}",
+    "copied_to_account": "Copied to {address}",
+    "delete_original": "Delete original"
+  },
   "calendar_offline": {
     "split_needs_server": "This change needs a connection to the server. Change only this event for now, or try again when you're back online."
   },
@@ -5258,6 +5265,12 @@
     "answered_accepted_nodate": "You accepted.",
     "answered_declined_nodate": "You declined.",
     "answered_tentative_nodate": "You answered maybe."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Repeats: {rule}",
+    "declined_dates": "You declined {dates}.",
+    "declined_many": "You declined {count} meetings of this series.",
+    "answers_series": "Your answer counts for every meeting in the series."
   },
   "calendar_event_notifications": {
     "someone": "Someone",
@@ -5812,6 +5825,26 @@
     "send_message": "Send a message",
     "share_mail_subject": "I shared {name} with you",
     "share_mail_body": "Hi,\n\nI shared \"{name}\" with you. You can open it here:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Add all to calendar",
+    "zone_contacts_all": "Add all to contacts",
+    "save_to_files": "Save to Files",
+    "saved": "{name} saved to Files.",
+    "saved_copy": "Saved to Files as {name}.",
+    "save_failed": "{name} could not be saved to Files.",
+    "changed_on_server": "{name} was changed in Files after you opened it.",
+    "gone_on_server": "{name} is no longer in Files.",
+    "keep_both": "Keep both",
+    "replace": "Replace",
+    "cancel": "Cancel",
+    "save_as_new": "Save as a new file",
+    "import_to_mail": "Import to a mail folder…",
+    "import_to_mail_title": "Import to a mail folder",
+    "imported_to_mail": "Imported into {folder}.",
+    "import_to_mail_failed": "{name} could not be imported.",
+    "import_contacts": "Import into contacts…",
+    "add_to_calendar": "Add to calendar…"
   },
   "smime": {
     "your_certificates": "Your Certificates",
@@ -7559,6 +7592,18 @@
     "import_mail": "Mail…",
     "import_calendar": "Calendar…",
     "import_contacts": "Contacts…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Refresh",
+    "menu_today": "Today",
+    "menu_next_period": "Next period",
+    "menu_previous_period": "Previous period",
+    "account_scope_label": "Showing {address}. Switch account",
+    "account_scope_menu": "Switch account",
+    "merge_links": "Links",
+    "merge_photo": "Photo",
+    "merge_kept": "Kept",
+    "import_show": "Show"
   },
   "desktopEdit": {
     "edit": "Edit",

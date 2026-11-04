@@ -19,14 +19,15 @@ const ICONS: Record<FileDropZoneId, ComponentType<{ className?: string }>> = {
 
 export function useZoneText() {
   const t = useTranslations("fileDrop");
+  const tAll = useTranslations("ux_p2_pim_files");
   const label = (zone: FileDropZone): string => {
     switch (zone.id) {
       case "attach-here": return t("zone_attach_here");
       case "insert-inline": return t("zone_insert_inline");
       case "new-message": return t("zone_new_message");
       case "upload": return zone.folder ? t("zone_upload_folder", { folder: zone.folder }) : t("zone_upload_files");
-      case "calendar": return t("zone_calendar");
-      case "contacts": return t("zone_contacts");
+      case "calendar": return zone.several ? tAll("zone_calendar_all") : t("zone_calendar");
+      case "contacts": return zone.several ? tAll("zone_contacts_all") : t("zone_contacts");
       case "open-eml": return t("zone_open_eml");
       case "import-eml": return t("zone_import_eml", { folder: zone.folder ?? "" });
     }

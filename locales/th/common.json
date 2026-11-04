@@ -2723,6 +2723,26 @@
     "share_mail_subject": "ฉันแชร์ {name} กับคุณ",
     "share_mail_body": "สวัสดี\n\nฉันแชร์ \"{name}\" กับคุณแล้ว เปิดได้ที่นี่:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "เพิ่มทั้งหมดในปฏิทิน",
+    "zone_contacts_all": "เพิ่มทั้งหมดในรายชื่อติดต่อ",
+    "save_to_files": "บันทึกลงในไฟล์",
+    "saved": "บันทึก {name} ลงในไฟล์แล้ว",
+    "saved_copy": "บันทึกลงในไฟล์เป็น {name} แล้ว",
+    "save_failed": "บันทึก {name} ลงในไฟล์ไม่ได้",
+    "changed_on_server": "{name} ถูกเปลี่ยนในไฟล์หลังจากที่คุณเปิด",
+    "gone_on_server": "{name} ไม่อยู่ในไฟล์แล้ว",
+    "keep_both": "เก็บทั้งสอง",
+    "replace": "แทนที่",
+    "cancel": "ยกเลิก",
+    "save_as_new": "บันทึกเป็นไฟล์ใหม่",
+    "import_to_mail": "นำเข้าไปยังโฟลเดอร์อีเมล…",
+    "import_to_mail_title": "นำเข้าไปยังโฟลเดอร์อีเมล",
+    "imported_to_mail": "นำเข้าไปยัง {folder} แล้ว",
+    "import_to_mail_failed": "นำเข้า {name} ไม่ได้",
+    "import_contacts": "นำเข้าไปยังรายชื่อติดต่อ…",
+    "add_to_calendar": "เพิ่มในปฏิทิน…"
+  },
   "protocol_handlers": {
     "title": "แอปพลิเคชันเริ่มต้น",
     "description": "เลือกว่าจะเปิดลิงก์อีเมลและปฏิทินใน {appName} หรือไม่",
@@ -4646,6 +4666,13 @@
     "caldav_shared_by": "แชร์โดย {name}:",
     "freebusy_description": "ผู้ที่คุณแชร์ด้วยจะเห็นว่าคุณไม่ว่างเมื่อใด แต่ไม่เห็นรายละเอียดกิจกรรม ฟีเจอร์แนะนำเวลาใช้ข้อมูลนี้"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "รายการ",
+    "task_list_not_in_calendar": "{name} (รายการงาน ไม่แสดงในปฏิทิน)",
+    "copy_to_account": "คัดลอกไปที่ {address}",
+    "copied_to_account": "คัดลอกไปที่ {address} แล้ว",
+    "delete_original": "ลบต้นฉบับ"
+  },
   "calendar_offline": {
     "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
   },
@@ -4666,6 +4693,12 @@
     "answered_accepted_nodate": "คุณตอบรับแล้ว",
     "answered_declined_nodate": "คุณปฏิเสธแล้ว",
     "answered_tentative_nodate": "คุณตอบว่าอาจจะ"
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "ทำซ้ำ: {rule}",
+    "declined_dates": "คุณปฏิเสธวันที่ {dates}",
+    "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
+    "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
   },
   "settings": {
     "title": "การตั้งค่า",
@@ -7567,6 +7600,18 @@
     "import_mail": "อีเมล…",
     "import_calendar": "ปฏิทิน…",
     "import_contacts": "ผู้ติดต่อ…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "รีเฟรช",
+    "menu_today": "วันนี้",
+    "menu_next_period": "ช่วงถัดไป",
+    "menu_previous_period": "ช่วงก่อนหน้า",
+    "account_scope_label": "กำลังแสดง {address} สลับบัญชี",
+    "account_scope_menu": "สลับบัญชี",
+    "merge_links": "ลิงก์",
+    "merge_photo": "รูปภาพ",
+    "merge_kept": "เก็บไว้",
+    "import_show": "แสดง"
   },
   "desktopEdit": {
     "edit": "แก้ไข",

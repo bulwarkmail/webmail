@@ -5238,6 +5238,13 @@
     "caldav_shared_by": "Поділився {name}:",
     "freebusy_description": "Ті, з ким ви поділилися, бачать, коли ви зайняті, але не бачать ваших подій. Цим користується «Запропонувати час»."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Список",
+    "task_list_not_in_calendar": "{name} (список завдань, не показується в календарі)",
+    "copy_to_account": "Копіювати до {address}",
+    "copied_to_account": "Скопійовано до {address}",
+    "delete_original": "Видалити оригінал"
+  },
   "calendar_offline": {
     "split_needs_server": "Для цієї зміни потрібне з'єднання із сервером. Поки що змініть лише цю подію або спробуйте ще раз, коли знову будете в мережі."
   },
@@ -5258,6 +5265,12 @@
     "answered_accepted_nodate": "Ви прийняли.",
     "answered_declined_nodate": "Ви відхилили.",
     "answered_tentative_nodate": "Ви відповіли «можливо»."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Повторюється: {rule}",
+    "declined_dates": "Ви відхилили зустріч {dates}.",
+    "declined_many": "Ви відхилили зустрічей цієї серії: {count}.",
+    "answers_series": "Ваша відповідь стосується всіх зустрічей серії."
   },
   "advanced_search": {
     "title": "Розширений пошук",
@@ -5550,6 +5563,26 @@
     "send_message": "Надіслати повідомлення",
     "share_mail_subject": "Я надав вам доступ до {name}",
     "share_mail_body": "Вітаю!\n\nЯ надав вам доступ до «{name}». Відкрити можна тут:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Додати все до календаря",
+    "zone_contacts_all": "Додати все до контактів",
+    "save_to_files": "Зберегти у Файли",
+    "saved": "{name} збережено у Файли.",
+    "saved_copy": "Збережено у Файли як {name}.",
+    "save_failed": "Не вдалося зберегти {name} у Файли.",
+    "changed_on_server": "{name} змінили у Файлах після того, як ви його відкрили.",
+    "gone_on_server": "{name} більше немає у Файлах.",
+    "keep_both": "Залишити обидва",
+    "replace": "Замінити",
+    "cancel": "Скасувати",
+    "save_as_new": "Зберегти як новий файл",
+    "import_to_mail": "Імпортувати в поштову теку…",
+    "import_to_mail_title": "Імпортувати в поштову теку",
+    "imported_to_mail": "Імпортовано в {folder}.",
+    "import_to_mail_failed": "Не вдалося імпортувати {name}.",
+    "import_contacts": "Імпортувати в контакти…",
+    "add_to_calendar": "Додати до календаря…"
   },
   "smime": {
     "your_certificates": "Ваші сертифікати",
@@ -7559,6 +7592,18 @@
     "import_mail": "Пошта…",
     "import_calendar": "Календар…",
     "import_contacts": "Контакти…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Оновити",
+    "menu_today": "Сьогодні",
+    "menu_next_period": "Наступний період",
+    "menu_previous_period": "Попередній період",
+    "account_scope_label": "Показано {address}. Змінити обліковий запис",
+    "account_scope_menu": "Змінити обліковий запис",
+    "merge_links": "Посилання",
+    "merge_photo": "Фото",
+    "merge_kept": "Залишиться",
+    "import_show": "Показати"
   },
   "desktopEdit": {
     "edit": "Редагувати",

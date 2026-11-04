@@ -13,6 +13,7 @@ import type { ContactCard, AddressBook } from "@/lib/jmap/types";
 import { getContactDisplayName, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { AccountScopeLabel } from "@/components/layout/account-scope-label";
 
 export type ContactCategory = "all" | "directory" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
 
@@ -283,7 +284,11 @@ export function ContactsSidebar({
       {/* Header */}
       {/* Same h-14 box as the mail sidebar's account switcher, so the apps line up. */}
       <div className="px-3 h-14 box-content border-b border-border flex items-center justify-between flex-shrink-0">
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
+        {/* Which account it shows, when there are several: the address, which switches. */}
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm font-semibold truncate">{t("title")}</span>
+          <AccountScopeLabel />
+        </div>
         <div className="relative flex-shrink-0">
           <IconButton
             label={t("new")}

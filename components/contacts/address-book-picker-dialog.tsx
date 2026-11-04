@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Book, Check } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { AddressBook } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { groupCalendarsByAccount } from "@/lib/calendar-targets";
+import { useAccountStore } from "@/stores/account-store";
 
 interface AddressBookPickerDialogProps {
   isOpen: boolean;
@@ -26,6 +28,10 @@ export function AddressBookPickerDialog({ isOpen, onClose, addressBooks, current
   const t = useTranslations("contacts");
   const [selected, setSelected] = useState<string | null>(null);
   const choice = addressBooks.find((b) => b.id === selected && b.id !== currentId) ?? null;
+  // Under each account's address with several signed in (pim-p2-3).
+  const accounts = useAccountStore((s) => s.accounts);
+  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const groups = groupCalendarsByAccount(addressBooks, accounts, activeAccountId);
 
   return (
     <Dialog
@@ -47,7 +53,12 @@ export function AddressBookPickerDialog({ isOpen, onClose, addressBooks, current
       }
     >
       <div role="radiogroup" aria-label={t("address_books.title")} className="mt-4 max-h-80 overflow-y-auto rounded-md border border-border py-1">
-        {addressBooks.map((book) => {
+        {groups.map((group) => (
+          <Fragment key={group.key || "own"}>
+            {group.label && (
+              <div className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground truncate" data-testid="address-book-account" title={group.label}>{group.label}</div>
+            )}
+        {group.calendars.map((book) => {
           const isCurrent = book.id === currentId;
           const isSelected = selected === book.id;
           return (
@@ -74,6 +85,8 @@ export function AddressBookPickerDialog({ isOpen, onClose, addressBooks, current
             </button>
           );
         })}
+          </Fragment>
+        ))}
       </div>
     </Dialog>
   );

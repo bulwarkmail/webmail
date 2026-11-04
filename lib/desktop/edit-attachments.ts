@@ -27,13 +27,27 @@ export type EditSource =
   | { kind: 'mail'; emailId: string; ownerAccountId?: string }
   /** A draft's attachment: offers the update, in the composer holding it. */
   | { kind: 'draft'; draftId: string | null; ownerAccountId?: string }
+  /**
+   * A file in Files, opened with "Open in default app": a save goes back into this node.
+   * `blobId` is the content last known to be there, to tell whether someone changed it
+   * on the server meanwhile.
+   */
+  | { kind: 'node'; nodeId: string; blobId: string | null; parentId: string | null }
   /** Its message went or it was taken off a draft: only the file is left. */
   | { kind: 'file' };
 
 export function parseEditSource(raw: string): EditSource {
   try {
-    const parsed = JSON.parse(raw) as Partial<EditSource> & { emailId?: unknown; draftId?: unknown; ownerAccountId?: unknown };
+    const parsed = JSON.parse(raw) as Partial<EditSource> & { emailId?: unknown; draftId?: unknown; ownerAccountId?: unknown; nodeId?: unknown; blobId?: unknown; parentId?: unknown };
     const ownerAccountId = typeof parsed.ownerAccountId === 'string' ? parsed.ownerAccountId : undefined;
+    if (parsed.kind === 'node' && typeof parsed.nodeId === 'string' && parsed.nodeId) {
+      return {
+        kind: 'node',
+        nodeId: parsed.nodeId,
+        blobId: typeof parsed.blobId === 'string' ? parsed.blobId : null,
+        parentId: typeof parsed.parentId === 'string' ? parsed.parentId : null,
+      };
+    }
     if (parsed.kind === 'mail' && typeof parsed.emailId === 'string') return { kind: 'mail', emailId: parsed.emailId, ownerAccountId };
     if (parsed.kind === 'draft') return { kind: 'draft', draftId: typeof parsed.draftId === 'string' ? parsed.draftId : null, ownerAccountId };
   } catch {

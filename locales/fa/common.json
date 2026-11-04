@@ -5238,6 +5238,13 @@
     "caldav_shared_by": "به اشتراک گذاشته‌شده توسط {name}:",
     "freebusy_description": "کسی که با او به اشتراک می‌گذارید می‌بیند چه زمانی مشغول هستید، نه اینکه رویدادهایتان چیست. «پیشنهاد زمان» از آن استفاده می‌کند."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "فهرست",
+    "task_list_not_in_calendar": "{name} (فهرست کارها، در تقویم نشان داده نمی‌شود)",
+    "copy_to_account": "رونوشت در {address}",
+    "copied_to_account": "در {address} رونوشت شد",
+    "delete_original": "حذف نسخهٔ اصلی"
+  },
   "calendar_offline": {
     "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
   },
@@ -5258,6 +5265,12 @@
     "answered_accepted_nodate": "پذیرفتید.",
     "answered_declined_nodate": "رد کردید.",
     "answered_tentative_nodate": "پاسخ «شاید» دادید."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "تکرار: {rule}",
+    "declined_dates": "جلسهٔ {dates} را رد کردید.",
+    "declined_many": "{count} جلسه از این سری را رد کردید.",
+    "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
   },
   "calendar_event_notifications": {
     "someone": "کسی",
@@ -5812,6 +5825,26 @@
     "send_message": "ارسال پیام",
     "share_mail_subject": "{name} را با شما به اشتراک گذاشتم",
     "share_mail_body": "سلام،\n\n«{name}» را با شما به اشتراک گذاشتم. می‌توانید آن را اینجا باز کنید:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "افزودن همه به تقویم",
+    "zone_contacts_all": "افزودن همه به مخاطبان",
+    "save_to_files": "ذخیره در فایل‌ها",
+    "saved": "{name} در فایل‌ها ذخیره شد.",
+    "saved_copy": "با نام {name} در فایل‌ها ذخیره شد.",
+    "save_failed": "ذخیرهٔ {name} در فایل‌ها ممکن نشد.",
+    "changed_on_server": "{name} پس از اینکه آن را باز کردید در فایل‌ها تغییر کرد.",
+    "gone_on_server": "{name} دیگر در فایل‌ها نیست.",
+    "keep_both": "نگه‌داشتن هر دو",
+    "replace": "جایگزینی",
+    "cancel": "انصراف",
+    "save_as_new": "ذخیره به‌عنوان فایل جدید",
+    "import_to_mail": "وارد کردن به یک پوشهٔ ایمیل…",
+    "import_to_mail_title": "وارد کردن به یک پوشهٔ ایمیل",
+    "imported_to_mail": "به {folder} وارد شد.",
+    "import_to_mail_failed": "وارد کردن {name} ممکن نشد.",
+    "import_contacts": "وارد کردن به مخاطبان…",
+    "add_to_calendar": "افزودن به تقویم…"
   },
   "smime": {
     "your_certificates": "گواهی‌های شما",
@@ -7559,6 +7592,18 @@
     "import_mail": "نامه…",
     "import_calendar": "تقویم…",
     "import_contacts": "مخاطبین…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "بازخوانی",
+    "menu_today": "امروز",
+    "menu_next_period": "بازه بعدی",
+    "menu_previous_period": "بازه قبلی",
+    "account_scope_label": "نمایش {address}. تغییر حساب",
+    "account_scope_menu": "تغییر حساب",
+    "merge_links": "پیوندها",
+    "merge_photo": "عکس",
+    "merge_kept": "حفظ می‌شود",
+    "import_show": "نمایش"
   },
   "desktopEdit": {
     "edit": "ویرایش",
