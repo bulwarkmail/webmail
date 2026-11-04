@@ -19,7 +19,7 @@ vi.mock('@/lib/admin/config-manager', () => ({
 }));
 vi.mock('@/lib/admin/plugin-registry', () => ({
   getPluginRegistry: vi.fn(async () => ({
-    plugins: [{ id: 'pretty-dates', name: 'Pretty Dates', version: '1.1.0', enabled: true, source: { kind: 'marketplace', slug: 'pretty-dates', directoryUrl: 'https://extensions.test' } }],
+    plugins: [{ id: 'pretty-dates', name: 'Pretty Dates', version: '1.1.0', permissions: ['email:read'], enabled: true, source: { kind: 'marketplace', slug: 'pretty-dates', directoryUrl: 'https://extensions.test' } }],
   })),
   getThemeRegistry: vi.fn(async () => ({ themes: [] })),
 }));
@@ -125,5 +125,45 @@ describe('GET /api/admin/marketplace/[slug]', () => {
   it('refuses a malformed version instead of forwarding it', async () => {
     directory();
     expect((await preview('?version=..%2F..%2Fetc')).status).toBe(400);
+  });
+});
+
+describe('permissions in the preview', () => {
+  async function previewOf(manifest: Record<string, unknown>) {
+    const zip = new JSZip();
+    zip.file('manifest.json', JSON.stringify({ id: 'pretty-dates', name: 'Pretty Dates', version: '1.2.0', author: 'x', description: 'd', type: 'hook', entrypoint: 'index.js', ...manifest }));
+    zip.file('index.js', '// x');
+    const bytes = (await zip.generateAsync({ type: 'uint8array' })).slice().buffer as ArrayBuffer;
+    const versions = [v('1.2.0')];
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const u = new URL(String(url));
+      if (u.pathname === '/api/v2/extensions/pretty-dates') {
+        return Response.json({ data: { ...summary, latest: versions[0], newest: versions[0], longDescription: 'long', versions, permissions: [{ id: 'crypto:full', title: 'Full crypto', body: 'b', highRisk: true }], screenshots: [], themePreviews: [], advisories: [] } });
+      }
+      if (u.pathname.endsWith('/versions')) return Response.json({ data: versions });
+      if (u.pathname.endsWith('/bundle')) return new Response(bytes);
+      return Response.json({ data: versions[0] });
+    }));
+    const res = await GET(new NextRequest('http://localhost/api/admin/marketplace/pretty-dates'), { params: Promise.resolve({ slug: 'pretty-dates' }) });
+    return res.json();
+  }
+
+  it('names an optional keystore with its own text and as high risk, even if the directory does not', async () => {
+    const body = await previewOf({ tier: 'privileged', permissions: ['crypto:full'], optionalPermissions: ['keystore'] });
+    const entry = body.extension.permissionDetails.find((p: { id: string }) => p.id === 'keystore');
+    expect(entry).toMatchObject({ highRisk: true });
+    expect(entry.title).toMatch(/certificates/i);
+    expect(body.extension.permissionDetails.filter((p: { id: string }) => p.id === 'crypto:full')).toHaveLength(1);
+  });
+
+  it('says what this version adds to the installed one', async () => {
+    const body = await previewOf({ tier: 'privileged', permissions: ['crypto:full', 'email:read'], optionalPermissions: ['keystore'] });
+    expect(body.bundle.addedPermissions).toEqual(['crypto:full', 'keystore']);
+  });
+
+  it('adds nothing for an untrusted plugin, which can not get it', async () => {
+    const body = await previewOf({ permissions: ['email:read'], optionalPermissions: ['keystore'] });
+    expect(body.extension.permissionDetails.map((p: { id: string }) => p.id)).not.toContain('keystore');
+    expect(body.bundle.addedPermissions).toEqual([]);
   });
 });

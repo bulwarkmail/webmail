@@ -75,6 +75,7 @@ export interface PolicyValues {
   AuthServerAllowlist: string | null;
   AuthNegotiateDelegateAllowlist: string | null;
   AutoSelectCertificateForUrls: CertificateRule[];
+  KeystoreEnabled: boolean;
   KeystoreAllowedOrigins: string[];
   BrowserSignIn: boolean;
   WipeOfflineData: string | null;
@@ -369,6 +370,19 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     description: {
       en: 'One JSON rule per line, in the format Chrome uses: {"pattern":"https://[*.]example.com","filter":{"ISSUER":{"CN":"Example CA"}}}. The app then picks the matching certificate for that site without asking.',
       de: 'Eine JSON-Regel pro Zeile, im Format von Chrome: {"pattern":"https://[*.]example.com","filter":{"ISSUER":{"CN":"Example CA"}}}. Die App wählt dann für diese Website das passende Zertifikat ohne Rückfrage.',
+    },
+  },
+  KeystoreEnabled: {
+    category: 'signIn',
+    forcedOnly: true,
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    sample: true,
+    title: { en: 'Allow the system certificate store', de: 'Zertifikatspeicher des Systems erlauben' },
+    description: {
+      en: 'When disabled, nothing in the app can sign or decrypt with the certificates and smart cards in the operating system\'s store, and nobody is asked. This overrides the list of sites below. It also holds when plugins are turned off. Imported keys are not affected.',
+      de: 'Wenn deaktiviert, kann nichts in der App mit den Zertifikaten und Smartcards im Speicher des Betriebssystems signieren oder entschlüsseln, und niemand wird gefragt. Das hat Vorrang vor der Liste der Websites unten. Es gilt auch, wenn Plugins ausgeschaltet sind. Importierte Schlüssel sind nicht betroffen.',
     },
   },
   KeystoreAllowedOrigins: {
@@ -840,6 +854,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   CrashReportsAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   QuickComposeShortcut: { repo: 'shell', file: 'src/main/features/os-quick-compose.ts' },
   AutoSelectCertificateForUrls: { repo: 'shell', file: 'src/main/features/client-certificates.ts' },
+  KeystoreEnabled: { repo: 'shell', file: 'src/main/features/policies.ts' },
   KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
   BrowserSignIn: { repo: 'shell', file: 'src/main/features/browser-sign-in.ts' },
 };

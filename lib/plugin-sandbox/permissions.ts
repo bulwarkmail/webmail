@@ -4,6 +4,13 @@ import { hookSpec } from '../plugin-hook-catalog';
 import { slotSpec } from '../plugin-slot-catalog';
 
 /**
+ * What an admin's install doesn't settle. These reach things on the user's own computer that
+ * the admin has no say over, so the user is asked even for a plugin the admin put there, and
+ * also when an update adds one to it.
+ */
+export const ALWAYS_ASK_USER: ReadonlySet<string> = new Set(['keystore']);
+
+/**
  * Whether `plugin` may use `perm`: the manifest must declare it, and an
  * admin must have installed the plugin (managed) or the user must have
  * granted it in the consent dialog. Implicit permissions always pass.
@@ -14,7 +21,7 @@ export function pluginHasPermission(plugin: InstalledPlugin, perm: Permission): 
   // Defense-in-depth: even if the manifest declares a permission, the host
   // refuses it unless an admin has marked the plugin as managed, or the user
   // has explicitly granted it via the consent dialog.
-  if (plugin.managed) return true;
+  if (plugin.managed && !ALWAYS_ASK_USER.has(perm)) return true;
   return (plugin.grantedPermissions ?? []).includes(perm);
 }
 

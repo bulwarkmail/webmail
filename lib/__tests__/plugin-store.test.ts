@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 
 // We test the raw store by directly invoking Zustand
@@ -64,6 +64,7 @@ import { usePluginStore, PLUGIN_PERSIST_DELAY_MS } from '@/stores/plugin-store';
 import { pluginStorage } from '@/lib/plugin-storage';
 import { deactivatePlugin, forgetSlotOffers } from '@/lib/plugin-loader';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
+import { head as consentHead, resolveHead as resolveConsent, subscribe as subscribeConsent } from '@/lib/plugin-sandbox/consent';
 
 function resetStore() {
   usePluginStore.setState({
@@ -559,5 +560,130 @@ describe('saving the plugin list', () => {
       setItem.mockRestore();
       vi.useRealTimers();
     }
+  });
+});
+
+describe('a plugin an admin installed, and the certificates on this computer', () => {
+  const serverSmime = {
+    id: 'smime', name: 'S/MIME', version: '1.5.0', author: 'a', description: '', type: 'hook', tier: 'privileged',
+    permissions: ['crypto:full', 'keystore'], entrypoint: 'index.js', forceEnabled: true, bundleHash: 'h',
+  };
+  const local = (overrides: Partial<InstalledPlugin> = {}) => mockPlugin({
+    id: 'smime', name: 'S/MIME', version: '1.5.0', tier: 'privileged', managed: true, enabled: true, status: 'enabled', adminApproved: true, bundleHash: 'h',
+    permissions: ['crypto:full', 'keystore'], ...overrides,
+  });
+  const answerConsent = (answer: boolean) => {
+    const seen: string[][] = [];
+    const stop = subscribeConsent(() => {
+      const request = consentHead();
+      if (!request) return;
+      seen.push(request.permissions);
+      queueMicrotask(() => resolveConsent(answer));
+    });
+    return { seen, stop };
+  };
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+  beforeEach(() => {
+    localStorage.clear();
+    resetStore();
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, keystore: {} };
+    vi.mocked(pluginStorage.codeIds).mockResolvedValue(['smime']);
+    mocks.apiFetch.mockImplementation(async (url: string) => (String(url).startsWith('/api/plugins')
+      ? new Response(JSON.stringify({ plugins: [serverSmime], themes: [] }))
+      : new Response(JSON.stringify({}))));
+  });
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('asks this person, for that alone, and keeps a yes', async () => {
+    usePluginStore.setState({ plugins: [local()] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([['keystore']]);
+    expect(usePluginStore.getState().plugins[0].grantedPermissions).toEqual(['keystore']);
+  });
+
+  it('asks when an update adds it to a plugin that had none', async () => {
+    usePluginStore.setState({ plugins: [local({ permissions: ['crypto:full'], version: '1.4.0' })] });
+    vi.mocked(mocks.downloadManagedBundle).mockResolvedValue('code');
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([['keystore']]);
+  });
+
+  it('runs it either way, and a no is not asked again', async () => {
+    const { loadPlugin } = await import('@/lib/plugin-loader');
+    vi.mocked(loadPlugin).mockClear();
+    usePluginStore.setState({ plugins: [local()] });
+    const first = answerConsent(false);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    first.stop();
+    expect(first.seen).toHaveLength(1);
+    expect(loadPlugin).toHaveBeenCalledTimes(1);
+    expect(usePluginStore.getState().plugins[0].grantedPermissions ?? []).not.toContain('keystore');
+    usePluginStore.setState({ initialized: false });
+    const second = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    second.stop();
+    expect(second.seen).toEqual([]);
+  });
+
+  it('starts the plugin again after a yes, so it sees what it was given', async () => {
+    const { loadPlugin } = await import('@/lib/plugin-loader');
+    vi.mocked(loadPlugin).mockClear();
+    vi.mocked(deactivatePlugin).mockClear();
+    usePluginStore.setState({ plugins: [local()] });
+    const { stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(deactivatePlugin).toHaveBeenCalledWith('smime');
+    expect(vi.mocked(loadPlugin).mock.lastCall?.[0]).toMatchObject({ grantedPermissions: ['keystore'] });
+  });
+
+  it('asks nothing in a browser, where there is no such thing', async () => {
+    delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    usePluginStore.setState({ plugins: [local()] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([]);
+  });
+
+  it('asks nothing for a plugin that does not want it', async () => {
+    mocks.apiFetch.mockImplementation(async (url: string) => (String(url).startsWith('/api/plugins')
+      ? new Response(JSON.stringify({ plugins: [{ ...serverSmime, permissions: ['crypto:full'] }], themes: [] }))
+      : new Response(JSON.stringify({}))));
+    usePluginStore.setState({ plugins: [local({ permissions: ['crypto:full'] })] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([]);
+  });
+
+  it('asks when someone turns it on themselves, and its other permissions stay the admin\'s call', async () => {
+    usePluginStore.setState({ plugins: [local({ enabled: false, status: 'installed', forceEnabled: false })] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().enablePlugin('smime');
+    stop();
+    expect(seen).toEqual([['keystore']]);
+    expect(usePluginStore.getState().plugins[0]).toMatchObject({ enabled: true, grantedPermissions: ['keystore'] });
+  });
+
+  it('forgets the answer once everyone has signed out: the next person gets asked', async () => {
+    usePluginStore.setState({ plugins: [local({ grantedPermissions: ['keystore'], declinedPermissions: ['keystore'] })] });
+    await purgeSignedOutData();
+    const [plugin] = usePluginStore.getState().plugins;
+    expect(plugin.grantedPermissions ?? []).toEqual([]);
+    expect(plugin.declinedPermissions ?? []).toEqual([]);
+    expect(plugin.managed).toBe(true);
   });
 });
