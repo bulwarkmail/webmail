@@ -34,6 +34,7 @@ vi.mock('@/components/layout/sidebar', () => ({
 vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => null }));
 vi.mock('@/components/ui/welcome-banner', () => ({
   WelcomeBanner: ({ variant = 'list' }: { variant?: string }) => <div data-testid={`welcome-${variant}`} />,
+  useWelcomeBannerDue: () => false,
 }));
 vi.mock('@/components/email/email-viewer', () => ({
   EmailViewer: ({ emptyPaneContent, emptyPaneFooter }: { emptyPaneContent?: React.ReactNode; emptyPaneFooter?: React.ReactNode }) => (
