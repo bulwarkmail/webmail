@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
-import { addEcho, isUndoWindow, mergeEchoes, sentEcho, withoutHeldSend } from '../held-send';
+import { addEcho, isUndoWindow, mergeEchoes, sentEcho, settleSent, withoutHeldSend } from '../held-send';
 
 const mb = (role: string, totalEmails: number, extra: Partial<Mailbox> = {}) =>
   ({ id: role, name: role, role, totalEmails, unreadEmails: 0, ...extra }) as Mailbox;
@@ -69,5 +69,15 @@ describe('echoes of sent replies', () => {
     expect(merged.bodyValues).toEqual(loaded.bodyValues);
     expect(merged.keywords).toEqual({ $seen: true });
     expect(merged.mailboxIds).toEqual({ archive: true });
+  });
+});
+
+describe('settleSent', () => {
+  it('drops the waiting mark once the send time passed, keeps later ones', () => {
+    const past = { id: 'a', isScheduled: true, scheduledSendAt: new Date(now - 1000).toISOString() } as Email;
+    const later = { id: 'b', isScheduled: true, scheduledSendAt: new Date(now + 60_000).toISOString() } as Email;
+    const [a, b] = settleSent([past, later], now);
+    expect(a.isScheduled).toBe(false);
+    expect(b.isScheduled).toBe(true);
   });
 });

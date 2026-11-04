@@ -109,3 +109,13 @@ export function mergeEchoes(server: Email[], shown: Email[]): Email[] {
   const echoes = shown.filter((e) => e.sentEcho && !ids.has(e.id));
   return echoes.length ? [...merged, ...echoes] : merged;
 }
+
+/**
+ * Messages whose send time has passed are sent: a thread read during the
+ * Undo window still marks them as waiting.
+ */
+export function settleSent(emails: Email[], now = Date.now()): Email[] {
+  return emails.map((e) => (e.isScheduled && e.scheduledSendAt && Date.parse(e.scheduledSendAt) <= now
+    ? { ...e, isScheduled: false, scheduledSendAt: undefined, scheduledUndoStatus: undefined }
+    : e));
+}

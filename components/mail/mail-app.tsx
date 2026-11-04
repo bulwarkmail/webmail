@@ -12,7 +12,7 @@ import { MessageListTabs, useMessageListPanelProps } from "@/components/email/me
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ReplyDock } from "@/components/mail/reply-dock";
-import { addEcho, isUndoWindow, mergeEchoes, sentEcho, withoutHeldSend } from "@/lib/held-send";
+import { addEcho, isUndoWindow, mergeEchoes, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
 import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 
 /** What waits with a send in its Undo window (mail-p2-8). */
@@ -4896,8 +4896,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     mvConversationLoadRef.current = null;
     const fresh = await loadMvConversation(ref, client);
     if (!fresh || useEmailStore.getState().selectedEmail?.threadId !== ref.threadId) return;
+    // A reply read back in its Undo window carries its send time; once that
+    // has passed it went out, whatever the scheduled list said then.
+    const settled = settleSent(fresh);
     setMvConversationResult((prev) => prev && prev.threadId === ref.threadId
-      ? { ...prev, emails: mergeEchoes(fresh, prev.emails) }
+      ? { ...prev, emails: mergeEchoes(settled, prev.emails) }
       : prev);
   };
   const echoSentReply = (replied: Email | null | undefined, sent: {
@@ -4913,7 +4916,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // A message alone so far: it becomes a conversation of two.
       return { emails: [open, echo], source: resolveEmailBlobContext(open, client), threadId: replied.threadId };
     });
-    for (const delay of [2000, 8000]) setTimeout(() => { void confirmConversation(open); }, delay);
+    for (const delay of [2000, 9000]) setTimeout(() => { void confirmConversation(open); }, delay);
   };
   const dropEcho = (emailId: string | undefined) => {
     if (!emailId) return;
