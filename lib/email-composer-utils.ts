@@ -618,5 +618,8 @@ export async function waitForPendingUploads(
     if (isCancelled()) return "cancelled";
     await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
+  // Completion/removal can race cancellation between polls. Closing the
+  // composer still wins, even when there is nothing left to wait for.
+  if (isCancelled()) return "cancelled";
   return getAttachments().some((att) => att.error) ? "failed" : "completed";
 }
