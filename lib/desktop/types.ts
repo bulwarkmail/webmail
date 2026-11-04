@@ -100,9 +100,31 @@ export interface DesktopMenuBarEntry {
 }
 
 export interface DesktopMenuBarEvent {
+  /** The bar has the keys: Alt was pressed. With `pinned` it shows either way. */
   visible: boolean;
   /** Open this menu right away: Alt plus its letter. */
   open?: string;
+  /** "Always show the menu bar". */
+  pinned?: boolean;
+}
+
+/** One line of a menu the page draws as the menu bar's. */
+export interface DesktopMenuBarItem {
+  /** Its place in the app menu: handed back with its text when it's picked. */
+  key: string;
+  label: string;
+  type: 'normal' | 'checkbox' | 'radio' | 'separator' | 'submenu';
+  enabled: boolean;
+  checked?: boolean;
+  /** As Electron writes it: `CmdOrCtrl+N`. */
+  accelerator?: string;
+  /** Where in `label` the letter for it is. */
+  mnemonic?: number;
+  items?: DesktopMenuBarItem[];
+}
+
+export interface DesktopMenuBarMenu extends DesktopMenuBarEntry {
+  items: DesktopMenuBarItem[];
 }
 
 /** What a page answers when asked to save before a window goes. */
@@ -129,6 +151,14 @@ export interface DesktopMenuBridge {
     /** Opens that menu natively, at page coordinates. */
     open: (id: string, at: { x: number; y: number }) => void;
     onEvent: (listener: (event: DesktopMenuBarEvent) => void) => () => void;
+    /** Every menu, with what's enabled and ticked in this window now. An older shell has none. */
+    menus?: () => Promise<DesktopMenuBarMenu[]>;
+    /** Runs a line of `menus`, by its key and text. */
+    run?: (key: string, label: string) => void;
+    /** The room the bar takes now (CSS pixels, 0 when gone), and whether it has the keys. */
+    report?: (report: { height: number; active: boolean }) => void;
+    /** "Always show the menu bar", in every window. */
+    setPinned?: (pinned: boolean) => void;
   };
 }
 

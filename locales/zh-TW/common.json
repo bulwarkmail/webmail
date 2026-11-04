@@ -6830,6 +6830,18 @@
       "close": "關閉"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "永遠顯示選單列",
+    "always_show_description": "否則按 Alt 鍵時顯示。",
+    "exit": "結束",
+    "tray_pause": "暫停通知",
+    "tray_pause_hour": "1 小時",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新開啟通知",
+    "tray_open": "開啟 Bulwark",
+    "tray_quit": "結束 Bulwark",
+    "tray_exit": "結束 Bulwark"
+  },
   "appLock": {
     "section_title": "應用程式鎖定",
     "section_desc": "一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,此裝置上的郵件保持加密,應用程式沒有金鑰。",

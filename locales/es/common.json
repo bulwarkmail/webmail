@@ -6830,6 +6830,18 @@
       "close": "Cerrar"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Mostrar siempre la barra de menús",
+    "always_show_description": "Si no, aparece al pulsar Alt.",
+    "exit": "Salir",
+    "tray_pause": "Pausar notificaciones",
+    "tray_pause_hour": "Durante 1 hora",
+    "tray_pause_tomorrow": "Hasta mañana",
+    "tray_resume": "Volver a activar las notificaciones",
+    "tray_open": "Abrir Bulwark",
+    "tray_quit": "Salir de Bulwark",
+    "tray_exit": "Salir de Bulwark"
+  },
   "appLock": {
     "section_title": "Bloqueo de la app",
     "section_desc": "Pide un PIN tras un tiempo sin uso, en cada ventana y pestaña. Mientras está bloqueada, el correo de este dispositivo sigue cifrado y la app no tiene la clave.",

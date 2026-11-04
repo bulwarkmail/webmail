@@ -6830,6 +6830,18 @@
       "close": "Zavrieť"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vždy zobrazovať panel ponúk",
+    "always_show_description": "Inak sa zobrazí po stlačení klávesu Alt.",
+    "exit": "Koniec",
+    "tray_pause": "Pozastaviť upozornenia",
+    "tray_pause_hour": "Na 1 hodinu",
+    "tray_pause_tomorrow": "Do zajtra",
+    "tray_resume": "Znova zapnúť upozornenia",
+    "tray_open": "Otvoriť Bulwark",
+    "tray_quit": "Ukončiť Bulwark",
+    "tray_exit": "Ukončiť Bulwark"
+  },
   "appLock": {
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase bez používania žiada o PIN, v každom okne a na každej karte. Kým je zamknuté, pošta na tomto zariadení zostáva šifrovaná a aplikácia k nej nemá kľúč.",

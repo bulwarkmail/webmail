@@ -6830,6 +6830,18 @@
       "close": "Close"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Always show the menu bar",
+    "always_show_description": "Otherwise it shows when you press Alt.",
+    "exit": "Exit",
+    "tray_pause": "Pause notifications",
+    "tray_pause_hour": "For 1 hour",
+    "tray_pause_tomorrow": "Until tomorrow",
+    "tray_resume": "Turn notifications back on",
+    "tray_open": "Open Bulwark",
+    "tray_quit": "Quit Bulwark",
+    "tray_exit": "Exit Bulwark"
+  },
   "appLock": {
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, mail on this device stays encrypted and the app has no key for it.",

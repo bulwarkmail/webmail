@@ -6830,6 +6830,18 @@
       "close": "Sulge"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Näita menüüriba alati",
+    "always_show_description": "Muidu ilmub see Alt-klahvi vajutamisel.",
+    "exit": "Välju",
+    "tray_pause": "Peata teavitused",
+    "tray_pause_hour": "1 tunniks",
+    "tray_pause_tomorrow": "Homseni",
+    "tray_resume": "Lülita teavitused uuesti sisse",
+    "tray_open": "Ava Bulwark",
+    "tray_quit": "Sulge Bulwark",
+    "tray_exit": "Välju Bulwarkist"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutamata aega PIN-koodi, igas aknas ja vahekaardil. Lukus olles jääb selle seadme e-post krüpteerituks ja rakendusel pole selle võtit.",

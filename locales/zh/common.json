@@ -6830,6 +6830,18 @@
       "close": "关闭"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "始终显示菜单栏",
+    "always_show_description": "否则按 Alt 键时显示。",
+    "exit": "退出",
+    "tray_pause": "暂停通知",
+    "tray_pause_hour": "1 小时",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新开启通知",
+    "tray_open": "打开 Bulwark",
+    "tray_quit": "退出 Bulwark",
+    "tray_exit": "退出 Bulwark"
+  },
   "appLock": {
     "section_title": "应用锁",
     "section_desc": "一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,此设备上的邮件保持加密,应用没有密钥。",

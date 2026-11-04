@@ -6842,6 +6842,18 @@
       "close": "Đóng"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Luôn hiện thanh menu",
+    "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
+    "exit": "Thoát",
+    "tray_pause": "Tạm dừng thông báo",
+    "tray_pause_hour": "Trong 1 giờ",
+    "tray_pause_tomorrow": "Đến ngày mai",
+    "tray_resume": "Bật lại thông báo",
+    "tray_open": "Mở Bulwark",
+    "tray_quit": "Thoát Bulwark",
+    "tray_exit": "Thoát Bulwark"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và thẻ. Khi đang khóa, thư trên thiết bị này vẫn được mã hóa và ứng dụng không có khóa của chúng.",

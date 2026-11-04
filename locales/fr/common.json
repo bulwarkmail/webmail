@@ -6830,6 +6830,18 @@
       "close": "Fermer"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Toujours afficher la barre de menus",
+    "always_show_description": "Sinon, elle s’affiche quand vous appuyez sur Alt.",
+    "exit": "Quitter",
+    "tray_pause": "Suspendre les notifications",
+    "tray_pause_hour": "Pendant 1 heure",
+    "tray_pause_tomorrow": "Jusqu’à demain",
+    "tray_resume": "Réactiver les notifications",
+    "tray_open": "Ouvrir Bulwark",
+    "tray_quit": "Quitter Bulwark",
+    "tray_exit": "Quitter Bulwark"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que l'app est verrouillée, les e-mails sur cet appareil restent chiffrés et l'app n'a pas de clé pour les lire.",

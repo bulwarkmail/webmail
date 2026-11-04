@@ -6830,6 +6830,18 @@
       "close": "Aizvērt"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vienmēr rādīt izvēļņu joslu",
+    "always_show_description": "Citādi tā parādās, nospiežot Alt.",
+    "exit": "Iziet",
+    "tray_pause": "Pauzēt paziņojumus",
+    "tray_pause_hour": "Uz 1 stundu",
+    "tray_pause_tomorrow": "Līdz rītdienai",
+    "tray_resume": "Atkal ieslēgt paziņojumus",
+    "tray_open": "Atvērt Bulwark",
+    "tray_quit": "Aizvērt Bulwark",
+    "tray_exit": "Iziet no Bulwark"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc laika bez lietošanas prasa PIN kodu katrā logā un cilnē. Kamēr lietotne ir bloķēta, e-pasts šajā ierīcē paliek šifrēts, un lietotnei nav tā atslēgas.",

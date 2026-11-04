@@ -6830,6 +6830,18 @@
       "close": "إغلاق"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "إظهار شريط القوائم دائمًا",
+    "always_show_description": "وإلا فسيظهر عند الضغط على Alt.",
+    "exit": "خروج",
+    "tray_pause": "إيقاف الإشعارات مؤقتًا",
+    "tray_pause_hour": "لمدة ساعة واحدة",
+    "tray_pause_tomorrow": "حتى الغد",
+    "tray_resume": "إعادة تشغيل الإشعارات",
+    "tray_open": "فتح Bulwark",
+    "tray_quit": "إنهاء Bulwark",
+    "tray_exit": "الخروج من Bulwark"
+  },
   "appLock": {
     "section_title": "قفل التطبيق",
     "section_desc": "يطلب رمز PIN بعد فترة دون استخدام، في كل نافذة وعلامة تبويب. أثناء القفل يبقى البريد على هذا الجهاز مشفرًا ولا يملك التطبيق مفتاحه.",

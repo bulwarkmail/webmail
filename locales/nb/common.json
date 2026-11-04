@@ -6830,6 +6830,18 @@
       "close": "Lukk"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vis alltid menylinjen",
+    "always_show_description": "Ellers vises den når du trykker på Alt.",
+    "exit": "Avslutt",
+    "tray_pause": "Sett varsler på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Til i morgen",
+    "tray_resume": "Slå på varsler igjen",
+    "tray_open": "Åpne Bulwark",
+    "tray_quit": "Avslutt Bulwark",
+    "tray_exit": "Avslutt Bulwark"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, forblir e-post på denne enheten kryptert, og appen har ingen nøkkel til den.",

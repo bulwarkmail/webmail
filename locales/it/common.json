@@ -6830,6 +6830,18 @@
       "close": "Chiudi"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra dei menu",
+    "always_show_description": "Altrimenti compare premendo Alt.",
+    "exit": "Esci",
+    "tray_pause": "Sospendi le notifiche",
+    "tray_pause_hour": "Per 1 ora",
+    "tray_pause_tomorrow": "Fino a domani",
+    "tray_resume": "Riattiva le notifiche",
+    "tray_open": "Apri Bulwark",
+    "tray_quit": "Esci da Bulwark",
+    "tray_exit": "Esci da Bulwark"
+  },
   "appLock": {
     "section_title": "Blocco dell'app",
     "section_desc": "Chiede un PIN dopo un periodo senza utilizzo, in ogni finestra e scheda. Finché è bloccata, la posta su questo dispositivo resta cifrata e l'app non ha la chiave.",

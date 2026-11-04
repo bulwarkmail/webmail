@@ -6830,6 +6830,18 @@
       "close": "Zamknij"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Zawsze pokazuj pasek menu",
+    "always_show_description": "W przeciwnym razie pojawia się po naciśnięciu Alt.",
+    "exit": "Zakończ",
+    "tray_pause": "Wstrzymaj powiadomienia",
+    "tray_pause_hour": "Na 1 godzinę",
+    "tray_pause_tomorrow": "Do jutra",
+    "tray_resume": "Włącz powiadomienia z powrotem",
+    "tray_open": "Otwórz Bulwark",
+    "tray_quit": "Zakończ Bulwark",
+    "tray_exit": "Zakończ Bulwark"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po czasie bezczynności, w każdym oknie i na każdej karcie. Gdy aplikacja jest zablokowana, poczta na tym urządzeniu pozostaje zaszyfrowana, a aplikacja nie ma do niej klucza.",

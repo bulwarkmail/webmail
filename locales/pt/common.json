@@ -6830,6 +6830,18 @@
       "close": "Fechar"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Mostrar sempre a barra de menus",
+    "always_show_description": "Caso contrário, aparece ao premir Alt.",
+    "exit": "Sair",
+    "tray_pause": "Pausar notificações",
+    "tray_pause_hour": "Durante 1 hora",
+    "tray_pause_tomorrow": "Até amanhã",
+    "tray_resume": "Voltar a ativar as notificações",
+    "tray_open": "Abrir o Bulwark",
+    "tray_quit": "Sair do Bulwark",
+    "tray_exit": "Sair do Bulwark"
+  },
   "appLock": {
     "section_title": "Bloqueio da app",
     "section_desc": "Pede um PIN após um tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, o correio neste dispositivo fica cifrado e a app não tem a chave.",

@@ -6830,6 +6830,18 @@
       "close": "閉じる"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "メニューバーを常に表示",
+    "always_show_description": "オフにすると、Alt キーを押したときに表示されます。",
+    "exit": "終了",
+    "tray_pause": "通知を一時停止",
+    "tray_pause_hour": "1 時間",
+    "tray_pause_tomorrow": "明日まで",
+    "tray_resume": "通知を再開",
+    "tray_open": "Bulwark を開く",
+    "tray_quit": "Bulwark を終了",
+    "tray_exit": "Bulwark を終了"
+  },
   "appLock": {
     "section_title": "アプリのロック",
     "section_desc": "一定時間使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中、このデバイスのメールは暗号化されたままで、アプリには鍵がありません。",

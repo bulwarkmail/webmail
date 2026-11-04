@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { ProTabFocusContext } from '@/hooks/use-pane-context';
@@ -26,6 +26,20 @@ vi.mock('@/components/error', () => ({
 }));
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
+
+// A message window: the Message menu's Move to… opens the folder list there.
+const popout = vi.hoisted(() => ({ value: false }));
+vi.mock('@/lib/popout/window-role', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/popout/window-role')>(),
+  isPopoutWindow: () => popout.value,
+}));
+const moveDialog = vi.hoisted(() => ({ current: null as { email: unknown } | null }));
+vi.mock('@/components/email/move-to-dialog', () => ({
+  MoveToDialog: (props: { email: unknown }) => {
+    moveDialog.current = props;
+    return null;
+  },
+}));
 vi.mock('@/stores/toast-store', () => ({ toast: { error: () => {}, success: () => {} } }));
 const multiAccount = vi.hoisted(() => ({
   value: { enabled: false, groups: [] as unknown[], allIdentities: [] as Array<{ id: string; email: string; name: string }> },
@@ -79,6 +93,7 @@ vi.mock('@/stores/pro-tab-store', () => ({
 }));
 
 import { ProEmailView } from '../pro-email-tab-body';
+import { resetDesktopCommands, runDesktopCommand } from '@/lib/desktop/commands';
 
 const DRAFT = {
   id: 'eaaaaab',
@@ -305,5 +320,26 @@ describe('Pro email view - keyboard', () => {
     await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
     press('r', 'KeyR');
     expect(openComposeTab).not.toHaveBeenCalled();
+  });
+});
+
+describe('Message > Move to… in a message window', () => {
+  it('opens the folder list for the message on screen', async () => {
+    popout.value = true;
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: vi.fn() } } as never;
+    try {
+      const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+      render(<ProEmailView emailId="eaaaaab" client={client as never} onClose={vi.fn()} />);
+      await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+      expect(moveDialog.current?.email ?? null).toBeNull();
+      act(() => {
+        expect(runDesktopCommand('message.move')).toBe(true);
+      });
+      await waitFor(() => expect(moveDialog.current?.email).toMatchObject({ id: 'eaaaaab' }));
+    } finally {
+      popout.value = false;
+      window.bulwarkDesktop = undefined;
+      resetDesktopCommands();
+    }
   });
 });
