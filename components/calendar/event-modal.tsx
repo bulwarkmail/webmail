@@ -1052,7 +1052,7 @@ export function EventModal({
               <MoreVertical />
             </IconButton>
           )}
-          <IconButton label={tCommon("close")} onClick={onClose} className="flex-shrink-0 mt-0.5 text-muted-foreground">
+          <IconButton label={tCommon("close")} onClick={onClose} className="flex-shrink-0 mt-0.5 text-muted-foreground" data-pane-close="">
             <X />
           </IconButton>
         </div>
@@ -1247,11 +1247,11 @@ export function EventModal({
 
   return (
     <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+      <div data-window-top-row="" className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
         <h2 className="text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}
         </h2>
-        <IconButton label={tCommon("close")} onClick={requestClose} className="flex-shrink-0 text-muted-foreground">
+        <IconButton label={tCommon("close")} onClick={requestClose} className="flex-shrink-0 text-muted-foreground" data-pane-close="">
           <X />
         </IconButton>
       </div>
