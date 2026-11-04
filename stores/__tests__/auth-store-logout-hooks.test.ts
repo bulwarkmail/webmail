@@ -73,6 +73,62 @@ describe('sign-out with plugins', () => {
     });
   });
 
+  describe('client certificates chosen for servers', () => {
+    afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+    const withBridge = (clearChoices?: () => Promise<void>) => {
+      (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, certificates: { clearChoices } };
+    };
+
+    it('all of them at the sign-out that leaves nobody', async () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      await useAuthStore.getState().logout();
+      expect(clearChoices).toHaveBeenCalledTimes(1);
+      expect(clearChoices.mock.calls[0][0]).toMatchObject({ last: true });
+    });
+
+    it('all of them when all accounts sign out', async () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      await useAuthStore.getState().logoutAll();
+      expect(clearChoices).toHaveBeenCalledWith({ last: true });
+    });
+
+    it('only its own while another account stays', async () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      const accounts = useAccountStore.getState();
+      const entry = (id: string) => ({ id, label: id, serverUrl: 'https://mail.example.test', username: id, authMode: 'basic' as const, rememberMe: true, displayName: id, email: id, lastLoginAt: 1, isConnected: true, hasError: false, isDefault: false, cookieSlot: id === 'a1' ? 0 : 1, avatarColor: '#000' });
+      useAccountStore.setState({ ...accounts, accounts: [entry('a1'), entry('a2')], activeAccountId: 'a1' });
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      await useAuthStore.getState().logout();
+      expect(clearChoices).toHaveBeenCalledWith({ account: 'a1', last: false });
+      expect(clearChoices.mock.calls.some(([scope]) => scope.last === true)).toBe(false);
+    });
+
+    it('nothing when switching to another account or searching across them', () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      const setAccount = vi.fn().mockResolvedValue(undefined);
+      (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, certificates: { clearChoices, setAccount } };
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      useAuthStore.setState({ activeAccountId: 'a2' });
+      useAuthStore.setState({ activeAccountId: 'a1' });
+      expect(clearChoices).not.toHaveBeenCalled();
+      expect(setAccount.mock.calls.at(-1)).toEqual(['a1']);
+      expect(setAccount).toHaveBeenCalledWith('a2');
+    });
+
+    it('signs out all the same on a shell without the call, or one that fails', async () => {
+      withBridge(undefined);
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      useAuthStore.setState({ isAuthenticated: true });
+      withBridge(vi.fn().mockRejectedValue(new Error('gone')));
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
   describe('keys in the OS store', () => {
     afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
     const withBridge = (clearGrants?: () => Promise<void>) => {

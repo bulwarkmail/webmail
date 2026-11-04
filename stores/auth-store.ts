@@ -18,7 +18,8 @@ import { generateAccountId, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
-import { clearDesktopCrashFiles, clearKeystoreGrants } from '@/lib/desktop/keystore-grants';
+import { clearDesktopCertificateChoices, clearDesktopCrashFiles, clearKeystoreGrants, noteDesktopCertificateAccount } from '@/lib/desktop/keystore-grants';
+import { onConnectionsReset } from '@/lib/desktop/connections-reset';
 import { DESKTOP_CLIENT_ID_KEY } from '@/lib/desktop/browser-sign-in';
 import { isEmbedded, notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll, forgetAccountRows } from '@/lib/account-state-manager';
@@ -359,6 +360,26 @@ function trackSessionWrite<T>(slot: number, run: (signal: AbortSignal) => Promis
   return request;
 }
 
+/** It holds the token lock, for every window: a request that never answers can't be left to hold it. */
+const TOKEN_RENEWAL_TIMEOUT_MS = 30_000;
+
+function renewalSignal(outer: AbortSignal): { signal: AbortSignal; done: () => void } {
+  const controller = new AbortController();
+  const stop = () => controller.abort();
+  if (outer.aborted) stop();
+  else outer.addEventListener('abort', stop, { once: true });
+  const timer = setTimeout(stop, TOKEN_RENEWAL_TIMEOUT_MS);
+  const stopWatching = onConnectionsReset(stop);
+  return {
+    signal: controller.signal,
+    done: () => {
+      clearTimeout(timer);
+      outer.removeEventListener('abort', stop);
+      stopWatching?.();
+    },
+  };
+}
+
 const TIMED_OUT = Symbol('timed out');
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof TIMED_OUT> {
@@ -649,8 +670,10 @@ function fetchSlotAccessToken(slot: number, opts: { force?: boolean; remember?: 
     const force = opts.force && !contended;
     if (!IS_LITE) {
       const query = `${force ? '&force=true' : ''}${opts.remember === false ? '&remember=false' : ''}`;
-      return apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal })
-        .then((res) => noteSessionAnswer(res, slot));
+      const renewal = renewalSignal(signal);
+      return apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal: renewal.signal })
+        .then((res) => noteSessionAnswer(res, slot))
+        .finally(renewal.done);
     }
     // Like the route's cookie cache: a restore resumes with the token it had,
     // since a renewal before the refresh token's `nbf` is refused (#552).
@@ -2544,6 +2567,7 @@ export const useAuthStore = create<AuthState>()(
         useSettingsStore.getState().disableSync();
 
         clearKeystoreGrants();
+        clearDesktopCertificateChoices({ account: accountId ?? undefined, last: useAccountStore.getState().accounts.length === 0 });
         clearDesktopCrashFiles();
         void authHooks.onAfterLogout.emit({
           accountId: accountId ?? 'all',
@@ -2635,6 +2659,7 @@ export const useAuthStore = create<AuthState>()(
             // mail never passed a question, so it waits for their next sign-in.
             accountStore.removeAccount(remaining.id, 'evicted');
           }
+          clearDesktopCertificateChoices({ last: true });
         }
 
         // Full logout. The credentials are cleared before the page state:
@@ -2679,6 +2704,7 @@ export const useAuthStore = create<AuthState>()(
         evictAccount(accountId);
         forgetAccountRows(accountId, get().client);
         accountStore.removeAccount(accountId, reason);
+        clearDesktopCertificateChoices({ account: accountId });
         forgetPrincipals(accountId);
         clearPluginStorageForAccount(accountId);
       },
@@ -2725,6 +2751,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         clearKeystoreGrants();
+        clearDesktopCertificateChoices({ last: true });
         clearDesktopCrashFiles();
         void authHooks.onAfterLogout.emit({
           accountId: 'all'
@@ -3872,6 +3899,7 @@ useAuthStore.subscribe((state, prev) => {
   const ready = state.isAuthenticated && !!state.client && !!state.activeAccountId;
   const wasReady = prev.isAuthenticated && !!prev.client && !!prev.activeAccountId;
   if (ready && !wasReady) void authHooks.onAuthReady.emit({ accountId: state.activeAccountId });
+  if (state.activeAccountId !== prev.activeAccountId) noteDesktopCertificateAccount(state.activeAccountId);
   if (state.activeAccountId && prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) {
     clearKeystoreGrants();
     clearDesktopCrashFiles();

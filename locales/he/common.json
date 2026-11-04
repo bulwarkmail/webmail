@@ -6928,6 +6928,14 @@
     "revoke": "ביטול",
     "revoked": "ההרשאה בוטלה"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} מבקש אישור",
+    "picker_detail": "השרת רוצה לדעת מי אתם. האישור שתבחרו יישלח לשרת הזה בלבד. אם אינכם מכירים את השרת הזה, אל תשלחו אישור.",
+    "picker_issued": "הונפק על ידי {issuer}, בתוקף עד {date}",
+    "picker_remember": "לזכור עבור {host}",
+    "picker_none": "לא לשלוח אישור",
+    "picker_more": "אישורים נוספים…"
+  },
   "desktopOs": {
     "section_title": "יישום שולחן עבודה",
     "section_description": "איך היישום עובד עם המחשב שלך.",

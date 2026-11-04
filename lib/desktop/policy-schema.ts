@@ -337,8 +337,8 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     label: { en: 'Servers', de: 'Server' },
     title: { en: 'Servers for integrated sign-in', de: 'Server für die integrierte Anmeldung' },
     description: {
-      en: 'The servers that may use the Windows sign-in (Kerberos, NTLM), separated by commas, such as *.example.com. Takes effect when the app restarts.',
-      de: 'Die Server, die die Windows-Anmeldung (Kerberos, NTLM) verwenden dürfen, durch Kommas getrennt, etwa *.example.com. Wird beim Neustart der App wirksam.',
+      en: 'The servers that may use the Windows sign-in (Kerberos, NTLM), separated by commas, such as *.example.com. A server taken off the list stops getting it at once. A new one needs the app to restart.',
+      de: 'Die Server, die die Windows-Anmeldung (Kerberos, NTLM) verwenden dürfen, durch Kommas getrennt, etwa *.example.com. Ein von der Liste entfernter Server erhält sie sofort nicht mehr. Ein neuer braucht einen Neustart der App.',
     },
   },
   AuthNegotiateDelegateAllowlist: {
@@ -826,7 +826,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   TelemetryAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   CrashReportsAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   QuickComposeShortcut: { repo: 'shell', file: 'src/main/features/os-quick-compose.ts' },
-  AutoSelectCertificateForUrls: { pendingConsumer: 'step 7, client certificates' },
+  AutoSelectCertificateForUrls: { repo: 'shell', file: 'src/main/features/client-certificates.ts' },
   KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
 };
 

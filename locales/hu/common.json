@@ -6927,6 +6927,14 @@
     "revoke": "Visszavonás",
     "revoked": "Engedély visszavonva"
   },
+  "desktop_certificates": {
+    "picker_title": "A(z) {host} tanúsítványt kér",
+    "picker_detail": "A kiszolgáló tudni szeretné, ki vagy. A kiválasztott tanúsítvány csak ehhez a kiszolgálóhoz kerül. Ha nem ismered ezt a kiszolgálót, ne küldj tanúsítványt.",
+    "picker_issued": "Kiállító: {issuer}, érvényes eddig: {date}",
+    "picker_remember": "Megjegyzés ehhez: {host}",
+    "picker_none": "Ne küldjön tanúsítványt",
+    "picker_more": "További tanúsítványok…"
+  },
   "desktopOs": {
     "section_title": "Asztali alkalmazás",
     "section_description": "Hogyan működik az alkalmazás a számítógépével.",

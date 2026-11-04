@@ -6927,6 +6927,14 @@
     "revoke": "Odvolať",
     "revoked": "Povolenie bolo odvolané"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} žiada o certifikát",
+    "picker_detail": "Server chce vedieť, kto ste. Certifikát, ktorý vyberiete, pôjde len na tento server. Ak tento server nepoznáte, žiadny neposielajte.",
+    "picker_issued": "Vydal {issuer}, platí do {date}",
+    "picker_remember": "Zapamätať pre {host}",
+    "picker_none": "Neposielať certifikát",
+    "picker_more": "Ďalšie certifikáty…"
+  },
   "desktopOs": {
     "section_title": "Počítačová aplikácia",
     "section_description": "Ako aplikácia spolupracuje s vaším počítačom.",

@@ -6927,6 +6927,14 @@
     "revoke": "Retrage",
     "revoked": "Permisiune retrasă"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} cere un certificat",
+    "picker_detail": "Serverul vrea să știe cine ești. Certificatul pe care îl alegi merge doar la acest server. Dacă nu cunoști acest server, nu trimite niciunul.",
+    "picker_issued": "Emis de {issuer}, valabil până la {date}",
+    "picker_remember": "Reține pentru {host}",
+    "picker_none": "Nu trimite un certificat",
+    "picker_more": "Mai multe certificate…"
+  },
   "desktopOs": {
     "section_title": "Aplicație desktop",
     "section_description": "Cum funcționează aplicația cu computerul tău.",
