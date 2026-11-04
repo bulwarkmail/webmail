@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Paragraph from '@tiptap/extension-paragraph';
@@ -6,6 +6,14 @@ import { trailingParagraphBreakRule } from '../paragraph-breaks';
 import { QuotedHtml, buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { SignatureBlock, buildSignatureBlock } from '../signature-block';
 import { ReplyQuoteCollapse, markReplyQuoteHeader, userTextEnd } from '../reply-quote-collapse';
+
+// jsdom has no elementFromPoint; ProseMirror's own mousedown handler asks it where a click landed.
+// Without it that handler throws after the test, as an unhandled error, while the test still passes.
+beforeAll(() => {
+  if (typeof document.elementFromPoint !== 'function') {
+    Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: () => null });
+  }
+});
 
 const HEADER = markReplyQuoteHeader('<div>On Monday, Bob wrote:<br></div>');
 const ORIGINAL = '<p>Original message</p><img src="cid:logo"><blockquote>Earlier reply</blockquote>';
