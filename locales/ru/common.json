@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} ({total} во всех аккаунтах)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {Ничего не найдено} one {Найдена # беседа} few {Найдено # беседы} many {Найдено # бесед} other {Найдено # беседы}}"
+    "conversations_found": "{count, plural, =0 {Ничего не найдено} one {Найдена # беседа} few {Найдено # беседы} many {Найдено # бесед} other {Найдено # беседы}}",
+    "name_unread_sub": "{name}, непрочитанных: {count}, во вложенных папках ещё {sub}",
+    "name_unread_only_sub": "{name}, непрочитанных во вложенных папках: {sub}",
+    "sub_unread": "Непрочитанных во вложенных папках: {sub}"
   },
   "uxs_folders": {
     "manage_accounts": "Управление аккаунтами…",

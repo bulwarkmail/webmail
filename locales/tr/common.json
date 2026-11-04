@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {Sonuç bulunamadı} one {# konuşma bulundu} other {# konuşma bulundu}}"
+    "conversations_found": "{count, plural, =0 {Sonuç bulunamadı} one {# konuşma bulundu} other {# konuşma bulundu}}",
+    "name_unread_sub": "{name}, {count} okunmamış, alt klasörlerde {sub} tane daha",
+    "name_unread_only_sub": "{name}, alt klasörlerde {sub} okunmamış",
+    "sub_unread": "Alt klasörlerde {sub} okunmamış"
   },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",

@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {نتیجه‌ای یافت نشد} one {# مکالمه یافت شد} other {# مکالمه یافت شد}}"
+    "conversations_found": "{count, plural, =0 {نتیجه‌ای یافت نشد} one {# مکالمه یافت شد} other {# مکالمه یافت شد}}",
+    "name_unread_sub": "{name}، خوانده‌نشده: {count}، در زیرپوشه‌ها: {sub}",
+    "name_unread_only_sub": "{name}، خوانده‌نشده در زیرپوشه‌ها: {sub}",
+    "sub_unread": "خوانده‌نشده در زیرپوشه‌ها: {sub}"
   },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",

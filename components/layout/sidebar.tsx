@@ -400,6 +400,9 @@ interface SidebarRowProps {
   /** Names the row the same folded and unfolded, so the drawer opened by a
    *  hover can put the hovered item back under the pointer. */
   railKey?: string;
+  /** Unread mail in subfolders that aren't shown under this row (folded to
+   *  icons, or the folder closed), so it shows somewhere (mail-p3 p2-9). */
+  subfolderUnread?: number;
 }
 
 function SidebarRow({
@@ -425,9 +428,11 @@ function SidebarRow({
   testMailboxId,
   testShared,
   railKey,
+  subfolderUnread = 0,
 }: SidebarRowProps) {
   const t = useTranslations('sidebar');
   const tShell = useTranslations('shell');
+  const tP3 = useTranslations('mail_p3_list');
   const leftPad = isCollapsed ? 0 : ROW_PX_BASE + depth * INDENT_STEP;
   const mutedId = useId();
   // The unread count is part of the folder's name ("Inbox, 3 unread"), also
@@ -440,7 +445,15 @@ function SidebarRow({
   const unreadForName = unreadCountStyle === 'hidden' ? 0 : resolveFolderCounts({
     unread, total, role: testRole, mode: countMode, showTotalGlobally: showFolderTotalCount, mountainView,
   }).unread;
-  const accessibleName = unreadForName > 0 ? tShell('name_unread', { name: label, count: unreadForName }) : undefined;
+  const subUnread = unreadCountStyle === 'hidden' ? 0 : subfolderUnread;
+  const accessibleName = subUnread > 0
+    ? (unreadForName > 0
+        ? tP3('name_unread_sub', { name: label, count: unreadForName, sub: subUnread })
+        : tP3('name_unread_only_sub', { name: label, sub: subUnread }))
+    : unreadForName > 0 ? tShell('name_unread', { name: label, count: unreadForName }) : undefined;
+  // Folded, the counter adds what the hidden subfolders hold: "Inbox 9" over
+  // 442 unread below it read as if everything was read.
+  const foldedUnread = unreadForName + subUnread;
   // The default layout's folded column: one grid of square items.
   const railItem = isCollapsed && !mountainView;
   const [labelRef, shortenedLabel] = useShortenedText(labelCandidates ?? [label]);
@@ -562,7 +575,7 @@ function SidebarRow({
           {icon}
         </span>
         {/* Folded to icons, a small counter at the icon's top corner (p2-9); the name says it already. */}
-        {isCollapsed && unreadForName > 0 && (
+        {isCollapsed && foldedUnread > 0 && (
           unreadCountStyle === 'dot' ? (
             <span aria-hidden="true" data-testid="folded-unread" className="absolute top-1.5 end-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
           ) : (
@@ -571,7 +584,7 @@ function SidebarRow({
               data-testid="folded-unread"
               className="absolute top-0 end-0 min-w-3 h-3 px-[0.1875rem] rounded-full bg-primary text-primary-foreground text-[0.5625rem] leading-3 font-semibold tabular-nums text-center"
             >
-              {unreadForName > 99 ? '99+' : unreadForName}
+              {foldedUnread > 99 ? '99+' : foldedUnread}
             </span>
           )
         )}
@@ -604,6 +617,15 @@ function SidebarRow({
           role={testRole}
           mailboxId={testMailboxId}
           isSelected={isSelected}
+        />
+      )}
+      {/* A closed folder whose subfolders hold unread mail: a dot after its count, said in its name. */}
+      {!isCollapsed && subUnread > 0 && (
+        <span
+          aria-hidden="true"
+          data-testid="subfolder-unread"
+          title={tP3('sub_unread', { sub: subUnread })}
+          className="ms-1.5 inline-block w-1.5 h-1.5 flex-shrink-0 rounded-full bg-primary/70"
         />
       )}
       {hasMenu && !isCollapsed && coarsePointer && (
@@ -653,7 +675,9 @@ function FolderInitial({ name, className }: { name: string; className?: string }
         dominantBaseline="central"
         fill="currentColor"
         stroke="none"
-        fontSize="10"
+        // 13.5 of 24 units: 9 px at the 16 px icon size, the smallest that
+        // reads at 100 % (mail-p3, p2-9); 10 units was about 6 px.
+        fontSize="13.5"
         fontWeight="700"
       >
         {initial}
@@ -918,6 +942,7 @@ function MailboxTreeItem({
         isValidDropTarget={isValidDropTarget && !pickOnly}
         onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
         muted={muted}
+        subfolderUnread={hasChildren && (isCollapsed || !isExpanded) ? subtreeUnread(node) : 0}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (

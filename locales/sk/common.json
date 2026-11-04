@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {Neboli nájdené žiadne výsledky} one {Nájdená # konverzácia} few {Nájdené # konverzácie} many {Nájdených # konverzácií} other {Nájdených # konverzácií}}"
+    "conversations_found": "{count, plural, =0 {Neboli nájdené žiadne výsledky} one {Nájdená # konverzácia} few {Nájdené # konverzácie} many {Nájdených # konverzácií} other {Nájdených # konverzácií}}",
+    "name_unread_sub": "{name}, neprečítané: {count}, v podpriečinkoch ďalších {sub}",
+    "name_unread_only_sub": "{name}, neprečítané v podpriečinkoch: {sub}",
+    "sub_unread": "Neprečítané v podpriečinkoch: {sub}"
   },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",

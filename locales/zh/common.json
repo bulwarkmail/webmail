@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} (所有账户共 {total})"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {未找到结果} other {找到 # 个会话}}"
+    "conversations_found": "{count, plural, =0 {未找到结果} other {找到 # 个会话}}",
+    "name_unread_sub": "{name}，{count} 封未读，子文件夹中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子文件夹中有 {sub} 封未读",
+    "sub_unread": "子文件夹中有 {sub} 封未读"
   },
   "uxs_folders": {
     "manage_accounts": "管理账户…",

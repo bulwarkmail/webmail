@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} (所有帳號共 {total})"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {找不到結果} other {找到 # 個對話串}}"
+    "conversations_found": "{count, plural, =0 {找不到結果} other {找到 # 個對話串}}",
+    "name_unread_sub": "{name}，{count} 封未讀，子資料夾中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子資料夾中有 {sub} 封未讀",
+    "sub_unread": "子資料夾中有 {sub} 封未讀"
   },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",

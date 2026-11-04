@@ -5714,7 +5714,10 @@
     "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {לא נמצאו תוצאות} one {נמצאה שיחה אחת} two {נמצאו שתי שיחות} other {נמצאו # שיחות}}"
+    "conversations_found": "{count, plural, =0 {לא נמצאו תוצאות} one {נמצאה שיחה אחת} two {נמצאו שתי שיחות} other {נמצאו # שיחות}}",
+    "name_unread_sub": "{name}, {count} שלא נקראו, עוד {sub} בתיקיות משנה",
+    "name_unread_only_sub": "{name}, {sub} שלא נקראו בתיקיות משנה",
+    "sub_unread": "{sub} שלא נקראו בתיקיות משנה"
   },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",

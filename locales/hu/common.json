@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {Nincs találat} one {# beszélgetés található} other {# beszélgetés található}}"
+    "conversations_found": "{count, plural, =0 {Nincs találat} one {# beszélgetés található} other {# beszélgetés található}}",
+    "name_unread_sub": "{name}, {count} olvasatlan, további {sub} az almappákban",
+    "name_unread_only_sub": "{name}, {sub} olvasatlan az almappákban",
+    "sub_unread": "{sub} olvasatlan az almappákban"
   },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",

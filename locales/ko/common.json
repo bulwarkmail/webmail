@@ -3908,7 +3908,10 @@
     "title_all_accounts_only": "{name} (모든 계정에 {total})"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {검색 결과가 없습니다} other {대화 #개를 찾았습니다}}"
+    "conversations_found": "{count, plural, =0 {검색 결과가 없습니다} other {대화 #개를 찾았습니다}}",
+    "name_unread_sub": "{name}, 읽지 않음 {count}개, 하위 폴더에 {sub}개 더",
+    "name_unread_only_sub": "{name}, 하위 폴더에 읽지 않음 {sub}개",
+    "sub_unread": "하위 폴더에 읽지 않음 {sub}개"
   },
   "uxs_folders": {
     "manage_accounts": "계정 관리…",

@@ -1058,7 +1058,10 @@
     "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },
   "mail_p3_list": {
-    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}"
+    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}",
+    "name_unread_sub": "{name}, ยังไม่อ่าน {count}, ในโฟลเดอร์ย่อยอีก {sub}",
+    "name_unread_only_sub": "{name}, ยังไม่อ่านในโฟลเดอร์ย่อย {sub}",
+    "sub_unread": "ยังไม่อ่านในโฟลเดอร์ย่อย {sub}"
   },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
