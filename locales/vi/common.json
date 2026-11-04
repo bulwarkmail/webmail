@@ -7158,6 +7158,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# giờ}}",
     "desktop_attention_title": "Trên máy tính này"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Tên của bạn",
+      "description": "Mọi người thấy tên này cạnh địa chỉ của bạn khi bạn gửi thư cho họ.",
+      "saved": "Đã lưu tên của bạn.",
+      "error": "Không lưu được tên của bạn. Hãy thử lại."
+    },
+    "addresses": {
+      "description": "Các địa chỉ bạn có thể gửi thư, mỗi địa chỉ có tên và chữ ký riêng.",
+      "label": "Địa chỉ của bạn",
+      "count": "{count, plural, =0 {Chưa có địa chỉ nào} other {# địa chỉ}}",
+      "manage": "Sửa địa chỉ…",
+      "modal_title": "Địa chỉ email của bạn",
+      "add": "Thêm địa chỉ",
+      "edit": "Sửa địa chỉ",
+      "added": "Đã thêm địa chỉ.",
+      "saved": "Đã lưu địa chỉ.",
+      "deleted": "Đã xóa địa chỉ.",
+      "delete_title": "Xóa địa chỉ này?"
+    },
+    "signatures": {
+      "title": "Chữ ký",
+      "description": "Được thêm vào cuối thư bạn viết. Mỗi địa chỉ có chữ ký riêng.",
+      "saved": "Đã lưu chữ ký.",
+      "error": "Không lưu được chữ ký. Hãy thử lại.",
+      "no_addresses": "Chưa có địa chỉ nào để gửi."
+    },
+    "search": {
+      "addresses": "danh tính bí danh người gửi địa chỉ người gửi địa chỉ gửi từ identity alias sender",
+      "signatures": "chữ ký chữ ký email chân trang danh tính người gửi địa chỉ gửi từ signature",
+      "your_name": "tên hiển thị họ tên tên người gửi display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
     "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",

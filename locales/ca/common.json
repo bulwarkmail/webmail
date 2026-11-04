@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# hores}}",
     "desktop_attention_title": "En aquest ordinador"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "El vostre nom",
+      "description": "La gent veu aquest nom al costat de la vostra adreça quan els envieu correu.",
+      "saved": "S'ha desat el vostre nom.",
+      "error": "No s'ha pogut desar el vostre nom. Torneu-ho a provar."
+    },
+    "addresses": {
+      "description": "Les adreces des de les quals podeu enviar, cadascuna amb el seu nom i la seva signatura.",
+      "label": "Les vostres adreces",
+      "count": "{count, plural, =0 {Encara no hi ha adreces} one {# adreça} other {# adreces}}",
+      "manage": "Edita les adreces…",
+      "modal_title": "Les vostres adreces de correu",
+      "add": "Afegeix una adreça",
+      "edit": "Edita l'adreça",
+      "added": "S'ha afegit l'adreça.",
+      "saved": "S'ha desat l'adreça.",
+      "deleted": "S'ha suprimit l'adreça.",
+      "delete_title": "Voleu suprimir aquesta adreça?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "S'afegeix al final dels missatges que escriviu. Cada adreça té la seva.",
+      "saved": "S'ha desat la signatura.",
+      "error": "No s'ha pogut desar la signatura. Torneu-ho a provar.",
+      "no_addresses": "Encara no teniu cap adreça per enviar."
+    },
+    "search": {
+      "addresses": "identitat identitats àlies remitent adreça del remitent adreça de identity alias sender",
+      "signatures": "signatura signatura de correu peu identitat remitent adreça de signature",
+      "your_name": "nom visible nom complet nom del remitent display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",

@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodin}}",
     "desktop_attention_title": "Na tomto počítači"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Vaše jméno",
+      "description": "Toto jméno lidé vidí vedle vaší adresy, když jim pošlete e-mail.",
+      "saved": "Vaše jméno je uloženo.",
+      "error": "Vaše jméno se nepodařilo uložit. Zkuste to znovu."
+    },
+    "addresses": {
+      "description": "Adresy, ze kterých můžete odesílat, každá s vlastním jménem a podpisem.",
+      "label": "Vaše adresy",
+      "count": "{count, plural, =0 {Zatím žádné adresy} one {# adresa} few {# adresy} many {# adresy} other {# adres}}",
+      "manage": "Upravit adresy…",
+      "modal_title": "Vaše e-mailové adresy",
+      "add": "Přidat adresu",
+      "edit": "Upravit adresu",
+      "added": "Adresa přidána.",
+      "saved": "Adresa uložena.",
+      "deleted": "Adresa smazána.",
+      "delete_title": "Smazat tuto adresu?"
+    },
+    "signatures": {
+      "title": "Podpisy",
+      "description": "Přidá se na konec zpráv, které píšete. Každá adresa má svůj vlastní.",
+      "saved": "Podpis uložen.",
+      "error": "Podpis se nepodařilo uložit. Zkuste to znovu.",
+      "no_addresses": "Zatím nemáte adresu, ze které lze odesílat."
+    },
+    "search": {
+      "addresses": "identita identity alias aliasy odesílatel adresa odesílatele adresa od identity alias sender",
+      "signatures": "podpis e-mailový podpis zápatí identita odesílatel adresa od signature",
+      "your_name": "zobrazované jméno celé jméno jméno odesílatele display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Nejdřív zadejte adresu serveru.",
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",

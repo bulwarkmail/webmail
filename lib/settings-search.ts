@@ -64,12 +64,12 @@ const syn = (id: string) => `uxs_structure.search.${id}`;
 // the label (see descriptionKeyFor) and searched too.
 export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   account: [
-    { label: 'settings.account.name_label' },
+    { label: 'uxs2_ident.your_name.label', synonyms: 'uxs2_ident.search.your_name' },
     { label: 'settings.account.email.label' },
     { label: 'settings.account.auth_method_label' },
     { label: 'settings.account.server.label', advanced: true },
-    { label: 'settings.account.sections.addresses', synonyms: syn('signature') },
-    { label: 'settings.identities.identities_count.label' },
+    { label: 'settings.account.sections.addresses', synonyms: 'uxs2_ident.search.addresses' },
+    { label: 'uxs2_ident.addresses.label' },
     { label: 'settings.identities.sub_addressing.label' },
     { label: 'settings.email_behavior.sub_address_delimiter.label', advanced: true },
     { label: 'settings.account.accounts.title', when: 'multiAccount' },

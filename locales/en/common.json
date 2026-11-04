@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hour} other {# hours}}",
     "desktop_attention_title": "On this computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Your name",
+      "description": "People see this name next to your address when you send them mail.",
+      "saved": "Your name is saved.",
+      "error": "Your name could not be saved. Try again."
+    },
+    "addresses": {
+      "description": "The addresses you can send from, each with its own name and signature.",
+      "label": "Your addresses",
+      "count": "{count, plural, =0 {No addresses yet} one {# address} other {# addresses}}",
+      "manage": "Edit addresses…",
+      "modal_title": "Your email addresses",
+      "add": "Add address",
+      "edit": "Edit address",
+      "added": "Address added.",
+      "saved": "Address saved.",
+      "deleted": "Address deleted.",
+      "delete_title": "Delete this address?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "Added at the end of the messages you write. Each address has its own.",
+      "saved": "Signature saved.",
+      "error": "The signature could not be saved. Try again.",
+      "no_addresses": "There is no address to send from yet."
+    },
+    "search": {
+      "addresses": "identity identities alias aliases sender sender address from address from name",
+      "signatures": "signature email signature sign-off footer identity sender from address",
+      "your_name": "display name full name sender name from name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",

@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# uur} other {# uur}}",
     "desktop_attention_title": "Op deze computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Uw naam",
+      "description": "Mensen zien deze naam naast uw adres als u ze mailt.",
+      "saved": "Uw naam is opgeslagen.",
+      "error": "Uw naam kon niet worden opgeslagen. Probeer het opnieuw."
+    },
+    "addresses": {
+      "description": "De adressen waarvanaf u kunt verzenden, elk met een eigen naam en handtekening.",
+      "label": "Uw adressen",
+      "count": "{count, plural, =0 {Nog geen adressen} one {# adres} other {# adressen}}",
+      "manage": "Adressen bewerken…",
+      "modal_title": "Uw e-mailadressen",
+      "add": "Adres toevoegen",
+      "edit": "Adres bewerken",
+      "added": "Adres toegevoegd.",
+      "saved": "Adres opgeslagen.",
+      "deleted": "Adres verwijderd.",
+      "delete_title": "Dit adres verwijderen?"
+    },
+    "signatures": {
+      "title": "Handtekeningen",
+      "description": "Komt onder de berichten die u schrijft. Elk adres heeft een eigen handtekening.",
+      "saved": "Handtekening opgeslagen.",
+      "error": "De handtekening kon niet worden opgeslagen. Probeer het opnieuw.",
+      "no_addresses": "Er is nog geen adres om vanaf te verzenden."
+    },
+    "search": {
+      "addresses": "identiteit identiteiten alias afzender afzenderadres van-adres identity sender",
+      "signatures": "handtekening e-mailhandtekening voettekst identiteit afzender van-adres signature",
+      "your_name": "weergavenaam volledige naam afzendernaam display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Vul eerst het adres van de server in.",
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",

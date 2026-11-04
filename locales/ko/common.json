@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, other {#시간}}",
     "desktop_attention_title": "이 컴퓨터에서"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "내 이름",
+      "description": "메일을 보내면 받는 사람에게 주소 옆에 이 이름이 보입니다.",
+      "saved": "이름을 저장했습니다.",
+      "error": "이름을 저장하지 못했습니다. 다시 시도하세요."
+    },
+    "addresses": {
+      "description": "보낼 때 쓸 수 있는 주소입니다. 주소마다 이름과 서명이 따로 있습니다.",
+      "label": "내 주소",
+      "count": "{count, plural, =0 {아직 주소가 없습니다} other {주소 #개}}",
+      "manage": "주소 편집…",
+      "modal_title": "내 이메일 주소",
+      "add": "주소 추가",
+      "edit": "주소 편집",
+      "added": "주소를 추가했습니다.",
+      "saved": "주소를 저장했습니다.",
+      "deleted": "주소를 삭제했습니다.",
+      "delete_title": "이 주소를 삭제할까요?"
+    },
+    "signatures": {
+      "title": "서명",
+      "description": "작성한 메시지 끝에 붙습니다. 주소마다 서명이 따로 있습니다.",
+      "saved": "서명을 저장했습니다.",
+      "error": "서명을 저장하지 못했습니다. 다시 시도하세요.",
+      "no_addresses": "아직 보낼 수 있는 주소가 없습니다."
+    },
+    "search": {
+      "addresses": "ID 아이덴티티 별칭 보낸 사람 보낸 사람 주소 발신 주소 identity alias sender",
+      "signatures": "서명 이메일 서명 바닥글 아이덴티티 보낸 사람 발신 주소 signature",
+      "your_name": "표시 이름 전체 이름 보낸 사람 이름 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "먼저 서버 주소를 입력하세요.",
     "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",

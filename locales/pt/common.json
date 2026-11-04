@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# horas}}",
     "desktop_attention_title": "Neste computador"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "O seu nome",
+      "description": "As pessoas veem este nome ao lado do seu endereço quando lhes envia e-mail.",
+      "saved": "O seu nome foi guardado.",
+      "error": "Não foi possível guardar o seu nome. Tente novamente."
+    },
+    "addresses": {
+      "description": "Os endereços a partir dos quais pode enviar, cada um com o seu nome e assinatura.",
+      "label": "Os seus endereços",
+      "count": "{count, plural, =0 {Ainda sem endereços} one {# endereço} other {# endereços}}",
+      "manage": "Editar endereços…",
+      "modal_title": "Os seus endereços de e-mail",
+      "add": "Adicionar endereço",
+      "edit": "Editar endereço",
+      "added": "Endereço adicionado.",
+      "saved": "Endereço guardado.",
+      "deleted": "Endereço eliminado.",
+      "delete_title": "Eliminar este endereço?"
+    },
+    "signatures": {
+      "title": "Assinaturas",
+      "description": "É acrescentada no fim das mensagens que escreve. Cada endereço tem a sua.",
+      "saved": "Assinatura guardada.",
+      "error": "Não foi possível guardar a assinatura. Tente novamente.",
+      "no_addresses": "Ainda não há nenhum endereço a partir do qual enviar."
+    },
+    "search": {
+      "addresses": "identidade identidades alias remetente endereço do remetente endereço de envio identity sender",
+      "signatures": "assinatura assinatura de e-mail rodapé identidade remetente endereço de envio signature",
+      "your_name": "nome a mostrar nome completo nome do remetente display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Digite primeiro o endereço do servidor.",
     "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",

@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# horas}}",
     "desktop_attention_title": "En este ordenador"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Tu nombre",
+      "description": "La gente ve este nombre junto a tu dirección cuando les envías un correo.",
+      "saved": "Tu nombre se ha guardado.",
+      "error": "No se ha podido guardar tu nombre. Inténtalo de nuevo."
+    },
+    "addresses": {
+      "description": "Las direcciones desde las que puedes enviar, cada una con su propio nombre y firma.",
+      "label": "Tus direcciones",
+      "count": "{count, plural, =0 {Todavía no hay direcciones} one {# dirección} other {# direcciones}}",
+      "manage": "Editar direcciones…",
+      "modal_title": "Tus direcciones de correo",
+      "add": "Añadir dirección",
+      "edit": "Editar dirección",
+      "added": "Dirección añadida.",
+      "saved": "Dirección guardada.",
+      "deleted": "Dirección eliminada.",
+      "delete_title": "¿Eliminar esta dirección?"
+    },
+    "signatures": {
+      "title": "Firmas",
+      "description": "Se añade al final de los mensajes que escribes. Cada dirección tiene la suya.",
+      "saved": "Firma guardada.",
+      "error": "No se ha podido guardar la firma. Inténtalo de nuevo.",
+      "no_addresses": "Todavía no hay ninguna dirección desde la que enviar."
+    },
+    "search": {
+      "addresses": "identidad identidades alias remitente dirección del remitente dirección de envío identity alias sender",
+      "signatures": "firma firma de correo pie identidad remitente dirección de envío signature",
+      "your_name": "nombre visible nombre completo nombre del remitente display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",

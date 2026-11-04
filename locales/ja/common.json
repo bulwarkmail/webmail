@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, other {#時間}}",
     "desktop_attention_title": "このコンピューター"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "あなたの名前",
+      "description": "メールを送ると、相手にはこの名前がアドレスの横に表示されます。",
+      "saved": "名前を保存しました。",
+      "error": "名前を保存できませんでした。もう一度お試しください。"
+    },
+    "addresses": {
+      "description": "送信に使えるアドレスです。アドレスごとに名前と署名があります。",
+      "label": "あなたのアドレス",
+      "count": "{count, plural, =0 {まだアドレスはありません} other {# 件のアドレス}}",
+      "manage": "アドレスを編集…",
+      "modal_title": "あなたのメールアドレス",
+      "add": "アドレスを追加",
+      "edit": "アドレスを編集",
+      "added": "アドレスを追加しました。",
+      "saved": "アドレスを保存しました。",
+      "deleted": "アドレスを削除しました。",
+      "delete_title": "このアドレスを削除しますか?"
+    },
+    "signatures": {
+      "title": "署名",
+      "description": "書いたメッセージの最後に付きます。アドレスごとに別の署名を使えます。",
+      "saved": "署名を保存しました。",
+      "error": "署名を保存できませんでした。もう一度お試しください。",
+      "no_addresses": "送信に使えるアドレスがまだありません。"
+    },
+    "search": {
+      "addresses": "ID アイデンティティ エイリアス 差出人 差出人アドレス 送信元アドレス identity alias sender",
+      "signatures": "署名 メール署名 フッター アイデンティティ 差出人 送信元アドレス signature",
+      "your_name": "表示名 氏名 差出人名 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "先にサーバーのアドレスを入力してください。",
     "server_declined": "このサーバーを許可しなかったため、何も送信していません。",

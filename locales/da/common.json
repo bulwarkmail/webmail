@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
     "desktop_attention_title": "På denne computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Dit navn",
+      "description": "Folk ser dette navn ved siden af din adresse, når du sender dem mail.",
+      "saved": "Dit navn er gemt.",
+      "error": "Dit navn kunne ikke gemmes. Prøv igen."
+    },
+    "addresses": {
+      "description": "De adresser, du kan sende fra, hver med sit eget navn og sin egen signatur.",
+      "label": "Dine adresser",
+      "count": "{count, plural, =0 {Ingen adresser endnu} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "Dine e-mailadresser",
+      "add": "Tilføj adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er tilføjet.",
+      "saved": "Adressen er gemt.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Slet denne adresse?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Tilføjes i slutningen af de beskeder, du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er gemt.",
+      "error": "Signaturen kunne ikke gemmes. Prøv igen.",
+      "no_addresses": "Der er endnu ingen adresse at sende fra."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias afsender afsenderadresse fra-adresse identity alias sender",
+      "signatures": "signatur e-mailsignatur sidefod identitet afsender fra-adresse signature",
+      "your_name": "visningsnavn fulde navn afsendernavn display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",

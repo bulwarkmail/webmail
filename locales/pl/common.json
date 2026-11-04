@@ -7146,6 +7146,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
     "desktop_attention_title": "Na tym komputerze"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Twoje imię i nazwisko",
+      "description": "Ludzie widzą tę nazwę obok Twojego adresu, gdy wysyłasz im wiadomość.",
+      "saved": "Zapisano Twoje imię i nazwisko.",
+      "error": "Nie udało się zapisać Twojego imienia i nazwiska. Spróbuj ponownie."
+    },
+    "addresses": {
+      "description": "Adresy, z których możesz wysyłać, każdy z własną nazwą i podpisem.",
+      "label": "Twoje adresy",
+      "count": "{count, plural, =0 {Jeszcze brak adresów} one {# adres} few {# adresy} many {# adresów} other {# adresu}}",
+      "manage": "Edytuj adresy…",
+      "modal_title": "Twoje adresy e-mail",
+      "add": "Dodaj adres",
+      "edit": "Edytuj adres",
+      "added": "Dodano adres.",
+      "saved": "Zapisano adres.",
+      "deleted": "Usunięto adres.",
+      "delete_title": "Usunąć ten adres?"
+    },
+    "signatures": {
+      "title": "Podpisy",
+      "description": "Dodawany na końcu pisanych wiadomości. Każdy adres ma własny.",
+      "saved": "Zapisano podpis.",
+      "error": "Nie udało się zapisać podpisu. Spróbuj ponownie.",
+      "no_addresses": "Nie masz jeszcze adresu, z którego można wysyłać."
+    },
+    "search": {
+      "addresses": "tożsamość tożsamości alias nadawca adres nadawcy adres od identity sender",
+      "signatures": "podpis podpis e-mail stopka tożsamość nadawca adres od signature",
+      "your_name": "nazwa wyświetlana imię i nazwisko nazwa nadawcy display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
