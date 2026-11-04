@@ -144,6 +144,8 @@ describe('a message with a reply draft (compose-p2-6)', () => {
     await screen.findByText('stub reply draft: my answer');
     fireEvent.click(screen.getByText('stub reply'));
     await waitFor(() => expect(screen.getByTestId('stub-composer')).toHaveAttribute('data-draft', 'd1'));
+    // Under the message it answers, as a new reply is, not over it.
+    expect(screen.getByTestId('stub-composer').closest('[data-reply-dock]')).not.toBeNull();
   });
 
   it('starts a new reply when the conversation has no reply to this message', async () => {

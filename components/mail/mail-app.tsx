@@ -306,6 +306,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
   const [dockedSession, setDockedSession] = useState<number | null>(null);
+  // A reply draft opened again from its message (compose-p2-6): it docks too.
+  const [resumedReplySession, setResumedReplySession] = useState<number | null>(null);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -2873,7 +2875,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       } : null;
     }
     if (!found) return false;
-    await handleEditDraft(found.draft, found.source);
+    await handleEditDraft(found.draft, found.source, { underMessage: true });
     return true;
   };
 
@@ -2912,7 +2914,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
    * undone or cancelled - the account it was sent from (a group or shared one
    * for mail sent from its identity) and the login that sent it.
    */
-  const handleEditDraft = async (email?: Email, source?: DraftSource) => {
+  // `underMessage`: a reply draft resumed from the message it answers docks
+  // under that message, as a new reply does (compose-p2-6).
+  const handleEditDraft = async (email?: Email, source?: DraftSource, { underMessage = false }: { underMessage?: boolean } = {}) => {
     if (!client) return;
     const draftCandidate = email && typeof email === 'object' && typeof email.id === 'string'
       ? email
@@ -2961,7 +2965,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     // Increment session ID to force the composer to remount with fresh state,
     // even if it was already open (e.g. right-clicking a draft while composing).
-    setComposerSessionId(id => id + 1);
+    const nextSession = composerSessionRef.current + 1;
+    setComposerSessionId(nextSession);
+    setResumedReplySession(underMessage ? nextSession : null);
     setPendingDraft(composerDataFromDraft(draft, {
       accountId,
       localAccountId,
@@ -5053,7 +5059,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Decided as it opens and kept for the session: moving it would mount it
   // anew when the message goes away (another folder opened meanwhile).
   const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
-    && (pendingDraft?.mode ?? composerMode) !== 'compose';
+    && ((pendingDraft?.mode ?? composerMode) !== 'compose' || resumedReplySession === composerSessionId);
   const dockOnOpen = dockCandidate && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
   if (dockOnOpen && dockedSession !== composerSessionId) setDockedSession(composerSessionId);
   const dockedReply = dockCandidate && (dockOnOpen || dockedSession === composerSessionId);
@@ -6355,7 +6361,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     replyComposerOpen={dockedReply}
                     replyDraft={replyDraft && selectedEmail && replyDraft.emailId === selectedEmail.id ? {
                       preview: replyDraft.draft.preview,
-                      onEdit: () => void handleEditDraft(replyDraft.draft, replyDraft.source).catch(reportDraftOpenFailure),
+                      onEdit: () => void handleEditDraft(replyDraft.draft, replyDraft.source, { underMessage: true }).catch(reportDraftOpenFailure),
                       onDiscard: discardReplyDraft,
                     } : null}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
