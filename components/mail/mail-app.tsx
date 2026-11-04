@@ -529,7 +529,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen,
     setSearchFilters,
     setSearchMailboxId,
-    scopeSearchToOpenFolder,
     clearSearchFilters,
     toggleAdvancedSearch,
     advancedSearch,
@@ -618,7 +617,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     isAdvancedSearchOpen: state.isAdvancedSearchOpen,
     setSearchFilters: state.setSearchFilters,
     setSearchMailboxId: state.setSearchMailboxId,
-    scopeSearchToOpenFolder: state.scopeSearchToOpenFolder,
     clearSearchFilters: state.clearSearchFilters,
     toggleAdvancedSearch: state.toggleAdvancedSearch,
     advancedSearch: state.advancedSearch,
@@ -3892,47 +3890,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
-  const handleUnreadFilterClick = async (mailboxId: string) => {
-    const isTogglingOff = selectedMailbox === mailboxId && !selectedKeyword && searchFilters.isUnread === true;
-
-    // Open the mailbox unless it is already the one listed. A tag view keeps
-    // selectedMailbox, so it counts as another view.
-    if (selectedMailbox !== mailboxId || selectedKeyword) {
-      if (isUnifiedView) exitUnifiedView();
-      setScheduledView(false);
-      selectMailbox(mailboxId);
-      selectEmail(null);
-    }
-
-    // On mobile, close sidebar and go to list view
-    if (isMobile) {
-      setSidebarOpen(false);
-      setActiveView("list");
-    }
-
-    // On tablet, show the list again
-    if (isTablet) {
-      setTabletListVisible(true);
-      setSidebarOpen(false);
-    }
-
-    if (isTogglingOff) {
-      // Disable the unread filter and show all emails
-      clearSearchFilters();
-      if (client) {
-        await fetchEmails(client, mailboxId);
-      }
-    } else {
-      // Enable unread filter, in this folder only
-      clearSearchFilters();
-      scopeSearchToOpenFolder();
-      setSearchFilters({ isUnread: true });
-      if (client) {
-        await advancedSearch(client);
-      }
-    }
-  };
-
   const tCtxMenu = t;
 
   const handleMarkFolderRead = async (mailboxId: string) => {
@@ -4755,7 +4712,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onOpenStarred: mvShell ? goToStarred : undefined,
     onMailboxSelect: handleMailboxSelect,
     onTagSelect: handleTagSelect,
-    onUnreadFilterClick: handleUnreadFilterClick,
     onMarkFolderRead: handleMarkFolderRead,
     onMarkFolderTreeRead: handleMarkFolderTreeRead,
     onMarkAllFoldersRead: handleMarkAllFoldersRead,

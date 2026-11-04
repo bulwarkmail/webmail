@@ -116,7 +116,6 @@ interface SidebarProps {
    */
   mvShell?: boolean;
   onSidebarClose?: () => void;
-  onUnreadFilterClick?: (mailboxId: string) => void;
   onMarkFolderRead?: (mailboxId: string) => void;
   onMarkFolderTreeRead?: (mailboxId: string) => void;
   onMarkAllFoldersRead?: () => void;
@@ -235,16 +234,13 @@ function SidebarRowCounts({
   total,
   role,
   mailboxId,
-  onUnreadClick,
 }: {
   unread?: number;
   total?: number;
   role?: string | null;
   mailboxId?: string;
   isSelected: boolean;
-  onUnreadClick?: () => void;
 }) {
-  const t = useTranslations('sidebar');
   const tShell = useTranslations('shell');
   const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
   const mountainView = useSettingsStore(s => s.interfaceLayout === 'mountain-view');
@@ -287,26 +283,12 @@ function SidebarRowCounts({
   const unreadClass = "text-xs font-semibold tabular-nums text-foreground";
   const totalClass = "text-xs tabular-nums text-muted-foreground";
 
+  // Text, not a button: a click on the count opens the folder like the rest
+  // of the row. It used to turn on an Unread filter and an "Inbox" search
+  // scope that stayed and broke later searches (usability test 2026-11-04).
   const unreadNode = unreadCount > 0 ? (
-    onUnreadClick ? (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onUnreadClick();
-        }}
-        // 24px to hit, with a short count at the end of it, next to the
-        // slash and the total, not in the middle with a gap before them.
-        className={cn(unreadClass, "inline-flex items-center justify-end min-w-6 min-h-6 -my-1 cursor-pointer hover:underline rounded-sm focus-visible:outline-hidden")}
-        title={t('unread_filter', { count: unreadCount })}
-        aria-label={t('unread_filter', { count: unreadCount })}
-      >
-        {unreadCountStyle === 'dot' ? unreadDot : unreadCount}
-      </button>
-    ) : (
-      // Said with the folder's name already.
-      <span className={unreadClass} aria-hidden="true">{unreadCountStyle === 'dot' ? unreadDot : unreadCount}</span>
-    )
+    // Said with the folder's name already.
+    <span className={unreadClass} aria-hidden="true">{unreadCountStyle === 'dot' ? unreadDot : unreadCount}</span>
   ) : null;
 
   return (
@@ -367,7 +349,6 @@ interface SidebarRowProps {
   hasChildren?: boolean;
   isExpanded?: boolean;
   onExpandToggle?: () => void;
-  onUnreadClick?: () => void;
   isCollapsed: boolean;
   dropHandlers?: Record<string, unknown>;
   isValidDropTarget?: boolean;
@@ -395,7 +376,6 @@ function SidebarRow({
   hasChildren = false,
   isExpanded = false,
   onExpandToggle,
-  onUnreadClick,
   isCollapsed,
   dropHandlers,
   isValidDropTarget,
@@ -542,8 +522,7 @@ function SidebarRow({
           </>
         )}
       </button>
-      {/* Beside the row's button, not in it: the unread count is a button
-          of its own (it filters the folder to unread). */}
+      {/* Beside the row's button, not in it; a click on it opens the folder through the row. */}
       {!isCollapsed && (
         <SidebarRowCounts
           unread={unread}
@@ -551,7 +530,6 @@ function SidebarRow({
           role={testRole}
           mailboxId={testMailboxId}
           isSelected={isSelected}
-          onUnreadClick={onUnreadClick}
         />
       )}
       {hasMenu && !isCollapsed && coarsePointer && (
@@ -693,7 +671,6 @@ function MailboxTreeItem({
   onMailboxSelect,
   onToggleExpand,
   isCollapsed,
-  onUnreadFilterClick,
   colorful,
   onContextMenu,
   dragAccountId = null,
@@ -707,7 +684,6 @@ function MailboxTreeItem({
   onMailboxSelect?: (id: string) => void;
   onToggleExpand: (id: string) => void;
   isCollapsed: boolean;
-  onUnreadFilterClick?: (mailboxId: string) => void;
   colorful: boolean;
   onContextMenu?: (e: React.MouseEvent, node: MailboxNode) => void;
   /** Connected-account id this folder is listed under; null = active account.
@@ -789,7 +765,6 @@ function MailboxTreeItem({
         hasChildren={hasChildren}
         isExpanded={isExpanded}
         onExpandToggle={() => onToggleExpand(node.id)}
-        onUnreadClick={() => onUnreadFilterClick?.(node.id)}
         isCollapsed={isCollapsed}
         dropHandlers={
           folderDragHandlers || (globalDragging && !pickOnly)
@@ -814,7 +789,6 @@ function MailboxTreeItem({
             onMailboxSelect={onMailboxSelect}
             onToggleExpand={onToggleExpand}
             isCollapsed={isCollapsed}
-            onUnreadFilterClick={onUnreadFilterClick}
             colorful={colorful}
             onContextMenu={onContextMenu}
             dragAccountId={dragAccountId}
@@ -1127,7 +1101,6 @@ function SidebarImpl({
   onTagSelect,
   onCompose,
   onSidebarClose,
-  onUnreadFilterClick,
   onMarkFolderRead,
   onMarkFolderTreeRead,
   onMarkAllFoldersRead,
@@ -1513,7 +1486,6 @@ function SidebarImpl({
             onMailboxSelect={onSelect}
             onToggleExpand={handleToggleExpand}
             isCollapsed={isCollapsed}
-            onUnreadFilterClick={active ? onUnreadFilterClick : undefined}
             colorful={colorfulSidebarIcons}
             onContextMenu={active ? handleMailboxContextMenu : undefined}
             dragAccountId={dragAccountId}
@@ -1586,7 +1558,6 @@ function SidebarImpl({
                       onMailboxSelect={onSelect}
                       onToggleExpand={handleToggleExpand}
                       isCollapsed={isCollapsed}
-                      onUnreadFilterClick={active ? onUnreadFilterClick : undefined}
                       colorful={colorfulSidebarIcons}
                       onContextMenu={active ? (e, node) => handleCompactSharedContextMenu(e, node, compact.id, menuAccountId, inboxHasSubfolders) : undefined}
                       pickOnly={!active}
@@ -1632,7 +1603,6 @@ function SidebarImpl({
                             onMailboxSelect={onSelect}
                             onToggleExpand={handleToggleExpand}
                             isCollapsed={isCollapsed}
-                            onUnreadFilterClick={active ? onUnreadFilterClick : undefined}
                             colorful={colorfulSidebarIcons}
                             onContextMenu={active ? handleMailboxContextMenu : undefined}
                             pickOnly={!active}
@@ -2090,7 +2060,6 @@ function SidebarImpl({
                               }
                               onToggleExpand={handleToggleExpand}
                               isCollapsed={isCollapsed}
-                              onUnreadFilterClick={isActive ? onUnreadFilterClick : undefined}
                               colorful={colorfulSidebarIcons}
                               onContextMenu={isActive ? handleMailboxContextMenu : undefined}
                               dragAccountId={isActive ? null : account.id}
@@ -2157,7 +2126,6 @@ function SidebarImpl({
                           onMailboxSelect={onMailboxSelect}
                           onToggleExpand={handleToggleExpand}
                           isCollapsed={isCollapsed}
-                          onUnreadFilterClick={onUnreadFilterClick}
                           colorful={colorfulSidebarIcons}
                           onContextMenu={handleMailboxContextMenu}
                         />
@@ -2200,7 +2168,6 @@ function SidebarImpl({
                         onMailboxSelect={onMailboxSelect}
                         onToggleExpand={handleToggleExpand}
                         isCollapsed={isCollapsed}
-                        onUnreadFilterClick={onUnreadFilterClick}
                         colorful={colorfulSidebarIcons}
                         onContextMenu={handleMailboxContextMenu}
                       />
@@ -2242,7 +2209,6 @@ function SidebarImpl({
                 onMailboxSelect={onMailboxSelect}
                 onToggleExpand={handleToggleExpand}
                 isCollapsed={isCollapsed}
-                onUnreadFilterClick={onUnreadFilterClick}
                 colorful={colorfulSidebarIcons}
                 onContextMenu={handleMailboxContextMenu}
               />

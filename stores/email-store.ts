@@ -3625,6 +3625,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchQuery: (query) => set((state) => ({
     searchQuery: query,
     ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
+    // A new search looks where searches look by default. A scope that only
+    // followed the open folder (scopeSearchToOpenFolder) is dropped; one the
+    // person picked in the filter panel stays.
+    ...(state.searchScopeFollowsFolder && !state.searchQuery.trim() && query.trim()
+      ? { searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox), searchScopeFollowsFolder: false }
+      : {}),
   })),
   setQuota: (quota) => set({ quota }),
 
