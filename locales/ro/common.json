@@ -5279,6 +5279,11 @@
     "cancelled": "{name} a anulat „{title}”",
     "untitled": "Eveniment fără titlu"
   },
+  "calendar_month_select": {
+    "selected_range": "Selectat de la {start} la {end}.",
+    "selected_day": "Selectat {day}.",
+    "enter_hint": "Apăsați Enter pentru a crea un eveniment."
+  },
   "company_calendars": {
     "section": "Organizație"
   },

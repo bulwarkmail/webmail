@@ -5905,6 +5905,11 @@
     "cancelled": "{name} odwołał(a) „{title}”",
     "untitled": "Wydarzenie bez tytułu"
   },
+  "calendar_month_select": {
+    "selected_range": "Wybrano od {start} do {end}.",
+    "selected_day": "Wybrano {day}.",
+    "enter_hint": "Naciśnij Enter, aby utworzyć wydarzenie."
+  },
   "company_calendars": {
     "section": "Organizacja"
   },

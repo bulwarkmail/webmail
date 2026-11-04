@@ -5905,6 +5905,11 @@
     "cancelled": "{name} отменил(а) «{title}»",
     "untitled": "Событие без названия"
   },
+  "calendar_month_select": {
+    "selected_range": "Выбрано с {start} по {end}.",
+    "selected_day": "Выбрано: {day}.",
+    "enter_hint": "Нажмите Enter, чтобы создать событие."
+  },
   "company_calendars": {
     "section": "Организация"
   },

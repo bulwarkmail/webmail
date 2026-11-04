@@ -5279,6 +5279,11 @@
     "cancelled": "{name} tühistas sündmuse \"{title}\"",
     "untitled": "Nimetu sündmus"
   },
+  "calendar_month_select": {
+    "selected_range": "Valitud {start} kuni {end}.",
+    "selected_day": "Valitud {day}.",
+    "enter_hint": "Sündmuse loomiseks vajutage Enter."
+  },
   "company_calendars": {
     "section": "Organisatsioon"
   },

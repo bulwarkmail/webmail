@@ -5279,6 +5279,11 @@
     "cancelled": "{name} \"{title}\" etkinliğini iptal etti",
     "untitled": "Başlıksız etkinlik"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} ile {end} arası seçildi.",
+    "selected_day": "{day} seçildi.",
+    "enter_hint": "Etkinlik oluşturmak için Enter tuşuna basın."
+  },
   "company_calendars": {
     "section": "Kuruluş"
   },

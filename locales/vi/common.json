@@ -5291,6 +5291,11 @@
     "cancelled": "{name} đã hủy \"{title}\"",
     "untitled": "Sự kiện không có tiêu đề"
   },
+  "calendar_month_select": {
+    "selected_range": "Đã chọn từ {start} đến {end}.",
+    "selected_day": "Đã chọn {day}.",
+    "enter_hint": "Nhấn Enter để tạo sự kiện."
+  },
   "company_calendars": {
     "section": "Tổ chức"
   },

@@ -12,7 +12,7 @@ import { QuickEventInput } from "./quick-event-input";
 import { CalendarTaskChip } from "./task-chip";
 import { AllHoursToggle, HiddenEventsIndicator } from "./display-hours-controls";
 import { groupTasksByDueDay } from "@/lib/calendar-tasks";
-import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments } from "@/lib/calendar-utils";
+import { buildTimedFullDayWeekSegments, buildWeekSegmentsRaw, formatSnapTime, getEventDayBounds, getPrimaryCalendarId, isTimedEventFullDayOnDate, layoutOverlappingEvents, packWeekSegments, pendingTimedMinutes, PENDING_LAYOUT_ID } from "@/lib/calendar-utils";
 import { clipToDisplayHours, indexOfDayOnOrAfter, partitionByDisplayHours, remapSegmentsToShownDays, resolveWorkingDays } from "@/lib/calendar-display-range";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import type { CalendarEvent, Calendar, CalendarTask } from "@/lib/jmap/types";
@@ -238,6 +238,25 @@ export function CalendarWeekView({
     return map;
   }, [days, timedEvents, hours]);
 
+  // The new event being created takes a column beside the events it
+  // overlaps, as it will once saved, instead of covering them. Only its
+  // times count: typing its title doesn't redo the layout.
+  const pendingStartMs = pendingPreview && !pendingPreview.allDay ? pendingPreview.start.getTime() : null;
+  const pendingEndMs = pendingPreview && !pendingPreview.allDay ? pendingPreview.end.getTime() : null;
+  const pendingLayout = useMemo(() => {
+    if (pendingStartMs === null || pendingEndMs === null) return null;
+    const preview = { start: new Date(pendingStartMs), end: new Date(pendingEndMs) };
+    const day = days.find((d) => isSameDay(d, preview.start));
+    const bounds = day ? pendingTimedMinutes(preview, day) : null;
+    if (!day || !bounds) return null;
+    const key = format(day, "yyyy-MM-dd");
+    const partition = partitionByDisplayHours(timedEvents.get(key) || [], day, hours);
+    const all = layoutOverlappingEvents(partition.visible, day, bounds);
+    const pending = all.find((layout) => layout.event.id === PENDING_LAYOUT_ID);
+    if (!pending) return null;
+    return { key, layouts: all.filter((layout) => layout.event.id !== PENDING_LAYOUT_ID), pending };
+  }, [pendingStartMs, pendingEndMs, days, timedEvents, hours]);
+
   // Built over the consecutive days and then moved onto the drawn columns,
   // so an event across a hidden weekend still spans Friday to Monday.
   const allDaySegments = useMemo(() => {
@@ -378,7 +397,7 @@ export function CalendarWeekView({
   }, []);
 
   const {
-    dragCreate, handleGridPointerDown, handleGridPointerMove, handleGridPointerUp,
+    dragCreate, handleGridPointerDown, handleGridPointerMove, handleGridPointerUp, handleGridPointerCancel,
     resizeVisual, handleResizePointerDown, handleResizePointerMove, handleResizePointerUp,
     quickCreate, handleSlotClick, handleSlotDoubleClick, handleQuickCreateSubmit, handleQuickCreateCancel,
     dropTarget, handleColumnDragOver, handleColumnDragLeave, handleColumnDrop,
@@ -664,7 +683,7 @@ export function CalendarWeekView({
               const key = format(day, "yyyy-MM-dd");
               const todayCol = isDisplayToday(day);
               const dayLayout = layoutByDay.get(key);
-              const layouted = dayLayout?.layouts ?? [];
+              const layouted = (pendingLayout?.key === key ? pendingLayout.layouts : dayLayout?.layouts) ?? [];
 
               return (
                 <div
@@ -674,6 +693,7 @@ export function CalendarWeekView({
                   onPointerDown={(e) => handleGridPointerDown(e, key, day)}
                   onPointerMove={handleGridPointerMove}
                   onPointerUp={handleGridPointerUp}
+                  onPointerCancel={handleGridPointerCancel}
                   onDragOver={(e) => handleColumnDragOver(e, key)}
                   onDragLeave={handleColumnDragLeave}
                   onDrop={(e) => handleColumnDrop(e, day)}
@@ -801,8 +821,11 @@ export function CalendarWeekView({
 
                   {dragCreate?.dayKey === key && (
                     <div
-                      className="absolute left-1 right-1 z-30 rounded-md pointer-events-none bg-primary/15 border-2 border-primary/30 border-dashed"
+                      data-drag-selection
+                      // Opaque and above the events (z-10), which showed through a see-through fill.
+                      className="absolute left-1 right-1 z-30 rounded-md pointer-events-none border-2 border-primary/60 border-dashed"
                       style={{
+                        backgroundColor: "color-mix(in srgb, var(--color-primary) 15%, var(--color-background))",
                         top: ((dragCreate.startMinutes - hours.startMinutes) / 60) * hourHeight,
                         height: ((dragCreate.endMinutes - dragCreate.startMinutes) / 60) * hourHeight,
                       }}
@@ -828,33 +851,37 @@ export function CalendarWeekView({
                     </div>
                   )}
 
-                  {pendingPreview && !pendingPreview.allDay && isSameDay(pendingPreview.start, day) && (
+                  {pendingPreview && pendingLayout?.key === key && (
                     (() => {
-                      const startMin = pendingPreview.start.getHours() * 60 + pendingPreview.start.getMinutes();
-                      let endMin = pendingPreview.end.getHours() * 60 + pendingPreview.end.getMinutes();
-                      if (endMin <= startMin) endMin = 1440;
-                      const durationMin = Math.max(15, endMin - startMin);
-                      if (startMin + durationMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
-                      const clip = clipToDisplayHours(startMin, startMin + durationMin, hours);
+                      const { startMinutes: startMin, endMinutes: endMin, column, totalColumns } = pendingLayout.pending;
+                      if (endMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
+                      const clip = clipToDisplayHours(startMin, endMin, hours);
                       const cal = calendars.find(c => c.id === pendingPreview.calendarId);
                       const color = paint(cal?.color || "#3b82f6");
-                      // Drawn like a saved event, so the new event shows where
-                      // it will land while it is being created.
+                      // Drawn like a saved event, in the column it will take, so the new
+                      // event shows where it will land while it is being created.
                       return (
                         <div
-                          data-pending-preview
-                          className={cn("absolute left-0.5 right-0.5 z-30 rounded-xs pointer-events-none overflow-hidden px-1.5 py-0.5 text-xs shadow-md", eventFillClass(tintedEvents, false))}
+                          className="absolute z-30 pointer-events-none"
                           style={{
                             top: ((clip.startMinutes - hours.startMinutes) / 60) * hourHeight,
                             height: Math.max(20, ((clip.endMinutes - clip.startMinutes) / 60) * hourHeight),
-                            ...eventFillStyle(color, { inactive: false, tinted: tintedEvents }),
+                            insetInlineStart: `${(column / totalColumns) * 100}%`,
+                            width: `${(1 / totalColumns) * 100}%`,
+                            paddingInline: 2,
                           }}
                         >
-                          <div className="font-medium truncate">
-                            {pendingPreview.title}
-                          </div>
-                          <div className="text-[0.65625rem] opacity-85 truncate">
-                            <bdi dir="ltr">{formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}</bdi>
+                          <div
+                            data-pending-preview
+                            className={cn("h-full rounded-xs overflow-hidden px-1.5 py-0.5 text-xs shadow-md", eventFillClass(tintedEvents, false))}
+                            style={eventFillStyle(color, { inactive: false, tinted: tintedEvents })}
+                          >
+                            <div className="font-medium truncate">
+                              {pendingPreview.title}
+                            </div>
+                            <div className="text-[0.65625rem] opacity-85 truncate">
+                              <bdi dir="ltr">{formatSnapTime(startMin, timeFormat)} – {formatSnapTime(endMin, timeFormat)}</bdi>
+                            </div>
                           </div>
                         </div>
                       );

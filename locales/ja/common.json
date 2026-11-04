@@ -5905,6 +5905,11 @@
     "cancelled": "{name} さんが「{title}」をキャンセルしました",
     "untitled": "無題の予定"
   },
+  "calendar_month_select": {
+    "selected_range": "{start}から{end}を選択しました。",
+    "selected_day": "{day}を選択しました。",
+    "enter_hint": "Enter キーで予定を作成します。"
+  },
   "company_calendars": {
     "section": "組織"
   },

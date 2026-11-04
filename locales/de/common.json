@@ -5905,6 +5905,11 @@
     "cancelled": "{name} hat „{title}“ abgesagt",
     "untitled": "Unbenannter Termin"
   },
+  "calendar_month_select": {
+    "selected_range": "{start} bis {end} ausgewählt.",
+    "selected_day": "{day} ausgewählt.",
+    "enter_hint": "Drücken Sie die Eingabetaste, um einen Termin zu erstellen."
+  },
   "company_calendars": {
     "section": "Organisation"
   },

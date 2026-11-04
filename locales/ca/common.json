@@ -5279,6 +5279,11 @@
     "cancelled": "{name} ha cancel·lat \"{title}\"",
     "untitled": "Esdeveniment sense títol"
   },
+  "calendar_month_select": {
+    "selected_range": "Seleccionat de {start} a {end}.",
+    "selected_day": "Seleccionat {day}.",
+    "enter_hint": "Premeu Retorn per crear un esdeveniment."
+  },
   "company_calendars": {
     "section": "Organització"
   },
