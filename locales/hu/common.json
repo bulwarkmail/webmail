@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Megosztotta: {name}",
     "freebusy_description": "Akivel megoszt, látja, mikor foglalt, de az eseményeit nem. Az Időpontok javaslata ezt használja."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (feladatlista, a naptárban nem látszik)",
+    "copy_to_account": "Másolás ide: {address}",
+    "copied_to_account": "Átmásolva ide: {address}",
+    "delete_original": "Eredeti törlése"
+  },
   "calendar_offline": {
     "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Ön elfogadta.",
     "answered_declined_nodate": "Ön elutasította.",
     "answered_tentative_nodate": "Ön talánnal válaszolt."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Ismétlődik: {rule}",
+    "declined_dates": "Elutasította: {dates}.",
+    "declined_many": "A sorozat {count} alkalmát utasította el.",
+    "answers_series": "A válasza a sorozat minden alkalmára vonatkozik."
   },
   "calendar_event_notifications": {
     "someone": "Valaki",
@@ -5808,6 +5821,26 @@
     "send_message": "Üzenet küldése",
     "share_mail_subject": "Megosztottam veled: {name}",
     "share_mail_body": "Szia!\n\nMegosztottam veled ezt: „{name}”. Itt tudod megnyitni:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Összes hozzáadása a naptárhoz",
+    "zone_contacts_all": "Összes hozzáadása a névjegyekhez",
+    "save_to_files": "Mentés a Fájlokba",
+    "saved": "{name} mentve a Fájlokba.",
+    "saved_copy": "Mentve a Fájlokba {name} néven.",
+    "save_failed": "{name} nem menthető a Fájlokba.",
+    "changed_on_server": "{name} megváltozott a Fájlokban, miután megnyitottad.",
+    "gone_on_server": "{name} már nincs a Fájlokban.",
+    "keep_both": "Mindkettő megtartása",
+    "replace": "Csere",
+    "cancel": "Mégse",
+    "save_as_new": "Mentés új fájlként",
+    "import_to_mail": "Importálás levélmappába…",
+    "import_to_mail_title": "Importálás levélmappába",
+    "imported_to_mail": "Importálva ide: {folder}.",
+    "import_to_mail_failed": "{name} nem importálható.",
+    "import_contacts": "Importálás a névjegyekbe…",
+    "add_to_calendar": "Hozzáadás a naptárhoz…"
   },
   "smime": {
     "your_certificates": "Tanúsítványaid",
@@ -7555,6 +7588,18 @@
     "import_mail": "Levelek…",
     "import_calendar": "Naptár…",
     "import_contacts": "Névjegyek…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Frissítés",
+    "menu_today": "Ma",
+    "menu_next_period": "Következő időszak",
+    "menu_previous_period": "Előző időszak",
+    "account_scope_label": "Látható: {address}. Fiókváltás",
+    "account_scope_menu": "Fiókváltás",
+    "merge_links": "Hivatkozások",
+    "merge_photo": "Fénykép",
+    "merge_kept": "Megmarad",
+    "import_show": "Megjelenítés"
   },
   "desktopEdit": {
     "edit": "Szerkesztés",

@@ -146,16 +146,22 @@ describe('a drag from outside', () => {
     clear();
   });
 
-  it('on the Files screen, "Upload to <folder>" hands the files to that folder', async () => {
+  // pim-p2-6: on the Files screen a drop uploads where it lands, with no question; the
+  // list takes it (components/files). A file pasted there goes up into the folder in view.
+  it('on the Files screen, shows no choices and leaves the drop to the list', async () => {
     const take = vi.fn();
     const clear = setFilesDropTarget({ folder: 'Reports', take, visible: () => true });
-    render(<FileDropHost />);
-    dragIn([file]);
-    expect(zone('upload').textContent).toContain('zone_upload_folder:{"folder":"Reports"}');
-    fireEvent.drop(zone('upload'), { dataTransfer: transfer([file]) });
-    await flush();
-    expect(take).toHaveBeenCalledWith({ files: [file], asFolder: false });
-    clear();
+    try {
+      render(<FileDropHost />);
+      dragIn([file]);
+      expect(screen.queryByTestId('file-drop-overlay')).toBeNull();
+      act(() => requestFileChoice({ files: [file] }));
+      await flush();
+      expect(screen.queryByTestId('file-drop-choice')).toBeNull();
+      expect(take).toHaveBeenCalledWith({ files: [file], asFolder: false });
+    } finally {
+      clear();
+    }
   });
 
   it('from another screen, Files gets the files after the app goes there', async () => {

@@ -40,6 +40,8 @@ interface SearchableSelectProps {
    * their order.
    */
   rank?: (query: string, option: SearchableOption, wordsMatch: boolean) => number | null;
+  /** Opens the list on mount, for a field that appears because the user asked to change it. */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -58,10 +60,11 @@ export function SearchableSelect({
   className,
   menuClassName,
   rank,
+  defaultOpen = false,
 }: SearchableSelectProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [query, setQuery] = useState('');
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => (defaultOpen ? Math.max(0, options.findIndex((o) => o.value === value)) : 0));
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

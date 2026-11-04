@@ -15,6 +15,7 @@ import type { AddressBook, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { isOfflineNow } from "@/lib/offline/state";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
 
 interface ContactImportDialogProps {
   existingContacts: ContactCard[];
@@ -26,6 +27,11 @@ interface ContactImportDialogProps {
   addressBooks?: AddressBook[];
   /** The book open in Contacts: "Import into" starts there. */
   defaultAddressBookId?: string;
+  /**
+   * Done: the dialog closes and the caller says so (a toast with Show) instead of a
+   * page of its own that only has Close. Without it the dialog shows the count.
+   */
+  onImported?: (count: number, addressBookId?: string) => void;
 }
 
 /** The file's bytes; jsdom's File has no arrayBuffer(). */
@@ -52,6 +58,7 @@ export function ContactImportDialog({
   initialFile,
   addressBooks = [],
   defaultAddressBookId,
+  onImported,
 }: ContactImportDialogProps) {
   const t = useTranslations("contacts");
   const shownName = useCollectionNames();
@@ -194,7 +201,13 @@ export function ContactImportDialog({
 
     setIsImporting(true);
     try {
-      const count = await onImport(toImport, addressBooks.length > 0 && bookId ? bookId : undefined);
+      const target = addressBooks.length > 0 && bookId ? bookId : undefined;
+      const count = await onImport(toImport, target);
+      if (onImported) {
+        onClose();
+        onImported(count, target);
+        return;
+      }
       setResult(count);
     } catch (error) {
       console.error('Failed to import contacts:', error);
@@ -354,11 +367,10 @@ export function ContactImportDialog({
                   onChange={(e) => setBookId(e.target.value)}
                   className="flex-1 min-w-0 text-sm bg-transparent border border-input rounded-md px-2.5 py-1.5 text-foreground focus:outline-hidden hover:border-muted-foreground/50 transition-colors"
                 >
-                  {addressBooks.map((book) => (
-                    <option key={book.id} value={book.id}>
-                      {book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
-                    </option>
-                  ))}
+                  <AccountGroupedOptions
+                    items={addressBooks}
+                    label={(book) => (book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book))}
+                  />
                 </select>
               </label>
             )}

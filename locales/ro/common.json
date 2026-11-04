@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Partajat de {name}:",
     "freebusy_description": "Cei cu care partajați văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Listă",
+    "task_list_not_in_calendar": "{name} (listă de sarcini, nu apare în calendar)",
+    "copy_to_account": "Copiază în {address}",
+    "copied_to_account": "Copiat în {address}",
+    "delete_original": "Șterge originalul"
+  },
   "calendar_offline": {
     "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Ai acceptat.",
     "answered_declined_nodate": "Ai refuzat.",
     "answered_tentative_nodate": "Ai răspuns poate."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Se repetă: {rule}",
+    "declined_dates": "Ați refuzat {dates}.",
+    "declined_many": "Ați refuzat {count} întâlniri din această serie.",
+    "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
   },
   "calendar_event_notifications": {
     "someone": "Cineva",
@@ -5808,6 +5821,26 @@
     "send_message": "Trimite un mesaj",
     "share_mail_subject": "Am partajat {name} cu tine",
     "share_mail_body": "Salut,\n\nAm partajat „{name}” cu tine. Îl poți deschide aici:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Adăugați tot în calendar",
+    "zone_contacts_all": "Adăugați tot la contacte",
+    "save_to_files": "Salvați în Fișiere",
+    "saved": "{name} a fost salvat în Fișiere.",
+    "saved_copy": "Salvat în Fișiere ca {name}.",
+    "save_failed": "{name} nu a putut fi salvat în Fișiere.",
+    "changed_on_server": "{name} a fost modificat în Fișiere după ce l-ați deschis.",
+    "gone_on_server": "{name} nu mai este în Fișiere.",
+    "keep_both": "Păstrează-le pe ambele",
+    "replace": "Înlocuiește",
+    "cancel": "Anulează",
+    "save_as_new": "Salvați ca fișier nou",
+    "import_to_mail": "Importați într-un dosar de e-mail…",
+    "import_to_mail_title": "Importați într-un dosar de e-mail",
+    "imported_to_mail": "Importat în {folder}.",
+    "import_to_mail_failed": "{name} nu a putut fi importat.",
+    "import_contacts": "Importați în contacte…",
+    "add_to_calendar": "Adăugați în calendar…"
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",
@@ -7555,6 +7588,18 @@
     "import_mail": "E-mail…",
     "import_calendar": "Calendar…",
     "import_contacts": "Contacte…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Reîmprospătează",
+    "menu_today": "Astăzi",
+    "menu_next_period": "Perioada următoare",
+    "menu_previous_period": "Perioada anterioară",
+    "account_scope_label": "Se afișează {address}. Schimbă contul",
+    "account_scope_menu": "Schimbă contul",
+    "merge_links": "Linkuri",
+    "merge_photo": "Fotografie",
+    "merge_kept": "Se păstrează",
+    "import_show": "Afișează"
   },
   "desktopEdit": {
     "edit": "Editează",

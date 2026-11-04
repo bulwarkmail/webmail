@@ -12,6 +12,7 @@ import type { Calendar } from "@/lib/jmap/types";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { CalendarSelect } from "@/components/calendar/calendar-select";
 
 export interface QuickCreateDraft {
   start: Date;
@@ -71,6 +72,7 @@ export function QuickCreatePopover({
   onClose,
 }: QuickCreatePopoverProps) {
   const shownName = useCollectionNames();
+  const selected = calendars.find((c) => c.id === draft.calendarId);
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -198,20 +200,17 @@ export function QuickCreatePopover({
             <div className="flex items-center gap-2.5">
               <span
                 className="w-4 h-4 rounded-sm flex-shrink-0"
-                style={{ backgroundColor: paint(calendars.find((c) => c.id === draft.calendarId)?.color || "#3b82f6") }}
+                style={{ backgroundColor: paint(selected?.color || "#3b82f6") }}
                 aria-hidden="true"
               />
-              <select
+              <CalendarSelect
+                calendars={calendars}
                 value={draft.calendarId}
-                onChange={(e) => onChange({ ...draft, calendarId: e.target.value })}
+                onChange={(calendarId) => onChange({ ...draft, calendarId })}
                 aria-label={t("form.calendar_select")}
-                title={calendars.find((c) => c.id === draft.calendarId)?.name}
+                title={selected ? shownName.calendar(selected) : undefined}
                 className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-hidden"
-              >
-                {calendars.map((c) => (
-                  <option key={c.id} value={c.id}>{shownName.calendar(c)}</option>
-                ))}
-              </select>
+              />
             </div>
           )}
         </div>

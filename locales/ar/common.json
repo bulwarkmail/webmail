@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "مشارَك من {name}:",
     "freebusy_description": "من تشارك معه يرى متى تكون مشغولًا، لا تفاصيل أحداثك. تستخدمه ميزة اقتراح الأوقات."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "القائمة",
+    "task_list_not_in_calendar": "{name} (قائمة مهام، لا تظهر في التقويم)",
+    "copy_to_account": "نسخ إلى {address}",
+    "copied_to_account": "تم النسخ إلى {address}",
+    "delete_original": "حذف الأصل"
+  },
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "قبلت الدعوة.",
     "answered_declined_nodate": "رفضت الدعوة.",
     "answered_tentative_nodate": "أجبت بـ\"ربما\"."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "يتكرر: {rule}",
+    "declined_dates": "رفضت موعد {dates}.",
+    "declined_many": "رفضت {count} من مواعيد هذه السلسلة.",
+    "answers_series": "ينطبق ردك على كل مواعيد السلسلة."
   },
   "calendar_event_notifications": {
     "someone": "شخص ما",
@@ -5808,6 +5821,26 @@
     "send_message": "إرسال رسالة",
     "share_mail_subject": "شاركت {name} معك",
     "share_mail_body": "مرحبًا،\n\nشاركت «{name}» معك. يمكنك فتحه من هنا:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "إضافة الكل إلى التقويم",
+    "zone_contacts_all": "إضافة الكل إلى جهات الاتصال",
+    "save_to_files": "حفظ في الملفات",
+    "saved": "تم حفظ {name} في الملفات.",
+    "saved_copy": "تم الحفظ في الملفات باسم {name}.",
+    "save_failed": "تعذّر حفظ {name} في الملفات.",
+    "changed_on_server": "تم تغيير {name} في الملفات بعد أن فتحته.",
+    "gone_on_server": "لم يعد {name} موجودًا في الملفات.",
+    "keep_both": "الاحتفاظ بالاثنين",
+    "replace": "استبدال",
+    "cancel": "إلغاء",
+    "save_as_new": "حفظ كملف جديد",
+    "import_to_mail": "استيراد إلى مجلد بريد…",
+    "import_to_mail_title": "استيراد إلى مجلد بريد",
+    "imported_to_mail": "تم الاستيراد إلى {folder}.",
+    "import_to_mail_failed": "تعذّر استيراد {name}.",
+    "import_contacts": "استيراد إلى جهات الاتصال…",
+    "add_to_calendar": "إضافة إلى التقويم…"
   },
   "smime": {
     "your_certificates": "شهاداتك",
@@ -7555,6 +7588,18 @@
     "import_mail": "البريد…",
     "import_calendar": "التقويم…",
     "import_contacts": "جهات الاتصال…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "تحديث",
+    "menu_today": "اليوم",
+    "menu_next_period": "الفترة التالية",
+    "menu_previous_period": "الفترة السابقة",
+    "account_scope_label": "يعرض {address}. تبديل الحساب",
+    "account_scope_menu": "تبديل الحساب",
+    "merge_links": "روابط",
+    "merge_photo": "صورة",
+    "merge_kept": "محفوظ",
+    "import_show": "عرض"
   },
   "desktopEdit": {
     "edit": "تعديل",

@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "{name} 님이 공유:",
     "freebusy_description": "공유받은 사람은 내가 바쁜 시간만 보고 일정 내용은 보지 못합니다. 시간 제안에 사용됩니다."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "목록",
+    "task_list_not_in_calendar": "{name} (할 일 목록, 캘린더에 표시되지 않음)",
+    "copy_to_account": "{address}(으)로 복사",
+    "copied_to_account": "{address}(으)로 복사됨",
+    "delete_original": "원본 삭제"
+  },
   "calendar_offline": {
     "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "수락했습니다.",
     "answered_declined_nodate": "거절했습니다.",
     "answered_tentative_nodate": "미정으로 응답했습니다."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "반복: {rule}",
+    "declined_dates": "{dates} 일정을 거절했습니다.",
+    "declined_many": "이 시리즈의 일정 {count}개를 거절했습니다.",
+    "answers_series": "답변은 시리즈의 모든 일정에 적용됩니다."
   },
   "advanced_search": {
     "title": "상세 검색",
@@ -5546,6 +5559,26 @@
     "send_message": "메시지 보내기",
     "share_mail_subject": "{name}을(를) 공유했습니다",
     "share_mail_body": "안녕하세요.\n\n\"{name}\"을(를) 공유했습니다. 여기에서 열 수 있습니다:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "모두 캘린더에 추가",
+    "zone_contacts_all": "모두 연락처에 추가",
+    "save_to_files": "파일에 저장",
+    "saved": "{name}을(를) 파일에 저장했습니다.",
+    "saved_copy": "파일에 {name}(으)로 저장했습니다.",
+    "save_failed": "{name}을(를) 파일에 저장하지 못했습니다.",
+    "changed_on_server": "{name}이(가) 연 뒤에 파일에서 변경되었습니다.",
+    "gone_on_server": "{name}이(가) 더 이상 파일에 없습니다.",
+    "keep_both": "둘 다 유지",
+    "replace": "바꾸기",
+    "cancel": "취소",
+    "save_as_new": "새 파일로 저장",
+    "import_to_mail": "메일 폴더로 가져오기…",
+    "import_to_mail_title": "메일 폴더로 가져오기",
+    "imported_to_mail": "{folder}(으)로 가져왔습니다.",
+    "import_to_mail_failed": "{name}을(를) 가져오지 못했습니다.",
+    "import_contacts": "연락처로 가져오기…",
+    "add_to_calendar": "캘린더에 추가…"
   },
   "smime": {
     "your_certificates": "내 인증서",
@@ -7555,6 +7588,18 @@
     "import_mail": "메일…",
     "import_calendar": "캘린더…",
     "import_contacts": "연락처…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "새로 고침",
+    "menu_today": "오늘",
+    "menu_next_period": "다음 기간",
+    "menu_previous_period": "이전 기간",
+    "account_scope_label": "{address} 표시 중. 계정 전환",
+    "account_scope_menu": "계정 전환",
+    "merge_links": "링크",
+    "merge_photo": "사진",
+    "merge_kept": "유지됨",
+    "import_show": "보기"
   },
   "desktopEdit": {
     "edit": "편집",
