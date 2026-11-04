@@ -5,8 +5,9 @@
  * file dialog does. In a browser there's no bridge, and nothing here offers anything.
  */
 
+import { useSyncExternalStore } from 'react';
 import { getDesktopBridge } from './bridge';
-import { getDesktopPolicy } from './policy';
+import { getDesktopPolicy, onDesktopPolicyChange } from './policy';
 import type { PolicySnapshot } from './policy-schema';
 import type { DesktopRecentFile } from './types';
 
@@ -16,6 +17,11 @@ export const RECENT_FILE_MAX_BYTES = 100 * 1024 * 1024;
 /** The shell has the list and the RecentFilesInAttach policy doesn't hide it. */
 export function recentFilesOffered(policy: PolicySnapshot = getDesktopPolicy()): boolean {
   return !!getDesktopBridge()?.recentFiles && policy.RecentFilesInAttach?.value !== false;
+}
+
+/** recentFilesOffered, live. False in the server's render, so the first render in the page matches it. */
+export function useRecentFilesOffered(): boolean {
+  return useSyncExternalStore(onDesktopPolicyChange, () => recentFilesOffered(), () => false);
 }
 
 /** Straight from the click that opened the menu: main wants one. Empty when there's nothing to show. */

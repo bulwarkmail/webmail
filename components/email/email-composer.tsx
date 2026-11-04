@@ -189,8 +189,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
 import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
-import { useDesktopPolicy } from "@/lib/desktop/policy";
-import { readRecentFile, RECENT_FILE_MAX_BYTES, recentFilesOffered } from "@/lib/desktop/recent-files";
+import { readRecentFile, RECENT_FILE_MAX_BYTES, useRecentFilesOffered } from "@/lib/desktop/recent-files";
 import type { DesktopRecentFile } from "@/lib/desktop/types";
 import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
 import { useDesktopCommands } from "@/lib/desktop/commands";
@@ -2785,8 +2784,7 @@ export function EmailComposer({
 
   // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
   // shell reads the file; from there it's a file like one from the file dialog.
-  const desktopPolicy = useDesktopPolicy();
-  const recentOffered = recentFilesOffered(desktopPolicy);
+  const recentOffered = useRecentFilesOffered();
   const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
     const result = await readRecentFile(file.id);
     if (result.ok) {

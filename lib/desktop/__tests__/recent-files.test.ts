@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_POLICY_SNAPSHOT, type PolicySnapshot } from '../policy-schema';
 import type { BulwarkDesktopBridge, DesktopRecentFilesBridge } from '../types';
-import { listRecentFiles, readRecentFile, recentFilesOffered, recentWhen } from '../recent-files';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import { listRecentFiles, readRecentFile, recentFilesOffered, recentWhen, useRecentFilesOffered } from '../recent-files';
 
 function setBridge(recentFiles?: Partial<DesktopRecentFilesBridge>, policy: Partial<PolicySnapshot> = {}) {
   const snapshot = { ...DEFAULT_POLICY_SNAPSHOT, ...policy };
@@ -28,6 +30,12 @@ describe('whether the Attach menu lists recent files', () => {
     expect(recentFilesOffered()).toBe(true);
     setBridge({ list: vi.fn(), attach: vi.fn() }, off);
     expect(recentFilesOffered()).toBe(false);
+  });
+
+  it("says no in the server's render, so the page's first render matches it", () => {
+    setBridge({ list: vi.fn(), attach: vi.fn() });
+    const Probe = () => createElement('span', null, useRecentFilesOffered() ? 'menu' : 'button');
+    expect(renderToString(createElement(Probe))).toBe('<span>button</span>');
   });
 });
 
