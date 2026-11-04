@@ -945,3 +945,56 @@ describe('CalendarApp company calendars on a phone', () => {
     }
   });
 });
+
+// Below the full desktop the sidebar is the same drawer as Mail's folders
+// (usability test 2026-11-04): from the window's edge, the page dimmed,
+// Escape closes it, and the focus goes in and back to the menu button.
+describe('CalendarApp sidebar drawer', () => {
+  beforeEach(() => {
+    media.desktop = false;
+  });
+
+  const drawer = () => screen.getByTestId('calendar-sidebar-drawer');
+  const menu = () => screen.getByRole('button', { name: 'nav_open_menu' });
+
+  it("opens from the window's edge, over the app rail and under the top bar", () => {
+    renderApp();
+    const classes = drawer().className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
+    expect(classes).not.toContain('absolute');
+  });
+
+  it("is out of reach while closed, so Tab doesn't walk into the hidden calendars", () => {
+    renderApp();
+    expect(drawer()).toHaveAttribute('inert');
+    fireEvent.click(menu());
+    expect(drawer()).not.toHaveAttribute('inert');
+  });
+
+  it('takes the focus in, keeps Tab there and gives it back to the menu button on Escape', () => {
+    renderApp();
+    menu().focus();
+    fireEvent.click(menu());
+    expect(drawer().contains(document.activeElement)).toBe(true);
+    const stops = Array.from(drawer().querySelectorAll<HTMLElement>('button:not(:disabled)'));
+    stops.at(-1)!.focus();
+    fireEvent.keyDown(stops.at(-1)!, { key: 'Tab' });
+    expect(document.activeElement).toBe(stops[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(drawer()).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu());
+  });
+
+  it('closes on a click on the dimmed window and gives the focus back to the menu button', () => {
+    renderApp();
+    menu().focus();
+    fireEvent.click(menu());
+    const scrim = screen.getByTestId('drawer-scrim');
+    expect(scrim.className.split(/\s+/)).toEqual(expect.arrayContaining(['fixed', 'inset-0']));
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.click(scrim);
+    expect(drawer()).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu());
+  });
+});
