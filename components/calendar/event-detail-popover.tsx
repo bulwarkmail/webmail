@@ -38,6 +38,7 @@ import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -146,6 +147,7 @@ export function EventDetailPopover({
   isMobile,
   pinned = false,
 }: EventDetailPopoverProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -643,7 +645,7 @@ export function EventDetailPopover({
         {calendar && (
           <div className="flex items-start gap-2.5">
             <CalendarIcon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <span dir="auto" className="text-sm text-foreground truncate" title={calendar.name}>{calendar.name}</span>
+            <span dir="auto" className="text-sm text-foreground truncate" title={shownName.calendar(calendar)}>{shownName.calendar(calendar)}</span>
           </div>
         )}
 

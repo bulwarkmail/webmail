@@ -58,7 +58,8 @@ async function openResult(query: string, label: string) {
 
 describe('settings search and the Advanced switch', () => {
   it('leaves Advanced off for a row that is not an advanced one', async () => {
-    await openResult('favicons', 'Sender favicons');
+    // settings-p2-18: the row is named like its section now, "Sender pictures".
+    await openResult('company websites', 'Pictures from company websites');
     expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
   });
 

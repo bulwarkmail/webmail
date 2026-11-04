@@ -10,13 +10,13 @@ import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-s
 import { TemplateSettings } from './template-settings';
 import { ProofreadingSettings } from './proofreading-settings';
 import { PrivacyLinkRow } from './privacy-settings';
-import { Button } from '@/components/ui/button';
-import { X, ChevronRight } from '@/components/icons';
+import { SignaturesSection } from './signatures-section';
+import { X } from '@/components/icons';
 
 /**
  * The Composing page: the editor, replying, what happens before a send,
- * templates (their own tab before) and pointers to where signatures and
- * read receipts live, since people look for them here.
+ * templates (their own tab before), the signature of each address, and a
+ * pointer to where read receipts live, since people look for them here.
  */
 export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -250,18 +250,7 @@ export function ComposingSettings() {
 
       {templatesEnabled && <TemplateSettings />}
 
-      <SettingsSection id="signatures" title={t('signatures_link.label')}>
-        <SettingItem label={t('signatures_link.label')} description={t('signatures_link.description')}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.dispatchEvent(new CustomEvent('settings-tab-change', { detail: { tab: 'account', section: 'addresses' } }))}
-          >
-            {t('signatures_link.button')}
-            <ChevronRight className="w-4 h-4 ms-1" />
-          </Button>
-        </SettingItem>
-      </SettingsSection>
+      <SignaturesSection />
     </div>
   );
 }

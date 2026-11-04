@@ -81,6 +81,17 @@ describe('the desktop app, with a server of one\'s own', () => {
     expect(screen.queryByTestId('login-server-trouble')).toBeNull();
   }, 30_000);
 
+  it('makes "Sign in" the main button once a password is typed', async () => {
+    render(<LoginPage />);
+    const button = await browserButton();
+    const submit = email().closest('form')!.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    expect(button.className).toContain('bg-primary');
+    expect(submit.className).not.toContain('bg-primary');
+    fireEvent.change(document.getElementById('password')!, { target: { value: 'secret' } });
+    await waitFor(() => expect(submit.className).toContain('bg-primary'));
+    expect(button.className).not.toContain('bg-primary');
+  }, 30_000);
+
   it('asks for the address under its field when the browser button is pressed first', async () => {
     render(<LoginPage />);
     fireEvent.click(await browserButton());

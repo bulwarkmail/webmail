@@ -174,6 +174,7 @@
     },
     "clear_search": "검색어 지우기",
     "vacation_active": "부재중 자동 응답이 켜져 있어요",
+    "vacation_turn_off": "끄기",
     "demo_banner": "데모 모드",
     "demo_reset": "초기화",
     "demo_tour": "둘러보기",
@@ -1393,6 +1394,8 @@
     "from_description": "비워 두면 바로 시작합니다.",
     "until_label": "종료 (선택)",
     "until_description": "비워 두면 끌 때까지 계속 답장합니다.",
+    "from_placeholder": "지금부터",
+    "until_placeholder": "끌 때까지",
     "audience_all": "모든 사람",
     "audience_internal": "내 조직만 ({domains})",
     "audience_external": "내 조직 밖의 사람만",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "원본 Sieve 에디터 열기",
       "fetch_error": "필터를 불러오지 못했어요",
       "expanded_view": "자세히 보기",
+      "show_rule_details": "각 규칙의 조건과 동작 표시",
       "expanded_view_description": "필터 규칙의 조건과 동작을 모두 펼쳐서 보여줘요",
       "if": "만약 (If)",
       "then": "다음 동작 실행 (Then)",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "기간의 시작일 또는 종료일을 입력해 주세요",
       "validation_period_invalid": "기간에 시간을 포함한 올바른 날짜를 입력하거나 칸을 비워 두세요",
       "apply_existing_period": "기간이 설정된 규칙은 그 기간에 도착한 메시지에만 적용되므로 기존 메시지에는 적용할 수 없어요.",
+      "apply_existing_in": "{folder}에 이미 있는 메일에도 적용",
+      "apply_existing_count": "{count, plural, other {{folder}에 이미 있는 메일 #개에도 적용}}",
+      "apply_existing_none": "{folder}에 이 규칙에 맞는 메일이 아직 없습니다.",
       "period_status_scheduled": "예정",
       "period_status_active": "활성",
       "period_status_expired": "만료"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "이 기기에서 이 계정을 로그아웃해요."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "트레이 시스템 트레이 알림 영역 백그라운드 최소화 tray",
+      "autostart": "자동 시작 시작 프로그램 Windows와 함께 시작 로그인 시 시작",
+      "default_app": "기본 메일 앱 기본 이메일 프로그램 mailto 메일 링크",
+      "menu_bar": "메뉴 표시줄 메뉴 Alt 키 파일 편집 보기",
+      "updates": "업데이트 새 버전 베타 채널",
+      "devtools": "개발자 도구 devtools 콘솔 검사 F12 디버깅",
+      "taskbar": "작업 표시줄 깜박임 Dock 주의",
+      "quiet_hours": "방해 금지 시간 방해 금지 무음 음소거 야간",
+      "telemetry": "사용 정보 원격 분석 통계 분석",
+      "crash": "충돌 보고서 오류 보고서 충돌",
+      "threads": "스레드 대화 묶기 threads",
+      "block_images": "이미지 차단 외부 이미지 이미지 불러오기",
+      "dark_mode": "다크 모드 라이트 모드 야간 모드 dark mode",
+      "timezone": "시간대 표준 시간대 timezone",
+      "reading_pane": "읽기 창 미리 보기 창 분할 보기",
+      "week_start": "주 시작 첫째 요일 월요일 일요일",
+      "empty_trash": "휴지통 비우기 휴지통 삭제된 항목",
+      "do_not_disturb": "방해 금지 시간 음소거 무음"
+    },
+    "desktop_notifications": {
+      "title": "이 컴퓨터에서",
+      "closed_label": "창을 닫았을 때",
+      "closed_description": "{appName}은(는) 실행 중인 동안 새 메일을 알려 드려요. 창을 닫은 뒤에도 트레이에서 계속 실행하려면 {page}에서 켜세요."
+    },
+    "push_unsupported": "이 브라우저는 웹사이트가 닫혀 있을 때 알림을 표시할 수 없어요.",
+    "backup_description_app": "다른 기기에서도 같은 설정을 사용해요.",
+    "sender_favicons": {
+      "label": "회사 웹사이트의 사진",
+      "description": "비즈니스 메일의 경우 해당 웹사이트의 아이콘을 프로필 사진으로 보여줘요"
+    },
+    "privacy_push": {
+      "label": "알림 릴레이",
+      "description": "{appName}이(가) 닫혀 있을 때의 알림은 푸시 릴레이를 거치며, 릴레이는 메일을 절대 보지 않아요. {page} 페이지에서 켜고 끌 수 있어요."
+    },
+    "reset": {
+      "message": "모든 설정을 처음 상태로 되돌려요. 메일, 필터, 자동 응답, 서명은 그대로 남아요.",
+      "sync_on": "다른 기기도 같은 설정을 사용하므로 함께 바뀌어요.",
+      "sync_off": "다른 기기의 설정은 그대로예요."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, other {#시간}}",
     "desktop_attention_title": "이 컴퓨터에서"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "내 이름",
+      "description": "메일을 보내면 받는 사람에게 주소 옆에 이 이름이 보입니다.",
+      "saved": "이름을 저장했습니다.",
+      "error": "이름을 저장하지 못했습니다. 다시 시도하세요."
+    },
+    "addresses": {
+      "description": "보낼 때 쓸 수 있는 주소입니다. 주소마다 이름과 서명이 따로 있습니다.",
+      "label": "내 주소",
+      "count": "{count, plural, =0 {아직 주소가 없습니다} other {주소 #개}}",
+      "manage": "주소 편집…",
+      "modal_title": "내 이메일 주소",
+      "add": "주소 추가",
+      "edit": "주소 편집",
+      "added": "주소를 추가했습니다.",
+      "saved": "주소를 저장했습니다.",
+      "deleted": "주소를 삭제했습니다.",
+      "delete_title": "이 주소를 삭제할까요?"
+    },
+    "signatures": {
+      "title": "서명",
+      "description": "작성한 메시지 끝에 붙습니다. 주소마다 서명이 따로 있습니다.",
+      "saved": "서명을 저장했습니다.",
+      "error": "서명을 저장하지 못했습니다. 다시 시도하세요.",
+      "no_addresses": "아직 보낼 수 있는 주소가 없습니다."
+    },
+    "search": {
+      "addresses": "ID 아이덴티티 별칭 보낸 사람 보낸 사람 주소 발신 주소 identity alias sender",
+      "signatures": "서명 이메일 서명 바닥글 아이덴티티 보낸 사람 발신 주소 signature",
+      "your_name": "표시 이름 전체 이름 보낸 사람 이름 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "먼저 서버 주소를 입력하세요.",
     "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
@@ -7338,10 +7420,12 @@
     "server_looking": "메일 서버를 찾고 있어요…",
     "server_found": "메일 서버: {server}",
     "server_change": "변경",
+    "server_change_hint": "다른 서버 주소를 입력하세요.",
     "server_not_found": "이 주소의 메일 서버를 찾지 못했어요. 여기에 입력하세요. 예: mail.example.com",
     "server_needed": "메일 서버 주소를 입력하세요.",
     "server_invalid": "서버 주소가 아니에요. mail.example.com처럼 입력하세요.",
     "email_needed": "먼저 이메일 주소를 입력하세요.",
+    "other_ways": "다른 로그인 방법",
     "trouble": "문제가 있나요?",
     "trouble_cors": "메일 서버가 이 웹사이트에서의 로그인을 허용해야 해요. 로그인이 안 되면 메일 서버 관리자에게 허용해 달라고 요청하세요.",
     "provider_unsupported": "{provider}은(는) Bulwark가 메일 서버와 통신하는 방식인 JMAP을 제공하지 않아서, Bulwark가 아직 직접 연결할 수 없어요."

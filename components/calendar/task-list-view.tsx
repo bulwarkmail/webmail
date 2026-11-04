@@ -12,6 +12,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 import { parseTaskDue } from "@/lib/task-due-parser";
 
 interface TaskListViewProps {
@@ -220,6 +221,7 @@ export function TaskListView({
   selectedTaskId,
   onQuickCreate,
 }: TaskListViewProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
@@ -307,7 +309,7 @@ export function TaskListView({
                   {cal && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: paint(cal.color || "#3b82f6") }} />
-                      {cal.name}
+                      {shownName.calendar(cal)}
                     </span>
                   )}
                 </span>

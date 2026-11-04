@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { addressStyle, addressToParts, countryCodeFromName, partsToComponents, type AddressStyle } from "@/lib/address-format";
 import { useBottomControls } from "@/hooks/use-bottom-controls";
 import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPersonalInfo, AddressBook, AnniversaryDate, PartialDate, ContactAddress, ContactMedia } from "@/lib/jmap/types";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
@@ -291,6 +292,7 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
 }
 
 export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts.form");
   const tx = useTranslations("ux_pim_contact");
   const locale = useLocale();
@@ -909,7 +911,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 {addressBooks.map((book) => (
                   <option key={book.id} value={book.id}>
                     {/* A shared book says whose it is, unless its name already does. */}
-                    {book.isShared && book.accountName && !book.name.includes(book.accountName) ? `${book.name} (${book.accountName})` : book.name}
+                    {book.isShared && book.accountName && !shownName.addressBook(book).includes(book.accountName) ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
                   </option>
                 ))}
               </select>

@@ -80,6 +80,7 @@ import {
   DirectoryEntryPrintSheet,
   DirectoryListPrint,
 } from "@/components/contacts/contact-print-views";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 type View =
   | "list"
@@ -101,6 +102,7 @@ export interface ContactsAppProps {
 function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('contacts', routeSegments);
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts");
   const skeleton = useSkeletonLabels();
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
@@ -490,14 +492,14 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     try {
       await moveContactToAddressBook(client, contactIds, addressBook);
       const msg = contactIds.length === 1
-        ? t("address_books.moved", { name: addressBook.name })
-        : t("address_books.moved_plural", { count: contactIds.length, name: addressBook.name });
+        ? t("address_books.moved", { name: shownName.addressBook(addressBook) })
+        : t("address_books.moved_plural", { count: contactIds.length, name: shownName.addressBook(addressBook) });
       toast.success(msg);
     } catch (error) {
       console.error('Failed to move contacts:', error);
       toast.error(t("address_books.move_failed"));
     }
-  }, [client, moveContactToAddressBook, t]);
+  }, [client, moveContactToAddressBook, t, shownName]);
 
   // Address books contacts can be moved to; "Move to…" needs a second one.
   const writableBooks = useMemo(() => addressBooks.filter((b) => b.myRights?.mayWrite !== false), [addressBooks]);
@@ -1379,7 +1381,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       onDeleteAddressBook={client ? fromDrawer(async (book: AddressBook) => {
                         const ok = await confirmDialog({
                           title: t("address_books.delete_title"),
-                          message: t("address_books.confirm_delete", { name: book.name }),
+                          message: t("address_books.confirm_delete", { name: shownName.addressBook(book) }),
                           variant: "destructive",
                           confirmText: t("address_books.delete"),
                         });
@@ -1640,12 +1642,13 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
         onClose={() => setRenamingAddressBook(null)}
         title={t("address_books.rename")}
         placeholder={t("address_books.name_label")}
-        defaultValue={renamingAddressBook?.name ?? ""}
+        defaultValue={renamingAddressBook ? shownName.addressBook(renamingAddressBook) : ""}
         confirmText={t("form.save")}
         cancelText={t("form.cancel")}
         onSubmit={(newName) => {
           const book = renamingAddressBook;
-          if (!client || !book || newName === book.name) return;
+          // The shown name kept as it was is no rename, also for the server's default name.
+          if (!client || !book || newName === book.name || newName === shownName.addressBook(book)) return;
           void (async () => {
             try {
               await renameAddressBook(client, book, newName);
@@ -1705,7 +1708,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           <ShareCollectionDialog
             client={client}
             kind="addressBook"
-            collectionName={book.name}
+            collectionName={shownName.addressBook(book)}
             shareWith={book.shareWith}
             ownAccountId={client.getAccountId()}
             onShare={async (principalId, rights) => {

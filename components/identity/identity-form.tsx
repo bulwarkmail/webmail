@@ -34,6 +34,7 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
   const t = useTranslations('identities.form');
   const tValidation = useTranslations('identities.validation_errors');
   const tOrg = useTranslations('org_signature');
+  const tName = useTranslations('uxs2_ident.your_name');
   const isEditing = !!identity;
   // Composing > Plain text only: the signature is plain text too.
   const plainTextMode = useSettingsStore((s) => s.plainTextMode);
@@ -156,8 +157,9 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name */}
       <div>
+        {/* "Your name", like the Account page: the one name recipients see. */}
         <label htmlFor="identity-name" className="block text-sm font-medium mb-1">
-          {t('name_label')}
+          {tName('label')}
         </label>
         <Input
           id="identity-name"
@@ -165,12 +167,12 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
           maxLength={256}
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder={t('name_placeholder')}
           disabled={isSubmitting}
           className={errors.name ? 'border-destructive' : ''}
-          aria-describedby={errors.name ? 'name-error' : undefined}
+          aria-describedby={errors.name ? 'name-error' : 'identity-name-hint'}
           aria-invalid={!!errors.name}
         />
+        <p id="identity-name-hint" className="text-xs text-muted-foreground mt-1">{tName('description')}</p>
         {errors.name && (
           <p
             id="name-error"
@@ -324,7 +326,7 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
 }
 
 /** The signature an address sends with when the admin locked signatures, read-only. */
-function LockedSignature({ html, text }: { html: string; text: string }) {
+export function LockedSignature({ html, text }: { html: string; text: string }) {
   const t = useTranslations('org_signature');
   const preview = html.trim() ? sanitizeSignatureHtmlForDisplay(html) : '';
   const plain = preview ? '' : getPlainTextSignature({ textSignature: text, htmlSignature: html });

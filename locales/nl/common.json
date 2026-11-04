@@ -174,6 +174,7 @@
     },
     "clear_search": "Zoekopdracht wissen",
     "vacation_active": "Afwezigheidsmelder is actief",
+    "vacation_turn_off": "Uitzetten",
     "demo_banner": "Demomodus",
     "demo_reset": "Resetten",
     "demo_tour": "Rondleiding",
@@ -1393,6 +1394,8 @@
     "from_description": "Laat leeg om meteen te beginnen.",
     "until_label": "Tot (optioneel)",
     "until_description": "Laat leeg om te blijven antwoorden tot je het uitzet.",
+    "from_placeholder": "Meteen",
+    "until_placeholder": "Tot u het uitzet",
     "audience_all": "Iedereen",
     "audience_internal": "Alleen mijn organisatie ({domains})",
     "audience_external": "Alleen mensen buiten mijn organisatie",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Sieve-scripteditor openen",
       "fetch_error": "Filters konden niet worden geladen",
       "expanded_view": "Uitgebreide weergave",
+      "show_rule_details": "Voorwaarden en acties van elke regel tonen",
       "expanded_view_description": "Filterregels weergeven met gedetailleerde voorwaarde- en actieblokken",
       "if": "Als",
       "then": "Dan",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Vul een start- of einddatum voor de periode in",
       "validation_period_invalid": "Vul voor de periode een geldige datum met tijd in, of laat het veld leeg",
       "apply_existing_period": "Een regel met een periode werkt alleen op berichten die binnen die periode binnenkomen en kan dus niet op bestaande berichten worden toegepast.",
+      "apply_existing_in": "Ook toepassen op de berichten die al in {folder} staan",
+      "apply_existing_count": "{count, plural, one {Ook toepassen op het # bericht dat al in {folder} staat} other {Ook toepassen op de # berichten die al in {folder} staan}}",
+      "apply_existing_none": "Nog geen bericht in {folder} past bij deze regel.",
       "period_status_scheduled": "gepland",
       "period_status_active": "actief",
       "period_status_expired": "verlopen"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Dit account op dit apparaat afmelden."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systeemvak meldingsgebied achtergrond minimaliseren tray",
+      "autostart": "automatisch starten opstarten starten met Windows bij aanmelden",
+      "default_app": "standaard mail-app standaard e-mailprogramma mailto e-maillinks",
+      "menu_bar": "menubalk menu’s Alt-toets Bestand Bewerken Beeld",
+      "updates": "updates bijwerken nieuwe versie bèta kanaal",
+      "devtools": "ontwikkelaarstools devtools console inspecteren F12 debuggen",
+      "taskbar": "taakbalk knipperen Dock aandacht",
+      "quiet_hours": "stille uren niet storen stil dempen nacht",
+      "telemetry": "gebruiksgegevens telemetrie statistieken analyse",
+      "crash": "crashrapporten foutrapporten crash",
+      "threads": "threads gesprekken groeperen conversatie",
+      "block_images": "afbeeldingen blokkeren externe afbeeldingen afbeeldingen laden",
+      "dark_mode": "donkere modus lichte modus nachtmodus dark mode",
+      "timezone": "tijdzone timezone",
+      "reading_pane": "leesvenster voorbeeldvenster gesplitste weergave",
+      "week_start": "begin van de week eerste dag maandag zondag",
+      "empty_trash": "prullenbak legen prullenbak verwijderde items",
+      "do_not_disturb": "stille uren dempen stilte"
+    },
+    "desktop_notifications": {
+      "title": "Op deze computer",
+      "closed_label": "Met het venster dicht",
+      "closed_description": "{appName} meldt nieuwe mail zolang het draait. Zet dit aan bij {page} als het na het sluiten van het venster in het systeemvak moet blijven draaien."
+    },
+    "push_unsupported": "Deze browser kan geen meldingen tonen als de website dicht is.",
+    "backup_description_app": "Gebruik dezelfde instellingen op uw andere apparaten.",
+    "sender_favicons": {
+      "label": "Afbeeldingen van bedrijfswebsites",
+      "description": "Toon websitepictogrammen als profielfoto's voor zakelijke afzenders"
+    },
+    "privacy_push": {
+      "label": "Relay voor meldingen",
+      "description": "Meldingen terwijl {appName} dicht is gaan via een push-relay, die uw mail nooit ziet. U zet ze aan of uit op de pagina {page}."
+    },
+    "reset": {
+      "message": "Zet alle instellingen terug zoals ze in het begin waren. Uw mail, filters, afwezigheidsbericht en handtekeningen blijven zoals ze zijn.",
+      "sync_on": "Uw andere apparaten gebruiken dezelfde instellingen, dus die veranderen ook.",
+      "sync_off": "Uw andere apparaten houden hun instellingen."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# uur} other {# uur}}",
     "desktop_attention_title": "Op deze computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Uw naam",
+      "description": "Mensen zien deze naam naast uw adres als u ze mailt.",
+      "saved": "Uw naam is opgeslagen.",
+      "error": "Uw naam kon niet worden opgeslagen. Probeer het opnieuw."
+    },
+    "addresses": {
+      "description": "De adressen waarvanaf u kunt verzenden, elk met een eigen naam en handtekening.",
+      "label": "Uw adressen",
+      "count": "{count, plural, =0 {Nog geen adressen} one {# adres} other {# adressen}}",
+      "manage": "Adressen bewerken…",
+      "modal_title": "Uw e-mailadressen",
+      "add": "Adres toevoegen",
+      "edit": "Adres bewerken",
+      "added": "Adres toegevoegd.",
+      "saved": "Adres opgeslagen.",
+      "deleted": "Adres verwijderd.",
+      "delete_title": "Dit adres verwijderen?"
+    },
+    "signatures": {
+      "title": "Handtekeningen",
+      "description": "Komt onder de berichten die u schrijft. Elk adres heeft een eigen handtekening.",
+      "saved": "Handtekening opgeslagen.",
+      "error": "De handtekening kon niet worden opgeslagen. Probeer het opnieuw.",
+      "no_addresses": "Er is nog geen adres om vanaf te verzenden."
+    },
+    "search": {
+      "addresses": "identiteit identiteiten alias afzender afzenderadres van-adres identity sender",
+      "signatures": "handtekening e-mailhandtekening voettekst identiteit afzender van-adres signature",
+      "your_name": "weergavenaam volledige naam afzendernaam display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Vul eerst het adres van de server in.",
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
@@ -7338,10 +7420,12 @@
     "server_looking": "Je mailserver wordt gezocht…",
     "server_found": "Mailserver: {server}",
     "server_change": "Wijzigen",
+    "server_change_hint": "Typ een ander serveradres.",
     "server_not_found": "We hebben de mailserver voor dit adres niet gevonden. Vul hem hier in, bijvoorbeeld mail.example.com.",
     "server_needed": "Vul het adres van je mailserver in.",
     "server_invalid": "Dit is geen serveradres. Schrijf het zoals mail.example.com.",
     "email_needed": "Vul eerst je e-mailadres in.",
+    "other_ways": "Andere manieren om in te loggen",
     "trouble": "Lukt het niet?",
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."

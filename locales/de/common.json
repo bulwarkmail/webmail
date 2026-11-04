@@ -174,6 +174,7 @@
     },
     "clear_search": "Suche löschen",
     "vacation_active": "Abwesenheitsnotiz ist aktiv",
+    "vacation_turn_off": "Ausschalten",
     "demo_banner": "Demo-Modus",
     "demo_reset": "Zurücksetzen",
     "demo_tour": "Tour",
@@ -1393,6 +1394,8 @@
     "from_description": "Leer lassen, um sofort zu beginnen.",
     "until_label": "Bis (optional)",
     "until_description": "Leer lassen, um weiter zu antworten, bis Sie es ausschalten.",
+    "from_placeholder": "Ab sofort",
+    "until_placeholder": "Bis Sie sie ausschalten",
     "audience_all": "Allen",
     "audience_internal": "Nur meiner Organisation ({domains})",
     "audience_external": "Nur Leuten außerhalb meiner Organisation",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Sieve-Skript-Editor öffnen",
       "fetch_error": "Filter konnten nicht geladen werden",
       "expanded_view": "Erweiterte Ansicht",
+      "show_rule_details": "Bedingungen und Aktionen jeder Regel anzeigen",
       "expanded_view_description": "Filterregeln mit detaillierten Bedingungs- und Aktionsblöcken anzeigen",
       "if": "Wenn",
       "then": "Dann",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Bitte ein Start- oder Enddatum für den Zeitraum angeben",
       "validation_period_invalid": "Bitte für den Zeitraum ein gültiges Datum mit Uhrzeit angeben oder das Feld leer lassen",
       "apply_existing_period": "Eine Regel mit Zeitraum wirkt nur auf Nachrichten, die in diesem Zeitraum eintreffen, und lässt sich daher nicht auf vorhandene Nachrichten anwenden.",
+      "apply_existing_in": "Auch auf die Nachrichten anwenden, die schon in {folder} sind",
+      "apply_existing_count": "{count, plural, one {Auch auf die # Nachricht anwenden, die schon in {folder} ist} other {Auch auf die # Nachrichten anwenden, die schon in {folder} sind}}",
+      "apply_existing_none": "Noch keine Nachricht in {folder} passt zu dieser Regel.",
       "period_status_scheduled": "geplant",
       "period_status_active": "aktiv",
       "period_status_expired": "abgelaufen"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Von diesem Konto auf diesem Gerät abmelden."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "Infobereich Taskleiste Tray Hintergrund im Hintergrund weiterlaufen minimieren",
+      "autostart": "Autostart Systemstart mit Windows starten beim Anmelden starten automatisch starten",
+      "default_app": "Standard-Mail-App Standard-E-Mail-Programm mailto E-Mail-Links Standardprogramm",
+      "menu_bar": "Menüleiste Menü Alt-Taste Datei Bearbeiten Ansicht",
+      "updates": "Updates Aktualisierung neue Version Beta Kanal",
+      "devtools": "Entwicklertools Devtools Konsole untersuchen F12 Fehlersuche",
+      "taskbar": "Taskleiste blinken aufblinken Dock hüpfen Aufmerksamkeit",
+      "quiet_hours": "Ruhezeiten nicht stören stumm lautlos Nacht",
+      "telemetry": "Nutzungsdaten Telemetrie Statistik Analyse",
+      "crash": "Absturzberichte Fehlerberichte Absturz",
+      "threads": "Threads Unterhaltungen Konversation gruppieren Verlauf",
+      "block_images": "Bilder blockieren externe Bilder Bilder laden",
+      "dark_mode": "Dunkelmodus dunkler Modus heller Modus Nachtmodus dark mode",
+      "timezone": "Zeitzone timezone",
+      "reading_pane": "Lesebereich Vorschaufenster Vorschau geteilte Ansicht",
+      "week_start": "Wochenbeginn Wochenanfang Montag Sonntag",
+      "empty_trash": "Papierkorb leeren Papierkorb gelöschte Elemente",
+      "do_not_disturb": "Ruhezeiten stumm Stille"
+    },
+    "desktop_notifications": {
+      "title": "Auf diesem Computer",
+      "closed_label": "Bei geschlossenem Fenster",
+      "closed_description": "{appName} meldet neue E-Mails, solange es läuft. Damit es nach dem Schließen des Fensters im Infobereich weiterläuft, schalten Sie das unter {page} ein."
+    },
+    "push_unsupported": "Dieser Browser kann keine Benachrichtigungen zeigen, wenn die Website geschlossen ist.",
+    "backup_description_app": "Dieselben Einstellungen auf Ihren anderen Geräten nutzen.",
+    "sender_favicons": {
+      "label": "Bilder von Firmen-Websites",
+      "description": "Bei Firmen das Symbol ihrer Website als Bild des Absenders zeigen"
+    },
+    "privacy_push": {
+      "label": "Relay für Benachrichtigungen",
+      "description": "Benachrichtigungen bei geschlossenem {appName} laufen über ein Push-Relay, das Ihre E-Mails nie sieht. Sie schalten sie auf der Seite {page} ein und aus."
+    },
+    "reset": {
+      "message": "Alle Einstellungen auf den Anfangszustand zurücksetzen. Ihre E-Mails, Filter, Abwesenheitsnotiz und Signaturen bleiben, wie sie sind.",
+      "sync_on": "Ihre anderen Geräte nutzen dieselben Einstellungen, also ändern sie sich auch.",
+      "sync_off": "Ihre anderen Geräte behalten ihre Einstellungen."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# Stunde} other {# Stunden}}",
     "desktop_attention_title": "Auf diesem Computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Ihr Name",
+      "description": "Diesen Namen sehen andere neben Ihrer Adresse, wenn Sie ihnen schreiben.",
+      "saved": "Ihr Name ist gespeichert.",
+      "error": "Ihr Name konnte nicht gespeichert werden. Versuchen Sie es noch einmal."
+    },
+    "addresses": {
+      "description": "Die Adressen, von denen Sie senden können, jede mit eigenem Namen und eigener Signatur.",
+      "label": "Ihre Adressen",
+      "count": "{count, plural, =0 {Noch keine Adressen} one {# Adresse} other {# Adressen}}",
+      "manage": "Adressen bearbeiten…",
+      "modal_title": "Ihre E-Mail-Adressen",
+      "add": "Adresse hinzufügen",
+      "edit": "Adresse bearbeiten",
+      "added": "Adresse hinzugefügt.",
+      "saved": "Adresse gespeichert.",
+      "deleted": "Adresse gelöscht.",
+      "delete_title": "Diese Adresse löschen?"
+    },
+    "signatures": {
+      "title": "Signaturen",
+      "description": "Steht am Ende der Nachrichten, die Sie schreiben. Jede Adresse hat ihre eigene.",
+      "saved": "Signatur gespeichert.",
+      "error": "Die Signatur konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
+      "no_addresses": "Es gibt noch keine Adresse zum Senden."
+    },
+    "search": {
+      "addresses": "Identität Identitäten Alias Aliasse Absender Absenderadresse Von-Adresse Absendername identity alias sender",
+      "signatures": "Signatur E-Mail-Signatur Grußformel Fußzeile Identität Absender Von-Adresse signature",
+      "your_name": "Anzeigename vollständiger Name Absendername display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
     "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
@@ -7338,10 +7420,12 @@
     "server_looking": "Ihr Mailserver wird gesucht…",
     "server_found": "Mailserver: {server}",
     "server_change": "Ändern",
+    "server_change_hint": "Geben Sie eine andere Serveradresse ein.",
     "server_not_found": "Für diese Adresse wurde kein Mailserver gefunden. Geben Sie ihn hier ein, zum Beispiel mail.example.com.",
     "server_needed": "Geben Sie die Adresse Ihres Mailservers ein.",
     "server_invalid": "Das ist keine Serveradresse. Schreiben Sie sie wie mail.example.com.",
     "email_needed": "Geben Sie zuerst Ihre E-Mail-Adresse ein.",
+    "other_ways": "Andere Anmeldewege",
     "trouble": "Probleme?",
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."

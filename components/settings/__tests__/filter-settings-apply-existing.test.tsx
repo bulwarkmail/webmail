@@ -9,8 +9,8 @@ import { useFilterStore } from '@/stores/filter-store';
 import { useSettingsStore } from '@/stores/settings-store';
 
 // settings-13 (usability pass 2026-11-04): a rule made in Settings only sees
-// new mail, so after Save the page offers to apply it to the Inbox; the raw
-// Sieve editor is an advanced tool.
+// new mail, so its dialog offers to apply it to the Inbox; the raw Sieve
+// editor is an advanced tool.
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn(), progress: vi.fn(), dismiss: vi.fn() }));
 vi.mock('@/stores/toast-store', () => ({ toast }));
@@ -57,6 +57,7 @@ beforeEach(() => {
     updateSieveScript: vi.fn(async () => {}),
     getSieveAccountId: () => 'primary',
     queryEmailFields,
+    batchUpdateKeywords: vi.fn(async () => {}),
   };
   target.value = {
     client, clientAccountId: null, key: 'k', accountId: 'primary', sieveAccountId: 'primary',
@@ -89,39 +90,70 @@ function showSettings(rules: FilterRule[] = [], extra: Record<string, unknown> =
   render(<FilterSettings />);
 }
 
-async function createRule(from: string, action: string) {
+async function fillRule(from: string, action: string) {
   fireEvent.click(screen.getByText('add_rule'));
   fireEvent.change(screen.getByLabelText('rule_name'), { target: { value: 'News' } });
   fireEvent.change(screen.getByLabelText('condition_value'), { target: { value: from } });
   fireEvent.change(screen.getAllByLabelText('actions')[0], { target: { value: action } });
-  fireEvent.click(screen.getByText('save'));
 }
 
-describe('a new rule in Settings › Filters', () => {
-  it('offers to apply it to the messages already in the Inbox', async () => {
+// settings-p2-6: the offer is a box in the rule's dialog, with the number of
+// messages it would change, not a toast that is gone in a few seconds.
+describe('a rule in Settings › Filters', () => {
+  it('offers, in its dialog, to apply it to the messages already in the Inbox', async () => {
     showSettings();
-    await createRule('news@example.org', 'star');
-    await waitFor(() => expect(toast.success).toHaveBeenCalled());
-    const [, options] = toast.success.mock.calls.at(-1)!;
-    expect(options.action.label).toBe('apply_to_existing');
+    await fillRule('news@example.org', 'star');
+    const box = await screen.findByRole('checkbox', { name: 'apply_existing_count' }, { timeout: 2000 });
+    expect(box).toBeEnabled();
     expect(queryEmailFields).toHaveBeenCalled();
+    fireEvent.click(box);
+    queryEmailFields.mockClear();
+    fireEvent.click(screen.getByText('save'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('rule_applied', expect.anything()));
+    // Saving ran the rule; no toast offered it.
+    expect(queryEmailFields).toHaveBeenCalled();
+    expect(toast.success.mock.calls.some(([, options]) => options?.action)).toBe(false);
   });
 
-  it('says nothing more when no message in the Inbox matches', async () => {
+  it('runs nothing on old mail when the box is left empty', async () => {
     showSettings();
-    await createRule('nobody@example.com', 'star');
-    await waitFor(() => expect(queryEmailFields).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 0));
-    expect(toast.success).not.toHaveBeenCalled();
-  });
-
-  it('is not offered for a rule that can only act on arriving mail', async () => {
-    showSettings();
-    await createRule('news@example.org', 'discard');
+    await fillRule('news@example.org', 'star');
+    await screen.findByRole('checkbox', { name: 'apply_existing_count' }, { timeout: 2000 });
+    queryEmailFields.mockClear();
+    fireEvent.click(screen.getByText('save'));
     await waitFor(() => expect(client.updateSieveScript).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 0));
     expect(queryEmailFields).not.toHaveBeenCalled();
     expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it('greys the box when no message in the Inbox matches', async () => {
+    showSettings();
+    await fillRule('nobody@example.com', 'star');
+    await waitFor(() => expect(queryEmailFields).toHaveBeenCalled(), { timeout: 2000 });
+    await waitFor(() => expect(screen.getByText('apply_existing_none')).toBeInTheDocument());
+    expect(screen.getByRole('checkbox', { name: 'apply_existing_in' })).toBeDisabled();
+  });
+
+  it('is greyed for a rule that can only act on arriving mail', async () => {
+    showSettings();
+    await fillRule('news@example.org', 'discard');
+    expect(screen.getByRole('checkbox', { name: 'apply_existing_in' })).toBeDisabled();
+    expect(screen.getByText('apply_existing_unsupported')).toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 500));
+    expect(queryEmailFields).not.toHaveBeenCalled();
+  });
+});
+
+describe('the rule list', () => {
+  it('says what its switch does', () => {
+    showSettings([{
+      id: 'r1', name: 'News', enabled: true, matchType: 'all',
+      conditions: [{ field: 'from', comparator: 'contains', value: 'news@example.org' }],
+      actions: [{ type: 'star' }], stopProcessing: false,
+    } as FilterRule]);
+    expect(screen.getByRole('switch', { name: 'show_rule_details' })).toBeInTheDocument();
+    expect(screen.queryByText('expanded_view')).toBeNull();
   });
 });
 

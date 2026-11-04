@@ -85,16 +85,29 @@ describe('Quick install', () => {
     expect(within(card).queryByText('hook')).toBeNull();
   });
 
-  it('asks to turn plugins on for users when they are off', async () => {
+  it('offers to turn plugins on in the same dialog when they are off, and asks nothing after', async () => {
     policy = { features: { pluginsEnabled: false } };
     render(<MarketplacePage />);
     const card = (await screen.findByText('Send Checks')).closest('.group') as HTMLElement;
     fireEvent.click(within(card).getByRole('button', { name: /Quick install/ }));
-    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Install' }));
-    const question = await screen.findByText('Turn on plugins for users too?');
-    fireEvent.click(within(question.closest('[role="alertdialog"]') as HTMLElement).getByRole('button', { name: 'Turn on' }));
+    const dialog = await screen.findByRole('alertdialog');
+    fireEvent.click(await within(dialog).findByRole('button', { name: 'Install and turn on plugins' }));
+    expect(within(dialog).queryByText(/turned on for them/)).toBeNull();
     await waitFor(() => expect(calls).toContainEqual(expect.objectContaining({
       url: '/api/admin/policy', method: 'PUT', body: expect.objectContaining({ features: { pluginsEnabled: true } }),
     })));
+    expect(installs()).toHaveLength(1);
+    expect(screen.queryByText('Turn on plugins for users too?')).toBeNull();
+  });
+
+  it('installs only, leaving plugins off, when the admin says so', async () => {
+    policy = { features: { pluginsEnabled: false } };
+    render(<MarketplacePage />);
+    const card = (await screen.findByText('Send Checks')).closest('.group') as HTMLElement;
+    fireEvent.click(within(card).getByRole('button', { name: /Quick install/ }));
+    fireEvent.click(await within(await screen.findByRole('alertdialog')).findByRole('button', { name: 'Install only' }));
+    await waitFor(() => expect(installs()).toHaveLength(1));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(calls.some((c) => c.url === '/api/admin/policy' && c.method === 'PUT')).toBe(false);
   });
 });

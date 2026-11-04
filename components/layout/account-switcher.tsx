@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { HelpMenuItems } from "@/components/layout/help-links";
-import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText, accountAvatarName } from "@/lib/account-utils";
+import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText, accountAvatarName, accountSharesAddress } from "@/lib/account-utils";
 import { inboxUnread, totalInboxUnread } from "@/lib/account-inbox-unread";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -20,9 +20,6 @@ import { useRouter } from "@/i18n/navigation";
 import { onRefusedLoginsChanged, siblingWaits, waitDate } from "@/lib/devices/wipe-state";
 import { Avatar } from "@/components/ui/avatar";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
-import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import { toUnicodeDomain, toUnicodeEmail } from "@/lib/idn";
 import { buildSettingsPath } from "@/lib/deep-links";
 
@@ -118,9 +115,7 @@ export function AccountSwitcher({
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
   const switchAccount = useAuthStore((s) => s.switchAccount);
   const logout = useAuthStore((s) => s.logout);
-  const removeAccount = useAuthStore((s) => s.removeAccount);
   const logoutAll = useAuthStore((s) => s.logoutAll);
-  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
   const tWipe = useTranslations("offlineWipe");
   // An account that signed out by itself beside this one: its data waits.
   const [, noteWaitsChanged] = useState(0);
@@ -218,20 +213,6 @@ export function AccountSwitcher({
     router.push(buildSettingsPath("account", "browser") as never);
   };
 
-  const handleRemove = async (e: React.MouseEvent, account: AccountEntry) => {
-    e.stopPropagation();
-    const label = toUnicodeEmail(account.email || account.username);
-    // The popover closes first: the dialog is the only thing asking now.
-    setOpen(false);
-    const ok = await confirm({
-      title: t("remove_account_title"),
-      message: t("remove_account_confirm", { account: label }),
-      confirmText: t("remove_account"),
-      variant: "destructive",
-    });
-    if (ok) removeAccount(account.id);
-  };
-
   const handleLogout = () => {
     setOpen(false);
     logout();
@@ -316,9 +297,7 @@ export function AccountSwitcher({
   const unreadFor = (account: AccountEntry) =>
     mvPopover || severalAccounts ? inboxUnread(unreadByAccount[account.id]) : undefined;
   // The server is only worth a line when it is what tells two rows apart.
-  const addressKey = (account: AccountEntry) => toUnicodeEmail(account.email || account.username).trim().toLowerCase();
-  const sharesAddress = (account: AccountEntry) =>
-    accounts.some((other) => other.id !== account.id && addressKey(other) === addressKey(account));
+  const sharesAddress = (account: AccountEntry) => accountSharesAddress(account, accounts);
   const connectedIds = accounts.filter((account) => account.isConnected).map((account) => account.id);
   const allInboxesUnread = totalInboxUnread(connectedIds, unreadByAccount);
   // What waits in the accounts not on screen: a dot on the avatar says so.
@@ -341,7 +320,7 @@ export function AccountSwitcher({
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
-        title={variant !== "expanded" ? [displayName, othersUnreadText].filter(Boolean).join("\n") : undefined}
+        title={[displayName, displaySubtitle, variant !== "expanded" ? othersUnreadText : null].filter(Boolean).join("\n")}
         aria-label={othersUnreadText ? `${t("switch_account")}, ${othersUnreadText}` : t("switch_account")}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -414,8 +393,8 @@ export function AccountSwitcher({
             <div className="flex items-center gap-4 rounded-t-3xl bg-background px-4 pt-4 pb-3" data-mv-account-current="">
               <AccountAvatar account={activeAccount} accounts={accounts} size="xl" />
               <div className="min-w-0 flex-1">
-                <p className="text-lg leading-6 truncate">{displayName}</p>
-                {displaySubtitle && <p className="text-sm text-muted-foreground truncate">{displaySubtitle}</p>}
+                <p className="text-lg leading-6 wrap-anywhere">{displayName}</p>
+                {displaySubtitle && <p className="text-sm text-muted-foreground wrap-anywhere">{displaySubtitle}</p>}
               </div>
             </div>
           )}
@@ -479,7 +458,7 @@ export function AccountSwitcher({
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors",
                     isActive ? "bg-accent/50" : "hover:bg-muted",
-                    (!isActive && !account.isDefault) ? (isDraggable ? "pe-16" : "pe-10") : (isDraggable && "pe-7")
+                    isDraggable && "pe-7"
                   )}
                   role="menuitem"
                   disabled={isActive}
@@ -494,7 +473,7 @@ export function AccountSwitcher({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium truncate">
+                      <span className="text-sm font-medium wrap-anywhere" title={toUnicodeEmail(text.title)}>
                         {toUnicodeEmail(text.title)}
                       </span>
                       {account.isDefault && accounts.length > 1 && (
@@ -505,7 +484,7 @@ export function AccountSwitcher({
                       <UnreadBadge count={unreadFor(account)} />
                     </div>
                     {text.subtitle && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground wrap-anywhere" title={toUnicodeEmail(text.subtitle)}>
                         {toUnicodeEmail(text.subtitle)}
                       </p>
                     )}
@@ -524,24 +503,10 @@ export function AccountSwitcher({
                 {isDraggable && (
                   <span
                     aria-hidden
-                    className={cn(
-                      "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100",
-                      !isActive && !account.isDefault ? "end-10" : "end-1.5"
-                    )}
+                    className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-1.5 text-muted-foreground/50 opacity-0 transition-opacity group-hover/acct:opacity-100"
                   >
                     <GripVertical className="w-4 h-4" />
                   </span>
-                )}
-                {!isActive && !account.isDefault && (
-                  // Shown on hover and focus, and always on a touch screen (R7).
-                  <IconButton
-                    onClick={(e) => void handleRemove(e, account)}
-                    role="menuitem"
-                    label={t("remove_account")}
-                    className="absolute end-1.5 top-1/2 -translate-y-1/2 text-muted-foreground opacity-0 transition-opacity group-hover/acct:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <X />
-                  </IconButton>
                 )}
                 </div>
               );
@@ -718,7 +683,6 @@ export function AccountSwitcher({
         </div>,
         document.body
       )}
-      <ConfirmDialog {...confirmDialogProps} />
     </>
   );
 }

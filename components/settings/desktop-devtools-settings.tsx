@@ -37,7 +37,8 @@ export function DesktopDevToolsSettings() {
   const description = state.forcedOff ? t("forced_off") : state.locked ? t("locked") : t("description", { shortcut });
 
   return (
-    <SettingsSection id="desktop-troubleshooting" title={t("section_title")}>
+    // Only with "Show advanced settings" on: nobody needs it to read mail (settings-p2-9).
+    <SettingsSection id="desktop-troubleshooting" advanced title={t("section_title")}>
       <SettingItem label={t("label", { shortcut })} description={description} locked={state.forcedOff}>
         <ToggleSwitch
           checked={state.on}

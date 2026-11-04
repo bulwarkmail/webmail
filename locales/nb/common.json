@@ -174,6 +174,7 @@
     },
     "clear_search": "Tøm søket",
     "vacation_active": "Feriesvar er aktivt",
+    "vacation_turn_off": "Slå av",
     "demo_banner": "Demomodus",
     "demo_reset": "Tilbakestill",
     "demo_tour": "Omvisning",
@@ -1393,6 +1394,8 @@
     "from_description": "La feltet stå tomt for å starte med en gang.",
     "until_label": "Til (valgfritt)",
     "until_description": "La feltet stå tomt for å fortsette å svare til du slår det av.",
+    "from_placeholder": "Med en gang",
+    "until_placeholder": "Til du slår det av",
     "audience_all": "Alle",
     "audience_internal": "Bare organisasjonen min ({domains})",
     "audience_external": "Bare folk utenfor organisasjonen min",
@@ -2913,6 +2916,7 @@
       "open_sieve_editor": "Åpne redigereren for Sieve-kode",
       "fetch_error": "Kunne ikke laste inn filtre",
       "expanded_view": "Utvidet visning",
+      "show_rule_details": "Vis betingelsene og handlingene for hver regel",
       "expanded_view_description": "Vis filterregler med detaljerte blokker for vilkår og handlinger",
       "if": "Hvis",
       "then": "Gjør følgende",
@@ -2991,6 +2995,9 @@
       "validation_period_empty": "Angi en start- eller sluttdato for perioden",
       "validation_period_invalid": "Angi en gyldig dato med klokkeslett for perioden, eller la feltet stå tomt",
       "apply_existing_period": "En regel med periode virker bare på meldinger som kommer i perioden, og kan derfor ikke brukes på eksisterende meldinger.",
+      "apply_existing_in": "Bruk også på meldingene som allerede er i {folder}",
+      "apply_existing_count": "{count, plural, one {Bruk også på den # meldingen som allerede er i {folder}} other {Bruk også på de # meldingene som allerede er i {folder}}}",
+      "apply_existing_none": "Ingen meldinger i {folder} passer med regelen ennå.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
       "period_status_expired": "utløpt"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Logg ut av denne kontoen på denne enheten."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systemstatusfelt varslingsområde bakgrunn minimer tray",
+      "autostart": "autostart oppstart start med Windows ved pålogging",
+      "default_app": "standard e-postapp standard e-postprogram mailto e-postlenker",
+      "menu_bar": "menylinje menyer Alt-tast Fil Rediger Vis",
+      "updates": "oppdateringer oppdatering ny versjon beta kanal",
+      "devtools": "utviklerverktøy devtools konsoll inspiser F12 feilsøking",
+      "taskbar": "oppgavelinje blink Dock oppmerksomhet",
+      "quiet_hours": "stille timer ikke forstyrr lydløs natt",
+      "telemetry": "bruksdata telemetri statistikk analyse",
+      "crash": "krasjrapporter feilrapporter krasj",
+      "threads": "tråder samtaler samtalevisning threads",
+      "block_images": "blokker bilder eksterne bilder last inn bilder",
+      "dark_mode": "mørk modus lys modus nattmodus dark mode",
+      "timezone": "tidssone timezone",
+      "reading_pane": "leserute forhåndsvisningsrute delt visning",
+      "week_start": "ukestart første ukedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stillhet"
+    },
+    "desktop_notifications": {
+      "title": "På denne datamaskinen",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} varsler om ny e-post så lenge den kjører. Slå det på under {page} hvis den skal kjøre videre i systemstatusfeltet når du lukker vinduet."
+    },
+    "push_unsupported": "Denne nettleseren kan ikke vise varsler når nettstedet er lukket.",
+    "backup_description_app": "Bruk de samme innstillingene på de andre enhetene dine.",
+    "sender_favicons": {
+      "label": "Bilder fra bedriftenes nettsteder",
+      "description": "Vis nettstedsikoner som profilbilder for bedriftsavsendere"
+    },
+    "privacy_push": {
+      "label": "Relé for varsler",
+      "description": "Varsler mens {appName} er lukket går gjennom et push-relé, som aldri ser e-posten din. Du slår dem av og på på siden {page}."
+    },
+    "reset": {
+      "message": "Setter alle innstillinger tilbake til slik de var fra start. E-post, filtre, autosvar og signaturer blir som de er.",
+      "sync_on": "De andre enhetene dine bruker de samme innstillingene, så de endres også.",
+      "sync_off": "De andre enhetene dine beholder innstillingene sine."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
     "desktop_attention_title": "På denne datamaskinen"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Navnet ditt",
+      "description": "Folk ser dette navnet ved siden av adressen din når du sender dem e-post.",
+      "saved": "Navnet ditt er lagret.",
+      "error": "Navnet ditt kunne ikke lagres. Prøv igjen."
+    },
+    "addresses": {
+      "description": "Adressene du kan sende fra, hver med sitt eget navn og sin egen signatur.",
+      "label": "Adressene dine",
+      "count": "{count, plural, =0 {Ingen adresser ennå} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "E-postadressene dine",
+      "add": "Legg til adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er lagt til.",
+      "saved": "Adressen er lagret.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Vil du slette denne adressen?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Legges til på slutten av meldingene du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er lagret.",
+      "error": "Signaturen kunne ikke lagres. Prøv igjen.",
+      "no_addresses": "Det finnes ingen adresse å sende fra ennå."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias avsender avsenderadresse fra-adresse identity sender",
+      "signatures": "signatur e-postsignatur bunntekst identitet avsender fra-adresse signature",
+      "your_name": "visningsnavn fullt navn avsendernavn display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
@@ -7338,10 +7420,12 @@
     "server_looking": "Leter etter e-postserveren din…",
     "server_found": "E-postserver: {server}",
     "server_change": "Endre",
+    "server_change_hint": "Skriv inn en annen serveradresse.",
     "server_not_found": "Vi fant ikke e-postserveren for denne adressen. Skriv den inn her, for eksempel mail.example.com.",
     "server_needed": "Skriv inn adressen til e-postserveren din.",
     "server_invalid": "Dette er ikke en serveradresse. Skriv den som mail.example.com.",
     "email_needed": "Skriv inn e-postadressen din først.",
+    "other_ways": "Andre måter å logge på",
     "trouble": "Problemer?",
     "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."

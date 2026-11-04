@@ -174,6 +174,7 @@
     },
     "clear_search": "Neteja la cerca",
     "vacation_active": "La resposta automàtica està activa",
+    "vacation_turn_off": "Desactiva",
     "demo_banner": "Mode de demostració",
     "demo_reset": "Reinicia",
     "demo_tour": "Visita guiada",
@@ -1393,6 +1394,8 @@
     "from_description": "Deixa-ho buit per començar ara mateix.",
     "until_label": "Fins a (opcional)",
     "until_description": "Deixa-ho buit per continuar responent fins que ho desactivis.",
+    "from_placeholder": "Des d’ara",
+    "until_placeholder": "Fins que el desactiveu",
     "audience_all": "Tothom",
     "audience_internal": "Només la meva organització ({domains})",
     "audience_external": "Només persones de fora de la meva organització",
@@ -2913,6 +2916,7 @@
       "open_sieve_editor": "Obre l'editor Sieve en brut",
       "fetch_error": "No s'han pogut carregar els filtres",
       "expanded_view": "Vista ampliada",
+      "show_rule_details": "Mostra les condicions i les accions de cada regla",
       "expanded_view_description": "Mostra les regles de filtre amb blocs detallats de condicions i accions",
       "if": "Si",
       "then": "Aleshores",
@@ -2991,6 +2995,9 @@
       "validation_period_empty": "Introdueix una data d'inici o de finalització per al període",
       "validation_period_invalid": "Introdueix una data vàlida amb l'hora per al període, o deixa el camp buit",
       "apply_existing_period": "Una regla amb període només actua sobre els missatges que arriben dins d'aquest període, de manera que no es pot aplicar als missatges existents.",
+      "apply_existing_in": "Aplica-la també als missatges que ja són a {folder}",
+      "apply_existing_count": "{count, plural, one {Aplica-la també al # missatge que ja és a {folder}} other {Aplica-la també als # missatges que ja són a {folder}}}",
+      "apply_existing_none": "Encara cap missatge de {folder} no compleix aquesta regla.",
       "period_status_scheduled": "programada",
       "period_status_active": "activa",
       "period_status_expired": "caducada"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Tanca la sessió d’aquest compte en aquest dispositiu."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "safata safata del sistema àrea de notificació segon pla minimitzar",
+      "autostart": "inici automàtic arrencada iniciar amb Windows en iniciar la sessió",
+      "default_app": "aplicació de correu predeterminada programa de correu mailto enllaços de correu",
+      "menu_bar": "barra de menús menús tecla Alt Fitxer Edita Visualitza",
+      "updates": "actualitzacions actualitzar versió nova beta canal",
+      "devtools": "eines de desenvolupament devtools consola inspeccionar F12 depuració",
+      "taskbar": "barra de tasques parpelleig Dock atenció",
+      "quiet_hours": "hores de silenci no molestis silenci mut nit",
+      "telemetry": "informació d’ús telemetria estadístiques analítica",
+      "crash": "informes d’error informes de fallada fallada",
+      "threads": "fils converses conversa agrupar threads",
+      "block_images": "bloquejar imatges imatges externes carregar imatges",
+      "dark_mode": "mode fosc mode clar mode nocturn tema fosc",
+      "timezone": "fus horari zona horària timezone",
+      "reading_pane": "panell de lectura panell de previsualització vista dividida",
+      "week_start": "inici de la setmana primer dia dilluns diumenge",
+      "empty_trash": "buidar la paperera paperera elements suprimits",
+      "do_not_disturb": "hores de silenci silenci mut"
+    },
+    "desktop_notifications": {
+      "title": "En aquest ordinador",
+      "closed_label": "Amb la finestra tancada",
+      "closed_description": "{appName} us avisa del correu nou mentre s’executa. Perquè continuï a la safata quan tanqueu la finestra, activeu-ho a {page}."
+    },
+    "push_unsupported": "Aquest navegador no pot mostrar notificacions quan el lloc web està tancat.",
+    "backup_description_app": "Feu servir la mateixa configuració als altres dispositius.",
+    "sender_favicons": {
+      "label": "Imatges dels llocs web de les empreses",
+      "description": "Mostra icones de llocs web com a imatges de perfil per als remitents d'empresa"
+    },
+    "privacy_push": {
+      "label": "Repetidor de notificacions",
+      "description": "Les notificacions amb {appName} tancat passen per un repetidor push, que mai no veu el vostre correu. Les activeu o desactiveu a la pàgina {page}."
+    },
+    "reset": {
+      "message": "Torna tota la configuració a com era al principi. El correu, els filtres, la resposta automàtica i les signatures es queden com estan.",
+      "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
+      "sync_off": "Els altres dispositius mantenen la seva configuració."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# hora} other {# hores}}",
     "desktop_attention_title": "En aquest ordinador"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "El vostre nom",
+      "description": "La gent veu aquest nom al costat de la vostra adreça quan els envieu correu.",
+      "saved": "S'ha desat el vostre nom.",
+      "error": "No s'ha pogut desar el vostre nom. Torneu-ho a provar."
+    },
+    "addresses": {
+      "description": "Les adreces des de les quals podeu enviar, cadascuna amb el seu nom i la seva signatura.",
+      "label": "Les vostres adreces",
+      "count": "{count, plural, =0 {Encara no hi ha adreces} one {# adreça} other {# adreces}}",
+      "manage": "Edita les adreces…",
+      "modal_title": "Les vostres adreces de correu",
+      "add": "Afegeix una adreça",
+      "edit": "Edita l'adreça",
+      "added": "S'ha afegit l'adreça.",
+      "saved": "S'ha desat l'adreça.",
+      "deleted": "S'ha suprimit l'adreça.",
+      "delete_title": "Voleu suprimir aquesta adreça?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "S'afegeix al final dels missatges que escriviu. Cada adreça té la seva.",
+      "saved": "S'ha desat la signatura.",
+      "error": "No s'ha pogut desar la signatura. Torneu-ho a provar.",
+      "no_addresses": "Encara no teniu cap adreça per enviar."
+    },
+    "search": {
+      "addresses": "identitat identitats àlies remitent adreça del remitent adreça de identity alias sender",
+      "signatures": "signatura signatura de correu peu identitat remitent adreça de signature",
+      "your_name": "nom visible nom complet nom del remitent display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
@@ -7338,10 +7420,12 @@
     "server_looking": "S'està cercant el teu servidor de correu…",
     "server_found": "Servidor de correu: {server}",
     "server_change": "Canvia",
+    "server_change_hint": "Escriviu una altra adreça de servidor.",
     "server_not_found": "No hem trobat el servidor de correu d'aquesta adreça. Escriu-lo aquí, per exemple mail.example.com.",
     "server_needed": "Escriu l'adreça del teu servidor de correu.",
     "server_invalid": "Això no és l'adreça d'un servidor. Escriu-la com mail.example.com.",
     "email_needed": "Primer escriu la teva adreça electrònica.",
+    "other_ways": "Altres maneres d'iniciar la sessió",
     "trouble": "Tens problemes?",
     "trouble_cors": "El teu servidor de correu ha de permetre iniciar sessió des d'aquest lloc web. Si no funciona, demana a qui gestiona el servidor que ho permeti.",
     "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."

@@ -17,6 +17,7 @@ import { isDocumentRTL } from '@/i18n/direction';
 import type { Email } from '@/lib/jmap/types';
 import type { StructuredCard } from '@/lib/structured-mail';
 import { useBookingCalendar } from './use-booking-calendar';
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 const BUTTON = 'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px] disabled:opacity-50';
 const PICKER_WIDTH = 208;
@@ -47,6 +48,7 @@ function pickerPosition(rect: DOMRect, count: number): PickerPosition {
  * action (see useBookingCalendar).
  */
 export function BookingCalendarActions({ booking, email }: { booking: StructuredCard; email: Pick<Email, 'from' | 'subject'> }) {
+  const shownName = useCollectionNames();
   const t = useTranslations('structured_mail_calendar');
   const calendar = useBookingCalendar(booking, email);
   const { status, calendars, busy, error, notice } = calendar;
@@ -186,7 +188,7 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
                   className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted focus:bg-muted focus:outline-none flex items-center gap-2 min-h-[36px]"
                 >
                   <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: sanitizeColor(cal.color) }} />
-                  <span className="truncate text-foreground">{cal.name}</span>
+                  <span className="truncate text-foreground">{shownName.calendar(cal)}</span>
                 </button>
               ))}
             </div>,

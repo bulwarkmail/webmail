@@ -174,6 +174,7 @@
     },
     "clear_search": "Xóa tìm kiếm",
     "vacation_active": "Đang bật trả lời tự động khi vắng mặt",
+    "vacation_turn_off": "Tắt",
     "demo_banner": "Chế độ demo",
     "demo_reset": "Đặt lại",
     "demo_tour": "Tham quan",
@@ -1405,6 +1406,8 @@
     "from_description": "Để trống để bắt đầu ngay.",
     "until_label": "Đến (không bắt buộc)",
     "until_description": "Để trống để tiếp tục trả lời cho đến khi bạn tắt.",
+    "from_placeholder": "Ngay bây giờ",
+    "until_placeholder": "Cho đến khi bạn tắt",
     "audience_all": "Mọi người",
     "audience_internal": "Chỉ tổ chức của tôi ({domains})",
     "audience_external": "Chỉ người ngoài tổ chức của tôi",
@@ -2925,6 +2928,7 @@
       "open_sieve_editor": "Mở trình chỉnh sửa mã Sieve",
       "fetch_error": "Không thể tải bộ lọc",
       "expanded_view": "Chế độ xem mở rộng",
+      "show_rule_details": "Hiện điều kiện và hành động của từng quy tắc",
       "expanded_view_description": "Hiển thị quy tắc lọc với các khối hành động và điều kiện chi tiết",
       "if": "Nếu",
       "then": "Sau đó",
@@ -3003,6 +3007,9 @@
       "validation_period_empty": "Nhập ngày bắt đầu hoặc ngày kết thúc cho khoảng thời gian",
       "validation_period_invalid": "Nhập ngày hợp lệ cùng với thời gian trong khoảng thời gian hoặc để trống trường",
       "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó, nên không thể chạy trên các thư hiện có.",
+      "apply_existing_in": "Áp dụng cả cho các thư đã có trong {folder}",
+      "apply_existing_count": "{count, plural, other {Áp dụng cả cho # thư đã có trong {folder}}}",
+      "apply_existing_none": "Chưa có thư nào trong {folder} khớp với quy tắc này.",
       "period_status_scheduled": "Theo lịch trình",
       "period_status_active": "Hoạt động",
       "period_status_expired": "Hết hạn"
@@ -3508,6 +3515,48 @@
     },
     "sign_out": {
       "description": "Đăng xuất tài khoản này trên thiết bị này."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "khay hệ thống vùng thông báo chạy nền thu nhỏ xuống khay tray",
+      "autostart": "tự khởi động khởi động cùng Windows khi đăng nhập",
+      "default_app": "ứng dụng thư mặc định chương trình email mặc định mailto liên kết email",
+      "menu_bar": "thanh menu menu phím Alt Tệp Sửa Xem",
+      "updates": "cập nhật phiên bản mới beta kênh",
+      "devtools": "công cụ nhà phát triển devtools bảng điều khiển kiểm tra F12 gỡ lỗi",
+      "taskbar": "thanh tác vụ nhấp nháy Dock chú ý",
+      "quiet_hours": "giờ yên lặng không làm phiền tắt tiếng ban đêm",
+      "telemetry": "thông tin sử dụng đo lường từ xa thống kê phân tích",
+      "crash": "báo cáo sự cố báo cáo lỗi sự cố",
+      "threads": "chuỗi thư hội thoại nhóm threads",
+      "block_images": "chặn hình ảnh hình ảnh bên ngoài tải hình ảnh",
+      "dark_mode": "chế độ tối chế độ sáng chế độ ban đêm dark mode",
+      "timezone": "múi giờ timezone",
+      "reading_pane": "ngăn đọc ngăn xem trước chia đôi màn hình",
+      "week_start": "đầu tuần ngày đầu tiên thứ Hai Chủ nhật",
+      "empty_trash": "dọn sạch thùng rác thùng rác mục đã xóa",
+      "do_not_disturb": "giờ yên lặng tắt tiếng im lặng"
+    },
+    "desktop_notifications": {
+      "title": "Trên máy tính này",
+      "closed_label": "Khi đóng cửa sổ",
+      "closed_description": "{appName} báo cho bạn thư mới khi ứng dụng đang chạy. Để ứng dụng tiếp tục chạy ở khay hệ thống sau khi đóng cửa sổ, hãy bật mục đó trong {page}."
+    },
+    "push_unsupported": "Trình duyệt này không thể hiển thị thông báo khi trang web đã đóng.",
+    "backup_description_app": "Dùng cùng cài đặt trên các thiết bị khác của bạn.",
+    "sender_favicons": {
+      "label": "Hình ảnh từ trang web của công ty",
+      "description": "Với người gửi là công ty, dùng biểu tượng trang web làm ảnh người gửi"
+    },
+    "privacy_push": {
+      "label": "Máy chuyển tiếp thông báo",
+      "description": "Thông báo khi {appName} đóng đi qua một máy chuyển tiếp đẩy, máy này không bao giờ thấy thư của bạn. Bạn bật hoặc tắt chúng trên trang {page}."
+    },
+    "reset": {
+      "message": "Đưa tất cả cài đặt về như lúc ban đầu. Thư, bộ lọc, trả lời tự động và chữ ký của bạn vẫn giữ nguyên.",
+      "sync_on": "Các thiết bị khác của bạn dùng cùng cài đặt, nên cũng thay đổi theo.",
+      "sync_off": "Các thiết bị khác của bạn giữ nguyên cài đặt."
     }
   },
   "setup": {
@@ -7308,6 +7357,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# giờ}}",
     "desktop_attention_title": "Trên máy tính này"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Tên của bạn",
+      "description": "Mọi người thấy tên này cạnh địa chỉ của bạn khi bạn gửi thư cho họ.",
+      "saved": "Đã lưu tên của bạn.",
+      "error": "Không lưu được tên của bạn. Hãy thử lại."
+    },
+    "addresses": {
+      "description": "Các địa chỉ bạn có thể gửi thư, mỗi địa chỉ có tên và chữ ký riêng.",
+      "label": "Địa chỉ của bạn",
+      "count": "{count, plural, =0 {Chưa có địa chỉ nào} other {# địa chỉ}}",
+      "manage": "Sửa địa chỉ…",
+      "modal_title": "Địa chỉ email của bạn",
+      "add": "Thêm địa chỉ",
+      "edit": "Sửa địa chỉ",
+      "added": "Đã thêm địa chỉ.",
+      "saved": "Đã lưu địa chỉ.",
+      "deleted": "Đã xóa địa chỉ.",
+      "delete_title": "Xóa địa chỉ này?"
+    },
+    "signatures": {
+      "title": "Chữ ký",
+      "description": "Được thêm vào cuối thư bạn viết. Mỗi địa chỉ có chữ ký riêng.",
+      "saved": "Đã lưu chữ ký.",
+      "error": "Không lưu được chữ ký. Hãy thử lại.",
+      "no_addresses": "Chưa có địa chỉ nào để gửi."
+    },
+    "search": {
+      "addresses": "danh tính bí danh người gửi địa chỉ người gửi địa chỉ gửi từ identity alias sender",
+      "signatures": "chữ ký chữ ký email chân trang danh tính người gửi địa chỉ gửi từ signature",
+      "your_name": "tên hiển thị họ tên tên người gửi display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
     "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
@@ -7350,10 +7432,12 @@
     "server_looking": "Đang tìm máy chủ thư của bạn…",
     "server_found": "Máy chủ thư: {server}",
     "server_change": "Đổi",
+    "server_change_hint": "Nhập địa chỉ máy chủ khác.",
     "server_not_found": "Không tìm thấy máy chủ thư cho địa chỉ này. Nhập vào đây, ví dụ mail.example.com.",
     "server_needed": "Nhập địa chỉ máy chủ thư của bạn.",
     "server_invalid": "Đây không phải địa chỉ máy chủ. Hãy viết như mail.example.com.",
     "email_needed": "Hãy nhập địa chỉ email trước.",
+    "other_ways": "Cách đăng nhập khác",
     "trouble": "Gặp sự cố?",
     "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."

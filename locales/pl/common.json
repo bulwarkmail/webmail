@@ -174,6 +174,7 @@
     },
     "clear_search": "Wyczyść wyszukiwanie",
     "vacation_active": "Autoresponder wakacyjny jest aktywny",
+    "vacation_turn_off": "Wyłącz",
     "demo_banner": "Tryb demo",
     "demo_reset": "Resetuj",
     "demo_tour": "Przewodnik",
@@ -1393,6 +1394,8 @@
     "from_description": "Zostaw puste, aby zacząć od razu.",
     "until_label": "Do (opcjonalnie)",
     "until_description": "Zostaw puste, aby odpowiadać, dopóki tego nie wyłączysz.",
+    "from_placeholder": "Od teraz",
+    "until_placeholder": "Dopóki jej nie wyłączysz",
     "audience_all": "Wszystkim",
     "audience_internal": "Tylko mojej organizacji ({domains})",
     "audience_external": "Tylko osobom spoza mojej organizacji",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Otwórz surowy edytor Sieve",
       "fetch_error": "Nie udało się załadować filtrów",
       "expanded_view": "Widok rozszerzony",
+      "show_rule_details": "Pokaż warunki i działania każdej reguły",
       "expanded_view_description": "Pokazuj reguły filtrów ze szczegółowymi blokami warunków i akcji",
       "if": "Jeśli",
       "then": "Wtedy",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Podaj datę rozpoczęcia lub zakończenia okresu",
       "validation_period_invalid": "Podaj prawidłową datę z godziną dla okresu albo pozostaw pole puste",
       "apply_existing_period": "Reguła z okresem działa tylko na wiadomości, które przychodzą w tym okresie, dlatego nie można jej zastosować do istniejących wiadomości.",
+      "apply_existing_in": "Zastosuj też do wiadomości, które już są w folderze {folder}",
+      "apply_existing_count": "{count, plural, one {Zastosuj też do # wiadomości, która już jest w folderze {folder}} few {Zastosuj też do # wiadomości, które już są w folderze {folder}} many {Zastosuj też do # wiadomości, które już są w folderze {folder}} other {Zastosuj też do # wiadomości, które już są w folderze {folder}}}",
+      "apply_existing_none": "Żadna wiadomość w folderze {folder} nie pasuje jeszcze do tej reguły.",
       "period_status_scheduled": "zaplanowana",
       "period_status_active": "aktywna",
       "period_status_expired": "wygasła"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Wyloguj to konto na tym urządzeniu."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zasobnik zasobnik systemowy obszar powiadomień w tle minimalizuj tray",
+      "autostart": "autostart uruchamianie uruchom z Windows przy logowaniu",
+      "default_app": "domyślna aplikacja pocztowa domyślny program pocztowy mailto linki e-mail",
+      "menu_bar": "pasek menu menu klawisz Alt Plik Edycja Widok",
+      "updates": "aktualizacje aktualizacja nowa wersja beta kanał",
+      "devtools": "narzędzia deweloperskie devtools konsola zbadaj F12 debugowanie",
+      "taskbar": "pasek zadań miganie Dock uwaga",
+      "quiet_hours": "godziny ciszy nie przeszkadzać wycisz noc",
+      "telemetry": "dane o użyciu telemetria statystyki analityka",
+      "crash": "raporty awarii raporty błędów awaria",
+      "threads": "wątki rozmowy grupowanie threads",
+      "block_images": "blokuj obrazy obrazy zewnętrzne wczytuj obrazy",
+      "dark_mode": "tryb ciemny tryb jasny tryb nocny dark mode",
+      "timezone": "strefa czasowa timezone",
+      "reading_pane": "okienko odczytu okienko podglądu widok dzielony",
+      "week_start": "początek tygodnia pierwszy dzień poniedziałek niedziela",
+      "empty_trash": "opróżnij kosz kosz usunięte elementy",
+      "do_not_disturb": "godziny ciszy wycisz cisza"
+    },
+    "desktop_notifications": {
+      "title": "Na tym komputerze",
+      "closed_label": "Przy zamkniętym oknie",
+      "closed_description": "{appName} powiadamia o nowej poczcie, dopóki działa. Aby po zamknięciu okna działał dalej w zasobniku, włącz to w sekcji {page}."
+    },
+    "push_unsupported": "Ta przeglądarka nie może pokazywać powiadomień, gdy strona jest zamknięta.",
+    "backup_description_app": "Używaj tych samych ustawień na innych urządzeniach.",
+    "sender_favicons": {
+      "label": "Obrazy ze stron firm",
+      "description": "Pokazuj ikony stron internetowych jako zdjęcia profilowe nadawców firmowych"
+    },
+    "privacy_push": {
+      "label": "Przekaźnik powiadomień",
+      "description": "Powiadomienia przy zamkniętym {appName} idą przez przekaźnik push, który nigdy nie widzi Twojej poczty. Włączasz je i wyłączasz na stronie {page}."
+    },
+    "reset": {
+      "message": "Przywraca wszystkie ustawienia do stanu początkowego. Twoja poczta, filtry, autoodpowiedź i podpisy zostają bez zmian.",
+      "sync_on": "Twoje inne urządzenia używają tych samych ustawień, więc też się zmienią.",
+      "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
     }
   },
   "setup": {
@@ -7296,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
     "desktop_attention_title": "Na tym komputerze"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Twoje imię i nazwisko",
+      "description": "Ludzie widzą tę nazwę obok Twojego adresu, gdy wysyłasz im wiadomość.",
+      "saved": "Zapisano Twoje imię i nazwisko.",
+      "error": "Nie udało się zapisać Twojego imienia i nazwiska. Spróbuj ponownie."
+    },
+    "addresses": {
+      "description": "Adresy, z których możesz wysyłać, każdy z własną nazwą i podpisem.",
+      "label": "Twoje adresy",
+      "count": "{count, plural, =0 {Jeszcze brak adresów} one {# adres} few {# adresy} many {# adresów} other {# adresu}}",
+      "manage": "Edytuj adresy…",
+      "modal_title": "Twoje adresy e-mail",
+      "add": "Dodaj adres",
+      "edit": "Edytuj adres",
+      "added": "Dodano adres.",
+      "saved": "Zapisano adres.",
+      "deleted": "Usunięto adres.",
+      "delete_title": "Usunąć ten adres?"
+    },
+    "signatures": {
+      "title": "Podpisy",
+      "description": "Dodawany na końcu pisanych wiadomości. Każdy adres ma własny.",
+      "saved": "Zapisano podpis.",
+      "error": "Nie udało się zapisać podpisu. Spróbuj ponownie.",
+      "no_addresses": "Nie masz jeszcze adresu, z którego można wysyłać."
+    },
+    "search": {
+      "addresses": "tożsamość tożsamości alias nadawca adres nadawcy adres od identity sender",
+      "signatures": "podpis podpis e-mail stopka tożsamość nadawca adres od signature",
+      "your_name": "nazwa wyświetlana imię i nazwisko nazwa nadawcy display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
@@ -7338,10 +7420,12 @@
     "server_looking": "Szukamy Twojego serwera poczty…",
     "server_found": "Serwer poczty: {server}",
     "server_change": "Zmień",
+    "server_change_hint": "Wpisz adres innego serwera.",
     "server_not_found": "Nie znaleźliśmy serwera poczty dla tego adresu. Wpisz go tutaj, na przykład mail.example.com.",
     "server_needed": "Wpisz adres swojego serwera poczty.",
     "server_invalid": "To nie jest adres serwera. Wpisz go jak mail.example.com.",
     "email_needed": "Najpierw wpisz swój adres e-mail.",
+    "other_ways": "Inne sposoby logowania",
     "trouble": "Masz problem?",
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
