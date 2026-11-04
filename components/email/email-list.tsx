@@ -1451,6 +1451,7 @@ export function EmailList({
       {/* Context Menu */}
       {contextMenuEmail && (
         <EmailContextMenu
+          rowMenu
           email={contextMenuEmail}
           position={contextMenu.position}
           isOpen={contextMenu.isOpen}

@@ -6,6 +6,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
+import { DesktopOsSettings } from './desktop-os-settings';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { Button } from '@/components/ui/button';
@@ -423,6 +424,9 @@ export function NotificationSettings() {
           </div>
         </SettingItem>
       </SettingsSection>
+
+      {/* The desktop app's taskbar flash and quiet hours. Nothing in a browser. */}
+      <DesktopOsSettings part="notifications" />
 
       <SettingsSection id="push" title={t('push.title')} description={t('push.description')} term="push">
         <SettingItem label={t('push.enable')} description={statusDescription}>

@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "E-Mails von {name} finden"
   },
+  "menuMove": {
+    "filter_placeholder": "Ordner suchen",
+    "recent": "Zuletzt verwendet",
+    "no_match": "Kein Ordner gefunden",
+    "choose_folder": "Ordner auswählen…",
+    "current_folder": "Bereits in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Ordner als gelesen markieren",
     "mark_folder_tree_read": "Ordner & Unterordner als gelesen markieren",
@@ -5929,6 +5936,14 @@
     "usage_label": "Was dieses Gerät behält",
     "pin_not_ready": "Diese Datei steht noch nicht auf der Liste dieses Geräts. Versuchen Sie es gleich noch einmal."
   },
+  "keyProtection": {
+    "browser_note": "Im Browser liegt der Schlüssel zu dieser Mail im selben Browserprofil wie die Mail. Wer die Dateien des Profils kopiert, kann sie lesen. Nutzen Sie deshalb eine Festplattenverschlüsselung.",
+    "no_secure_storage": "Dieser Computer hat keinen sicheren Schlüsselspeicher, den die App nutzen kann. Der Schlüssel zu dieser Mail ist auf der Festplatte nur verschleiert. Nutzen Sie eine Festplattenverschlüsselung.",
+    "wrap_failed": "Der sichere Schlüsselspeicher dieses Computers hat den Schlüssel zu dieser Mail nicht angenommen, er ist also nicht so geschützt, wie er sein sollte. Starten Sie die App neu und nutzen Sie eine Festplattenverschlüsselung.",
+    "rekey_progress": "Die Mail auf diesem Gerät wird neu verschlüsselt: {percent} %. Sie können weiterarbeiten.",
+    "rekey_failed": "Die neue Verschlüsselung der Mail auf diesem Gerät wurde nicht fertig, der alte Schlüssel öffnet sie also noch. Die App versucht es beim nächsten Start erneut.",
+    "reenroll_note": "Passkey und Systementsperrung nutzten den Schlüssel der alten PIN und wurden deshalb entfernt. Richten Sie sie neu ein, wenn Sie sie nutzen."
+  },
   "offlineDrafts": {
     "title": "Entwürfe auf diesem Gerät",
     "description": "Diese Entwürfe sind auf diesem Gerät gespeichert. Sie gehen von selbst an den Server, sobald er erreichbar ist.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Weitere Optionen"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline-Hinweis ausblenden"
+  },
   "shell": {
     "resize": "Größe ändern",
     "update_available": "Update verfügbar",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Plugins",
     "group_account": "Konto",
     "switch_to": "Zu {account} wechseln"
+  },
+  "menuAudit": {
+    "offline_header": "Sie sind offline. Manche Aktionen brauchen eine Verbindung.",
+    "files_new_folder": "Neuer Ordner…",
+    "files_new_file": "Neue Datei…",
+    "files_new_text_file": "Neue Textdatei…",
+    "files_upload_files": "Dateien hochladen…",
+    "files_upload_folder": "Ordner hochladen…",
+    "files_share": "Teilen…",
+    "files_share_button": "Teilen",
+    "contacts_add_to_group": "Zur Gruppe hinzufügen…",
+    "contacts_bulk_add_to_group": "Zur Gruppe hinzufügen…",
+    "schedule_send": "Senden planen…"
   },
   "notification_center": {
     "title": "Benachrichtigungen",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menüleiste immer anzeigen",
+    "always_show_description": "Sonst erscheint sie, wenn Sie Alt drücken.",
+    "exit": "Beenden",
+    "tray_pause": "Benachrichtigungen pausieren",
+    "tray_pause_hour": "Für 1 Stunde",
+    "tray_pause_tomorrow": "Bis morgen",
+    "tray_resume": "Benachrichtigungen wieder einschalten",
+    "tray_open": "Bulwark öffnen",
+    "tray_quit": "Bulwark beenden",
+    "tray_exit": "Bulwark beenden"
+  },
+  "desktopMenus": {
+    "save_draft": "Entwurf speichern",
+    "attach_files": "Dateien anhängen…",
+    "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
+  },
   "appLock": {
     "section_title": "App-Sperre",
-    "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, bleiben E-Mails auf diesem Gerät verschlüsselt und die App hat keinen Schlüssel dafür.",
+    "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",
     "enable_label": "Mit PIN sperren",
     "enable_desc": "Standardmäßig aus. Die PIN bleibt auf diesem Gerät.",
-    "protects_desc": "Wovor das schützt: Im Browser hält die PIN andere an diesem Gerät aus der App heraus, und die hier gespeicherten E-Mails bleiben verschlüsselt. Sie kann kein Programm auf diesem Computer aufhalten, keine von Ihnen installierte Browser-Erweiterung und niemanden, der die Dateien des Browsers kopiert und Zeit hat, viele PINs auszuprobieren. Eine längere PIN lohnt sich also. In der Desktop-App ist die PIN zusätzlich an Ihre Anmeldung an diesem Computer gebunden. Ihr Konto auf dem Server ist davon nicht betroffen.",
+    "protects_desc": "Wovor das schützt: Die PIN hält Personen an diesem Gerät aus der App heraus. Die hier gespeicherte Mail bekommt einen neuen Schlüssel, wenn Sie die Sperre einschalten oder die PIN ändern. Das kann einen Moment dauern. Nicht verhindern kann sie ein Programm auf diesem Computer, eine von Ihnen installierte Browsererweiterung oder jemanden, der die Dateien der App kopiert und Zeit hat, viele PINs zu probieren. Eine längere PIN lohnt sich also. In der Desktop-App braucht das Probieren von PINs zusätzlich Ihre Anmeldung an diesem Computer. Ihr Konto auf dem Server ist davon nicht betroffen.",
     "enable_body": "Wählen Sie eine PIN. Sie brauchen sie jedes Mal, wenn die App sperrt, und nach einem Neuladen oder Neustart.",
     "set_pin_title": "PIN wählen",
     "change_pin": "PIN ändern…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Das Hauptfenster hat nicht geantwortet. Ihre Nachricht bleibt hier.",
     "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
     "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
+  },
+  "desktopDevTools": {
+    "section_title": "Fehlerbehebung",
+    "label": "Entwicklertools ({shortcut})",
+    "description": "Mit {shortcut} und F12 öffnen sich die Entwicklertools für das Fenster, in dem Sie sind. Schaltet sich wieder aus, wenn die App gesperrt wird.",
+    "forced_off": "Von Ihrer Organisation ausgeschaltet.",
+    "locked": "Entsperren Sie die App, um das zu ändern.",
+    "menu_toggle": "Entwicklertools ein- oder ausblenden"
+  },
+  "fileDrop": {
+    "overlay_label": "Dateien ablegen",
+    "overlay_title": "Wohin sollen die Dateien?",
+    "overlay_hint": "Zum Abbrechen außerhalb der Felder ablegen oder Esc drücken.",
+    "files_unknown": "Dateien",
+    "files_summary": "{count, plural, one {# Datei} other {# Dateien}}",
+    "files_summary_size": "{count, plural, one {# Datei} other {# Dateien}}, {size}",
+    "zone_attach_here": "An diese Nachricht anhängen",
+    "zone_insert_inline": "In die Nachricht einfügen",
+    "zone_new_message": "An neue Nachricht anhängen",
+    "zone_upload_files": "In Dateien hochladen",
+    "zone_upload_folder": "In {folder} hochladen",
+    "zone_calendar": "Zum Kalender hinzufügen",
+    "zone_contacts": "Zu Kontakten hinzufügen",
+    "zone_open_eml": "Nachricht öffnen",
+    "zone_import_eml": "In {folder} importieren",
+    "note_limit_message": "Bis zu {size} pro Nachricht",
+    "note_limit_file": "Bis zu {size} pro Datei",
+    "note_kept_offline": "Bleibt auf diesem Gerät, bis Sie wieder online sind",
+    "note_needs_connection": "Braucht eine Verbindung",
+    "announce": "{files, plural, =0 {Dateien} one {# Datei} other {# Dateien}} hereingezogen. Möglichkeiten: {choices}.",
+    "choose_title": "{count, plural, one {Wohin soll diese Datei?} other {Wohin sollen diese Dateien?}}",
+    "save_first_failed": "Die offene Nachricht konnte nicht gespeichert werden, daher bleibt die App, wo sie war.",
+    "import_done": "{count, plural, one {# Nachricht in {folder} importiert.} other {# Nachrichten in {folder} importiert.}}",
+    "import_failed": "{name} konnte nicht importiert werden.",
+    "too_large_file": "{name} ist zu groß. Die Grenze liegt bei {max} pro Datei.",
+    "too_large_message": "Diese Dateien sind zusammen zu groß für eine Nachricht. Die Grenze liegt bei {max}.",
+    "folders_left_out": "Ordner können nur in Dateien, daher wurden sie weggelassen.",
+    "nothing_here": "Diese Dateien lassen sich hier nicht verwenden."
   },
   "desktopReminders": {
     "generic_title": "Erinnerung",

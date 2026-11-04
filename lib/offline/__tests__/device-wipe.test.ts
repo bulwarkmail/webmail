@@ -1261,6 +1261,184 @@ describe('what else goes with a wipe', () => {
   });
 });
 
+describe('the desktop app\'s main process in a wipe', () => {
+  /** What the real preload hands out, once. */
+  function shellWith(localWipe: (request: { reason: string; account: string | null }) => Promise<{ failed: string[] }>) {
+    const finish = vi.fn(async () => {});
+    const calls: string[] = [];
+    const wrapped = vi.fn(async (request: { reason: string; account: string | null }) => {
+      calls.push('main');
+      return localWipe(request);
+    });
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
+      version: 1,
+      platform: 'win32',
+      mode: 'standalone',
+      appLock: {
+        status: async () => ({ wrap: false }),
+        forget: async () => true,
+        claim: () => ({ lock() {}, osUnlock: async () => ({ ok: false }), localWipe: wrapped, finishLocalWipe: finish }),
+      },
+    };
+    return { run: wrapped, finish, calls };
+  }
+
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+  });
+
+  it('a wipe from settings asks main for everything, and restarts when all went', async () => {
+    const { run, finish } = shellWith(async () => ({ failed: [] }));
+    await wipe.wipeWholeDevice('user');
+    expect(run).toHaveBeenCalledWith({ reason: 'settings', account: null });
+    expect(finish).toHaveBeenCalledTimes(1);
+    expect(wipeState.readPendingWipes()).toEqual({});
+  });
+
+  it('a remote wipe of the last account does too, tells the instance after main answered, and keeps the note if it could not', async () => {
+    const order: string[] = [];
+    respond = (url) => {
+      if (url.endsWith('/wiped')) {
+        order.push('report');
+        return json(500, {});
+      }
+      return noWipe();
+    };
+    const { run, finish } = shellWith(async () => {
+      order.push('main');
+      return { failed: [] };
+    });
+    await wipe.wipeAccountFromDevice(ALICE, 'admin');
+    expect(run).toHaveBeenCalledWith({ reason: 'remote', account: null });
+    expect(order).toEqual(['main', 'report']);
+    // The instance hasn't heard: the id and secret have to outlive the restart.
+    expect(finish).toHaveBeenCalledWith({ keepLocalStorage: true });
+  });
+
+  it('a step main could not finish: not reported as done, tried again, and no restart', async () => {
+    const { finish } = shellWith(async () => ({ failed: ['edited files'] }));
+    const reports: unknown[] = [];
+    respond = (url, init) => {
+      if (url.endsWith('/wiped')) reports.push(init?.body);
+      return url.endsWith('/wiped') ? json(200, { ok: true }) : noWipe();
+    };
+    await wipe.wipeAccountFromDevice(ALICE, 'admin');
+    expect(reports).toEqual([]);
+    expect(wipeState.readPendingWipes()).toEqual({ [ALICE]: 'admin' });
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it('main never answering counts as a step that failed', async () => {
+    // Only that wait is shortened: the promise itself never settles.
+    const real = globalThis.setTimeout;
+    vi.stubGlobal('setTimeout', (run: () => void, ms?: number) => real(run, ms === wipe.MAIN_WIPE_BUDGET_MS ? 50 : ms));
+    try {
+      const { finish } = shellWith(() => new Promise(() => {}));
+      await wipe.wipeWholeDevice('user');
+      expect(finish).not.toHaveBeenCalled();
+      expect(wipeState.WHOLE_DEVICE in wipeState.readPendingWipes()).toBe(true);
+    } finally {
+      vi.stubGlobal('setTimeout', real);
+    }
+  });
+
+  it('one account with another still signed in: only that account, and no restart', async () => {
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)] } as never);
+    const { run, finish } = shellWith(async () => ({ failed: [] }));
+    await wipe.wipeAccountFromDevice(ALICE, 'admin');
+    expect(run).toHaveBeenCalledWith({ reason: 'remote', account: ALICE });
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it('a deletion after a refused login stays with the account, also the last one', async () => {
+    const { run, finish } = shellWith(async () => ({ failed: [] }));
+    await wipe.wipeAccountFromDevice(ALICE, 'rejected');
+    expect(run).toHaveBeenCalledWith({ reason: 'remote', account: ALICE });
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it('an older shell has no such call: the wipe still finishes', async () => {
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
+      version: 1, platform: 'win32', mode: 'standalone', appLock: { status: async () => ({ wrap: false }), forget: async () => true, claim: () => ({ lock() {}, osUnlock: async () => ({ ok: false }) }) },
+    };
+    await wipe.wipeWholeDevice('user');
+    expect(wipeState.readPendingWipes()).toEqual({});
+  });
+});
+
+describe('the HTTP cache in the desktop app', () => {
+  it('goes with a wipe, also of one account with another still signed in', async () => {
+    const clear = vi.fn(async () => {});
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', mode: 'standalone', httpCache: { clear } };
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)] } as never);
+    try {
+      await wipe.wipeAccountFromDevice(ALICE, 'user');
+      expect(clear).toHaveBeenCalled();
+    } finally {
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    }
+  });
+});
+
+describe('the 30 days', () => {
+  it('run out in an app that stays open too', async () => {
+    const offline = await import('../offline-mode');
+    const stop = offline.startOfflineMode();
+    try {
+      state.markEvicted(ALICE, Date.now() - 31 * 24 * 60 * 60 * 1000);
+      useAccountStore.setState({ accounts: [] } as never);
+      const before = purge.files;
+      expect(offline.EVICTED_SWEEP_MS).toBeLessThanOrEqual(60 * 60 * 1000);
+      const spy = vi.spyOn(globalThis, 'setInterval');
+      stop();
+      const again = offline.startOfflineMode();
+      const tick = spy.mock.calls.find((call) => call[1] === offline.EVICTED_SWEEP_MS)?.[0] as (() => void) | undefined;
+      expect(tick).toBeTypeOf('function');
+      spy.mockRestore();
+      tick!();
+      await vi.waitFor(() => expect(purge.files).toBeGreaterThan(before));
+      again();
+    } finally {
+      stop();
+    }
+  });
+});
+
+describe('a shell that never answers about shown notifications', () => {
+  // Electron has no answer to getNotifications(): the promise stays pending for good.
+  beforeEach(() => {
+    respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : noWipe());
+    const registration = {
+      getNotifications: () => new Promise<Notification[]>(() => {}),
+      pushManager: { getSubscription: async () => null },
+    };
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { getRegistration: async () => registration, controller: null } });
+  });
+
+  afterEach(() => {
+    delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+  });
+
+  const ended = (work: Promise<void>) => Promise.race([
+    work.then(() => 'finished'),
+    new Promise((resolve) => setTimeout(() => resolve('hung'), 20_000)),
+  ]);
+
+  it('a wipe of the whole device still gets to the keys and the files', async () => {
+    const before = purge.files;
+    expect(await ended(wipe.wipeWholeDevice('user'))).toBe('finished');
+    expect(purge.files).toBeGreaterThan(before);
+    expect(wipeState.readPendingWipes()).toEqual({});
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('a wipe of one account gets past them too, to its sign-out', async () => {
+    expect(await ended(wipe.wipeAccountFromDevice(ALICE, 'admin'))).toBe('finished');
+    expect(wipeState.readPendingWipes()).toEqual({});
+    expect(useAccountStore.getState().accounts.some((account) => account.id === ALICE)).toBe(false);
+  });
+});
+
 describe('the session timers', () => {
   const timerSignOut = () => useAuthStore.getState().logoutAll({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
 

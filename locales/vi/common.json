@@ -3684,6 +3684,13 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Tìm thư mục",
+    "recent": "Gần đây",
+    "no_match": "Không có thư mục phù hợp",
+    "choose_folder": "Chọn thư mục…",
+    "current_folder": "Đã ở trong {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Đánh dấu thư mục là đã đọc",
     "mark_folder_tree_read": "Đánh dấu thư mục và thư mục con là đã đọc",
@@ -5941,6 +5948,14 @@
     "usage_label": "Những gì thiết bị này giữ",
     "pin_not_ready": "Tệp này chưa có trong danh sách của thiết bị này. Hãy thử lại sau giây lát."
   },
+  "keyProtection": {
+    "browser_note": "Trong trình duyệt, khóa của thư này nằm trong cùng hồ sơ trình duyệt với thư. Ai sao chép các tệp của hồ sơ đều có thể đọc được, vì vậy hãy dùng mã hóa ổ đĩa.",
+    "no_secure_storage": "Máy tính này không có kho khóa an toàn mà ứng dụng có thể dùng, nên khóa của thư này chỉ được làm rối trên ổ đĩa. Hãy dùng mã hóa ổ đĩa.",
+    "wrap_failed": "Kho khóa an toàn của máy tính này không nhận khóa của thư này, nên khóa không được bảo vệ như đáng lẽ phải có. Hãy khởi động lại ứng dụng và dùng mã hóa ổ đĩa.",
+    "rekey_progress": "Đang mã hóa lại thư trên thiết bị này: {percent}%. Bạn có thể tiếp tục làm việc.",
+    "rekey_failed": "Việc mã hóa lại thư trên thiết bị này chưa xong, nên khóa cũ vẫn có thể mở được. Ứng dụng sẽ thử lại ở lần khởi động sau.",
+    "reenroll_note": "Mã khóa truy cập và mở khóa hệ thống đã dùng khóa của mã PIN cũ nên đã bị gỡ bỏ. Hãy thiết lập lại nếu bạn dùng chúng."
+  },
   "offlineDrafts": {
     "title": "Bản nháp trên thiết bị này",
     "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
@@ -6450,6 +6465,9 @@
   "top_bar": {
     "more": "Nhiều lựa chọn hơn"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ẩn thông báo ngoại tuyến"
+  },
   "shell": {
     "resize": "Thay đổi kích thước",
     "update_available": "Đã có bản cập nhật",
@@ -6494,6 +6512,19 @@
     "group_plugins": "Plugin",
     "group_account": "Tài khoản",
     "switch_to": "Chuyển sang {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Bạn đang ngoại tuyến. Một số thao tác cần kết nối.",
+    "files_new_folder": "Thư mục mới…",
+    "files_new_file": "Tệp mới…",
+    "files_new_text_file": "Tệp văn bản mới…",
+    "files_upload_files": "Tải tệp lên…",
+    "files_upload_folder": "Tải lên thư mục…",
+    "files_share": "Chia sẻ…",
+    "files_share_button": "Chia sẻ",
+    "contacts_add_to_group": "Thêm vào nhóm…",
+    "contacts_bulk_add_to_group": "Thêm vào nhóm…",
+    "schedule_send": "Lên lịch gửi…"
   },
   "notification_center": {
     "title": "Thông báo",
@@ -6853,12 +6884,29 @@
   "desktop_mail": {
     "context_search_mail": "Tìm “{text}” trong thư"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Luôn hiện thanh menu",
+    "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
+    "exit": "Thoát",
+    "tray_pause": "Tạm dừng thông báo",
+    "tray_pause_hour": "Trong 1 giờ",
+    "tray_pause_tomorrow": "Đến ngày mai",
+    "tray_resume": "Bật lại thông báo",
+    "tray_open": "Mở Bulwark",
+    "tray_quit": "Thoát Bulwark",
+    "tray_exit": "Thoát Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lưu bản nháp",
+    "attach_files": "Đính kèm tệp…",
+    "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
-    "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và thẻ. Khi đang khóa, thư trên thiết bị này vẫn được mã hóa và ứng dụng không có khóa của chúng.",
+    "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
     "enable_label": "Khóa bằng mã PIN",
     "enable_desc": "Mặc định tắt. Mã PIN chỉ ở trên thiết bị này.",
-    "protects_desc": "Điều này bảo vệ trước gì: trong trình duyệt, mã PIN ngăn người ở cạnh thiết bị này vào ứng dụng và giữ thư lưu ở đây được mã hóa. Nó không thể chặn một chương trình chạy trên máy tính này, tiện ích trình duyệt bạn đã cài, hoặc người sao chép tệp của trình duyệt và có thời gian thử nhiều mã, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, mã PIN còn gắn với thông tin đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
+    "protects_desc": "Điều này bảo vệ khỏi: mã PIN giữ người đang ở thiết bị này bên ngoài ứng dụng. Thư lưu ở đây nhận khóa mới khi bạn bật khóa hoặc đổi mã PIN, việc này có thể mất một lúc. Nó không thể ngăn một chương trình chạy trên máy tính này, một tiện ích trình duyệt bạn đã cài, hoặc người sao chép các tệp của ứng dụng và có thời gian thử nhiều mã PIN, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, việc thử mã PIN còn cần phiên đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
     "enable_body": "Hãy chọn một mã PIN. Bạn cần nó mỗi khi ứng dụng khóa, và sau khi tải lại hoặc khởi động lại.",
     "set_pin_title": "Chọn mã PIN",
     "change_pin": "Đổi mã PIN…",
@@ -7100,6 +7148,44 @@
     "back_no_answer": "Cửa sổ chính không phản hồi. Thư của bạn vẫn ở đây.",
     "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
     "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
+  },
+  "desktopDevTools": {
+    "section_title": "Khắc phục sự cố",
+    "label": "Công cụ cho nhà phát triển ({shortcut})",
+    "description": "Cho phép {shortcut} và F12 mở công cụ cho nhà phát triển của cửa sổ bạn đang dùng. Tự tắt lại khi ứng dụng khóa.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "locked": "Hãy mở khóa ứng dụng để thay đổi.",
+    "menu_toggle": "Hiện hoặc ẩn công cụ cho nhà phát triển"
+  },
+  "fileDrop": {
+    "overlay_label": "Thả tệp",
+    "overlay_title": "Đưa tệp đi đâu?",
+    "overlay_hint": "Thả bên ngoài các lựa chọn hoặc nhấn Esc để hủy.",
+    "files_unknown": "Tệp",
+    "files_summary": "{count, plural, other {# tệp}}",
+    "files_summary_size": "{count, plural, other {# tệp}}, {size}",
+    "zone_attach_here": "Đính kèm vào thư này",
+    "zone_insert_inline": "Chèn vào nội dung thư",
+    "zone_new_message": "Đính kèm vào thư mới",
+    "zone_upload_files": "Tải lên Tệp",
+    "zone_upload_folder": "Tải lên {folder}",
+    "zone_calendar": "Thêm vào lịch",
+    "zone_contacts": "Thêm vào danh bạ",
+    "zone_open_eml": "Mở thư",
+    "zone_import_eml": "Nhập vào {folder}",
+    "note_limit_message": "Tối đa {size} mỗi thư",
+    "note_limit_file": "Tối đa {size} mỗi tệp",
+    "note_kept_offline": "Được giữ trên thiết bị này đến khi bạn trực tuyến lại",
+    "note_needs_connection": "Cần kết nối",
+    "announce": "{files, plural, =0 {Đã kéo tệp vào} other {Đã kéo vào # tệp}}. Lựa chọn: {choices}.",
+    "choose_title": "{count, plural, other {Đưa các tệp này đi đâu?}}",
+    "save_first_failed": "Không lưu được thư đang mở, nên ứng dụng vẫn ở chỗ cũ.",
+    "import_done": "{count, plural, other {Đã nhập # thư vào {folder}.}}",
+    "import_failed": "Không nhập được {name}.",
+    "too_large_file": "{name} quá lớn. Giới hạn là {max} mỗi tệp.",
+    "too_large_message": "Các tệp này quá lớn cho một thư. Giới hạn là {max}.",
+    "folders_left_out": "Thư mục chỉ có thể đưa vào Tệp, nên đã bị bỏ qua.",
+    "nothing_here": "Không dùng được các tệp này ở đây."
   },
   "desktopReminders": {
     "generic_title": "Lời nhắc",

@@ -74,7 +74,12 @@ describe('when the session is refused', () => {
     endSession();
     expect(screen.getByTestId('content')).toBeTruthy();
     expect(mounts).toBe(1);
-    expect(document.querySelector('[data-popout-session-ended]')).toBeTruthy();
+    const line = document.querySelector<HTMLElement>('[data-popout-session-ended]')!;
+    expect(line).toBeTruthy();
+    // It's the window's top row: room for the window's controls, and its own
+    // "Close window" gives way to the window's close where there is one.
+    expect(line.hasAttribute('data-window-top-row')).toBe(true);
+    expect(screen.getByRole('button', { name: 'close_window' }).hasAttribute('data-own-window-close')).toBe(true);
   });
 });
 

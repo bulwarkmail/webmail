@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { sortFolderTree } from "@/lib/move-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "@/components/icons";
@@ -221,8 +222,10 @@ export function FilterRuleModal({
   }, [confirmDiscard, dirty, onClose]);
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // The folder list in the order every Move list has (lib/move-menu.ts).
+  const locale = useLocale();
   const { hierarchicalMailboxes, mailboxPathMap } = useMemo(() => {
-    const tree = buildMailboxTree(mailboxes.filter((mb) => !mb.isShared));
+    const tree = sortFolderTree(buildMailboxTree(mailboxes.filter((mb) => !mb.isShared)), locale);
     const pathMap = new Map<string, string>();
     const buildPaths = (nodes: MailboxNode[], parentPath = "") => {
       for (const node of nodes) {
@@ -236,7 +239,7 @@ export function FilterRuleModal({
     };
     buildPaths(tree);
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
-  }, [mailboxes]);
+  }, [mailboxes, locale]);
 
   // Rules saved before folder ids were stored only carry the path; resolve it
   // so the select shows the folder and the next save adds the id.

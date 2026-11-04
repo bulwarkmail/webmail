@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Find e-mails fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find en mappe",
+    "recent": "Seneste",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Vælg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Markér mappe som læst",
     "mark_folder_tree_read": "Markér mappe & undermapper som læst",
@@ -5929,6 +5936,14 @@
     "usage_label": "Det her beholder denne enhed",
     "pin_not_ready": "Denne fil er ikke på denne enheds liste endnu. Prøv igen om lidt."
   },
+  "keyProtection": {
+    "browser_note": "I en browser ligger nøglen til denne mail i den samme browserprofil som mailen. Den, der kopierer profilens filer, kan læse den, så brug diskkryptering.",
+    "no_secure_storage": "Denne computer har ikke et sikkert nøglelager, som appen kan bruge, så nøglen til denne mail er kun sløret på disken. Brug diskkryptering.",
+    "wrap_failed": "Computerens sikre nøglelager tog ikke imod nøglen til denne mail, så den er ikke beskyttet, som den skal være. Genstart appen, og brug diskkryptering.",
+    "rekey_progress": "Mailen på denne enhed krypteres igen: {percent} %. Du kan arbejde videre.",
+    "rekey_failed": "Den nye kryptering af mailen på denne enhed blev ikke færdig, så den gamle nøgle kan stadig åbne den. Appen prøver igen ved næste start.",
+    "reenroll_note": "Adgangsnøglen og systemoplåsningen brugte den gamle pinkodes nøgle, så de er fjernet. Konfigurer dem igen, hvis du bruger dem."
+  },
   "offlineDrafts": {
     "title": "Kladder på denne enhed",
     "description": "Disse kladder er gemt på denne enhed. De sendes selv til serveren, så snart den kan nås.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Flere muligheder"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul offline-besked"
+  },
   "shell": {
     "resize": "Tilpas størrelse",
     "update_available": "Opdatering tilgængelig",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Plugins",
     "group_account": "Konto",
     "switch_to": "Skift til {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Du er offline. Nogle handlinger kræver forbindelse.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Upload filer…",
+    "files_upload_folder": "Upload mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Tilføj til gruppe…",
+    "contacts_bulk_add_to_group": "Tilføj til gruppe…",
+    "schedule_send": "Planlæg afsendelse…"
   },
   "notification_center": {
     "title": "Notifikationer",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Søg efter “{text}” i mail"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vis altid menulinjen",
+    "always_show_description": "Ellers vises den, når du trykker på Alt.",
+    "exit": "Afslut",
+    "tray_pause": "Sæt notifikationer på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Indtil i morgen",
+    "tray_resume": "Slå notifikationer til igen",
+    "tray_open": "Åbn Bulwark",
+    "tray_quit": "Afslut Bulwark",
+    "tray_exit": "Afslut Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Gem kladde",
+    "attach_files": "Vedhæft filer…",
+    "shortcut_apps": "Gå til Mail, Kalender, Kontakter eller Filer"
+  },
   "appLock": {
     "section_title": "Applås",
-    "section_desc": "Beder om en pinkode efter en tid uden brug, i alle vinduer og faner. Mens den er låst, forbliver mail på denne enhed krypteret, og appen har ingen nøgle til den.",
+    "section_desc": "Beder om en pinkode efter et stykke tid uden brug, i alle vinduer og faner. Mens den er låst, kan appen ikke læse den mail, der er gemt på denne enhed, før nogen indtaster pinkoden.",
     "enable_label": "Lås med en pinkode",
     "enable_desc": "Slået fra som standard. Pinkoden bliver på denne enhed.",
-    "protects_desc": "Hvad det beskytter mod: I en browser holder pinkoden andre ved denne enhed ude af appen og holder den mail, der er gemt her, krypteret. Den kan ikke stoppe et program på denne computer, en browserudvidelse, du har installeret, eller nogen, der kopierer browserens filer og har tid til at prøve mange pinkoder, så en længere pinkode er umagen værd. I desktop-appen er pinkoden også knyttet til dit login på denne computer. Din konto på serveren påvirkes ikke.",
+    "protects_desc": "Det beskytter den mod: Pinkoden holder personer ved denne enhed ude af appen. Mailen, der er gemt her, får en ny nøgle, når du slår låsen til eller ændrer pinkoden, hvilket kan tage et øjeblik. Den kan ikke stoppe et program, der kører på denne computer, en browserudvidelse, du har installeret, eller en person, der kopierer appens filer og har tid til at prøve mange pinkoder, så en længere pinkode er det værd. I desktop-appen kræver det også dit login på denne computer at prøve pinkoder. Din konto på serveren påvirkes ikke.",
     "enable_body": "Vælg en pinkode. Du skal bruge den, hver gang appen låser, og efter en genindlæsning eller ny start.",
     "set_pin_title": "Vælg en pinkode",
     "change_pin": "Skift pinkode…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Hovedvinduet svarede ikke. Din besked bliver her.",
     "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
     "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
+  },
+  "desktopDevTools": {
+    "section_title": "Fejlfinding",
+    "label": "Udviklerværktøjer ({shortcut})",
+    "description": "Lader {shortcut} og F12 åbne udviklerværktøjerne for det vindue, du er i. Slås fra igen, når appen låses.",
+    "forced_off": "Slået fra af din organisation.",
+    "locked": "Lås appen op for at ændre dette.",
+    "menu_toggle": "Vis eller skjul udviklerværktøjer"
+  },
+  "fileDrop": {
+    "overlay_label": "Slip filer",
+    "overlay_title": "Hvor skal filerne hen?",
+    "overlay_hint": "Slip uden for valgene, eller tryk på Esc for at annullere.",
+    "files_unknown": "Filer",
+    "files_summary": "{count, plural, one {# fil} other {# filer}}",
+    "files_summary_size": "{count, plural, one {# fil} other {# filer}}, {size}",
+    "zone_attach_here": "Vedhæft til denne besked",
+    "zone_insert_inline": "Indsæt i beskeden",
+    "zone_new_message": "Vedhæft til en ny besked",
+    "zone_upload_files": "Upload til Filer",
+    "zone_upload_folder": "Upload til {folder}",
+    "zone_calendar": "Føj til kalender",
+    "zone_contacts": "Føj til kontakter",
+    "zone_open_eml": "Åbn besked",
+    "zone_import_eml": "Importér til {folder}",
+    "note_limit_message": "Op til {size} pr. besked",
+    "note_limit_file": "Op til {size} pr. fil",
+    "note_kept_offline": "Bliver på denne enhed, til du er online igen",
+    "note_needs_connection": "Kræver forbindelse",
+    "announce": "{files, plural, =0 {Filer} one {# fil} other {# filer}} trukket ind. Valg: {choices}.",
+    "choose_title": "{count, plural, one {Hvor skal denne fil hen?} other {Hvor skal disse filer hen?}}",
+    "save_first_failed": "Den åbne besked kunne ikke gemmes, så appen blev, hvor den var.",
+    "import_done": "{count, plural, one {# besked importeret til {folder}.} other {# beskeder importeret til {folder}.}}",
+    "import_failed": "{name} kunne ikke importeres.",
+    "too_large_file": "{name} er for stor. Grænsen er {max} pr. fil.",
+    "too_large_message": "Disse filer er for store til én besked. Grænsen er {max}.",
+    "folders_left_out": "Mapper kan kun komme i Filer, så de blev udeladt.",
+    "nothing_here": "Disse filer kan ikke bruges her."
   },
   "desktopReminders": {
     "generic_title": "Påmindelse",

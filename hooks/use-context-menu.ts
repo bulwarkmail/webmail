@@ -24,10 +24,6 @@ export interface UseContextMenuReturn<T> {
   menuRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const MENU_WIDTH = 200;
-const MENU_HEIGHT = 320; // Approximate max height
-const VIEWPORT_MARGIN = 10;
-
 /** Shift+F10 or the Menu key: open the focused element's context menu. */
 export function isContextMenuKey(e: { key: string; shiftKey: boolean }): boolean {
   return e.key === "ContextMenu" || (e.shiftKey && e.key === "F10");
@@ -71,46 +67,26 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const calculatePosition = useCallback((clientX: number, clientY: number): ContextMenuPosition => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let x = clientX;
-    let y = clientY;
-
-    // Adjust for right edge
-    if (x + MENU_WIDTH > viewportWidth - VIEWPORT_MARGIN) {
-      x = viewportWidth - MENU_WIDTH - VIEWPORT_MARGIN;
-    }
-
-    // Adjust for bottom edge
-    if (y + MENU_HEIGHT > viewportHeight - VIEWPORT_MARGIN) {
-      y = viewportHeight - MENU_HEIGHT - VIEWPORT_MARGIN;
-    }
-
-    // Ensure minimum position
-    x = Math.max(VIEWPORT_MARGIN, x);
-    y = Math.max(VIEWPORT_MARGIN, y);
-
-    return { x, y };
-  }, []);
-
   const openContextMenu = useCallback((e: React.MouseEvent, data: T) => {
     e.preventDefault();
     e.stopPropagation();
 
     const target = e.currentTarget instanceof HTMLElement ? e.currentTarget : null;
     const trigger = target ? focusReturnTarget(target) : null;
-    const position = target && openedByKeyboard(e)
+    const position: ContextMenuPosition = target && openedByKeyboard(e)
       ? { ...anchorPosition(target), trigger }
-      : { ...calculatePosition(e.clientX, e.clientY), trigger };
+      // At the pointer as it is: the menu places itself once it knows its size,
+      // opening up or to the side where there's no room (lib/menu-placement.ts).
+      : { x: e.clientX, y: e.clientY, trigger, fromPointer: true };
+    // The row it's for stays marked while it's open (a ⋮ inside the row counts as the row).
+    if (target) position.opener = target.closest<HTMLElement>("[data-menu-row]") ?? target;
 
     setContextMenu({
       isOpen: true,
       position,
       data,
     });
-  }, [calculatePosition]);
+  }, []);
 
   const openContextMenuFrom = useCallback((element: HTMLElement, data: T, align: "start" | "end" = "start") => {
     setContextMenu({ isOpen: true, position: anchorPosition(element, align), data });

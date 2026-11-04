@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Atrast e-pastus no {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Meklēt mapi",
+    "recent": "Nesen izmantotās",
+    "no_match": "Neviena mape neatbilst",
+    "choose_folder": "Izvēlēties mapi…",
+    "current_folder": "Jau mapē {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Atzīmēt mapi kā lasītu",
     "mark_folder_tree_read": "Atzīmēt mapi un apakšmapes kā lasītas",
@@ -5929,6 +5936,14 @@
     "usage_label": "Ko glabā šī ierīce",
     "pin_not_ready": "Šī faila vēl nav šīs ierīces sarakstā. Mēģiniet vēlreiz pēc brīža."
   },
+  "keyProtection": {
+    "browser_note": "Pārlūkā šī pasta atslēga atrodas tajā pašā pārlūka profilā, kur pasts. Kas nokopē profila failus, var to izlasīt, tāpēc izmantojiet diska šifrēšanu.",
+    "no_secure_storage": "Šajā datorā nav drošas atslēgu krātuves, ko lietotne varētu izmantot, tāpēc šī pasta atslēga diskā ir tikai aizmiglota. Izmantojiet diska šifrēšanu.",
+    "wrap_failed": "Šī datora drošā atslēgu krātuve nepieņēma šī pasta atslēgu, tāpēc tā nav aizsargāta, kā vajadzētu. Restartējiet lietotni un izmantojiet diska šifrēšanu.",
+    "rekey_progress": "Šīs ierīces pasts tiek šifrēts no jauna: {percent}%. Varat turpināt darbu.",
+    "rekey_failed": "Šīs ierīces pasta jaunā šifrēšana netika pabeigta, tāpēc vecā atslēga to joprojām var atvērt. Lietotne mēģinās vēlreiz nākamajā startā.",
+    "reenroll_note": "Piekļuves atslēga un sistēmas atbloķēšana izmantoja vecā PIN atslēgu, tāpēc tās ir noņemtas. Ja tās izmantojat, iestatiet tās no jauna."
+  },
   "offlineDrafts": {
     "title": "Melnraksti šajā ierīcē",
     "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Citas iespējas"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Paslēpt bezsaistes paziņojumu"
+  },
   "shell": {
     "resize": "Mainīt izmēru",
     "update_available": "Pieejams atjauninājums",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Spraudņi",
     "group_account": "Konts",
     "switch_to": "Pārslēgties uz {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Jūs esat bezsaistē. Dažām darbībām vajag savienojumu.",
+    "files_new_folder": "Jauna mape…",
+    "files_new_file": "Jauns fails…",
+    "files_new_text_file": "Jauns teksta fails…",
+    "files_upload_files": "Augšupielādēt failus…",
+    "files_upload_folder": "Augšupielādēt mapi…",
+    "files_share": "Kopīgot…",
+    "files_share_button": "Kopīgot",
+    "contacts_add_to_group": "Pievienot grupai…",
+    "contacts_bulk_add_to_group": "Pievienot grupai…",
+    "schedule_send": "Ieplānot sūtīšanu…"
   },
   "notification_center": {
     "title": "Paziņojumi",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Meklēt pastā “{text}”"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vienmēr rādīt izvēļņu joslu",
+    "always_show_description": "Citādi tā parādās, nospiežot Alt.",
+    "exit": "Iziet",
+    "tray_pause": "Pauzēt paziņojumus",
+    "tray_pause_hour": "Uz 1 stundu",
+    "tray_pause_tomorrow": "Līdz rītdienai",
+    "tray_resume": "Atkal ieslēgt paziņojumus",
+    "tray_open": "Atvērt Bulwark",
+    "tray_quit": "Aizvērt Bulwark",
+    "tray_exit": "Iziet no Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Saglabāt melnrakstu",
+    "attach_files": "Pievienot failus…",
+    "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
-    "section_desc": "Pēc laika bez lietošanas prasa PIN kodu katrā logā un cilnē. Kamēr lietotne ir bloķēta, e-pasts šajā ierīcē paliek šifrēts, un lietotnei nav tā atslēgas.",
+    "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
     "enable_label": "Bloķēt ar PIN kodu",
     "enable_desc": "Pēc noklusējuma izslēgts. PIN kods paliek šajā ierīcē.",
-    "protects_desc": "No kā tas aizsargā: pārlūkā PIN neļauj kādam pie šīs ierīces iekļūt lietotnē, un šeit saglabātais pasts paliek šifrēts. Tas nevar apturēt programmu šajā datorā, jūsu instalētu pārlūka paplašinājumu vai kādu, kas nokopē pārlūka failus un var izmēģināt daudz PIN, tāpēc garāks PIN ir tā vērts. Darbvirsmas lietotnē PIN ir saistīts arī ar jūsu pieteikšanos šajā datorā. Jūsu kontu serverī tas neietekmē.",
+    "protects_desc": "No kā tas aizsargā: PIN neielaiž lietotnē to, kurš ir pie šīs ierīces. Šeit glabātais pasts saņem jaunu atslēgu, kad ieslēdzat bloķēšanu vai maināt PIN, un tas var aizņemt brīdi. Tas nevar apturēt programmu, kas darbojas šajā datorā, jūsu instalētu pārlūka paplašinājumu vai kādu, kurš nokopē lietotnes failus un kuram ir laiks izmēģināt daudzus PIN, tāpēc garāks PIN ir tā vērts. Darbvirsmas lietotnē PIN izmēģināšanai vajag arī jūsu pieteikšanos šajā datorā. Jūsu konts serverī netiek ietekmēts.",
     "enable_body": "Izvēlieties PIN kodu. Tas būs vajadzīgs katru reizi, kad lietotne bloķējas, un pēc pārlādes vai jaunas palaišanas.",
     "set_pin_title": "Izvēlieties PIN kodu",
     "change_pin": "Mainīt PIN kodu…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Galvenais logs neatbildēja. Jūsu ziņa paliek šeit.",
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
+  },
+  "desktopDevTools": {
+    "section_title": "Problēmu novēršana",
+    "label": "Izstrādātāju rīki ({shortcut})",
+    "description": "Ļauj {shortcut} un F12 atvērt izstrādātāju rīkus logā, kurā esat. Izslēdzas, kad lietotne tiek bloķēta.",
+    "forced_off": "Jūsu organizācija to ir izslēgusi.",
+    "locked": "Atbloķējiet lietotni, lai to mainītu.",
+    "menu_toggle": "Rādīt vai paslēpt izstrādātāju rīkus"
+  },
+  "fileDrop": {
+    "overlay_label": "Nometiet failus",
+    "overlay_title": "Kur likt failus?",
+    "overlay_hint": "Lai atceltu, nometiet ārpus izvēlēm vai nospiediet Esc.",
+    "files_unknown": "Faili",
+    "files_summary": "{count, plural, zero {# failu} one {# fails} other {# faili}}",
+    "files_summary_size": "{count, plural, zero {# failu} one {# fails} other {# faili}}, {size}",
+    "zone_attach_here": "Pievienot šim ziņojumam",
+    "zone_insert_inline": "Ievietot ziņojumā",
+    "zone_new_message": "Pievienot jaunam ziņojumam",
+    "zone_upload_files": "Augšupielādēt failos",
+    "zone_upload_folder": "Augšupielādēt mapē {folder}",
+    "zone_calendar": "Pievienot kalendāram",
+    "zone_contacts": "Pievienot kontaktiem",
+    "zone_open_eml": "Atvērt ziņojumu",
+    "zone_import_eml": "Importēt mapē {folder}",
+    "note_limit_message": "Līdz {size} vienam ziņojumam",
+    "note_limit_file": "Līdz {size} vienam failam",
+    "note_kept_offline": "Paliek šajā ierīcē, līdz atkal būsit tiešsaistē",
+    "note_needs_connection": "Vajadzīgs savienojums",
+    "announce": "{files, plural, =0 {Ievilkti faili} zero {Ievilkts # failu} one {Ievilkts # fails} other {Ievilkti # faili}}. Izvēles: {choices}.",
+    "choose_title": "{count, plural, zero {Kur likt šos failus?} one {Kur likt šo failu?} other {Kur likt šos failus?}}",
+    "save_first_failed": "Atvērto ziņojumu neizdevās saglabāt, tāpēc lietotne palika, kur bija.",
+    "import_done": "{count, plural, zero {# ziņojumu importēts mapē {folder}.} one {# ziņojums importēts mapē {folder}.} other {# ziņojumi importēti mapē {folder}.}}",
+    "import_failed": "{name} neizdevās importēt.",
+    "too_large_file": "{name} ir pārāk liels. Ierobežojums ir {max} vienam failam.",
+    "too_large_message": "Šie faili ir pārāk lieli vienam ziņojumam. Ierobežojums ir {max}.",
+    "folders_left_out": "Mapes var likt tikai failos, tāpēc tās tika izlaistas.",
+    "nothing_here": "Šos failus šeit nevar izmantot."
   },
   "desktopReminders": {
     "generic_title": "Atgādinājums",

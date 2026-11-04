@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { PrintRoot } from "@/components/print/print-root";
+import type { InvitationPrint } from "@/lib/print/invitation-print";
 
 export interface MessagePrintFields {
   subject: string;
@@ -13,6 +14,8 @@ export interface MessagePrintFields {
   /** Sanitized body HTML without <style>: a re-sanitized HTML body, or the escaped plain-text one. */
   bodyHtml: string;
   plain: boolean;
+  /** An invitation's card: what, when, where and who, as the reader shows it. */
+  invitation?: InvitationPrint | null;
 }
 
 // The reader's image rule: cap only images that set no max-width of their own.
@@ -66,6 +69,19 @@ export function MessagePrint({ fields }: { fields: MessagePrintFields }) {
             ))}
           </dl>
         </header>
+        {fields.invitation && fields.invitation.rows.length > 0 && (
+          <section className="pr-invitation" data-message-print-invitation="">
+            <h2 className="pr-invitation-heading">{fields.invitation.heading}</h2>
+            <dl className="pr-message-meta">
+              {fields.invitation.rows.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}:</dt>
+                  <dd dir="auto">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
         <div className="pr-message-body" data-message-print-body="" ref={fillBody} />
       </article>
     </PrintRoot>

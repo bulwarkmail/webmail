@@ -9,10 +9,8 @@ import { addSignOutGate } from '@/lib/sign-out-cleanup';
 import { reloadToNewBuild } from '@/lib/app-update';
 import { buildSettingsPath } from '@/lib/deep-links';
 import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
+import { showFirstStartNotice } from '@/lib/first-start-notices';
 import { toast } from '@/stores/toast-store';
-
-/** How long the notice that the desktop app keeps mail stays: a long sentence, so twice a plain toast. */
-const DEFAULT_ON_NOTICE_MS = 10_000;
 
 /**
  * Runs offline mode (#523) in this tab: the JMAP client's offline hooks,
@@ -30,6 +28,9 @@ export function OfflineHost() {
   const tStorage = useTranslations('offlineStorage');
   const tStorageRef = useRef(tStorage);
   tStorageRef.current = tStorage;
+  const tKey = useTranslations('keyProtection');
+  const tKeyRef = useRef(tKey);
+  tKeyRef.current = tKey;
   const router = useRouter();
   const routerRef = useRef(router);
   routerRef.current = router;
@@ -77,8 +78,8 @@ export function OfflineHost() {
           toast.warning(tStorageRef.current('storage_full_title'), { message: tStorageRef.current('storage_full_text'), duration: 0, action: openStorage });
           break;
         case 'default-on':
-          // Said once; it goes like other notices, and Settings has the switch.
-          toast.info(tStorageRef.current('default_on'), { duration: DEFAULT_ON_NOTICE_MS, action: openStorage });
+          // A first-start notice, not a toast: it stays until closed, and covers nothing.
+          showFirstStartNotice({ id: 'offline-default-on', text: tStorageRef.current('default_on'), action: openStorage });
           break;
         case 'legacy-stranded':
           toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });
@@ -92,6 +93,12 @@ export function OfflineHost() {
           break;
         case 'store-unavailable':
           toast.warning(tConflictsRef.current('store_unavailable'), { duration: 0 });
+          break;
+        case 'key-unprotected':
+          toast.warning(tKeyRef.current('wrap_failed'), { duration: 0 });
+          break;
+        case 'rekey-failed':
+          toast.warning(tKeyRef.current('rekey_failed'), { duration: 0 });
           break;
         case 'refused-delete':
           toast.warning(tr('toast.refused_delete'));

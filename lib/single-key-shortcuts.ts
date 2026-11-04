@@ -10,3 +10,12 @@ import { useSettingsStore } from "@/stores/settings-store";
 export function isSingleKeyShortcutOff(event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey">): boolean {
   return isSingleCharacterKey(event) && useSettingsStore.getState().singleKeyShortcuts === false;
 }
+
+/**
+ * A key hint as the help and menus write it ("r", "Shift + I", "#") that's a single-key
+ * shortcut, so it does nothing while those are off. Arrows aren't characters.
+ */
+export function isSingleKeyHint(combo: string): boolean {
+  const key = combo.replace(/^(shift\s*\+\s*)+/i, "").trim();
+  return [...key].length === 1 && !/[←→↑↓]/.test(key);
+}

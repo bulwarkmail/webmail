@@ -83,6 +83,9 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
     // Virtual nodes (shared folder headers) cannot be drop targets
     if (mailbox.id.startsWith("shared-")) return false;
 
+    // Drafts holds what's being written: no Move list offers it either.
+    if (mailbox.role === "drafts") return false;
+
     return true;
   }, [isDragging, mailbox, sourceMailboxId]);
 

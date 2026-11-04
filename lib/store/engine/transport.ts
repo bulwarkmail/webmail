@@ -128,7 +128,8 @@ export class FetchTransport implements JmapTransport {
       if (!header) throw new TransportError('auth', 'No credentials yet');
       if (this.aborted) throw new TransportError('network', 'The store is closing');
       try {
-        return await doFetch(url, { ...init, signal: transfer.signal, headers: { ...init.headers, Authorization: header } });
+        // The browser's cache isn't encrypted, and a download may stay in it for a year.
+        return await doFetch(url, { ...init, cache: 'no-store', signal: transfer.signal, headers: { ...init.headers, Authorization: header } });
       } catch (error) {
         throw new TransportError('network', messageOf(error, 'Network failure'), undefined, undefined, undefined, transfer.timedOut());
       }

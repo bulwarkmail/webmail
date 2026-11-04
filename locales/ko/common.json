@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "{name}님이 보낸 이메일 찾기"
   },
+  "menuMove": {
+    "filter_placeholder": "폴더 찾기",
+    "recent": "최근",
+    "no_match": "일치하는 폴더 없음",
+    "choose_folder": "폴더 선택…",
+    "current_folder": "이미 {folder}에 있음"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "폴더를 읽음으로 표시",
     "mark_folder_tree_read": "폴더 및 하위 폴더를 읽음으로 표시",
@@ -5929,6 +5936,14 @@
     "usage_label": "이 기기에 보관된 항목",
     "pin_not_ready": "이 파일은 아직 이 기기의 목록에 없습니다. 잠시 후 다시 시도하세요."
   },
+  "keyProtection": {
+    "browser_note": "브라우저에서는 이 메일의 키가 메일과 같은 브라우저 프로필에 있습니다. 프로필 파일을 복사한 사람은 메일을 읽을 수 있으므로 디스크 암호화를 사용하세요.",
+    "no_secure_storage": "이 컴퓨터에는 앱이 사용할 수 있는 안전한 키 저장소가 없어서 이 메일의 키는 디스크에서 난독화만 되어 있습니다. 디스크 암호화를 사용하세요.",
+    "wrap_failed": "이 컴퓨터의 안전한 키 저장소가 이 메일의 키를 받지 않아 키가 제대로 보호되지 않습니다. 앱을 다시 시작하고 디스크 암호화를 사용하세요.",
+    "rekey_progress": "이 기기의 메일을 다시 암호화하는 중: {percent}%. 계속 작업할 수 있습니다.",
+    "rekey_failed": "이 기기의 메일 재암호화가 끝나지 않아 이전 키로 아직 열 수 있습니다. 앱이 다음 시작 때 다시 시도합니다.",
+    "reenroll_note": "패스키와 시스템 잠금 해제가 이전 PIN의 키를 사용했기 때문에 제거되었습니다. 사용한다면 다시 설정하세요."
+  },
   "offlineDrafts": {
     "title": "이 기기의 임시 보관함",
     "description": "이 임시 보관 메일은 이 기기에 저장되어 있습니다. 서버에 연결되면 자동으로 올라갑니다.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "추가 옵션"
   },
+  "windowChrome": {
+    "hide_offline_notice": "오프라인 알림 숨기기"
+  },
   "shell": {
     "resize": "크기 조정",
     "update_available": "업데이트가 있습니다",
@@ -6482,6 +6500,19 @@
     "group_plugins": "플러그인",
     "group_account": "계정",
     "switch_to": "{account}(으)로 전환"
+  },
+  "menuAudit": {
+    "offline_header": "오프라인 상태입니다. 일부 작업에는 연결이 필요합니다.",
+    "files_new_folder": "새 폴더…",
+    "files_new_file": "새 파일…",
+    "files_new_text_file": "새 텍스트 파일…",
+    "files_upload_files": "파일 업로드…",
+    "files_upload_folder": "폴더 업로드…",
+    "files_share": "공유…",
+    "files_share_button": "공유",
+    "contacts_add_to_group": "그룹에 추가…",
+    "contacts_bulk_add_to_group": "그룹에 추가…",
+    "schedule_send": "보내기 예약…"
   },
   "notification_center": {
     "title": "알림",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "메일에서 “{text}” 검색"
   },
+  "desktopMenuBar": {
+    "always_show_label": "메뉴 막대 항상 표시",
+    "always_show_description": "끄면 Alt 키를 누를 때 표시됩니다.",
+    "exit": "끝내기",
+    "tray_pause": "알림 일시 중지",
+    "tray_pause_hour": "1시간 동안",
+    "tray_pause_tomorrow": "내일까지",
+    "tray_resume": "알림 다시 켜기",
+    "tray_open": "Bulwark 열기",
+    "tray_quit": "Bulwark 종료",
+    "tray_exit": "Bulwark 종료"
+  },
+  "desktopMenus": {
+    "save_draft": "임시 저장",
+    "attach_files": "파일 첨부…",
+    "shortcut_apps": "메일, 캘린더, 연락처, 파일로 이동"
+  },
   "appLock": {
     "section_title": "앱 잠금",
-    "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 이 기기의 메일은 암호화된 상태로 유지되며 앱에는 키가 없습니다.",
+    "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 앱은 누군가 PIN을 입력할 때까지 이 기기에 저장된 메일을 읽을 수 없습니다.",
     "enable_label": "PIN으로 잠금",
     "enable_desc": "기본적으로 꺼져 있습니다. PIN은 이 기기에만 남습니다.",
-    "protects_desc": "보호 범위: 브라우저에서 PIN은 이 기기 앞에 있는 사람이 앱에 들어오지 못하게 하고 여기에 저장된 메일을 암호화된 상태로 유지합니다. 이 컴퓨터에서 실행되는 프로그램, 직접 설치한 브라우저 확장 프로그램, 브라우저 파일을 복사해 많은 PIN을 시도할 시간이 있는 사람은 막을 수 없으므로 더 긴 PIN을 사용하는 것이 좋습니다. 데스크톱 앱에서는 PIN이 이 컴퓨터의 로그인에도 연결됩니다. 서버의 계정에는 영향이 없습니다.",
+    "protects_desc": "보호 대상: PIN은 이 기기 앞에 있는 사람이 앱에 들어오지 못하게 합니다. 여기에 저장된 메일은 잠금을 켜거나 PIN을 변경할 때 새 키를 받으며, 잠시 걸릴 수 있습니다. 이 컴퓨터에서 실행되는 프로그램, 설치한 브라우저 확장 프로그램, 앱 파일을 복사해 많은 PIN을 시도할 시간이 있는 사람은 막을 수 없으므로 더 긴 PIN이 좋습니다. 데스크톱 앱에서는 PIN을 시도하려면 이 컴퓨터의 로그인도 필요합니다. 서버의 계정에는 영향이 없습니다.",
     "enable_body": "PIN을 선택하세요. 앱이 잠길 때마다, 그리고 다시 로드하거나 새로 시작한 후에 필요합니다.",
     "set_pin_title": "PIN 선택",
     "change_pin": "PIN 변경…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "기본 창이 응답하지 않았습니다. 메시지는 여기에 그대로 있습니다.",
     "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
+  },
+  "desktopDevTools": {
+    "section_title": "문제 해결",
+    "label": "개발자 도구 ({shortcut})",
+    "description": "{shortcut} 및 F12로 현재 창의 개발자 도구를 열 수 있게 합니다. 앱이 잠기면 다시 꺼집니다.",
+    "forced_off": "조직에서 이 기능을 껐습니다.",
+    "locked": "변경하려면 앱 잠금을 해제하세요.",
+    "menu_toggle": "개발자 도구 표시/숨기기"
+  },
+  "fileDrop": {
+    "overlay_label": "파일 놓기",
+    "overlay_title": "파일을 어디에 둘까요?",
+    "overlay_hint": "취소하려면 선택 항목 밖에 놓거나 Esc 키를 누르세요.",
+    "files_unknown": "파일",
+    "files_summary": "{count, plural, other {파일 #개}}",
+    "files_summary_size": "{count, plural, other {파일 #개}}, {size}",
+    "zone_attach_here": "이 메시지에 첨부",
+    "zone_insert_inline": "메시지 본문에 삽입",
+    "zone_new_message": "새 메시지에 첨부",
+    "zone_upload_files": "파일에 업로드",
+    "zone_upload_folder": "{folder}에 업로드",
+    "zone_calendar": "캘린더에 추가",
+    "zone_contacts": "연락처에 추가",
+    "zone_open_eml": "메시지 열기",
+    "zone_import_eml": "{folder}(으)로 가져오기",
+    "note_limit_message": "메시지당 최대 {size}",
+    "note_limit_file": "파일당 최대 {size}",
+    "note_kept_offline": "다시 온라인이 될 때까지 이 기기에 보관됩니다",
+    "note_needs_connection": "연결이 필요합니다",
+    "announce": "{files, plural, =0 {파일을} other {파일 #개를}} 끌어왔습니다. 선택 항목: {choices}.",
+    "choose_title": "{count, plural, other {이 파일을 어디에 둘까요?}}",
+    "save_first_failed": "열린 메시지를 저장하지 못해 앱이 그대로 있습니다.",
+    "import_done": "{count, plural, other {메시지 #개를 {folder}(으)로 가져왔습니다.}}",
+    "import_failed": "{name}을(를) 가져오지 못했습니다.",
+    "too_large_file": "{name}이(가) 너무 큽니다. 한도는 파일당 {max}입니다.",
+    "too_large_message": "이 파일들은 한 메시지에 넣기에 너무 큽니다. 한도는 {max}입니다.",
+    "folders_left_out": "폴더는 파일에만 넣을 수 있어 제외했습니다.",
+    "nothing_here": "이 파일은 여기에서 사용할 수 없습니다."
   },
   "desktopReminders": {
     "generic_title": "알림",

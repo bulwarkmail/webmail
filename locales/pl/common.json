@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Znajdź e-maile od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Znajdź folder",
+    "recent": "Ostatnie",
+    "no_match": "Brak pasującego folderu",
+    "choose_folder": "Wybierz folder…",
+    "current_folder": "Już w folderze {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Oznacz folder jako przeczytany",
     "mark_folder_tree_read": "Oznacz folder i podfoldery jako przeczytane",
@@ -5929,6 +5936,14 @@
     "usage_label": "Co przechowuje to urządzenie",
     "pin_not_ready": "Tego pliku nie ma jeszcze na liście tego urządzenia. Spróbuj ponownie za chwilę."
   },
+  "keyProtection": {
+    "browser_note": "W przeglądarce klucz do tej poczty znajduje się w tym samym profilu przeglądarki co poczta. Kto skopiuje pliki profilu, może ją przeczytać, więc używaj szyfrowania dysku.",
+    "no_secure_storage": "Ten komputer nie ma bezpiecznego magazynu kluczy, którego aplikacja mogłaby użyć, więc klucz do tej poczty jest na dysku tylko zaciemniony. Używaj szyfrowania dysku.",
+    "wrap_failed": "Bezpieczny magazyn kluczy tego komputera nie przyjął klucza do tej poczty, więc nie jest on chroniony tak, jak powinien. Uruchom aplikację ponownie i używaj szyfrowania dysku.",
+    "rekey_progress": "Ponowne szyfrowanie poczty na tym urządzeniu: {percent}%. Możesz dalej pracować.",
+    "rekey_failed": "Ponowne szyfrowanie poczty na tym urządzeniu nie zakończyło się, więc stary klucz nadal może ją otworzyć. Aplikacja spróbuje ponownie przy następnym uruchomieniu.",
+    "reenroll_note": "Klucz dostępu i odblokowywanie systemowe używały klucza starego PIN-u, więc zostały usunięte. Skonfiguruj je ponownie, jeśli ich używasz."
+  },
   "offlineDrafts": {
     "title": "Wersje robocze na tym urządzeniu",
     "description": "Te wersje robocze są zapisane na tym urządzeniu. Trafią na serwer same, gdy tylko będzie dostępny.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Więcej opcji"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ukryj powiadomienie o trybie offline"
+  },
   "shell": {
     "resize": "Zmień rozmiar",
     "update_available": "Dostępna aktualizacja",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Wtyczki",
     "group_account": "Konto",
     "switch_to": "Przełącz na {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Jesteś offline. Niektóre działania wymagają połączenia.",
+    "files_new_folder": "Nowy folder…",
+    "files_new_file": "Nowy plik…",
+    "files_new_text_file": "Nowy plik tekstowy…",
+    "files_upload_files": "Prześlij pliki…",
+    "files_upload_folder": "Prześlij folder…",
+    "files_share": "Udostępnij…",
+    "files_share_button": "Udostępnij",
+    "contacts_add_to_group": "Dodaj do grupy…",
+    "contacts_bulk_add_to_group": "Dodaj do grupy…",
+    "schedule_send": "Zaplanuj wysyłkę…"
   },
   "notification_center": {
     "title": "Powiadomienia",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Szukaj „{text}” w poczcie"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Zawsze pokazuj pasek menu",
+    "always_show_description": "W przeciwnym razie pojawia się po naciśnięciu Alt.",
+    "exit": "Zakończ",
+    "tray_pause": "Wstrzymaj powiadomienia",
+    "tray_pause_hour": "Na 1 godzinę",
+    "tray_pause_tomorrow": "Do jutra",
+    "tray_resume": "Włącz powiadomienia z powrotem",
+    "tray_open": "Otwórz Bulwark",
+    "tray_quit": "Zakończ Bulwark",
+    "tray_exit": "Zakończ Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Zapisz wersję roboczą",
+    "attach_files": "Załącz pliki…",
+    "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
-    "section_desc": "Prosi o PIN po czasie bezczynności, w każdym oknie i na każdej karcie. Gdy aplikacja jest zablokowana, poczta na tym urządzeniu pozostaje zaszyfrowana, a aplikacja nie ma do niej klucza.",
+    "section_desc": "Prosi o PIN po pewnym czasie bezczynności, w każdym oknie i na każdej karcie. Gdy jest zablokowana, aplikacja nie może czytać poczty zapisanej na tym urządzeniu, dopóki ktoś nie poda PIN-u.",
     "enable_label": "Blokuj kodem PIN",
     "enable_desc": "Domyślnie wyłączone. PIN pozostaje na tym urządzeniu.",
-    "protects_desc": "Przed czym to chroni: w przeglądarce PIN nie wpuszcza do aplikacji osoby przy tym urządzeniu, a zapisana tu poczta pozostaje zaszyfrowana. Nie zatrzyma programu działającego na tym komputerze, zainstalowanego przez Ciebie rozszerzenia przeglądarki ani kogoś, kto skopiuje pliki przeglądarki i ma czas na wypróbowanie wielu kodów, więc warto wybrać dłuższy PIN. W aplikacji komputerowej PIN jest też powiązany z Twoim logowaniem na tym komputerze. Nie ma to wpływu na Twoje konto na serwerze.",
+    "protects_desc": "Przed czym to chroni: PIN nie wpuszcza do aplikacji kogoś przy tym urządzeniu. Zapisana tu poczta dostaje nowy klucz, gdy włączysz blokadę lub zmienisz PIN, co może chwilę potrwać. Nie zatrzyma to programu działającego na tym komputerze, zainstalowanego przez Ciebie rozszerzenia przeglądarki ani kogoś, kto skopiuje pliki aplikacji i ma czas wypróbować wiele PIN-ów, więc warto użyć dłuższego PIN-u. W aplikacji komputerowej próbowanie PIN-ów wymaga też Twojego logowania na tym komputerze. Nie ma to wpływu na Twoje konto na serwerze.",
     "enable_body": "Wybierz PIN. Będzie potrzebny za każdym razem, gdy aplikacja się zablokuje, oraz po przeładowaniu lub ponownym uruchomieniu.",
     "set_pin_title": "Wybierz PIN",
     "change_pin": "Zmień PIN…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Główne okno nie odpowiedziało. Wiadomość zostaje tutaj.",
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
+  },
+  "desktopDevTools": {
+    "section_title": "Rozwiązywanie problemów",
+    "label": "Narzędzia dla deweloperów ({shortcut})",
+    "description": "Pozwala, by {shortcut} i F12 otwierały narzędzia dla deweloperów w oknie, w którym jesteś. Wyłącza się, gdy aplikacja się zablokuje.",
+    "forced_off": "Wyłączone przez Twoją organizację.",
+    "locked": "Odblokuj aplikację, aby to zmienić.",
+    "menu_toggle": "Pokaż lub ukryj narzędzia dla deweloperów"
+  },
+  "fileDrop": {
+    "overlay_label": "Upuść pliki",
+    "overlay_title": "Gdzie mają trafić pliki?",
+    "overlay_hint": "Upuść poza opcjami lub naciśnij Esc, aby anulować.",
+    "files_unknown": "Pliki",
+    "files_summary": "{count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}",
+    "files_summary_size": "{count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}, {size}",
+    "zone_attach_here": "Załącz do tej wiadomości",
+    "zone_insert_inline": "Wstaw do wiadomości",
+    "zone_new_message": "Załącz do nowej wiadomości",
+    "zone_upload_files": "Prześlij do Plików",
+    "zone_upload_folder": "Prześlij do {folder}",
+    "zone_calendar": "Dodaj do kalendarza",
+    "zone_contacts": "Dodaj do kontaktów",
+    "zone_open_eml": "Otwórz wiadomość",
+    "zone_import_eml": "Importuj do {folder}",
+    "note_limit_message": "Do {size} na wiadomość",
+    "note_limit_file": "Do {size} na plik",
+    "note_kept_offline": "Zostaje na tym urządzeniu, aż znów będziesz online",
+    "note_needs_connection": "Wymaga połączenia",
+    "announce": "{files, plural, =0 {Przeciągnięto pliki} one {Przeciągnięto # plik} few {Przeciągnięto # pliki} many {Przeciągnięto # plików} other {Przeciągnięto # pliku}}. Opcje: {choices}.",
+    "choose_title": "{count, plural, one {Gdzie ma trafić ten plik?} few {Gdzie mają trafić te pliki?} many {Gdzie mają trafić te pliki?} other {Gdzie mają trafić te pliki?}}",
+    "save_first_failed": "Nie udało się zapisać otwartej wiadomości, więc aplikacja została tam, gdzie była.",
+    "import_done": "{count, plural, one {Zaimportowano # wiadomość do {folder}.} few {Zaimportowano # wiadomości do {folder}.} many {Zaimportowano # wiadomości do {folder}.} other {Zaimportowano # wiadomości do {folder}.}}",
+    "import_failed": "Nie udało się zaimportować {name}.",
+    "too_large_file": "{name} jest za duży. Limit to {max} na plik.",
+    "too_large_message": "Te pliki są za duże na jedną wiadomość. Limit to {max}.",
+    "folders_left_out": "Foldery mogą trafić tylko do Plików, więc zostały pominięte.",
+    "nothing_here": "Tych plików nie można tu użyć."
   },
   "desktopReminders": {
     "generic_title": "Przypomnienie",

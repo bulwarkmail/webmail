@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "{name} e-mailjeinek keresése"
   },
+  "menuMove": {
+    "filter_placeholder": "Mappa keresése",
+    "recent": "Legutóbbiak",
+    "no_match": "Nincs ilyen mappa",
+    "choose_folder": "Mappa kiválasztása…",
+    "current_folder": "Már itt van: {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mappa olvasottnak jelölése",
     "mark_folder_tree_read": "Mappa és almappák olvasottnak jelölése",
@@ -5929,6 +5936,14 @@
     "usage_label": "Mit tart meg ez az eszköz",
     "pin_not_ready": "Ez a fájl még nincs rajta az eszköz listáján. Próbálja újra egy pillanat múlva."
   },
+  "keyProtection": {
+    "browser_note": "Böngészőben ennek a levélnek a kulcsa ugyanabban a böngészőprofilban van, mint a levél. Aki lemásolja a profil fájljait, el tudja olvasni, ezért használjon lemeztitkosítást.",
+    "no_secure_storage": "Ezen a számítógépen nincs biztonságos kulcstár, amelyet az alkalmazás használhatna, ezért a levél kulcsa a lemezen csak el van rejtve. Használjon lemeztitkosítást.",
+    "wrap_failed": "A számítógép biztonságos kulcstára nem fogadta el a levél kulcsát, ezért az nincs úgy védve, ahogy kellene. Indítsa újra az alkalmazást, és használjon lemeztitkosítást.",
+    "rekey_progress": "Az eszközön lévő levelek újratitkosítása: {percent}%. Nyugodtan dolgozhat tovább.",
+    "rekey_failed": "Az eszközön lévő levelek újratitkosítása nem fejeződött be, így a régi kulcs még megnyitja őket. Az alkalmazás a következő indításkor újra megpróbálja.",
+    "reenroll_note": "A jelkulcs és a rendszeres feloldás a régi PIN kulcsát használta, ezért eltávolítottuk őket. Ha használja őket, állítsa be újra."
+  },
   "offlineDrafts": {
     "title": "Piszkozatok ezen az eszközön",
     "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "További lehetőségek"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline értesítés elrejtése"
+  },
   "shell": {
     "resize": "Átméretezés",
     "update_available": "Frissítés érhető el",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Bővítmények",
     "group_account": "Fiók",
     "switch_to": "Váltás erre: {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Nincs kapcsolat. Néhány művelethez kapcsolat kell.",
+    "files_new_folder": "Új mappa…",
+    "files_new_file": "Új fájl…",
+    "files_new_text_file": "Új szöveges fájl…",
+    "files_upload_files": "Fájlok feltöltése…",
+    "files_upload_folder": "Mappa feltöltése…",
+    "files_share": "Megosztás…",
+    "files_share_button": "Megosztás",
+    "contacts_add_to_group": "Hozzáadás a csoporthoz…",
+    "contacts_bulk_add_to_group": "Hozzáadás a csoporthoz…",
+    "schedule_send": "Késleltetett küldés…"
   },
   "notification_center": {
     "title": "Értesítések",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "„{text}” keresése a levelek között"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menüsor mindig látható",
+    "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",
+    "exit": "Kilépés",
+    "tray_pause": "Értesítések szüneteltetése",
+    "tray_pause_hour": "1 órára",
+    "tray_pause_tomorrow": "Holnapig",
+    "tray_resume": "Értesítések visszakapcsolása",
+    "tray_open": "Bulwark megnyitása",
+    "tray_quit": "Kilépés a Bulwarkból",
+    "tray_exit": "Kilépés a Bulwarkból"
+  },
+  "desktopMenus": {
+    "save_draft": "Piszkozat mentése",
+    "attach_files": "Fájlok csatolása…",
+    "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
-    "section_desc": "Használat nélküli idő után PIN-kódot kér, minden ablakban és lapon. Amíg zárolva van, az eszközön lévő levelek titkosítva maradnak, és az alkalmazásnak nincs hozzájuk kulcsa.",
+    "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
     "enable_label": "Zárolás PIN-kóddal",
     "enable_desc": "Alapból ki van kapcsolva. A PIN-kód ezen az eszközön marad.",
-    "protects_desc": "Mi ellen véd: böngészőben a PIN-kód távol tartja az alkalmazástól az eszköznél lévőket, az itt tárolt levelek pedig titkosítva maradnak. Nem állít meg egy ezen a számítógépen futó programot, egy ön által telepített böngészőbővítményt, vagy valakit, aki lemásolja a böngésző fájljait, és van ideje sok kódot kipróbálni, ezért megéri a hosszabb PIN-kód. Az asztali alkalmazásban a PIN-kód ehhez a számítógépes bejelentkezéshez is kötődik. A szerveren lévő fiókját ez nem érinti.",
+    "protects_desc": "Mi ellen véd: a PIN-kód kint tartja az alkalmazásból azt, aki ennél az eszköznél van. Az itt tárolt levelek új kulcsot kapnak, amikor bekapcsolja a zárolást vagy módosítja a PIN-kódot, ami eltarthat egy ideig. Nem tudja megállítani a számítógépen futó programot, az Ön által telepített böngészőbővítményt, sem azt, aki lemásolja az alkalmazás fájljait, és van ideje sok PIN-kódot kipróbálni, ezért érdemes hosszabb PIN-kódot választani. Az asztali alkalmazásban a PIN-kódok kipróbálásához az Ön bejelentkezése is kell ezen a számítógépen. A kiszolgálón lévő fiókját ez nem érinti.",
     "enable_body": "Válasszon PIN-kódot. Minden zároláskor, valamint újratöltés vagy új indítás után szükség lesz rá.",
     "set_pin_title": "PIN-kód választása",
     "change_pin": "PIN-kód módosítása…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
+  },
+  "desktopDevTools": {
+    "section_title": "Hibaelhárítás",
+    "label": "Fejlesztői eszközök ({shortcut})",
+    "description": "A(z) {shortcut} és az F12 megnyitja a fejlesztői eszközöket abban az ablakban, ahol éppen van. Kikapcsol, amikor az alkalmazás zárolódik.",
+    "forced_off": "A szervezete kikapcsolta.",
+    "locked": "A módosításhoz oldja fel az alkalmazást.",
+    "menu_toggle": "Fejlesztői eszközök megjelenítése vagy elrejtése"
+  },
+  "fileDrop": {
+    "overlay_label": "Fájlok ejtése",
+    "overlay_title": "Hová kerüljenek a fájlok?",
+    "overlay_hint": "A megszakításhoz engedje el a lehetőségeken kívül, vagy nyomja meg az Esc billentyűt.",
+    "files_unknown": "Fájlok",
+    "files_summary": "{count, plural, one {# fájl} other {# fájl}}",
+    "files_summary_size": "{count, plural, one {# fájl} other {# fájl}}, {size}",
+    "zone_attach_here": "Csatolás ehhez az üzenethez",
+    "zone_insert_inline": "Beszúrás az üzenetbe",
+    "zone_new_message": "Csatolás új üzenethez",
+    "zone_upload_files": "Feltöltés a Fájlokba",
+    "zone_upload_folder": "Feltöltés ide: {folder}",
+    "zone_calendar": "Hozzáadás a naptárhoz",
+    "zone_contacts": "Hozzáadás a névjegyekhez",
+    "zone_open_eml": "Üzenet megnyitása",
+    "zone_import_eml": "Importálás ide: {folder}",
+    "note_limit_message": "Legfeljebb {size} üzenetenként",
+    "note_limit_file": "Legfeljebb {size} fájlonként",
+    "note_kept_offline": "Ezen az eszközön marad, amíg újra online nem lesz",
+    "note_needs_connection": "Kapcsolat szükséges",
+    "announce": "{files, plural, =0 {Fájlok} one {# fájl} other {# fájl}} behúzva. Lehetőségek: {choices}.",
+    "choose_title": "{count, plural, one {Hová kerüljön ez a fájl?} other {Hová kerüljenek ezek a fájlok?}}",
+    "save_first_failed": "A megnyitott üzenetet nem sikerült menteni, ezért az alkalmazás ott maradt, ahol volt.",
+    "import_done": "{count, plural, one {# üzenet importálva ide: {folder}.} other {# üzenet importálva ide: {folder}.}}",
+    "import_failed": "{name} nem importálható.",
+    "too_large_file": "{name} túl nagy. A korlát {max} fájlonként.",
+    "too_large_message": "Ezek a fájlok együtt túl nagyok egy üzenethez. A korlát {max}.",
+    "folders_left_out": "Mappák csak a Fájlokba kerülhetnek, ezért kimaradtak.",
+    "nothing_here": "Ezek a fájlok itt nem használhatók."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",

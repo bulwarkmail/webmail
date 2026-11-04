@@ -12,6 +12,25 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 
 const ONBOARDING_KEY = "onboarding_completed";
 
+/** Whether the welcome tips are due on this device. Read after mount: localStorage. */
+export function useWelcomeBannerDue(): boolean {
+  const onboardingCompleted = useSettingsStore((s) => s.onboardingCompleted);
+  const showOnboardingOnNewDevices = useSettingsStore((s) => s.showOnboardingOnNewDevices);
+  const [due, setDue] = useState(false);
+  useEffect(() => {
+    if (!onboardingCompleted) {
+      setDue(true);
+      return;
+    }
+    let seenHere = true;
+    try {
+      seenHere = localStorage.getItem(ONBOARDING_KEY) === "true";
+    } catch { /* localStorage unavailable */ }
+    setDue(showOnboardingOnNewDevices && !seenHere);
+  }, [onboardingCompleted, showOnboardingOnNewDevices]);
+  return due;
+}
+
 /**
  * First-run tips. `list` sits above the message list (phones, and layouts
  * without a reading pane beside the list); `pane` is a card in the empty

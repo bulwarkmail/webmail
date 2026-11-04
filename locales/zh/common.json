@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "查找来自 {name} 的邮件"
   },
+  "menuMove": {
+    "filter_placeholder": "查找文件夹",
+    "recent": "最近使用",
+    "no_match": "没有匹配的文件夹",
+    "choose_folder": "选择文件夹…",
+    "current_folder": "已在“{folder}”中"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "将文件夹标记为已读",
     "mark_folder_tree_read": "将文件夹及子文件夹标记为已读",
@@ -5929,6 +5936,14 @@
     "usage_label": "此设备保留的内容",
     "pin_not_ready": "此文件还不在此设备的列表中。请稍后再试。"
   },
+  "keyProtection": {
+    "browser_note": "在浏览器中,这些邮件的密钥与邮件位于同一个浏览器配置文件中。任何复制该配置文件的人都能读取邮件,因此请使用磁盘加密。",
+    "no_secure_storage": "这台电脑没有应用可用的安全密钥存储,因此这些邮件的密钥在磁盘上只是经过混淆。请使用磁盘加密。",
+    "wrap_failed": "这台电脑的安全密钥存储没有接受这些邮件的密钥,因此密钥没有得到应有的保护。请重启应用,并使用磁盘加密。",
+    "rekey_progress": "正在重新加密此设备上的邮件:{percent}%。你可以继续工作。",
+    "rekey_failed": "此设备上邮件的重新加密没有完成,因此旧密钥仍能打开邮件。应用会在下次启动时重试。",
+    "reenroll_note": "通行密钥和系统解锁使用的是旧 PIN 的密钥,因此已被移除。如果你要使用,请重新设置。"
+  },
   "offlineDrafts": {
     "title": "此设备上的草稿",
     "description": "这些草稿保存在此设备上。一旦能连接服务器，就会自动上传。",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "更多选项"
   },
+  "windowChrome": {
+    "hide_offline_notice": "隐藏离线提示"
+  },
   "shell": {
     "resize": "调整大小",
     "update_available": "有可用更新",
@@ -6482,6 +6500,19 @@
     "group_plugins": "插件",
     "group_account": "账户",
     "switch_to": "切换到 {account}"
+  },
+  "menuAudit": {
+    "offline_header": "您已离线。部分操作需要联网。",
+    "files_new_folder": "新建文件夹…",
+    "files_new_file": "新建文件…",
+    "files_new_text_file": "新建文本文件…",
+    "files_upload_files": "上传文件…",
+    "files_upload_folder": "上传文件夹…",
+    "files_share": "共享…",
+    "files_share_button": "共享",
+    "contacts_add_to_group": "加入群组…",
+    "contacts_bulk_add_to_group": "添加到群组…",
+    "schedule_send": "计划发送…"
   },
   "notification_center": {
     "title": "通知",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "在邮件中搜索“{text}”"
   },
+  "desktopMenuBar": {
+    "always_show_label": "始终显示菜单栏",
+    "always_show_description": "否则按 Alt 键时显示。",
+    "exit": "退出",
+    "tray_pause": "暂停通知",
+    "tray_pause_hour": "1 小时",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新开启通知",
+    "tray_open": "打开 Bulwark",
+    "tray_quit": "退出 Bulwark",
+    "tray_exit": "退出 Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "保存草稿",
+    "attach_files": "附加文件…",
+    "shortcut_apps": "转到邮件、日历、联系人或文件"
+  },
   "appLock": {
     "section_title": "应用锁",
-    "section_desc": "一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,此设备上的邮件保持加密,应用没有密钥。",
+    "section_desc": "在一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,在有人输入 PIN 之前,应用无法读取存储在此设备上的邮件。",
     "enable_label": "使用 PIN 锁定",
     "enable_desc": "默认关闭。PIN 只保存在此设备上。",
-    "protects_desc": "它能防护什么：在浏览器中，PIN 可阻止这台设备前的人进入应用，并让存储在此处的邮件保持加密。它无法阻止在这台电脑上运行的程序、你安装的浏览器扩展，或复制浏览器文件并有时间尝试大量 PIN 的人，因此更长的 PIN 更值得。在桌面应用中，PIN 还与你在这台电脑上的登录绑定。服务器上的账户不受影响。",
+    "protects_desc": "它能防范什么:PIN 让此设备旁的人无法进入应用。当你开启锁定或更改 PIN 时,这里存储的邮件会获得新密钥,这可能需要一点时间。它无法阻止在这台电脑上运行的程序、你安装的浏览器扩展,也无法阻止复制应用文件并有时间尝试大量 PIN 的人,因此较长的 PIN 是值得的。在桌面应用中,尝试 PIN 还需要你在这台电脑上的登录。你在服务器上的账户不受影响。",
     "enable_body": "请选择一个 PIN。每次应用锁定时以及重新加载或重新启动后都需要它。",
     "set_pin_title": "选择 PIN",
     "change_pin": "更改 PIN…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "主窗口没有响应。您的邮件仍在这里。",
     "types_character": "这些键在您的键盘上会输入一个字符，占用后该字符在所有应用中都无法输入。请试试其他按键。",
     "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
+  },
+  "desktopDevTools": {
+    "section_title": "故障排除",
+    "label": "开发者工具（{shortcut}）",
+    "description": "允许 {shortcut} 和 F12 为您所在的窗口打开开发者工具。应用锁定时会再次关闭。",
+    "forced_off": "您的组织已关闭此功能。",
+    "locked": "请解锁应用以更改此设置。",
+    "menu_toggle": "显示或隐藏开发者工具"
+  },
+  "fileDrop": {
+    "overlay_label": "放下文件",
+    "overlay_title": "要把文件放到哪里？",
+    "overlay_hint": "在选项外放下或按 Esc 取消。",
+    "files_unknown": "文件",
+    "files_summary": "{count, plural, other {# 个文件}}",
+    "files_summary_size": "{count, plural, other {# 个文件}}, {size}",
+    "zone_attach_here": "附加到此邮件",
+    "zone_insert_inline": "插入到邮件正文",
+    "zone_new_message": "附加到新邮件",
+    "zone_upload_files": "上传到文件",
+    "zone_upload_folder": "上传到 {folder}",
+    "zone_calendar": "添加到日历",
+    "zone_contacts": "添加到联系人",
+    "zone_open_eml": "打开邮件",
+    "zone_import_eml": "导入到 {folder}",
+    "note_limit_message": "每封邮件最多 {size}",
+    "note_limit_file": "每个文件最多 {size}",
+    "note_kept_offline": "在您重新联网前保存在此设备上",
+    "note_needs_connection": "需要连接",
+    "announce": "{files, plural, =0 {已拖入文件} other {已拖入 # 个文件}}。选项：{choices}。",
+    "choose_title": "{count, plural, other {要把这些文件放到哪里？}}",
+    "save_first_failed": "无法保存打开的邮件，因此应用停留在原处。",
+    "import_done": "{count, plural, other {已将 # 封邮件导入到 {folder}。}}",
+    "import_failed": "无法导入 {name}。",
+    "too_large_file": "{name} 太大。每个文件的上限为 {max}。",
+    "too_large_message": "这些文件对一封邮件来说太大。上限为 {max}。",
+    "folders_left_out": "文件夹只能放到文件中，因此已略过。",
+    "nothing_here": "这些文件无法在此使用。"
   },
   "desktopReminders": {
     "generic_title": "提醒",

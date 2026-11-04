@@ -22,7 +22,7 @@
  *   messages a sign-out deletes without the user's word are named (lost.ts).
  */
 
-import { appLockKeyLayers, onStoreKeyMissing } from '@/lib/app-lock/controller';
+import { onStoreKeyMissing, storeKeyLayers } from '@/lib/app-lock/controller';
 import { IS_LITE } from '@/lib/lite';
 import { desktopJmapBase } from '@/lib/desktop/jmap-route';
 import { devicesForAccount, devicesForNoOne, signedInAccountIds } from '@/lib/device-policy';
@@ -63,6 +63,7 @@ import { clearHandoffs } from '@/lib/launch-handoff';
 import {
   clearEvicted,
   EVICTED_KEEP_MS,
+  onStoreOwnerChanged,
   forgetAccountState,
   forgetAllAccountState,
   forgetMailSnapshot,
@@ -86,6 +87,7 @@ import {
   type OutboxRow,
   type UserChoice,
 } from './state';
+import { desktopOfflinePolicy } from '@/lib/desktop/policy';
 import { effectiveScope, offlineDefaultOn, olderThanCap, platformDefault, userChoiceFor, type EffectiveScope } from './scope';
 import { isStandaloneDisplayMode } from '@/lib/standalone-display';
 import { readPersistence, requestPersistence, safariMayDelete } from './storage-health';
@@ -109,6 +111,8 @@ export type OfflineNotice =
   | { kind: 'draft-conflict'; subject: string }
   | { kind: 'storage-failed' }
   | { kind: 'store-unavailable' }
+  | { kind: 'key-unprotected' }
+  | { kind: 'rekey-failed' }
   | { kind: 'store-reset'; lost?: number }
   | { kind: 'legacy-stranded' }
   | { kind: 'default-on' }
@@ -163,7 +167,7 @@ export function offlineSupported(): boolean {
 
 /** The organisation allows this account to keep mail on the device. */
 export function offlineAllowed(account: string | null | undefined): boolean {
-  return offlineSupported() && !devicesForAccount(account ?? null).noOffline;
+  return offlineSupported() && !devicesForAccount(account ?? null).noOffline && !desktopOfflinePolicy().invalid;
 }
 
 /** A dropped account's data isn't judged by the groups of whoever is signed in now. */
@@ -222,7 +226,16 @@ function noteStoreUnavailable(): void {
 }
 
 const storeHooks: StorePageHooks = {
-  keyLayers: appLockKeyLayers,
+  keyLayers: storeKeyLayers,
+  onKeyWrapFailed() {
+    if (useOfflineStore.getState().keyUnprotected) return;
+    useOfflineStore.setState({ keyUnprotected: true });
+    notify({ kind: 'key-unprotected' });
+  },
+  onRekeyFailed(account) {
+    useOfflineStore.setState((s) => ({ rekey: { ...s.rekey, [account]: 'failed' } }));
+    notify({ kind: 'rekey-failed' });
+  },
   onKeyLocked: onStoreKeyMissing,
   inputs(account) {
     const client = onlineClientFor(account);
@@ -276,6 +289,12 @@ const storeHooks: StorePageHooks = {
       // A pass also sends what the calendar and contacts have waiting.
       void refreshQueueState();
     }
+    if (event.type === 'rekey') {
+      useOfflineStore.setState((s) => {
+        const { [event.account]: _before, ...rest } = s.rekey;
+        return { rekey: event.percent >= 100 ? rest : { ...rest, [event.account]: event.percent } };
+      });
+    }
     if (event.type === 'progress') {
       useOfflineStore.setState((s) => ({ progress: { ...s.progress, [event.account]: nextProgress(s.progress[event.account], event, Date.now()) } }));
     }
@@ -301,7 +320,12 @@ function hasWholeText(email: { bodyValues?: Record<string, { isTruncated?: boole
 const NEEDS_SERVER = /^(EmailSubmission|Email\/import|CalendarEvent\/set|ContactCard\/set|AddressBook\/set|Calendar\/set|Mailbox\/set|FileNode\/set|SieveScript\/set|VacationResponse\/set|Identity\/set)/;
 let lastRefusalNotice = 0;
 
-function noticeRefused(answered: OfflineResponse | null, methodCalls: OfflineMethodCall[]): void {
+function noticeRefused(client: OfflineClientRef, answered: OfflineResponse | null, methodCalls: OfflineMethodCall[]): void {
+  // Online, with the server answering: the store only stood in for a moment (a draft
+  // waiting from last time, at a start). The outbox retries by itself; "this needs a
+  // connection" would be wrong.
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (online && !useOfflineStore.getState().downServers.includes(serverKey(client.getServerUrl()))) return;
   const refusedCall = methodCalls.some(([name, , id]) => NEEDS_SERVER.test(name)
     && (!answered || answered.methodResponses.some(([responseName, , responseId]) => responseId === id && responseName === 'error')));
   const refusedChange = answered?.methodResponses.some(([name, result]) => name === 'Email/set' && result?.notUpdated) ?? false;
@@ -364,7 +388,7 @@ const hooks: OfflineHooks = {
     } catch {
       // The store couldn't start or lost its owner: as if nothing were kept.
     }
-    noticeRefused(answered, methodCalls);
+    noticeRefused(client, answered, methodCalls);
     if (answered && methodCalls.some(([name]) => QUEUEING_METHOD.test(name))) {
       requestOutboxSync();
       void refreshQueueState();
@@ -1245,6 +1269,7 @@ const cleanups: Array<() => void> = [];
 export function registerOfflineHooks(): void {
   if (!offlineSupported()) return;
   configureStore(storeHooks);
+  onStoreOwnerChanged((account) => wipeAccount(account));
   setOfflineHooks(hooks);
   setOutboxHooks(outbox);
   void moveLegacyOutbox();
@@ -1335,6 +1360,9 @@ export function startOfflineMode(): () => void {
     if (reason === 'explicit') void wipeAccount(id);
   }));
   void sweepAccountsGone();
+  // Also for an app that stays open past the 30 days.
+  const sweeping = setInterval(() => void sweepAccountsGone(), EVICTED_SWEEP_MS);
+  cleanups.push(() => clearInterval(sweeping));
   void checkStorageAccess();
 
   // Session, then a sync, for every account signed in with offline mode on.
@@ -1403,6 +1431,9 @@ export function startOfflineMode(): () => void {
   };
 }
 
+/** How often a running app looks whether a dropped account's 30 days are over. */
+export const EVICTED_SWEEP_MS = 60 * 60 * 1000;
+
 /**
  * Data no signed-in account vouches for. A dropped account's waits 30 days. One
  * that left the registry on purpose before this ran (a login without "remember
@@ -1465,6 +1496,7 @@ onFullSignOut(({ keepLocalStore }) => {
     health: keepLocalStore ? s.health : {},
     outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], localDrafts: [], usageBytes: 0, usage: {},
     storageFull: {}, progress: {}, syncing: [], lastSyncedAt: {}, startedOffline: false,
+    keyUnprotected: false, rekey: {},
   }));
 });
 

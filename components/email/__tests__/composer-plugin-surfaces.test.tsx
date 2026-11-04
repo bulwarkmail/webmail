@@ -327,6 +327,8 @@ describe('composer-send-menu', () => {
     const schedule = screen.getAllByRole('menuitem', { name: /schedule_send/ })[0];
     const plugin = screen.getAllByRole('menuitem', { name: 'Send with Later' })[0];
     expect(follows(schedule, plugin)).toBe(true);
+    // It opens a dialog, and shows the key that opens it from the composer.
+    expect(schedule).toHaveTextContent('Ctrl + Shift + Enter');
   });
 
   it('keeps a plain Send button without plugin entries or scheduled send', () => {

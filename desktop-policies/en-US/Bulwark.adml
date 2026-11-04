@@ -15,6 +15,7 @@
       <string id="Category_security">Offline mail and app lock</string>
       <string id="Category_privacy">Privacy</string>
       <string id="Category_signIn">Sign-in and certificates</string>
+      <string id="Category_system">System integration and troubleshooting</string>
       <string id="InstanceUrl">Bulwark server</string>
       <string id="InstanceUrl_Explain">The address of your Bulwark server, starting with https://. When forced, the app opens on this server, the choice of server is hidden, and the window stays on it. An invalid address shows an error page that names this policy, and the app does not fall back to anything else. As a default, the app opens on this server until the user picks something else.</string>
       <string id="AllowStandalone">Allow direct connections to mail servers</string>
@@ -61,7 +62,11 @@
       <string id="BrowserSignIn">Offer sign-in through the browser</string>
       <string id="BrowserSignIn_Explain">When enabled or not configured, the login page offers &quot;Sign in with your browser&quot;, so people can use their password manager, passkeys and your single sign-on there. When disabled, the button is gone and the app refuses the flow. The form in the app stays, unless the server only allows OAuth.</string>
       <string id="WipeOfflineData">Delete mail kept on the device</string>
-      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.</string>
+      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again. That memory is in the user&apos;s own profile, so someone who edits it can skip a wipe they know is coming: this cleans up a device, it doesn&apos;t take data from the person using it.</string>
+      <string id="OpenWithEnabled">Offer the app in &quot;Open with&quot; and &quot;Send to&quot;</string>
+      <string id="OpenWithEnabled_Explain">When enabled or not configured, the app adds itself to the &quot;Open with&quot; list for common documents and pictures and to the &quot;Send to&quot; menu on Windows, so people can attach a file to a new message from the file manager. It never becomes the default program for those files. When disabled, the app removes these entries for the user. Mail links and .eml, .ics and .vcf files are not affected.</string>
+      <string id="DeveloperToolsAvailability">Developer tools</string>
+      <string id="DeveloperToolsAvailability_Explain">The same values as Chrome&apos;s policy of this name. 2: developer tools are off and the setting is locked. 0 or 1, or not configured: people can turn them on under Settings, after a warning. Developer tools let anyone at the keyboard read everything the app holds, mail and passwords in memory included.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>
@@ -80,6 +85,7 @@
       <presentation id="AutoSelectCertificateForUrls"><listBox refId="AutoSelectCertificateForUrls_Value">Rules</listBox></presentation>
       <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Addresses</listBox></presentation>
       <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Wipe code</label></textBox></presentation>
+      <presentation id="DeveloperToolsAvailability"><decimalTextBox refId="DeveloperToolsAvailability_Value" defaultValue="2">Value (0, 1 or 2)</decimalTextBox></presentation>
     </presentationTable>
   </resources>
 </policyDefinitionResources>

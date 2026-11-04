@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Encontrar e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Procurar uma pasta",
+    "recent": "Recentes",
+    "no_match": "Nenhuma pasta corresponde",
+    "choose_folder": "Escolher pasta…",
+    "current_folder": "Já está em {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar pasta como lida",
     "mark_folder_tree_read": "Marcar pasta e subpastas como lidas",
@@ -5929,6 +5936,14 @@
     "usage_label": "O que este dispositivo mantém",
     "pin_not_ready": "Este ficheiro ainda não está na lista deste dispositivo. Tente novamente dentro de instantes."
   },
+  "keyProtection": {
+    "browser_note": "Num navegador, a chave deste correio está no mesmo perfil do navegador que o correio. Quem copiar os ficheiros do perfil pode lê-lo, por isso use a encriptação do disco.",
+    "no_secure_storage": "Este computador não tem um armazenamento seguro de chaves que a aplicação possa usar, por isso a chave deste correio está apenas ofuscada no disco. Use a encriptação do disco.",
+    "wrap_failed": "O armazenamento seguro de chaves deste computador não aceitou a chave deste correio, por isso não está protegida como devia. Reinicie a aplicação e use a encriptação do disco.",
+    "rekey_progress": "A encriptar de novo o correio neste dispositivo: {percent}%. Pode continuar a trabalhar.",
+    "rekey_failed": "A nova encriptação do correio neste dispositivo não terminou, por isso a chave antiga ainda o pode abrir. A aplicação tenta de novo no próximo arranque.",
+    "reenroll_note": "A chave de acesso e o desbloqueio do sistema usavam a chave do PIN antigo, por isso foram removidos. Configure-os de novo se os usar."
+  },
   "offlineDrafts": {
     "title": "Rascunhos neste dispositivo",
     "description": "Estes rascunhos estão guardados neste dispositivo. Vão para o servidor por si assim que for possível contactá-lo.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Mais opções"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ocultar aviso de sem ligação"
+  },
   "shell": {
     "resize": "Redimensionar",
     "update_available": "Atualização disponível",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Plugins",
     "group_account": "Conta",
     "switch_to": "Mudar para {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Está offline. Algumas ações precisam de ligação.",
+    "files_new_folder": "Nova pasta…",
+    "files_new_file": "Novo arquivo…",
+    "files_new_text_file": "Novo arquivo de texto…",
+    "files_upload_files": "Carregar arquivos…",
+    "files_upload_folder": "Carregar pasta…",
+    "files_share": "Compartilhar…",
+    "files_share_button": "Compartilhar",
+    "contacts_add_to_group": "Adicionar ao grupo…",
+    "contacts_bulk_add_to_group": "Adicionar ao grupo…",
+    "schedule_send": "Agendar envio…"
   },
   "notification_center": {
     "title": "Notificações",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Pesquisar «{text}» no correio"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Mostrar sempre a barra de menus",
+    "always_show_description": "Caso contrário, aparece ao premir Alt.",
+    "exit": "Sair",
+    "tray_pause": "Pausar notificações",
+    "tray_pause_hour": "Durante 1 hora",
+    "tray_pause_tomorrow": "Até amanhã",
+    "tray_resume": "Voltar a ativar as notificações",
+    "tray_open": "Abrir o Bulwark",
+    "tray_quit": "Sair do Bulwark",
+    "tray_exit": "Sair do Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvar rascunho",
+    "attach_files": "Anexar arquivos…",
+    "shortcut_apps": "Ir para E-mail, Calendário, Contatos ou Arquivos"
+  },
   "appLock": {
     "section_title": "Bloqueio da app",
-    "section_desc": "Pede um PIN após um tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, o correio neste dispositivo fica cifrado e a app não tem a chave.",
+    "section_desc": "Pede um PIN após algum tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, a aplicação não consegue ler o correio guardado neste dispositivo até alguém introduzir o PIN.",
     "enable_label": "Bloquear com um PIN",
     "enable_desc": "Desativado por predefinição. O PIN fica neste dispositivo.",
-    "protects_desc": "Contra o que isto protege: num navegador, o PIN impede que alguém junto a este dispositivo entre na aplicação e mantém encriptado o correio guardado aqui. Não consegue travar um programa em execução neste computador, uma extensão do navegador que tenha instalado nem alguém que copie os ficheiros do navegador e tenha tempo para experimentar muitos PIN, por isso vale a pena um PIN mais longo. Na aplicação de computador, o PIN também fica ligado ao seu início de sessão neste computador. A sua conta no servidor não é afetada.",
+    "protects_desc": "Contra o que protege: o PIN impede quem está neste dispositivo de entrar na aplicação. O correio guardado aqui recebe uma nova chave quando ativa o bloqueio ou muda o PIN, o que pode demorar um momento. Não consegue impedir um programa a correr neste computador, uma extensão de navegador que instalou nem alguém que copie os ficheiros da aplicação e tenha tempo para tentar muitos PIN, por isso vale a pena um PIN mais longo. Na aplicação de computador, tentar PIN também exige a sua sessão neste computador. A sua conta no servidor não é afetada.",
     "enable_body": "Escolha um PIN. Vai precisar dele sempre que a app bloquear, e depois de recarregar ou iniciar de novo.",
     "set_pin_title": "Escolher um PIN",
     "change_pin": "Alterar PIN…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui.",
     "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
+  },
+  "desktopDevTools": {
+    "section_title": "Resolução de problemas",
+    "label": "Ferramentas de programador ({shortcut})",
+    "description": "Permite que {shortcut} e F12 abram as ferramentas de programador na janela em que está. Desliga-se quando a app bloqueia.",
+    "forced_off": "Desligado pela sua organização.",
+    "locked": "Desbloqueie a app para alterar isto.",
+    "menu_toggle": "Mostrar ou ocultar ferramentas de programador"
+  },
+  "fileDrop": {
+    "overlay_label": "Soltar arquivos",
+    "overlay_title": "Para onde vão os arquivos?",
+    "overlay_hint": "Solte fora das opções ou prima Esc para cancelar.",
+    "files_unknown": "Arquivos",
+    "files_summary": "{count, plural, one {# arquivo} other {# arquivos}}",
+    "files_summary_size": "{count, plural, one {# arquivo} other {# arquivos}}, {size}",
+    "zone_attach_here": "Anexar a esta mensagem",
+    "zone_insert_inline": "Inserir na mensagem",
+    "zone_new_message": "Anexar a uma nova mensagem",
+    "zone_upload_files": "Enviar para Arquivos",
+    "zone_upload_folder": "Enviar para {folder}",
+    "zone_calendar": "Adicionar ao calendário",
+    "zone_contacts": "Adicionar aos contactos",
+    "zone_open_eml": "Abrir mensagem",
+    "zone_import_eml": "Importar para {folder}",
+    "note_limit_message": "Até {size} por mensagem",
+    "note_limit_file": "Até {size} por arquivo",
+    "note_kept_offline": "Fica neste dispositivo até voltar a estar online",
+    "note_needs_connection": "Precisa de ligação",
+    "announce": "{files, plural, =0 {Arquivos arrastados} one {# arquivo arrastado} other {# arquivos arrastados}}. Opções: {choices}.",
+    "choose_title": "{count, plural, one {Para onde vai este arquivo?} other {Para onde vão estes arquivos?}}",
+    "save_first_failed": "Não foi possível guardar a mensagem aberta, por isso a app ficou onde estava.",
+    "import_done": "{count, plural, one {# mensagem importada para {folder}.} other {# mensagens importadas para {folder}.}}",
+    "import_failed": "Não foi possível importar {name}.",
+    "too_large_file": "{name} é demasiado grande. O limite é {max} por arquivo.",
+    "too_large_message": "Estes arquivos são demasiado grandes para uma mensagem. O limite é {max}.",
+    "folders_left_out": "As pastas só podem ir para Arquivos, por isso ficaram de fora.",
+    "nothing_here": "Estes arquivos não podem ser usados aqui."
   },
   "desktopReminders": {
     "generic_title": "Lembrete",

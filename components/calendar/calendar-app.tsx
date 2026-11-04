@@ -125,6 +125,8 @@ import { calendarShortcutAction } from "@/lib/calendar-shortcuts";
 import { isAppShortcutBlocked, isArrowKeyWidgetTarget } from "@/lib/keyboard";
 import { isContextMenuOpen } from "@/components/ui/context-menu";
 import { useRegisterCommands } from "@/lib/command-registry";
+import { useAppCommands } from "@/lib/app-commands";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useConfig } from "@/hooks/use-config";
 import { CalendarPrint, type CalendarPrintContent } from "@/components/calendar/calendar-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
@@ -1667,6 +1669,28 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     { mode: "agenda", key: "a" },
     { mode: "tasks", key: "k" },
   ];
+  // File > New event and New task in the desktop app's menus, from any app.
+  useAppCommands({
+    "new-event": () => openCreateModal(),
+    "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
+  }, true);
+  // Its View menu's Day, Week, Month and Agenda, and Edit > Search events.
+  const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
+  useDesktopCommands({
+    "view.calendar.day": viewFromMenu("day"),
+    "view.calendar.week": viewFromMenu("week"),
+    "view.calendar.month": viewFromMenu("month"),
+    "view.calendar.agenda": viewFromMenu("agenda"),
+    "edit.search": openSearch,
+  }, {
+    "view.calendar.day": { enabled: true, checked: normalizedViewMode === "day" },
+    "view.calendar.week": { enabled: true, checked: normalizedViewMode === "week" },
+    "view.calendar.month": { enabled: true, checked: normalizedViewMode === "month" },
+    "view.calendar.agenda": { enabled: true, checked: normalizedViewMode === "agenda" },
+    "edit.search": normalizedViewMode !== "tasks",
+    "file.newTask": enableCalendarTasks,
+  });
+
   useRegisterCommands(tSidebar("calendar"), [
     { id: "new-event", label: t("events.new_event"), icon: Plus, shortcut: "n", run: () => openCreateModal() },
     { id: "new-task", label: t("events.new_task"), icon: ListTodo, run: openCreateTaskModal, when: () => enableCalendarTasks },

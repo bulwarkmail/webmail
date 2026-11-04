@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Find emails from {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find a folder",
+    "recent": "Recent",
+    "no_match": "No folder matches",
+    "choose_folder": "Choose folder…",
+    "current_folder": "Already in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mark folder as read",
     "mark_folder_tree_read": "Mark folder & subfolders as read",
@@ -5929,6 +5936,14 @@
     "usage_label": "What this device keeps",
     "pin_not_ready": "This file isn't on this device's list yet. Try again in a moment."
   },
+  "keyProtection": {
+    "browser_note": "In a browser, the key to this mail sits in the same browser profile as the mail. Someone who copies the profile's files can read it, so use disk encryption.",
+    "no_secure_storage": "This computer has no secure key storage the app can use, so the key to this mail is only obfuscated on disk. Use disk encryption.",
+    "wrap_failed": "This computer's secure key storage didn't take the key to this mail, so the key isn't protected as it should be. Restart the app, and use disk encryption.",
+    "rekey_progress": "Re-encrypting the mail on this device: {percent}%. You can keep working.",
+    "rekey_failed": "Re-encrypting the mail on this device didn't finish, so the old key can still open it. The app tries again at its next start.",
+    "reenroll_note": "The passkey and system unlock used the old PIN's key, so they were removed. Set them up again if you use them."
+  },
   "offlineDrafts": {
     "title": "Drafts on this device",
     "description": "These drafts are saved on this device. They go to the server by themselves once it can be reached.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "More options"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Hide offline notice"
+  },
   "shell": {
     "resize": "Resize",
     "update_available": "Update available",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Plugins",
     "group_account": "Account",
     "switch_to": "Switch to {account}"
+  },
+  "menuAudit": {
+    "offline_header": "You're offline. Some actions need a connection.",
+    "files_new_folder": "New folder…",
+    "files_new_file": "New file…",
+    "files_new_text_file": "New text file…",
+    "files_upload_files": "Upload files…",
+    "files_upload_folder": "Upload folder…",
+    "files_share": "Share…",
+    "files_share_button": "Share",
+    "contacts_add_to_group": "Add to group…",
+    "contacts_bulk_add_to_group": "Add to group…",
+    "schedule_send": "Schedule send…"
   },
   "notification_center": {
     "title": "Notifications",
@@ -6745,7 +6776,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Windows",
+      "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
       "restore_label": "Reopen windows at start",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Search mail for \"{text}\""
   },
+  "desktopMenuBar": {
+    "always_show_label": "Always show the menu bar",
+    "always_show_description": "Otherwise it shows when you press Alt.",
+    "exit": "Exit",
+    "tray_pause": "Pause notifications",
+    "tray_pause_hour": "For 1 hour",
+    "tray_pause_tomorrow": "Until tomorrow",
+    "tray_resume": "Turn notifications back on",
+    "tray_open": "Open Bulwark",
+    "tray_quit": "Quit Bulwark",
+    "tray_exit": "Exit Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Save draft",
+    "attach_files": "Attach files…",
+    "shortcut_apps": "Go to Mail, Calendar, Contacts or Files"
+  },
   "appLock": {
     "section_title": "App lock",
-    "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, mail on this device stays encrypted and the app has no key for it.",
+    "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
     "enable_label": "Lock with a PIN",
     "enable_desc": "Off by default. The PIN stays on this device.",
-    "protects_desc": "What this protects against: in a browser, the PIN keeps someone at this device out of the app and keeps the mail stored here encrypted. It can't stop a program running on this computer, a browser extension you installed, or someone who copies the browser's files and has time to try many PINs, so a longer PIN is worth it. In the desktop app the PIN is also tied to your login on this computer. Your account on the server isn't affected.",
+    "protects_desc": "What this protects against: the PIN keeps someone at this device out of the app. The mail stored here gets a new key when you turn the lock on or change the PIN, which can take a moment. It can't stop a program running on this computer, a browser extension you installed, or someone who copies the app's files and has time to try many PINs, so a longer PIN is worth it. In the desktop app, trying PINs also takes your login on this computer. Your account on the server isn't affected.",
     "enable_body": "Choose a PIN. You need it each time the app locks, and after a reload or a new start.",
     "set_pin_title": "Choose a PIN",
     "change_pin": "Change PIN…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "The main window did not answer. Your message stays here.",
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
+  },
+  "desktopDevTools": {
+    "section_title": "Troubleshooting",
+    "label": "Developer tools ({shortcut})",
+    "description": "Lets {shortcut} and F12 open developer tools for the window you are in. Turns off again when the app locks.",
+    "forced_off": "Turned off by your organisation.",
+    "locked": "Unlock the app to change this.",
+    "menu_toggle": "Toggle developer tools"
+  },
+  "fileDrop": {
+    "overlay_label": "Drop files",
+    "overlay_title": "Where should the files go?",
+    "overlay_hint": "Drop outside the choices or press Esc to cancel.",
+    "files_unknown": "Files",
+    "files_summary": "{count, plural, one {# file} other {# files}}",
+    "files_summary_size": "{count, plural, one {# file} other {# files}}, {size}",
+    "zone_attach_here": "Attach to this message",
+    "zone_insert_inline": "Insert into the message",
+    "zone_new_message": "Attach to a new message",
+    "zone_upload_files": "Upload to Files",
+    "zone_upload_folder": "Upload to {folder}",
+    "zone_calendar": "Add to calendar",
+    "zone_contacts": "Add to contacts",
+    "zone_open_eml": "Open message",
+    "zone_import_eml": "Import into {folder}",
+    "note_limit_message": "Up to {size} per message",
+    "note_limit_file": "Up to {size} per file",
+    "note_kept_offline": "Kept on this device until you're online",
+    "note_needs_connection": "Needs a connection",
+    "announce": "{files, plural, =0 {Files} one {# file} other {# files}} dragged in. Choices: {choices}.",
+    "choose_title": "{count, plural, one {Where should this file go?} other {Where should these files go?}}",
+    "save_first_failed": "The open message could not be saved, so the app stayed where it was.",
+    "import_done": "{count, plural, one {# message imported into {folder}.} other {# messages imported into {folder}.}}",
+    "import_failed": "{name} could not be imported.",
+    "too_large_file": "{name} is too large. The limit is {max} per file.",
+    "too_large_message": "These files are too large for one message. The limit is {max}.",
+    "folders_left_out": "Folders can only go to Files, so they were left out.",
+    "nothing_here": "These files can't be used here."
   },
   "desktopReminders": {
     "generic_title": "Reminder",

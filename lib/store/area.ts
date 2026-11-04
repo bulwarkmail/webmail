@@ -74,7 +74,9 @@ export type StoreEvent =
   | { type: 'created'; account: string; jmap: string; collection: string; ids: string[] }
   | { type: 'error'; account: string; area: string; message: string }
   /** Its file and key are gone, whichever tab asked: opening it again makes a new one. */
-  | { type: 'removed'; account: string };
+  | { type: 'removed'; account: string }
+  /** How far a re-encryption got. Says nothing about the data. */
+  | { type: 'rekey'; account: string; percent: number };
 
 export interface StoreContext {
   account: string;

@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getAccountRecord, openAccountKey, rewrapAccountKey, StoreKeyLayerMissingError } from '@/lib/store/client/keys';
-import { importLockKey, lockLayer, mainProof, PBKDF2_ITERATIONS, pinIsObvious, pinLongEnough } from '../crypto';
-import { changeVaultPin, createVault, deleteVault, FREE_FAILURES, LONGEST_WAIT_MS, openSealedDrafts, openVaultWithPin, PinBlockedError, pinBlockedUntil, readVault, sealDraft, waitAfter, WrongPinError } from '../vault';
+import { importLockKey, keyFromPin, lockLayer, mainProof, open, PBKDF2_ITERATIONS, pinIsObvious, pinLongEnough } from '../crypto';
+import { rotateVaultKey, createVault, deleteVault, FREE_FAILURES, LONGEST_WAIT_MS, openSealedDrafts, openVaultWithPin, PinBlockedError, pinBlockedUntil, readVault, sealDraft, waitAfter, WrongPinError } from '../vault';
 
 const PIN = 'correct-pin';
 
@@ -97,11 +97,108 @@ describe('in the desktop app, with main\'s safeStorage', () => {
 
   it('a changed PIN goes through main too', async () => {
     const appLock = shell();
-    await createVault(PIN);
-    await changeVaultPin(PIN, 'next-pin-5521');
+    const raw = await createVault(PIN);
+    await rotateVaultKey('next-pin-5521', raw);
     expect(appLock.wrap).toHaveBeenCalledTimes(2);
     expect((await readVault())!.pin.shell).toBe(true);
     await expect(openVaultWithPin('next-pin-5521')).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  describe('with the calls handed out once, and each guess through main', () => {
+    /** What the real preload does: wrap, unwrap and a PIN step only for whoever claims first. */
+    function realShell(answer: (data: Uint8Array) => PinAnswer = stepWithSecret) {
+      let claimed = false;
+      const step = vi.fn(async (data: Uint8Array) => answer(data));
+      const appLock = {
+        status: vi.fn(async () => ({ locked: false, enrolled: false, os: null, osEnrolled: false, wrap: true })),
+        prove: vi.fn(async () => true),
+        claim: vi.fn(() => {
+          if (claimed) return null;
+          claimed = true;
+          return {
+            lock: () => {},
+            osUnlock: async () => ({ ok: false }),
+            wrap: async (data: Uint8Array) => Uint8Array.from([9, ...data]),
+            unwrap: async (data: Uint8Array) => (data[0] === 9 ? data.slice(1) : null),
+            pinStep: step,
+          };
+        }),
+      };
+      (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', appLock };
+      return { appLock, step };
+    }
+
+    type PinAnswer = { ok: true; bytes: Uint8Array } | { ok: false; blockedUntil?: number };
+    /** Main's secret mixed in: the same guess gives the same bytes, and only main can make them. */
+    function stepWithSecret(data: Uint8Array): PinAnswer {
+      return { ok: true, bytes: data.map((byte) => byte ^ 0x5a) };
+    }
+
+    it('nothing on the bridge unwraps: a frame reaching it gets nothing', async () => {
+      realShell();
+      await createVault(PIN);
+      const bridge = (window as unknown as { bulwarkDesktop: { appLock: Record<string, unknown> & { claim(): unknown } } }).bulwarkDesktop.appLock;
+      expect(bridge.wrap).toBeUndefined();
+      expect(bridge.unwrap).toBeUndefined();
+      expect(bridge.claim()).toBeNull();
+    });
+
+    it('the PIN key takes main\'s secret, so the record alone can\'t be guessed at', async () => {
+      const { step } = realShell();
+      const raw = await createVault(PIN);
+      const vault = await readVault();
+      expect(vault?.pin.pepper).toBe(true);
+      expect(step).toHaveBeenCalledTimes(1);
+      await expect(openVaultWithPin('wrong-pin-1')).rejects.toBeInstanceOf(WrongPinError);
+      expect(step).toHaveBeenCalledTimes(2);
+      expect(hex(await openVaultWithPin(PIN))).toBe(hex(raw));
+      expect(step).toHaveBeenCalledTimes(3);
+      // Without main's secret the right PIN opens nothing.
+      const plainKey = await keyFromPin(PIN, vault!.pin.salt, vault!.pin.iterations);
+      await expect(open(plainKey, { iv: vault!.pin.iv, data: vault!.pin.data.slice(1) })).rejects.toBeDefined();
+    });
+
+    it('main refusing a guess reads as blocked, not as a wrong PIN', async () => {
+      realShell();
+      await createVault(PIN);
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+      const until = Date.now() + 60_000;
+      realShell(() => ({ ok: false, blockedUntil: until }));
+      await expect(openVaultWithPin(PIN)).rejects.toMatchObject({ name: 'PinBlockedError', until });
+    });
+
+    it('a secret main lost is the shell\'s trouble, not a wrong PIN', async () => {
+      realShell();
+      await createVault(PIN);
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+      realShell(() => ({ ok: false }));
+      await expect(openVaultWithPin(PIN)).rejects.toMatchObject({ name: 'VaultShellError' });
+    });
+
+    it('a right PIN tells main, which alone can clear its count', async () => {
+      const { appLock } = realShell();
+      const raw = await createVault(PIN);
+      await openVaultWithPin(PIN);
+      expect(appLock.prove).toHaveBeenCalledTimes(1);
+      expect(Array.from(appLock.prove.mock.calls[0][0 as never] as unknown as Uint8Array)).toEqual(Array.from(await mainProof(raw)));
+    });
+
+    it('a record from before gets main\'s secret at its next right PIN', async () => {
+      shell();
+      const raw = await createVault(PIN);
+      expect((await readVault())?.pin.pepper).toBeUndefined();
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+      realShell();
+      expect(hex(await openVaultWithPin(PIN))).toBe(hex(raw));
+      expect((await readVault())?.pin.pepper).toBe(true);
+      expect(hex(await openVaultWithPin(PIN))).toBe(hex(raw));
+    });
+
+    it('a wrap main refuses stops the setup: the PIN record isn\'t left without the OS\'s layer', async () => {
+      shell({ wrap: vi.fn(async () => null) });
+      await expect(createVault(PIN)).rejects.toMatchObject({ name: 'VaultShellError' });
+      expect(await readVault()).toBeNull();
+    });
   });
 
   it('a shell whose storage only obfuscates: no wrap, and it says so in the record', async () => {

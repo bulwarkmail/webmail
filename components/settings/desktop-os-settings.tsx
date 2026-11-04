@@ -16,10 +16,12 @@ function shortcutLabel(platform: string | undefined): string {
 }
 
 /**
- * The desktop app's own settings, on the General page: only where there's an app to
- * set. A browser never sees it, and it renders nothing until the bridge has answered.
+ * The desktop app's own settings: only where there's an app to set. A browser never sees
+ * them, and they render nothing until the bridge has answered. The General page has how
+ * the app runs; the Notifications page has the taskbar flash and quiet hours, next to
+ * the rest of what notifies.
  */
-export function DesktopOsSettings() {
+export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notifications" } = {}) {
   const t = useTranslations("desktopOs");
   const [status, setStatus] = useState<DesktopOsStatus | null>(null);
   const [defaultApp, setDefaultApp] = useState<DesktopOsDefaultAppStatus | null>(null);
@@ -48,6 +50,43 @@ export function DesktopOsSettings() {
     void os.setSettings(patch).then(setStatus);
   };
 
+  if (part === "notifications") {
+    return (
+      <SettingsSection id="desktop-notifications" title={t("section_title")}>
+        <SettingItem
+          label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
+          description={t("attention_description")}
+        >
+          <ToggleSwitch checked={settings.attentionOnNewMail} onChange={(attentionOnNewMail) => change({ attentionOnNewMail })} />
+        </SettingItem>
+        <SettingItem label={t("quiet_hours_label")} description={t("quiet_hours_description")}>
+          <ToggleSwitch checked={settings.quietHoursEnabled} onChange={(quietHoursEnabled) => change({ quietHoursEnabled })} />
+        </SettingItem>
+        {settings.quietHoursEnabled && (
+          <SettingItem nested label={t("quiet_hours_from")}>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                aria-label={t("quiet_hours_from")}
+                value={settings.quietHoursStart}
+                onChange={(event) => change({ quietHoursStart: event.target.value })}
+                className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+              />
+              <span className="text-sm text-muted-foreground">{t("quiet_hours_to")}</span>
+              <input
+                type="time"
+                aria-label={t("quiet_hours_to")}
+                value={settings.quietHoursEnd}
+                onChange={(event) => change({ quietHoursEnd: event.target.value })}
+                className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+              />
+            </div>
+          </SettingItem>
+        )}
+      </SettingsSection>
+    );
+  }
+
   return (
     <SettingsSection id="desktop-app" title={t("section_title")} description={t("section_description")}>
       <SettingItem label={t("close_to_tray_label")} description={t("close_to_tray_description")}>
@@ -59,36 +98,6 @@ export function DesktopOsSettings() {
       {settings.startAtLogin && (
         <SettingItem nested label={t("start_minimized_label")} description={t("start_minimized_description")}>
           <ToggleSwitch checked={settings.startMinimized} onChange={(startMinimized) => change({ startMinimized })} />
-        </SettingItem>
-      )}
-      <SettingItem
-        label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
-        description={t("attention_description")}
-      >
-        <ToggleSwitch checked={settings.attentionOnNewMail} onChange={(attentionOnNewMail) => change({ attentionOnNewMail })} />
-      </SettingItem>
-      <SettingItem label={t("quiet_hours_label")} description={t("quiet_hours_description")}>
-        <ToggleSwitch checked={settings.quietHoursEnabled} onChange={(quietHoursEnabled) => change({ quietHoursEnabled })} />
-      </SettingItem>
-      {settings.quietHoursEnabled && (
-        <SettingItem nested label={t("quiet_hours_from")}>
-          <div className="flex items-center gap-2">
-            <input
-              type="time"
-              aria-label={t("quiet_hours_from")}
-              value={settings.quietHoursStart}
-              onChange={(event) => change({ quietHoursStart: event.target.value })}
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-            />
-            <span className="text-sm text-muted-foreground">{t("quiet_hours_to")}</span>
-            <input
-              type="time"
-              aria-label={t("quiet_hours_to")}
-              value={settings.quietHoursEnd}
-              onChange={(event) => change({ quietHoursEnd: event.target.value })}
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-            />
-          </div>
         </SettingItem>
       )}
       <SettingItem

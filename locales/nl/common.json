@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "E-mails van {name} zoeken"
   },
+  "menuMove": {
+    "filter_placeholder": "Map zoeken",
+    "recent": "Recent",
+    "no_match": "Geen map gevonden",
+    "choose_folder": "Map kiezen…",
+    "current_folder": "Staat al in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Map markeren als gelezen",
     "mark_folder_tree_read": "Map en submappen markeren als gelezen",
@@ -5929,6 +5936,14 @@
     "usage_label": "Wat dit apparaat bewaart",
     "pin_not_ready": "Dit bestand staat nog niet op de lijst van dit apparaat. Probeer het zo meteen opnieuw."
   },
+  "keyProtection": {
+    "browser_note": "In een browser staat de sleutel van deze mail in hetzelfde browserprofiel als de mail. Wie de bestanden van het profiel kopieert, kan de mail lezen, dus gebruik schijfversleuteling.",
+    "no_secure_storage": "Deze computer heeft geen veilige sleutelopslag die de app kan gebruiken, dus de sleutel van deze mail is op schijf alleen verhuld. Gebruik schijfversleuteling.",
+    "wrap_failed": "De veilige sleutelopslag van deze computer heeft de sleutel van deze mail niet aangenomen, dus die is niet beveiligd zoals het hoort. Start de app opnieuw en gebruik schijfversleuteling.",
+    "rekey_progress": "De mail op dit apparaat wordt opnieuw versleuteld: {percent}%. Je kunt gewoon doorwerken.",
+    "rekey_failed": "Het opnieuw versleutelen van de mail op dit apparaat is niet afgerond, dus de oude sleutel kan de mail nog openen. De app probeert het bij de volgende start opnieuw.",
+    "reenroll_note": "De passkey en systeemontgrendeling gebruikten de sleutel van de oude pincode en zijn daarom verwijderd. Stel ze opnieuw in als je ze gebruikt."
+  },
   "offlineDrafts": {
     "title": "Concepten op dit apparaat",
     "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Meer opties"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offlinemelding verbergen"
+  },
   "shell": {
     "resize": "Formaat wijzigen",
     "update_available": "Update beschikbaar",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Plug-ins",
     "group_account": "Account",
     "switch_to": "Overschakelen naar {account}"
+  },
+  "menuAudit": {
+    "offline_header": "U bent offline. Sommige acties hebben een verbinding nodig.",
+    "files_new_folder": "Nieuwe map…",
+    "files_new_file": "Nieuw bestand…",
+    "files_new_text_file": "Nieuw tekstbestand…",
+    "files_upload_files": "Bestanden uploaden…",
+    "files_upload_folder": "Map uploaden…",
+    "files_share": "Delen…",
+    "files_share_button": "Delen",
+    "contacts_add_to_group": "Aan groep toevoegen…",
+    "contacts_bulk_add_to_group": "Aan groep toevoegen…",
+    "schedule_send": "Verzenden plannen…"
   },
   "notification_center": {
     "title": "Meldingen",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Zoek ‘{text}’ in e-mail"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menubalk altijd tonen",
+    "always_show_description": "Anders verschijnt hij bij een druk op Alt.",
+    "exit": "Afsluiten",
+    "tray_pause": "Meldingen pauzeren",
+    "tray_pause_hour": "1 uur",
+    "tray_pause_tomorrow": "Tot morgen",
+    "tray_resume": "Meldingen weer aanzetten",
+    "tray_open": "Bulwark openen",
+    "tray_quit": "Bulwark afsluiten",
+    "tray_exit": "Bulwark afsluiten"
+  },
+  "desktopMenus": {
+    "save_draft": "Concept opslaan",
+    "attach_files": "Bestanden bijvoegen…",
+    "shortcut_apps": "Naar E-mail, Agenda, Contacten of Bestanden"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
-    "section_desc": "Vraagt na een tijd zonder gebruik om een pincode, in elk venster en tabblad. Zolang de app vergrendeld is, blijft de mail op dit apparaat versleuteld en heeft de app er geen sleutel voor.",
+    "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
     "enable_label": "Vergrendelen met een pincode",
     "enable_desc": "Standaard uit. De pincode blijft op dit apparaat.",
-    "protects_desc": "Waartegen dit beschermt: in een browser houdt de pincode iemand bij dit apparaat buiten de app en blijft de e-mail die hier is opgeslagen versleuteld. Hij kan geen programma op deze computer tegenhouden, geen browserextensie die je hebt geïnstalleerd en niemand die de bestanden van de browser kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is de pincode ook gekoppeld aan je aanmelding op deze computer. Je account op de server verandert niet.",
+    "protects_desc": "Waartegen dit beschermt: de pincode houdt iemand bij dit apparaat uit de app. De mail die hier staat krijgt een nieuwe sleutel als je de vergrendeling aanzet of de pincode wijzigt, wat even kan duren. Het kan niet tegenhouden: een programma op deze computer, een browserextensie die je hebt geïnstalleerd, of iemand die de bestanden van de app kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is voor het proberen van pincodes ook je aanmelding op deze computer nodig. Je account op de server verandert hierdoor niet.",
     "enable_body": "Kies een pincode. Die heeft u nodig telkens als de app vergrendelt, en na herladen of opnieuw starten.",
     "set_pin_title": "Kies een pincode",
     "change_pin": "Pincode wijzigen…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier.",
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
+  },
+  "desktopDevTools": {
+    "section_title": "Probleemoplossing",
+    "label": "Ontwikkelaarstools ({shortcut})",
+    "description": "Met {shortcut} en F12 openen de ontwikkelaarstools voor het venster waarin je bent. Gaat weer uit als de app vergrendelt.",
+    "forced_off": "Uitgezet door je organisatie.",
+    "locked": "Ontgrendel de app om dit te wijzigen.",
+    "menu_toggle": "Ontwikkelaarstools tonen of verbergen"
+  },
+  "fileDrop": {
+    "overlay_label": "Bestanden neerzetten",
+    "overlay_title": "Waar moeten de bestanden heen?",
+    "overlay_hint": "Zet buiten de keuzes neer of druk op Esc om te annuleren.",
+    "files_unknown": "Bestanden",
+    "files_summary": "{count, plural, one {# bestand} other {# bestanden}}",
+    "files_summary_size": "{count, plural, one {# bestand} other {# bestanden}}, {size}",
+    "zone_attach_here": "Bij dit bericht voegen",
+    "zone_insert_inline": "In het bericht invoegen",
+    "zone_new_message": "Bij een nieuw bericht voegen",
+    "zone_upload_files": "Uploaden naar Bestanden",
+    "zone_upload_folder": "Uploaden naar {folder}",
+    "zone_calendar": "Aan agenda toevoegen",
+    "zone_contacts": "Aan contacten toevoegen",
+    "zone_open_eml": "Bericht openen",
+    "zone_import_eml": "Importeren in {folder}",
+    "note_limit_message": "Tot {size} per bericht",
+    "note_limit_file": "Tot {size} per bestand",
+    "note_kept_offline": "Blijft op dit apparaat tot je weer online bent",
+    "note_needs_connection": "Heeft een verbinding nodig",
+    "announce": "{files, plural, =0 {Bestanden} one {# bestand} other {# bestanden}} binnengesleept. Keuzes: {choices}.",
+    "choose_title": "{count, plural, one {Waar moet dit bestand heen?} other {Waar moeten deze bestanden heen?}}",
+    "save_first_failed": "Het open bericht kon niet worden opgeslagen, dus de app bleef waar hij was.",
+    "import_done": "{count, plural, one {# bericht geïmporteerd in {folder}.} other {# berichten geïmporteerd in {folder}.}}",
+    "import_failed": "{name} kon niet worden geïmporteerd.",
+    "too_large_file": "{name} is te groot. De grens is {max} per bestand.",
+    "too_large_message": "Deze bestanden zijn samen te groot voor één bericht. De grens is {max}.",
+    "folders_left_out": "Mappen kunnen alleen naar Bestanden, dus ze zijn weggelaten.",
+    "nothing_here": "Deze bestanden kunnen hier niet worden gebruikt."
   },
   "desktopReminders": {
     "generic_title": "Herinnering",

@@ -14,10 +14,28 @@ export function storeFilesToPrune(files: readonly string[], keep: readonly strin
   return files.filter((file) => /^\/a[0-9a-f]+\.db$/.test(file) && !keep.includes(file));
 }
 
+/** A copy of a database under way, page by page, into a new file under a new key. */
+export interface StoreCopy {
+  /** Negative: everything that's left. Busy: the source is in the middle of something. */
+  step(pages: number): 'more' | 'done' | 'busy';
+  remaining(): number;
+  pageCount(): number;
+  /** Done: the file stays. */
+  finish(): void;
+  /** Not done: the file goes. */
+  abort(): void;
+}
+
 export interface HostStorage {
   open(file: string, keyHex: string): Promise<StorageAdapter>;
   remove(file: string): boolean;
+  startCopy?(source: StorageAdapter, file: string, keyHex: string): Promise<StoreCopy>;
 }
+
+const COPY_PAGES_PER_STEP = 256;
+/** What's left for after the engine has stopped: a write after a copy's end isn't in it. */
+const COPY_LAST_PAGES = 64;
+const COPY_BUSY_WAIT_MS = 50;
 
 interface OpenAccount {
   engine: AccountEngine;
@@ -26,6 +44,8 @@ interface OpenAccount {
   auth: string | null;
   pendingAuth: Array<(header: string | null) => void>;
   session: StoreSession;
+  /** A re-encryption under way: the database can't close under it. */
+  copying?: { stop: boolean; settled: Promise<void> };
 }
 
 export interface StoreHostOptions {
@@ -36,6 +56,12 @@ export interface StoreHostOptions {
 }
 
 /** The owner hasn't opened this account yet. The caller may try again shortly. */
+function rekeyStopped(): Error {
+  const error = new Error('The re-encryption was stopped');
+  error.name = 'StoreRekeyStoppedError';
+  return error;
+}
+
 function accountClosed(): Error {
   const error = new Error('The local store is not open for this account');
   error.name = 'StoreAccountClosedError';
@@ -127,10 +153,88 @@ export class StoreHost {
   async closeAccount(account: string): Promise<void> {
     const open = this.accounts.get(account);
     if (!open) return;
+    if (open.copying) {
+      open.copying.stop = true;
+      await open.copying.settled;
+    }
     this.accounts.delete(account);
     await open.engine.close();
     for (const resolve of open.pendingAuth.splice(0)) resolve(null);
     open.db.close();
+  }
+
+  /**
+   * Copies an open account into a new file under a new key, while it goes on working: the source's
+   * own writes reach the copy too. Then stops the engine for the last pages, and ends with the
+   * account closed and nothing written since, so the old file and the new one are the same data.
+   * On a failure the new file goes and the account stays open, if it can.
+   */
+  async rekey(account: string, file: string, keyHex: string): Promise<void> {
+    const open = this.accounts.get(account);
+    if (!open) throw accountClosed();
+    if (!this.options.storage.startCopy) throw new Error('This storage can\'t re-encrypt');
+    if (open.copying) throw new Error('A re-encryption is under way');
+    let settle = () => {};
+    const copying = { stop: false, settled: new Promise<void>((resolve) => { settle = resolve; }) };
+    open.copying = copying;
+    let copy: StoreCopy | null = null;
+    const emit = (percent: number) => this.options.emit({ type: 'rekey', account, percent });
+    try {
+      copy = await this.options.storage.startCopy(open.db, file, keyHex);
+      const yieldNow = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+      // One page first: only then does SQLite know how much there is.
+      let answer = copy.step(1);
+      for (;;) {
+        if (copying.stop) throw rekeyStopped();
+        if (answer === 'done') break;
+        if (answer === 'busy') {
+          await yieldNow(COPY_BUSY_WAIT_MS);
+        } else {
+          const left = copy.remaining();
+          if (left <= COPY_LAST_PAGES) break;
+          const total = copy.pageCount();
+          emit(Math.min(99, Math.floor(((total - left) / Math.max(total, 1)) * 100)));
+          await yieldNow();
+        }
+        if (copying.stop) throw rekeyStopped();
+        answer = copy.step(Math.min(COPY_PAGES_PER_STEP, Math.max(1, copy.remaining() - COPY_LAST_PAGES)));
+      }
+      if (copying.stop) throw rekeyStopped();
+      // Calls wait for the account to open again from here. Other tabs try again by themselves.
+      this.accounts.delete(account);
+      await open.engine.close();
+      for (const resolve of open.pendingAuth.splice(0)) resolve(null);
+      // Nothing writes now. A copy that was short enough to end above is whole only if nothing
+      // wrote after, so it goes round again.
+      let last = answer === 'done' ? 'again' : copy.step(-1);
+      if (last === 'again') {
+        copy.abort();
+        copy = await this.options.storage.startCopy(open.db, file, keyHex);
+        last = copy.step(-1);
+      }
+      for (let tries = 0; last === 'busy' && tries < 20; tries += 1) {
+        await yieldNow(COPY_BUSY_WAIT_MS);
+        last = copy.step(-1);
+      }
+      if (last !== 'done') throw new Error('The copy did not finish');
+      copy.finish();
+      copy = null;
+      open.db.close();
+      emit(100);
+    } catch (error) {
+      copy?.abort();
+      if (!this.accounts.has(account)) {
+        try {
+          open.db.close();
+        } catch {
+          // The page opens the old file again.
+        }
+      }
+      throw error;
+    } finally {
+      open.copying = undefined;
+      settle();
+    }
   }
 
   async removeAccount(account: string, file: string): Promise<boolean> {

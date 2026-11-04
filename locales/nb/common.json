@@ -3672,6 +3672,13 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Finn en mappe",
+    "recent": "Nylig brukt",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Velg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",
     "mark_folder_tree_read": "Merk mappe og undermapper som lest",
@@ -5929,6 +5936,14 @@
     "usage_label": "Dette beholder enheten",
     "pin_not_ready": "Denne filen er ikke på listen til denne enheten ennå. Prøv igjen om litt."
   },
+  "keyProtection": {
+    "browser_note": "I en nettleser ligger nøkkelen til denne e-posten i den samme nettleserprofilen som e-posten. Den som kopierer profilens filer, kan lese den, så bruk diskkryptering.",
+    "no_secure_storage": "Denne datamaskinen har ikke et sikkert nøkkellager appen kan bruke, så nøkkelen til denne e-posten er bare tilslørt på disken. Bruk diskkryptering.",
+    "wrap_failed": "Det sikre nøkkellageret på denne datamaskinen tok ikke imot nøkkelen til denne e-posten, så den er ikke beskyttet slik den skal være. Start appen på nytt, og bruk diskkryptering.",
+    "rekey_progress": "E-posten på denne enheten krypteres på nytt: {percent} %. Du kan jobbe videre.",
+    "rekey_failed": "Den nye krypteringen av e-posten på denne enheten ble ikke ferdig, så den gamle nøkkelen kan fortsatt åpne den. Appen prøver igjen ved neste start.",
+    "reenroll_note": "Tilgangsnøkkelen og systemopplåsingen brukte nøkkelen til den gamle PIN-koden, så de er fjernet. Sett dem opp igjen hvis du bruker dem."
+  },
   "offlineDrafts": {
     "title": "Utkast på denne enheten",
     "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
@@ -6438,6 +6453,9 @@
   "top_bar": {
     "more": "Flere alternativer"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul frakoblet-melding"
+  },
   "shell": {
     "resize": "Endre størrelse",
     "update_available": "Oppdatering tilgjengelig",
@@ -6482,6 +6500,19 @@
     "group_plugins": "Tillegg",
     "group_account": "Konto",
     "switch_to": "Bytt til {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Du er frakoblet. Noen handlinger trenger tilkobling.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Last opp filer…",
+    "files_upload_folder": "Last opp mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Legg til i gruppe…",
+    "contacts_bulk_add_to_group": "Legg til i gruppe…",
+    "schedule_send": "Planlegg sending…"
   },
   "notification_center": {
     "title": "Varsler",
@@ -6841,12 +6872,29 @@
   "desktop_mail": {
     "context_search_mail": "Søk etter «{text}» i e-post"
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vis alltid menylinjen",
+    "always_show_description": "Ellers vises den når du trykker på Alt.",
+    "exit": "Avslutt",
+    "tray_pause": "Sett varsler på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Til i morgen",
+    "tray_resume": "Slå på varsler igjen",
+    "tray_open": "Åpne Bulwark",
+    "tray_quit": "Avslutt Bulwark",
+    "tray_exit": "Avslutt Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lagre utkast",
+    "attach_files": "Legg ved filer…",
+    "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
+  },
   "appLock": {
     "section_title": "Applås",
-    "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, forblir e-post på denne enheten kryptert, og appen har ingen nøkkel til den.",
+    "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
     "enable_label": "Lås med en PIN-kode",
     "enable_desc": "Av som standard. PIN-koden blir på denne enheten.",
-    "protects_desc": "Hva dette beskytter mot: I en nettleser holder PIN-koden andre ved denne enheten ute av appen og holder e-posten som er lagret her kryptert. Den kan ikke stoppe et program på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer nettleserens filer og har tid til å prøve mange koder, så en lengre PIN-kode er verdt det. I skrivebordsappen er PIN-koden også knyttet til påloggingen din på denne datamaskinen. Kontoen din på serveren påvirkes ikke.",
+    "protects_desc": "Dette beskytter mot: PIN-koden holder folk ved denne enheten ute av appen. E-posten som er lagret her, får en ny nøkkel når du slår på låsen eller endrer PIN-koden, og det kan ta et øyeblikk. Den kan ikke stoppe et program som kjører på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer appens filer og har tid til å prøve mange PIN-koder, så en lengre PIN-kode lønner seg. I skrivebordsappen krever det også påloggingen din på denne datamaskinen å prøve PIN-koder. Kontoen din på serveren berøres ikke.",
     "enable_body": "Velg en PIN-kode. Du trenger den hver gang appen låses, og etter en ny lasting eller ny start.",
     "set_pin_title": "Velg en PIN-kode",
     "change_pin": "Endre PIN-kode…",
@@ -7088,6 +7136,44 @@
     "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
+  },
+  "desktopDevTools": {
+    "section_title": "Feilsøking",
+    "label": "Utviklerverktøy ({shortcut})",
+    "description": "Lar {shortcut} og F12 åpne utviklerverktøyene for vinduet du er i. Slås av igjen når appen låses.",
+    "forced_off": "Slått av av organisasjonen din.",
+    "locked": "Lås opp appen for å endre dette.",
+    "menu_toggle": "Vis eller skjul utviklerverktøy"
+  },
+  "fileDrop": {
+    "overlay_label": "Slipp filer",
+    "overlay_title": "Hvor skal filene?",
+    "overlay_hint": "Slipp utenfor valgene eller trykk på Esc for å avbryte.",
+    "files_unknown": "Filer",
+    "files_summary": "{count, plural, one {# fil} other {# filer}}",
+    "files_summary_size": "{count, plural, one {# fil} other {# filer}}, {size}",
+    "zone_attach_here": "Legg ved denne meldingen",
+    "zone_insert_inline": "Sett inn i meldingen",
+    "zone_new_message": "Legg ved en ny melding",
+    "zone_upload_files": "Last opp til Filer",
+    "zone_upload_folder": "Last opp til {folder}",
+    "zone_calendar": "Legg til i kalenderen",
+    "zone_contacts": "Legg til i kontakter",
+    "zone_open_eml": "Åpne melding",
+    "zone_import_eml": "Importer til {folder}",
+    "note_limit_message": "Opptil {size} per melding",
+    "note_limit_file": "Opptil {size} per fil",
+    "note_kept_offline": "Blir på denne enheten til du er på nett igjen",
+    "note_needs_connection": "Trenger tilkobling",
+    "announce": "{files, plural, =0 {Filer} one {# fil} other {# filer}} dratt inn. Valg: {choices}.",
+    "choose_title": "{count, plural, one {Hvor skal denne filen?} other {Hvor skal disse filene?}}",
+    "save_first_failed": "Den åpne meldingen kunne ikke lagres, så appen ble der den var.",
+    "import_done": "{count, plural, one {# melding importert til {folder}.} other {# meldinger importert til {folder}.}}",
+    "import_failed": "{name} kunne ikke importeres.",
+    "too_large_file": "{name} er for stor. Grensen er {max} per fil.",
+    "too_large_message": "Disse filene er for store for én melding. Grensen er {max}.",
+    "folders_left_out": "Mapper kan bare gå til Filer, så de ble utelatt.",
+    "nothing_here": "Disse filene kan ikke brukes her."
   },
   "desktopReminders": {
     "generic_title": "Påminnelse",

@@ -61,6 +61,26 @@ function printCopy(): HTMLElement | null {
 }
 
 describe('Ctrl+P on an open message', () => {
+  it('prints an invitation with its card: when, where and who', async () => {
+    const { InvitationPrintSync } = await import('@/lib/print/invitation-print');
+    const card = { heading: 'Calendar Invitation', rows: [['Time', 'Thu 5 Nov, 13:00 to 14:00'], ['Location', 'Room 4'], ['Organized by', 'Anna Becker']] as Array<[string, string]> };
+    const view = render(<>
+      <EmailViewer email={htmlMail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />
+      <InvitationPrintSync emailId="e1" print={card} />
+    </>);
+    act(() => { window.dispatchEvent(new Event('beforeprint')); });
+    const box = printCopy()!.querySelector('[data-message-print-invitation]')!;
+    expect(box.textContent).toContain('Calendar Invitation');
+    expect(box.textContent).toContain('Thu 5 Nov, 13:00 to 14:00');
+    expect(box.textContent).toContain('Room 4');
+    expect(box.textContent).toContain('Anna Becker');
+    act(() => { window.dispatchEvent(new Event('afterprint')); });
+    // The card gone (another message opened): the next printout has no box.
+    view.rerender(<EmailViewer email={htmlMail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
+    act(() => { window.dispatchEvent(new Event('beforeprint')); });
+    expect(printCopy()!.querySelector('[data-message-print-invitation]')).toBeNull();
+  }, 30_000);
+
   it('prints the message alone, next to the app', () => {
     render(<EmailViewer email={htmlMail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
     expect(printCopy()).toBeNull();

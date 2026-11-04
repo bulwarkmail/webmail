@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BulwarkDesktopBridge, DesktopOsPowerEvent, DesktopOsStatus } from '../types';
 import type { CalendarEvent } from '@/lib/jmap/types';
 
-/** The window's end: badge, dropped and pasted files, drag-out, waking up, the settings section. */
+/** The window's end: badge, drag-out, waking up, the settings section. Dropped and pasted files: components/file-drop. */
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) => (values ? `${key}:${JSON.stringify(values)}` : key),
@@ -87,176 +87,6 @@ describe('the policy keeps refreshing', () => {
     vi.advanceTimersByTime(POLICY_REFRESH_MS);
     expect(fetchPolicy).not.toHaveBeenCalled();
     unmount();
-  });
-});
-
-function dropEvent(type: string, files: File[]): Event {
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.defineProperty(event, 'dataTransfer', { value: { types: files.length ? ['Files'] : ['text/plain'], files, dropEffect: 'none' } });
-  return event;
-}
-
-describe('files on the window', () => {
-  const file = new File(['x'], 'report.pdf');
-
-  beforeEach(async () => {
-    const { clearHandoffs, takeHandoff } = await import('@/lib/launch-handoff');
-    clearHandoffs();
-    takeHandoff('compose');
-  });
-
-  it('nothing happens in a browser', async () => {
-    const { startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    const stop = startWindowFiles();
-    const event = dropEvent('drop', [file]);
-    window.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(false);
-    expect(takeHandoff('compose')).toBeNull();
-    stop();
-  });
-
-  it('a drop on the window starts a new draft with the file', async () => {
-    const { startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    const over = dropEvent('dragover', [file]);
-    window.dispatchEvent(over);
-    expect(over.defaultPrevented).toBe(true);
-    const drop = dropEvent('drop', [file]);
-    window.dispatchEvent(drop);
-    expect(drop.defaultPrevented).toBe(true);
-    expect(takeHandoff('compose')?.files).toEqual([file]);
-    stop();
-  });
-
-  it('a drop something else took is left alone', async () => {
-    const { startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    const event = dropEvent('drop', [file]);
-    event.preventDefault();
-    window.dispatchEvent(event);
-    expect(takeHandoff('compose')).toBeNull();
-    stop();
-  });
-
-  it('text dragged around is not a file', async () => {
-    const { startWindowFiles } = await import('../window-files');
-    setBridge({});
-    const stop = startWindowFiles();
-    const event = dropEvent('dragover', []);
-    window.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(false);
-    stop();
-  });
-
-  it('an open composer takes the file itself', async () => {
-    const { setComposerFileTarget, startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    const target = vi.fn();
-    const clear = setComposerFileTarget(target, () => true);
-    window.dispatchEvent(dropEvent('drop', [file]));
-    expect(target).toHaveBeenCalledWith([file]);
-    expect(takeHandoff('compose')).toBeNull();
-    clear();
-    stop();
-  });
-
-  it('a composer out of sight on a hidden tab takes nothing', async () => {
-    const { setComposerFileTarget, startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    const hidden = vi.fn();
-    const clear = setComposerFileTarget(hidden, () => false);
-    window.dispatchEvent(dropEvent('drop', [file]));
-    expect(hidden).not.toHaveBeenCalled();
-    expect(takeHandoff('compose')?.files).toEqual([file]);
-    clear();
-    stop();
-  });
-
-  it('a pasted file is taken; pasted text is not', async () => {
-    const { startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    const paste = (files: File[]) => {
-      const event = new Event('paste', { bubbles: true, cancelable: true });
-      Object.defineProperty(event, 'clipboardData', { value: { files, types: files.length ? ['Files'] : ['text/plain'] } });
-      window.dispatchEvent(event);
-      return event;
-    };
-    expect(paste([]).defaultPrevented).toBe(false);
-    expect(takeHandoff('compose')).toBeNull();
-    expect(paste([file]).defaultPrevented).toBe(true);
-    expect(takeHandoff('compose')?.files).toEqual([file]);
-    stop();
-  });
-
-  describe('a paste that is not for us', () => {
-    const pasteOn = (target: EventTarget, types: string[]) => {
-      const event = new Event('paste', { bubbles: true, cancelable: true });
-      Object.defineProperty(event, 'clipboardData', { value: { files: [file], types } });
-      target.dispatchEvent(event);
-      return event;
-    };
-
-    it('text with a file, as a spreadsheet copies, stays text', async () => {
-      const { startWindowFiles } = await import('../window-files');
-      const { takeHandoff } = await import('@/lib/launch-handoff');
-      setBridge({});
-      const stop = startWindowFiles();
-      expect(pasteOn(document.body, ['text/plain', 'Files']).defaultPrevented).toBe(false);
-      expect(takeHandoff('compose')).toBeNull();
-      stop();
-    });
-
-    it('in a search field or any other input, a file is not an attachment', async () => {
-      const { startWindowFiles } = await import('../window-files');
-      const { takeHandoff } = await import('@/lib/launch-handoff');
-      setBridge({});
-      const stop = startWindowFiles();
-      const input = document.body.appendChild(document.createElement('input'));
-      expect(pasteOn(input, ['Files']).defaultPrevented).toBe(false);
-      expect(takeHandoff('compose')).toBeNull();
-      input.remove();
-      stop();
-    });
-
-    it('in the body of a composer on screen, a bare file attaches', async () => {
-      const { setComposerFileTarget, startWindowFiles } = await import('../window-files');
-      setBridge({});
-      const stop = startWindowFiles();
-      const target = vi.fn();
-      const clear = setComposerFileTarget(target, () => true);
-      const composer = document.body.appendChild(document.createElement('div'));
-      composer.setAttribute('data-testid', 'email-composer');
-      const body = composer.appendChild(document.createElement('div'));
-      body.setAttribute('contenteditable', 'true');
-      pasteOn(body, ['Files']);
-      expect(target).toHaveBeenCalledWith([file]);
-      composer.remove();
-      clear();
-      stop();
-    });
-  });
-
-  it('our own native drag over our own window is not a new file', async () => {
-    const { setOwnDragActive, startWindowFiles } = await import('../window-files');
-    const { takeHandoff } = await import('@/lib/launch-handoff');
-    setBridge({});
-    const stop = startWindowFiles();
-    setOwnDragActive(true);
-    window.dispatchEvent(dropEvent('drop', [file]));
-    expect(takeHandoff('compose')).toBeNull();
-    setOwnDragActive(false);
-    stop();
   });
 });
 
@@ -490,6 +320,18 @@ describe('the summary', () => {
       expect(summary.unread).toEqual([expect.objectContaining({ emailId: 'e1', accountId: 'acc', sender: 'Alice', subject: 'Lunch?' })]);
       expect(JSON.parse(summary.unread[0].context!)).toMatchObject({ emailId: 'e1', slot: 3 });
       expect(getEmails).toHaveBeenCalledWith('in', undefined, 5, 0, undefined, false, { notKeyword: '$seen' });
+      // One account: no need to say whose.
+      expect(summary.account).toBeUndefined();
+    });
+
+    it('with two accounts it names the one the unread mail is from', async () => {
+      const { useAccountStore } = await import('@/stores/account-store');
+      useAccountStore.setState({ accounts: [
+        { id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' },
+        { id: 'bob@two', cookieSlot: 4, serverUrl: 'https://two.example', username: 'bob@example.org' },
+      ] as never });
+      const { readSummary } = await import('../os-summary');
+      expect((await readSummary('en')).account).toBe('alice@example.org');
     });
 
     it('before the policy is known it is empty', async () => {
@@ -590,7 +432,24 @@ describe('the settings section', () => {
   it('macOS gets its own word for the bounce', async () => {
     const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
     setBridge(bridgeFor(status()) as never, 'darwin');
-    render(<DesktopOsSettings />);
+    render(<DesktopOsSettings part="notifications" />);
     expect(await screen.findByText('attention_mac_label')).toBeInTheDocument();
+  });
+
+  it('the taskbar flash and quiet hours are with the notifications, not on General', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    const general = render(<DesktopOsSettings />);
+    expect(await screen.findByText('close_to_tray_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
+    general.unmount();
+    render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
+    expect(screen.getByText('attention_label')).toBeInTheDocument();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    fireEvent.click(screen.getAllByRole('switch')[1]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ quietHoursEnabled: true }));
   });
 });
