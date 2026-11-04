@@ -27,6 +27,8 @@ export function DesktopOsHost() {
   const archiveEnabled = useArchiveActionEnabled();
   const clientKey = useAccountStore((s) => s.accounts.map((a) => a.id).join("\n"));
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Logins restored after a restart connect after the window is up, and each needs a baseline.
+  const connectedRevision = useAuthStore((s) => s.connectedAccountsRevision);
   const mailRef = useRef<MailNotifications | null>(null);
   const summaryRef = useRef<{ refresh: () => void } | null>(null);
   const localeRef = useRef(locale);
@@ -78,7 +80,7 @@ export function DesktopOsHost() {
     if (auth.client) clients.add(auth.client);
     for (const client of clients) mail.seed(client);
     summaryRef.current?.refresh();
-  }, [isAuthenticated, clientKey]);
+  }, [isAuthenticated, clientKey, connectedRevision]);
 
   return null;
 }
