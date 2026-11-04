@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { ContactCard } from '@/lib/jmap/types';
+import type { AddressBook, ContactCard } from '@/lib/jmap/types';
 
 // Keys with their namespace, so a label read from ux_pim_contact can be told
 // from the old one in contacts.form.
@@ -19,6 +19,7 @@ vi.mock('@/components/contacts/contact-activity', () => ({ ContactActivity: () =
 
 import { ContactForm } from '../contact-form';
 import { ContactDetail } from '../contact-detail';
+import { ContactsSidebar } from '../contacts-sidebar';
 
 const anna: ContactCard = {
   id: 'c1',
@@ -41,5 +42,54 @@ describe('pim-19: standard words read as people say them', () => {
   it('labels a voice phone "Phone" and a private one "Home" on the contact page', () => {
     render(<ContactDetail contact={anna} onEdit={vi.fn()} onDelete={vi.fn()} />);
     expect(screen.getByText('ux_pim_contact.context_private · ux_pim_contact.phone_voice')).toBeInTheDocument();
+  });
+});
+
+describe('pim-26: the contact editor keeps rare fields under "More fields"', () => {
+  it('collapses Gender, Calendar, Online services and Personal info when none has a value', () => {
+    render(<ContactForm contact={anna} onSave={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByText('ux_pim_contact.more_fields')).toBeInTheDocument();
+    expect(screen.queryByText('contacts.form.gender_sex')).toBeNull();
+    expect(screen.queryByText('contacts.form.calendar_uri')).toBeNull();
+    expect(screen.queryByText('contacts.form.add_online_service')).toBeNull();
+    expect(screen.queryByText('contacts.form.add_personal_info')).toBeNull();
+    fireEvent.click(screen.getByText('ux_pim_contact.more_fields'));
+    expect(screen.getByText('contacts.form.gender_sex')).toBeInTheDocument();
+    expect(screen.getByText('contacts.form.calendar_uri')).toBeInTheDocument();
+    expect(screen.getByText('contacts.form.add_online_service')).toBeInTheDocument();
+    expect(screen.getByText('contacts.form.add_personal_info')).toBeInTheDocument();
+  });
+
+  it('opens "More fields" when one of them has a value', () => {
+    render(<ContactForm contact={{ ...anna, calendarUri: 'https://cal.example/anna' }} onSave={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByDisplayValue('https://cal.example/anna')).toBeInTheDocument();
+  });
+});
+
+function renderSidebar(addressBooks: AddressBook[]) {
+  return render(
+    <ContactsSidebar
+      groups={[]}
+      individuals={[]}
+      addressBooks={addressBooks}
+      activeCategory="all"
+      onSelectCategory={vi.fn()}
+      onCreateGroup={vi.fn()}
+      onCreateContact={vi.fn()}
+      onCreateAddressBook={vi.fn()}
+      onImport={vi.fn()}
+      onEditGroup={vi.fn()}
+      onDeleteGroup={vi.fn()}
+    />,
+  );
+}
+
+describe('pim-26: the Contacts menus', () => {
+  it('ends "Import contacts" and "New address book" in "…", as they open a dialog', () => {
+    renderSidebar([{ id: 'b1', name: 'Contacts', isDefault: true } as AddressBook]);
+    fireEvent.click(screen.getByRole('button', { name: 'contacts.new' }));
+    const menu = screen.getByRole('menu');
+    expect(within(menu).getByText('ux_pim_contact.import_menu')).toBeInTheDocument();
+    expect(within(menu).getByText('ux_pim_contact.new_address_book_menu')).toBeInTheDocument();
   });
 });

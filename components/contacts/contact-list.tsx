@@ -176,6 +176,7 @@ export function ContactList({
   printTitle,
 }: ContactListProps) {
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const density = useSettingsStore((state) => state.density);
@@ -697,7 +698,7 @@ export function ContactList({
                   {onImport && (
                     <Button variant="outline" size="sm" onClick={onImport}>
                       <Upload className="w-4 h-4 me-1.5" />
-                      {t("import.title")}
+                      {tx("import_menu")}
                     </Button>
                   )}
                 </>

@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Ev",
-    "phone_voice": "Telefon"
+    "phone_voice": "Telefon",
+    "more_fields": "Diğer alanlar",
+    "import_menu": "Kişileri İçe Aktar…",
+    "new_address_book_menu": "Yeni adres defteri…"
   },
   "uxs_wording": {
     "more_options": "Diğer seçenekler",

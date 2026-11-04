@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Acasă",
-    "phone_voice": "Telefon"
+    "phone_voice": "Telefon",
+    "more_fields": "Mai multe câmpuri",
+    "import_menu": "Importați contactele…",
+    "new_address_book_menu": "Agendă nouă…"
   },
   "uxs_wording": {
     "more_options": "Mai multe opțiuni",

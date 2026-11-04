@@ -117,6 +117,7 @@ export function ContactsSidebar({
   multiAccountMode,
 }: ContactsSidebarProps) {
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
   const router = useRouter();
   const { contextMenu: groupContextMenu, openContextMenu: openGroupContextMenu, openContextMenuFrom: openGroupMenuFrom, closeContextMenu: closeGroupContextMenu, menuRef: groupMenuRef } = useContextMenu<ContactCard>();
   const { contextMenu: bookContextMenu, openContextMenu: openBookContextMenu, openContextMenuFrom: openBookMenuFrom, closeContextMenu: closeBookContextMenu, menuRef: bookMenuRef } = useContextMenu<AddressBook>();
@@ -289,12 +290,12 @@ export function ContactsSidebar({
             <ContextMenuItem icon={UserPlus} label={t("create_new")} onClick={() => { newMenu.closeContextMenu(); onCreateContact(); }} />
             <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { newMenu.closeContextMenu(); onCreateGroup(); }} />
             {onCreateAddressBook && (
-              <ContextMenuItem icon={BookPlus} label={t("address_books.create")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
+              <ContextMenuItem icon={BookPlus} label={tx("new_address_book_menu")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
             )}
             {onImport && (
               <>
                 <ContextMenuSeparator />
-                <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
+                <ContextMenuItem icon={Upload} label={tx("import_menu")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
               </>
             )}
           </ContextMenu>

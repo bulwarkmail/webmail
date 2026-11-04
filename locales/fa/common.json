@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "منزل",
-    "phone_voice": "تلفن"
+    "phone_voice": "تلفن",
+    "more_fields": "فیلدهای بیشتر",
+    "import_menu": "وارد کردن مخاطبین…",
+    "new_address_book_menu": "دفترچه آدرس جدید…"
   },
   "uxs_wording": {
     "more_options": "گزینه‌های بیشتر",

@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "المنزل",
-    "phone_voice": "هاتف"
+    "phone_voice": "هاتف",
+    "more_fields": "حقول إضافية",
+    "import_menu": "استيراد جهات الاتصال…",
+    "new_address_book_menu": "دفتر عناوين جديد…"
   },
   "uxs_wording": {
     "more_options": "خيارات إضافية",

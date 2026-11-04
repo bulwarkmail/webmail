@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Domácí",
-    "phone_voice": "Telefon"
+    "phone_voice": "Telefon",
+    "more_fields": "Další pole",
+    "import_menu": "Importovat kontakty…",
+    "new_address_book_menu": "Nový adresář…"
   },
   "uxs_wording": {
     "more_options": "Další možnosti",

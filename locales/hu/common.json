@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Otthoni",
-    "phone_voice": "Telefon"
+    "phone_voice": "Telefon",
+    "more_fields": "További mezők",
+    "import_menu": "Névjegyek importálása…",
+    "new_address_book_menu": "Új címjegyzék…"
   },
   "uxs_wording": {
     "more_options": "További beállítások",

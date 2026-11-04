@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Casa",
-    "phone_voice": "Telefone"
+    "phone_voice": "Telefone",
+    "more_fields": "Mais campos",
+    "import_menu": "Importar contatos…",
+    "new_address_book_menu": "Novo livro de endereços…"
   },
   "uxs_wording": {
     "more_options": "Mais opções",

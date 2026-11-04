@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Thuis",
-    "phone_voice": "Telefoon"
+    "phone_voice": "Telefoon",
+    "more_fields": "Meer velden",
+    "import_menu": "Contacten importeren…",
+    "new_address_book_menu": "Nieuw adresboek…"
   },
   "uxs_wording": {
     "more_options": "Meer opties",

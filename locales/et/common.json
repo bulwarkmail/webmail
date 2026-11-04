@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Kodu",
-    "phone_voice": "Telefon"
+    "phone_voice": "Telefon",
+    "more_fields": "Rohkem välju",
+    "import_menu": "Impordi kontaktid…",
+    "new_address_book_menu": "Uus aadressiraamat…"
   },
   "uxs_wording": {
     "more_options": "Rohkem valikuid",

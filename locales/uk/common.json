@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Домашній",
-    "phone_voice": "Телефон"
+    "phone_voice": "Телефон",
+    "more_fields": "Інші поля",
+    "import_menu": "Імпортувати контакти…",
+    "new_address_book_menu": "Нова адресна книга…"
   },
   "uxs_wording": {
     "more_options": "Інші параметри",

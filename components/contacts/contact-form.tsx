@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
 import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
-import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2 } from "@/components/icons";
+import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2, MoreHorizontal } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -478,6 +478,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
   const dirty = fields !== initialFields || photoEdit.kind !== "unchanged";
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
   const footerRef = useBottomControls();
+  const [hasMoreFields] = useState(() => onlineServices.length > 0 || personalInfoEntries.length > 0
+    || !!(genderSex || genderIdentity) || !!(calendarUri || schedulingUri || freeBusyUri));
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1059,37 +1061,6 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             </div>
           </FormSection>
 
-          {/* Online Services */}
-          <FormSection icon={Globe} title={t("online_services")} collapsible defaultOpen={onlineServices.length > 0}>
-            <div className="space-y-2">
-              {onlineServices.map((svc, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={svc.uri}
-                    onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], uri: e.target.value }; setOnlineServices(n); }}
-                    placeholder={t("url_placeholder")}
-                    aria-label={t("online_service_url")}
-                    className="flex-1"
-                  />
-                  <Input
-                    value={svc.service}
-                    onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], service: e.target.value }; setOnlineServices(n); }}
-                    placeholder={t("service_placeholder")}
-                    aria-label={t("service_placeholder")}
-                    className="w-24"
-                  />
-                  <IconButton label={t("remove_entry")} onClick={() => setOnlineServices(onlineServices.filter((_, j) => j !== i))} className="shrink-0">
-                    <X />
-                  </IconButton>
-                </div>
-              ))}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setOnlineServices([...onlineServices, { uri: "", service: "", label: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 me-1" />
-                {t("add_online_service")}
-              </Button>
-            </div>
-          </FormSection>
-
           {/* Anniversaries */}
           <FormSection icon={Cake} title={t("anniversaries")} collapsible defaultOpen={anniversaries.length > 0}>
             <div className="space-y-2">
@@ -1124,50 +1095,6 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             </div>
           </FormSection>
 
-          {/* Personal Info */}
-          <FormSection icon={Heart} title={t("personal_info")} collapsible defaultOpen={personalInfoEntries.length > 0}>
-            <div className="space-y-2">
-              {personalInfoEntries.map((pi, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={pi.value}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], value: e.target.value }; setPersonalInfoEntries(n); }}
-                    placeholder={t("personal_info_placeholder")}
-                    aria-label={t("personal_info")}
-                    className="flex-1"
-                  />
-                  <Select
-                    value={pi.kind}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: e.target.value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
-                    aria-label={t("personal_info_kind")}
-                  >
-                    <option value="expertise">{t("personal_expertise")}</option>
-                    <option value="hobby">{t("personal_hobby")}</option>
-                    <option value="interest">{t("personal_interest")}</option>
-                    <option value="other">{t("personal_other")}</option>
-                  </Select>
-                  <Select
-                    value={pi.level}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: e.target.value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
-                    aria-label={t("level")}
-                  >
-                    <option value="">{t("level")}</option>
-                    <option value="high">{t("level_high")}</option>
-                    <option value="medium">{t("level_medium")}</option>
-                    <option value="low">{t("level_low")}</option>
-                  </Select>
-                  <IconButton label={t("remove_entry")} onClick={() => setPersonalInfoEntries(personalInfoEntries.filter((_, j) => j !== i))} className="shrink-0">
-                    <X />
-                  </IconButton>
-                </div>
-              ))}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setPersonalInfoEntries([...personalInfoEntries, { value: "", kind: "hobby", level: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 me-1" />
-                {t("add_personal_info")}
-              </Button>
-            </div>
-          </FormSection>
-
           {/* Categories */}
           <FormSection icon={Tag} title={t("categories")} collapsible defaultOpen={!!keywordsStr}>
             <CategoryComboBox
@@ -1182,45 +1109,6 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             />
           </FormSection>
 
-          {/* Gender */}
-          <FormSection icon={UserCircle} title={t("gender")} collapsible defaultOpen={!!(genderSex || genderIdentity)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label htmlFor={fieldId("gender_sex")} className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
-                <Select id={fieldId("gender_sex")} value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
-                  <option value="">-</option>
-                  <option value="masculine">{t("gender_male")}</option>
-                  <option value="feminine">{t("gender_female")}</option>
-                  <option value="other">{t("gender_other")}</option>
-                  <option value="none">{t("gender_none")}</option>
-                  <option value="unknown">{t("gender_unknown")}</option>
-                </Select>
-              </div>
-              <div>
-                <label htmlFor={fieldId("gender_identity")} className="text-xs text-muted-foreground mb-1 block">{t("gender_identity")}</label>
-                <Input id={fieldId("gender_identity")} value={genderIdentity} onChange={(e) => setGenderIdentity(e.target.value)} placeholder={t("gender_identity_placeholder")} />
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Calendar */}
-          <FormSection icon={Calendar} title={t("calendar")} collapsible defaultOpen={!!(calendarUri || schedulingUri || freeBusyUri)}>
-            <div className="space-y-3">
-              <div>
-                <label htmlFor={fieldId("calendar_uri")} className="text-xs text-muted-foreground mb-1 block">{t("calendar_uri")}</label>
-                <Input id={fieldId("calendar_uri")} value={calendarUri} onChange={(e) => setCalendarUri(e.target.value)} placeholder="https://..." />
-              </div>
-              <div>
-                <label htmlFor={fieldId("scheduling_uri")} className="text-xs text-muted-foreground mb-1 block">{t("scheduling_uri")}</label>
-                <Input id={fieldId("scheduling_uri")} value={schedulingUri} onChange={(e) => setSchedulingUri(e.target.value)} placeholder="https://..." />
-              </div>
-              <div>
-                <label htmlFor={fieldId("freebusy_uri")} className="text-xs text-muted-foreground mb-1 block">{t("freebusy_uri")}</label>
-                <Input id={fieldId("freebusy_uri")} value={freeBusyUri} onChange={(e) => setFreeBusyUri(e.target.value)} placeholder="https://..." />
-              </div>
-            </div>
-          </FormSection>
-
           {/* Notes */}
           <FormSection icon={StickyNote} title={t("note")} collapsible defaultOpen={!!note}>
             <textarea
@@ -1230,6 +1118,125 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
               aria-label={t("note")}
               className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-y outline-none"
             />
+          </FormSection>
+
+          {/* Fields most cards don't use, collapsed unless one has a value. */}
+          <FormSection icon={MoreHorizontal} title={tx("more_fields")} collapsible defaultOpen={hasMoreFields}>
+            <div className="divide-y divide-border/60 -my-5">
+            {/* Online Services */}
+            <FormSection icon={Globe} title={t("online_services")}>
+              <div className="space-y-2">
+                {onlineServices.map((svc, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={svc.uri}
+                      onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], uri: e.target.value }; setOnlineServices(n); }}
+                      placeholder={t("url_placeholder")}
+                      aria-label={t("online_service_url")}
+                      className="flex-1"
+                    />
+                    <Input
+                      value={svc.service}
+                      onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], service: e.target.value }; setOnlineServices(n); }}
+                      placeholder={t("service_placeholder")}
+                      aria-label={t("service_placeholder")}
+                      className="w-24"
+                    />
+                    <IconButton label={t("remove_entry")} onClick={() => setOnlineServices(onlineServices.filter((_, j) => j !== i))} className="shrink-0">
+                      <X />
+                    </IconButton>
+                  </div>
+                ))}
+                <Button type="button" variant="ghost" size="sm" onClick={() => setOnlineServices([...onlineServices, { uri: "", service: "", label: "" }])} className="text-xs">
+                  <Plus className="w-3 h-3 me-1" />
+                  {t("add_online_service")}
+                </Button>
+              </div>
+            </FormSection>
+
+            {/* Personal Info */}
+            <FormSection icon={Heart} title={t("personal_info")}>
+              <div className="space-y-2">
+                {personalInfoEntries.map((pi, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={pi.value}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], value: e.target.value }; setPersonalInfoEntries(n); }}
+                      placeholder={t("personal_info_placeholder")}
+                      aria-label={t("personal_info")}
+                      className="flex-1"
+                    />
+                    <Select
+                      value={pi.kind}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: e.target.value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
+                      aria-label={t("personal_info_kind")}
+                    >
+                      <option value="expertise">{t("personal_expertise")}</option>
+                      <option value="hobby">{t("personal_hobby")}</option>
+                      <option value="interest">{t("personal_interest")}</option>
+                      <option value="other">{t("personal_other")}</option>
+                    </Select>
+                    <Select
+                      value={pi.level}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: e.target.value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
+                      aria-label={t("level")}
+                    >
+                      <option value="">{t("level")}</option>
+                      <option value="high">{t("level_high")}</option>
+                      <option value="medium">{t("level_medium")}</option>
+                      <option value="low">{t("level_low")}</option>
+                    </Select>
+                    <IconButton label={t("remove_entry")} onClick={() => setPersonalInfoEntries(personalInfoEntries.filter((_, j) => j !== i))} className="shrink-0">
+                      <X />
+                    </IconButton>
+                  </div>
+                ))}
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPersonalInfoEntries([...personalInfoEntries, { value: "", kind: "hobby", level: "" }])} className="text-xs">
+                  <Plus className="w-3 h-3 me-1" />
+                  {t("add_personal_info")}
+                </Button>
+              </div>
+            </FormSection>
+
+            {/* Gender */}
+            <FormSection icon={UserCircle} title={t("gender")}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor={fieldId("gender_sex")} className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
+                  <Select id={fieldId("gender_sex")} value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
+                    <option value="">-</option>
+                    <option value="masculine">{t("gender_male")}</option>
+                    <option value="feminine">{t("gender_female")}</option>
+                    <option value="other">{t("gender_other")}</option>
+                    <option value="none">{t("gender_none")}</option>
+                    <option value="unknown">{t("gender_unknown")}</option>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor={fieldId("gender_identity")} className="text-xs text-muted-foreground mb-1 block">{t("gender_identity")}</label>
+                  <Input id={fieldId("gender_identity")} value={genderIdentity} onChange={(e) => setGenderIdentity(e.target.value)} placeholder={t("gender_identity_placeholder")} />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Calendar */}
+            <FormSection icon={Calendar} title={t("calendar")}>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor={fieldId("calendar_uri")} className="text-xs text-muted-foreground mb-1 block">{t("calendar_uri")}</label>
+                  <Input id={fieldId("calendar_uri")} value={calendarUri} onChange={(e) => setCalendarUri(e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <label htmlFor={fieldId("scheduling_uri")} className="text-xs text-muted-foreground mb-1 block">{t("scheduling_uri")}</label>
+                  <Input id={fieldId("scheduling_uri")} value={schedulingUri} onChange={(e) => setSchedulingUri(e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <label htmlFor={fieldId("freebusy_uri")} className="text-xs text-muted-foreground mb-1 block">{t("freebusy_uri")}</label>
+                  <Input id={fieldId("freebusy_uri")} value={freeBusyUri} onChange={(e) => setFreeBusyUri(e.target.value)} placeholder="https://..." />
+                </div>
+              </div>
+            </FormSection>
+            </div>
           </FormSection>
 
           </div>

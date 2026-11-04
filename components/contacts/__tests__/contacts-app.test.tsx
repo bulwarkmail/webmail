@@ -215,7 +215,7 @@ describe('ContactsApp', () => {
     renderContacts();
     fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
     fireEvent.click(within(drawer()).getByRole('button', { name: 'new' }));
-    fireEvent.click(screen.getByText('import.title'));
+    fireEvent.click(screen.getByText('import_menu'));
     const dialog = screen.getByRole('dialog', { name: 'import.title' });
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'import.title' })).toBeNull();
@@ -273,7 +273,7 @@ describe('ContactsApp', () => {
     try {
       renderContacts();
       fireEvent.click(screen.getByRole('button', { name: 'more' }));
-      fireEvent.click(screen.getByText('import.title'));
+      fireEvent.click(screen.getByText('import_menu'));
       expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
     } finally {
       window.matchMedia = matchMedia;
@@ -287,7 +287,7 @@ describe('ContactsApp', () => {
     fireEvent.click(within(drawer()).getByText('Work'));
     expect(screen.getByText('empty_view_title')).toBeInTheDocument();
     expect(screen.queryByText('empty_state_title')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /import.title/ }));
+    fireEvent.click(screen.getByRole('button', { name: /import_menu/ }));
     expect(screen.getByRole('dialog', { name: 'import.title' })).toBeInTheDocument();
   });
 

@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Mājas",
-    "phone_voice": "Tālrunis"
+    "phone_voice": "Tālrunis",
+    "more_fields": "Vairāk lauku",
+    "import_menu": "Kontaktu imports…",
+    "new_address_book_menu": "Jauna adrešu grāmata…"
   },
   "uxs_wording": {
     "more_options": "Vairāk iespēju",

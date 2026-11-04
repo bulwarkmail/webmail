@@ -4485,7 +4485,10 @@
   },
   "ux_pim_contact": {
     "context_private": "Home",
-    "phone_voice": "Phone"
+    "phone_voice": "Phone",
+    "more_fields": "More fields",
+    "import_menu": "Import contacts…",
+    "new_address_book_menu": "New address book…"
   },
   "uxs_wording": {
     "more_options": "More options",
