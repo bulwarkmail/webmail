@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Standardapper",
-    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}. Teknisk sett registrerer {appName} seg som protokollbehandler for mailto:- og webcal:-lenker.",
+    "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}.",
     "unsupported": "Denne nettleseren eller tilkoblingen støtter ikke manuell registrering av protokollbehandlere. Det kan hende du likevel kan velge den installerte PWA-en i innstillingene for nettleseren eller operativsystemet.",
-    "mailto_label": "E-postlenker",
-    "mailto_description": "Åpne mailto:-lenker i {appName} med et forhåndsutfylt meldingsvindu.",
-    "protocol_open_mode_label": "Når mailto:- og webcal:-lenker åpnes",
+    "mailto_label": "Åpne e-postlenker i {appName}",
+    "mailto_description": "Et klikk på en e-postadresse på et nettsted starter en ny melding i {appName}.",
+    "protocol_open_mode_label": "Slik åpnes lenker",
     "protocol_open_mode_description": "Velg om {appName} skal åpne mailto:- og webcal:-lenker i en ny fane eller bruke en økt som allerede er åpen. Alternativet for aktiv økt krever tillatelse til varsler. Hvis nettleseren hindrer {appName} i å få fokus, kan du klikke på et varsel for å vise vinduet.",
     "protocol_open_mode_active_session": "Åpne i aktiv økt hvis mulig",
     "protocol_open_mode_new_tab": "Åpne alltid en ny fane",
     "focus_notification_title": "Åpne {appName}",
     "focus_notification_body": "Lenken ble åpnet i {appName}. Klikk for å vise vinduet.",
-    "webcal_label": "Kalenderlenker",
-    "webcal_description": "Åpne webcal:-lenker i {appName} med en forhåndsutfylt dialog for kalenderabonnement.",
-    "register_mailto": "Registrer e-postprogram",
-    "register_webcal": "Registrer kalenderprogram",
+    "webcal_label": "Åpne kalenderlenker i {appName}",
+    "webcal_description": "Et klikk på en kalenderlenke på et nettsted legger til kalenderen i {appName}.",
+    "register_mailto": "Bruk {appName} for e-postlenker",
+    "register_webcal": "Bruk {appName} for kalenderlenker",
     "mailto_registered": "Forespørsel om registrering av e-postprogram er sendt",
     "webcal_registered": "Forespørsel om registrering av kalenderprogram er sendt",
     "registration_failed": "Registrering av protokollbehandler mislyktes",
@@ -1643,7 +1643,7 @@
       },
       "favicon_unread_badge": {
         "label": "Antall uleste på faneikonet",
-        "description": "Vis antall uleste meldinger i innboksen som et merke på nettleserfaneikonet, slik at ny e-post er synlig når fanen ikke er fokusert. Deaktiver for å beholde ikonet uten merke."
+        "description": "Slik ser du ny e-post mens du jobber i en annen fane eller app."
       },
       "show_shared_mail_accounts": {
         "label": "Vis delte e-postkontoer",
@@ -1751,7 +1751,7 @@
         "relax": "Rolig"
       },
       "push": {
-        "title": "Bakgrunnsvarsler",
+        "title": "Varsler når {appName} er lukket",
         "description": "Motta systemvarsler om ny e-post selv når denne siden ikke er åpen. Varslene leveres via Bulwarks push-relé, som aldri ser innholdet i e-posten.",
         "relay_label": "Push-relé",
         "relay_desc": "Reléet som driftes av Bulwark, brukes som standard. Endre dette bare hvis du drifter et eget relé.",
@@ -1763,7 +1763,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Bakgrunnsvarsler er ikke tilgjengelige i demoen.",
         "status_busy": "Behandler...",
-        "enable": "Aktiver",
+        "enable": "Slå på for denne enheten",
         "reenable": "Registrer på nytt",
         "disable": "Deaktiver",
         "confirm_disable_title": "Vil du deaktivere bakgrunnsvarsler?",
@@ -1808,9 +1808,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Varslingslyd",
+        "title": "Lyd",
         "description": "Velg hvilken lyd som skal spilles av for varsler",
-        "choose": "Lyd",
+        "choose": "Tone",
         "choose_desc": "Velg en varseltone og klikk på høyttalerikonet for å forhåndsvise den"
       },
       "email": {
@@ -1818,7 +1818,7 @@
         "description": "Velg innstillinger for varsler om innkommende e-post",
         "enabled": "E-postvarsler",
         "enabled_desc": "Vis varsler når nye e-poster kommer",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved ny e-post",
         "sound_desc": "Spill av et lydvarsel når nye e-poster kommer",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1828,7 +1828,7 @@
         "description": "Velg innstillinger for varsler om kalenderhendelser",
         "enabled": "Hendelsesvarsler",
         "enabled_desc": "Vis varsler for kommende kalenderhendelser",
-        "sound": "Varslingslyd",
+        "sound": "Lyd ved påminnelser",
         "sound_desc": "Spill av et lydvarsel for kalenderpåminnelser"
       }
     },
@@ -1867,7 +1867,7 @@
       },
       "first_day": {
         "label": "Første dag i uken",
-        "description": "Start uken på søndag eller mandag",
+        "description": "Første dag i uken i kalendere",
         "sunday": "søndag",
         "monday": "mandag"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "Lesemaske",
         "description": "Demper alt i en melding unntatt noen få linjer rundt pekeren, slik at du holder styr på hvor du er."
-      },
-      "plain_language": {
-        "label": "Enkelt språk",
-        "description": "Enklere ord i innstillinger og feilmeldinger, og korte forklaringer av tekniske uttrykk. Tilgjengelig på engelsk og tysk."
       },
       "contrast": {
         "label": "Kontrast",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Vinduer",
+      "title": "Appens vinduer",
       "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
       "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
       "restore_label": "Åpne vinduer på nytt ved start",
@@ -6918,9 +6914,9 @@
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
     "enable_label": "Lås med en PIN-kode",
-    "enable_desc": "Av som standard. PIN-koden blir på denne enheten.",
+    "enable_desc": "PIN-koden blir på denne enheten.",
     "protects_desc": "Dette beskytter mot: PIN-koden holder folk ved denne enheten ute av appen. E-posten som er lagret her, får en ny nøkkel når du slår på låsen eller endrer PIN-koden, og det kan ta et øyeblikk. Den kan ikke stoppe et program som kjører på denne datamaskinen, en nettleserutvidelse du har installert, eller noen som kopierer appens filer og har tid til å prøve mange PIN-koder, så en lengre PIN-kode lønner seg. I skrivebordsappen krever det også påloggingen din på denne datamaskinen å prøve PIN-koder. Kontoen din på serveren berøres ikke.",
-    "enable_body": "Velg en PIN-kode. Du trenger den hver gang appen låses, og etter en ny lasting eller ny start.",
+    "enable_body": "Du trenger den hver gang appen låses, og etter en omstart.",
     "set_pin_title": "Velg en PIN-kode",
     "change_pin": "Endre PIN-kode…",
     "change_pin_title": "Endre PIN-koden",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, one {# minutt} other {# minutter}}",
     "blocked_seconds": "For mange forsøk. Prøv igjen om {count, plural, one {# sekund} other {# sekunder}}.",
     "blocked_minutes": "For mange forsøk. Prøv igjen om {count, plural, one {# minutt} other {# minutter}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Vanlige tidssoner",
+    "time_zone_all": "Alle tidssoner",
+    "time_zone_search": "Søk etter tidssone",
+    "time_zone_no_match": "Fant ingen tidssone",
+    "time_zone_desktop_description": "Vis tidspunkter for e-post og avtaler i denne tidssonen. Hvis du ikke velger en, brukes tidssonen til datamaskinen.",
+    "app_lock_desc_desktop": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
+    "app_lock_timeout_desc_desktop": "Tid uten bruk i et vindu.",
+    "app_lock_now_desc_desktop": "Låser alle vinduer med en gang.",
+    "app_lock_protects_toggle": "Hva beskytter dette mot?",
+    "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
+    "desktop_attention_title": "På denne datamaskinen"
   },
   "desktop_sign_in": {
     "server_needed": "Skriv inn serveradressen først.",
@@ -7206,7 +7215,7 @@
     "section_title": "Bruksdata og krasjrapporter",
     "section_description": "Begge er av til du slår dem på, og hver har sin egen bryter.",
     "telemetry_label": "Send bruksdata",
-    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appversjonen, Node-versjonen, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
+    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appens versjonsnumre, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
     "crash_label": "Send krasjrapporter",
     "crash_description": "Feil i appen sendes med en tilfeldig ID, filnavn fra appens egen kode og korte, rensede meldinger. Hvis selve appen krasjer, blir en krasjfil liggende på denne datamaskinen og forlater den bare hvis du sender den.",
     "crash_memory": "En krasjfil er en kopi av en del av appens minne da den krasjet. Bulwark fjerner brukernavn, adresser og påloggingstokener det finner, men en krasjfil kan likevel inneholde teksten i e-posten din.",

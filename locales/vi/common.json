@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Ứng dụng mặc định",
-    "description": "Chọn xem các liên kết email và lịch có mở trong {appName} hay không. Về mặt kỹ thuật, {appName} đăng ký làm trình xử lý giao thức cho các liên kết mailto: và webcal:.",
+    "description": "Chọn có mở liên kết email và lịch trong {appName} hay không.",
     "unsupported": "Trình duyệt hoặc kết nối này không hỗ trợ đăng ký trình xử lý giao thức thủ công. Bạn vẫn có thể sử dụng PWA đã cài đặt thông qua cài đặt trình duyệt hoặc hệ điều hành.",
-    "mailto_label": "Liên kết email",
-    "mailto_description": "Mở các liên kết mailto: trong {appName} bằng trình soạn thảo được điền sẵn.",
-    "protocol_open_mode_label": "Khi mở liên kết giao thức",
+    "mailto_label": "Mở liên kết email trong {appName}",
+    "mailto_description": "Nhấp vào một địa chỉ email trên trang web sẽ bắt đầu thư mới trong {appName}.",
+    "protocol_open_mode_label": "Cách mở liên kết",
     "protocol_open_mode_description": "Chọn xem {appName} mở liên kết mailto: và webcal: trong tab mới hay sử dụng lại phiên đang mở. Tùy chọn phiên hoạt động cần có quyền thông báo để bạn có thể nhấp vào thông báo dự phòng để đưa {appName} lên phía trước nếu trình duyệt chặn tiêu điểm.",
     "protocol_open_mode_active_session": "Mở trong phiên hoạt động nếu có thể",
     "protocol_open_mode_new_tab": "Luôn mở tab mới",
     "focus_notification_title": "Mở {appName}",
     "focus_notification_body": "Liên kết đã được mở trong {appName}. Bấm để đưa cửa sổ lên phía trước.",
-    "webcal_label": "Liên kết lịch",
-    "webcal_description": "Mở các liên kết webcal: trong {appName} bằng hộp thoại đăng ký lịch được điền sẵn.",
-    "register_mailto": "Đăng ký ứng dụng email",
-    "register_webcal": "Đăng ký ứng dụng lịch",
+    "webcal_label": "Mở liên kết lịch trong {appName}",
+    "webcal_description": "Nhấp vào một liên kết lịch trên trang web sẽ thêm lịch vào {appName}.",
+    "register_mailto": "Dùng {appName} cho liên kết email",
+    "register_webcal": "Dùng {appName} cho liên kết lịch",
     "mailto_registered": "Đã yêu cầu đăng ký trình xử lý email",
     "webcal_registered": "Đã yêu cầu đăng ký trình xử lý lịch",
     "registration_failed": "Đăng ký xử lý giao thức không thành công",
@@ -1655,7 +1655,7 @@
       },
       "favicon_unread_badge": {
         "label": "Số thư chưa đọc trên biểu tượng tab và ứng dụng",
-        "description": "Hiển thị số thư chưa đọc trong Hộp thư đến trên biểu tượng tab trình duyệt và biểu tượng ứng dụng đã cài đặt nếu được hỗ trợ, để bạn thấy thư mới khi tab không được chọn. Tắt để ẩn huy hiệu trên cả hai biểu tượng."
+        "description": "Để bạn thấy thư mới khi đang làm việc ở tab hoặc ứng dụng khác."
       },
       "show_shared_mail_accounts": {
         "label": "Hiển thị tài khoản thư được chia sẻ",
@@ -1763,7 +1763,7 @@
         "relax": "Thư giãn"
       },
       "push": {
-        "title": "Thông báo chạy nền",
+        "title": "Thông báo khi {appName} đang đóng",
         "description": "Nhận thông báo hệ thống về thư mới khi đóng trang web này. Thông báo được gửi qua máy chủ chuyển tiếp push của Bulwark; máy chủ này không bao giờ xem được nội dung thư.",
         "relay_label": "Máy chủ chuyển tiếp push",
         "relay_desc": "Máy chủ gửi thông báo cho bạn. Chọn một máy chủ trong số các máy chủ do quản trị viên cung cấp.",
@@ -1775,7 +1775,7 @@
         "status_lite": "Bulwark Lite không hỗ trợ Web Push; tính năng này cần máy chủ Bulwark.",
         "status_demo": "Thông báo nền không khả dụng trong bản demo.",
         "status_busy": "Đang xử lý…",
-        "enable": "Bật",
+        "enable": "Bật trên thiết bị này",
         "reenable": "Đăng ký lại",
         "disable": "Tắt",
         "confirm_disable_title": "Tắt thông báo chạy nền?",
@@ -1820,9 +1820,9 @@
         "result_disabled": "Đã tắt thông báo cho {count} tài khoản."
       },
       "sound_selection": {
-        "title": "Âm thanh thông báo",
+        "title": "Âm thanh",
         "description": "Chọn âm thanh phát khi có thông báo",
-        "choose": "Âm thanh",
+        "choose": "Nhạc chuông",
         "choose_desc": "Chọn âm báo rồi nhấn biểu tượng loa để nghe thử"
       },
       "email": {
@@ -1830,7 +1830,7 @@
         "description": "Cấu hình thông báo khi có thư đến",
         "enabled": "Thông báo qua email",
         "enabled_desc": "Hiển thị thông báo khi có thư mới",
-        "sound": "Âm thanh thông báo",
+        "sound": "Âm thanh khi có thư mới",
         "sound_desc": "Phát âm báo khi có thư mới",
         "inbox_only": "Chỉ Hộp thư đến",
         "inbox_only_desc": "Chỉ thông báo thư đến Hộp thư đến; bỏ qua thư được bộ lọc chuyển vào thư mục khác"
@@ -1840,7 +1840,7 @@
         "description": "Cấu hình thông báo cho sự kiện lịch",
         "enabled": "Thông báo sự kiện",
         "enabled_desc": "Hiển thị nhắc nhở về các sự kiện lịch sắp tới",
-        "sound": "Âm thanh thông báo",
+        "sound": "Âm thanh cho lời nhắc",
         "sound_desc": "Phát âm báo cho lời nhắc lịch"
       }
     },
@@ -1879,7 +1879,7 @@
       },
       "first_day": {
         "label": "Ngày đầu tuần",
-        "description": "Bắt đầu tuần vào Chủ nhật hoặc Thứ Hai",
+        "description": "Ngày đầu tuần trong lịch",
         "sunday": "Chủ nhật",
         "monday": "Thứ Hai"
       },
@@ -3202,10 +3202,6 @@
       "reading_mask": {
         "label": "Vùng tập trung khi đọc",
         "description": "Làm mờ mọi thứ trong thư ngoại trừ một vài dòng xung quanh con trỏ để giúp bạn giữ nguyên vị trí của mình."
-      },
-      "plain_language": {
-        "label": "Ngôn ngữ đơn giản",
-        "description": "Từ ngữ đơn giản hơn cho các cài đặt và thông báo lỗi cũng như giải thích ngắn gọn về các thuật ngữ kỹ thuật. Có sẵn bằng tiếng Anh và tiếng Đức."
       },
       "contrast": {
         "label": "Độ tương phản",
@@ -6833,7 +6829,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Cửa sổ",
+      "title": "Cửa sổ ứng dụng",
       "double_click_label": "Mở thư trong cửa sổ mới khi nhấp đúp",
       "double_click_description": "Nhấp một lần vẫn mở thư bên cạnh danh sách.",
       "restore_label": "Mở lại cửa sổ khi khởi động",
@@ -6930,9 +6926,9 @@
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
     "enable_label": "Khóa bằng mã PIN",
-    "enable_desc": "Mặc định tắt. Mã PIN chỉ ở trên thiết bị này.",
+    "enable_desc": "Mã PIN chỉ ở trên thiết bị này.",
     "protects_desc": "Điều này bảo vệ khỏi: mã PIN giữ người đang ở thiết bị này bên ngoài ứng dụng. Thư lưu ở đây nhận khóa mới khi bạn bật khóa hoặc đổi mã PIN, việc này có thể mất một lúc. Nó không thể ngăn một chương trình chạy trên máy tính này, một tiện ích trình duyệt bạn đã cài, hoặc người sao chép các tệp của ứng dụng và có thời gian thử nhiều mã PIN, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, việc thử mã PIN còn cần phiên đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
-    "enable_body": "Hãy chọn một mã PIN. Bạn cần nó mỗi khi ứng dụng khóa, và sau khi tải lại hoặc khởi động lại.",
+    "enable_body": "Bạn cần nó mỗi khi ứng dụng khóa và sau khi khởi động lại.",
     "set_pin_title": "Chọn mã PIN",
     "change_pin": "Đổi mã PIN…",
     "change_pin_title": "Đổi mã PIN",
@@ -6993,6 +6989,19 @@
     "timeout_option": "{count, plural, other {# phút}}",
     "blocked_seconds": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# giây}}.",
     "blocked_minutes": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# phút}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Múi giờ phổ biến",
+    "time_zone_all": "Tất cả múi giờ",
+    "time_zone_search": "Tìm múi giờ",
+    "time_zone_no_match": "Không tìm thấy múi giờ",
+    "time_zone_desktop_description": "Hiển thị giờ của thư và cuộc hẹn theo múi giờ này. Nếu bạn không chọn, múi giờ của máy tính sẽ được dùng.",
+    "app_lock_desc_desktop": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
+    "app_lock_timeout_desc_desktop": "Thời gian không dùng ở bất kỳ cửa sổ nào.",
+    "app_lock_now_desc_desktop": "Khóa ngay mọi cửa sổ.",
+    "app_lock_protects_toggle": "Điều này bảo vệ khỏi gì?",
+    "app_lock_timeout_hours": "{count, plural, other {# giờ}}",
+    "desktop_attention_title": "Trên máy tính này"
   },
   "desktop_sign_in": {
     "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
@@ -7218,7 +7227,7 @@
     "section_title": "Thông tin sử dụng và báo cáo sự cố",
     "section_description": "Cả hai đều tắt cho đến khi bạn bật, và mỗi mục có công tắc riêng.",
     "telemetry_label": "Gửi thông tin sử dụng",
-    "telemetry_description": "Mỗi ngày một lần: một ID ngẫu nhiên, phiên bản ứng dụng, phiên bản Node, hệ điều hành của bạn, ứng dụng đã chạy bao lâu và cách nó kết nối. Với máy chủ thư riêng, còn có các tính năng đang bật, số tài khoản ước tính và số tiện ích cùng chủ đề bạn có. Không bao giờ gửi thư, địa chỉ hay tên máy chủ.",
+    "telemetry_description": "Mỗi ngày một lần: một ID ngẫu nhiên, các số phiên bản của ứng dụng, hệ điều hành của bạn, ứng dụng đã chạy bao lâu và cách nó kết nối. Với máy chủ thư riêng, còn có các tính năng đang bật, số tài khoản ước tính và số tiện ích cùng chủ đề bạn có. Không bao giờ gửi thư, địa chỉ hay tên máy chủ.",
     "crash_label": "Gửi báo cáo sự cố",
     "crash_description": "Lỗi trong ứng dụng được gửi kèm một ID ngẫu nhiên, tên tệp từ mã của chính ứng dụng và thông báo ngắn đã được làm sạch. Nếu chính ứng dụng gặp sự cố, một tệp sự cố sẽ ở lại trên máy tính này và chỉ rời đi khi bạn gửi.",
     "crash_memory": "Tệp sự cố là bản sao một phần bộ nhớ của ứng dụng khi gặp sự cố. Bulwark xóa tên người dùng, địa chỉ và mã đăng nhập mà nó tìm thấy, nhưng tệp sự cố vẫn có thể chứa nội dung thư của bạn.",

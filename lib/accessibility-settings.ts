@@ -65,7 +65,6 @@ export interface AccessibilitySettings {
   paragraphSpacing: ParagraphSpacing;
   readingWidth: ReadingWidth;
   readingMask: boolean;
-  plainLanguage: boolean;
   // Motion
   reduceMotion: SystemToggle;
   pauseAnimatedImages: SystemToggle;
@@ -117,7 +116,6 @@ export const ACCESSIBILITY_DEFAULTS: AccessibilitySettings = {
   paragraphSpacing: 'normal',
   readingWidth: 'full',
   readingMask: false,
-  plainLanguage: false,
   reduceMotion: 'system',
   pauseAnimatedImages: 'system',
   focusRing: 'normal',
@@ -196,7 +194,7 @@ export function isAllowedAccessibilityValue(key: string, value: unknown): boolea
 export const UNLOCKABLE_SETTING_KEYS: ReadonlySet<string> = new Set([
   'fontSize', 'reduceMotion', 'contrast', 'reduceTransparency', 'underlineLinks', 'showColorNames', 'colorBlindPalette',
   'appFont', 'lineSpacing', 'letterSpacing', 'wordSpacing', 'paragraphSpacing', 'readingWidth', 'readingMask',
-  'plainLanguage', 'pauseAnimatedImages', 'focusRing', 'focusAlwaysVisible', 'largeTargets', 'largeCursor',
+  'pauseAnimatedImages', 'focusRing', 'focusAlwaysVisible', 'largeTargets', 'largeCursor',
   'openOnHover', 'showRowActionButton', 'nativeScrollbars', 'mailViewMode', 'mailTextScale', 'mailMinFontSize',
   'mailOverrideStyles', 'mailFitWidth', 'readAloudRate', 'readAloudVoice', 'visualAlerts', 'unreadCountStyle',
   'doNotDisturb', 'announceNewMail', 'announceRowPreview', 'simpleMode', 'simpleModePagedList', 'showAccessibilityButton',

@@ -263,9 +263,6 @@ export function AccessibilitySettings() {
         <SettingItem label={t('reading_mask.label')} description={t('reading_mask.description')}>
           <ToggleSwitch checked={settings.readingMask} onChange={(checked) => set('readingMask', checked)} />
         </SettingItem>
-        <SettingItem label={t('plain_language.label')} description={t('plain_language.description')}>
-          <ToggleSwitch checked={settings.plainLanguage} onChange={(checked) => set('plainLanguage', checked)} />
-        </SettingItem>
         <SettingItem label={tLinks('text.label')} description={tLinks('text.description')}>
           <LinkButton label={tRoot('settings.tabs.appearance')} onClick={() => goToSettings('appearance', 'text')} />
         </SettingItem>

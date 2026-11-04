@@ -155,7 +155,7 @@ export const SHARED_SETTINGS = [
   'calendarFreeScroll', 'calendarHoverPreview', 'showTasksOnCalendar',
   'groupContactsByLetter', 'sortContactsByLastName', 'showContactsDirectory',
   'showAccessibilityButton', 'lineSpacing', 'letterSpacing', 'wordSpacing', 'paragraphSpacing', 'readingWidth',
-  'readingMask', 'plainLanguage', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
+  'readingMask', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
   'focusAlwaysVisible', 'largeCursor', 'openOnHover', 'showRowActionButton', 'nativeScrollbars',
   'mailViewMode', 'mailTextScale', 'mailMinFontSize', 'mailOverrideStyles', 'mailFitWidth', 'readAloudRate',
   'composeFontFamily', 'composeFontSize', 'confirmDelete', 'confirmArchive', 'unreadCountStyle',

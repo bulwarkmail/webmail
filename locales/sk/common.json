@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Predvolené aplikácie",
-    "description": "Vyberte, či sa e-mailové a kalendárové odkazy otvárajú v aplikácii {appName}. {appName} sa registruje ako obslužná aplikácia protokolu pre odkazy mailto: a webcal:.",
+    "description": "Zvoľte, či sa odkazy na e-mail a kalendár otvárajú v {appName}.",
     "unsupported": "Tento prehľadávač alebo pripojenie nepodporuje manuálnu registráciu obslužnej aplikácie protokolu.",
-    "mailto_label": "E-mailové odkazy",
-    "mailto_description": "Otvoriť odkazy mailto: v aplikácii {appName} s predvyplneným editorom správy.",
-    "protocol_open_mode_label": "Pri otváraní odkazov protokolov",
+    "mailto_label": "Otvárať e-mailové odkazy v {appName}",
+    "mailto_description": "Kliknutie na e-mailovú adresu na webe začne novú správu v {appName}.",
+    "protocol_open_mode_label": "Ako sa odkazy otvárajú",
     "protocol_open_mode_description": "Vyberte, či má {appName} otvárať odkazy mailto: a webcal: v novej karte alebo znovu použiť otvorenú reláciu.",
     "protocol_open_mode_active_session": "Otvoriť v aktívnej relácii, ak je to možné",
     "protocol_open_mode_new_tab": "Vždy otvoriť novú kartu",
     "focus_notification_title": "Otvoriť {appName}",
     "focus_notification_body": "Odkaz bol otvorený v aplikácii {appName}. Kliknutím prenesú okno do popredia.",
-    "webcal_label": "Kalendárové odkazy",
-    "webcal_description": "Otvoriť odkazy webcal: v aplikácii {appName} s predvyplneným dialógom pre odber kalendára.",
-    "register_mailto": "Zaregistrovať e-mailovú aplikáciu",
-    "register_webcal": "Zaregistrovať kalendárovú aplikáciu",
+    "webcal_label": "Otvárať odkazy na kalendár v {appName}",
+    "webcal_description": "Kliknutie na odkaz na kalendár na webe pridá kalendár do {appName}.",
+    "register_mailto": "Používať {appName} pre e-mailové odkazy",
+    "register_webcal": "Používať {appName} pre odkazy na kalendár",
     "mailto_registered": "Registrácia obsluhy e-mailových odkazov bola požiadaná",
     "webcal_registered": "Registrácia obsluhy kalendárových odkazov bola požiadaná",
     "registration_failed": "Registrácia obslužnej aplikácie protokolu zlyhala",
@@ -1643,7 +1643,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Aby ste novú poštu videli aj pri práci v inej karte alebo aplikácii."
       },
       "show_shared_mail_accounts": {
         "label": "Zobraziť zdieľané poštové účty",
@@ -1763,9 +1763,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Zvuk oznámenia",
+        "title": "Zvuk",
         "description": "Vyberte zvuk, ktorý sa prehrá pri oznámení",
-        "choose": "Zvuk",
+        "choose": "Tón",
         "choose_desc": "Vyberte tón oznámenia a kliknutím na ikonu reproduktora si ho vypočujte"
       },
       "email": {
@@ -1773,7 +1773,7 @@
         "description": "Nakonfigurujte oznámenia pre prichádzajúce e-maily",
         "enabled": "E-mailové oznámenia",
         "enabled_desc": "Zobrazovať oznámenia pri príchode nových e-mailov",
-        "sound": "Zvuk oznámenia",
+        "sound": "Zvuk pri novej pošte",
         "sound_desc": "Prehrať zvukové upozornenie pri príchode nových e-mailov",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1783,11 +1783,11 @@
         "description": "Nakonfigurujte oznámenia pre udalosti kalendára",
         "enabled": "Oznámenia o udalostiach",
         "enabled_desc": "Zobrazovať upozornenia na nadchádzajúce udalosti v kalendári",
-        "sound": "Zvuk oznámenia",
+        "sound": "Zvuk pri pripomienkach",
         "sound_desc": "Prehrať zvukové upozornenie pre pripomenutia kalendára"
       },
       "push": {
-        "title": "Oznámenia na pozadí",
+        "title": "Upozornenia, keď je {appName} zatvorený",
         "description": "Prijímať systémové oznámenia o novej pošte, keď je táto stránka zatvorená. Doručované cez push relay Bulwark.",
         "relay_label": "Push relay",
         "relay_desc": "Predvolený je hostovaný relay Bulwark. Zmeňte iba ak používate vlastný hosting.",
@@ -1799,7 +1799,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Oznámenia na pozadí nie sú v ukážke k dispozícii.",
         "status_busy": "Pracujem…",
-        "enable": "Povoliť",
+        "enable": "Zapnúť v tomto zariadení",
         "reenable": "Znovu zaregistrovať",
         "disable": "Zakázať",
         "confirm_disable_title": "Zakázať oznámenia na pozadí?",
@@ -1867,7 +1867,7 @@
       },
       "first_day": {
         "label": "Prvý deň v týždni",
-        "description": "Začiatok týždňa v nedeľu alebo v pondelok",
+        "description": "Prvý deň týždňa v kalendároch",
         "sunday": "Nedeľa",
         "monday": "Pondelok"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "Maska na čítanie",
         "description": "V správe zatemní všetko okrem niekoľkých riadkov okolo ukazovateľa, aby ste nestratili miesto."
-      },
-      "plain_language": {
-        "label": "Jednoduchý jazyk",
-        "description": "Jednoduchšie formulácie v nastaveniach a chybových hláseniach a krátke vysvetlenia odborných pojmov. K dispozícii v angličtine a nemčine."
       },
       "contrast": {
         "label": "Kontrast",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Okná",
+      "title": "Okná aplikácie",
       "double_click_label": "Otvárať správy v novom okne dvojitým kliknutím",
       "double_click_description": "Jedným kliknutím sa správa stále otvorí vedľa zoznamu.",
       "restore_label": "Pri spustení znova otvoriť okná",
@@ -6918,9 +6914,9 @@
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase nečinnosti žiada PIN v každom okne a na každej karte. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
     "enable_label": "Zamykať kódom PIN",
-    "enable_desc": "V predvolenom stave vypnuté. PIN zostáva na tomto zariadení.",
+    "enable_desc": "PIN zostáva na tomto zariadení.",
     "protects_desc": "Pred čím to chráni: PIN nepustí do aplikácie nikoho, kto je pri tomto zariadení. Pošta uložená tu dostane nový kľúč, keď zámok zapnete alebo zmeníte PIN, čo môže chvíľu trvať. Nezastaví program spustený na tomto počítači, rozšírenie prehliadača, ktoré ste nainštalovali, ani niekoho, kto skopíruje súbory aplikácie a má čas skúšať veľa PIN-ov, takže dlhší PIN sa oplatí. V počítačovej aplikácii je na skúšanie PIN-ov potrebné aj vaše prihlásenie na tomto počítači. Váš účet na serveri to neovplyvní.",
-    "enable_body": "Zvoľte PIN. Budete ho potrebovať pri každom zamknutí aplikácie a po opätovnom načítaní alebo novom spustení.",
+    "enable_body": "Budete ho potrebovať pri každom zamknutí aplikácie a po reštarte.",
     "set_pin_title": "Zvoľte PIN",
     "change_pin": "Zmeniť PIN…",
     "change_pin_title": "Zmeniť PIN",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, one {# minúta} few {# minúty} many {# minúty} other {# minút}}",
     "blocked_seconds": "Príliš veľa pokusov. Skúste to o {count, plural, one {# sekundu} few {# sekundy} many {# sekundy} other {# sekúnd}}.",
     "blocked_minutes": "Príliš veľa pokusov. Skúste to o {count, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Bežné časové pásma",
+    "time_zone_all": "Všetky časové pásma",
+    "time_zone_search": "Hľadať časové pásmo",
+    "time_zone_no_match": "Nenašlo sa žiadne časové pásmo",
+    "time_zone_desktop_description": "Zobrazovať časy pošty a stretnutí v tomto časovom pásme. Ak žiadne nevyberiete, použije sa časové pásmo počítača.",
+    "app_lock_desc_desktop": "Po čase nečinnosti žiada PIN v každom okne. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
+    "app_lock_timeout_desc_desktop": "Čas bez používania v ktoromkoľvek okne.",
+    "app_lock_now_desc_desktop": "Zamkne hneď všetky okná.",
+    "app_lock_protects_toggle": "Pred čím to chráni?",
+    "app_lock_timeout_hours": "{count, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodín}}",
+    "desktop_attention_title": "Na tomto počítači"
   },
   "desktop_sign_in": {
     "server_needed": "Najprv zadajte adresu servera.",
@@ -7206,7 +7215,7 @@
     "section_title": "Údaje o používaní a hlásenia o zlyhaniach",
     "section_description": "Oboje je vypnuté, kým to nezapnete, a každé má vlastný prepínač.",
     "telemetry_label": "Odosielať údaje o používaní",
-    "telemetry_description": "Raz denne: náhodné ID, verzia aplikácie, verzia Node, váš operačný systém, ako dlho aplikácia beží a ako sa pripája. Pri vlastnom poštovom serveri aj zapnuté funkcie, približný počet účtov a počet doplnkov a motívov. Nikdy pošta, adresy ani názvy serverov.",
+    "telemetry_description": "Raz denne: náhodné ID, čísla verzií aplikácie, váš operačný systém, ako dlho aplikácia beží a ako sa pripája. Pri vlastnom poštovom serveri aj zapnuté funkcie, približný počet účtov a počet doplnkov a motívov. Nikdy pošta, adresy ani názvy serverov.",
     "crash_label": "Odosielať hlásenia o zlyhaniach",
     "crash_description": "Chyby v aplikácii sa odosielajú s náhodným ID, názvami súborov z kódu aplikácie a krátkymi, očistenými správami. Keď zlyhá samotná aplikácia, súbor o zlyhaní zostane v tomto počítači a odíde len vtedy, keď ho odošlete.",
     "crash_memory": "Súbor o zlyhaní je kópia časti pamäte aplikácie v okamihu zlyhania. Bulwark odstráni používateľské mená, adresy a prihlasovacie tokeny, ktoré nájde, ale súbor o zlyhaní môže aj tak obsahovať text vašej pošty.",

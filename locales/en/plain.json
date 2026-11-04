@@ -184,7 +184,6 @@
         "description": "Show how many messages a folder or tag has in total, next to the number of unread ones."
       },
       "favicon_unread_badge": {
-        "description": "Show the number of unread messages on the browser tab and on the app icon. Then you see new mail even when you use another tab."
       },
       "show_shared_mail_accounts": {
         "description": "Show the folders of mailboxes that others share with you, under Shared in the folder list. Turn this off to hide them all, or hide single accounts below. Their calendars and contacts stay."

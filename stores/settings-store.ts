@@ -2101,6 +2101,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.protocolOpenMode = state.protocolMailtoOpenMode;
         }
         delete state.protocolMailtoOpenMode;
+        // Plain wording became the only wording: the switch is gone.
+        delete state.plainLanguage;
         // Never read: drafts save 2 s after the last change.
         delete state.autoSaveDraftInterval;
         // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to

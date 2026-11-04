@@ -1,0 +1,237 @@
+"use client";
+
+import { useState, useRef, useEffect, useMemo, useId, type ReactNode } from "react";
+import { Check, ChevronDown, Search } from '@/components/icons';
+import { cn } from '@/lib/utils';
+
+export interface SearchableOption {
+  value: string;
+  label: string;
+  /** Shown after the label in smaller text. */
+  hint?: string;
+  /** Extra text a search should match (names in other languages, offsets). */
+  keywords?: string;
+  /** Options with the same group are listed under its heading while nothing is typed. */
+  group?: string;
+  icon?: ReactNode;
+}
+
+// Case- and accent-insensitive, so "espanol" finds "Español".
+export function foldForSearch(text: string): string {
+  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+}
+
+interface SearchableSelectProps {
+  value: string;
+  options: SearchableOption[];
+  onSelect: (value: string) => void;
+  /** Accessible name of the button, when its text doesn't say what it picks. */
+  ariaLabel?: string;
+  searchLabel: string;
+  noMatchLabel: string;
+  /** What the button shows; the selected option's icon and label by default. */
+  renderValue?: (option: SearchableOption | undefined) => ReactNode;
+  className?: string;
+  menuClassName?: string;
+}
+
+/**
+ * A button that opens a list with a search box on top: type to filter,
+ * arrows and Page Up/Down to move, Enter to pick, Escape to close. Used by
+ * the language picker and the time zone picker.
+ */
+export function SearchableSelect({
+  value,
+  options,
+  onSelect,
+  ariaLabel,
+  searchLabel,
+  noMatchLabel,
+  renderValue,
+  className,
+  menuClassName,
+}: SearchableSelectProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const listId = useId();
+
+  const current = options.find((o) => o.value === value);
+
+  const entries = useMemo(
+    () => options.map((o) => ({ ...o, haystack: foldForSearch([o.label, o.value, o.hint, o.keywords].filter(Boolean).join(' ')) })),
+    [options],
+  );
+
+  const results = useMemo(() => {
+    const needle = foldForSearch(query.trim());
+    if (!needle) return entries;
+    // Every word typed has to match, each anywhere.
+    const words = needle.split(/\s+/);
+    // An option listed in two groups shows once in the results.
+    const seen = new Set<string>();
+    return entries.filter((e) => {
+      if (seen.has(e.value) || !words.every((w) => e.haystack.includes(w))) return false;
+      seen.add(e.value);
+      return true;
+    });
+  }, [entries, query]);
+
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) buttonRef.current?.focus();
+  };
+
+  const pick = (next: string) => {
+    onSelect(next);
+    close(true);
+  };
+
+  // Start on the current value each time the menu opens.
+  const toggle = () => {
+    if (open) return close(false);
+    setQuery('');
+    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, active, results]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActive((i) => Math.min(results.length - 1, i + 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActive((i) => Math.max(0, i - 1));
+        break;
+      case 'PageDown':
+        e.preventDefault();
+        setActive((i) => Math.min(results.length - 1, i + 8));
+        break;
+      case 'PageUp':
+        e.preventDefault();
+        setActive((i) => Math.max(0, i - 8));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (results[active]) pick(results[active].value);
+        break;
+      case 'Escape':
+        e.preventDefault();
+        e.stopPropagation();
+        close(true);
+        break;
+      case 'Tab':
+        close(false);
+        break;
+    }
+  };
+
+  const showGroups = !query.trim();
+
+  return (
+    <div ref={containerRef} className={cn("relative", className)}>
+      <button
+        type="button"
+        ref={buttonRef}
+        onClick={toggle}
+        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground hover:border-muted-foreground focus:outline-hidden transition-colors duration-150 cursor-pointer w-full"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+      >
+        {renderValue ? renderValue(current) : (
+          <>
+            {current?.icon}
+            <span className="flex-1 truncate text-start">{current?.label ?? value}</span>
+          </>
+        )}
+        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className={cn("absolute end-0 z-50 mt-1 w-64 max-w-[80vw] rounded-md border border-border bg-background shadow-lg", menuClassName)}>
+          <div className="flex items-center gap-2 border-b border-border px-3">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              ref={inputRef}
+              type="text"
+              role="combobox"
+              aria-expanded="true"
+              aria-controls={listId}
+              aria-activedescendant={results[active] ? `${listId}-${active}` : undefined}
+              aria-label={searchLabel}
+              placeholder={searchLabel}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setActive(0);
+              }}
+              onKeyDown={onInputKeyDown}
+              className="w-full bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+          <ul ref={listRef} id={listId} role="listbox" aria-label={ariaLabel} className="max-h-72 overflow-auto py-1">
+            {results.map((option, index) => {
+              const heading = showGroups && option.group && option.group !== results[index - 1]?.group ? option.group : null;
+              return [
+                heading && (
+                  <li key={`group-${heading}`} role="presentation" className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                    {heading}
+                  </li>
+                ),
+                <li
+                  key={`${option.group ?? ''}:${option.value}`}
+                  id={`${listId}-${index}`}
+                  data-index={index}
+                  role="option"
+                  aria-selected={option.value === value}
+                  onMouseMove={() => setActive(index)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pick(option.value)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer",
+                    index === active ? "bg-accent text-accent-foreground" : "text-foreground"
+                  )}
+                >
+                  {option.icon}
+                  <span className="truncate" dir="auto">{option.label}</span>
+                  {option.hint && <span className="truncate text-xs text-muted-foreground">{option.hint}</span>}
+                  {option.value === value && <Check className="ms-auto h-4 w-4 shrink-0" />}
+                </li>,
+              ];
+            })}
+            {results.length === 0 && (
+              <li className="px-3 py-2 text-sm text-muted-foreground">{noMatchLabel}</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

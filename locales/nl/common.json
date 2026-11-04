@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Standaardapps",
-    "description": "Kies of e-mail- en kalenderlinks in {appName} worden geopend. Technisch registreert {appName} zich als protocolhandler voor mailto:- en webcal:-links.",
+    "description": "Kies of e-mail- en agendalinks in {appName} openen.",
     "unsupported": "Deze browser of verbinding ondersteunt geen handmatige registratie van protocolhandlers. Mogelijk kun je de geïnstalleerde PWA nog gebruiken via de browser- of systeeminstellingen.",
-    "mailto_label": "E-maillinks",
-    "mailto_description": "Opent mailto:-links in {appName} met een vooraf ingevulde opsteller.",
-    "protocol_open_mode_label": "Bij het openen van protocollinks",
+    "mailto_label": "E-maillinks openen in {appName}",
+    "mailto_description": "Klikken op een e-mailadres op een website begint een nieuw bericht in {appName}.",
+    "protocol_open_mode_label": "Hoe links openen",
     "protocol_open_mode_description": "Kies of {appName} mailto:- en webcal:-links in een nieuw tabblad opent of een geopende sessie hergebruikt. Voor de optie actieve sessie is toestemming voor meldingen nodig, zodat je op een fallbackmelding kunt klikken om {appName} naar voren te halen als de browser focus blokkeert.",
     "protocol_open_mode_active_session": "Indien mogelijk openen in actieve sessie",
     "protocol_open_mode_new_tab": "Altijd een nieuw tabblad openen",
     "focus_notification_title": "{appName} openen",
     "focus_notification_body": "De link is geopend in {appName}. Klik om het venster naar voren te halen.",
-    "webcal_label": "Kalenderlinks",
-    "webcal_description": "Opent webcal:-links in {appName} met een vooraf ingevuld dialoogvenster voor kalenderabonnementen.",
-    "register_mailto": "E-mailapp registreren",
-    "register_webcal": "Kalenderapp registreren",
+    "webcal_label": "Agendalinks openen in {appName}",
+    "webcal_description": "Klikken op een agendalink op een website voegt de agenda toe in {appName}.",
+    "register_mailto": "{appName} gebruiken voor e-maillinks",
+    "register_webcal": "{appName} gebruiken voor agendalinks",
     "mailto_registered": "Registratie van e-mailhandler aangevraagd",
     "webcal_registered": "Registratie van kalenderhandler aangevraagd",
     "registration_failed": "Registratie van protocolhandler mislukt",
@@ -1640,7 +1640,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Zo ziet u nieuwe mail terwijl u in een ander tabblad of andere app werkt."
       },
       "show_shared_mail_accounts": {
         "label": "Gedeelde mailaccounts tonen",
@@ -1760,9 +1760,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Meldingsgeluid",
+        "title": "Geluid",
         "description": "Kies welk geluid wordt afgespeeld voor meldingen",
-        "choose": "Geluid",
+        "choose": "Toon",
         "choose_desc": "Selecteer een meldingstoon en klik op het luidsprekerpictogram voor een voorbeeld"
       },
       "email": {
@@ -1770,7 +1770,7 @@
         "description": "Meldingen voor inkomende e-mails configureren",
         "enabled": "E-mailmeldingen",
         "enabled_desc": "Meldingen tonen wanneer nieuwe e-mails binnenkomen",
-        "sound": "Meldingsgeluid",
+        "sound": "Geluid bij nieuwe mail",
         "sound_desc": "Een geluid afspelen wanneer nieuwe e-mails binnenkomen",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1780,7 +1780,7 @@
         "description": "Meldingen voor agenda-evenementen configureren",
         "enabled": "Evenementmeldingen",
         "enabled_desc": "Waarschuwingen tonen voor aankomende agenda-evenementen",
-        "sound": "Meldingsgeluid",
+        "sound": "Geluid bij herinneringen",
         "sound_desc": "Een geluid afspelen voor agendaherinneringen"
       },
       "push": {
@@ -1788,7 +1788,7 @@
         "confirm_disable_title": "Achtergrondmeldingen uitschakelen?",
         "description": "Ontvang systeemmeldingen voor nieuwe e-mail wanneer deze site gesloten is. Geleverd via de Bulwark-pushrelay; de relay ziet nooit e-mailinhoud.",
         "disable": "Uitschakelen",
-        "enable": "Inschakelen",
+        "enable": "Aanzetten op dit apparaat",
         "dismiss_aria": "Meldingsvenster sluiten",
         "ios_hint": "Installeer de site op iOS eerst op het beginscherm – Safari levert Web Push alleen aan geïnstalleerde PWA's.",
         "reenable": "Opnieuw registreren",
@@ -1802,7 +1802,7 @@
         "status_unsupported": "Deze browser ondersteunt geen Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Achtergrondmeldingen zijn niet beschikbaar in de demo.",
-        "title": "Achtergrondmeldingen",
+        "title": "Meldingen als {appName} gesloten is",
         "devices_title": "Geregistreerde apparaten",
         "devices_desc": "Alle apparaten die achtergrondmeldingen voor dit account ontvangen. Trek je er een in, dan stopt de ontvangst meteen.",
         "devices_loading": "Geregistreerde apparaten laden…",
@@ -1864,7 +1864,7 @@
       },
       "first_day": {
         "label": "Eerste dag van de week",
-        "description": "Begin de week op zondag of maandag",
+        "description": "Eerste dag van de week in agenda's",
         "sunday": "Zondag",
         "monday": "Maandag"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "Leesmasker",
         "description": "Dimt alles in een bericht behalve een paar regels rond de aanwijzer, zodat je je plek niet kwijtraakt."
-      },
-      "plain_language": {
-        "label": "Makkelijke taal",
-        "description": "Eenvoudigere formuleringen bij instellingen en foutmeldingen, en korte uitleg bij technische termen. Beschikbaar in het Engels en Duits."
       },
       "contrast": {
         "label": "Contrast",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Vensters",
+      "title": "Vensters van de app",
       "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
       "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
       "restore_label": "Vensters opnieuw openen bij het starten",
@@ -6918,9 +6914,9 @@
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
     "enable_label": "Vergrendelen met een pincode",
-    "enable_desc": "Standaard uit. De pincode blijft op dit apparaat.",
+    "enable_desc": "De pincode blijft op dit apparaat.",
     "protects_desc": "Waartegen dit beschermt: de pincode houdt iemand bij dit apparaat uit de app. De mail die hier staat krijgt een nieuwe sleutel als je de vergrendeling aanzet of de pincode wijzigt, wat even kan duren. Het kan niet tegenhouden: een programma op deze computer, een browserextensie die je hebt geïnstalleerd, of iemand die de bestanden van de app kopieert en tijd heeft om veel pincodes te proberen, dus een langere pincode is de moeite waard. In de desktop-app is voor het proberen van pincodes ook je aanmelding op deze computer nodig. Je account op de server verandert hierdoor niet.",
-    "enable_body": "Kies een pincode. Die heeft u nodig telkens als de app vergrendelt, en na herladen of opnieuw starten.",
+    "enable_body": "U heeft hem nodig telkens als de app vergrendelt en na een herstart.",
     "set_pin_title": "Kies een pincode",
     "change_pin": "Pincode wijzigen…",
     "change_pin_title": "De pincode wijzigen",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, one {# minuut} other {# minuten}}",
     "blocked_seconds": "Te veel pogingen. Probeer het over {count, plural, one {# seconde} other {# seconden}} opnieuw.",
     "blocked_minutes": "Te veel pogingen. Probeer het over {count, plural, one {# minuut} other {# minuten}} opnieuw."
+  },
+  "uxs_general": {
+    "time_zone_common": "Veelgebruikte tijdzones",
+    "time_zone_all": "Alle tijdzones",
+    "time_zone_search": "Tijdzone zoeken",
+    "time_zone_no_match": "Geen tijdzone gevonden",
+    "time_zone_desktop_description": "Toon de tijden van mail en afspraken in deze tijdzone. Als u er geen kiest, wordt de tijdzone van uw computer gebruikt.",
+    "app_lock_desc_desktop": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
+    "app_lock_timeout_desc_desktop": "Tijd zonder gebruik in een venster.",
+    "app_lock_now_desc_desktop": "Vergrendelt alle vensters meteen.",
+    "app_lock_protects_toggle": "Waartegen beschermt dit?",
+    "app_lock_timeout_hours": "{count, plural, one {# uur} other {# uur}}",
+    "desktop_attention_title": "Op deze computer"
   },
   "desktop_sign_in": {
     "server_needed": "Vul eerst het adres van de server in.",
@@ -7206,7 +7215,7 @@
     "section_title": "Gebruiksgegevens en crashrapporten",
     "section_description": "Beide staan uit totdat je ze aanzet, en elk heeft een eigen schakelaar.",
     "telemetry_label": "Gebruiksgegevens verzenden",
-    "telemetry_description": "Eén keer per dag: een willekeurige ID, de appversie, de Node-versie, je besturingssysteem, hoe lang de app al draait en hoe hij verbinding maakt. Met je eigen mailserver ook welke functies aan staan, een ruw aantal accounts en hoeveel plug-ins en thema's je hebt. Nooit e-mail, adressen of servernamen.",
+    "telemetry_description": "Eén keer per dag: een willekeurige ID, de versienummers van de app, je besturingssysteem, hoe lang de app al draait en hoe hij verbinding maakt. Met je eigen mailserver ook welke functies aan staan, een ruw aantal accounts en hoeveel plug-ins en thema's je hebt. Nooit e-mail, adressen of servernamen.",
     "crash_label": "Crashrapporten verzenden",
     "crash_description": "Fouten in de app gaan mee met een willekeurige ID, bestandsnamen uit de eigen code van de app en korte, opgeschoonde meldingen. Als de app zelf crasht, blijft er een crashbestand op deze computer staan dat alleen weggaat als jij het verzendt.",
     "crash_memory": "Een crashbestand is een kopie van een deel van het geheugen van de app op het moment van de crash. Bulwark verwijdert gebruikersnamen, adressen en aanmeldtokens die het vindt, maar een crashbestand kan nog steeds de tekst van je e-mail bevatten.",

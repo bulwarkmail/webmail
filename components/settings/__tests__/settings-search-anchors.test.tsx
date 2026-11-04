@@ -153,6 +153,7 @@ describe('settings search index', () => {
     const problems: string[] = [];
     for (const [tab, entries] of Object.entries(tabSearchEntries)) {
       for (const entry of entries) {
+        // Rows that name the app show the stock name, as the index does.
         const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
         const variant = out[entry.when ?? 'base'];
         const parts = TAB_PAGES[tab].map((page) => variant[page]);

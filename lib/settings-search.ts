@@ -137,7 +137,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.accessibility.paragraph_spacing.label' },
     { label: 'settings.accessibility.reading_width.label' },
     { label: 'settings.accessibility.reading_mask.label' },
-    { label: 'settings.accessibility.plain_language.label' },
     { label: 'settings.accessibility.sections.contrast' },
     { label: 'settings.accessibility.contrast.label' },
     { label: 'settings.accessibility.transparency.label' },

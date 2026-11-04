@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "默认应用",
-    "description": "选择是否在 {appName} 中打开电子邮件和日历链接。从技术上讲，{appName} 会注册为 mailto: 和 webcal: 链接的协议处理程序。",
+    "description": "选择是否在 {appName} 中打开邮件和日历链接。",
     "unsupported": "此浏览器或连接不支持手动注册协议处理程序。你仍可尝试通过浏览器或系统设置使用已安装的 PWA。",
-    "mailto_label": "电子邮件链接",
-    "mailto_description": "在 {appName} 中打开 mailto: 链接，并预先填好撰写窗口。",
-    "protocol_open_mode_label": "打开协议链接时",
+    "mailto_label": "在 {appName} 中打开邮件链接",
+    "mailto_description": "点击网站上的邮件地址会在 {appName} 中新建邮件。",
+    "protocol_open_mode_label": "链接的打开方式",
     "protocol_open_mode_description": "选择 {appName} 是在新标签页中打开 mailto: 和 webcal: 链接，还是复用已打开的会话。活动会话选项需要通知权限，这样当浏览器阻止聚焦时，你可以点击备用通知将 {appName} 窗口带到前台。",
     "protocol_open_mode_active_session": "尽可能在活动会话中打开",
     "protocol_open_mode_new_tab": "始终打开新标签页",
     "focus_notification_title": "打开 {appName}",
     "focus_notification_body": "链接已在 {appName} 中打开。点击可将窗口带到前台。",
-    "webcal_label": "日历链接",
-    "webcal_description": "在 {appName} 中打开 webcal: 链接，并预先填好日历订阅对话框。",
-    "register_mailto": "注册电子邮件应用",
-    "register_webcal": "注册日历应用",
+    "webcal_label": "在 {appName} 中打开日历链接",
+    "webcal_description": "点击网站上的日历链接会在 {appName} 中添加该日历。",
+    "register_mailto": "使用 {appName} 打开邮件链接",
+    "register_webcal": "使用 {appName} 打开日历链接",
     "mailto_registered": "已请求注册电子邮件处理程序",
     "webcal_registered": "已请求注册日历处理程序",
     "registration_failed": "协议处理程序注册失败",
@@ -1640,7 +1640,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "这样在其他标签页或应用中工作时也能看到新邮件。"
       },
       "show_shared_mail_accounts": {
         "label": "显示共享邮件账户",
@@ -1760,9 +1760,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "通知声音",
+        "title": "声音",
         "description": "选择通知时播放的声音",
-        "choose": "声音",
+        "choose": "铃声",
         "choose_desc": "选择通知音并单击扬声器图标进行预览"
       },
       "email": {
@@ -1770,7 +1770,7 @@
         "description": "配置传入邮件的通知",
         "enabled": "邮件通知",
         "enabled_desc": "新邮件到达时显示通知",
-        "sound": "通知声音",
+        "sound": "新邮件提示音",
         "sound_desc": "新邮件到达时播放音频提醒",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1780,7 +1780,7 @@
         "description": "配置日历事件的通知",
         "enabled": "事件通知",
         "enabled_desc": "显示即将发生的日历事件的提醒",
-        "sound": "通知声音",
+        "sound": "提醒提示音",
         "sound_desc": "播放日历提醒的音频提醒"
       },
       "push": {
@@ -1788,7 +1788,7 @@
         "confirm_disable_title": "禁用后台通知？",
         "description": "在此网站关闭时接收新邮件的系统通知。通过 Bulwark 推送中继传送；中继永远不会看到邮件内容。",
         "disable": "禁用",
-        "enable": "启用",
+        "enable": "在此设备上开启",
         "dismiss_aria": "关闭通知提示",
         "ios_hint": "在 iOS 上，请先将网站安装到主屏幕 – Safari 仅向已安装的 PWA 发送 Web Push。",
         "reenable": "重新注册",
@@ -1802,7 +1802,7 @@
         "status_unsupported": "此浏览器不支持 Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "演示版不提供后台通知。",
-        "title": "后台通知",
+        "title": "{appName} 关闭时的通知",
         "devices_title": "已注册的设备",
         "devices_desc": "已注册接收此账户后台通知的所有设备。撤销后，该设备会立即停止接收。",
         "devices_loading": "正在加载已注册的设备…",
@@ -1864,7 +1864,7 @@
       },
       "first_day": {
         "label": "一周的第一天",
-        "description": "从周日或周一开始一周",
+        "description": "日历中一周的第一天",
         "sunday": "周日",
         "monday": "周一"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "阅读遮罩",
         "description": "将邮件中指针周围几行以外的内容调暗，帮助您不丢失阅读位置。"
-      },
-      "plain_language": {
-        "label": "通俗语言",
-        "description": "设置和错误提示使用更简单的措辞，并为技术术语提供简短说明。支持英语和德语。"
       },
       "contrast": {
         "label": "对比度",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "窗口",
+      "title": "应用窗口",
       "double_click_label": "双击时在新窗口中打开邮件",
       "double_click_description": "单击仍会在列表旁打开邮件。",
       "restore_label": "启动时重新打开窗口",
@@ -6918,9 +6914,9 @@
     "section_title": "应用锁",
     "section_desc": "在一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,在有人输入 PIN 之前,应用无法读取存储在此设备上的邮件。",
     "enable_label": "使用 PIN 锁定",
-    "enable_desc": "默认关闭。PIN 只保存在此设备上。",
+    "enable_desc": "PIN 只保存在此设备上。",
     "protects_desc": "它能防范什么:PIN 让此设备旁的人无法进入应用。当你开启锁定或更改 PIN 时,这里存储的邮件会获得新密钥,这可能需要一点时间。它无法阻止在这台电脑上运行的程序、你安装的浏览器扩展,也无法阻止复制应用文件并有时间尝试大量 PIN 的人,因此较长的 PIN 是值得的。在桌面应用中,尝试 PIN 还需要你在这台电脑上的登录。你在服务器上的账户不受影响。",
-    "enable_body": "请选择一个 PIN。每次应用锁定时以及重新加载或重新启动后都需要它。",
+    "enable_body": "每次应用锁定时以及重新启动后都需要它。",
     "set_pin_title": "选择 PIN",
     "change_pin": "更改 PIN…",
     "change_pin_title": "更改 PIN",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, other {# 分钟}}",
     "blocked_seconds": "尝试次数过多。请在 {count, plural, other {# 秒}}后重试。",
     "blocked_minutes": "尝试次数过多。请在 {count, plural, other {# 分钟}}后重试。"
+  },
+  "uxs_general": {
+    "time_zone_common": "常用时区",
+    "time_zone_all": "所有时区",
+    "time_zone_search": "搜索时区",
+    "time_zone_no_match": "未找到时区",
+    "time_zone_desktop_description": "以此时区显示邮件和日程的时间。如果不选择，则使用电脑的时区。",
+    "app_lock_desc_desktop": "在一段时间未使用后，在每个窗口中要求输入 PIN。锁定期间，在有人输入 PIN 之前，应用无法读取存储在此设备上的邮件。",
+    "app_lock_timeout_desc_desktop": "任一窗口未使用的时间。",
+    "app_lock_now_desc_desktop": "立即锁定所有窗口。",
+    "app_lock_protects_toggle": "这能防范什么？",
+    "app_lock_timeout_hours": "{count, plural, other {# 小时}}",
+    "desktop_attention_title": "在这台电脑上"
   },
   "desktop_sign_in": {
     "server_needed": "请先输入服务器地址。",
@@ -7206,7 +7215,7 @@
     "section_title": "使用信息和崩溃报告",
     "section_description": "两者在您开启之前都处于关闭状态，并且各有独立的开关。",
     "telemetry_label": "发送使用信息",
-    "telemetry_description": "每天一次：一个随机 ID、应用版本、Node 版本、您的操作系统、应用已运行多久以及连接方式。使用自己的邮件服务器时，还包括已开启的功能、大致的帐户数量以及插件和主题的数量。绝不发送邮件、地址或服务器名称。",
+    "telemetry_description": "每天一次：一个随机 ID、应用的版本号、您的操作系统、应用已运行多久以及连接方式。使用自己的邮件服务器时，还包括已开启的功能、大致的帐户数量以及插件和主题的数量。绝不发送邮件、地址或服务器名称。",
     "crash_label": "发送崩溃报告",
     "crash_description": "应用中的错误会连同一个随机 ID、应用自身代码的文件名和经过清理的简短消息一起发送。如果应用本身崩溃，崩溃文件会留在这台电脑上，只有您发送时才会离开。",
     "crash_memory": "崩溃文件是崩溃时应用部分内存的副本。Bulwark 会删除它找到的用户名、地址和登录令牌，但崩溃文件仍可能包含您邮件的文本。",

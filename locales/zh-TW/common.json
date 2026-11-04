@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "預設應用程式",
-    "description": "選擇電子郵件與行事曆連結是否要在 {appName} 開啟。{appName} 會註冊為 mailto: 與 webcal: 連結的通訊協定處理常式。",
+    "description": "選擇是否在 {appName} 中開啟郵件和行事曆連結。",
     "unsupported": "此瀏覽器或連線不支援手動註冊通訊協定處理常式。您仍可嘗試透過瀏覽器或作業系統設定，使用已安裝的 PWA。",
-    "mailto_label": "電子郵件連結",
-    "mailto_description": "使用預先填入的撰寫視窗，在 {appName} 開啟 mailto: 連結。",
-    "protocol_open_mode_label": "開啟通訊協定連結時",
+    "mailto_label": "在 {appName} 中開啟郵件連結",
+    "mailto_description": "點選網站上的電子郵件地址會在 {appName} 中撰寫新郵件。",
+    "protocol_open_mode_label": "連結的開啟方式",
     "protocol_open_mode_description": "選擇 {appName} 要在新分頁開啟 mailto: 與 webcal: 連結，或使用現有的工作階段。現有工作階段選項需要通知權限；若瀏覽器阻止視窗取得焦點，您可以點擊備用通知，將 {appName} 移到最上層。",
     "protocol_open_mode_active_session": "盡可能在現有工作階段開啟",
     "protocol_open_mode_new_tab": "一律開啟新分頁",
     "focus_notification_title": "開啟 {appName}",
     "focus_notification_body": "連結已在 {appName} 開啟。點擊即可將視窗移到最上層。",
-    "webcal_label": "行事曆連結",
-    "webcal_description": "使用預先填入的行事曆訂閱對話方塊，在 {appName} 開啟 webcal: 連結。",
-    "register_mailto": "註冊電子郵件應用程式",
-    "register_webcal": "註冊行事曆應用程式",
+    "webcal_label": "在 {appName} 中開啟行事曆連結",
+    "webcal_description": "點選網站上的行事曆連結會在 {appName} 中加入該行事曆。",
+    "register_mailto": "使用 {appName} 開啟郵件連結",
+    "register_webcal": "使用 {appName} 開啟行事曆連結",
     "mailto_registered": "已要求註冊電子郵件處理常式",
     "webcal_registered": "已要求註冊行事曆處理常式",
     "registration_failed": "通訊協定處理常式註冊失敗",
@@ -1643,7 +1643,7 @@
       },
       "favicon_unread_badge": {
         "label": "在分頁圖示顯示未讀數量",
-        "description": "在瀏覽器分頁圖示顯示收件匣未讀數量徽章，即使分頁不在前景也能看到新郵件。停用後不顯示徽章。"
+        "description": "這樣在其他分頁或應用程式中工作時也能看到新郵件。"
       },
       "show_shared_mail_accounts": {
         "label": "顯示共用郵件帳號",
@@ -1751,7 +1751,7 @@
         "relax": "放鬆"
       },
       "push": {
-        "title": "背景通知",
+        "title": "{appName} 關閉時的通知",
         "description": "網站關閉時仍可接收新郵件的系統通知。通知會透過 Bulwark 推送中繼傳送；中繼不會看到郵件內容。",
         "relay_label": "推送中繼",
         "relay_desc": "用來傳送通知的伺服器。請從管理員提供的中繼中選擇。",
@@ -1763,7 +1763,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "展示版不提供背景通知。",
         "status_busy": "工作中…",
-        "enable": "啟用",
+        "enable": "在此裝置上開啟",
         "reenable": "重新註冊",
         "disable": "停用",
         "confirm_disable_title": "要停用背景通知嗎？",
@@ -1808,9 +1808,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "通知聲音",
+        "title": "聲音",
         "description": "選擇通知時播放的聲音",
-        "choose": "聲音",
+        "choose": "鈴聲",
         "choose_desc": "選擇通知音並點擊揚聲器圖示進行預覽"
       },
       "email": {
@@ -1818,7 +1818,7 @@
         "description": "設定傳入郵件的通知",
         "enabled": "郵件通知",
         "enabled_desc": "新郵件到達時顯示通知",
-        "sound": "通知聲音",
+        "sound": "新郵件提示音",
         "sound_desc": "新郵件到達時播放音訊提醒",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1828,7 +1828,7 @@
         "description": "設定行事曆活動的通知",
         "enabled": "活動通知",
         "enabled_desc": "顯示即將開始的行事曆活動提醒",
-        "sound": "通知聲音",
+        "sound": "提醒提示音",
         "sound_desc": "播放行事曆提醒的音訊提醒"
       }
     },
@@ -1867,7 +1867,7 @@
       },
       "first_day": {
         "label": "一週的第一天",
-        "description": "從週日或週一開始一週",
+        "description": "行事曆中一週的第一天",
         "sunday": "週日",
         "monday": "週一"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "閱讀遮罩",
         "description": "將郵件中指標周圍幾行以外的內容調暗，幫助您不會找不到閱讀位置。"
-      },
-      "plain_language": {
-        "label": "白話語言",
-        "description": "設定和錯誤訊息使用更簡單的措辭，並為技術術語提供簡短說明。支援英文和德文。"
       },
       "contrast": {
         "label": "對比",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "視窗",
+      "title": "應用程式視窗",
       "double_click_label": "按兩下時在新視窗中開啟郵件",
       "double_click_description": "按一下仍會在清單旁開啟郵件。",
       "restore_label": "啟動時重新開啟視窗",
@@ -6918,9 +6914,9 @@
     "section_title": "應用程式鎖定",
     "section_desc": "在一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,在有人輸入 PIN 之前,應用程式無法讀取儲存在此裝置上的郵件。",
     "enable_label": "使用 PIN 鎖定",
-    "enable_desc": "預設關閉。PIN 只保存在此裝置上。",
+    "enable_desc": "PIN 只保存在此裝置上。",
     "protects_desc": "它能防範什麼:PIN 讓此裝置旁的人無法進入應用程式。當你開啟鎖定或變更 PIN 時,這裡儲存的郵件會取得新金鑰,這可能需要一點時間。它無法阻止在這台電腦上執行的程式、你安裝的瀏覽器擴充功能,也無法阻止複製應用程式檔案並有時間嘗試大量 PIN 的人,因此較長的 PIN 是值得的。在桌面應用程式中,嘗試 PIN 還需要你在這台電腦上的登入。你在伺服器上的帳戶不受影響。",
-    "enable_body": "請選擇一個 PIN。每次應用程式鎖定時以及重新載入或重新啟動後都需要它。",
+    "enable_body": "每次應用程式鎖定時以及重新啟動後都需要它。",
     "set_pin_title": "選擇 PIN",
     "change_pin": "變更 PIN…",
     "change_pin_title": "變更 PIN",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, other {# 分鐘}}",
     "blocked_seconds": "嘗試次數過多。請在 {count, plural, other {# 秒}}後再試。",
     "blocked_minutes": "嘗試次數過多。請在 {count, plural, other {# 分鐘}}後再試。"
+  },
+  "uxs_general": {
+    "time_zone_common": "常用時區",
+    "time_zone_all": "所有時區",
+    "time_zone_search": "搜尋時區",
+    "time_zone_no_match": "找不到時區",
+    "time_zone_desktop_description": "以此時區顯示郵件和行程的時間。如果不選擇，則使用電腦的時區。",
+    "app_lock_desc_desktop": "在一段時間未使用後，在每個視窗中要求輸入 PIN。鎖定期間，在有人輸入 PIN 之前，應用程式無法讀取儲存在此裝置上的郵件。",
+    "app_lock_timeout_desc_desktop": "任一視窗未使用的時間。",
+    "app_lock_now_desc_desktop": "立即鎖定所有視窗。",
+    "app_lock_protects_toggle": "這能防範什麼？",
+    "app_lock_timeout_hours": "{count, plural, other {# 小時}}",
+    "desktop_attention_title": "在這台電腦上"
   },
   "desktop_sign_in": {
     "server_needed": "請先輸入伺服器位址。",
@@ -7206,7 +7215,7 @@
     "section_title": "使用資訊與當機報告",
     "section_description": "兩者在您開啟前都維持關閉，且各有獨立的開關。",
     "telemetry_label": "傳送使用資訊",
-    "telemetry_description": "每天一次：一個隨機 ID、應用程式版本、Node 版本、您的作業系統、應用程式已執行多久以及連線方式。使用自己的郵件伺服器時，還包括已開啟的功能、大致的帳號數量以及外掛和主題的數量。絕不傳送郵件、地址或伺服器名稱。",
+    "telemetry_description": "每天一次：一個隨機 ID、應用程式的版本號、您的作業系統、應用程式已執行多久以及連線方式。使用自己的郵件伺服器時，還包括已開啟的功能、大致的帳號數量以及外掛和主題的數量。絕不傳送郵件、地址或伺服器名稱。",
     "crash_label": "傳送當機報告",
     "crash_description": "應用程式中的錯誤會連同一個隨機 ID、應用程式本身程式碼的檔案名稱和經過清理的簡短訊息一起傳送。如果應用程式本身當機，當機檔案會留在這台電腦上，只有您傳送時才會離開。",
     "crash_memory": "當機檔案是當機時應用程式部分記憶體的副本。Bulwark 會移除它找到的使用者名稱、地址和登入權杖，但當機檔案仍可能包含您郵件的文字。",

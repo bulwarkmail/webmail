@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Aplicativos padrão",
-    "description": "Escolha se links de e-mail e calendário devem abrir no {appName}. Tecnicamente, o {appName} se registra como manipulador de protocolo para links mailto: e webcal:.",
+    "description": "Escolha se as ligações de e-mail e de calendário abrem no {appName}.",
     "unsupported": "Este navegador ou esta conexão não oferece suporte ao registro manual de manipuladores de protocolo. Talvez você ainda consiga usar o PWA instalado pelas configurações do navegador ou do sistema.",
-    "mailto_label": "Links de e-mail",
-    "mailto_description": "Abre links mailto: no {appName} com o editor preenchido previamente.",
-    "protocol_open_mode_label": "Ao abrir links de protocolo",
+    "mailto_label": "Abrir ligações de e-mail no {appName}",
+    "mailto_description": "Clicar num endereço de e-mail num site começa uma nova mensagem no {appName}.",
+    "protocol_open_mode_label": "Como as ligações abrem",
     "protocol_open_mode_description": "Escolha se o {appName} abre links mailto: e webcal: em uma nova guia ou reutiliza uma sessão aberta. A opção de sessão ativa precisa da permissão de notificações para que você possa clicar em uma notificação alternativa e trazer o {appName} para a frente se o navegador bloquear o foco.",
     "protocol_open_mode_active_session": "Abrir na sessão ativa se possível",
     "protocol_open_mode_new_tab": "Sempre abrir uma nova guia",
     "focus_notification_title": "Abrir {appName}",
     "focus_notification_body": "O link foi aberto no {appName}. Clique para trazer a janela para a frente.",
-    "webcal_label": "Links de calendário",
-    "webcal_description": "Abre links webcal: no {appName} com uma janela de assinatura de calendário preenchida previamente.",
-    "register_mailto": "Registrar aplicativo de e-mail",
-    "register_webcal": "Registrar aplicativo de calendário",
+    "webcal_label": "Abrir ligações de calendário no {appName}",
+    "webcal_description": "Clicar numa ligação de calendário num site adiciona o calendário no {appName}.",
+    "register_mailto": "Usar o {appName} para ligações de e-mail",
+    "register_webcal": "Usar o {appName} para ligações de calendário",
     "mailto_registered": "Registro do manipulador de e-mail solicitado",
     "webcal_registered": "Registro do manipulador de calendário solicitado",
     "registration_failed": "Falha ao registrar manipulador de protocolo",
@@ -1640,7 +1640,7 @@
       },
       "favicon_unread_badge": {
         "label": "Contagem de não lidos no Ícone da Aba",
-        "description": "Mostra a contagem de e-mails não lidos na aba do navegador, para que novos e-mails sejam visíveis mesmo quando a aba não estiver em foco. Desative para manter o ícone sem marca."
+        "description": "Assim vê o novo correio enquanto trabalha noutro separador ou aplicação."
       },
       "show_shared_mail_accounts": {
         "label": "Mostrar contas de e-mail compartilhadas",
@@ -1760,9 +1760,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Som de notificação",
+        "title": "Som",
         "description": "Escolha qual som reproduzir para notificações",
-        "choose": "Som",
+        "choose": "Toque",
         "choose_desc": "Selecione um toque de notificação e clique no ícone do alto-falante para pré-visualizar"
       },
       "email": {
@@ -1770,7 +1770,7 @@
         "description": "Configurar notificações para e-mails recebidos",
         "enabled": "Notificações de e-mail",
         "enabled_desc": "Mostrar notificações quando novos e-mails chegarem",
-        "sound": "Som de notificação",
+        "sound": "Som para novo correio",
         "sound_desc": "Reproduzir um som quando novos e-mails chegarem",
         "inbox_only": "Apenas Caixa de Entrada",
         "inbox_only_desc": "Notificar apenas pelos e-mails que chegarem à Caixa de Entrada; pular e-mails que forem filtrados para outra pasta"
@@ -1780,7 +1780,7 @@
         "description": "Configurar notificações para eventos do calendário",
         "enabled": "Notificações de eventos",
         "enabled_desc": "Mostrar alertas para próximos eventos do calendário",
-        "sound": "Som de notificação",
+        "sound": "Som para lembretes",
         "sound_desc": "Reproduzir um som para lembretes do calendário"
       },
       "push": {
@@ -1788,7 +1788,7 @@
         "confirm_disable_title": "Desativar notificações em segundo plano?",
         "description": "Receba notificações do sistema para novas mensagens quando este site estiver fechado. Entregue através do relay push do Bulwark; o relay nunca vê o conteúdo da mensagem.",
         "disable": "Desativar",
-        "enable": "Ativar",
+        "enable": "Ativar neste dispositivo",
         "dismiss_aria": "Dispensar aviso de notificações",
         "ios_hint": "No iOS, instale o site primeiro na tela inicial – o Safari só entrega Web Push para PWAs instalados.",
         "reenable": "Registrar novamente",
@@ -1802,7 +1802,7 @@
         "status_unsupported": "Este navegador não oferece suporte a Web Push",
         "status_lite": "O Web Push não está disponível no Bulwark Lite; ele requer o servidor do Bulwark.",
         "status_demo": "As notificações em segundo plano não estão disponíveis na demonstração.",
-        "title": "Notificações em segundo plano",
+        "title": "Notificações quando o {appName} está fechado",
         "devices_title": "Dispositivos registrados",
         "devices_desc": "Todos os dispositivos registrados para receber notificações em segundo plano desta conta. Revogar um deles interrompe o recebimento imediatamente.",
         "devices_loading": "Carregando dispositivos registrados…",
@@ -1864,7 +1864,7 @@
       },
       "first_day": {
         "label": "Primeiro Dia da Semana",
-        "description": "Começar a semana no domingo ou segunda-feira",
+        "description": "Primeiro dia da semana nos calendários",
         "sunday": "Domingo",
         "monday": "Segunda-feira"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "Máscara de leitura",
         "description": "Escurece tudo em uma mensagem, exceto algumas linhas ao redor do ponteiro, para ajudar a não perder o ponto da leitura."
-      },
-      "plain_language": {
-        "label": "Linguagem simples",
-        "description": "Textos mais simples nas configurações e nas mensagens de erro, com explicações curtas de termos técnicos. Disponível em inglês e alemão."
       },
       "contrast": {
         "label": "Contraste",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Janelas",
+      "title": "Janelas da aplicação",
       "double_click_label": "Abrir mensagens numa nova janela com duplo clique",
       "double_click_description": "Um único clique continua a abrir a mensagem junto à lista.",
       "restore_label": "Reabrir janelas ao iniciar",
@@ -6918,9 +6914,9 @@
     "section_title": "Bloqueio da app",
     "section_desc": "Pede um PIN após algum tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, a aplicação não consegue ler o correio guardado neste dispositivo até alguém introduzir o PIN.",
     "enable_label": "Bloquear com um PIN",
-    "enable_desc": "Desativado por predefinição. O PIN fica neste dispositivo.",
+    "enable_desc": "O PIN fica neste dispositivo.",
     "protects_desc": "Contra o que protege: o PIN impede quem está neste dispositivo de entrar na aplicação. O correio guardado aqui recebe uma nova chave quando ativa o bloqueio ou muda o PIN, o que pode demorar um momento. Não consegue impedir um programa a correr neste computador, uma extensão de navegador que instalou nem alguém que copie os ficheiros da aplicação e tenha tempo para tentar muitos PIN, por isso vale a pena um PIN mais longo. Na aplicação de computador, tentar PIN também exige a sua sessão neste computador. A sua conta no servidor não é afetada.",
-    "enable_body": "Escolha um PIN. Vai precisar dele sempre que a app bloquear, e depois de recarregar ou iniciar de novo.",
+    "enable_body": "Vai precisar dele sempre que a app bloquear e depois de reiniciar.",
     "set_pin_title": "Escolher um PIN",
     "change_pin": "Alterar PIN…",
     "change_pin_title": "Alterar o PIN",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, one {# minuto} other {# minutos}}",
     "blocked_seconds": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# segundo} other {# segundos}}.",
     "blocked_minutes": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# minuto} other {# minutos}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Fusos horários comuns",
+    "time_zone_all": "Todos os fusos horários",
+    "time_zone_search": "Procurar fuso horário",
+    "time_zone_no_match": "Nenhum fuso horário encontrado",
+    "time_zone_desktop_description": "Mostrar as horas das mensagens e compromissos neste fuso horário. Se não escolher nenhum, é usado o fuso horário do computador.",
+    "app_lock_desc_desktop": "Pede um PIN após algum tempo sem uso, em todas as janelas. Enquanto está bloqueada, a aplicação não consegue ler o correio guardado neste dispositivo até alguém introduzir o PIN.",
+    "app_lock_timeout_desc_desktop": "Tempo sem uso em qualquer janela.",
+    "app_lock_now_desc_desktop": "Bloqueia todas as janelas de imediato.",
+    "app_lock_protects_toggle": "Contra o que protege?",
+    "app_lock_timeout_hours": "{count, plural, one {# hora} other {# horas}}",
+    "desktop_attention_title": "Neste computador"
   },
   "desktop_sign_in": {
     "server_needed": "Digite primeiro o endereço do servidor.",
@@ -7206,7 +7215,7 @@
     "section_title": "Dados de utilização e relatórios de falhas",
     "section_description": "Ambos ficam desligados até os ligar, e cada um tem o seu próprio interruptor.",
     "telemetry_label": "Enviar dados de utilização",
-    "telemetry_description": "Uma vez por dia: um ID aleatório, a versão da aplicação, a versão do Node, o seu sistema operativo, há quanto tempo a aplicação está a correr e como se liga. Com o seu próprio servidor de correio, também que funções estão ativas, um número aproximado de contas e quantos plugins e temas tem. Nunca mensagens, endereços ou nomes de servidor.",
+    "telemetry_description": "Uma vez por dia: um ID aleatório, os números de versão da aplicação, o seu sistema operativo, há quanto tempo a aplicação está a correr e como se liga. Com o seu próprio servidor de correio, também que funções estão ativas, um número aproximado de contas e quantos plugins e temas tem. Nunca mensagens, endereços ou nomes de servidor.",
     "crash_label": "Enviar relatórios de falhas",
     "crash_description": "Os erros da aplicação são enviados com um ID aleatório, nomes de ficheiros do próprio código da aplicação e mensagens curtas e limpas. Se a própria aplicação falhar, um ficheiro de falha fica neste computador e só sai se o enviar.",
     "crash_memory": "Um ficheiro de falha é uma cópia de parte da memória da aplicação no momento da falha. O Bulwark remove os nomes de utilizador, endereços e tokens de início de sessão que encontra, mas um ficheiro de falha pode ainda conter o texto das suas mensagens.",

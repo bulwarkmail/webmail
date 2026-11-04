@@ -214,20 +214,20 @@
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",
-    "description": "Alegeți dacă linkurile către e-mail și calendar se deschid în {appName}. Din punct de vedere tehnic, {appName} se înregistrează ca gestionar de protocol pentru linkurile de tip mailto: și webcal:.",
+    "description": "Alegeți dacă linkurile de e-mail și calendar se deschid în {appName}.",
     "unsupported": "Acest browser sau această conexiune nu acceptă înregistrarea manuală a gestionarului de protocoale. Este posibil să puteți utiliza totuși aplicația PWA instalată prin setările browserului sau ale sistemului de operare.",
-    "mailto_label": "Linkuri din e-mail",
-    "mailto_description": "Deschideți linkurile „mailto:” în {appName} cu o fereastră de redactare precompletată.",
-    "protocol_open_mode_label": "La deschiderea linkurilor de protocol",
+    "mailto_label": "Deschideți linkurile de e-mail în {appName}",
+    "mailto_description": "Un clic pe o adresă de e-mail de pe un site începe un mesaj nou în {appName}.",
+    "protocol_open_mode_label": "Cum se deschid linkurile",
     "protocol_open_mode_description": "Alegeți dacă {appName} deschide linkurile mailto: și webcal: într-o filă nouă sau reutilizează o sesiune deschisă. Opțiunea „sesiune activă” necesită permisiunea de notificare, astfel încât să puteți face clic pe o notificare de rezervă pentru a aduce {appName} în prim-plan dacă browserul blochează focalizarea.",
     "protocol_open_mode_active_session": "Deschideți într-o sesiune activă, dacă este posibil",
     "protocol_open_mode_new_tab": "Deschideți întotdeauna o filă nouă",
     "focus_notification_title": "Deschideți {appName}",
     "focus_notification_body": "Linkul a fost deschis în {appName}. Faceți clic pentru a aduce fereastra în prim-plan.",
-    "webcal_label": "Linkuri către calendar",
-    "webcal_description": "Deschideți linkurile webcal: din {appName} cu o fereastră de dialog de abonare la calendar completată în prealabil.",
-    "register_mailto": "Înregistrați aplicația de e-mail",
-    "register_webcal": "Înregistrați aplicația de calendar",
+    "webcal_label": "Deschideți linkurile de calendar în {appName}",
+    "webcal_description": "Un clic pe un link de calendar de pe un site adaugă calendarul în {appName}.",
+    "register_mailto": "Folosiți {appName} pentru linkurile de e-mail",
+    "register_webcal": "Folosiți {appName} pentru linkurile de calendar",
     "mailto_registered": "S-a solicitat înregistrarea unui gestionar de e-mail",
     "webcal_registered": "S-a solicitat înregistrarea unui handler pentru calendar",
     "registration_failed": "Înregistrarea gestionarului de protocol a eșuat",
@@ -1643,7 +1643,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Ca să vedeți e-mailurile noi cât lucrați în altă filă sau aplicație."
       },
       "show_shared_mail_accounts": {
         "label": "Afișează conturile de e-mail partajate",
@@ -1751,7 +1751,7 @@
         "relax": "Relaxează-te"
       },
       "push": {
-        "title": "Notificări în fundal",
+        "title": "Notificări când {appName} este închis",
         "description": "Primiți notificări de sistem pentru e-mailuri noi chiar și atunci când acest site este închis. Notificările sunt transmise prin intermediul serverului de push Bulwark; serverul nu vede niciodată conținutul e-mailurilor.",
         "relay_label": "Relay push",
         "relay_desc": "Implicit este setat serverul de retransmitere găzduit Bulwark. Modificați această setare numai dacă utilizați un server propriu.",
@@ -1763,7 +1763,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Notificările în fundal nu sunt disponibile în demonstrație.",
         "status_busy": "Se lucrează…",
-        "enable": "Activați",
+        "enable": "Activați pe acest dispozitiv",
         "reenable": "Reînregistrează-te",
         "disable": "Dezactivare",
         "confirm_disable_title": "Dezactivați notificările din fundal?",
@@ -1808,9 +1808,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Sunet de notificare",
+        "title": "Sunet",
         "description": "Alegeți ce sunet să se redea pentru notificări",
-        "choose": "Sunet",
+        "choose": "Ton",
         "choose_desc": "Selectați un ton de notificare și faceți clic pe pictograma difuzorului pentru a-l asculta"
       },
       "email": {
@@ -1818,7 +1818,7 @@
         "description": "Configurați notificările pentru e-mailurile primite",
         "enabled": "Notificări prin e-mail",
         "enabled_desc": "Afișați notificări la primirea de e-mailuri noi",
-        "sound": "Sunet de notificare",
+        "sound": "Sunet pentru e-mailuri noi",
         "sound_desc": "Redă o alertă audio la sosirea unor e-mailuri noi",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1828,7 +1828,7 @@
         "description": "Configurați notificările pentru evenimentele din calendar",
         "enabled": "Notificări privind evenimentele",
         "enabled_desc": "Afișați alerte pentru evenimentele viitoare din calendar",
-        "sound": "Sunet de notificare",
+        "sound": "Sunet pentru mementouri",
         "sound_desc": "Redă o alertă audio pentru mementourile din calendar"
       }
     },
@@ -1867,7 +1867,7 @@
       },
       "first_day": {
         "label": "Prima zi a săptămânii",
-        "description": "Începeți săptămâna duminică sau luni",
+        "description": "Prima zi a săptămânii în calendare",
         "sunday": "Duminică",
         "monday": "Luni"
       },
@@ -3190,10 +3190,6 @@
       "reading_mask": {
         "label": "Mască de citire",
         "description": "Estompează tot ce este în mesaj, în afară de câteva rânduri din jurul cursorului, ca să nu pierdeți locul."
-      },
-      "plain_language": {
-        "label": "Limbaj simplu",
-        "description": "Formulări mai simple în setări și în mesajele de eroare și explicații scurte pentru termenii tehnici. Disponibil în engleză și germană."
       },
       "contrast": {
         "label": "Contrast",
@@ -6821,7 +6817,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Ferestre",
+      "title": "Ferestrele aplicației",
       "double_click_label": "Deschide mesajele într-o fereastră nouă la dublu clic",
       "double_click_description": "Un singur clic deschide în continuare mesajul lângă listă.",
       "restore_label": "Redeschide ferestrele la pornire",
@@ -6918,9 +6914,9 @@
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
     "enable_label": "Blochează cu un PIN",
-    "enable_desc": "Dezactivat implicit. PIN-ul rămâne pe acest dispozitiv.",
+    "enable_desc": "PIN-ul rămâne pe acest dispozitiv.",
     "protects_desc": "De ce protejează: PIN-ul ține în afara aplicației pe cineva aflat la acest dispozitiv. Mesajele stocate aici primesc o cheie nouă când activezi blocarea sau schimbi PIN-ul, ceea ce poate dura puțin. Nu poate opri un program care rulează pe acest computer, o extensie de browser instalată de tine sau pe cineva care copiază fișierele aplicației și are timp să încerce multe PIN-uri, așa că merită un PIN mai lung. În aplicația desktop, încercarea PIN-urilor cere și autentificarea ta pe acest computer. Contul tău de pe server nu este afectat.",
-    "enable_body": "Alegeți un PIN. Veți avea nevoie de el de fiecare dată când aplicația se blochează, și după o reîncărcare sau o repornire.",
+    "enable_body": "Veți avea nevoie de el de fiecare dată când aplicația se blochează și după o repornire.",
     "set_pin_title": "Alegeți un PIN",
     "change_pin": "Schimbați PIN-ul…",
     "change_pin_title": "Schimbați PIN-ul",
@@ -6981,6 +6977,19 @@
     "timeout_option": "{count, plural, one {# minut} few {# minute} other {# de minute}}",
     "blocked_seconds": "Prea multe încercări. Încercați din nou peste {count, plural, one {# secundă} few {# secunde} other {# de secunde}}.",
     "blocked_minutes": "Prea multe încercări. Încercați din nou peste {count, plural, one {# minut} few {# minute} other {# de minute}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Fusuri orare uzuale",
+    "time_zone_all": "Toate fusurile orare",
+    "time_zone_search": "Căutați un fus orar",
+    "time_zone_no_match": "Niciun fus orar găsit",
+    "time_zone_desktop_description": "Afișează orele mesajelor și programărilor în acest fus orar. Dacă nu alegeți unul, se folosește fusul orar al computerului.",
+    "app_lock_desc_desktop": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
+    "app_lock_timeout_desc_desktop": "Timp fără utilizare în orice fereastră.",
+    "app_lock_now_desc_desktop": "Blochează imediat toate ferestrele.",
+    "app_lock_protects_toggle": "De ce protejează?",
+    "app_lock_timeout_hours": "{count, plural, one {# oră} few {# ore} other {# de ore}}",
+    "desktop_attention_title": "Pe acest computer"
   },
   "desktop_sign_in": {
     "server_needed": "Introdu mai întâi adresa serverului.",
@@ -7206,7 +7215,7 @@
     "section_title": "Date de utilizare și rapoarte de blocare",
     "section_description": "Ambele sunt oprite până le porniți și fiecare are propriul comutator.",
     "telemetry_label": "Trimite date de utilizare",
-    "telemetry_description": "O dată pe zi: un ID aleatoriu, versiunea aplicației, versiunea Node, sistemul de operare, de cât timp rulează aplicația și cum se conectează. Cu propriul server de e-mail, și ce funcții sunt pornite, un număr aproximativ de conturi și câte pluginuri și teme aveți. Niciodată e-mailuri, adrese sau nume de servere.",
+    "telemetry_description": "O dată pe zi: un ID aleatoriu, numerele de versiune ale aplicației, sistemul de operare, de cât timp rulează aplicația și cum se conectează. Cu propriul server de e-mail, și ce funcții sunt pornite, un număr aproximativ de conturi și câte pluginuri și teme aveți. Niciodată e-mailuri, adrese sau nume de servere.",
     "crash_label": "Trimite rapoarte de blocare",
     "crash_description": "Erorile din aplicație pleacă cu un ID aleatoriu, nume de fișiere din codul aplicației și mesaje scurte, curățate. Dacă aplicația însăși se blochează, un fișier de blocare rămâne pe acest computer și pleacă doar dacă îl trimiteți.",
     "crash_memory": "Un fișier de blocare este o copie a unei părți din memoria aplicației din momentul blocării. Bulwark elimină numele de utilizator, adresele și tokenurile de autentificare pe care le găsește, dar un fișier de blocare poate conține totuși textul e-mailurilor dvs.",

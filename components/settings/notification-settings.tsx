@@ -14,6 +14,9 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { MultiAccountPushSettings } from './multi-account-push';
+import { DesktopNotificationOsSettings } from './desktop-os-settings';
+import { productName } from '@/lib/product-name';
+import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import {
   WebPushUnsupportedError,
@@ -52,6 +55,7 @@ export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
   const tAppearance = useTranslations('settings.appearance');
   const tThirdParty = useTranslations('third_party');
+  const appName = productName(useConfig().appName);
   // The relay list depends on it; re-render once the config is known (#903).
   const noThirdParty = useNoThirdPartyTraffic();
   const {
@@ -409,7 +413,9 @@ export function NotificationSettings() {
         </SettingItem>
       </SettingsSection>
 
-      <SettingsSection id="push" title={t('push.title')} description={t('push.description')} term="push">
+      <DesktopNotificationOsSettings />
+
+      <SettingsSection id="push" title={t('push.title', { appName })} description={t('push.description')} term="push">
         <SettingItem label={t('push.enable')} description={statusDescription}>
           <div className="flex items-center gap-2">
             {pushEnabled && (

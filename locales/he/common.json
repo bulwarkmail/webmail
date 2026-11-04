@@ -1583,7 +1583,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "כדי לראות דואר חדש גם כשאתם עובדים בכרטיסייה או באפליקציה אחרת."
       },
       "show_shared_mail_accounts": {
         "label": "הצגת חשבונות דואר משותפים",
@@ -1703,9 +1703,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "צליל התראה",
+        "title": "צליל",
         "description": "בחר איזה צליל להפעיל עבור התראות",
-        "choose": "צליל",
+        "choose": "צלצול",
         "choose_desc": "בחר צליל התראה ולחץ על סמל הרמקול כדי להציג אותו בתצוגה מקדימה"
       },
       "email": {
@@ -1713,7 +1713,7 @@
         "description": "הגדר התראות עבור הודעות דוא\"ל נכנסות",
         "enabled": "התראות באימייל",
         "enabled_desc": "הצג התראות כשמגיעות אימיילים חדשים",
-        "sound": "צליל התראה",
+        "sound": "צליל לדואר חדש",
         "sound_desc": "הפעל התראת שמע כשמגיעות הודעות דוא\"ל חדשות",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1723,11 +1723,11 @@
         "description": "הגדר התראות עבור אירועי לוח שנה",
         "enabled": "התראות על אירועים",
         "enabled_desc": "הצג התראות עבור אירועי לוח שנה קרובים",
-        "sound": "צליל התראה",
+        "sound": "צליל לתזכורות",
         "sound_desc": "הפעל התראה קולית עבור תזכורות יומן"
       },
       "push": {
-        "title": "התראות בדפדפן",
+        "title": "התראות כש-{appName} סגור",
         "description": "קבל עדכונים מערכת עבור דוא״ל חדש כאשר אתר זה סגור. מסופק דרך ממסר Bulwark; הממסר לא רואה תוכן דוא״ל.",
         "relay_label": "ממסר דחיפה",
         "relay_desc": "ברירת מחדל של ממסר Bulwark המתורח. שנה רק אם אתה מארח בעצמך.",
@@ -1739,7 +1739,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "התראות ברקע אינן זמינות בהדגמה.",
         "status_busy": "עובד…",
-        "enable": "הפעל",
+        "enable": "הפעלה במכשיר הזה",
         "reenable": "רשום מחדש",
         "disable": "השבת",
         "confirm_disable_title": "השבת התראות בדפדפן?",
@@ -1807,7 +1807,7 @@
       },
       "first_day": {
         "label": "היום הראשון בשבוע",
-        "description": "התחל את השבוע ביום ראשון או שני",
+        "description": "היום הראשון בשבוע ביומנים",
         "sunday": "ראשון",
         "monday": "שני"
       },
@@ -3134,10 +3134,6 @@
       "reading_mask": {
         "label": "מסכת קריאה",
         "description": "מחשיך הכול בהודעה מלבד כמה שורות סביב המצביע, כדי שלא תאבדו את המקום."
-      },
-      "plain_language": {
-        "label": "שפה פשוטה",
-        "description": "ניסוח פשוט יותר בהגדרות ובהודעות שגיאה, והסברים קצרים למונחים טכניים. זמין באנגלית ובגרמנית."
       },
       "contrast": {
         "label": "ניגודיות",
@@ -5345,20 +5341,20 @@
   "meta_description": "דואר רשת באירוח עצמי לדואר, יומן, אנשי קשר וקבצים, מבוסס JMAP",
   "protocol_handlers": {
     "title": "יישומים ברירת מחדל",
-    "description": "בחר אם קישורי דוא״ל ולוח שנה ייפתחו ב־{appName}. מבחינה טכנית, {appName} רשום כטיפול בפרוטוקול עבור קישורי mailto: ו־webcal:.",
+    "description": "בחרו אם קישורי דואר ויומן ייפתחו ב-{appName}.",
     "unsupported": "דפדפן זה או חיבור זה לא תומך בהרשמה ידנית של טיפול בפרוטוקול. ייתכן שעדיין תוכל להשתמש ב־PWA המותקנת דרך הדפדפן או הגדרות מערכת ההפעלה.",
-    "mailto_label": "קישורי דוא״ל",
-    "mailto_description": "פתח קישורי mailto: ב־{appName} עם מחבר שמלא מראש.",
-    "protocol_open_mode_label": "בעת פתיחת קישורי פרוטוקול",
+    "mailto_label": "פתיחת קישורי דואר ב-{appName}",
+    "mailto_description": "לחיצה על כתובת דואר באתר מתחילה הודעה חדשה ב-{appName}.",
+    "protocol_open_mode_label": "איך קישורים נפתחים",
     "protocol_open_mode_description": "בחר אם {appName} יפתח קישורי mailto: ו־webcal: בלשונית חדשה או ישתמש בחיבור פתוח. אפשרות הישיבה הפעילה דורשת הרשאת עדכון כדי שתוכל ללחוץ על עדכון נופל כדי להביא את {appName} לחזית אם הדפדפן חוסם מיקוד.",
     "protocol_open_mode_active_session": "פתח בישיבה פעילה אם אפשר",
     "protocol_open_mode_new_tab": "פתח תמיד לשונית חדשה",
     "focus_notification_title": "פתח את {appName}",
     "focus_notification_body": "הקישור נפתח ב־{appName}. לחץ כדי להביא את החלון לחזית.",
-    "webcal_label": "קישורי לוח שנה",
-    "webcal_description": "פתח קישורי webcal: ב־{appName} עם תיבת דו־שיח מלא מראש להרשמה ללוח שנה.",
-    "register_mailto": "רשום יישום דוא״ל",
-    "register_webcal": "רשום יישום לוח שנה",
+    "webcal_label": "פתיחת קישורי יומן ב-{appName}",
+    "webcal_description": "לחיצה על קישור ליומן באתר מוסיפה את היומן ב-{appName}.",
+    "register_mailto": "שימוש ב-{appName} לקישורי דואר",
+    "register_webcal": "שימוש ב-{appName} לקישורי יומן",
     "mailto_registered": "בקש הרשמה של מטפל דוא״ל",
     "webcal_registered": "בקש הרשמה של מטפל לוח שנה",
     "registration_failed": "הרשמת טיפול בפרוטוקול נכשלה",
@@ -6822,7 +6818,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "חלונות",
+      "title": "חלונות האפליקציה",
       "double_click_label": "פתיחת הודעות בחלון חדש בלחיצה כפולה",
       "double_click_description": "לחיצה אחת עדיין פותחת את ההודעה ליד הרשימה.",
       "restore_label": "פתיחה מחדש של חלונות בהפעלה",
@@ -6919,9 +6915,9 @@
     "section_title": "נעילת אפליקציה",
     "section_desc": "מבקש PIN אחרי זמן ללא שימוש, בכל חלון ולשונית. בזמן הנעילה האפליקציה לא יכולה לקרוא את הדואר השמור במכשיר הזה עד שמישהו מזין את ה-PIN.",
     "enable_label": "נעילה עם קוד PIN",
-    "enable_desc": "כבוי כברירת מחדל. קוד ה-PIN נשאר במכשיר הזה.",
+    "enable_desc": "קוד ה-PIN נשאר במכשיר הזה.",
     "protects_desc": "ממה זה מגן: ה-PIN מונע ממי שנמצא ליד המכשיר הזה להיכנס לאפליקציה. הדואר השמור כאן מקבל מפתח חדש כשמפעילים את הנעילה או משנים את ה-PIN, וזה עשוי לקחת רגע. זה לא יכול לעצור תוכנה שרצה במחשב הזה, תוסף דפדפן שהתקנתם או מישהו שמעתיק את קובצי האפליקציה ויש לו זמן לנסות הרבה קודים, לכן כדאי PIN ארוך יותר. באפליקציית שולחן העבודה, ניסיון קודים דורש גם את הכניסה שלכם למחשב הזה. החשבון שלכם בשרת לא מושפע.",
-    "enable_body": "בחרו קוד PIN. תצטרכו אותו בכל פעם שהאפליקציה ננעלת, ואחרי טעינה מחדש או הפעלה חדשה.",
+    "enable_body": "תצטרכו אותו בכל פעם שהאפליקציה ננעלת ואחרי הפעלה מחדש.",
     "set_pin_title": "בחירת קוד PIN",
     "change_pin": "שינוי קוד PIN…",
     "change_pin_title": "שינוי קוד PIN",
@@ -6982,6 +6978,19 @@
     "timeout_option": "{count, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}",
     "blocked_seconds": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {שנייה אחת} two {שתי שניות} other {# שניות}}.",
     "blocked_minutes": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "אזורי זמן נפוצים",
+    "time_zone_all": "כל אזורי הזמן",
+    "time_zone_search": "חיפוש אזור זמן",
+    "time_zone_no_match": "לא נמצא אזור זמן",
+    "time_zone_desktop_description": "הצגת זמני הדואר והפגישות לפי אזור הזמן הזה. אם לא תבחרו, ישמש אזור הזמן של המחשב.",
+    "app_lock_desc_desktop": "מבקש PIN אחרי זמן ללא שימוש, בכל חלון. בזמן הנעילה האפליקציה לא יכולה לקרוא את הדואר השמור במכשיר הזה עד שמישהו מזין את ה-PIN.",
+    "app_lock_timeout_desc_desktop": "זמן ללא שימוש בכל חלון.",
+    "app_lock_now_desc_desktop": "נועל מיד את כל החלונות.",
+    "app_lock_protects_toggle": "ממה זה מגן?",
+    "app_lock_timeout_hours": "{count, plural, one {שעה אחת} two {שעתיים} other {# שעות}}",
+    "desktop_attention_title": "במחשב הזה"
   },
   "desktop_sign_in": {
     "server_needed": "קודם צריך להזין את כתובת השרת.",
@@ -7207,7 +7216,7 @@
     "section_title": "מידע על שימוש ודוחות קריסה",
     "section_description": "שניהם כבויים עד שתפעילו אותם, ולכל אחד מתג משלו.",
     "telemetry_label": "שליחת מידע על שימוש",
-    "telemetry_description": "פעם ביום: מזהה אקראי, גרסת האפליקציה, גרסת Node, מערכת ההפעלה, כמה זמן האפליקציה פועלת ואופן החיבור שלה. עם שרת דואר משלכם, גם אילו תכונות פעילות, מספר משוער של חשבונות וכמה תוספים וערכות נושא יש לכם. אף פעם לא דואר, כתובות או שמות שרתים.",
+    "telemetry_description": "פעם ביום: מזהה אקראי, מספרי הגרסה של האפליקציה, מערכת ההפעלה, כמה זמן האפליקציה פועלת ואופן החיבור שלה. עם שרת דואר משלכם, גם אילו תכונות פעילות, מספר משוער של חשבונות וכמה תוספים וערכות נושא יש לכם. אף פעם לא דואר, כתובות או שמות שרתים.",
     "crash_label": "שליחת דוחות קריסה",
     "crash_description": "שגיאות באפליקציה נשלחות עם מזהה אקראי, שמות קבצים מהקוד של האפליקציה עצמה והודעות קצרות ומנוקות. אם האפליקציה עצמה קורסת, קובץ קריסה נשאר במחשב הזה ויוצא ממנו רק אם תשלחו אותו.",
     "crash_memory": "קובץ קריסה הוא העתק של חלק מזיכרון האפליקציה ברגע הקריסה. Bulwark מסיר שמות משתמש, כתובות ואסימוני התחברות שהוא מוצא, אבל קובץ קריסה עדיין עשוי להכיל את הטקסט של הדואר שלכם.",
