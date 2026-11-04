@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -25,9 +25,10 @@ vi.mock('@/components/layout/sidebar', () => ({
 vi.mock('@/components/email/email-composer', async () => {
   const { useEffect } = await import('react');
   return {
-    EmailComposer: ({ onSaveState, requestCloseRef }: {
+    EmailComposer: ({ onSaveState, requestCloseRef, replyTo }: {
       onSaveState: (data: Record<string, unknown>) => void;
       requestCloseRef?: { current: unknown };
+      replyTo?: { quoteHeaderHtml?: string };
     }) => {
       useEffect(() => {
         if (requestCloseRef && stub.requestClose) requestCloseRef.current = stub.requestClose;
@@ -37,7 +38,7 @@ vi.mock('@/components/email/email-composer', async () => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
-      return <div>stub composer</div>;
+      return <div data-testid="stub-composer" data-quote={replyTo?.quoteHeaderHtml ?? ''}>stub composer</div>;
     },
   };
 });
@@ -141,6 +142,13 @@ describe('a reply in the standard layout', () => {
       expect(screen.getByTestId('viewer')).toHaveAttribute('data-reply-open', 'yes');
     });
   }
+
+  // compose-30: a forward says who the message went to.
+  it('gives a forward a header with To', async () => {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub forward'));
+    await waitFor(() => expect(screen.getByTestId('stub-composer').getAttribute('data-quote')).toContain('forward_to_label'));
+  });
 
   it('takes the whole pane for a new message', async () => {
     render(<MailApp />);

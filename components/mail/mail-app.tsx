@@ -264,6 +264,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const tRemove = useTranslations('email_list.confirm_remove');
   const tCommon = useTranslations('common');
   const tComposeUx = useTranslations('compose_ux');
+  const tComposeWords = useTranslations('compose_words');
   const appName = productName(useConfig().appName);
   const tQuote = useTranslations('quote_header');
   const tComposer = useTranslations('email_composer');
@@ -2744,6 +2745,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           fromLabel: tQuote('from_label'),
           dateLabel: tQuote('date_label'),
           subjectLabel: tQuote('subject_label'),
+          // A forward says who the message went to, as Gmail and Outlook do.
+          toLabel: tComposeWords('forward_to_label'),
+          ccLabel: tComposeWords('forward_cc_label'),
         },
       });
       setComposerQuoteHeader(header);
@@ -2751,7 +2755,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       console.warn('[quote-header] plugin transform failed; using default', err);
       setComposerQuoteHeader(null);
     }
-  }, [tCommon, tQuote]);
+  }, [tCommon, tQuote, tComposeWords]);
 
   // Force a clean composer remount on every fresh entry point so prior
   // compose state can't bleed into the new session (#329 C). The composer is
