@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
     "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zeigt den Kontoumschalter über den Ordnern, darunter „Verfassen“. Ausgeschaltet steht „Verfassen“ an seiner Stelle."
+  },
   "mail_p2_conv": {
     "show_message": "Nachricht anzeigen",
     "back_to_reply": "Zurück zur Antwort"

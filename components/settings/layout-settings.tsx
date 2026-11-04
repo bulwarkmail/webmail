@@ -189,13 +189,15 @@ export function LayoutSection() {
 /** The Appearance page's Sidebar section: what the folder sidebar and rail show. */
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
+  const tP3 = useTranslations('mail_p3_conv');
   const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
   return (
     <SettingsSection id="sidebar" title={t('sections.sidebar')}>
-      <SettingItem label={t('sidebar_account_switcher.label')} description={t('sidebar_account_switcher.description')}>
+      {/* Compose sits under the switcher now, not over the list (mail-p3-11). */}
+      <SettingItem label={t('sidebar_account_switcher.label')} description={tP3('sidebar_account_switcher_description')}>
         <ToggleSwitch
           checked={sidebarAccountSwitcher}
           onChange={(checked) => updateSetting('sidebarAccountSwitcher', checked)}

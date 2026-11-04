@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami a pod ním tlačidlo Napísať. Po vypnutí bude na jeho mieste tlačidlo Napísať."
+  },
   "mail_p2_conv": {
     "show_message": "Zobraziť správu",
     "back_to_reply": "Späť na odpoveď"

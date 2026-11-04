@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
     "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "フォルダの上にアカウント切替を表示し、その下に「作成」を表示します。オフにすると、アカウント切替の代わりに「作成」が表示されます。"
+  },
   "mail_p2_conv": {
     "show_message": "メッセージを表示",
     "back_to_reply": "返信に戻る"

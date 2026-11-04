@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
     "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Näita kontovahetajat kaustade kohal ja selle all nuppu Koosta. Lülita see välja, et nupp Koosta oleks selle asemel."
+  },
   "mail_p2_conv": {
     "show_message": "Näita kirja",
     "back_to_reply": "Tagasi vastuse juurde"

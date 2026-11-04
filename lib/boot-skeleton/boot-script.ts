@@ -174,8 +174,8 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   var mailLayout = s.mailLayout === 'focus' || s.mailLayout === 'horizontal' ? s.mailLayout : 'split';
   if (layout === 'mountain-view' || s.simpleMode === true) mailLayout = 'focus';
   mark('mail-layout', mailLayout);
-  // Compose at the head of the folder sidebar instead of the account
-  // switcher, with no round button over the list (sidebarAccountSwitcher).
+  // Compose at the head of the folder sidebar in place of the account
+  // switcher (sidebarAccountSwitcher off); otherwise it sits under it.
   mark('sidebar-compose', s.sidebarAccountSwitcher === false ? 'on' : null);
 
   var desktop = false;

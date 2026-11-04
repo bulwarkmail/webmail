@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra folderelor, cu Compune sub el. Dezactivați pentru a pune Compune în locul lui."
+  },
   "mail_p2_conv": {
     "show_message": "Afișează mesajul",
     "back_to_reply": "Înapoi la răspuns"

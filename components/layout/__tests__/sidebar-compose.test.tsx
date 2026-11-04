@@ -2,11 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
-// The folder sidebar's header holds the account switcher by default, with the
-// round Compose button over the list. With sidebarAccountSwitcher off it holds
-// Compose instead (usability test 2026-11-04: the round button covered the
-// list's rows, mail-13, and the switcher was a second one beside the rail's
-// avatar, mail-27).
+// The folder sidebar's header holds the account switcher by default, with
+// Compose under it on a desktop: the round Compose button over the list
+// covered the rows under it while scrolling (mail-13, mail-p3-11). With
+// sidebarAccountSwitcher off it holds Compose instead (usability test
+// 2026-11-04: the switcher was a second one beside the rail's avatar, mail-27).
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({
@@ -58,14 +58,26 @@ describe('folder sidebar header, by default', () => {
     window.matchMedia = realMatchMedia;
   });
 
-  it('starts with the account switcher and leaves Compose to the round button', () => {
-    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
-    expect(screen.getByTestId('account-switcher')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'compose' })).toBeNull();
+  it('starts with the account switcher and Compose under it', () => {
+    const onCompose = vi.fn();
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={onCompose} />);
+    const switcher = screen.getByTestId('account-switcher');
+    const compose = screen.getByRole('button', { name: 'compose' });
+    expect(switcher.compareDocumentPosition(compose) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(compose);
+    expect(onCompose).toHaveBeenCalledTimes(1);
   });
 
-  it('has no Compose icon when the sidebar is collapsed', () => {
+  it('keeps Compose as an icon when the sidebar is collapsed', () => {
     useUIStore.setState({ sidebarCollapsed: true } as never);
+    const onCompose = vi.fn();
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={onCompose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'compose' }));
+    expect(onCompose).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves Compose to the round button where the sidebar is a drawer', () => {
+    narrowWindow(true);
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'compose' })).toBeNull();
   });

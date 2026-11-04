@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Mostrar # mensaje anterior} other {Mostrar # mensajes anteriores}}",
     "return_to_list_follows_layout": "Mientras no lo cambies, sigue el diseño: desactivado cuando la lista y el mensaje están uno al lado del otro, activado en los demás casos."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Muestra el selector de cuentas encima de las carpetas, con Redactar debajo. Desactívelo para poner Redactar en su lugar."
+  },
   "mail_p2_conv": {
     "show_message": "Mostrar el mensaje",
     "back_to_reply": "Volver a tu respuesta"

@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
     "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra il selettore account sopra le cartelle, con Scrivi sotto. Disattivalo per mettere Scrivi al suo posto."
+  },
   "mail_p2_conv": {
     "show_message": "Mostra il messaggio",
     "back_to_reply": "Torna alla risposta"

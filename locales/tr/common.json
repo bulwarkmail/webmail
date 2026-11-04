@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
     "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hesap değiştiriciyi klasörlerin üstünde, Yeni E-posta düğmesini de onun altında gösterir. Kapatırsanız Yeni E-posta onun yerinde yer alır."
+  },
   "mail_p2_conv": {
     "show_message": "İletiyi göster",
     "back_to_reply": "Yanıtınıza dönün"

@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
     "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Show the account switcher above the folders, with Compose under it. Turn this off to put Compose in its place."
+  },
   "mail_p2_conv": {
     "show_message": "Show the message",
     "back_to_reply": "Back to your reply"

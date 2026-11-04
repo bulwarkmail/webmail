@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Afficher # message plus ancien} other {Afficher # messages plus anciens}}",
     "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Affiche le sélecteur de compte au-dessus des dossiers, avec Composer en dessous. Désactivez cette option pour mettre Composer à sa place."
+  },
   "mail_p2_conv": {
     "show_message": "Afficher le message",
     "back_to_reply": "Revenir à votre réponse"

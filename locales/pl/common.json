@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Pokaż # starszą wiadomość} few {Pokaż # starsze wiadomości} many {Pokaż # starszych wiadomości} other {Pokaż # starszej wiadomości}}",
     "return_to_list_follows_layout": "Dopóki tego nie zmienisz, ustawienie zależy od układu: wyłączone, gdy lista i wiadomość są obok siebie, w innych przypadkach włączone."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Pokazuje przełącznik kont nad folderami, a pod nim przycisk Napisz. Po wyłączeniu przycisk Napisz będzie w jego miejscu."
+  },
   "mail_p2_conv": {
     "show_message": "Pokaż wiadomość",
     "back_to_reply": "Wróć do odpowiedzi"

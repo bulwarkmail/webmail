@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Mostra # missatge anterior} other {Mostra # missatges anteriors}}",
     "return_to_list_follows_layout": "Mentre no ho canviïs, segueix el disseny: desactivat quan la llista i el missatge són l'un al costat de l'altre, activat en els altres casos."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra el selector de comptes damunt de les carpetes, amb Redacta a sota. Desactiveu-ho per posar Redacta al seu lloc."
+  },
   "mail_p2_conv": {
     "show_message": "Mostra el missatge",
     "back_to_reply": "Torna a la resposta"

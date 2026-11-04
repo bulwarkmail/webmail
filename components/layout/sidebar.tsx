@@ -2312,12 +2312,14 @@ function SidebarImpl({
               {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
             </Button>
 
-            {/* The account switcher heads the folders by default, with the
-                round Compose button over the list. With the setting off a
-                desktop puts Compose here instead, as in Gmail and Outlook,
-                and the rail's avatar is the one account switcher (usability
-                test 2026-11-04, mail-13, mail-27); phones and tablets keep
-                the round button, since this pane is a drawer there. */}
+            {/* The account switcher heads the folders by default, with
+                Compose under it on a desktop, as in Gmail and Outlook: a
+                round button over the list covered the rows under it while
+                scrolling (mail-13, mail-p3-11). With the setting off a
+                desktop puts Compose here instead, and the rail's avatar is
+                the one account switcher (usability test 2026-11-04,
+                mail-27); phones keep the round button, since this pane is a
+                drawer there. */}
             {!isCollapsed && sidebarAccountSwitcher && (
               <AccountSwitcher variant="expanded" className="flex-1" />
             )}
@@ -2334,7 +2336,21 @@ function SidebarImpl({
               </Button>
             )}
           </div>
-          {isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
+          {!isCollapsed && sidebarAccountSwitcher && !isDrawer && onCompose && (
+            <div className="px-2 pb-2">
+              <Button
+                onClick={onCompose}
+                className="w-full min-w-0 h-9 justify-start gap-2 px-3"
+                data-sidebar-compose=""
+                data-tour="compose-button"
+                title={t("compose_hint")}
+              >
+                <PenSquare className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{t("compose")}</span>
+              </Button>
+            </div>
+          )}
+          {isCollapsed && !isDrawer && onCompose && (
             <div className="flex justify-center pb-2">
               <IconButton
                 onClick={onCompose}

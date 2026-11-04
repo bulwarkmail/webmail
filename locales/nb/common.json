@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
     "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontobytteren over mappene, med Skriv under den. Slå av for å sette Skriv i stedet for den."
+  },
   "mail_p2_conv": {
     "show_message": "Vis meldingen",
     "back_to_reply": "Tilbake til svaret ditt"

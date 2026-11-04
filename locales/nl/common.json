@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen, met Nieuw bericht eronder. Zet dit uit om Nieuw bericht op die plek te zetten."
+  },
   "mail_p2_conv": {
     "show_message": "Bericht tonen",
     "back_to_reply": "Terug naar je antwoord"

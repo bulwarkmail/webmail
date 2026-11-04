@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {Vis # ældre besked} other {Vis # ældre beskeder}}",
     "return_to_list_follows_layout": "Indtil du ændrer det, følger det layoutet: fra, når listen og beskeden står side om side, ellers til."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontoskifteren over mapperne med Ny besked under den. Slå det fra for at sætte Ny besked i stedet for den."
+  },
   "mail_p2_conv": {
     "show_message": "Vis beskeden",
     "back_to_reply": "Tilbage til dit svar"

@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, other {顯示 # 封較早的郵件}}",
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「撰寫郵件」。關閉後，「撰寫郵件」會顯示在帳號切換器的位置。"
+  },
   "mail_p2_conv": {
     "show_message": "顯示郵件",
     "back_to_reply": "返回回覆"

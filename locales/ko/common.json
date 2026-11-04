@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, other {이전 메시지 #개 보기}}",
     "return_to_list_follows_layout": "변경하기 전까지는 레이아웃을 따릅니다. 목록과 메시지가 나란히 있으면 꺼지고, 그 밖에는 켜집니다."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "폴더 위에 계정 전환기를, 그 아래에 메일 쓰기를 보여줘요. 끄면 계정 전환기 자리에 메일 쓰기가 표시돼요."
+  },
   "mail_p2_conv": {
     "show_message": "메시지 보기",
     "back_to_reply": "답장으로 돌아가기"

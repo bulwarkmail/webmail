@@ -3986,6 +3986,9 @@
     "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
     "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "A fiókváltó a mappák fölött jelenik meg, alatta az Új levél gombbal. Kikapcsolva az Új levél gomb kerül a helyére."
+  },
   "mail_p2_conv": {
     "show_message": "Üzenet megjelenítése",
     "back_to_reply": "Vissza a válaszhoz"

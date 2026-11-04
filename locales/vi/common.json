@@ -3998,6 +3998,9 @@
     "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
     "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hiện bộ chuyển tài khoản phía trên các thư mục, với Soạn thư bên dưới. Tắt tùy chọn này để đặt Soạn thư vào chỗ của nó."
+  },
   "mail_p2_conv": {
     "show_message": "Hiện thư",
     "back_to_reply": "Quay lại thư trả lời"
