@@ -372,7 +372,7 @@ export function WindowMenuBar() {
             aria-haspopup={isSub ? "menu" : undefined}
             aria-expanded={isSub ? opened : undefined}
             aria-disabled={item.enabled ? undefined : true}
-            aria-keyshortcuts={item.accelerator ? menuKeyText(item.accelerator, getDesktopBridge()?.platform) : undefined}
+            aria-keyshortcuts={item.accelerator ? menuKeyText(item.accelerator, getDesktopBridge()?.platform, 'en') : undefined}
             data-menu-line={index}
             tabIndex={-1}
             onMouseEnter={(event) => {

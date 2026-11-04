@@ -27,6 +27,14 @@ describe('describeAccelerator', () => {
   });
 });
 
+describe('describeAccelerator in the app\'s language', () => {
+  it('says Strg and Umschalt in German, and keeps a Mac\'s symbols', () => {
+    expect(describeAccelerator('CommandOrControl+Alt+F11', 'win32', 'de')).toBe('Strg+Alt+F11');
+    expect(describeAccelerator('CommandOrControl+Shift+Enter', 'linux', 'de')).toBe('Strg+Umschalt+Eingabe');
+    expect(describeAccelerator('CommandOrControl+Shift+B', 'darwin', 'de')).toBe('⇧⌘B');
+  });
+});
+
 describe('readShortcutPress', () => {
   it('turns a press into what the shell takes', () => {
     expect(readShortcutPress(press('n', 'KeyN', CTRL_ALT), 'win32')).toEqual({ accelerator: 'CommandOrControl+Alt+N' });

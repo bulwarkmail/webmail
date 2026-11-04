@@ -4,6 +4,8 @@
  * so the settings page can say why before the shell silently refuses.
  */
 
+import { localKeyName } from '@/lib/shortcut-keys';
+
 /**
  * What turning quick compose on gives when the shell doesn't say. On Windows the shell
  * answers Ctrl+Alt+Enter: Ctrl+Alt+N is AltGr+N, which types a character on many layouts.
@@ -50,7 +52,8 @@ const OTHER_NAMES: Record<string, string> = {
 /** The order a Mac shows modifiers in. */
 const MAC_ORDER = ['⌃', '⌥', '⇧', '⌘'];
 
-export function describeAccelerator(accelerator: string, platform: string | undefined): string {
+/** An Electron accelerator as people read it: ⇧⌘B on a Mac, Ctrl+Alt+F11 elsewhere, in the app's language (Strg in German). */
+export function describeAccelerator(accelerator: string, platform: string | undefined, language?: string): string {
   const parts = accelerator.split('+');
   const key = parts.pop() ?? '';
   const named = parts.map((part) => part.toLowerCase());
@@ -59,7 +62,7 @@ export function describeAccelerator(accelerator: string, platform: string | unde
     return [...symbols].sort((a, b) => MAC_ORDER.indexOf(a) - MAC_ORDER.indexOf(b)).join('') + key;
   }
   const superKey = platform === 'win32' ? 'Win' : 'Super';
-  return [...named.map((part) => OTHER_NAMES[part] ?? superKey), key].join('+');
+  return [...named.map((part) => OTHER_NAMES[part] ?? superKey), key].map((part) => localKeyName(part, language)).join('+');
 }
 
 export interface ShortcutKeyEvent {

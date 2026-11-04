@@ -13,6 +13,25 @@ describe('shortcut notation', () => {
     expect(formatShortcutCombo('Ctrl+Shift+Y', false)).toBe('Ctrl+Shift+Y');
   });
 
+  it('names keys the way Windows does in the app\'s language, and a Mac keeps its symbols', () => {
+    expect(formatShortcutCombo('Mod + Shift + R', false, 'de')).toBe('Strg + Umschalt + R');
+    expect(formatShortcutCombo('Shift + Mod + Enter', false, 'de-AT')).toBe('Umschalt + Strg + Eingabe');
+    expect(shortcutAlternatives('# / Del', false, 'de')).toEqual(['#', 'Entf']);
+    expect(formatShortcutCombo('Alt + Shift + N', false, 'fr')).toBe('Alt + Maj + N');
+    expect(formatShortcutCombo('Mod + Shift + R', true, 'de')).toBe('⌘ + Shift + R');
+    expect(formatShortcutCombo('Mod + Shift + R', false, 'nl')).toBe('Ctrl + Shift + R');
+    expect(formatShortcutCombo('Mod + Shift + R', false, 'en')).toBe('Ctrl + Shift + R');
+  });
+
+  it('follows the app\'s language when none is given', () => {
+    document.documentElement.lang = 'de';
+    try {
+      expect(formatShortcutCombo('Mod + K', false)).toBe('Strg + K');
+    } finally {
+      document.documentElement.lang = '';
+    }
+  });
+
   it('splits alternatives', () => {
     expect(shortcutAlternatives('j / ↓', false)).toEqual(['j', '↓']);
     expect(shortcutAlternatives('Mod + A', true)).toEqual(['⌘ + A']);

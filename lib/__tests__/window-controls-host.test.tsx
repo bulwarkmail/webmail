@@ -278,6 +278,14 @@ describe('the menu bar in the desktop app', () => {
     expect(menuKeyText('?', 'win32')).toBe('?');
     expect(menuKeyText('CommandOrControl+Shift+Z', 'win32')).toBe('Ctrl+Shift+Z');
   });
+
+  it('and in the app\'s language, as German Windows writes them', () => {
+    expect(menuKeyText('CmdOrCtrl+Shift+R', 'win32', 'de')).toBe('Strg+Umschalt+R');
+    expect(menuKeyText('Delete', 'win32', 'de')).toBe('Entf');
+    expect(menuKeyText('CmdOrCtrl+Enter', 'linux', 'de')).toBe('Strg+Eingabe');
+    expect(menuKeyText('Alt+Left', 'win32', 'de')).toBe('Alt+←');
+    expect(menuKeyText('Delete', 'win32', 'fr')).toBe('Suppr');
+  });
 });
 
 describe('the window controls over the app', () => {
