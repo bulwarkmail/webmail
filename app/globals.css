@@ -1286,6 +1286,14 @@ html[data-window-controls-left] [data-window-rail] {
   overflow: hidden;
 }
 
+/* A pasted spreadsheet table keeps its source grid (fixed layout with
+   colgroup widths, see components/email/table-paste.ts), which can add up
+   to more than the composer's width. Scroll the wrapper instead of letting
+   the table stick out of the compose pane. */
+.tiptap .tableWrapper {
+  overflow-x: auto;
+}
+
 .tiptap table td,
 .tiptap table th {
   border: 1px solid var(--color-border);

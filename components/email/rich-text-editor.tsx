@@ -19,10 +19,13 @@ import Color from "@tiptap/extension-color";
 import { FontSize, FONT_SIZES, composeTextStyleCss, type ComposeTextStyle } from "@/components/email/font-size";
 import { ResizableImage } from "@/components/email/resizable-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableCell } from "@tiptap/extension-table-cell";
+import {
+  StyledTable,
+  StyledTableRow,
+  StyledTableHeader,
+  StyledTableCell,
+  TablePaste,
+} from "@/components/email/table-paste";
 import { ReplyQuoteCollapse } from "@/components/email/reply-quote-collapse";
 import { QuotedHtml, restoreCaretAfterContentSync, serializeEditorContent } from "@/components/email/quoted-html";
 import { keepLoadedParagraphSpacing, paragraphStyleWithoutSpacing, trailingParagraphBreakRule } from "@/components/email/paragraph-breaks";
@@ -560,7 +563,7 @@ export function RichTextEditor({
       Placeholder.configure({
         placeholder,
       }),
-      Table.configure({
+      StyledTable.configure({
         resizable: true,
         HTMLAttributes: {
           border: "1",
@@ -570,13 +573,13 @@ export function RichTextEditor({
           style: "width:100%;border-collapse:collapse;",
         },
       }),
-      TableRow,
-      TableHeader.configure({
+      StyledTableRow,
+      StyledTableHeader.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;background-color:#f5f5f5;color:#1f2937;text-align:left;",
         },
       }),
-      TableCell.configure({
+      StyledTableCell.configure({
         HTMLAttributes: {
           style: "padding:6px 8px;border:1px solid #ccc;vertical-align:top;",
         },
@@ -592,6 +595,7 @@ export function RichTextEditor({
       SignatureBlock.configure({ editHint: tComposer('signature_edit_hint') }),
       TextDirection,
       PlainTextPaste,
+      TablePaste,
       // "@" offers the recipients and inserts a first name (see
       // recipient-mention.tsx). The editor is built once, so the candidates
       // and the list are reached through refs and a stable state setter.
