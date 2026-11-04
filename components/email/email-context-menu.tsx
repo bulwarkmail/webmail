@@ -131,7 +131,9 @@ interface EmailContextMenuProps {
   onViewSource?: () => void;
   /** Entries the host already shows elsewhere (the reader's toolbar). */
   omit?: ReadonlySet<MessageActionKey>;
-  /** The host's own entries after the message's (the reader's view toggles). */
+  /** How the host shows the message (the reader's view toggles), before Export, Print and View source. */
+  views?: MessageActionEntry[];
+  /** The host's own entries after the message's. */
   extras?: MessageActionEntry[];
   /** The row's plugin entries (message-row-actions). Default true. */
   rowPlugins?: boolean;
@@ -192,6 +194,7 @@ export function EmailContextMenu({
   onPrint,
   onViewSource,
   omit,
+  views,
   extras,
   rowPlugins = true,
   extraEntries,
@@ -319,6 +322,7 @@ export function EmailContextMenu({
     onPrint,
     onViewSource,
     omit,
+    views,
     extras,
   });
 

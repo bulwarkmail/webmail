@@ -136,7 +136,7 @@ import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
+import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog } from "@/components/email/move-to-dialog";
 import { ResizeHandle } from "@/components/layout/resize-handle";
@@ -4819,6 +4819,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       when: () => !!paletteEmail && conversationSpamApplicable,
       run: () => void (conversationInJunk ? handleUndoSpam(paletteEmail) : handleMarkAsSpam(paletteEmail)),
     },
+    // Into the open folder, as the folder's own menu does it.
+    {
+      id: 'import', label: t('mail_import.menu_import'), icon: Upload,
+      run: () => openMailImport({ mailboxId: selectedMailbox || undefined }),
+    },
     ...mailboxes
       .filter((mb) => !mb.id.startsWith('shared-') && mb.id !== selectedMailbox)
       .map((mb) => {
@@ -6113,7 +6118,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
-                    onShowShortcuts={() => setShowShortcutsModal(true)}
                     onEditDraft={handleEditDraft}
                     onCancelScheduledForEdit={async () => {
                       if (!client || !selectedEmail) return;

@@ -3,7 +3,6 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
-import { openMailImport } from "@/stores/mail-transfer-store";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -106,7 +105,6 @@ import {
   Send,
   FolderInput,
   Sun,
-  Upload,
   Moon,
   PlayCircle,
   PenSquare,
@@ -278,7 +276,6 @@ interface EmailViewerProps {
   onReplyAllConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
-  onShowShortcuts?: () => void;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
@@ -1157,6 +1154,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onPrint={options.onPrint}
       onViewSource={options.onViewSource}
       omit={options.omit}
+      views={options.views}
       extras={options.extras}
       rowPlugins={false}
       extraEntries={pluginEntries}
@@ -1341,7 +1339,6 @@ export function EmailViewer({
   onReplyConversationEmail,
   onReplyAllConversationEmail,
   mvInlineComposer,
-  onShowShortcuts,
   onEditDraft,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
@@ -1364,7 +1361,6 @@ export function EmailViewer({
   const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
-  const tImport = useTranslations('mail_import');
   const tCommon = useTranslations('common');
   const tFiles = useTranslations('files');
   const tDemoWelcome = useTranslations('demo_welcome');
@@ -3768,11 +3764,6 @@ export function EmailViewer({
     await exportEmail(email, { onArchive, onDelete, archiveEnabled: archiveActionEnabled }, blobSource ?? { client, accountId: undefined });
   };
 
-  // Import mail into the open folder: the import dialog (lib/mail-import) does the rest.
-  const handleImportEmail = () => {
-    openMailImport({ mailboxId: useEmailStore.getState().selectedMailbox || undefined });
-  };
-
   // What a printout of the message shows, for the Print action's window and
   // for the page's print copy (Ctrl+P). Text fields are unescaped.
   const messagePrintFields = (): MessagePrintFields | null => {
@@ -4228,6 +4219,8 @@ ${printWatermark ? printWatermark.html : ''}
   // the bottom bar has the replies.
   const toolbarShownActions = (): ReadonlySet<MessageActionKey> => {
     const shown = new Set<MessageActionKey>(['delete', 'edit_draft']);
+    // The star sits by the subject, or on the sender's line in Mountain View.
+    if (toolbarPosition === 'top' || mvViewer) shown.add('star');
     toolbarRef.current?.querySelectorAll<HTMLElement>('[data-overflow-item]').forEach((item) => {
       const key = TOOLBAR_PRIORITY_ACTIONS[item.dataset.overflowPriority ?? ''];
       if (key && item.getClientRects().length > 0) shown.add(key);
@@ -4248,9 +4241,10 @@ ${printWatermark ? printWatermark.html : ''}
     return hidden;
   };
   const toggleViewMode = () => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev);
-  // The reader's own entries after the message's: the view toggle, Import
-  // (into the open folder) and, with a keyboard, the shortcuts.
-  const readerExtras: MessageActionEntry[] = [
+  // How the reader shows the message, a group of the ⋮ menu of its own. Import
+  // and the keyboard shortcuts are no message's: Import is in the folder's menu,
+  // Settings and the command palette, the shortcuts behind ?, the rail and Help.
+  const readerViews: MessageActionEntry[] = [
     ...(readAloud.supported && !isBodyLoading
       ? [{ kind: 'item' as const, key: 'extra:read_aloud' as const, icon: Volume2, label: t('read_aloud'), run: readAloud.start }]
       : []),
@@ -4262,10 +4256,6 @@ ${printWatermark ? printWatermark.html : ''}
       : []),
     ...(effectiveEmailContent.isHtml
       ? [{ kind: 'item' as const, key: 'extra:view_mode' as const, icon: isDark ? Sun : Moon, label: isDark ? t('view_in_light_mode') : t('view_in_dark_mode'), run: toggleViewMode }]
-      : []),
-    { kind: 'item', key: 'extra:import', icon: Upload, label: tImport('menu_import'), run: handleImportEmail },
-    ...(onShowShortcuts && !isMobile
-      ? [{ kind: 'item' as const, key: 'extra:shortcuts' as const, icon: Keyboard, label: t('keyboard_shortcuts'), run: onShowShortcuts }]
       : []),
   ];
   const readerActionOptions: MessageActionOptions = {
@@ -4291,7 +4281,7 @@ ${printWatermark ? printWatermark.html : ''}
     onPrint: devices.noPrint ? undefined : () => handlePrint(),
     onViewSource: devices.noExport ? undefined : () => setShowSourceModal(true),
     omit: readerMenuOmit,
-    extras: readerExtras.filter((entry) => entry.kind !== 'item' || !readerMenuOmit.has(entry.key)),
+    views: readerViews,
   };
 
   // Shared toolbar items used by both 'top' and 'below-subject' positions
