@@ -562,6 +562,17 @@ describe('the drive', () => {
     expect(s.disk.node('r1', 'new.txt').placeholder).toMatchObject({ identity: node.id, inSync: true });
   });
 
+  it('uploads a file made in Explorer inside a placed folder, next to a file opened there', async () => {
+    const s = await drive((server) => { const docs = server.folder('Docs'); server.file('seen.txt', docs.id, 'seen'); });
+    const request = s.disk.requestFetch('r1', 'Docs/seen.txt');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(s.disk.fetchFailed.has(request.fetchId)).toBe(false);
+    s.disk.write('r1', 'Docs/new.txt', 'from explorer');
+    await s.sync();
+    const node = s.server.find('Docs/new.txt');
+    expect(node && s.server.content(node.id)).toBe('from explorer');
+  });
+
   it('takes a save over a placeholder as an edit here', async () => {
     const s = await drive((server) => server.file('doc.txt', null, 'v1'));
     const id = s.server.find('doc.txt')!.id;
