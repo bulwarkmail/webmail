@@ -304,7 +304,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   composerSessionRef.current = composerSessionId;
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
-  const dockedSessionRef = useRef<number | null>(null);
+  const [dockedSession, setDockedSession] = useState<number | null>(null);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -4923,8 +4923,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // anew when the message goes away (another folder opened meanwhile).
   const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
     && (pendingDraft?.mode ?? composerMode) !== 'compose';
-  if (dockCandidate && selectedEmail && !selectedEmail.keywords?.$draft) dockedSessionRef.current = composerSessionId;
-  const dockedReply = dockCandidate && dockedSessionRef.current === composerSessionId;
+  const dockOnOpen = dockCandidate && Boolean(selectedEmail) && !selectedEmail?.keywords?.$draft;
+  if (dockOnOpen && dockedSession !== composerSessionId) setDockedSession(composerSessionId);
+  const dockedReply = dockCandidate && (dockOnOpen || dockedSession === composerSessionId);
   const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
   composerHostRef.current = composerHost;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
@@ -5275,6 +5276,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         sessionKey={`inline-${composerSessionId}`}
         sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
+          // A composer whose session another one has replaced: its state
+          // belongs to no composer on screen. Taken as the new session's,
+          // it turned a new message into the old reply and moved it between
+          // the dock and the pane for ever (React error 185, compose-p2-1).
+          // Whatever opens a composer closes the old one first, which saves it.
+          if (composerSessionRef.current !== composerSessionId) return;
           setComposerPrefill(null);
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
             suppressComposerStateSaveSessionRef.current = null;
