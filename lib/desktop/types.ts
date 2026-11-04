@@ -119,6 +119,8 @@ export interface DesktopMenuBarEvent {
 export interface DesktopMenuBarItem {
   /** Its place in the app menu: handed back with its text when it's picked. */
   key: string;
+  /** The line's command id (`message.reply`), or `role.<role>`: the page draws its icon by it. Newer shells only. */
+  id?: string;
   label: string;
   type: 'normal' | 'checkbox' | 'radio' | 'separator' | 'submenu';
   enabled: boolean;
