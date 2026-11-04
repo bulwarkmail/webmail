@@ -1,39 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Search } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { formatAddressLines } from "@/lib/address-format";
+import { formatContactDate } from "@/lib/contact-dates";
 import { cn } from "@/lib/utils";
-import type { ContactAddress, ContactCard } from "@/lib/jmap/types";
+import type { ContactCard } from "@/lib/jmap/types";
 import { memberKeys, planMerge, type MergePlan } from "@/lib/contacts/merge";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 
-/** One line for an address, as its parts and separators say. */
-export function addressLine(address: ContactAddress): string {
-  const components = address.components ?? [];
-  if (components.length > 0) {
-    let out = "";
-    let lastWasValue = false;
-    for (const c of components) {
-      if (c.kind === "separator") {
-        out += c.value;
-        lastWasValue = false;
-        continue;
-      }
-      if (!c.value) continue;
-      if (lastWasValue) out += address.defaultSeparator ?? ", ";
-      out += c.value.replace(/\s*\n\s*/g, ", ");
-      lastWasValue = true;
-    }
-    return out;
-  }
-  const legacy = [address.street, [address.postcode, address.locality].filter(Boolean).join(" "), address.region, address.country]
-    .filter(Boolean).join(", ");
-  return legacy || address.full || address.fullAddress || "";
-}
+/** Lines of one value, shown with whitespace-pre-line. */
+const NEWLINE = String.fromCharCode(10);
 
 interface ContactMergeDialogProps {
   /** Two or more cards: the dialog opens on what the merge keeps. */
@@ -69,11 +50,14 @@ function PickRow({ card, onPick }: { card: ContactCard; onPick: () => void }) {
 export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = [], suggested = [], groups, onMerge, onClose }: ContactMergeDialogProps) {
   const t = useTranslations("ux_pim_cimport");
   const tc = useTranslations("contacts");
+  const tm = useTranslations("ux_p2_pim_cm");
+  const locale = useLocale();
   const [cards, setCards] = useState<ContactCard[] | null>(initialCards && initialCards.length > 1 ? initialCards : null);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
 
   const plan = useMemo(() => (cards ? planMerge(cards) : null), [cards]);
+  const collator = useMemo(() => new Intl.Collator(locale, { sensitivity: "base", numeric: true }), [locale]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -81,8 +65,10 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
     return candidates
       .filter((c) => !suggestedIds.has(c.id))
       .filter((c) => !q || `${getContactDisplayName(c)} ${Object.values(c.emails ?? {}).map((e) => e.address).join(" ")}`.toLowerCase().includes(q))
+      // By name, as the contact list sorts, in the UI language's order.
+      .sort((a, b) => collator.compare(getContactDisplayName(a) || getContactPrimaryEmail(a) || "", getContactDisplayName(b) || getContactPrimaryEmail(b) || ""))
       .slice(0, 200);
-  }, [candidates, suggested, query]);
+  }, [candidates, suggested, query, collator]);
 
   if (!plan) {
     const name = pickFor ? getContactDisplayName(pickFor) || getContactPrimaryEmail(pickFor) : "";
@@ -135,11 +121,12 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
     .filter((g) => Object.entries(g.members ?? {}).some(([k, on]) => on && keys.has(k)))
     .map((g) => getContactDisplayName(g))
     .filter(Boolean);
-  const rows: Array<{ label: string; values: string[] }> = [
+  const rows: Array<{ label: string; values: string[]; multiline?: boolean }> = [
     { label: t("group_name"), values: [getContactDisplayName(r)].filter(Boolean) },
     { label: t("group_email"), values: Object.values(r.emails ?? {}).map((e) => e.address) },
     { label: t("group_phone"), values: Object.values(r.phones ?? {}).map((p) => p.number) },
-    { label: t("group_adr_any"), values: Object.values(r.addresses ?? {}).map(addressLine).filter(Boolean) },
+    // Laid out as the card shows it ("Hauptstraße 5" / "10115 Berlin"), not the parts in stored order.
+    { label: t("group_adr_any"), values: Object.values(r.addresses ?? {}).map((a) => formatAddressLines(a, locale).join(NEWLINE)).filter(Boolean), multiline: true },
     {
       label: t("group_org"),
       values: [
@@ -147,8 +134,29 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
         ...Object.values(r.titles ?? {}).map((ti) => ti.name),
       ].filter(Boolean),
     },
+    { label: t("t_nickname"), values: Object.values(r.nicknames ?? {}).map((n) => n.name).filter(Boolean) },
+    // Every date the kept card will have, each under its own name ("Birthday").
+    ...(["birth", "wedding", "death", "other"] as const).map((kind) => ({
+      label: tc(`detail.anniversary_${kind}`),
+      values: Object.values(r.anniversaries ?? {}).filter((a) => a.kind === kind && a.date).map((a) => formatContactDate(a.date, locale)),
+    })),
+    {
+      label: tc("detail.gender"),
+      values: [
+        r.speakToAs?.grammaticalGender ? tc(`detail.gender_${r.speakToAs.grammaticalGender}`, { defaultValue: r.speakToAs.grammaticalGender }) : "",
+        ...Object.values(r.speakToAs?.pronouns ?? {}).map((p) => p.pronouns),
+      ].filter(Boolean),
+    },
+    { label: tc("detail.language_label"), values: Object.values(r.preferredLanguages ?? {}).map((l) => l.language).filter(Boolean) },
+    { label: tc("detail.personal_info"), values: Object.values(r.personalInfo ?? {}).map((pi) => pi.value).filter(Boolean) },
     { label: t("t_web"), values: Object.values(r.onlineServices ?? {}).map((s) => s.uri || s.user || "").filter(Boolean) },
-    { label: t("t_notes"), values: Object.values(r.notes ?? {}).map((n) => n.note).filter(Boolean) },
+    { label: tm("merge_links"), values: [...Object.values(r.links ?? {}), ...Object.values(r.directories ?? {})].map((l) => l.uri).filter(Boolean) },
+    { label: tc("detail.calendar_uri"), values: Object.values(r.calendars ?? {}).map((c) => c.uri).filter(Boolean) },
+    { label: tc("detail.scheduling_uri"), values: Object.values(r.schedulingAddresses ?? {}).map((c) => c.uri).filter(Boolean) },
+    { label: tc("detail.related_contacts"), values: Object.keys(r.relatedTo ?? {}) },
+    { label: tc("detail.crypto_keys"), values: Object.keys(r.cryptoKeys ?? {}).length > 0 ? [tm("merge_kept")] : [] },
+    { label: tm("merge_photo"), values: Object.keys(r.media ?? {}).length > 0 ? [tm("merge_kept")] : [] },
+    { label: t("t_notes"), values: Object.values(r.notes ?? {}).map((n) => n.note).filter(Boolean), multiline: true },
     { label: t("t_categories"), values: Object.keys(r.keywords ?? {}).filter((k) => r.keywords?.[k]) },
     { label: t("groups"), values: groupNames },
   ].filter((row) => row.values.length > 0);
@@ -188,7 +196,7 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
               <dt className="text-muted-foreground">{row.label}</dt>
               <dd className="min-w-0">
                 {row.values.map((value, i) => (
-                  <div key={i} className={cn("break-words", row.label === t("t_notes") && "whitespace-pre-line")}>{value}</div>
+                  <div key={i} className={cn("break-words", row.multiline && "whitespace-pre-line")}>{value}</div>
                 ))}
               </dd>
             </div>
