@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tilbage til redigering",
+    "send_anyway": "Send alligevel",
+    "warnings_title": "Send denne besked alligevel?",
+    "warning_subject": "Intet emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nævner \"{keyword}\", men ingen fil er vedhæftet",
+    "warning_placeholders": "Pladsholdertekst, som modtagerne vil se:",
+    "warning_proofreading": "Åbne stave- eller grammatikfejl: {count}",
+    "empty_text_title": "Send uden tekst?",
+    "empty_text_message": "Denne besked har ingen tekst og ingen vedhæftet fil. Send den alligevel?",
+    "scheduled_for": "Planlagt til {when}",
+    "sending": "Sender…",
+    "sent": "Sendt",
+    "view": "Vis",
+    "picker_button": "Tilføj fra kontakter",
+    "picker_title": "Tilføj modtagere",
+    "tab_contacts": "Kontakter",
+    "tab_directory": "Adressefortegnelse",
+    "contacts_empty_title": "Ingen kontakter endnu",
+    "contacts_empty_hint": "Personer, du gemmer i Kontakter, vises her.",
+    "contacts_no_match": "Ingen kontakter matcher din søgning",
+    "template_name": "Skabelonens navn",
+    "template_edit_details": "Rediger detaljer…"
+  },
   "org_templates": {
     "section_personal": "Mine skabeloner",
     "section_organisation": "Organisation",

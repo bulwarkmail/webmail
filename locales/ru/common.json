@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Вернуться к редактированию",
+    "send_anyway": "Отправить всё равно",
+    "warnings_title": "Всё равно отправить это письмо?",
+    "warning_subject": "Нет темы",
+    "warning_text": "Нет текста",
+    "warning_attachment": "Упоминается «{keyword}», но файл не прикреплён",
+    "warning_placeholders": "Текст-заполнитель, который увидят получатели:",
+    "warning_proofreading": "Неисправленные орфографические или грамматические ошибки: {count}",
+    "empty_text_title": "Отправить без текста?",
+    "empty_text_message": "В этом письме нет ни текста, ни вложений. Всё равно отправить?",
+    "scheduled_for": "Запланировано на {when}",
+    "sending": "Отправка…",
+    "sent": "Отправлено",
+    "view": "Открыть",
+    "picker_button": "Добавить из контактов",
+    "picker_title": "Добавить получателей",
+    "tab_contacts": "Контакты",
+    "tab_directory": "Справочник",
+    "contacts_empty_title": "Контактов пока нет",
+    "contacts_empty_hint": "Здесь появятся люди, которых вы сохраните в контактах.",
+    "contacts_no_match": "Нет контактов, подходящих под запрос",
+    "template_name": "Название шаблона",
+    "template_edit_details": "Изменить подробности…"
+  },
   "org_templates": {
     "section_personal": "Мои шаблоны",
     "section_organisation": "Организация",

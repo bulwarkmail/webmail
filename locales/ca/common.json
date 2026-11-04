@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna a l'edició",
+    "send_anyway": "Envia igualment",
+    "warnings_title": "Vols enviar aquest missatge igualment?",
+    "warning_subject": "Sense assumpte",
+    "warning_text": "Sense text",
+    "warning_attachment": "Esmenta «{keyword}», però no hi ha cap fitxer adjunt",
+    "warning_placeholders": "Text de mostra que veuran els destinataris:",
+    "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
+    "empty_text_title": "Vols enviar-lo sense text?",
+    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?",
+    "scheduled_for": "Programat per a {when}",
+    "sending": "S'està enviant…",
+    "sent": "Enviat",
+    "view": "Mostra",
+    "picker_button": "Afegeix des dels contactes",
+    "picker_title": "Afegeix destinataris",
+    "tab_contacts": "Contactes",
+    "tab_directory": "Directori",
+    "contacts_empty_title": "Encara no hi ha contactes",
+    "contacts_empty_hint": "Aquí apareixen les persones que deses a Contactes.",
+    "contacts_no_match": "Cap contacte coincideix amb la cerca",
+    "template_name": "Nom de la plantilla",
+    "template_edit_details": "Edita els detalls…"
+  },
   "org_templates": {
     "section_personal": "Les meves plantilles",
     "section_organisation": "Organització",

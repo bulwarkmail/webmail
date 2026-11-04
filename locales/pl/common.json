@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Wróć do edycji",
+    "send_anyway": "Wyślij mimo to",
+    "warnings_title": "Wysłać tę wiadomość mimo to?",
+    "warning_subject": "Brak tematu",
+    "warning_text": "Brak treści",
+    "warning_attachment": "Wspomina „{keyword}”, ale nie dołączono pliku",
+    "warning_placeholders": "Tekst zastępczy, który zobaczą odbiorcy:",
+    "warning_proofreading": "Nierozwiązane błędy pisowni lub gramatyki: {count}",
+    "empty_text_title": "Wysłać bez treści?",
+    "empty_text_message": "Ta wiadomość nie ma treści ani załącznika. Wysłać ją mimo to?",
+    "scheduled_for": "Zaplanowano na {when}",
+    "sending": "Wysyłanie…",
+    "sent": "Wysłano",
+    "view": "Pokaż",
+    "picker_button": "Dodaj z kontaktów",
+    "picker_title": "Dodaj odbiorców",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Katalog",
+    "contacts_empty_title": "Brak kontaktów",
+    "contacts_empty_hint": "Tutaj pojawią się osoby zapisane w Kontaktach.",
+    "contacts_no_match": "Żaden kontakt nie pasuje do wyszukiwania",
+    "template_name": "Nazwa szablonu",
+    "template_edit_details": "Edytuj szczegóły…"
+  },
   "org_templates": {
     "section_personal": "Moje szablony",
     "section_organisation": "Organizacja",

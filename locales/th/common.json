@@ -1147,6 +1147,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "กลับไปแก้ไข",
+    "send_anyway": "ส่งต่อไป",
+    "warnings_title": "ส่งข้อความนี้ต่อไปหรือไม่",
+    "warning_subject": "ไม่มีหัวเรื่อง",
+    "warning_text": "ไม่มีข้อความ",
+    "warning_attachment": "มีคำว่า \"{keyword}\" แต่ไม่ได้แนบไฟล์",
+    "warning_placeholders": "ข้อความตัวยึดตำแหน่งที่ผู้รับจะเห็น:",
+    "warning_proofreading": "ปัญหาการสะกดหรือไวยากรณ์ที่ยังค้างอยู่: {count}",
+    "empty_text_title": "ส่งโดยไม่มีข้อความหรือไม่",
+    "empty_text_message": "ข้อความนี้ไม่มีเนื้อหาและไม่มีไฟล์แนบ ส่งต่อไปหรือไม่",
+    "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}",
+    "sending": "กำลังส่ง…",
+    "sent": "ส่งแล้ว",
+    "view": "ดู",
+    "picker_button": "เพิ่มจากผู้ติดต่อ",
+    "picker_title": "เพิ่มผู้รับ",
+    "tab_contacts": "ผู้ติดต่อ",
+    "tab_directory": "ไดเรกทอรีกลาง",
+    "contacts_empty_title": "ยังไม่มีผู้ติดต่อ",
+    "contacts_empty_hint": "คนที่คุณบันทึกไว้ในผู้ติดต่อจะแสดงที่นี่",
+    "contacts_no_match": "ไม่มีผู้ติดต่อที่ตรงกับการค้นหา",
+    "template_name": "ชื่อแม่แบบ",
+    "template_edit_details": "แก้ไขรายละเอียด…"
+  },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",
     "section_organisation": "องค์กร",

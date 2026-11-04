@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Terug naar bewerken",
+    "send_anyway": "Toch verzenden",
+    "warnings_title": "Dit bericht toch verzenden?",
+    "warning_subject": "Geen onderwerp",
+    "warning_text": "Geen tekst",
+    "warning_attachment": "Noemt ‘{keyword}’, maar er is geen bestand bijgevoegd",
+    "warning_placeholders": "Tijdelijke tekst die ontvangers zien:",
+    "warning_proofreading": "Openstaande spel- of grammaticafouten: {count}",
+    "empty_text_title": "Verzenden zonder tekst?",
+    "empty_text_message": "Dit bericht heeft geen tekst en geen bijlage. Toch verzenden?",
+    "scheduled_for": "Gepland voor {when}",
+    "sending": "Bezig met verzenden…",
+    "sent": "Verzonden",
+    "view": "Bekijken",
+    "picker_button": "Toevoegen uit contacten",
+    "picker_title": "Ontvangers toevoegen",
+    "tab_contacts": "Contacten",
+    "tab_directory": "Adresboek van de organisatie",
+    "contacts_empty_title": "Nog geen contacten",
+    "contacts_empty_hint": "Mensen die u in Contacten opslaat, verschijnen hier.",
+    "contacts_no_match": "Geen contact komt overeen met uw zoekopdracht",
+    "template_name": "Naam van sjabloon",
+    "template_edit_details": "Details bewerken…"
+  },
   "org_templates": {
     "section_personal": "Mijn sjablonen",
     "section_organisation": "Organisatie",

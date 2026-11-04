@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna alla modifica",
+    "send_anyway": "Invia comunque",
+    "warnings_title": "Inviare comunque questo messaggio?",
+    "warning_subject": "Nessun oggetto",
+    "warning_text": "Nessun testo",
+    "warning_attachment": "Menziona \"{keyword}\", ma non c'è nessun file allegato",
+    "warning_placeholders": "Testo segnaposto che i destinatari vedranno:",
+    "warning_proofreading": "Errori di ortografia o grammatica aperti: {count}",
+    "empty_text_title": "Inviare senza testo?",
+    "empty_text_message": "Questo messaggio non ha testo né allegati. Inviarlo comunque?",
+    "scheduled_for": "Programmato per {when}",
+    "sending": "Invio in corso…",
+    "sent": "Inviato",
+    "view": "Visualizza",
+    "picker_button": "Aggiungi dai contatti",
+    "picker_title": "Aggiungi destinatari",
+    "tab_contacts": "Contatti",
+    "tab_directory": "Rubrica aziendale",
+    "contacts_empty_title": "Ancora nessun contatto",
+    "contacts_empty_hint": "Le persone salvate in Contatti compaiono qui.",
+    "contacts_no_match": "Nessun contatto corrisponde alla ricerca",
+    "template_name": "Nome del modello",
+    "template_edit_details": "Modifica dettagli…"
+  },
   "org_templates": {
     "section_personal": "I miei modelli",
     "section_organisation": "Organizzazione",

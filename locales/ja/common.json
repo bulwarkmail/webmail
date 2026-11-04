@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "編集に戻る",
+    "send_anyway": "そのまま送信",
+    "warnings_title": "このメッセージをそのまま送信しますか？",
+    "warning_subject": "件名がありません",
+    "warning_text": "本文がありません",
+    "warning_attachment": "「{keyword}」とありますが、ファイルが添付されていません",
+    "warning_placeholders": "受信者に表示されるプレースホルダー:",
+    "warning_proofreading": "未解決のスペル・文法の問題: {count}",
+    "empty_text_title": "本文なしで送信しますか？",
+    "empty_text_message": "このメッセージには本文も添付ファイルもありません。そのまま送信しますか？",
+    "scheduled_for": "{when} に送信予定",
+    "sending": "送信中…",
+    "sent": "送信しました",
+    "view": "表示",
+    "picker_button": "連絡先から追加",
+    "picker_title": "宛先を追加",
+    "tab_contacts": "連絡先",
+    "tab_directory": "ディレクトリ",
+    "contacts_empty_title": "連絡先はまだありません",
+    "contacts_empty_hint": "連絡先に保存した人がここに表示されます。",
+    "contacts_no_match": "検索に一致する連絡先はありません",
+    "template_name": "テンプレート名",
+    "template_edit_details": "詳細を編集…"
+  },
   "org_templates": {
     "section_personal": "マイテンプレート",
     "section_organisation": "組織",

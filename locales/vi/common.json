@@ -3908,6 +3908,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Quay lại chỉnh sửa",
+    "send_anyway": "Vẫn gửi",
+    "warnings_title": "Vẫn gửi thư này?",
+    "warning_subject": "Không có tiêu đề",
+    "warning_text": "Không có nội dung",
+    "warning_attachment": "Có nhắc đến \"{keyword}\" nhưng chưa đính kèm tệp nào",
+    "warning_placeholders": "Văn bản giữ chỗ mà người nhận sẽ thấy:",
+    "warning_proofreading": "Lỗi chính tả hoặc ngữ pháp chưa sửa: {count}",
+    "empty_text_title": "Gửi mà không có nội dung?",
+    "empty_text_message": "Thư này không có nội dung và không có tệp đính kèm. Vẫn gửi?",
+    "scheduled_for": "Đã lên lịch gửi lúc {when}",
+    "sending": "Đang gửi…",
+    "sent": "Đã gửi",
+    "view": "Xem",
+    "picker_button": "Thêm từ danh bạ",
+    "picker_title": "Thêm người nhận",
+    "tab_contacts": "Danh bạ",
+    "tab_directory": "Danh bạ tổ chức",
+    "contacts_empty_title": "Chưa có liên hệ nào",
+    "contacts_empty_hint": "Những người bạn lưu trong Danh bạ sẽ hiện ở đây.",
+    "contacts_no_match": "Không có liên hệ nào khớp với tìm kiếm",
+    "template_name": "Tên mẫu",
+    "template_edit_details": "Sửa chi tiết…"
+  },
   "org_templates": {
     "section_personal": "Mẫu của tôi",
     "section_organisation": "Tổ chức",

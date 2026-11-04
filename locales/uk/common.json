@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Назад до редагування",
+    "send_anyway": "Усе одно надіслати",
+    "warnings_title": "Усе одно надіслати цей лист?",
+    "warning_subject": "Без теми",
+    "warning_text": "Без тексту",
+    "warning_attachment": "Згадується «{keyword}», але файл не прикріплено",
+    "warning_placeholders": "Текст-заповнювач, який побачать одержувачі:",
+    "warning_proofreading": "Невиправлені орфографічні чи граматичні помилки: {count}",
+    "empty_text_title": "Надіслати без тексту?",
+    "empty_text_message": "У цьому листі немає ні тексту, ні вкладень. Усе одно надіслати?",
+    "scheduled_for": "Заплановано на {when}",
+    "sending": "Надсилання…",
+    "sent": "Надіслано",
+    "view": "Переглянути",
+    "picker_button": "Додати з контактів",
+    "picker_title": "Додати одержувачів",
+    "tab_contacts": "Контакти",
+    "tab_directory": "Довідник",
+    "contacts_empty_title": "Контактів ще немає",
+    "contacts_empty_hint": "Тут з’являться люди, яких ви збережете в контактах.",
+    "contacts_no_match": "Немає контактів, що відповідають пошуку",
+    "template_name": "Назва шаблону",
+    "template_edit_details": "Редагувати подробиці…"
+  },
   "org_templates": {
     "section_personal": "Мої шаблони",
     "section_organisation": "Організація",

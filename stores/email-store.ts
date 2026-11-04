@@ -4399,7 +4399,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const outbox = options?.outbox ? getOutboxHooks() : null;
     const queueArgs = () => [to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, attachments, inReplyTo, references, delayedUntil, envelopeMailFrom, options];
     if (outbox?.shouldQueue(client)) return outbox.queueEmail(client, queueArgs());
-    set({ isLoading: true, error: null });
+    // Not isLoading: that is the message list's own, and a send put the list
+    // under "Loading emails…" until the message was out.
+    set({ error: null });
     try {
       // Files attached while offline are uploaded now that the server answers.
       const sendAttachments = attachments && getOutboxHooks() ? await getOutboxHooks()!.resolveHeldAttachments(client, attachments) : attachments;
@@ -4414,7 +4416,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (useAuthStore.getState().client === client) void get().fetchMailboxes(client);
       // Refresh handled by UI layer for immediate feedback
       set({
-        isLoading: false,
         pendingUndoSend: result.scheduled && result.emailSubmissionId && result.sendAt
           ? {
               submissionId: result.emailSubmissionId,
@@ -4435,12 +4436,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // (the client says so: SendNotStartedError): keep it. Any other
       // failure may have come after the server took the message.
       if (outbox && error instanceof Error && error.name === 'SendNotStartedError' && outbox.shouldQueue(client)) {
-        set({ isLoading: false });
         return outbox.queueEmail(client, queueArgs());
       }
       set({
         error: error instanceof Error ? error.message : "Failed to send email",
-        isLoading: false
       });
       throw error;
     }
@@ -4451,7 +4450,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // encrypted with the user present, so the finished message can wait.
     const outbox = options?.outbox ? getOutboxHooks() : null;
     if (outbox?.shouldQueue(client)) return outbox.queueRaw(client, rawMimeBlob, { identityId, delayedUntil, envelopeRecipients });
-    set({ isLoading: true, error: null });
+    // Not isLoading, as in sendEmail.
+    set({ error: null });
     try {
       const mailboxes = await client.getMailboxes();
       const sentMailbox = mailboxes.find(mb => mb.role === 'sent');
@@ -4460,7 +4460,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const result = await client.sendRawEmail(rawMimeBlob, identityId, sentMailbox.id, draftsMailbox?.id, delayedUntil, envelopeRecipients);
       void client.pruneEmailSubmissions();
       set({
-        isLoading: false,
         pendingUndoSend: result.scheduled && result.emailSubmissionId && result.sendAt
           ? { submissionId: result.emailSubmissionId, emailId: result.emailId, identityId, sendAt: result.sendAt, isSmime: true, submissionAccountId: result.submissionAccountId }
           : get().pendingUndoSend,
@@ -4469,7 +4468,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to send email",
-        isLoading: false,
       });
       throw error;
     }

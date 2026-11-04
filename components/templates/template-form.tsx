@@ -22,6 +22,8 @@ import type { Editor } from '@tiptap/react';
 interface TemplateFormProps {
   template?: EmailTemplate;
   initialData?: {
+    /** A name typed before the full editor opened (Save as template). */
+    name?: string;
     subject?: string;
     body?: string;
     /** The body is the composer's HTML, not plain text (#1506). */
@@ -57,7 +59,7 @@ export function TemplateForm({ template, initialData, onSave, onCancel, shared =
   const browserList = useTemplateStore((s) => s.templates);
   const templates = categorySource ?? browserList;
 
-  const [name, setName] = useState(template?.name || '');
+  const [name, setName] = useState(template?.name || initialData?.name || '');
   const [category, setCategory] = useState(template?.category || '');
   const [subject, setSubject] = useState(template?.subject || initialData?.subject || '');
   const [body, setBody] = useState(template?.body || initialData?.body || '');

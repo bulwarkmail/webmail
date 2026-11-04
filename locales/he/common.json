@@ -3793,6 +3793,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "חזור לעריכה",
+    "send_anyway": "שלח בכל זאת",
+    "warnings_title": "לשלוח את ההודעה בכל זאת?",
+    "warning_subject": "אין נושא",
+    "warning_text": "אין טקסט",
+    "warning_attachment": "מוזכר \"{keyword}\", אבל לא צורף קובץ",
+    "warning_placeholders": "טקסט ממלא מקום שהנמענים יראו:",
+    "warning_proofreading": "שגיאות כתיב או דקדוק פתוחות: {count}",
+    "empty_text_title": "לשלוח ללא טקסט?",
+    "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?",
+    "scheduled_for": "מתוזמן ל-{when}",
+    "sending": "שולח…",
+    "sent": "נשלח",
+    "view": "הצג",
+    "picker_button": "הוסף מאנשי הקשר",
+    "picker_title": "הוספת נמענים",
+    "tab_contacts": "אנשי קשר",
+    "tab_directory": "ספרייה",
+    "contacts_empty_title": "אין עדיין אנשי קשר",
+    "contacts_empty_hint": "אנשים שתשמרו באנשי הקשר יופיעו כאן.",
+    "contacts_no_match": "אין איש קשר שתואם לחיפוש",
+    "template_name": "שם התבנית",
+    "template_edit_details": "עריכת פרטים…"
+  },
   "org_templates": {
     "section_personal": "התבניות שלי",
     "section_organisation": "ארגון",

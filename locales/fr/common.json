@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Retour à l'édition",
+    "send_anyway": "Envoyer quand même",
+    "warnings_title": "Envoyer ce message quand même ?",
+    "warning_subject": "Pas d'objet",
+    "warning_text": "Pas de texte",
+    "warning_attachment": "Mentionne « {keyword} », mais aucun fichier n'est joint",
+    "warning_placeholders": "Texte de remplacement que les destinataires verront :",
+    "warning_proofreading": "Fautes d'orthographe ou de grammaire restantes : {count}",
+    "empty_text_title": "Envoyer sans texte ?",
+    "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?",
+    "scheduled_for": "Programmé pour {when}",
+    "sending": "Envoi…",
+    "sent": "Envoyé",
+    "view": "Afficher",
+    "picker_button": "Ajouter depuis les contacts",
+    "picker_title": "Ajouter des destinataires",
+    "tab_contacts": "Contacts",
+    "tab_directory": "Annuaire",
+    "contacts_empty_title": "Aucun contact pour l'instant",
+    "contacts_empty_hint": "Les personnes enregistrées dans Contacts s'affichent ici.",
+    "contacts_no_match": "Aucun contact ne correspond à votre recherche",
+    "template_name": "Nom du modèle",
+    "template_edit_details": "Modifier les détails…"
+  },
   "org_templates": {
     "section_personal": "Mes modèles",
     "section_organisation": "Organisation",

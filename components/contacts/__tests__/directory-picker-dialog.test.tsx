@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DirectoryPickerDialog } from '../directory-picker-dialog';
 import { useContactStore, type DirectoryEntry, type DirectoryStatus } from '@/stores/contact-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import type { ContactCard } from '@/lib/jmap/types';
 
 // next-intl is mocked globally in vitest.setup (t returns the key).
 
@@ -25,7 +26,11 @@ function rows() {
 }
 
 describe('DirectoryPickerDialog', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // No contacts of the user's own: the picker opens on the directory.
+    useContactStore.setState({ contacts: [] });
+  });
 
   it('lists the directory before any search, one page at a time', () => {
     setDirectory(people(60), 'ready');
@@ -109,3 +114,69 @@ describe('DirectoryPickerDialog', () => {
     expect(screen.queryByText('refresh_failed')).not.toBeInTheDocument();
   });
 });
+
+// compose-17: the picker listed only the server's directory, not the
+// contacts the To field's suggestions offer.
+describe('DirectoryPickerDialog with contacts', () => {
+  function contact(id: string, name: string, ...emails: string[]): ContactCard {
+    return {
+      id, addressBookIds: { book: true },
+      name: { full: name },
+      emails: Object.fromEntries(emails.map((address, i) => [`e${i}`, { address }])),
+    } as unknown as ContactCard;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setDirectory([{ name: 'Server Account', email: 'server@example.org' }], 'ready');
+    useContactStore.setState({
+      contacts: [
+        contact('c1', 'Zoe Fischer', 'zoe@example.com', 'zoe.f@work.example'),
+        contact('c2', 'Anna Becker', 'anna@example.com'),
+        { id: 'g1', kind: 'group', name: { full: 'Team' } } as unknown as ContactCard,
+      ],
+    });
+  });
+
+  it('opens on the contacts, one row per address, without groups', () => {
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={vi.fn()} />);
+
+    expect(screen.getByRole('tab', { name: 'tab_contacts' })).toHaveAttribute('aria-selected', 'true');
+    expect(rows().map((r) => r.textContent)).toEqual([
+      expect.stringContaining('anna@example.com'),
+      expect.stringContaining('zoe.f@work.example'),
+      expect.stringContaining('zoe@example.com'),
+    ]);
+    expect(screen.queryByText('Server Account')).not.toBeInTheDocument();
+  });
+
+  it('searches the contacts', () => {
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={vi.fn()} />);
+    fireEvent.change(screen.getByPlaceholderText('search_placeholder'), { target: { value: 'anna' } });
+    expect(rows()).toHaveLength(1);
+    fireEvent.change(screen.getByPlaceholderText('search_placeholder'), { target: { value: 'nobody' } });
+    expect(screen.getByText('contacts_no_match')).toBeInTheDocument();
+  });
+
+  it('adds what was checked on both tabs', () => {
+    const onAdd = vi.fn();
+    render(<DirectoryPickerDialog client={client} onClose={vi.fn()} onAdd={onAdd} />);
+    fireEvent.click(rows()[0]);
+    fireEvent.click(screen.getByRole('tab', { name: 'tab_directory' }));
+    fireEvent.click(rows()[0]);
+    fireEvent.click(screen.getByText('add_to'));
+
+    expect(onAdd).toHaveBeenCalledWith('to', [
+      expect.objectContaining({ name: 'Anna Becker', email: 'anna@example.com' }),
+      expect.objectContaining({ email: 'server@example.org' }),
+    ]);
+  });
+
+  it('shows the contacts alone where the server has no directory', () => {
+    const noDirectory = { supportsPrincipals: () => false } as unknown as IJMAPClient;
+    render(<DirectoryPickerDialog client={noDirectory} onClose={vi.fn()} onAdd={vi.fn()} />);
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(rows()).toHaveLength(3);
+  });
+});
+

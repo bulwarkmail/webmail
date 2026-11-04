@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Zpět k úpravám",
+    "send_anyway": "Přesto odeslat",
+    "warnings_title": "Přesto tuto zprávu odeslat?",
+    "warning_subject": "Bez předmětu",
+    "warning_text": "Bez textu",
+    "warning_attachment": "Zmiňuje „{keyword}“, ale není připojen žádný soubor",
+    "warning_placeholders": "Zástupný text, který příjemci uvidí:",
+    "warning_proofreading": "Nevyřešené pravopisné či gramatické chyby: {count}",
+    "empty_text_title": "Odeslat bez textu?",
+    "empty_text_message": "Tato zpráva nemá text ani přílohu. Přesto ji odeslat?",
+    "scheduled_for": "Naplánováno na {when}",
+    "sending": "Odesílání…",
+    "sent": "Odesláno",
+    "view": "Zobrazit",
+    "picker_button": "Přidat z kontaktů",
+    "picker_title": "Přidat příjemce",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Adresář organizace",
+    "contacts_empty_title": "Zatím žádné kontakty",
+    "contacts_empty_hint": "Zde se zobrazí lidé, které uložíte do Kontaktů.",
+    "contacts_no_match": "Hledání neodpovídá žádný kontakt",
+    "template_name": "Název šablony",
+    "template_edit_details": "Upravit podrobnosti…"
+  },
   "org_templates": {
     "section_personal": "Moje šablony",
     "section_organisation": "Organizace",

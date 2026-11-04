@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Vissza a szerkesztéshez",
+    "send_anyway": "Küldés így is",
+    "warnings_title": "Elküldi így is ezt az üzenetet?",
+    "warning_subject": "Nincs tárgy",
+    "warning_text": "Nincs szöveg",
+    "warning_attachment": "Említi ezt: „{keyword}”, de nincs csatolt fájl",
+    "warning_placeholders": "Helykitöltő szöveg, amelyet a címzettek látni fognak:",
+    "warning_proofreading": "Nyitott helyesírási vagy nyelvtani hibák: {count}",
+    "empty_text_title": "Küldés szöveg nélkül?",
+    "empty_text_message": "Ennek az üzenetnek nincs szövege és melléklete. Elküldi így is?",
+    "scheduled_for": "Ütemezve: {when}",
+    "sending": "Küldés…",
+    "sent": "Elküldve",
+    "view": "Megtekintés",
+    "picker_button": "Hozzáadás a névjegyekből",
+    "picker_title": "Címzettek hozzáadása",
+    "tab_contacts": "Névjegyek",
+    "tab_directory": "Címtár",
+    "contacts_empty_title": "Még nincsenek névjegyek",
+    "contacts_empty_hint": "A névjegyekbe mentett személyek itt jelennek meg.",
+    "contacts_no_match": "Egy névjegy sem felel meg a keresésnek",
+    "template_name": "Sablon neve",
+    "template_edit_details": "Részletek szerkesztése…"
+  },
   "org_templates": {
     "section_personal": "Saját sablonok",
     "section_organisation": "Szervezet",

@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Düzenlemeye dön",
+    "send_anyway": "Yine de gönder",
+    "warnings_title": "Bu ileti yine de gönderilsin mi?",
+    "warning_subject": "Konu yok",
+    "warning_text": "Metin yok",
+    "warning_attachment": "\"{keyword}\" geçiyor ama hiç dosya eklenmemiş",
+    "warning_placeholders": "Alıcıların göreceği yer tutucu metin:",
+    "warning_proofreading": "Açık yazım veya dilbilgisi sorunları: {count}",
+    "empty_text_title": "Metin olmadan gönderilsin mi?",
+    "empty_text_message": "Bu iletide metin ve ek yok. Yine de gönderilsin mi?",
+    "scheduled_for": "{when} için zamanlandı",
+    "sending": "Gönderiliyor…",
+    "sent": "Gönderildi",
+    "view": "Görüntüle",
+    "picker_button": "Kişilerden ekle",
+    "picker_title": "Alıcı ekle",
+    "tab_contacts": "Kişiler",
+    "tab_directory": "Dizin",
+    "contacts_empty_title": "Henüz kişi yok",
+    "contacts_empty_hint": "Kişiler'e kaydettiğiniz kişiler burada görünür.",
+    "contacts_no_match": "Aramanızla eşleşen kişi yok",
+    "template_name": "Şablon adı",
+    "template_edit_details": "Ayrıntıları düzenle…"
+  },
   "org_templates": {
     "section_personal": "Şablonlarım",
     "section_organisation": "Kuruluş",

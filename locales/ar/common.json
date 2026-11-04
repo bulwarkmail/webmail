@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "العودة إلى التعديل",
+    "send_anyway": "الإرسال على أي حال",
+    "warnings_title": "هل تريد إرسال هذه الرسالة على أي حال؟",
+    "warning_subject": "بلا موضوع",
+    "warning_text": "بلا نص",
+    "warning_attachment": "تذكر \"{keyword}\" لكن لا يوجد ملف مرفق",
+    "warning_placeholders": "نص مؤقت سيراه المستلمون:",
+    "warning_proofreading": "مشكلات إملائية أو نحوية مفتوحة: {count}",
+    "empty_text_title": "هل تريد الإرسال بدون نص؟",
+    "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟",
+    "scheduled_for": "مجدولة في {when}",
+    "sending": "جارٍ الإرسال…",
+    "sent": "تم الإرسال",
+    "view": "عرض",
+    "picker_button": "إضافة من جهات الاتصال",
+    "picker_title": "إضافة مستلمين",
+    "tab_contacts": "جهات الاتصال",
+    "tab_directory": "الدليل",
+    "contacts_empty_title": "لا توجد جهات اتصال بعد",
+    "contacts_empty_hint": "يظهر هنا الأشخاص الذين تحفظهم في جهات الاتصال.",
+    "contacts_no_match": "لا توجد جهة اتصال تطابق بحثك",
+    "template_name": "اسم القالب",
+    "template_edit_details": "تعديل التفاصيل…"
+  },
   "org_templates": {
     "section_personal": "قوالبي",
     "section_organisation": "المؤسسة",

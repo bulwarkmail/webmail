@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Späť na úpravu",
+    "send_anyway": "Odoslať aj tak",
+    "warnings_title": "Odoslať túto správu aj tak?",
+    "warning_subject": "Bez predmetu",
+    "warning_text": "Bez textu",
+    "warning_attachment": "Spomína „{keyword}“, ale nie je pripojený žiadny súbor",
+    "warning_placeholders": "Zástupný text, ktorý uvidia príjemcovia:",
+    "warning_proofreading": "Neopravené pravopisné alebo gramatické chyby: {count}",
+    "empty_text_title": "Odoslať bez textu?",
+    "empty_text_message": "Táto správa nemá text ani prílohu. Odoslať ju aj tak?",
+    "scheduled_for": "Naplánované na {when}",
+    "sending": "Odosielanie…",
+    "sent": "Odoslané",
+    "view": "Zobraziť",
+    "picker_button": "Pridať z kontaktov",
+    "picker_title": "Pridať príjemcov",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Adresár organizácie",
+    "contacts_empty_title": "Zatiaľ žiadne kontakty",
+    "contacts_empty_hint": "Tu sa zobrazia ľudia, ktorých uložíte do Kontaktov.",
+    "contacts_no_match": "Vyhľadávaniu nezodpovedá žiadny kontakt",
+    "template_name": "Názov šablóny",
+    "template_edit_details": "Upraviť podrobnosti…"
+  },
   "org_templates": {
     "section_personal": "Moje šablóny",
     "section_organisation": "Organizácia",

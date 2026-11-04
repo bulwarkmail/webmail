@@ -3896,6 +3896,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Volver a editar",
+    "send_anyway": "Enviar de todos modos",
+    "warnings_title": "¿Enviar este mensaje de todos modos?",
+    "warning_subject": "Sin asunto",
+    "warning_text": "Sin texto",
+    "warning_attachment": "Menciona «{keyword}», pero no hay ningún archivo adjunto",
+    "warning_placeholders": "Texto de marcador que verán los destinatarios:",
+    "warning_proofreading": "Errores de ortografía o gramática pendientes: {count}",
+    "empty_text_title": "¿Enviar sin texto?",
+    "empty_text_message": "Este mensaje no tiene texto ni archivos adjuntos. ¿Enviarlo de todos modos?",
+    "scheduled_for": "Programado para {when}",
+    "sending": "Enviando…",
+    "sent": "Enviado",
+    "view": "Ver",
+    "picker_button": "Añadir desde contactos",
+    "picker_title": "Añadir destinatarios",
+    "tab_contacts": "Contactos",
+    "tab_directory": "Directorio",
+    "contacts_empty_title": "Aún no hay contactos",
+    "contacts_empty_hint": "Aquí aparecen las personas que guardas en Contactos.",
+    "contacts_no_match": "Ningún contacto coincide con la búsqueda",
+    "template_name": "Nombre de la plantilla",
+    "template_edit_details": "Editar detalles…"
+  },
   "org_templates": {
     "section_personal": "Mis plantillas",
     "section_organisation": "Organización",
