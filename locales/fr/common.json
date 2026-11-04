@@ -7673,6 +7673,10 @@
     "offline_send_saved": "Vous êtes hors ligne. Le message est enregistré dans les Brouillons.",
     "offline_send_unsaved": "Vous êtes hors ligne. Le message reste ici et sera enregistré dans les Brouillons dès que vous serez de nouveau en ligne."
   },
+  "composer_panel": {
+    "show_panel": "Afficher {name}",
+    "hide_panel": "Masquer {name}"
+  },
   "desktopDevTools": {
     "section_title": "Dépannage",
     "label": "Outils de développement ({shortcut})",

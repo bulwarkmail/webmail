@@ -627,6 +627,17 @@ html[data-window-controls] [data-window-row-right] {
   padding-right: calc(var(--titlebar-right-inset) + 0.5rem) !important;
 }
 
+/*
+ * The composer's header runs over its plugin panels. The head above the panel at the
+ * window's right takes that room inside itself, so it stays as wide as the panel and
+ * its Hide button stays at the panel's edge, with its window buttons left of the controls.
+ */
+html[data-window-controls]:not([dir="rtl"]) [data-window-row-right] > [data-composer-panel-head="right"],
+html[data-window-controls][dir="rtl"] [data-window-row-right] > [data-composer-panel-head="left"] {
+  margin-right: calc(-1 * (var(--titlebar-right-inset) + 0.5rem));
+  padding-right: calc(var(--titlebar-right-inset) + 0.5rem);
+}
+
 /* Something floating at the top end of a page with no row: next to the controls, lined up. */
 html[data-window-controls]:not([dir="rtl"]) [data-window-beside-controls] {
   right: calc(var(--titlebar-right-inset) + 0.5rem);
