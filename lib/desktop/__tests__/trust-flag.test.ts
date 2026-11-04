@@ -134,6 +134,20 @@ describe('the flag is fixed at build time', () => {
     expect(await trustCheckOfBuild('1')).toContain(DESKTOP_TRUST_MARKER);
   });
 
+  it('the secrets from the shell are read in the desktop build only', async () => {
+    const compile = async (flag: string) => (await build({
+      entryPoints: [path.join(ROOT, 'lib/desktop/server-secrets.ts')],
+      bundle: true,
+      write: false,
+      minify: true,
+      format: 'esm',
+      platform: 'node',
+      define: { 'process.env.NEXT_PUBLIC_BULWARK_DESKTOP': JSON.stringify(flag) },
+    })).outputFiles[0].text;
+    expect(await compile('')).not.toContain('bulwark.desktop.serverSecrets');
+    expect(await compile('1')).toContain('bulwark.desktop.serverSecrets');
+  });
+
   it('no image build sets it', () => {
     for (const file of ['Dockerfile', 'Dockerfile.lite']) {
       expect(readFileSync(path.join(ROOT, file), 'utf8')).not.toContain('NEXT_PUBLIC_BULWARK_DESKTOP');
