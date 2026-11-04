@@ -35,7 +35,11 @@ import {
   participantFieldsToSave,
   userOrganizes,
 } from "@/lib/calendar-participants";
-import { canUserRsvp, getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
+import { canUserRsvp, getEventEditability } from "@/lib/calendar-editability";
+import { eventTargets, preferredTarget } from "@/lib/calendar-targets";
+import { CalendarSelect } from "@/components/calendar/calendar-select";
+import { useAccountStore } from "@/stores/account-store";
+import { useCalendarStore } from "@/stores/calendar-store";
 import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -58,7 +62,6 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
-import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export interface PendingEventPreview {
   start: Date;
@@ -276,7 +279,6 @@ export function EventModal({
   maxParticipants = null,
   isMobile = false,
 }: EventModalProps) {
-  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   // Ids that tie each visible label to its field.
@@ -437,28 +439,33 @@ export function EventModal({
   };
   const handleStartDateChange = (v: string) => { setStartDate(v); shiftEndKeepingDuration(v, startTime); };
   const handleStartTimeChange = (v: string) => { setStartTime(v); shiftEndKeepingDuration(startDate, v); };
+  // New events go to the account on screen (pim-p2-4): the calendar last
+  // picked there, else its default one. Never a task list (pim-p2-2).
+  const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
   const [calendarId, setCalendarId] = useState<string>(() => {
     if (event?.calendarIds) return getPrimaryCalendarId(event) || calendars[0]?.id || "";
-    if (defaultCalendarId && calendars.some(c => c.id === defaultCalendarId)) return defaultCalendarId;
-    const defaultCal = calendars.find(c => c.isDefault);
+    const targets = eventTargets(calendars, isSubscriptionCalendar);
+    if (defaultCalendarId && targets.some(c => c.id === defaultCalendarId)) return defaultCalendarId;
     // Never default new events into a subscription / read-only calendar (#762).
-    return defaultCal?.id
-      || calendars.find(c => canCreateEventsIn(c, isSubscriptionCalendar))?.id
+    return preferredTarget(targets, activeLocalAccountId, lastEventCalendarIds)?.id
       || calendars[0]?.id || "";
   });
 
-  // Calendars offered as create/move targets: writable, non-subscription, plus
-  // the event's current calendar so an in-place edit never blanks the select.
+  // Calendars offered as create/move targets: writable, non-subscription,
+  // holding events (a task list never shows in the grid, so an event saved
+  // there seemed lost, pim-p2-2), plus the event's current calendar so an
+  // in-place edit never blanks the select.
   // An existing event moves only within its own login: the update goes to
   // that login's server, which doesn't know another login's calendar ids.
   const eventLogin = useMemo(() => {
     const primary = event?.calendarIds ? getPrimaryCalendarId(event) : undefined;
-    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId } : { known: false, login: undefined };
+    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId, primary } : { known: false, login: undefined, primary: undefined };
   }, [event, calendars]);
   const selectableCalendars = useMemo(
-    () => calendars.filter(c => (canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId)
-      && (!eventLogin.known || c.localAccountId === eventLogin.login)),
-    [calendars, isSubscriptionCalendar, calendarId, eventLogin]
+    () => eventTargets(calendars, isSubscriptionCalendar, eventLogin.primary)
+      .filter(c => !eventLogin.known || c.localAccountId === eventLogin.login),
+    [calendars, isSubscriptionCalendar, eventLogin]
   );
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!event?.recurrenceRules?.length) return "none";
@@ -1521,18 +1528,13 @@ export function EventModal({
           {selectableCalendars.length > 1 && (
             <div>
               <label htmlFor={labelFor("calendar_select")} className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
-              <select
+              <CalendarSelect
                 id={labelFor("calendar_select")}
+                calendars={selectableCalendars}
                 value={calendarId}
-                onChange={(e) => setCalendarId(e.target.value)}
+                onChange={setCalendarId}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              >
-                {selectableCalendars.map((cal) => (
-                  <option key={cal.id} value={cal.id}>
-                    {shownName.calendar(cal)}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           )}
 

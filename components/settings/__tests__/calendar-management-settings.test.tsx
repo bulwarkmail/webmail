@@ -161,3 +161,29 @@ describe('CalendarManagementSettings row actions', () => {
     expect(screen.getByRole('button', { name: 'share_open' })).toBeInTheDocument();
   });
 });
+
+// pim-p2-3: with two accounts signed in, both accounts' calendars were one
+// list with two rows reading "Calendar · Default".
+describe('CalendarManagementSettings with two accounts', () => {
+  it("lists each account's calendars under its address", async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login-a', email: 'a@example.org', username: 'a@example.org', displayName: 'Sam', label: 'Sam' },
+        { id: 'login-b', email: 'b@example.org', username: 'b@example.org', displayName: 'Sam', label: 'Sam' },
+      ] as never,
+      activeAccountId: 'login-a',
+    });
+    useAuthStore.setState({ client: { getAccountId: () => 'acct-1' }, serverUrl: null, username: null } as never);
+    const a = { ...appleColored, id: 'login-a::cal', name: 'Home', localAccountId: 'login-a' } as Calendar;
+    const b = { ...appleColored, id: 'login-b::cal', name: 'Office', localAccountId: 'login-b' } as Calendar;
+    useCalendarStore.setState({ calendars: [b, a], icalSubscriptions: [], updateCalendar: vi.fn() } as never);
+
+    render(<CalendarManagementSettings />);
+
+    const groups = screen.getAllByTestId('calendar-settings-group');
+    expect(groups.map((g) => g.querySelector('[data-testid="calendar-settings-account"]')?.textContent)).toEqual(['a@example.org', 'b@example.org']);
+    expect(groups.map((g) => Array.from(g.querySelectorAll('[data-testid="calendar-settings-item"]')).map((el) => el.getAttribute('data-calendar-name')))).toEqual([['Home'], ['Office']]);
+    useAccountStore.setState({ accounts: [], activeAccountId: null });
+  });
+});

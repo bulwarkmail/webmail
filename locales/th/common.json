@@ -4617,6 +4617,13 @@
     "caldav_shared_by": "แชร์โดย {name}:",
     "freebusy_description": "ผู้ที่คุณแชร์ด้วยจะเห็นว่าคุณไม่ว่างเมื่อใด แต่ไม่เห็นรายละเอียดกิจกรรม ฟีเจอร์แนะนำเวลาใช้ข้อมูลนี้"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "รายการ",
+    "task_list_not_in_calendar": "{name} (รายการงาน ไม่แสดงในปฏิทิน)",
+    "copy_to_account": "คัดลอกไปที่ {address}",
+    "copied_to_account": "คัดลอกไปที่ {address} แล้ว",
+    "delete_original": "ลบต้นฉบับ"
+  },
   "calendar_offline": {
     "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
   },

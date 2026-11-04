@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Delt af {name}:",
     "freebusy_description": "Dem, du deler med, ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (opgaveliste, vises ikke i kalenderen)",
+    "copy_to_account": "Kopiér til {address}",
+    "copied_to_account": "Kopieret til {address}",
+    "delete_original": "Slet originalen"
+  },
   "calendar_offline": {
     "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
   },

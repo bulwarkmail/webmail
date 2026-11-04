@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Sdílí {name}:",
     "freebusy_description": "Ten, s kým sdílíte, vidí, kdy jste obsazeni, ne jaké máte události. Používá to funkce Navrhnout časy."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Seznam",
+    "task_list_not_in_calendar": "{name} (seznam úkolů, v kalendáři se nezobrazuje)",
+    "copy_to_account": "Kopírovat do {address}",
+    "copied_to_account": "Zkopírováno do {address}",
+    "delete_original": "Smazat originál"
+  },
   "calendar_offline": {
     "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."
   },

@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Shared by {name}:",
     "freebusy_description": "Whoever you share with sees when you’re busy, not what your events are. Suggest times uses it."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "List",
+    "task_list_not_in_calendar": "{name} (task list, not shown in the calendar)",
+    "copy_to_account": "Copy to {address}",
+    "copied_to_account": "Copied to {address}",
+    "delete_original": "Delete original"
+  },
   "calendar_offline": {
     "split_needs_server": "This change needs a connection to the server. Change only this event for now, or try again when you're back online."
   },

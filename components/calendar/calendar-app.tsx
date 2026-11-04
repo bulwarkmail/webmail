@@ -70,7 +70,8 @@ import { getClientByLocalAccountId } from "@/stores/client-registry";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { getEventDisplayEndDate, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
-import { canCreateEventsIn, canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
+import { accountAddress, buildCopyToCalendarData, copyTargetsFor, distinctAccountDefaultColors, eventTargets, preferredTarget, taskTargets } from "@/lib/calendar-targets";
+import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { TASKS_LOAD_ERROR, useTaskStore } from "@/stores/task-store";
 import { useContactStore } from "@/stores/contact-store";
@@ -172,6 +173,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // mail server for and the Lite static build does not have at all.
   const canSubscribe = !demoMode && !IS_LITE;
   const tDeepLink = useTranslations("deep_link");
+  const tP2Cal = useTranslations("ux_p2_pim_cal");
   const isMobile = useIsMobile();
   // Below the full desktop the sidebar opens over the page.
   const isFullDesktop = useIsFullDesktop();
@@ -212,6 +214,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const { identities } = useIdentityStore();
   const contacts = useContactStore((s) => s.contacts);
   const normalizedViewMode = isCalendarViewMode(viewMode) ? viewMode : "month";
+  const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
+  const rememberEventCalendar = useCalendarStore((s) => s.rememberEventCalendar);
   usePrintListener();
   const printing = usePrinting();
   const printTarget = usePrintStore((s) => s.target);
@@ -1193,6 +1198,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             toast.error(t("notifications.event_error"));
             return;
           }
+          // The next new event in this account starts in the same calendar (pim-p2-4).
+          const pickedId = Object.keys(data.calendarIds ?? {})[0];
+          const picked = pickedId ? useCalendarStore.getState().calendars.find((c) => c.id === pickedId) : undefined;
+          if (picked) rememberEventCalendar(picked);
           focusCalendarOnEvent(created);
           if (sendSchedulingMessages) {
             toast.success(t("notifications.invitation_sent"));
@@ -1218,17 +1227,18 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       }
     };
     await save(requestedScheduling);
-  }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, describeError, t]);
+  }, [client, editEvent, createEvent, updateEvent, focusCalendarOnEvent, confirmAction, describeError, t, rememberEventCalendar]);
 
-  // Calendars a new task can go into: writable, not a subscription.
+  // Lists a new task can go into: task lists, writable, not a subscription (pim-p2-13).
   const writableTaskCalendars = useMemo(
-    () => calendars.filter((c) => canCreateEventsIn(c, isSubscriptionCalendar)),
-    [calendars, isSubscriptionCalendar],
+    () => taskTargets(calendars, isSubscriptionCalendar, { holdingTasks: taskStore.tasks.flatMap((x) => Object.keys(x.calendarIds ?? {})) }),
+    [calendars, isSubscriptionCalendar, taskStore.tasks],
   );
 
-  // Calendars a new event can go into: never a subscription or read-only one (#762).
+  // Calendars a new event can go into: never a subscription or read-only one
+  // (#762), nor a task list (pim-p2-2). Coloured as the grid shows them.
   const writableCalendars = useMemo(
-    () => calendars.filter((c) => !c.isTasksOnly && canCreateEventsIn(c, isSubscriptionCalendar)),
+    () => eventTargets(distinctAccountDefaultColors(calendars), isSubscriptionCalendar),
     [calendars, isSubscriptionCalendar],
   );
 
@@ -1240,7 +1250,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       return;
     }
     const finalEnd = end ?? (allDay ? start : new Date(start.getTime() + 60 * 60 * 1000));
-    const preferred = writableCalendars.find((c) => c.isDefault) ?? writableCalendars[0];
+    // The account on screen's calendar, not the first account's (pim-p2-4).
+    const preferred = preferredTarget(writableCalendars, activeLocalAccountId, lastEventCalendarIds);
     setShowEventModal(false);
     setEditEvent(null);
     setShowTaskModal(false);
@@ -1255,7 +1266,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         ? prev.calendarId
         : preferred?.id ?? "",
     }));
-  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded]);
+  }), [isMobile, openCreateModal, writableCalendars, closeDetail, whenEditorsDiscarded, activeLocalAccountId, lastEventCalendarIds]);
 
   // A day in the month view or the all-day row: an all-day event, the same
   // quick editor as a slot in week and day view.
@@ -1616,6 +1627,35 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     handleDeleteEvent(event.id, hasParticipants || undefined);
   }, [handleDeleteEvent]);
 
+  // "Copy to <other account>" (pim-p2-16): an event can't move between
+  // accounts, so the other one gets a copy, and the toast offers to delete
+  // the original. A series is copied whole, read from its own server.
+  const localAccounts = useAccountStore((s) => s.accounts);
+  const copyTargetsOf = useCallback(
+    (event: CalendarEvent) => copyTargetsFor(event, writableCalendars, localAccounts),
+    [writableCalendars, localAccounts],
+  );
+  const handleCopyToAccount = useCallback(async (event: CalendarEvent, target: { account: { email?: string; username?: string; id: string }; calendar: Calendar }) => {
+    if (!client) { toast.error(t("notifications.event_error")); return; }
+    let source = event;
+    if (event.recurrenceId && event.recurrenceRules?.length && event.originalId) {
+      const sourceClient = (event.localAccountId ? useAuthStore.getState().getClientForAccount(event.localAccountId) : null) ?? client;
+      const isSharedSource = calendars.some((c) => event.calendarIds?.[c.id] && c.isShared);
+      const master = await sourceClient.getCalendarEvent(event.originalId, isSharedSource ? event.accountId : undefined).catch(() => null);
+      if (master) source = master;
+    }
+    const address = accountAddress(target.account);
+    try {
+      const created = await createEvent(client, buildCopyToCalendarData(source, target.calendar.id));
+      if (!created) return;
+      toast.success(tP2Cal("copied_to_account", { address }), {
+        action: { label: tP2Cal("delete_original"), onClick: () => handleDeleteContextMenu(event) },
+      });
+    } catch (error) {
+      toast.error(describeError(error, t("notifications.event_error")));
+    }
+  }, [client, calendars, createEvent, describeError, t, tP2Cal, handleDeleteContextMenu]);
+
   const handleRsvpFromDetail = useCallback(async (status: CalendarParticipant['participationStatus'], target?: AnswerTarget) => {
     if (!detailEvent || !client) return;
     // A target names the event and participant: the owner's in a calendar
@@ -1740,7 +1780,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // colors via the `colorIsLocalOverride` flag (see getEventColor). Personal
   // calendars are passed through untouched.
   const displayCalendars = useMemo(() => {
-    return calendars.map((cal) => {
+    // Two accounts' default calendars come in one blue: the second gets a colour of its own (pim-p2-3).
+    return distinctAccountDefaultColors(calendars).map((cal) => {
       if (!cal.isShared) return cal;
       const override = sharedCalendarColors[sharedCalendarColorKey(cal)];
       if (!override) return cal;
@@ -2087,7 +2128,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onQuickCreate={(title, due) => {
                 // Into the first task-only list, else the default calendar,
                 // else the first the user may write to (pim-8).
-                const target = defaultTaskList(writableTaskCalendars);
+                const target = defaultTaskList(writableTaskCalendars, activeLocalAccountId);
                 if (!client || !target) {
                   toast.error(t("notifications.task_save_error"));
                   return;
@@ -2519,6 +2560,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRespond={gridAnswerFor(eventContextMenu.data) ? (status) => handleRespondFromGrid(eventContextMenu.data!, status) : undefined}
           responseStatus={gridAnswerFor(eventContextMenu.data)?.status}
           answersOnly={answersOnlyMenu}
+          copyTo={answersOnlyMenu ? [] : copyTargetsOf(eventContextMenu.data).map((target) => ({
+            address: accountAddress(target.account),
+            onCopy: () => { void handleCopyToAccount(eventContextMenu.data!, target); },
+          }))}
         />
       )}
 

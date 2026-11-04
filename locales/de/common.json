@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Freigegeben von {name}:",
     "freebusy_description": "Wer die Freigabe erhält, sieht, wann Sie belegt sind, aber nicht, welche Termine Sie haben. „Zeiten vorschlagen“ nutzt das."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (Aufgabenliste, nicht im Kalender sichtbar)",
+    "copy_to_account": "In {address} kopieren",
+    "copied_to_account": "In {address} kopiert",
+    "delete_original": "Original löschen"
+  },
   "calendar_offline": {
     "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."
   },

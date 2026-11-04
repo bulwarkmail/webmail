@@ -24,6 +24,7 @@ import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-m
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useAccountStore } from '@/stores/account-store';
+import { groupCalendarsByAccount } from '@/lib/calendar-targets';
 import { apiFetch } from '@/lib/browser-navigation';
 import { CALENDAR_COLORS, sharedCalendarColorKey } from '@/lib/shared-calendar-colors';
 import { IS_LITE } from '@/lib/lite';
@@ -332,6 +333,9 @@ export function CalendarManagementSettings() {
   // Principal ids belong to one server: only calendars of the account
   // `client` talks to get their recipients named.
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const localAccounts = useAccountStore((s) => s.accounts);
+  // Under each account's address when several are signed in (pim-p2-3).
+  const calendarGroups = groupCalendarsByAccount(listedCalendars, localAccounts, activeLocalAccountId);
   const resolvesShares = (cal: Calendar) => !cal.localAccountId || cal.localAccountId === activeLocalAccountId;
   const shareLabels = useShareRecipientLabels(
     client,
@@ -651,7 +655,14 @@ export function CalendarManagementSettings() {
     <SettingsSection id="calendars" title={t('title')} description={touch ? t('description_touch') : t('description')}>
       {renderRowMenu()}
       <div className="space-y-2">
-        {listedCalendars.map((cal) => {
+        {calendarGroups.map((group) => (
+          <div key={group.key || 'own'} className="space-y-2" data-testid="calendar-settings-group">
+            {group.label && (
+              <h4 className="pt-2 text-xs font-semibold text-muted-foreground truncate" data-testid="calendar-settings-account" title={group.label}>
+                {group.label}
+              </h4>
+            )}
+        {group.calendars.map((cal) => {
           const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
           // Up and down step over the neighbours of the same account.
           const siblings = cal.isShared ? [] : orderableCalendars.filter(c => calendarAccountKey(c) === calendarAccountKey(cal));
@@ -819,6 +830,8 @@ export function CalendarManagementSettings() {
             </div>
           );
         })}
+          </div>
+        ))}
 
         {isCreating ? (
           <CalendarEditForm

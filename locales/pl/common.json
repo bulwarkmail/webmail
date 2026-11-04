@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Udostępnia {name}:",
     "freebusy_description": "Osoby, którym udostępniasz, widzą, kiedy jesteś zajęty, ale nie widzą Twoich wydarzeń. Korzysta z tego funkcja proponowania terminów."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (lista zadań, niewidoczna w kalendarzu)",
+    "copy_to_account": "Kopiuj do {address}",
+    "copied_to_account": "Skopiowano do {address}",
+    "delete_original": "Usuń oryginał"
+  },
   "calendar_offline": {
     "split_needs_server": "Ta zmiana wymaga połączenia z serwerem. Na razie zmień tylko to wydarzenie albo spróbuj ponownie, gdy wrócisz do trybu online."
   },

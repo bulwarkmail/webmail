@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Gedeeld door {name}:",
     "freebusy_description": "Wie je deelt, ziet wanneer je bezet bent, niet wat je afspraken zijn. ‘Tijden voorstellen’ gebruikt dit."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lijst",
+    "task_list_not_in_calendar": "{name} (takenlijst, niet zichtbaar in de agenda)",
+    "copy_to_account": "Kopiëren naar {address}",
+    "copied_to_account": "Gekopieerd naar {address}",
+    "delete_original": "Origineel verwijderen"
+  },
   "calendar_offline": {
     "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
   },

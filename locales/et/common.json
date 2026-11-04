@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Jagas {name}:",
     "freebusy_description": "Kellega jagad, näeb, millal oled hõivatud, aga mitte sinu sündmusi. Seda kasutab „Soovita aegu“."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Loend",
+    "task_list_not_in_calendar": "{name} (ülesannete loend, kalendris ei näidata)",
+    "copy_to_account": "Kopeeri kontole {address}",
+    "copied_to_account": "Kopeeritud kontole {address}",
+    "delete_original": "Kustuta originaal"
+  },
   "calendar_offline": {
     "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
   },

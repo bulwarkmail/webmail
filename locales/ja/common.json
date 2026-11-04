@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "{name} が共有:",
     "freebusy_description": "共有した相手には予定がある時間だけが見え、予定の内容は見えません。「時間を提案」で使われます。"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "リスト",
+    "task_list_not_in_calendar": "{name}（タスクリスト、カレンダーには表示されません）",
+    "copy_to_account": "{address} にコピー",
+    "copied_to_account": "{address} にコピーしました",
+    "delete_original": "元の予定を削除"
+  },
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
   },

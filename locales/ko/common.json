@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "{name} 님이 공유:",
     "freebusy_description": "공유받은 사람은 내가 바쁜 시간만 보고 일정 내용은 보지 못합니다. 시간 제안에 사용됩니다."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "목록",
+    "task_list_not_in_calendar": "{name} (할 일 목록, 캘린더에 표시되지 않음)",
+    "copy_to_account": "{address}(으)로 복사",
+    "copied_to_account": "{address}(으)로 복사됨",
+    "delete_original": "원본 삭제"
+  },
   "calendar_offline": {
     "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
   },

@@ -15,6 +15,7 @@ import type { AddressBook, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { isOfflineNow } from "@/lib/offline/state";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
 
 interface ContactImportDialogProps {
   existingContacts: ContactCard[];
@@ -354,11 +355,10 @@ export function ContactImportDialog({
                   onChange={(e) => setBookId(e.target.value)}
                   className="flex-1 min-w-0 text-sm bg-transparent border border-input rounded-md px-2.5 py-1.5 text-foreground focus:outline-hidden hover:border-muted-foreground/50 transition-colors"
                 >
-                  {addressBooks.map((book) => (
-                    <option key={book.id} value={book.id}>
-                      {book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
-                    </option>
-                  ))}
+                  <AccountGroupedOptions
+                    items={addressBooks}
+                    label={(book) => (book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book))}
+                  />
                 </select>
               </label>
             )}

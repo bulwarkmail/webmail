@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Kopīgoja {name}:",
     "freebusy_description": "Tas, ar kuru kopīgojat, redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Saraksts",
+    "task_list_not_in_calendar": "{name} (uzdevumu saraksts, kalendārā netiek rādīts)",
+    "copy_to_account": "Kopēt uz {address}",
+    "copied_to_account": "Nokopēts uz {address}",
+    "delete_original": "Dzēst oriģinālu"
+  },
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
   },

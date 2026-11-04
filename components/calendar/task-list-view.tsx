@@ -32,9 +32,11 @@ interface TaskListViewProps {
  * The user's own calendars of the active login come first: a colleague's
  * shared list or another login's is never picked over them.
  */
-export function defaultTaskList(calendars: Calendar[]): Calendar | undefined {
+export function defaultTaskList(calendars: Calendar[], activeAccountId?: string | null): Calendar | undefined {
   const pick = (list: Calendar[]) => list.find((c) => c.isTasksOnly) ?? list.find((c) => c.isDefault) ?? list[0];
-  return pick(calendars.filter((c) => !c.isShared && !c.localAccountId)) ?? pick(calendars);
+  // With several accounts every calendar names its login: the one on screen counts as the user's own (pim-p2-4).
+  const own = (c: Calendar) => !c.isShared && (!c.localAccountId || (!!activeAccountId && c.localAccountId === activeAccountId));
+  return pick(calendars.filter(own)) ?? pick(calendars);
 }
 
 /**

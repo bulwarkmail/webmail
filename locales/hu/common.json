@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Megosztotta: {name}",
     "freebusy_description": "Akivel megoszt, látja, mikor foglalt, de az eseményeit nem. Az Időpontok javaslata ezt használja."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (feladatlista, a naptárban nem látszik)",
+    "copy_to_account": "Másolás ide: {address}",
+    "copied_to_account": "Átmásolva ide: {address}",
+    "delete_original": "Eredeti törlése"
+  },
   "calendar_offline": {
     "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
   },

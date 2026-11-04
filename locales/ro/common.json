@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Partajat de {name}:",
     "freebusy_description": "Cei cu care partajați văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Listă",
+    "task_list_not_in_calendar": "{name} (listă de sarcini, nu apare în calendar)",
+    "copy_to_account": "Copiază în {address}",
+    "copied_to_account": "Copiat în {address}",
+    "delete_original": "Șterge originalul"
+  },
   "calendar_offline": {
     "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
   },

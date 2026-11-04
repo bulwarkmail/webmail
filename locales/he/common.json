@@ -5099,6 +5099,13 @@
     "caldav_shared_by": "משותף על ידי {name}:",
     "freebusy_description": "מי שאתה משתף איתו רואה מתי אתה תפוס, לא מה האירועים שלך. \"הצע זמנים\" משתמש בזה."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "רשימה",
+    "task_list_not_in_calendar": "{name} (רשימת משימות, לא מוצגת בלוח השנה)",
+    "copy_to_account": "העתקה אל {address}",
+    "copied_to_account": "הועתק אל {address}",
+    "delete_original": "מחיקת המקור"
+  },
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
   },

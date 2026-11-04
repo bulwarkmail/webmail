@@ -15,6 +15,7 @@ import { addressStyle, addressToParts, countryCodeFromName, partsToComponents, t
 import { useBottomControls } from "@/hooks/use-bottom-controls";
 import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPersonalInfo, AddressBook, AnniversaryDate, PartialDate, ContactAddress, ContactMedia } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
+import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
@@ -908,12 +909,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-hidden"
               >
                 <option value="">{t("select_address_book")}</option>
-                {addressBooks.map((book) => (
-                  <option key={book.id} value={book.id}>
-                    {/* A shared book says whose it is, unless its name already does. */}
-                    {book.isShared && book.accountName && !shownName.addressBook(book).includes(book.accountName) ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
-                  </option>
-                ))}
+                {/* Under each account's address with several (pim-p2-3). A shared book says whose it is, unless its name already does. */}
+                <AccountGroupedOptions
+                  items={addressBooks}
+                  label={(book) => (book.isShared && book.accountName && !shownName.addressBook(book).includes(book.accountName) ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book))}
+                />
               </select>
             </FormSection>
           )}

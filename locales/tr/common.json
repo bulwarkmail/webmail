@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Paylaşan: {name}",
     "freebusy_description": "Paylaştığınız kişiler ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (görev listesi, takvimde gösterilmez)",
+    "copy_to_account": "{address} hesabına kopyala",
+    "copied_to_account": "{address} hesabına kopyalandı",
+    "delete_original": "Orijinali sil"
+  },
   "calendar_offline": {
     "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
   },

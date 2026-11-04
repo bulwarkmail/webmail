@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Partagé par {name} :",
     "freebusy_description": "Les personnes avec qui vous partagez voient quand vous êtes occupé, pas le contenu de vos événements. « Suggérer des créneaux » s’en sert."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (liste de tâches, non affichée dans le calendrier)",
+    "copy_to_account": "Copier vers {address}",
+    "copied_to_account": "Copié vers {address}",
+    "delete_original": "Supprimer l'original"
+  },
   "calendar_offline": {
     "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."
   },

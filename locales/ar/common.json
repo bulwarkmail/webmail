@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "مشارَك من {name}:",
     "freebusy_description": "من تشارك معه يرى متى تكون مشغولًا، لا تفاصيل أحداثك. تستخدمه ميزة اقتراح الأوقات."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "القائمة",
+    "task_list_not_in_calendar": "{name} (قائمة مهام، لا تظهر في التقويم)",
+    "copy_to_account": "نسخ إلى {address}",
+    "copied_to_account": "تم النسخ إلى {address}",
+    "delete_original": "حذف الأصل"
+  },
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
   },

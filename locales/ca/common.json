@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Compartit per {name}:",
     "freebusy_description": "Qui rebi la compartició veu quan esteu ocupat, no quins esdeveniments teniu. «Suggereix horaris» ho fa servir."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Llista",
+    "task_list_not_in_calendar": "{name} (llista de tasques, no es mostra al calendari)",
+    "copy_to_account": "Copia a {address}",
+    "copied_to_account": "S'ha copiat a {address}",
+    "delete_original": "Suprimeix l'original"
+  },
   "calendar_offline": {
     "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
   },

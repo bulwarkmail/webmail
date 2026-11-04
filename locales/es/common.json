@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "Compartido por {name}:",
     "freebusy_description": "Quien reciba lo compartido ve cuándo estás ocupado, no qué eventos tienes. «Sugerir horarios» lo usa."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (lista de tareas, no se muestra en el calendario)",
+    "copy_to_account": "Copiar a {address}",
+    "copied_to_account": "Copiado a {address}",
+    "delete_original": "Eliminar el original"
+  },
   "calendar_offline": {
     "split_needs_server": "Este cambio necesita conexión con el servidor. Cambia solo este evento por ahora o inténtalo de nuevo cuando vuelvas a tener conexión."
   },

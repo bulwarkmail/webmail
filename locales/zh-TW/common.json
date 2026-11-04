@@ -5205,6 +5205,13 @@
     "caldav_shared_by": "{name} 分享：",
     "freebusy_description": "分享對象能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "清單",
+    "task_list_not_in_calendar": "{name}（工作清單，不會顯示在行事曆中）",
+    "copy_to_account": "複製到 {address}",
+    "copied_to_account": "已複製到 {address}",
+    "delete_original": "刪除原始活動"
+  },
   "calendar_offline": {
     "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
   },

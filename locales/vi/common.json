@@ -5217,6 +5217,13 @@
     "caldav_shared_by": "Được chia sẻ bởi {name}:",
     "freebusy_description": "Người được chia sẻ thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Danh sách",
+    "task_list_not_in_calendar": "{name} (danh sách việc cần làm, không hiện trong lịch)",
+    "copy_to_account": "Sao chép sang {address}",
+    "copied_to_account": "Đã sao chép sang {address}",
+    "delete_original": "Xóa bản gốc"
+  },
   "calendar_offline": {
     "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
   },
