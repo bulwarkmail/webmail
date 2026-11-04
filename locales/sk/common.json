@@ -3838,7 +3838,9 @@
     "empty_trash": "Vyprázdniť kôš",
     "empty_spam": "Vyprázdniť spam",
     "empty_trash_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši? Nedá sa to vrátiť späť.",
-    "empty_spam_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v spame? Nedá sa to vrátiť späť."
+    "empty_spam_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v spame? Nedá sa to vrátiť späť.",
+    "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
+    "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",

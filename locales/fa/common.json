@@ -3838,7 +3838,9 @@
     "empty_trash": "خالی کردن زباله‌دان",
     "empty_spam": "خالی کردن هرزنامه",
     "empty_trash_confirm": "{count, plural, one {پیام} other {همه # پیام}} زباله‌دان برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
-    "empty_spam_confirm": "{count, plural, one {پیام} other {همه # پیام}} هرزنامه برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست."
+    "empty_spam_confirm": "{count, plural, one {پیام} other {همه # پیام}} هرزنامه برای همیشه حذف شود؟ این کار برگشت‌پذیر نیست.",
+    "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
+    "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",

@@ -152,7 +152,8 @@ import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
-import { mailTitleContext } from "@/lib/tab-title";
+import { mailTitleContext, mailboxTitleLine } from "@/lib/tab-title";
+import { useOtherAccountsUnread } from "@/hooks/use-all-inboxes-unread";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
@@ -1472,6 +1473,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The subject is kept out until the policy has loaded: a gate that keeps
   // subjects out of browser history must not let one through while unknown.
   const subjectInTabTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled('tabTitleSubjectEnabled'));
+  const otherAccountsUnread = useOtherAccountsUnread();
   const titleContext = useMemo(() => {
     // Composing email
     const composer = showComposer
@@ -1491,12 +1493,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
     if (mailbox) {
       const mailboxName = localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`));
-      const unreadCount = mailbox.unreadEmails || 0;
-      mailboxLine = unreadCount > 0 ? `${mailboxName} (${unreadCount})` : mailboxName;
+      // The open account's own Inbox also counts the other accounts' (mail-6).
+      mailboxLine = mailboxTitleLine({
+        name: mailboxName,
+        unread: mailbox.unreadEmails || 0,
+        otherUnread: otherAccountsUnread,
+        ownInbox: mailbox.role === 'inbox' && !mailbox.isShared && !isUnifiedView,
+      }, t);
     }
 
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle });
-  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle]);
+  }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView]);
   useDocumentTitle(titleContext);
 
   // When this page is rendered inside the Pro shell as the Mail tab body,

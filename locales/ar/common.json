@@ -3838,7 +3838,9 @@
     "empty_trash": "إفراغ المهملات",
     "empty_spam": "إفراغ البريد العشوائي",
     "empty_trash_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في المهملات نهائيًا؟ لا يمكن التراجع عن ذلك.",
-    "empty_spam_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في البريد العشوائي نهائيًا؟ لا يمكن التراجع عن ذلك."
+    "empty_spam_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في البريد العشوائي نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
+    "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
   },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",

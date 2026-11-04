@@ -3838,7 +3838,9 @@
     "empty_trash": "清空已删除",
     "empty_spam": "清空垃圾邮件",
     "empty_trash_confirm": "要永久删除已删除中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。",
-    "empty_spam_confirm": "要永久删除垃圾邮件中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。"
+    "empty_spam_confirm": "要永久删除垃圾邮件中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。",
+    "title_all_accounts": "{name} ({count}、所有账户共 {total})",
+    "title_all_accounts_only": "{name} (所有账户共 {total})"
   },
   "uxs_folders": {
     "manage_accounts": "管理账户…",

@@ -3838,7 +3838,9 @@
     "empty_trash": "휴지통 비우기",
     "empty_spam": "스팸 비우기",
     "empty_trash_confirm": "휴지통의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요.",
-    "empty_spam_confirm": "스팸의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요."
+    "empty_spam_confirm": "스팸의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요.",
+    "title_all_accounts": "{name} ({count}, 모든 계정에 {total})",
+    "title_all_accounts_only": "{name} (모든 계정에 {total})"
   },
   "uxs_folders": {
     "manage_accounts": "계정 관리…",

@@ -3838,7 +3838,9 @@
     "empty_trash": "Papierkorb leeren",
     "empty_spam": "Spam leeren",
     "empty_trash_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen.",
-    "empty_spam_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Spam endgültig löschen? Das lässt sich nicht rückgängig machen."
+    "empty_spam_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Spam endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "title_all_accounts": "{name} ({count}, {total} in allen Konten)",
+    "title_all_accounts_only": "{name} ({total} in allen Konten)"
   },
   "uxs_folders": {
     "manage_accounts": "Konten verwalten…",

@@ -1034,7 +1034,9 @@
     "empty_trash": "ล้างถังขยะ",
     "empty_spam": "ล้างสแปม",
     "empty_trash_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะอย่างถาวรไหม ย้อนกลับไม่ได้",
-    "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้"
+    "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
+    "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",

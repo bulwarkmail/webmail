@@ -5544,7 +5544,9 @@
     "empty_trash": "ריקון האשפה",
     "empty_spam": "ריקון הספאם",
     "empty_trash_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} באשפה? אי אפשר לבטל את זה.",
-    "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה."
+    "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה.",
+    "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
+    "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
   },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",

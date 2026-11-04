@@ -3838,7 +3838,9 @@
     "empty_trash": "清空垃圾桶",
     "empty_spam": "清空垃圾郵件",
     "empty_trash_confirm": "要永久刪除垃圾桶中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
-    "empty_spam_confirm": "要永久刪除垃圾郵件中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。"
+    "empty_spam_confirm": "要永久刪除垃圾郵件中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
+    "title_all_accounts": "{name} ({count}、所有帳號共 {total})",
+    "title_all_accounts_only": "{name} (所有帳號共 {total})"
   },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",

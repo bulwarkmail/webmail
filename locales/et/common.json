@@ -3838,7 +3838,9 @@
     "empty_trash": "Tühjenda prügikast",
     "empty_spam": "Tühjenda rämpspost",
     "empty_trash_confirm": "Kas kustutada prügikastist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
-    "empty_spam_confirm": "Kas kustutada rämpspostist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta."
+    "empty_spam_confirm": "Kas kustutada rämpspostist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
+    "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
+    "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
   },
   "uxs_folders": {
     "manage_accounts": "Halda kontosid…",

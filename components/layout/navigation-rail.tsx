@@ -12,7 +12,6 @@ import { useShallow } from "zustand/react/shallow";
 import { usePathname, Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
-import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
@@ -34,6 +33,7 @@ import { toUnicodeEmail } from "@/lib/idn";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
 import { NotificationBell } from "@/components/notifications/notification-center";
 import { useBottomControls } from "@/hooks/use-bottom-controls";
+import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 
 interface NavItem {
@@ -260,7 +260,6 @@ export function NavigationRail({
   const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const { supportsCalendar } = useCalendarStore(useShallow((state) => ({ supportsCalendar: state.supportsCalendar })));
-  const { mailboxes } = useEmailStore(useShallow((state) => ({ mailboxes: state.mailboxes })));
   const client = useAuthStore((s) => s.client);
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
@@ -277,7 +276,9 @@ export function NavigationRail({
   const visibleSidebarApps = useResolvedSidebarApps();
   // Pages plugins added (api.ui.setPages); listed after the built-in apps.
   const pluginPages = usePluginPages();
-  const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
+  // Every signed-in account's inbox, as the favicon and the tab title count
+  // it (mail-6), unless Notifications says to count the open one only.
+  const inboxUnread = useAllInboxesUnread();
   const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);

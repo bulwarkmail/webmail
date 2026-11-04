@@ -3838,7 +3838,9 @@
     "empty_trash": "Хогийн савыг хоослох",
     "empty_spam": "Спамыг хоослох",
     "empty_trash_confirm": "Хогийн саван дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
-    "empty_spam_confirm": "Спам дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй."
+    "empty_spam_confirm": "Спам дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
+    "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
   },
   "uxs_folders": {
     "manage_accounts": "Данснуудыг удирдах…",

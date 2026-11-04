@@ -3838,7 +3838,9 @@
     "empty_trash": "Çöp Kutusunu boşalt",
     "empty_spam": "Spam klasörünü boşalt",
     "empty_trash_confirm": "Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
-    "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz."
+    "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
+    "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
   },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",

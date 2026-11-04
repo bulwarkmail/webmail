@@ -3838,7 +3838,9 @@
     "empty_trash": "Svuota cestino",
     "empty_spam": "Svuota spam",
     "empty_trash_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino? Non si può annullare.",
-    "empty_spam_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nello spam? Non si può annullare."
+    "empty_spam_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nello spam? Non si può annullare.",
+    "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
+    "title_all_accounts_only": "{name} ({total} in tutti gli account)"
   },
   "uxs_folders": {
     "manage_accounts": "Gestisci account…",

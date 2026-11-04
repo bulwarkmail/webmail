@@ -3850,7 +3850,9 @@
     "empty_trash": "Dọn sạch Thùng rác",
     "empty_spam": "Dọn sạch Thư rác",
     "empty_trash_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác? Không thể hoàn tác.",
-    "empty_spam_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thư rác? Không thể hoàn tác."
+    "empty_spam_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thư rác? Không thể hoàn tác.",
+    "title_all_accounts": "{name} ({count}, {total} trong mọi tài khoản)",
+    "title_all_accounts_only": "{name} ({total} trong mọi tài khoản)"
   },
   "uxs_folders": {
     "manage_accounts": "Quản lý tài khoản…",

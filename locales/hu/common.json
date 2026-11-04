@@ -3838,7 +3838,9 @@
     "empty_trash": "Kuka ürítése",
     "empty_spam": "Spam ürítése",
     "empty_trash_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a kukából? Ez nem vonható vissza.",
-    "empty_spam_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a spamből? Ez nem vonható vissza."
+    "empty_spam_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a spamből? Ez nem vonható vissza.",
+    "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
+    "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",

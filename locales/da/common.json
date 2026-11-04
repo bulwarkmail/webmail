@@ -3838,7 +3838,9 @@
     "empty_trash": "Tøm papirkurven",
     "empty_spam": "Tøm spam",
     "empty_trash_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i papirkurven for altid? Det kan ikke fortrydes.",
-    "empty_spam_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i spam for altid? Det kan ikke fortrydes."
+    "empty_spam_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i spam for altid? Det kan ikke fortrydes.",
+    "title_all_accounts": "{name} ({count}, {total} i alle konti)",
+    "title_all_accounts_only": "{name} ({total} i alle konti)"
   },
   "uxs_folders": {
     "manage_accounts": "Administrer konti…",

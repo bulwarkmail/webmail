@@ -3838,7 +3838,9 @@
     "empty_trash": "Golește coșul de gunoi",
     "empty_spam": "Golește spamul",
     "empty_trash_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi? Nu se poate anula.",
-    "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula."
+    "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula.",
+    "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
+    "title_all_accounts_only": "{name} ({total} în toate conturile)"
   },
   "uxs_folders": {
     "manage_accounts": "Gestionați conturile…",

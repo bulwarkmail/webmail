@@ -3838,7 +3838,9 @@
     "empty_trash": "Vaciar papelera",
     "empty_spam": "Vaciar spam",
     "empty_trash_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de la papelera? No se puede deshacer.",
-    "empty_spam_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de spam? No se puede deshacer."
+    "empty_spam_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de spam? No se puede deshacer.",
+    "title_all_accounts": "{name} ({count}, {total} en todas las cuentas)",
+    "title_all_accounts_only": "{name} ({total} en todas las cuentas)"
   },
   "uxs_folders": {
     "manage_accounts": "Gestionar cuentas…",

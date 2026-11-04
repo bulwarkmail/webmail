@@ -3838,7 +3838,9 @@
     "empty_trash": "Empty Trash",
     "empty_spam": "Empty Spam",
     "empty_trash_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Trash forever? You can't undo this.",
-    "empty_spam_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Spam forever? You can't undo this."
+    "empty_spam_confirm": "Delete {count, plural, one {the message} other {all # messages}} in Spam forever? You can't undo this.",
+    "title_all_accounts": "{name} ({count}, {total} in all accounts)",
+    "title_all_accounts_only": "{name} ({total} in all accounts)"
   },
   "uxs_folders": {
     "manage_accounts": "Manage accounts…",

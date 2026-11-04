@@ -3838,7 +3838,9 @@
     "empty_trash": "Iztukšot miskasti",
     "empty_spam": "Iztukšot mēstules",
     "empty_trash_confirm": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} miskastē? To nevar atsaukt.",
-    "empty_spam_confirm": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} mēstulēs? To nevar atsaukt."
+    "empty_spam_confirm": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} mēstulēs? To nevar atsaukt.",
+    "title_all_accounts": "{name} ({count}, {total} visos kontos)",
+    "title_all_accounts_only": "{name} ({total} visos kontos)"
   },
   "uxs_folders": {
     "manage_accounts": "Pārvaldīt kontus…",
