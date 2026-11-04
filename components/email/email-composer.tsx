@@ -1846,9 +1846,13 @@ export function EmailComposer({
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
   // "Save as template" keeps it with the account the message is written from.
+  // It says so: the dialog closing was the only sign before (compose-p2-15).
   const addTemplate = useCallback(
-    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => personalTemplatesFor(composingAccountId).add(data),
-    [composingAccountId],
+    (data: Parameters<ReturnType<typeof personalTemplatesFor>['add']>[0]) => {
+      personalTemplatesFor(composingAccountId).add(data);
+      toast.success(tSend('template_saved'));
+    },
+    [composingAccountId, tSend],
   );
   // The admin may leave users only organisation and team templates.
   const composingTemplates = useTemplateSources(composingAccountId);

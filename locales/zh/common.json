@@ -4057,6 +4057,7 @@
     "sending": "正在发送…",
     "sent": "已发送",
     "view": "查看",
+    "template_saved": "模板已保存",
     "schedule_anyway": "仍然计划发送",
     "schedule_warnings_title": "仍然计划发送这封邮件？",
     "picker_button": "从联系人添加",
