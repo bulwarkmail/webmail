@@ -42,7 +42,14 @@ export interface ContextMenuPosition extends Position {
   anchor?: ContextMenuAnchor;
   /** Gets the focus back when the menu closes. Default: what had the focus when it opened. */
   trigger?: HTMLElement | null;
+  /** What it's for: marked `data-menu-opener` while it's open, so a list row shows it. */
+  opener?: HTMLElement | null;
+  /** Opened by a right-click: the pointer sits on it, and only counts once it moves. */
+  fromPointer?: boolean;
 }
+
+/** How far the pointer moves before a menu opened under it answers it. */
+const POINTER_SLOP = 3;
 
 interface ContextMenuProps {
   isOpen: boolean;
@@ -357,6 +364,40 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
     const isPositioned = adjustedPosition !== null;
 
+    // Opened by a right-click, the menu comes up under the pointer: the item
+    // there isn't hovered, and its submenu doesn't open, until the pointer
+    // moves. A tap or a key counts at once.
+    const [pointerArmed, setPointerArmed] = useState(true);
+    const fromPointer = isOpen && position.fromPointer === true;
+    useLayoutEffect(() => {
+      if (!fromPointer) {
+        setPointerArmed(true);
+        return;
+      }
+      setPointerArmed(false);
+      const start = { x: position.x, y: position.y };
+      const arm = () => setPointerArmed(true);
+      const onMove = (e: PointerEvent) => {
+        if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > POINTER_SLOP) arm();
+      };
+      document.addEventListener("pointermove", onMove, true);
+      document.addEventListener("pointerdown", arm, true);
+      document.addEventListener("keydown", arm, true);
+      return () => {
+        document.removeEventListener("pointermove", onMove, true);
+        document.removeEventListener("pointerdown", arm, true);
+        document.removeEventListener("keydown", arm, true);
+      };
+    }, [fromPointer, position.x, position.y]);
+
+    // The row the menu is for stays marked while it's open (app/globals.css).
+    const opener = isOpen ? position.opener ?? null : null;
+    useEffect(() => {
+      if (!opener) return;
+      opener.setAttribute("data-menu-opener", "");
+      return () => opener.removeAttribute("data-menu-opener");
+    }, [opener]);
+
     // Where the focus goes back to: the trigger the opener named, else what
     // had the focus when the menu opened. Read in a layout effect, before
     // the menu takes the focus.
@@ -530,6 +571,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           aria-label={label}
           aria-orientation="vertical"
           tabIndex={-1}
+          data-pointer-unarmed={pointerArmed ? undefined : ""}
           onPointerDownCapture={(e) => {
             if (e.pointerType === "touch" || e.pointerType === "pen") lastTouchAt.current = Date.now();
           }}
@@ -758,9 +800,10 @@ export function ContextMenuSubMenu({
   return (
     <div
       className="relative"
-      onMouseEnter={() => {
+      onMouseEnter={(e) => {
         // Settings > Accessibility can make submenus open on click or
-        // Enter only.
+        // Enter only. Not under the pointer that just opened the menu.
+        if (e.currentTarget.closest("[data-pointer-unarmed]")) return;
         if (!disabled && hoverOpens()) setOpen(true);
       }}
     >

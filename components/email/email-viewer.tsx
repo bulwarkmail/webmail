@@ -33,6 +33,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { ContextMenu, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-menu";
 import { EmailContextMenu } from "./email-context-menu";
+import { restoreTarget } from "@/lib/trash-origin";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
 import { turnOffLinks } from "@/lib/phishing-links";
@@ -4282,6 +4283,10 @@ ${printWatermark ? printWatermark.html : ''}
     onExport: devices.noExport ? undefined : () => void handleExportEmail(),
     onPrint: devices.noPrint ? undefined : () => handlePrint(),
     onViewSource: devices.noExport ? undefined : () => setShowSourceModal(true),
+    // The phone panel's Restore; the ⋮ menu works it out from onMoveToMailbox.
+    onRestore: currentMailboxRole === 'trash' && onMoveToMailbox
+      ? () => { const to = restoreTarget(email, mailboxes, selectedMailbox); if (to) onMoveToMailbox(to); }
+      : undefined,
     omit: readerMenuOmit,
     views: readerViews,
   };

@@ -179,3 +179,58 @@ describe('a native menu from a button', () => {
     }
   });
 });
+
+describe('a menu from a right-click on a row', () => {
+  function Row() {
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu<string>();
+    return (
+      <>
+        <div data-testid="row" data-menu-row="" onContextMenu={(e) => openContextMenu(e, 'row')}>Row</div>
+        <ContextMenu isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
+          <ContextMenuItem label="Reply" onClick={() => {}} />
+          <ContextMenuSubMenu label="Move to" testId="sub">
+            <ContextMenuItem label="Inbox" onClick={() => {}} />
+          </ContextMenuSubMenu>
+        </ContextMenu>
+      </>
+    );
+  }
+
+  it('marks the row while the menu is open', () => {
+    render(<Row />);
+    const row = screen.getByTestId('row');
+    fireEvent.contextMenu(row, { clientX: 300, clientY: 200 });
+    expect(row).toHaveAttribute('data-menu-opener');
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+    expect(row).not.toHaveAttribute('data-menu-opener');
+  });
+
+  it("doesn't answer the pointer that opened it until the pointer moves", () => {
+    render(<Row />);
+    fireEvent.contextMenu(screen.getByTestId('row'), { clientX: 300, clientY: 200 });
+    const menu = screen.getByRole('menu');
+    expect(menu).toHaveAttribute('data-pointer-unarmed');
+    // Still under the pointer: hovering the submenu's entry doesn't open it.
+    fireEvent.mouseEnter(screen.getByTestId('sub').parentElement!);
+    expect(screen.queryByRole('menu', { name: 'Move to' })).toBeNull();
+    fireEvent.pointerMove(document, { clientX: 301, clientY: 201 });
+    expect(menu).toHaveAttribute('data-pointer-unarmed');
+    fireEvent.pointerMove(document, { clientX: 310, clientY: 210 });
+    expect(menu).not.toHaveAttribute('data-pointer-unarmed');
+    fireEvent.mouseEnter(screen.getByTestId('sub').parentElement!);
+    expect(screen.getByRole('menu', { name: 'Move to' })).toBeTruthy();
+  });
+});
+
+describe('placeMenu near the bottom', () => {
+  it('a button low in the window with more room above: above it, capped, not over it', () => {
+    const at = placeMenu({
+      point: { x: 0, y: 0 },
+      anchor: { left: 100, top: 600, right: 132, bottom: 632 },
+      size: { width: 220, height: 700 },
+      viewport: { width: 1280, height: 720 },
+    });
+    expect(at.maxHeight).toBe(600 - 4 - 10);
+    expect(at.y + at.maxHeight!).toBe(596);
+  });
+});

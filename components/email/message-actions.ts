@@ -39,6 +39,7 @@ import {
   Printer,
   Code,
   Fish,
+  Undo,
 } from "@/components/icons";
 
 type Icon = ComponentType<{ className?: string }>;
@@ -70,6 +71,7 @@ export type MessageActionKey =
   | "export"
   | "print"
   | "view_source"
+  | "restore"
   | MessageSubmenuKey
   // A host's own entries (the reader's view toggles), appended after the list.
   | `extra:${string}`;
@@ -123,6 +125,8 @@ export interface MessageActionOptions {
   onExport?: () => void;
   onPrint?: () => void;
   onViewSource?: () => void;
+  /** In Trash: back to the folder it came from, or the Inbox (lib/trash-origin.ts). */
+  onRestore?: () => void;
   /** Entries the host already shows elsewhere (the reader's toolbar). */
   omit?: ReadonlySet<MessageActionKey>;
   /** How the host shows the message (the reader's view toggles): a group before Export, Print and View source. */
@@ -156,6 +160,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tDeepLink = useTranslations("deep_link");
   const tPhishing = useTranslations("phishing_report");
   const tWindows = useTranslations("pwaWindows");
+  const tRecover = useTranslations("recover_deleted");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -233,6 +238,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           })]
         : []),
     ];
+    // In Trash the first thing after answering: getting it back.
+    const restore = o.onRestore && o.currentMailboxRole === "trash"
+      ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
+      : [];
     const archive = archiveEnabled ? [item("archive", Archive, t("archive"), o.onArchive)] : [];
     const del = item("delete", Trash2, t("delete"), o.onDelete, { destructive: !mountainView, testId: "ctx-delete" });
     const read = item("read", isUnread ? MailOpen : Mail, isUnread ? t("mark_read") : t("mark_unread"), () => o.onMarkAsRead?.(isUnread), {
@@ -283,13 +292,13 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     // open and link; how it shows; save, print, source.
     list = mountainView
       ? [
-          ...draft, ...replies, ...archive, del, read, SEPARATOR,
+          ...draft, ...replies, ...restore, ...archive, del, read, SEPARATOR,
           ...move, tag, ...rules, ...copy, SEPARATOR,
           star, ...pin, ...spam, ...reportPhishing, ...find, SEPARATOR,
           ...links, SEPARATOR, ...views, SEPARATOR, ...openWindow, ...file,
         ]
       : [
-          ...draft, ...replies, ...archive, del, SEPARATOR,
+          ...draft, ...replies, ...restore, ...archive, del, SEPARATOR,
           ...move, ...copy, ...rules, SEPARATOR,
           read, star, ...pin, tag, SEPARATOR,
           ...spam, ...reportPhishing, SEPARATOR,

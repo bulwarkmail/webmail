@@ -28,8 +28,11 @@ import {
   Paperclip,
   Copy,
   Fish,
+  MoreHorizontal,
+  Undo,
 } from "@/components/icons";
-import { useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
+import { tidySeparators, useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
+import { restoreTarget, restoreTargetForAll } from "@/lib/trash-origin";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
 import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
@@ -143,12 +146,30 @@ interface EmailContextMenuProps {
   extraEntries?: React.ReactNode;
   /** The menu's accessible name, e.g. "More actions" from the reader's ⋮. */
   label?: string;
+  /**
+   * A list row's right-click menu: what people use from a row, and the rest under
+   * "More actions". The reader's ⋮ is that "more" already, so it shows them all.
+   */
+  rowMenu?: boolean;
 }
+
+/**
+ * What a row's menu shows at its top level, as Outlook and Gmail have it. The rest
+ * goes under "More actions".
+ */
+export const ROW_MENU_KEYS = new Set<MessageActionKey>([
+  "reschedule", "cancel_and_edit", "cancel_send", "edit_draft",
+  "reply", "reply_all", "forward",
+  "restore", "archive", "delete", "move",
+  "read", "star", "tag",
+  "spam",
+  "open_window",
+]);
 
 /** Entries that change the message on the server, or queue the change offline. */
 const CHANGES_MAIL = new Set<MessageActionKey>([
   "archive", "delete", "read", "remove_from_folder", "star", "pin", "spam",
-  "reschedule", "cancel_send", "cancel_and_edit",
+  "reschedule", "cancel_send", "cancel_and_edit", "restore",
 ]);
 
 export function EmailContextMenu({
@@ -207,8 +228,11 @@ export function EmailContextMenu({
   rowPlugins = true,
   extraEntries,
   label,
+  rowMenu = false,
 }: EmailContextMenuProps) {
   const t = useTranslations("context_menu");
+  const tViewer = useTranslations("email_viewer");
+  const tRecover = useTranslations("recover_deleted");
   const shortcutOf = useMessageActionShortcut();
   // Offline, a change to a message waits in the outbox only where the account keeps
   // its mail on this device; otherwise it would fail, so it's greyed out. Rules and
@@ -286,6 +310,13 @@ export function EmailContextMenu({
     onClose();
   };
 
+  // In Trash: back to the folder it came from, or its account's Inbox.
+  const inTrash = currentMailboxRole === "trash";
+  const restoreTo = inTrash && onMoveToMailbox ? restoreTarget(email, mailboxes, selectedMailbox) : undefined;
+  const batchRestoreTo = inTrash && onBatchMoveToMailbox && showBatchActions
+    ? restoreTargetForAll(batchEmails ?? [], mailboxes, selectedMailbox)
+    : undefined;
+
   // One message: the shared action list (R6), the same the reader's ⋮ and
   // the phone panel show.
   const singleEntries = useMessageActionList({
@@ -315,6 +346,7 @@ export function EmailContextMenu({
     onExport,
     onPrint,
     onViewSource,
+    onRestore: restoreTo ? () => onMoveToMailbox?.(restoreTo) : undefined,
     omit,
     views,
     extras,
@@ -374,19 +406,46 @@ export function EmailContextMenu({
         />
     </>
   );
+  // A selection of read and unread mail gets both; otherwise the one that changes something.
+  const selection = batchEmails?.length ? batchEmails : [email];
+  const someUnread = selection.some((e) => !e.keywords?.$seen);
+  const someRead = selection.some((e) => !!e.keywords?.$seen);
   const readItem = (
     <>
-        {/* Mark as read/unread */}
-        <ContextMenuItem
-          icon={isUnread ? MailOpen : Mail}
-          label={isUnread ? t("mark_read") : t("mark_unread")}
-          testId={isUnread ? "ctx-mark-read" : "ctx-mark-unread"}
-          shortcut={shortcutOf("read", isUnread)}
-          disabled={!canChangeMail}
-          onClick={() => handleAction(() => onBatchMarkAsRead?.(isUnread))}
-        />
+        {someUnread && (
+          <ContextMenuItem
+            icon={MailOpen}
+            label={t("mark_read")}
+            testId="ctx-mark-read"
+            shortcut={shortcutOf("read", true)}
+            disabled={!canChangeMail}
+            onClick={() => handleAction(() => onBatchMarkAsRead?.(true))}
+          />
+        )}
+        {someRead && (
+          <ContextMenuItem
+            icon={Mail}
+            label={t("mark_unread")}
+            testId="ctx-mark-unread"
+            shortcut={shortcutOf("read", false)}
+            disabled={!canChangeMail}
+            onClick={() => handleAction(() => onBatchMarkAsRead?.(false))}
+          />
+        )}
     </>
   );
+  const batchRestoreItem = batchRestoreTo ? (
+    <>
+      <ContextMenuItem
+        icon={Undo}
+        label={tRecover("restore")}
+        testId="ctx-restore"
+        disabled={!canChangeMail}
+        onClick={() => handleAction(() => onBatchMoveToMailbox?.(batchRestoreTo))}
+      />
+      <ContextMenuSeparator />
+    </>
+  ) : null;
   const moveItem = (
     <>
         {/* Move to submenu */}
@@ -502,8 +561,8 @@ export function EmailContextMenu({
     }
   };
 
-  const singleMenu = singleEntries.map((entry, index) => {
-    if (entry.kind === "separator") return <ContextMenuSeparator key={`sep-${index}`} />;
+  const renderEntries = (entries: MessageActionEntry[], keyPrefix = "") => entries.map((entry, index) => {
+    if (entry.kind === "separator") return <ContextMenuSeparator key={`${keyPrefix}sep-${index}`} />;
     if (entry.kind === "submenu") return renderSubmenu(entry);
     return (
       <ContextMenuItem
@@ -518,6 +577,27 @@ export function EmailContextMenu({
       />
     );
   });
+  // A row's menu: the usual few, the rest one level down. Not Spam in Spam
+  // and Restore in Trash stay at the top.
+  const rowTop = rowMenu
+    ? tidySeparators(singleEntries.filter((entry) => entry.kind === "separator" || ROW_MENU_KEYS.has(entry.key)))
+    : singleEntries;
+  const rowMore = rowMenu
+    ? tidySeparators(singleEntries.filter((entry) => entry.kind === "separator" || !ROW_MENU_KEYS.has(entry.key)))
+    : [];
+  const singleMenu = (
+    <>
+      {renderEntries(rowTop)}
+      {rowMore.length > 0 && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuSubMenu icon={MoreHorizontal} label={tViewer("more_actions")} testId="ctx-more">
+            {renderEntries(rowMore, "more-")}
+          </ContextMenuSubMenu>
+        </>
+      )}
+    </>
+  );
 
   return (
     <ContextMenu
@@ -535,6 +615,7 @@ export function EmailContextMenu({
           </ContextMenuHeader>
 
           {!isScheduled && (<>
+          {batchRestoreItem}
           {/* Compose-style actions first, above the archive/delete group,
               mirroring the single menu's ordering. */}
           <ContextMenuItem

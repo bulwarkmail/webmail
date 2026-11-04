@@ -13,3 +13,23 @@ export function popoverShift(
   const overStart = bounds.left + margin - (popover.left + shift);
   return overStart > 0 ? shift + overStart : shift;
 }
+
+/**
+ * Whether a popover that opens under its button fits the window's height: if not,
+ * it opens above the button when there's more room there, and either way it gets a
+ * height cap and scrolls. Null when it fits as it is.
+ */
+export function popoverFitHeight(
+  popover: { top: number; height: number },
+  trigger: { top: number },
+  viewportHeight: number,
+  margin = 10,
+  gap = 4,
+): { above: boolean; maxHeight: number } | null {
+  if (popover.top + popover.height <= viewportHeight - margin) return null;
+  const below = viewportHeight - margin - popover.top;
+  const above = trigger.top - gap - margin;
+  return above > below
+    ? { above: true, maxHeight: Math.min(popover.height, above) }
+    : { above: false, maxHeight: Math.max(0, below) };
+}
