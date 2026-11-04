@@ -277,6 +277,16 @@ describe('message-row-actions', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('puts them under More actions in the right-click menu of a row, in the browser and the desktop app alike', async () => {
+    act(() => setPluginActions('p', 'Snooze+', 'message-row-actions', [{ id: 'later', label: 'Later' }]));
+    menu({ rowMenu: true });
+    expect(screen.queryByRole('menuitem', { name: 'Later' })).toBeNull();
+    fireEvent.click(screen.getByTestId('ctx-more'));
+    const more = screen.getByRole('menu', { name: 'more_actions' });
+    await act(async () => { fireEvent.click(within(more).getByRole('menuitem', { name: 'Later' })); });
+    expect(dispatch).toHaveBeenCalledWith('p', 'message-row-actions', 'later', { emailId: 'a' });
+  });
+
   it('keeps them out of the menu for a multi-selection, and out of an empty menu', () => {
     const { unmount } = menu();
     expect(screen.queryByRole('menuitem', { name: 'Later' })).toBeNull();
