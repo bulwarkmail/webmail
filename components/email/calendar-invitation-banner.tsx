@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { answerInvitation } from '@/lib/calendar-rsvp';
 import { createPortal } from 'react-dom';
 import {
@@ -27,6 +27,7 @@ import { isDocumentRTL } from '@/i18n/direction';
 import { useAuthStore } from '@/stores/auth-store';
 import { useShallow } from "zustand/react/shallow";
 import { useEmailStore } from '@/stores/email-store';
+import { eventTargets } from '@/lib/calendar-targets';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { Email, CalendarEvent } from '@/lib/jmap/types';
@@ -455,7 +456,7 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   // The user's zone, as getEffectiveTimeZone resolves it.
   const userTimeZone = resolveTimeZone(useSettingsStore((s) => s.timeZone));
-  const { calendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, deleteEvent, events: storeEvents, setSelectedDate } = useCalendarStore(useShallow((state) => ({
+  const { calendars: allCalendars, supportsCalendar, importEvents, rsvpEvent, updateEvent, deleteEvent, events: storeEvents, setSelectedDate } = useCalendarStore(useShallow((state) => ({
     calendars: state.calendars,
     supportsCalendar: state.supportsCalendar,
     importEvents: state.importEvents,
@@ -465,6 +466,16 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     events: state.events,
     setSelectedDate: state.setSelectedDate,
   })));
+
+  // Where an invitation can go: the calendars of the account on screen that show
+  // in the grid. A task list would hide the event, and another login's calendar
+  // would put the meeting in the wrong account (pim-p2-2).
+  const activeLocalAccountId = useAuthStore((s) => s.activeAccountId);
+  const calendars = useMemo(() => {
+    const mine = allCalendars.filter((c) => !c.localAccountId || c.localAccountId === activeLocalAccountId);
+    const targets = eventTargets(mine);
+    return targets.length > 0 ? targets : mine;
+  }, [allCalendars, activeLocalAccountId]);
 
   const [state, setState] = useState<BannerState>('loading');
   const [parsedEvent, setParsedEvent] = useState<Partial<CalendarEvent> | null>(null);
