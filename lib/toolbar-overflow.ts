@@ -7,6 +7,26 @@ export interface MeasuredToolbarItem {
 }
 
 /**
+ * The order the reader's toolbar gives way in, as indexes into `priorities`.
+ * Labels go before any button (the caller measures without them first). Then
+ * the optional buttons, least important (highest number) first. The ones in
+ * `required` (Reply, Reply all, Forward, Archive, Move; Delete never takes
+ * part) go only when the toolbar still doesn't fit without all the optional
+ * ones, in the order `required` lists them: a reader too narrow for six
+ * icons.
+ */
+export function toolbarHideOrder(priorities: number[], required: readonly number[]): number[] {
+  const indexes = priorities.map((_, i) => i);
+  const optional = indexes
+    .filter((i) => !required.includes(priorities[i]))
+    .sort((a, b) => priorities[b] - priorities[a]);
+  const last = indexes
+    .filter((i) => required.includes(priorities[i]))
+    .sort((a, b) => required.indexOf(priorities[a]) - required.indexOf(priorities[b]));
+  return [...optional, ...last];
+}
+
+/**
  * Which items to hide so the toolbar fits, decided from one measuring pass.
  * `items` come least important first; they are hidden in that order until
  * `overflow` (content width minus available width, in px) is used up. A

@@ -135,7 +135,9 @@ beforeEach(() => {
     getClientForAccount: (id) => (id === 'login-primary' ? asClient(primary) : id === 'login-other' ? asClient(other) : undefined) as never,
     getAllConnectedClients: () => new Map([['login-primary', asClient(primary)], ['login-other', asClient(other)]]) as never,
   });
-  useSettingsStore.setState({ interfaceLayout: 'default', markAsReadDelay: -1, enableUnifiedMailbox: false, mailAttachmentAction: 'download', mailLayout: 'split', attachmentImagePreviewsEnabled: false, postExportAction: 'none', attachmentDownloadTemplate: '{filename}', filenameLowercase: false } as never);
+  // One message in the reader: fetching its conversation would take the
+  // requests these tests count.
+  useSettingsStore.setState({ interfaceLayout: 'default', markAsReadDelay: -1, enableUnifiedMailbox: false, mailAttachmentAction: 'download', mailLayout: 'split', attachmentImagePreviewsEnabled: false, postExportAction: 'none', attachmentDownloadTemplate: '{filename}', filenameLowercase: false, disableThreading: true } as never);
   useEmailStore.setState({
     emails: [message()], selectedEmail: message(), selectedMailbox: sharedMailbox.id,
     mailboxes: [primaryMailbox, sharedMailbox], viewingAccountId: null, accountMailboxes: {},
@@ -800,6 +802,25 @@ function expectProBlob(route: typeof proRoutes[number], action: ProBlobAction, i
 }
 
 describe('Pro blob routing', () => {
+  it("opens a compose tab with the typed text for a notification's Reply, once, when the message is in", async () => {
+    const { requestTabReply } = await import('@/lib/pwa-notify/tab-reply');
+    const { useProTabStore } = await import('@/stores/pro-tab-store');
+    const { a } = await conversationClients();
+    vi.spyOn(a, 'getEmail').mockResolvedValue(message());
+    useEmailStore.setState({ emails: [], selectedEmail: null, isUnifiedView: false, selectedMailbox: 'inbox' });
+    useAuthStore.setState({ client: a, activeAccountId: 'login-primary' });
+    const composeTabs = () => useProTabStore.getState().tabs.filter((tab) => tab.kind === 'compose');
+    const before = composeTabs().length;
+
+    requestTabReply('email', 'Typed on the toast');
+    const view = render(<ProEmailTabBody tabId="reader" data={{ accountId: '', emailId: 'email', mailboxId: null, title: 'Loading' }} />);
+    await waitFor(() => expect(composeTabs()).toHaveLength(before + 1));
+    expect(composeTabs().at(-1)?.composeData).toMatchObject({ mode: 'reply', sourceEmailId: 'email', initialDraftText: 'Typed on the toast' });
+
+    view.rerender(<ProEmailTabBody tabId="reader" data={{ accountId: '', emailId: 'email', mailboxId: null, title: 'Hello' }} />);
+    expect(composeTabs()).toHaveLength(before + 1);
+  });
+
   it.each(proRoutes.flatMap(route => proBlobActions.map(action => ({ ...route, action }))))(
     '$label: $action uses the message owner and authenticated client', async route => {
       const { origin, fetchMock } = await openProMessage(route, route.action);

@@ -113,7 +113,7 @@ describe('email-detail-sidebar', () => {
     rerender(<EmailViewer email={textMail('Hi')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
 
     expect(screen.queryByTestId('slot-email-detail-sidebar')).toBeNull();
-    expect(screen.getByRole('button', { name: 'plugin_panel_show' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'plugin_panel', pressed: false })).toBeInTheDocument();
   });
 
   it('lays the panel over the message when opened anyway, instead of squeezing it', () => {
@@ -121,7 +121,7 @@ describe('email-detail-sidebar', () => {
     offerSlots('p1', ['email-detail-sidebar']);
     viewer(textMail('Hi'));
 
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_show' }));
+    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel', pressed: false }));
     const panel = screen.getByTestId('slot-email-detail-sidebar').closest('[data-plugin-detail-panel]')!;
     expect(panel.getAttribute('data-plugin-detail-panel')).toBe('overlay');
     expect(panel.className).toContain('absolute');
@@ -168,7 +168,7 @@ describe('email-detail-sidebar', () => {
     offerSlots('p1', ['email-detail-sidebar'], { startFolded: ['email-detail-sidebar'] });
     const { unmount } = viewer(textMail('Hi'));
     expect(screen.queryByTestId('slot-email-detail-sidebar')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_show' }));
+    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel', pressed: false }));
     expect(screen.getByTestId('slot-email-detail-sidebar').closest('[data-plugin-detail-panel]')!.getAttribute('data-plugin-detail-panel')).toBe('docked');
     unmount();
     viewer(textMail('Hi'));
@@ -425,6 +425,25 @@ describe('reader surfaces in the phone conversation view', () => {
   });
 });
 
+describe('quick reply', () => {
+  it('scrolls its buttons into view when it takes the focus', () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    useSettingsStore.setState({ quickReplyEnabled: true });
+    const { container } = viewer(textMail('Hola'), { onQuickReply: vi.fn() });
+    fireEvent.focus(container.querySelector('textarea')!);
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
+  });
+});
+
+describe('recipients row', () => {
+  it('says how many recipients are left out, in the phone row as in the desktop one', () => {
+    const to = ['a', 'b', 'c', 'd'].map((n) => ({ name: n, email: `${n}@example.com` }));
+    viewer(textMail('Hola', { to } as Partial<Email>));
+    expect(screen.getAllByText('more_count')).toHaveLength(2);
+  });
+});
+
 describe('reader-actions', () => {
   it('adds the plugin buttons to the reader toolbar', async () => {
     act(() => setPluginActions('p', 'Translator', 'reader-actions', [{ id: 'translate', label: 'Translate' }]));
@@ -440,6 +459,32 @@ describe('reader-actions', () => {
     act(() => setPluginActions('p', 'P', 'reader-actions', [{ id: 'translate', label: 'Translate', mailboxRoles: ['junk'] }]));
     viewer(textMail('Hola'));
     expect(screen.queryByRole('button', { name: 'Translate' })).toBeNull();
+  });
+
+  it('joins the toolbar overflow, giving way before the items of the toolbar', () => {
+    act(() => setPluginActions('p', 'P', 'reader-actions', [{ id: 'one', label: 'One' }, { id: 'two', label: 'Two' }]));
+    viewer(textMail('Hola'));
+
+    const priority = (name: string) => Number(screen.getByRole('button', { name }).dataset.overflowPriority);
+    expect(priority('One')).toBeGreaterThan(11);
+    expect(priority('Two')).toBeGreaterThan(priority('One'));
+  });
+
+  it('offers the buttons with no room on the toolbar in the more menu, and only those', async () => {
+    act(() => setPluginActions('p', 'Translator', 'reader-actions', [
+      { id: 'fits', label: 'Fits' },
+      { id: 'translate', label: 'Translate' },
+    ]));
+    viewer(textMail('Hola'));
+    // jsdom lays nothing out, so a button without rects reads as hidden.
+    vi.spyOn(screen.getByRole('button', { name: 'Fits' }), 'getClientRects')
+      .mockReturnValue([new DOMRect(0, 0, 40, 32)] as unknown as DOMRectList);
+
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    const item = await screen.findByRole('menuitem', { name: 'Translate' });
+    expect(screen.queryByRole('menuitem', { name: 'Fits' })).toBeNull();
+    await act(async () => { fireEvent.click(item); });
+    expect(dispatch).toHaveBeenCalledWith('p', 'reader-actions', 'translate', { emailId: 'e1' });
   });
 
   it('puts them in the More panel on phones', async () => {

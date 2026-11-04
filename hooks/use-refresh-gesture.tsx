@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import {
   PullToRefreshIndicator,
   createPullToRefreshStore,
@@ -138,7 +139,8 @@ export function useRefreshGesture({ onRefresh, enabled = true }: UseRefreshGestu
     const handleKeyDown = (event: KeyboardEvent) => {
       const isReloadKey =
         event.key === "F5" ||
-        ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "r");
+        // The desktop app has no page reload: there Ctrl+R replies, from its Message menu.
+        (!getDesktopBridge() && (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "r");
       if (!isReloadKey) return;
 
       event.preventDefault();

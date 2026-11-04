@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { PreviewShell, type PreviewNeighbours } from "@/components/files/preview-shell";
+import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { useTranslations } from "next-intl";
 import { ZoomableImage } from "@/components/files/zoomable-image";
 import { FilePreviewPluginSection } from "@/components/files/file-preview-plugin-section";
@@ -35,6 +35,7 @@ export function ImagePreviewModal({ name, onClose, onDownload, getImageUrl, file
 
   // Back closes the preview instead of leaving Files, as for every other preview.
   useCloseOnBack({ onBack: onClose });
+  const closeFromBackdrop = useBackdropClose(onClose);
 
   useEffect(() => {
     let revoke: string | null = null;
@@ -76,7 +77,7 @@ export function ImagePreviewModal({ name, onClose, onDownload, getImageUrl, file
           </div>
         )}
         {imageUrl && !error && (
-          <ZoomableImage src={imageUrl} alt={name} onBackgroundClick={onClose} />
+          <ZoomableImage src={imageUrl} alt={name} onBackgroundClick={closeFromBackdrop} />
         )}
         {imageUrl && !error && <Watermark text={watermark} />}
       </div>

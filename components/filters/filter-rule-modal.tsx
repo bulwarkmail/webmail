@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { sortFolderTree } from "@/lib/move-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "@/components/icons";
@@ -27,6 +28,7 @@ import { hasPeriod, isPeriodBoundary } from "@/lib/sieve/period";
 import { fromWallClock, getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 
 interface FilterRuleModalProps {
   rule?: FilterRule;
@@ -39,6 +41,16 @@ interface FilterRuleModalProps {
   suggestions?: RuleSuggestion[];
   /** Offer "Also apply to existing messages in this folder". */
   offerApplyToExisting?: boolean;
+  /**
+   * The folder the offer is about, by name ("Inbox"), when the dialog isn't
+   * opened from that folder (Settings › Filters).
+   */
+  applyExistingFolder?: string;
+  /**
+   * How many messages in that folder the rule as typed would change. The
+   * offer says the number, and is greyed when it is 0.
+   */
+  countExisting?: (rule: FilterRule) => Promise<number>;
   mailboxes: Mailbox[];
   /** Server cap on redirects per message (Sieve `maxNumberRedirects`). */
   maxRedirects?: number | null;
@@ -90,9 +102,31 @@ function comparatorsFor(field: FilterConditionField, regex: boolean): FilterComp
   return regex && REGEX_FIELDS.has(field) ? [...base, "regex"] : base;
 }
 
+// "Stop processing" is not offered as an action: the "Don't apply later
+// rules" checkbox does the same, and two ways to say it confused people.
 const ALL_ACTION_TYPES: FilterActionType[] = [
-  "move", "copy", "forward", "mark_read", "star", "add_label", "discard", "reject", "keep", "stop",
+  "move", "copy", "forward", "mark_read", "star", "add_label", "discard", "reject", "keep",
 ];
+
+// Mail never needs filing into these: Drafts and Sent hold what the user
+// writes, Scheduled what waits to be sent.
+const NON_TARGET_ROLES = new Set(["drafts", "sent", "scheduled"]);
+
+/**
+ * A rule saved with the old "Stop processing" action opens with that action
+ * folded into the checkbox, so it keeps working and can be saved again. What
+ * came after the stop never ran, so it goes; a rule that did nothing before
+ * it keeps the message in the inbox, as it did.
+ */
+export function foldStopAction(actions: FilterAction[], stopProcessing: boolean): {
+  actions: FilterAction[];
+  stopProcessing: boolean;
+} {
+  const stopAt = actions.findIndex((a) => a.type === "stop");
+  if (stopAt === -1) return { actions, stopProcessing };
+  const before = actions.slice(0, stopAt);
+  return { actions: before.length > 0 ? before : [{ type: "keep" }], stopProcessing: true };
+}
 
 const ACTIONS_WITH_VALUE = new Set<FilterActionType>(["move", "copy", "forward", "reject", "add_label"]);
 const ACTIONS_WITH_MAILBOX = new Set<FilterActionType>(["move", "copy"]);
@@ -174,6 +208,8 @@ export function FilterRuleModal({
   initialRule,
   suggestions = [],
   offerApplyToExisting = false,
+  applyExistingFolder,
+  countExisting,
   mailboxes,
   maxRedirects,
   forwardsBefore = 0,
@@ -184,8 +220,13 @@ export function FilterRuleModal({
   onClose,
 }: FilterRuleModalProps) {
   const t = useTranslations("settings.filters");
+  const tSidebar = useTranslations("sidebar");
   const isEdit = !!rule;
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  // Regular expressions are for people who asked for the advanced settings;
+  // a rule that already uses one keeps its comparator either way.
+  const showAdvanced = useSettingsStore((state) => state.showAdvancedSettings);
+  const regexOffered = regexSupported && showAdvanced;
   const { tagName } = useKeywordFormat();
 
   const start = rule ?? initialRule;
@@ -194,10 +235,11 @@ export function FilterRuleModal({
   const [conditions, setConditions] = useState<FilterCondition[]>(
     start?.conditions.length ? [...start.conditions] : [makeEmptyCondition()]
   );
+  const [folded] = useState(() => foldStopAction(start?.actions ?? [], start?.stopProcessing ?? false));
   const [actions, setActions] = useState<FilterAction[]>(
-    start?.actions.length ? [...start.actions] : [makeEmptyAction()]
+    folded.actions.length ? [...folded.actions] : [makeEmptyAction()]
   );
-  const [stopProcessing, setStopProcessing] = useState(start?.stopProcessing ?? false);
+  const [stopProcessing, setStopProcessing] = useState(folded.stopProcessing);
   const [includeSpam, setIncludeSpam] = useState(start?.includeSpam ?? false);
   const [usedSuggestions, setUsedSuggestions] = useState<ReadonlySet<string>>(new Set());
   const [applyToExisting, setApplyToExisting] = useState(false);
@@ -221,8 +263,10 @@ export function FilterRuleModal({
   }, [confirmDiscard, dirty, onClose]);
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // The folder list in the order every Move list has (lib/move-menu.ts).
+  const locale = useLocale();
   const { hierarchicalMailboxes, mailboxPathMap } = useMemo(() => {
-    const tree = buildMailboxTree(mailboxes.filter((mb) => !mb.isShared));
+    const tree = sortFolderTree(buildMailboxTree(mailboxes.filter((mb) => !mb.isShared)), locale);
     const pathMap = new Map<string, string>();
     const buildPaths = (nodes: MailboxNode[], parentPath = "") => {
       for (const node of nodes) {
@@ -236,7 +280,7 @@ export function FilterRuleModal({
     };
     buildPaths(tree);
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
-  }, [mailboxes]);
+  }, [mailboxes, locale]);
 
   // Rules saved before folder ids were stored only carry the path; resolve it
   // so the select shows the folder and the next save adds the id.
@@ -312,6 +356,30 @@ export function FilterRuleModal({
     const checkActions: FilterAction[] = validActions.length > 0 ? validActions : [{ type: "mark_read" }];
     return retroactiveSupport({ conditions: validConditions, actions: checkActions }).ok;
   }, [offerApplyToExisting, validConditions, validActions, periodOn]);
+
+  // How many messages the rule would change there, asked of the server a
+  // moment after the conditions and actions stop changing. null: not known
+  // (still asking, no action yet, or the server didn't answer).
+  const [existingCount, setExistingCount] = useState<number | null>(null);
+  const countKey = canApplyToExisting && countExisting && validActions.length > 0
+    ? JSON.stringify([matchType, validConditions, validActions])
+    : null;
+  const countRef = useRef(countExisting);
+  countRef.current = countExisting;
+  useEffect(() => {
+    setExistingCount(null);
+    if (!countKey || !countRef.current) return;
+    const [type, conds, acts] = JSON.parse(countKey) as [FilterRule["matchType"], FilterCondition[], FilterAction[]];
+    let stale = false;
+    const timer = setTimeout(() => {
+      countRef.current!({ id: "count", name: "", enabled: true, matchType: type, conditions: conds, actions: acts, stopProcessing: false })
+        .then((count) => { if (!stale) setExistingCount(count); })
+        .catch(() => { /* the offer stays, without a number */ });
+    }, 400);
+    return () => { stale = true; clearTimeout(timer); };
+  }, [countKey]);
+  const noneToApply = existingCount === 0;
+  const canTickApply = canApplyToExisting && !noneToApply;
 
   // What keeps the rule from being saved, said under the part it is about
   // once Save was pressed, and updated as the user fixes it.
@@ -395,8 +463,8 @@ export function FilterRuleModal({
       includeSpam: includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? true : undefined,
       activeFrom: activeFrom ?? undefined,
       activeUntil: activeUntil ?? undefined,
-    }, { applyToExisting: applyToExisting && canApplyToExisting });
-  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, activeFrom, activeUntil, hasErrors, start, onSave, applyToExisting, canApplyToExisting]);
+    }, { applyToExisting: applyToExisting && canTickApply });
+  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, activeFrom, activeUntil, hasErrors, start, onSave, applyToExisting, canTickApply]);
 
   const visibleSuggestions = suggestions.filter((s) => !usedSuggestions.has(s.id));
 
@@ -420,7 +488,7 @@ export function FilterRuleModal({
         // with e.g. (field=attachment, comparator=contains) — invalid for the
         // Sieve generator. Each field has its own valid comparator set.
         if (updates.field && updates.field !== c.field) {
-          const allowed = comparatorsFor(updates.field, regexSupported);
+          const allowed = comparatorsFor(updates.field, regexOffered);
           if (!allowed.includes(c.comparator)) {
             updated.comparator = allowed[0];
           }
@@ -605,7 +673,7 @@ export function FilterRuleModal({
                       className={selectClass}
                       aria-label={t("comparators.contains")}
                     >
-                      {comparatorsFor(condition.field, regexSupported || condition.comparator === "regex").map((c) => (
+                      {comparatorsFor(condition.field, regexOffered || condition.comparator === "regex").map((c) => (
                         <option key={c} value={c}>
                           {t(`comparators.${c}`)}
                         </option>
@@ -740,11 +808,14 @@ export function FilterRuleModal({
                       >
                         <option value="">{t("move_to_folder")}</option>
                         {missing && <option value={selectedId}>{action.value}</option>}
-                        {hierarchicalMailboxes.map((mb) => (
-                          <option key={mb.id} value={mb.id}>
-                            {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                          </option>
-                        ))}
+                        {hierarchicalMailboxes
+                          .filter((mb) => !NON_TARGET_ROLES.has(mb.role ?? "") || mb.id === selectedId)
+                          .map((mb) => (
+                            <option key={mb.id} value={mb.id}>
+                              {"\u00A0".repeat(mb.depth * 3)}
+                              {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
+                            </option>
+                          ))}
                       </select>
                     );
                   })()}
@@ -919,22 +990,28 @@ export function FilterRuleModal({
                 <input
                   type="checkbox"
                   id="applyToExisting"
-                  checked={applyToExisting && canApplyToExisting}
-                  disabled={!canApplyToExisting}
+                  checked={applyToExisting && canTickApply}
+                  disabled={!canTickApply}
                   onChange={(e) => setApplyToExisting(e.target.checked)}
                   className="rounded border-input disabled:opacity-50"
-                  aria-describedby={canApplyToExisting ? undefined : "applyToExistingHint"}
+                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
                 />
                 <label
                   htmlFor="applyToExisting"
-                  className={cn("text-sm", canApplyToExisting ? "text-foreground" : "text-muted-foreground")}
+                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
                 >
-                  {t("apply_existing")}
+                  {applyExistingFolder === undefined
+                    ? t("apply_existing")
+                    : existingCount && canApplyToExisting
+                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
+                      : t("apply_existing_in", { folder: applyExistingFolder })}
                 </label>
               </div>
-              {!canApplyToExisting && (
+              {!canTickApply && (
                 <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
-                  {periodOn ? t("apply_existing_period") : t("apply_existing_unsupported")}
+                  {!canApplyToExisting
+                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
+                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
                 </p>
               )}
             </div>

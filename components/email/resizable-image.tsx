@@ -12,10 +12,14 @@ export interface ResizableImageOptions {
   onEditAlt?: (pos: number) => void;
   /** The name of the button that does it ("Image description"). */
   editAltLabel?: string;
+  /** The chip on an image that has no description yet ("Add description"). */
+  addAltLabel?: string;
 }
 
 function ResizableImageView({ node, updateAttributes, selected, extension, getPos }: NodeViewProps) {
-  const { onEditAlt, editAltLabel } = extension.options as ResizableImageOptions;
+  const { onEditAlt, editAltLabel, addAltLabel } = extension.options as ResizableImageOptions;
+  // No description and not marked decorative (""): an optional chip asks for one.
+  const undescribed = node.attrs.alt === null || node.attrs.alt === undefined;
   const imgRef = useRef<HTMLImageElement>(null);
   const [resizing, setResizing] = useState(false);
   // A remote image (a draft from another client, pasted web content) stays
@@ -93,6 +97,23 @@ function ResizableImageView({ node, updateAttributes, selected, extension, getPo
           style={{ width: "100%", height: "auto", display: "block" }}
           draggable={false}
         />
+        {undescribed && onEditAlt && addAltLabel && !selected && (
+          // Optional, never in the way: pasting or dropping an image asks nothing.
+          <button
+            type="button"
+            contentEditable={false}
+            data-testid="image-alt-add"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.stopPropagation();
+              const pos = typeof getPos === "function" ? getPos() : undefined;
+              if (typeof pos === "number") onEditAlt(pos);
+            }}
+            className="absolute bottom-1 start-1 rounded-full bg-background/90 px-2 py-0.5 text-xs font-medium text-foreground shadow border border-border hover:bg-background"
+          >
+            {addAltLabel}
+          </button>
+        )}
         {selected && onEditAlt && (
           // Edit what the image says to screen readers. Reachable with Tab
           // while the image is selected, and from the toolbar.
@@ -140,7 +161,7 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
   name: "image",
 
   addOptions() {
-    return { onEditAlt: undefined, editAltLabel: undefined };
+    return { onEditAlt: undefined, editAltLabel: undefined, addAltLabel: undefined };
   },
   group: "inline",
   inline: true,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Identity } from '@/lib/jmap/types';
 import { identityHooks } from '@/lib/plugin-hooks';
+import { getPlainTextSignature, signatureAsHtml } from '@/lib/signature-utils';
 
 interface RenderedSignature {
   identityId: string;
@@ -43,9 +44,14 @@ export function usePluginSignature(identity: Identity | null | undefined, option
     void identityHooks.onSignatureRender.transform(initial, { identityId: id }).then((result: unknown) => {
       if (cancelled) return;
       const r = result as { html?: unknown; text?: unknown } | null;
-      const html = typeof r?.html === 'string' ? r.html : initial.html;
-      const text = typeof r?.text === 'string' ? r.text : initial.text;
+      let html = typeof r?.html === 'string' ? r.html : initial.html;
+      let text = typeof r?.text === 'string' ? r.text : initial.text;
       if (html === initial.html && text === initial.text) return;
+      // A plugin that changed one form only: the composer's other mode reads
+      // the other form, which would still be the old signature. An empty one
+      // needs nothing, as the composer falls back to the form that is set.
+      if (text === initial.text && initial.text) text = getPlainTextSignature({ htmlSignature: html });
+      else if (html === initial.html && initial.html) html = signatureAsHtml({ textSignature: text });
       setRendered({ identityId: id, source, html, text });
       setRevision((n) => n + 1);
     });

@@ -10,31 +10,8 @@ import { getEmailValidationError, validateEmailList } from '@/lib/validation';
 import { getPlainTextSignature } from '@/lib/signature-utils';
 import { useOrgSignatureSetup } from '@/hooks/use-org-signature';
 import { OrgLockedNote } from '@/components/settings/org-locked-note';
-
-// Stalwarts JMAP Identity/set caps signature fields at 2047 UTF-8 bytes
-const SIGNATURE_MAX_BYTES = 2047;
-const utf8Encoder = new TextEncoder();
-
-function utf8ByteLength(s: string): number {
-  return utf8Encoder.encode(s).length;
-}
-
-function truncateToUtf8Bytes(s: string, maxBytes: number): string {
-  if (utf8ByteLength(s) <= maxBytes) return s;
-  let lo = 0;
-  let hi = s.length;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >>> 1;
-    if (utf8ByteLength(s.slice(0, mid)) <= maxBytes) lo = mid;
-    else hi = mid - 1;
-  }
-  // Don't split a surrogate pair: if we landed right after a high surrogate, back off one code unit.
-  if (lo > 0) {
-    const prev = s.charCodeAt(lo - 1);
-    if (prev >= 0xD800 && prev <= 0xDBFF) lo -= 1;
-  }
-  return s.slice(0, lo);
-}
+import { useSettingsStore } from '@/stores/settings-store';
+import { SignatureEditor, SIGNATURE_MAX_BYTES, signatureBytes } from './signature-editor';
 
 interface IdentityFormData {
   name: string;
@@ -56,9 +33,11 @@ interface IdentityFormProps {
 export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: IdentityFormProps) {
   const t = useTranslations('identities.form');
   const tValidation = useTranslations('identities.validation_errors');
-  const tDisplay = useTranslations('identities.display');
   const tOrg = useTranslations('org_signature');
+  const tName = useTranslations('uxs2_ident.your_name');
   const isEditing = !!identity;
+  // Composing > Plain text only: the signature is plain text too.
+  const plainTextMode = useSettingsStore((s) => s.plainTextMode);
 
   const [formData, setFormData] = useState<IdentityFormData>({
     name: identity?.name || '',
@@ -133,6 +112,11 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
       }
     }
 
+    // Too long for the server: the field says so under it; nothing is cut off.
+    if (signatureEditable && signatureBytes(formData.htmlSignature ?? '', formData.textSignature ?? '', plainTextMode) > SIGNATURE_MAX_BYTES) {
+      newErrors.signature = 'too_long';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -173,8 +157,9 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name */}
       <div>
+        {/* "Your name", like the Account page: the one name recipients see. */}
         <label htmlFor="identity-name" className="block text-sm font-medium mb-1">
-          {t('name_label')}
+          {tName('label')}
         </label>
         <Input
           id="identity-name"
@@ -182,12 +167,12 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
           maxLength={256}
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder={t('name_placeholder')}
           disabled={isSubmitting}
           className={errors.name ? 'border-destructive' : ''}
-          aria-describedby={errors.name ? 'name-error' : undefined}
+          aria-describedby={errors.name ? 'name-error' : 'identity-name-hint'}
           aria-invalid={!!errors.name}
         />
+        <p id="identity-name-hint" className="text-xs text-muted-foreground mt-1">{tName('description')}</p>
         {errors.name && (
           <p
             id="name-error"
@@ -303,58 +288,20 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
         />
       )}
 
-      {signatureEditable && (<>
-      {/* Text Signature */}
-      <div>
-        <label htmlFor="identity-text-sig" className="block text-sm font-medium mb-1">
-          {t('text_signature_label')}
-        </label>
-        <textarea
-          id="identity-text-sig"
-          value={formData.textSignature ?? ''}
-          onChange={(e) => setFormData({ ...formData, textSignature: truncateToUtf8Bytes(e.target.value, SIGNATURE_MAX_BYTES) })}
-          rows={3}
+      {signatureEditable && (
+        <SignatureEditor
+          html={formData.htmlSignature ?? ''}
+          text={formData.textSignature ?? ''}
+          plainOnly={plainTextMode}
           disabled={isSubmitting}
-          aria-label={t('text_signature_label')}
-          aria-describedby="identity-text-sig-counter"
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:outline-hidden focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+          onChange={(next) => setFormData({ ...formData, ...next })}
+          note={org.signature ? (
+            <p className="text-xs text-muted-foreground mt-1" data-testid="identity-org-signature-default">
+              {tOrg('identity_default')}
+            </p>
+          ) : null}
         />
-        <SignatureByteCounter id="identity-text-sig-counter" value={formData.textSignature || ''} />
-        {org.signature && (
-          <p className="text-xs text-muted-foreground mt-1" data-testid="identity-org-signature-default">
-            {tOrg('identity_default')}
-          </p>
-        )}
-      </div>
-
-      {/* HTML Signature */}
-      <div>
-        <label htmlFor="identity-html-sig" className="block text-sm font-medium mb-1">
-          {t('html_signature_label')}
-        </label>
-        <textarea
-          id="identity-html-sig"
-          value={formData.htmlSignature ?? ''}
-          onChange={(e) => setFormData({ ...formData, htmlSignature: truncateToUtf8Bytes(e.target.value, SIGNATURE_MAX_BYTES) })}
-          rows={5}
-          disabled={isSubmitting}
-          aria-label={t('html_signature_label')}
-          aria-describedby="identity-html-sig-counter"
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground font-mono transition-all duration-200 placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:outline-hidden focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <SignatureByteCounter id="identity-html-sig-counter" value={formData.htmlSignature || ''} />
-        {formData.htmlSignature && (
-          <div className="mt-2 p-2 border rounded bg-muted">
-            <div className="text-xs text-muted-foreground mb-1">{tDisplay('preview')}</div>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: sanitizeSignatureHtmlForDisplay(formData.htmlSignature)
-              }}
-            />
-          </div>
-        )}
-      </div>
-      </>)}
+      )}
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4">
@@ -379,7 +326,7 @@ export function IdentityForm({ identity, onSave, onCancel, onDirtyChange }: Iden
 }
 
 /** The signature an address sends with when the admin locked signatures, read-only. */
-function LockedSignature({ html, text }: { html: string; text: string }) {
+export function LockedSignature({ html, text }: { html: string; text: string }) {
   const t = useTranslations('org_signature');
   const preview = html.trim() ? sanitizeSignatureHtmlForDisplay(html) : '';
   const plain = preview ? '' : getPlainTextSignature({ textSignature: text, htmlSignature: html });
@@ -397,28 +344,5 @@ function LockedSignature({ html, text }: { html: string; text: string }) {
       </div>
       <OrgLockedNote className="mt-1" />
     </div>
-  );
-}
-
-function SignatureByteCounter({ id, value }: { id: string; value: string }) {
-  const t = useTranslations('identities.form');
-  const bytes = utf8ByteLength(value);
-  const atLimit = bytes >= SIGNATURE_MAX_BYTES;
-  const nearLimit = !atLimit && bytes >= Math.floor(SIGNATURE_MAX_BYTES * 0.9);
-  const tone = atLimit
-    ? 'text-destructive'
-    : nearLimit
-      ? 'text-amber-600 dark:text-amber-400'
-      : 'text-muted-foreground';
-  return (
-    <p
-      id={id}
-      className={`text-xs mt-1 tabular-nums ${tone}`}
-      role="status"
-      aria-live="polite"
-    >
-      {t('signature_byte_counter', { bytes, max: SIGNATURE_MAX_BYTES })}
-      {atLimit && <span className="ms-1">{t('signature_byte_limit_reached')}</span>}
-    </p>
   );
 }

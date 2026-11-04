@@ -1,4 +1,5 @@
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { scrubRoutePath } from '@/lib/route-groups';
 import { debugIdsByPath } from './debug-ids';
 import {
@@ -41,6 +42,10 @@ interface ClientState {
   breadcrumbs: Breadcrumb[];
   limiter: ReportLimiter | null;
   installed: boolean;
+  /** In the desktop app: the shell's privacy changes are being listened to. */
+  watchingConsent: boolean;
+  /** The user took crash reports back, or a policy did. A later config doesn't undo that. */
+  withdrawn: boolean;
 }
 
 // On globalThis: the error boundary, the JMAP client and the root component
@@ -48,7 +53,7 @@ interface ClientState {
 const KEY = Symbol.for('bulwark.error-reporting.client');
 function state(): ClientState {
   const g = globalThis as typeof globalThis & { [KEY]?: ClientState };
-  return (g[KEY] ??= { settings: undefined, pending: [], breadcrumbs: [], limiter: null, installed: false });
+  return (g[KEY] ??= { settings: undefined, pending: [], breadcrumbs: [], limiter: null, installed: false, watchingConsent: false, withdrawn: false });
 }
 
 function sessionStore(): Storage | null {
@@ -73,10 +78,36 @@ function currentRoute(): string | undefined {
   return scrubRoutePath(location.pathname, basePath());
 }
 
+/**
+ * Consent taken back while a page is open, in the desktop app. A change to anything else
+ * with crash reports never on leaves an instance's own settings alone: its admin chose
+ * those, and the settings page says so.
+ */
+function watchDesktopConsent(): void {
+  const s = state();
+  const bridge = getDesktopBridge();
+  if (s.watchingConsent || !bridge?.privacy?.onChange) return;
+  s.watchingConsent = true;
+  let on: boolean | null = null;
+  void Promise.resolve(bridge.privacy.get?.()).then((current) => {
+    on ??= current?.crashReports.on ?? null;
+  }).catch(() => {});
+  bridge.privacy.onChange((next) => {
+    const tookBack = on === true && !next.crashReports.on;
+    on = next.crashReports.on;
+    if (on) s.withdrawn = false;
+    if (tookBack || next.crashReports.forcedOff) {
+      s.withdrawn = true;
+      configureErrorReporting(null);
+    }
+  });
+}
+
 /** Apply the settings from /api/config (or Lite's policy.json); null switches reporting off. */
 export function configureErrorReporting(settings: ClientSettings | null): void {
   const s = state();
-  const on = settings && (parseDsn(settings.dsn) || settings.collect) ? settings : null;
+  watchDesktopConsent();
+  const on = !s.withdrawn && settings && (parseDsn(settings.dsn) || settings.collect) ? settings : null;
   s.settings = on;
   const queued = s.pending;
   s.pending = [];
@@ -176,10 +207,19 @@ export function captureReport(report: ErrorReport): void {
   deliver(withCrumbs);
 }
 
+/**
+ * `CrashReportsAllowed` forced off, on any page of the desktop app. An instance's own
+ * settings decide the rest there: its admin chose what its pages report to it.
+ */
+function forbiddenByDevicePolicy(): boolean {
+  const entry = getDesktopBridge()?.policy?.get?.().CrashReportsAllowed;
+  return !!entry && entry.locked && entry.value === false;
+}
+
 function deliver(report: ErrorReport): void {
   const s = state();
   const settings = s.settings;
-  if (!settings) return;
+  if (!settings || forbiddenByDevicePolicy()) return;
   const version = appVersion();
   const print = fingerprint(report.name, report.frames, version, report.code);
   if (!limiter().allow(print)) return;
@@ -194,7 +234,12 @@ function deliver(report: ErrorReport): void {
       platform: 'javascript',
       fingerprint: print,
       debugIds: debugIdsByPath(),
-      tags: { runtime: 'browser', ...(process.env.NEXT_PUBLIC_BULWARK_LITE === '1' ? { lite: 'yes' } : {}) },
+      tags: {
+        runtime: 'browser',
+        ...(process.env.NEXT_PUBLIC_BULWARK_LITE === '1' ? { lite: 'yes' } : {}),
+        // An instance's build knows nothing of the app it's in, so the bridge says.
+        ...(getDesktopBridge() ? { platform: 'desktop' } : {}),
+      },
     });
     send(envelopeUrl(dsn), buildEnvelope(event), {
       // text/plain keeps it a simple request: no preflight, no custom header.

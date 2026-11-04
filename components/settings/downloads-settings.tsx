@@ -147,7 +147,10 @@ export function DownloadsSettings() {
   // With the Archive action off a stored "archive" keeps the message, so it shows as "keep".
   const postExportShown = archiveActionEnabled || postExportAction !== "archive" ? postExportAction : "keep";
 
-  const sampleEmail = useMemo(() => buildSampleEmail(), []);
+  const tWording = useTranslations("uxs_wording");
+  // A subject in the user's language, with a letter or two the "plain letters" option changes.
+  const sampleSubject = tWording("sample_subject");
+  const sampleEmail = useMemo(() => buildSampleEmail(sampleSubject), [sampleSubject]);
   const sampleAttachment = useMemo(() => ({ name: "Invoice-2026-05.pdf", type: "application/pdf" }), []);
 
   const transform = useMemo(

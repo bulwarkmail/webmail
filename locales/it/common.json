@@ -6,9 +6,6 @@
     "username_placeholder": "utente@esempio.com",
     "password_label": "Password",
     "password_placeholder": "Inserisci la tua password",
-    "jmap_endpoint_label": "Server JMAP",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Il server deve consentire le richieste CORS da questo dominio.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server selezionato in base al tuo dominio email.",
     "sign_in": "Accedi",
@@ -29,7 +26,7 @@
     },
     "show_password": "Mostra password",
     "hide_password": "Nascondi password",
-    "totp_toggle": "Ho un codice 2FA",
+    "totp_toggle": "Ho un codice dalla mia app di autenticazione",
     "token_toggle": "Accedi con un token di accesso",
     "password_toggle": "Accedi con una password",
     "token_label": "Token di accesso",
@@ -126,7 +123,7 @@
     "sign_out_of": "Disconnetti da {account}",
     "sign_out_all": "Disconnetti da tutti gli account",
     "add_account": "Aggiungi account",
-    "set_as_default": "Imposta come predefinito",
+    "set_as_default": "Apri questo account all'avvio",
     "switch_account": "Cambia account",
     "contacts": "Contatti",
     "calendar": "Calendario",
@@ -177,6 +174,7 @@
     },
     "clear_search": "Cancella ricerca",
     "vacation_active": "Risponditore automatico attivo",
+    "vacation_turn_off": "Disattiva",
     "demo_banner": "Modalità demo",
     "demo_reset": "Reimposta",
     "demo_tour": "Tour",
@@ -215,22 +213,30 @@
     "mv_storage_used": "{percent}% di {total} utilizzato",
     "accessibility": "Accessibilità"
   },
+  "account_unread": {
+    "others": "Non letti negli altri account: {count}",
+    "badge_all_accounts": {
+      "label": "Conta la posta non letta di tutti gli account",
+      "description": "Il numero sulla scheda, sull'icona dell'app e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati."
+    },
+    "empty_hint": "Puoi svuotare la cartella {folder} per rimuovere definitivamente tutti i messaggi."
+  },
   "protocol_handlers": {
     "title": "App predefinite",
-    "description": "Scegli se i link e-mail e calendario devono aprirsi in {appName}. Tecnicamente, {appName} si registra come gestore di protocollo per i link mailto: e webcal:.",
+    "description": "Scegli se i link di email e calendario si aprono in {appName}.",
     "unsupported": "Questo browser o questa connessione non supporta la registrazione manuale dei gestori di protocollo. Potresti comunque poter usare la PWA installata tramite le impostazioni del browser o del sistema.",
-    "mailto_label": "Link e-mail",
-    "mailto_description": "Apre i link mailto: in {appName} con l'editor precompilato.",
-    "protocol_open_mode_label": "All'apertura dei link di protocollo",
+    "mailto_label": "Apri i link email in {appName}",
+    "mailto_description": "Un clic su un indirizzo email in un sito web avvia un nuovo messaggio in {appName}.",
+    "protocol_open_mode_label": "Come si aprono i link",
     "protocol_open_mode_description": "Scegli se {appName} deve aprire i link mailto: e webcal: in una nuova scheda o riutilizzare una sessione aperta. L'opzione sessione attiva richiede l'autorizzazione alle notifiche, così puoi fare clic su una notifica di fallback per portare {appName} in primo piano se il browser blocca il focus.",
     "protocol_open_mode_active_session": "Apri nella sessione attiva se possibile",
     "protocol_open_mode_new_tab": "Apri sempre una nuova scheda",
     "focus_notification_title": "Apri {appName}",
     "focus_notification_body": "Il link è stato aperto in {appName}. Fai clic per portare la finestra in primo piano.",
-    "webcal_label": "Link calendario",
-    "webcal_description": "Apre i link webcal: in {appName} con una finestra di dialogo di sottoscrizione al calendario precompilata.",
-    "register_mailto": "Registra app e-mail",
-    "register_webcal": "Registra app calendario",
+    "webcal_label": "Apri i link del calendario in {appName}",
+    "webcal_description": "Un clic su un link di calendario in un sito web aggiunge il calendario in {appName}.",
+    "register_mailto": "Usa {appName} per i link email",
+    "register_webcal": "Usa {appName} per i link del calendario",
     "mailto_registered": "Registrazione del gestore e-mail richiesta",
     "webcal_registered": "Registrazione del gestore calendario richiesta",
     "registration_failed": "Registrazione del gestore di protocollo non riuscita",
@@ -240,7 +246,6 @@
     "select_account_title": "Scegli account",
     "select_mailto_account": "Scegli quale account deve aprire questo link e-mail.",
     "select_webcal_account": "Scegli quale account deve aprire questo link calendario.",
-    "select_account_note": "Questa scelta si applica solo a questo link di protocollo.",
     "detail_to": "A",
     "detail_subject": "Oggetto",
     "detail_no_subject": "Senza oggetto",
@@ -248,6 +253,28 @@
     "detail_source": "Fonte",
     "active_account": "Attivo",
     "switching_account": "Cambio account..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nuovo messaggio",
+    "shortcut_calendar": "Calendario",
+    "shortcut_contacts": "Contatti",
+    "unsupported_file": "{name} non può essere aperto qui.",
+    "open_failed": "Non è stato possibile aprire il file. Prova ad aprirlo di nuovo.",
+    "share_gone": "Ciò che hai condiviso non è più disponibile. Condividilo di nuovo.",
+    "share_files_lost": "Non è stato possibile conservare i file condivisi. Aggiungili di nuovo al messaggio.",
+    "ics_needs_server": "Per importare un file di calendario serve una connessione al server. L'importazione inizierà quando tornerai online.",
+    "contacts_need_server": "Per importare i contatti serve una connessione al server. Riprova quando tornerai online.",
+    "share_confirm_title": "Iniziare un nuovo messaggio?",
+    "share_confirm_message": "Un altro sito o app vuole iniziare un messaggio. Non viene caricato o salvato nulla senza il tuo consenso.",
+    "share_confirm_subject": "Oggetto:",
+    "share_confirm_text": "Testo:",
+    "share_confirm_files": "{count, plural, one {File:} other {File:}}",
+    "share_confirm_accept": "Inizia messaggio",
+    "share_confirm_decline": "Non iniziare",
+    "share_cut": "Il testo condiviso era troppo lungo ed è stato accorciato.",
+    "handoff_expired": "Qualcosa che hai aperto o condiviso ha atteso troppo a lungo e non c'è più. Aprilo o condividilo di nuovo.",
+    "compose_waiting": "Chiudi questo messaggio per iniziare il successivo.",
+    "save_first_failed": "Non è stato possibile salvare il messaggio, quindi il file non è stato aperto. Salva il messaggio, poi apri il calendario o i contatti."
   },
   "sidebar_apps": {
     "modal_title": "App della barra laterale",
@@ -388,6 +415,29 @@
       "next": "Pagina successiva",
       "position": "{more, select, yes {Pagina {page} di {pages} o più} other {Pagina {page} di {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversazione selezionata} other {# conversazioni selezionate}}",
+    "search_count": "{conversations, plural, one {# conversazione} other {# conversazioni}} ({messages, plural, one {# messaggio} other {# messaggi}})",
+    "conversation_count": "{count, plural, one {# conversazione} other {# conversazioni}}",
+    "archived": "Archiviato",
+    "moved_to_trash": "Spostato nel cestino",
+    "moved_to": "Spostato in {mailbox}",
+    "moved_count_to": "{count, plural, one {# messaggio spostato in {mailbox}} other {# messaggi spostati in {mailbox}}}",
+    "new_folder_title": "Nuova cartella",
+    "new_subfolder_title": "Nuova sottocartella"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversazione archiviata} other {# conversazioni archiviate}}",
+    "conversations_to_trash": "{count, plural, one {# conversazione spostata nel cestino} other {# conversazioni spostate nel cestino}}",
+    "conversations_deleted": "{count, plural, one {# conversazione eliminata} other {# conversazioni eliminate}}",
+    "conversations_moved_to": "{count, plural, one {# conversazione spostata in {mailbox}} other {# conversazioni spostate in {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversazione spostata} other {# conversazioni spostate}}",
+    "select_all_in_folder": "{count, plural, one {Seleziona la # conversazione in {folder}} other {Seleziona tutte le # conversazioni in {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Seleziona il # messaggio in {folder}} other {Seleziona tutti i # messaggi in {folder}}}",
+    "select_all_conversations": "{count, plural, one {Seleziona la # conversazione} other {Seleziona tutte le # conversazioni}}",
+    "select_all_emails": "{count, plural, one {Seleziona il # messaggio} other {Seleziona tutti i # messaggi}}",
+    "selecting_all": "Selezione in corso…"
   },
   "shared_tags": {
     "title": "Etichette condivise",
@@ -843,6 +893,7 @@
     "mv_position": "{index} di {total}",
     "plugin_panel_show": "Mostra il pannello del plugin",
     "plugin_panel_hide": "Nascondi il pannello del plugin",
+    "plugin_panel": "Pannello del plugin",
     "copy": "Copia",
     "contact_added": "Contatto aggiunto",
     "save_to_files": {
@@ -869,6 +920,11 @@
     "read_aloud_resume": "Riprendi",
     "read_aloud_stop": "Interrompi la lettura",
     "reader_view": "Modalità lettura"
+  },
+  "reader_actions": {
+    "restore": "Ripristina",
+    "restore_to": "Riporta in {folder}",
+    "delete_forever": "Elimina definitivamente"
   },
   "external_mail": {
     "sender_label": "Esterno",
@@ -1068,7 +1124,7 @@
     "link_url_prompt": "Inserisci l'URL",
     "sending": "Invio in corso...",
     "schedule_send": "Programma invio",
-    "schedule_send_description": "Scegli quando il server deve rilasciare questo messaggio.",
+    "schedule_send_description": "Scegli quando inviarlo.",
     "schedule_preset": {
       "this_morning": "Stamattina",
       "this_afternoon": "Oggi pomeriggio",
@@ -1119,6 +1175,7 @@
       "edit_link": "Modifica link",
       "remove_link": "Rimuovi link",
       "link_address": "Indirizzo del link",
+      "link_text": "Testo",
       "link_invalid": "L'indirizzo non può contenere spazi",
       "table": "Tabella",
       "clear_formatting": "Cancella formattazione",
@@ -1188,6 +1245,21 @@
       "edit": "Modifica descrizione dell'immagine",
       "plain_text": "[Immagine: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Bozza eliminata",
+    "undo": "Annulla",
+    "discard_draft": "Elimina bozza",
+    "save_failed_close": "Impossibile salvare la bozza. Riprova o eliminala.",
+    "try_again": "Riprova",
+    "add_description": "Aggiungi descrizione",
+    "attachments_summary": "Allegati: {count}, {size}",
+    "from_sub_address": "Usa un sottoindirizzo…",
+    "from_edit_sender": "Modifica mittente…",
+    "shortcut_insert_link": "Inserisci link",
+    "shortcut_save_draft": "Salva bozza",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Ccn"
   },
   "confirm_dialog": {
     "confirm": "Conferma",
@@ -1321,6 +1393,32 @@
     "deputy_name_missing": "Inserisci prima il nome del tuo sostituto.",
     "apply": "Usa questo testo",
     "apply_hint": "Sostituisce l'oggetto e il testo qui sotto."
+  },
+  "uxs_vacation": {
+    "default_subject": "Fuori ufficio",
+    "default_message": "Grazie per la tua email. Sono fuori ufficio e risponderò al mio rientro.",
+    "write_message_first": "Scrivi prima un messaggio. Senza, le persone riceverebbero una risposta vuota.",
+    "enter_address_first": "Inserisci prima l'indirizzo a cui inoltrare.",
+    "message_title": "La tua risposta",
+    "message_label": "Messaggio",
+    "message_description": "Ciò che riceve chi ti scrive. Puoi usare formattazione e link.",
+    "from_label": "Dal (facoltativo)",
+    "from_description": "Lascia vuoto per iniziare subito.",
+    "until_label": "Al (facoltativo)",
+    "until_description": "Lascia vuoto per continuare a rispondere finché non lo disattivi.",
+    "from_placeholder": "Da subito",
+    "until_placeholder": "Finché non lo disattivi",
+    "audience_all": "Tutti",
+    "audience_internal": "Solo la mia organizzazione ({domains})",
+    "audience_external": "Solo persone esterne alla mia organizzazione",
+    "signature_label": "Firma",
+    "signature_plain_label": "Firma (testo semplice)",
+    "signature_plain_description": "Scrivi solo testo semplice (Composizione), quindi anche la firma è testo semplice.",
+    "edit_as_html": "Modifica come HTML",
+    "edit_formatted": "Torna all'editor con formattazione",
+    "html_source_label": "Firma in HTML",
+    "signature_size": "{bytes} di {max} byte usati",
+    "signature_too_long": "Troppo lunga per il server ({bytes} di {max} byte). Accorciala."
   },
   "retention_notice": {
     "line": "I messaggi qui vengono eliminati {count, plural, one {# giorno} other {# giorni}} dopo essere stati spostati qui."
@@ -1511,8 +1609,8 @@
       "title": "Aspetto",
       "description": "Personalizza l'aspetto della tua webmail",
       "theme": {
-        "label": "Tema",
-        "description": "Scegli la tua combinazione di colori preferita",
+        "label": "Chiaro o scuro",
+        "description": "Sistema segue l'impostazione del dispositivo",
         "light": "Chiaro",
         "dark": "Scuro",
         "system": "Sistema"
@@ -1540,7 +1638,7 @@
         "label": "Layout dell'interfaccia",
         "description": "Dove si trovano ricerca, navigazione e barre degli strumenti",
         "default": "Predefinito",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Ricerca in alto, app a sinistra"
       },
       "animations": {
         "label": "Abilita animazioni",
@@ -1584,7 +1682,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Icone colorate nella barra laterale",
-        "description": "Colora le icone di cartelle ed etichette per tipo (Posta in arrivo blu, Spam rosso, Inviati verde, ecc.). Disattiva per una barra laterale monocromatica."
+        "description": "Colora le icone di cartelle ed etichette per tipo (Posta in arrivo in blu, Spam in rosso, Inviati in verde e così via). Disattiva per icone grigie."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1596,7 +1694,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Così vedi la nuova posta mentre lavori in un'altra scheda o app."
       },
       "show_shared_mail_accounts": {
         "label": "Mostra account di posta condivisi",
@@ -1647,7 +1745,7 @@
     },
     "keywords": {
       "title": "Etichette e-mail",
-      "description": "Definisci etichette per organizzare le tue e-mail con i colori. Vengono archiviate come parole chiave JMAP sul server.",
+      "description": "Crea etichette per ordinare i messaggi. Le etichette vengono salvate con i messaggi sul server.",
       "add_keyword": "Aggiungi etichetta",
       "label_field": "Nome visualizzato",
       "label_placeholder": "es. Lavoro, Personale, Urgente",
@@ -1682,8 +1780,8 @@
         "hide": "Nascondi"
       },
       "unrecognized": {
-        "title": "Recupera le etichette dal server",
-        "description": "I nomi e i colori delle etichette sono salvati in questo browser, ma le etichette vere e proprie si trovano sulle tue e-mail come parole chiave JMAP. Analizza la posta alla ricerca di parole chiave che nessuna etichetta qui spiega, poi aggiungile di nuovo.",
+        "title": "Trova le etichette dei messaggi che mancano qui",
+        "description": "Questo browser conserva i nomi e i colori delle etichette. Le etichette vere e proprie sono salvate sui messaggi. Cerca nella posta le etichette che mancano qui e aggiungile di nuovo.",
         "scan": "Cerca etichette",
         "rescan": "Analizza di nuovo",
         "scanning": "Analisi in corso… {scanned} di {total} e-mail",
@@ -1716,17 +1814,17 @@
           "result_disabled": "Notifiche disattivate per {count} account."
         },
       "sound_selection": {
-        "title": "Suono di notifica",
+        "title": "Suono",
         "description": "Scegli quale suono riprodurre per le notifiche",
-        "choose": "Suono",
+        "choose": "Tono",
         "choose_desc": "Seleziona un tono di notifica e clicca sull'icona dell'altoparlante per l'anteprima"
       },
       "email": {
-        "title": "Notifiche e-mail",
+        "title": "Nuova posta",
         "description": "Configura le notifiche per le e-mail in arrivo",
         "enabled": "Notifiche e-mail",
         "enabled_desc": "Mostra notifiche all'arrivo di nuove e-mail",
-        "sound": "Suono di notifica",
+        "sound": "Suono per la nuova posta",
         "sound_desc": "Riproduci un suono all'arrivo di nuove e-mail",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1736,7 +1834,7 @@
         "description": "Configura le notifiche per gli eventi del calendario",
         "enabled": "Notifiche eventi",
         "enabled_desc": "Mostra avvisi per i prossimi eventi del calendario",
-        "sound": "Suono di notifica",
+        "sound": "Suono per i promemoria",
         "sound_desc": "Riproduci un suono per i promemoria del calendario"
       },
       "push": {
@@ -1744,7 +1842,7 @@
         "confirm_disable_title": "Disabilitare le notifiche in background?",
         "description": "Ricevi notifiche di sistema per la nuova posta quando questo sito è chiuso. Consegnato tramite il relay push Bulwark; il relay non vede mai il contenuto della posta.",
         "disable": "Disabilita",
-        "enable": "Abilita",
+        "enable": "Attiva su questo dispositivo",
         "dismiss_aria": "Chiudi avviso di notifiche",
         "ios_hint": "Su iOS, installa prima il sito sulla schermata Home: Safari consegna Web Push solo alle PWA installate.",
         "reenable": "Registra di nuovo",
@@ -1757,7 +1855,8 @@
         "status_inactive": "Non abilitato su questo dispositivo",
         "status_unsupported": "Questo browser non supporta Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
-        "title": "Notifiche in background",
+        "status_demo": "Le notifiche in background non sono disponibili nella demo.",
+        "title": "Notifiche quando {appName} è chiuso",
         "devices_title": "Dispositivi registrati",
         "devices_desc": "Tutti i dispositivi registrati per ricevere le notifiche in background di questo account. Revocandone uno, smette subito di riceverle.",
         "devices_loading": "Caricamento dei dispositivi registrati…",
@@ -1776,7 +1875,12 @@
         "confirm_revoke_message_this": "Questo dispositivo smetterà subito di ricevere le notifiche in background.",
         "shared_mailboxes_no_push": "Le caselle di posta che altri condividono con te non inviano notifiche in background.",
         "error_forbidden": "Il server di posta non consente le notifiche in background per questo account.",
-        "error_over_quota": "Questo account ha troppe registrazioni push sul server di posta (il limite di solito è 15). Revoca i dispositivi che non usi più nelle impostazioni delle notifiche, poi riprova."
+        "error_over_quota": "Questo account ha troppe registrazioni push sul server di posta (il limite di solito è 15). Revoca i dispositivi che non usi più nelle impostazioni delle notifiche, poi riprova.",
+        "error_blocked": "Le notifiche sono bloccate per questo sito. Consentile nelle impostazioni del sito del browser, poi riprova.",
+        "error_not_granted": "Le notifiche non sono state consentite, quindi le notifiche push restano disattivate.",
+        "error_verification_timeout": "Il server di posta non ha confermato questo dispositivo in tempo, quindi le notifiche push restano disattivate. Riprova tra un minuto.",
+        "error_relay": "Il relay delle notifiche non è raggiungibile in questo momento, quindi le notifiche push restano disattivate. Riprova più tardi.",
+        "error_teardown": "Le notifiche push sono disattivate in questo browser, ma il server di posta o il relay non erano raggiungibili. Potrebbero arrivare notifiche ancora per qualche giorno. Per fermarle prima, quando torni online attiva le impostazioni avanzate e revoca questo dispositivo in Dispositivi registrati."
       }
     },
     "language_region": {
@@ -1814,7 +1918,7 @@
       },
       "first_day": {
         "label": "Primo giorno della settimana",
-        "description": "Inizia la settimana di domenica o lunedì",
+        "description": "Primo giorno della settimana nei calendari",
         "sunday": "Domenica",
         "monday": "Lunedì"
       },
@@ -1904,13 +2008,13 @@
       },
       "mail_layout": {
         "label": "Layout della posta",
-        "description": "Scegli tra il classico pannello di lettura diviso e un flusso di lettura focalizzato in stile Gmail.",
+        "description": "Dove si trovano sullo schermo l'elenco dei messaggi e il messaggio aperto.",
         "split": "Pannello diviso",
-        "split_description": "Mantieni la lista dei messaggi e il pannello di lettura visibili affiancati.",
+        "split_description": "Elenco e messaggio affiancati",
         "focus": "Lista focalizzata",
-        "focus_description": "Mostra una riga per messaggio e apri la posta a larghezza piena mantenendo visibile la barra laterale delle cartelle.",
+        "focus_description": "L'elenco, poi il messaggio a tutta larghezza",
         "horizontal": "Riquadro di lettura in basso",
-        "horizontal_description": "Mostra l'elenco dei messaggi in alto e apri il messaggio selezionato in un riquadro di lettura sotto."
+        "horizontal_description": "Messaggio sotto l'elenco"
       },
       "list_columns": {
         "label": "Mostra l'elenco in colonne",
@@ -1926,7 +2030,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Seleziona automaticamente l'indirizzo di risposta",
-        "description": "Quando rispondi, passa automaticamente l'indirizzo mittente all'identità che ha ricevuto il messaggio originale"
+        "description": "Quando rispondi, invia dall’indirizzo a cui è stato inviato il messaggio."
       },
       "reply_identity_match": {
         "label": "Corrispondenza dell'indirizzo di ricezione",
@@ -1939,6 +2043,14 @@
         "description": "Dove inserire la tua firma nelle risposte e negli inoltri. Sopra il testo citato si legge in modo naturale come chiusura della risposta; sotto mantiene il messaggio originale contiguo.",
         "above_quote": "Prima del testo citato",
         "below_quote": "Dopo il testo citato"
+      },
+      "signature_new_mail": {
+        "label": "Firma sui nuovi messaggi",
+        "description": "Inserisce automaticamente la firma quando componi un nuovo messaggio. Disattiva per iniziare ogni nuovo messaggio senza."
+      },
+      "signature_reply_forward": {
+        "label": "Firma su risposte e inoltri",
+        "description": "Aggiunge automaticamente la firma quando rispondi o inoltri un messaggio. Disattiva per inviarli senza."
       },
       "signature_separator": {
         "label": "Delimitatore firma",
@@ -2151,8 +2263,8 @@
         "title": "Account connessi",
         "description": "Trascina per riordinare la visualizzazione degli account nel menu a discesa",
         "active": "Account attualmente attivo",
-        "default_badge": "Account predefinito",
-        "set_default": "Imposta come predefinito",
+        "default_badge": "Si apre all'avvio",
+        "set_default": "Apri questo account all'avvio",
         "switch_to": "Passa a questo account",
         "move_up": "Sposta su",
         "move_down": "Sposta giù",
@@ -2235,7 +2347,7 @@
       },
       "totp": {
         "section_title": "Autenticazione a due fattori",
-        "label": "Autenticazione TOTP",
+        "label": "Accesso in due passaggi",
         "description": "Aggiungi un ulteriore livello di sicurezza con una password monouso basata sul tempo",
         "active": "Abilitato",
         "inactive": "Disabilitato",
@@ -2315,12 +2427,12 @@
         "enabled_success": "Crittografia a riposo abilitata"
       },
       "email_client": {
-        "title": "Configurazione client e-mail",
-        "description": "Usa queste credenziali per configurare il tuo client e-mail desktop o mobile (Thunderbird, Apple Mail, Outlook, ecc.)",
-        "jmap_username_label": "Nome utente JMAP",
+        "title": "Usa la posta in altre app",
+        "description": "Thunderbird, Apple Mail, Outlook e le app di posta del telefono possono usare queste impostazioni.",
+        "jmap_username_label": "Nome utente",
         "copy": "Copia",
         "copied": "Copiato",
-        "password_instructions": "Usa il tuo nome utente JMAP sopra indicato insieme a una password dell'app per accedere al tuo client e-mail. Crea una password dell'app nella sezione sotto se non l'hai ancora fatto."
+        "password_instructions": "Come password usa una password per app, non quella normale. Puoi crearne una più in basso in questa pagina."
       },
       "link_device": {
         "title": "Collega l'app mobile",
@@ -2571,7 +2683,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Ricarica contatti, calendari e cartelle dal server. Resti connesso.",
         "button": "Refresh",
         "confirm_title": "Aggiornare i dati nella cache?"
       },
@@ -2584,12 +2696,12 @@
       },
       "export_settings": {
         "label": "Esporta impostazioni",
-        "description": "Scarica le tue impostazioni come JSON",
+        "description": "Scarica una copia delle impostazioni",
         "button": "Esporta"
       },
       "import_settings": {
         "label": "Importa impostazioni",
-        "description": "Carica impostazioni da file JSON",
+        "description": "Ripristina le impostazioni da un file",
         "button": "Importa"
       },
       "about": {
@@ -2640,8 +2752,8 @@
       "manage_description": "Aggiungi, modifica o rimuovi app personalizzate dalla barra laterale"
     },
     "contacts": {
-      "title": "Contatti",
-      "description": "Importa ed esporta i tuoi contatti",
+      "title": "Elenco contatti",
+      "description": "Come vengono elencati i contatti, e file di contatti da importare o esportare",
       "import_label": "Importa contatti",
       "import_description": "Importa contatti da un file vCard (.vcf)",
       "export_label": "Esporta contatti",
@@ -2736,15 +2848,15 @@
       "not_supported": "Il tuo server di posta non supporta i filtri email.",
       "rule_name": "Nome della regola",
       "rule_name_placeholder": "es. Ordina newsletter",
-      "match_all": "Corrispondere a TUTTE le condizioni",
-      "match_any": "Corrispondere a QUALSIASI condizione",
+      "match_all": "Corrisponde a tutte le condizioni",
+      "match_any": "Corrisponde a una qualsiasi condizione",
       "conditions": "Condizioni",
       "add_condition": "Aggiungi condizione",
       "actions": "Azioni",
       "add_action": "Aggiungi azione",
       "remove_condition": "Rimuovi condizione",
       "remove_action": "Rimuovi azione",
-      "stop_processing": "Interrompere l'elaborazione delle regole successive",
+      "stop_processing": "Non applicare le regole successive",
       "include_spam": "Sposta anche i messaggi contrassegnati come spam",
       "attachment_type_placeholder": "es. pdf, doc, jpg",
       "value_placeholder_multi": "Valore (più valori separati da virgole)",
@@ -2786,7 +2898,7 @@
         "discard": "Elimina silenziosamente",
         "reject": "Rifiuta con messaggio",
         "keep": "Mantieni nella posta in arrivo",
-        "stop": "Interrompi elaborazione"
+        "stop": "Non applicare le regole successive"
       },
       "move_to_folder": "Seleziona cartella",
       "copy_to_folder": "Seleziona cartella",
@@ -2809,6 +2921,7 @@
       "open_sieve_editor": "Apri editor Sieve",
       "fetch_error": "Impossibile caricare i filtri",
       "expanded_view": "Vista espansa",
+      "show_rule_details": "Mostra condizioni e azioni di ogni regola",
       "expanded_view_description": "Mostra le regole dei filtri con blocchi dettagliati di condizioni e azioni",
       "if": "Se",
       "then": "Allora",
@@ -2887,6 +3000,9 @@
       "validation_period_empty": "Inserisci una data di inizio o di fine per il periodo",
       "validation_period_invalid": "Inserisci una data valida con l'ora per il periodo oppure lascia vuoto il campo",
       "apply_existing_period": "Una regola con periodo agisce solo sui messaggi che arrivano al suo interno, quindi non si può applicare ai messaggi esistenti.",
+      "apply_existing_in": "Applica anche ai messaggi già in {folder}",
+      "apply_existing_count": "{count, plural, one {Applica anche al # messaggio già in {folder}} other {Applica anche ai # messaggi già in {folder}}}",
+      "apply_existing_none": "Nessun messaggio in {folder} corrisponde ancora a questa regola.",
       "period_status_scheduled": "programmata",
       "period_status_active": "attiva",
       "period_status_expired": "scaduta"
@@ -2930,7 +3046,7 @@
         "description": "Configura come vengono visualizzati file e cartelle"
       },
       "default_view": {
-        "label": "Vista predefinita",
+        "label": "Mostra i file come",
         "description": "Scegli tra layout a griglia e a lista",
         "list": "Lista",
         "grid": "Griglia"
@@ -3133,10 +3249,6 @@
         "label": "Maschera di lettura",
         "description": "Oscura tutto in un messaggio tranne alcune righe intorno al puntatore, per aiutarti a non perdere il segno."
       },
-      "plain_language": {
-        "label": "Linguaggio semplice",
-        "description": "Parole più semplici per impostazioni e messaggi di errore, e brevi spiegazioni dei termini tecnici. Disponibile in inglese e tedesco."
-      },
       "contrast": {
         "label": "Contrasto",
         "description": "Più contrasto rende testo, bordi e contorno del focus più scuri o più chiari con qualsiasi tema e sottolinea i link. Sistema segue il tuo dispositivo.",
@@ -3328,6 +3440,123 @@
         "description": "La voce che legge i messaggi. L'elenco mostra le voci che il browser ha per la lingua dell'interfaccia.",
         "default": "Predefinita del browser"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "Informazioni"
+    },
+    "search": {
+      "signature": "firma firma email piè di pagina",
+      "sign_out": "esci disconnetti logout uscita",
+      "app_lock": "PIN blocco codice blocca schermo",
+      "text_size": "dimensione carattere testo più grande zoom ingrandire",
+      "vacation": "risposta automatica fuori sede assente ferie vacanza autoreply",
+      "two_factor": "2FA due fattori due passaggi MFA OTP autenticatore codice monouso",
+      "encryption": "S/MIME smime PGP OpenPGP crittografia certificato",
+      "password": "password cambia password nuova password",
+      "offline": "offline senza connessione senza internet scaricare archiviazione sincronizzare",
+      "wipe": "rimuovi cancella elimina dispositivo dati",
+      "outbox": "posta in uscita non inviati in attesa coda",
+      "remote_content": "immagini remote contenuti esterni tracciamento pixel mittenti attendibili",
+      "push": "push relay in background notifiche",
+      "version": "versione aggiornamento informazioni codice sorgente GitHub licenza"
+    },
+    "privacy": {
+      "push_title": "Notifiche",
+      "push_link": {
+        "label": "Relay per le notifiche",
+        "description": "Le notifiche ad app chiusa passano da un relay push, che non vede mai la tua posta. Lo scegli nella pagina Notifiche.",
+        "button": "Notifiche"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Immagini remote e mittenti attendibili",
+      "receipts_label": "Conferme di lettura",
+      "senders_label": "Immagini dei mittenti",
+      "description": "Queste impostazioni sono nella pagina Privacy.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densità ed etichette della barra",
+        "description": "La distanza tra le righe dell’elenco e la presenza del nome sui pulsanti si impostano nella pagina Aspetto."
+      },
+      "light_mode": {
+        "label": "Sfondo chiaro per i messaggi",
+        "description": "Mostrare i messaggi su sfondo chiaro in modalità scura si imposta nella pagina Lettura."
+      },
+      "calendar": {
+        "label": "Anteprima degli eventi nel calendario",
+        "description": "Se puntando un evento compaiono i dettagli si imposta nella pagina Calendario."
+      },
+      "list": {
+        "label": "Conversazioni e righe di anteprima",
+        "description": "Il raggruppamento per conversazione e la riga di anteprima sotto ogni messaggio si impostano nella pagina Elenco messaggi."
+      },
+      "reading": {
+        "label": "Segnare come letto",
+        "description": "Quando un messaggio conta come letto, e dove vai dopo averlo eliminato o spostato, si imposta nella pagina Lettura."
+      },
+      "send_warnings_description": "Annulla invio e gli avvisi per oggetto mancante, allegato dimenticato o testo segnaposto.",
+      "bulk_delete": {
+        "label": "Chiedere prima di eliminare più messaggi",
+        "description": "Si imposta nella pagina Elenco messaggi."
+      },
+      "sounds": {
+        "label": "Suoni e contatore dei non letti",
+        "description": "I suoni delle notifiche e il numero di non letti nella scheda si impostano nella pagina Notifiche."
+      }
+    },
+    "about": {
+      "title": "Informazioni su {appName}"
+    },
+    "sign_out": {
+      "description": "Esci da questo account su questo dispositivo."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "area di notifica barra di sistema background riduci a icona tray",
+      "autostart": "avvio automatico avvio avvia con Windows all’accesso",
+      "default_app": "app di posta predefinita programma di posta predefinito mailto link email",
+      "menu_bar": "barra dei menu menu tasto Alt File Modifica Visualizza",
+      "updates": "aggiornamenti aggiornamento nuova versione beta canale",
+      "devtools": "strumenti per sviluppatori devtools console ispeziona F12 debug",
+      "taskbar": "barra delle applicazioni lampeggia Dock attenzione",
+      "quiet_hours": "ore di silenzio non disturbare silenzioso muto notte",
+      "telemetry": "dati di utilizzo telemetria statistiche analisi",
+      "crash": "segnalazioni di arresto anomalo segnalazioni errori crash",
+      "threads": "thread conversazioni raggruppa",
+      "block_images": "blocca immagini immagini esterne carica immagini",
+      "dark_mode": "modalità scura modalità chiara modalità notte tema scuro",
+      "timezone": "fuso orario timezone",
+      "reading_pane": "riquadro di lettura riquadro anteprima vista divisa",
+      "week_start": "inizio settimana primo giorno lunedì domenica",
+      "empty_trash": "svuota il cestino cestino elementi eliminati",
+      "do_not_disturb": "ore di silenzio muto silenzio"
+    },
+    "desktop_notifications": {
+      "title": "Su questo computer",
+      "closed_label": "Con la finestra chiusa",
+      "closed_description": "{appName} ti avvisa della nuova posta finché è in esecuzione. Per farlo restare nell’area di notifica dopo aver chiuso la finestra, attivalo in {page}."
+    },
+    "push_unsupported": "Questo browser non può mostrare notifiche quando il sito è chiuso.",
+    "backup_description_app": "Usa le stesse impostazioni sugli altri dispositivi.",
+    "sender_favicons": {
+      "label": "Immagini dai siti delle aziende",
+      "description": "Mostra le icone dei siti web come immagini profilo per i mittenti aziendali"
+    },
+    "privacy_push": {
+      "label": "Relay per le notifiche",
+      "description": "Le notifiche con {appName} chiuso passano da un relay push, che non vede mai la tua posta. Le attivi o disattivi nella pagina {page}."
+    },
+    "reset": {
+      "message": "Riporta tutte le impostazioni a come erano all’inizio. Posta, filtri, risposta automatica e firme restano come sono.",
+      "sync_on": "Gli altri dispositivi usano le stesse impostazioni, quindi cambiano anche loro.",
+      "sync_off": "Gli altri dispositivi mantengono le loro impostazioni."
     }
   },
   "setup": {
@@ -3611,6 +3840,13 @@
     },
     "find_emails_from": "Trova email da {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una cartella",
+    "recent": "Recenti",
+    "no_match": "Nessuna cartella corrisponde",
+    "choose_folder": "Scegli cartella…",
+    "current_folder": "Già in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Segna cartella come letta",
     "mark_folder_tree_read": "Segna cartella e sottocartelle come lette",
@@ -3657,6 +3893,19 @@
     "placeholder_folder_name": "Nome cartella",
     "create": "Crea",
     "rename_confirm": "Rinomina"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Tutte le cartelle",
+    "empty_trash": "Svuota cestino",
+    "empty_spam": "Svuota spam",
+    "empty_trash_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino? Non si può annullare.",
+    "empty_spam_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nello spam? Non si può annullare.",
+    "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
+    "title_all_accounts_only": "{name} ({total} in tutti gli account)"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestisci account…",
+    "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"
   },
   "shortcuts": {
     "title": "Scorciatoie da tastiera",
@@ -3728,6 +3977,14 @@
     "messages_count": "{count, plural, one {# messaggio} other {# messaggi}}",
     "expand_named": "Espandi conversazione: {subject}",
     "collapse_named": "Comprimi conversazione: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
+    "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
+  },
+  "mail_p2_conv": {
+    "show_message": "Mostra il messaggio",
+    "back_to_reply": "Torna alla risposta"
   },
   "identities": {
     "modal_title": "Gestisci identità di invio",
@@ -3858,6 +4115,34 @@
         "next": "Di' cosa ti serve dal lettore ed entro quando."
       }
     }
+  },
+  "compose_send": {
+    "back": "Torna alla modifica",
+    "send_anyway": "Invia comunque",
+    "warnings_title": "Inviare comunque questo messaggio?",
+    "warning_subject": "Nessun oggetto",
+    "warning_text": "Nessun testo",
+    "warning_attachment": "Menziona \"{keyword}\", ma non c'è nessun file allegato",
+    "warning_placeholders": "Testo segnaposto che i destinatari vedranno:",
+    "warning_proofreading": "Errori di ortografia o grammatica aperti: {count}",
+    "empty_text_title": "Inviare senza testo?",
+    "empty_text_message": "Questo messaggio non ha testo né allegati. Inviarlo comunque?",
+    "scheduled_for": "Programmato per {when}",
+    "sending": "Invio in corso…",
+    "sent": "Inviato",
+    "view": "Visualizza",
+    "template_saved": "Modello salvato",
+    "schedule_anyway": "Programma comunque",
+    "schedule_warnings_title": "Programmare comunque questo messaggio?",
+    "picker_button": "Aggiungi dai contatti",
+    "picker_title": "Aggiungi destinatari",
+    "tab_contacts": "Contatti",
+    "tab_directory": "Rubrica aziendale",
+    "contacts_empty_title": "Ancora nessun contatto",
+    "contacts_empty_hint": "Le persone salvate in Contatti compaiono qui.",
+    "contacts_no_match": "Nessun contatto corrisponde alla ricerca",
+    "template_name": "Nome del modello",
+    "template_edit_details": "Modifica dettagli…"
   },
   "org_templates": {
     "section_personal": "I miei modelli",
@@ -4315,6 +4600,35 @@
     "open_categories": "Apri categorie",
     "row_actions": "Azioni per {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Casa",
+    "phone_voice": "Telefono",
+    "more_fields": "Altri campi",
+    "import_menu": "Importa contatti…",
+    "new_address_book_menu": "Nuova rubrica…"
+  },
+  "uxs_wording": {
+    "more_options": "Altre opzioni",
+    "use_in_other_apps": "Usa in altre app",
+    "default_address_book": "Contatti",
+    "default_calendar": "Calendario",
+    "preview_documents": "Documenti",
+    "preview_photos": "Foto",
+    "sample_subject": "Appunti della riunione al caffè di Niccolò",
+    "mail_apps": {
+      "imap": "Posta in arrivo (IMAP)",
+      "smtp": "Posta in uscita (SMTP)",
+      "caldav": "Calendari (CalDAV)",
+      "carddav": "Contatti (CardDAV)",
+      "port_security": "Porta {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Nessuna crittografia",
+      "copy_label": "Copia {name}",
+      "loading": "Lettura delle impostazioni dal server di posta…",
+      "not_found": "Il server di posta non ha indicato i nomi dei server per altre app. Chiedili al tuo amministratore."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendari: {names}",
@@ -4558,7 +4872,7 @@
       "hide_non_working_days_desc": "Togli dalla vista settimanale i giorni in cui non lavori. I loro eventi restano visibili nelle viste mese, giorno e agenda.",
       "working_days": "Giorni lavorativi",
       "title": "Impostazioni calendario",
-      "default_view": "Vista predefinita",
+      "default_view": "Il calendario si apre in",
       "week_starts_on": "La settimana inizia il",
       "time_format": "Formato ora",
       "default_calendar": "Calendario predefinito",
@@ -4569,7 +4883,7 @@
       "notifications_enabled_desc": "Mostra avvisi per gli eventi in arrivo",
       "notification_sound": "Suono di notifica",
       "notification_sound_desc": "Riproduci un suono per gli avvisi del calendario",
-      "invitation_parsing": "Analizza gli inviti email",
+      "invitation_parsing": "Mostra gli inviti dalla posta",
       "invitation_parsing_desc": "Rileva gli inviti del calendario negli allegati email e mostra le azioni del calendario",
       "show_time_in_month_view": "Mostra orario nella vista mensile",
       "show_time_in_month_view_desc": "Visualizza gli orari degli eventi nella vista mensile del calendario",
@@ -4584,7 +4898,7 @@
       "show_week_numbers_desc": "Mostra i numeri di settimana nel mini-calendario",
       "calendar_free_scroll": "Scorrimento libero",
       "calendar_free_scroll_desc": "Scorri in modo continuo tra mesi, settimane e giorni invece di un periodo alla volta",
-      "enable_tasks": "Abilita attività",
+      "enable_tasks": "Attività",
       "enable_tasks_desc": "Mostra una vista attività nel calendario per gestire le cose da fare",
       "show_tasks_on_calendar": "Mostra attività nel calendario",
       "show_tasks_on_calendar_desc": "Mostra le attività nelle viste mensile, settimanale e giornaliera del calendario",
@@ -4729,8 +5043,8 @@
       "error_update": "Impossibile aggiornare il calendario",
       "error_delete": "Impossibile eliminare il calendario",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Copia URL CalDAV",
-      "url_copied": "URL CalDAV copiato negli appunti",
+      "copy_url": "Copia indirizzo per altre app",
+      "url_copied": "Indirizzo copiato",
       "confirm_clear": "Cancellare tutti gli eventi da \"{name}\"? Questa azione non può essere annullata.",
       "set_default": "Imposta come predefinito",
       "default_updated": "Calendario predefinito aggiornato",
@@ -4757,8 +5071,8 @@
       "default_alerts_updated": "Promemoria predefiniti aggiornati"
     },
     "subscription": {
-      "title": "Abbonamento iCal",
-      "section_title": "Abbonamenti iCal",
+      "title": "Iscriviti a un calendario",
+      "section_title": "Calendari a cui sei iscritto",
       "description": "Abbonati a un feed iCalendar esterno. Gli eventi verranno sincronizzati automaticamente nel proprio calendario. Supporta URL https:// e webcal://.",
       "url_label": "URL del calendario",
       "url_placeholder": "https://example.com/calendar.ics o webcal://...",
@@ -4900,6 +5214,47 @@
     "mini_has_events": "ha eventi",
     "mini_week_number": "Settimana {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Elenchi attività",
+    "task_status_not_started": "Non iniziata",
+    "task_status_in_progress": "In corso",
+    "quick_task_due": "Scadenza {date}",
+    "quick_task_due_remove": "Lascia «{words}» nel titolo",
+    "rename_calendar": "Rinomina…",
+    "rename_title": "Rinomina calendario",
+    "rename_confirm": "Rinomina",
+    "rename_empty": "Inserisci un nome.",
+    "edit_calendar": "Modifica…",
+    "default_alerts_open": "Promemoria predefiniti…",
+    "share_open": "Condividi…",
+    "clear_all_events": "Cancella tutti gli eventi…",
+    "delete_calendar": "Elimina…",
+    "caldav_title": "Indirizzo per altre app (CalDAV)",
+    "caldav_hint": "Aggiungi questo indirizzo in Thunderbird, Calendario di Apple o DAVx⁵ per sincronizzare i calendari.",
+    "caldav_shared_by": "Condiviso da {name}:",
+    "freebusy_description": "Chi riceve la condivisione vede quando sei occupato, non quali eventi hai. «Suggerisci orari» lo usa."
+  },
+  "calendar_offline": {
+    "split_needs_server": "Questa modifica richiede una connessione al server. Per ora modifica solo questo evento, oppure riprova quando sei di nuovo online."
+  },
+  "ux_pim_event": {
+    "time_zone": "Fuso orario",
+    "time_zone_line": "Fuso orario: {zone}",
+    "your_time": "{times} ora tua",
+    "zone_times": "{times} {zone} ({local} ora tua)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Accettato",
+    "status_declined": "Rifiutato",
+    "status_tentative": "Forse",
+    "status_needs_action": "Non ha ancora risposto",
+    "status_delegated": "Delegato",
+    "answered_accepted": "Hai accettato il {date}.",
+    "answered_declined": "Hai rifiutato il {date}.",
+    "answered_tentative": "Hai risposto forse il {date}.",
+    "answered_accepted_nodate": "Hai accettato.",
+    "answered_declined_nodate": "Hai rifiutato.",
+    "answered_tentative_nodate": "Hai risposto forse."
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",
@@ -4959,7 +5314,7 @@
     "title": "Benvenuto nella tua casella di posta",
     "tip_compose": "Premi c per scrivere una nuova email",
     "tip_shortcuts": "Premi ? per vedere tutte le scorciatoie da tastiera",
-    "tip_sidebar": "Trova Calendario, Contatti e Impostazioni nel menu laterale",
+    "tip_sidebar": "Calendario, Contatti e Impostazioni sono nella barra a sinistra",
     "tip_settings": "Personalizza la tua esperienza nelle Impostazioni",
     "tip_compose_touch": "Tocca il pulsante a matita per scrivere una nuova email",
     "tip_sidebar_touch": "Calendario, Contatti e Impostazioni sono nella barra in basso",
@@ -5176,6 +5531,21 @@
     "previous_file": "File precedente",
     "next_file": "File successivo",
     "loading": "Caricamento…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} esiste già.",
+    "conflict_file_hint": "Sostituisci mette il nuovo contenuto nel file esistente, così le sue condivisioni restano. Mantieni entrambi aggiunge una copia numerata.",
+    "conflict_folder_hint": "Sostituisci aggiunge i file alla cartella esistente e sostituisce quelli con lo stesso nome. Mantieni entrambi crea una seconda cartella numerata.",
+    "replace": "Sostituisci",
+    "keep_both": "Mantieni entrambi",
+    "skip": "Salta",
+    "apply_to_all": "{count, plural, one {Fai lo stesso per il conflitto} other {Fai lo stesso per tutti i # conflitti}}",
+    "no_preview": "Nessuna anteprima per questo tipo di file.",
+    "open_in_app": "Apri con l’app predefinita",
+    "shared_with": "{name} ora è condiviso con {person}.",
+    "send_message": "Invia un messaggio",
+    "share_mail_subject": "Ho condiviso {name} con te",
+    "share_mail_body": "Ciao,\n\nho condiviso «{name}» con te. Puoi aprirlo qui:\n{link}"
   },
   "smime": {
     "your_certificates": "I tuoi certificati",
@@ -5423,6 +5793,48 @@
     "toast_stopped": "L'esportazione si è fermata.",
     "toast_show": "Mostra"
   },
+  "desktopImport": {
+    "find": "Cerca dati di Thunderbird e Outlook…",
+    "find_hint": "Cerca nei percorsi abituali di questo computer. Bulwark te lo chiede prima.",
+    "scan_declined": "Non è stato cercato nulla perché non l'hai consentito.",
+    "scan_failed": "La ricerca non ha funzionato. Riprova.",
+    "read_declined": "Nessun file letto perché non l'hai consentito.",
+    "read_failed": "Questi file non sono più leggibili. Cerca di nuovo.",
+    "nothing_found": "Nessun profilo Thunderbird né file di dati Outlook nei percorsi abituali. Per importare un file da un altro percorso, usa Scegli file.",
+    "found_list": "Dati di posta trovati su questo computer",
+    "outlook_files": "File di dati di Outlook",
+    "thunderbird_profile": "Profilo Thunderbird {name}",
+    "address_book": "Rubrica di {name}",
+    "message_count": "{count, plural, one {# messaggio} other {# messaggi}}",
+    "contact_count": "{count, plural, one {# contatto} other {# contatti}}",
+    "confirm": "{count, plural, one {Usa questo elemento…} other {Usa questi # elementi…}}",
+    "back": "Indietro",
+    "estimate": "{size} selezionati. Molti server, tra cui Stalwart, accettano solo circa 1000 messaggi o 50 MB all'ora da un utente, quindi servono almeno {time}. Al limite l'importazione si ferma e riprende da sola. Funziona in background e continua dopo un riavvio.",
+    "duration_hours": "{count, plural, one {# ora} other {# ore}}",
+    "duration_days": "{count, plural, one {# giorno} other {# giorni}}",
+    "time_left": "Mancano almeno {time} al limite di caricamento del server. Nel frattempo puoi continuare a lavorare.",
+    "thunderbird_running": "Thunderbird è aperto. Chiudilo prima. Se modifica una cartella durante l'importazione, quella cartella riparte da capo e i messaggi già importati vengono saltati.",
+    "ost_refused": "Non proposti: {names}. I file .ost di Outlook sono solo una copia locale di una casella e qui non si possono importare. In Outlook, esporta invece la posta in un file .pst.",
+    "calendars_left_out": "I calendari di Thunderbird non vengono importati. Esportali da Thunderbird come file .ics e importali nel calendario.",
+    "pst_items_left_out": "Dai file di Outlook viene importata solo la posta, non contatti o calendari.",
+    "picked": "{count, plural, one {# cartella o file da questo computer} other {# cartelle e file da questo computer}}",
+    "remove_picked": "Rimuovi questi file",
+    "contacts_picked": "{count, plural, one {# contatto di Thunderbird va nei tuoi contatti.} other {# contatti di Thunderbird vanno nei tuoi contatti.}}",
+    "contacts_added": "{count, plural, one {Aggiunto # contatto da Thunderbird.} other {Aggiunti # contatti da Thunderbird.}}",
+    "contacts_failed": "Alcuni contatti di Thunderbird non sono stati aggiunti.",
+    "files_refused": "Esclusi perché non più leggibili: {names}",
+    "skip_seen": "Salta i messaggi che un'importazione precedente ha già messo nella stessa cartella",
+    "skip_duplicate": "{count, plural, one {# messaggio già importato in precedenza} other {# messaggi già importati in precedenza}}",
+    "file_unavailable": "Un file è cambiato o non è più leggibile. Chiudi Thunderbird e importa di nuovo. I messaggi già importati vengono saltati.",
+    "resume_gone": "L'importazione da questo computer non può continuare perché i suoi file non ci sono più.",
+    "pst_in_use": "{names} non è leggibile finché Outlook lo tiene aperto. Chiudi Outlook e cerca di nuovo.",
+    "description": "Cerca la posta su questo computer, o scegli file .eml, .zip, .mbox o Outlook .pst.",
+    "settings_description": "Importa la posta da Thunderbird, o da file .eml, ZIP, mbox o Outlook .pst.",
+    "resume_refused": "Non leggibili ora: {names}. Il resto continua, e questi verranno riprovati al prossimo avvio.",
+    "resume_stop_trying": "Non riprovare",
+    "resume_hand_picked": "Scegli di nuovo questi file per importare il resto: {names}. I messaggi già importati vengono saltati.",
+    "scan_incomplete": "La ricerca ha richiesto troppo tempo ed è stata interrotta. Ecco cosa ha trovato fin lì."
+  },
   "recover_deleted": {
     "tab": "Recupera elementi eliminati",
     "title": "Recupera elementi eliminati",
@@ -5459,6 +5871,11 @@
   "company_calendars": {
     "section": "Organizzazione"
   },
+  "ux_pim_grid": {
+    "search_short": "Cerca",
+    "reply": "Rispondi",
+    "reply_to_invitation": "Rispondi all’invito"
+  },
   "vacation_calendar": {
     "label": "Blocca il mio calendario",
     "description": "Aggiunge un evento occupato per il periodo di assenza, così nessuno ti fissa riunioni in quei giorni.",
@@ -5480,6 +5897,88 @@
     "group_label": "Gruppo",
     "title": "Disponibilità",
     "description": "I colleghi del gruppo vedono quando sei occupato, non quali eventi hai. «Suggerisci orari» lo usa."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Fai clic per selezionare un file vCard o CSV",
+    "file_types": "File .vcf o .csv, ad esempio da Outlook o Google Contatti",
+    "parse_error": "Impossibile leggere il file",
+    "columns_title": "Abbina le colonne",
+    "columns_hint": "Scegli dove va ogni colonna di {file}. Le colonne impostate su «Non importare» vengono escluse.",
+    "column": "Colonna",
+    "sample": "Esempio",
+    "field": "Campo del contatto",
+    "skip": "Non importare",
+    "no_columns": "Scegli un campo per almeno una colonna.",
+    "continue": "Continua",
+    "back": "Indietro",
+    "import_into": "Importa in",
+    "group_name": "Nome",
+    "group_email": "Email",
+    "group_phone": "Telefono",
+    "group_org": "Organizzazione",
+    "group_adr_any": "Indirizzo",
+    "group_adr_home": "Indirizzo di casa",
+    "group_adr_work": "Indirizzo di lavoro",
+    "group_adr_other": "Altro indirizzo",
+    "group_more": "Altro",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Nome completo",
+    "t_name_given": "Nome",
+    "t_name_middle": "Secondo nome",
+    "t_name_surname": "Cognome",
+    "t_name_prefix": "Titolo (Dott., Sig.ra)",
+    "t_name_suffix": "Suffisso (Jr.)",
+    "t_nickname": "Soprannome",
+    "t_email": "Email",
+    "t_email_home": "Email (casa)",
+    "t_email_work": "Email (lavoro)",
+    "t_phone": "Telefono",
+    "t_phone_mobile": "Cellulare",
+    "t_phone_home": "Telefono (casa)",
+    "t_phone_work": "Telefono (lavoro)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (casa)",
+    "t_phone_fax_work": "Fax (lavoro)",
+    "t_phone_pager": "Cercapersone",
+    "t_org_name": "Azienda",
+    "t_org_unit": "Reparto",
+    "t_org_title": "Qualifica",
+    "t_street": "Via",
+    "t_pobox": "Casella postale",
+    "t_locality": "Città",
+    "t_region": "Stato o regione",
+    "t_postcode": "CAP",
+    "t_country": "Paese",
+    "t_web": "Sito web",
+    "t_birthday": "Compleanno",
+    "t_anniversary": "Anniversario",
+    "t_notes": "Note",
+    "t_categories": "Categorie",
+    "t_type": "Tipo del valore (Casa, Lavoro…)",
+    "merge_with": "Unisci con…",
+    "merge_selected": "Unisci…",
+    "find_duplicates": "Trova duplicati",
+    "possible_duplicates": "Possibili duplicati ({count})",
+    "duplicates_title": "Possibili duplicati",
+    "duplicates_hint": "Contatti con lo stesso nome, indirizzo email o numero di telefono.",
+    "duplicates_none": "Nessun possibile duplicato trovato.",
+    "pick_title": "Unisci {name} con…",
+    "pick_search": "Cerca contatti",
+    "pick_suggested": "Possibili duplicati",
+    "pick_all": "Tutti i contatti",
+    "pick_none": "Nessun altro contatto da unire.",
+    "preview_title": "Unisci contatti ({count})",
+    "preview_hint": "Questi contatti diventano una sola scheda con tutto ciò che segue.",
+    "preview_deleted": "Uniti e poi eliminati: {names}",
+    "groups": "Gruppi",
+    "merge": "Unisci",
+    "merging": "Unione in corso…",
+    "merged": "Contatti uniti",
+    "merge_failed": "Impossibile unire i contatti.",
+    "merge_not_possible": "Questi contatti non si possono unire: sono in account diversi o in una rubrica che non puoi modificare.",
+    "undo": "Annulla",
+    "undone": "Unione annullata",
+    "undo_failed": "Non è stato possibile annullare del tutto l’unione."
   },
   "find_time": {
     "suggest": "Suggerisci orari",
@@ -5709,6 +6208,176 @@
       "no_drafts_mailbox": "Impossibile trovare la cartella Bozze."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifiche non applicate",
+    "description": "Hai fatto queste modifiche offline. Non sono state applicate e il messaggio resta com'è sul server.",
+    "changed": "Modificato su un altro dispositivo, la tua modifica non è stata applicata",
+    "changed_delete": "Modificato su un altro dispositivo, non è stato eliminato",
+    "gone": "Non è più sul server, la tua modifica non è stata applicata",
+    "refused": "Il server ha rifiutato questa modifica: {reason}",
+    "dismiss": "Ignora",
+    "dismiss_label": "Ignora la nota su {subject}",
+    "banner": "Modifiche non applicate: {count}",
+    "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
+    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni.",
+    "signout_changes_title": "Uscire con modifiche non salvate?",
+    "signout_changes": "Modifiche non ancora sul server: {count}. Uscendo vengono eliminate.",
+    "store_unavailable": "La posta offline di questo dispositivo non si può aprire ora. La posta non inviata resta qui e l'app continua a provare.",
+    "store_reset": "Non è stato possibile leggere la posta offline di questo dispositivo, quindi viene scaricata di nuovo. Ciò che non era stato inviato è perso.",
+    "legacy_stranded": "Questo browser non può aprire la posta non inviata conservata da una versione precedente. Aggiornare il browser può recuperarla.",
+    "store_private": "Le finestre private non possono conservare la posta per l'uso offline.",
+    "server_not_answering": "Il server di posta non risponde. Riprova tra un momento."
+  },
+  "offlineWipe": {
+    "note": "La tua organizzazione ha rimosso i dati di questo account da questo dispositivo. Accedi per ricominciare.",
+    "note_unsent": "La tua organizzazione ha rimosso i dati di questo account da questo dispositivo. Messaggi non inviati eliminati: {count}.",
+    "settings_title": "Rimuovi tutto da questo dispositivo",
+    "settings_description": "Per quando cedi questo computer o smetti di usarlo. La tua posta sul server resta.",
+    "settings_button": "Rimuovi tutto…",
+    "settings_wiping": "Rimozione…",
+    "confirm_title": "Rimuovere tutto da questo dispositivo?",
+    "confirm_message": "Questo elimina ciò che questa app conserva su questo dispositivo, per tutti gli account presenti. La tua posta sul server non viene toccata.",
+    "confirm_mail": "Posta, calendari, contatti e file conservati qui",
+    "confirm_unsent": "Messaggi non inviati in attesa qui: {count}. Andranno persi.",
+    "confirm_keys": "Chiavi S/MIME e OpenPGP. Per riusarle ti serve un tuo backup.",
+    "confirm_plugins": "Dati salvati qui dai plugin",
+    "confirm_files": "Allegati aperti per la modifica e file in attesa di essere allegati",
+    "confirm_accounts": "Tutti gli account vengono disconnessi",
+    "confirm_button": "Rimuovi tutto",
+    "note_unknown": "La tua organizzazione ha rimosso i dati di questo account da questo dispositivo. Potrebbero essere stati eliminati anche messaggi non inviati.",
+    "refused_waiting": "Messaggi non inviati in attesa della nuova password: {count}. Restano fino al {date}.",
+    "refused_waiting_unknown": "Alcuni messaggi non inviati potrebbero essere in attesa della nuova password. Restano fino al {date}.",
+    "confirm_unsent_unknown": "Qui potrebbero esserci messaggi non inviati in attesa. Andranno persi.",
+    "confirm_templates": "Modelli di email salvati su questo dispositivo",
+    "session_waiting": "Messaggi non inviati in attesa del prossimo accesso: {count}. Restano fino al {date}.",
+    "session_waiting_unknown": "Alcuni messaggi non inviati potrebbero essere in attesa del prossimo accesso. Restano fino al {date}.",
+    "needs_sign_in": "Accesso richiesto",
+    "switcher_waiting": "Messaggi non inviati: {count}. Eliminati da questo dispositivo il {date}.",
+    "switcher_kept": "Le sue email su questo dispositivo verranno eliminate il {date}.",
+    "sibling_waiting": "{name} è stato disconnesso. Messaggi non inviati: {count}. Accedi entro il {date} o verranno eliminati da questo dispositivo.",
+    "sibling_kept": "{name} è stato disconnesso. Accedi entro il {date} o le sue email verranno eliminate da questo dispositivo."
+  },
+  "offlineStorage": {
+    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che scegli, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto.",
+    "window_label": "Da quanto tempo conservare",
+    "window_description": "La posta e gli eventi più vecchi lasciano questo dispositivo. Puoi comunque aprirli quando sei online.",
+    "window_days": "{days, plural, one {# giorno} other {# giorni}}",
+    "window_year": "1 anno",
+    "window_everything": "Tutto",
+    "attachments_label": "Conserva gli allegati",
+    "attachments_description": "Allegati dei messaggi conservati e file che tieni offline, fino a {total} in totale. I più vecchi vengono rimossi per primi.",
+    "total_locked": "La tua organizzazione consente al massimo {size} di allegati e file.",
+    "attachment_cap_label": "Allegato più grande da conservare",
+    "usage_mail": "Messaggi e indice di ricerca",
+    "usage_attachments": "Allegati",
+    "usage_calendar": "Calendario",
+    "usage_contacts": "Contatti",
+    "usage_files": "File conservati offline",
+    "usage_row": "{size} ({count, plural, one {# elemento} other {# elementi}})",
+    "progress_list": "Elenco dei messaggi",
+    "progress_bodies": "Download dei messaggi",
+    "progress_threads": "Ordinamento delle conversazioni",
+    "progress_files": "Download dei file",
+    "progress_other": "Trasferimento dei dati su questo dispositivo",
+    "progress_count": "{done} di {total}",
+    "progress_count_open": "{done} finora",
+    "progress_left": "mancano circa {minutes, plural, one {# minuto} other {# minuti}}",
+    "clear_label": "Svuota questo account",
+    "clear_description": "Elimina tutto ciò che questo dispositivo conserva per questo account, poi lo scarica di nuovo.",
+    "clear_button": "Svuota…",
+    "clear_confirm_title": "Svuotare questo account su questo dispositivo?",
+    "clear_confirm_message": "Tutto ciò che questo dispositivo conserva per {account} viene eliminato e scaricato di nuovo. La tua posta sul server resta dov'è.",
+    "clear_confirm_unsent": "{count, plural, one {# messaggio non inviato andrà perso.} other {# messaggi non inviati andranno persi.}}",
+    "clear_confirm": "Svuota",
+    "persist_refused": "Questo browser può eliminare la posta conservata quando lo spazio scarseggia. Installare l'app di solito lo evita.",
+    "persist_retry": "Chiedi al browser di conservarla",
+    "safari_hint": "Safari elimina i dati di un sito dopo 7 giorni senza visite. Aggiungi Bulwark alla schermata Home o al Dock per conservare la tua posta su questo dispositivo.",
+    "evicted": "Il browser ha eliminato la posta conservata su questo dispositivo. Viene scaricata di nuovo.",
+    "evicted_lost": "{count, plural, one {# messaggio o modifica non inviati sono andati persi.} other {# messaggi o modifiche non inviati sono andati persi.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Lo spazio del dispositivo è esaurito.",
+    "storage_full_text": "Bulwark ha smesso di salvare la posta qui. Conserva meno posta o svuota questo account per fare spazio.",
+    "open_settings": "Apri impostazioni",
+    "default_on": "Bulwark conserva la tua posta su questo dispositivo, così funziona anche senza connessione. Puoi cambiarlo nelle impostazioni.",
+    "conflict_calendar": "Evento del calendario",
+    "conflict_contacts": "Contatto",
+    "kept_files_title": "File conservati offline",
+    "kept_state_kept": "Su questo dispositivo",
+    "kept_state_waiting": "In attesa del download",
+    "kept_error_tooLarge": "Troppo grande per essere conservato",
+    "kept_error_overLimit": "Oltre il limite di questo dispositivo",
+    "kept_error_notAllowed": "La tua organizzazione non consente di conservare i file",
+    "kept_error_download": "Impossibile scaricare",
+    "keep_offline": "Conserva offline",
+    "unpin": "Non conservare più offline",
+    "unpin_label": "Non conservare più {name} offline",
+    "warning_desktop": "Chiunque possa usare l'account utente di questo computer può leggere questa posta. Usa la cifratura del disco.",
+    "off_confirm_text": "Questo elimina tutto ciò che questo dispositivo conserva per {account}. La tua posta sul server resta dov'è.",
+    "unsent_changes": "{count, plural, one {# modifica che non ha raggiunto il server andrà persa.} other {# modifiche che non hanno raggiunto il server andranno perse.}}",
+    "clear_needs_connection": "Serve una connessione, perché viene scaricato di nuovo tutto.",
+    "usage_label": "Cosa conserva questo dispositivo",
+    "pin_not_ready": "Questo file non è ancora nell'elenco di questo dispositivo. Riprova tra un momento."
+  },
+  "keyProtection": {
+    "browser_note": "In un browser, la chiave di questa posta si trova nello stesso profilo del browser della posta. Chi copia i file del profilo può leggerla, quindi usa la crittografia del disco.",
+    "no_secure_storage": "Questo computer non ha un archivio sicuro di chiavi utilizzabile dall'app, quindi la chiave di questa posta è solo offuscata sul disco. Usa la crittografia del disco.",
+    "wrap_failed": "L'archivio sicuro di chiavi di questo computer non ha accettato la chiave di questa posta, quindi non è protetta come dovrebbe. Riavvia l'app e usa la crittografia del disco.",
+    "rekey_progress": "Nuova cifratura della posta su questo dispositivo: {percent}%. Puoi continuare a lavorare.",
+    "rekey_failed": "La nuova cifratura della posta su questo dispositivo non è terminata, quindi la vecchia chiave può ancora aprirla. L'app riproverà al prossimo avvio.",
+    "reenroll_note": "La passkey e lo sblocco di sistema usavano la chiave del vecchio PIN, quindi sono stati rimossi. Configurali di nuovo se li usi."
+  },
+  "offlineDrafts": {
+    "title": "Bozze su questo dispositivo",
+    "description": "Queste bozze sono salvate su questo dispositivo. Passano da sole al server appena è raggiungibile.",
+    "saved_on_device": "Salvata su questo dispositivo",
+    "status_waiting": "In attesa del server",
+    "status_sending": "Salvataggio sul server",
+    "status_uncertain": "Verifica dell'arrivo sul server",
+    "status_refused": "Il server ha rifiutato questa bozza: {error}",
+    "file_missing": "Un file allegato non è più su questo dispositivo",
+    "open": "Apri",
+    "open_label": "Apri {subject}",
+    "retry": "Riprova",
+    "retry_label": "Riprova {subject}",
+    "toast_refused": "Non è stato possibile salvare la bozza {subject} sul server. Resta su questo dispositivo.",
+    "toast_conflict": "La bozza {subject} è stata modificata su un altro dispositivo. Vengono conservate entrambe le versioni.",
+    "conflict_changed": "Modificata su un altro dispositivo. Entrambe le versioni sono in Bozze.",
+    "conflict_gone": "Modificata o rimossa su un altro dispositivo. La tua versione è in Bozze.",
+    "banner_refused": "Bozze rifiutate dal server: {count}",
+    "banner_waiting": "Bozze in attesa del server: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Esporta la posta conservata",
+    "settings_description": "Salva la posta di questo dispositivo come file mbox o .eml. Funziona anche offline.",
+    "title": "Esporta la posta conservata",
+    "description": "Salva gli originali che questo dispositivo conserva. I file .eml sono copie esatte. Un file mbox aggiunge i segni richiesti dal suo formato e scrive lo stato di letto e contrassegnato nelle intestazioni di ogni messaggio, al posto di quelle presenti. La posta più vecchia del periodo scelto non è inclusa. Per salvare tutto dal server, usa «Esporta tutta la posta».",
+    "folders_label": "Cartelle",
+    "all_folders": "Tutte le cartelle",
+    "folder_kept": "{kept} di {total} qui",
+    "loading": "Lettura dei dati su questo dispositivo…",
+    "load_failed": "Impossibile leggere la posta su questo dispositivo.",
+    "nothing_kept": "Su questo dispositivo non è ancora conservata posta.",
+    "kept": "Originali su questo dispositivo: {kept} di {total} messaggi",
+    "missing_online": "Da scaricare dal server: {count}",
+    "missing_offline": "Non esportabili offline: {count}. Puoi riprovare quando sei online.",
+    "reason_attachments_off": "I messaggi originali vengono conservati solo se «Conserva gli allegati» è attivo.",
+    "reason_not_kept": "I messaggi originali vengono scaricati per ultimi e solo se c'è spazio.",
+    "not_kept_attachments_off": "Nessun originale qui perché su questo dispositivo gli allegati non vengono conservati: {count}",
+    "not_kept_not_kept": "Ancora nessun originale su questo dispositivo: {count}",
+    "retry": "Riprova online",
+    "retry_online": "Ora sei online, quindi possono arrivare dal server.",
+    "retry_offline": "Puoi riprovare quando sei online.",
+    "settings_button": "Esporta…",
+    "message_failed": "Il server non ha fornito questo messaggio.",
+    "failed_generic": "L'esportazione si è interrotta per un errore. Riprova.",
+    "stopped_limit": "L'esportazione si è interrotta a {limit}, il massimo che questo browser può contenere. Scegli meno cartelle, oppure usa Chromium, Firefox o l'app desktop.",
+    "over_limit": "Questo browser può contenere al massimo {limit}, e questa scelta occupa circa {size}. Scegli meno cartelle, oppure usa Chromium, Firefox o l'app desktop.",
+    "no_room": "Questa esportazione richiede circa {size}, e questo browser ha {free} disponibili. Scegli meno cartelle o libera spazio.",
+    "stopped_no_room": "Il browser ha esaurito lo spazio per l'esportazione. Scegli meno cartelle o libera spazio.",
+    "stopped_offline_off": "L'esportazione si è interrotta perché questo account non conserva più posta su questo dispositivo.",
+    "policy_unknown": "Le regole della tua organizzazione per questo account non sono ancora note, quindi l'esportazione resta disattivata per ora.",
+    "leftover_file": "Impossibile rimuovere il file {name} dal punto in cui l'hai salvato. È incompleto, puoi eliminarlo."
+  },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",
     "thread_not_found": "Questa conversazione non è più disponibile.",
@@ -5825,13 +6494,17 @@
         "title": "Accesso completo a questa app",
         "body": "Funziona con gli stessi diritti della webmail stessa. Può leggere tutta la tua posta e le chiavi salvate e agire per conto tuo. Consentilo solo ai plugin di cui ti fidi completamente."
       },
+      "keystore": {
+        "title": "Usare i certificati di questo computer",
+        "body": "Chiede di firmare e decifrare i messaggi con i certificati di questo computer o di una smart card. L'app te lo chiede prima. Il plugin non riceve mai la chiave privata, ma finché lo consenti può firmare a tuo nome e leggere ciò che decifra."
+      },
       "email_raw_send": {
         "title": "Inviare messaggi creati da sé",
         "body": "Inviare messaggi completi, ad esempio firmati o cifrati, dal tuo account."
       },
       "email_blob_read": {
-        "title": "Leggere il contenuto grezzo dei messaggi",
-        "body": "Leggere i dati originali dei tuoi messaggi e allegati, e di ogni file che alleghi prima dell'invio."
+        "title": "Leggere gli allegati e il sorgente dei messaggi",
+        "body": "Leggere gli allegati (anche il loro testo e le loro immagini) e il sorgente completo dei messaggi su cui lavori, e ogni file che alleghi prima dell'invio."
       },
       "email_blob_write": {
         "title": "Sostituire gli allegati prima dell'invio",
@@ -5849,6 +6522,10 @@
         "title": "Modificare il tuo calendario",
         "body": "Creare, modificare ed eliminare eventi."
       },
+      "calendar_respond": {
+        "title": "Rispondere agli inviti",
+        "body": "Accettare o rifiutare inviti del calendario. La tua risposta arriva all'organizzatore via email."
+      },
       "contacts_read": {
         "title": "Leggere i tuoi contatti",
         "body": "Cercare e leggere nelle tue rubriche."
@@ -5859,11 +6536,11 @@
       },
       "files_read": {
         "title": "Leggere i tuoi file",
-        "body": "Sfogliare e aprire i file salvati nel tuo account."
+        "body": "Cercare, aprire e leggere i file del tuo account."
       },
       "files_write": {
         "title": "Modificare i tuoi file",
-        "body": "Caricare, rinominare, spostare ed eliminare file nel tuo account."
+        "body": "Salvare, creare, rinominare e spostare file nel tuo account e impedire che un file venga eliminato."
       },
       "identity_read": {
         "title": "Vedere i tuoi indirizzi mittente",
@@ -5914,8 +6591,12 @@
         "body": "Vedere le tue preferenze e le definizioni delle etichette."
       },
       "settings_write": {
+        "title": "Modificare le tue etichette",
+        "body": "Aggiungere, rinominare e riordinare le tue etichette e bloccare le modifiche alle tue impostazioni."
+      },
+      "settings_change": {
         "title": "Modificare le tue impostazioni",
-        "body": "Aggiungere e riordinare etichette e modificare le tue preferenze."
+        "body": "Modificare l'aspetto e il funzionamento dell'app, come il tema, il formato dell'ora o il pannello di lettura. Le impostazioni definite dalla tua organizzazione restano invariate."
       },
       "security_read": {
         "title": "Vedere la sicurezza del tuo account",
@@ -5977,6 +6658,10 @@
         "title": "Aggiungere pannelli ai dettagli del messaggio",
         "body": "Mostrare un proprio pannello accanto o sotto un messaggio aperto."
       },
+      "ui_side_panel": {
+        "title": "Aggiungere un pannello ad altre viste",
+        "body": "Mostrare un proprio pannello accanto a Calendario, Contatti, File e Impostazioni."
+      },
       "ui_download_file": {
         "title": "Salvare file sul tuo dispositivo",
         "body": "Offrire in download i file che ha creato."
@@ -6031,11 +6716,15 @@
       },
       "compose_read": {
         "title": "Leggere il messaggio che stai scrivendo",
-        "body": "Leggere il testo di un messaggio mentre lo scrivi, quando usi il plugin nell'editor. Non la firma né il messaggio citato."
+        "body": "Leggere un messaggio mentre lo scrivi, quando usi il plugin nell'editor: testo, oggetto, destinatari compresi quelli in Ccn, e nome e dimensione degli allegati. Non la firma né il messaggio citato."
       },
       "compose_write": {
         "title": "Modificare il messaggio che stai scrivendo",
         "body": "Sostituire o aggiungere testo in un messaggio mentre lo scrivi, quando usi il plugin nell'editor. Puoi annullare ogni modifica e decidi sempre tu se inviarlo."
+      },
+      "compose_check": {
+        "title": "Controllare ciò che scrivi",
+        "body": "Legge ciò che scrivi nell'editor mentre digiti e può inviarlo al servizio che usa. Solo quando la correzione è attiva, e nulla finché un messaggio è impostato per essere firmato o cifrato. Il testo scritto prima di attivarlo potrebbe essere già stato controllato."
       },
       "email_forward": {
         "title": "Inoltrare la tua posta",
@@ -6055,7 +6744,7 @@
       },
       "ui_tasks": {
         "title": "Aggiungere elementi alla vista attività",
-        "body": "Mostrare le proprie sezioni nei dettagli di un'attività e pulsanti nell'elenco delle attività."
+        "body": "Mostrare le proprie sezioni nei dettagli di un'attività, pulsanti nell'elenco delle attività e un proprio elenco delle attività al posto di quello di Bulwark."
       },
       "ui_files": {
         "title": "Aggiungere elementi alla vista file",
@@ -6112,6 +6801,24 @@
     "not_running": "Non inviato. Un controllo richiesto dalla tua organizzazione non è attivo. Riprova tra un momento.",
     "stopped_working": "Non inviato. Un controllo richiesto dalla tua organizzazione ha smesso di funzionare. Ricarica la pagina. Se non basta, avvisa l'amministratore."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Annulla invio",
+      "description": "Ti dà qualche secondo per riprendere un messaggio dopo aver premuto Invia."
+    },
+    "reply_from_received": {
+      "label": "Seleziona automaticamente l'indirizzo di risposta",
+      "description": "Rispondi dall'indirizzo a cui è stata inviata l'email. Utile se hai più indirizzi."
+    },
+    "require_tls": "Consegna solo tramite una connessione sicura",
+    "require_tls_hint": "Il messaggio in sé non è cifrato. Viene respinto se un server non può usare TLS.",
+    "encrypt": "Cifra…",
+    "encrypt_hint": "Serve un componente aggiuntivo S/MIME o PGP. Apre le Impostazioni.",
+    "quick_reply_to": "Rispondi a {names}…",
+    "open_full_editor": "Apri l'editor completo",
+    "forward_to_label": "A",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtri",
     "remove_filter": "Rimuovi il filtro {label}"
@@ -6145,6 +6852,9 @@
   },
   "top_bar": {
     "more": "Altre opzioni"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Nascondi l'avviso offline"
   },
   "shell": {
     "resize": "Ridimensiona",
@@ -6190,6 +6900,19 @@
     "group_plugins": "Plugin",
     "group_account": "Account",
     "switch_to": "Passa a {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Sei offline. Alcune azioni richiedono una connessione.",
+    "files_new_folder": "Nuova cartella…",
+    "files_new_file": "Nuovo file…",
+    "files_new_text_file": "Nuovo file di testo…",
+    "files_upload_files": "Carica file…",
+    "files_upload_folder": "Carica cartella…",
+    "files_share": "Condividi…",
+    "files_share_button": "Condividi",
+    "contacts_add_to_group": "Aggiungi al gruppo…",
+    "contacts_bulk_add_to_group": "Aggiungi al gruppo…",
+    "schedule_send": "Programma invio…"
   },
   "notification_center": {
     "title": "Notifiche",
@@ -6325,6 +7048,12 @@
     "sign_language": "Lingua dei segni",
     "new_tab": "si apre in una nuova scheda"
   },
+  "pwaNotify": {
+    "action_archive": "Archivia",
+    "action_mark_read": "Segna come letto",
+    "action_reply": "Rispondi",
+    "reply_placeholder": "Scrivi una risposta"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Aggiungi al calendario",
     "update_in_calendar": "Aggiorna nel calendario",
@@ -6355,5 +7084,638 @@
       "added_from": "Aggiunto da un’e-mail di {domain}",
       "added_from_subject": "Aggiunto dall’e-mail «{subject}» di {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Grammatica",
+      "style": "Stile",
+      "other": "Suggerimento"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nessun suggerimento",
+      "suggestions": "Suggerimenti",
+      "replace_with": "Sostituisci con {text}",
+      "also": "Anche da {checker}",
+      "ignore": "Ignora",
+      "add_to_dictionary": "Aggiungi al dizionario",
+      "disable_rule": "Disattiva questa regola",
+      "changed": "Il testo è cambiato. Attendi il prossimo controllo."
+    },
+    "list_item": "{word}: {message} Suggerimento: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nessun errore di ortografia o grammatica} one {# errore di ortografia o grammatica} other {# errori di ortografia o grammatica}}",
+    "status": {
+      "title": "Correzione",
+      "off": "Correzione disattivata",
+      "paused": "Correzione in pausa",
+      "rate_limited": "Controllo in pausa",
+      "unavailable": "Controllo non disponibile",
+      "checking": "Controllo in corso…",
+      "issues": "{count, plural, =0 {Nessun problema} one {# problema} other {# problemi}}"
+    },
+    "panel": {
+      "title": "Correzione",
+      "required": "Richiesto dalla tua organizzazione",
+      "check_message": "Controlla questo messaggio",
+      "notice": "Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo. La tua firma e il messaggio citato sono esclusi. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima di attivarlo potrebbe essere già stato controllato.",
+      "turn_on": "Attiva la correzione",
+      "paused_protected": "Non viene controllato nulla finché questo messaggio è impostato per essere firmato o cifrato.",
+      "paused_unknown": "{plugin} può firmare o cifrare i messaggi senza mostrarlo qui, quindi non viene controllato nulla finché è attivo.",
+      "rate_limited": "{checker} ha chiesto di attendere. Il controllo riprende tra un minuto.",
+      "unavailable": "{checker} non può controllare in questo momento. Riprova quando continui a scrivere.",
+      "no_issues": "Nessun problema trovato.",
+      "list_label": "Problemi in questo messaggio",
+      "shortcuts": "Problema successivo: {next}. Precedente: {previous}."
+    },
+    "notice": {
+      "on": "La correzione è attiva. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
+      "forced": "La tua organizzazione ha attivato la correzione. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Inviare con problemi aperti?",
+      "body": "{count, plural, one {# errore di ortografia o grammatica è ancora aperto} other {# errori di ortografia o grammatica sono ancora aperti}} in questo messaggio.",
+      "review": "Rivedi",
+      "send": "Invia comunque"
+    },
+    "settings": {
+      "title": "Correzione",
+      "description": "Sottolinea gli errori di ortografia e grammatica mentre scrivi, con suggerimenti per correggerli.",
+      "enable": "Controlla ortografia e grammatica mentre digito",
+      "enable_description": "Il testo che scrivi viene inviato al componente aggiuntivo di correzione e al servizio che usa, senza la tua firma né i messaggi citati. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato.",
+      "no_checker": "Nessun componente aggiuntivo di correzione installato. Chiedi all'amministratore di aggiungerne uno.",
+      "plugin_description": "Invia ciò che scrivi a {plugin}.",
+      "writing_language": "Lingua di scrittura",
+      "writing_language_description": "La lingua in cui scrivi di solito. La usano la correzione e il controllo ortografico del browser.",
+      "auto": "Rileva automaticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Errore di ortografia o grammatica successivo",
+      "previous_issue": "Errore di ortografia o grammatica precedente"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "Apri in una nuova finestra",
+    "save_all_to_folder": "Salva tutto in una cartella…",
+    "saved_all": "{count, plural, one {# allegato salvato in {folder}.} other {# allegati salvati in {folder}.}}",
+    "saved_partial": "{saved} allegati su {total} salvati in {folder}.",
+    "save_failed": "Impossibile salvare gli allegati in {folder}.",
+    "popup_blocked": "Il browser ha bloccato la nuova finestra. Consenti i pop-up per questo sito e riprova.",
+    "opening": "Apertura…",
+    "session_ended_title": "Hai effettuato la disconnessione in questa finestra",
+    "session_ended_body": "Apri l’app e accedi, poi riapri questa finestra.",
+    "open_app": "Apri l’app",
+    "close_window": "Chiudi finestra",
+    "message_gone_title": "Questo messaggio non c’è più",
+    "message_gone_body": "È stato eliminato o spostato in un altro account.",
+    "message_moved": "Questo messaggio è stato spostato in un’altra cartella.",
+    "message_moved_to": "Questo messaggio è stato spostato in {folder}.",
+    "window_not_ready": "La nuova finestra non si è aperta in tempo. La bozza rimane qui."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Finestre dell'app",
+      "double_click_label": "Apri i messaggi in una nuova finestra con il doppio clic",
+      "double_click_description": "Un solo clic apre comunque il messaggio accanto all’elenco.",
+      "restore_label": "Riapri le finestre all’avvio",
+      "restore_description": "Le finestre di messaggi e bozze aperte all’uscita tornano."
+    },
+    "attachment": {
+      "open": "Apri",
+      "save_as": "Salva con nome…",
+      "copy": "Copia",
+      "copy_failed": "Impossibile copiare il file."
+    },
+    "menu": {
+      "file": "File",
+      "edit": "Modifica",
+      "view": "Vista",
+      "message": "Messaggio",
+      "go": "Vai",
+      "window": "Finestra",
+      "help": "Aiuto",
+      "new_window": "Nuova finestra",
+      "print": "Stampa…",
+      "save_pdf": "Salva come PDF…",
+      "switch_connection": "Cambia connessione…",
+      "close": "Chiudi",
+      "quit": "Esci",
+      "undo": "Annulla",
+      "redo": "Ripeti",
+      "cut": "Taglia",
+      "copy": "Copia",
+      "paste": "Incolla",
+      "select_all": "Seleziona tutto",
+      "search": "Cerca nella posta",
+      "refresh": "Controlla nuova posta",
+      "reading_pane": "Pannello di lettura",
+      "pane_right": "A destra",
+      "pane_below": "Sotto l’elenco",
+      "pane_off": "Disattivato",
+      "zoom_in": "Ingrandisci",
+      "zoom_out": "Riduci",
+      "zoom_reset": "Dimensione effettiva",
+      "full_screen": "Schermo intero",
+      "open_in_window": "Apri in una nuova finestra",
+      "next_message": "Messaggio successivo",
+      "previous_message": "Messaggio precedente",
+      "next_unread": "Prossimo messaggio non letto",
+      "mail": "Posta",
+      "files": "File",
+      "back": "Indietro",
+      "forward": "Avanti",
+      "minimize": "Riduci a icona",
+      "next_window": "Finestra successiva",
+      "shortcuts": "Scorciatoie da tastiera",
+      "docs": "Documentazione",
+      "settings": "Impostazioni…",
+      "about": "Informazioni su Bulwark",
+      "from_plugins": "Altro dai plugin…",
+      "pick_gone": "Questo menu non era aggiornato. Riaprilo e riprova.",
+      "bar_label": "Menu"
+    },
+    "context": {
+      "add_to_dictionary": "Aggiungi «{word}» al dizionario",
+      "no_suggestions": "Nessun suggerimento",
+      "open_link": "Apri link",
+      "copy_link": "Copia link",
+      "copy_address": "Copia indirizzo",
+      "save_image": "Salva immagine…",
+      "copy_image": "Copia immagine"
+    },
+    "closing": {
+      "unsaved_title": "Impossibile salvare una bozza",
+      "unsaved_detail": "Se chiudi ora, quello che hai scritto dall’ultimo salvataggio andrà perso.",
+      "close_anyway": "Chiudi comunque",
+      "unsent_title": "Alcuni messaggi non sono ancora stati inviati",
+      "unsent_one": "Un messaggio è in attesa di invio. Partirà alla prossima apertura di Bulwark.",
+      "unsent_many": "{count} messaggi sono in attesa di invio. Partiranno alla prossima apertura di Bulwark.",
+      "quit": "Esci",
+      "leave_title": "Uscire con modifiche non salvate?",
+      "leave_detail": "Le modifiche fatte in questa pagina non sono ancora salvate.",
+      "leave": "Esci",
+      "stay": "Rimani"
+    },
+    "spellcheck": {
+      "offer": "Il controllo ortografico in {language} richiede un dizionario. Bulwark può scaricarlo da Google. Il tuo testo non viene inviato.",
+      "download": "Scarica"
+    },
+    "restore": {
+      "unavailable_title": "Questa bozza non può essere aperta ora",
+      "unavailable_body": "È al sicuro sul server, in Bozze. Riprova quando la connessione sarà tornata.",
+      "try_again": "Riprova",
+      "close": "Chiudi"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Cerca «{text}» nella posta"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sei offline. Questo messaggio ha bisogno di una connessione per aprirsi.",
+    "reader_failed": "Impossibile caricare questo messaggio.",
+    "retry": "Riprova",
+    "action_offline": "Sei offline. Serve una connessione.",
+    "offline_bar": "Sei offline. Per leggere e modificare la posta serve una connessione.",
+    "offline_default_on": "La tua posta è conservata su questo dispositivo, così puoi leggerla offline."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra dei menu",
+    "always_show_description": "Altrimenti compare premendo Alt.",
+    "exit": "Esci",
+    "tray_pause": "Sospendi le notifiche",
+    "tray_pause_hour": "Per 1 ora",
+    "tray_pause_tomorrow": "Fino a domani",
+    "tray_resume": "Riattiva le notifiche",
+    "tray_open": "Apri Bulwark",
+    "tray_quit": "Esci da Bulwark",
+    "tray_exit": "Esci da Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salva bozza",
+    "attach_files": "Allega file…",
+    "shortcut_apps": "Vai a Posta, Calendario, Contatti o File"
+  },
+  "appLock": {
+    "section_title": "Blocco dell'app",
+    "section_desc": "Chiede un PIN dopo un periodo di inattività, in ogni finestra e scheda. Mentre è bloccata, l'app non può leggere la posta salvata su questo dispositivo finché qualcuno non inserisce il PIN.",
+    "enable_label": "Blocca con un PIN",
+    "enable_desc": "Il PIN resta su questo dispositivo.",
+    "protects_desc": "Da cosa protegge: il PIN tiene fuori dall'app chi si trova davanti a questo dispositivo. La posta salvata qui riceve una nuova chiave quando attivi il blocco o cambi il PIN, e può volerci un momento. Non può fermare un programma in esecuzione su questo computer, un'estensione del browser che hai installato o chi copia i file dell'app e ha tempo di provare molti PIN, quindi conviene un PIN più lungo. Nell'app desktop, per provare i PIN serve anche il tuo accesso a questo computer. Il tuo account sul server non è interessato.",
+    "enable_body": "Ti servirà ogni volta che l'app si blocca e dopo un riavvio.",
+    "set_pin_title": "Scegli un PIN",
+    "change_pin": "Cambia PIN…",
+    "change_pin_title": "Cambia il PIN",
+    "pin_label": "PIN",
+    "pin_current": "PIN attuale",
+    "pin_new": "Nuovo PIN",
+    "pin_repeat": "Ripeti il PIN",
+    "pin_hint": "Almeno 6 caratteri. Vanno bene anche le lettere, e un PIN più lungo è più difficile da indovinare.",
+    "pin_obvious": "Questo PIN è troppo facile da indovinare. Evita ripetizioni, sequenze e scelte comuni.",
+    "pin_mismatch": "I due PIN non coincidono.",
+    "pin_recovery": "Se lo dimentichi, l'unica strada è rimuovere i dati da questo dispositivo e accedere di nuovo. La tua posta sul server resta. I messaggi ancora in attesa di invio su questo dispositivo vanno persi.",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "save_failed": "Non ha funzionato. Riprova.",
+    "timeout_label": "Blocca dopo",
+    "timeout_desc": "Tempo senza utilizzo in qualsiasi finestra o scheda.",
+    "lock_now": "Blocca ora",
+    "lock_now_desc": "Blocca subito tutte le finestre e le schede.",
+    "disable_title": "Disattivare il blocco?",
+    "disable_body": "Inserisci il PIN per disattivarlo.",
+    "disable_confirm": "Disattiva",
+    "passkey_label": "Passkey",
+    "passkey_desc": "Sblocca con una passkey o una chiave di sicurezza in grado di proteggere la chiave. Non tutte lo sono, e il PIN continua a funzionare.",
+    "passkey_add": "Aggiungi una passkey…",
+    "passkey_add_title": "Aggiungi una passkey",
+    "passkey_remove": "Rimuovi",
+    "passkey_added": "Passkey aggiunta.",
+    "passkey_no_prf": "Questa passkey non può proteggere la chiave. Il PIN continua a funzionare.",
+    "passkey_failed": "La passkey non ha funzionato. Inserisci il PIN.",
+    "use_passkey": "Usa una passkey",
+    "use_hello": "Usa Windows Hello",
+    "use_touchid": "Usa Touch ID",
+    "os_add": "Attiva…",
+    "os_add_title": "Usa {method}",
+    "os_remove": "Disattiva",
+    "os_desc": "{method} è un controllo fatto dall'app. Dopo un sì, l'app legge la chiave dall'archivio cifrato di questo computer. Un programma avviato con il tuo account utente potrebbe leggerla lì senza {method}, quindi il PIN protegge di più. Il PIN continua a funzionare.",
+    "os_failed": "Non ha funzionato. Inserisci il PIN.",
+    "lock_title": "{app} è bloccata",
+    "locking": "Blocco in corso…",
+    "pin_prompt": "Inserisci il PIN per continuare.",
+    "unlock": "Sblocca",
+    "unlocking": "Sblocco in corso…",
+    "wrong_pin": "Questo PIN non è corretto.",
+    "unlock_failed": "Lo sblocco non ha funzionato. Riprova.",
+    "blocked_later": "Troppi tentativi. Riprova più tardi.",
+    "forgot": "PIN dimenticato?",
+    "forgot_title": "Rimuovere i dati locali e uscire?",
+    "forgot_body": "Un PIN dimenticato non si può recuperare. Questo rimuove la posta salvata su questo dispositivo e disconnette tutti gli account, così puoi accedere di nuovo. La tua posta sul server resta. I messaggi ancora in attesa di invio su questo dispositivo vanno persi.",
+    "forgot_provider": "Se hai effettuato l'accesso dalla pagina della tua organizzazione, quell'accesso resta aperto lì. Il prossimo accesso qui chiederà a quella pagina un nuovo accesso, se lo consente.",
+    "forgot_confirm": "Rimuovi ed esci",
+    "unlock_in_main": "Sblocca nella finestra principale.",
+    "open_main": "Vai alla finestra principale",
+    "setup_required_title": "La tua organizzazione richiede un blocco dell'app",
+    "setup_required_body": "Scegli un PIN. Ti servirà per aprire {app} dopo il blocco.",
+    "draft_saved_notice": "Quello che stavi scrivendo è stato salvato nelle bozze prima del blocco.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, one {# minuto} other {# minuti}}",
+    "blocked_seconds": "Troppi tentativi. Riprova tra {count, plural, one {# secondo} other {# secondi}}.",
+    "blocked_minutes": "Troppi tentativi. Riprova tra {count, plural, one {# minuto} other {# minuti}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Fusi orari comuni",
+    "time_zone_all": "Tutti i fusi orari",
+    "time_zone_search": "Cerca fusi orari",
+    "time_zone_no_match": "Nessun fuso orario trovato",
+    "time_zone_desktop_description": "Mostra gli orari di posta e appuntamenti in questo fuso orario. Se non ne scegli uno, si usa quello del computer.",
+    "app_lock_desc_desktop": "Chiede un PIN dopo un periodo di inattività, in ogni finestra. Mentre è bloccata, l'app non può leggere la posta salvata su questo dispositivo finché qualcuno non inserisce il PIN.",
+    "app_lock_timeout_desc_desktop": "Tempo senza utilizzo in qualsiasi finestra.",
+    "app_lock_now_desc_desktop": "Blocca subito tutte le finestre.",
+    "app_lock_protects_toggle": "Da cosa protegge?",
+    "app_lock_timeout_hours": "{count, plural, one {# ora} other {# ore}}",
+    "desktop_attention_title": "Su questo computer"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Il tuo nome",
+      "description": "Le persone vedono questo nome accanto al tuo indirizzo quando scrivi loro.",
+      "saved": "Il tuo nome è stato salvato.",
+      "error": "Non è stato possibile salvare il tuo nome. Riprova."
+    },
+    "addresses": {
+      "description": "Gli indirizzi da cui puoi inviare, ognuno con il proprio nome e la propria firma.",
+      "label": "I tuoi indirizzi",
+      "count": "{count, plural, =0 {Ancora nessun indirizzo} one {# indirizzo} other {# indirizzi}}",
+      "manage": "Modifica indirizzi…",
+      "modal_title": "I tuoi indirizzi email",
+      "add": "Aggiungi indirizzo",
+      "edit": "Modifica indirizzo",
+      "added": "Indirizzo aggiunto.",
+      "saved": "Indirizzo salvato.",
+      "deleted": "Indirizzo eliminato.",
+      "delete_title": "Eliminare questo indirizzo?"
+    },
+    "signatures": {
+      "title": "Firme",
+      "description": "Aggiunta alla fine dei messaggi che scrivi. Ogni indirizzo ha la sua.",
+      "saved": "Firma salvata.",
+      "error": "Non è stato possibile salvare la firma. Riprova.",
+      "no_addresses": "Non c'è ancora un indirizzo da cui inviare."
+    },
+    "search": {
+      "addresses": "identità alias mittente indirizzo del mittente indirizzo da identity sender",
+      "signatures": "firma firma email piè di pagina identità mittente indirizzo da signature",
+      "your_name": "nome visualizzato nome completo nome del mittente display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Inserisci prima l'indirizzo del server.",
+    "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
+    "server_invalid": "Questo indirizzo del server non è valido."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Accedi con il browser…",
+    "waiting": "In attesa del browser…",
+    "waiting_hint": "Completa l’accesso lì. Il tuo gestore di password funziona nel browser.",
+    "cancel": "Annulla",
+    "or_here": "oppure accedi qui",
+    "timed_out": "L’accesso nel browser ha richiesto troppo tempo. Riprova.",
+    "no_browser": "Bulwark non è riuscito ad aprire il browser. Riprova o accedi qui.",
+    "failed": "L’accesso tramite il browser non è riuscito. Riprova.",
+    "handoff_banner": "Un programma su questo computer ha chiesto questo accesso per l’app Bulwark. Questo browser resta disconnesso da Bulwark. Se non sei stato tu ad avviarlo, chiudi questa scheda.",
+    "consent_title": "Accedere all’app Bulwark?",
+    "consent_description": "Un programma su questo computer, alla porta {port}, chiede l’accesso per {username}. Continua solo se hai appena premuto «Accedi con il browser…» nell’app Bulwark qui. Altrimenti qualcuno potrebbe cercare di entrare nel tuo account: scegli Non ora.",
+    "consent_confirm": "Accedi all’app",
+    "consent_cancel": "Non ora",
+    "page_done": "Puoi chiudere questa scheda e tornare a Bulwark.",
+    "page_failed": "L’accesso non è riuscito. Torna a Bulwark e riprova.",
+    "page_link_used": "Questo link funziona una sola volta. Torna a Bulwark e ricomincia.",
+    "page_title": "Accedi a {server}",
+    "page_intro": "Questa pagina viene dall’app Bulwark su questo computer. La tua password va a {server} e da nessun’altra parte.",
+    "page_username": "Indirizzo e-mail o nome utente",
+    "page_password": "Password",
+    "page_code": "Codice a due fattori",
+    "page_submit": "Accedi",
+    "page_wrong_password": "Il server non ha accettato questo nome utente e questa password.",
+    "page_code_needed": "Questo account richiede anche un codice a due fattori. Inserisci di nuovo la password e il codice.",
+    "page_no_answer": "Bulwark non è riuscito ad accedere. Verifica che il server sia raggiungibile e riprova.",
+    "declined": "Hai detto no nel browser, quindi non è stato effettuato alcun accesso.",
+    "too_many": "Troppi tentativi di accesso da questa rete. Attendi qualche minuto e riprova.",
+    "page_declined": "Non è stato consegnato nulla. Puoi chiudere questa scheda."
+  },
+  "uxs_login": {
+    "theme_button": "Chiaro o scuro",
+    "server_label": "Server di posta",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Ricerca del tuo server di posta…",
+    "server_found": "Server di posta: {server}",
+    "server_change": "Cambia",
+    "server_change_hint": "Scrivi l'indirizzo di un altro server.",
+    "server_not_found": "Non abbiamo trovato il server di posta di questo indirizzo. Inseriscilo qui, per esempio mail.example.com.",
+    "server_needed": "Inserisci l'indirizzo del tuo server di posta.",
+    "server_invalid": "Questo non è l'indirizzo di un server. Scrivilo come mail.example.com.",
+    "email_needed": "Inserisci prima il tuo indirizzo email.",
+    "other_ways": "Altri modi per accedere",
+    "trouble": "Problemi?",
+    "trouble_cors": "Il tuo server di posta deve consentire l'accesso da questo sito. Se l'accesso non riesce, chiedi a chi gestisce il server di posta di consentirlo.",
+    "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
+  },
+  "desktop_updates": {
+    "title": "Aggiornamenti",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark cerca gli aggiornamenti da solo.",
+    "status_checking": "Ricerca di aggiornamenti…",
+    "status_up_to_date": "Hai la versione più recente.",
+    "status_downloading": "Download della versione {version}…",
+    "status_ready": "La versione {version} è pronta. Verrà installata alla prossima chiusura, oppure riavvia ora.",
+    "status_available": "La versione {version} è disponibile.",
+    "status_available_per_machine": "La versione {version} è disponibile. Bulwark è installato per tutti su questo computer, quindi gli aggiornamenti li installa un amministratore.",
+    "status_older": "Hai una beta. La versione stabile {version} è precedente, quindi Bulwark resta su questa versione finché la stabile non la raggiunge.",
+    "status_error": "Impossibile cercare gli aggiornamenti. Bulwark riproverà più tardi.",
+    "status_off": "La tua organizzazione ha disattivato gli aggiornamenti nell'app.",
+    "check": "Cerca ora",
+    "restart": "Riavvia per aggiornare",
+    "download": "Scarica",
+    "install_older": "Installa versione precedente…",
+    "channel_label": "Canale di aggiornamento",
+    "channel_description": "Le versioni beta arrivano prima e possono avere più problemi.",
+    "channel_stable": "Stabile",
+    "channel_beta": "Beta",
+    "shell_restart": "Riavvia per aggiornare",
+    "shell_check": "Cerca aggiornamenti…",
+    "shell_available": "Bulwark {version} è disponibile",
+    "shell_ready_title": "Bulwark è pronto per l’aggiornamento",
+    "shell_ready_body": "La versione {version} verrà installata alla prossima chiusura. Fai clic per riavviare ora. Le bozze vengono salvate prima.",
+    "shell_available_title": "È disponibile una nuova versione di Bulwark",
+    "shell_none_title": "Bulwark è aggiornato",
+    "shell_none_detail": "Hai la versione {version}.",
+    "shell_failed_title": "Bulwark non ha potuto cercare aggiornamenti",
+    "shell_failed_detail": "Controlla la connessione e riprova più tardi. Non è cambiato nulla.",
+    "shell_beta_title": "Passare alle versioni beta?",
+    "shell_beta_detail": "Ricevi le nuove versioni prima, e possono avere più problemi. Per tornare indietro installi una versione stabile precedente o aspetti che la stabile raggiunga la beta.",
+    "shell_beta_confirm": "Passa alla beta",
+    "shell_older_title": "Tornare a Bulwark {version}?",
+    "shell_older_detail": "Hai la beta {current}. La stabile {target} è precedente e potrebbe non leggere ciò che la beta ha salvato su questo computer. La posta resta sul server, ma quella salvata offline può essere riscaricata e le modifiche non ancora inviate possono andare perse. Se aspetti, la stabile raggiunge la beta e ci passi senza questo passaggio.",
+    "shell_older_confirm": "Installa versione precedente"
+  },
+  "desktop_keystore": {
+    "title": "Certificati di questo computer",
+    "description": "Questo server può chiedere di usare i tuoi certificati e le tue smart card. Ti verrà comunque chiesto prima di usare ogni certificato.",
+    "label": "Accesso di questo server",
+    "label_description": "Ritira il tuo permesso. Il server dovrà chiederlo di nuovo.",
+    "revoke": "Ritira",
+    "revoked": "Permesso ritirato"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} chiede un certificato",
+    "picker_detail": "Il server vuole sapere chi sei. Il certificato che scegli va solo a questo server. Se non conosci questo server, non inviarne nessuno.",
+    "picker_issued": "Emesso da {issuer}, valido fino al {date}",
+    "picker_remember": "Ricorda per {host}",
+    "picker_none": "Non inviare un certificato",
+    "picker_more": "Altri certificati…"
+  },
+  "desktopOs": {
+    "section_title": "App desktop",
+    "section_description": "Come l'app funziona con il tuo computer.",
+    "close_to_tray_label": "Resta nell'area di notifica alla chiusura",
+    "close_to_tray_description": "La nuova posta e i promemoria continuano ad arrivare dopo la chiusura della finestra.",
+    "start_at_login_label": "Avvia all'accesso al computer",
+    "start_at_login_description": "L'app si avvia da sola quando accedi.",
+    "start_minimized_label": "Avvia nell'area di notifica",
+    "start_minimized_description": "All'accesso non si apre alcuna finestra. Aprila con l'icona nell'area di notifica.",
+    "attention_label": "Fai lampeggiare la barra delle applicazioni con nuova posta",
+    "attention_mac_label": "Fai rimbalzare l'icona del Dock con nuova posta",
+    "attention_description": "Solo quando l'app non è in primo piano.",
+    "quiet_hours_label": "Ore di silenzio",
+    "quiet_hours_description": "Nessuna notifica o suono in queste ore. La posta continua ad arrivare.",
+    "quiet_hours_from": "Da",
+    "quiet_hours_to": "a",
+    "show_shortcut_label": "Mostra l'app con una scorciatoia da tastiera",
+    "show_shortcut_description": "{keys} porta l'app in primo piano da qualsiasi altra app.",
+    "show_shortcut_taken": "Un'altra app usa {keys}. Chiudila, oppure disattiva e riattiva questa opzione.",
+    "default_app_label": "App di posta predefinita",
+    "default_app_description": "Apri i link di posta e i file .eml, .ics e .vcf con questa app.",
+    "default_app_is_default": "Questa app apre i tuoi link di posta.",
+    "default_app_button": "Scegli app predefinita…",
+    "new_mail": "Nuova posta",
+    "no_subject": "(nessun oggetto)",
+    "action_delete": "Elimina",
+    "copy_as_file": "Copia come file",
+    "copied": "File copiato. Puoi incollarlo in una cartella.",
+    "copy_failed": "Impossibile copiare il file.",
+    "reply_lost": "Non è stato possibile conservare la risposta digitata. Apri il messaggio e rispondi da lì."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Cerca contatti",
+    "search_files": "Cerca file",
+    "import": "Importa",
+    "import_mail": "Posta…",
+    "import_calendar": "Calendario…",
+    "import_contacts": "Contatti…"
+  },
+  "desktopEdit": {
+    "edit": "Modifica",
+    "edit_named": "Modifica {name}",
+    "opened": "{name} è aperto nel suo programma. Salva lì le modifiche e ti verrà chiesto cosa farne.",
+    "offers_label": "Allegati modificati",
+    "changed_title": "{name} è stato modificato",
+    "changed_body": "Hai salvato delle modifiche in un altro programma. Cosa vuoi farne?",
+    "reply": "Allega a una risposta",
+    "new_message": "Allega a un nuovo messaggio",
+    "open_draft": "Apri bozza",
+    "save_copy": "Salva una copia…",
+    "discard": "Scarta le modifiche…",
+    "discard_title": "Scartare le modifiche a {name}?",
+    "discard_detail": "La copia modificata viene eliminata. L’allegato originale non cambia.",
+    "discard_confirm": "Scarta",
+    "cancel": "Annulla",
+    "update": "Aggiorna allegato",
+    "no_app": "Nessun programma di questo computer può aprire questo file.",
+    "blocked_type": "Questo tipo di file non può essere aperto per la modifica, perché potrebbe essere eseguito come programma.",
+    "blocked_policy": "La tua organizzazione non consente di salvare allegati su questo dispositivo.",
+    "removed_policy": "La tua organizzazione non lo consente più, quindi la copia modificata di {name} è stata eliminata.",
+    "too_large": "Questo file è troppo grande per essere aperto e modificato.",
+    "too_many": "Ci sono troppi file aperti per la modifica. Prima terminane alcuni.",
+    "failed": "Non è stato possibile aprire il file per la modifica.",
+    "read_busy": "Un altro programma sta ancora usando {name}. Chiudilo lì e riprova.",
+    "read_failed": "Non è stato possibile leggere la copia modificata di {name}.",
+    "send_stale_title": "{name} ha modifiche che non sono in questo messaggio",
+    "send_stale_detail": "Se invii ora, il messaggio parte con la versione precedente. Le modifiche restano su questo computer fino a 30 giorni, finché non decidi cosa farne.",
+    "send_stale_send": "Invia comunque",
+    "send_stale_back": "Torna indietro",
+    "signout_title": "Uscire ed eliminare le modifiche?",
+    "signout_confirm": "Esci",
+    "lock_note": "I file aperti con Modifica restano aperti nel loro programma mentre l’app è bloccata, e restano leggibili su questo computer. Non se ne possono aprire altri finché non la sblocchi.",
+    "changed_title_hidden": "Un allegato modificato è stato salvato",
+    "last_chance": "Non usato da 30 giorni. Questa copia verrà eliminata domani.",
+    "held_named": "{names}: ancora aperto in un altro programma, quindi la copia non può ancora essere eliminata. Chiudilo lì e verrà eliminata.",
+    "held_unnamed": "La copia di un allegato è ancora aperta in un altro programma e non può ancora essere eliminata. Chiudila lì e verrà eliminata.",
+    "removed_policy_held": "La tua organizzazione non lo consente più. {name} è ancora aperto in un altro programma, quindi la copia non può essere eliminata finché non lo chiudi lì.",
+    "removed_policy_hidden": "La tua organizzazione non consente più di modificare gli allegati, quindi una copia modificata è stata rimossa.",
+    "outside_note": "I file di ripristino e l’elenco dei file recenti di quel programma sono fuori dalla portata di questa app.",
+    "clear_title": "Eliminare gli allegati modificati?",
+    "clear_confirm": "Elimina",
+    "signout_changed": "Non ancora allegati o salvati, ed eliminati ora: {names}.",
+    "signout_held": "Ancora aperti in un altro programma, quindi eliminati solo quando li chiudi lì: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Scrittura rapida",
+    "menu": "Scrittura rapida",
+    "description": "{keys} apre una piccola finestra per un nuovo messaggio, da qualsiasi altra app.",
+    "description_off": "Apre una piccola finestra per un nuovo messaggio, da qualsiasi altra app.",
+    "taken": "Un'altra app sta usando {keys}, quindi qui non succede nulla. Scegli altri tasti o chiudi quell'app.",
+    "change": "Cambia i tasti: {keys}",
+    "recording": "Premi i tasti…",
+    "recording_hint": "Tieni premuto Ctrl (Cmd su Mac) con Alt o Maiusc e premi una lettera, un numero, Invio o un tasto funzione. Esc annulla.",
+    "back_to_main": "Sposta nella finestra principale",
+    "back_busy": "La finestra principale ha già un messaggio aperto. Chiudilo e riprova.",
+    "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui.",
+    "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
+    "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
+  },
+  "compose_windows": {
+    "more_formatting": "Altre opzioni di formattazione",
+    "offline": "Offline",
+    "offline_hint": "Per inviare serve una connessione.",
+    "offline_hint_outbox": "Quello che invii ora aspetta nella posta in uscita e parte quando torni online.",
+    "offline_send_saved": "Sei offline. Il messaggio è salvato nelle Bozze.",
+    "offline_send_unsaved": "Sei offline. Il messaggio resta qui e viene salvato nelle Bozze quando torni online."
+  },
+  "desktopDevTools": {
+    "section_title": "Risoluzione dei problemi",
+    "label": "Strumenti per sviluppatori ({shortcut})",
+    "description": "{shortcut} e F12 aprono gli strumenti per sviluppatori nella finestra in cui ti trovi. Si disattiva quando l'app si blocca.",
+    "forced_off": "Disattivato dalla tua organizzazione.",
+    "locked": "Sblocca l'app per modificare questa opzione.",
+    "menu_toggle": "Mostra o nascondi strumenti per sviluppatori"
+  },
+  "fileDrop": {
+    "overlay_label": "Rilascia file",
+    "overlay_title": "Dove vanno i file?",
+    "overlay_hint": "Rilascia fuori dalle opzioni o premi Esc per annullare.",
+    "files_unknown": "File",
+    "files_summary": "{count, plural, one {# file} other {# file}}",
+    "files_summary_size": "{count, plural, one {# file} other {# file}}, {size}",
+    "zone_attach_here": "Allega a questo messaggio",
+    "zone_insert_inline": "Inserisci nel messaggio",
+    "zone_new_message": "Allega a un nuovo messaggio",
+    "zone_upload_files": "Carica in File",
+    "zone_upload_folder": "Carica in {folder}",
+    "zone_calendar": "Aggiungi al calendario",
+    "zone_contacts": "Aggiungi ai contatti",
+    "zone_open_eml": "Apri messaggio",
+    "zone_import_eml": "Importa in {folder}",
+    "note_limit_message": "Fino a {size} per messaggio",
+    "note_limit_file": "Fino a {size} per file",
+    "note_kept_offline": "Resta su questo dispositivo finché non torni online",
+    "note_needs_connection": "Serve una connessione",
+    "announce": "{files, plural, =0 {File trascinati} one {# file trascinato} other {# file trascinati}}. Opzioni: {choices}.",
+    "choose_title": "{count, plural, one {Dove va questo file?} other {Dove vanno questi file?}}",
+    "save_first_failed": "Non è stato possibile salvare il messaggio aperto, quindi l'app è rimasta dov'era.",
+    "import_done": "{count, plural, one {# messaggio importato in {folder}.} other {# messaggi importati in {folder}.}}",
+    "import_failed": "Non è stato possibile importare {name}.",
+    "too_large_file": "{name} è troppo grande. Il limite è {max} per file.",
+    "too_large_message": "Questi file sono troppo grandi per un solo messaggio. Il limite è {max}.",
+    "folders_left_out": "Le cartelle possono andare solo in File, quindi sono state escluse.",
+    "nothing_here": "Questi file non si possono usare qui."
+  },
+  "desktopReminders": {
+    "generic_title": "Promemoria",
+    "snooze": "Rimanda di {count} min",
+    "snooze_short": "{count} min",
+    "open": "Apri",
+    "join": "Partecipa",
+    "missed_title": "{count, plural, one {# promemoria perso} other {# promemoria persi}}",
+    "missed_more": "e altri {count}",
+    "missed_show": "Mostra",
+    "missed_dialog_title": "Promemoria persi",
+    "missed_dialog_description": "Sono scattati mentre l'app era chiusa, il computer in sospensione o le notifiche in pausa.",
+    "open_calendar": "Apri calendario",
+    "done": "Fatto",
+    "join_host": "Partecipa ({host})",
+    "join_named": "Partecipa: {title}"
+  },
+  "desktop_policy": {
+    "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",
+    "plugin_refused": "La tua organizzazione non consente questo plugin su questo dispositivo, quindi non viene eseguito. Le sue impostazioni e i suoi dati restano conservati.",
+    "install_refused": "La tua organizzazione non consente questo plugin su questo dispositivo.",
+    "plugins_label": "Plugin",
+    "plugins_off": "La tua organizzazione ha disattivato i plugin su questo dispositivo.",
+    "plugins_allowlist": "La tua organizzazione consente solo alcuni plugin su questo dispositivo.",
+    "off": "Disattivato"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dati di utilizzo e segnalazioni di arresto anomalo",
+    "section_description": "Entrambi restano disattivati finché non li attivi, e ognuno ha il proprio interruttore.",
+    "telemetry_label": "Invia dati di utilizzo",
+    "telemetry_description": "Una volta al giorno: un ID casuale, i numeri di versione dell'app, il tuo sistema operativo, da quanto tempo è in esecuzione l'app e come si connette. Con un tuo server di posta, anche quali funzioni sono attive, un numero approssimativo di account e quanti plugin e temi hai. Mai email, indirizzi o nomi di server.",
+    "crash_label": "Invia segnalazioni di arresto anomalo",
+    "crash_description": "Gli errori dell'app vengono inviati con un ID casuale, i nomi dei file del codice dell'app e brevi messaggi ripuliti. Se l'app stessa si arresta, un file di arresto resta su questo computer e ne esce solo se lo invii.",
+    "crash_memory": "Un file di arresto è una copia di parte della memoria dell'app al momento dell'arresto. Bulwark rimuove i nomi utente, gli indirizzi e i token di accesso che trova, ma un file di arresto può comunque contenere il testo delle tue email.",
+    "instance_note": "Su un server Bulwark, il suo amministratore decide separatamente cosa le sue pagine gli segnalano.",
+    "forced_off": "La tua organizzazione ha disattivato questa opzione.",
+    "url_label": "Destinazione dei file di arresto",
+    "url_description": "L'indirizzo https che riceve un file di arresto. Bulwark non ne include nessuno.",
+    "url_invalid": "Inserisci un indirizzo https completo.",
+    "url_save": "Salva",
+    "files_label": "File di arresto su questo computer",
+    "files_description": "Bulwark conserva i più recenti ed elimina quelli più vecchi di un mese.",
+    "files_empty": "Nessun file di arresto.",
+    "file_size": "{size} KB",
+    "send": "Invia segnalazione di arresto…",
+    "delete_all": "Elimina tutti",
+    "sent": "Segnalazione di arresto inviata.",
+    "send_no_consent": "Attiva prima le segnalazioni di arresto anomalo.",
+    "send_no_url": "Non è impostato alcun indirizzo, quindi non c'è dove inviarla. Inseriscine uno qui sopra.",
+    "send_failed": "Impossibile inviare la segnalazione di arresto."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Numero di messaggi non letti sull'icona della barra delle applicazioni",
+    "unread_badge_description": "Per vedere la nuova posta mentre lavori in un'altra app.",
+    "tip_compose_keys": "Premi {keys} per scrivere un nuovo messaggio",
+    "tip_palette_keys": "Premi {keys} per trovare qualsiasi comando"
   }
 }

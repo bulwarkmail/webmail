@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRenderableHtmlBody, getDraftTextBody } from '@/lib/email-body-selection';
+import { getRenderableHtmlBody, getDraftTextBody, getDraftComposerBody } from '@/lib/email-body-selection';
 
 type PartialEmail = Parameters<typeof getRenderableHtmlBody>[0];
 
@@ -145,5 +145,30 @@ describe('getDraftTextBody', () => {
 
   it('survives a part whose value the server did not return', () => {
     expect(getDraftTextBody(draft([{ partId: '1' }, { partId: '9' }], { '1': 'one' }))).toBe('one');
+  });
+});
+
+describe('getDraftComposerBody', () => {
+  it('opens a text-only draft as plain text', () => {
+    // Plain-text-only draft: the text/plain part is listed under htmlBody too.
+    const email = makeEmail({
+      html: { partId: '1', type: 'text/plain' },
+      text: { partId: '1', type: 'text/plain' },
+      values: { '1': 'Hi <you>,\n\nbye' },
+    });
+    expect(getDraftComposerBody(email)).toEqual({ body: 'Hi <you>,\n\nbye', bodyText: 'Hi <you>,\n\nbye', plainTextMode: true });
+  });
+
+  it('opens an HTML draft in the rich editor', () => {
+    const email = makeEmail({
+      html: { partId: '2', type: 'text/html' },
+      text: { partId: '1', type: 'text/plain' },
+      values: { '1': 'Hi', '2': '<p>Hi</p>' },
+    });
+    expect(getDraftComposerBody(email)).toEqual({ body: '<p>Hi</p>', bodyText: 'Hi', plainTextMode: false });
+  });
+
+  it('leaves the format of an empty draft to the setting', () => {
+    expect(getDraftComposerBody(makeEmail({ values: {} })).plainTextMode).toBeUndefined();
   });
 });

@@ -2,16 +2,25 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import { RouteSkeleton } from '@/components/boot-skeleton/route-skeleton';
+import { surfaceFromPath } from '@/lib/boot-skeleton/surfaces';
+import { locales } from '@/i18n/routing';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { getBrowserTimeZone, resolveTimeZone } from '@/lib/timezone';
-import enMessages from '@/locales/en/common.json';
+import enCommon from '@/locales/en/common.json';
+import enPlain from '@/locales/en/plain.json';
 import { getLocaleDirection } from '@/i18n/direction';
 import { mergeMessages } from '@/i18n/merge-messages';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
-import { PLAIN_LANGUAGE_LOADERS, hasPlainLanguage, withPlainLanguage } from '@/i18n/plain-language';
+import { addPlainLanguage, withPlainLanguage } from '@/i18n/plain-language';
 
 type Messages = Record<string, unknown>;
+
+// English with its plain wording laid over it: the default catalog and the
+// fallback base. The plain strings are the only wording, with no setting.
+const enMessages = withPlainLanguage(enCommon as Messages, enPlain as Messages);
 
 // Per-locale dynamic loaders so each catalog is its own lazy chunk. Importing
 // them all statically put every locale (~3 MB) in the critical client bundle,
@@ -24,8 +33,8 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   ca: () => import('@/locales/ca/common.json').then((m) => m.default),
   cs: () => import('@/locales/cs/common.json').then((m) => m.default),
   da: () => import('@/locales/da/common.json').then((m) => m.default),
-  de: () => import('@/locales/de/common.json').then((m) => m.default),
-  en: () => Promise.resolve(enMessages as Messages),
+  de: () => import('@/locales/de/common.json').then((m) => addPlainLanguage('de', m.default)),
+  en: () => Promise.resolve(enMessages),
   es: () => import('@/locales/es/common.json').then((m) => m.default),
   he: () => import('@/locales/he/common.json').then((m) => m.default),
   et: () => import('@/locales/et/common.json').then((m) => m.default),
@@ -47,7 +56,7 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   th: () => import('@/locales/th/common.json').then((m) => m.default),
   tr: () => import('@/locales/tr/common.json').then((m) => m.default),
   uk: () => import('@/locales/uk/common.json').then((m) => m.default),
-  vi: () => import('@/locales/vi/common.json').then((m) => m.default),
+  vi: () => import('@/locales/vi/common.json').then((m) => addPlainLanguage('vi', m.default)),
   zh: () => import('@/locales/zh/common.json').then((m) => m.default),
   'zh-TW': () => import('@/locales/zh-TW/common.json').then((m) => m.default),
 };
@@ -66,7 +75,7 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
   const [browserTimeZone, setBrowserTimeZone] = useState<string>('UTC');
   const timeZoneSetting = useSettingsStore((state) => state.timeZone);
   const timeZone = resolveTimeZone(timeZoneSetting, browserTimeZone);
-  const plainLanguage = useSettingsStore((state) => state.plainLanguage);
+  const pathname = usePathname();
 
   // The catalog currently in use. Seeded with the server-provided messages for
   // the SSR-resolved locale, so the first render needs no async work and
@@ -74,12 +83,12 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
   // lazily loaded catalog arrives, never out of sync. Without server messages
   // (Lite) only English is at hand; any other locale renders nothing, on the
   // server and on the client alike, until its chunk arrives.
-  const seed = initialMessages ?? (initialLocale === 'en' ? (enMessages as Messages) : undefined);
+  const seed = initialMessages ?? (initialLocale === 'en' ? enMessages : undefined);
   const [catalog, setCatalog] = useState<{ locale: string; messages: Messages } | null>(
     seed ? { locale: initialLocale, messages: seed } : null,
   );
   const loadedRef = useRef<Record<string, Messages>>({
-    en: enMessages as Messages,
+    en: enMessages,
     ...(seed ? { [initialLocale]: seed } : {}),
   });
 
@@ -119,22 +128,6 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLocale]);
 
-  // Plain-language strings, loaded the first time the setting is on for an
-  // English or German UI. They arrive after the first render, so hydration
-  // always matches the server's normal strings.
-  const [plainCatalogs, setPlainCatalogs] = useState<Record<string, Messages>>({});
-  const plainLocale = plainLanguage && catalog && hasPlainLanguage(catalog.locale) ? catalog.locale : null;
-  useEffect(() => {
-    if (!plainLocale || plainCatalogs[plainLocale]) return;
-    let stale = false;
-    PLAIN_LANGUAGE_LOADERS[plainLocale]()
-      .catch(() => ({} as Messages))
-      .then((plain) => {
-        if (!stale) setPlainCatalogs((prev) => ({ ...prev, [plainLocale]: plain }));
-      });
-    return () => { stale = true; };
-  }, [plainLocale, plainCatalogs]);
-
   // Keep <html> lang/dir in sync with the rendered locale (RTL for he/fa).
   const activeLocale = catalog?.locale;
   useEffect(() => {
@@ -145,21 +138,24 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
 
   // Fall back to English for any key the active locale has not translated, so
   // untranslated strings show English text instead of a raw message key.
-  const baseMessages = useMemo(
+  // Server-provided catalogs already carry their plain strings (the layouts
+  // add them), and so do the client loaders, so first render and hydration
+  // show the same wording.
+  const messages = useMemo(
     () =>
       !catalog || catalog.locale === 'en'
-        ? (enMessages as Messages)
-        : mergeMessages(enMessages as Messages, catalog.messages),
+        ? enMessages
+        : mergeMessages(enMessages, catalog.messages),
     [catalog]
   );
-  // Plain strings win over the catalog; keys without a plain version keep it.
-  const plainMessages = plainLocale ? plainCatalogs[plainLocale] : undefined;
-  const messages = useMemo(
-    () => withPlainLanguage(baseMessages, plainMessages),
-    [baseMessages, plainMessages]
-  );
 
-  if (!catalog) return null;
+  if (!catalog) {
+    // Lite without this locale's catalog yet: no text can be drawn, but the
+    // page's skeleton can (it takes no translations), so the prerendered HTML
+    // still shows the page's shape instead of a blank screen.
+    const surface = pathname ? surfaceFromPath(pathname, locales) : null;
+    return surface ? <RouteSkeleton surface={surface} /> : null;
+  }
 
   return (
     <NextIntlClientProvider

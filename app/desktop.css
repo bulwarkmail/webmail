@@ -1,0 +1,75 @@
+/*
+ * The desktop app is an app, not a page. Everything here hangs on
+ * html[data-desktop], which the boot script sets when the preload bridge is
+ * there (lib/desktop/boot.ts), so a browser never matches any of it.
+ *
+ * UI chrome is listed one by one, instead of switching selection off for the
+ * whole page and listing what may stay on: a message, a contact's details or
+ * an event's notes must not stop being selectable because nobody thought of
+ * them. An HTML message is in its own frame; a plain-text one is in the page,
+ * and the rule at the end keeps it selectable wherever it sits.
+ */
+
+html[data-desktop],
+html[data-desktop] body {
+  overscroll-behavior: none;
+}
+
+html[data-desktop] :is(
+  button,
+  summary,
+  label,
+  nav,
+  [role="button"],
+  [role="navigation"],
+  [role="toolbar"],
+  [role="menu"],
+  [role="menubar"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="tab"],
+  [role="tablist"],
+  [role="listbox"],
+  [role="option"],
+  [role="tree"],
+  [role="treeitem"],
+  [role="row"],
+  [data-composer-header],
+  [data-mv-compose-titlebar]
+) {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* A field inside a label or a row is still a field. */
+html[data-desktop] :is(input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+html[data-desktop] :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"]), textarea, [contenteditable="true"], [contenteditable="plaintext-only"]) {
+  cursor: text;
+}
+
+/* No dragging an icon or a link by accident. What the app means to drag says so. */
+html[data-desktop] :is(img, a, svg) {
+  -webkit-user-drag: none;
+}
+
+html[data-desktop] [draggable="true"] {
+  -webkit-user-drag: element;
+}
+
+/* A plain-text message renders in the page, also inside rows and buttons. */
+html[data-desktop] [data-plugin-source="email-body"],
+html[data-desktop] [data-plugin-source="email-body"] * {
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
+html[data-desktop] [data-plugin-source="email-body"] a {
+  cursor: pointer;
+}

@@ -92,7 +92,8 @@ const IDLE_STATE: SessionTimerState = { phase: "active", kind: null, deadline: n
  * (policy.json `organisation.session`). Activity in any Bulwark tab keeps
  * every tab signed in; a warning counts down first; at zero the open and
  * minimised composers save their drafts and every account signs out, with
- * the reason on the login page.
+ * the reason on the login page. What the accounts keep on the device hides until
+ * the next sign-in, unless the organisation asks for deletion at once.
  */
 export function SessionTimeoutGuard() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -149,7 +150,8 @@ export function SessionTimeoutGuard() {
     rememberSessionEnd(endReason(kind, current, false));
     const flushed = await flushComposers(DRAFT_FLUSH_TIMEOUT_MS);
     if (flushed.failed > 0 || flushed.timedOut) rememberSessionEnd(endReason(kind, current, true));
-    await useAuthStore.getState().logoutAll({ endProviderSession: false });
+    // Nobody asked: the mail hides until the next sign-in, and unsent messages with it.
+    await useAuthStore.getState().logoutAll({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
   }, []);
 
   // The clock, while there is a limit to count.

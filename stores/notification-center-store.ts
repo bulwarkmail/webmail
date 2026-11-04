@@ -125,7 +125,7 @@ export function recordNotification(input: CenterEntryInput): void {
   }
 }
 
-/** Test helper: read the list back from storage as a fresh page load would. */
+/** Reads the list back from storage as a fresh page load would: the app lock puts it back at unlock. */
 export function reloadNotificationCenter(): void {
   useNotificationCenterStore.setState({ entries: load() });
 }

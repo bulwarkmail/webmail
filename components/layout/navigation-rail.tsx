@@ -12,14 +12,13 @@ import { useShallow } from "zustand/react/shallow";
 import { usePathname, Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
-import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
-import { getMaxAccounts } from "@/lib/account-utils";
+import { accountAvatarName, getMaxAccounts } from "@/lib/account-utils";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { quotaLevel, type StorageQuota } from "@/lib/quota";
@@ -34,6 +33,8 @@ import { toUnicodeEmail } from "@/lib/idn";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
 import { NotificationBell } from "@/components/notifications/notification-center";
 import { useBottomControls } from "@/hooks/use-bottom-controls";
+import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
+import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
 
 interface NavItem {
   id: string;
@@ -42,6 +43,18 @@ interface NavItem {
   href: string;
   hidden?: boolean;
   badge?: number;
+}
+
+/**
+ * How wide a phone tab bar entry should be, or null when all of them fit at
+ * the normal width. A bar that doesn't fit shows whole entries and half of
+ * the next: half an entry says there is more to scroll to, a few cut-off
+ * pixels only look broken.
+ */
+export function tabBarItemWidth(barWidth: number, count: number, minWidth = 52): number | null {
+  if (!barWidth || count * minWidth <= barWidth) return null;
+  const whole = Math.max(1, Math.floor(barWidth / minWidth - 0.5));
+  return barWidth / (whole + 0.5);
 }
 
 interface NavigationRailProps {
@@ -229,11 +242,24 @@ export function NavigationRail({
   // The phone tab bar: toasts sit above it.
   const tabBarRef = useBottomControls(orientation === "horizontal");
   const pathname = usePathname();
+  // Each app draws its own tab bar, so its scroll position starts over: bring
+  // the current entry back into view when it lies past the edge of a full bar.
+  const tabBarScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    tabBarScrollRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [pathname]);
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+  useEffect(() => {
+    const bar = tabBarScrollRef.current;
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setTabBarWidth(bar.clientWidth));
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [orientation]);
   const router = useRouter();
   const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const { supportsCalendar } = useCalendarStore(useShallow((state) => ({ supportsCalendar: state.supportsCalendar })));
-  const { mailboxes } = useEmailStore(useShallow((state) => ({ mailboxes: state.mailboxes })));
   const client = useAuthStore((s) => s.client);
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
@@ -250,7 +276,9 @@ export function NavigationRail({
   const visibleSidebarApps = useResolvedSidebarApps();
   // Pages plugins added (api.ui.setPages); listed after the built-in apps.
   const pluginPages = usePluginPages();
-  const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
+  // Every signed-in account's inbox, as the favicon and the tab title count
+  // it (mail-6), unless Notifications says to count the open one only.
+  const inboxUnread = useAllInboxesUnread();
   const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
@@ -348,6 +376,23 @@ export function NavigationRail({
 
   const visibleItems = navItems.filter((item) => !item.hidden);
 
+  // Leave the next page load's skeleton a note of what this rail shows
+  // (lib/boot-skeleton/hints.ts). Only once a session is up: before that the
+  // rail is still missing the apps the server offers.
+  const quotaShown = !!quota && quota.total > 0;
+  useEffect(() => {
+    if (!client) return;
+    const items: RailHint[] = [];
+    for (const item of navItems) if (item.id !== 'mail' && !item.hidden) items.push(item.id as RailHint);
+    if (sidebarAppsEnabled && onManageApps) items.push('add-app');
+    if (isStalwartAdmin) items.push('admin');
+    if (showAccessibilityButton) items.push('a11y');
+    if (quotaShown) items.push('quota');
+    writeRailHints(items);
+    // navItems is rebuilt every render; its inputs are listed instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, supportsCalendar, calendarEnabled, supportsContacts, contactsEnabled, supportsFiles, filesEnabled, sidebarAppsEnabled, !!onManageApps, isStalwartAdmin, showAccessibilityButton, quotaShown]);
+
   const getIsActive = (href: string, itemId: string) => {
     if (activeAppId) return false;
     if (onNavigate) {
@@ -376,18 +421,34 @@ export function NavigationRail({
     };
 
   if (orientation === "horizontal") {
+    // Settings stays outside the part that scrolls: plugin pages and apps fill
+    // the bar, and the last entry must not end up off screen with nothing to
+    // say there is more. Sized by item count so all entries are equally wide.
+    const scrollingCount = visibleItems.length + pluginPages.length
+      + visibleSidebarApps.filter((app) => app.showOnMobile).length
+      + (isStalwartAdmin || adminActive ? 1 : 0);
+    const itemWidth = tabBarItemWidth(tabBarWidth, scrollingCount);
     return (
       <nav
         ref={tabBarRef}
         data-mobile-navigation=""
         className={cn(
-          "flex items-center bg-background border-t border-border shrink-0 overflow-x-auto mobile-scroll-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
+          "flex items-center bg-background border-t border-border shrink-0 pb-[calc(env(safe-area-inset-bottom)/2)]",
           mountainView && "min-h-16 border-t-0 bg-secondary shadow-[0_-1px_3px_rgb(0_0_0/0.08)]",
           className
         )}
         role="navigation"
         aria-label={t("nav_label")}
       >
+        <div
+          ref={tabBarScrollRef}
+          data-mobile-navigation-scroll=""
+          className="flex items-center min-w-0 overflow-x-auto mobile-scroll-hidden"
+          style={{
+            flex: `${scrollingCount} 1 ${scrollingCount * 52}px`,
+            ...(itemWidth ? { "--tab-item-width": `${itemWidth}px` } as React.CSSProperties : {}),
+          }}
+        >
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
@@ -398,7 +459,7 @@ export function NavigationRail({
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
               data-tour={`nav-${item.id}`}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -440,7 +501,7 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               title={page.pluginName}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -479,7 +540,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -502,7 +563,7 @@ export function NavigationRail({
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+              "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
               "transition-colors duration-150",
               adminActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
@@ -528,13 +589,15 @@ export function NavigationRail({
           </a>
         )}
 
+        </div>
+
         {/* Settings */}
         <Link
           href="/settings"
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
           className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+            "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
             "transition-colors duration-150",
             isSettingsActive
               ? "text-primary"
@@ -559,7 +622,9 @@ export function NavigationRail({
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        // On a short window (a phone on its side) the whole rail scrolls: the
+        // pinned group at the bottom left the apps room for two icons.
+        "flex flex-col h-full scroll-hidden [@media(max-height:32rem)]:overflow-y-auto",
         collapsed ? "items-center" : "",
         className
       )}
@@ -578,8 +643,9 @@ export function NavigationRail({
       })()}
 
       <nav
+        data-window-rail=""
         className={cn(
-          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden",
+          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden [@media(max-height:32rem)]:flex-none [@media(max-height:32rem)]:overflow-visible",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",
         )}
         role="navigation"
@@ -593,7 +659,7 @@ export function NavigationRail({
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-pointer",
               collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
+              "tap:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title={collapsed ? tGlobalSearch("title") : undefined}
@@ -617,7 +683,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -661,7 +727,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -707,7 +773,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -730,7 +796,7 @@ export function NavigationRail({
               collapsed
                 ? "justify-center w-10 h-10"
                 : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
+              "tap:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title={collapsed ? t("add_app") : undefined}
@@ -860,7 +926,7 @@ export function NavigationRail({
                   title={`${toUnicodeEmail(account.displayName || account.label)} (${toUnicodeEmail(account.email || account.username)})`}
                 >
                   <Avatar
-                    name={account.displayName || account.label}
+                    name={accountAvatarName(account, accounts)}
                     email={account.email || account.username}
                     size="sm"
                     disableFavicon

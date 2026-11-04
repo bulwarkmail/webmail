@@ -94,6 +94,11 @@ export interface SearchRequestOptions {
    * where the list must not wait for the highlighting.
    */
   deferSnippets?: boolean;
+  /**
+   * For the search palette. It searches on every few keystrokes, so it keeps its
+   * paging apart from the mail list's, and waits less for the local store.
+   */
+  palette?: boolean;
 }
 
 export interface SearchEmailsResult {
@@ -166,6 +171,12 @@ export interface IJMAPClient {
   hasSSEStream(): boolean;
   onConnectionChange(callback: (connected: boolean) => void): void;
   onRateLimit(callback: (rateLimited: boolean, retryAfterMs: number) => void): void;
+  /**
+   * The mail server itself answered 401 after a fresh try at signing in, with
+   * `refusedForMs` since it first did with no good answer in between. Not called
+   * for an outage, a proxy's page or a token renewal that failed.
+   */
+  onCredentialsRefused?(callback: (refusedForMs: number) => void): void;
   isRateLimited(): boolean;
   getRateLimitRemainingMs(): number;
   onStateChange(callback: (change: StateChange) => void): void;
@@ -404,7 +415,8 @@ export interface IJMAPClient {
   // ── Threads ───────────────────────────────────────────────────
   getThread(threadId: string, accountId?: string): Promise<Thread | null>;
   getThreads(threadIds: string[], accountId?: string): Promise<Thread[]>;
-  getThreadEmails(threadId: string, accountId?: string): Promise<Email[]>;
+  /** `newest`: only that many of the thread's newest messages are fetched (Thread/get lists them oldest first). */
+  getThreadEmails(threadId: string, accountId?: string, options?: { newest?: number }): Promise<Email[]>;
 
   // ── Compose / Send ────────────────────────────────────────────
   createDraft(
@@ -493,8 +505,8 @@ export interface IJMAPClient {
     humanText?: string;
   }): Promise<void>;
 
-  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
-  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
+  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
+  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
   getScheduledEmails(limit?: number, position?: number): Promise<{ emails: ScheduledEmail[]; hasMore: boolean; total: number; totalByAccount?: Record<string, number>; nextPosition: number }>;
   /** Cancels a pending submission, then destroys its record. */
   cancelEmailSubmission(submissionId: string, accountId?: string): Promise<void>;
@@ -547,6 +559,7 @@ export interface IJMAPClient {
           accountId?: string;
           onProgress?: (loaded: number, total: number) => void;
           signal?: AbortSignal;
+          noHold?: boolean;
         },
   ): Promise<{ blobId: string; size: number; type: string }>;
   getBlobDownloadUrl(blobId: string, name?: string, type?: string, accountId?: string): string;
@@ -634,6 +647,8 @@ export interface IJMAPClient {
     options?: CalendarEventUpdateOptions,
   ): Promise<void>;
   deleteCalendarEvent(eventId: string, sendSchedulingMessages?: boolean, targetAccountId?: string): Promise<void>;
+  /** Whether the last request was answered from this device instead of the server. */
+  answeredFromDevice?(): boolean;
   batchDeleteCalendarEvents(eventIds: string[], targetAccountId?: string): Promise<{ destroyed: string[]; notDestroyed: Record<string, { type?: string; description?: string }> }>;
   queryCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, targetAccountId?: string, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;
   queryAllCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;
@@ -699,6 +714,12 @@ export interface IJMAPClient {
    */
   copyBlobs(fromAccountId: string, blobIds: string[], toAccountId: string): Promise<Record<string, string>>;
   updateFileNode(id: string, updates: Partial<Pick<FileNode, 'name' | 'parentId'>>): Promise<void>;
+  /**
+   * Point a file at new content (a blob already uploaded): same node, same
+   * name and place, new blob. The server stamps `modified`. Throws when
+   * refused.
+   */
+  replaceFileNodeBlob(id: string, blobId: string): Promise<void>;
   updateFileNodes(updates: Record<string, Partial<Pick<FileNode, 'name' | 'parentId'>>>): Promise<{ updated: string[]; notUpdated: Record<string, string> }>;
   destroyFileNodes(ids: string[]): Promise<{ destroyed: string[]; notDestroyed: string[] }>;
   copyFileNode(id: string, newName: string, parentId: string | null, listings?: FileNodeListings): Promise<FileNode>;

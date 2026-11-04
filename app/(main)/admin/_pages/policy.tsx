@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
+import { Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
 import { iconForName } from '@/components/icons';
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
@@ -20,41 +20,44 @@ import { SettingsSection, SettingItem, ToggleSwitch, SectionNav } from '@/compon
 import type { GlossaryId } from '@/components/ui/term';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { Badge } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { inputClass } from '@/components/admin/config-items';
-import { LockedSettingsSection, PolicyDefaultsSection } from '@/components/admin/policy/user-settings-policy';
+import { InheritLine, LockedSettingsSection, PolicyDefaultsSection, ScopePicker, useScopeId } from '@/components/admin/policy/user-settings-policy';
+import { EVERYONE_SCOPE, featureAt, withFeatureAt } from '@/lib/admin/policy-settings';
+import { GLOBAL_ONLY_FEATURES } from '@/lib/admin/policy-scopes';
 
 // `allMailViewEnabled` is deprecated (folded into `crossAllViewEnabled`, normalized
 // forward on policy load), so it is hidden from the admin UI.
 const EXCLUDED_FEATURE_GATES: (keyof FeatureGates)[] = ['pluginsEnabled', 'pluginsUploadEnabled', 'themesEnabled', 'userThemesEnabled', 'allMailViewEnabled'];
 
 const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; description: string; term?: GlossaryId }>> = {
-  sidebarAppsEnabled: { label: 'Sidebar Apps', description: 'Allow custom web apps in navigation rail' },
-  settingsExportEnabled: { label: 'Settings Export/Import', description: 'Allow users to export and import settings JSON' },
-  customKeywordsEnabled: { label: 'Custom Keywords', description: 'Allow user-created labels and tags' },
-  templatesEnabled: { label: 'Email Templates', description: 'Allow email template creation and library' },
-  calendarEnabled: { label: 'Calendar', description: 'Enable calendar features and views' },
-  calendarTasksEnabled: { label: 'Calendar Tasks', description: 'Show task panel in calendar view' },
-  contactsEnabled: { label: 'Contacts', description: 'Enable contacts/address book features' },
-  smimeEnabled: { label: 'S/MIME', description: 'Enable certificate management and email signing', term: 'smime' },
-  externalContentEnabled: { label: 'External Content', description: 'Allow users to choose external content loading policy' },
-  debugModeEnabled: { label: 'Debug Mode', description: 'Allow users to enable debug/diagnostic mode' },
-  folderIconsEnabled: { label: 'Folder Icons', description: 'Allow custom folder icon picker' },
-  hoverActionsConfigEnabled: { label: 'Hover Actions Config', description: 'Allow users to customize email hover actions' },
-  tabTitleSubjectEnabled: { label: 'Subject in Tab Title', description: 'Show the open message\'s subject in the browser tab title. Browsers also keep the title in history and screen shares show it; turn this off when mailboxes hold confidential correspondence, and the tab shows the folder instead.' },
-  filesEnabled: { label: 'Files (WebDAV)', description: 'Enable file storage via WebDAV', term: 'webdav' },
-  crossUnreadViewEnabled: { label: 'Unified Mailbox: Unread', description: 'Allow an "Unread" entry in the Unified Mailbox section that lists unread mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
-  crossStarredViewEnabled: { label: 'Unified Mailbox: Starred', description: 'Allow a "Starred" entry in the Unified Mailbox section that lists flagged/starred mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
-  crossAllViewEnabled: { label: 'Unified Mailbox: All Mail', description: 'Allow an "All mail" entry in the Unified Mailbox section that lists all mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
-  unifiedCrossAccountEnabled: { label: 'Unified Mailbox: Cross-account', description: 'Allow users to expand the Unified Mailbox beyond the active account boundary so its lists merge across every logged-in account. When off, the Unified Mailbox stays within the active account and its shared folders.' },
-  accountArchiveEnabled: { label: 'Account List Backup', description: 'Let users save their list of accounts (address, server, label, colour) on this server, encrypted in the browser with a password of their choice, and restore it on another device. Mailbox passwords are stored only when the Passwords option below is on. Archives live in SETTINGS_DATA_DIR/account-archives; requires SESSION_SECRET.' },
-  accountArchivePasswordsEnabled: { label: 'Account List Backup: Passwords', description: 'With Account List Backup on, offer to include the mailbox passwords of accounts signed in with a password, so a restore signs in to them by itself. They are encrypted in the browser with the backup password together with the list; the server never sees them in clear, but anyone who learns the backup password gets every mailbox in it. Accounts signed in with OAuth or a TOTP code are saved without.' },
-  customFromEnabled: { label: 'Custom From Address', description: 'Let users type any sender address in the composer instead of picking one of their identities, and let replies to a catch-all address on their domain send from that address. Turn this off when users may only send as their configured identities.' },
-  archiveActionEnabled: { label: 'Archive Action', description: 'Offer "Archive" on messages: the toolbar button, the context menu and selection bar, the hover and swipe actions, the E shortcut and archiving after an export. Turn this off when mail is archived elsewhere, for example by a mail gateway; existing Archive folders stay as ordinary folders and Bulwark no longer creates one.' },
-  tagsAboveSharedEnabled: { label: 'Tags Above Shared Mailboxes', description: 'List the Tags in the sidebar above the shared mailboxes instead of below them. Turn this on when users have many shared mailboxes and work with tags: expanded, the shared mailboxes push the tags out of sight.' },
-  structuredMailEnabled: { label: 'Booking and Parcel Cards', description: 'Show a card above booking, shipping and order mails that carry schema.org markup (flights, trains, buses, hotels, rental cars, events, restaurants, parcels, orders), with copy buttons, links and "Add to calendar". Cards appear only for mail whose sender passed SPF or DKIM for the From domain, and nothing is added to a calendar without a click. Everything is read in the browser; no request goes to airlines or carriers. Turn this off if mail content should not be turned into calendar entries, or if you don\'t trust the Authentication-Results your mail server writes.' },
+  sidebarAppsEnabled: { label: 'Sidebar apps', description: 'Let users add their own web apps and links to the sidebar.' },
+  settingsExportEnabled: { label: 'Settings backup', description: 'Let users download a copy of their settings and restore it from a file.' },
+  customKeywordsEnabled: { label: 'Own tags', description: 'Let users create their own tags for messages.' },
+  templatesEnabled: { label: 'Email templates', description: 'Let users save messages as templates and use the template library.' },
+  calendarEnabled: { label: 'Calendar', description: 'Show the calendar.' },
+  calendarTasksEnabled: { label: 'Tasks', description: 'Show the task list in the calendar.' },
+  contactsEnabled: { label: 'Contacts', description: 'Show contacts and address books.' },
+  smimeEnabled: { label: 'S/MIME', description: 'Let users add certificates to sign and encrypt mail.', term: 'smime' },
+  externalContentEnabled: { label: 'Choice of remote content', description: 'Let users choose whether pictures and other content from the web load in messages.' },
+  debugModeEnabled: { label: 'Debug mode', description: 'Let users turn on extra logging when they report a problem.' },
+  folderIconsEnabled: { label: 'Folder icons', description: 'Let users pick an icon for each folder.' },
+  hoverActionsConfigEnabled: { label: 'Hover buttons', description: 'Let users choose which buttons show when they point at a message in the list.' },
+  tabTitleSubjectEnabled: { label: 'Subject in the tab title', description: 'Show the open message\'s subject in the browser tab title. Browsers also keep the title in history and screen shares show it; turn this off when mailboxes hold confidential correspondence, and the tab shows the folder instead.' },
+  filesEnabled: { label: 'Files', description: 'Show file storage (WebDAV).', term: 'webdav' },
+  crossUnreadViewEnabled: { label: 'Unified mailbox: Unread', description: 'Offer an "Unread" entry in the sidebar that lists unread mail from the account and its shared folders, or from every account when Cross-account is on. Users turn it on in Settings > Appearance.' },
+  crossStarredViewEnabled: { label: 'Unified mailbox: Starred', description: 'Offer a "Starred" entry in the sidebar that lists starred mail from the account and its shared folders, or from every account when Cross-account is on. Users turn it on in Settings > Appearance.' },
+  crossAllViewEnabled: { label: 'Unified mailbox: All mail', description: 'Offer an "All mail" entry in the sidebar that lists all mail from the account and its shared folders, or from every account when Cross-account is on. Users turn it on in Settings > Appearance.' },
+  unifiedCrossAccountEnabled: { label: 'Unified mailbox: Cross-account', description: 'Let the unified mailbox entries above list mail from every account a user is signed in to. Off keeps them to the account in view and its shared folders.' },
+  accountArchiveEnabled: { label: 'Account list backup', description: 'Let users save their list of accounts (address, server, label, colour) on this server, encrypted in the browser with a password of their choice, and restore it on another device. Mailbox passwords are stored only when the Passwords option below is on. Archives live in SETTINGS_DATA_DIR/account-archives; requires SESSION_SECRET.' },
+  accountArchivePasswordsEnabled: { label: 'Account list backup: passwords', description: 'With Account list backup on, offer to include the mailbox passwords of accounts signed in with a password, so a restore signs in to them by itself. They are encrypted in the browser with the backup password together with the list; the server never sees them in clear, but anyone who learns the backup password gets every mailbox in it. Accounts signed in with OAuth or a TOTP code are saved without.' },
+  customFromEnabled: { label: 'Any sender address', description: 'Let users type any sender address in the composer instead of picking one of their identities, and let replies to a catch-all address on their domain send from that address. Turn this off when users may only send as their configured identities.' },
+  archiveActionEnabled: { label: 'Archive', description: 'Offer "Archive" on messages: the toolbar button, the context menu and selection bar, the hover and swipe actions, the E shortcut and archiving after an export. Turn this off when mail is archived elsewhere, for example by a mail gateway; existing Archive folders stay as ordinary folders and Bulwark no longer creates one.' },
+  tagsAboveSharedEnabled: { label: 'Tags above shared mailboxes', description: 'List the tags in the sidebar above the shared mailboxes instead of below them. Turn this on when users have many shared mailboxes and work with tags: expanded, the shared mailboxes push the tags out of sight.' },
+  structuredMailEnabled: { label: 'Booking and parcel cards', description: 'Show a card above booking, shipping and order mails that carry schema.org markup (flights, trains, buses, hotels, rental cars, events, restaurants, parcels, orders), with copy buttons, links and "Add to calendar". Cards appear only for mail whose sender passed SPF or DKIM for the From domain, and nothing is added to a calendar without a click. Everything is read in the browser; no request goes to airlines or carriers. Turn this off if mail content should not be turned into calendar entries, or if you don\'t trust the Authentication-Results your mail server writes.' },
 };
 
 const PAGE = adminPageDef('policy');
@@ -100,11 +103,12 @@ export function PolicyPage() {
     }
   }
 
-  function toggleFeature(key: keyof FeatureGates) {
-    setPolicy(prev => ({
-      ...prev,
-      features: { ...prev.features, [key]: !prev.features[key] },
-    }));
+  const [scopeId, setScopeId] = useScopeId(policy);
+  const scoped = scopeId !== EVERYONE_SCOPE;
+
+  /** A feature at Everyone or the picked domain or group; undefined there means Everyone's again. */
+  function setFeature(key: keyof FeatureGates, value: boolean | undefined) {
+    setPolicy(prev => withFeatureAt(prev, scopeId, key, value));
     setDirty(true);
     setMessage(null);
   }
@@ -237,7 +241,7 @@ export function PolicyPage() {
         } else {
           setSavedPolicy(policy);
         }
-        setMessage({ type: 'success', text: 'Policy saved. Users see the change on their next login.' });
+        setMessage({ type: 'success', text: 'Saved. Users get the change within 15 minutes.' });
         setDirty(false);
       } else {
         const data = await res.json().catch(() => ({}));
@@ -261,9 +265,7 @@ export function PolicyPage() {
 
 
       {loading ? (
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       ) : (
         <div className="space-y-10">
           <SectionNav />
@@ -271,17 +273,35 @@ export function PolicyPage() {
           <SettingsSection
             id="features"
             title="Features"
-            description="Toggle entire features on or off for all users. Plugin and theme gates are on their respective admin pages."
+            description="Turn whole features on or off for users. Plugins and themes have their own pages."
           >
+            <ScopePicker policy={policy} scopeId={scopeId} onPick={setScopeId} />
             {(Object.keys(DEFAULT_FEATURE_GATES) as (keyof FeatureGates)[])
               .filter(key => !EXCLUDED_FEATURE_GATES.includes(key))
               .map(key => {
                 const meta = FEATURE_GATE_LABELS[key];
                 if (!meta) return null;
                 const { label, description, term } = meta;
+                // The server checks these itself and can't tell users apart there.
+                const globalOnly = GLOBAL_ONLY_FEATURES.has(key);
+                const at = featureAt(policy, globalOnly ? EVERYONE_SCOPE : scopeId, key);
                 return (
                   <SettingItem key={key} label={label} description={description} term={term}>
-                    <ToggleSwitch checked={!!policy.features[key]} onChange={() => toggleFeature(key)} />
+                    <ToggleSwitch
+                      checked={at.value}
+                      disabled={scoped && globalOnly}
+                      onChange={(v) => setFeature(key, v)}
+                    />
+                    {scoped && globalOnly ? (
+                      <p className="mt-1 text-xs text-muted-foreground">Applies to everyone</p>
+                    ) : (
+                      <InheritLine
+                        scoped={scoped}
+                        own={at.own}
+                        everyone={at.everyone ? 'On' : 'Off'}
+                        onReset={() => setFeature(key, undefined)}
+                      />
+                    )}
                   </SettingItem>
                 );
               })}
@@ -290,7 +310,7 @@ export function PolicyPage() {
           <SettingsSection
             id="push-relays"
             title="Push relays"
-            description="Relays users can pick from in notification settings. The built-in Bulwark relay is always offered; add your own here. Users choose from this list - they cannot enter a URL."
+            description="Relays users can pick from in notification settings. The built-in Bulwark relay is always offered; add your own here. Users choose from this list - they cannot enter a URL. Applies to everyone."
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -391,7 +411,7 @@ export function PolicyPage() {
           <SettingsSection
             id="sidebar-apps"
             title="Default sidebar apps"
-            description="Apps every user gets in the navigation rail without configuring anything. They appear above the user's own apps and cannot be edited or removed by users. Independent of the Sidebar Apps feature gate above, which only governs user-added apps."
+            description="Apps every user gets in the navigation rail without configuring anything. They appear above the user's own apps and cannot be edited or removed by users. Independent of the Sidebar apps feature above, which only covers apps users add themselves. Applies to everyone."
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -567,7 +587,7 @@ export function PolicyPage() {
         onSave={handleSave}
         onDiscard={discard}
         saveLabel="Save policy"
-        note="Users see the change on their next login"
+        note="Users get the change within 15 minutes"
       />
     </div>
   );

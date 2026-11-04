@@ -99,7 +99,7 @@ export function PolicyFileSection({ draft }: { draft: OrgPolicyDraft }) {
     <SettingsSection
       id="policy-file"
       title="Policy file"
-      description="Everything on the Organisation and User policy pages is one file, policy.json. Export it to keep it in git or copy it to another Bulwark or a Lite build; importing replaces the current policy."
+      description="Everything on the pages under Users is one file, policy.json. Export it to keep it in git or copy it to another Bulwark or a Lite build; importing replaces the current policy."
     >
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => void exportFile()}>

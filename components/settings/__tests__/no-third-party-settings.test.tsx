@@ -3,7 +3,7 @@ import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { MessageListSettings } from '../message-list-settings';
 import { NotificationSettings } from '../notification-settings';
 import { PluginsSettings } from '../plugins-settings';
-import { ReadingSettings } from '../reading-settings';
+import { PrivacySettings } from '../privacy-settings';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -13,7 +13,11 @@ import type { InstalledPlugin } from '@/lib/plugin-types';
 
 // #903: the settings pages hide or explain what the no-third-party mode turns off.
 
-vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key, useLocale: () => 'en' }));
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+  useFormatter: () => ({ dateTime: String, relativeTime: String, number: String }),
+}));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ demoMode: false }) }));
 vi.mock('../settings-section', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../settings-section')>()),
@@ -46,14 +50,22 @@ beforeEach(() => {
 });
 afterEach(() => setNoThirdPartyTraffic(false));
 
-describe('Settings > Message list', () => {
+// Sender pictures, remote content and trusted senders moved from Message
+// list and Reading to Privacy (settings-24, 2026-11-04).
+describe('Settings > Privacy', () => {
   it('offers sender favicons only while third-party traffic is allowed', () => {
-    const { unmount } = render(<MessageListSettings />);
+    const { unmount } = render(<PrivacySettings />);
     expect(screen.getByText('sender_favicons.label')).toBeInTheDocument();
     unmount();
     setNoThirdPartyTraffic(true);
+    render(<PrivacySettings />);
+    expect(screen.queryByText('sender_favicons.label')).toBeNull();
+  });
+
+  it('leaves a link to Privacy on Message list', () => {
     render(<MessageListSettings />);
     expect(screen.queryByText('sender_favicons.label')).toBeNull();
+    expect(screen.getByText('senders_label')).toBeInTheDocument();
   });
 });
 
@@ -91,14 +103,14 @@ describe('Settings > Plugins', () => {
   });
 });
 
-describe('Settings > Reading', () => {
+describe('Settings > Privacy: remote content', () => {
   function externalContentRow() {
     return screen.getByText('external_content.label').closest('[data-search-label]') as HTMLElement;
   }
 
   it('lets the user pick the external content policy without the mode', () => {
     useSettingsStore.setState({ externalContentPolicy: 'ask' });
-    render(<ReadingSettings />);
+    render(<PrivacySettings />);
     expect(externalContentRow().textContent).not.toContain('org_locked');
     expect(externalContentRow().querySelector('select')?.value).toBe('ask');
   });
@@ -106,7 +118,7 @@ describe('Settings > Reading', () => {
   it('shows the policy as blocked and set by the organisation in the mode', () => {
     setNoThirdPartyTraffic(true);
     useSettingsStore.setState({ externalContentPolicy: 'allow' });
-    render(<ReadingSettings />);
+    render(<PrivacySettings />);
     const row = externalContentRow();
     expect(row.textContent).toContain('org_locked');
     expect(row.querySelector('select')?.value).toBe('block');

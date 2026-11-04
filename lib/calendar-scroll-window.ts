@@ -165,3 +165,34 @@ export function parseDayKey(key: string): Date {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
+
+/**
+ * The first day in view of the month with the most days on screen, a week cut
+ * by the pane's edge counting for the part of it that shows. On a tie the later
+ * month wins, so a month whose first week is at the top is the one you're in.
+ */
+export function mostVisibleMonthDay(
+  rows: { weekStart: Date; top: number; bottom: number }[],
+  viewTop: number,
+  viewBottom: number,
+  monthKey: (day: Date) => string,
+): Date | null {
+  const months = new Map<string, { weight: number; first: Date }>();
+  for (const row of rows) {
+    const height = row.bottom - row.top;
+    const visible = Math.min(row.bottom, viewBottom) - Math.max(row.top, viewTop);
+    if (height <= 0 || visible <= 0) continue;
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(row.weekStart, i);
+      const key = monthKey(day);
+      const month = months.get(key);
+      if (month) month.weight += visible / height;
+      else months.set(key, { weight: visible / height, first: day });
+    }
+  }
+  let best: { weight: number; first: Date } | null = null;
+  for (const month of months.values()) {
+    if (!best || month.weight >= best.weight) best = month;
+  }
+  return best?.first ?? null;
+}

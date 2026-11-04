@@ -20,6 +20,7 @@ import { ReceivedLabelChip } from "./received-label-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
+import { forwardFrameKeys } from "@/lib/email-frame-keys";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { mailLanguage } from "@/lib/mail-language";
 import { htmlToReadableText } from "@/lib/html-to-readable-text";
@@ -35,7 +36,7 @@ import { brandIndicatorDomain } from "@/lib/email-headers";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
-import { PaneSpinner } from "@/components/ui/spinner";
+import { MailConversationSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import {
   ArrowLeft,
   ChevronDown,
@@ -48,9 +49,13 @@ import {
   Download,
   Eye,
   CalendarClock,
+  Pencil,
+  Trash2,
 } from "@/components/icons";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { useTranslations } from "next-intl";
+import { FilePen } from "@/components/icons";
+import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
@@ -88,6 +93,9 @@ interface ThreadConversationViewProps {
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
   onForward?: (email: Email) => void;
+  /** A draft in the conversation (compose-p2-6): Edit and Discard take Reply's place. */
+  onEditDraft?: (email: Email) => void;
+  onDiscardDraft?: (email: Email) => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   /** Routing captured when this conversation was opened. */
   blobSource?: EmailBlobContext;
@@ -193,6 +201,8 @@ export function ThreadConversationView({
   onReply,
   onReplyAll,
   onForward,
+  onEditDraft,
+  onDiscardDraft,
   onDownloadAttachment,
   blobSource,
   onMarkAsRead,
@@ -201,8 +211,12 @@ export function ThreadConversationView({
 }: ThreadConversationViewProps) {
   const t = useTranslations();
   const externalContent = useConversationExternalContent();
-  const emailIdList = emails.map((email) => email.id).join(',');
-  const { isMobile: summaryOnPhone, isTablet: summaryOnTablet } = useDeviceDetection();
+  // Oldest first, the newest at the bottom, as on every other layout and in
+  // Gmail (mail-p2-6). The thread arrives newest first.
+  const ordered = useMemo(() => oldestFirst(emails), [emails]);
+  const newestId = newestReadable(ordered)?.id ?? null;
+  const emailIdList = ordered.map((email) => email.id).join(',');
+  const { isMobile: summaryOnPhone, isCompact: summaryOnTablet } = useDeviceDetection();
   const threadSummaryProps = useMemo(
     () => ({ threadId: thread.latestEmail.threadId ?? null, emailIds: emailIdList ? emailIdList.split(',') : [], deviceType: summaryOnPhone ? 'mobile' : summaryOnTablet ? 'tablet' : 'desktop' }),
     [thread.latestEmail.threadId, emailIdList, summaryOnPhone, summaryOnTablet],
@@ -210,28 +224,41 @@ export function ThreadConversationView({
 
   // Track which emails are expanded (most recent by default)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const scrolledThreadRef = useRef<string | null>(null);
 
-  // Auto-expand most recent email AND all unread emails when thread opens
+  // Auto-expand the newest email (your own reply too) AND all unread emails
+  // when the thread opens.
   useEffect(() => {
-    if (emails.length > 0) {
+    if (ordered.length > 0) {
       const idsToExpand = new Set<string>();
 
-      // Always expand most recent
-      idsToExpand.add(emails[0].id);
+      if (newestId) idsToExpand.add(newestId);
 
       // Also expand all unread emails
-      emails.forEach(email => {
-        if (!email.keywords?.$seen) {
+      ordered.forEach(email => {
+        if (!email.keywords?.$seen && !email.keywords?.$draft) {
           idsToExpand.add(email.id);
         }
       });
 
       setExpandedIds(idsToExpand);
     }
-  }, [emails]);
+  }, [ordered, newestId]);
+
+  // Once per conversation, show the newest message: it is at the bottom.
+  useEffect(() => {
+    const threadId = ordered[0]?.threadId ?? null;
+    if (!newestId || !threadId || scrolledThreadRef.current === threadId) return;
+    scrolledThreadRef.current = threadId;
+    const frame = requestAnimationFrame(() => {
+      cardsRef.current?.querySelector<HTMLElement>(`[data-thread-email-id="${CSS.escape(newestId)}"]`)?.scrollIntoView?.({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [ordered, newestId]);
 
   const toggleExpanded = (emailId: string) => {
-    const target = emails.find((e) => e.id === emailId);
+    const target = ordered.find((e) => e.id === emailId);
     if (target) emitThreadExpand(target.threadId, [target], !expandedIds.has(emailId));
     setExpandedIds(prev => {
       const next = new Set(prev);
@@ -245,8 +272,13 @@ export function ThreadConversationView({
   };
 
   if (isLoading) {
-    // One centred spinner for a whole pane (R9).
-    return <PaneSpinner label={t("threads.loading")} className="bg-background" />;
+    // The conversation's shape (the page skeleton's), with one status message.
+    return (
+      <div className="flex flex-col h-full bg-background" aria-busy="true">
+        <span role="status" className="sr-only">{t("threads.loading")}</span>
+        <MailConversationSkeleton />
+      </div>
+    );
   }
 
   return (
@@ -261,7 +293,7 @@ export function ThreadConversationView({
           <h2 className="font-semibold text-foreground break-words line-clamp-2" dir="auto" title={thread.latestEmail.subject || undefined}>
             {thread.latestEmail.subject || t("email_viewer.no_subject")}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="truncate text-xs sm:text-sm text-muted-foreground">
             {t("threads.messages_count", { count: emails.length })}
           </p>
         </div>
@@ -271,30 +303,51 @@ export function ThreadConversationView({
       {/* Email Cards */}
       <div className="flex-1 overflow-y-auto">
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
-        <div className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
-          {emails.map((email, index) => (
+        <div ref={cardsRef} className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
+          {ordered.map((email) => {
+            const draft = !!email.keywords?.$draft;
+            return (
+            <div key={email.id} data-thread-email-id={email.id} className="scroll-mt-16">
             <EmailCard
-              key={email.id}
               email={email}
               isExpanded={expandedIds.has(email.id)}
-              isLatest={index === 0}
+              isLatest={email.id === newestId}
               allowExternal={externalContent.isAllowed(email)}
               onToggleExpanded={() => toggleExpanded(email.id)}
               onAllowExternal={() => externalContent.allow(email.id)}
               onTrustSender={externalContent.trustSender(email)}
-              onReply={onReply ? () => onReply(email) : undefined}
-              onReplyAll={onReplyAll ? () => onReplyAll(email) : undefined}
-              onForward={onForward ? () => onForward(email) : undefined}
+              isDraft={draft}
+              onEditDraft={draft && onEditDraft ? () => onEditDraft(email) : undefined}
+              onDiscardDraft={draft && onDiscardDraft ? () => onDiscardDraft(email) : undefined}
+              onReply={!draft && onReply ? () => onReply(email) : undefined}
+              onReplyAll={!draft && onReplyAll ? () => onReplyAll(email) : undefined}
+              onForward={!draft && onForward ? () => onForward(email) : undefined}
               onDownloadAttachment={onDownloadAttachment}
             blobSource={blobSource}
               onMarkAsRead={onMarkAsRead}
               mailboxRole={mailboxRole}
             />
-          ))}
+            </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
+}
+
+/** A conversation's messages from the oldest to the newest. */
+export function oldestFirst(emails: Email[]): Email[] {
+  return [...emails].sort((a, b) => (Date.parse(a.receivedAt) || 0) - (Date.parse(b.receivedAt) || 0));
+}
+
+/** The newest message that isn't a draft or waiting to be sent. */
+export function newestReadable(ordered: Email[]): Email | undefined {
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const e = ordered[i];
+    if (!e.keywords?.$draft && !e.isScheduled) return e;
+  }
+  return ordered[ordered.length - 1];
 }
 
 // Individual email card component
@@ -309,6 +362,9 @@ interface EmailCardProps {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  isDraft?: boolean;
+  onEditDraft?: () => void;
+  onDiscardDraft?: () => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   /** Routing captured when this conversation was opened. */
   blobSource?: EmailBlobContext;
@@ -328,8 +384,8 @@ function useConversationPluginProps(email: Email) {
   const belowSubjectOffers = usePluginSlotOffers('reader-below-subject').length;
   const bannerOffers = usePluginSlotOffers('email-banner').length;
   const wantsView = headerOffers + belowSubjectOffers + bannerOffers > 0;
-  const { isMobile, isTablet } = useDeviceDetection();
-  const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+  const { isMobile, isCompact } = useDeviceDetection();
+  const deviceType = isMobile ? 'mobile' : isCompact ? 'tablet' : 'desktop';
   const emailProps = useMemo(() => ({ email: wantsView ? emailToReadView(email) : null, deviceType }), [email, wantsView, deviceType]);
   const idProps = useMemo(() => ({ emailId: email.id }), [email.id]);
   const actionTarget = useMessageActionTarget(email);
@@ -347,6 +403,9 @@ function EmailCard({
   onReply,
   onReplyAll,
   onForward,
+  isDraft = false,
+  onEditDraft,
+  onDiscardDraft,
   onDownloadAttachment,
   blobSource,
   onMarkAsRead,
@@ -402,6 +461,11 @@ function EmailCard({
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
             <ReceivedLabelChip email={email} />
+            {isDraft && (
+              <span data-testid="conversation-draft-label" className="text-xs font-medium text-destructive shrink-0">
+                {t('email_list.draft')}
+              </span>
+            )}
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary shrink-0">
                 <CalendarClock className="w-3.5 h-3.5" />
@@ -467,6 +531,34 @@ function EmailCard({
               in the single reader's More panel on phones. Long names (Arabic
               "Reply all") wrap to a second line instead of being cut. */}
           <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {onEditDraft && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditDraft();
+                }}
+                className="flex-auto px-2 whitespace-nowrap"
+              >
+                <Pencil className="w-4 h-4 me-1.5 shrink-0" />
+                {t("email_viewer.edit_draft")}
+              </Button>
+            )}
+            {onDiscardDraft && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDiscardDraft();
+                }}
+                className="flex-auto px-2 whitespace-nowrap"
+              >
+                <Trash2 className="w-4 h-4 me-1.5 shrink-0" />
+                {t("email_composer.discard")}
+              </Button>
+            )}
             {onReply && (
               <Button
                 variant="outline"
@@ -544,7 +636,7 @@ interface ConversationEmailBodyProps {
  */
 export function ConversationEmailBody({
   email,
-  allowExternal,
+  allowExternal: externalAllowed,
   onAllowExternal,
   onTrustSender,
   onDownloadAttachment,
@@ -584,6 +676,8 @@ export function ConversationEmailBody({
   const fallbackSource = useEmailStore(useShallow(() => resolveEmailBlobContext(email, client)));
   const source = blobSource ?? fallbackSource;
   const { client: blobClient, accountId } = source;
+  const editAccount = source.clientAccountId ?? editAccountOf(email);
+  const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
   // Reported as phishing: a banner, links off, no cards (as in the reader).
   const phishingMarked = usePhishingMarked(email);
   const tPhishing = useTranslations('phishing_report');
@@ -597,6 +691,8 @@ export function ConversationEmailBody({
   const cidBlobUrls = useMemo(() => cidResult?.request === cidRequest ? cidResult.urls : {}, [cidResult, cidRequest]);
   // A crypto plugin's decrypted body (PGP, S/MIME) replaces the message's own.
   const pluginBody = usePluginRenderedBody(email);
+  // The plugin can't vouch for its body: external content stays off, whatever was allowed.
+  const allowExternal = externalAllowed && !pluginBody.blockExternal;
   // reader-above-quote: the body the quote was collapsed in, once it is on screen.
   const [htmlBodyEl, setHtmlBodyEl] = useState<HTMLElement | null>(null);
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
@@ -915,6 +1011,8 @@ export function ConversationEmailBody({
         emailId: email.id,
         onContextMenu: (point, text) => selectionMenu.openRef.current(point, { emailId: email.id, text }),
       });
+      // j, k, e and the other shortcuts keep working after a click into the body.
+      forwardFrameKeys(doc, iframe);
       setHtmlBodyEl(doc.body);
     } catch {
       // contentDocument may be inaccessible under stricter sandboxes; ignore.
@@ -925,7 +1023,7 @@ export function ConversationEmailBody({
     <div className={className}>
       {phishingMarked && <PhishingMarkBanner className="px-4" />}
       {/* External content warning */}
-      {hasBlockedContent && !allowExternal && emailContent.isHtml && (
+      {hasBlockedContent && !allowExternal && !pluginBody.blockExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">
           <span className="text-muted-foreground">
             {remoteBlockedByOrg ? t("third_party.remote_content_blocked") : t("email_viewer.external_content_warning")}
@@ -1065,6 +1163,28 @@ export function ConversationEmailBody({
                     <Download className="w-4 h-4 text-muted-foreground" />
                   )}
                 </button>
+                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
+                  <button
+                    type="button"
+                    title={t('desktopEdit.edit')}
+                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
+                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const { blobId } = attachment;
+                      void editAttachment({
+                        key: `mail:${editAccount}:${email.id}:${blobId}`,
+                        name: attachment.name ?? 'attachment',
+                        type: attachment.type,
+                        account: editAccount,
+                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
+                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
+                      });
+                    }}
+                  >
+                    <FilePen className="h-4 w-4" />
+                  </button>
+                )}
                 <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
                 </React.Fragment>
               );

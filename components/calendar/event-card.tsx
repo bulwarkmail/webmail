@@ -4,9 +4,12 @@ import { useCallback, useRef, useState, type CSSProperties, type DragEvent } fro
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
+import { parseDuration } from "@/lib/calendar-event-normalization";
 import { format } from "date-fns";
 import { ChevronDown, ChevronUp, Users } from "@/components/icons";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
+import { gridReplyState, type GridReplyState } from "@/lib/calendar-reply-state";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-store";
 import { readableTextOn } from "@/lib/color-transform";
@@ -32,8 +35,17 @@ interface EventCardProps {
   continuesAfter?: boolean;
   className?: string;
   style?: CSSProperties;
-  /** The user's calendar addresses, to tell whether they declined the event. */
+  /**
+   * The user's calendar addresses, to tell whether they declined or have yet
+   * to answer the event. An event of another signed-in login is read with
+   * that login's addresses.
+   */
   currentUserEmails?: string[];
+  /**
+   * The "?" / "Reply" marker of an invitation the user hasn't answered was
+   * clicked: offer Accept, Maybe and Decline next to it (pim-9).
+   */
+  onReply?: (anchor: HTMLElement, event: CalendarEvent) => void;
   /** False for a day scrolled out of view: Tab skips it (arrows still reach it). */
   tabbable?: boolean;
   /**
@@ -96,23 +108,37 @@ export function eventFillStyle(
   return shadows.length > 0 ? { ...fill, boxShadow: shadows.join(", ") } : fill;
 }
 
+/**
+ * An invitation the user hasn't answered: the calendar colour as an outline
+ * over a light hatch. One they answered "maybe": a dashed outline over a
+ * light tint (pim-9).
+ */
+export function replyFillStyle(
+  color: string,
+  state: Exclude<GridReplyState, null>,
+  { separated, selected }: { separated?: boolean; selected?: boolean },
+): CSSProperties {
+  const ring = selected ? "0 0 0 2px var(--color-primary)" : separated ? "0 0 0 1px var(--color-background)" : null;
+  if (state === "tentative") {
+    return {
+      backgroundColor: `color-mix(in srgb, ${color} 14%, var(--color-background))`,
+      color: "var(--color-foreground)",
+      border: `1.5px dashed ${color}`,
+      ...(ring ? { boxShadow: ring } : {}),
+    };
+  }
+  const tint = `color-mix(in srgb, ${color} 18%, var(--color-background))`;
+  return {
+    backgroundColor: "var(--color-background)",
+    backgroundImage: `repeating-linear-gradient(135deg, ${tint} 0 4px, transparent 4px 8px)`,
+    color: eventTextColor(color),
+    boxShadow: [ring, `inset 0 0 0 1.5px ${color}`].filter(Boolean).join(", "),
+  };
+}
+
 /** The class that draws the light style's bar; declined and cancelled events keep their outline. */
 export function eventFillClass(tinted: boolean, inactive: boolean): string | undefined {
   return tinted && !inactive ? "start-bar" : undefined;
-}
-
-function parseDuration(duration: string | undefined): number {
-  if (!duration) return 0;
-  let totalMinutes = 0;
-  const weekMatch = duration.match(/(\d+)W/);
-  const hourMatch = duration.match(/(\d+)H/);
-  const minMatch = duration.match(/(\d+)M/);
-  const dayMatch = duration.match(/(\d+)D/);
-  if (weekMatch) totalMinutes += parseInt(weekMatch[1]) * 7 * 24 * 60;
-  if (dayMatch) totalMinutes += parseInt(dayMatch[1]) * 24 * 60;
-  if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
-  if (minMatch) totalMinutes += parseInt(minMatch[1]);
-  return totalMinutes;
 }
 
 function createEventDragPreview(title: string, timeRange: string, color: string): HTMLElement {
@@ -130,8 +156,12 @@ function createEventDragPreview(title: string, timeRange: string, color: string)
   return el;
 }
 
-export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onMouseLeave, onContextMenu, isSelected, draggable: isDraggable, continuesBefore = false, continuesAfter = false, className, style, currentUserEmails, tabbable = true, timedStyle = "bar" }: EventCardProps) {
+export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onMouseLeave, onContextMenu, onReply, isSelected, draggable: isDraggable, continuesBefore = false, continuesAfter = false, className, style, currentUserEmails, tabbable = true, timedStyle = "bar" }: EventCardProps) {
   const t = useTranslations("calendar");
+  const tEvent = useTranslations("ux_pim_event");
+  const tGrid = useTranslations("ux_pim_grid");
+  // The addresses of the login the event is in (pim-12, pim-9).
+  const userEmails = useEventUserEmails(currentUserEmails ?? [])(event);
   const [isBeingDragged, setIsBeingDragged] = useState(false);
   const paint = useCvdColor();
   const color = paint(getEventColor(event, calendar));
@@ -159,9 +189,62 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   // deleting it (#572), and a declined invitation stays on the calendar too
   // (#1110) - render both struck through and dimmed.
   const isCancelled = event.status === "cancelled";
-  const isDeclined = !isCancelled && isDeclinedByUser(event, currentUserEmails);
+  const isDeclined = !isCancelled && isDeclinedByUser(event, userEmails);
   const isInactive = isCancelled || isDeclined;
-  const statusLabel = isCancelled ? t("detail.cancelled") : isDeclined ? t("participants.declined") : null;
+  // An invitation not answered yet, or answered "maybe" (pim-9).
+  const replyState = isInactive ? null : gridReplyState(event, userEmails);
+  const statusLabel = isCancelled
+    ? t("detail.cancelled")
+    : isDeclined
+      ? t("participants.declined")
+      : replyState === "needs-action"
+        ? tEvent("status_needs_action")
+        : replyState === "tentative" ? tEvent("status_tentative") : null;
+  const fillStyle = (opts: { separated?: boolean }) => replyState
+    ? replyFillStyle(color, replyState, { ...opts, selected: isSelected })
+    : eventFillStyle(color, { inactive: isInactive, selected: isSelected, tinted, ...opts });
+  // No light-style bar over the outline of an open answer.
+  const fillClass = eventFillClass(tinted, isInactive || replyState !== null);
+  const showMarker = replyState === "needs-action";
+  // "?" in a narrow event, "Reply" where there is room.
+  const markerLabel = (
+    <>
+      <span aria-hidden="true" className="@min-[11rem]/reply:hidden">?</span>
+      <span className="hidden @min-[11rem]/reply:inline">{tGrid("reply")}</span>
+    </>
+  );
+  const markerClass = cn(
+    "absolute z-[1] inline-flex items-center justify-center h-5 min-w-5 max-w-20 px-1 rounded-xs",
+    "text-[0.625rem] font-semibold leading-none truncate",
+    // A block's title runs along its top: the marker sits at the bottom.
+    variant === "block" ? (continuesAfter ? "bottom-0.5 end-4" : "bottom-0.5 end-0.5") : "top-1/2 -translate-y-1/2 end-0.5",
+  );
+  const markerStyle: CSSProperties = { backgroundColor: color, color: readableTextOn(color) };
+  const marker = !showMarker ? null : onReply ? (
+    <button
+      type="button"
+      data-reply-marker
+      aria-label={tGrid("reply_to_invitation")}
+      title={tGrid("reply_to_invitation")}
+      tabIndex={tabbable ? undefined : -1}
+      onClick={(e) => { e.stopPropagation(); onReply(e.currentTarget, event); }}
+      onDoubleClick={(e) => e.stopPropagation()}
+      className={cn(markerClass, "cursor-pointer hover:opacity-90")}
+      style={markerStyle}
+    >
+      {markerLabel}
+    </button>
+  ) : (
+    <span data-reply-marker aria-hidden="true" className={markerClass} style={markerStyle}>{markerLabel}</span>
+  );
+  // Room for the marker at the end of a one-line card.
+  const markerRoom = showMarker && variant !== "block" ? "pe-6 @min-[11rem]/reply:pe-[5.5rem]" : undefined;
+  const withMarker = (card: React.ReactElement) => marker ? (
+    <div className={cn("relative @container/reply w-full", variant !== "chip" && "h-full")} data-reply-state={replyState ?? undefined}>
+      {card}
+      {marker}
+    </div>
+  ) : card;
   const ariaLabel = `${event.title || t("events.no_title")}, ${spokenTime}${calendarName ? `, ${calendarName}` : ""}${statusLabel ? `, ${statusLabel}` : ""}`;
 
   const handleDragStart = useCallback((e: DragEvent) => {
@@ -229,7 +312,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   } : {};
 
   if (variant === "chip") {
-    return (
+    return withMarker(
       <button
         onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
@@ -240,15 +323,17 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-reply-state={replyState ?? undefined}
         className={cn(
           "flex items-center w-full text-start text-xs font-medium px-1.5 py-0.5 rounded-xs truncate",
           "min-h-[44px] sm:min-h-0",
           "hover:opacity-90 transition-opacity",
           isBeingDragged && "opacity-50",
-          eventFillClass(tinted, isInactive),
+          fillClass,
+          markerRoom,
           className
         )}
-        style={{ ...eventFillStyle(color, { inactive: isInactive, selected: isSelected, tinted }), ...style }}
+        style={{ ...fillStyle({}), ...style }}
       >
         {/* The whole width, aligned to the title's own start: a short English
             title in Arabic sat at the right, a cut one filled to the left. */}
@@ -265,7 +350,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     // on the drawn day (#1449). Anything else stays a bar, so all-day and
     // multi-day events read as blocked days.
     const textStyle = (timedStyle === "text" || timedStyle === "dot")
-      && !event.showWithoutTime && !continuesBefore && !continuesAfter && !isInactive
+      && !event.showWithoutTime && !continuesBefore && !continuesAfter && !isInactive && !replyState
       ? timedStyle : null;
     if (textStyle) {
       return (
@@ -292,20 +377,22 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
             ...style,
           }}
         >
-          <div className="flex items-center gap-1 min-w-0">
-            {textStyle === "dot" && (
-              <span data-event-dot aria-hidden="true" className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            )}
-            <span className="flex-shrink-0 font-normal opacity-85">{safeFormat(startDate, timeFmt)}</span>
-            <span dir="auto" className="flex-1 min-w-0 truncate text-start font-medium">{event.title || t("events.no_title")}</span>
-            {visibleCalendarName && (
-              <span data-calendar-name dir="auto" className="min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
-            )}
+          <div className="@container">
+            <div className="flex items-center gap-1 min-w-0">
+              {textStyle === "dot" && (
+                <span data-event-dot aria-hidden="true" className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              )}
+              <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{safeFormat(startDate, timeFmt)}</span>
+              <span dir="auto" className="flex-1 min-w-0 truncate text-start font-medium">{event.title || t("events.no_title")}</span>
+              {visibleCalendarName && (
+                <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
+              )}
+            </div>
           </div>
         </button>
       );
     }
-    return (
+    return withMarker(
       <button
         onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
@@ -316,31 +403,37 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-reply-state={replyState ?? undefined}
         className={cn(
           "w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
           "hover:opacity-90 transition-opacity cursor-pointer",
           continuesBefore && "rounded-s-none",
           continuesAfter && "rounded-e-none pe-2",
           isBeingDragged && "opacity-50",
-          eventFillClass(tinted, isInactive),
+          fillClass,
+          markerRoom,
           className
         )}
-        style={{ ...eventFillStyle(color, { inactive: isInactive, selected: isSelected, tinted }), ...style }}
+        style={{ ...fillStyle({}), ...style }}
       >
-        <div className="flex items-center gap-1 min-w-0">
-          {showTimeInMonthView && !event.showWithoutTime && (
-            <span className="flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
-          )}
-          <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start font-medium", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
-          {visibleCalendarName && (
-            <span data-calendar-name dir="auto" className="min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
-          )}
+        {/* The title comes first: in a narrow day the time and the calendar's
+            name left it no room, or one letter. */}
+        <div className="@container">
+          <div className="flex items-center gap-1 min-w-0">
+            {showTimeInMonthView && !event.showWithoutTime && (
+              <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
+            )}
+            <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start font-medium", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+            {visibleCalendarName && (
+              <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
+            )}
+          </div>
         </div>
       </button>
     );
   }
 
-  return (
+  return withMarker(
     <button
       onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
       onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
@@ -352,6 +445,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       tabIndex={tabbable ? undefined : -1}
       {...dragProps}
       data-calendar-event
+      data-reply-state={replyState ?? undefined}
       data-continues-before={continuesBefore || undefined}
       data-continues-after={continuesAfter || undefined}
       className={cn(
@@ -365,10 +459,11 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         continuesAfter && "rounded-b-none",
         continuesBefore && "pe-4",
         isBeingDragged && "opacity-50",
-        eventFillClass(tinted, isInactive),
+        fillClass,
+        markerRoom,
         className
       )}
-      style={{ ...eventFillStyle(color, { inactive: isInactive, separated: true, selected: isSelected, tinted }), ...style }}
+      style={{ ...fillStyle({ separated: true }), ...style }}
     >
       {continuesBefore && <ChevronUp aria-hidden="true" className="absolute top-0.5 end-0.5 w-3 h-3 opacity-85" />}
       {continuesAfter && <ChevronDown aria-hidden="true" className="absolute bottom-0.5 end-0.5 w-3 h-3 opacity-85" />}
@@ -383,16 +478,20 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           )}
         </div>
       </div>
+      {/* Not in a block too narrow for it (several events at once): it broke over three lines of clipped text. */}
       {!event.showWithoutTime && durationMinutes >= 45 && (
-        <div className="opacity-85 text-[0.65625rem]">
-          {/* Start before end in a right-to-left layout too. */}
-          <bdi dir="ltr">{timeString}</bdi>
+        <div className="@container">
+          <div className="hidden @min-[4.25rem]:block opacity-85 text-[0.65625rem]">
+            {/* Start before end in a right-to-left layout too. */}
+            <bdi dir="ltr">{timeString}</bdi>
+          </div>
         </div>
       )}
       {visibleCalendarName && (
         <div data-calendar-name dir="auto" className="opacity-85 text-[0.65625rem] truncate">{visibleCalendarName}</div>
       )}
-      {getParticipantCount(event) > 0 && (
+      {/* Below 45 minutes the block has room for the title line only: the count was cut in half. */}
+      {getParticipantCount(event) > 0 && durationMinutes >= 45 && (
         <div
           className="flex items-center gap-0.5 opacity-85 text-[0.65625rem]"
           title={t("participants.count", { count: getParticipantCount(event) })}

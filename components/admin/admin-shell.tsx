@@ -1,38 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import {
-  ArrowLeft,
-  ArrowUpCircle,
-  Activity,
-  Bell,
-  HeartRateMonitor,
-  Building2,
-  CalendarDays,
-  ChevronRight,
-  KeyRound,
-  LayoutDashboard,
-  LayoutTemplate,
-  LogOut,
-  Palette,
-  PenLine,
-  Puzzle,
-  Scale,
-  ScrollText,
-  Search,
-  Server,
-  Share2,
-  Shield,
-  ShieldCheck,
-  Smartphone,
-  Store,
-  SwatchBook,
-  Tag,
-  X,
-  type AppIcon,
-} from '@/components/icons';
+import { ArrowLeft, ChevronRight, KeyRound, LogOut, Search, Shield, X } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { NavigationRail } from '@/components/layout/navigation-rail';
 import { AboutFooter } from '@/components/settings/about-data-settings';
@@ -44,40 +16,12 @@ import { useUpdateStore, selectHasUpdate } from '@/stores/update-store';
 import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
 import { ADMIN_PAGES, adminPath, type AdminPageDef, type AdminPageId, type AdminSectionDef } from '@/lib/admin/admin-nav';
+import { AdminSessionLinksSkeleton, AdminSkeleton } from '@/components/boot-skeleton/admin-skeleton';
+import { useSkeletonLabels } from '@/components/boot-skeleton/use-skeleton-labels';
+import { ADMIN_GROUPS, ADMIN_GROUP_LABELS, ADMIN_PAGE_ICONS as PAGE_ICONS } from './admin-page-icons';
 import { cn } from '@/lib/utils';
 import { AdminLink } from './admin-link';
 import { AdminShellContext } from './shell-context';
-
-const PAGE_ICONS: Record<AdminPageId, AppIcon> = {
-  dashboard: LayoutDashboard,
-  settings: Server,
-  auth: Shield,
-  branding: Palette,
-  policy: Scale,
-  organisation: Building2,
-  'org-signatures': PenLine,
-  'org-templates': LayoutTemplate,
-  'org-security': ShieldCheck,
-  'org-sharing': Share2,
-  'org-labels': Tag,
-  'org-calendars': CalendarDays,
-  'org-notices': Bell,
-  'org-devices': Smartphone,
-  plugins: Puzzle,
-  themes: SwatchBook,
-  marketplace: Store,
-  version: ArrowUpCircle,
-  telemetry: Activity,
-  monitoring: HeartRateMonitor,
-  logs: ScrollText,
-};
-
-const GROUP_LABELS: Record<AdminPageDef['group'], string | null> = {
-  top: null,
-  organisation: 'Organisation',
-  extensions: 'Extensions',
-  system: 'System',
-};
 
 interface AdminShellProps {
   /** Whether the admin session is in place; the sidebar counts load then. */
@@ -107,6 +51,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   const tSettings = useTranslations('settings');
   const tSidebar = useTranslations('sidebar');
   const location = useAdminLocation();
+  const { label: loadingLabel, labels: railLabels } = useSkeletonLabels();
   const isDesktop = useIsDesktop();
   // The server can't know the window width, so its HTML would be the phone
   // layout, shown on desktop until hydration swaps it (the rail's Admin link
@@ -118,6 +63,16 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [pendingSection, setPendingSection] = useState<{ page: AdminPageId; id: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // The two layouts are different trees, so a page drawn inside them would be
+  // remounted when the window crosses the breakpoint (a tablet turned round)
+  // and lose what the admin had typed. It lives in one element instead, which
+  // moves into whichever layout is showing. The portal comes after the layout
+  // so the element is in the document before the page's effects run.
+  const [pageHost] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
+  const pageSlot = useCallback((slot: HTMLDivElement | null) => {
+    if (slot && pageHost) slot.appendChild(pageHost);
+  }, [pageHost]);
 
   const onChangePassword = pathname === '/admin/change-password';
   const activePage: AdminPageId | null = location.page ?? (isDesktop && !onChangePassword ? 'dashboard' : null);
@@ -150,6 +105,12 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [scrollKey]);
+
+  // A page opened from a link or a reload can be far down the list, under its
+  // fold on a laptop: bring its entry into view.
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: 'nearest' });
+  }, [activePage, isDesktop, hydrated]);
 
   // A section picked from the search scrolls into view once its page has
   // rendered it; pages fetch first, so retry for a moment.
@@ -186,8 +147,8 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   }, [trimmed]);
 
   const groups = useMemo(() => (
-    (['top', 'organisation', 'extensions', 'system'] as const)
-      .map((group) => ({ group, label: GROUP_LABELS[group], items: matches.filter((m) => m.page.group === group) }))
+    ADMIN_GROUPS
+      .map((group) => ({ group, label: ADMIN_GROUP_LABELS[group], items: matches.filter((m) => m.page.group === group) }))
       .filter((g) => g.items.length > 0)
   ), [matches]);
 
@@ -299,15 +260,29 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
     </div>
   );
 
-  if (!hydrated) return <div className="h-dvh bg-background" />;
+  // The server HTML and the hydration pass: the panel's skeleton, both
+  // layouts drawn and picked by CSS until the width is known.
+  if (!hydrated) {
+    return (
+      <AdminSkeleton
+        page={location.page}
+        label={loadingLabel}
+        backLabel={tSettings('back_to_mail')}
+        searchLabel={tShell('admin_search')}
+        labels={railLabels}
+      />
+    );
+  }
+
+  const showIndex = location.page === null && !onChangePassword;
+  const page = pageHost && (isDesktop || !showIndex) ? createPortal(children, pageHost) : null;
 
   if (!isDesktop) {
-    const showIndex = location.page === null && !onChangePassword;
     const title = onChangePassword ? 'Change password' : activeDef?.label ?? 'Admin';
     const backHref = location.detail ? adminPath(location.page) : '/admin';
     return (
       <AdminShellContext.Provider value={contextValue}>
-        <div className="flex h-dvh flex-col bg-background pt-[env(safe-area-inset-top)]">
+        <div className="flex h-dvh flex-col bg-background pt-[var(--app-top-inset)]">
           <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border bg-background px-2">
             {showIndex ? (
               <a
@@ -380,13 +355,17 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
                     </div>
                   ))}
                 </div>
-                {showSessionLinks && <div className="border-t border-border px-2 py-2">{sessionLinks(true)}</div>}
+                {(showSessionLinks || !authenticated) && (
+                  <div className="border-t border-border px-2 py-2">
+                    {showSessionLinks ? sessionLinks(true) : <AdminSessionLinksSkeleton mobile />}
+                  </div>
+                )}
                 <div className="border-t border-border px-2 py-2"><AboutFooter /></div>
               </>
             ) : (
               <div className="p-4 pb-6">
                 {readOnlyBanner}
-                {children}
+                <div ref={pageSlot} />
               </div>
             )}
           </div>
@@ -395,13 +374,14 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
           <NavigationRail orientation="horizontal" adminActive />
         </div>
+        {page}
       </AdminShellContext.Provider>
     );
   }
 
   return (
     <AdminShellContext.Provider value={contextValue}>
-      <div className="flex h-dvh bg-background pt-[env(safe-area-inset-top)]">
+      <div className="flex h-dvh bg-background pt-[var(--app-top-inset)]">
         {/* The same rail as mail and settings, with Admin as the current app. */}
         <div className="flex w-14 shrink-0 flex-col bg-secondary" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail collapsed adminActive />
@@ -423,7 +403,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
           <div className="flex-1 overflow-y-auto py-2">
             <div className="px-3 pb-1 pt-1">{searchBox}</div>
-            <nav className="space-y-0.5 px-2" aria-label={tShell('admin_pages')}>
+            <nav ref={navRef} className="space-y-0.5 px-2" aria-label={tShell('admin_pages')}>
               {groups.length === 0 && noResults}
               {groups.map((group, groupIndex) => (
                 <div key={group.group}>
@@ -471,21 +451,31 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
           </div>
 
           <div className="border-t border-border px-1 py-1">
-            {showSessionLinks && <div className="space-y-0.5 px-1 py-1">{sessionLinks(false)}</div>}
+            {/* Held in place while the session is checked, as the boot skeleton draws them. */}
+            {(showSessionLinks || !authenticated) && (
+              <div className="space-y-0.5 px-1 py-1">
+                {showSessionLinks ? sessionLinks(false) : <AdminSessionLinksSkeleton mobile={false} />}
+              </div>
+            )}
             <AboutFooter />
           </div>
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
+          {/* Only for the window's controls: the sidebar says which page is open. */}
+          <div data-window-only="" aria-hidden="true" className="h-14 box-content shrink-0 items-center border-b border-border px-6 text-sm font-semibold">
+            <span className="truncate">{pageName ?? 'Admin'}</span>
+          </div>
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-6 py-6">
               {readOnlyBanner}
-              {children}
+              <div ref={pageSlot} />
             </div>
           </div>
           <div ref={setSaveBarHost} className="shrink-0" />
         </main>
       </div>
+      {page}
     </AdminShellContext.Provider>
   );
 }

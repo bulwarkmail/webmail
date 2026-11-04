@@ -30,20 +30,44 @@ export interface ExportFolder {
   path: string[];
 }
 
+export type NotKeptReason = "attachments_off" | "not_kept";
+
+/**
+ * A local-store export has no original of this message and can't reach the
+ * server. Counted by reason in `notKept`, not listed one by one.
+ */
+export class MessageNotKeptError extends Error {
+  constructor(readonly reason: NotKeptReason) {
+    super("The original of this message is not on this device");
+    this.name = "MessageNotKeptError";
+  }
+}
+
 export interface ExportProgress {
   phase: ExportPhase;
   exported: number;
   failed: number;
   failures: { label: string; reason: string }[];
+  /** The part of `failed` a local-store export had no original for, by reason. */
+  notKept?: Partial<Record<NotKeptReason, number>>;
   total: number;
   fraction: number;
   pausedUntil?: number;
   file?: ExportFile;
   error?: string;
+  /** What stopped it, as the error's name: a dialog says this in the user's language. */
+  errorCode?: string;
+  /** The limit an ExportTooLargeError ran into, in bytes. */
+  errorLimit?: number;
+  /** A file in the place the user picked that couldn't be removed after a run that wrote nothing whole. */
+  leftover?: string;
 }
 
+/** What an export reads through: the real client, or lib/mail-export/local-store-client.ts. */
+export type ExportClient = Pick<IJMAPClient, "queryEmailFields" | "getBlobsAsBase64" | "fetchBlobForTransfer" | "fetchBlob" | "getMaxConcurrentRequests">;
+
 export interface ExportOptions {
-  client: IJMAPClient;
+  client: ExportClient;
   accountId: string;
   folders: ExportFolder[];
   format: ExportFormat;
@@ -53,7 +77,12 @@ export interface ExportOptions {
   now?: () => number;
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
   reportEveryMs?: number;
-  /** Requests per minute the export allows itself (the server's limit is 1000 for everything). */
+  /** No file when nothing was written, also when nothing failed: the person chose mail, not an empty file. */
+  noEmptyFile?: boolean;
+  /**
+   * Requests per minute the export allows itself (the server's limit is 1000 for
+   * everything). Infinity for a client that keeps to the limit itself.
+   */
   requestsPerMinute?: number;
 }
 
@@ -73,6 +102,10 @@ const BATCH_BYTES = 4 * 1024 * 1024;
 const BATCH_COUNT = 100;
 const MAX_FAILURES_LISTED = 20;
 const RETRY_DELAYS_MS = [500, 2000, 5000];
+
+function leftoverOf(aborted: { leftover?: string } | void | undefined): string | undefined {
+  return aborted ? aborted.leftover : undefined;
+}
 
 function isAbort(error: unknown): boolean {
   return (error as { name?: string } | null)?.name === "AbortError";
@@ -141,10 +174,11 @@ export function folderTree(mailboxes: Mailbox[]): ExportFolder[] {
 }
 
 /** Keeps the export under a number of requests per minute. */
-class RateGate {
+export class RateGate {
   private times: number[] = [];
   constructor(private readonly perMinute: number, private readonly now: () => number, private readonly sleep: (ms: number) => Promise<void>) {}
   async take(): Promise<void> {
+    if (this.perMinute === Infinity) return;
     for (;;) {
       const t = this.now();
       this.times = this.times.filter((x) => t - x < 60_000);
@@ -167,7 +201,7 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
     if (!force && t - lastReport < (options.reportEveryMs ?? 150)) return;
     lastReport = t;
     progress.fraction = progress.total > 0 ? Math.min(1, (progress.exported + progress.failed) / progress.total) : 0;
-    options.onProgress({ ...progress, failures: [...progress.failures] });
+    options.onProgress({ ...progress, failures: [...progress.failures], ...(progress.notKept ? { notKept: { ...progress.notKept } } : {}) });
   };
   const fail = (label: string, reason: string) => {
     progress.failed++;
@@ -319,7 +353,14 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
           const raw = results[i];
           seq++;
           if (raw instanceof Error) {
-            fail(ref.subject, raw.message);
+            if (raw.name === "MessageNotKeptError") {
+              const { reason } = raw as MessageNotKeptError;
+              progress.failed++;
+              progress.notKept = { ...progress.notKept, [reason]: (progress.notKept?.[reason] ?? 0) + 1 };
+            } else {
+              fail(ref.subject, raw.message);
+            }
+            report();
             continue;
           }
           if (options.format === "mbox") {
@@ -335,18 +376,33 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
       }
       if (stream) await stream.close();
     }
-    if (zip) await zip.finish();
-    progress.file = await sink.close();
+    // A cancel with nothing left to fetch must not close and hand out the file.
+    if (signal.aborted) throw cancelled();
+    if (progress.exported === 0 && (progress.failed > 0 || options.noEmptyFile)) {
+      // Every message failed: an empty file would only look like a backup.
+      progress.leftover = leftoverOf(await sink.abort());
+    } else {
+      if (zip) await zip.finish();
+      const file = await sink.close(signal);
+      // Stopped while the file was being finished: it goes, and nobody gets to download it.
+      if (signal.aborted) {
+        await file.discard(true).catch(() => {});
+        throw cancelled();
+      }
+      progress.file = file;
+    }
     progress.phase = "done";
     progress.fraction = 1;
   } catch (error) {
-    await sink.abort().catch(() => {});
+    progress.leftover = leftoverOf(await sink.abort().catch(() => undefined));
     progress.pausedUntil = undefined;
     if (isAbort(error) || signal.aborted) {
       progress.phase = "cancelled";
     } else {
       progress.phase = "failed";
       progress.error = error instanceof Error ? error.message : String(error);
+      progress.errorCode = (error as { name?: string } | null)?.name;
+      progress.errorLimit = (error as { limit?: number } | null)?.limit;
     }
   }
   report(true);

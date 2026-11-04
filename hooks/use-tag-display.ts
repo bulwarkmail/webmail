@@ -18,14 +18,22 @@ const TAG_BESIDE_SUBJECT_MIN_WIDTH = 560;
  */
 const TAG_NAME_MIN_WIDTH = 320;
 
+/**
+ * Below this, a sender line with several tags or a folder chip leaves the
+ * sender's name a letter or two, so the tags give way to their dots.
+ */
+const SENDER_LINE_TIGHT_WIDTH = 480;
+
 export interface TagDisplay {
   /** Whether a tag is named or shown as colour alone. */
   variant: TagBadgeVariant;
   /** Which line of a multi-line row the tags belong on. */
   placement: "subject" | "sender";
+  /** The sender line can't also hold a crowd of named tags and chips. */
+  tight: boolean;
 }
 
-const NAMED_BESIDE_SUBJECT: TagDisplay = { variant: "badge", placement: "subject" };
+const NAMED_BESIDE_SUBJECT: TagDisplay = { variant: "badge", placement: "subject", tight: false };
 
 /**
  * How message rows should draw their tags.
@@ -65,6 +73,7 @@ export function useMeasuredTagDisplay(ref: RefObject<HTMLElement | null>): TagDi
     return {
       variant: width >= TAG_NAME_MIN_WIDTH ? "badge" : "dot",
       placement: width >= TAG_BESIDE_SUBJECT_MIN_WIDTH ? "subject" : "sender",
+      tight: width < SENDER_LINE_TIGHT_WIDTH,
     };
   }, [width]);
 }

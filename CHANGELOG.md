@@ -1,5 +1,147 @@
 # Changelog
 
+## 1.20.0 (2026-11-03)
+
+1.20.0 can keep recent mail on the device, so mail can be read, sorted and written without a connection and goes out once the server answers again. Mail comes in from mbox, Outlook PST, EML and ZIP files and goes out as mbox or ZIP, and proofreading plugins underline mistakes while you write. With the AI Assistant plugin 2.2 the assistant reads attachments and whole conversations, takes actions such as answering invitations or filing many messages at once, works with Files and sits next to every app. Admins can turn on phishing reports, classification labels, device policies such as no downloads or printing, announcements, company calendars and out-of-office templates. Bulwark can run as several instances that share one Valkey or Redis store, with Kubernetes manifests, Prometheus metrics, OpenTelemetry traces and error reporting. Every page shows its shape in your theme while the app loads instead of a blank screen, and attachments show as a bar of tiles under the message header. Vietnamese is a new language.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@systemflair](https://github.com/systemflair)
+- [@bultester](https://github.com/bultester)
+- Anonymous
+
+**Monthly**
+
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Changes
+
+- **Mail**: Attachments show as a bar of equal tiles under the message header by default. The "beside the sender" position is gone and moves to the bar; "below the message" now shows larger preview cards after the body
+- **Server**: Every response carries `X-Powered-By: bulwarkmail.org`
+- **Admin**: The switch for user theme uploads, which users can't do, and the unused connector address setting are gone. Clearing the usage stats collector address now switches usage stats off
+
+### Features
+
+- **Offline mode**: Turn on "Keep mail on this device" under Settings > Backup & reset to read, flag, move and write recent mail without a connection. Mail is kept encrypted in the browser, up to the last 30 days of the Inbox and the folders you opened. The outbox sends in order once the server answers, never twice, and marks a message it can't confirm instead of sending it again. Nothing is queued while a plugin isn't running, and queued mail is held if the organisation's rules got stricter. Every sign-out deletes the offline data, and admins can forbid offline mode per domain or group. Not in Lite (#523, thanks @muelli)
+- **Updates**: An open tab says when a new version was deployed and offers a reload, once however many builds go out, and never mixes files of two versions (#523)
+- **Import and export**: Import mail from mbox (Thunderbird, Apple Mail, Google Takeout), Outlook .pst and .ost, .eml and ZIP files, keeping folders, dates and read and flagged state. Large imports pause at the server's upload limit and continue by themselves, and a stopped import continues where it left off. A folder or the whole account exports as mbox or as a ZIP of .eml files, streamed to disk so large mailboxes fit. Both are under Mail files in Settings > Backup & reset
+- **AI assistant**: With the AI Assistant plugin 2.2 the assistant reads attachments, pictures and whole conversations, works on the messages ticked in the list, answers invitations, sets the out-of-office, creates filters, acts on many messages at once, changes settings when the admin allows it, works with Files, and sits next to Calendar, Contacts, Files and Settings too
+- **Composer**: Proofreading. With a proofreading plugin such as Proofreading (LanguageTool), spelling, grammar and style mistakes are underlined while you write; click, tap or press Ctrl+' for up to five suggestions, and the toolbar lists all issues. Off until you turn it on under Settings > Composing; nothing is sent while a message is set to be signed or encrypted (#1397, thanks @Chaoskjell44)
+- **Composer**: Switches for inserting the signature in new mail and in replies, forwards and quick replies. Both are on, so nothing changes until you turn one off (#1493, thanks @ibayue)
+- **Composer**: Images in a template go out as inline parts, so Gmail and Outlook show them (#1492, thanks @shadow1runner)
+- **Security**: Report phishing sends a suspicious message to the address the admin sets, as an attachment or an ARF report, with no copy in Sent, and moves it to Junk. Reported messages show a banner and their links are turned off (Organisation > Security)
+- **Security**: Classification labels. Admins define labels, with presets for a generic scheme and German OFFEN / VS-NfD, a default, and whether a label is required. The composer has a label picker, and sent mail carries SIO-Label, Sensitivity and an optional admin header, plus a subject prefix that isn't doubled. Quick replies, plugin forwards, Pro tabs and Undo send keep the label, and received mail shows known labels (Organisation > Classification)
+- **Organisation**: Device policies: no attachment or file downloads, no mail or folder export, no printing, no install prompt, push notifications without sender and subject, and a watermark with the user's address and the date. The push text and the office editor are enforced on the server (Organisation > Devices)
+- **Organisation**: An announcement across the top of Mail, Calendar, Contacts, Files and Settings, per language, with a severity, a start and end time, and whether users can close it. Trash and Junk can say how long the server keeps mail there (Organisation > Notices)
+- **Organisation**: An out-of-office template library. Users pick a reply and Bulwark fills in their name, the dates and a deputy (Organisation > Templates)
+- **Organisation**: Admins can turn proofreading off, preset it or require it, for everyone, a domain or a group and per plugin, and preset or lock the writing language (Organisation > Proofreading, #1397)
+- **Calendar**: "Suggest times" in the event editor finds the next slots that are free for every attendee whose calendar Bulwark can check, and lists who it couldn't check and why (#1164)
+- **Calendar**: An invitation in a calendar shared with you can be answered as its owner; the organiser's reply names you with SENT-BY. Group mailbox calendars answer as the group (#634)
+- **Calendar**: An out-of-office reply with dates puts a busy event in your calendar ("Block my calendar", on by default); admins can lock it. The start and end fields use the time zone set in Bulwark, not the browser's
+- **Calendar**: Company calendars the admin lists show read-only under "Organisation" and can be hidden; their addresses stay on the server
+- **Calendar**: Share your free/busy with a group in one click. Admins can share every user's free/busy with a group at sign-in
+- **Calendar**: Timed events in the month view can show as a bar, coloured text or a dot and text (#1449, thanks @chodid)
+- **Mail**: Shared mailboxes can be shown compact in the sidebar (#1483, thanks @HOLOEYE-JZ)
+- **Mail**: Search in, under Settings > Message list, makes a new search look only in the open folder. Admins can preset or lock it (#1485, thanks @npXXX)
+- **Mail**: Filter conditions can match a regular expression (#885, thanks @mbunkus)
+- **Mail**: Replies come from the address a message was delivered to when To, Cc and Bcc match none of your identities (#1353, thanks @vanchaxy)
+- **Mail**: The quoted history of iPhone Mail and Outlook replies folds behind the ••• toggle (#1476, thanks @mmomjian)
+- **Mail**: On the phone in Mountain View, Reply and Reply all sit at the top of the open message (#1475, thanks @mmomjian)
+- **Contacts**: The directory is hidden when the server refuses it, and users or admins can turn it off (#1457, thanks @SystemFuchs)
+- **Loading**: From the first paint every page shows its own shape in the saved theme, density and layout: Mail's folders, list and reader, the calendar grid, Contacts, Files, Settings, plugin pages, the admin, sign-in and setup pages and the Pro workspace with its tabs. Linked messages, mailto links and connector links draw the page they open
+- **Several instances**: Bulwark runs as several replicas behind any load balancer when `REDIS_URL` points them at one Redis-protocol store (Valkey, Redis, KeyDB, Dragonfly). Every replica sees the same admin config, policy, plugins, themes, branding, synced settings, plugin credentials, sign-in limits, pairing and hand-off codes, admin sessions and audit log, and an admin change reaches every replica within seconds. No replica needs a shared volume, and config can still come from read-only mounted files. Without `REDIS_URL` nothing changes (#1066, thanks @supu2)
+- **Several instances**: An existing install moves onto the store by starting one instance with `REDIS_URL` on its old volume; `SHARED_STORE_EXPORT=1` writes everything back into the data folders. `/api/ready` answers 503 while an instance is starting or can't reach the store, and the admin Overview shows which storage is in use and how many instances checked in during the last minute (#1066)
+- **Several instances**: One instance runs the telemetry heartbeat and the update check, and another takes over within about 40 seconds if it goes away. QR pairing and the browser sign-in hand-off work whichever instance the phone and desktop reach (#1066)
+- **Kubernetes**: Reference manifests in `deploy/kubernetes` run three replicas with one Valkey store, with an overlay for config kept in git. CI deploys them to a kind cluster and checks shared sessions, config spread and zero failed requests during a rolling restart (#1066)
+- **Monitoring**: Browser and server errors go to your own error tracker (Bugsink, GlitchTip, Sentry), set under System > Monitoring or with `ERROR_REPORTING_DSN`. Message text, addresses, URLs, file names and tokens are removed before anything is sent. Bulwark Lite reads it from `errorReporting` in policy.json
+- **Monitoring**: Prometheus metrics at `/api/metrics`, on with `METRICS_TOKEN`: requests, sign-ins, calls to Stalwart and other services, browser errors, memory and event-loop lag. `/api/health/live` and `/api/health/ready` serve liveness and readiness probes, and the Docker image has a health check
+- **Monitoring**: OpenTelemetry traces when `OTEL_EXPORTER_OTLP_ENDPOINT` is set, with the trace context passed on to Stalwart
+- **Usage stats**: A separate switch, off by default, also sends anonymous error counts, daily or within about a minute (`BULWARK_TELEMETRY_ERRORS`)
+- **Logging**: Startup messages and admin audit entries go through the logger, so `LOG_FORMAT=json` covers them
+- **Admin**: `OAUTH_RESOURCE` sends an RFC 8707 resource indicator with OAuth sign-ins (#1461, thanks @sorontoo)
+- **Admin**: The marketplace shows a plugin's screenshots above its versions and opens them large on click
+- **Mobile app**: The sign-in link hands the app a one-time code instead of the sign-in itself, and the app gets the organisation policy for its access token
+- **Plugins**: Plugins can add a side panel beside the mail (#1496), open a dialog as a popover at the control that was clicked (#1497), draw the calendar's task view (#1498), and see task reminders and show reminders themselves (#1495) (thanks @HOLOEYE-JZ)
+- **Plugins**: Tasks carry alerts (#1481) and links and related mail (#1482), `api.ui.openEmail` opens a message in the reader (#1466), star and after-send hooks name the mail's account (#1467), and input in a plugin frame counts as activity for the idle sign-out (#1456) (thanks @HOLOEYE-JZ)
+- **Plugins**: The calendar API includes the contacts' birthday calendar with `contacts:read` (#1479, thanks @tobiasge)
+- **Plugins**: `composer.getSnapshot` and `composer.readAttachment` read the draft with `compose:read`, and `replaceBody` takes an `expectedRevision` (#1443). Composer toolbar actions show in quick reply (#1445), and plugins can show progress toasts (#1442) (thanks @yontani)
+- **Plugins**: Text checkers: `api.composer.registerChecker` with the new `compose:check` permission lets a plugin check what users write and have Bulwark draw its suggestions; a checker that only checks when asked needs `compose:read` (#1397)
+- **Plugins**: Quick replies and plugin forwards go through send checks like the composer. Send-check plugins get what the user wrote without the quote, the recipients outside the organisation, each attachment's real file type and, with permission, its text. While a send check the admin forces on isn't running, Bulwark doesn't send and says why
+- **Plugins**: Every link Bulwark opens, plain-text mail and middle clicks included, goes through link-check plugins with the address the browser really opens. With no third-party traffic, a plugin that only reaches servers an admin typed keeps running
+- **Plugins**: Plugin frames can run work they can stop in a worker
+- **Plugins**: A side panel next to Calendar, Contacts, Files and Settings (`app-side-panel`, permission `ui:side-panel`) that knows the open event, contact, selected files or settings page. Its button sits at the end of each view's toolbar, where Mail has it, and on phones a plugin dialog fills the space above the keyboard
+- **Plugins**: `email.getAttachmentText` reads the text of PDF, Word, Excel, PowerPoint, OpenDocument, text, CSV, HTML, calendar and contact attachments, and `email.getAttachmentImage` hands over a picture made smaller in the app, without tracking pixels. `email.getThread` reads a conversation, the reader panel gets the messages ticked in the list, inline images carry their Content-ID and alt text, and `email.search` takes a `position`
+- **Plugins**: `calendar.respond` answers an invitation the way the reader's banner does (new permission `calendar:respond`), `filters.list` and `filters.create` add rules the way Settings > Filters does, `email.batch` archives, moves, marks or tags up to 200 messages at once, and `app.setSettings` changes appearance, reading, composing, notification, calendar and accessibility settings through the settings pages (new permission `settings:change`). Settings the organisation set stay as they are, and each change comes with an undo
+- **Plugins**: `api.files` finds, reads and attaches files, saves attachments to Files, creates text and Markdown files and folders, and moves and renames, in the user's own drive only. Replacing a file keeps the old version in the Files trash. There is no call to delete or share a file
+- **Plugins**: `optionalPermissions` in a plugin's manifest lists permissions an older Bulwark doesn't know; Bulwark grants the ones it knows and installs the plugin without the rest. `api.host.features` says which of the new calls are there
+- **Plugins**: Rules for every plugin: none can switch the out-of-office on while it forwards mail, or while Bulwark can't tell; plugin filters can't forward, redirect, reject or discard mail; a plugin's batch, archive or filter never files mail into a folder shared with others, and Bulwark refuses when it can't tell; plugin file writes stay in the user's own drive
+- **i18n**: Vietnamese (#1448, thanks @vietnamvps)
+
+### Fixes
+
+- **Security**: A sender on the trusted list or in the trusted address book no longer loads remote content while the organisation blocks it, in settings, replies, reopened drafts and attachment previews included. Opening a reply or a draft no longer loads the quoted message's remote images
+- **Security**: Plugins no longer receive their secret settings when the user is also signed in to the admin console
+- **Mail**: Pictures Apple Mail sends inline show as attachments (#1478, thanks @JamesJosephFinn), and pasted images stay inside the message body for recipients and in Sent (#1451, thanks @neekonoff)
+- **Mail**: Accounts with hundreds of folders load the folder list page by page and show the right hierarchy, also on Stalwart 1.0 (#1502, thanks @pirate)
+- **Mail**: A notification from a shared mailbox opens that mailbox, Safari 16 included (#1499, thanks @Schrobo)
+- **Mail**: With several accounts signed in, each shows its shared mailboxes, and the sidebar no longer redraws on every message open (#1486, thanks @npXXX)
+- **Mail**: Recover deleted items lists messages on Stalwart 1.0 (#1480, thanks @spysz), and out of office is hidden when the account lacks the vacation permission (#1488, thanks @FSaurenbach)
+- **Mail**: Printing a plain-text mail keeps its line breaks and quoted text, and plugins and plugin forwards get the text of an HTML-only mail instead of its markup
+- **Mountain View**: Searching with a message open shows the results (#1468), the open folder isn't bold, so bold only means unread (#1469), the folders get their own heading under the unified mailbox (#1470), the unified inbox shows its real total (#1471), the select-all checkbox lines up with the rows (#1473) and a folder opens from anywhere in its row (#1501) (thanks @mmomjian)
+- **Phone**: The mail body shrinks to its content when it gets shorter after opening (#1474), and the undo toast stays off the header (#1472) (thanks @mmomjian)
+- **Composer**: Replies leave an empty line above the signature delimiter (#1503, thanks @Monarobase)
+- **Composer**: Saving a rich text draft as a template keeps it as HTML and edits it in the rich editor (#1506, thanks @French-Asgeir), and plain-text templates and placeholder values keep angle brackets and ampersands
+- **Composer**: Switching a reply to plain text keeps quote markers, list markers and image alt text, and switching back turns quoted lines into a quote again. Cloud attachment links and a plugin's template or signature change follow the draft's format, drafts reopened from the Pro view open in the format they were written in, and an HTML-only signature shows in the identity list
+- **Composer**: Drafts wait for attachment uploads before saving and closing (#1454), discarding a draft cancels its pending uploads (#1489), and stalled uploads time out (#1464) (thanks @VasilisNtovolos)
+- **Identities**: An identity can be saved without a display name (#1462, thanks @Enn0)
+- **Out of office**: The plain-text part of an HTML reply stays in step after a reload, and saving an HTML reply no longer saves over and over
+- **Calendar**: An HTML event description shows as text instead of markup, editing it saves plain text, and duplicating the event keeps its format
+- **Calendar**: Picking a contact group as attendees adds its members (#1507, thanks @Schrobo)
+- **Tasks**: A shared account without calendar access no longer breaks the task list (#1465, thanks @HOLOEYE-JZ)
+- **Command palette**: The search field's focus outline stays inside the dialog (#1446, thanks @robertdoneill)
+- **Filters**: Undoing the first filter rule works again; it left the rule's script active
+- **Files**: Search results leave out the Files trash
+- **Settings**: Two saves at the same moment, from two tabs or two instances, keep both sides' templates and calendar subscriptions. Settings or plugin credentials that no longer decrypt are moved aside as `.unreadable-<time>` instead of being overwritten (#1066)
+- **Settings**: "Delete junk for good" syncs between devices, and the composing page shows the admin's locks for plain text and the reply identity
+- **Accessibility**: Reset brings back the organisation's defaults and covers every option
+- **Admin**: A mailbox can be opened through impersonation more than five times; expired support sessions' app passwords are cleaned up (#1436, thanks @shukiv)
+- **Admin**: Every save refused by a read-only config answers with the read-only message instead of "Internal server error" (#1249, thanks @chodid), and with read-only config, `ADMIN_PASSWORD` and no admin.json the server starts instead of retrying to save the password forever (#1066)
+- **Admin**: Saving the policy from a page opened before someone else saved says so and keeps your edits. After a password change the old password stops working at once, and a sign-out that couldn't be stored says so
+- **Admin**: The log level and format set in the setup wizard or admin console apply, embedded mode posts to the parent origin set there, the setup wizard is skipped in demo mode without a mail server, and plugin credentials and update-check state survive a container recreate
+- **Branding**: A re-uploaded logo or icon shows at once in the app, the app icons and link previews instead of after an hour or a restart. Logo and icon addresses now carry a version (`?v=`) in the stored config; going back below 1.20.0 needs the logos and icons uploaded again
+- **Plugins**: Two settings of a plugin saved at once both stay, the plugin signing key is no longer replaced when two parts of the server create it at once, and approval requests and decisions reach every part of the server at once. Headers plugins add to an outgoing message are sent, and banner plugins are told when an admin opened the mailbox through impersonation
+- **Plugins**: The composer's plugin panels have their buttons in the composer's header and no second header row, and the Files details panel's header is as tall as the other side panels. Stalwart 1.0 symlinks reach plugins as files, not folders, and saving an attachment to Files goes through the plugins that check uploads
+- **Plugins**: A plugin's hidden frame no longer widens right-to-left pages, and the plugin proxy marks its "no third-party traffic" refusal as its own error, so plugins can tell it from a service answering 403
+- **Marketplace**: An install is refused when the recorded directory keyring dates can't be read, instead of letting an older keyring through, and a plugin's permissions name the app and the plugin
+- **Server**: The bare base path of a sub-path install redirects to the sign-in page (#1455, thanks @garceri), and with `HOSTNAME=127.0.0.1` behind a reverse proxy, redirects no longer send the browser to localhost over HTTPS (#1487, thanks @npXXX)
+- **Lite**: Subscribe to calendar is hidden, since Lite can't fetch feeds
+
 ## 1.19.1 (2026-10-31)
 
 1.19.1 shows a card above booking, shipping and order mail, with the times, tracking and status that matter, and can put a booking in the calendar and keep it up to date. Mail that passes DMARC shows the sender's BIMI logo as its icon. Archiving, moving and reporting spam from an open message now follow "Return to list", archiving in unread first opens the next unread message, and a shared mailbox sends through its own identity. Plugins can forward a message to an address the user allowed and print a page they made, and new mail plays the Involved sound by default.

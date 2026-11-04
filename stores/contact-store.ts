@@ -5,19 +5,45 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { loadPrincipalDirectory } from '@/lib/jmap/principal-directory';
 import { generateUUID } from '@/lib/utils';
 import { debug } from '@/lib/debug';
-import { settingsHooks } from '@/lib/plugin-hooks';
+import { calendarHooks, contactHooks, settingsHooks } from '@/lib/plugin-hooks';
+import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
+import { useSettingsStore } from './settings-store';
 import { getClientByLocalAccountId } from './client-registry';
 import { sanitizeDisplayName, splitMailbox } from '@/lib/rfc5322-mailbox';
 import { inlineContactMedia, writeContactWithNewPhoto, type ContactSaveOptions } from '@/lib/contact-media';
-import { contactHooks } from '@/lib/plugin-hooks';
 import { contactToView } from '@/lib/plugin-projection';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
+import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@/lib/jmap/partial-accounts';
 import type { Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
+import { planGroupMoves, type MergePlan } from '@/lib/contacts/merge';
+
+/** What a merge changed, to put it back with Undo. */
+export interface MergeUndo {
+  keepId: string;
+  /** The kept card's values before, for each property the merge changed (undefined: it had none). */
+  before: Partial<ContactCard>;
+  /** The merged cards as they were; their photos as data: URIs, since their blobs go with them. */
+  others: ContactCard[];
+  /** The groups' members before the merge. */
+  groups: Array<{ groupId: string; members: Record<string, boolean> }>;
+  /** Some step after the kept card's update failed or was stopped: not all cards are gone. */
+  incomplete?: boolean;
+}
 
 /** A contact that is about to be created, projected for plugins (no id yet). */
 function draftContactView(contact: Partial<ContactCard>) {
   return contactToView({ addressBookIds: {}, ...contact, id: contact.id ?? '' } as ContactCard);
+}
+
+function notifyBirthdayCalendarIfEnabled() {
+  try {
+    if (useSettingsStore.getState().showBirthdayCalendar) {
+      void calendarHooks.onCalendarChange.emit({ calendarId: BIRTHDAY_CALENDAR_ID, change: 'updated' });
+    }
+  } catch {
+    // Ignore when stores not initialized in unit tests
+  }
 }
 
 function sameIdSet(a: Set<string>, b: Set<string>): boolean {
@@ -28,6 +54,27 @@ function sameIdSet(a: Set<string>, b: Set<string>): boolean {
 
 /** One compose-autocomplete suggestion: a person, or a contact group. */
 type RecipientSuggestion = { name: string; email: string; group?: { id: string; memberCount: number } };
+
+/** How many suggestions the compose autocomplete offers. */
+const MAX_SUGGESTIONS = 10;
+
+/**
+ * How well `query` (lowercase) matches any of `texts`: 0 at the start of a
+ * word ("an" in "Anna" or "an@x"), 1 inside a word ("an" in "Daniel"),
+ * -1 not at all. Word starts come first in the suggestions.
+ */
+function matchRank(query: string, ...texts: (string | undefined)[]): number {
+  let rank = -1;
+  for (const text of texts) {
+    if (!text) continue;
+    const lower = text.toLowerCase();
+    for (let at = lower.indexOf(query); at !== -1; at = lower.indexOf(query, at + 1)) {
+      if (at === 0 || !/[\p{L}\p{N}]/u.test(lower[at - 1])) return 0;
+      rank = 1;
+    }
+  }
+  return rank;
+}
 
 /**
  * Reduces every suggestion to a clean display name plus a bare address and
@@ -469,7 +516,12 @@ interface ContactStore {
   /** Put a category on contacts, e.g. to undo removing it. */
   addKeyword: (client: IJMAPClient | null, keyword: string, contactIds: string[]) => Promise<void>;
 
-  importContacts: (client: IJMAPClient | null, contacts: ContactCard[]) => Promise<number>;
+  /** Into `addressBookId` when given, else where the server files new cards. */
+  importContacts: (client: IJMAPClient | null, contacts: ContactCard[], addressBookId?: string) => Promise<number>;
+  /** Merges the plan's cards into its kept card (lib/contacts/merge.ts); null when a plugin stopped it. */
+  mergeContacts: (client: IJMAPClient | null, plan: MergePlan) => Promise<MergeUndo | null>;
+  /** Puts a merge back: the merged cards (with new ids), their groups, the kept card's old values. */
+  undoMergeContacts: (client: IJMAPClient | null, undo: MergeUndo) => Promise<boolean>;
 
   // Trusted senders address book
   loadTrustedSendersBook: (client: IJMAPClient) => Promise<void>;
@@ -603,7 +655,14 @@ export const useContactStore = create<ContactStore>()(
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           console.error('Failed to fetch contacts:', error);
-          set({ error: 'Failed to fetch contacts', isLoading: false, contactsLoaded: true });
+          // An account that couldn't answer keeps its cards; the others are fresh.
+          const partial = partialAccounts<ContactCard>(error);
+          set((state) => ({
+            error: 'Failed to fetch contacts',
+            isLoading: false,
+            contactsLoaded: true,
+            contacts: partial ? withFailedAccountsKept(partial, state.contacts) : state.contacts,
+          }));
         }
       },
 
@@ -645,7 +704,11 @@ export const useContactStore = create<ContactStore>()(
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           console.error('Failed to fetch address books:', error);
-          set({ error: 'Failed to fetch address books' });
+          const partial = partialAccounts<AddressBook>(error);
+          set((state) => ({
+            error: 'Failed to fetch address books',
+            addressBooks: partial ? withFailedAccountsKept(partial, state.addressBooks) : state.addressBooks,
+          }));
         }
       },
 
@@ -660,7 +723,12 @@ export const useContactStore = create<ContactStore>()(
                 return prefixContactsWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch contacts for account ${localAccountId}:`, error);
-                return [] as ContactCard[];
+                // Keep what this login's cards were: it just couldn't answer.
+                const held = get().contacts.filter((contact) => contact.localAccountId === localAccountId);
+                const partial = partialAccounts<ContactCard>(error);
+                if (!partial) return held;
+                const fresh = prefixContactsWithLocalAccount(partial.items, localAccountId);
+                return withFailedAccountsKept(new PartialAccountsError(fresh, partial.failedAccountIds, partial.primaryAccountId, error), held);
               }
             }),
           );
@@ -683,7 +751,11 @@ export const useContactStore = create<ContactStore>()(
                 return prefixAddressBooksWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch address books for account ${localAccountId}:`, error);
-                return [] as AddressBook[];
+                const held = get().addressBooks.filter((book) => book.localAccountId === localAccountId);
+                const partial = partialAccounts<AddressBook>(error);
+                if (!partial) return held;
+                const fresh = prefixAddressBooksWithLocalAccount(partial.items, localAccountId);
+                return withFailedAccountsKept(new PartialAccountsError(fresh, partial.failedAccountIds, partial.primaryAccountId, error), held);
               }
             }),
           );
@@ -749,6 +821,7 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
           }));
           void contactHooks.onAfterContactCreate.emit(contactToView(stored));
+          notifyBirthdayCalendarIfEnabled();
           return true;
         } catch (error) {
           const msg = error instanceof Error ? error.message : 'Failed to create contact';
@@ -788,6 +861,7 @@ export const useContactStore = create<ContactStore>()(
           }));
           const updated = get().contacts.find(c => c.id === id);
           if (updated) void contactHooks.onAfterContactUpdate.emit(contactToView(updated));
+          notifyBirthdayCalendarIfEnabled();
           return true;
         } catch (error) {
           const msg = error instanceof Error ? error.message : 'Failed to update contact';
@@ -821,6 +895,7 @@ export const useContactStore = create<ContactStore>()(
             };
           });
           void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
+          notifyBirthdayCalendarIfEnabled();
           return true;
         } catch (error) {
           const msg = error instanceof Error ? error.message : 'Failed to delete contact';
@@ -833,6 +908,7 @@ export const useContactStore = create<ContactStore>()(
         if (!(await contactHooks.onBeforeContactCreate.intercept(draftContactView(contact)))) return false;
         set((state) => ({ contacts: [...state.contacts, contact] }));
         void contactHooks.onAfterContactCreate.emit(contactToView(contact));
+        notifyBirthdayCalendarIfEnabled();
         return true;
       },
 
@@ -845,6 +921,7 @@ export const useContactStore = create<ContactStore>()(
         }));
         const updated = get().contacts.find(c => c.id === id);
         if (updated) void contactHooks.onAfterContactUpdate.emit(contactToView(updated));
+        notifyBirthdayCalendarIfEnabled();
         return true;
       },
 
@@ -859,6 +936,7 @@ export const useContactStore = create<ContactStore>()(
           };
         });
         void contactHooks.onAfterContactDelete.emit({ contactIds: [id] });
+        notifyBirthdayCalendarIfEnabled();
         return true;
       },
 
@@ -887,17 +965,26 @@ export const useContactStore = create<ContactStore>()(
 
         const lower = query.toLowerCase();
         const results: RecipientSuggestion[] = [];
+        // Every match is collected and ranked: a word that starts with the
+        // query ("an": Anna, an@x) before one that only contains it
+        // (Daniel), each kind in the order contacts, directory, recent.
+        const ranks = new Map<RecipientSuggestion, number>();
+        const add = (suggestion: RecipientSuggestion, rank: number) => {
+          results.push(suggestion);
+          ranks.set(suggestion, rank);
+        };
 
         for (const contact of contacts) {
           if (contact.kind === 'group') {
             // Suggest the group itself as a single entry (Outlook-style);
             // the composer turns it into one chip carrying the members.
             const groupName = getContactDisplayName(contact);
-            if (groupName && groupName.toLowerCase().includes(lower)) {
+            const rank = matchRank(lower, groupName);
+            if (rank >= 0) {
               const memberCount = get().getGroupMembers(contact.id)
                 .filter(m => getContactPrimaryEmail(m).trim()).length;
               if (memberCount > 0) {
-                results.push({ name: groupName, email: '', group: { id: contact.id, memberCount } });
+                add({ name: groupName, email: '', group: { id: contact.id, memberCount } }, rank);
               }
             }
             continue;
@@ -908,15 +995,9 @@ export const useContactStore = create<ContactStore>()(
 
           for (const emailEntry of emails) {
             if (!emailEntry.address) continue;
-            if (
-              name.toLowerCase().includes(lower) ||
-              emailEntry.address.toLowerCase().includes(lower)
-            ) {
-              results.push({ name, email: emailEntry.address });
-            }
+            const rank = matchRank(lower, name, emailEntry.address);
+            if (rank >= 0) add({ name, email: emailEntry.address }, rank);
           }
-
-          if (results.length >= 10) break;
         }
 
         // Augment with directory principals (other users on the server, RFC 9670).
@@ -925,7 +1006,6 @@ export const useContactStore = create<ContactStore>()(
         if (directoryPrincipals.length > 0) {
           const seen = new Set(results.map(r => r.email.toLowerCase()));
           for (const p of directoryPrincipals) {
-            if (results.length >= 10) break;
             const addr = p.email.toLowerCase();
             if (seen.has(addr)) {
               const betterName = p.description || p.name;
@@ -937,10 +1017,11 @@ export const useContactStore = create<ContactStore>()(
               }
               continue;
             }
-            if (p.name.toLowerCase().includes(lower) || addr.includes(lower) || (p.description && p.description.toLowerCase().includes(lower))) {
+            const rank = matchRank(lower, p.name, addr, p.description);
+            if (rank >= 0) {
               const displayName = p.description || p.name;
               const name = displayName !== p.email ? displayName : '';
-              results.push({ name, email: p.email });
+              add({ name, email: p.email }, rank);
               seen.add(addr);
             }
           }
@@ -952,20 +1033,22 @@ export const useContactStore = create<ContactStore>()(
         // duplicates). These carry the display name from the message, so match
         // on name or address.
         const { recentRecipients } = get();
-        if (recentRecipients.length > 0 && results.length < 10) {
+        if (recentRecipients.length > 0) {
           const seenRecent = new Set(results.map(r => r.email.toLowerCase()));
           for (const rec of recentRecipients) {
-            if (results.length >= 10) break;
             const addr = rec.email.toLowerCase();
             if (seenRecent.has(addr)) continue;
-            if (addr.includes(lower) || (rec.name && rec.name.toLowerCase().includes(lower))) {
-              results.push({ name: rec.name, email: rec.email });
+            const rank = matchRank(lower, addr, rec.name);
+            if (rank >= 0) {
+              add({ name: rec.name, email: rec.email }, rank);
               seenRecent.add(addr);
             }
           }
         }
 
-        return normalizeSuggestions(results);
+        // Array.prototype.sort is stable, so each rank keeps the order above.
+        const ranked = [...results].sort((a, b) => (ranks.get(a) ?? 1) - (ranks.get(b) ?? 1));
+        return normalizeSuggestions(ranked).slice(0, MAX_SUGGESTIONS);
       },
 
       getGroups: () => {
@@ -1202,6 +1285,7 @@ export const useContactStore = create<ContactStore>()(
         });
         if (deletedIds.size > 0) {
           void contactHooks.onAfterContactDelete.emit({ contactIds: ids.filter(id => deletedIds.has(id)) });
+          notifyBirthdayCalendarIfEnabled();
         }
         return true;
       },
@@ -1590,22 +1674,46 @@ export const useContactStore = create<ContactStore>()(
         return get().trustedSenderEmails.includes(normalizedEmail);
       },
 
-      importContacts: async (client, contacts) => {
+      importContacts: async (client, contacts, targetBookId) => {
         const { supportsSync } = get();
         let imported = 0;
         // The book the cards landed in, as the server filed the first one.
         let addressBookId = '';
+        const book = targetBookId ? get().addressBooks.find(b => b.id === targetBookId) : undefined;
+        // The chosen book as the server knows it, and the login and account it belongs to.
+        const target = book ? resolveRawAddressBookIds({ [book.id]: true }, get().addressBooks) : undefined;
 
         for (const contact of contacts) {
           try {
             let added: ContactCard;
-            if (client && supportsSync) {
+            if (client && supportsSync && book && target) {
+              const { id: _id, ...data } = contact;
+              const sharedAccountId = target.sharedAccountId;
+              const created = await resolveAccountClient(client, target.localAccountId)
+                .createContact({ ...data, addressBookIds: target.addressBookIds }, sharedAccountId);
+              // Under the ids the listings give it, as createContact keeps it.
+              added = sharedAccountId
+                ? {
+                  ...created,
+                  id: `${sharedAccountId}:${created.id}`,
+                  originalId: created.id,
+                  accountId: sharedAccountId,
+                  accountName: book.accountName,
+                  isShared: true,
+                  addressBookIds: Object.fromEntries(
+                    Object.entries(created.addressBookIds ?? {}).map(([bookId, v]) => [`${sharedAccountId}:${bookId}`, v]),
+                  ),
+                }
+                : created;
+              if (target.localAccountId) added = prefixContactsWithLocalAccount([added], target.localAccountId)[0];
+            } else if (client && supportsSync) {
               const { id: _id, ...data } = contact;
               added = await client.createContact(data);
             } else {
               added = {
                 ...contact,
                 id: `local-${generateUUID()}`,
+                ...(book ? { addressBookIds: { [book.id]: true } } : {}),
               };
             }
             set((state) => ({ contacts: [...state.contacts, added] }));
@@ -1616,8 +1724,109 @@ export const useContactStore = create<ContactStore>()(
           }
         }
 
-        if (imported > 0) void contactHooks.onContactsImport.emit({ addressBookId, imported });
+        if (imported > 0) {
+          void contactHooks.onContactsImport.emit({ addressBookId, imported });
+          notifyBirthdayCalendarIfEnabled();
+        }
         return imported;
+      },
+
+      mergeContacts: async (client, plan) => {
+        const sync = !!client && get().supportsSync;
+        const { keep, others, patch } = plan;
+        const before: Partial<ContactCard> = {};
+        for (const key of Object.keys(patch) as Array<keyof ContactCard>) {
+          (before as Record<string, unknown>)[key] = keep[key];
+        }
+        // The kept card first: if that fails, nothing is deleted.
+        if (Object.keys(patch).length > 0) {
+          const updated = sync
+            ? await get().updateContact(client!, keep.id, patch)
+            : await get().updateLocalContact(keep.id, patch);
+          if (!updated) return null;
+        }
+        const groups: MergeUndo['groups'] = [];
+        const moves = planGroupMoves(get().contacts.filter(c => c.kind === 'group'), keep, others);
+        try {
+          for (const { group, members } of moves) {
+            if (sync) {
+              const accountId = group.isShared ? group.accountId : undefined;
+              await resolveAccountClient(client!, group.localAccountId)
+                .updateContact(group.originalId || group.id, { members }, accountId);
+            }
+            groups.push({ groupId: group.id, members: { ...(group.members ?? {}) } });
+            set((state) => ({
+              contacts: state.contacts.map(c => c.id === group.id ? { ...c, members } : c),
+            }));
+            void contactHooks.onContactGroupMemberChange.emit({ groupId: group.id, added: [keep.id], removed: others.map(o => o.id) });
+          }
+        } catch (error) {
+          // The kept card is changed already: hand back what Undo needs, delete nothing.
+          console.error('Failed to move group members while merging:', error);
+          return { keepId: keep.id, before, others: [], groups, incomplete: true };
+        }
+        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id));
+        // A failed delete, or a plugin that stopped it, leaves cards in place:
+        // Undo must not create those again.
+        const left = new Set(get().contacts.map(c => c.id));
+        const deleted = others.filter(o => !left.has(o.id));
+        return { keepId: keep.id, before, others: deleted, groups, ...(deleted.length < others.length ? { incomplete: true } : {}) };
+      },
+
+      undoMergeContacts: async (client, undo) => {
+        const sync = !!client && get().supportsSync;
+        let ok = true;
+        for (const card of undo.others) {
+          try {
+            let created: boolean;
+            if (sync) {
+              const { id: _id, originalId: _originalId, created: _created, updated: _updated, ...data } = card;
+              // A photo still only in a blob went with the card.
+              const media = card.media
+                ? Object.fromEntries(Object.entries(card.media).filter(([, m]) => !!m?.uri))
+                : undefined;
+              created = await get().createContact(client!, {
+                ...data,
+                media: media && Object.keys(media).length > 0 ? media : undefined,
+              });
+            } else {
+              created = await get().addLocalContact(card);
+            }
+            if (!created) ok = false;
+          } catch (error) {
+            console.error('Failed to restore a merged contact:', error);
+            ok = false;
+          }
+        }
+        for (const { groupId, members } of undo.groups) {
+          const group = get().contacts.find(c => c.id === groupId);
+          if (!group) continue;
+          try {
+            if (sync) {
+              const accountId = group.isShared ? group.accountId : undefined;
+              await resolveAccountClient(client!, group.localAccountId)
+                .updateContact(group.originalId || group.id, { members }, accountId);
+            }
+            set((state) => ({
+              contacts: state.contacts.map(c => c.id === groupId ? { ...c, members } : c),
+            }));
+          } catch (error) {
+            console.error('Failed to restore group members:', error);
+            ok = false;
+          }
+        }
+        if (Object.keys(undo.before).length > 0) {
+          try {
+            const restored = sync
+              ? await get().updateContact(client!, undo.keepId, undo.before)
+              : await get().updateLocalContact(undo.keepId, undo.before);
+            if (!restored) ok = false;
+          } catch (error) {
+            console.error('Failed to restore the kept contact:', error);
+            ok = false;
+          }
+        }
+        return ok;
       },
     });
     },

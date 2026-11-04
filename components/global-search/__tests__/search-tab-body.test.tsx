@@ -60,6 +60,8 @@ vi.mock('@/components/pro/pro-email-tab-body', () => ({
 }));
 
 import { SearchTabBody } from '../search-tab-body';
+import { openHit } from '@/lib/global-search/open-hit';
+import { PaneSizeContext } from '@/hooks/use-pane-size';
 
 /** Renders the tab the way the Pro page does: data flows from the tab store. */
 function Harness({ tabId }: { tabId: string }) {
@@ -121,5 +123,31 @@ describe('SearchTabBody scope switching', () => {
         expect(rowCount('calendar')).toBe(scope === 'scope_mail' ? 0 : 1);
       }, { timeout: 5000 });
     }
+  });
+});
+
+describe('SearchTabBody in a narrow pane', () => {
+  beforeEach(() => {
+    resetTabs();
+    vi.mocked(openHit).mockClear();
+  });
+
+  const renderInPane = async (width: number) => {
+    const tabId = useProTabStore.getState().openSearchTab({ query: 'Ann', scope: 'all', accountId: null, title: 'Ann' });
+    render(<PaneSizeContext.Provider value={width}><Harness tabId={tabId} /></PaneSizeContext.Provider>);
+    await waitFor(() => expect(rowCount('mail')).toBe(1), { timeout: 5000 });
+    return document.querySelector<HTMLElement>('[data-hit-kind="mail"]')!;
+  };
+
+  it('opens a hit on click where no preview fits', async () => {
+    const row = await renderInPane(500);
+    fireEvent.click(row);
+    expect(openHit).toHaveBeenCalledTimes(1);
+  });
+
+  it('only selects it where the preview shows', async () => {
+    const row = await renderInPane(1100);
+    fireEvent.click(row);
+    expect(openHit).not.toHaveBeenCalled();
   });
 });

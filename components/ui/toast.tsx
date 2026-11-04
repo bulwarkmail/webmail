@@ -36,6 +36,8 @@ export interface Toast {
    * that has one lays its actions out on a row of their own.
    */
   tertiaryAction?: ToastAction;
+  /** More actions at the end of that row. Needs a tertiaryAction. */
+  extraActions?: ToastAction[];
   /**
    * Work in progress, e.g. an upload: 0..1, or null while the amount is
    * unknown. The bottom line then shows progress instead of a countdown,
@@ -291,6 +293,7 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
             {actionButton(toast.tertiaryAction)}
             {toast.secondaryAction && actionButton(toast.secondaryAction)}
             {toast.action && actionButton(toast.action)}
+            {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
           </div>
         )}
       </div>
@@ -302,7 +305,8 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
         </div>
       )}
 
-      {/* Close button. Phones swipe the toast away instead. */}
+      {/* Close button. Phones swipe the toast away instead. A toast that stays
+          until closed shows it all the time: that's the only way it goes. */}
       <button
         type="button"
         data-toast-close=""
@@ -316,7 +320,9 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
           "flex-shrink-0 p-1 rounded-md transition-all max-sm:hidden",
           TOUCH_HIT_AREA,
           "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
-          "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
+          !toast.duration || toast.duration <= 0
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
         )}
       >
         <X className="w-3.5 h-3.5" />
@@ -355,10 +361,14 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
 }
 
 /**
- * True when the toast stack, in its usual place at the bottom, overlaps the
- * element that has the focus. The stack's own box is measured where it is
- * now; while it sits at the top, its bottom place is worked out from the gap
- * it left there (data-bottom-gap).
+ * True when the toast stack, in its usual place at the bottom, hides at
+ * least half of the element that has the focus: a button or a field. A
+ * large element it only overlaps at a corner (the composer's text, the
+ * quick reply box) stays usable, and moving the stack to the top for it put
+ * the toasts over the composer's close button and the reader's toolbar. The
+ * stack's own box is measured where it is now; while it sits at the top,
+ * its bottom place is worked out from the gap it left there
+ * (data-bottom-gap).
  */
 export function stackWouldCoverFocus(stack: HTMLElement | null): boolean {
   if (!stack) return false;
@@ -376,7 +386,11 @@ export function stackWouldCoverFocus(stack: HTMLElement | null): boolean {
     stack.dataset.bottomGap = String(Math.max(0, window.innerHeight - box.bottom));
   }
   const f = focused.getBoundingClientRect();
-  return f.right > box.left && f.left < box.right && f.bottom > top && f.top < bottom;
+  const overlapWidth = Math.min(f.right, box.right) - Math.max(f.left, box.left);
+  const overlapHeight = Math.min(f.bottom, bottom) - Math.max(f.top, top);
+  if (overlapWidth <= 0 || overlapHeight <= 0) return false;
+  const area = Math.max(f.width, 0) * Math.max(f.height, 0);
+  return area === 0 || overlapWidth * overlapHeight >= area / 2;
 }
 
 export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: (id: string) => void }) {
@@ -461,10 +475,13 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
         // lifted over a registered bottom bar (a form's Save/Cancel footer)
         // and over an open composer's footer.
         "fixed bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))] end-5 z-[99999] flex flex-col gap-2.5 [html[data-composer-open]_&]:bottom-20",
+        // And over the reader's quick reply box (compose-p2-17).
+        "[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]",
         // Phone: full width with 12px margins, above the bottom controls
         // (the tab bar, or whichever bar registered with useBottomControls).
         "max-sm:inset-x-3 max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]",
         "max-sm:[html[data-composer-open]_&]:bottom-[max(5rem,calc(var(--bottom-controls-height,3.75rem)+0.75rem))]",
+        "max-sm:[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]",
         // Out of the way of the focused element: the top end corner.
         dodge && "top-5 bottom-auto!",
         held && "invisible"

@@ -115,6 +115,34 @@ export function findMeetingLink(event: EventPlaces): MeetingLink | null {
   return null;
 }
 
+export interface JoinLink {
+  url: string;
+  /** Set for a link to no service this app knows: say where it goes before anyone clicks. */
+  host: string | null;
+}
+
+/**
+ * The address to offer as Join: web links only, with no user name in them, since what
+ * comes before an @ only looks like the host. An app scheme can start anything on the
+ * machine (ms-msdt:, search-ms:, smb:), and this comes from whoever sent the invitation.
+ */
+export function joinLinkFrom(uri: string): JoinLink | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(uri.trim());
+  } catch {
+    return null;
+  }
+  if ((parsed.protocol !== 'https:' && parsed.protocol !== 'http:') || parsed.username || parsed.password || !parsed.hostname) return null;
+  return { url: parsed.href, host: meetingProviderOf(parsed.href) ? null : parsed.hostname };
+}
+
+/** The event's Join, when it has one that's safe to offer. */
+export function findJoinLink(event: EventPlaces): JoinLink | null {
+  const link = findMeetingLink(event);
+  return link ? joinLinkFrom(link.uri) : null;
+}
+
 /** The first location's display name, if any. */
 export function primaryLocationName(event: Pick<EventPlaces, 'locations'>): string | undefined {
   const name = Object.values(event.locations ?? {})[0]?.name?.trim();

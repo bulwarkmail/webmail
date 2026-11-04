@@ -67,21 +67,28 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
 interface ItemProps {
   icon?: AppIcon;
   onSelect: () => void;
+  /** A line under the label, as on the check items. */
+  description?: string;
+  /** Greyed out: the item can't do its job here yet, and says where to set it up. */
+  muted?: boolean;
   testId?: string;
   children: React.ReactNode;
 }
 
-export function ComposerToolbarMenuItem({ icon: Icon, onSelect, testId, children }: ItemProps) {
+export function ComposerToolbarMenuItem({ icon: Icon, onSelect, description, muted, testId, children }: ItemProps) {
   return (
     <button
       type="button"
       role="menuitem"
       onClick={onSelect}
       data-testid={testId}
-      className={CONTEXT_MENU_ITEM_CLASS}
+      className={cn(CONTEXT_MENU_ITEM_CLASS, description && "items-start", muted && "text-muted-foreground")}
     >
-      {Icon ? <Icon className="w-4 h-4 shrink-0" /> : null}
-      <span className="flex-1">{children}</span>
+      {Icon ? <Icon className={cn("w-4 h-4 shrink-0", description && "mt-0.5")} /> : null}
+      <span className="flex-1">
+        <span className="block">{children}</span>
+        {description && <span className="block text-xs text-muted-foreground">{description}</span>}
+      </span>
     </button>
   );
 }
@@ -176,8 +183,9 @@ interface PluginItemsProps {
  * no room next to the app's own buttons, Discard and Send, so the buttons
  * are hidden and the same actions are listed in the Options menu instead
  * (ComposerPluginMenuItems with `onlyWhenNarrow`).
+ * `alwaysVisible` is for a wrapping toolbar without an Options fallback.
  */
-export function ComposerPluginToolbarButtons({ surface, context }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown> }) {
+export function ComposerPluginToolbarButtons({ surface, context, alwaysVisible = false }: { surface: "composer-toolbar-actions"; context: () => Record<string, unknown>; alwaysVisible?: boolean }) {
   const actions = usePluginActions(surface);
   if (actions.length === 0) return null;
   return (
@@ -190,15 +198,15 @@ export function ComposerPluginToolbarButtons({ surface, context }: { surface: "c
             key={`${action.pluginId}:${action.id}`}
             type="button"
             variant="ghost"
-            className={cn("hidden @[44rem]/composer-bar:inline-flex h-9 gap-1.5 px-2 sm:px-2.5", action.danger && "text-destructive")}
+            className={cn("h-9 gap-1.5 px-2 sm:px-2.5", alwaysVisible && "max-w-full", !alwaysVisible && "hidden @[44rem]/composer-bar:inline-flex", action.danger && "text-destructive")}
             title={tip}
             aria-label={action.label}
             aria-keyshortcuts={action.shortcut}
             data-plugin-action={`${action.pluginId}:${action.id}`}
             onClick={() => { void runAction(action, surface, context()); }}
           >
-            <Icon className="w-4 h-4" />
-            <span className="text-sm">{action.label}</span>
+            <Icon className="w-4 h-4 shrink-0" />
+            <span className={cn("text-sm", alwaysVisible && "truncate")}>{action.label}</span>
           </Button>
         );
       })}

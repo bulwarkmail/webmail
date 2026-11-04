@@ -16,7 +16,7 @@ import {
   Download,
   Users,
   Trash2,
-  Copy,
+  Merge,
   Printer,
   FolderInput,
   CheckSquare,
@@ -58,13 +58,18 @@ interface ContactContextMenuProps {
   inDetail?: boolean;
   /** Writes to the contact in the app's composer. */
   onCompose?: () => void;
-  onDuplicate?: () => void;
+  /** "Merge with…": pick another card to merge this one with. */
+  onMergeWith?: () => void;
   /** Move to another address book; undefined where there is none to move to. */
   onMoveTo?: () => void;
   onBatchMoveTo?: () => void;
   onBatchExport?: () => void;
   onBatchAddToGroup?: () => void;
   onBatchDelete?: () => void;
+  /** Two or more ticked: merge them into one. */
+  onBatchMerge?: () => void;
+  /** The contact is in an address book shared read-only: no Edit, Move or Delete. */
+  readOnly?: boolean;
 }
 
 export function ContactContextMenu({
@@ -81,15 +86,19 @@ export function ContactContextMenu({
   onDelete,
   onAddToGroup,
   onCompose,
-  onDuplicate,
+  onMergeWith,
   onMoveTo,
   onBatchMoveTo,
   inDetail = false,
   onBatchExport,
   onBatchAddToGroup,
   onBatchDelete,
+  onBatchMerge,
+  readOnly = false,
 }: ContactContextMenuProps) {
   const t = useTranslations("contacts");
+  const tMerge = useTranslations("ux_pim_cimport");
+  const tMenu = useTranslations("menuAudit");
   const printOff = useStrictestDevices().noPrint;
   const email = getContactPrimaryEmail(contact);
   const phone = getContactPrimaryPhone(contact);
@@ -134,12 +143,15 @@ export function ContactContextMenu({
         </ContextMenuHeader>
         <ContextMenuItem
           icon={Users}
-          label={t("bulk.add_to_group")}
+          label={tMenu("contacts_bulk_add_to_group")}
           onClick={handle(() => onBatchAddToGroup?.())}
           disabled={!onBatchAddToGroup}
         />
         {onBatchMoveTo && (
           <ContextMenuItem icon={FolderInput} label={t("address_books.move_to")} onClick={handle(onBatchMoveTo)} />
+        )}
+        {onBatchMerge && (
+          <ContextMenuItem icon={Merge} label={tMerge("merge_selected")} onClick={handle(onBatchMerge)} />
         )}
         <ContextMenuItem
           icon={Download}
@@ -179,23 +191,23 @@ export function ContactContextMenu({
           onClick={handle(handleCall)}
         />
       )}
-      {onEdit && <ContextMenuItem icon={Pencil} label={t("context_menu.edit")} onClick={handle(onEdit)} />}
+      {onEdit && !readOnly && <ContextMenuItem icon={Pencil} label={t("context_menu.edit")} onClick={handle(onEdit)} />}
       {!inDetail && <ContextMenuSeparator />}
       {onAddToGroup && (
         <ContextMenuItem
           icon={Users}
-          label={t("context_menu.add_to_group")}
+          label={tMenu("contacts_add_to_group")}
           onClick={handle(onAddToGroup)}
         />
       )}
-      {onDuplicate && (
+      {onMergeWith && !readOnly && (
         <ContextMenuItem
-          icon={Copy}
-          label={t("context_menu.duplicate")}
-          onClick={handle(onDuplicate)}
+          icon={Merge}
+          label={tMerge("merge_with")}
+          onClick={handle(onMergeWith)}
         />
       )}
-      {onMoveTo && (
+      {onMoveTo && !readOnly && (
         <ContextMenuItem icon={FolderInput} label={t("address_books.move_to")} onClick={handle(onMoveTo)} />
       )}
       {email && (
@@ -225,13 +237,18 @@ export function ContactContextMenu({
           onClick={handle(handlePrint)}
         />
       )}
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        icon={Trash2}
-        label={t("context_menu.delete")}
-        onClick={handle(onDelete)}
-        destructive
-      />
+      {!readOnly && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            icon={Trash2}
+            label={t("context_menu.delete")}
+            shortcut="Del"
+            onClick={handle(onDelete)}
+            destructive
+          />
+        </>
+      )}
     </ContextMenu>
   );
 }

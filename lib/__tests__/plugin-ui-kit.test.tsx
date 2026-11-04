@@ -63,7 +63,7 @@ describe('plugin UI kit components', () => {
       ['components/email/email-viewer.tsx', 'w-10 h-10 rounded-full'],
       ['components/email/email-viewer.tsx', 'text-[0.6875rem] font-semibold text-muted-foreground'],
       ['components/email/email-viewer.tsx', 'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]'],
-      ['components/identity/identity-form.tsx', 'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200'],
+      ['components/identity/signature-editor.tsx', 'flex w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 hover:border-muted-foreground'],
     ];
     const kitSource = source('lib/plugin-sandbox/ui-kit/components.tsx');
     for (const [file, classes] of copies) {
@@ -157,10 +157,11 @@ describe('plugin UI kit components', () => {
   });
 
   it('makes sidebar rows as tall as folder rows on touch screens', () => {
-    // The page sets --touch-row-min-h to 44px below lg, where folder rows
-    // are max-lg:min-h-[44px]; the frame can't see the page's width itself.
-    expect(source('components/layout/sidebar.tsx')).toContain('max-lg:min-h-[44px]');
-    expect(source('app/globals.css')).toMatch(/@media \(width < 64rem\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
+    // The page sets --touch-row-min-h to 44px where folder rows are
+    // tap:min-h-[44px] (phones, touch screens below the full desktop); the
+    // frame can't see the page's width itself.
+    expect(source('components/layout/sidebar.tsx')).toContain('tap:min-h-[44px]');
+    expect(source('app/globals.css')).toMatch(/@media \(width < 37\.5rem\), \(width < 64rem\) and \(pointer: coarse\) \{\s*:root \{\s*--touch-row-min-h: 44px;/);
     render(<kit.SidebarRow label="Anna" onClick={() => {}} />);
     expect(screen.getByRole('button', { name: 'Anna' }).style.minHeight).toBe('var(--touch-row-min-h, 0px)');
   });

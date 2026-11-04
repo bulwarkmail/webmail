@@ -23,6 +23,7 @@ export const ADMIN_PAGE_IDS = [
   'org-security',
   'org-sharing',
   'org-labels',
+  'org-proofreading',
   'org-calendars',
   'org-notices',
   'org-devices',
@@ -118,10 +119,10 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
   },
   {
     id: 'policy',
-    label: 'User policy',
-    description: 'Which features users get and which settings they may change',
-    group: 'top',
-    keywords: 'features gates restrictions lock hide users',
+    label: 'Features and settings',
+    description: 'Which features users get, which settings they may change, and what they start with, for everyone or one domain or group',
+    group: 'organisation',
+    keywords: 'user policy features gates restrictions lock hide users defaults presets scope domain group',
     sections: [
       { id: 'features', title: 'Features', keywords: 'calendar contacts files smime templates keywords sidebar apps unified mailbox archive custom from debug export' },
       { id: 'push-relays', title: 'Push relays', keywords: 'notifications relay url default lock' },
@@ -201,6 +202,16 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     ],
   },
   {
+    id: 'org-proofreading',
+    label: 'Proofreading',
+    description: 'Spelling and grammar checks while users write: required, off, or their choice',
+    group: 'organisation',
+    keywords: 'proofreading spelling grammar spell check languagetool writing language mandatory required',
+    sections: [
+      { id: 'proofreading', title: 'Proofreading', keywords: 'checker plugin required lock language force' },
+    ],
+  },
+  {
     id: 'org-calendars',
     label: 'Calendars',
     description: 'Company calendars every user sees, free/busy sharing and out-of-office in the calendar',
@@ -232,6 +243,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'devices', title: 'Downloads, printing and notifications', keywords: 'download attachment export print watermark install prompt push sender subject' },
       { id: 'offline', title: 'Offline mode', keywords: 'offline cache device keep mail outbox' },
+      { id: 'registered', title: 'Registered devices', keywords: 'device registry wipe remote lost stolen laptop remove desktop app browser' },
     ],
   },
   {
@@ -239,11 +251,11 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     label: 'Plugins',
     description: 'Plugins installed for every user, and what users may install themselves',
     group: 'extensions',
-    keywords: 'extensions addons upload zip approve permissions configure force enable',
+    keywords: 'extensions addons upload zip approve permissions configure force enable always on default off',
     sections: [
+      { id: 'policy', title: 'Plugins for users', keywords: 'plugins enabled master switch user uploads require approval policy' },
       { id: 'approvals', title: 'Approval requests', keywords: 'approve deny user uploaded code review' },
       { id: 'installed', title: 'Installed plugins', keywords: 'enable disable remove roll back configure' },
-      { id: 'policy', title: 'Plugin policy', keywords: 'plugins enabled user uploads require approval' },
     ],
     hasDetail: true,
   },

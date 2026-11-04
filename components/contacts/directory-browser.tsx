@@ -51,6 +51,13 @@ interface DirectoryBrowserProps {
   /** Set while the list is being printed. */
   printing?: boolean;
   className?: string;
+  /**
+   * Browse these instead of the server's directory (the recipient picker's
+   * Contacts tab): nothing is fetched and there is nothing to refresh.
+   */
+  entries?: DirectoryEntry[];
+  /** With `entries`: the list's name and what an empty list or search says. */
+  labels?: { list: string; emptyTitle: string; emptyHint?: string; noMatch: string };
 }
 
 /**
@@ -69,13 +76,17 @@ export function DirectoryBrowser({
   onPrint,
   printing = false,
   className,
+  entries: ownEntries,
+  labels,
 }: DirectoryBrowserProps) {
   const t = useTranslations("contacts.directory");
   const tContacts = useTranslations("contacts");
   const tCommon = useTranslations("common");
   const locale = useLocale();
-  const entries = useContactStore((s) => s.directoryPrincipals);
-  const status = useContactStore((s) => s.directoryStatus);
+  const directoryEntries = useContactStore((s) => s.directoryPrincipals);
+  const directoryStatus = useContactStore((s) => s.directoryStatus);
+  const entries = ownEntries ?? directoryEntries;
+  const status = ownEntries ? "ready" : directoryStatus;
   const fetchDirectory = useContactStore((s) => s.fetchDirectory);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -83,8 +94,8 @@ export function DirectoryBrowser({
 
   // The directory loads at sign-in; fetch here only if that never ran.
   useEffect(() => {
-    if (client && status === "idle") void fetchDirectory(client);
-  }, [client, status, fetchDirectory]);
+    if (!ownEntries && client && status === "idle") void fetchDirectory(client);
+  }, [ownEntries, client, status, fetchDirectory]);
 
   useEffect(() => {
     if (autoFocusSearch) searchRef.current?.focus();
@@ -117,7 +128,9 @@ export function DirectoryBrowser({
   };
 
   let placeholder: React.ReactNode = null;
-  if (entries.length === 0) {
+  if (entries.length === 0 && ownEntries) {
+    placeholder = <StatePanel icon={<BookUser className="w-6 h-6" />} title={labels?.emptyTitle ?? t("empty_title")} hint={labels?.emptyHint} />;
+  } else if (entries.length === 0) {
     if (loading) {
       placeholder = (
         <StatePanel icon={<Loader2 className="w-6 h-6 animate-spin" />} title={t("loading")} />
@@ -132,7 +145,7 @@ export function DirectoryBrowser({
       placeholder = <StatePanel icon={<BookUser className="w-6 h-6" />} title={t("empty_title")} hint={t("empty_hint")} />;
     }
   } else if (filtered.length === 0) {
-    placeholder = <StatePanel icon={<Search className="w-6 h-6" />} title={t("no_match")} />;
+    placeholder = <StatePanel icon={<Search className="w-6 h-6" />} title={labels?.noMatch ?? t("no_match")} />;
   }
 
   return (
@@ -163,13 +176,15 @@ export function DirectoryBrowser({
             onClear={() => { setQuery(""); setPage(0); }}
             clearLabel={tContacts("clear_search")}
           />
-          <ToolbarButton
-            label={t("refresh")}
-            onClick={refresh}
-            disabled={!client || status === "loading" || status === "unavailable"}
-          >
-            <RefreshCw className={cn(status === "loading" && "animate-spin [animation-direction:reverse]")} />
-          </ToolbarButton>
+          {!ownEntries && (
+            <ToolbarButton
+              label={t("refresh")}
+              onClick={refresh}
+              disabled={!client || status === "loading" || status === "unavailable"}
+            >
+              <RefreshCw className={cn(status === "loading" && "animate-spin [animation-direction:reverse]")} />
+            </ToolbarButton>
+          )}
           {onPrint && (
             <ToolbarButton label={tCommon("print")} onClick={onPrint}>
               <Printer />
@@ -186,7 +201,7 @@ export function DirectoryBrowser({
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto" role="list" aria-label={t("title")}>
+      <div className="flex-1 min-h-0 overflow-y-auto" role="list" aria-label={labels?.list ?? t("title")}>
         {placeholder ?? pageEntries.map((entry) => {
           const key = directoryKey(entry);
           const checked = selected.has(key);

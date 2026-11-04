@@ -84,6 +84,9 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'autoSelectReplyIdentity', label: 'Auto-select Reply Identity', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: false },
   { key: 'replyIdentityMatch', label: 'Reply Identity Matching', category: 'Composer', type: 'enum', allowedValues: ['exact', 'domain'], page: 'policy', defaultValue: 'domain' },
   { key: 'plainTextMode', label: 'Plain Text Only', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: false },
+  // Set on Organisation > Proofreading, with per-plugin keys `proofreading.<pluginId>` (lib/proofreading/gate.ts).
+  { key: 'proofreading', label: 'Proofreading', description: 'Locked off, no proofreading plugin gets any text; locked on, it checks in every composer.', category: 'Composer', type: 'boolean', page: 'org-proofreading' },
+  { key: 'writingLanguage', label: 'Writing language', category: 'Composer', type: 'enum', page: 'org-proofreading' },
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'pushNotifyInboxOnly', label: 'Inbox-only Push Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: false },

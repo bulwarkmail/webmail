@@ -10,8 +10,10 @@ import {
   filterTemplates,
   exportTemplates,
   importTemplates,
+  parseSyncedTemplates,
   spliceTemplateAboveSignature,
   composeBodyHasUserContent,
+  embedTemplateImages,
 } from '../template-utils';
 import type { EmailTemplate } from '../template-types';
 
@@ -78,9 +80,18 @@ describe('substitutePlaceholders', () => {
     expect(substitutePlaceholders('{{known}} {{unknown}}', { known: 'yes' })).toBe('yes {{unknown}}');
   });
 
-  it('sanitizes XSS in values', () => {
-    const result = substitutePlaceholders('{{name}}', { name: '<script>alert(1)</script>' });
-    expect(result).not.toContain('<script>');
+  it('escapes values going into an HTML template', () => {
+    const result = substitutePlaceholders('<p>{{name}}</p>', { name: '<script>alert(1)</script>' }, { html: true });
+    expect(result).toBe('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
+  });
+
+  // Values are text: an address in angle brackets or an ampersand is kept.
+  it('keeps values as typed in a plain template', () => {
+    expect(substitutePlaceholders('To {{name}}', { name: 'Smith & Co <j@x.com>' })).toBe('To Smith & Co <j@x.com>');
+  });
+
+  it('keeps the address in an HTML template visible', () => {
+    expect(substitutePlaceholders('<p>{{name}}</p>', { name: 'Smith <j@x.com>' }, { html: true })).toBe('<p>Smith &lt;j@x.com&gt;</p>');
   });
 
   it('handles empty values', () => {
@@ -283,15 +294,33 @@ describe('importTemplates', () => {
     expect(result.errors).toContain('missing_template_name');
   });
 
-  it('sanitizes imported values against XSS', () => {
+  // Name, subject, category and a plain body are text, shown as text: markup
+  // in them is harmless and is kept as typed, not cut out or entity-encoded.
+  it('keeps angle brackets and ampersands in plain-text fields', () => {
     const json = JSON.stringify({
       type: 'webmail-templates',
       version: 1,
-      templates: [{ name: '<img onerror=alert(1) src=x>', subject: '<script>alert(1)</script>' }],
+      templates: [{
+        name: 'Sales <EU>',
+        subject: 'Re: {{recipient_name}} <{{recipient_email}}>',
+        category: 'R&D',
+        body: 'Please reply to <sales@example.com> if a<b & c',
+        isHTML: false,
+      }],
     });
-    const result = importTemplates(json);
-    expect(result.templates[0].name).not.toContain('onerror');
-    expect(result.templates[0].subject).not.toContain('<script>');
+    const [tpl] = importTemplates(json).templates;
+    expect(tpl.name).toBe('Sales <EU>');
+    expect(tpl.subject).toBe('Re: {{recipient_name}} <{{recipient_email}}>');
+    expect(tpl.category).toBe('R&D');
+    expect(tpl.body).toBe('Please reply to <sales@example.com> if a<b & c');
+  });
+
+  it('keeps plain-text fields of synced templates as typed', () => {
+    const [tpl] = parseSyncedTemplates([
+      { id: 't1', name: 'Sales', subject: 'a <= b', body: 'Write to <sales@example.com> & us', isHTML: false },
+    ])!;
+    expect(tpl.subject).toBe('a <= b');
+    expect(tpl.body).toBe('Write to <sales@example.com> & us');
   });
 
   it('handles missing templates array', () => {
@@ -435,5 +464,53 @@ describe('composeBodyHasUserContent', () => {
     const openEnded = '<p data-signature-block="start"></p><div>My signature</div>';
     expect(composeBodyHasUserContent(`<p></p>${openEnded}`)).toBe(false);
     expect(composeBodyHasUserContent(`<p>Hello Mr.</p>${openEnded}`)).toBe(true);
+  });
+});
+
+describe('embedTemplateImages', () => {
+  // A 1×1 PNG.
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const DATA = `data:image/png;base64,${PNG}`;
+  const uploader = () => {
+    let n = 0;
+    return vi.fn(async (_file: File) => ({ cid: `img${++n}@webmail` }));
+  };
+
+  it('uploads a data: image and tags it with the cid', async () => {
+    const upload = uploader();
+    const html = await embedTemplateImages(`<p>Plan</p><p><img src="${DATA}" alt="Floor plan"></p>`, upload);
+    expect(upload).toHaveBeenCalledTimes(1);
+    const file = upload.mock.calls[0][0];
+    expect(file).toMatchObject({ name: 'image-1.png', type: 'image/png' });
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(Uint8Array.from(atob(PNG), (c) => c.charCodeAt(0)));
+    const img = new DOMParser().parseFromString(html, 'text/html').querySelector('img')!;
+    expect(img.getAttribute('data-cid')).toBe('img1@webmail');
+    expect(img.getAttribute('src')).toBe(DATA);
+    expect(img.getAttribute('alt')).toBe('Floor plan');
+  });
+
+  it('uploads an image shown twice once', async () => {
+    const upload = uploader();
+    const html = await embedTemplateImages(`<img src="${DATA}"><img src="${DATA}">`, upload);
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(html.match(/data-cid="img1@webmail"/g)).toHaveLength(2);
+  });
+
+  it('replaces a cid the template was saved with', async () => {
+    const html = await embedTemplateImages(`<img src="${DATA}" data-cid="old@webmail">`, uploader());
+    expect(html).toContain('data-cid="img1@webmail"');
+    expect(html).not.toContain('old@webmail');
+  });
+
+  it('leaves remote, cid: and non-raster images alone', async () => {
+    const upload = uploader();
+    const html = '<img src="https://example.com/a.png"><img src="cid:a@b"><img src="data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=">';
+    expect(await embedTemplateImages(html, upload)).toBe(html);
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('keeps an image as it is when its upload fails', async () => {
+    const html = `<img src="${DATA}">`;
+    expect(await embedTemplateImages(html, async () => null)).toBe(html);
   });
 });

@@ -82,13 +82,13 @@ function viewer() {
 describe('the viewer and the Archive action gate', () => {
   it('shows the Archive button while the gate is on', () => {
     viewer();
-    expect(screen.getByTitle('tooltips.archive')).toBeInTheDocument();
+    expect(screen.getByTitle('archive (E)')).toBeInTheDocument();
   });
 
   it('has no Archive button with the gate off, Delete still there', () => {
     setArchiveGate(false);
     viewer();
-    expect(screen.queryByTitle('tooltips.archive')).toBeNull();
-    expect(screen.getByTitle('tooltips.delete')).toBeInTheDocument();
+    expect(screen.queryByTitle('archive (E)')).toBeNull();
+    expect(screen.getByTitle('delete (Del)')).toBeInTheDocument();
   });
 });

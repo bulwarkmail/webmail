@@ -47,15 +47,25 @@ beforeEach(() => {
   } as never);
 });
 
+// The reminders open from the calendar's "Edit…" form (pim-20).
+function openReminders(index = 0) {
+  fireEvent.click(screen.getAllByRole('button', { name: 'edit_calendar' })[index]);
+  fireEvent.click(screen.getByRole('button', { name: 'default_alerts_open' }));
+}
+
 describe('Calendar default reminders settings', () => {
   it('offers default reminders only for calendars the user owns', () => {
     render(<CalendarManagementSettings />);
-    expect(screen.getAllByLabelText('default_alerts')).toHaveLength(1);
+    fireEvent.click(screen.getAllByRole('button', { name: 'edit_calendar' })[0]);
+    expect(screen.getByRole('button', { name: 'default_alerts_open' })).toBeInTheDocument();
+    fireEvent.click(screen.getByText('cancel'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'edit_calendar' })[1]);
+    expect(screen.queryByRole('button', { name: 'default_alerts_open' })).toBeNull();
   });
 
   it('saves both lists with their actions and keeps alerts it cannot show', async () => {
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByLabelText('default_alerts'));
+    openReminders();
 
     // Timed list first, then all-day.
     const [addTimed, addAllDay] = screen.getAllByText('alerts.add');
@@ -89,7 +99,7 @@ describe('Calendar default reminders settings', () => {
       ],
     } as never);
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getAllByLabelText('default_alerts')[0]);
+    openReminders(0);
 
     const [addTimed, addAllDay] = screen.getAllByText('alerts.add');
     fireEvent.click(addTimed);
@@ -115,7 +125,7 @@ describe('Calendar default reminders settings', () => {
       })],
     } as never);
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByLabelText('default_alerts'));
+    openReminders();
 
     fireEvent.click(screen.getByLabelText('alerts.remove'));
     fireEvent.click(screen.getByText('save'));

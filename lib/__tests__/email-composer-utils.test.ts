@@ -649,11 +649,25 @@ describe("getQuoteBodies", () => {
       htmlBody: [part("h", "text/html")],
       bodyValues: {
         t: { value: "plain version" },
-        h: { value: "<p>html version</p>" },
+        h: { value: "<p><b>html</b> version</p>" },
       },
     });
     expect(body).toBe("plain version");
-    expect(htmlBody).toBe("<p>html version</p>");
+    expect(htmlBody).toBe("<p><b>html</b> version</p>");
+  });
+
+  it("quotes the text part when the HTML part is a bare wrapper without line breaks", () => {
+    const text = "Line one\nLine two\nLine three";
+    const { body, htmlBody } = getQuoteBodies({
+      textBody: [part("t", "text/plain")],
+      htmlBody: [part("h", "text/html")],
+      bodyValues: {
+        t: { value: text },
+        h: { value: "<html><body>Line one\nLine two\nLine three</body></html>" },
+      },
+    });
+    expect(body).toBe(text);
+    expect(htmlBody).toBeUndefined();
   });
 
   it("falls back to the preview when body values are missing", () => {

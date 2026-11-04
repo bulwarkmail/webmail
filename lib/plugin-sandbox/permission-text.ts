@@ -11,6 +11,8 @@ import { ALL_PERMISSIONS, IMPLICIT_PERMISSIONS } from '../plugin-types';
  */
 export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'crypto:full',
+  // Signs and decrypts in the user's name with their certificates.
+  'keystore',
   // email.get reads any message in the account, not only the open one.
   'email:read',
   'email:send',
@@ -24,13 +26,33 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'http:post',
   'filters:write',
   'http:proxy',
+  // Reads everything the user writes, as they write it, and may send it on.
+  'compose:check',
   // A plugin can point the reply-to of a sender address elsewhere, so
   // answers to the user's mail go to someone else.
   'identity:write',
   // The out-of-office reply goes out to everyone who writes, in the user's
   // name, with whatever text the plugin set.
   'vacation:write',
+  // Answering an invitation sends a reply to the organiser in the user's name.
+  'calendar:respond',
+  // Changes how the app behaves for the user (lib/settings-schema.ts).
+  'settings:change',
 ]);
+
+/**
+ * What a manifest asks for, as an install grants it (checkPluginManifest): optional
+ * permissions count, minus what this version doesn't offer and what the tier can't have.
+ * Everything that shows permissions from a manifest goes through this.
+ */
+export function declaredPermissions(manifest: unknown): string[] {
+  const m = (manifest ?? {}) as { permissions?: unknown; optionalPermissions?: unknown; tier?: unknown };
+  const strings = (value: unknown) => (Array.isArray(value) ? value.filter((p): p is string => typeof p === 'string') : []);
+  const known = new Set<string>(ALL_PERMISSIONS);
+  return [...new Set([...strings(m.permissions), ...strings(m.optionalPermissions)])]
+    .filter((p) => known.has(p))
+    .filter((p) => p !== 'keystore' || m.tier === 'privileged');
+}
 
 /** Locale key segment for a permission: `email:read` → `email_read`. */
 export function permissionKey(perm: string): string {

@@ -442,6 +442,27 @@ export function checkPluginManifest(m: Record<string, unknown>, opts: { appVersi
       if (unknown.length > 0) errors.push(`Unknown permissions: ${unknown.join(', ')} (this Bulwark version does not offer them)`);
     }
   }
+  // Permissions a plugin uses when the webmail offers them: the ones this
+  // version knows are granted like "permissions" (and shown for consent the
+  // same way); unknown ones are left out, so one package installs on older
+  // and newer webmails alike and checks api.host.features for what it got.
+  if (m.optionalPermissions !== undefined) {
+    if (!Array.isArray(m.optionalPermissions) || m.optionalPermissions.some((p) => typeof p !== 'string')) {
+      errors.push('"optionalPermissions" must be a list of strings');
+    } else {
+      const asked = [...new Set(m.optionalPermissions as string[])].filter((p) => !DEPRECATED_PERMISSIONS.includes(p));
+      const unknown = asked.filter((p) => !KNOWN_PERMISSIONS.has(p));
+      if (unknown.length > 0) warnings.push(`Left out optional permissions this Bulwark version does not offer: ${unknown.join(', ')}`);
+      permissions = [...new Set([...permissions, ...asked.filter((p) => KNOWN_PERMISSIONS.has(p))])];
+    }
+  }
+  // Only the privileged tier may reach the OS certificate store. Left out rather than
+  // refused, like an optional permission this version doesn't offer: the host would
+  // refuse the calls anyway, and consent shouldn't ask for what can't be used.
+  if (tier !== 'privileged' && permissions.includes('keystore')) {
+    warnings.push('Left out the "keystore" permission: it needs the privileged tier');
+    permissions = permissions.filter((p) => p !== 'keystore');
+  }
   if (tier === 'privileged' && !permissions.includes('crypto:full')) {
     errors.push('A privileged plugin must request the "crypto:full" permission');
   }

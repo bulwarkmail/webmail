@@ -23,6 +23,9 @@
 /public/plugin-sandbox-assets/
 # scripts/build-pst-worker.mjs
 /public/pst-worker.js
+# scripts/build-store-worker.mjs
+/public/store-worker.js
+/public/sqlite3mc/
 
 # production
 /build

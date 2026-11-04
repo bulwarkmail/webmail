@@ -130,8 +130,9 @@
 }
 /* Inside a scroll container a positive offset is clipped; draw it inside.
    `focus-inset` does the same for any control that sits flush against the
-   edge of a clipping container. */
-:is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible {
+   edge of a clipping container. The selector is padded to outweigh the two
+   rules above, whose :not() lists count towards their specificity. */
+html:root :is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible:focus-visible:focus-visible:focus-visible {
   outline-offset: calc(var(--focus-ring-width) * -1) !important;
 }
 /* The focused element scrolls clear of sticky headers and the bottom bar,
@@ -255,6 +256,29 @@ html.dark[data-contrast="more"] {
 }
 :root[data-contrast="more"] a[href]:not([role]) {
   text-decoration-line: underline;
+}
+/* Proofreading underlines: darker in light mode, lighter in dark mode. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) {
+    --text-issue-grammar: #1d4ed8;
+    --text-issue-style: #92400e;
+    --text-issue-other: #374151;
+  }
+  .dark:not([data-contrast="normal"]) {
+    --text-issue-grammar: #93c5fd;
+    --text-issue-style: #fcd34d;
+    --text-issue-other: #e5e7eb;
+  }
+}
+:root[data-contrast="more"] {
+  --text-issue-grammar: #1d4ed8;
+  --text-issue-style: #92400e;
+  --text-issue-other: #374151;
+}
+html.dark[data-contrast="more"] {
+  --text-issue-grammar: #93c5fd;
+  --text-issue-style: #fcd34d;
+  --text-issue-other: #e5e7eb;
 }
 
 /* ---------- Reduced transparency ---------- */
@@ -482,4 +506,17 @@ html.dark[data-contrast="more"] {
 
 :root[data-simple-mode="on"] [data-simple-hide] {
   display: none !important;
+}
+
+/* Proofreading underlines in forced colours: one colour, so the line styles tell the kinds apart. */
+@media (forced-colors: active) {
+  .tiptap .text-issue {
+    text-decoration-color: CanvasText;
+    text-decoration-thickness: 2px;
+  }
+  .tiptap .text-issue-active {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
 }

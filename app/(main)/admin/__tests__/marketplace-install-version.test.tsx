@@ -49,6 +49,36 @@ describe('installVersion', () => {
     expect(calls).toHaveLength(1);
   });
 
+  it('says what an update adds, and repeats with what the admin saw', async () => {
+    responses = [json({ error: 'adds', permissionsAdded: ['keystore'] }, 409), json({ warnings: [] })];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(`${q.title} ${q.message}`); return true; });
+    expect(asked[0]).toContain('new permissions');
+    expect(asked[0]).toContain('keystore');
+    expect(calls.map((c) => c.body.acceptPermissions)).toEqual([undefined, ['keystore']]);
+    expect(calls.map((c) => c.body.force), 'not the same as forcing it').toEqual([undefined, undefined]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('does not update past new permissions the admin declined', async () => {
+    responses = [json({ error: 'adds', permissionsAdded: ['keystore'] }, 409)];
+    expect(await installVersion(BODY, () => false)).toEqual({ ok: false, error: 'Not installed.' });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('asks about both when a withdrawn version also adds permissions, and keeps both answers', async () => {
+    responses = [
+      json({ error: 'withdrawn', yanked: { reason: null } }, 409),
+      json({ error: 'adds', permissionsAdded: ['keystore'] }, 409),
+      json({ warnings: [] }),
+    ];
+    const asked: string[] = [];
+    const result = await installVersion(BODY, (q) => { asked.push(q.title); return true; });
+    expect(asked).toHaveLength(2);
+    expect(calls.at(-1)!.body).toMatchObject({ force: true, acceptPermissions: ['keystore'] });
+    expect(result.ok).toBe(true);
+  });
+
   it('shows any other 409 as the error it is', async () => {
     responses = [json({ error: 'The configuration is read-only' }, 409)];
     const result = await installVersion(BODY, () => true);

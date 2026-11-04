@@ -3,6 +3,7 @@
 // to press Send; drafts.create saves a draft to the Drafts folder without
 // opening anything. Neither sends mail.
 
+import { goInApp } from './page-navigation';
 import type { ComposeInput, DraftInput, InstalledPlugin } from '../plugin-types';
 import type { ParsedMailto } from '../protocol-handlers/mailto';
 import { requestInternalCompose } from '../protocol-handlers/mailto';
@@ -96,7 +97,7 @@ export function doComposeOpen(plugin: InstalledPlugin, input: unknown): 'opened'
   // incoming mailto: request when it mounts, and go there.
   savePendingMailto(draft);
   notifyPendingMailto();
-  window.location.assign(mailPageHref());
+  goInApp('/', mailPageHref());
   return 'navigating';
 }
 

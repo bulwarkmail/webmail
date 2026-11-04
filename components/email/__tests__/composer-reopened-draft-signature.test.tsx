@@ -96,6 +96,8 @@ vi.mock('@/stores/settings-store', () => {
     // The default position: replies/forwards get the signature appended at
     // send time rather than embedded above the quote.
     signaturePosition: 'below_quote',
+    signatureNewMailEnabled: true,
+    signatureReplyForwardEnabled: true,
     signatureSeparatorEnabled: true,
     requestReadReceiptDefault: false,
     addTrustedSender: () => {},

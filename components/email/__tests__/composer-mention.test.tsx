@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
+import { useAuthStore } from '@/stores/auth-store';
+import { useContactStore } from '@/stores/contact-store';
 import { EmailComposer } from '../email-composer';
 import { useSettingsStore } from '@/stores/settings-store';
 
@@ -16,6 +18,9 @@ vi.mock('@/components/ui/avatar', () => ({ Avatar: () => null }));
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/components/identity/sub-address-helper', () => ({ SubAddressHelper: () => null }));
 vi.mock('@/components/templates/template-picker', () => ({ TemplatePicker: () => null }));
+vi.mock('@/components/contacts/directory-picker-dialog', () => ({
+  DirectoryPickerDialog: () => <div role="dialog" aria-label="directory"><input aria-label="directory search" /></div>,
+}));
 vi.mock('@/components/templates/template-form', () => ({ TemplateForm: () => null }));
 vi.mock('@/components/files/file-preview-modal', () => ({ FilePreviewModal: () => null }));
 vi.mock('@/hooks/use-focus-trap', () => ({
@@ -297,7 +302,7 @@ describe('composer with the @ recipient list', () => {
     }
   });
 
-  it('lets Escape close the open list, not the composer; the next Escape asks to close', async () => {
+  it('lets Escape close the open list, not the composer; the next Escape closes that', async () => {
     const { editor, onClose } = await renderComposer();
     await typeInto(editor, ' @');
     await screen.findByRole('listbox', { name: 'mention_recipients' });
@@ -307,8 +312,10 @@ describe('composer with the @ recipient list', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
 
+    // The composer's close runs: with no connection here its save fails,
+    // which is when it asks.
     press(editor, 'Escape');
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('close_draft_title');
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
   });
 
   it('keeps Ctrl+Enter as the send shortcut while the list is open', async () => {
@@ -353,7 +360,7 @@ describe('composer with the @ recipient list', () => {
     await waitFor(() => expect(mentionList()).toBeNull());
 
     fireEvent.keyDown(subject, { key: 'Escape' });
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('close_draft_title');
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
   });
 
   it('closes the list on a click elsewhere, but not on a click on the list itself', async () => {
@@ -522,5 +529,59 @@ describe('composer with the @ recipient list', () => {
     fireEvent.keyDown(dialog.querySelector('input')!, { key: 'Escape' });
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('lets Escape in a formatting menu close only the menu', async () => {
+    const { onClose } = await renderComposer();
+    fireEvent.click(screen.getByTitle('text_color'));
+    const menu = await screen.findByRole('menu', { name: 'text_color' });
+    fireEvent.keyDown(menu.querySelector('button')!, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: 'text_color' })).toBeNull();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  // The first Backspace selects the last recipient, it doesn't turn it into text.
+  it('selects the last recipient on Backspace, without the key deleting anything', async () => {
+    await renderComposer({ to: 'Sarah Kim <sarah@example.com>' });
+    const to = within(screen.getByTestId('composer-to')).getByRole('combobox') as HTMLInputElement;
+    // fireEvent returns false when the handler stopped the key's default action.
+    expect(fireEvent.keyDown(to, { key: 'Backspace' })).toBe(false);
+    expect(to.value).toBe('');
+    expect(document.activeElement).toHaveAttribute('data-recipient-chip');
+  });
+
+  // compose-17: the button was there only with a server directory, so
+  // contacts alone were never offered.
+  it('offers the recipient picker for the contacts when the server has no directory', async () => {
+    const contactState = (useContactStore as unknown as { getState: () => { contacts: unknown[] } }).getState();
+    contactState.contacts = [{ id: 'c1', name: { full: 'Zoe Fischer' }, emails: { e: { address: 'zoe@example.com' } } }];
+    try {
+      await renderComposer();
+      const button = screen.getByTestId('composer-directory-picker');
+      expect(button).toHaveAccessibleName('picker_button');
+      fireEvent.click(button);
+      expect(screen.getByRole('dialog', { name: 'directory' })).toBeInTheDocument();
+    } finally {
+      contactState.contacts = [];
+    }
+  });
+
+  // The directory picker is drawn inside the composer itself, not portaled.
+  it('lets Escape in the directory picker leave the composer alone', async () => {
+    // Every other capability answers nothing.
+    const client = new Proxy({ supportsPrincipals: () => true }, {
+      get: (target, key) => (key in target ? target[key as keyof typeof target] : () => undefined),
+    });
+    useAuthStore.setState({ client: client as never });
+    try {
+      const { onClose } = await renderComposer();
+      fireEvent.click(screen.getByTestId('composer-directory-picker'));
+      fireEvent.keyDown(screen.getByRole('textbox', { name: 'directory search' }), { key: 'Escape' });
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(onClose).not.toHaveBeenCalled();
+    } finally {
+      useAuthStore.setState({ client: null });
+    }
   });
 });

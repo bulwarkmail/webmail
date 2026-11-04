@@ -18,8 +18,7 @@ describe('SearchChips', () => {
       />,
     );
 
-    const chip = screen.getByText('From Alice').parentElement!;
-    fireEvent.click(chip.querySelector('button')!);
+    fireEvent.click(screen.getByRole('button', { name: /remove_filter/ }));
     expect(onRemoveFilter).toHaveBeenCalledWith('pluginFilter');
   });
 });

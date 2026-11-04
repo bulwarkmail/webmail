@@ -82,6 +82,10 @@ const probes: Record<string, () => Promise<boolean>> = {
     await GET(new NextRequest('https://webmail.example/api/bimi?domain=probe.org'));
     return bimiResolve.mock.calls.length > 0;
   },
+  'spellcheck-dictionaries': async () => {
+    const { dictionaryDownloadAllowed } = await import('@/lib/desktop/dictionary-download');
+    return dictionaryDownloadAllowed();
+  },
   translate: async () => {
     const { POST } = await import('@/app/api/translate/route');
     await POST(new NextRequest('https://webmail.example/api/translate', {

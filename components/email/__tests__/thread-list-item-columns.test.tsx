@@ -55,7 +55,7 @@ const sizeCells = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-list-
 
 describe('message list rows under the bottom reading pane (#262)', () => {
   beforeEach(() => {
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: true,
@@ -78,8 +78,14 @@ describe('message list rows under the bottom reading pane (#262)', () => {
     expect(screen.getByText(/Preview text/)).toBeInTheDocument();
   });
 
-  it('keeps stacked rows on a tablet, which shows the split layout', () => {
-    useUIStore.setState({ isMobile: false, isTablet: true, isDesktop: false });
+  it('draws one line on a compact desktop too, which shows the bottom pane', () => {
+    useUIStore.setState({ isMobile: false, isCompact: true, isDesktop: true });
+    const { container } = renderEmails([makeEmail()]);
+    expect(container.querySelector('p')).toBeNull();
+  });
+
+  it('keeps stacked rows on a phone', () => {
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     const { container } = renderEmails([makeEmail()]);
     expect(container.querySelector('p')).not.toBeNull();
   });
@@ -87,7 +93,9 @@ describe('message list rows under the bottom reading pane (#262)', () => {
   it('keeps stacked rows in the split layout', () => {
     useSettingsStore.setState({ mailLayout: 'split' });
     const { container } = renderEmails([makeEmail()]);
-    expect(container.querySelector('p')).not.toBeNull();
+    // Stacked: a preview line of its own, or the preview after the subject
+    // on the subject's line at the regular density (mail-15).
+    expect(container.querySelector('p, [data-row-preview]')).not.toBeNull();
   });
 
   describe('as columns', () => {

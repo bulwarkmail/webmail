@@ -111,7 +111,11 @@ export function EmailIdentityBadge({
     return null;
   }
 
-  // Full view for email viewer - now shows compact badges only
+  // Full view for email viewer - the sub-address tag only. A message of your
+  // own named its identity ("via <identity>"), which read like a delegation
+  // warning; the sender's address, shown right under the name, already says
+  // which of your addresses sent it.
+  if (!displayTag) return null;
   return (
     <div className={cn('inline-flex items-center gap-2', className)}>
       {/* Sub-address tag badge */}
@@ -130,21 +134,6 @@ export function EmailIdentityBadge({
         </div>
       )}
 
-      {/* Identity badge (only if identity has a name and no sub-address tag) */}
-      {!displayTag && matchingIdentity && showIdentityName && (
-          <div
-            className={cn(
-              'inline-flex items-center gap-1 px-2 py-0.5 rounded-md',
-              'bg-secondary text-muted-foreground border border-border',
-              'text-xs font-medium'
-            )}
-            title={t('identity_name', { name: matchingIdentity.name })}
-            aria-label={t('identity_name', { name: matchingIdentity.name })}
-          >
-            <Mail className="w-3 h-3" />
-            <span>{t('identity_short', { name: matchingIdentity.name })}</span>
-          </div>
-        )}
     </div>
   );
 }

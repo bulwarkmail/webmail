@@ -28,7 +28,9 @@ vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
-vi.mock('@/components/layout/mobile-header', () => ({ MobileHeader: () => null }));
+vi.mock('@/components/layout/mobile-header', () => ({
+  MobileHeader: ({ onOpenSearch }: { onOpenSearch?: () => void }) => <button onClick={onOpenSearch}>stub open search</button>,
+}));
 vi.mock('@/components/email/message-list-tabs', () => ({ useMessageListPanelProps: (id: string) => ({ id }), MessageListTabs: () => null }));
 vi.mock('@/components/search/search-box', () => ({ SearchBox: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({ useTour: () => ({ activeTour: null, registerStep: vi.fn() }) }));
@@ -41,7 +43,7 @@ vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMa
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: true, isTablet: false, isDesktop: false }),
+  useDeviceDetection: () => ({ isMobile: true, isCompact: false, isDesktop: false }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -87,7 +89,7 @@ afterEach(() => {
 });
 
 /** On a phone only one of list and reading pane shows; the other gets max-md:hidden. */
-const listHidden = () => screen.getByText('message list').closest('.max-md\\:hidden') !== null;
+const listHidden = () => screen.getByText('message list').closest('.max-desk\\:hidden') !== null;
 
 describe('sending from a phone', () => {
   it('goes back to the message list after sending a new message', async () => {
@@ -101,5 +103,19 @@ describe('sending from a phone', () => {
     await waitFor(() => expect(sendEmail).toHaveBeenCalled());
     await waitFor(() => expect(screen.queryByText('stub send')).not.toBeInTheDocument());
     expect(listHidden()).toBe(false);
+  });
+});
+
+describe('the filter panel on a phone', () => {
+  it('shows the results when Search is pressed: they are behind the full-screen panel', async () => {
+    useEmailStore.setState({ isAdvancedSearchOpen: true, advancedSearch: vi.fn().mockResolvedValue(undefined) } as never);
+    const { container } = render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub open search', {}, { timeout: 5000 }));
+    expect(container.querySelector('.fixed.inset-0.z-50')).not.toBeNull();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /search$/i }).find((b) => b.getAttribute('type') === 'submit' || /(^|\.)search$/.test(b.textContent ?? ''))!);
+
+    expect(container.querySelector('.fixed.inset-0.z-50')).toBeNull();
+    expect(useEmailStore.getState().isAdvancedSearchOpen).toBe(false);
   });
 });

@@ -1,250 +1,133 @@
 /**
- * What waits on this device for the network (#523): changes made offline
- * (read, flagged, tags, moves) and the outbox. Both are kept encrypted in
- * the offline database and sent in the order they were made.
- *
- * An outbox entry is a finished message: everything a send does up to the
- * transport ran when the user clicked Send (the organisation's checks,
- * the classification label, signatures and disclaimers, plugin send checks,
- * S/MIME or PGP with the user present). What is kept is the arguments of the
- * final send, with the files that couldn't be uploaded yet, or the finished
- * raw message of a plugin's send. Sending it later can't skip any of that.
- *
- * The state of an outbox entry (waiting, sending, ...) is kept unencrypted
- * next to it, so that taking an entry for sending is one database
- * transaction: two tabs can't both take it (claimForSending).
+ * What waits on this device for the network (#523): the page's view of the
+ * outbox in the local store (lib/store/outbox). Changes made offline wait there
+ * merged per record; messages wait as finished sends. Everything is kept
+ * encrypted in the store, and taking an entry for sending is one SQLite
+ * transaction, so two tabs can't both take it (claimForSending).
  */
 
-import { idbAdd, idbDeleteAccount, idbGet, idbGetAll, idbGetAllByAccount, idbUpdate, idbWrite } from './db';
-import { openBytes, openJson, sealBytes, sealJson, type Sealed } from './crypto';
-import { generateUUID } from '@/lib/utils';
+import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
+import { getStore } from '@/lib/store/client/api';
+import type { LocalDraftSummary } from '@/lib/store/drafts/calls';
+import type { ConflictSummary, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem, StoredConflict, StoredOutboxEntry } from '@/lib/store/outbox/items';
+import { visibleAccounts } from './state';
 
-export interface PatchItem {
-  kind: 'patch';
-  jmap: string;
-  update: Record<string, Record<string, unknown>>;
+export { LOCAL_BLOB_PREFIX, heldBlobIds, isLocalBlobId } from '@/lib/store/outbox/items';
+export type { EmailSendItem, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, RawSendItem, SendItem } from '@/lib/store/outbox/items';
+
+export interface OutboxEntry extends StoredOutboxEntry {
+  account: string;
 }
 
-/** The arguments of useEmailStore.sendEmail after the client (positional, as the client takes them). */
-export interface EmailSendItem {
-  kind: 'email';
-  args: unknown[];
-}
-
-export interface RawSendItem {
-  kind: 'raw';
-  /** The finished message, kept as an upload until it is sent. */
-  blobId: string;
-  identityId: string;
-  delayedUntil?: string;
-  envelopeRecipients?: string[];
-  /** submitRaw: no copy in Sent. */
-  submitOnly?: boolean;
-}
-
-export type SendItem = EmailSendItem | RawSendItem;
-
-export interface OutboxSummary {
-  subject: string;
-  to: string[];
-}
-
-/**
- * - waiting: goes out by itself when the server answers;
- * - sending: on its way (a tab took it);
- * - failed: the server refused it; the error says why;
- * - uncertain: the connection broke after it may have reached the server;
- *   never sent again by itself;
- * - held: the organisation's rules got stricter while it waited.
- */
-export type OutboxStatus = 'waiting' | 'sending' | 'failed' | 'uncertain' | 'held';
-
-/** Why an entry failed: one of ours (a code the UI translates) or the server's own words. */
-export interface OutboxError {
-  code?: 'file_missing' | 'no_sent_mailbox' | 'no_drafts_mailbox';
-  text?: string;
-}
-
-/** What the organisation required when the message was finished (see offline-mode.ts policyFingerprint). */
-export interface PolicyFingerprint {
-  labelRequired: boolean;
-  hasLabel: boolean;
-  guards: string[];
-}
-
-export interface OutboxEntry {
+export interface ConflictEntry {
   id: number;
   account: string;
+  recordId: string;
   createdAt: number;
-  summary: OutboxSummary;
-  status: OutboxStatus;
-  /** When a tab took it for sending (ms). */
-  sendingSince?: number;
-  error?: OutboxError;
-  item: SendItem;
-  fingerprint?: PolicyFingerprint;
+  summary: ConflictSummary;
 }
 
-interface QueueRecord extends Sealed {
-  id?: number;
-  account: string;
-  kind: 'patch' | 'send';
-  createdAt: number;
-  status?: OutboxStatus;
-  sendingSince?: number;
+export async function queueSend(account: string, summary: OutboxSummary, item: SendItem, fingerprint?: PolicyFingerprint, messageId?: string): Promise<number> {
+  const id = await getStore().area<number>(account, 'outbox.queueSend', { summary, item, fingerprint, messageId });
+  requestOutboxSync();
+  return id;
 }
 
-interface SendPayload {
-  summary: OutboxSummary;
-  error?: OutboxError;
-  item: SendItem;
-  fingerprint?: PolicyFingerprint;
+interface StoredQueue {
+  patches: number;
+  entries: StoredOutboxEntry[];
+  conflicts: StoredConflict[];
 }
 
-export async function queuePatch(account: string, jmap: string, update: PatchItem['update']): Promise<void> {
-  const item: PatchItem = { kind: 'patch', jmap, update };
-  await idbAdd('queue', { account, kind: 'patch', createdAt: Date.now(), ...(await sealJson(item)) } satisfies QueueRecord);
-}
-
-export async function queueSend(account: string, summary: OutboxSummary, item: SendItem, fingerprint?: PolicyFingerprint): Promise<number> {
-  const payload: SendPayload = { summary, item, fingerprint };
-  return Number(await idbAdd('queue', { account, kind: 'send', createdAt: Date.now(), status: 'waiting', ...(await sealJson(payload)) } satisfies QueueRecord));
-}
-
-export interface QueuedPatch { id: number; account: string; item: PatchItem }
-
-/** Everything waiting for one account (or all), oldest first. */
-export async function readQueue(account?: string): Promise<{ patches: QueuedPatch[]; outbox: OutboxEntry[] }> {
-  const records = account ? await idbGetAllByAccount<QueueRecord>('queue', account) : await idbGetAll<QueueRecord>('queue');
-  records.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
-  const patches: QueuedPatch[] = [];
-  const outbox: OutboxEntry[] = [];
-  for (const record of records) {
-    try {
-      if (record.kind === 'patch') {
-        patches.push({ id: record.id!, account: record.account, item: await openJson<PatchItem>(record) });
-      } else {
-        const payload = await openJson<SendPayload>(record);
-        outbox.push({
-          id: record.id!,
-          account: record.account,
-          createdAt: record.createdAt,
-          status: record.status ?? 'waiting',
-          sendingSince: record.sendingSince,
-          ...payload,
-        });
-      }
-    } catch {
-      // Sealed with a key that is gone; removed with the account.
-    }
-  }
-  return { patches, outbox };
-}
-
-/**
- * Takes a waiting entry for sending, in one transaction: false when it
- * isn't waiting any more (another tab took it, the user deleted it).
- */
-export async function claimForSending(id: number): Promise<boolean> {
-  return idbUpdate<QueueRecord>('queue', id, (record) => {
-    if (!record || record.kind !== 'send' || (record.status ?? 'waiting') !== 'waiting') return undefined;
-    return { ...record, status: 'sending', sendingSince: Date.now() };
-  });
-}
-
-/** Sets an entry's state; with an error or a new after-send list, its payload too. */
-export async function updateOutboxEntry(
-  entry: OutboxEntry,
-  patch: { status: OutboxStatus; error?: OutboxError },
-): Promise<void> {
-  const payload: SendPayload = {
-    summary: entry.summary,
-    item: entry.item,
-    fingerprint: entry.fingerprint,
-    error: patch.error,
+/** Everything waiting for one account (or every account with it on), oldest first. */
+export async function readQueue(account?: string): Promise<{ failed: string[]; patches: number; patchesBy: Record<string, number>; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
+  const accounts = account ? [account] : visibleAccounts();
+  const settled = await Promise.allSettled(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+  const read = settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  const failed = accounts.filter((_, index) => settled[index].status === 'rejected');
+  // Nothing could be read: that isn't an empty queue.
+  if (read.length === 0 && failed.length > 0) throw (settled[0] as PromiseRejectedResult).reason;
+  return {
+    failed,
+    patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),
+    patchesBy: Object.fromEntries(read.map(({ id, queue }) => [id, queue.patches])),
+    outbox: read.flatMap(({ id, queue }) => queue.entries.map((entry) => ({ ...entry, account: id }))),
+    conflicts: read.flatMap(({ id, queue }) => queue.conflicts.map((conflict) => ({
+      id: conflict.id,
+      account: id,
+      recordId: conflict.recordId,
+      createdAt: conflict.createdAt,
+      summary: conflict.summary,
+    }))),
   };
-  const sealed = await sealJson(payload);
-  await idbUpdate<QueueRecord>('queue', entry.id, (record) => {
-    // Deleted meanwhile: stays deleted.
-    if (!record) return undefined;
-    return { ...record, status: patch.status, sendingSince: patch.status === 'sending' ? Date.now() : undefined, ...sealed };
-  });
 }
 
-export async function removeQueued(ids: number[]): Promise<void> {
-  await idbWrite(ids.map((id) => ({ store: 'queue' as const, del: id })));
+/** Takes a waiting entry for sending: false when it isn't waiting any more (another tab took it, the user deleted it). */
+export function claimForSending(account: string, id: number): Promise<boolean> {
+  return getStore().area<boolean>(account, 'outbox.claim', { id });
+}
+
+export function updateOutboxEntry(
+  entry: Pick<OutboxEntry, 'account' | 'id'>,
+  patch: { status: OutboxStatus; error?: OutboxError; copyId?: string | null },
+): Promise<void> {
+  return getStore().area(entry.account, 'outbox.update', { id: entry.id, ...patch });
 }
 
 /** Removes an outbox entry and the files it held. */
-export async function removeOutboxEntry(entry: OutboxEntry): Promise<void> {
-  const blobIds = heldBlobIds(entry.item);
-  await idbWrite([
-    { store: 'queue', del: entry.id },
-    ...blobIds.map((blobId) => ({ store: 'uploads' as const, del: uploadKey(entry.account, blobId) })),
-  ]);
+export function removeOutboxEntry(entry: Pick<OutboxEntry, 'account' | 'id'>): Promise<void> {
+  return getStore().area(entry.account, 'outbox.remove', { id: entry.id });
+}
+
+export interface LocalDraftRow extends LocalDraftSummary {
+  account: string;
+}
+
+/** Drafts that are only on this device, oldest first. */
+export async function readLocalDrafts(account?: string): Promise<LocalDraftRow[]> {
+  const accounts = account ? [account] : visibleAccounts();
+  // An account in trouble is what readQueue reports. Its drafts are still there.
+  const settled = await Promise.allSettled(accounts.map(async (id) => ((await getStore().area<LocalDraftSummary[] | undefined>(id, 'drafts.list')) ?? []).map((row) => ({ ...row, account: id }))));
+  return settled.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
+}
+
+/** An old version in another login: removed through it once the draft here is on the server. */
+export function noteDraftReplacedElsewhere(account: string, localId: string, version: { login: string; jmap?: string; id: string }): Promise<void> {
+  return getStore().area(account, 'drafts.noteElsewhere', { localId, ...version });
+}
+
+/** Asks the server again about a draft it refused. */
+export function retryLocalDraft(account: string, localId: string): Promise<void> {
+  return getStore().area(account, 'drafts.retry', { localId });
+}
+
+export function dismissConflict(account: string, id: number): Promise<void> {
+  return getStore().area(account, 'outbox.dismissConflict', { id });
 }
 
 // ---- Files attached while offline ----
 
-/** Stand-in blob ids of files kept on this device start with this. */
-export const LOCAL_BLOB_PREFIX = 'bulwark-local-';
-
-const uploadKey = (account: string, blobId: string) => `${account}\u0001${blobId}`;
-
-export function isLocalBlobId(blobId: unknown): blobId is string {
-  return typeof blobId === 'string' && blobId.startsWith(LOCAL_BLOB_PREFIX);
-}
-
-interface UploadRecord extends Sealed {
-  key: string;
-  account: string;
-  createdAt: number;
-  /** The file's name and type, sealed: names say a lot about a message. */
-  meta: Sealed;
-}
+/** A file on its way to the store is cut into pieces of this size, so it's never in memory as a whole. */
+const HOLD_CHUNK_BYTES = 1024 * 1024;
 
 /** Keeps a file under a stand-in blob id until its message is sent. */
-export async function holdFile(account: string, file: Blob, name: string): Promise<{ blobId: string; size: number; type: string }> {
-  const blobId = `${LOCAL_BLOB_PREFIX}${generateUUID()}`;
-  const sealed = await sealBytes(await file.arrayBuffer());
-  const meta = await sealJson({ name, type: file.type });
-  await idbWrite([{ store: 'uploads', put: { key: uploadKey(account, blobId), account, createdAt: Date.now(), meta, ...sealed } satisfies UploadRecord }]);
-  return { blobId, size: file.size, type: file.type || 'application/octet-stream' };
-}
-
-export async function heldFile(account: string, blobId: string): Promise<File | null> {
-  const record = await idbGet<UploadRecord>('uploads', uploadKey(account, blobId));
-  if (!record) return null;
+export async function holdFile(account: string, file: Blob, name: string, jmap?: string): Promise<{ blobId: string; size: number; type: string }> {
+  const store = getStore();
+  const { blobId } = await store.area<{ blobId: string }>(account, 'outbox.holdStart', { jmap, name, type: file.type, size: file.size });
   try {
-    const meta = await openJson<{ name?: string; type?: string }>(record.meta);
-    return new File([await openBytes(record)], meta.name || 'attachment', { type: meta.type || 'application/octet-stream' });
-  } catch {
-    return null;
+    for (let at = 0, seq = 0; at < file.size; at += HOLD_CHUNK_BYTES, seq += 1) {
+      const data = new Uint8Array(await file.slice(at, at + HOLD_CHUNK_BYTES).arrayBuffer());
+      await store.area(account, 'outbox.holdChunk', { blobId, seq, data });
+    }
+    return await store.area(account, 'outbox.holdEnd', { blobId });
+  } catch (error) {
+    await store.area(account, 'outbox.holdAbort', { blobId }).catch(() => {});
+    throw error;
   }
 }
 
-/** The stand-in blob ids an outbox entry needs uploaded first. */
-export function heldBlobIds(item: SendItem): string[] {
-  if (item.kind === 'raw') return isLocalBlobId(item.blobId) ? [item.blobId] : [];
-  const attachments = item.args[10];
-  if (!Array.isArray(attachments)) return [];
-  return attachments.map((a) => (a as { blobId?: unknown }).blobId).filter(isLocalBlobId);
-}
-
-/** Files held for no outbox entry (attached offline to a message that was then discarded). */
-export async function dropOrphanFiles(account: string, olderThanMs = 24 * 60 * 60 * 1000): Promise<void> {
-  const { outbox } = await readQueue(account);
-  const needed = new Set(outbox.flatMap((entry) => heldBlobIds(entry.item)));
-  const held = await idbGetAllByAccount<{ key: string; createdAt?: number }>('uploads', account);
-  const cutoff = Date.now() - olderThanMs;
-  const stale = held.filter((record) => {
-    const blobId = record.key.split('\u0001')[1];
-    return !needed.has(blobId) && (record.createdAt ?? 0) < cutoff;
-  });
-  await idbWrite(stale.map((record) => ({ store: 'uploads' as const, del: record.key })));
-}
-
-/** The queue and held files of one account. */
-export async function wipeAccountQueue(account: string): Promise<void> {
-  await idbDeleteAccount(account, ['queue', 'uploads']);
+export async function heldFile(account: string, blobId: string): Promise<File | null> {
+  const held = await getStore().area<{ name: string; type: string; blob: Blob } | null>(account, 'outbox.heldFile', { blobId });
+  if (!held) return null;
+  return new File([held.blob], held.name, { type: held.type });
 }

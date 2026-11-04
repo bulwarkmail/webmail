@@ -1,11 +1,13 @@
 "use client";
 
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import { useEffect } from "react";
 import { parseWebcal } from "@/lib/protocol-handlers/webcal";
 import { savePendingWebcal } from "@/lib/protocol-handlers/session";
 import { useSettingsStore } from "@/stores/settings-store";
+import { CalendarSkeleton, type CalendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
+import type { RailLabels } from "@/components/boot-skeleton/shell";
 
-type StandaloneNavigator = Navigator & { standalone?: boolean };
 
 function getProtocolPathPrefix(): string {
   const marker = "/protocol/webcal";
@@ -32,16 +34,18 @@ function openFallbackAppTab(raw: string): boolean {
 }
 
 function shouldOpenFallbackAppTab(): boolean {
-  const standalone = window.matchMedia?.("(display-mode: standalone)").matches
-    || (navigator as StandaloneNavigator).standalone === true;
-  return !standalone && window.history.length > 1;
+  return !isStandaloneDisplayMode() && window.history.length > 1;
 }
 
 interface WebcalProtocolClientProps {
   openingText: string;
+  /** Rail labels for the phone bottom bar (sidebar.*). */
+  labels?: RailLabels;
+  /** The calendar skeleton's words (calendar.*). */
+  text?: CalendarSkeletonText;
 }
 
-export function WebcalProtocolClient({ openingText }: WebcalProtocolClientProps) {
+export function WebcalProtocolClient({ openingText, labels, text }: WebcalProtocolClientProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get("url");
@@ -65,9 +69,7 @@ export function WebcalProtocolClient({ openingText }: WebcalProtocolClientProps)
     window.location.replace(`${getProtocolPathPrefix()}/calendar`);
   }, []);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p>{openingText}</p>
-    </main>
-  );
+  // The calendar is where this goes next: its skeleton, with "Opening…" as
+  // the page's status.
+  return <CalendarSkeleton label={openingText} labels={labels} text={text} />;
 }

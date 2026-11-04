@@ -123,7 +123,7 @@ export function Dialog({
   );
 
   const footerRow = footer && (
-    <div className="flex items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
+    <div className="flex flex-wrap items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
   );
 
   // With an icon the title, text and body sit in one column beside it (a
@@ -155,8 +155,8 @@ export function Dialog({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150",
-        size === "full-on-phone" && "max-sm:p-0"
+        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 pt-[calc(1rem+var(--titlebar-row-height))] animate-in fade-in duration-150",
+        size === "full-on-phone" && "max-sm:p-0 max-sm:pt-[var(--titlebar-row-height)]"
       )}
       onMouseDown={(e) => {
         pressedOnBackdrop.current = e.target === e.currentTarget;

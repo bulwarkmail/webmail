@@ -196,7 +196,7 @@ export function DelegatesSettings() {
                       <div className="text-xs text-muted-foreground">{describeSummary(summary, t)}</div>
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-2 ps-11 sm:ps-0">
+                  <div className="flex flex-wrap shrink-0 gap-2 ps-11 sm:ps-0">
                     <Button variant="outline" size="sm" onClick={() => setDialog({ mode: "change", summary })} disabled={busy || incomplete}>
                       {t("change")}
                     </Button>

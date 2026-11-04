@@ -168,6 +168,19 @@ export interface OrganisationPolicy {
     pushWithoutContent: boolean;
     watermark: boolean;
     noOffline: boolean;
+    /** How far back a device keeps mail, in days. 0 is no cap. Like the other caps, a scope can only lower it. */
+    offlineMaxDays: number;
+    noOfflineAttachments: boolean;
+    /** The largest attachment or file a device keeps, in MB. 0 is no cap. */
+    offlineMaxAttachmentMb: number;
+    /** All attachments and files of one account on a device, in MB. 0 is no cap. */
+    offlineMaxTotalMb: number;
+    /**
+     * A device deletes an account's offline data as soon as it signs out with nobody
+     * asking (the server refused the login, or the idle or session limit ran out),
+     * instead of hiding it for 30 days until the next sign-in. Unsent mail goes with it.
+     */
+    wipeOnForcedSignOut: boolean;
   };
   calendars: {
     /** Adds up across scopes by id. */
@@ -192,6 +205,8 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
   devices: {
     noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
     pushWithoutContent: false, watermark: false, noOffline: false,
+    offlineMaxDays: 0, noOfflineAttachments: false, offlineMaxAttachmentMb: 0, offlineMaxTotalMb: 0,
+    wipeOnForcedSignOut: false,
   },
   calendars: { feeds: [], freeBusyGroup: '' },
 };
@@ -208,6 +223,8 @@ export type DeepPartial<T> = {
 const MAX_TEXT = 64 * 1024;
 const MAX_LIBRARY = 200;
 const MAX_DOMAINS = 500;
+const MAX_OFFLINE_DAYS = 3650;
+const MAX_OFFLINE_MB = 1024 * 1024;
 // Same shape as the branding host rule, without the wildcard: a bare domain.
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -530,12 +547,53 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
     pushWithoutContent: bool(dev.pushWithoutContent),
     watermark: bool(dev.watermark),
     noOffline: bool(dev.noOffline),
+    offlineMaxDays: count(dev.offlineMaxDays, MAX_OFFLINE_DAYS),
+    noOfflineAttachments: bool(dev.noOfflineAttachments),
+    offlineMaxAttachmentMb: count(dev.offlineMaxAttachmentMb, MAX_OFFLINE_MB),
+    offlineMaxTotalMb: count(dev.offlineMaxTotalMb, MAX_OFFLINE_MB),
+    wipeOnForcedSignOut: bool(dev.wipeOnForcedSignOut),
   });
 
   const cal = section('calendars');
   if (cal) assign('calendars', { feeds: sanitizeFeeds(cal.feeds), freeBusyGroup: email(cal.freeBusyGroup) });
 
   return out;
+}
+
+/** The smaller of two caps, where 0 is no cap. */
+export function tighterCap(a: number, b: number): number {
+  if (!(a > 0)) return b > 0 ? b : 0;
+  return b > 0 ? Math.min(a, b) : a;
+}
+
+/**
+ * Device keys where the strictest value wins across scopes instead of the
+ * last one: a group scope must not raise what a domain scope lowered.
+ * noOffline isn't one: a scope may allow it where Everyone forbids it.
+ */
+const STRICTEST_DEVICE_MERGE: Partial<Record<keyof OrganisationPolicy['devices'], (a: never, b: never) => unknown>> = {
+  offlineMaxDays: tighterCap,
+  offlineMaxAttachmentMb: tighterCap,
+  offlineMaxTotalMb: tighterCap,
+  noOfflineAttachments: (a: boolean, b: boolean) => a || b,
+};
+
+/**
+ * Every limit either side sets: for a page that isn't about one account, or a
+ * login whose scopes can't be worked out. Numbers are caps, so a key may never
+ * become `true` here.
+ */
+export function strictestDevices(
+  base: OrganisationPolicy['devices'],
+  other: Partial<OrganisationPolicy['devices']>,
+): OrganisationPolicy['devices'] {
+  const out = { ...base } as Record<string, boolean | number>;
+  for (const [key, value] of Object.entries(other)) {
+    const current = out[key];
+    if (typeof current === 'number') out[key] = tighterCap(current, typeof value === 'number' ? value : 0);
+    else if (value === true) out[key] = true;
+  }
+  return out as OrganisationPolicy['devices'];
 }
 
 /** Arrays that add up across scopes by id instead of replacing. */
@@ -553,10 +611,10 @@ function normaliseMerged(policy: OrganisationPolicy): OrganisationPolicy {
 
 /**
  * Merges `override` into `base` per leaf of plain objects; arrays and values
- * replace. Exceptions: the lists in ADDITIVE_LISTS add up by id, and the
- * sections in WHOLE_SECTIONS are replaced as a whole (a scope's own label
- * scheme or announcement never mixes with the inherited one), with the
- * built-in defaults for keys the override leaves out.
+ * replace. Exceptions: the lists in ADDITIVE_LISTS add up by id, the sections
+ * in WHOLE_SECTIONS are replaced as a whole (a scope's own label scheme or
+ * announcement never mixes with the inherited one), with the built-in defaults
+ * for keys the override leaves out, and the offline caps keep the strictest.
  */
 export function mergeOrganisation(
   base: OrganisationPolicy,
@@ -577,6 +635,9 @@ export function mergeOrganisation(
         const byId = new Map((merged[key] as Array<{ id: string }>).map((t) => [t.id, t]));
         for (const item of value as Array<{ id: string }>) byId.set(item.id, item);
         merged[key] = [...byId.values()];
+      } else if (sectionKey === 'devices' && STRICTEST_DEVICE_MERGE[key as keyof OrganisationPolicy['devices']]) {
+        const pick = STRICTEST_DEVICE_MERGE[key as keyof OrganisationPolicy['devices']] as (a: unknown, b: unknown) => unknown;
+        merged[key] = pick(merged[key], value);
       } else {
         merged[key] = value;
       }

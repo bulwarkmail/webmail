@@ -10,24 +10,29 @@ export const MAIL_SHORTCUTS = {
     { key: "n", description: "shortcuts.navigation.next_unread" },
     { key: "g → i / s / t / d / a", description: "shortcuts.navigation.go_to_folder", layout: "mountain-view" },
   ],
+  // The same keys the toolbar tooltips and message menus show
+  // (components/email/message-action-shortcuts.ts). `a` and `#` still work,
+  // unadvertised (mail-p2-13).
   actions: [
-    { key: "r", description: "shortcuts.actions.reply" },
-    { key: "R / a", description: "shortcuts.actions.reply_all" },
-    { key: "f", description: "shortcuts.actions.forward" },
+    { key: "r", description: "shortcuts.actions.reply", desktopKey: "Mod + R" },
+    { key: "Shift + R", description: "shortcuts.actions.reply_all", desktopKey: "Mod + Shift + R" },
+    // Ctrl+F forwards with a message selected (Outlook) and searches elsewhere; Ctrl+Shift+F still works.
+    { key: "f", description: "shortcuts.actions.forward", desktopKey: "Mod + Shift + F", desktopPcKey: "Ctrl + F / Ctrl + Shift + F" },
     { key: "s", description: "shortcuts.actions.star" },
     { key: "e", description: "shortcuts.actions.archive", feature: "archiveActionEnabled" },
-    { key: "# / Del", description: "shortcuts.actions.delete" },
-    { key: "u", description: "shortcuts.actions.mark_unread" },
-    { key: "Shift + I", description: "shortcuts.actions.mark_read" },
+    { key: "Del", description: "shortcuts.actions.delete" },
+    { key: "u", description: "shortcuts.actions.mark_unread", desktopPcKey: "Ctrl + U" },
+    { key: "Shift + I", description: "shortcuts.actions.mark_read", desktopWindowsKey: "Ctrl + Q" },
     { key: "!", description: "shortcuts.actions.toggle_spam" },
     // hooks/use-undo-shortcut.ts; `z` only with single-key shortcuts on.
     { key: "Mod + Z / z", description: "shortcuts.actions.undo" },
   ],
   // Shown under "Global" together with GENERAL_SHORTCUTS (./index.ts).
   global: [
-    { key: "c", description: "shortcuts.global.compose" },
-    { key: "/", description: "shortcuts.global.search" },
-    { key: "Shift + G", description: "shortcuts.global.refresh" },
+    { key: "c", description: "shortcuts.global.compose", desktopKey: "Mod + N", desktopPcKey: "Ctrl + N / Ctrl + Shift + M" },
+    { key: "/", description: "shortcuts.global.search", desktopPcKey: "Ctrl + E" },
+    { key: "Shift + G", description: "shortcuts.global.refresh", desktopPcKey: "F9 / F5" },
+    { key: "", description: "desktopMenus.shortcut_apps", desktopPcKey: "Ctrl + 1 / Ctrl + 2 / Ctrl + 3 / Ctrl + 4" },
     { key: "Mod + A", description: "shortcuts.global.select_all" },
     { key: "Shift + ↓ / Shift + ↑", description: "shortcuts.global.extend_selection" },
   ],
@@ -38,7 +43,14 @@ export const MAIL_SHORTCUTS = {
   composer: [
     { key: "Mod + Enter", description: "shortcuts.composer.send" },
     { key: "Mod + Shift + Enter", description: "shortcuts.composer.schedule_send" },
-    { key: "t", description: "shortcuts.composer.template_picker" },
+    // "t" opens templates only outside a text field, so it isn't listed: in the composer it types a t.
+    { key: "Mod + S", description: "compose_ux.shortcut_save_draft" },
+    { key: "Mod + K", description: "compose_ux.shortcut_insert_link" },
+    { key: "Mod + Shift + C", description: "compose_ux.shortcut_show_cc" },
+    { key: "Mod + Shift + B", description: "compose_ux.shortcut_show_bcc" },
+    // Proofreading (components/email/proofreading); shown even without a checker.
+    { key: "Mod + '", description: "proofreading.shortcuts.next_issue" },
+    { key: "Mod + ;", description: "proofreading.shortcuts.previous_issue" },
   ],
 } as const;
 

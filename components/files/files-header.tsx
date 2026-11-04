@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   Menu, ChevronRight, Search, X, ArrowUpDown, Check, LayoutGrid, LayoutList,
@@ -12,6 +12,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { ToolbarButton, ToolbarSearch, TOOLBAR_ACTIVE } from "@/components/ui/toolbar";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
 import { cn } from "@/lib/utils";
 import { anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
@@ -84,6 +85,8 @@ interface FilesHeaderProps {
   selection: SelectionActions | null;
   /** In the trash: the Empty trash button. */
   emptyTrash?: { onEmpty: () => void; disabled: boolean };
+  /** The plugin side panel's button, after the details button (desktop and tablet). */
+  panelToggle?: ReactNode;
 }
 
 const MAX_VISIBLE_CRUMBS = 3;
@@ -114,14 +117,21 @@ export function FilesHeader({
   toolsHidden,
   selection,
   emptyTrash,
+  panelToggle,
 }: FilesHeaderProps) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const sortMenu = useContextMenu<null>();
   const overflowMenu = useContextMenu<Crumb[]>();
   const [searchOpen, setSearchOpen] = useState(false);
   const [dropCrumb, setDropCrumb] = useState<string | null>(null);
+  // A phone's row has no room for the path next to every tool: sort, view and details go in the ⋮.
+  const narrow = useMediaQuery("(max-width: 30rem)") && compact;
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   const headerClass = "flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0";
+  // The row is px-3; the margin puts the button where the reader has it (px-4, lg:px-6).
+  const toggleSlot = panelToggle ? <div className="flex items-center shrink-0 me-1 lg:me-3" data-panel-toggle-slot="">{panelToggle}</div> : null;
 
   if (selection) {
     return (
@@ -150,7 +160,7 @@ export function FilesHeader({
             <ToolButton icon={Download} label={t("download")} onClick={selection.onDownload} compact />
           )}
           {selection.canShare && (
-            <ToolButton icon={Share2} label={t("share")} onClick={selection.onShare} compact />
+            <ToolButton icon={Share2} label={tMenu("files_share_button")} onClick={selection.onShare} compact />
           )}
           {selection.canRename && (
             <ToolButton icon={Pencil} label={t("rename")} onClick={selection.onRename} compact />
@@ -160,22 +170,30 @@ export function FilesHeader({
           )}
           <ToolButton icon={Scissors} label={t("cut")} onClick={selection.onCut} compact />
           <ToolButton icon={Copy} label={t("copy")} onClick={selection.onCopy} compact />
-          <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />
+          {!compact && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
           {!compact && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} />}
           </>
           )}
         </div>
-        {/* Outside the scrolling row, so the "more" button never scrolls out of sight. */}
+        {/* Outside the scrolling row, so Delete and the "more" button never scroll out of sight. */}
+        {compact && !selection.trash && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
         {compact && !selection.trash && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} overflow />}
         <div className="flex-1" />
-        <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />
+        {!narrow && <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />}
+        {toggleSlot}
       </div>
     );
   }
 
   // Deep paths keep the root and the last folders; the rest go in a menu.
-  const hidden = crumbs.length > MAX_VISIBLE_CRUMBS + 1 ? crumbs.slice(1, crumbs.length - MAX_VISIBLE_CRUMBS + 1) : [];
-  const visible = hidden.length > 0 ? [crumbs[0], ...crumbs.slice(crumbs.length - MAX_VISIBLE_CRUMBS + 1)] : crumbs;
+  // A phone only fits the folder you are in, with the way up in the menu.
+  const onlyLast = narrow ? crumbs.length > 1 : compact && crumbs.length > 2;
+  const hidden = onlyLast
+    ? crumbs.slice(0, -1)
+    : crumbs.length > MAX_VISIBLE_CRUMBS + 1 ? crumbs.slice(1, crumbs.length - MAX_VISIBLE_CRUMBS + 1) : [];
+  const visible = onlyLast
+    ? crumbs.slice(-1)
+    : hidden.length > 0 ? [crumbs[0], ...crumbs.slice(crumbs.length - MAX_VISIBLE_CRUMBS + 1)] : crumbs;
 
   const crumbDropProps = (crumb: Crumb, isLast: boolean) => isLast ? {} : {
     onDragOver: (e: React.DragEvent) => {
@@ -196,12 +214,13 @@ export function FilesHeader({
   const renderCrumb = (crumb: Crumb, index: number) => {
     const isLast = crumb === crumbs[crumbs.length - 1];
     return (
-      <li key={`${crumb.id ?? "root"}:${crumb.path}`} className="flex items-center min-w-0 shrink-0 last:shrink">
+      <li key={`${crumb.id ?? "root"}:${crumb.path}`} className="flex items-center min-w-0 shrink first:shrink-0 last:shrink-[0.25]">
         {index > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />}
         <button
           type="button"
           onClick={() => onNavigateCrumb(crumb)}
           aria-current={isLast ? "page" : undefined}
+          title={crumb.name}
           className={cn(
             "px-1.5 py-1 rounded-md transition-colors truncate max-w-[16rem]",
             isLast ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -263,8 +282,8 @@ export function FilesHeader({
 
       <nav aria-label={t("breadcrumbs")} className="flex-1 min-w-0">
         <ol className="flex items-center text-sm min-w-0">
-          {visible.slice(0, 1).map((c) => renderCrumb(c, 0))}
-          {accountLabel && (
+          {!onlyLast && visible.slice(0, 1).map((c) => renderCrumb(c, 0))}
+          {accountLabel && !onlyLast && (
             <li className="flex items-center min-w-0 shrink-0">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
               <button
@@ -278,7 +297,7 @@ export function FilesHeader({
           )}
           {hidden.length > 0 && (
             <li className="flex items-center shrink-0">
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
+              {!onlyLast && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />}
               <button
                 type="button"
                 className="px-1.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -290,12 +309,12 @@ export function FilesHeader({
               </button>
             </li>
           )}
-          {visible.slice(1).map((c, i) => renderCrumb(c, i + 1))}
+          {(onlyLast ? visible : visible.slice(1)).map((c, i) => renderCrumb(c, i + 1))}
         </ol>
       </nav>
 
       {!toolsHidden && (
-        <div className="flex items-center gap-1 shrink-0">
+        <div ref={toolsRef} className="flex items-center gap-1 shrink-0">
           {emptyTrash && (
             <Button
               variant="outline"
@@ -320,7 +339,7 @@ export function FilesHeader({
               <Search />
             </ToolbarButton>
           ) : searchField}
-          <ToolbarButton
+          {!narrow && <ToolbarButton
             label={t("sort_by")}
             active={sortMenu.contextMenu.isOpen}
             aria-haspopup="menu"
@@ -332,8 +351,8 @@ export function FilesHeader({
             }}
           >
             <ArrowUpDown />
-          </ToolbarButton>
-          <div className="flex items-center h-8 rounded-md border border-input p-0.5 shrink-0" role="radiogroup" aria-label={t("view_mode")}>
+          </ToolbarButton>}
+          {!narrow && <div className="flex items-center h-8 rounded-md border border-input p-0.5 shrink-0" role="radiogroup" aria-label={t("view_mode")}>
             {([["list", LayoutList, t("list_view")], ["grid", LayoutGrid, t("grid_view")]] as const).map(([mode, Icon, label]) => (
               <button
                 key={mode}
@@ -353,18 +372,26 @@ export function FilesHeader({
                 <Icon className="w-4 h-4" />
               </button>
             ))}
-          </div>
+          </div>}
           {!compact && (
             <ToolbarButton label={t("refresh")} onClick={onRefresh} disabled={isLoading}>
               <RefreshCw className={cn(isLoading && "animate-spin [animation-direction:reverse]")} />
             </ToolbarButton>
           )}
-          <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />
+          {!narrow && <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />}
+          {toggleSlot}
           <PhoneHeaderActions
             below="md"
             menuItems={(close) => (
-              // The phone header has no room for Refresh as a button.
-              <ContextMenuItem icon={RefreshCw} label={t("refresh")} onClick={() => { close(); onRefresh(); }} disabled={isLoading} />
+              <>
+                {narrow && <ContextMenuItem icon={ArrowUpDown} label={t("sort_by")} onClick={() => { close(); if (toolsRef.current) sortMenu.openContextMenu(anchorEvent(toolsRef.current, "end"), null); }} />}
+                {narrow && (viewMode === "list"
+                  ? <ContextMenuItem icon={LayoutGrid} label={t("grid_view")} onClick={() => { close(); onViewModeChange("grid"); }} />
+                  : <ContextMenuItem icon={LayoutList} label={t("list_view")} onClick={() => { close(); onViewModeChange("list"); }} />)}
+                {narrow && <ContextMenuItem icon={PanelRight} label={t("details")} onClick={() => { close(); onToggleDetails(); }} />}
+                {/* The phone header has no room for Refresh as a button. */}
+                <ContextMenuItem icon={RefreshCw} label={t("refresh")} onClick={() => { close(); onRefresh(); }} disabled={isLoading} />
+              </>
             )}
           />
         </div>

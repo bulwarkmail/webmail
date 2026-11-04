@@ -1,3 +1,4 @@
+import { isAppLockOn } from '@/lib/app-lock/state';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedSidebarApps } from '@/hooks/use-resolved-sidebar-apps';
@@ -97,11 +98,19 @@ export function useSidebarApps() {
       const origins = inlineAppFrameOrigins(sidebarApps);
       if (!origins.includes(origin)) origins.push(origin);
       if (writeAppFrameOrigins(origins)) {
+        // Only a new document gets the new CSP, and with the app lock on that would ask for
+        // the PIN just to open an app. So this once it opens beside the app, and in place
+        // from the next start on.
+        if (isAppLockOn()) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+          return;
+        }
         try {
           sessionStorage.setItem(PENDING_APP_KEY, JSON.stringify(app));
         } catch {
           // Private mode / storage full - the app just won't reopen itself.
         }
+        // full-load: a document's frame-src can't change without a new document.
         window.location.reload();
         return;
       }

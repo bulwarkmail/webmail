@@ -61,7 +61,7 @@ export function MobileHeader({
   const { toggleSidebar, goBack, sidebarOpen } = useUIStore(useShallow((state) => ({ toggleSidebar: state.toggleSidebar, goBack: state.goBack, sidebarOpen: state.sidebarOpen })));
   const mountainView = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   // Pane-aware: in Pro split mode the viewport is desktop-wide while the
-  // pane is narrow. The Tailwind `lg:hidden` variant alone would never fire
+  // pane is narrow. The Tailwind `desk:hidden` variant alone would never fire
   // there, so we additionally hide via JS when the surrounding pane is
   // desktop-sized. Outside of Pro this still returns the viewport value.
   const isPaneDesktop = useIsDesktop();

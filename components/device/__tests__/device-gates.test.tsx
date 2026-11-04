@@ -129,6 +129,8 @@ describe('No export', () => {
     await waitFor(() => expect(discard).toHaveBeenCalledWith(true));
     expect(controller.signal.aborted).toBe(true);
     expect(useMailTransferStore.getState().job).toBeNull();
+    // The dialog just went: this is all that says why.
+    expect(toast.info).toHaveBeenCalledWith('export_blocked');
   });
 });
 

@@ -49,6 +49,10 @@ describe('formatDate formatters', () => {
       const got = formatDate(d);
       if (dateFormat === 'full') {
         expect(got).toBe(d.toLocaleString(numeric, { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12 }));
+      } else if (dateFormat === 'smart' && ago > 7 * 86_400_000 && dateLocale === 'auto'
+        && d.toLocaleDateString('en-US', { timeZone: zone, year: 'numeric' }) === new Date(now).toLocaleDateString('en-US', { timeZone: zone, year: 'numeric' })) {
+        // Earlier this year: day and month (mail-16).
+        expect(got).toBe(d.toLocaleDateString('en-US', { timeZone: zone, month: 'short', day: 'numeric' }));
       } else if (dateFormat === 'smart' && ago > 7 * 86_400_000) {
         expect(got).toBe(d.toLocaleDateString(numeric, { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }));
       } else if (dateFormat === 'smart' && ago > 86_400_000) {

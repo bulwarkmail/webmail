@@ -249,8 +249,8 @@ describe('RecipientChipInput drag and drop', () => {
   it('keeps a display name with a comma in a single chip (array model)', async () => {
     render(<EmailComposer initialData={{ ...BASE_DATA, to: '"Doo, John" <john@doo.org>, ' }} />);
 
-    // One chip, displayed as "Doo, John (john@doo.org)" — not split on the comma.
-    const chip = await screen.findByText('Doo, John (john@doo.org)');
+    // One chip, "Doo, John" with the address in its tooltip — not split on the comma.
+    const chip = await screen.findByTitle('Doo, John <john@doo.org>');
     const chipSpan = chip.closest('[draggable]') as HTMLElement;
     expect(chipSpan).not.toBeNull();
 

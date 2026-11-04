@@ -52,18 +52,26 @@ beforeEach(() => {
 });
 
 describe('AccountSecuritySettings sign-in section', () => {
+  // settings-p2-18: the heading is "Two-step sign-in", the row's own name, not "Two-factor authentication".
+  it('heads two-step sign-in with the name of its row', () => {
+    signIn('basic', false);
+    render(<AccountSecuritySettings />);
+    expect(screen.queryByText('totp.section_title')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'totp.label' })).toBeInTheDocument();
+  });
+
   it('shows password and two-factor to a password sign-in', () => {
     signIn('basic', false);
     render(<AccountSecuritySettings />);
     expect(screen.getByText('password.title')).toBeInTheDocument();
-    expect(screen.getByText('totp.section_title')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'totp.label' })).toBeInTheDocument();
   });
 
   it('shows them to a password plus TOTP sign-in, which runs on OAuth tokens (#1432)', () => {
     signIn('oauth', false);
     render(<AccountSecuritySettings />);
     expect(screen.getByText('password.title')).toBeInTheDocument();
-    expect(screen.getByText('totp.section_title')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'totp.label' })).toBeInTheDocument();
   });
 
   it.each([
@@ -74,7 +82,7 @@ describe('AccountSecuritySettings sign-in section', () => {
     signIn(authMode, providerSession);
     render(<AccountSecuritySettings />);
     expect(screen.queryByText('password.title')).toBeNull();
-    expect(screen.queryByText('totp.section_title')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'totp.label' })).toBeNull();
     expect(screen.getByText('email_client.title')).toBeInTheDocument();
   });
 });

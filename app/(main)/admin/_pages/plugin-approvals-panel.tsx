@@ -120,7 +120,7 @@ export function PluginApprovalsPanel() {
           <Badge tone={STATUS_TONE[entry.status]}>{entry.status}</Badge>
         </div>
         {entry.manifest.description && <p className="text-xs text-muted-foreground">{entry.manifest.description}</p>}
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
           <code className="font-mono">{entry.pluginId}</code> &middot; by {entry.manifest.author ?? 'unknown'} &middot; requested by {entry.requestedBy} on {new Date(entry.requestedAt).toLocaleString()}
         </div>
         {perms.length > 0 && (

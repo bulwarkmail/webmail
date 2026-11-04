@@ -26,13 +26,13 @@ beforeEach(() => {
     { id: 'long', label: 'InternationalInfrastructureModernizationProject', color: 'blue' },
   ], showColorNames: false, showPreview: false, showAccountDot: true, tintListRowsByAccount: false,
   mailLayout: 'split', interfaceLayout: 'default', listColumns: false, density: 'regular' });
-  useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+  useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
   useEmailStore.setState({ selectedEmailKeys: new Set(), selectedMailbox: 'inbox', isUnifiedView: true,
     mailboxes: [{ id: 'inbox', role: 'inbox' } as never] });
 });
 
-function rows({ child = false, count = 1, layout = 'split', rtl = false, dot = false, tagged = true, placement, expanded = false }: {
-  child?: boolean; count?: number; layout?: string; rtl?: boolean; dot?: boolean; tagged?: boolean; placement?: 'sender' | 'subject'; expanded?: boolean;
+function rows({ child = false, count = 1, layout = 'split', rtl = false, dot = false, tagged = true, placement, expanded = false, tight = false }: {
+  child?: boolean; count?: number; layout?: string; rtl?: boolean; dot?: boolean; tagged?: boolean; placement?: 'sender' | 'subject'; expanded?: boolean; tight?: boolean;
 } = {}) {
   useSettingsStore.setState({ mailLayout: layout === 'split' ? 'split' : 'focus',
     interfaceLayout: layout === 'mountain' ? 'mountain-view' : 'default', listColumns: layout === 'columns' });
@@ -42,7 +42,7 @@ function rows({ child = false, count = 1, layout = 'split', rtl = false, dot = f
     subject: 'Synthetic subject', preview: 'Synthetic preview', size: 1024, receivedAt: '2026-01-15T10:00:00Z',
     hasAttachment: true, accountId: 'a', accountLabel: 'Account A',
   }));
-  return <div dir={rtl ? 'rtl' : 'ltr'}><TagDisplayContext.Provider value={{ variant: dot ? 'dot' : 'badge', placement: placement ?? (layout === 'split' ? 'sender' : 'subject') }}>
+  return <div dir={rtl ? 'rtl' : 'ltr'}><TagDisplayContext.Provider value={{ variant: dot ? 'dot' : 'badge', placement: placement ?? (layout === 'split' ? 'sender' : 'subject'), tight }}>
     {child ? <ThreadEmailItem email={emails[0]} /> : <ThreadListItem thread={groupEmailsByThread(emails)[0]} isExpanded={expanded} onToggleExpand={() => {}} onEmailSelect={() => {}} />}
   </TagDisplayContext.Provider></div>;
 }
@@ -139,6 +139,15 @@ describe('list-row tag suffix classes', () => {
       expect(suffix.previousElementSibling).toHaveClass('min-w-0', 'flex-1');
       unmount();
     }
+  });
+
+  it.each([1, 3])('keeps upstream tight sender dots in the bounded suffix for %i messages', count => {
+    const { container } = render(rows({ count, tight: true }));
+    const suffix = container.querySelector('.flex-wrap.overflow-hidden')!;
+    expect(suffix.querySelectorAll('[data-tag-dot]')).toHaveLength(2);
+    expect(suffix).toHaveClass('has-[[data-tag-dot]]:h-4');
+    expect(container.querySelector('.tabular-nums')).not.toBeNull();
+    expect(suffix.querySelector('.tabular-nums')).toBeNull();
   });
 
   it('keeps Mountain View counts with the sender names', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { AlertTriangle, ChevronDown, ChevronRight, ChevronUp, Plus, RotateCcw, Trash2 } from '@/components/icons';
 import { SettingItem, SettingsSection, ToggleSwitch } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
@@ -190,8 +190,14 @@ export function LabelsSection({ draft }: { draft: OrgPolicyDraft }) {
   };
 
   // The extra header name is typed freely and stored once it is a valid name.
+  // A new stored value (a load, a scope switch) replaces the text during
+  // render: an effect would run after mount and could wipe what was typed.
   const [headerText, setHeaderText] = useState(extraHeader);
-  useEffect(() => { setHeaderText(extraHeader); }, [extraHeader]);
+  const [headerFrom, setHeaderFrom] = useState(extraHeader);
+  if (headerFrom !== extraHeader) {
+    setHeaderFrom(extraHeader);
+    setHeaderText(extraHeader);
+  }
   const headerInvalid = headerText.trim() !== '' && !isLabelExtraHeaderName(headerText);
   const onHeader = (text: string) => {
     setHeaderText(text);

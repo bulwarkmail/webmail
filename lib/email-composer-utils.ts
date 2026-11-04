@@ -1,6 +1,7 @@
 import { isValidEmail } from "@/lib/validation";
 import { splitMailbox } from "@/lib/rfc5322-mailbox";
 import { htmlToPlainText } from "@/lib/html-to-text";
+import { hasMeaningfulHtmlBody } from "@/lib/signature-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { Ellipsis, Lock, TriangleAlert } from "@/components/icons";
 import type { Email } from "@/lib/jmap/types";
@@ -48,9 +49,14 @@ export function getQuoteBodies(
   const body = textValue
     ? (textPartIsHtml ? htmlToPlainText(textValue, { paragraphSpacing: true }) : textValue)
     : (email.preview || "");
+  // Like the viewer (getRenderableHtmlBody): an HTML part that is only a bare
+  // wrapper around the text, next to a real text part, often has no <br>, so
+  // quoting it would run every line together. Quote the text part instead.
+  const bareHtmlBesideText = !!htmlValue && !!textValue && !textPartIsHtml
+    && textPart?.partId !== htmlPart?.partId && !hasMeaningfulHtmlBody(htmlValue);
   return {
     body,
-    htmlBody: htmlPartIsHtml ? htmlValue || undefined : undefined,
+    htmlBody: htmlPartIsHtml && !bareHtmlBesideText ? htmlValue || undefined : undefined,
   };
 }
 

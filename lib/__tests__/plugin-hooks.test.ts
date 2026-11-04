@@ -269,6 +269,25 @@ describe('onBeforeBlobUpload offload budget', () => {
   });
 });
 
+describe('onBeforeCalendarAlert budget', () => {
+  it('shows the reminder after 5s when a plugin hangs, not after the dialog budget', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      calendarHooks.onBeforeCalendarAlert.register('hung', () => new Promise(() => {}));
+      let allowed: boolean | undefined;
+      void calendarHooks.onBeforeCalendarAlert.intercept({ id: 'a1', taskId: 't1' }).then((a) => { allowed = a; });
+      await vi.advanceTimersByTimeAsync(4_900);
+      expect(allowed).toBeUndefined();
+      await vi.advanceTimersByTimeAsync(200);
+      expect(allowed).toBe(true);
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    }
+  });
+});
+
 describe('isExternalAttachmentResult', () => {
   const valid = { externalAttachment: true, html: '<a href="https://x/y">y</a>', text: 'https://x/y' };
 

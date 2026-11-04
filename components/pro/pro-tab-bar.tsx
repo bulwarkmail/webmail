@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type WheelEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { useRestoredTabTitles } from "@/hooks/use-restored-tab-titles";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
 import {
   PRO_TAB_DRAG_MIME,
@@ -49,6 +50,14 @@ const TAB_ICONS: Record<ProTabKind, AppIcon> = {
 
 type DropIndicator = { targetId: string; edge: "before" | "after" } | null;
 
+/** Scrolls the strip by the least that shows the whole tab. Rects are physical, so this holds in RTL too. */
+export function revealInStrip(strip: HTMLElement, tab: HTMLElement): void {
+  const s = strip.getBoundingClientRect();
+  const r = tab.getBoundingClientRect();
+  if (r.left < s.left) strip.scrollLeft -= s.left - r.left;
+  else if (r.right > s.right) strip.scrollLeft += r.right - s.right;
+}
+
 export function ProTabBar({
   paneId,
   tabs,
@@ -63,11 +72,38 @@ export function ProTabBar({
 }: ProTabBarProps) {
   const tSidebar = useTranslations("sidebar");
   const reorderTab = useProTabStore((s) => s.reorderTab);
+  useRestoredTabTitles(tabs);
 
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null);
   // True while an email or folder payload hovers the strip (both drop "anywhere").
   const [isPayloadDragOver, setIsPayloadDragOver] = useState(false);
   const dragLeaveTimer = useRef<number | null>(null);
+  const stripRef = useRef<HTMLDivElement | null>(null);
+
+  // A strip fuller than its pane scrolls, so the active tab has to be brought
+  // into view: a tab that just opened lands past the end. Also when the strip
+  // itself gets narrower (a split opens, the window shrinks).
+  const tabCount = tabs.length;
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !activeTabId) return;
+    const reveal = () => {
+      const active = strip.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(activeTabId)}"]`);
+      if (active) revealInStrip(strip, active);
+    };
+    reveal();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(reveal);
+    ro.observe(strip);
+    return () => ro.disconnect();
+  }, [activeTabId, tabCount]);
+
+  // The strip draws no scrollbar: an ordinary mouse wheel moves along it.
+  const handleStripWheel = (e: WheelEvent<HTMLDivElement>) => {
+    if (e.deltaX !== 0 || e.deltaY === 0) return;
+    const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
+    e.currentTarget.scrollLeft += rtl ? -e.deltaY : e.deltaY;
+  };
 
   const dragKind = (e: DragEvent) => dragKindFromTypes(e.dataTransfer.types);
 
@@ -95,8 +131,9 @@ export function ProTabBar({
     }
     e.dataTransfer.dropEffect = "move";
     const rect = e.currentTarget.getBoundingClientRect();
-    const edge: "before" | "after" =
-      e.clientX < rect.left + rect.width / 2 ? "before" : "after";
+    const inFirstHalf = e.clientX < rect.left + rect.width / 2;
+    const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
+    const edge: "before" | "after" = inFirstHalf !== rtl ? "before" : "after";
     setDropIndicator((prev) =>
       prev && prev.targetId === tab.id && prev.edge === edge
         ? prev
@@ -218,6 +255,8 @@ export function ProTabBar({
 
   return (
     <div
+      ref={stripRef}
+      onWheel={handleStripWheel}
       className={cn(
         "relative flex items-stretch h-9 bg-secondary px-1 overflow-x-auto scroll-hidden flex-shrink-0",
         isPayloadDragOver && "bg-primary/10",
@@ -226,6 +265,7 @@ export function ProTabBar({
       style={{ borderBottom: '1px solid rgba(128, 128, 128, 0.3)' }}
       role="tablist"
       data-pane-strip={paneId}
+      data-window-top-row
       onDragLeave={handleStripDragLeave}
     >
       {tabs.map((tab, index) => {
@@ -259,7 +299,7 @@ export function ProTabBar({
             onDragEnd={handleDragEnd}
             className={cn(
               "group relative flex items-center gap-1.5 px-3 h-9 text-sm cursor-pointer select-none transition-colors",
-              "min-w-0 flex-1 basis-0 max-w-[200px] [min-width:80px]",
+              "min-w-24 flex-1 basis-0 max-w-[200px]",
               "border-e border-border first:border-s",
               isActive
                 ? "bg-background text-foreground"
@@ -282,9 +322,10 @@ export function ProTabBar({
                   onClose(tab.id);
                 }}
                 className={cn(
-                  "ms-1 flex items-center justify-center w-4 h-4 rounded-sm transition-colors flex-shrink-0",
+                  "ms-1 items-center justify-center w-4 h-4 rounded-sm transition-colors flex-shrink-0",
                   "text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground",
-                  !isActive && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+                  // Takes no room until wanted: in a full strip the label needs it.
+                  isActive ? "flex" : "hidden group-hover:flex",
                 )}
                 aria-label={tSidebar("close")}
                 tabIndex={isActive ? 0 : -1}
@@ -311,13 +352,13 @@ export function ProTabBar({
 
             {showBefore && (
               <span
-                className="pointer-events-none absolute top-1 bottom-1 left-0 w-0.5 -translate-x-1/2 bg-primary rounded-full"
+                className="pointer-events-none absolute top-1 bottom-1 start-0 w-0.5 -translate-x-1/2 rtl:translate-x-1/2 bg-primary rounded-full"
                 aria-hidden="true"
               />
             )}
             {showAfter && (
               <span
-                className="pointer-events-none absolute top-1 bottom-1 right-0 w-0.5 translate-x-1/2 bg-primary rounded-full"
+                className="pointer-events-none absolute top-1 bottom-1 end-0 w-0.5 translate-x-1/2 rtl:-translate-x-1/2 bg-primary rounded-full"
                 aria-hidden="true"
               />
             )}

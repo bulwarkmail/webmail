@@ -7,6 +7,7 @@ import { getPlugin, getTheme, savePlugin, saveTheme } from '@/lib/admin/plugin-r
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 import { EXTENSION_ID_RE } from '@/lib/extension-package';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * POST /api/admin/extensions/[kind]/[id]/rollback
@@ -32,6 +33,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unknown extension kind' }, { status: 400 });
     }
     if (!EXTENSION_ID_RE.test(id)) return NextResponse.json({ error: 'Invalid extension id' }, { status: 400 });
+    if (kind === 'plugin') {
+      const refused = devicePolicyPluginRefusal(id);
+      if (refused) return refused;
+    }
 
     const body = await request.json().catch(() => ({}));
     const version = typeof body?.version === 'string' ? body.version.trim() : '';
@@ -53,6 +58,7 @@ export async function POST(
         id,
         enabled: current.enabled,
         ...(current.forceEnabled !== undefined ? { forceEnabled: current.forceEnabled } : {}),
+        defaultOff: current.defaultOff === true ? true : undefined,
         installedAt: current.installedAt,
         updatedAt: now,
       };

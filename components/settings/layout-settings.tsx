@@ -10,6 +10,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
+import { localizeMailboxName } from '@/lib/mailbox-label';
 
 const MAIL_LAYOUT_PREVIEW_ROWS = [
   { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
@@ -188,7 +189,7 @@ export function LayoutSection() {
 /** The Appearance page's Sidebar section: what the folder sidebar and rail show. */
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
-  const { hideAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
+  const { showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
@@ -208,17 +209,9 @@ export function SidebarSection() {
         />
       </SettingItem>
 
-      {/* The account switcher and the rail avatars only mean something with
-          a second account; a single-account user never sees either. */}
-      {multiAccount && (
-        <SettingItem label={t('hide_account_switcher.label')} description={t('hide_account_switcher.description')}>
-          <ToggleSwitch
-            checked={hideAccountSwitcher}
-            onChange={(checked) => updateSetting('hideAccountSwitcher', checked)}
-          />
-        </SettingItem>
-      )}
-
+      {/* The rail avatars only mean something with a second account. The
+          sidebar's own account switcher is gone (the rail's avatar is the
+          one), and with it the switch that hid it. */}
       {multiAccount && (
         <SettingItem label={t('show_rail_account_list.label')} description={t('show_rail_account_list.description')}>
           <ToggleSwitch
@@ -238,6 +231,7 @@ export function SidebarSection() {
  */
 export function MultipleAccountsSection() {
   const t = useTranslations('settings.appearance');
+  const tSidebar = useTranslations('sidebar');
   const { enableUnifiedMailbox, includeGroupInUnified, unifiedCrossAccount, allMailFolderIds, enableCrossUnreadView, enableCrossStarredView, enableCrossAllView, tintListRowsByAccount, showAccountDot, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const accounts = useAccountStore(s => s.accounts);
@@ -391,7 +385,9 @@ export function MultipleAccountsSection() {
                       {checked && <Check className="w-3 h-3" />}
                     </span>
                     <Folder className={cn("w-4 h-4 flex-shrink-0", mb.role ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-sm text-foreground truncate">{mb.name}</span>
+                    <span className="text-sm text-foreground truncate">
+                      {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
+                    </span>
                   </button>
                 );
               })}

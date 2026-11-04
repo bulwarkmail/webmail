@@ -50,22 +50,24 @@ export function ScreenshotGallery({ images, name }: { images: GalleryImage[]; na
         description={open !== null && images[open].altText ? images[open].altText : undefined}
         size="lg"
         className="max-w-[min(96vw,1400px)]"
+        bodyClassName="max-sm:px-3"
         testId="screenshot-gallery-dialog"
       >
         {open !== null && (
-          <div className="mt-4 flex items-center gap-2" onKeyDown={onKeyDown}>
+          // On a phone the arrows go under the image: beside it they leave it smaller than the thumbnail.
+          <div className="mt-4 grid grid-cols-2 items-center gap-2 sm:flex" onKeyDown={onKeyDown}>
             {count > 1 && (
-              <IconButton label="Previous screenshot" onClick={() => step(-1)} className="shrink-0">
+              <IconButton label="Previous screenshot" onClick={() => step(-1)} className="row-start-2 shrink-0 justify-self-start">
                 <ChevronLeft className="h-5 w-5" />
               </IconButton>
             )}
             <img
               src={images[open].url}
               alt={alt(open)}
-              className="block min-w-0 flex-1 max-h-[75vh] object-contain rounded-md border border-border bg-muted"
+              className="col-span-2 block w-full min-w-0 max-h-[min(75dvh,calc(100dvh-8rem))] object-contain rounded-md border border-border bg-muted sm:w-auto sm:flex-1"
             />
             {count > 1 && (
-              <IconButton label="Next screenshot" onClick={() => step(1)} className="shrink-0">
+              <IconButton label="Next screenshot" onClick={() => step(1)} className="row-start-2 shrink-0 justify-self-end">
                 <ChevronRight className="h-5 w-5" />
               </IconButton>
             )}

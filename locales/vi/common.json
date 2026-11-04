@@ -6,9 +6,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "Mật khẩu",
     "password_placeholder": "Nhập mật khẩu của bạn",
-    "jmap_endpoint_label": "Máy chủ JMAP",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Máy chủ phải cho phép các yêu cầu CORS từ miền này.",
     "jmap_server_label": "Máy chủ",
     "jmap_server_auto_picked": "Máy chủ được chọn từ miền email của bạn.",
     "sign_in": "Đăng nhập",
@@ -29,7 +26,7 @@
     },
     "show_password": "Hiển thị mật khẩu",
     "hide_password": "Ẩn mật khẩu",
-    "totp_toggle": "Tôi có mã 2FA",
+    "totp_toggle": "Tôi có mã từ ứng dụng xác thực",
     "token_toggle": "Đăng nhập bằng mã truy cập",
     "password_toggle": "Đăng nhập bằng mật khẩu",
     "token_label": "Mã truy cập",
@@ -126,7 +123,7 @@
     "sign_out_of": "Đăng xuất khỏi {account}",
     "sign_out_all": "Đăng xuất khỏi tất cả các tài khoản",
     "add_account": "Thêm tài khoản",
-    "set_as_default": "Đặt làm mặc định",
+    "set_as_default": "Mở tài khoản này khi khởi động",
     "switch_account": "Chuyển đổi tài khoản",
     "contacts": "Danh bạ",
     "calendar": "Lịch",
@@ -177,6 +174,7 @@
     },
     "clear_search": "Xóa tìm kiếm",
     "vacation_active": "Đang bật trả lời tự động khi vắng mặt",
+    "vacation_turn_off": "Tắt",
     "demo_banner": "Chế độ demo",
     "demo_reset": "Đặt lại",
     "demo_tour": "Tham quan",
@@ -215,22 +213,30 @@
     "mv_storage_used": "Đã dùng {percent}% dung lượng {total}",
     "accessibility": "Hỗ trợ tiếp cận"
   },
+  "account_unread": {
+    "others": "Chưa đọc trong các tài khoản khác: {count}",
+    "badge_all_accounts": {
+      "label": "Đếm thư chưa đọc của mọi tài khoản",
+      "description": "Con số trên tab, biểu tượng ứng dụng và khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập."
+    },
+    "empty_hint": "Bạn có thể làm trống thư mục {folder} để xóa vĩnh viễn tất cả thư."
+  },
   "protocol_handlers": {
     "title": "Ứng dụng mặc định",
-    "description": "Chọn xem các liên kết email và lịch có mở trong {appName} hay không. Về mặt kỹ thuật, {appName} đăng ký làm trình xử lý giao thức cho các liên kết mailto: và webcal:.",
+    "description": "Chọn có mở liên kết email và lịch trong {appName} hay không.",
     "unsupported": "Trình duyệt hoặc kết nối này không hỗ trợ đăng ký trình xử lý giao thức thủ công. Bạn vẫn có thể sử dụng PWA đã cài đặt thông qua cài đặt trình duyệt hoặc hệ điều hành.",
-    "mailto_label": "Liên kết email",
-    "mailto_description": "Mở các liên kết mailto: trong {appName} bằng trình soạn thảo được điền sẵn.",
-    "protocol_open_mode_label": "Khi mở liên kết giao thức",
+    "mailto_label": "Mở liên kết email trong {appName}",
+    "mailto_description": "Nhấp vào một địa chỉ email trên trang web sẽ bắt đầu thư mới trong {appName}.",
+    "protocol_open_mode_label": "Cách mở liên kết",
     "protocol_open_mode_description": "Chọn xem {appName} mở liên kết mailto: và webcal: trong tab mới hay sử dụng lại phiên đang mở. Tùy chọn phiên hoạt động cần có quyền thông báo để bạn có thể nhấp vào thông báo dự phòng để đưa {appName} lên phía trước nếu trình duyệt chặn tiêu điểm.",
     "protocol_open_mode_active_session": "Mở trong phiên hoạt động nếu có thể",
     "protocol_open_mode_new_tab": "Luôn mở tab mới",
     "focus_notification_title": "Mở {appName}",
     "focus_notification_body": "Liên kết đã được mở trong {appName}. Bấm để đưa cửa sổ lên phía trước.",
-    "webcal_label": "Liên kết lịch",
-    "webcal_description": "Mở các liên kết webcal: trong {appName} bằng hộp thoại đăng ký lịch được điền sẵn.",
-    "register_mailto": "Đăng ký ứng dụng email",
-    "register_webcal": "Đăng ký ứng dụng lịch",
+    "webcal_label": "Mở liên kết lịch trong {appName}",
+    "webcal_description": "Nhấp vào một liên kết lịch trên trang web sẽ thêm lịch vào {appName}.",
+    "register_mailto": "Dùng {appName} cho liên kết email",
+    "register_webcal": "Dùng {appName} cho liên kết lịch",
     "mailto_registered": "Đã yêu cầu đăng ký trình xử lý email",
     "webcal_registered": "Đã yêu cầu đăng ký trình xử lý lịch",
     "registration_failed": "Đăng ký xử lý giao thức không thành công",
@@ -240,7 +246,6 @@
     "select_account_title": "Chọn tài khoản",
     "select_mailto_account": "Chọn tài khoản nào sẽ mở liên kết email này.",
     "select_webcal_account": "Chọn tài khoản nào sẽ mở liên kết lịch này.",
-    "select_account_note": "Điều này chỉ áp dụng cho liên kết giao thức này.",
     "detail_to": "Đến",
     "detail_subject": "Tiêu đề",
     "detail_no_subject": "Không có tiêu đề",
@@ -248,6 +253,28 @@
     "detail_source": "Nguồn",
     "active_account": "Đang hoạt động",
     "switching_account": "Đang chuyển đổi tài khoản..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Thư mới",
+    "shortcut_calendar": "Lịch",
+    "shortcut_contacts": "Danh bạ",
+    "unsupported_file": "Không thể mở {name} tại đây.",
+    "open_failed": "Không thể mở tệp. Hãy thử mở lại.",
+    "share_gone": "Nội dung bạn đã chia sẻ không còn ở đây. Vui lòng chia sẻ lại.",
+    "share_files_lost": "Không thể giữ các tệp đã chia sẻ. Hãy thêm lại chúng vào thư.",
+    "ics_needs_server": "Nhập tệp lịch cần kết nối với máy chủ. Quá trình nhập sẽ bắt đầu khi bạn trực tuyến trở lại.",
+    "contacts_need_server": "Nhập danh bạ cần kết nối với máy chủ. Hãy thử lại khi bạn trực tuyến trở lại.",
+    "share_confirm_title": "Bắt đầu thư mới?",
+    "share_confirm_message": "Một trang web hoặc ứng dụng khác muốn bắt đầu một thư. Sẽ không có gì được tải lên hoặc lưu nếu bạn không đồng ý.",
+    "share_confirm_subject": "Chủ đề:",
+    "share_confirm_text": "Nội dung:",
+    "share_confirm_files": "{count, plural, other {Tệp:}}",
+    "share_confirm_accept": "Bắt đầu thư",
+    "share_confirm_decline": "Không bắt đầu",
+    "share_cut": "Văn bản được chia sẻ quá dài và đã được rút ngắn.",
+    "handoff_expired": "Nội dung bạn đã mở hoặc chia sẻ đã chờ quá lâu và không còn nữa. Vui lòng mở hoặc chia sẻ lại.",
+    "compose_waiting": "Đóng thư này để bắt đầu thư tiếp theo.",
+    "save_first_failed": "Không thể lưu thư của bạn nên tệp chưa được mở. Hãy lưu thư, rồi mở lịch hoặc danh bạ."
   },
   "sidebar_apps": {
     "modal_title": "Ứng dụng thanh bên",
@@ -388,6 +415,29 @@
       "next": "Trang tiếp theo",
       "position": "{more, select, yes {Trang {page} trong số {pages} trở lên} other {Trang {page} trong số {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {Đã chọn # cuộc trò chuyện}}",
+    "search_count": "{conversations, plural, other {# cuộc trò chuyện}} ({messages, plural, other {# thư}})",
+    "conversation_count": "{count, plural, other {# cuộc trò chuyện}}",
+    "archived": "Đã lưu trữ",
+    "moved_to_trash": "Đã chuyển vào thùng rác",
+    "moved_to": "Đã chuyển tới {mailbox}",
+    "moved_count_to": "{count, plural, other {Đã chuyển # email tới {mailbox}}}",
+    "new_folder_title": "Thư mục mới",
+    "new_subfolder_title": "Thư mục con mới"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {Đã lưu trữ # cuộc trò chuyện}}",
+    "conversations_to_trash": "{count, plural, other {Đã chuyển # cuộc trò chuyện vào thùng rác}}",
+    "conversations_deleted": "{count, plural, other {Đã xóa # cuộc trò chuyện}}",
+    "conversations_moved_to": "{count, plural, other {Đã chuyển # cuộc trò chuyện tới {mailbox}}}",
+    "conversations_moved": "{count, plural, other {Đã chuyển # cuộc trò chuyện}}",
+    "select_all_in_folder": "{count, plural, other {Chọn tất cả # cuộc trò chuyện trong {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, other {Chọn tất cả # email trong {folder}}}",
+    "select_all_conversations": "{count, plural, other {Chọn tất cả # cuộc trò chuyện}}",
+    "select_all_emails": "{count, plural, other {Chọn tất cả # email}}",
+    "selecting_all": "Đang chọn…"
   },
   "shared_tags": {
     "title": "Thẻ được chia sẻ",
@@ -853,6 +903,7 @@
     },
     "plugin_panel_show": "Hiện bảng plugin",
     "plugin_panel_hide": "Ẩn bảng plugin",
+    "plugin_panel": "Bảng plugin",
     "frame_title": "Thư: {subject}",
     "frame_title_from": "Thư từ {sender}",
     "download_named": "Tải xuống {name}",
@@ -869,6 +920,11 @@
     "read_aloud_resume": "Tiếp tục",
     "read_aloud_stop": "Dừng đọc",
     "reader_view": "Chế độ đọc"
+  },
+  "reader_actions": {
+    "restore": "Khôi phục",
+    "restore_to": "Chuyển lại vào {folder}",
+    "delete_forever": "Xóa vĩnh viễn"
   },
   "external_mail": {
     "sender_label": "Bên ngoài",
@@ -1082,7 +1138,7 @@
       ]
     },
     "schedule_send": "Lên lịch gửi",
-    "schedule_send_description": "Chọn thời điểm máy chủ sẽ gửi thư này.",
+    "schedule_send_description": "Chọn thời điểm gửi.",
     "schedule_preset": {
       "this_morning": "Sáng nay",
       "this_afternoon": "Chiều nay",
@@ -1133,6 +1189,7 @@
       "edit_link": "Chỉnh sửa liên kết",
       "remove_link": "Xóa liên kết",
       "link_address": "Địa chỉ liên kết",
+      "link_text": "Văn bản",
       "link_invalid": "Địa chỉ không được chứa dấu cách",
       "table": "Bảng",
       "clear_formatting": "Xóa định dạng",
@@ -1200,6 +1257,21 @@
       "edit": "Chỉnh sửa mô tả hình ảnh",
       "plain_text": "[Hình ảnh: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Đã hủy bản nháp",
+    "undo": "Hoàn tác",
+    "discard_draft": "Hủy bản nháp",
+    "save_failed_close": "Không lưu được bản nháp. Hãy thử lại hoặc hủy bản nháp.",
+    "try_again": "Thử lại",
+    "add_description": "Thêm mô tả",
+    "attachments_summary": "Tệp đính kèm: {count}, {size}",
+    "from_sub_address": "Dùng địa chỉ phụ…",
+    "from_edit_sender": "Sửa người gửi…",
+    "shortcut_insert_link": "Chèn liên kết",
+    "shortcut_save_draft": "Lưu bản nháp",
+    "shortcut_show_cc": "Hiện Cc",
+    "shortcut_show_bcc": "Hiện Bcc"
   },
   "confirm_dialog": {
     "confirm": "Xác nhận",
@@ -1333,6 +1405,32 @@
     "deputy_name_missing": "Hãy nhập tên người thay thế trước.",
     "apply": "Dùng nội dung này",
     "apply_hint": "Thay thế tiêu đề và nội dung bên dưới."
+  },
+  "uxs_vacation": {
+    "default_subject": "Vắng mặt",
+    "default_message": "Cảm ơn bạn đã gửi thư. Tôi đang vắng mặt và sẽ trả lời khi quay lại.",
+    "write_message_first": "Hãy viết thư trước. Nếu không, mọi người sẽ nhận được thư trả lời trống.",
+    "enter_address_first": "Hãy nhập địa chỉ cần chuyển tiếp đến trước.",
+    "message_title": "Thư trả lời của bạn",
+    "message_label": "Nội dung",
+    "message_description": "Những gì người gửi thư cho bạn sẽ nhận được. Bạn có thể dùng định dạng và liên kết.",
+    "from_label": "Từ (không bắt buộc)",
+    "from_description": "Để trống để bắt đầu ngay.",
+    "until_label": "Đến (không bắt buộc)",
+    "until_description": "Để trống để tiếp tục trả lời cho đến khi bạn tắt.",
+    "from_placeholder": "Ngay bây giờ",
+    "until_placeholder": "Cho đến khi bạn tắt",
+    "audience_all": "Mọi người",
+    "audience_internal": "Chỉ tổ chức của tôi ({domains})",
+    "audience_external": "Chỉ người ngoài tổ chức của tôi",
+    "signature_label": "Chữ ký",
+    "signature_plain_label": "Chữ ký (văn bản thuần)",
+    "signature_plain_description": "Bạn chỉ viết văn bản thuần (Soạn thư), nên chữ ký cũng là văn bản thuần.",
+    "edit_as_html": "Sửa dưới dạng HTML",
+    "edit_formatted": "Quay lại trình soạn thảo có định dạng",
+    "html_source_label": "Chữ ký dạng HTML",
+    "signature_size": "Đã dùng {bytes}/{max} byte",
+    "signature_too_long": "Quá dài đối với máy chủ ({bytes}/{max} byte). Hãy rút ngắn."
   },
   "retention_notice": {
     "line": "Thư ở đây sẽ bị xóa {count, plural, other {# ngày}} sau khi được chuyển vào đây."
@@ -1526,8 +1624,8 @@
       "title": "Giao diện",
       "description": "Tùy chỉnh diện mạo và cách hiển thị của webmail",
       "theme": {
-        "label": "Tiêu đề",
-        "description": "Chọn bảng màu bạn muốn dùng",
+        "label": "Sáng hoặc tối",
+        "description": "Tùy chọn Hệ thống làm theo cài đặt của thiết bị",
         "light": "Sáng",
         "dark": "Tối",
         "system": "Theo hệ thống"
@@ -1555,7 +1653,7 @@
         "label": "Bố cục giao diện",
         "description": "Vị trí của tìm kiếm, điều hướng và thanh công cụ",
         "default": "Mặc định",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Thanh tìm kiếm ở trên, ứng dụng bên trái"
       },
       "animations": {
         "label": "Bật hiệu ứng chuyển động",
@@ -1599,7 +1697,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Biểu tượng thanh bên nhiều màu",
-        "description": "Tô màu biểu tượng thư mục và nhãn theo loại (Hộp thư đến màu xanh dương, Thư rác màu đỏ, Đã gửi màu xanh lá, v.v.). Tắt để dùng thanh bên đơn sắc."
+        "description": "Tô màu biểu tượng thư mục và thẻ (Hộp thư đến màu xanh dương, Thư rác màu đỏ, Đã gửi màu xanh lá cây, v.v.). Tắt để dùng biểu tượng màu xám."
       },
       "tint_list_rows": {
         "label": "Tô màu hàng trong danh sách theo nhãn",
@@ -1611,7 +1709,7 @@
       },
       "favicon_unread_badge": {
         "label": "Số thư chưa đọc trên biểu tượng tab và ứng dụng",
-        "description": "Hiển thị số thư chưa đọc trong Hộp thư đến trên biểu tượng tab trình duyệt và biểu tượng ứng dụng đã cài đặt nếu được hỗ trợ, để bạn thấy thư mới khi tab không được chọn. Tắt để ẩn huy hiệu trên cả hai biểu tượng."
+        "description": "Để bạn thấy thư mới khi đang làm việc ở tab hoặc ứng dụng khác."
       },
       "show_shared_mail_accounts": {
         "label": "Hiển thị tài khoản thư được chia sẻ",
@@ -1662,7 +1760,7 @@
     },
     "keywords": {
       "title": "Nhãn thư",
-      "description": "Tạo nhãn để sắp xếp thư. Nhãn được lưu dưới dạng từ khóa JMAP trên máy chủ.",
+      "description": "Tạo thẻ để sắp xếp thư. Các thẻ được lưu cùng thư trên máy chủ.",
       "add_keyword": "Nhãn mới",
       "label_field": "Tên hiển thị",
       "label_placeholder": "Ví dụ: Công việc, Cá nhân, Khẩn cấp",
@@ -1697,8 +1795,8 @@
         "hide": "Ẩn"
       },
       "unrecognized": {
-        "title": "Khôi phục nhãn từ máy chủ",
-        "description": "Tên và màu nhãn được lưu trong trình duyệt này, còn nhãn được lưu trên thư dưới dạng từ khóa JMAP. Quét thư để tìm từ khóa chưa có nhãn tương ứng, rồi thêm lại chúng.",
+        "title": "Tìm các thẻ trên thư còn thiếu ở đây",
+        "description": "Trình duyệt này lưu tên và màu thẻ. Bản thân các thẻ được lưu trên thư. Hãy tìm các thẻ còn thiếu trong thư của bạn rồi thêm lại vào đây.",
         "scan": "Quét tìm nhãn",
         "rescan": "Quét lại",
         "scanning": "Đang quét… {scanned}/{total} thư",
@@ -1719,7 +1817,7 @@
         "relax": "Thư giãn"
       },
       "push": {
-        "title": "Thông báo chạy nền",
+        "title": "Thông báo khi {appName} đang đóng",
         "description": "Nhận thông báo hệ thống về thư mới khi đóng trang web này. Thông báo được gửi qua máy chủ chuyển tiếp push của Bulwark; máy chủ này không bao giờ xem được nội dung thư.",
         "relay_label": "Máy chủ chuyển tiếp push",
         "relay_desc": "Máy chủ gửi thông báo cho bạn. Chọn một máy chủ trong số các máy chủ do quản trị viên cung cấp.",
@@ -1729,8 +1827,9 @@
         "status_inactive": "Chưa bật trên thiết bị này",
         "status_unsupported": "Trình duyệt này không hỗ trợ Web Push",
         "status_lite": "Bulwark Lite không hỗ trợ Web Push; tính năng này cần máy chủ Bulwark.",
+        "status_demo": "Thông báo nền không khả dụng trong bản demo.",
         "status_busy": "Đang xử lý…",
-        "enable": "Bật",
+        "enable": "Bật trên thiết bị này",
         "reenable": "Đăng ký lại",
         "disable": "Tắt",
         "confirm_disable_title": "Tắt thông báo chạy nền?",
@@ -1755,7 +1854,12 @@
         "confirm_revoke_message_this": "Thiết bị này sẽ ngừng nhận thông báo chạy nền ngay lập tức.",
         "shared_mailboxes_no_push": "Hộp thư được người khác chia sẻ với bạn không gửi thông báo chạy nền.",
         "error_forbidden": "Máy chủ thư không cho phép bật thông báo chạy nền cho tài khoản này.",
-        "error_over_quota": "Tài khoản này có quá nhiều lượt đăng ký push trên máy chủ thư (giới hạn thường là 15). Hãy thu hồi các thiết bị không còn dùng trong phần cài đặt thông báo rồi thử lại."
+        "error_over_quota": "Tài khoản này có quá nhiều lượt đăng ký push trên máy chủ thư (giới hạn thường là 15). Hãy thu hồi các thiết bị không còn dùng trong phần cài đặt thông báo rồi thử lại.",
+        "error_blocked": "Thông báo đang bị chặn cho trang này. Hãy cho phép trong cài đặt trang của trình duyệt rồi thử lại.",
+        "error_not_granted": "Thông báo không được cho phép nên push vẫn tắt.",
+        "error_verification_timeout": "Máy chủ thư không xác nhận thiết bị này kịp thời nên push vẫn tắt. Hãy thử lại sau một phút.",
+        "error_relay": "Hiện không thể kết nối với relay push nên push vẫn tắt. Hãy thử lại sau.",
+        "error_teardown": "Push đã tắt trong trình duyệt này nhưng không thể kết nối với máy chủ thư hoặc relay. Thông báo có thể tiếp tục đến trong vài ngày. Để dừng sớm hơn, khi có mạng trở lại hãy bật cài đặt nâng cao và thu hồi thiết bị này trong Thiết bị đã đăng ký."
       },
       "push_all": {
         "title": "Tất cả tài khoản",
@@ -1770,17 +1874,17 @@
         "result_disabled": "Đã tắt thông báo cho {count} tài khoản."
       },
       "sound_selection": {
-        "title": "Âm thanh thông báo",
+        "title": "Âm thanh",
         "description": "Chọn âm thanh phát khi có thông báo",
-        "choose": "Âm thanh",
+        "choose": "Nhạc chuông",
         "choose_desc": "Chọn âm báo rồi nhấn biểu tượng loa để nghe thử"
       },
       "email": {
-        "title": "Thông báo qua email",
+        "title": "Thư mới",
         "description": "Cấu hình thông báo khi có thư đến",
         "enabled": "Thông báo qua email",
         "enabled_desc": "Hiển thị thông báo khi có thư mới",
-        "sound": "Âm thanh thông báo",
+        "sound": "Âm thanh khi có thư mới",
         "sound_desc": "Phát âm báo khi có thư mới",
         "inbox_only": "Chỉ Hộp thư đến",
         "inbox_only_desc": "Chỉ thông báo thư đến Hộp thư đến; bỏ qua thư được bộ lọc chuyển vào thư mục khác"
@@ -1790,7 +1894,7 @@
         "description": "Cấu hình thông báo cho sự kiện lịch",
         "enabled": "Thông báo sự kiện",
         "enabled_desc": "Hiển thị nhắc nhở về các sự kiện lịch sắp tới",
-        "sound": "Âm thanh thông báo",
+        "sound": "Âm thanh cho lời nhắc",
         "sound_desc": "Phát âm báo cho lời nhắc lịch"
       }
     },
@@ -1829,7 +1933,7 @@
       },
       "first_day": {
         "label": "Ngày đầu tuần",
-        "description": "Bắt đầu tuần vào Chủ nhật hoặc Thứ Hai",
+        "description": "Ngày đầu tuần trong lịch",
         "sunday": "Chủ nhật",
         "monday": "Thứ Hai"
       },
@@ -1919,13 +2023,13 @@
       },
       "mail_layout": {
         "label": "Bố cục thư",
-        "description": "Chọn giữa khung đọc chia đôi kiểu cổ điển, luồng đọc tập trung kiểu Gmail hoặc khung đọc phía dưới kiểu Zimbra.",
+        "description": "Vị trí của danh sách thư và thư đang mở trên màn hình.",
         "split": "Khung chia đôi",
-        "split_description": "Hiển thị danh sách thư và khung đọc cạnh nhau.",
+        "split_description": "Danh sách và thư cạnh nhau",
         "focus": "Danh sách tập trung",
-        "focus_description": "Hiển thị mỗi thư trên một dòng và mở thư toàn chiều rộng, đồng thời giữ thanh bên thư mục.",
+        "focus_description": "Danh sách, rồi thư toàn chiều rộng",
         "horizontal": "Khung đọc phía dưới",
-        "horizontal_description": "Hiển thị danh sách thư ở trên và mở thư đã chọn trong khung đọc bên dưới."
+        "horizontal_description": "Thư bên dưới danh sách"
       },
       "list_columns": {
         "label": "Hiển thị danh sách dạng cột",
@@ -1950,7 +2054,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Trả lời bằng địa chỉ nhận thư",
-        "description": "Khi trả lời, gửi thư từ địa chỉ mà thư ban đầu được gửi đến. Các danh tính bạn đã cấu hình luôn được khớp; tùy chọn “Khớp địa chỉ nhận” bên dưới quyết định có tính các địa chỉ khác trong miền của bạn (catch-all) hay không."
+        "description": "Khi trả lời, gửi từ địa chỉ mà thư đã được gửi đến."
       },
       "reply_identity_match": {
         "label": "Khớp địa chỉ nhận",
@@ -1963,6 +2067,14 @@
         "description": "Vị trí chèn chữ ký trong thư trả lời và chuyển tiếp. Đặt trên phần trích dẫn giúp lời hồi đáp liền mạch; đặt bên dưới giữ nguyên nội dung thư gốc.",
         "above_quote": "Trước phần trích dẫn",
         "below_quote": "Sau phần trích dẫn"
+      },
+      "signature_new_mail": {
+        "label": "Chữ ký trong thư mới",
+        "description": "Tự động chèn chữ ký của bạn khi soạn thư mới. Tắt nếu bạn muốn mỗi thư mới bắt đầu không có chữ ký."
+      },
+      "signature_reply_forward": {
+        "label": "Chữ ký khi trả lời và chuyển tiếp",
+        "description": "Tự động thêm chữ ký của bạn khi trả lời hoặc chuyển tiếp thư. Tắt nếu muốn gửi chúng không kèm chữ ký."
       },
       "signature_separator": {
         "label": "Dấu phân cách chữ ký",
@@ -2166,8 +2278,8 @@
         "title": "Tài khoản đã đăng nhập",
         "description": "Kéo để sắp xếp lại cách các tài khoản xuất hiện trong danh sách tài khoản thả xuống",
         "active": "Tài khoản hiện đang hoạt động",
-        "default_badge": "Tài khoản mặc định",
-        "set_default": "Đặt làm mặc định",
+        "default_badge": "Mở khi khởi động",
+        "set_default": "Mở tài khoản này khi khởi động",
         "switch_to": "Chuyển sang tài khoản này",
         "move_up": "Di chuyển lên",
         "move_down": "Di chuyển xuống",
@@ -2254,7 +2366,7 @@
       },
       "totp": {
         "section_title": "Xác thực hai yếu tố",
-        "label": "Xác thực TOTP",
+        "label": "Đăng nhập hai bước",
         "description": "Thêm một lớp bảo mật bổ sung bằng mật khẩu dùng một lần theo thời gian",
         "active": "Đã bật",
         "inactive": "Đã tắt",
@@ -2350,12 +2462,12 @@
         "delete_message": "{name} bị xóa khỏi máy chủ."
       },
       "email_client": {
-        "title": "Thiết lập ứng dụng khách email",
-        "description": "Sử dụng những thông tin xác thực này để định cấu hình ứng dụng email khách trên máy tính để bàn hoặc thiết bị di động của bạn (Thunderbird, Apple Mail, Outlook, v.v.)",
-        "jmap_username_label": "Tên người dùng JMAP",
+        "title": "Dùng thư trong ứng dụng khác",
+        "description": "Thunderbird, Apple Mail, Outlook và ứng dụng thư trên điện thoại có thể dùng các cài đặt này.",
+        "jmap_username_label": "Tên người dùng",
         "copy": "Sao chép",
         "copied": "Đã sao chép",
-        "password_instructions": "Sử dụng tên người dùng JMAP ở trên cùng với mật khẩu ứng dụng để đăng nhập vào ứng dụng email của bạn. Tạo mật khẩu ứng dụng trong phần bên dưới nếu bạn chưa làm như vậy."
+        "password_instructions": "Hãy dùng mật khẩu ứng dụng làm mật khẩu, không dùng mật khẩu thường. Bạn có thể tạo ở phần dưới của trang này."
       },
       "link_device": {
         "title": "Liên kết ứng dụng di động",
@@ -2590,7 +2702,7 @@
       },
       "refresh_cache": {
         "label": "Làm mới dữ liệu được lưu trong bộ nhớ đệm",
-        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Giữ lại các tài khoản và phiên của bạn — sửa chế độ xem cũ hoặc sai mà không cần đăng xuất.",
+        "description": "Tải lại danh bạ, lịch và thư mục từ máy chủ. Bạn vẫn đăng nhập.",
         "button": "Làm mới",
         "confirm_title": "Làm mới dữ liệu đã lưu vào bộ nhớ đệm?"
       },
@@ -2603,12 +2715,12 @@
       },
       "export_settings": {
         "label": "Xuất cài đặt",
-        "description": "Tải xuống cài đặt của bạn dưới dạng JSON",
+        "description": "Tải xuống bản sao cài đặt",
         "button": "Xuất"
       },
       "import_settings": {
         "label": "Nhập cài đặt",
-        "description": "Tải lên cài đặt từ tệp JSON",
+        "description": "Khôi phục cài đặt từ tệp",
         "button": "Nhập"
       },
       "about": {
@@ -2659,8 +2771,8 @@
       "manage_description": "Thêm, chỉnh sửa hoặc xóa ứng dụng tùy chỉnh khỏi thanh bên của bạn"
     },
     "contacts": {
-      "title": "Danh bạ",
-      "description": "Nhập và xuất danh bạ của bạn",
+      "title": "Danh sách liên hệ",
+      "description": "Cách hiển thị danh bạ, và tệp danh bạ để nhập hoặc xuất",
       "group_by_letter_label": "Nhóm theo chữ cái đầu tiên",
       "group_by_letter_description": "Hiển thị tiêu đề phần theo thứ tự bảng chữ cái trong danh sách liên hệ",
       "sort_by_last_name_label": "Sắp xếp theo họ",
@@ -2755,15 +2867,15 @@
       "not_supported": "Máy chủ thư của bạn không hỗ trợ bộ lọc email.",
       "rule_name": "Tên quy tắc",
       "rule_name_placeholder": "Ví dụ: Sắp xếp các bản tin",
-      "match_all": "Phù hợp với TẤT CẢ các điều kiện",
-      "match_any": "Phù hợp với bất kỳ điều kiện nào",
+      "match_all": "Tất cả điều kiện phải đúng",
+      "match_any": "Chỉ cần một điều kiện đúng",
       "conditions": "Điều kiện",
       "add_condition": "Thêm điều kiện",
       "actions": "Thao tác",
       "add_action": "Thêm hành động",
       "remove_condition": "Xóa điều kiện",
       "remove_action": "Xóa hành động",
-      "stop_processing": "Dừng xử lý các quy tắc tiếp theo",
+      "stop_processing": "Không áp dụng các quy tắc sau",
       "include_spam": "Đồng thời di chuyển các thư bị đánh dấu là thư rác",
       "attachment_type_placeholder": "Ví dụ: pdf, doc, jpg",
       "value_placeholder_multi": "Giá trị (phân tách nhiều giá trị bằng dấu phẩy)",
@@ -2805,7 +2917,7 @@
         "discard": "Hủy (xóa âm thầm)",
         "reject": "Từ chối bằng thư",
         "keep": "Giữ trong hộp thư đến",
-        "stop": "Dừng xử lý"
+        "stop": "Không áp dụng các quy tắc sau"
       },
       "move_to_folder": "Chọn thư mục",
       "copy_to_folder": "Chọn thư mục",
@@ -2828,6 +2940,7 @@
       "open_sieve_editor": "Mở trình chỉnh sửa mã Sieve",
       "fetch_error": "Không thể tải bộ lọc",
       "expanded_view": "Chế độ xem mở rộng",
+      "show_rule_details": "Hiện điều kiện và hành động của từng quy tắc",
       "expanded_view_description": "Hiển thị quy tắc lọc với các khối hành động và điều kiện chi tiết",
       "if": "Nếu",
       "then": "Sau đó",
@@ -2906,6 +3019,9 @@
       "validation_period_empty": "Nhập ngày bắt đầu hoặc ngày kết thúc cho khoảng thời gian",
       "validation_period_invalid": "Nhập ngày hợp lệ cùng với thời gian trong khoảng thời gian hoặc để trống trường",
       "apply_existing_period": "Quy tắc có giới hạn thời gian chỉ áp dụng cho thư đến trong khoảng đó, nên không thể chạy trên các thư hiện có.",
+      "apply_existing_in": "Áp dụng cả cho các thư đã có trong {folder}",
+      "apply_existing_count": "{count, plural, other {Áp dụng cả cho # thư đã có trong {folder}}}",
+      "apply_existing_none": "Chưa có thư nào trong {folder} khớp với quy tắc này.",
       "period_status_scheduled": "Theo lịch trình",
       "period_status_active": "Hoạt động",
       "period_status_expired": "Hết hạn"
@@ -2949,7 +3065,7 @@
         "description": "Định cấu hình cách hiển thị tệp và thư mục"
       },
       "default_view": {
-        "label": "Chế độ xem mặc định",
+        "label": "Hiển thị tệp dạng",
         "description": "Chọn giữa bố cục lưới và danh sách",
         "list": "Danh sách",
         "grid": "Lưới"
@@ -3145,10 +3261,6 @@
         "label": "Vùng tập trung khi đọc",
         "description": "Làm mờ mọi thứ trong thư ngoại trừ một vài dòng xung quanh con trỏ để giúp bạn giữ nguyên vị trí của mình."
       },
-      "plain_language": {
-        "label": "Ngôn ngữ đơn giản",
-        "description": "Từ ngữ đơn giản hơn cho các cài đặt và thông báo lỗi cũng như giải thích ngắn gọn về các thuật ngữ kỹ thuật. Có sẵn bằng tiếng Anh và tiếng Đức."
-      },
       "contrast": {
         "label": "Độ tương phản",
         "description": "Độ tương phản cao hơn làm cho văn bản, đường viền và đường viền tiêu điểm tối hơn hoặc sáng hơn trên bất kỳ giao diện nào và gạch chân các liên kết. Hệ thống theo dõi thiết bị của bạn.",
@@ -3340,6 +3452,123 @@
         "description": "Giọng nói đọc to thư. Danh sách hiển thị các giọng nói mà trình duyệt của bạn dành cho ngôn ngữ giao diện.",
         "default": "Trình duyệt mặc định"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Ngoại tuyến",
+      "privacy": "Quyền riêng tư",
+      "about": "Giới thiệu"
+    },
+    "search": {
+      "signature": "chữ ký chữ ký email chân thư",
+      "sign_out": "đăng xuất thoát logout",
+      "app_lock": "PIN khóa mã màn hình khóa",
+      "text_size": "cỡ chữ chữ to hơn phóng to thu phóng",
+      "vacation": "trả lời tự động vắng mặt nghỉ phép kỳ nghỉ ngoài văn phòng autoreply",
+      "two_factor": "2FA hai lớp hai bước MFA OTP ứng dụng xác thực mã dùng một lần",
+      "encryption": "S/MIME smime PGP OpenPGP mã hóa chứng chỉ",
+      "password": "mật khẩu đổi mật khẩu mật khẩu mới",
+      "offline": "ngoại tuyến offline không có kết nối không có mạng tải xuống bộ nhớ đồng bộ",
+      "wipe": "xóa gỡ dọn thiết bị dữ liệu",
+      "outbox": "hộp thư đi chưa gửi đang chờ hàng đợi",
+      "remote_content": "hình ảnh từ xa nội dung bên ngoài theo dõi pixel người gửi tin cậy",
+      "push": "đẩy push chuyển tiếp nền thông báo",
+      "version": "phiên bản cập nhật giới thiệu mã nguồn GitHub giấy phép"
+    },
+    "privacy": {
+      "push_title": "Thông báo",
+      "push_link": {
+        "label": "Máy chuyển tiếp thông báo",
+        "description": "Thông báo khi ứng dụng đóng đi qua một máy chuyển tiếp đẩy, máy này không bao giờ thấy thư của bạn. Bạn chọn nó trên trang Thông báo.",
+        "button": "Thông báo"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Hình ảnh từ xa và người gửi tin cậy",
+      "receipts_label": "Xác nhận đã đọc",
+      "senders_label": "Ảnh người gửi",
+      "description": "Các cài đặt này nằm trên trang Quyền riêng tư.",
+      "button": "Quyền riêng tư"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Mật độ và nhãn nút",
+        "description": "Khoảng cách các dòng trong danh sách và việc nút có hiện tên hay không được đặt trên trang Giao diện."
+      },
+      "light_mode": {
+        "label": "Nền sáng cho thư",
+        "description": "Hiển thị thư trên nền sáng ở chế độ tối được đặt trên trang Đọc thư."
+      },
+      "calendar": {
+        "label": "Xem trước sự kiện trong lịch",
+        "description": "Việc trỏ vào sự kiện có hiện chi tiết hay không được đặt trên trang Lịch."
+      },
+      "list": {
+        "label": "Cuộc trò chuyện và dòng xem trước",
+        "description": "Nhóm theo cuộc trò chuyện và dòng xem trước dưới mỗi thư được đặt trên trang Danh sách thư."
+      },
+      "reading": {
+        "label": "Đánh dấu đã đọc",
+        "description": "Khi nào thư được tính là đã đọc, và bạn đi đâu sau khi xóa hoặc di chuyển thư, được đặt trên trang Đọc thư."
+      },
+      "send_warnings_description": "Hoàn tác gửi và các cảnh báo khi thiếu tiêu đề, quên tệp đính kèm hoặc còn văn bản giữ chỗ.",
+      "bulk_delete": {
+        "label": "Hỏi trước khi xóa nhiều thư",
+        "description": "Mục này được đặt trên trang Danh sách thư."
+      },
+      "sounds": {
+        "label": "Âm thanh và số thư chưa đọc",
+        "description": "Âm thanh thông báo và số thư chưa đọc trên thẻ được đặt trên trang Thông báo."
+      }
+    },
+    "about": {
+      "title": "Giới thiệu {appName}"
+    },
+    "sign_out": {
+      "description": "Đăng xuất tài khoản này trên thiết bị này."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "khay hệ thống vùng thông báo chạy nền thu nhỏ xuống khay tray",
+      "autostart": "tự khởi động khởi động cùng Windows khi đăng nhập",
+      "default_app": "ứng dụng thư mặc định chương trình email mặc định mailto liên kết email",
+      "menu_bar": "thanh menu menu phím Alt Tệp Sửa Xem",
+      "updates": "cập nhật phiên bản mới beta kênh",
+      "devtools": "công cụ nhà phát triển devtools bảng điều khiển kiểm tra F12 gỡ lỗi",
+      "taskbar": "thanh tác vụ nhấp nháy Dock chú ý",
+      "quiet_hours": "giờ yên lặng không làm phiền tắt tiếng ban đêm",
+      "telemetry": "thông tin sử dụng đo lường từ xa thống kê phân tích",
+      "crash": "báo cáo sự cố báo cáo lỗi sự cố",
+      "threads": "chuỗi thư hội thoại nhóm threads",
+      "block_images": "chặn hình ảnh hình ảnh bên ngoài tải hình ảnh",
+      "dark_mode": "chế độ tối chế độ sáng chế độ ban đêm dark mode",
+      "timezone": "múi giờ timezone",
+      "reading_pane": "ngăn đọc ngăn xem trước chia đôi màn hình",
+      "week_start": "đầu tuần ngày đầu tiên thứ Hai Chủ nhật",
+      "empty_trash": "dọn sạch thùng rác thùng rác mục đã xóa",
+      "do_not_disturb": "giờ yên lặng tắt tiếng im lặng"
+    },
+    "desktop_notifications": {
+      "title": "Trên máy tính này",
+      "closed_label": "Khi đóng cửa sổ",
+      "closed_description": "{appName} báo cho bạn thư mới khi ứng dụng đang chạy. Để ứng dụng tiếp tục chạy ở khay hệ thống sau khi đóng cửa sổ, hãy bật mục đó trong {page}."
+    },
+    "push_unsupported": "Trình duyệt này không thể hiển thị thông báo khi trang web đã đóng.",
+    "backup_description_app": "Dùng cùng cài đặt trên các thiết bị khác của bạn.",
+    "sender_favicons": {
+      "label": "Hình ảnh từ trang web của công ty",
+      "description": "Với người gửi là công ty, dùng biểu tượng trang web làm ảnh người gửi"
+    },
+    "privacy_push": {
+      "label": "Máy chuyển tiếp thông báo",
+      "description": "Thông báo khi {appName} đóng đi qua một máy chuyển tiếp đẩy, máy này không bao giờ thấy thư của bạn. Bạn bật hoặc tắt chúng trên trang {page}."
+    },
+    "reset": {
+      "message": "Đưa tất cả cài đặt về như lúc ban đầu. Thư, bộ lọc, trả lời tự động và chữ ký của bạn vẫn giữ nguyên.",
+      "sync_on": "Các thiết bị khác của bạn dùng cùng cài đặt, nên cũng thay đổi theo.",
+      "sync_off": "Các thiết bị khác của bạn giữ nguyên cài đặt."
     }
   },
   "setup": {
@@ -3623,6 +3852,13 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Tìm thư mục",
+    "recent": "Gần đây",
+    "no_match": "Không có thư mục phù hợp",
+    "choose_folder": "Chọn thư mục…",
+    "current_folder": "Đã ở trong {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Đánh dấu thư mục là đã đọc",
     "mark_folder_tree_read": "Đánh dấu thư mục và thư mục con là đã đọc",
@@ -3669,6 +3905,19 @@
     "delete_with_contents_title": "Thư mục không trống",
     "delete_with_contents_message": "Thư mục \"{name}\" vẫn chứa {count, plural, one {1 thư} other {# thư}}. Xóa thư mục và tất cả thư của nó? Điều này không thể hoàn tác được.",
     "delete_with_contents_confirm": "Xóa thư mục và thư"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Tất cả thư mục",
+    "empty_trash": "Dọn sạch Thùng rác",
+    "empty_spam": "Dọn sạch Thư rác",
+    "empty_trash_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác? Không thể hoàn tác.",
+    "empty_spam_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thư rác? Không thể hoàn tác.",
+    "title_all_accounts": "{name} ({count}, {total} trong mọi tài khoản)",
+    "title_all_accounts_only": "{name} ({total} trong mọi tài khoản)"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Quản lý tài khoản…",
+    "apply_to_existing": "{count, plural, one {Áp dụng cho # thư hiện có trong {folder}} other {Áp dụng cho # thư hiện có trong {folder}}}"
   },
   "shortcuts": {
     "title": "Phím tắt",
@@ -3740,6 +3989,14 @@
     "messages_count": "{count, plural, one {# thư} other {# thư}}",
     "expand_named": "Mở rộng cuộc trò chuyện: {subject}",
     "collapse_named": "Thu gọn cuộc trò chuyện: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
+    "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
+  },
+  "mail_p2_conv": {
+    "show_message": "Hiện thư",
+    "back_to_reply": "Quay lại thư trả lời"
   },
   "identities": {
     "modal_title": "Quản lý danh tính gửi thư",
@@ -3870,6 +4127,34 @@
         "next": "Nói những gì bạn cần từ người đọc và khi nào."
       }
     }
+  },
+  "compose_send": {
+    "back": "Quay lại chỉnh sửa",
+    "send_anyway": "Vẫn gửi",
+    "warnings_title": "Vẫn gửi thư này?",
+    "warning_subject": "Không có tiêu đề",
+    "warning_text": "Không có nội dung",
+    "warning_attachment": "Có nhắc đến \"{keyword}\" nhưng chưa đính kèm tệp nào",
+    "warning_placeholders": "Văn bản giữ chỗ mà người nhận sẽ thấy:",
+    "warning_proofreading": "Lỗi chính tả hoặc ngữ pháp chưa sửa: {count}",
+    "empty_text_title": "Gửi mà không có nội dung?",
+    "empty_text_message": "Thư này không có nội dung và không có tệp đính kèm. Vẫn gửi?",
+    "scheduled_for": "Đã lên lịch gửi lúc {when}",
+    "sending": "Đang gửi…",
+    "sent": "Đã gửi",
+    "view": "Xem",
+    "template_saved": "Đã lưu mẫu",
+    "schedule_anyway": "Vẫn lên lịch",
+    "schedule_warnings_title": "Vẫn lên lịch gửi thư này?",
+    "picker_button": "Thêm từ danh bạ",
+    "picker_title": "Thêm người nhận",
+    "tab_contacts": "Danh bạ",
+    "tab_directory": "Danh bạ tổ chức",
+    "contacts_empty_title": "Chưa có liên hệ nào",
+    "contacts_empty_hint": "Những người bạn lưu trong Danh bạ sẽ hiện ở đây.",
+    "contacts_no_match": "Không có liên hệ nào khớp với tìm kiếm",
+    "template_name": "Tên mẫu",
+    "template_edit_details": "Sửa chi tiết…"
   },
   "org_templates": {
     "section_personal": "Mẫu của tôi",
@@ -4327,6 +4612,35 @@
       "menu": "Mở menu của liên hệ"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Nhà riêng",
+    "phone_voice": "Điện thoại",
+    "more_fields": "Thêm trường",
+    "import_menu": "Nhập danh bạ…",
+    "new_address_book_menu": "Sổ địa chỉ mới…"
+  },
+  "uxs_wording": {
+    "more_options": "Tùy chọn khác",
+    "use_in_other_apps": "Dùng trong ứng dụng khác",
+    "default_address_book": "Danh bạ",
+    "default_calendar": "Lịch",
+    "preview_documents": "Tài liệu",
+    "preview_photos": "Ảnh",
+    "sample_subject": "Ghi chú buổi họp ở quán cà phê",
+    "mail_apps": {
+      "imap": "Thư đến (IMAP)",
+      "smtp": "Thư đi (SMTP)",
+      "caldav": "Lịch (CalDAV)",
+      "carddav": "Danh bạ (CardDAV)",
+      "port_security": "Cổng {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Không mã hóa",
+      "copy_label": "Sao chép {name}",
+      "loading": "Đang đọc cài đặt từ máy chủ thư…",
+      "not_found": "Máy chủ thư không cung cấp tên máy chủ cho ứng dụng khác. Hãy hỏi quản trị viên."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Lịch: {names}",
@@ -4570,7 +4884,7 @@
       "hide_non_working_days_desc": "Ẩn các ngày bạn không làm việc khỏi chế độ xem tuần. Sự kiện trong những ngày đó vẫn xuất hiện trong chế độ xem tháng, ngày và lịch trình.",
       "working_days": "Ngày làm việc",
       "title": "Cài đặt lịch",
-      "default_view": "Chế độ xem mặc định",
+      "default_view": "Lịch mở ở chế độ",
       "week_starts_on": "Tuần bắt đầu vào",
       "time_format": "Định dạng thời gian",
       "default_calendar": "Lịch mặc định",
@@ -4581,7 +4895,7 @@
       "notifications_enabled_desc": "Hiển thị thông báo cho các sự kiện lịch sắp tới",
       "notification_sound": "Âm thanh thông báo",
       "notification_sound_desc": "Phát âm thanh để thông báo lịch",
-      "invitation_parsing": "Phân tích lời mời email",
+      "invitation_parsing": "Hiển thị lời mời từ thư",
       "invitation_parsing_desc": "Phát hiện lời mời lịch trong tệp đính kèm email và hiển thị các hành động trên lịch",
       "show_time_in_month_view": "Hiển thị thời gian trong chế độ xem tháng",
       "show_time_in_month_view_desc": "Hiển thị thời gian sự kiện trong chế độ xem lịch tháng. Trên màn hình nhỏ, phần này hiển thị đầy đủ các mục sự kiện thay vì dấu chấm.",
@@ -4596,7 +4910,7 @@
       "show_week_numbers_desc": "Hiển thị số tuần trong lịch nhỏ",
       "calendar_free_scroll": "Cuộn tự do",
       "calendar_free_scroll_desc": "Cuộn liên tục qua các tháng, tuần và ngày thay vì từng khoảng thời gian một",
-      "enable_tasks": "Bật tác vụ",
+      "enable_tasks": "Công việc",
       "enable_tasks_desc": "Hiển thị chế độ xem công việc trong lịch để quản lý việc cần làm",
       "show_tasks_on_calendar": "Hiển thị công việc trên lịch",
       "show_tasks_on_calendar_desc": "Hiển thị công việc trên dạng xem lịch tháng, tuần, ngày",
@@ -4777,8 +5091,8 @@
       "error_update": "Không thể cập nhật lịch",
       "error_delete": "Không thể xóa lịch",
       "caldav_url": "URL CalDAV",
-      "copy_url": "Sao chép URL CalDAV",
-      "url_copied": "Đã sao chép URL CalDAV vào bảng nhớ tạm",
+      "copy_url": "Sao chép địa chỉ cho ứng dụng khác",
+      "url_copied": "Đã sao chép địa chỉ",
       "share": "Chia sẻ lịch…",
       "new_event_in_calendar": "Sự kiện mới trong lịch này",
       "shared_with": "Đã chia sẻ với {names}",
@@ -4798,8 +5112,8 @@
       "default_alerts_updated": "Đã cập nhật lời nhắc mặc định"
     },
     "subscription": {
-      "title": "Đăng ký iCal",
-      "section_title": "Đăng ký iCal",
+      "title": "Đăng ký một lịch",
+      "section_title": "Lịch đã đăng ký",
       "description": "Đăng ký nguồn cấp dữ liệu iCalendar bên ngoài. Các sự kiện sẽ được tự động đồng bộ hóa vào lịch riêng của chúng. Hỗ trợ URL https:// và webcal://.",
       "url_label": "URL lịch",
       "url_placeholder": "https://example.com/calendar.ics hoặc webcal://...",
@@ -4912,6 +5226,47 @@
     "mini_has_events": "Có sự kiện",
     "mini_week_number": "Tuần {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Danh sách công việc",
+    "task_status_not_started": "Chưa bắt đầu",
+    "task_status_in_progress": "Đang làm",
+    "quick_task_due": "Hạn {date}",
+    "quick_task_due_remove": "Giữ “{words}” trong tiêu đề",
+    "rename_calendar": "Đổi tên…",
+    "rename_title": "Đổi tên lịch",
+    "rename_confirm": "Đổi tên",
+    "rename_empty": "Nhập tên.",
+    "edit_calendar": "Chỉnh sửa…",
+    "default_alerts_open": "Lời nhắc mặc định…",
+    "share_open": "Chia sẻ…",
+    "clear_all_events": "Xóa mọi sự kiện…",
+    "delete_calendar": "Xóa…",
+    "caldav_title": "Địa chỉ cho ứng dụng khác (CalDAV)",
+    "caldav_hint": "Thêm địa chỉ này vào Thunderbird, Lịch Apple hoặc DAVx⁵ để đồng bộ lịch của bạn.",
+    "caldav_shared_by": "Được chia sẻ bởi {name}:",
+    "freebusy_description": "Người được chia sẻ thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
+  },
+  "calendar_offline": {
+    "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
+  },
+  "ux_pim_event": {
+    "time_zone": "Múi giờ",
+    "time_zone_line": "Múi giờ: {zone}",
+    "your_time": "{times} theo giờ của bạn",
+    "zone_times": "{times} {zone} ({local} theo giờ của bạn)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Đã chấp nhận",
+    "status_declined": "Đã từ chối",
+    "status_tentative": "Có thể",
+    "status_needs_action": "Chưa trả lời",
+    "status_delegated": "Đã chuyển giao",
+    "answered_accepted": "Bạn đã chấp nhận vào {date}.",
+    "answered_declined": "Bạn đã từ chối vào {date}.",
+    "answered_tentative": "Bạn đã trả lời có thể vào {date}.",
+    "answered_accepted_nodate": "Bạn đã chấp nhận.",
+    "answered_declined_nodate": "Bạn đã từ chối.",
+    "answered_tentative_nodate": "Bạn đã trả lời có thể."
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
@@ -4921,6 +5276,11 @@
   },
   "company_calendars": {
     "section": "Tổ chức"
+  },
+  "ux_pim_grid": {
+    "search_short": "Tìm",
+    "reply": "Trả lời",
+    "reply_to_invitation": "Trả lời lời mời"
   },
   "vacation_calendar": {
     "label": "Chặn lịch của tôi",
@@ -4943,6 +5303,88 @@
     "group_label": "Nhóm",
     "title": "Rảnh/bận",
     "description": "Đồng nghiệp trong nhóm thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Bấm để chọn tệp vCard hoặc CSV",
+    "file_types": "Tệp .vcf hoặc .csv, ví dụ từ Outlook hoặc Google Danh bạ",
+    "parse_error": "Không đọc được tệp",
+    "columns_title": "Ghép các cột",
+    "columns_hint": "Chọn nơi đặt từng cột của {file}. Các cột đặt là “Không nhập” sẽ bị bỏ qua.",
+    "column": "Cột",
+    "sample": "Ví dụ",
+    "field": "Trường liên hệ",
+    "skip": "Không nhập",
+    "no_columns": "Chọn một trường cho ít nhất một cột.",
+    "continue": "Tiếp tục",
+    "back": "Quay lại",
+    "import_into": "Nhập vào",
+    "group_name": "Tên",
+    "group_email": "Email",
+    "group_phone": "Điện thoại",
+    "group_org": "Tổ chức",
+    "group_adr_any": "Địa chỉ",
+    "group_adr_home": "Địa chỉ nhà",
+    "group_adr_work": "Địa chỉ cơ quan",
+    "group_adr_other": "Địa chỉ khác",
+    "group_more": "Thêm",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Họ và tên",
+    "t_name_given": "Tên",
+    "t_name_middle": "Tên đệm",
+    "t_name_surname": "Họ",
+    "t_name_prefix": "Danh xưng (TS., Bà)",
+    "t_name_suffix": "Hậu tố (Jr.)",
+    "t_nickname": "Biệt danh",
+    "t_email": "Email",
+    "t_email_home": "Email (nhà)",
+    "t_email_work": "Email (cơ quan)",
+    "t_phone": "Điện thoại",
+    "t_phone_mobile": "Di động",
+    "t_phone_home": "Điện thoại (nhà)",
+    "t_phone_work": "Điện thoại (cơ quan)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (nhà)",
+    "t_phone_fax_work": "Fax (cơ quan)",
+    "t_phone_pager": "Máy nhắn tin",
+    "t_org_name": "Công ty",
+    "t_org_unit": "Phòng ban",
+    "t_org_title": "Chức danh",
+    "t_street": "Đường",
+    "t_pobox": "Hộp thư bưu điện",
+    "t_locality": "Thành phố",
+    "t_region": "Tỉnh hoặc vùng",
+    "t_postcode": "Mã bưu chính",
+    "t_country": "Quốc gia",
+    "t_web": "Trang web",
+    "t_birthday": "Sinh nhật",
+    "t_anniversary": "Ngày kỷ niệm",
+    "t_notes": "Ghi chú",
+    "t_categories": "Danh mục",
+    "t_type": "Loại giá trị (Nhà, Cơ quan…)",
+    "merge_with": "Gộp với…",
+    "merge_selected": "Gộp…",
+    "find_duplicates": "Tìm liên hệ trùng",
+    "possible_duplicates": "Có thể trùng ({count})",
+    "duplicates_title": "Có thể trùng",
+    "duplicates_hint": "Các liên hệ có cùng tên, địa chỉ email hoặc số điện thoại.",
+    "duplicates_none": "Không tìm thấy liên hệ có thể trùng.",
+    "pick_title": "Gộp {name} với…",
+    "pick_search": "Tìm liên hệ",
+    "pick_suggested": "Có thể trùng",
+    "pick_all": "Tất cả liên hệ",
+    "pick_none": "Không có liên hệ nào khác để gộp.",
+    "preview_title": "Gộp liên hệ ({count})",
+    "preview_hint": "Các liên hệ này trở thành một thẻ với mọi thứ bên dưới.",
+    "preview_deleted": "Đã gộp vào rồi xóa: {names}",
+    "groups": "Nhóm",
+    "merge": "Gộp",
+    "merging": "Đang gộp…",
+    "merged": "Đã gộp liên hệ",
+    "merge_failed": "Không gộp được các liên hệ.",
+    "merge_not_possible": "Không thể gộp các liên hệ này: chúng ở các tài khoản khác nhau hoặc trong sổ địa chỉ bạn không được thay đổi.",
+    "undo": "Hoàn tác",
+    "undone": "Đã hoàn tác việc gộp",
+    "undo_failed": "Không thể hoàn tác hết việc gộp."
   },
   "find_time": {
     "suggest": "Gợi ý thời gian",
@@ -5146,7 +5588,7 @@
     "title": "Chào mừng đến với hộp thư của bạn",
     "tip_compose": "Nhấn c để soạn email mới",
     "tip_shortcuts": "Nhấn ? để xem tất cả phím tắt",
-    "tip_sidebar": "Tìm Lịch, Danh bạ và Cài đặt trong menu thanh bên",
+    "tip_sidebar": "Lịch, Danh bạ và Cài đặt nằm ở thanh bên trái",
     "tip_settings": "Tùy chỉnh trải nghiệm của bạn trong Cài đặt",
     "tip_compose_touch": "Nhấn vào nút bút chì để viết email mới",
     "tip_sidebar_touch": "Tìm Lịch, Danh bạ và Cài đặt ở thanh phía dưới",
@@ -5363,6 +5805,21 @@
     "previous_file": "Tệp trước",
     "next_file": "Tệp tiếp theo",
     "loading": "Đang tải…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} đã tồn tại.",
+    "conflict_file_hint": "Thay thế đưa nội dung mới vào tệp hiện có, nên các chia sẻ của tệp vẫn giữ nguyên. Giữ cả hai thêm một bản sao có đánh số.",
+    "conflict_folder_hint": "Thay thế thêm các tệp vào thư mục hiện có và thay các tệp trùng tên. Giữ cả hai tạo thêm một thư mục có đánh số.",
+    "replace": "Thay thế",
+    "keep_both": "Giữ cả hai",
+    "skip": "Bỏ qua",
+    "apply_to_all": "{count, plural, other {Làm vậy cho cả # xung đột}}",
+    "no_preview": "Không có bản xem trước cho loại tệp này.",
+    "open_in_app": "Mở bằng ứng dụng mặc định",
+    "shared_with": "{name} giờ đã được chia sẻ với {person}.",
+    "send_message": "Gửi tin nhắn",
+    "share_mail_subject": "Tôi đã chia sẻ {name} với bạn",
+    "share_mail_body": "Chào bạn,\n\nTôi đã chia sẻ \"{name}\" với bạn. Bạn có thể mở tại đây:\n{link}"
   },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
@@ -5610,6 +6067,48 @@
     "toast_stopped": "Việc xuất đã dừng.",
     "toast_show": "Hiện"
   },
+  "desktopImport": {
+    "find": "Tìm dữ liệu Thunderbird và Outlook…",
+    "find_hint": "Tìm ở những nơi thường dùng trên máy tính này. Bulwark sẽ hỏi bạn trước.",
+    "scan_declined": "Không tìm gì vì bạn không cho phép.",
+    "scan_failed": "Không tìm được. Hãy thử lại.",
+    "read_declined": "Không đọc tệp nào vì bạn không cho phép.",
+    "read_failed": "Không thể đọc các tệp này nữa. Hãy tìm lại.",
+    "nothing_found": "Không có hồ sơ Thunderbird hay tệp dữ liệu Outlook ở những nơi thường dùng. Để nhập tệp từ nơi khác, hãy dùng Chọn tệp.",
+    "found_list": "Dữ liệu thư tìm thấy trên máy tính này",
+    "outlook_files": "Tệp dữ liệu Outlook",
+    "thunderbird_profile": "Hồ sơ Thunderbird {name}",
+    "address_book": "Sổ địa chỉ của {name}",
+    "message_count": "{count, plural, other {# thư}}",
+    "contact_count": "{count, plural, other {# liên hệ}}",
+    "confirm": "{count, plural, other {Dùng # mục này…}}",
+    "back": "Quay lại",
+    "estimate": "Đã chọn {size}. Nhiều máy chủ, trong đó có Stalwart, chỉ nhận khoảng 1000 thư hoặc 50 MB mỗi giờ từ một người dùng, nên việc này mất ít nhất {time}. Đến giới hạn, việc nhập tạm dừng rồi tự tiếp tục. Nó chạy ở chế độ nền và tiếp tục sau khi khởi động lại.",
+    "duration_hours": "{count, plural, other {# giờ}}",
+    "duration_days": "{count, plural, other {# ngày}}",
+    "time_left": "Còn ít nhất {time} theo giới hạn tải lên của máy chủ. Trong lúc đó bạn vẫn có thể làm việc.",
+    "thunderbird_running": "Thunderbird đang chạy. Hãy đóng nó trước. Nếu nó thay đổi một thư mục trong khi nhập, thư mục đó sẽ bắt đầu lại, và các thư đã nhập sẽ được bỏ qua.",
+    "ost_refused": "Không cung cấp: {names}. Tệp .ost của Outlook chỉ là bản sao cục bộ của hộp thư và không thể nhập ở đây. Trong Outlook, hãy xuất thư ra tệp .pst.",
+    "calendars_left_out": "Lịch Thunderbird không được nhập. Hãy xuất chúng từ Thunderbird thành tệp .ics rồi nhập vào lịch.",
+    "pst_items_left_out": "Từ tệp Outlook chỉ nhập thư, không nhập liên hệ hay lịch.",
+    "picked": "{count, plural, other {# thư mục và tệp từ máy tính này}}",
+    "remove_picked": "Xóa các tệp này",
+    "contacts_picked": "{count, plural, other {# liên hệ từ Thunderbird sẽ vào danh bạ của bạn.}}",
+    "contacts_added": "{count, plural, other {Đã thêm # liên hệ từ Thunderbird.}}",
+    "contacts_failed": "Không thể thêm một số liên hệ từ Thunderbird.",
+    "files_refused": "Bỏ qua vì không thể đọc nữa: {names}",
+    "skip_seen": "Bỏ qua các thư mà lần nhập trước đã đưa vào cùng thư mục",
+    "skip_duplicate": "{count, plural, other {# thư đã được nhập trước đó}}",
+    "file_unavailable": "Một tệp đã thay đổi hoặc không thể đọc nữa. Hãy đóng Thunderbird và nhập lại. Các thư đã nhập sẽ được bỏ qua.",
+    "resume_gone": "Không thể tiếp tục nhập từ máy tính này vì các tệp đã mất.",
+    "pst_in_use": "Không thể đọc {names} khi Outlook đang mở tệp. Hãy đóng Outlook và tìm lại.",
+    "description": "Tìm thư trên máy tính này, hoặc chọn tệp .eml, .zip, .mbox hay Outlook .pst.",
+    "settings_description": "Lấy thư từ Thunderbird, hoặc từ tệp .eml, ZIP, mbox hay Outlook .pst.",
+    "resume_refused": "Hiện không đọc được: {names}. Phần còn lại vẫn tiếp tục, và các mục này sẽ được thử lại ở lần khởi động sau.",
+    "resume_stop_trying": "Ngừng thử",
+    "resume_hand_picked": "Hãy chọn lại các tệp này để nhập phần còn lại: {names}. Các thư đã nhập sẽ được bỏ qua.",
+    "scan_incomplete": "Việc tìm kiếm mất quá lâu và đã dừng. Đây là những gì đã tìm thấy đến lúc đó."
+  },
   "recover_deleted": {
     "tab": "Khôi phục các mục đã xóa",
     "title": "Khôi phục các mục đã xóa",
@@ -5720,6 +6219,176 @@
       "no_sent_mailbox": "Không tìm thấy thư mục Thư đã gửi.",
       "no_drafts_mailbox": "Không tìm thấy thư mục Thư nháp."
     }
+  },
+  "offlineConflicts": {
+    "title": "Các thay đổi chưa được áp dụng",
+    "description": "Bạn đã thực hiện các thay đổi này khi ngoại tuyến. Chúng chưa được áp dụng và thư vẫn giữ nguyên như trên máy chủ.",
+    "changed": "Đã thay đổi trên thiết bị khác nên thay đổi của bạn chưa được áp dụng",
+    "changed_delete": "Đã thay đổi trên thiết bị khác nên chưa bị xóa",
+    "gone": "Không còn trên máy chủ nên thay đổi của bạn chưa được áp dụng",
+    "refused": "Máy chủ đã từ chối thay đổi này: {reason}",
+    "dismiss": "Đóng",
+    "dismiss_label": "Đóng ghi chú về {subject}",
+    "banner": "Các thay đổi chưa được áp dụng: {count}",
+    "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào.",
+    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt.",
+    "signout_changes_title": "Đăng xuất khi còn thay đổi chưa lưu?",
+    "signout_changes": "Thay đổi chưa có trên máy chủ: {count}. Đăng xuất sẽ xóa chúng.",
+    "store_unavailable": "Hiện không mở được thư ngoại tuyến trên thiết bị này. Thư chưa gửi vẫn ở đây và ứng dụng tiếp tục thử.",
+    "store_reset": "Không đọc được thư ngoại tuyến trên thiết bị này nên đang tải lại. Những gì chưa gửi đã mất.",
+    "legacy_stranded": "Trình duyệt này không mở được thư chưa gửi do phiên bản trước lưu. Cập nhật trình duyệt có thể lấy lại chúng.",
+    "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
+    "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
+  },
+  "offlineWipe": {
+    "note": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Hãy đăng nhập để bắt đầu lại.",
+    "note_unsent": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Số thư chưa gửi đã xóa: {count}.",
+    "settings_title": "Xóa mọi thứ khỏi thiết bị này",
+    "settings_description": "Dành cho khi bạn tặng máy tính này hoặc không dùng nữa. Thư của bạn trên máy chủ vẫn còn.",
+    "settings_button": "Xóa mọi thứ…",
+    "settings_wiping": "Đang xóa…",
+    "confirm_title": "Xóa mọi thứ khỏi thiết bị này?",
+    "confirm_message": "Thao tác này xóa những gì ứng dụng này lưu trên thiết bị này, cho mọi tài khoản ở đây. Thư của bạn trên máy chủ không bị ảnh hưởng.",
+    "confirm_mail": "Thư, lịch, danh bạ và tệp được lưu ở đây",
+    "confirm_unsent": "Số thư chưa gửi đang chờ ở đây: {count}. Chúng sẽ bị mất.",
+    "confirm_keys": "Khóa S/MIME và OpenPGP. Bạn cần bản sao lưu của riêng mình để dùng lại.",
+    "confirm_plugins": "Dữ liệu mà các tiện ích đã lưu ở đây",
+    "confirm_files": "Tệp đính kèm mở để chỉnh sửa và tệp đang chờ đính kèm",
+    "confirm_accounts": "Tất cả tài khoản sẽ đăng xuất",
+    "confirm_button": "Xóa mọi thứ",
+    "note_unknown": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Các thư chưa gửi cũng có thể đã bị xóa.",
+    "refused_waiting": "Thư chưa gửi đang chờ mật khẩu mới của bạn: {count}. Được giữ đến {date}.",
+    "refused_waiting_unknown": "Có thể có thư chưa gửi đang chờ mật khẩu mới của bạn. Được giữ đến {date}.",
+    "confirm_unsent_unknown": "Có thể có thư chưa gửi đang chờ ở đây. Chúng sẽ bị mất.",
+    "confirm_templates": "Mẫu email đã lưu trên thiết bị này",
+    "session_waiting": "Thư chưa gửi đang chờ lần đăng nhập tiếp theo: {count}. Được giữ đến {date}.",
+    "session_waiting_unknown": "Có thể có thư chưa gửi đang chờ lần đăng nhập tiếp theo. Được giữ đến {date}.",
+    "needs_sign_in": "Cần đăng nhập",
+    "switcher_waiting": "Thư chưa gửi: {count}. Sẽ bị xóa khỏi thiết bị này vào {date}.",
+    "switcher_kept": "Email trên thiết bị này sẽ bị xóa vào {date}.",
+    "sibling_waiting": "{name} đã bị đăng xuất. Thư chưa gửi: {count}. Hãy đăng nhập trước {date}, nếu không chúng sẽ bị xóa khỏi thiết bị này.",
+    "sibling_kept": "{name} đã bị đăng xuất. Hãy đăng nhập trước {date}, nếu không email sẽ bị xóa khỏi thiết bị này."
+  },
+  "offlineStorage": {
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+    "window_label": "Giữ lại bao lâu",
+    "window_description": "Thư và sự kiện lịch cũ hơn sẽ bị xóa khỏi thiết bị này. Bạn vẫn có thể mở chúng khi có kết nối.",
+    "window_days": "{days, plural, other {# ngày}}",
+    "window_year": "1 năm",
+    "window_everything": "Tất cả",
+    "attachments_label": "Giữ tệp đính kèm",
+    "attachments_description": "Tệp đính kèm của các thư được giữ và các tệp bạn giữ ngoại tuyến, tối đa {total} tổng cộng. Tệp cũ nhất sẽ bị xóa trước.",
+    "total_locked": "Tổ chức của bạn chỉ cho phép tối đa {size} tệp đính kèm và tệp.",
+    "attachment_cap_label": "Tệp đính kèm lớn nhất được giữ",
+    "usage_mail": "Thư và chỉ mục tìm kiếm",
+    "usage_attachments": "Tệp đính kèm",
+    "usage_calendar": "Lịch",
+    "usage_contacts": "Danh bạ",
+    "usage_files": "Tệp giữ ngoại tuyến",
+    "usage_row": "{size} ({count, plural, other {# mục}})",
+    "progress_list": "Đang liệt kê thư",
+    "progress_bodies": "Đang tải thư xuống",
+    "progress_threads": "Đang sắp xếp cuộc trò chuyện",
+    "progress_files": "Đang tải tệp xuống",
+    "progress_other": "Đang đưa dữ liệu về thiết bị này",
+    "progress_count": "{done} trên {total}",
+    "progress_count_open": "đến nay {done}",
+    "progress_left": "còn khoảng {minutes, plural, other {# phút}}",
+    "clear_label": "Xóa tài khoản này",
+    "clear_description": "Xóa mọi thứ thiết bị này giữ cho tài khoản này, rồi tải lại.",
+    "clear_button": "Xóa…",
+    "clear_confirm_title": "Xóa tài khoản này trên thiết bị này?",
+    "clear_confirm_message": "Mọi thứ thiết bị này giữ cho {account} sẽ bị xóa và tải lại. Thư của bạn trên máy chủ vẫn còn.",
+    "clear_confirm_unsent": "{count, plural, other {# thư chưa gửi sẽ bị mất.}}",
+    "clear_confirm": "Xóa",
+    "persist_refused": "Trình duyệt này có thể xóa thư đã giữ khi sắp hết dung lượng. Cài đặt ứng dụng thường giúp tránh điều này.",
+    "persist_retry": "Đề nghị trình duyệt giữ lại",
+    "safari_hint": "Safari xóa dữ liệu của một trang web sau 7 ngày không truy cập. Hãy thêm Bulwark vào Màn hình chính hoặc Dock để giữ thư trên thiết bị này.",
+    "evicted": "Trình duyệt đã xóa thư được giữ trên thiết bị này. Đang tải lại.",
+    "evicted_lost": "{count, plural, other {# thư hoặc thay đổi chưa gửi đã bị mất.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Bộ nhớ thiết bị đã đầy.",
+    "storage_full_text": "Bulwark đã ngừng lưu thư ở đây. Hãy giữ ít thư hơn hoặc xóa tài khoản này để có thêm chỗ.",
+    "open_settings": "Mở cài đặt",
+    "default_on": "Bulwark giữ thư của bạn trên thiết bị này để dùng được khi không có kết nối. Bạn có thể đổi điều này trong Cài đặt.",
+    "conflict_calendar": "Sự kiện lịch",
+    "conflict_contacts": "Liên hệ",
+    "kept_files_title": "Tệp giữ ngoại tuyến",
+    "kept_state_kept": "Trên thiết bị này",
+    "kept_state_waiting": "Đang chờ tải xuống",
+    "kept_error_tooLarge": "Quá lớn để giữ",
+    "kept_error_overLimit": "Vượt giới hạn của thiết bị này",
+    "kept_error_notAllowed": "Tổ chức của bạn không cho phép giữ tệp",
+    "kept_error_download": "Không tải xuống được",
+    "keep_offline": "Giữ ngoại tuyến",
+    "unpin": "Ngừng giữ ngoại tuyến",
+    "unpin_label": "Ngừng giữ {name} ngoại tuyến",
+    "warning_desktop": "Bất kỳ ai dùng được tài khoản người dùng trên máy tính này đều có thể đọc thư này. Hãy dùng mã hóa ổ đĩa.",
+    "off_confirm_text": "Thao tác này xóa mọi thứ thiết bị này giữ cho {account}. Thư của bạn trên máy chủ vẫn còn.",
+    "unsent_changes": "{count, plural, other {# thay đổi chưa đến được máy chủ sẽ bị mất.}}",
+    "clear_needs_connection": "Cần có kết nối, vì mọi thứ sẽ được tải lại.",
+    "usage_label": "Những gì thiết bị này giữ",
+    "pin_not_ready": "Tệp này chưa có trong danh sách của thiết bị này. Hãy thử lại sau giây lát."
+  },
+  "keyProtection": {
+    "browser_note": "Trong trình duyệt, khóa của thư này nằm trong cùng hồ sơ trình duyệt với thư. Ai sao chép các tệp của hồ sơ đều có thể đọc được, vì vậy hãy dùng mã hóa ổ đĩa.",
+    "no_secure_storage": "Máy tính này không có kho khóa an toàn mà ứng dụng có thể dùng, nên khóa của thư này chỉ được làm rối trên ổ đĩa. Hãy dùng mã hóa ổ đĩa.",
+    "wrap_failed": "Kho khóa an toàn của máy tính này không nhận khóa của thư này, nên khóa không được bảo vệ như đáng lẽ phải có. Hãy khởi động lại ứng dụng và dùng mã hóa ổ đĩa.",
+    "rekey_progress": "Đang mã hóa lại thư trên thiết bị này: {percent}%. Bạn có thể tiếp tục làm việc.",
+    "rekey_failed": "Việc mã hóa lại thư trên thiết bị này chưa xong, nên khóa cũ vẫn có thể mở được. Ứng dụng sẽ thử lại ở lần khởi động sau.",
+    "reenroll_note": "Mã khóa truy cập và mở khóa hệ thống đã dùng khóa của mã PIN cũ nên đã bị gỡ bỏ. Hãy thiết lập lại nếu bạn dùng chúng."
+  },
+  "offlineDrafts": {
+    "title": "Bản nháp trên thiết bị này",
+    "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
+    "saved_on_device": "Đã lưu trên thiết bị này",
+    "status_waiting": "Đang chờ máy chủ",
+    "status_sending": "Đang lưu lên máy chủ",
+    "status_uncertain": "Đang kiểm tra xem đã đến máy chủ chưa",
+    "status_refused": "Máy chủ đã từ chối bản nháp này: {error}",
+    "file_missing": "Một tệp đính kèm không còn trên thiết bị này",
+    "open": "Mở",
+    "open_label": "Mở {subject}",
+    "retry": "Thử lại",
+    "retry_label": "Thử lại {subject}",
+    "toast_refused": "Không thể lưu bản nháp {subject} lên máy chủ. Bản nháp vẫn ở trên thiết bị này.",
+    "toast_conflict": "Bản nháp {subject} đã được thay đổi trên thiết bị khác. Cả hai phiên bản đều được giữ lại.",
+    "conflict_changed": "Đã thay đổi trên thiết bị khác. Cả hai phiên bản đều ở trong Bản nháp.",
+    "conflict_gone": "Đã thay đổi hoặc xóa trên thiết bị khác. Phiên bản của bạn ở trong Bản nháp.",
+    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}",
+    "banner_waiting": "Bản nháp đang chờ máy chủ: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Xuất thư đã lưu",
+    "settings_description": "Lưu thư trên thiết bị này thành tệp mbox hoặc .eml. Hoạt động cả khi ngoại tuyến.",
+    "title": "Xuất thư đã lưu",
+    "description": "Lưu các bản gốc mà thiết bị này giữ. Tệp .eml là bản sao chính xác. Tệp mbox thêm các dấu mà định dạng của nó cần và ghi trạng thái đã đọc và gắn cờ vào tiêu đề của mỗi thư, thay cho giá trị cũ. Thư cũ hơn khoảng thời gian bạn chọn không có trong đó. Để lưu mọi thứ trên máy chủ, hãy dùng “Xuất toàn bộ thư”.",
+    "folders_label": "Thư mục",
+    "all_folders": "Tất cả thư mục",
+    "folder_kept": "Ở đây {kept}/{total}",
+    "loading": "Đang đọc dữ liệu trên thiết bị này…",
+    "load_failed": "Không đọc được thư trên thiết bị này.",
+    "nothing_kept": "Chưa có thư nào được lưu trên thiết bị này.",
+    "kept": "Bản gốc trên thiết bị này: {kept}/{total} thư",
+    "missing_online": "Cần tải từ máy chủ: {count}",
+    "missing_offline": "Không xuất được khi ngoại tuyến: {count}. Bạn có thể thử lại khi trực tuyến.",
+    "reason_attachments_off": "Thư gốc chỉ được giữ khi “Giữ tệp đính kèm” đang bật.",
+    "reason_not_kept": "Thư gốc được tải sau cùng và chỉ khi còn chỗ.",
+    "not_kept_attachments_off": "Không có bản gốc vì thiết bị này không giữ tệp đính kèm: {count}",
+    "not_kept_not_kept": "Chưa có bản gốc trên thiết bị này: {count}",
+    "retry": "Thử lại khi trực tuyến",
+    "retry_online": "Bạn đang trực tuyến nên có thể lấy từ máy chủ.",
+    "retry_offline": "Bạn có thể thử lại khi trực tuyến.",
+    "settings_button": "Xuất…",
+    "message_failed": "Máy chủ không trả về thư này.",
+    "failed_generic": "Việc xuất đã dừng do lỗi. Hãy thử lại.",
+    "stopped_limit": "Việc xuất đã dừng ở {limit}, mức tối đa trình duyệt này có thể giữ. Hãy chọn ít thư mục hơn, hoặc dùng Chromium, Firefox hay ứng dụng máy tính.",
+    "over_limit": "Trình duyệt này giữ được tối đa {limit}, còn lựa chọn này khoảng {size}. Hãy chọn ít thư mục hơn, hoặc dùng Chromium, Firefox hay ứng dụng máy tính.",
+    "no_room": "Lần xuất này cần khoảng {size}, còn trình duyệt này còn {free}. Hãy chọn ít thư mục hơn hoặc giải phóng dung lượng.",
+    "stopped_no_room": "Trình duyệt đã hết chỗ cho việc xuất. Hãy chọn ít thư mục hơn hoặc giải phóng dung lượng.",
+    "stopped_offline_off": "Việc xuất đã dừng vì tài khoản này không còn giữ thư trên thiết bị này.",
+    "policy_unknown": "Chưa biết quy tắc của tổ chức bạn cho tài khoản này, nên việc xuất tạm thời tắt.",
+    "leftover_file": "Không thể xóa tệp {name} khỏi nơi bạn đã lưu. Tệp chưa hoàn chỉnh, bạn có thể xóa nó."
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
@@ -5837,13 +6506,17 @@
         "title": "Toàn quyền truy cập vào ứng dụng này",
         "body": "Chạy với các quyền tương tự như chính webmail. Nó có thể đọc tất cả thư và các khóa được lưu trữ của bạn và hành động thay bạn. Chỉ cho phép điều này đối với các plugin mà bạn hoàn toàn tin tưởng."
       },
+      "keystore": {
+        "title": "Dùng chứng chỉ trên máy tính này",
+        "body": "Yêu cầu ký và giải mã thư bằng chứng chỉ trên máy tính này hoặc thẻ thông minh. Ứng dụng sẽ hỏi bạn trước. Tiện ích không bao giờ nhận được khóa riêng, nhưng khi bạn cho phép, tiện ích có thể ký dưới tên bạn và đọc nội dung đã giải mã."
+      },
       "email_raw_send": {
         "title": "Gửi thư nó tự tạo",
         "body": "Gửi thư hoàn chỉnh, ví dụ như thư đã ký hoặc mã hóa, từ tài khoản của bạn."
       },
       "email_blob_read": {
-        "title": "Đọc nội dung thô của thư",
-        "body": "Đọc các tệp đính kèm và toàn bộ nguồn thư bạn thao tác cũng như mọi tệp bạn đính kèm trước khi nó được gửi."
+        "title": "Đọc tệp đính kèm và nguồn thư",
+        "body": "Đọc tệp đính kèm (cả văn bản và hình ảnh trong đó) và toàn bộ nguồn của thư bạn thao tác, cũng như mọi tệp bạn đính kèm trước khi gửi."
       },
       "email_blob_write": {
         "title": "Thay thế tệp đính kèm trước khi gửi",
@@ -5861,6 +6534,10 @@
         "title": "Thay đổi lịch của bạn",
         "body": "Tạo, thay đổi và xóa các sự kiện."
       },
+      "calendar_respond": {
+        "title": "Trả lời lời mời",
+        "body": "Chấp nhận hoặc từ chối lời mời trên lịch. Câu trả lời của bạn được gửi đến người tổ chức qua email."
+      },
       "contacts_read": {
         "title": "Đọc danh bạ của bạn",
         "body": "Tìm kiếm và đọc sổ địa chỉ của bạn."
@@ -5871,11 +6548,11 @@
       },
       "files_read": {
         "title": "Đọc tệp của bạn",
-        "body": "Duyệt và mở các tệp được lưu trữ trong tài khoản của bạn."
+        "body": "Tìm, mở và đọc các tệp trong tài khoản của bạn."
       },
       "files_write": {
         "title": "Thay đổi tệp của bạn",
-        "body": "Tải lên, đổi tên, di chuyển và xóa các tệp trong tài khoản của bạn."
+        "body": "Lưu, tạo, đổi tên và di chuyển tệp trong tài khoản của bạn, đồng thời ngăn xóa một tệp."
       },
       "identity_read": {
         "title": "Xem địa chỉ người gửi của bạn",
@@ -5926,8 +6603,12 @@
         "body": "Xem tùy chọn và định nghĩa thẻ của bạn."
       },
       "settings_write": {
+        "title": "Thay đổi thẻ của bạn",
+        "body": "Thêm, đổi tên và sắp xếp lại các thẻ của bạn, đồng thời chặn các thay đổi đối với cài đặt của bạn."
+      },
+      "settings_change": {
         "title": "Thay đổi cài đặt của bạn",
-        "body": "Thêm và sắp xếp lại các thẻ và thay đổi tùy chọn của bạn."
+        "body": "Thay đổi giao diện và cách hoạt động của ứng dụng, chẳng hạn như chủ đề, định dạng giờ hoặc ngăn đọc. Các cài đặt do tổ chức của bạn đặt vẫn giữ nguyên."
       },
       "security_read": {
         "title": "Xem bảo mật tài khoản của bạn",
@@ -5989,6 +6670,10 @@
         "title": "Thêm bảng vào chi tiết thư",
         "body": "Hiển thị bảng riêng bên cạnh hoặc bên dưới thư đang mở."
       },
+      "ui_side_panel": {
+        "title": "Thêm bảng vào các chế độ xem khác",
+        "body": "Hiển thị bảng riêng bên cạnh Lịch, Danh bạ, Tệp và Cài đặt."
+      },
       "ui_download_file": {
         "title": "Lưu tệp vào thiết bị",
         "body": "Cho phép tải xuống các tệp plugin đã tạo."
@@ -6047,7 +6732,7 @@
       },
       "ui_tasks": {
         "title": "Thêm vào công việc",
-        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc và các nút trong danh sách công việc."
+        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc, các nút trong danh sách công việc và danh sách công việc riêng thay cho danh sách của Bulwark."
       },
       "ui_files": {
         "title": "Thêm vào tệp",
@@ -6071,11 +6756,15 @@
       },
       "compose_read": {
         "title": "Đọc thư bạn đang soạn",
-        "body": "Đọc nội dung thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Không bao gồm chữ ký hoặc phần thư được trích dẫn."
+        "body": "Đọc thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư: nội dung, tiêu đề, người nhận (kể cả Bcc), tên và kích thước tệp đính kèm. Không bao gồm chữ ký hoặc phần thư được trích dẫn."
       },
       "compose_write": {
         "title": "Thay đổi thư bạn đang soạn",
         "body": "Thay thế hoặc thêm văn bản vào thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Bạn có thể hoàn tác từng thay đổi và vẫn là người quyết định có gửi thư hay không."
+      },
+      "compose_check": {
+        "title": "Kiểm tra những gì bạn viết",
+        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không gửi gì khi thư được đặt để ký hoặc mã hóa. Văn bản bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra."
       },
       "email_forward": {
         "title": "Chuyển tiếp thư của bạn",
@@ -6124,6 +6813,24 @@
     "not_running": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu hiện không chạy. Hãy thử lại sau giây lát.",
     "stopped_working": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu đã ngừng hoạt động. Hãy tải lại trang. Nếu vẫn không được, hãy báo cho quản trị viên."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Hoàn tác gửi",
+      "description": "Cho bạn vài giây để lấy lại thư sau khi nhấn Gửi."
+    },
+    "reply_from_received": {
+      "label": "Trả lời bằng địa chỉ nhận thư",
+      "description": "Trả lời từ địa chỉ mà thư đã được gửi đến. Hữu ích nếu bạn có nhiều địa chỉ."
+    },
+    "require_tls": "Chỉ gửi qua kết nối an toàn",
+    "require_tls_hint": "Bản thân thư không được mã hóa. Thư sẽ bị trả lại nếu máy chủ không dùng được TLS.",
+    "encrypt": "Mã hóa…",
+    "encrypt_hint": "Cần tiện ích S/MIME hoặc PGP. Mở Cài đặt.",
+    "quick_reply_to": "Trả lời {names}…",
+    "open_full_editor": "Mở trong trình soạn thảo đầy đủ",
+    "forward_to_label": "Đến",
+    "forward_cc_label": "CC"
+  },
   "plugin_list": {
     "filters": "Bộ lọc",
     "remove_filter": "Xóa bộ lọc {label}"
@@ -6157,6 +6864,9 @@
   },
   "top_bar": {
     "more": "Nhiều lựa chọn hơn"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Ẩn thông báo ngoại tuyến"
   },
   "shell": {
     "resize": "Thay đổi kích thước",
@@ -6202,6 +6912,19 @@
     "group_plugins": "Plugin",
     "group_account": "Tài khoản",
     "switch_to": "Chuyển sang {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Bạn đang ngoại tuyến. Một số thao tác cần kết nối.",
+    "files_new_folder": "Thư mục mới…",
+    "files_new_file": "Tệp mới…",
+    "files_new_text_file": "Tệp văn bản mới…",
+    "files_upload_files": "Tải tệp lên…",
+    "files_upload_folder": "Tải lên thư mục…",
+    "files_share": "Chia sẻ…",
+    "files_share_button": "Chia sẻ",
+    "contacts_add_to_group": "Thêm vào nhóm…",
+    "contacts_bulk_add_to_group": "Thêm vào nhóm…",
+    "schedule_send": "Lên lịch gửi…"
   },
   "notification_center": {
     "title": "Thông báo",
@@ -6337,6 +7060,12 @@
     "sign_language": "Ngôn ngữ ký hiệu",
     "new_tab": "Mở trong một tab mới"
   },
+  "pwaNotify": {
+    "action_archive": "Lưu trữ",
+    "action_mark_read": "Đánh dấu là đã đọc",
+    "action_reply": "Trả lời",
+    "reply_placeholder": "Viết trả lời"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Thêm vào lịch",
     "update_in_calendar": "Cập nhật trong lịch",
@@ -6367,5 +7096,638 @@
       "added_from": "Được thêm từ một thư của {domain}",
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
     }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Chính tả",
+      "grammar": "Ngữ pháp",
+      "style": "Văn phong",
+      "other": "Gợi ý"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Không có gợi ý",
+      "suggestions": "Gợi ý",
+      "replace_with": "Thay bằng {text}",
+      "also": "{checker} cũng phát hiện",
+      "ignore": "Bỏ qua",
+      "add_to_dictionary": "Thêm vào từ điển",
+      "disable_rule": "Tắt quy tắc này",
+      "changed": "Văn bản đã thay đổi. Hãy chờ lần kiểm tra tiếp theo."
+    },
+    "list_item": "{word}: {message} Gợi ý: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Không có lỗi chính tả hay ngữ pháp} other {# lỗi chính tả hoặc ngữ pháp}}",
+    "status": {
+      "title": "Soát lỗi",
+      "off": "Đã tắt soát lỗi",
+      "paused": "Đã tạm dừng soát lỗi",
+      "rate_limited": "Đã tạm dừng kiểm tra",
+      "unavailable": "Không thể kiểm tra",
+      "checking": "Đang kiểm tra…",
+      "issues": "{count, plural, =0 {Không có vấn đề} other {# vấn đề}}"
+    },
+    "panel": {
+      "title": "Soát lỗi",
+      "required": "Tổ chức của bạn yêu cầu bật",
+      "check_message": "Kiểm tra thư này",
+      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra.",
+      "turn_on": "Bật soát lỗi",
+      "paused_protected": "Không kiểm tra gì trong khi thư này được đặt để ký hoặc mã hóa.",
+      "paused_unknown": "{plugin} có thể ký hoặc mã hóa thư mà không hiển thị ở đây, nên không kiểm tra gì khi nó đang bật.",
+      "rate_limited": "{checker} yêu cầu chờ. Việc kiểm tra sẽ tiếp tục sau một phút.",
+      "unavailable": "{checker} hiện không thể kiểm tra. Nó sẽ thử lại khi bạn tiếp tục gõ.",
+      "no_issues": "Không tìm thấy vấn đề nào.",
+      "list_label": "Các vấn đề trong thư này",
+      "shortcuts": "Vấn đề tiếp theo: {next}. Trước đó: {previous}."
+    },
+    "notice": {
+      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Gửi khi vẫn còn vấn đề?",
+      "body": "Thư này vẫn còn {count, plural, other {# lỗi chính tả hoặc ngữ pháp}} chưa xử lý.",
+      "review": "Xem lại",
+      "send": "Vẫn gửi"
+    },
+    "settings": {
+      "title": "Soát lỗi",
+      "description": "Gạch dưới lỗi chính tả và ngữ pháp khi bạn viết, kèm gợi ý để sửa.",
+      "enable": "Kiểm tra chính tả và ngữ pháp khi tôi gõ",
+      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa.",
+      "no_checker": "Chưa cài tiện ích bổ sung soát lỗi nào. Hãy nhờ quản trị viên thêm một tiện ích.",
+      "plugin_description": "Gửi những gì bạn viết đến {plugin}.",
+      "writing_language": "Ngôn ngữ viết",
+      "writing_language_description": "Ngôn ngữ bạn thường dùng để viết. Soát lỗi và trình kiểm tra chính tả của trình duyệt sẽ dùng ngôn ngữ này.",
+      "auto": "Tự động phát hiện"
+    },
+    "shortcuts": {
+      "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
+      "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
+    }
+  },
+  "pwaWindows": {
+    "open_in_window": "Mở trong cửa sổ mới",
+    "save_all_to_folder": "Lưu tất cả vào thư mục…",
+    "saved_all": "{count, plural, other {Đã lưu # tệp đính kèm vào {folder}.}}",
+    "saved_partial": "Đã lưu {saved} trong {total} tệp đính kèm vào {folder}.",
+    "save_failed": "Không thể lưu tệp đính kèm vào {folder}.",
+    "popup_blocked": "Trình duyệt đã chặn cửa sổ mới. Hãy cho phép cửa sổ bật lên với trang này rồi thử lại.",
+    "opening": "Đang mở…",
+    "session_ended_title": "Bạn đã đăng xuất trong cửa sổ này",
+    "session_ended_body": "Hãy mở ứng dụng và đăng nhập, rồi mở lại cửa sổ này.",
+    "open_app": "Mở ứng dụng",
+    "close_window": "Đóng cửa sổ",
+    "message_gone_title": "Thư này không còn nữa",
+    "message_gone_body": "Thư đã bị xóa hoặc chuyển sang tài khoản khác.",
+    "message_moved": "Thư này đã được chuyển sang thư mục khác.",
+    "message_moved_to": "Thư này đã được chuyển đến {folder}.",
+    "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Cửa sổ ứng dụng",
+      "double_click_label": "Mở thư trong cửa sổ mới khi nhấp đúp",
+      "double_click_description": "Nhấp một lần vẫn mở thư bên cạnh danh sách.",
+      "restore_label": "Mở lại cửa sổ khi khởi động",
+      "restore_description": "Các cửa sổ thư và bản nháp đang mở khi thoát sẽ trở lại."
+    },
+    "attachment": {
+      "open": "Mở",
+      "save_as": "Lưu thành…",
+      "copy": "Sao chép",
+      "copy_failed": "Không thể sao chép tệp."
+    },
+    "menu": {
+      "file": "Tệp",
+      "edit": "Chỉnh sửa",
+      "view": "Xem",
+      "message": "Thư",
+      "go": "Đi tới",
+      "window": "Cửa sổ",
+      "help": "Trợ giúp",
+      "new_window": "Cửa sổ mới",
+      "print": "In…",
+      "save_pdf": "Lưu dưới dạng PDF…",
+      "switch_connection": "Đổi kết nối…",
+      "close": "Đóng",
+      "quit": "Thoát",
+      "undo": "Hoàn tác",
+      "redo": "Làm lại",
+      "cut": "Cắt",
+      "copy": "Sao chép",
+      "paste": "Dán",
+      "select_all": "Chọn tất cả",
+      "search": "Tìm trong thư",
+      "refresh": "Kiểm tra thư mới",
+      "reading_pane": "Ô đọc thư",
+      "pane_right": "Bên phải",
+      "pane_below": "Bên dưới danh sách",
+      "pane_off": "Tắt",
+      "zoom_in": "Phóng to",
+      "zoom_out": "Thu nhỏ",
+      "zoom_reset": "Kích thước thực",
+      "full_screen": "Toàn màn hình",
+      "open_in_window": "Mở trong cửa sổ mới",
+      "next_message": "Thư tiếp theo",
+      "previous_message": "Thư trước",
+      "next_unread": "Thư chưa đọc tiếp theo",
+      "mail": "Thư",
+      "files": "Tệp",
+      "back": "Quay lại",
+      "forward": "Tiến tới",
+      "minimize": "Thu nhỏ cửa sổ",
+      "next_window": "Cửa sổ tiếp theo",
+      "shortcuts": "Phím tắt",
+      "docs": "Tài liệu",
+      "settings": "Cài đặt…",
+      "about": "Giới thiệu về Bulwark",
+      "from_plugins": "Thêm từ các plugin…",
+      "pick_gone": "Menu này đã cũ. Hãy mở lại và thử một lần nữa.",
+      "bar_label": "Trình đơn"
+    },
+    "context": {
+      "add_to_dictionary": "Thêm “{word}” vào từ điển",
+      "no_suggestions": "Không có gợi ý",
+      "open_link": "Mở liên kết",
+      "copy_link": "Sao chép liên kết",
+      "copy_address": "Sao chép địa chỉ",
+      "save_image": "Lưu hình ảnh…",
+      "copy_image": "Sao chép hình ảnh"
+    },
+    "closing": {
+      "unsaved_title": "Không thể lưu một bản nháp",
+      "unsaved_detail": "Nếu bạn đóng bây giờ, nội dung bạn đã viết kể từ lần lưu gần nhất sẽ bị mất.",
+      "close_anyway": "Vẫn đóng",
+      "unsent_title": "Một số thư chưa được gửi",
+      "unsent_one": "Có 1 thư đang chờ gửi. Thư sẽ được gửi vào lần tới bạn mở Bulwark.",
+      "unsent_many": "Có {count} thư đang chờ gửi. Các thư sẽ được gửi vào lần tới bạn mở Bulwark.",
+      "quit": "Thoát",
+      "leave_title": "Rời đi khi còn thay đổi chưa lưu?",
+      "leave_detail": "Các thay đổi của bạn trên trang này chưa được lưu.",
+      "leave": "Rời đi",
+      "stay": "Ở lại"
+    },
+    "spellcheck": {
+      "offer": "Kiểm tra chính tả cho {language} cần một từ điển. Bulwark có thể tải từ Google. Văn bản của bạn không bị gửi đi.",
+      "download": "Tải xuống"
+    },
+    "restore": {
+      "unavailable_title": "Hiện không thể mở bản nháp này",
+      "unavailable_body": "Bản nháp vẫn an toàn trên máy chủ, trong mục Thư nháp. Hãy thử lại khi có kết nối.",
+      "try_again": "Thử lại",
+      "close": "Đóng"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Tìm “{text}” trong thư"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Bạn đang ngoại tuyến. Cần có kết nối để mở thư này.",
+    "reader_failed": "Không tải được thư này.",
+    "retry": "Thử lại",
+    "action_offline": "Bạn đang ngoại tuyến. Việc này cần có kết nối.",
+    "offline_bar": "Bạn đang ngoại tuyến. Cần có kết nối để đọc và thay đổi thư.",
+    "offline_default_on": "Thư của bạn được lưu trên thiết bị này, nên bạn có thể đọc khi ngoại tuyến."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Luôn hiện thanh menu",
+    "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
+    "exit": "Thoát",
+    "tray_pause": "Tạm dừng thông báo",
+    "tray_pause_hour": "Trong 1 giờ",
+    "tray_pause_tomorrow": "Đến ngày mai",
+    "tray_resume": "Bật lại thông báo",
+    "tray_open": "Mở Bulwark",
+    "tray_quit": "Thoát Bulwark",
+    "tray_exit": "Thoát Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lưu bản nháp",
+    "attach_files": "Đính kèm tệp…",
+    "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
+  },
+  "appLock": {
+    "section_title": "Khóa ứng dụng",
+    "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
+    "enable_label": "Khóa bằng mã PIN",
+    "enable_desc": "Mã PIN chỉ ở trên thiết bị này.",
+    "protects_desc": "Điều này bảo vệ khỏi: mã PIN giữ người đang ở thiết bị này bên ngoài ứng dụng. Thư lưu ở đây nhận khóa mới khi bạn bật khóa hoặc đổi mã PIN, việc này có thể mất một lúc. Nó không thể ngăn một chương trình chạy trên máy tính này, một tiện ích trình duyệt bạn đã cài, hoặc người sao chép các tệp của ứng dụng và có thời gian thử nhiều mã PIN, vì vậy mã PIN dài hơn là đáng giá. Trong ứng dụng máy tính, việc thử mã PIN còn cần phiên đăng nhập của bạn trên máy tính này. Tài khoản của bạn trên máy chủ không bị ảnh hưởng.",
+    "enable_body": "Bạn cần nó mỗi khi ứng dụng khóa và sau khi khởi động lại.",
+    "set_pin_title": "Chọn mã PIN",
+    "change_pin": "Đổi mã PIN…",
+    "change_pin_title": "Đổi mã PIN",
+    "pin_label": "Mã PIN",
+    "pin_current": "Mã PIN hiện tại",
+    "pin_new": "Mã PIN mới",
+    "pin_repeat": "Nhập lại mã PIN",
+    "pin_hint": "Ít nhất 6 ký tự. Có thể dùng cả chữ cái, và mã dài hơn sẽ khó đoán hơn.",
+    "pin_obvious": "Mã PIN này quá dễ đoán. Hãy tránh lặp lại, dãy số và các lựa chọn phổ biến.",
+    "pin_mismatch": "Hai mã PIN không giống nhau.",
+    "pin_recovery": "Nếu quên, cách duy nhất là xóa dữ liệu trên thiết bị này và đăng nhập lại. Thư của bạn trên máy chủ vẫn còn. Các thư đang chờ gửi trên thiết bị này sẽ bị mất.",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "save_failed": "Không thành công. Hãy thử lại.",
+    "timeout_label": "Khóa sau",
+    "timeout_desc": "Thời gian không dùng ở bất kỳ cửa sổ hoặc thẻ nào.",
+    "lock_now": "Khóa ngay",
+    "lock_now_desc": "Khóa ngay mọi cửa sổ và thẻ.",
+    "disable_title": "Tắt khóa ứng dụng?",
+    "disable_body": "Nhập mã PIN để tắt.",
+    "disable_confirm": "Tắt",
+    "passkey_label": "Khóa truy cập",
+    "passkey_desc": "Mở khóa bằng khóa truy cập hoặc khóa bảo mật có thể bảo vệ khóa. Không phải loại nào cũng làm được, và mã PIN vẫn dùng được.",
+    "passkey_add": "Thêm khóa truy cập…",
+    "passkey_add_title": "Thêm khóa truy cập",
+    "passkey_remove": "Gỡ bỏ",
+    "passkey_added": "Đã thêm khóa truy cập.",
+    "passkey_no_prf": "Khóa truy cập này không thể bảo vệ khóa. Mã PIN vẫn dùng được.",
+    "passkey_failed": "Khóa truy cập không hoạt động. Hãy nhập mã PIN.",
+    "use_passkey": "Dùng khóa truy cập",
+    "use_hello": "Dùng Windows Hello",
+    "use_touchid": "Dùng Touch ID",
+    "os_add": "Bật…",
+    "os_add_title": "Dùng {method}",
+    "os_remove": "Tắt",
+    "os_desc": "{method} là bước kiểm tra do ứng dụng thực hiện. Sau khi xác nhận, ứng dụng đọc khóa từ bộ nhớ mã hóa của máy tính này. Một chương trình chạy dưới tài khoản người dùng của bạn có thể đọc nó ở đó mà không cần {method}, nên mã PIN bảo vệ tốt hơn. Mã PIN vẫn dùng được.",
+    "os_failed": "Không thành công. Hãy nhập mã PIN.",
+    "lock_title": "{app} đang khóa",
+    "locking": "Đang khóa…",
+    "pin_prompt": "Nhập mã PIN để tiếp tục.",
+    "unlock": "Mở khóa",
+    "unlocking": "Đang mở khóa…",
+    "wrong_pin": "Mã PIN này không đúng.",
+    "unlock_failed": "Không mở khóa được. Hãy thử lại.",
+    "blocked_later": "Quá nhiều lần thử. Hãy thử lại sau.",
+    "forgot": "Quên mã PIN?",
+    "forgot_title": "Xóa dữ liệu cục bộ và đăng xuất?",
+    "forgot_body": "Mã PIN đã quên không thể khôi phục. Thao tác này xóa thư lưu trên thiết bị này và đăng xuất mọi tài khoản để bạn có thể đăng nhập lại. Thư của bạn trên máy chủ vẫn còn. Các thư đang chờ gửi trên thiết bị này sẽ bị mất.",
+    "forgot_provider": "Nếu bạn đăng nhập qua trang đăng nhập của tổ chức, phiên đó vẫn mở ở đó. Lần đăng nhập tiếp theo tại đây sẽ yêu cầu trang đó đăng nhập mới, nếu được phép.",
+    "forgot_confirm": "Xóa và đăng xuất",
+    "unlock_in_main": "Hãy mở khóa trong cửa sổ chính.",
+    "open_main": "Đến cửa sổ chính",
+    "setup_required_title": "Tổ chức của bạn yêu cầu khóa ứng dụng",
+    "setup_required_body": "Hãy chọn một mã PIN. Bạn cần nó để mở {app} sau khi khóa.",
+    "draft_saved_notice": "Nội dung bạn đang viết đã được lưu vào Thư nháp trước khi khóa.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, other {# phút}}",
+    "blocked_seconds": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# giây}}.",
+    "blocked_minutes": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# phút}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Múi giờ phổ biến",
+    "time_zone_all": "Tất cả múi giờ",
+    "time_zone_search": "Tìm múi giờ",
+    "time_zone_no_match": "Không tìm thấy múi giờ",
+    "time_zone_desktop_description": "Hiển thị giờ của thư và cuộc hẹn theo múi giờ này. Nếu bạn không chọn, múi giờ của máy tính sẽ được dùng.",
+    "app_lock_desc_desktop": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
+    "app_lock_timeout_desc_desktop": "Thời gian không dùng ở bất kỳ cửa sổ nào.",
+    "app_lock_now_desc_desktop": "Khóa ngay mọi cửa sổ.",
+    "app_lock_protects_toggle": "Điều này bảo vệ khỏi gì?",
+    "app_lock_timeout_hours": "{count, plural, other {# giờ}}",
+    "desktop_attention_title": "Trên máy tính này"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Tên của bạn",
+      "description": "Mọi người thấy tên này cạnh địa chỉ của bạn khi bạn gửi thư cho họ.",
+      "saved": "Đã lưu tên của bạn.",
+      "error": "Không lưu được tên của bạn. Hãy thử lại."
+    },
+    "addresses": {
+      "description": "Các địa chỉ bạn có thể gửi thư, mỗi địa chỉ có tên và chữ ký riêng.",
+      "label": "Địa chỉ của bạn",
+      "count": "{count, plural, =0 {Chưa có địa chỉ nào} other {# địa chỉ}}",
+      "manage": "Sửa địa chỉ…",
+      "modal_title": "Địa chỉ email của bạn",
+      "add": "Thêm địa chỉ",
+      "edit": "Sửa địa chỉ",
+      "added": "Đã thêm địa chỉ.",
+      "saved": "Đã lưu địa chỉ.",
+      "deleted": "Đã xóa địa chỉ.",
+      "delete_title": "Xóa địa chỉ này?"
+    },
+    "signatures": {
+      "title": "Chữ ký",
+      "description": "Được thêm vào cuối thư bạn viết. Mỗi địa chỉ có chữ ký riêng.",
+      "saved": "Đã lưu chữ ký.",
+      "error": "Không lưu được chữ ký. Hãy thử lại.",
+      "no_addresses": "Chưa có địa chỉ nào để gửi."
+    },
+    "search": {
+      "addresses": "danh tính bí danh người gửi địa chỉ người gửi địa chỉ gửi từ identity alias sender",
+      "signatures": "chữ ký chữ ký email chân trang danh tính người gửi địa chỉ gửi từ signature",
+      "your_name": "tên hiển thị họ tên tên người gửi display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
+    "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
+    "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Đăng nhập bằng trình duyệt…",
+    "waiting": "Đang chờ trình duyệt…",
+    "waiting_hint": "Hãy hoàn tất đăng nhập ở đó. Trình quản lý mật khẩu của bạn hoạt động trong trình duyệt.",
+    "cancel": "Hủy",
+    "or_here": "hoặc đăng nhập tại đây",
+    "timed_out": "Đăng nhập trong trình duyệt mất quá nhiều thời gian. Hãy thử lại.",
+    "no_browser": "Bulwark không thể mở trình duyệt. Hãy thử lại hoặc đăng nhập tại đây.",
+    "failed": "Không đăng nhập được qua trình duyệt. Hãy thử lại.",
+    "handoff_banner": "Một chương trình trên máy tính này đã yêu cầu đăng nhập này cho ứng dụng Bulwark. Trình duyệt này vẫn chưa đăng nhập Bulwark. Nếu không phải bạn bắt đầu, hãy đóng tab này.",
+    "consent_title": "Đăng nhập vào ứng dụng Bulwark?",
+    "consent_description": "Một chương trình trên máy tính này, tại cổng {port}, đang yêu cầu thông tin đăng nhập của {username}. Chỉ tiếp tục nếu bạn vừa nhấn \"Đăng nhập bằng trình duyệt…\" trong ứng dụng Bulwark tại đây. Nếu không, có thể ai đó đang cố vào tài khoản của bạn: hãy chọn Để sau.",
+    "consent_confirm": "Đăng nhập vào ứng dụng",
+    "consent_cancel": "Để sau",
+    "page_done": "Bạn có thể đóng tab này và quay lại Bulwark.",
+    "page_failed": "Không đăng nhập được. Hãy quay lại Bulwark và thử lại.",
+    "page_link_used": "Liên kết này chỉ dùng được một lần. Hãy quay lại Bulwark và bắt đầu lại.",
+    "page_title": "Đăng nhập vào {server}",
+    "page_intro": "Trang này đến từ ứng dụng Bulwark trên máy tính này. Mật khẩu của bạn chỉ được gửi đến {server}.",
+    "page_username": "Địa chỉ email hoặc tên người dùng",
+    "page_password": "Mật khẩu",
+    "page_code": "Mã hai yếu tố",
+    "page_submit": "Đăng nhập",
+    "page_wrong_password": "Máy chủ không chấp nhận tên người dùng và mật khẩu này.",
+    "page_code_needed": "Tài khoản này cũng cần mã hai yếu tố. Hãy nhập lại mật khẩu và mã.",
+    "page_no_answer": "Bulwark không thể đăng nhập. Hãy kiểm tra xem máy chủ có truy cập được không rồi thử lại.",
+    "declined": "Bạn đã từ chối trong trình duyệt nên không có đăng nhập nào.",
+    "too_many": "Có quá nhiều lần thử đăng nhập từ mạng này. Hãy đợi vài phút rồi thử lại.",
+    "page_declined": "Không có gì được chuyển giao. Bạn có thể đóng tab này."
+  },
+  "uxs_login": {
+    "theme_button": "Sáng hay tối",
+    "server_label": "Máy chủ thư",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Đang tìm máy chủ thư của bạn…",
+    "server_found": "Máy chủ thư: {server}",
+    "server_change": "Đổi",
+    "server_change_hint": "Nhập địa chỉ máy chủ khác.",
+    "server_not_found": "Không tìm thấy máy chủ thư cho địa chỉ này. Nhập vào đây, ví dụ mail.example.com.",
+    "server_needed": "Nhập địa chỉ máy chủ thư của bạn.",
+    "server_invalid": "Đây không phải địa chỉ máy chủ. Hãy viết như mail.example.com.",
+    "email_needed": "Hãy nhập địa chỉ email trước.",
+    "other_ways": "Cách đăng nhập khác",
+    "trouble": "Gặp sự cố?",
+    "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
+    "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."
+  },
+  "desktop_updates": {
+    "title": "Cập nhật",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark tự kiểm tra bản cập nhật.",
+    "status_checking": "Đang kiểm tra bản cập nhật…",
+    "status_up_to_date": "Bạn đang dùng phiên bản mới nhất.",
+    "status_downloading": "Đang tải phiên bản {version}…",
+    "status_ready": "Phiên bản {version} đã sẵn sàng. Bản này sẽ được cài vào lần thoát tới, hoặc khởi động lại ngay.",
+    "status_available": "Đã có phiên bản {version}.",
+    "status_available_per_machine": "Đã có phiên bản {version}. Bulwark được cài cho mọi người trên máy tính này nên quản trị viên sẽ cài bản cập nhật.",
+    "status_older": "Bạn đang dùng bản beta. Bản ổn định {version} cũ hơn nên Bulwark giữ phiên bản này đến khi bản ổn định theo kịp.",
+    "status_error": "Không kiểm tra được bản cập nhật. Bulwark sẽ thử lại sau.",
+    "status_off": "Tổ chức của bạn đã tắt cập nhật trong ứng dụng.",
+    "check": "Kiểm tra ngay",
+    "restart": "Khởi động lại để cập nhật",
+    "download": "Tải xuống",
+    "install_older": "Cài phiên bản cũ hơn…",
+    "channel_label": "Kênh cập nhật",
+    "channel_description": "Bản beta ra sớm hơn và có thể có nhiều lỗi hơn.",
+    "channel_stable": "Ổn định",
+    "channel_beta": "Beta",
+    "shell_restart": "Khởi động lại để cập nhật",
+    "shell_check": "Kiểm tra bản cập nhật…",
+    "shell_available": "Đã có Bulwark {version}",
+    "shell_ready_title": "Bulwark đã sẵn sàng cập nhật",
+    "shell_ready_body": "Phiên bản {version} sẽ được cài vào lần thoát tới. Nhấp để khởi động lại ngay. Bản nháp được lưu trước.",
+    "shell_available_title": "Đã có phiên bản Bulwark mới",
+    "shell_none_title": "Bulwark đã cập nhật",
+    "shell_none_detail": "Bạn đang dùng phiên bản {version}.",
+    "shell_failed_title": "Bulwark không kiểm tra được bản cập nhật",
+    "shell_failed_detail": "Hãy kiểm tra kết nối và thử lại sau. Không có gì thay đổi.",
+    "shell_beta_title": "Chuyển sang bản beta?",
+    "shell_beta_detail": "Bạn nhận phiên bản mới sớm hơn và có thể có nhiều lỗi hơn. Để quay lại, hãy cài bản ổn định cũ hơn hoặc chờ bản ổn định theo kịp.",
+    "shell_beta_confirm": "Chuyển sang beta",
+    "shell_older_title": "Quay lại Bulwark {version}?",
+    "shell_older_detail": "Bạn đang dùng beta {current}. Bản ổn định {target} cũ hơn và có thể không đọc được những gì beta đã lưu trên máy này. Thư vẫn ở trên máy chủ, nhưng thư lưu ngoại tuyến có thể tải lại và thay đổi chưa gửi có thể mất. Nếu chờ, bản ổn định sẽ theo kịp và bạn chuyển mà không cần bước này.",
+    "shell_older_confirm": "Cài phiên bản cũ hơn"
+  },
+  "desktop_keystore": {
+    "title": "Chứng chỉ trên máy tính này",
+    "description": "Máy chủ này có thể yêu cầu dùng chứng chỉ và thẻ thông minh của bạn. Bạn vẫn được hỏi trước khi mỗi chứng chỉ được dùng.",
+    "label": "Quyền truy cập của máy chủ này",
+    "label_description": "Thu hồi quyền của bạn. Máy chủ sẽ phải hỏi lại.",
+    "revoke": "Thu hồi",
+    "revoked": "Đã thu hồi quyền"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} yêu cầu một chứng chỉ",
+    "picker_detail": "Máy chủ muốn biết bạn là ai. Chứng chỉ bạn chọn chỉ được gửi đến máy chủ này. Nếu bạn không biết máy chủ này, đừng gửi.",
+    "picker_issued": "Do {issuer} cấp, có hiệu lực đến {date}",
+    "picker_remember": "Ghi nhớ cho {host}",
+    "picker_none": "Không gửi chứng chỉ",
+    "picker_more": "Thêm chứng chỉ…"
+  },
+  "desktopOs": {
+    "section_title": "Ứng dụng máy tính",
+    "section_description": "Cách ứng dụng hoạt động với máy tính của bạn.",
+    "close_to_tray_label": "Tiếp tục chạy ở khay hệ thống khi đóng",
+    "close_to_tray_description": "Thư mới và lời nhắc vẫn đến sau khi bạn đóng cửa sổ.",
+    "start_at_login_label": "Khởi động khi đăng nhập vào máy tính",
+    "start_at_login_description": "Ứng dụng tự khởi động khi bạn đăng nhập.",
+    "start_minimized_label": "Khởi động ở khay hệ thống",
+    "start_minimized_description": "Không có cửa sổ nào mở khi đăng nhập. Mở bằng biểu tượng ở khay hệ thống.",
+    "attention_label": "Nhấp nháy thanh tác vụ khi có thư mới",
+    "attention_mac_label": "Làm biểu tượng Dock nảy khi có thư mới",
+    "attention_description": "Chỉ khi ứng dụng không ở phía trước.",
+    "quiet_hours_label": "Giờ yên tĩnh",
+    "quiet_hours_description": "Không có thông báo hay âm thanh vào giờ này. Thư vẫn đến.",
+    "quiet_hours_from": "Từ",
+    "quiet_hours_to": "đến",
+    "show_shortcut_label": "Hiện ứng dụng bằng phím tắt",
+    "show_shortcut_description": "{keys} đưa ứng dụng lên trước từ bất kỳ ứng dụng nào khác.",
+    "show_shortcut_taken": "Ứng dụng khác đang dùng {keys}. Hãy đóng ứng dụng đó, hoặc tắt rồi bật lại tùy chọn này.",
+    "default_app_label": "Ứng dụng thư mặc định",
+    "default_app_description": "Mở liên kết thư và tệp .eml, .ics, .vcf bằng ứng dụng này.",
+    "default_app_is_default": "Ứng dụng này mở các liên kết thư của bạn.",
+    "default_app_button": "Chọn ứng dụng mặc định…",
+    "new_mail": "Thư mới",
+    "no_subject": "(không có chủ đề)",
+    "action_delete": "Xóa",
+    "copy_as_file": "Sao chép dưới dạng tệp",
+    "copied": "Đã sao chép tệp. Bạn có thể dán vào một thư mục.",
+    "copy_failed": "Không thể sao chép tệp.",
+    "reply_lost": "Không thể giữ câu trả lời bạn đã nhập. Hãy mở thư và trả lời ở đó."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Tìm liên hệ",
+    "search_files": "Tìm tệp",
+    "import": "Nhập",
+    "import_mail": "Thư…",
+    "import_calendar": "Lịch…",
+    "import_contacts": "Danh bạ…"
+  },
+  "desktopEdit": {
+    "edit": "Chỉnh sửa",
+    "edit_named": "Chỉnh sửa {name}",
+    "opened": "{name} đang mở trong chương trình của nó. Hãy lưu thay đổi ở đó, rồi bạn sẽ được hỏi muốn làm gì với chúng.",
+    "offers_label": "Tệp đính kèm đã chỉnh sửa",
+    "changed_title": "{name} đã thay đổi",
+    "changed_body": "Bạn đã lưu thay đổi trong một chương trình khác. Bạn muốn làm gì với chúng?",
+    "reply": "Đính kèm vào thư trả lời",
+    "new_message": "Đính kèm vào thư mới",
+    "open_draft": "Mở bản nháp",
+    "save_copy": "Lưu một bản sao…",
+    "discard": "Bỏ thay đổi…",
+    "discard_title": "Bỏ các thay đổi của bạn trong {name}?",
+    "discard_detail": "Bản sao đã chỉnh sửa sẽ bị xóa. Tệp đính kèm gốc không thay đổi.",
+    "discard_confirm": "Bỏ",
+    "cancel": "Hủy",
+    "update": "Cập nhật tệp đính kèm",
+    "no_app": "Không có chương trình nào trên máy tính này mở được tệp này.",
+    "blocked_type": "Không thể mở loại tệp này để chỉnh sửa vì nó có thể chạy như một chương trình.",
+    "blocked_policy": "Tổ chức của bạn không cho phép lưu tệp đính kèm trên thiết bị này.",
+    "removed_policy": "Tổ chức của bạn không còn cho phép việc này, nên bản sao đã chỉnh sửa của {name} đã bị xóa.",
+    "too_large": "Tệp này quá lớn để mở chỉnh sửa.",
+    "too_many": "Có quá nhiều tệp đang mở để chỉnh sửa. Hãy hoàn tất một vài tệp trước.",
+    "failed": "Không thể mở tệp để chỉnh sửa.",
+    "read_busy": "Một chương trình khác vẫn đang dùng {name}. Hãy đóng nó ở đó rồi thử lại.",
+    "read_failed": "Không đọc được bản sao đã chỉnh sửa của {name}.",
+    "send_stale_title": "{name} có thay đổi không nằm trong thư này",
+    "send_stale_detail": "Nếu gửi ngay, thư sẽ đi với phiên bản cũ hơn. Thay đổi của bạn ở trên máy tính này tối đa 30 ngày, cho đến khi bạn quyết định.",
+    "send_stale_send": "Vẫn gửi",
+    "send_stale_back": "Quay lại",
+    "signout_title": "Đăng xuất và xóa thay đổi của bạn?",
+    "signout_confirm": "Đăng xuất",
+    "lock_note": "Các tệp đã mở bằng Chỉnh sửa vẫn mở trong chương trình của chúng khi ứng dụng bị khóa và vẫn đọc được trên máy tính này. Không thể mở tệp mới cho đến khi bạn mở khóa.",
+    "changed_title_hidden": "Một tệp đính kèm đã chỉnh sửa đã được lưu",
+    "last_chance": "Không dùng trong 30 ngày. Bản sao này sẽ bị xóa vào ngày mai.",
+    "held_named": "{names}: vẫn đang mở trong chương trình khác nên chưa xóa được bản sao. Hãy đóng ở đó và bản sao sẽ bị xóa.",
+    "held_unnamed": "Bản sao của một tệp đính kèm vẫn đang mở trong chương trình khác nên chưa xóa được. Hãy đóng ở đó và bản sao sẽ bị xóa.",
+    "removed_policy_held": "Tổ chức của bạn không còn cho phép việc này. {name} vẫn đang mở trong chương trình khác nên chỉ xóa được bản sao sau khi bạn đóng ở đó.",
+    "removed_policy_hidden": "Tổ chức của bạn không còn cho phép chỉnh sửa tệp đính kèm nên một bản sao đã chỉnh sửa đã bị gỡ.",
+    "outside_note": "Ứng dụng này không thể xóa các tệp khôi phục và danh sách tệp gần đây của chương trình đó.",
+    "clear_title": "Xóa các tệp đính kèm đã chỉnh sửa?",
+    "clear_confirm": "Xóa",
+    "signout_changed": "Chưa đính kèm hoặc lưu, và bị xóa ngay: {names}.",
+    "signout_held": "Vẫn đang mở trong chương trình khác nên chỉ bị xóa sau khi bạn đóng ở đó: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Soạn nhanh",
+    "menu": "Soạn nhanh",
+    "description": "{keys} mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "description_off": "Mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "taken": "Một ứng dụng khác đang dùng {keys}, nên phím tắt này không có tác dụng ở đây. Hãy chọn phím khác hoặc đóng ứng dụng đó.",
+    "change": "Đổi phím: {keys}",
+    "recording": "Nhấn các phím…",
+    "recording_hint": "Giữ Ctrl (Cmd trên Mac) cùng Alt hoặc Shift, rồi nhấn một chữ cái, chữ số, Enter hoặc phím chức năng. Esc để hủy.",
+    "back_to_main": "Chuyển sang cửa sổ chính",
+    "back_busy": "Cửa sổ chính đang mở một thư. Hãy đóng thư đó rồi thử lại.",
+    "back_no_answer": "Cửa sổ chính không phản hồi. Thư của bạn vẫn ở đây.",
+    "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
+    "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
+  },
+  "compose_windows": {
+    "more_formatting": "Thêm định dạng",
+    "offline": "Ngoại tuyến",
+    "offline_hint": "Cần có kết nối để gửi.",
+    "offline_hint_outbox": "Thư bạn gửi bây giờ sẽ chờ trong Hộp thư đi và được gửi khi bạn trực tuyến trở lại.",
+    "offline_send_saved": "Bạn đang ngoại tuyến. Thư đã được lưu trong Bản nháp.",
+    "offline_send_unsaved": "Bạn đang ngoại tuyến. Thư vẫn ở đây và sẽ được lưu vào Bản nháp khi bạn trực tuyến trở lại."
+  },
+  "desktopDevTools": {
+    "section_title": "Khắc phục sự cố",
+    "label": "Công cụ cho nhà phát triển ({shortcut})",
+    "description": "Cho phép {shortcut} và F12 mở công cụ cho nhà phát triển của cửa sổ bạn đang dùng. Tự tắt lại khi ứng dụng khóa.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "locked": "Hãy mở khóa ứng dụng để thay đổi.",
+    "menu_toggle": "Hiện hoặc ẩn công cụ cho nhà phát triển"
+  },
+  "fileDrop": {
+    "overlay_label": "Thả tệp",
+    "overlay_title": "Đưa tệp đi đâu?",
+    "overlay_hint": "Thả bên ngoài các lựa chọn hoặc nhấn Esc để hủy.",
+    "files_unknown": "Tệp",
+    "files_summary": "{count, plural, other {# tệp}}",
+    "files_summary_size": "{count, plural, other {# tệp}}, {size}",
+    "zone_attach_here": "Đính kèm vào thư này",
+    "zone_insert_inline": "Chèn vào nội dung thư",
+    "zone_new_message": "Đính kèm vào thư mới",
+    "zone_upload_files": "Tải lên Tệp",
+    "zone_upload_folder": "Tải lên {folder}",
+    "zone_calendar": "Thêm vào lịch",
+    "zone_contacts": "Thêm vào danh bạ",
+    "zone_open_eml": "Mở thư",
+    "zone_import_eml": "Nhập vào {folder}",
+    "note_limit_message": "Tối đa {size} mỗi thư",
+    "note_limit_file": "Tối đa {size} mỗi tệp",
+    "note_kept_offline": "Được giữ trên thiết bị này đến khi bạn trực tuyến lại",
+    "note_needs_connection": "Cần kết nối",
+    "announce": "{files, plural, =0 {Đã kéo tệp vào} other {Đã kéo vào # tệp}}. Lựa chọn: {choices}.",
+    "choose_title": "{count, plural, other {Đưa các tệp này đi đâu?}}",
+    "save_first_failed": "Không lưu được thư đang mở, nên ứng dụng vẫn ở chỗ cũ.",
+    "import_done": "{count, plural, other {Đã nhập # thư vào {folder}.}}",
+    "import_failed": "Không nhập được {name}.",
+    "too_large_file": "{name} quá lớn. Giới hạn là {max} mỗi tệp.",
+    "too_large_message": "Các tệp này quá lớn cho một thư. Giới hạn là {max}.",
+    "folders_left_out": "Thư mục chỉ có thể đưa vào Tệp, nên đã bị bỏ qua.",
+    "nothing_here": "Không dùng được các tệp này ở đây."
+  },
+  "desktopReminders": {
+    "generic_title": "Lời nhắc",
+    "snooze": "Báo lại sau {count} phút",
+    "snooze_short": "{count} phút",
+    "open": "Mở",
+    "join": "Tham gia",
+    "missed_title": "{count, plural, other {# lời nhắc đã bỏ lỡ}}",
+    "missed_more": "và {count} lời nhắc khác",
+    "missed_show": "Hiển thị",
+    "missed_dialog_title": "Lời nhắc đã bỏ lỡ",
+    "missed_dialog_description": "Những lời nhắc này đến hạn khi ứng dụng đóng, máy tính ngủ hoặc thông báo bị tạm dừng.",
+    "open_calendar": "Mở lịch",
+    "done": "Xong",
+    "join_host": "Tham gia ({host})",
+    "join_named": "Tham gia: {title}"
+  },
+  "desktop_policy": {
+    "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",
+    "plugin_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này nên tiện ích không chạy. Cài đặt và dữ liệu của tiện ích vẫn được giữ lại.",
+    "install_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này.",
+    "plugins_label": "Tiện ích",
+    "plugins_off": "Tổ chức của bạn đã tắt tiện ích trên thiết bị này.",
+    "plugins_allowlist": "Tổ chức của bạn chỉ cho phép một số tiện ích trên thiết bị này.",
+    "off": "Tắt"
+  },
+  "desktopTelemetry": {
+    "section_title": "Thông tin sử dụng và báo cáo sự cố",
+    "section_description": "Cả hai đều tắt cho đến khi bạn bật, và mỗi mục có công tắc riêng.",
+    "telemetry_label": "Gửi thông tin sử dụng",
+    "telemetry_description": "Mỗi ngày một lần: một ID ngẫu nhiên, các số phiên bản của ứng dụng, hệ điều hành của bạn, ứng dụng đã chạy bao lâu và cách nó kết nối. Với máy chủ thư riêng, còn có các tính năng đang bật, số tài khoản ước tính và số tiện ích cùng chủ đề bạn có. Không bao giờ gửi thư, địa chỉ hay tên máy chủ.",
+    "crash_label": "Gửi báo cáo sự cố",
+    "crash_description": "Lỗi trong ứng dụng được gửi kèm một ID ngẫu nhiên, tên tệp từ mã của chính ứng dụng và thông báo ngắn đã được làm sạch. Nếu chính ứng dụng gặp sự cố, một tệp sự cố sẽ ở lại trên máy tính này và chỉ rời đi khi bạn gửi.",
+    "crash_memory": "Tệp sự cố là bản sao một phần bộ nhớ của ứng dụng khi gặp sự cố. Bulwark xóa tên người dùng, địa chỉ và mã đăng nhập mà nó tìm thấy, nhưng tệp sự cố vẫn có thể chứa nội dung thư của bạn.",
+    "instance_note": "Trên máy chủ Bulwark, quản trị viên của máy chủ đó quyết định riêng những gì các trang báo cáo về.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "url_label": "Nơi nhận tệp sự cố",
+    "url_description": "Địa chỉ https nhận tệp sự cố. Bulwark không có sẵn địa chỉ nào.",
+    "url_invalid": "Nhập địa chỉ https đầy đủ.",
+    "url_save": "Lưu",
+    "files_label": "Tệp sự cố trên máy tính này",
+    "files_description": "Bulwark giữ các tệp mới nhất và xóa các tệp cũ hơn một tháng.",
+    "files_empty": "Không có tệp sự cố.",
+    "file_size": "{size} KB",
+    "send": "Gửi báo cáo sự cố…",
+    "delete_all": "Xóa tất cả",
+    "sent": "Đã gửi báo cáo sự cố.",
+    "send_no_consent": "Hãy bật báo cáo sự cố trước.",
+    "send_no_url": "Chưa đặt địa chỉ nên không có nơi để gửi. Hãy nhập một địa chỉ ở trên.",
+    "send_failed": "Không thể gửi báo cáo sự cố."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Số thư chưa đọc trên biểu tượng thanh tác vụ",
+    "unread_badge_description": "Để bạn thấy thư mới khi đang làm việc trong ứng dụng khác.",
+    "tip_compose_keys": "Nhấn {keys} để viết thư mới",
+    "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
   }
 }

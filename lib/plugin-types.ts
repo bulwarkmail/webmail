@@ -1,5 +1,7 @@
 import type { CredentialSpec } from './plugin-secrets/credentials';
 import type { CatalogSlotName } from './plugin-slot-catalog';
+import { ASSISTANT_PERMISSIONS, type AssistantHostFeatures } from './plugin-sandbox/assistant/types';
+import type { AttachmentExtrasB, EmailReadViewExtrasB } from './plugin-sandbox/assistant/b.types';
 
 // Plugin & Theme system types
 
@@ -252,6 +254,18 @@ export interface InstalledPlugin {
   managed?: boolean;
   // True when plugin is admin-enforced and cannot be disabled locally.
   forceEnabled?: boolean;
+  /**
+   * For an admin's plugin: what users get while they haven't chosen.
+   * False when the admin picked "Off until users turn it on".
+   */
+  defaultOn?: boolean;
+  /**
+   * The user turned it on or off themselves (or it was turned off because it
+   * kept failing), so the admin's default no longer changes it.
+   */
+  chosen?: boolean;
+  /** Turned on by the admin's default, not by the user. */
+  autoEnabled?: boolean;
   // True when plugin has been approved by an admin. Unapproved plugins cannot be enabled.
   adminApproved?: boolean;
   settingsSchema?: Record<string, SettingFieldSchema>;
@@ -281,6 +295,8 @@ export interface InstalledPlugin {
    * skip the consent prompt (admin pre-approval).
    */
   grantedPermissions?: string[];
+  /** Asked for a plugin an admin installed (ALWAYS_ASK_USER), and the user said no: not asked again. */
+  declinedPermissions?: string[];
   /**
    * For plugins the user installed: the validated manifest, kept so the
    * package can be rebuilt for an approval request, and the hash an admin
@@ -395,7 +411,7 @@ export interface KeyboardShortcut {
 // ─── Read-Only View Types ────────────────────────────────────
 // Projected views exposed to plugins - no direct store references
 
-export interface EmailReadView {
+export interface EmailReadView extends EmailReadViewExtrasB {
   id: string;
   /**
    * The JMAP account the message is in. Message ids repeat across accounts
@@ -418,9 +434,10 @@ export interface EmailReadView {
   /**
    * The message's attachments. `blobId` is what `email.getAttachment`
    * takes. Inline images are included and marked. Empty until the host has
-   * loaded the message's body structure.
+   * loaded the message's body structure. An image the HTML shows inline
+   * also has its `cid` and, when the sender wrote one, its `alt` text.
    */
-  attachments: { blobId: string; name: string; type: string; size: number; inline: boolean }[];
+  attachments: ({ blobId: string; name: string; type: string; size: number; inline: boolean } & AttachmentExtrasB)[];
   preview: string;
   keywords: string[];
   /** Full plain-text body of the message (HTML-only bodies are stripped to
@@ -586,6 +603,60 @@ export interface TaskInput {
   priority?: number;
   /** Defaults to the tasks calendar, else the default calendar. */
   calendarId?: string;
+  /**
+   * The task's reminders by id (1-64 of `A-Z a-z 0-9 . _ -`); a task holds
+   * at most 5. On update only the ids named change: an alert given is set
+   * (one kept with the same trigger and action stays acknowledged; a new
+   * trigger, a snooze, makes it fire again), an id given null is removed,
+   * and alerts not named are left as they are. null for the whole map
+   * removes every alert. While the task uses its calendar's default alerts
+   * (TaskView.useDefaultAlerts), any change makes the defaults the task's
+   * own under new ids; `{}` does only that.
+   */
+  alerts?: Record<string, TaskAlertInput | null> | null;
+  /**
+   * Links by id (1-64 of `A-Z a-z 0-9 . _ -`), at most 10: an http(s) URL,
+   * a `mailto:` address or a path of this Bulwark (`/mail/...`), stored as
+   * its full URL. Merged by id on update as `alerts` is; links another app
+   * wrote stay unless named with null.
+   */
+  links?: Record<string, TaskLinkInput | null> | null;
+  /**
+   * What the task relates to, by a mail's Message-ID (with its angle
+   * brackets) or another calendar object's UID; at most 10. Merged by key on
+   * update as `alerts` is.
+   */
+  relatedTo?: Record<string, TaskRelationInput | null> | null;
+}
+
+/**
+ * When a task's alert fires: an ISO 8601 duration from the task's due
+ * (`-PT15M` before, `PT0S` at it; `relativeTo: 'start'` counts from its
+ * start, else from its due), at most a year either way; or an instant in
+ * UTC (`2026-05-01T07:30:00Z`).
+ */
+export type TaskAlertTrigger =
+  | { offset: string; relativeTo?: 'due' | 'start' }
+  | { at: string };
+
+export interface TaskAlertInput {
+  trigger: TaskAlertTrigger;
+  /** `display` (the default) shows a reminder; `email` has the server send one. */
+  action?: 'display' | 'email';
+}
+
+export interface TaskLinkInput {
+  /** Up to 2048 characters. */
+  href: string;
+  /** A link relation such as `describedby` or `author` (RFC 8288), lower case. */
+  rel?: string;
+  /** Up to 500 characters. */
+  title?: string;
+}
+
+export interface TaskRelationInput {
+  /** How it relates, as in JSCalendar: `parent`, `child`, `first`, `next` or another lower-case type; at most 4. */
+  relation?: string[];
 }
 
 export interface ContactView {
@@ -651,6 +722,37 @@ export interface TaskView {
   priority: number;
   calendarId: string;
   keywords: string[];
+  /** By id; as written by any app, not only by plugins. */
+  alerts: Record<string, TaskAlertView>;
+  /**
+   * True while the task uses its calendar's default alerts: `alerts` then
+   * shows those defaults, which can't be acknowledged until an update of
+   * `alerts` makes them the task's own (under new ids).
+   */
+  useDefaultAlerts: boolean;
+  /** By id; as written by any app (an attachment's link too). */
+  links: Record<string, TaskLinkView>;
+  /** By Message-ID or UID. */
+  relatedTo: Record<string, TaskRelationView>;
+}
+
+export interface TaskAlertView {
+  /** As in TaskAlertInput; `relativeTo` is always given for an offset. */
+  trigger: { offset: string; relativeTo: 'due' | 'start' } | { at: string };
+  action: 'display' | 'email';
+  /** When the alert was dismissed (UTC), or null while it is not. */
+  acknowledged: string | null;
+}
+
+export interface TaskLinkView {
+  href: string;
+  rel: string | null;
+  title: string | null;
+  contentType: string | null;
+}
+
+export interface TaskRelationView {
+  relation: string[];
 }
 
 export interface TemplateView {
@@ -807,12 +909,20 @@ export interface QuotaView {
   percentUsed: number;
 }
 
-export interface CalendarAlertView {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  triggerTime: string;
-}
+/**
+ * A reminder that is due: an event's display alert or a task's. `id` is the
+ * alert's id within its event or task; `triggerTime` when it fired (UTC).
+ * A task's reaches only plugins with `tasks:read`, an event's only plugins
+ * with `calendar:read`.
+ */
+export type CalendarAlertView =
+  | { id: string; eventId: string; eventTitle: string; triggerTime: string }
+  | { id: string; taskId: string; taskTitle: string; triggerTime: string };
+
+/** A reminder's toast closed by the user (onCalendarAlertAcknowledge). */
+export type CalendarAlertAcknowledgeView =
+  | { alertId: string; eventId: string }
+  | { alertId: string; taskId: string };
 
 export interface SearchFilters {
   from?: string;
@@ -871,7 +981,7 @@ export interface AppInfoView {
  * that does the same job steps back while one is true. Missing on hosts
  * older than 1.19.0, so read it as `api.host?.features?.x === true`.
  */
-export interface HostFeaturesView {
+export interface HostFeaturesView extends AssistantHostFeatures {
   /** The admin turned on the "External" label on mail from outside the organisation (organisation.externalMail.senderLabel). */
   externalSenderLabel: boolean;
   /** The admin turned on the confirm before sending outside the organisation (organisation.externalMail.recipientWarning). */
@@ -884,6 +994,18 @@ export interface HostFeaturesView {
    * down.
    */
   noThirdPartyTraffic: boolean;
+  /**
+   * The desktop app's OS certificate store and smart cards are there for this
+   * plugin: privileged tier, the `keystore` permission, and a shell that has them.
+   * Absent otherwise. See `api.keystore`.
+   */
+  keystore?: boolean;
+  /**
+   * onRenderEmailBody may return `blockExternalContent: true` to keep external content
+   * off for that body, whatever the settings and trusted senders allow. Per plugin, for
+   * those with `email:render-takeover`. Absent on webmails that ignore the field.
+   */
+  blockExternalContent?: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */
@@ -1259,6 +1381,26 @@ export interface PluginAttachmentUpload {
   size: number;
 }
 
+/** Own text and metadata of one open composer, with an opaque edit revision. */
+export type ComposerSnapshot = {
+  revision: string;
+  subject: string;
+  text: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  attachments: { id: string; name: string; type: string; size: number }[];
+  pending: boolean;
+};
+
+/** Bytes of a file still attached to the selected composer. */
+export type ComposerAttachmentData = {
+  name: string;
+  type: string;
+  size: number;
+  data: ArrayBuffer;
+};
+
 /**
  * Initial value passed to the onAttachmentPreview transform hook. A handler
  * may return a different `previewUrl` (e.g. a proxied/sanitised URL) or a
@@ -1430,6 +1572,10 @@ export const ALL_PERMISSIONS = [
   // message bodies and private keys; only granted to a signed, admin-approved
   // privileged bundle after explicit high-risk consent.
   'crypto:full',
+  // Sign and decrypt with the OS certificate store and smart cards, in the desktop
+  // app. Declare it in optionalPermissions: as a plain permission it would be an
+  // install error on a webmail that doesn't know it. Privileged tier only.
+  'keystore',
   // Submit a fully-formed raw RFC822 message via JMAP (used after a plugin
   // signs/encrypts an outgoing message itself).
   'email:raw-send',
@@ -1444,11 +1590,18 @@ export const ALL_PERMISSIONS = [
   // Open the composer filled in (api.compose.open). Low risk: the user still
   // has to press Send.
   'compose:open',
-  // Read the message being written (api.composer.getBody/getSelection), in
+  // Read the message being written (api.composer.getBody/getSelection/getSnapshot), in
   // a composer that handed the plugin its id.
   'compose:read',
   // Change the message being written (api.composer.replaceSelection/replaceBody).
   'compose:write',
+  // Check the text of every open composer while the user types
+  // (api.composer.registerChecker): the host sends the plugin what the user
+  // writes, without the user pointing it at a composer, and draws its
+  // results as underlines. Only where the user (or the admin) turned
+  // proofreading on, and never for a message that will be signed or encrypted.
+  // A checker that checks only when asked needs compose:read instead.
+  'compose:check',
   // Forward a message of the account with its attachments, without the
   // composer (api.email.forward). The host asks the user once per address.
   'email:forward',
@@ -1486,6 +1639,8 @@ export const ALL_PERMISSIONS = [
   'http:proxy',
   'admin:config',
   'app:lifecycle',
+  // The AI assistant's host APIs, one list per area (lib/plugin-sandbox/assistant).
+  ...ASSISTANT_PERMISSIONS,
 ] as const;
 
 export type Permission = (typeof ALL_PERMISSIONS)[number];

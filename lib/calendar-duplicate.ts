@@ -24,6 +24,8 @@ export function buildDuplicateEventData(event: CalendarEvent): Partial<CalendarE
     freeBusyStatus: event.freeBusyStatus,
     privacy: event.privacy,
   };
+  // Without its type an HTML description would be stored as plain text.
+  if (event.descriptionContentType) data.descriptionContentType = event.descriptionContentType;
   if (event.locations) data.locations = structuredClone(event.locations);
   if (event.virtualLocations) data.virtualLocations = structuredClone(event.virtualLocations);
   if (event.recurrenceRules) data.recurrenceRules = structuredClone(event.recurrenceRules);

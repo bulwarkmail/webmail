@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 
 // We test the raw store by directly invoking Zustand
@@ -64,6 +64,7 @@ import { usePluginStore, PLUGIN_PERSIST_DELAY_MS } from '@/stores/plugin-store';
 import { pluginStorage } from '@/lib/plugin-storage';
 import { deactivatePlugin, forgetSlotOffers } from '@/lib/plugin-loader';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
+import { head as consentHead, resolveHead as resolveConsent, subscribe as subscribeConsent } from '@/lib/plugin-sandbox/consent';
 
 function resetStore() {
   usePluginStore.setState({
@@ -198,7 +199,7 @@ describe('usePluginStore', () => {
     it('lists every server plugin when IndexedDB cannot be written (#1327)', async () => {
       mocks.apiFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ plugins: [serverPlugin, { ...serverPlugin, id: 'optional-plugin', forceEnabled: false }], themes: [] }),
+        json: async () => ({ plugins: [serverPlugin, { ...serverPlugin, id: 'optional-plugin', forceEnabled: false, defaultOn: false }], themes: [] }),
       });
       vi.mocked(pluginStorage.codeIds).mockRejectedValue(new Error('IndexedDB unavailable'));
       vi.mocked(pluginStorage.saveCode).mockRejectedValueOnce(new Error('IndexedDB unavailable'));
@@ -211,6 +212,72 @@ describe('usePluginStore', () => {
       expect(plugins.map(p => p.id)).toEqual(['managed-plugin', 'optional-plugin']);
       expect(plugins[0]).toMatchObject({ managed: true, enabled: true });
       expect(plugins[1]).toMatchObject({ managed: true, enabled: false });
+    });
+
+    describe('what users get from an admin\'s plugin that isn\'t forced', () => {
+      const optional = { ...serverPlugin, id: 'optional-plugin', forceEnabled: false };
+      const serve = (plugin: Record<string, unknown>) => mocks.apiFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ plugins: [plugin], themes: [] }),
+      });
+      const record = (overrides: Partial<InstalledPlugin> = {}) => syncedRecord({ id: 'optional-plugin', forceEnabled: false, ...overrides });
+      const synced = () => usePluginStore.getState().plugins.find((p) => p.id === 'optional-plugin');
+
+      it('turns a new one on, so it runs without anyone finding the switch', async () => {
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true, status: 'enabled', autoEnabled: true });
+      });
+
+      it('leaves a new one off when the admin chose "Off until users turn it on"', async () => {
+        serve({ ...optional, defaultOn: false });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false, status: 'installed' });
+      });
+
+      it('turns on one that was synced off before, while nobody chose', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'installed' })] });
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true });
+      });
+
+      it('keeps it off when the user turned it off', async () => {
+        usePluginStore.setState({ plugins: [record()] });
+        usePluginStore.getState().disablePlugin('optional-plugin');
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false, chosen: true });
+      });
+
+      it('keeps one off that was turned off because it kept failing', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'installed', chosen: true })] });
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false });
+      });
+
+      it('takes back what the default turned on when the admin switches to off, and nothing the user turned on', async () => {
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve({ ...optional, defaultOn: false });
+        usePluginStore.setState({ plugins: [record({ autoEnabled: true })] });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false });
+        expect(deactivatePlugin).toHaveBeenCalledWith('optional-plugin');
+
+        usePluginStore.setState({ plugins: [record({ chosen: true })], initialized: false });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true });
+      });
+
+      it('lets the next person at this browser start from the admin\'s default', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'disabled', chosen: true })] });
+        await purgeSignedOutData();
+        expect(synced()?.chosen).toBeUndefined();
+      });
     });
 
     it('re-downloads the bundle when the record is current but IndexedDB has no copy (#636)', async () => {
@@ -323,6 +390,10 @@ describe('installPlugin', () => {
   });
 
   it('keeps the translations a plugin ships', async () => {
+    // Uploads are off unless the admin allows them.
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const { DEFAULT_POLICY } = await import('@/lib/admin/types');
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, features: { ...DEFAULT_POLICY.features, pluginsUploadEnabled: true } } });
     const { extractPlugin } = await import('@/lib/plugin-validator');
     vi.mocked(extractPlugin).mockResolvedValueOnce({
       valid: true, errors: [], warnings: [], preview: null, code: 'module.exports = {}',
@@ -372,6 +443,15 @@ describe('plugins the user installs', () => {
 
     expect(result).toMatchObject({ success: false, reason: 'uploads-disabled' });
     expect(usePluginStore.getState().plugins).toHaveLength(0);
+  });
+
+  it('refuses a user\'s ZIP unless the admin allowed uploads', async () => {
+    await setFeatures({ pluginsEnabled: true });
+    await mockExtract();
+
+    const result = await usePluginStore.getState().installPlugin(new File(['x'], 'p.zip'));
+
+    expect(result).toMatchObject({ success: false, reason: 'uploads-disabled' });
   });
 
   it('refuses a package that reuses the id of an admin plugin', async () => {
@@ -559,5 +639,130 @@ describe('saving the plugin list', () => {
       setItem.mockRestore();
       vi.useRealTimers();
     }
+  });
+});
+
+describe('a plugin an admin installed, and the certificates on this computer', () => {
+  const serverSmime = {
+    id: 'smime', name: 'S/MIME', version: '1.5.0', author: 'a', description: '', type: 'hook', tier: 'privileged',
+    permissions: ['crypto:full', 'keystore'], entrypoint: 'index.js', forceEnabled: true, bundleHash: 'h',
+  };
+  const local = (overrides: Partial<InstalledPlugin> = {}) => mockPlugin({
+    id: 'smime', name: 'S/MIME', version: '1.5.0', tier: 'privileged', managed: true, enabled: true, status: 'enabled', adminApproved: true, bundleHash: 'h',
+    permissions: ['crypto:full', 'keystore'], ...overrides,
+  });
+  const answerConsent = (answer: boolean) => {
+    const seen: string[][] = [];
+    const stop = subscribeConsent(() => {
+      const request = consentHead();
+      if (!request) return;
+      seen.push(request.permissions);
+      queueMicrotask(() => resolveConsent(answer));
+    });
+    return { seen, stop };
+  };
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+  beforeEach(() => {
+    localStorage.clear();
+    resetStore();
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, keystore: {} };
+    vi.mocked(pluginStorage.codeIds).mockResolvedValue(['smime']);
+    mocks.apiFetch.mockImplementation(async (url: string) => (String(url).startsWith('/api/plugins')
+      ? new Response(JSON.stringify({ plugins: [serverSmime], themes: [] }))
+      : new Response(JSON.stringify({}))));
+  });
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('asks this person, for that alone, and keeps a yes', async () => {
+    usePluginStore.setState({ plugins: [local()] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([['keystore']]);
+    expect(usePluginStore.getState().plugins[0].grantedPermissions).toEqual(['keystore']);
+  });
+
+  it('asks when an update adds it to a plugin that had none', async () => {
+    usePluginStore.setState({ plugins: [local({ permissions: ['crypto:full'], version: '1.4.0' })] });
+    vi.mocked(mocks.downloadManagedBundle).mockResolvedValue('code');
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([['keystore']]);
+  });
+
+  it('runs it either way, and a no is not asked again', async () => {
+    const { loadPlugin } = await import('@/lib/plugin-loader');
+    vi.mocked(loadPlugin).mockClear();
+    usePluginStore.setState({ plugins: [local()] });
+    const first = answerConsent(false);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    first.stop();
+    expect(first.seen).toHaveLength(1);
+    expect(loadPlugin).toHaveBeenCalledTimes(1);
+    expect(usePluginStore.getState().plugins[0].grantedPermissions ?? []).not.toContain('keystore');
+    usePluginStore.setState({ initialized: false });
+    const second = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    second.stop();
+    expect(second.seen).toEqual([]);
+  });
+
+  it('starts the plugin again after a yes, so it sees what it was given', async () => {
+    const { loadPlugin } = await import('@/lib/plugin-loader');
+    vi.mocked(loadPlugin).mockClear();
+    vi.mocked(deactivatePlugin).mockClear();
+    usePluginStore.setState({ plugins: [local()] });
+    const { stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(deactivatePlugin).toHaveBeenCalledWith('smime');
+    expect(vi.mocked(loadPlugin).mock.lastCall?.[0]).toMatchObject({ grantedPermissions: ['keystore'] });
+  });
+
+  it('asks nothing in a browser, where there is no such thing', async () => {
+    delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    usePluginStore.setState({ plugins: [local()] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([]);
+  });
+
+  it('asks nothing for a plugin that does not want it', async () => {
+    mocks.apiFetch.mockImplementation(async (url: string) => (String(url).startsWith('/api/plugins')
+      ? new Response(JSON.stringify({ plugins: [{ ...serverSmime, permissions: ['crypto:full'] }], themes: [] }))
+      : new Response(JSON.stringify({}))));
+    usePluginStore.setState({ plugins: [local({ permissions: ['crypto:full'] })] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().initializePlugins();
+    await settle();
+    stop();
+    expect(seen).toEqual([]);
+  });
+
+  it('asks when someone turns it on themselves, and its other permissions stay the admin\'s call', async () => {
+    usePluginStore.setState({ plugins: [local({ enabled: false, status: 'installed', forceEnabled: false })] });
+    const { seen, stop } = answerConsent(true);
+    await usePluginStore.getState().enablePlugin('smime');
+    stop();
+    expect(seen).toEqual([['keystore']]);
+    expect(usePluginStore.getState().plugins[0]).toMatchObject({ enabled: true, grantedPermissions: ['keystore'] });
+  });
+
+  it('forgets the answer once everyone has signed out: the next person gets asked', async () => {
+    usePluginStore.setState({ plugins: [local({ grantedPermissions: ['keystore'], declinedPermissions: ['keystore'] })] });
+    await purgeSignedOutData();
+    const [plugin] = usePluginStore.getState().plugins;
+    expect(plugin.grantedPermissions ?? []).toEqual([]);
+    expect(plugin.declinedPermissions ?? []).toEqual([]);
+    expect(plugin.managed).toBe(true);
   });
 });

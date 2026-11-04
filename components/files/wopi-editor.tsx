@@ -124,7 +124,7 @@ export function WopiEditor({ target, accountId, slot, onClose, closeOnBack = fal
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-[100] bg-background flex flex-col"
+      className="fixed inset-0 z-[100] bg-background flex flex-col pt-[var(--titlebar-inset)]"
     >
       <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-border shrink-0">
         <h2 id={titleId} className="text-sm font-medium text-foreground truncate">{target.name}</h2>

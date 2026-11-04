@@ -25,6 +25,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { companyName } from '@/lib/org/signature-state';
 import { fromWallClock, getWallClock, parseLocalDateTime, resolveTimeZone } from '@/lib/timezone';
+import { textToParagraphHtml } from '@/lib/text-to-paragraph-html';
 
 const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
 
@@ -33,8 +34,23 @@ const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
 const SAVE_AT_ONCE = 0;
 const SAVE_AFTER_TYPING = 800;
 
+/** The plain-text part a save derives from the sanitized HTML. */
+function textFromHtml(sanitizedHtml: string): string {
+  return htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+}
+
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
+}
+
+/** Whether HTML holds any text a recipient would read. */
+function hasReadableText(html: string | null | undefined): boolean {
+  return !!html && !!htmlToPlainText(html).trim();
+}
+
+/** A reply the server holds with nothing in it: off, no subject, no message. */
+function isBlankReply(stored: { isEnabled: boolean; subject: string; textBody: string; htmlBody: string | null }): boolean {
+  return !stored.isEnabled && !stored.subject.trim() && !stored.textBody.trim() && !hasReadableText(stored.htmlBody);
 }
 
 /** A switch with its state written out next to it ("Active" / "Inactive"). */
@@ -66,7 +82,7 @@ function utcToLocalDatetime(utcIso: string, timeZone: string): string {
 }
 
 const DATE_FIELD =
-  'px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground';
+  'max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground';
 
 // The latest moment the date fields offer: a later year has no room in the
 // four digits a stored date has.
@@ -95,6 +111,7 @@ function sameForward(a: VacationForwardSettings | null, b: VacationForward | nul
 
 export function VacationSettings() {
   const t = useTranslations('settings.vacation');
+  const tx = useTranslations('uxs_vacation');
   const tFilters = useTranslations('settings.filters');
   const tNotifications = useTranslations('notifications');
   const locale = useLocale();
@@ -142,6 +159,19 @@ export function VacationSettings() {
   const [halfFilled, setHalfFilled] = useState({ from: false, to: false });
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
+  // An empty date field that isn't being edited is a text field with a
+  // placeholder in words: the browser's own date field shows its raw pattern
+  // ("dd.mm.yyyy --:--") there, whatever the app's date format.
+  const [dateEditing, setDateEditing] = useState<'from' | 'to' | null>(null);
+  const dateFieldType = (field: 'from' | 'to') =>
+    dateEditing === field || halfFilled[field] || (field === 'from' ? fromInput : toInput) ? 'datetime-local' : 'text';
+  useEffect(() => {
+    if (!dateEditing) return;
+    const input = (dateEditing === 'from' ? fromRef : toRef).current;
+    // Opens the browser's picker after a click; a Tab into the field has no
+    // user activation and just leaves the field focused for typing.
+    try { input?.showPicker?.(); } catch { /* not allowed without a click */ }
+  }, [dateEditing]);
   const localFromDate = fieldMoment(fromInput, fromDate, inputZone);
   const localToDate = fieldMoment(toInput, toDate, inputZone);
   useEffect(() => {
@@ -154,9 +184,15 @@ export function VacationSettings() {
   }, [timeZone]);
   const datesUnusable = localFromDate === null || localToDate === null || halfFilled.from || halfFilled.to;
   const [localSubject, setLocalSubject] = useState(subject);
-  const [localTextBody, setLocalTextBody] = useState(textBody);
-  const [htmlEnabled, setHtmlEnabled] = useState(!!htmlBody);
-  const [localHtmlBody, setLocalHtmlBody] = useState(htmlBody || '');
+  // One message editor with formatting. What it holds is HTML; the plain-text
+  // part a save sends is derived from it. Until the message is edited (or
+  // filled with the starting text) a save sends the stored parts unchanged.
+  const [localBody, setLocalBody] = useState(() => htmlBody || textToParagraphHtml(textBody));
+  const [bodyEdited, setBodyEdited] = useState(false);
+  // The user tried to switch the reply on with no message, or forwarding on
+  // with no address: said under the field until it is filled in.
+  const [needMessage, setNeedMessage] = useState(false);
+  const [needAddress, setNeedAddress] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [forwardEnabled, setForwardEnabled] = useState(forward?.enabled ?? false);
   const [forwardTo, setForwardTo] = useState(forward?.to ?? '');
@@ -209,10 +245,19 @@ export function VacationSettings() {
       setToInput(stored.toDate ? utcToLocalDatetime(stored.toDate, timeZone) : '');
       setInputZone(timeZone);
       setHalfFilled({ from: false, to: false });
-      setLocalSubject(stored.subject);
-      setLocalTextBody(stored.textBody);
-      setHtmlEnabled(!!stored.htmlBody);
-      setLocalHtmlBody(stored.htmlBody || '');
+      setNeedMessage(false);
+      if (isBlankReply(stored)) {
+        // Nothing written yet: start with real text in the user's language,
+        // which they can change, so switching on never sends a blank reply.
+        // Saved with the first change the user makes, not by opening the page.
+        setLocalSubject(tx('default_subject'));
+        setLocalBody(textToParagraphHtml(tx('default_message')));
+        setBodyEdited(true);
+      } else {
+        setLocalSubject(stored.subject);
+        setLocalBody(stored.htmlBody || textToParagraphHtml(stored.textBody));
+        setBodyEdited(false);
+      }
     }
     // Forwarding a save didn't send takes what the server has now; one it
     // sent stays as set here, also when its filters part failed and it
@@ -221,6 +266,7 @@ export function VacationSettings() {
       setForwardEnabled(stored.forward?.enabled ?? false);
       setForwardTo(stored.forward?.to ?? '');
       setForwardKeep(stored.forward?.keepCopy ?? false);
+      setNeedAddress(false);
     }
     setAudienceOnly(stored.audience?.only ?? 'all');
     // The time zone is read when the fields load, not followed while typing.
@@ -244,9 +290,15 @@ export function VacationSettings() {
     touched.current = true;
     saveDelay.current = SAVE_AFTER_TYPING;
     if (filled.subject) setLocalSubject(filled.subject);
-    setLocalTextBody(filled.text);
-    setHtmlEnabled(!!filled.html);
-    setLocalHtmlBody(filled.html);
+    setLocalBody(filled.html || textToParagraphHtml(filled.text));
+    setBodyEdited(true);
+  };
+
+  const editBody = (html: string) => {
+    touched.current = true;
+    saveDelay.current = SAVE_AFTER_TYPING;
+    setLocalBody(html);
+    setBodyEdited(true);
   };
 
   // Reads a date field as the browser holds it, half filled in or not.
@@ -274,9 +326,11 @@ export function VacationSettings() {
   // Forwarding as a save stores it: an address that is off is kept for next
   // time if it is usable, and dropped otherwise.
   const forwardInvalid = forwardAvailable && forwardEnabled && !isValidEmail(forwardTo);
+  // The address field shows while forwarding is off too, so typing one
+  // there before switching on is not a change of its own.
   const forwardSettings = !forwardAvailable
     ? undefined
-    : forwardEnabled || isValidEmail(forwardTo)
+    : forwardEnabled || (forward && isValidEmail(forwardTo))
       ? { enabled: forwardEnabled, to: forwardTo, keepCopy: forwardKeep }
       : null;
   // Only what was changed here is sent: the rest stays as the server has it,
@@ -289,19 +343,15 @@ export function VacationSettings() {
     forwardAvailable && forwardEnabled && forwardKeep &&
     typeof forwardLimit === 'number' && forwardLimit > 0 && 1 + otherForwards > forwardLimit;
 
-  // What a save sends: the sanitized HTML and a plain-text part, derived
-  // from the HTML when the user left it blank (for clients without HTML).
+  // What a save sends: the sanitized HTML and the plain-text part derived
+  // from it (for mail apps without HTML). A message nobody edited goes as
+  // the server has it, so switching the reply on rewrites nothing.
   const payload = useMemo(() => {
-    const sanitizedHtml =
-      htmlEnabled && htmlToPlainText(localHtmlBody).trim()
-        ? sanitizeEmailHtml(localHtmlBody)
-        : null;
-    const text =
-      localTextBody.trim() || !sanitizedHtml
-        ? localTextBody
-        : htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
-    return { sanitizedHtml, textBody: text };
-  }, [htmlEnabled, localHtmlBody, localTextBody]);
+    if (!bodyEdited) return { sanitizedHtml: htmlBody || null, textBody };
+    const sanitizedHtml = hasReadableText(localBody) ? sanitizeEmailHtml(localBody) : null;
+    return { sanitizedHtml, textBody: sanitizedHtml ? textFromHtml(sanitizedHtml) : '' };
+  }, [bodyEdited, localBody, htmlBody, textBody]);
+  const bodyEmpty = !payload.textBody.trim() && !hasReadableText(payload.sanitizedHtml);
 
   // Stalwart refuses a subject of 512 bytes or more and a text or HTML body
   // of 2048 bytes or more, answering only "Field could not be set."
@@ -327,25 +377,45 @@ export function VacationSettings() {
   const fromWarning = !fromError && localFromDate && localFromDate !== fromDate && new Date(localFromDate) < todayStart
     ? t('warnings.start_in_past')
     : null;
-  const hasHtmlContent = htmlEnabled && !!htmlToPlainText(localHtmlBody).trim();
-  const bodyWarning = oversize.body && sizeLimits
+  // An empty message never goes live: the switch won't turn on, and a reply
+  // that is on can't be saved with its text deleted.
+  const bodyError = oversize.body && sizeLimits
     ? t('warnings.body_too_long', { max: sizeLimits.body })
-    : localEnabled && !localTextBody.trim() && !hasHtmlContent ? t('warnings.empty_body') : null;
+    : (localEnabled || needMessage) && bodyEmpty ? tx('write_message_first') : null;
 
+  // The bodies are compared as a save sends them: the server keeps the
+  // sanitized HTML and the text derived from it, never what was typed.
   const userChanges =
     localEnabled !== isEnabled ||
     (localFromDate || null) !== (fromDate || null) ||
     (localToDate || null) !== (toDate || null) ||
     localSubject !== subject ||
-    localTextBody !== textBody ||
-    (htmlEnabled ? localHtmlBody : '') !== (htmlBody || '') ||
+    payload.textBody !== textBody ||
+    (payload.sanitizedHtml ?? '') !== (htmlBody || '') ||
     forwardChanged ||
     audienceChanged;
 
   const hasBlockingError =
     datesUnusable ||
     !!(localFromDate && localToDate && new Date(localToDate) <= new Date(localFromDate)) ||
-    oversize.subject || oversize.body || forwardInvalid;
+    oversize.subject || oversize.body || forwardInvalid || (localEnabled && bodyEmpty);
+
+  const switchReply = (on: boolean) => {
+    if (on && bodyEmpty) {
+      setNeedMessage(true);
+      return;
+    }
+    setNeedMessage(false);
+    changeNow(setLocalEnabled)(on);
+  };
+  const switchForward = (on: boolean) => {
+    if (on && !isValidEmail(forwardTo)) {
+      setNeedAddress(true);
+      return;
+    }
+    setNeedAddress(false);
+    changeNow(setForwardEnabled)(on);
+  };
 
   // What a save would store, to tell one change from the next.
   const snapshot = JSON.stringify([
@@ -353,6 +423,9 @@ export function VacationSettings() {
   ]);
   // A save that failed or was stopped isn't tried again until something changes.
   const [refusedSnapshot, setRefusedSnapshot] = useState<string | null>(null);
+  // The same, at once: a timer set while the failed save's last render was
+  // on its way must not send it again.
+  const refusedRef = useRef<string | null>(null);
   const [savedOnce, setSavedOnce] = useState(false);
   const savingSnapshot = useRef<string | null>(null);
 
@@ -390,9 +463,13 @@ export function VacationSettings() {
 
       // false: a plugin stopped the change and is expected to have said why.
       if (saved) setSavedOnce(true);
-      else setRefusedSnapshot(sent);
+      else {
+        refusedRef.current = sent;
+        setRefusedSnapshot(sent);
+      }
     } catch (error) {
       console.error('Failed to save vacation response:', error);
+      refusedRef.current = sent;
       setRefusedSnapshot(sent);
       toast.error(tNotifications(
         error instanceof VacationFiltersError ? 'vacation_filters_save_failed' : 'vacation_save_failed',
@@ -418,7 +495,10 @@ export function VacationSettings() {
 
   useEffect(() => {
     if (!canAutoSave || isSaving || !touched.current) return;
-    const timer = setTimeout(() => { void saveRef.current(); }, saveDelay.current);
+    const due = snapshot;
+    const timer = setTimeout(() => {
+      if (refusedRef.current !== due) void saveRef.current();
+    }, saveDelay.current);
     return () => clearTimeout(timer);
   }, [canAutoSave, isSaving, snapshot]);
 
@@ -471,19 +551,44 @@ export function VacationSettings() {
           </Button>
         </div>
       )}
-      {/* The period is the absence: the auto-reply and forwarding both keep to it. */}
-      <SettingsSection title={t('title')} description={t('description')}>
+      {/* The switch first, then who gets it and when; the period applies to forwarding too. */}
+      <SettingsSection id="reply" title={t('title')} description={t('status.description')}>
+        <SettingItem label={t('status.label')}>
+          <StatusSwitch
+            checked={localEnabled}
+            onChange={switchReply}
+            activeLabel={t('status.active')}
+            inactiveLabel={t('status.inactive')}
+          />
+        </SettingItem>
+        {!localEnabled && <VacationFilterWarning accountId={managedAccountId ?? undefined} />}
+        {canNarrow && (
+          <SettingItem label={t('audience.label')}>
+            <Select
+              value={audienceOnly}
+              onChange={(value) => changeNow(setAudienceOnly)(value as 'all' | 'internal' | 'external')}
+              options={[
+                { value: 'all', label: tx('audience_all') },
+                { value: 'internal', label: tx('audience_internal', { domains: domains.join(', ') }) },
+                { value: 'external', label: tx('audience_external') },
+              ]}
+            />
+          </SettingItem>
+        )}
         <SettingItem
-          label={t('date_range.start')}
-          description={t('date_range.start_description')}
+          label={tx('from_label')}
+          description={tx('from_description')}
         >
           <input
             ref={fromRef}
-            type="datetime-local"
-            max={DATE_INPUT_MAX}
+            type={dateFieldType('from')}
+            max={dateFieldType('from') === 'datetime-local' ? DATE_INPUT_MAX : undefined}
             value={fromInput}
+            placeholder={tx('from_placeholder')}
+            onFocus={() => setDateEditing('from')}
             onChange={(e) => readDateField('from', e.currentTarget)}
-            onBlur={(e) => readDateField('from', e.currentTarget)}
+            onBlur={(e) => { readDateField('from', e.currentTarget); setDateEditing(null); }}
+            aria-label={tx('from_label')}
             aria-invalid={!!fromError}
             aria-describedby={fromError ? 'vacation-from-error' : undefined}
             className={cn(DATE_FIELD, fromError && 'border-destructive hover:border-destructive')}
@@ -492,16 +597,19 @@ export function VacationSettings() {
         <FieldMessage id="vacation-from-error" text={fromError} />
         <FieldMessage text={fromWarning} warning />
         <SettingItem
-          label={t('date_range.end')}
-          description={t('date_range.end_description')}
+          label={tx('until_label')}
+          description={tx('until_description')}
         >
           <input
             ref={toRef}
-            type="datetime-local"
-            max={DATE_INPUT_MAX}
+            type={dateFieldType('to')}
+            max={dateFieldType('to') === 'datetime-local' ? DATE_INPUT_MAX : undefined}
             value={toInput}
+            placeholder={tx('until_placeholder')}
+            onFocus={() => setDateEditing('to')}
             onChange={(e) => readDateField('to', e.currentTarget)}
-            onBlur={(e) => readDateField('to', e.currentTarget)}
+            onBlur={(e) => { readDateField('to', e.currentTarget); setDateEditing(null); }}
+            aria-label={tx('until_label')}
             aria-invalid={!!toError}
             aria-describedby={toError ? 'vacation-to-error' : undefined}
             className={cn(DATE_FIELD, toError && 'border-destructive hover:border-destructive')}
@@ -525,32 +633,7 @@ export function VacationSettings() {
         onApply={applyTemplate}
       />
 
-      <SettingsSection id="reply" title={t('auto_reply.title')} description={t('status.description')}>
-        <SettingItem label={t('status.label')}>
-          <StatusSwitch
-            checked={localEnabled}
-            onChange={changeNow(setLocalEnabled)}
-            activeLabel={t('status.active')}
-            inactiveLabel={t('status.inactive')}
-          />
-        </SettingItem>
-        {!localEnabled && <VacationFilterWarning accountId={managedAccountId ?? undefined} />}
-        {canNarrow && (
-          <SettingItem
-            label={t('audience.label')}
-            description={t('audience.description', { domains: domains.join(', ') })}
-          >
-            <Select
-              value={audienceOnly}
-              onChange={(value) => changeNow(setAudienceOnly)(value as 'all' | 'internal' | 'external')}
-              options={[
-                { value: 'all', label: t('audience.all') },
-                { value: 'internal', label: t('audience.internal') },
-                { value: 'external', label: t('audience.external') },
-              ]}
-            />
-          </SettingItem>
-        )}
+      <SettingsSection id="reply-message" title={tx('message_title')}>
         <SettingItem
           label={t('message.subject_label')}
           description={t('message.subject_description')}
@@ -560,50 +643,36 @@ export function VacationSettings() {
             value={localSubject}
             onChange={(e) => changeTyped(setLocalSubject)(e.target.value)}
             placeholder={t('message.subject_placeholder')}
+            aria-label={t('message.subject_label')}
             aria-invalid={oversize.subject}
-            className="w-64 px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground"
+            className="w-64 max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground"
           />
         </SettingItem>
         <FieldMessage text={oversize.subject && sizeLimits ? t('warnings.subject_too_long', { max: sizeLimits.subject }) : null} />
-        <div className="py-3">
-          <label htmlFor="vacation-body" className="text-sm font-medium text-foreground block mb-1">
-            {t('message.body_label')}
-          </label>
+        <div className="py-3" data-search-label={tx('message_label')}>
+          <span id="vacation-body-label" className="text-sm font-medium text-foreground block mb-1">
+            {tx('message_label')}
+          </span>
           <p className="text-xs text-muted-foreground mb-2">
-            {t('message.body_description')}
+            {tx('message_description')}
           </p>
-          <textarea
-            id="vacation-body"
-            value={localTextBody}
-            onChange={(e) => changeTyped(setLocalTextBody)(e.target.value)}
-            placeholder={t('message.body_placeholder')}
-            rows={6}
-            className="w-full px-3 py-2 text-sm rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground resize-y"
-          />
-          <FieldMessage text={bodyWarning} warning={!oversize.body} />
-        </div>
-        <SettingItem
-          label={t('message.html_label')}
-          description={t('message.html_description')}
-        >
-          <ToggleSwitch checked={htmlEnabled} onChange={changeNow(setHtmlEnabled)} />
-        </SettingItem>
-        {htmlEnabled && (
-          <div className="pb-3">
-            <div className="rounded-md border border-border overflow-hidden">
-              <RichTextEditor
-                content={localHtmlBody}
-                onChange={changeTyped(setLocalHtmlBody)}
-                placeholder={t('message.html_placeholder')}
-              />
-            </div>
+          <div className={cn('rounded-md border overflow-hidden', bodyError ? 'border-destructive' : 'border-border')}>
+            <RichTextEditor
+              content={localBody}
+              onChange={editBody}
+              toolbar="short"
+              ariaLabel={tx('message_label')}
+              ariaInvalid={!!bodyError}
+              ariaDescribedBy={bodyError ? 'vacation-body-error' : undefined}
+            />
           </div>
-        )}
+          <FieldMessage id="vacation-body-error" text={bodyError} />
+        </div>
       </SettingsSection>
 
       {(() => {
-        const showHtmlPreview = htmlEnabled && !!htmlToPlainText(localHtmlBody).trim();
-        if (!localTextBody.trim() && !showHtmlPreview) return null;
+        const showHtmlPreview = hasReadableText(payload.sanitizedHtml);
+        if (bodyEmpty) return null;
         return (
           <SettingsSection title={t('preview.title')}>
             <button
@@ -632,10 +701,10 @@ export function VacationSettings() {
                         window.open(anchor.href, '_blank', 'noopener,noreferrer');
                       }
                     }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(localHtmlBody) }}
+                    dangerouslySetInnerHTML={{ __html: payload.sanitizedHtml ?? '' }}
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{localTextBody}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{payload.textBody}</p>
                 )}
               </div>
             )}
@@ -648,25 +717,30 @@ export function VacationSettings() {
           <SettingItem label={t('forward.enabled_label')}>
             <StatusSwitch
               checked={forwardEnabled}
-              onChange={changeNow(setForwardEnabled)}
+              onChange={switchForward}
               activeLabel={t('status.active')}
               inactiveLabel={t('status.inactive')}
             />
           </SettingItem>
+          {/* The address shows while forwarding is off, so it can be filled in before switching on. */}
+          <SettingItem label={t('forward.to_label')}>
+            <input
+              type="email"
+              value={forwardTo}
+              onChange={(e) => changeTyped(setForwardTo)(e.target.value)}
+              placeholder={t('forward.to_placeholder')}
+              aria-label={t('forward.to_label')}
+              aria-invalid={forwardInvalid || (needAddress && !isValidEmail(forwardTo))}
+              className="w-64 max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground"
+            />
+          </SettingItem>
+          <FieldMessage
+            text={forwardInvalid
+              ? t('warnings.forward_address')
+              : needAddress && !isValidEmail(forwardTo) ? tx('enter_address_first') : null}
+          />
           {forwardEnabled && (
             <>
-              <SettingItem label={t('forward.to_label')}>
-                <input
-                  type="email"
-                  value={forwardTo}
-                  onChange={(e) => changeTyped(setForwardTo)(e.target.value)}
-                  placeholder={t('forward.to_placeholder')}
-                  aria-label={t('forward.to_label')}
-                  aria-invalid={forwardInvalid}
-                  className="w-64 max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-hidden transition-colors duration-150 hover:border-muted-foreground"
-                />
-              </SettingItem>
-              <FieldMessage text={forwardInvalid ? t('warnings.forward_address') : null} />
               <SettingItem label={t('forward.keep_label')} description={t('forward.keep_description')}>
                 <ToggleSwitch checked={forwardKeep} onChange={changeNow(setForwardKeep)} />
               </SettingItem>

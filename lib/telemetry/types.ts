@@ -4,7 +4,7 @@
 
 export type ConsentState = 'pending' | 'on' | 'off';
 
-export type Platform = 'docker' | 'bare' | 'k8s' | 'unknown';
+export type Platform = 'docker' | 'bare' | 'k8s' | 'desktop' | 'unknown';
 export type OsFamily = 'linux' | 'darwin' | 'windows' | 'unknown';
 export type CountBucket = '0' | '1' | '2-5' | '6-10' | '11-50' | '51-200' | '201+';
 

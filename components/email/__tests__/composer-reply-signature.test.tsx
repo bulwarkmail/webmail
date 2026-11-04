@@ -123,6 +123,8 @@ vi.mock('@/stores/settings-store', () => {
     // The default position: replies/forwards get the signature appended at
     // send time rather than embedded above the quote.
     signaturePosition: 'below_quote',
+    signatureNewMailEnabled: true,
+    signatureReplyForwardEnabled: true,
     signatureSeparatorEnabled: true,
     requestReadReceiptDefault: false,
     addTrustedSender: () => {},
@@ -304,6 +306,33 @@ describe('reply signature above the quote (#842)', () => {
       expect(html).toContain('<i>Sales team</i>');
       expect(html.indexOf('<i>Sales team</i>')).toBeLessThan(html.indexOf('reply_line'));
     });
+
+    // #1503: with the delimiter on, a reply started with the "-- " line, so
+    // there was no line above the signature to type the reply into.
+    it('leaves an empty line above the delimiter', () => {
+      useSettingsStore.setState({ signaturePosition: 'above_quote' });
+      setIdentities([ME]);
+      render(<EmailComposer mode="reply" replyTo={TO_ME} />);
+
+      const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+      expect(html.startsWith('<p></p><p data-signature-block="separator">-- </p>')).toBe(true);
+    });
+
+    it('leaves an empty line above a delimiter that arrives with late identities', async () => {
+      useSettingsStore.setState({ signaturePosition: 'above_quote' });
+      setIdentities([]);
+      const props = { mode: 'reply' as const, replyTo: TO_ME };
+      const { rerender } = render(<EmailComposer {...props} />);
+      setIdentities([ME]);
+      rerender(<EmailComposer {...props} />);
+
+      await waitFor(() => expect(editorState.html).toContain('<b>Alice</b>'));
+      const lines = new DOMParser().parseFromString(editorState.html, 'text/html').body.children;
+      expect(lines[0].tagName).toBe('P');
+      expect(lines[0].textContent).toBe('');
+      expect(lines[0].hasAttribute('data-signature-block')).toBe(false);
+      expect(lines[1].getAttribute('data-signature-block')).toBe('separator');
+    });
   });
 
   it('still signs a reply below the quote at send time by default', async () => {
@@ -348,5 +377,41 @@ describe('reply quote attribution markers', () => {
     render(<EmailComposer mode="reply" replyTo={{ ...TO_ME, quoteHeaderHtml: '<p><b>From:</b> Bob</p>', quoteWrapInBlockquote: false }} />);
     const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
     expect(html).toContain('<p data-reply-quote-start="true"><b>From:</b> Bob</p>');
+  });
+});
+
+// The forwarded header had From, Date and Subject only; Gmail and Outlook
+// also say who the mail went to.
+describe('forwarded header recipients', () => {
+  afterEach(() => {
+    useSettingsStore.setState({ plainTextMode: false, signaturePosition: 'below_quote' });
+    setIdentities([ME]);
+  });
+  const FORWARDED = {
+    ...REPLY_TO,
+    to: [{ name: 'Anna Becker', email: 'anna@example.com' }, { email: 'team@example.com' }],
+    cc: [{ name: 'Carol', email: 'carol@example.com' }],
+  };
+
+  it('lists To and Cc in a plain text forward', async () => {
+    useSettingsStore.setState({ plainTextMode: true });
+    const onSend = vi.fn();
+    render(<EmailComposer mode="forward" replyTo={FORWARDED} prefill={{ to: ['dave@example.com'] }} onSend={onSend} />);
+    const sent = await send(onSend);
+    expect(sent.body).toContain('subject_label: Question\nforward_to_label: Anna Becker <anna@example.com>, team@example.com\nforward_cc_label: Carol <carol@example.com>\n\nOriginal text');
+  });
+
+  // escapeHtml is mocked to pass values through in this file.
+  it('lists To and Cc in an HTML forward', () => {
+    render(<EmailComposer mode="forward" replyTo={FORWARDED} />);
+    const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+    expect(html).toContain('subject_label: Question<br>forward_to_label: Anna Becker <anna@example.com>, team@example.com<br>forward_cc_label: Carol <carol@example.com><br><br>');
+  });
+
+  it('leaves out a Cc line when nobody was copied', () => {
+    render(<EmailComposer mode="forward" replyTo={{ ...FORWARDED, cc: [] }} />);
+    const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+    expect(html).toContain('forward_to_label: ');
+    expect(html).not.toContain('forward_cc_label');
   });
 });

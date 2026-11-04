@@ -49,12 +49,21 @@ describe('parseSyncedTemplates', () => {
     expect(result!.map((t) => t.id)).toEqual(['a']);
   });
 
-  it('strips markup from non-HTML fields', () => {
+  // Name and a plain body are text shown as text, so markup in them is kept as typed.
+  it('keeps markup in non-HTML fields as typed', () => {
     const result = parseSyncedTemplates([
       makeTemplate({ id: 'a', name: '<b>Bold</b> name', body: '<p>hi</p>' }),
     ]);
-    expect(result![0].name).toBe('Bold name');
-    expect(result![0].body).toBe('hi');
+    expect(result![0].name).toBe('<b>Bold</b> name');
+    expect(result![0].body).toBe('<p>hi</p>');
+  });
+
+  it('sanitizes the body of an HTML template', () => {
+    const result = parseSyncedTemplates([
+      makeTemplate({ id: 'a', isHTML: true, body: '<p>hi</p><img src=x onerror=alert(1)>' }),
+    ]);
+    expect(result![0].body).toContain('<p>hi</p>');
+    expect(result![0].body).not.toContain('onerror');
   });
 });
 

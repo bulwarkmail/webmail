@@ -51,6 +51,8 @@ export interface Email {
   // subject / body excerpt with the matched terms in <mark>, set on search
   // hits only. See lib/search-snippet.ts.
   searchSnippet?: { subject: string | null; preview: string | null };
+  /** A search row only the local store found. It's no sign of new mail, whatever its date (lib/jmap/search-merge.ts). */
+  foundLocally?: boolean;
   textBody?: EmailBodyPart[];
   htmlBody?: EmailBodyPart[];
   bodyValues?: Record<string, EmailBodyValue>;
@@ -95,6 +97,8 @@ export interface Email {
   // views (All Mail, unified, cross-account) so the list can show where each
   // message lives. Transient/client-only, not part of the JMAP object.
   sourceFolder?: string;
+  // Role of that folder, so the list names it as the sidebar does ("Sent", not "Sent Items").
+  sourceFolderRole?: string;
   // Client-only scheduled-send metadata, populated from EmailSubmission/query.
   scheduledSendAt?: string;
   emailSubmissionId?: string;
@@ -109,6 +113,11 @@ export interface Email {
   scheduledAccountId?: string;
   isScheduled?: boolean;
   isSmimeScheduled?: boolean;
+  /**
+   * Client-only: a reply just sent, shown in the open conversation before the
+   * server's copy is read back (lib/held-send.ts).
+   */
+  sentEcho?: boolean;
 }
 
 export interface SendEmailResult {
@@ -909,11 +918,14 @@ export interface CalendarTask {
   useDefaultAlerts?: boolean;
   alerts: Record<string, CalendarEventAlert> | null;
   relatedTo: Record<string, CalendarRelation> | null;
+  links?: Record<string, CalendarLink> | null;
   // Client-only, set on tasks from a shared calendar account. Their `id` and
   // `calendarIds` are namespaced `accountId:id` like shared events.
   originalId?: string;
   accountId?: string;
   isShared?: boolean;
+  /** Client-only: the login the task belongs to while the calendar shows several (pim-12). */
+  localAccountId?: string;
 }
 
 /**

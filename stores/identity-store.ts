@@ -182,7 +182,7 @@ export async function createIdentityWithHooks(client: IJMAPClient, data: Identit
 export async function updateIdentityWithHooks(
   client: IJMAPClient,
   identity: Identity,
-  updates: Omit<IdentityInput, 'email'>,
+  updates: Partial<Omit<IdentityInput, 'email'>>,
 ): Promise<boolean> {
   const next = identityToView({ ...identity, ...updates } as Identity);
   if (!(await identityHooks.onBeforeIdentityChange.intercept({ identityId: identity.id, change: 'update', identity: next }))) {
@@ -190,6 +190,22 @@ export async function updateIdentityWithHooks(
   }
   await client.updateIdentity(identity.id, updates);
   void identityHooks.onIdentityUpdate.emit(next);
+  return true;
+}
+
+/**
+ * Change some fields of one identity (the Account page's name, a signature
+ * on Composing) and keep the local list in step, without reloading every
+ * identity. Callers then run the auth store's syncIdentities so the From
+ * line and the account switcher follow.
+ */
+export async function saveIdentityChanges(
+  client: IJMAPClient,
+  identity: Identity,
+  updates: Partial<Omit<IdentityInput, 'email'>>,
+): Promise<boolean> {
+  if (!(await updateIdentityWithHooks(client, identity, updates))) return false;
+  useIdentityStore.getState().updateIdentityLocal(identity.id, updates as Partial<Identity>);
   return true;
 }
 

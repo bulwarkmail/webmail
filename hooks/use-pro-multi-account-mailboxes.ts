@@ -7,6 +7,7 @@ import { invalidateUnifiedMailboxes, loadAccountMailboxes } from "@/stores/email
 import { useSettingsStore } from "@/stores/settings-store";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { changesAnyType, subscribePushStateChanges } from "@/lib/push-events";
 
 /**
  * Keeps `useEmailStore.accountMailboxes` populated with one entry per
@@ -14,11 +15,14 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
  * sidebar reads this cache to render a Thunderbird-style per-account folder
  * tree (see [[project_pro_mode]]). Outside Pro the cache stays empty.
  *
- * Mountain View needs the same cache for a different reason: its account
- * popover puts the unread waiting in each account next to that address, and
- * the active login's folder list knows nothing about the others. It is only
- * worth the extra round trips once a second account is connected - with one
- * account the popover has nothing to compare.
+ * Every layout needs the same cache once a second account is connected: the
+ * account switcher puts the unread waiting in each account next to that
+ * address, and the app badge and the desktop tray count every account's
+ * inbox, while the active login's folder list knows nothing about the others.
+ * With one account there is nothing to compare, and nothing is fetched.
+ *
+ * A background login's push says when its counts moved; its list is then read
+ * again (one Mailbox/get), a moment later so a burst of changes costs one.
  *
  * Each login is loaded once per client, not once per connection: while a
  * browser restores its logins they connect one after another, and reloading
@@ -31,7 +35,6 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 export function useProMultiAccountMailboxes(): void {
   const isEmbedded = useIsEmbedded();
   const proInterface = useSettingsStore((s) => s.proInterface);
-  const mountainView = useSettingsStore((s) => s.interfaceLayout === "mountain-view");
   // The ids of the connected logins, as one string: `accounts` itself changes
   // for display-name and login-time updates that call for no fetch at all.
   const connectedSignature = useAccountStore((s) =>
@@ -43,10 +46,10 @@ export function useProMultiAccountMailboxes(): void {
 
   useEffect(() => {
     const connected = connectedSignature ? connectedSignature.split("\n") : [];
-    if (!proInterface && !isEmbedded && !(mountainView && connected.length > 1)) return;
+    if (!proInterface && !isEmbedded && connected.length < 2) return;
     if (connected.length === 0) return;
     // The Pro sidebar lists each login's shared mailboxes under it (#1486);
-    // Mountain View's account popover only counts the login's own unread.
+    // the account switcher and the badge only count the login's own unread.
     const withShared = proInterface || isEmbedded;
 
     if (lastActive.current !== null && lastActive.current !== activeAccountId) {
@@ -68,5 +71,32 @@ export function useProMultiAccountMailboxes(): void {
         if (!ok && loaded.current.get(id) === client) loaded.current.delete(id);
       });
     }
-  }, [proInterface, isEmbedded, mountainView, connectedSignature, activeAccountId]);
+  }, [proInterface, isEmbedded, connectedSignature, activeAccountId]);
+
+  // The active login's counts live in `mailboxes` and follow its push there.
+  // A background login's change re-reads its list. The mail view's own push
+  // handler (createMailPushListener) drops that login's cached list on the
+  // push itself, so this is a fetch, or nothing when the all-accounts views
+  // have already read and published the list again.
+  useEffect(() => {
+    const timers = new Map<string, ReturnType<typeof setTimeout>>();
+    const stop = subscribePushStateChanges((change, client, role) => {
+      if (role === "active" || !changesAnyType(change, ["Mailbox", "Email"])) return;
+      const id = [...loaded.current].find(([, c]) => c === client)?.[0];
+      if (!id || timers.has(id)) return;
+      timers.set(id, setTimeout(() => {
+        timers.delete(id);
+        if (loaded.current.get(id) !== client) return;
+        const withShared = useSettingsStore.getState().proInterface || isEmbedded;
+        void loadAccountMailboxes(client, id, { withShared });
+      }, BACKGROUND_REFRESH_DELAY_MS));
+    });
+    return () => {
+      stop();
+      for (const timer of timers.values()) clearTimeout(timer);
+    };
+  }, [isEmbedded]);
 }
+
+/** How long a background login's changes are gathered before its folders are read again. */
+const BACKGROUND_REFRESH_DELAY_MS = 1500;

@@ -15,6 +15,8 @@ import { notifyPersonalChange, useAccountTemplatesStore } from './account-templa
 import { withStorableId } from '@/lib/templates/metadata-templates';
 import { templateHooks } from '@/lib/plugin-hooks';
 import { templateToView } from '@/lib/plugin-projection';
+import { htmlToPlainText } from '@/lib/html-to-text';
+import { escapeHtml } from '@/lib/email-sanitization';
 
 const MAX_RECENT = 5;
 
@@ -191,7 +193,10 @@ export interface RenderedTemplate {
  * Hands a template about to be inserted into the composer to the
  * onTemplateRender plugins. Returns null when no plugin listens, so the
  * composer keeps its own rendering; otherwise the plugins' version, with any
- * field a plugin returned as a non-string kept from the input.
+ * field a plugin returned as a non-string kept from the input. When a plugin
+ * changed only the HTML or only the text, the other is made from it: the
+ * composer uses one or the other depending on its mode, and the old one
+ * would leave the plugin's change out of a plain-text (or rich) draft.
  */
 export async function renderTemplateWithPlugins(
   templateId: string,
@@ -199,10 +204,17 @@ export async function renderTemplateWithPlugins(
 ): Promise<RenderedTemplate | null> {
   if (templateHooks.onTemplateRender.size === 0) return null;
   const result = await templateHooks.onTemplateRender.transform(rendered, { templateId }) as Partial<RenderedTemplate> | null;
+  let html = typeof result?.html === 'string' ? result.html : rendered.html;
+  let text = typeof result?.text === 'string' ? result.text : rendered.text;
+  if (html !== rendered.html && text === rendered.text) {
+    text = htmlToPlainText(html, { paragraphSpacing: true, mailMarkup: true });
+  } else if (text !== rendered.text && html === rendered.html) {
+    html = `<p>${escapeHtml(text).replace(/\r?\n/g, '<br>')}</p>`;
+  }
   return {
     subject: typeof result?.subject === 'string' ? result.subject : rendered.subject,
-    html: typeof result?.html === 'string' ? result.html : rendered.html,
-    text: typeof result?.text === 'string' ? result.text : rendered.text,
+    html,
+    text,
   };
 }
 

@@ -39,10 +39,29 @@ export function pagePathHref(pluginId: string, pageId: unknown, path: unknown): 
 
 /** Checks the request and moves the tab: true when it went, false when nothing could take it. */
 export function requestPageNavigation(pluginId: string, pageId: unknown, path: unknown): boolean {
-  const href = pagePathHref(pluginId, pageId, path);
+  return navigateInApp(pagePathHref(pluginId, pageId, path));
+}
+
+/** Whether something can move the tab now (the router is mounted). */
+export function canNavigateInApp(): boolean {
+  return handler !== null;
+}
+
+/** Moves the tab to an in-app href the host built: false while nothing can. */
+export function navigateInApp(href: string): boolean {
   if (!handler) return false;
   handler(href);
   return true;
+}
+
+/**
+ * Moves the tab through the router, which keeps the page, and with it the app lock's key.
+ * A full load makes the user type the PIN again.
+ */
+export function goInApp(routerHref: string, fullHref: string): void {
+  if (navigateInApp(routerHref)) return;
+  // full-load: no router in this window, as in a pop-out or before the app has mounted.
+  window.location.assign(fullHref);
 }
 
 /** Test helper. */

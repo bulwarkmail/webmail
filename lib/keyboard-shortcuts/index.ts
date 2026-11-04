@@ -3,9 +3,9 @@ import { CONTACTS_SECTIONS } from "./contacts";
 import { FILES_SECTIONS } from "./files";
 import { MAIL_SECTIONS } from "./mail";
 import { SETTINGS_SECTIONS } from "./settings";
-import type { ShortcutAppId, ShortcutEntry, ShortcutSection } from "./types";
+import type { ShortcutAppId, ShortcutEntry, ShortcutHost, ShortcutSection } from "./types";
 
-export type { ShortcutAppId, ShortcutEntry, ShortcutSection } from "./types";
+export type { ShortcutAppId, ShortcutEntry, ShortcutHost, ShortcutSection } from "./types";
 export { MAIL_SHORTCUTS } from "./mail";
 
 export interface ShortcutApp {
@@ -39,6 +39,20 @@ export const GENERAL_SHORTCUTS: readonly ShortcutEntry[] = [
 ];
 
 /** An app's sections with the general keys added (see GENERAL_SHORTCUTS). */
+/**
+ * What a row lists where the help is shown: the desktop app's key first, then the
+ * page's own. Null when there's nothing to press here.
+ */
+export function shortcutKeyFor(entry: ShortcutEntry, host: ShortcutHost): string | null {
+  const desktop = host === "browser"
+    ? undefined
+    : (host === "windows" ? entry.desktopWindowsKey : undefined)
+      ?? (host === "mac" ? undefined : entry.desktopPcKey)
+      ?? entry.desktopKey;
+  const keys = [desktop, entry.key].filter((key): key is string => !!key);
+  return keys.length ? keys.join(" / ") : null;
+}
+
 export function sectionsWithGeneral(sections: readonly ShortcutSection[]): ShortcutSection[] {
   if (sections.some((s) => s.id === "global")) {
     return sections.map((s) => (s.id === "global" ? { ...s, entries: [...s.entries, ...GENERAL_SHORTCUTS] } : s));

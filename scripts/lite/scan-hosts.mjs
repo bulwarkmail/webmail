@@ -26,6 +26,7 @@ export const LITE_BUILT_IN_HOSTS = [
   "www.google.com",
   "randomuser.me",
   "img.freepik.com",
+  "redirector.gvt1.com",
   "openpgpkey.",
 ];
 

@@ -136,8 +136,8 @@ const ALIASED_ROLES = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'j
  * login by its cookie slot instead - what a push notification knows.
  */
 export type MailDeepLink =
-  | { kind: 'folder'; ref: string; accountId?: string; slot?: number }
-  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; ownerAccountId?: string }
+  | { kind: 'folder'; ref: string; accountId?: string; slot?: number; ownerAccountId?: string }
+  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; ownerAccountId?: string; reply?: boolean }
   | { kind: 'thread'; id: string; accountId?: string; slot?: number; ownerAccountId?: string };
 
 export interface MailLinkState {
@@ -179,8 +179,17 @@ export function buildFolderRef(mailboxId: string, mailboxes: Mailbox[] = []): st
  * Exact ids are checked before aliases so a custom folder whose id happens to
  * read like an alias still resolves to itself.
  */
-export function resolveFolderRef(ref: string, mailboxes: Mailbox[] = []): string | null {
+export function resolveFolderRef(ref: string, mailboxes: Mailbox[] = [], ownerAccountId?: string): string | null {
   const decoded = decodeSegment(ref);
+
+  if (ownerAccountId) {
+    const owned = mailboxes.filter((mailbox) => mailbox.accountId === ownerAccountId);
+    const exact = owned.find((mailbox) => mailbox.id === decoded);
+    if (exact) return exact.id;
+    return ALIASED_ROLES.has(decoded)
+      ? owned.find((mailbox) => mailbox.role === decoded)?.id ?? null
+      : null;
+  }
 
   if (mailboxes.some((m) => m.id === decoded)) return decoded;
 
@@ -277,14 +286,17 @@ export function parseMailPath(
   // opens message links as fullscreen email tabs and ignores the flag.
   const fullscreen = search?.get('view') === 'fullscreen' || undefined;
   const ownerAccountId = search?.get('owner') || undefined;
+  // `?reply=1`, a notification's Reply: opens the reply composer once. Only
+  // opens it: nothing a link says can send or change mail.
+  const reply = search?.get('reply') === '1' || undefined;
   const [kind, value] = segments;
 
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId };
+      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId, ...(reply ? { reply } : {}) };
       if (kind === 'thread') return { kind: 'thread', id, accountId, slot, ownerAccountId };
-      if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot };
+      if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot, ownerAccountId };
     }
   }
 

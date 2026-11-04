@@ -125,7 +125,7 @@ export function TemplatesSection({ draft }: { draft: OrgPolicyDraft }) {
       <SettingsSection
         id="library"
         title="Organisation library"
-        description="Users see these templates under “Organisation” in the template picker and in Settings > Templates. They can use and copy them, not change them."
+        description="Users see these templates under “Organisation” in the template picker and in Settings > Composing > Email templates. They can use and copy them, not change them."
       >
         <div className="space-y-4">
           {inScope && (

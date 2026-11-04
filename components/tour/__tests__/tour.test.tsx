@@ -157,6 +157,24 @@ describe('tour targets', () => {
     }
   });
 
+  it('keeps the card off the target on a phone narrower than the card', () => {
+    const w = window.innerWidth;
+    const hgt = window.innerHeight;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 320 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 568 });
+    try {
+      const fab = { top: 440, left: 247, width: 56, height: 56 };
+      // Measured off screen the card is at its full 360 px.
+      const pos = computeTooltipPosition(fab, 'right', { width: 360, height: 196 });
+      expect(pos.actualPlacement).toBe('top');
+      expect(pos.top + 196).toBeLessThanOrEqual(fab.top);
+      expect(pos.left).toBe(8);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: w });
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: hgt });
+    }
+  });
+
   it('leaves out on a phone the steps that point into the rail or the folder drawer', () => {
     const ids = (phone: boolean) =>
       getTourSteps({ isDemoMode: true, supportsCalendar: true, supportsWebDAV: true, touch: phone, phone }).map((s) => s.id);
@@ -217,7 +235,7 @@ describe('tour text on a phone', () => {
     const step = tour.steps[0] as { phoneDescriptionKey?: string };
     step.phoneDescriptionKey = 'one_desc_phone';
     const spy = vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
-      matches: query === '(width < 48rem)', media: query, onchange: null,
+      matches: query === '(width < 37.5rem)', media: query, onchange: null,
       addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {},
       dispatchEvent: () => false,
     }) as MediaQueryList);

@@ -7,18 +7,21 @@ import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, getPathPrefix, toRouterPath } from "@/lib/browser-navigation";
 import { buildSettingsPath } from "@/lib/deep-links";
 import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-oauth";
-import { Loader2, AlertCircle } from "@/components/icons";
+import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { buildMobileHandoffUrl, mobileHandoffTarget } from "@/lib/auth/mobile-handoff";
-import { confirmMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
+import { buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, handoffTarget } from "@/lib/auth/mobile-handoff";
+import { confirmMobileHandoffCodeUrl, discardDesktopSignIn } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
+import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 function OAuthCallbackInner() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const t = useTranslations("login");
+  const { labels } = useSkeletonLabels();
   const { loginWithOAuth, loginWithServerSso } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   // A sign-in started for the mobile app, waiting for the user to confirm
@@ -27,7 +30,21 @@ function OAuthCallbackInner() {
     url: string | null;
     resolveUrl?: () => Promise<string | null>;
     username: string;
+    /** The desktop app's: what ends it, if the user says no or leaves. */
+    desktop?: { code: string; target: string; state: string };
   } | null>(null);
+  // Unanswered, and the tab goes: the tokens the server parked go too. A yes has left this
+  // to the app, and "Not now" has already said.
+  const desktopPending = pendingHandoff?.desktop;
+  const desktopAnswered = useRef(false);
+  useEffect(() => {
+    if (!desktopPending) return;
+    const leave = () => {
+      if (!desktopAnswered.current) discardDesktopSignIn(desktopPending.code);
+    };
+    window.addEventListener("pagehide", leave);
+    return () => window.removeEventListener("pagehide", leave);
+  }, [desktopPending]);
   // The authorization code is single-use. React's development double effect
   // ran this twice: the second pass no longer saw the pairing re-auth flag
   // (the first had removed it) and spent the code on the login flow instead.
@@ -148,7 +165,7 @@ function OAuthCallbackInner() {
       let mobileRedirectUri = "";
       let mobileState: string | null = null;
       try {
-        mobileRedirectUri = mobileHandoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
+        mobileRedirectUri = handoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
         mobileState = sessionStorage.getItem("mobile_state");
       } catch { /* sessionStorage may be unavailable */ }
 
@@ -181,14 +198,22 @@ function OAuthCallbackInner() {
                 sessionStorage.removeItem("mobile_redirect_uri");
                 sessionStorage.removeItem("mobile_state");
               } catch { /* ignore */ }
+              const desktopTarget = desktopHandoffTarget(mobileRedirectUri);
               setPendingHandoff({
                 url: null,
-                resolveUrl: () => confirmMobileHandoffCodeUrl({
-                  target: mobileRedirectUri,
-                  code: handoffCode,
-                  state: handoffState,
-                }),
-                username: typeof data.server_url === "string" ? data.server_url : "",
+                resolveUrl: () => {
+                  desktopAnswered.current = true;
+                  return confirmMobileHandoffCodeUrl({
+                    target: mobileRedirectUri,
+                    code: handoffCode,
+                    state: handoffState,
+                  });
+                },
+                ...(desktopTarget ? { desktop: { code: handoffCode, target: desktopTarget, state: handoffState } } : {}),
+                // Who is being handed over, where the server could say. Its address otherwise.
+                username: desktopTarget && typeof data.account === "string" && data.account
+                  ? data.account
+                  : typeof data.server_url === "string" ? data.server_url : "",
               });
               return;
             }
@@ -263,12 +288,22 @@ function OAuthCallbackInner() {
           url={pendingHandoff.url}
           resolveUrl={pendingHandoff.resolveUrl ?? null}
           username={pendingHandoff.username}
+          desktopPort={pendingHandoff.desktop ? desktopHandoffPort(pendingHandoff.desktop.target) : undefined}
           onError={() => {
             setPendingHandoff(null);
             setError("token_exchange_failed");
           }}
           onCancel={() => {
+            const desktop = pendingHandoff.desktop;
             setPendingHandoff(null);
+            if (desktop) {
+              // Ends the flow here and at the app. A plain login page from here would be a way
+              // to get a browser session nobody asked for.
+              desktopAnswered.current = true;
+              discardDesktopSignIn(desktop.code);
+              window.location.replace(desktopHandoffDeclineUrl(desktop.target, desktop.state));
+              return;
+            }
             router.push(toRouterPath(`${getPathPrefix(params.locale as string)}/${params.locale}/login`));
           }}
         />
@@ -300,27 +335,16 @@ function OAuthCallbackInner() {
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-muted-foreground text-sm">{t("oauth_completing")}</p>
-      </div>
-    </div>
-  );
+  // A finished sign-in lands in the mailbox (or the page saved before it),
+  // so the mail page's skeleton: it stays in place while the app loads there.
+  return <MailSkeleton label={t("oauth_completing")} labels={labels} />;
 }
 
 export default function OAuthCallbackPage() {
+  const t = useTranslations("login");
+  const { labels } = useSkeletonLabels();
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
-          <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<MailSkeleton label={t("oauth_completing")} labels={labels} />}>
       <OAuthCallbackInner />
     </Suspense>
   );

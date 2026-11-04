@@ -59,6 +59,22 @@ describe('Offline mode section', () => {
     expect((puts[0].organisation as { devices: { noOffline: boolean } }).devices.noOffline).toBe(true);
   });
 
+  it('leaves a refused login\'s data alone by default, and can ask for deletion at once, per scope', async () => {
+    await renderSection();
+    const toggle = screen.getByTestId('org-devices-wipeOnForcedSignOut');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    act(() => latest!.setScopeId('field'));
+    fireEvent.click(screen.getByTestId('org-devices-wipeOnForcedSignOut'));
+    expect(latest!.policy?.scopes?.[0].policy.organisation).toEqual({ devices: { wipeOnForcedSignOut: true } });
+    expect(latest!.policy?.organisation?.devices.wipeOnForcedSignOut).toBe(false);
+  });
+
+  it('says what a sign-out does now, for the timers too', async () => {
+    await renderSection();
+    expect(document.body.textContent).not.toContain('Every sign-out, the automatic one after inactivity included, deletes everything');
+    expect(document.body.textContent).toContain('A sign-out someone asks for deletes everything');
+  });
+
   it('writes a scope override only into that scope', async () => {
     await renderSection();
     act(() => latest!.setScopeId('field'));
@@ -70,6 +86,31 @@ describe('Offline mode section', () => {
   it('says what a device keeps and links the docs', async () => {
     await renderSection();
     expect(screen.getByRole('link', { name: 'How offline mode works' }).getAttribute('href')).toBe('https://bulwarkmail.org/docs/guides/organisation/offline-mode');
-    expect(document.body.textContent).toContain('Bulwark Lite has no offline mode');
+    expect(document.body.textContent).toContain('Bulwark Lite reads the same policy but has no offline mode');
+    expect(document.body.textContent).not.toContain('250 MB');
+  });
+
+  it('saves the caps as numbers and takes a cleared field as no cap', async () => {
+    await renderSection();
+    const days = screen.getByTestId('org-devices-offlineMaxDays') as HTMLInputElement;
+    fireEvent.change(days, { target: { value: '45' } });
+    fireEvent.change(screen.getByTestId('org-devices-offlineMaxAttachmentMb'), { target: { value: '10' } });
+    fireEvent.change(screen.getByTestId('org-devices-offlineMaxTotalMb'), { target: { value: '200' } });
+    fireEvent.click(screen.getByTestId('org-devices-noOfflineAttachments'));
+    await act(async () => { await latest!.save(); });
+    expect((puts[0].organisation as { devices: unknown }).devices).toMatchObject({
+      offlineMaxDays: 45, offlineMaxAttachmentMb: 10, offlineMaxTotalMb: 200, noOfflineAttachments: true,
+    });
+    fireEvent.change(days, { target: { value: '' } });
+    expect(latest!.policy?.organisation?.devices.offlineMaxDays).toBe(0);
+    expect(days.value).toBe('');
+  });
+
+  it('writes a cap into the scope only', async () => {
+    await renderSection();
+    act(() => latest!.setScopeId('field'));
+    fireEvent.change(screen.getByTestId('org-devices-offlineMaxDays'), { target: { value: '30' } });
+    expect(latest!.policy?.scopes?.[0].policy.organisation).toEqual({ devices: { offlineMaxDays: 30 } });
+    expect(latest!.policy?.organisation?.devices.offlineMaxDays).toBe(0);
   });
 });
