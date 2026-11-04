@@ -41,3 +41,28 @@ export function emailDisplayDate<T extends DatedEmail>(email: T): DisplayDate<T>
   }
   return sentAt as DisplayDate<T>;
 }
+
+/**
+ * How long after its `Date` header a message may arrive before the list takes
+ * it for imported or restored mail and shows the header instead.
+ */
+export const MAX_DELIVERY_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Which timestamp the message list shows: when the mail arrived, as Gmail and
+ * Outlook do. The list sorts by `receivedAt`, so a mail held up on the way
+ * would otherwise show an older time between newer ones and the list would
+ * look out of order. The reader and the details keep the sent time
+ * (`emailDisplayDate`).
+ *
+ * Mail that arrived much later than it was sent was imported or restored
+ * (#891): its `receivedAt` is the import time, so it shows its own date.
+ */
+export function emailListDate<T extends DatedEmail>(email: T): DisplayDate<T> {
+  const { sentAt, receivedAt } = email;
+  const received = receivedAt ? Date.parse(receivedAt) : NaN;
+  if (Number.isNaN(received)) return emailDisplayDate(email);
+  const sent = sentAt ? Date.parse(sentAt) : NaN;
+  if (!Number.isNaN(sent) && received - sent > MAX_DELIVERY_DELAY_MS) return emailDisplayDate(email);
+  return receivedAt as DisplayDate<T>;
+}
