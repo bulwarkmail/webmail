@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select';
 import { AUTO_TIME_ZONE, getBrowserTimeZone, listTimeZones } from '@/lib/timezone';
-import { timeZoneChoices, timeZoneCity, type TimeZoneChoice } from '@/lib/time-zone-choices';
+import { timeZoneChoices, timeZoneCity, timeZoneSearchRank, type TimeZoneChoice } from '@/lib/time-zone-choices';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 
 /**
@@ -25,11 +25,13 @@ export function TimeZonePicker({ value, onChange }: { value: string; onChange: (
     setZones(listTimeZones());
   }, []);
 
+  const offsets = useMemo(() => new Map<string, number>(), []);
   const options = useMemo<SearchableOption[]>(() => {
     // A zone synced from another browser (newer tz database) may be missing
     // from this runtime's list; keep it selectable.
     const extra = value !== AUTO_TIME_ZONE ? [value] : [];
     const { common, all } = timeZoneChoices(zones, { locale: getEffectiveLocale(), extra });
+    for (const choice of all) offsets.set(choice.value, choice.offsetMinutes);
     const toOption = (group: string) => (choice: TimeZoneChoice): SearchableOption => ({
       value: choice.value,
       label: choice.city,
@@ -42,7 +44,13 @@ export function TimeZonePicker({ value, onChange }: { value: string; onChange: (
       ...common.map(toOption(tz('time_zone_common'))),
       ...all.map(toOption(tz('time_zone_all'))),
     ];
-  }, [zones, value, browserTimeZone, t, tz]);
+  }, [zones, value, browserTimeZone, t, tz, offsets]);
+  // "CET" and "GMT+1" find their zones first (settings-p2-20).
+  const rank = useCallback(
+    (query: string, option: SearchableOption, wordsMatch: boolean) =>
+      timeZoneSearchRank(query, { value: option.value, offsetMinutes: offsets.get(option.value) }, wordsMatch),
+    [offsets],
+  );
 
   const current = options.find((option) => option.value === value);
   return (
@@ -52,6 +60,7 @@ export function TimeZonePicker({ value, onChange }: { value: string; onChange: (
       value={value}
       options={options}
       onSelect={onChange}
+      rank={rank}
       ariaLabel={`${t('time_zone.label')}: ${current?.label ?? timeZoneCity(value)}`}
       searchLabel={tz('time_zone_search')}
       noMatchLabel={tz('time_zone_no_match')}

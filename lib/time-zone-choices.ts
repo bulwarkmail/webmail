@@ -134,3 +134,90 @@ export function timeZoneChoices(
   }
   return { common, all };
 }
+
+
+// Abbreviations people type for a zone, with the zones they stand for. Both
+// the winter and the summer name, since people type either all year.
+const CET = ['Europe/Berlin', 'Europe/Paris', 'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Brussels',
+  'Europe/Vienna', 'Europe/Zurich', 'Europe/Stockholm', 'Europe/Oslo', 'Europe/Copenhagen', 'Europe/Warsaw',
+  'Europe/Prague', 'Europe/Budapest', 'Europe/Belgrade', 'Europe/Luxembourg'];
+const EET = ['Europe/Athens', 'Europe/Helsinki', 'Europe/Kyiv', 'Europe/Kiev', 'Europe/Bucharest', 'Europe/Sofia',
+  'Europe/Riga', 'Europe/Tallinn', 'Europe/Vilnius', 'Africa/Cairo'];
+const WET = ['Europe/Lisbon', 'Atlantic/Canary', 'Atlantic/Madeira', 'Atlantic/Faroe', 'Atlantic/Faeroe'];
+const US_EAST = ['America/New_York', 'America/Toronto', 'America/Detroit', 'America/Indiana/Indianapolis'];
+const US_CENTRAL = ['America/Chicago', 'America/Winnipeg', 'America/Mexico_City'];
+const US_MOUNTAIN = ['America/Denver', 'America/Phoenix', 'America/Edmonton', 'America/Boise'];
+const US_PACIFIC = ['America/Los_Angeles', 'America/Vancouver', 'America/Tijuana'];
+const AU_EAST = ['Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Hobart', 'Australia/Canberra'];
+const UK = ['Europe/London', 'Europe/Dublin'];
+
+export const TIME_ZONE_ABBREVIATIONS: Record<string, readonly string[]> = {
+  UTC: ['UTC', 'Etc/UTC'],
+  GMT: ['UTC', 'Etc/UTC', ...UK],
+  BST: UK,
+  IST: ['Asia/Kolkata', 'Asia/Calcutta'],
+  CET, CEST: CET, MEZ: CET, MESZ: CET,
+  EET, EEST: EET,
+  WET, WEST: WET,
+  MSK: ['Europe/Moscow'],
+  EST: US_EAST, EDT: US_EAST, ET: US_EAST,
+  CST: [...US_CENTRAL, 'Asia/Shanghai'], CDT: US_CENTRAL, CT: US_CENTRAL,
+  MST: US_MOUNTAIN, MDT: US_MOUNTAIN, MT: US_MOUNTAIN,
+  PST: US_PACIFIC, PDT: US_PACIFIC, PT: US_PACIFIC,
+  AKST: ['America/Anchorage'], AKDT: ['America/Anchorage'],
+  HST: ['Pacific/Honolulu'],
+  JST: ['Asia/Tokyo'],
+  KST: ['Asia/Seoul'],
+  HKT: ['Asia/Hong_Kong'],
+  SGT: ['Asia/Singapore'],
+  AEST: AU_EAST, AEDT: AU_EAST,
+  ACST: ['Australia/Adelaide', 'Australia/Darwin'], ACDT: ['Australia/Adelaide'],
+  AWST: ['Australia/Perth'],
+  NZST: ['Pacific/Auckland'], NZDT: ['Pacific/Auckland'],
+  BRT: ['America/Sao_Paulo'],
+  ART: ['America/Argentina/Buenos_Aires', 'America/Buenos_Aires'],
+  SAST: ['Africa/Johannesburg'],
+  WAT: ['Africa/Lagos'],
+  EAT: ['Africa/Nairobi'],
+  PKT: ['Asia/Karachi'],
+  WIB: ['Asia/Jakarta'],
+  ICT: ['Asia/Bangkok', 'Asia/Ho_Chi_Minh', 'Asia/Saigon'],
+  PHT: ['Asia/Manila'],
+  GST: ['Asia/Dubai'],
+};
+
+/**
+ * An offset typed in the search ("GMT+1", "UTC-5", "+05:30", "-0800"), in
+ * minutes east of UTC; null when the text isn't one. "GMT" alone is UTC.
+ */
+export function parseTypedOffset(text: string): number | null {
+  const m = /^(?:gmt|utc)?\s*([+\-−])\s*(\d{1,2})(?::?(\d{2}))?$/i.exec(text.trim());
+  if (!m) return null;
+  const hours = Number(m[2]);
+  const minutes = m[3] ? Number(m[3]) : 0;
+  if (hours > 14 || minutes > 59) return null;
+  return (m[1] === '+' ? 1 : -1) * (hours * 60 + minutes);
+}
+
+/**
+ * Where a zone goes in the search results, lower first; null leaves it out.
+ * An abbreviation ("CET") or an exact offset ("GMT+1") finds its zones
+ * first; anything the words match comes after. Without this, "GMT+1" listed
+ * GMT+11 and GMT+10 before GMT+01:00, and "CET" found nothing.
+ */
+export function timeZoneSearchRank(
+  query: string,
+  zone: { value: string; offsetMinutes?: number },
+  wordsMatch: boolean,
+): number | null {
+  const typed = query.trim();
+  const zones = TIME_ZONE_ABBREVIATIONS[typed.toUpperCase()];
+  if (zones?.includes(zone.value)) return 0;
+  const offset = parseTypedOffset(typed);
+  if (offset !== null && zone.offsetMinutes !== undefined) {
+    if (zone.offsetMinutes === offset) return 0;
+    // "+1" also finds "+10", but after the zones at +01:00.
+    return wordsMatch ? 2 : null;
+  }
+  return wordsMatch ? 1 : null;
+}
