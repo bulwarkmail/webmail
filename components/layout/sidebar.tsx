@@ -371,7 +371,6 @@ interface SidebarRowProps {
   isCollapsed: boolean;
   dropHandlers?: Record<string, unknown>;
   isValidDropTarget?: boolean;
-  isInvalidDropTarget?: boolean;
   onContextMenu?: (e: React.MouseEvent) => void;
   /** New mail here does not notify (#1169). */
   muted?: boolean;
@@ -399,7 +398,6 @@ function SidebarRow({
   isCollapsed,
   dropHandlers,
   isValidDropTarget,
-  isInvalidDropTarget,
   onContextMenu,
   muted = false,
   testRole,
@@ -469,8 +467,9 @@ function SidebarRow({
           : isSelected
             ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
             : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
-        isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
-        isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
+        // Only a folder that takes the drop lights up. Elsewhere the pointer
+        // says no (dropEffect none), as in a native mail client.
+        isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset"
       )}
     >
       {!isCollapsed && (
@@ -756,7 +755,7 @@ function MailboxTreeItem({
       : undefined;
 
   const { isDragging: globalDragging } = useDragDropContext();
-  const { dropHandlers, isValidDropTarget, isInvalidDropTarget } = useMailboxDrop({
+  const { dropHandlers, isValidDropTarget } = useMailboxDrop({
     mailbox: node,
     accountId: dragAccountId ?? undefined,
     onSuccess: (count, mailboxName, restore, receipts) => {
@@ -800,7 +799,6 @@ function MailboxTreeItem({
             : undefined
         }
         isValidDropTarget={isValidDropTarget && !pickOnly}
-        isInvalidDropTarget={isInvalidDropTarget && !pickOnly}
         onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
         muted={muted}
       />

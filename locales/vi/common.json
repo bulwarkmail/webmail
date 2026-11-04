@@ -3660,6 +3660,13 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Tìm thư mục",
+    "recent": "Gần đây",
+    "no_match": "Không có thư mục phù hợp",
+    "choose_folder": "Chọn thư mục…",
+    "current_folder": "Đã ở trong {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Đánh dấu thư mục là đã đọc",
     "mark_folder_tree_read": "Đánh dấu thư mục và thư mục con là đã đọc",
@@ -6475,6 +6482,19 @@
     "group_account": "Tài khoản",
     "switch_to": "Chuyển sang {account}"
   },
+  "menuAudit": {
+    "offline_header": "Bạn đang ngoại tuyến. Một số thao tác cần kết nối.",
+    "files_new_folder": "Thư mục mới…",
+    "files_new_file": "Tệp mới…",
+    "files_new_text_file": "Tệp văn bản mới…",
+    "files_upload_files": "Tải tệp lên…",
+    "files_upload_folder": "Tải lên thư mục…",
+    "files_share": "Chia sẻ…",
+    "files_share_button": "Chia sẻ",
+    "contacts_add_to_group": "Thêm vào nhóm…",
+    "contacts_bulk_add_to_group": "Thêm vào nhóm…",
+    "schedule_send": "Lên lịch gửi…"
+  },
   "notification_center": {
     "title": "Thông báo",
     "mark_all_read": "Đánh dấu tất cả đã đọc",
@@ -6829,6 +6849,18 @@
       "try_again": "Thử lại",
       "close": "Đóng"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Luôn hiện thanh menu",
+    "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
+    "exit": "Thoát",
+    "tray_pause": "Tạm dừng thông báo",
+    "tray_pause_hour": "Trong 1 giờ",
+    "tray_pause_tomorrow": "Đến ngày mai",
+    "tray_resume": "Bật lại thông báo",
+    "tray_open": "Mở Bulwark",
+    "tray_quit": "Thoát Bulwark",
+    "tray_exit": "Thoát Bulwark"
   },
   "appLock": {
     "section_title": "Khóa ứng dụng",

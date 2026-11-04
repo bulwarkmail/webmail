@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
 import { useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
@@ -30,10 +30,12 @@ import {
   Fish,
 } from "@/components/icons";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
-import { buildMailboxTree, MailboxNode } from "@/lib/utils";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
-import { localizeMailboxName } from "@/lib/mailbox-label";
-import { moveMailboxIcon } from "./move-target-list";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
+import { useMessageActionShortcut } from "./message-action-shortcuts";
+import { useConnectionState } from "@/hooks/use-connection-state";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextSubMenu } from "./rules-menu";
@@ -131,7 +133,9 @@ interface EmailContextMenuProps {
   onViewSource?: () => void;
   /** Entries the host already shows elsewhere (the reader's toolbar). */
   omit?: ReadonlySet<MessageActionKey>;
-  /** The host's own entries after the message's (the reader's view toggles). */
+  /** How the host shows the message (the reader's view toggles), before Export, Print and View source. */
+  views?: MessageActionEntry[];
+  /** The host's own entries after the message's. */
   extras?: MessageActionEntry[];
   /** The row's plugin entries (message-row-actions). Default true. */
   rowPlugins?: boolean;
@@ -140,6 +144,12 @@ interface EmailContextMenuProps {
   /** The menu's accessible name, e.g. "More actions" from the reader's ⋮. */
   label?: string;
 }
+
+/** Entries that change the message on the server, or queue the change offline. */
+const CHANGES_MAIL = new Set<MessageActionKey>([
+  "archive", "delete", "read", "remove_from_folder", "star", "pin", "spam",
+  "reschedule", "cancel_send", "cancel_and_edit",
+]);
 
 export function EmailContextMenu({
   email,
@@ -192,15 +202,21 @@ export function EmailContextMenu({
   onPrint,
   onViewSource,
   omit,
+  views,
   extras,
   rowPlugins = true,
   extraEntries,
   label,
 }: EmailContextMenuProps) {
   const t = useTranslations("context_menu");
+  const shortcutOf = useMessageActionShortcut();
+  // Offline, a change to a message waits in the outbox only where the account keeps
+  // its mail on this device; otherwise it would fail, so it's greyed out. Rules and
+  // copies to another account always need the server.
+  const { offline, canChangeMail } = useConnectionState();
+  const tMenu = useTranslations("menuAudit");
   const archiveActionEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
-  const tSidebar = useTranslations("sidebar");
   const isUnread = !email.keywords?.$seen;
   const currentTagIds = getEmailTagIds(email.keywords);
   // The row's account names its tags; a selection uses batchTagScope.
@@ -221,68 +237,49 @@ export function EmailContextMenu({
     ? !!onBatchRemoveFromFolder && !!batchEmails?.length && batchEmails.every((e) => canRemoveFromFolder(e, folderToLeave))
     : !!onRemoveFromFolder && canRemoveFromFolder(email, folderToLeave);
 
-  // Move-to submenu: the message's own account first (#1149)
-  const { tree: moveTree, targetIds: moveTargetIds } = buildMoveTargets(mailboxes, {
+  // Move-to submenu: the message's own account first (#1149), shared with
+  // every other Move list (lib/move-menu.ts).
+  const movedEmails = useMemo(
+    () => (showBatchActions ? batchEmails ?? [] : [email]),
+    [showBatchActions, batchEmails, email],
+  );
+  const moveModel = useMoveMenu(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
-    emails: showBatchActions ? batchEmails : [email],
+    emails: movedEmails,
   });
-
-  // Filter tree to only include branches that contain valid targets
-  const filterTree = (nodes: MailboxNode[], targetIds: Set<string>): MailboxNode[] => {
-    return nodes.reduce<MailboxNode[]>((acc, node) => {
-      const filteredChildren = filterTree(node.children, targetIds);
-      if (targetIds.has(node.id) || filteredChildren.length > 0) {
-        acc.push({ ...node, children: filteredChildren });
-      }
-      return acc;
-    }, []);
-  };
+  const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
+  const chooseMoveFolder = useChooseMoveFolder();
 
   // Folders of the other connected accounts a copy can land in.
-  const copyTrees = (copyTargets ?? [])
-    .map((target) => {
-      const targetIds = new Set(
-        target.mailboxes
-          .filter((m) => !m.isShared && m.role !== "drafts" && m.myRights?.mayAddItems)
-          .map((m) => m.id)
-      );
-      return { ...target, targetIds, tree: filterTree(buildMailboxTree(target.mailboxes), targetIds) };
-    })
-    .filter((target) => target.tree.length > 0);
+  const locale = useLocale();
+  const copyTrees = useMemo(
+    () => (copyTargets ?? [])
+      .map((target) => ({
+        ...target,
+        model: buildMoveMenu(target.mailboxes.filter((m) => !m.isShared), { locale }),
+      }))
+      .filter((target) => target.model.targetCount > 0),
+    [copyTargets, locale],
+  );
 
-  const renderMailboxNodes = (
-    nodes: MailboxNode[],
-    targetIds: Set<string>,
-    testIdPrefix: string,
-    onPick: (mailboxId: string) => void,
-  ): React.ReactNode =>
-    nodes.map((node) => {
-      const Icon = moveMailboxIcon(node.role);
-      const nodeLabel = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
-      return (
-        <div key={node.id}>
-          {targetIds.has(node.id) ? (
-            <ContextMenuItem
-              icon={Icon}
-              label={nodeLabel}
-              testId={`${testIdPrefix}${node.id}`}
-              onClick={() => handleAction(() => onPick(node.id))}
-            />
-          ) : (
-            <div className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground">
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span>{nodeLabel}</span>
-            </div>
-          )}
-          {node.children.length > 0 && (
-            <div className="ps-4">
-              {renderMailboxNodes(node.children, targetIds, testIdPrefix, onPick)}
-            </div>
-          )}
-        </div>
-      );
-    });
+  const renderMoveList = (onPick?: (mailboxId: string) => void) => (
+    <MoveFolderList
+      model={moveModel}
+      onPick={(mailboxId) => handleAction(() => onPick?.(mailboxId))}
+      onChooseFolder={chooseMoveFolder && onPick
+        ? () => handleAction(() => chooseMoveFolder({ emails: movedEmails, onMove: onPick }))
+        : undefined}
+    />
+  );
+  const renderCopyList = (target: { accountId: string; model: MoveMenuModel }) => (
+    <MoveFolderList
+      model={target.model}
+      noRecent
+      testIdPrefix={`copy-to:${target.accountId}:`}
+      onPick={(mailboxId) => handleAction(() => onCopyToAccount?.(target.accountId, mailboxId))}
+    />
+  );
 
   const handleAction = (action: () => void) => {
     action();
@@ -294,7 +291,7 @@ export function EmailContextMenu({
   const singleEntries = useMessageActionList({
     email,
     currentMailboxRole,
-    canMove: moveTree.length > 0,
+    canMove: canMoveAnywhere,
     canRemoveFromFolder: canRemove,
     canCopyToAccount: !!onCopyToAccount && copyTrees.length > 0,
     onReply,
@@ -319,6 +316,7 @@ export function EmailContextMenu({
     onPrint,
     onViewSource,
     omit,
+    views,
     extras,
   });
 
@@ -356,8 +354,9 @@ export function EmailContextMenu({
         <ContextMenuItem
           icon={Archive}
           label={t("archive")}
+          shortcut={shortcutOf("archive")}
           onClick={() => handleAction(onBatchArchive!)}
-          disabled={!onBatchArchive}
+          disabled={!onBatchArchive || !canChangeMail}
         />
     </>
   );
@@ -368,8 +367,9 @@ export function EmailContextMenu({
           icon={Trash2}
           label={t("delete")}
           testId="ctx-delete"
+          shortcut={shortcutOf("delete")}
           onClick={() => handleAction(onBatchDelete!)}
-          disabled={!onBatchDelete}
+          disabled={!onBatchDelete || !canChangeMail}
           destructive={!mountainView}
         />
     </>
@@ -381,6 +381,8 @@ export function EmailContextMenu({
           icon={isUnread ? MailOpen : Mail}
           label={isUnread ? t("mark_read") : t("mark_unread")}
           testId={isUnread ? "ctx-mark-read" : "ctx-mark-unread"}
+          shortcut={shortcutOf("read", isUnread)}
+          disabled={!canChangeMail}
           onClick={() => handleAction(() => onBatchMarkAsRead?.(isUnread))}
         />
     </>
@@ -388,9 +390,9 @@ export function EmailContextMenu({
   const moveItem = (
     <>
         {/* Move to submenu */}
-        {moveTree.length > 0 && (
-          <ContextMenuSubMenu icon={FolderInput} label={t("move_to")} testId="ctx-move-to">
-            {renderMailboxNodes(moveTree, moveTargetIds, "move-to:", (mailboxId) => onBatchMoveToMailbox?.(mailboxId))}
+        {canMoveAnywhere && (
+          <ContextMenuSubMenu icon={FolderInput} label={t("move_to")} testId="ctx-move-to" disabled={!canChangeMail}>
+            {renderMoveList(onBatchMoveToMailbox)}
           </ContextMenuSubMenu>
         )}
         {canRemove && (
@@ -398,6 +400,7 @@ export function EmailContextMenu({
             icon={FolderX}
             label={t("remove_from_folder")}
             testId="ctx-remove-from-folder"
+            disabled={!canChangeMail}
             onClick={() => handleAction(onBatchRemoveFromFolder!)}
           />
         )}
@@ -407,9 +410,7 @@ export function EmailContextMenu({
     ? copyTrees.map((target) => (
         <div key={target.accountId}>
           <ContextMenuHeader>{target.label}</ContextMenuHeader>
-          {renderMailboxNodes(target.tree, target.targetIds, `copy-to:${target.accountId}:`, (mailboxId) =>
-            onCopyToAccount(target.accountId, mailboxId)
-          )}
+          {renderCopyList(target)}
         </div>
       ))
     : null;
@@ -417,7 +418,7 @@ export function EmailContextMenu({
     <>
         {/* Copy to another connected account, keeping the originals */}
         {onCopyToAccount && copyTrees.length > 0 && (
-          <ContextMenuSubMenu icon={Copy} label={t("copy_to_account")} testId="ctx-copy-to">
+          <ContextMenuSubMenu icon={Copy} label={t("copy_to_account")} testId="ctx-copy-to" disabled={offline}>
             {copyTargetsContent}
           </ContextMenuSubMenu>
         )}
@@ -426,14 +427,14 @@ export function EmailContextMenu({
   const rulesItem = (
     <>
         {/* Rules: filter rules made from the sender(s), saved as Sieve */}
-        <RulesContextSubMenu anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} />
+        <RulesContextSubMenu anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} disabled={offline} />
     </>
   );
   const tagItem = (
     <>
         {/* Set tag submenu - the whole selection's tags (#1077) */}
         {onBatchToggleTag && (
-          <ContextMenuSubMenu icon={Tag} label={t("tag")} testId="ctx-tag">
+          <ContextMenuSubMenu icon={Tag} label={t("tag")} testId="ctx-tag" disabled={!canChangeMail}>
             <div className="w-56 max-w-[18rem]">
               <TagPicker
                 selectedIds={batchTagIds ?? []}
@@ -457,8 +458,9 @@ export function EmailContextMenu({
               icon={isInJunkFolder ? ShieldCheck : ShieldAlert}
               label={isInJunkFolder ? t("not_spam") : t("mark_as_spam")}
               testId={isInJunkFolder ? "ctx-not-spam" : "ctx-spam"}
+              shortcut={shortcutOf("spam")}
               onClick={() => handleAction(isInJunkFolder ? onBatchUndoSpam! : onBatchMarkAsSpam!)}
-              disabled={isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam}
+              disabled={(isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam) || !canChangeMail}
               destructive={!isInJunkFolder && !mountainView}
             />
             {batchPhishing.available && (
@@ -477,26 +479,26 @@ export function EmailContextMenu({
     switch (entry.key) {
       case "move":
         return (
-          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId}>
-            {renderMailboxNodes(moveTree, moveTargetIds, "move-to:", (mailboxId) => onMoveToMailbox?.(mailboxId))}
+          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail}>
+            {renderMoveList(onMoveToMailbox)}
           </ContextMenuSubMenu>
         );
       case "copy_to_account":
         return (
-          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId}>
+          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={offline}>
             {copyTargetsContent}
           </ContextMenuSubMenu>
         );
       case "tag":
         return (
-          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId}>
+          <ContextMenuSubMenu key={entry.key} icon={entry.icon} label={entry.label} testId={entry.testId} disabled={!canChangeMail}>
             <div className="w-56 max-w-[18rem]">
               <TagPicker selectedIds={currentTagIds} onToggle={(tagId) => onSetTag?.(tagId)} scope={tagScope} />
             </div>
           </ContextMenuSubMenu>
         );
       case "rules":
-        return <RulesContextSubMenu key={entry.key} anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} />;
+        return <RulesContextSubMenu key={entry.key} anchor={email} senderEmails={ruleSenderEmails} onClose={onClose} disabled={offline} />;
     }
   };
 
@@ -509,8 +511,9 @@ export function EmailContextMenu({
         icon={entry.icon}
         label={entry.label}
         testId={entry.testId}
-        disabled={entry.disabled}
+        disabled={entry.disabled || (!canChangeMail && CHANGES_MAIL.has(entry.key))}
         destructive={entry.destructive}
+        shortcut={shortcutOf(entry.key, isUnread)}
         onClick={() => handleAction(entry.run)}
       />
     );
@@ -524,6 +527,7 @@ export function EmailContextMenu({
       onClose={onClose}
       label={label}
     >
+      {offline && <ContextMenuHeader>{tMenu("offline_header")}</ContextMenuHeader>}
       {showBatchActions ? (
         <>
           <ContextMenuHeader>

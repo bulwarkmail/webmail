@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "查找来自 {name} 的邮件"
   },
+  "menuMove": {
+    "filter_placeholder": "查找文件夹",
+    "recent": "最近使用",
+    "no_match": "没有匹配的文件夹",
+    "choose_folder": "选择文件夹…",
+    "current_folder": "已在“{folder}”中"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "将文件夹标记为已读",
     "mark_folder_tree_read": "将文件夹及子文件夹标记为已读",
@@ -6463,6 +6470,19 @@
     "group_account": "账户",
     "switch_to": "切换到 {account}"
   },
+  "menuAudit": {
+    "offline_header": "您已离线。部分操作需要联网。",
+    "files_new_folder": "新建文件夹…",
+    "files_new_file": "新建文件…",
+    "files_new_text_file": "新建文本文件…",
+    "files_upload_files": "上传文件…",
+    "files_upload_folder": "上传文件夹…",
+    "files_share": "共享…",
+    "files_share_button": "共享",
+    "contacts_add_to_group": "加入群组…",
+    "contacts_bulk_add_to_group": "添加到群组…",
+    "schedule_send": "计划发送…"
+  },
   "notification_center": {
     "title": "通知",
     "mark_all_read": "全部标为已读",
@@ -6817,6 +6837,18 @@
       "try_again": "重试",
       "close": "关闭"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "始终显示菜单栏",
+    "always_show_description": "否则按 Alt 键时显示。",
+    "exit": "退出",
+    "tray_pause": "暂停通知",
+    "tray_pause_hour": "1 小时",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新开启通知",
+    "tray_open": "打开 Bulwark",
+    "tray_quit": "退出 Bulwark",
+    "tray_exit": "退出 Bulwark"
   },
   "appLock": {
     "section_title": "应用锁",

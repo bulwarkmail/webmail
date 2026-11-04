@@ -708,7 +708,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
         <h2 className="text-lg font-semibold">
           {isEditing ? t("edit_title") : t("create_title")}
         </h2>
-        <IconButton label={t("close")} onClick={onCancel}>
+        <IconButton label={t("close")} onClick={onCancel} data-pane-close="">
           <X />
         </IconButton>
       </div>

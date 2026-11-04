@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Find e-mails fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find en mappe",
+    "recent": "Seneste",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Vælg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Markér mappe som læst",
     "mark_folder_tree_read": "Markér mappe & undermapper som læst",
@@ -6463,6 +6470,19 @@
     "group_account": "Konto",
     "switch_to": "Skift til {account}"
   },
+  "menuAudit": {
+    "offline_header": "Du er offline. Nogle handlinger kræver forbindelse.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Upload filer…",
+    "files_upload_folder": "Upload mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Tilføj til gruppe…",
+    "contacts_bulk_add_to_group": "Tilføj til gruppe…",
+    "schedule_send": "Planlæg afsendelse…"
+  },
   "notification_center": {
     "title": "Notifikationer",
     "mark_all_read": "Markér alle som læst",
@@ -6817,6 +6837,18 @@
       "try_again": "Prøv igen",
       "close": "Luk"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Vis altid menulinjen",
+    "always_show_description": "Ellers vises den, når du trykker på Alt.",
+    "exit": "Afslut",
+    "tray_pause": "Sæt notifikationer på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Indtil i morgen",
+    "tray_resume": "Slå notifikationer til igen",
+    "tray_open": "Åbn Bulwark",
+    "tray_quit": "Afslut Bulwark",
+    "tray_exit": "Afslut Bulwark"
   },
   "appLock": {
     "section_title": "Applås",

@@ -119,6 +119,41 @@ describe('command palette', () => {
     expect(hint('search')).toBe('');
   });
 
+  it('shows no single-key hints while single-key shortcuts are off, since those keys do nothing then', async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const hint = (label: string) => {
+      const row = screen.getAllByRole('option').find((o) => o.querySelector('.flex-1')?.textContent === label)!;
+      return [...row.querySelectorAll('kbd')].map((k) => k.textContent).join(' ');
+    };
+    useSettingsStore.setState({ singleKeyShortcuts: false });
+    try {
+      render(<CommandPaletteHost />);
+      pressCtrlK();
+      expect(hint('compose')).toBe('');
+      expect(hint('shortcuts')).toBe('');
+    } finally {
+      useSettingsStore.setState({ singleKeyShortcuts: true });
+    }
+  });
+
+  it('names the account Sign out leaves, as the account menu does', async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const before = useAccountStore.getState().accounts;
+    useAccountStore.setState({ accounts: [
+      { id: 'a1', email: 'one@example.org', username: 'one@example.org' },
+      { id: 'a2', email: 'two@example.org', username: 'two@example.org' },
+    ] } as never);
+    useAuthStore.setState({ activeAccountId: 'a2' } as never);
+    try {
+      render(<CommandPaletteHost />);
+      pressCtrlK();
+      expect(screen.getByText('sign_out_of(two@example.org)')).toBeInTheDocument();
+      expect(screen.queryByText('sign_out')).toBeNull();
+    } finally {
+      useAccountStore.setState({ accounts: before } as never);
+    }
+  });
+
   it('shows plugin entries with the plugin name and runs them with Enter', async () => {
     act(() => setPluginActions('jira', 'Jira', 'command-palette', [{ id: 'new-issue', label: 'Create issue' }]));
     render(<CommandPaletteHost />);

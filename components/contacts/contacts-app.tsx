@@ -487,6 +487,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Address books contacts can be moved to; "Move to…" needs a second one.
   const writableBooks = useMemo(() => addressBooks.filter((b) => b.myRights?.mayWrite !== false), [addressBooks]);
   const canMoveContacts = !!client && supportsSync && writableBooks.length > 1;
+  // A contact in an address book shared read-only can't be changed: its menus leave out Edit, Move and Delete.
+  const isContactReadOnly = useCallback((contact: ContactCard) => Object.entries(contact.addressBookIds ?? {})
+    .some(([id, inBook]) => inBook && addressBooks.find((b) => b.id === id)?.myRights?.mayWrite === false), [addressBooks]);
   const handleMoveContacts = useCallback((ids: string[]) => {
     if (ids.length > 0) setMovingContactIds(ids);
   }, []);
@@ -1144,6 +1147,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
             onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
             isMobile={isMobile}
+            readOnly={selectedContact ? isContactReadOnly(selectedContact) : false}
           />
         );
     }
@@ -1398,6 +1402,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 ) : (
                 <ContactList
                   contacts={displayedContacts}
+                  isContactReadOnly={isContactReadOnly}
                   selectedContactId={selectedContactId}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}

@@ -14,6 +14,14 @@ import { offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return
 const push = vi.fn();
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
 
+// The catalog on screen: its language, and text that says which one it came from.
+const intl = vi.hoisted(() => ({ locale: 'en', prefix: '', messages: {} as object }));
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => `${intl.prefix}${key}`,
+  useLocale: () => intl.locale,
+  useMessages: () => intl.messages,
+}));
+
 const canPrint = vi.fn(() => true);
 const canDownload = vi.fn(() => true);
 vi.mock('@/lib/device-policy', () => ({ canPrintAnywhere: () => canPrint(), canDownloadAnywhere: () => canDownload() }));
@@ -68,6 +76,7 @@ function fakeBridge() {
 const original = useAuthStore.getState();
 
 beforeEach(() => {
+  Object.assign(intl, { locale: 'en', prefix: '', messages: {} });
   push.mockClear();
   resolveExternalLink.mockClear();
   resolveExternalLink.mockImplementation(async (ctx) => ctx.href);
@@ -170,9 +179,24 @@ describe('DesktopHost', () => {
   it('says which languages are in use', async () => {
     const shell = fakeBridge();
     act(() => useLocaleStore.setState({ locale: 'de' }));
+    intl.locale = 'de';
     render(<DesktopHost />);
     await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
     expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'de' });
+  });
+
+  it('follows the text on screen, not only the stored choice', async () => {
+    const shell = fakeBridge();
+    // English chosen, but the first render still has the catalog the server picked from the OS.
+    act(() => useLocaleStore.setState({ locale: 'en' }));
+    Object.assign(intl, { locale: 'de', prefix: 'de:', messages: { de: true } });
+    const view = render(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
+    // The chosen catalog lands a render later.
+    Object.assign(intl, { locale: 'en', prefix: 'en:', messages: { en: true } });
+    view.rerender(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages.mock.lastCall![0].labels.menuFile).toBe('en:desktopUi.menu.file'));
+    expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'en' });
   });
 
   describe('Open Link in a native menu', () => {

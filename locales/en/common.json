@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Find emails from {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find a folder",
+    "recent": "Recent",
+    "no_match": "No folder matches",
+    "choose_folder": "Choose folder…",
+    "current_folder": "Already in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mark folder as read",
     "mark_folder_tree_read": "Mark folder & subfolders as read",
@@ -6463,6 +6470,19 @@
     "group_account": "Account",
     "switch_to": "Switch to {account}"
   },
+  "menuAudit": {
+    "offline_header": "You're offline. Some actions need a connection.",
+    "files_new_folder": "New folder…",
+    "files_new_file": "New file…",
+    "files_new_text_file": "New text file…",
+    "files_upload_files": "Upload files…",
+    "files_upload_folder": "Upload folder…",
+    "files_share": "Share…",
+    "files_share_button": "Share",
+    "contacts_add_to_group": "Add to group…",
+    "contacts_bulk_add_to_group": "Add to group…",
+    "schedule_send": "Schedule send…"
+  },
   "notification_center": {
     "title": "Notifications",
     "mark_all_read": "Mark all read",
@@ -6817,6 +6837,18 @@
       "try_again": "Try again",
       "close": "Close"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Always show the menu bar",
+    "always_show_description": "Otherwise it shows when you press Alt.",
+    "exit": "Exit",
+    "tray_pause": "Pause notifications",
+    "tray_pause_hour": "For 1 hour",
+    "tray_pause_tomorrow": "Until tomorrow",
+    "tray_resume": "Turn notifications back on",
+    "tray_open": "Open Bulwark",
+    "tray_quit": "Quit Bulwark",
+    "tray_exit": "Exit Bulwark"
   },
   "appLock": {
     "section_title": "App lock",

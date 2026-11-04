@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { useRouter } from "@/i18n/navigation";
 import { openKeyboardShortcuts, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
@@ -45,6 +45,8 @@ export function DesktopHost() {
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts);
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const uiLocale = useLocaleStore((s) => s.locale);
+  const activeLocale = useLocale();
+  const messages = useMessages();
   const strictest = useStrictestDevices();
   const { restoreWindows } = useDesktopPrefs();
   const theme = useThemeStore((s) => s.theme);
@@ -116,11 +118,14 @@ export function DesktopHost() {
     });
   }, [isAuthenticated, singleKeys, strictest]);
 
-  // Menus and spellcheck follow the interface.
+  // Menus, the tray and spellcheck follow the interface: the language its text is in now,
+  // with that text. The stored choice isn't it: on the first render the catalog can still
+  // be the one the server picked from the OS language, and the chosen one lands a render
+  // later. Going by the choice alone left the menus in the OS language for good.
   useEffect(() => {
-    const ui = uiLocale || document.documentElement.lang;
+    const ui = activeLocale || uiLocale || document.documentElement.lang;
     if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as Parameters<typeof shellLabels>[0]));
-  }, [uiLocale]);
+  }, [activeLocale, uiLocale, messages]);
 
   // What the user writes in, whichever composer asks for it too.
   useEffect(() => {

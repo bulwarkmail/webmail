@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name}-с ирсэн имэйлүүдийг хайх"
   },
+  "menuMove": {
+    "filter_placeholder": "Хавтас хайх",
+    "recent": "Сүүлд ашигласан",
+    "no_match": "Тохирох хавтас алга",
+    "choose_folder": "Хавтас сонгох…",
+    "current_folder": "Аль хэдийн {folder}-д байна"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Хавтсыг уншсан гэж тэмдэглэх",
     "mark_folder_tree_read": "Хавтас болон дэд хавтаснуудыг уншсан гэж тэмдэглэх",
@@ -6463,6 +6470,19 @@
     "group_account": "Бүртгэл",
     "switch_to": "{account} руу шилжих"
   },
+  "menuAudit": {
+    "offline_header": "Та офлайн байна. Зарим үйлдэлд холболт хэрэгтэй.",
+    "files_new_folder": "Шинэ хавтас…",
+    "files_new_file": "Шинэ файл…",
+    "files_new_text_file": "Шинэ текст файл…",
+    "files_upload_files": "Файл байршуулах…",
+    "files_upload_folder": "Хавтас байршуулах…",
+    "files_share": "Хуваалцах…",
+    "files_share_button": "Хуваалцах",
+    "contacts_add_to_group": "Бүлэгт нэмэх…",
+    "contacts_bulk_add_to_group": "Бүлэгт нэмэх…",
+    "schedule_send": "Хуваарь илгээх…"
+  },
   "notification_center": {
     "title": "Мэдэгдэл",
     "mark_all_read": "Бүгдийг уншсан болгох",
@@ -6817,6 +6837,18 @@
       "try_again": "Дахин оролдох",
       "close": "Хаах"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Цэсний мөрийг үргэлж харуулах",
+    "always_show_description": "Эс бөгөөс Alt товч дарахад гарч ирнэ.",
+    "exit": "Гарах",
+    "tray_pause": "Мэдэгдлийг түр зогсоох",
+    "tray_pause_hour": "1 цагийн турш",
+    "tray_pause_tomorrow": "Маргааш хүртэл",
+    "tray_resume": "Мэдэгдлийг дахин асаах",
+    "tray_open": "Bulwark-г нээх",
+    "tray_quit": "Bulwark-г хаах",
+    "tray_exit": "Bulwark-аас гарах"
   },
   "appLock": {
     "section_title": "Аппын түгжээ",

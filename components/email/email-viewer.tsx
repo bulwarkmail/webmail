@@ -3,7 +3,6 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
-import { openMailImport } from "@/stores/mail-transfer-store";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -47,11 +46,12 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
+import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { itemsToHide } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
 import { TagPicker } from "./tag-picker";
@@ -63,7 +63,8 @@ import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndi
 import { emailToReadView } from "@/lib/plugin-projection";
 import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
-import { MoveTargetList } from "./move-target-list";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
 import { SaveToFilesDialog, type SaveableAttachment } from "./save-to-files-dialog";
 import { usePolicyStore } from "@/stores/policy-store";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
@@ -106,7 +107,6 @@ import {
   Send,
   FolderInput,
   Sun,
-  Upload,
   Moon,
   PlayCircle,
   PenSquare,
@@ -122,7 +122,7 @@ import {
   Paperclip,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
@@ -155,6 +155,7 @@ import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
+import { BreakableAddress } from "@/components/ui/breakable-address";
 import { mentionFromLink } from "@/lib/recipient-mentions";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
@@ -278,7 +279,6 @@ interface EmailViewerProps {
   onReplyAllConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
-  onShowShortcuts?: () => void;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
@@ -1157,6 +1157,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onPrint={options.onPrint}
       onViewSource={options.onViewSource}
       omit={options.omit}
+      views={options.views}
       extras={options.extras}
       rowPlugins={false}
       extraEntries={pluginEntries}
@@ -1172,8 +1173,7 @@ interface ReaderMorePanelBodyProps {
   openSub: (sub: MoreMenuSub) => void;
   close: () => void;
   entryRefs: React.MutableRefObject<Record<MoreMenuSub, HTMLButtonElement | null>>;
-  moveTree: MailboxNode[];
-  moveTargetIds: Set<string>;
+  moveModel: MoveMenuModel;
   onMoveToMailbox?: (mailboxId: string) => void;
   currentTagIds: string[];
   sortedTagIds: string[];
@@ -1197,8 +1197,7 @@ function ReaderMorePanelBody({
   openSub,
   close,
   entryRefs,
-  moveTree,
-  moveTargetIds,
+  moveModel,
   onMoveToMailbox,
   currentTagIds,
   sortedTagIds,
@@ -1209,6 +1208,7 @@ function ReaderMorePanelBody({
   pluginTarget,
 }: ReaderMorePanelBodyProps) {
   const { email } = options;
+  const locale = useLocale();
   const { tagColor } = useKeywordFormat(tagScope);
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   const entries = useMessageActionList({
@@ -1218,11 +1218,10 @@ function ReaderMorePanelBody({
   });
 
   if (sub === 'move') {
-    return moveTree.length > 0 && onMoveToMailbox ? (
-      <MoveTargetList
+    return !moveMenuIsEmpty(moveModel) && onMoveToMailbox ? (
+      <MoveFolderList
         variant="panel"
-        tree={moveTree}
-        targetIds={moveTargetIds}
+        model={moveModel}
         onPick={(mailboxId) => { onMoveToMailbox(mailboxId); close(); }}
       />
     ) : null;
@@ -1231,14 +1230,15 @@ function ReaderMorePanelBody({
     return (
       <>
         {copyTargets.map((target) => {
-          const { tree, targetIds } = buildMoveTargets(target.mailboxes.filter((m) => !m.isShared && m.role !== 'drafts'), {});
+          const model = buildMoveMenu(target.mailboxes.filter((m) => !m.isShared), { locale });
           return (
             <div key={target.accountId}>
               <div className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground truncate" title={target.label}>{target.label}</div>
-              <MoveTargetList
+              <MoveFolderList
                 variant="panel"
-                tree={tree}
-                targetIds={targetIds}
+                noRecent
+                model={model}
+                testIdPrefix={`copy-to:${target.accountId}:`}
                 onPick={(mailboxId) => { void copyToAccount([email], target.accountId, mailboxId); close(); }}
               />
             </div>
@@ -1341,7 +1341,6 @@ export function EmailViewer({
   onReplyConversationEmail,
   onReplyAllConversationEmail,
   mvInlineComposer,
-  onShowShortcuts,
   onEditDraft,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
@@ -1364,7 +1363,6 @@ export function EmailViewer({
   const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
-  const tImport = useTranslations('mail_import');
   const tCommon = useTranslations('common');
   const tFiles = useTranslations('files');
   const tDemoWelcome = useTranslations('demo_welcome');
@@ -1978,14 +1976,14 @@ export function EmailViewer({
 
   // Move-to dropdown: the message's own account first (#1149)
   const moveOwnerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
-  const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
-    () => buildMoveTargets(mailboxes, {
-      currentMailboxId: selectedMailbox,
-      ownerAccountId: moveOwnerAccountId,
-      emails: email ? [email] : [],
-    }),
-    [mailboxes, selectedMailbox, moveOwnerAccountId, email],
-  );
+  const moveEmails = useMemo(() => (email ? [email] : []), [email]);
+  const moveModel = useMoveMenu(mailboxes, {
+    currentMailboxId: selectedMailbox,
+    ownerAccountId: moveOwnerAccountId,
+    emails: moveEmails,
+  });
+  const canMoveAnywhere = !moveMenuIsEmpty(moveModel);
+  const chooseMoveFolder = useChooseMoveFolder();
 
   // Close dropdown menus on click outside
   useEffect(() => {
@@ -2164,7 +2162,7 @@ export function EmailViewer({
     email?.id,
     showToolbarLabels,
     isLoading,
-    moveTree.length,
+    canMoveAnywhere,
     emailKeywords.length,
     currentColor,
     isInJunkFolder,
@@ -3768,11 +3766,6 @@ export function EmailViewer({
     await exportEmail(email, { onArchive, onDelete, archiveEnabled: archiveActionEnabled }, blobSource ?? { client, accountId: undefined });
   };
 
-  // Import mail into the open folder: the import dialog (lib/mail-import) does the rest.
-  const handleImportEmail = () => {
-    openMailImport({ mailboxId: useEmailStore.getState().selectedMailbox || undefined });
-  };
-
   // What a printout of the message shows, for the Print action's window and
   // for the page's print copy (Ctrl+P). Text fields are unescaped.
   const messagePrintFields = (): MessagePrintFields | null => {
@@ -4228,6 +4221,8 @@ ${printWatermark ? printWatermark.html : ''}
   // the bottom bar has the replies.
   const toolbarShownActions = (): ReadonlySet<MessageActionKey> => {
     const shown = new Set<MessageActionKey>(['delete', 'edit_draft']);
+    // The star sits by the subject, or on the sender's line in Mountain View.
+    if (toolbarPosition === 'top' || mvViewer) shown.add('star');
     toolbarRef.current?.querySelectorAll<HTMLElement>('[data-overflow-item]').forEach((item) => {
       const key = TOOLBAR_PRIORITY_ACTIONS[item.dataset.overflowPriority ?? ''];
       if (key && item.getClientRects().length > 0) shown.add(key);
@@ -4248,9 +4243,10 @@ ${printWatermark ? printWatermark.html : ''}
     return hidden;
   };
   const toggleViewMode = () => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev);
-  // The reader's own entries after the message's: the view toggle, Import
-  // (into the open folder) and, with a keyboard, the shortcuts.
-  const readerExtras: MessageActionEntry[] = [
+  // How the reader shows the message, a group of the ⋮ menu of its own. Import
+  // and the keyboard shortcuts are no message's: Import is in the folder's menu,
+  // Settings and the command palette, the shortcuts behind ?, the rail and Help.
+  const readerViews: MessageActionEntry[] = [
     ...(readAloud.supported && !isBodyLoading
       ? [{ kind: 'item' as const, key: 'extra:read_aloud' as const, icon: Volume2, label: t('read_aloud'), run: readAloud.start }]
       : []),
@@ -4263,15 +4259,11 @@ ${printWatermark ? printWatermark.html : ''}
     ...(effectiveEmailContent.isHtml
       ? [{ kind: 'item' as const, key: 'extra:view_mode' as const, icon: isDark ? Sun : Moon, label: isDark ? t('view_in_light_mode') : t('view_in_dark_mode'), run: toggleViewMode }]
       : []),
-    { kind: 'item', key: 'extra:import', icon: Upload, label: tImport('menu_import'), run: handleImportEmail },
-    ...(onShowShortcuts && !isMobile
-      ? [{ kind: 'item' as const, key: 'extra:shortcuts' as const, icon: Keyboard, label: t('keyboard_shortcuts'), run: onShowShortcuts }]
-      : []),
   ];
   const readerActionOptions: MessageActionOptions = {
     email,
     currentMailboxRole,
-    canMove: moveTree.length > 0 && !!onMoveToMailbox,
+    canMove: canMoveAnywhere && !!onMoveToMailbox,
     canRemoveFromFolder: !!onRemoveFromFolder,
     onReply: onReply ? () => onReply() : undefined,
     onReplyAll,
@@ -4291,7 +4283,7 @@ ${printWatermark ? printWatermark.html : ''}
     onPrint: devices.noPrint ? undefined : () => handlePrint(),
     onViewSource: devices.noExport ? undefined : () => setShowSourceModal(true),
     omit: readerMenuOmit,
-    extras: readerExtras.filter((entry) => entry.kind !== 'item' || !readerMenuOmit.has(entry.key)),
+    views: readerViews,
   };
 
   // Shared toolbar items used by both 'top' and 'below-subject' positions
@@ -4467,7 +4459,7 @@ ${printWatermark ? printWatermark.html : ''}
           {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
-        {moveTree.length > 0 && onMoveToMailbox && (
+        {canMoveAnywhere && onMoveToMailbox && (
           <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
             <Button
               variant="ghost"
@@ -4487,11 +4479,11 @@ ${printWatermark ? printWatermark.html : ''}
               {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
-              <div className="w-56 max-h-72 overflow-y-auto">
-                <MoveTargetList
-                  tree={moveTree}
-                  targetIds={moveTargetIds}
+              <div className="w-64 max-w-full" data-reader-move-menu="">
+                <MoveFolderList
+                  model={moveModel}
                   onPick={(mailboxId) => { onMoveToMailbox(mailboxId); closeMoveMenu(); }}
+                  onChooseFolder={chooseMoveFolder ? () => { closeMoveMenu(); chooseMoveFolder({ emails: moveEmails, onMove: onMoveToMailbox }); } : undefined}
                 />
               </div>
             </ContextMenu>
@@ -4831,8 +4823,7 @@ ${printWatermark ? printWatermark.html : ''}
               openSub={setMoreMenuSub}
               close={closeMoreMenu}
               entryRefs={moreEntryRefs}
-              moveTree={moveTree}
-              moveTargetIds={moveTargetIds}
+              moveModel={moveModel}
               onMoveToMailbox={onMoveToMailbox}
               currentTagIds={currentTagIds}
               sortedTagIds={sortedTagIds}
@@ -5413,6 +5404,11 @@ ${printWatermark ? printWatermark.html : ''}
           const fullDate = (iso?: string) => iso
             ? formatDateTime(iso, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', second: '2-digit', timeZoneName: 'short' })
             : '-';
+          // A long date wraps over three lines in the narrow column: the short one
+          // shows, the full one is on hover.
+          const shownDate = (iso?: string) => iso
+            ? <time dateTime={iso} title={fullDate(iso)}>{formatDateTime(iso, timeFormat, { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+            : '-';
           const auth = email.authenticationResults;
           const totalAttachmentSize = effectiveAttachments.reduce((s, a) => s + (a.size || 0), 0);
           const topMimeType = email.bodyStructure?.type;
@@ -5423,7 +5419,7 @@ ${printWatermark ? printWatermark.html : ''}
           );
           const Row = ({ label, children, mono }: { label: string; children: React.ReactNode; mono?: boolean }) => (
             <>
-              <dt className="text-muted-foreground text-xs pt-1">{label}</dt>
+              <dt className="text-muted-foreground text-xs @sm:pt-1">{label}</dt>
               <dd className={cn(
                 "text-sm text-foreground min-w-0 break-words",
                 mono && "font-mono text-xs",
@@ -5440,7 +5436,7 @@ ${printWatermark ? printWatermark.html : ''}
             return (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
                   tooltip && "cursor-help",
                   status.icon === 'check' && "bg-green-500/[0.07] border-green-500/30",
                   status.icon === 'x' && "bg-red-500/[0.07] border-red-500/30",
@@ -5450,14 +5446,14 @@ ${printWatermark ? printWatermark.html : ''}
                 title={tooltip}
               >
                 <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", status.color)} />
-                <span className="font-medium text-foreground">{name}</span>
-                <span className={cn("text-[0.6875rem]", status.color)}>
+                <span className="font-medium text-foreground whitespace-nowrap">{name}</span>
+                <span className={cn("text-[0.6875rem] whitespace-nowrap", status.color)}>
                   {translateAuthResult(result)}
                 </span>
                 {extra && (
                   <>
                     <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground">{extra}</span>
+                    <span className="text-muted-foreground truncate min-w-0" title={typeof extra === 'string' ? extra : undefined}>{extra}</span>
                   </>
                 )}
               </span>
@@ -5478,17 +5474,24 @@ ${printWatermark ? printWatermark.html : ''}
           );
 
           return (
-            <div className="bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-5">
+            <div className="@container bg-background border-b border-border px-4 lg:px-6" style={{ paddingBlock: 'var(--density-header-py)' }}>
+              <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-10 gap-y-5">
                 <section className="min-w-0">
                   <SectionHeader>{t('details.recipients_routing')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     <Row label={t('from')}>
                       <div className="flex flex-wrap items-center gap-1">
                         <RecipientPopover
                           name={sender?.name}
                           email={sender?.email || ''}
-                          displayLabel={sender?.name && sender?.email ? `${sender.name} <${sender.email}>` : undefined}
+                          label={sender?.name && sender?.email ? (
+                            <>
+                              <bdi className="block">{sender.name}</bdi>
+                              <bdi className="block text-muted-foreground" title={sender.email}>
+                                <BreakableAddress text={sender.email} />
+                              </bdi>
+                            </>
+                          ) : undefined}
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
@@ -5542,10 +5545,10 @@ ${printWatermark ? printWatermark.html : ''}
                       </Row>
                     )}
                     {email.sentAt && (
-                      <Row label={t('details.sent')}>{fullDate(email.sentAt)}</Row>
+                      <Row label={t('details.sent')}>{shownDate(email.sentAt)}</Row>
                     )}
                     <Row label={t('details.received')}>
-                      {fullDate(email.receivedAt)}
+                      {shownDate(email.receivedAt)}
                       {deliveryDeltaMs > 60000 && (
                         <span className="text-muted-foreground"> · {formatDelta(deliveryDeltaMs)} {t('details.delivery_time').toLowerCase()}</span>
                       )}
@@ -5590,7 +5593,7 @@ ${printWatermark ? printWatermark.html : ''}
                       )}
                       {email.spamScore !== undefined && (
                         <span className={cn(
-                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs",
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs max-w-full min-w-0",
                           email.spamScore > 5 ? "bg-red-500/[0.07] border-red-500/30" :
                           email.spamScore > 2 ? "bg-amber-500/[0.07] border-amber-500/30" :
                           "bg-green-500/[0.07] border-green-500/30",
@@ -5613,7 +5616,7 @@ ${printWatermark ? printWatermark.html : ''}
                           {email.spamStatus && (
                             <>
                               <span className="text-muted-foreground">·</span>
-                              <span className="text-muted-foreground">{email.spamStatus}</span>
+                              <span className="text-muted-foreground truncate min-w-0" title={email.spamStatus}>{email.spamStatus}</span>
                             </>
                           )}
                         </span>
@@ -5644,9 +5647,9 @@ ${printWatermark ? printWatermark.html : ''}
                 {hasIdentifiers && (
                   <section className="min-w-0">
                     <SectionHeader>{t('details.identifiers_threading')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                       {email.messageId && (
-                        <Row label={t('headers.message_id')} mono>{email.messageId}</Row>
+                        <Row label={t('headers.message_id')} mono><BreakableAddress text={email.messageId} /></Row>
                       )}
                       {email.inReplyTo && email.inReplyTo.length > 0 && (
                         <Row label={t('details.in_reply_to')} mono>
@@ -5678,7 +5681,7 @@ ${printWatermark ? printWatermark.html : ''}
 
                 <section className="min-w-0">
                   <SectionHeader>{t('details.message_properties')}</SectionHeader>
-                  <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                  <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                     {email.subject !== undefined && (
                       <Row label={t('subject')}>{email.subject || <span className="italic text-muted-foreground">{t('details.no_subject')}</span>}</Row>
                     )}
@@ -5701,9 +5704,9 @@ ${printWatermark ? printWatermark.html : ''}
                 </section>
 
                 {hasListInfo && (
-                  <section className="lg:col-span-2 min-w-0">
+                  <section className="@3xl:col-span-2 min-w-0">
                     <SectionHeader>{t('details.mailing_list')}</SectionHeader>
-                    <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                    <dl className="grid grid-cols-1 @sm:grid-cols-[minmax(4.5rem,7rem)_minmax(0,1fr)] gap-x-4 gap-y-1.5">
                       {listHeaders?.listId && (
                         <Row label={t('details.list_id')} mono>{listHeaders.listId}</Row>
                       )}
@@ -5730,7 +5733,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {/* Plugin-supplied category. Plugins whose shouldShow accepts
                     `category === null` render their own titled section here. */}
                 {hasDetailsSlotOffers && (
-                  <section className="lg:col-span-2 min-w-0">
+                  <section className="@3xl:col-span-2 min-w-0">
                     <DetailsCategorySlot email={pluginEmailView} category={null} />
                   </section>
                 )}

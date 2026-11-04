@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Cerca correus de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una carpeta",
+    "recent": "Recents",
+    "no_match": "Cap carpeta coincideix",
+    "choose_folder": "Tria una carpeta…",
+    "current_folder": "Ja és a {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
     "mark_folder_tree_read": "Marca la carpeta i les subcarpetes com a llegides",
@@ -6463,6 +6470,19 @@
     "group_account": "Compte",
     "switch_to": "Canvia a {account}"
   },
+  "menuAudit": {
+    "offline_header": "No teniu connexió. Algunes accions la necessiten.",
+    "files_new_folder": "Carpeta nova…",
+    "files_new_file": "Fitxer nou…",
+    "files_new_text_file": "Fitxer de text nou…",
+    "files_upload_files": "Puja fitxers…",
+    "files_upload_folder": "Puja una carpeta…",
+    "files_share": "Comparteix…",
+    "files_share_button": "Comparteix",
+    "contacts_add_to_group": "Afegeix al grup…",
+    "contacts_bulk_add_to_group": "Afegeix al grup…",
+    "schedule_send": "Programa l'enviament…"
+  },
   "notification_center": {
     "title": "Notificacions",
     "mark_all_read": "Marca-ho tot com a llegit",
@@ -6817,6 +6837,18 @@
       "try_again": "Torna-ho a provar",
       "close": "Tanca"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra de menús",
+    "always_show_description": "Si no, apareix en prémer Alt.",
+    "exit": "Surt",
+    "tray_pause": "Posa en pausa les notificacions",
+    "tray_pause_hour": "Durant 1 hora",
+    "tray_pause_tomorrow": "Fins demà",
+    "tray_resume": "Torna a activar les notificacions",
+    "tray_open": "Obre Bulwark",
+    "tray_quit": "Surt de Bulwark",
+    "tray_exit": "Surt de Bulwark"
   },
   "appLock": {
     "section_title": "Bloqueig de l'app",

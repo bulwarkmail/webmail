@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Leia kirjad saatjalt {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Otsi kausta",
+    "recent": "Viimati kasutatud",
+    "no_match": "Ükski kaust ei sobi",
+    "choose_folder": "Vali kaust…",
+    "current_folder": "Juba kaustas {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Märgi kaust loetuks",
     "mark_folder_tree_read": "Märgi kaust ja alamkaustad loetuks",
@@ -6463,6 +6470,19 @@
     "group_account": "Konto",
     "switch_to": "Lülitu kontole {account}"
   },
+  "menuAudit": {
+    "offline_header": "Olete võrguühenduseta. Mõni toiming vajab ühendust.",
+    "files_new_folder": "Uus kaust…",
+    "files_new_file": "Uus fail…",
+    "files_new_text_file": "Uus tekstifail…",
+    "files_upload_files": "Laadi failid üles…",
+    "files_upload_folder": "Laadi kaust üles…",
+    "files_share": "Jaga…",
+    "files_share_button": "Jaga",
+    "contacts_add_to_group": "Lisa gruppi…",
+    "contacts_bulk_add_to_group": "Lisa gruppi…",
+    "schedule_send": "Ajasta saatmine…"
+  },
   "notification_center": {
     "title": "Märguanded",
     "mark_all_read": "Märgi kõik loetuks",
@@ -6817,6 +6837,18 @@
       "try_again": "Proovi uuesti",
       "close": "Sulge"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Näita menüüriba alati",
+    "always_show_description": "Muidu ilmub see Alt-klahvi vajutamisel.",
+    "exit": "Välju",
+    "tray_pause": "Peata teavitused",
+    "tray_pause_hour": "1 tunniks",
+    "tray_pause_tomorrow": "Homseni",
+    "tray_resume": "Lülita teavitused uuesti sisse",
+    "tray_open": "Ava Bulwark",
+    "tray_quit": "Sulge Bulwark",
+    "tray_exit": "Välju Bulwarkist"
   },
   "appLock": {
     "section_title": "Rakenduse lukk",

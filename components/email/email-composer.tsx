@@ -56,6 +56,7 @@ import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu, isContextMenuKey } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay, sanitizeEmailHtml, escapeHtml, sanitizePluginBodyHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
@@ -592,6 +593,7 @@ export function EmailComposer({
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
+  const tMenu = useTranslations('menuAudit');
   const tCommon = useTranslations('common');
   const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
@@ -4894,6 +4896,7 @@ export function EmailComposer({
           label={tCommon('close')}
           data-testid="composer-close"
           data-own-window-close={ownWindow ? "" : undefined}
+          data-pane-close=""
         >
           <X className="w-5 h-5 md:w-4 md:h-4" />
         </IconButton>
@@ -5813,7 +5816,7 @@ export function EmailComposer({
 
       <ContextMenu ref={sendMenu.menuRef} isOpen={showSendMenu} position={sendMenu.contextMenu.position} onClose={closeSendMenu}>
         {composerClient?.hasDelayedSend() && (
-          <ContextMenuItem icon={CalendarClock} label={t('schedule_send')} onClick={openScheduleDialog} testId="composer-schedule-send" />
+          <ContextMenuItem icon={CalendarClock} label={tMenu('schedule_send')} shortcut={formatShortcutCombo('Mod + Shift + Enter')} onClick={openScheduleDialog} testId="composer-schedule-send" />
         )}
         <ComposerPluginMenuItems
           surface="composer-send-menu"

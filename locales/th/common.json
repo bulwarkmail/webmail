@@ -98,6 +98,19 @@
     "group_account": "บัญชี",
     "switch_to": "สลับไปที่ {account}"
   },
+  "menuAudit": {
+    "offline_header": "คุณออฟไลน์อยู่ บางการทำงานต้องใช้การเชื่อมต่อ",
+    "files_new_folder": "โฟลเดอร์ใหม่…",
+    "files_new_file": "ไฟล์ใหม่…",
+    "files_new_text_file": "ไฟล์ข้อความใหม่…",
+    "files_upload_files": "อัปโหลดไฟล์…",
+    "files_upload_folder": "อัปโหลดโฟลเดอร์…",
+    "files_share": "แชร์…",
+    "files_share_button": "แชร์",
+    "contacts_add_to_group": "เพิ่มในกลุ่ม…",
+    "contacts_bulk_add_to_group": "เพิ่มในกลุ่ม…",
+    "schedule_send": "กำหนดเวลาส่ง…"
+  },
   "notification_center": {
     "title": "การแจ้งเตือน",
     "mark_all_read": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
@@ -914,6 +927,13 @@
       "running": "กำลังเรียกใช้ “{name}” บน {folder}…"
     },
     "find_emails_from": "ค้นหาอีเมลจาก {name}"
+  },
+  "menuMove": {
+    "filter_placeholder": "ค้นหาโฟลเดอร์",
+    "recent": "ล่าสุด",
+    "no_match": "ไม่มีโฟลเดอร์ที่ตรงกัน",
+    "choose_folder": "เลือกโฟลเดอร์…",
+    "current_folder": "อยู่ใน {folder} แล้ว"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "ทำเครื่องหมายโฟลเดอร์ว่าอ่านแล้ว",
@@ -6825,6 +6845,18 @@
       "try_again": "ลองอีกครั้ง",
       "close": "ปิด"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "แสดงแถบเมนูเสมอ",
+    "always_show_description": "มิฉะนั้นแถบเมนูจะแสดงเมื่อกด Alt",
+    "exit": "ออก",
+    "tray_pause": "หยุดการแจ้งเตือนชั่วคราว",
+    "tray_pause_hour": "1 ชั่วโมง",
+    "tray_pause_tomorrow": "จนถึงพรุ่งนี้",
+    "tray_resume": "เปิดการแจ้งเตือนอีกครั้ง",
+    "tray_open": "เปิด Bulwark",
+    "tray_quit": "ปิด Bulwark",
+    "tray_exit": "ออกจาก Bulwark"
   },
   "appLock": {
     "section_title": "ล็อกแอป",

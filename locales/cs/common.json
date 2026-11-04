@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Najít e-maily od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Najít složku",
+    "recent": "Nedávné",
+    "no_match": "Žádná složka neodpovídá",
+    "choose_folder": "Vybrat složku…",
+    "current_folder": "Už je ve složce {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Označit složku jako přečtenou",
     "mark_folder_tree_read": "Označit složku a podsložky jako přečtené",
@@ -6463,6 +6470,19 @@
     "group_account": "Účet",
     "switch_to": "Přepnout na {account}"
   },
+  "menuAudit": {
+    "offline_header": "Jste offline. Některé akce potřebují připojení.",
+    "files_new_folder": "Nová složka…",
+    "files_new_file": "Nový soubor…",
+    "files_new_text_file": "Nový textový soubor…",
+    "files_upload_files": "Nahrát soubory…",
+    "files_upload_folder": "Nahrát složku…",
+    "files_share": "Sdílet…",
+    "files_share_button": "Sdílet",
+    "contacts_add_to_group": "Přidat do skupiny…",
+    "contacts_bulk_add_to_group": "Přidat do skupiny…",
+    "schedule_send": "Naplánovat odeslání…"
+  },
   "notification_center": {
     "title": "Oznámení",
     "mark_all_read": "Označit vše jako přečtené",
@@ -6817,6 +6837,18 @@
       "try_again": "Zkusit znovu",
       "close": "Zavřít"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Vždy zobrazovat řádek nabídek",
+    "always_show_description": "Jinak se zobrazí po stisknutí klávesy Alt.",
+    "exit": "Konec",
+    "tray_pause": "Pozastavit oznámení",
+    "tray_pause_hour": "Na 1 hodinu",
+    "tray_pause_tomorrow": "Do zítřka",
+    "tray_resume": "Znovu zapnout oznámení",
+    "tray_open": "Otevřít Bulwark",
+    "tray_quit": "Ukončit Bulwark",
+    "tray_exit": "Ukončit Bulwark"
   },
   "appLock": {
     "section_title": "Zámek aplikace",

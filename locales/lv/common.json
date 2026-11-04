@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Atrast e-pastus no {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Meklēt mapi",
+    "recent": "Nesen izmantotās",
+    "no_match": "Neviena mape neatbilst",
+    "choose_folder": "Izvēlēties mapi…",
+    "current_folder": "Jau mapē {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Atzīmēt mapi kā lasītu",
     "mark_folder_tree_read": "Atzīmēt mapi un apakšmapes kā lasītas",
@@ -6463,6 +6470,19 @@
     "group_account": "Konts",
     "switch_to": "Pārslēgties uz {account}"
   },
+  "menuAudit": {
+    "offline_header": "Jūs esat bezsaistē. Dažām darbībām vajag savienojumu.",
+    "files_new_folder": "Jauna mape…",
+    "files_new_file": "Jauns fails…",
+    "files_new_text_file": "Jauns teksta fails…",
+    "files_upload_files": "Augšupielādēt failus…",
+    "files_upload_folder": "Augšupielādēt mapi…",
+    "files_share": "Kopīgot…",
+    "files_share_button": "Kopīgot",
+    "contacts_add_to_group": "Pievienot grupai…",
+    "contacts_bulk_add_to_group": "Pievienot grupai…",
+    "schedule_send": "Ieplānot sūtīšanu…"
+  },
   "notification_center": {
     "title": "Paziņojumi",
     "mark_all_read": "Atzīmēt visus kā lasītus",
@@ -6817,6 +6837,18 @@
       "try_again": "Mēģināt vēlreiz",
       "close": "Aizvērt"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Vienmēr rādīt izvēļņu joslu",
+    "always_show_description": "Citādi tā parādās, nospiežot Alt.",
+    "exit": "Iziet",
+    "tray_pause": "Pauzēt paziņojumus",
+    "tray_pause_hour": "Uz 1 stundu",
+    "tray_pause_tomorrow": "Līdz rītdienai",
+    "tray_resume": "Atkal ieslēgt paziņojumus",
+    "tray_open": "Atvērt Bulwark",
+    "tray_quit": "Aizvērt Bulwark",
+    "tray_exit": "Iziet no Bulwark"
   },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",

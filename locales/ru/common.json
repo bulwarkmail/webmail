@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Найти письма от {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Найти папку",
+    "recent": "Недавние",
+    "no_match": "Подходящих папок нет",
+    "choose_folder": "Выбрать папку…",
+    "current_folder": "Уже в папке {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Отметить папку как прочитанную",
     "mark_folder_tree_read": "Отметить папку и вложенные папки как прочитанные",
@@ -6463,6 +6470,19 @@
     "group_account": "Аккаунт",
     "switch_to": "Переключиться на {account}"
   },
+  "menuAudit": {
+    "offline_header": "Нет подключения. Для некоторых действий нужна сеть.",
+    "files_new_folder": "Новая папка…",
+    "files_new_file": "Новый файл…",
+    "files_new_text_file": "Новый текстовый файл…",
+    "files_upload_files": "Загрузить файлы…",
+    "files_upload_folder": "Загрузить папку…",
+    "files_share": "Поделиться…",
+    "files_share_button": "Поделиться",
+    "contacts_add_to_group": "Добавить в группу…",
+    "contacts_bulk_add_to_group": "Добавить в группу…",
+    "schedule_send": "Запланировать отправку…"
+  },
   "notification_center": {
     "title": "Уведомления",
     "mark_all_read": "Отметить все как прочитанные",
@@ -6817,6 +6837,18 @@
       "try_again": "Повторить",
       "close": "Закрыть"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Всегда показывать строку меню",
+    "always_show_description": "Иначе она появляется при нажатии Alt.",
+    "exit": "Выход",
+    "tray_pause": "Приостановить уведомления",
+    "tray_pause_hour": "На 1 час",
+    "tray_pause_tomorrow": "До завтра",
+    "tray_resume": "Снова включить уведомления",
+    "tray_open": "Открыть Bulwark",
+    "tray_quit": "Закрыть Bulwark",
+    "tray_exit": "Выйти из Bulwark"
   },
   "appLock": {
     "section_title": "Блокировка приложения",

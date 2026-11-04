@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} adlı kişiden gelen e-postaları bul"
   },
+  "menuMove": {
+    "filter_placeholder": "Klasör bul",
+    "recent": "Son kullanılanlar",
+    "no_match": "Eşleşen klasör yok",
+    "choose_folder": "Klasör seç…",
+    "current_folder": "Zaten {folder} içinde"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Klasörü okundu olarak işaretle",
     "mark_folder_tree_read": "Klasörü ve alt klasörleri okundu olarak işaretle",
@@ -6463,6 +6470,19 @@
     "group_account": "Hesap",
     "switch_to": "{account} hesabına geç"
   },
+  "menuAudit": {
+    "offline_header": "Çevrimdışısınız. Bazı işlemler bağlantı gerektirir.",
+    "files_new_folder": "Yeni Klasör…",
+    "files_new_file": "Yeni Dosya…",
+    "files_new_text_file": "Yeni Metin Dosyası…",
+    "files_upload_files": "Dosya Yükle…",
+    "files_upload_folder": "Klasör Yükle…",
+    "files_share": "Paylaş…",
+    "files_share_button": "Paylaş",
+    "contacts_add_to_group": "Gruba ekle…",
+    "contacts_bulk_add_to_group": "Gruba ekle…",
+    "schedule_send": "Göndermeyi zamanla…"
+  },
   "notification_center": {
     "title": "Bildirimler",
     "mark_all_read": "Tümünü okundu işaretle",
@@ -6817,6 +6837,18 @@
       "try_again": "Yeniden dene",
       "close": "Kapat"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Menü çubuğunu her zaman göster",
+    "always_show_description": "Aksi halde Alt tuşuna basınca görünür.",
+    "exit": "Çıkış",
+    "tray_pause": "Bildirimleri duraklat",
+    "tray_pause_hour": "1 saat",
+    "tray_pause_tomorrow": "Yarına kadar",
+    "tray_resume": "Bildirimleri yeniden aç",
+    "tray_open": "Bulwark'ı aç",
+    "tray_quit": "Bulwark'tan çık",
+    "tray_exit": "Bulwark'tan çık"
   },
   "appLock": {
     "section_title": "Uygulama kilidi",

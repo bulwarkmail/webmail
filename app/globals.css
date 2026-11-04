@@ -191,6 +191,12 @@
   * {
     border-color: var(--color-border);
   }
+
+  /* A placeholder or value too long for a narrow field ends in "…" instead of
+     stopping mid-word ("Termine durchs"), so it's clear there's more. */
+  input {
+    text-overflow: ellipsis;
+  }
 }
 
 body {
@@ -606,6 +612,23 @@ html[data-window-controls] [data-own-window-close] {
   display: none;
 }
 
+/*
+ * A pane's own close right beside the window's read as a second close for the
+ * window. Where the row ends at the controls, it goes to the row's other end.
+ * Geometry, not direction: the controls stay at the right on Windows in RTL too.
+ */
+html[data-window-controls]:not([dir="rtl"]) [data-window-row-right] > [data-pane-close],
+html[data-window-controls][dir="rtl"] [data-window-row-left] > [data-pane-close] {
+  order: -1;
+  margin-inline-start: -0.25rem;
+  margin-inline-end: 0;
+}
+
+/* Toasts that step out of the focus's way go to the top end corner: below the controls there. */
+html[data-window-controls] [data-toast-container][data-dodging] {
+  top: calc(var(--titlebar-row-height) + 0.75rem) !important;
+}
+
 /* A top row is at least as tall as the controls, so they don't hang over what's below it. */
 html[data-window-controls] [data-window-row] {
   min-height: var(--titlebar-row-height);
@@ -627,6 +650,21 @@ html[data-window-controls] [data-pane-strip] {
 
 html[data-window-controls] [data-window-row-left] {
   padding-left: calc(var(--titlebar-left-inset) + 0.5rem) !important;
+}
+
+/*
+ * The desktop app's menu bar while it takes its row (components/layout/window-menu-bar.tsx).
+ * The app moves down under it, a page that fills the window starts below it, and the
+ * window's controls sit in the bar's row, so no column below makes room for them.
+ */
+html[data-menu-bar] {
+  --menu-bar-height: 2rem;
+  --app-top-inset: calc(env(safe-area-inset-top, 0px) + var(--menu-bar-height));
+  --titlebar-inset: var(--menu-bar-height);
+}
+
+html[data-menu-bar][data-window-controls] [data-window-end-column] {
+  padding-top: 0;
 }
 
 /*

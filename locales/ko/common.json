@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name}님이 보낸 이메일 찾기"
   },
+  "menuMove": {
+    "filter_placeholder": "폴더 찾기",
+    "recent": "최근",
+    "no_match": "일치하는 폴더 없음",
+    "choose_folder": "폴더 선택…",
+    "current_folder": "이미 {folder}에 있음"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "폴더를 읽음으로 표시",
     "mark_folder_tree_read": "폴더 및 하위 폴더를 읽음으로 표시",
@@ -6463,6 +6470,19 @@
     "group_account": "계정",
     "switch_to": "{account}(으)로 전환"
   },
+  "menuAudit": {
+    "offline_header": "오프라인 상태입니다. 일부 작업에는 연결이 필요합니다.",
+    "files_new_folder": "새 폴더…",
+    "files_new_file": "새 파일…",
+    "files_new_text_file": "새 텍스트 파일…",
+    "files_upload_files": "파일 업로드…",
+    "files_upload_folder": "폴더 업로드…",
+    "files_share": "공유…",
+    "files_share_button": "공유",
+    "contacts_add_to_group": "그룹에 추가…",
+    "contacts_bulk_add_to_group": "그룹에 추가…",
+    "schedule_send": "보내기 예약…"
+  },
   "notification_center": {
     "title": "알림",
     "mark_all_read": "모두 읽음으로 표시",
@@ -6817,6 +6837,18 @@
       "try_again": "다시 시도",
       "close": "닫기"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "메뉴 막대 항상 표시",
+    "always_show_description": "끄면 Alt 키를 누를 때 표시됩니다.",
+    "exit": "끝내기",
+    "tray_pause": "알림 일시 중지",
+    "tray_pause_hour": "1시간 동안",
+    "tray_pause_tomorrow": "내일까지",
+    "tray_resume": "알림 다시 켜기",
+    "tray_open": "Bulwark 열기",
+    "tray_quit": "Bulwark 종료",
+    "tray_exit": "Bulwark 종료"
   },
   "appLock": {
     "section_title": "앱 잠금",
