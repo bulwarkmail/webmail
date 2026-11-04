@@ -429,6 +429,12 @@ interface EmailComposerProps {
    */
   onRestoreDiscarded?: (data: ComposerDraftData) => void;
   /**
+   * The bin took the draft `draftId` off screen; it is deleted once Undo
+   * is over (onDiscardDraft) or comes back (onRestoreDiscarded). Until then
+   * the host shows it nowhere else, such as the reply-draft card.
+   */
+  onDiscardStarted?: (draftId: string) => void;
+  /**
    * Offers "Open in new window". Called in the click, since a browser only
    * opens a window for a user action: the host opens it and answers with what
    * takes the draft, or null when no window opened. The composer then saves,
@@ -632,6 +638,7 @@ export function EmailComposer({
   onDiscardDraft,
   onSaveState,
   onRestoreDiscarded,
+  onDiscardStarted,
   popOut,
   popOutToMainLabel,
   docked = false,
@@ -4977,6 +4984,7 @@ export function EmailComposer({
     const discard = onDiscardDraft;
     const restore = onRestoreDiscarded;
     const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
+    if (draftId && !windowDiscarded) onDiscardStarted?.(draftId);
     handleDiscardAndClose({ keepDraft: true });
     if (windowDiscarded) {
       if (draftId) windowDiscarded(draftId, where);

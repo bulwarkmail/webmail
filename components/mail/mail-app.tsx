@@ -412,6 +412,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // closed or a draft went.
   const [replyDraft, setReplyDraft] = useState<{ emailId: string; draft: Email; source: DraftSource } | null>(null);
   const [replyDraftScan, setReplyDraftScan] = useState<{ emailId: string; n: number } | null>(null);
+  // Drafts the composer's bin discarded while their Undo is offered. They are
+  // still on the server, but neither the card nor Reply offers them; the card
+  // used to come back as the composer closed and stay after the delete
+  // (compose-p3-2).
+  const [discardingDraftIds, setDiscardingDraftIds] = useState<ReadonlySet<string>>(() => new Set());
+  const discardingDraftIdsRef = useRef(discardingDraftIds);
+  discardingDraftIdsRef.current = discardingDraftIds;
+  const noteDiscardingDraft = (draftId: string) => setDiscardingDraftIds((prev) => new Set(prev).add(draftId));
+  const forgetDiscardingDraft = (draftId: string) => setDiscardingDraftIds((prev) => {
+    if (!prev.has(draftId)) return prev;
+    const next = new Set(prev);
+    next.delete(draftId);
+    return next;
+  });
   const conversationDraftsRef = useRef<{ threadId: string; emailId: string; drafts: Email[] } | null>(null);
   const [conversationEmails, setConversationEmails] = useState<Email[]>([]);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
@@ -2998,7 +3012,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         source: { accountId, localAccountId: clientAccountId ?? activeAccountId ?? undefined },
       } : null;
     }
-    if (!found) return false;
+    if (!found || discardingDraftIdsRef.current.has(found.draft.id)) return false;
     await handleEditDraft(found.draft, found.source, { underMessage: true });
     return true;
   };
@@ -5775,12 +5789,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }}
         requestCloseRef={composerRequestCloseRef}
         onDiscardDraft={(draftId, draft) => {
-          handleDiscardDraft(draftId, draft);
+          // Once it is gone, the card under its message goes too (compose-p3-2).
+          void handleDiscardDraft(draftId, draft).finally(() => {
+            forgetDiscardingDraft(draftId);
+            scanReplyDrafts();
+          });
           // The bin and the toasts' Discard delete once their Undo is over,
           // when another composer may be open: its draft stays.
           if (composerSessionRef.current === composerSessionId) setPendingDraft(null);
         }}
+        onDiscardStarted={noteDiscardingDraft}
         onRestoreDiscarded={(data) => {
+          if (data.draftId) forgetDiscardingDraft(data.draftId);
           void closeOpenComposer().then(() => {
             startFreshComposerSession();
             setPendingDraft(data);
@@ -6650,7 +6670,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     } : undefined}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
                     replyComposerOpen={dockedReply}
-                    replyDraft={replyDraft && selectedEmail && replyDraft.emailId === selectedEmail.id ? {
+                    replyDraft={replyDraft && selectedEmail && replyDraft.emailId === selectedEmail.id && !discardingDraftIds.has(replyDraft.draft.id) ? {
                       preview: replyDraft.draft.preview,
                       onEdit: () => void handleEditDraft(replyDraft.draft, replyDraft.source, { underMessage: true }).catch(reportDraftOpenFailure),
                       onDiscard: discardReplyDraft,
