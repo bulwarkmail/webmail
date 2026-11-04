@@ -307,4 +307,16 @@ describe('ContactsApp', () => {
     fireEvent.click(screen.getByText('context_menu.duplicate'));
     await waitFor(() => expect(useToastStore.getState().toasts.at(-1)?.title).toBe('toast.error_create'));
   });
+
+  it("marks no member in the list on a group's page, even with a contact open before", () => {
+    const team: ContactCard = { id: 'g-team', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { 'c-alice': true, 'c-bob': true } };
+    renderContacts([alice, bob, team]);
+    fireEvent.click(screen.getByText('Alice Smith'));
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);
+    fireEvent.click(within(drawer()).getByText('Team'));
+    expect(screen.getByText('groups.members_label')).toBeInTheDocument();
+    expect(document.querySelector('[data-contact-id="c-alice"]')).toHaveAttribute('aria-selected', 'false');
+    expect(document.querySelectorAll('[data-contact-id][aria-selected="true"]')).toHaveLength(0);
+  });
 });

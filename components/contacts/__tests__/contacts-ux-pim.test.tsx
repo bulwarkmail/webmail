@@ -20,6 +20,8 @@ vi.mock('@/components/contacts/contact-activity', () => ({ ContactActivity: () =
 import { ContactForm } from '../contact-form';
 import { ContactDetail } from '../contact-detail';
 import { ContactsSidebar } from '../contacts-sidebar';
+import { ContactList } from '../contact-list';
+import { ContactGroupDetail } from '../contact-group-detail';
 
 const anna: ContactCard = {
   id: 'c1',
@@ -27,6 +29,12 @@ const anna: ContactCard = {
   name: { components: [{ kind: 'given', value: 'Anna' }, { kind: 'surname', value: 'Example' }], isOrdered: true },
   emails: { e0: { address: 'anna@example.net', contexts: { private: true } } },
   phones: { p0: { number: '+49 30 1', features: { voice: true }, contexts: { private: true } } },
+};
+const ben: ContactCard = {
+  id: 'c2',
+  addressBookIds: {},
+  name: { components: [{ kind: 'given', value: 'Ben' }, { kind: 'surname', value: 'Muster' }], isOrdered: true },
+  emails: { e0: { address: 'ben@example.net' } },
 };
 
 describe('pim-19: standard words read as people say them', () => {
@@ -120,5 +128,58 @@ describe('pim-26: the Contacts menus', () => {
     const menu = screen.getByRole('menu');
     expect(within(menu).getByText('ux_pim_contact.import_menu')).toBeInTheDocument();
     expect(within(menu).getByText('ux_pim_contact.new_address_book_menu')).toBeInTheDocument();
+  });
+});
+
+const listProps = {
+  contacts: [anna, ben],
+  searchQuery: '',
+  onSearchChange: vi.fn(),
+  onSelectContact: vi.fn(),
+  onCreateNew: vi.fn(),
+  selectedContactIds: new Set<string>(),
+  onToggleSelection: vi.fn(),
+  onSelectRangeContacts: vi.fn(),
+  onSelectAll: vi.fn(),
+  onClearSelection: vi.fn(),
+  onBulkDelete: vi.fn(),
+  onBulkAddToGroup: vi.fn(),
+  onBulkExport: vi.fn(),
+  onEditContact: vi.fn(),
+  onDeleteContact: vi.fn(),
+  onAddContactToGroup: vi.fn(),
+};
+
+describe('pim-17: right-clicking a contact marks whose menu is open', () => {
+  it('gives the right-clicked row the hover colour while its menu is open', () => {
+    render(<ContactList {...listProps} selectedContactId="c1" />);
+    const row = (id: string) => document.querySelector(`[data-contact-id="${id}"]`) as HTMLElement;
+    expect(row('c2')).not.toHaveAttribute('data-menu-open');
+    fireEvent.contextMenu(row('c2'));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(row('c2')).toHaveAttribute('data-menu-open');
+    expect(row('c2').className).toMatch(/(^|\s)bg-muted(\s|$)/);
+    // The open contact stays as it is.
+    expect(row('c1')).not.toHaveAttribute('data-menu-open');
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+    expect(row('c2')).not.toHaveAttribute('data-menu-open');
+  });
+});
+
+describe("pim-18: a group's page manages its members", () => {
+  it('shows "Remove from group" on every member row, not only on hover', () => {
+    render(
+      <ContactGroupDetail
+        group={{ id: 'g1', addressBookIds: {}, kind: 'group', name: { full: 'Team' }, members: { c1: true, c2: true } }}
+        members={[anna, ben]}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onRemoveMember={vi.fn()}
+        onSelectMember={vi.fn()}
+      />,
+    );
+    const remove = screen.getAllByRole('button', { name: 'contacts.groups.remove_member' });
+    expect(remove).toHaveLength(2);
+    for (const button of remove) expect(button.className).not.toMatch(/(^|\s)opacity-0(\s|$)/);
   });
 });

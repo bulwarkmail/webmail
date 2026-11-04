@@ -1409,7 +1409,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 <ContactList
                   contacts={displayedContacts}
                   isContactReadOnly={isContactReadOnly}
-                  selectedContactId={selectedContactId}
+                  // A group's page opens no member: none is marked in the list (#pim-18).
+                  selectedContactId={view === "group-detail" || view === "group-edit" ? null : selectedContactId}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onSelectContact={guard(handleSelectContact)}

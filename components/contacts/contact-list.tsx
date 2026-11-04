@@ -715,6 +715,7 @@ export function ContactList({
                 isChecked={selectedContactIds.has(contact.id)}
                 hasSelection={hasSelection}
                 isFocused={contact.id === cursorId}
+                isMenuTarget={contextMenu.isOpen && contextMenu.data?.id === contact.id}
                 onFocus={() => setFocusedId(contact.id)}
                 density={density}
                 selectedContactIds={selectedContactIds}
