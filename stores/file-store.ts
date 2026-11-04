@@ -16,6 +16,9 @@ import {
 } from '@/lib/files-trash';
 import { buildZip, planZip, saveBlob, type ZipProgress } from '@/lib/files-zip';
 import { downloadAllowed } from '@/lib/download-guard';
+import {
+  findUploadConflicts, type UploadConflict, type UploadConflictChoice, type UploadConflictResolver,
+} from '@/lib/files-upload-conflicts';
 
 export interface FileResource {
   id: string;
@@ -59,6 +62,13 @@ export interface UploadReport {
   uploaded: number;
   failed: { name: string; error: unknown }[];
   canceled: boolean;
+  /** Left out because the name was taken and the user chose Skip. */
+  skipped?: number;
+}
+
+export interface UploadOptions {
+  /** Asked when a name is taken in the target folder; without it, new ones are numbered. */
+  resolveConflicts?: UploadConflictResolver;
 }
 
 interface ClipboardState {
@@ -137,8 +147,8 @@ interface FileState {
   refresh: () => Promise<void>;
   createDirectory: (name: string) => Promise<void>;
   uploadFile: (file: File) => Promise<void>;
-  uploadFiles: (files: File[]) => Promise<UploadReport>;
-  uploadFolder: (files: File[]) => Promise<UploadReport>;
+  uploadFiles: (files: File[], options?: UploadOptions) => Promise<UploadReport>;
+  uploadFolder: (files: File[], options?: UploadOptions) => Promise<UploadReport>;
   cancelUpload: () => void;
   // Deletes, renames and moves resolve to false when a plugin stopped them
   // (onBeforeFileDelete / Rename / Move); nothing changed then.
@@ -469,6 +479,32 @@ function resolvePathToId(nodes: FileNode[], path: string): string | null | undef
     parentId = match.id;
   }
   return parentId;
+}
+
+/**
+ * The answer to every name of an upload that is taken in the target folder
+ * (pim-10): an empty map when nothing clashes or nobody can be asked (the
+ * new ones are then numbered, as before), null when the user called it off.
+ */
+async function askUploadConflicts(
+  incoming: UploadConflict[],
+  existing: Pick<FileResource, 'name' | 'serverName' | 'isDirectory' | 'isSymlink'>[],
+  resolve: UploadConflictResolver | undefined,
+): Promise<Map<string, UploadConflictChoice> | null> {
+  if (!resolve) return new Map();
+  // A symlink's name is taken but it can't be replaced: kept beside it.
+  const entries = existing.filter(r => !r.isSymlink).map(r => ({ name: r.serverName ?? r.name, isDirectory: r.isDirectory }));
+  const conflicts = findUploadConflicts(incoming, entries);
+  if (conflicts.length === 0) return new Map();
+  return resolve(conflicts);
+}
+
+/** A file whose content an upload replaced, as plugins see it (onAfterFileUpload). */
+function replacedView(id: string, file: File, type: string | undefined, folderPath: string): FileResourceView {
+  return {
+    id, name: file.name, type: 'file', size: file.size, mimeType: type || file.type || 'application/octet-stream',
+    path: folderPath, modified: new Date().toISOString(),
+  };
 }
 
 function getUniqueName(name: string, existingNames: Set<string>): string {
@@ -1083,7 +1119,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
   },
 
-  uploadFiles: async (allFiles: File[]) => {
+  uploadFiles: async (allFiles: File[], options?: UploadOptions) => {
     const { client, currentParentId, currentPath, resources } = get();
     const report: UploadReport = { uploaded: 0, failed: [], canceled: false };
     if (!client) return report;
@@ -1098,6 +1134,22 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
     if (files.length === 0) return report;
 
+    // A name that is taken: ask Replace, Keep both or Skip (pim-10).
+    const choices = await askUploadConflicts(
+      files.map(f => ({ name: f.name, kind: 'file' as const })),
+      resources,
+      options?.resolveConflicts,
+    );
+    if (!choices) {
+      report.canceled = true;
+      return report;
+    }
+    const replaceIds = new Map(resources.filter(r => !r.isDirectory && !r.isSymlink).map(r => [r.serverName ?? r.name, r.id]));
+    const kept = files.filter(f => choices.get(f.name) !== 'skip');
+    if (kept.length < files.length) report.skipped = files.length - kept.length;
+    files.splice(0, files.length, ...kept);
+    if (files.length === 0) return report;
+
     const abortController = new AbortController();
     set({ uploadAbortController: abortController });
     const totalFiles = files.length;
@@ -1106,7 +1158,8 @@ export const useFileStore = create<FileState>((set, get) => ({
     for (let i = 0; i < files.length; i++) {
       if (abortController.signal.aborted) break;
       const file = files[i];
-      const uniqueName = getUniqueName(file.name, existingNames);
+      const replaceId = choices.get(file.name) === 'replace' ? replaceIds.get(file.name) : undefined;
+      const uniqueName = replaceId ? file.name : getUniqueName(file.name, existingNames);
       existingNames.add(uniqueName);
       set({ uploadProgress: { name: file.name, loaded: 0, total: file.size, current: i + 1, totalFiles } });
 
@@ -1120,6 +1173,13 @@ export const useFileStore = create<FileState>((set, get) => ({
         });
         if (abortController.signal.aborted) break;
         set({ uploadProgress: { name: file.name, loaded: file.size, total: file.size, current: i + 1, totalFiles } });
+        if (replaceId) {
+          // New content for the node that is there: same id, same shares.
+          await client.replaceFileNodeBlob(replaceId, blobId);
+          report.uploaded++;
+          void fileHooks.onAfterFileUpload.emit(replacedView(replaceId, file, type, currentPath));
+          continue;
+        }
         const node = await client.createFileNode(uniqueName, blobId, type || file.type || 'application/octet-stream', file.size, currentParentId);
         report.uploaded++;
         void fileHooks.onAfterFileUpload.emit(fileToView(node, currentPath));
@@ -1143,8 +1203,8 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
   },
 
-  uploadFolder: async (allFiles: File[]) => {
-    const { client, currentParentId, currentPath } = get();
+  uploadFolder: async (allFiles: File[], options?: UploadOptions) => {
+    const { client, currentParentId, currentPath, resources } = get();
     const report: UploadReport = { uploaded: 0, failed: [], canceled: false };
     if (!client || allFiles.length === 0) return report;
     assertCanAddTo(currentParentId);
@@ -1166,6 +1226,39 @@ export const useFileStore = create<FileState>((set, get) => ({
       }
     }
     if (files.length === 0) return report;
+
+    // What lands right in the target folder: a dropped file, or the top
+    // folder of each path. A name that is taken there asks first (pim-10).
+    const topOf = (file: File): UploadConflict => {
+      const relativePath = relativePathOf(file);
+      const slash = relativePath.indexOf('/');
+      return slash >= 0 ? { name: relativePath.slice(0, slash), kind: 'folder' } : { name: relativePath, kind: 'file' };
+    };
+    const choices = await askUploadConflicts(files.map(topOf), resources, options?.resolveConflicts);
+    if (!choices) {
+      report.canceled = true;
+      return report;
+    }
+    const kept = files.filter(f => choices.get(topOf(f).name) !== 'skip');
+    if (kept.length < files.length) report.skipped = files.length - kept.length;
+    files.splice(0, files.length, ...kept);
+    if (files.length === 0) return report;
+    // Replace: a file gets new content; a folder takes the new content in,
+    // with its subfolders reused and files of the same name replaced.
+    const replacing = new Map(resources
+      .filter(r => !r.isSymlink && choices.get(r.serverName ?? r.name) === 'replace')
+      .map(r => [`${r.isDirectory ? 'folder' : 'file'}:${r.serverName ?? r.name}`, r.id]));
+    let tree: FileNode[] | null = null;
+    const loadTree = async () => {
+      tree ??= isCrossAccountId(currentParentId)
+        ? await client.listAllFileNodesAcrossAccounts()
+        : await client.listAllFileNodes();
+      return tree;
+    };
+    const childNamed = async (parentId: string | null, name: string, kind: 'file' | 'directory') =>
+      (await loadTree()).find(n => (n.parentId ?? null) === parentId && n.name === name && fileNodeKind(n) === kind)?.id;
+    // Folder paths of the upload that are existing folders (merged into).
+    const mergedDirs = new Set<string>();
 
     const abortController = new AbortController();
     set({ uploadAbortController: abortController });
@@ -1220,6 +1313,14 @@ export const useFileStore = create<FileState>((set, get) => ({
         continue;
       }
       try {
+        const existingId = parentPath === ''
+          ? replacing.get(`folder:${dirName}`)
+          : mergedDirs.has(parentPath) ? await childNamed(parentId, dirName, 'directory') : undefined;
+        if (existingId) {
+          dirIds.set(dir, existingId);
+          mergedDirs.add(dir);
+          continue;
+        }
         const created = await client.createFileDirectory(dirName, parentId);
         dirIds.set(dir, created.id);
         void fileHooks.onDirectoryCreate.emit(fileToView(created, joinPath(currentPath, parentPath)));
@@ -1256,6 +1357,15 @@ export const useFileStore = create<FileState>((set, get) => ({
         });
         if (abortController.signal.aborted) break;
         set({ uploadProgress: { name: relativePath, loaded: file.size, total: file.size, current: i + 1, totalFiles } });
+        const replaceId = dirPath === ''
+          ? replacing.get(`file:${file.name}`)
+          : mergedDirs.has(dirPath) ? await childNamed(parentId, file.name, 'file') : undefined;
+        if (replaceId) {
+          await client.replaceFileNodeBlob(replaceId, blobId);
+          report.uploaded++;
+          void fileHooks.onAfterFileUpload.emit(replacedView(replaceId, file, type, joinPath(currentPath, dirPath)));
+          continue;
+        }
         const node = await client.createFileNode(file.name, blobId, type || file.type || 'application/octet-stream', file.size, parentId);
         report.uploaded++;
         void fileHooks.onAfterFileUpload.emit(fileToView(node, joinPath(currentPath, dirPath)));

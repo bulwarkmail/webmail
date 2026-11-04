@@ -25,6 +25,7 @@ import { PluginDayLabel } from "./plugin-day-label";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 
 interface CalendarMonthViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -36,6 +37,8 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
   onContextMenuEmpty?: (e: React.MouseEvent, date: Date, hour?: number, allDayArea?: boolean) => void;
+  /** The "?" / "Reply" marker of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   /** A click on a day's empty space: a new all-day event there (wide screens). */
   onCreateAllDay?: (date: Date) => void;
   /** Open a day in the day view (its date number, or its "N more" link). */
@@ -78,6 +81,67 @@ export function monthGridMetrics(isMobile: boolean, textScale: number) {
   return { overlayTop, rowHeight, chipHeight, baseRowMinHeight };
 }
 
+/**
+ * The height of a week on a wide screen (pim-6): the weeks of the month in
+ * view share the pane, so the whole month shows without scrolling, at 150 %
+ * zoom too. Never less than the date and one entry.
+ */
+export function monthRowHeight(
+  availableHeight: number,
+  weeksInMonth: number,
+  { overlayTop, rowHeight, fallback }: { overlayTop: number; rowHeight: number; fallback: number },
+): number {
+  if (availableHeight <= 0) return fallback;
+  return Math.max(overlayTop + 4 + rowHeight + 4, Math.floor(availableHeight / Math.max(1, weeksInMonth)));
+}
+
+interface FitSegment { startIndex: number; span: number; row: number }
+
+/**
+ * What a fixed-height week shows of each day (pim-6). A day with no more
+ * entries than `capacity` rows shows them all; a fuller one shows one row
+ * fewer and "+n more" in the last. An event over several days shows only
+ * where all its days have room for its row, and counts as more elsewhere.
+ * `limits[d]` is the first row day d doesn't draw an entry in (its "+n more"
+ * row when `hidden[d]` > 0). With `moreInHeader` the link sits beside the
+ * date instead and every row shows an entry: a week of one row (150 % zoom)
+ * shows each day's first event, not a lone "+2 more".
+ */
+export function fitMonthWeek(
+  segments: FitSegment[],
+  dayEventRows: number[],
+  dayTaskCounts: number[],
+  capacity: number,
+  moreInHeader = false,
+): { limits: number[]; hidden: number[]; isShown: (segment: FitSegment) => boolean } {
+  const limits = dayEventRows.map((rows, d) => (!moreInHeader && rows + dayTaskCounts[d] > capacity ? capacity - 1 : capacity));
+  const isShown = (segment: FitSegment) => {
+    for (let d = segment.startIndex; d < segment.startIndex + segment.span; d++) {
+      if (segment.row >= limits[d]) return false;
+    }
+    return true;
+  };
+  const countHidden = () => limits.map((limit, d) => {
+    const events = segments.filter((s) => d >= s.startIndex && d < s.startIndex + s.span && !isShown(s)).length;
+    const tasks = dayTaskCounts[d] - Math.min(dayTaskCounts[d], Math.max(0, limit - dayEventRows[d]));
+    return events + tasks;
+  });
+  let hidden = countHidden();
+  // An event hidden for a neighbour's sake needs a "+n more" row here too.
+  for (let pass = 0; !moreInHeader && pass < limits.length; pass++) {
+    let changed = false;
+    hidden.forEach((count, d) => {
+      if (count > 0 && limits[d] === capacity) {
+        limits[d] = capacity - 1;
+        changed = true;
+      }
+    });
+    if (!changed) break;
+    hidden = countHidden();
+  }
+  return { limits, hidden, isShown };
+}
+
 export function CalendarMonthView({
   selectedDate,
   focus,
@@ -96,6 +160,7 @@ export function CalendarMonthView({
   onHoverLeave,
   onContextMenuEvent,
   onContextMenuEmpty,
+  onReplyEvent,
   onCreateAllDay,
   onOpenDay,
   isMobile,
@@ -111,6 +176,8 @@ export function CalendarMonthView({
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const describeError = useCalendarErrorMessage();
+  // An event of another signed-in login is read with that login's addresses.
+  const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
   const showTimeInMonthView = useSettingsStore((state) => state.showTimeInMonthView);
   const timedStyle = useSettingsStore((state) => state.calendarMonthTimedEvents);
   // On mobile the month view collapses events to dots unless the user opted
@@ -222,12 +289,20 @@ export function CalendarMonthView({
     return () => observer.disconnect();
   }, []);
   const availableHeight = Math.max(0, viewportHeight - headerHeight);
-  const rowMinHeight = Math.max(baseRowMinHeight, Math.floor(availableHeight / 6));
+  // Wide screens: the weeks of the month navigated to fill the pane (pim-6),
+  // also while scrolling freely, so the rows keep their height. Phones keep
+  // six rows that grow with their chips.
+  const weeksInMonth = Math.max(4, Math.round(getMonthGridDays(focus.date).length / 7));
+  const rowMinHeight = isMobile
+    ? Math.max(baseRowMinHeight, Math.floor(availableHeight / 6))
+    : monthRowHeight(availableHeight, weeksInMonth, { overlayTop, rowHeight, fallback: baseRowMinHeight });
   // On wide screens a week keeps its height: a day with more entries than
   // fit shows the first ones and a "N more" link (as in Google Calendar).
   // Phones keep growing the row to fit.
   const rowCapacity = Math.max(1, Math.floor((rowMinHeight - overlayTop - 4 - 8) / rowHeight));
   const capRows = showChips && !isMobile;
+  // A week of one row has its "+n more" beside the date (pim-6).
+  const moreInHeader = capRows && rowCapacity === 1;
 
   // The month the user is looking at: the one with the most days in view. It
   // dims the other months' days and drives the title. One point on the screen
@@ -400,19 +475,21 @@ export function CalendarMonthView({
       if (newStartISO === data.originalStart) return;
       const client = useAuthStore.getState().client;
       if (!client) return;
-      const moved = movedEventUpdates(event, { start: newStartISO }, currentUserEmails ?? []);
+      const moved = movedEventUpdates(event, { start: newStartISO }, userEmailsFor(event));
       if (event && onMoveEvent) await onMoveEvent(event, moved.updates, moved.sendSchedulingMessages, "move");
       else await useCalendarStore.getState().updateEvent(client, data.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_move_error")));
     }
-  }, [t, describeError, currentUserEmails, onMoveEvent]);
+  }, [t, describeError, userEmailsFor, onMoveEvent]);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={`${t("views.month")}, ${formatMonthYear(visibleMonthDate)}`}>
       <div
         ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none]"
+        // At 150 % the pane's edge falls inside a device pixel, and the week
+        // scrolled under the header showed a line of its events there.
+        className="flex-1 flex flex-col overflow-y-auto [overflow-anchor:none] [clip-path:inset(0.5px_0_0_0)]"
         onScroll={handleScroll}
       >
         <div
@@ -431,25 +508,14 @@ export function CalendarMonthView({
         </div>
         <div ref={topSentinelRef} data-testid="month-top-sentinel" className="h-px flex-shrink-0" />
         {weekSegments.map(({ week, segments, rowCount, dayEventRows, dayTasks, contentRows }) => {
-          const overflowing = capRows && contentRows > rowCapacity;
-          // Rows drawn per day; the last one is taken by the "N more" link.
-          const rowLimit = overflowing ? rowCapacity - 1 : Infinity;
-          const hiddenPerDay = overflowing
-            ? week.map((_, dayIndex) => {
-              const hiddenEvents = segments.filter((segment) =>
-                segment.row >= rowLimit
-                && dayIndex >= segment.startIndex
-                && dayIndex < segment.startIndex + segment.span,
-              ).length;
-              const hiddenTasks = dayTasks[dayIndex].filter((_, taskIndex) => dayEventRows[dayIndex] + taskIndex >= rowLimit).length;
-              return hiddenEvents + hiddenTasks;
-            })
-            : null;
+          // A fixed-height week: each day shows what fits and "+n more" (pim-6).
+          const fit = capRows ? fitMonthWeek(segments, dayEventRows, dayTasks.map((list) => list.length), rowCapacity, moreInHeader) : null;
+          const hiddenPerDay = fit?.hidden ?? null;
           // Rows that grow with their content make room for the new event's preview.
           const previewRows = !capRows && pendingPreview && week.some((day) => checkIsSameDay(pendingPreview.start, day)) ? 1 : 0;
           return (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
-            minHeight: showChips && !overflowing
+            minHeight: showChips && !capRows
               ? Math.max(rowMinHeight, overlayTop + 4 + (contentRows + previewRows) * rowHeight + 8)
               : rowMinHeight,
           }}>
@@ -534,7 +600,7 @@ export function CalendarMonthView({
                         const calId = getPrimaryCalendarId(ev);
                         const cal = calId ? calendarMap.get(calId) : undefined;
                         const evColor = paint(ev.color || cal?.color || "#3b82f6");
-                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
+                        const inactive = ev.status === "cancelled" || isDeclinedByUser(ev, userEmailsFor(ev));
                         return (
                           <span
                             key={ev.id}
@@ -571,7 +637,8 @@ export function CalendarMonthView({
                       dayIndex={dayIndex}
                       week={week}
                       segments={segments}
-                      rowLimit={rowLimit}
+                      rowLimit={fit ? fit.limits[dayIndex] : Infinity}
+                      isShown={fit?.isShown}
                       rowCount={rowCount}
                       dayEventRows={dayEventRows}
                       dayTasks={dayTasks}
@@ -592,10 +659,12 @@ export function CalendarMonthView({
                       onHoverEvent={onHoverEvent}
                       onHoverLeave={onHoverLeave}
                       onContextMenuEvent={onContextMenuEvent}
+                      onReplyEvent={onReplyEvent}
                       onToggleTaskComplete={onToggleTaskComplete}
                       onSelectTask={onSelectTask}
                       onShowMore={() => (onOpenDay ?? onSelectDate)(week[dayIndex])}
                       moreLabel={t("events.more", { count: hiddenPerDay?.[dayIndex] ?? 0 })}
+                      moreInHeader={moreInHeader}
                       paint={paint}
                     />
                   )}
@@ -623,14 +692,17 @@ type WeekSegment = ReturnType<typeof buildWeekSegments>[number];
  * across the following ones.
  */
 function MonthCellEntries({
-  dayIndex, week, segments, rowLimit, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
+  dayIndex, week, segments, rowLimit, isShown, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
   isMobile, calendarMap, pendingPreview, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
-  onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, paint,
+  onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onReplyEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, moreInHeader = false, paint,
 }: {
   dayIndex: number;
   week: Date[];
   segments: WeekSegment[];
+  /** This day's first row without an entry: its "N more" row when some are hidden. */
   rowLimit: number;
+  /** Whether a fixed-height week has room for an event on all its days. */
+  isShown?: (segment: WeekSegment) => boolean;
   rowCount: number;
   dayEventRows: number[];
   dayTasks: CalendarTask[][];
@@ -653,10 +725,13 @@ function MonthCellEntries({
   onHoverEvent?: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   onToggleTaskComplete?: (task: CalendarTask) => void;
   onSelectTask?: (task: CalendarTask) => void;
   onShowMore: () => void;
   moreLabel: string;
+  /** The link goes beside the date ("+2"), named in full. */
+  moreInHeader?: boolean;
   paint: (color: string) => string;
 }) {
   const day = week[dayIndex];
@@ -675,7 +750,7 @@ function MonthCellEntries({
     onDoubleClick: (e: React.MouseEvent) => e.stopPropagation(),
     onContextMenu: (e: React.MouseEvent) => e.stopPropagation(),
   };
-  const daySegments = segments.filter((segment) => segment.startIndex === dayIndex && segment.row < rowLimit);
+  const daySegments = segments.filter((segment) => segment.startIndex === dayIndex && (isShown ? isShown(segment) : segment.row < rowLimit));
   const tasks = dayTasks[dayIndex].filter((_, taskIndex) => dayEventRows[dayIndex] + taskIndex < rowLimit);
   const preview = pendingPreview && isSameDay(pendingPreview.start, day) ? pendingPreview : null;
 
@@ -703,6 +778,7 @@ function MonthCellEntries({
               onMouseEnter={(rect) => onHoverEvent?.(segment.event, rect)}
               onMouseLeave={onHoverLeave}
               onContextMenu={onContextMenuEvent}
+              onReply={onReplyEvent}
               currentUserEmails={currentUserEmails}
               draggable={canEditEvent(segment.event)}
               tabbable={spanDays.some(inView)}
@@ -730,7 +806,22 @@ function MonthCellEntries({
           </div>
         );
       })}
-      {hidden > 0 && (
+      {hidden > 0 && moreInHeader && (
+        <div className="absolute z-10" style={{ top: 4, insetInlineEnd: 2, height: 24 }} {...own}>
+          <button
+            type="button"
+            data-month-more
+            tabIndex={inView(day) ? undefined : -1}
+            onClick={onShowMore}
+            aria-label={moreLabel}
+            title={moreLabel}
+            className="h-full px-1.5 rounded-xs text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            +{hidden}
+          </button>
+        </div>
+      )}
+      {hidden > 0 && !moreInHeader && (
         <div className="absolute z-10 px-0.5" style={place(rowLimit)} {...own}>
           <button
             type="button"

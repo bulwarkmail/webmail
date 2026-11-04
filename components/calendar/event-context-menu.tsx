@@ -15,8 +15,11 @@ import {
   Link as LinkIcon,
   Trash2,
   Printer,
+  Check,
+  HelpCircle,
+  X,
 } from "@/components/icons";
-import type { CalendarEvent } from "@/lib/jmap/types";
+import type { CalendarEvent, CalendarParticipant } from "@/lib/jmap/types";
 import { buildCalendarPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { findMeetingLink } from "@/lib/event-links";
@@ -42,6 +45,15 @@ interface EventContextMenuProps {
   onPrint?: () => void;
   /** False for an event the user can't change (a birthday, a subscription, a read-only share): no Edit or Delete. */
   editable?: boolean;
+  /**
+   * Answer the invitation from the grid (pim-9): Accept, Maybe and Decline
+   * at the top. Only for an event the user is invited to.
+   */
+  onRespond?: (status: CalendarParticipant["participationStatus"]) => void;
+  /** The answer given so far; its item is left out. */
+  responseStatus?: CalendarParticipant["participationStatus"] | null;
+  /** Only the answers: the menu of the "?" / "Reply" marker. */
+  answersOnly?: boolean;
 }
 
 export function EventContextMenu({
@@ -58,6 +70,9 @@ export function EventContextMenu({
   onDelete,
   onPrint,
   editable = true,
+  onRespond,
+  responseStatus,
+  answersOnly = false,
 }: EventContextMenuProps) {
   const t = useTranslations("calendar");
   const tDeepLink = useTranslations("deep_link");
@@ -71,8 +86,36 @@ export function EventContextMenu({
 
   const hasMeetingLink = !!findMeetingLink(event);
 
+  const answers = onRespond ? (
+    <>
+      {responseStatus !== "accepted" && (
+        <ContextMenuItem icon={Check} label={t("participants.accept")} onClick={handle(() => onRespond("accepted"))} testId="grid-answer-accepted" />
+      )}
+      {responseStatus !== "tentative" && (
+        <ContextMenuItem icon={HelpCircle} label={t("participants.maybe")} onClick={handle(() => onRespond("tentative"))} testId="grid-answer-tentative" />
+      )}
+      {responseStatus !== "declined" && (
+        <ContextMenuItem icon={X} label={t("participants.decline")} onClick={handle(() => onRespond("declined"))} testId="grid-answer-declined" />
+      )}
+    </>
+  ) : null;
+
+  if (answersOnly && answers) {
+    return (
+      <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+        {answers}
+      </ContextMenu>
+    );
+  }
+
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+      {answers && (
+        <>
+          {answers}
+          <ContextMenuSeparator />
+        </>
+      )}
       {editable && <ContextMenuItem icon={Pencil} label={t("events.edit")} onClick={handle(onEdit)} />}
       <ContextMenuItem icon={CopyPlus} label={t("events.duplicate")} onClick={handle(onDuplicate)} />
       <ContextMenuSeparator />

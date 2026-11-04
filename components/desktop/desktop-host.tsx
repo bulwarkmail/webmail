@@ -95,6 +95,17 @@ export function DesktopHost() {
         routerRef.current.push("/contacts");
       },
       "file.import": () => openMailImport(),
+      // File > Import > Calendar… and Contacts…: that app's own import, once it's on screen.
+      "file.importCalendar": () => {
+        if (requestAppCommand("import-calendar")) return;
+        parkAppCommand("import-calendar");
+        routerRef.current.push("/calendar");
+      },
+      "file.importContacts": () => {
+        if (requestAppCommand("import-contacts")) return;
+        parkAppCommand("import-contacts");
+        routerRef.current.push("/contacts");
+      },
       "go.inbox": () => routerRef.current.push("/"),
       "go.mail": () => routerRef.current.push("/"),
       "go.calendar": () => routerRef.current.push("/calendar"),
@@ -159,9 +170,12 @@ export function DesktopHost() {
       "file.newTask": signedIn,
       "file.newContact": signedIn,
       "file.import": signedIn && !popout,
+      "file.importCalendar": signedIn && !popout,
+      "file.importContacts": signedIn && !popout,
       "file.settings": signedIn,
       [`section.${section}`]: true,
-      "edit.search": signedIn && !popout,
+      // Search mail. Calendar, Contacts and Files search themselves, and say so while they can.
+      "edit.search": signedIn && !popout && (section === "mail" || section === "settings"),
       "go.inbox": signedIn,
       "go.mail": signedIn,
       "go.calendar": signedIn,

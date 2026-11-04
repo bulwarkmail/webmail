@@ -26,6 +26,7 @@ describe('CalendarSidebarPanel on touch screens', () => {
   it('opens a calendar\'s menu on a long press', async () => {
     render(<CalendarSidebarPanel calendars={[work]} selectedCalendarIds={['work']} onToggleVisibility={() => {}} onDeleteCalendar={() => {}} client={client} />);
     fireEvent.touchStart(screen.getByTestId('calendar-item'), { touches: [{ clientX: 20, clientY: 20 }] });
-    expect(await screen.findByRole('menuitem', { name: 'delete' }, { timeout: 2000 })).toBeInTheDocument();
+    // "Delete…" in the menu, as it opens a dialog (pim-20).
+    expect(await screen.findByRole('menuitem', { name: 'delete_calendar' }, { timeout: 2000 })).toBeInTheDocument();
   });
 });
