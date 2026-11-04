@@ -245,7 +245,6 @@
     "select_account_title": "Выберите аккаунт",
     "select_mailto_account": "Выберите, в каком аккаунте открыть эту ссылку электронной почты.",
     "select_webcal_account": "Выберите, в каком аккаунте открыть эту ссылку календаря.",
-    "select_account_note": "Этот выбор применяется только к этой ссылке протокола.",
     "detail_to": "Кому",
     "detail_subject": "Тема",
     "detail_no_subject": "Без темы",

@@ -245,7 +245,6 @@
     "select_account_title": "اختر الحساب",
     "select_mailto_account": "اختر الحساب الذي سيفتح رابط البريد هذا.",
     "select_webcal_account": "اختر الحساب الذي سيفتح رابط التقويم هذا.",
-    "select_account_note": "ينطبق هذا فقط على رابط البروتوكول هذا.",
     "detail_to": "إلى",
     "detail_subject": "الموضوع",
     "detail_no_subject": "بلا موضوع",

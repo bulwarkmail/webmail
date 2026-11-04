@@ -245,7 +245,6 @@
     "select_account_title": "Velg konto",
     "select_mailto_account": "Velg hvilken konto som skal åpne denne e-postlenken.",
     "select_webcal_account": "Velg hvilken konto som skal åpne denne kalenderlenken.",
-    "select_account_note": "Dette gjelder bare denne lenken.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Uten emne",

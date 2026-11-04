@@ -245,7 +245,6 @@
     "select_account_title": "Scegli account",
     "select_mailto_account": "Scegli quale account deve aprire questo link e-mail.",
     "select_webcal_account": "Scegli quale account deve aprire questo link calendario.",
-    "select_account_note": "Questa scelta si applica solo a questo link di protocollo.",
     "detail_to": "A",
     "detail_subject": "Oggetto",
     "detail_no_subject": "Senza oggetto",

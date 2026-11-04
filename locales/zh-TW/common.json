@@ -245,7 +245,6 @@
     "select_account_title": "選擇帳號",
     "select_mailto_account": "選擇用於開啟此電子郵件連結的帳號。",
     "select_webcal_account": "選擇用於開啟此行事曆連結的帳號。",
-    "select_account_note": "此選擇僅適用於此協議連結。",
     "detail_to": "收件者",
     "detail_subject": "主題",
     "detail_no_subject": "無主題",

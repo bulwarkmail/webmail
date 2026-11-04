@@ -245,7 +245,6 @@
     "select_account_title": "Vybrat účet",
     "select_mailto_account": "Vyberte účet, ve kterém se má tento e-mailový odkaz otevřít.",
     "select_webcal_account": "Vyberte účet, ve kterém se má tento kalendářový odkaz otevřít.",
-    "select_account_note": "Tato volba platí jen pro tento odkaz protokolu.",
     "detail_to": "Komu",
     "detail_subject": "Předmět",
     "detail_no_subject": "Bez předmětu",

@@ -245,7 +245,6 @@
     "select_account_title": "Fiók kiválasztása",
     "select_mailto_account": "Válaszd ki, melyik fiók nyissa meg ezt az e-mail hivatkozást.",
     "select_webcal_account": "Válaszd ki, melyik fiók nyissa meg ezt a naptár hivatkozást.",
-    "select_account_note": "Ez csak erre a protokoll hivatkozásra vonatkozik.",
     "detail_to": "Címzett",
     "detail_subject": "Tárgy",
     "detail_no_subject": "Nincs tárgy",

@@ -245,7 +245,6 @@
     "select_account_title": "Бүртгэл сонгох",
     "select_mailto_account": "Энэ имэйлийн холбоосыг аль бүртгэлээр нээхийг сонгоно уу.",
     "select_webcal_account": "Энэ хуанлийн холбоосыг аль данс нээхийг сонгоно уу.",
-    "select_account_note": "Энэ нь зөвхөн энэ протоколын холбоост хамаарна.",
     "detail_to": "Хэнд",
     "detail_subject": "Сэдэв",
     "detail_no_subject": "Сэдэв байхгүй",

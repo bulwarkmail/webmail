@@ -245,7 +245,6 @@
     "select_account_title": "Alegeți contul",
     "select_mailto_account": "Alegeți contul în care să se deschidă acest link de e-mail.",
     "select_webcal_account": "Alegeți contul care ar trebui să deschidă acest link către calendar.",
-    "select_account_note": "Aceasta se aplică numai acestui link de protocol.",
     "detail_to": "Către",
     "detail_subject": "Subiect",
     "detail_no_subject": "Fără subiect",

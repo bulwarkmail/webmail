@@ -167,7 +167,7 @@ export function ProtocolAccountPicker({
               {t("switching_account")}
             </span>
           ) : (
-            <span className="text-xs text-muted-foreground">{t("select_account_note")}</span>
+            <span />
           )}
           <button
             type="button"

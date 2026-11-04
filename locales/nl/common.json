@@ -245,7 +245,6 @@
     "select_account_title": "Account kiezen",
     "select_mailto_account": "Kies welk account deze e-maillink moet openen.",
     "select_webcal_account": "Kies welk account deze kalenderlink moet openen.",
-    "select_account_note": "Deze keuze geldt alleen voor deze protocol-link.",
     "detail_to": "Aan",
     "detail_subject": "Onderwerp",
     "detail_no_subject": "Geen onderwerp",

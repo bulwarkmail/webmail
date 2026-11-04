@@ -2701,7 +2701,6 @@
     "select_account_title": "เลือกบัญชี",
     "select_mailto_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์อีเมลนี้",
     "select_webcal_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์ปฏิทินนี้",
-    "select_account_note": "การตั้งค่านี้มีผลเฉพาะกับลิงก์โปรโตคอลนี้เท่านั้น",
     "detail_to": "ถึง",
     "detail_subject": "เรื่อง",
     "detail_no_subject": "ไม่มีหัวข้อเรื่อง",

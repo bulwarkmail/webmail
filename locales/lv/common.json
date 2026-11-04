@@ -245,7 +245,6 @@
     "select_account_title": "Izvēlieties kontu",
     "select_mailto_account": "Izvēlieties, kurā kontā atvērt šo e-pasta saiti.",
     "select_webcal_account": "Izvēlieties, kurā kontā atvērt šo kalendāra saiti.",
-    "select_account_note": "Šī izvēle attiecas tikai uz šo protokola saiti.",
     "detail_to": "Kam",
     "detail_subject": "Temats",
     "detail_no_subject": "Bez temata",

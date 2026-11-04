@@ -245,7 +245,6 @@
     "select_account_title": "Wybierz konto",
     "select_mailto_account": "Wybierz konto, które ma otworzyć ten link e-mail.",
     "select_webcal_account": "Wybierz konto, które ma otworzyć ten link kalendarza.",
-    "select_account_note": "Ten wybór dotyczy tylko tego linku protokołu.",
     "detail_to": "Do",
     "detail_subject": "Temat",
     "detail_no_subject": "Bez tematu",

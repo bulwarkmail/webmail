@@ -156,7 +156,7 @@ import { mailTitleContext } from "@/lib/tab-title";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
-import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
+import { consumePendingMailto, mailLinkAccountId, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
 import { setMailLinkOpener } from "@/lib/desktop/mail-links";
 import { requestTabReply } from "@/lib/pwa-notify/tab-reply";
@@ -1716,7 +1716,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // A mail link from another program, in the desktop app: a compose window of its own,
   // as Outlook and Thunderbird do, and the main window stays where it was. Plugins get
   // their say first. False when it has to open here instead.
-  const openMailtoInWindow = useCallback(async (pending: DraftRequest): Promise<boolean> => {
+  const openMailtoInWindow = useCallback(async (pending: DraftRequest, accountId?: string): Promise<boolean> => {
     if (!pending.fromOs || !hasDesktopWindows() || !popoutsAvailable()) return false;
     let prefill: ComposePrefill | null = null;
     if (emailHooks.onBeforeCompose.size > 0) {
@@ -1729,7 +1729,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // A plugin said no: nothing opens, here or there.
       if (!prefill) return true;
     }
-    const opened = openComposerWindow(useAuthStore.getState().activeAccountId);
+    // The account the link goes out from, in its own window: the main window keeps the one it shows.
+    const opened = openComposerWindow(accountId ?? useAuthStore.getState().activeAccountId);
     if (!opened) return false;
     void opened.handOver({
       mode: 'compose',
@@ -1768,6 +1769,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [openMailtoInWindow, openMailtoHere]);
 
   const openMailtoForAccount = useCallback(async (pending: DraftRequest, accountId: string) => {
+    if (await openMailtoInWindow(pending, accountId)) {
+      setPendingMailtoAccountChoice(null);
+      return;
+    }
     setIsProtocolAccountSwitching(true);
     try {
       if (useAuthStore.getState().activeAccountId !== accountId) {
@@ -1778,7 +1783,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     } finally {
       setIsProtocolAccountSwitching(false);
     }
-  }, [openMailtoDraft, switchAccount]);
+  }, [openMailtoDraft, openMailtoInWindow, switchAccount]);
 
   // onMailtoIntercept: a plugin may stop a mailto: from opening the composer.
   const mailtoAllowed = useCallback(async (pending: ParsedMailto & { href?: string }): Promise<boolean> => {
@@ -1791,17 +1796,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
   }, []);
 
-  // A draft that comes from outside: which account it goes out from.
+  // A draft that comes from outside goes out from the default account, as in Outlook and
+  // Thunderbird, with no question: the composer's From changes it (desktop-p2-8).
   const routeOutsideDraft = useCallback(async (pending: DraftRequest): Promise<void> => {
-    const protocolAccounts = getMailtoProtocolAccounts();
-    if (protocolAccounts.length > 1) {
-      // The question is asked in this window: bring it up.
-      if (pending.fromOs) getDesktopBridge()?.windows?.focus?.();
-      setPendingMailtoAccountChoice(pending);
-      return;
-    }
-
-    const accountId = protocolAccounts[0]?.id ?? activeAccountId;
+    const accountId = mailLinkAccountId(getMailtoProtocolAccounts(), useAccountStore.getState().defaultAccountId, activeAccountId);
     if (accountId) {
       await openMailtoForAccount(pending, accountId);
       return;

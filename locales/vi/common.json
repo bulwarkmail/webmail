@@ -245,7 +245,6 @@
     "select_account_title": "Chọn tài khoản",
     "select_mailto_account": "Chọn tài khoản nào sẽ mở liên kết email này.",
     "select_webcal_account": "Chọn tài khoản nào sẽ mở liên kết lịch này.",
-    "select_account_note": "Điều này chỉ áp dụng cho liên kết giao thức này.",
     "detail_to": "Đến",
     "detail_subject": "Tiêu đề",
     "detail_no_subject": "Không có tiêu đề",

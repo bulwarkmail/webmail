@@ -245,7 +245,6 @@
     "select_account_title": "アカウントを選択",
     "select_mailto_account": "このメールリンクを開くアカウントを選択してください。",
     "select_webcal_account": "このカレンダーリンクを開くアカウントを選択してください。",
-    "select_account_note": "この選択は、このプロトコル リンクにのみ適用されます。",
     "detail_to": "宛先",
     "detail_subject": "件名",
     "detail_no_subject": "件名なし",

@@ -245,7 +245,6 @@
     "select_account_title": "계정 선택",
     "select_mailto_account": "이 이메일 링크를 열 계정을 선택하세요.",
     "select_webcal_account": "이 캘린더 링크를 열 계정을 선택하세요.",
-    "select_account_note": "이 선택은 이 프로토콜 링크에만 적용됩니다.",
     "detail_to": "받는 사람",
     "detail_subject": "제목",
     "detail_no_subject": "제목 없음",

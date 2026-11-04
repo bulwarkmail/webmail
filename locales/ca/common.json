@@ -245,7 +245,6 @@
     "select_account_title": "Trieu un compte",
     "select_mailto_account": "Trieu quin compte ha d'obrir aquest enllaç de correu.",
     "select_webcal_account": "Trieu quin compte ha d'obrir aquest enllaç de calendari.",
-    "select_account_note": "Això només s'aplica a aquest enllaç de protocol.",
     "detail_to": "Per a",
     "detail_subject": "Assumpte",
     "detail_no_subject": "Sense assumpte",

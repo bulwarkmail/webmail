@@ -245,7 +245,6 @@
     "select_account_title": "Hesap seç",
     "select_mailto_account": "Bu e-posta bağlantısını hangi hesabın açacağını seçin.",
     "select_webcal_account": "Bu takvim bağlantısını hangi hesabın açacağını seçin.",
-    "select_account_note": "Bu seçim yalnızca bu protokol bağlantısı için geçerlidir.",
     "detail_to": "Kime",
     "detail_subject": "Konu",
     "detail_no_subject": "Konu yok",

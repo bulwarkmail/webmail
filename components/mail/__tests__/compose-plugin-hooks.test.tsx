@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
@@ -220,6 +221,29 @@ describe('a mail link from another program in the desktop app', () => {
     expect(desktopWindows.handOver).toHaveBeenCalledWith(expect.objectContaining({ mode: 'compose', initialFiles: [file] }));
     await act(() => new Promise((r) => setTimeout(r, 50)));
     expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+
+  it('with two accounts it opens from the default one, in its own window, with no question', async () => {
+    const client = useAuthStore.getState().client;
+    useAuthStore.setState({ getAllConnectedClients: () => new Map([['login', client], ['second', client]]) as never });
+    useAccountStore.setState({
+      accounts: [
+        { id: 'login', email: 'me@example.com', isConnected: true, isDefault: false },
+        { id: 'second', email: 'work@example.com', isConnected: true, isDefault: true },
+      ],
+      defaultAccountId: 'second',
+    } as never);
+    try {
+      render(<MailApp />);
+      await fromOs();
+      await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+      expect(desktopWindows.open).toHaveBeenCalledWith('second');
+      expect(screen.queryByText('select_account_title')).not.toBeInTheDocument();
+      // The main window keeps the account it shows.
+      expect(useAuthStore.getState().activeAccountId).toBe('login');
+    } finally {
+      useAccountStore.setState({ accounts: [], defaultAccountId: null } as never);
+    }
   });
 
   it('a link inside the app still opens here', async () => {

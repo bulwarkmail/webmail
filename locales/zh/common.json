@@ -245,7 +245,6 @@
     "select_account_title": "选择账户",
     "select_mailto_account": "选择用于打开此电子邮件链接的账户。",
     "select_webcal_account": "选择用于打开此日历链接的账户。",
-    "select_account_note": "此选择仅适用于此协议链接。",
     "detail_to": "收件人",
     "detail_subject": "主题",
     "detail_no_subject": "无主题",

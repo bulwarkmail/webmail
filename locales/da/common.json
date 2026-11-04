@@ -245,7 +245,6 @@
     "select_account_title": "Vælg konto",
     "select_mailto_account": "Vælg hvilken konto der skal åbne dette e-mail-link.",
     "select_webcal_account": "Vælg hvilken konto der skal åbne dette kalenderlink.",
-    "select_account_note": "Dette gælder kun for dette protokollink.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Intet emne",
