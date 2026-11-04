@@ -7601,6 +7601,112 @@
     "signout_changed": "Endnu ikke vedhæftet eller gemt, og slettet nu: {names}.",
     "signout_held": "Stadig åbne i et andet program, så de slettes først, når du lukker dem der: {names}."
   },
+  "files_sync": {
+    "title": "Filer på denne computer",
+    "drive": {
+      "title": "Filer-drev",
+      "label": "Vis Filer som et drev",
+      "description": "Dine Filer vises i Stifinder som et drev. En fil hentes, når du åbner den.",
+      "unsupported": "Kræver Windows 10 version 1809 eller nyere.",
+      "root_name": "Filer-drev",
+      "letter_label": "Drevbogstav",
+      "letter_description": "Giver drevet sit eget bogstav i Stifinder.",
+      "letter_none": "Intet bogstav"
+    },
+    "folders": {
+      "title": "Synkroniserede mapper",
+      "description": "En mappe på denne computer og en mappe i Filer holdes ens, i begge retninger.",
+      "empty": "Ingen mapper synkroniseres endnu.",
+      "forced_off": "Din organisation har slået synkronisering af mapper fra. Filerne i dem bliver på denne computer.",
+      "add": "Tilføj mappe…",
+      "loading": "Indlæser dine mapper…",
+      "load_failed": "Dine mapper i Filer kunne ikke indlæses. Prøv igen.",
+      "pick_title": "Hvilken mappe i Filer?",
+      "pick_confirm": "Vælg mappe på denne computer…",
+      "paired_with": "Med {folder} i Filer",
+      "pause": "Sæt på pause",
+      "resume": "Genoptag",
+      "remove": "Fjern…",
+      "remove_title": "Stop synkronisering af denne mappe?",
+      "remove_message": "Filerne på denne computer bliver, hvor de er, og det samme gør filerne i Filer. Ændringer går ikke længere fra den ene til den anden.",
+      "remove_confirm": "Stop synkronisering",
+      "add_failed": {
+        "overlap": "Denne mappe ligger i en synkroniseret mappe, indeholder en eller er en systemmappe. Vælg en anden.",
+        "denied": "Appen kan ikke bruge denne mappe. Vælg en anden.",
+        "policy": "Din organisation tillader ikke dette.",
+        "failed": "Mappen kunne ikke tilføjes. Prøv igen."
+      }
+    },
+    "status": {
+      "starting": "Starter…",
+      "idle": "Opdateret. Sidst synkroniseret {time}",
+      "idle_never": "Opdateret",
+      "syncing": "Synkroniserer: {done} færdige, {pending} tilbage",
+      "paused": "På pause",
+      "offline": "Offline. {count, plural, =0 {Ændringer venter på serveren} one {# ændring venter på serveren} other {# ændringer venter på serveren}}",
+      "error": "Stoppet: {reason}",
+      "confirm_delete": "På pause, indtil du svarer på spørgsmålet nedenfor",
+      "blocked": "Slået fra af din organisation"
+    },
+    "mass_delete": {
+      "title": "Slet {count, plural, one {# element} other {# elementer}}?",
+      "local": "{count, plural, one {# element blev} other {# elementer blev}} slettet fra {folder} på denne computer. Slet {count, plural, one {det} other {dem}} i Filer også?",
+      "remote": "{count, plural, one {# element blev} other {# elementer blev}} slettet fra {folder} i Filer. Slet {count, plural, one {det} other {dem}} på denne computer også?",
+      "allow": "{count, plural, one {Slet det} other {Slet dem}}",
+      "restore": "{count, plural, one {Gendan det} other {Gendan dem}}",
+      "later": "Beslut senere"
+    },
+    "activity": {
+      "title": "Seneste aktivitet",
+      "empty": "Der er ikke sket noget endnu.",
+      "clear": "Ryd",
+      "to_files": "Til Filer",
+      "to_computer": "Til denne computer",
+      "mark_conflict": "Konflikt",
+      "mark_error": "Fejl",
+      "mark_question": "Venter på dit svar",
+      "uploaded": "Uploadede {path}",
+      "downloaded": "Downloadede {path}",
+      "folder-created": "Oprettede mappen {path}",
+      "renamed": "Omdøbte {detail} til {path}",
+      "moved": "Flyttede {detail} til {path}",
+      "deleted": "Slettede {path}",
+      "trashed": "Flyttede {path} til papirkurven",
+      "conflict": "{path} blev ændret begge steder. Den anden version er gemt som {detail}",
+      "renamed-for-disk": "{path} hedder {detail} på denne computer, fordi navnet ikke er tilladt her",
+      "too-large": "{path} er større, end Filer tillader ({detail}). Den bliver kun på denne computer",
+      "waiting": "{path} venter på serveren",
+      "mass-delete": "Sat på pause før sletning af mange elementer",
+      "error": "{path} kunne ikke synkroniseres"
+    },
+    "errors": {
+      "offline": "Serveren kan ikke nås",
+      "server_refused": "Serveren afviste ændringen",
+      "too_large": "Filen er for stor til Filer",
+      "name_invalid": "Navnet er ikke tilladt",
+      "disk_full": "Disken er fuld",
+      "denied": "Ingen adgang",
+      "busy": "Et andet program bruger den",
+      "quota": "Din lagerplads i Filer er fuld",
+      "not_found": "Den findes ikke længere",
+      "policy": "Din organisation tillader ikke dette",
+      "failed": "Noget gik galt"
+    },
+    "item": {
+      "label": "På denne computer",
+      "synced": "Synkroniseret",
+      "syncing": "Synkroniserer",
+      "pending": "Venter på synkronisering",
+      "error": "Kunne ikke synkronisere",
+      "online-only": "Kun i Filer, hentes ved åbning"
+    },
+    "show_in": {
+      "explorer": "Vis i Stifinder",
+      "finder": "Vis i Finder",
+      "file_manager": "Vis i filhåndtering",
+      "failed": "Mappen kunne ikke åbnes."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hurtig skrivning",
     "menu": "Hurtig skrivning",

@@ -7601,6 +7601,112 @@
     "signout_changed": "Încă neatașate sau nesalvate, și șterse acum: {names}.",
     "signout_held": "Încă deschise în alt program, așa că se șterg doar după ce le închideți acolo: {names}."
   },
+  "files_sync": {
+    "title": "Fișiere pe acest computer",
+    "drive": {
+      "title": "Unitatea Fișiere",
+      "label": "Afișează Fișiere ca unitate",
+      "description": "Fișierele dvs. apar în Explorer ca o unitate. Un fișier se descarcă atunci când îl deschideți.",
+      "unsupported": "Necesită Windows 10 versiunea 1809 sau mai nouă.",
+      "root_name": "Unitatea Fișiere",
+      "letter_label": "Literă de unitate",
+      "letter_description": "Atribuie unității o literă proprie în Explorer.",
+      "letter_none": "Fără literă"
+    },
+    "folders": {
+      "title": "Dosare sincronizate",
+      "description": "Un dosar de pe acest computer și un dosar din Fișiere sunt păstrate identice, în ambele direcții.",
+      "empty": "Încă nu se sincronizează niciun dosar.",
+      "forced_off": "Organizația dvs. a dezactivat sincronizarea dosarelor. Fișierele din ele rămân pe acest computer.",
+      "add": "Adăugați un dosar…",
+      "loading": "Se încarcă dosarele…",
+      "load_failed": "Dosarele dvs. din Fișiere nu au putut fi încărcate. Încercați din nou.",
+      "pick_title": "Ce dosar din Fișiere?",
+      "pick_confirm": "Alegeți un dosar de pe acest computer…",
+      "paired_with": "Cu {folder} din Fișiere",
+      "pause": "Întrerupe",
+      "resume": "Reia",
+      "remove": "Elimină…",
+      "remove_title": "Opriți sincronizarea acestui dosar?",
+      "remove_message": "Fișierele de pe acest computer rămân unde sunt, la fel și cele din Fișiere. Modificările nu mai trec de la unul la altul.",
+      "remove_confirm": "Oprește sincronizarea",
+      "add_failed": {
+        "overlap": "Acest dosar se află într-un dosar sincronizat, conține unul sau este un dosar de sistem. Alegeți altul.",
+        "denied": "Aplicația nu poate folosi acest dosar. Alegeți altul.",
+        "policy": "Organizația dvs. nu permite acest lucru.",
+        "failed": "Dosarul nu a putut fi adăugat. Încercați din nou."
+      }
+    },
+    "status": {
+      "starting": "Se pornește…",
+      "idle": "Actualizat. Ultima sincronizare {time}",
+      "idle_never": "Actualizat",
+      "syncing": "Se sincronizează: {done} gata, {pending} rămase",
+      "paused": "Întrerupt",
+      "offline": "Offline. {count, plural, =0 {Modificările așteaptă serverul} one {# modificare așteaptă serverul} few {# modificări așteaptă serverul} other {# de modificări așteaptă serverul}}",
+      "error": "Oprit: {reason}",
+      "confirm_delete": "Întrerupt până când răspundeți la întrebarea de mai jos",
+      "blocked": "Dezactivat de organizația dvs."
+    },
+    "mass_delete": {
+      "title": "Ștergeți {count, plural, one {# element} few {# elemente} other {# de elemente}}?",
+      "local": "{count, plural, one {# element a fost șters} few {# elemente au fost șterse} other {# de elemente au fost șterse}} din {folder} de pe acest computer. {count, plural, one {Îl ștergeți} few {Le ștergeți} other {Le ștergeți}} și din Fișiere?",
+      "remote": "{count, plural, one {# element a fost șters} few {# elemente au fost șterse} other {# de elemente au fost șterse}} din {folder} din Fișiere. {count, plural, one {Îl ștergeți} few {Le ștergeți} other {Le ștergeți}} și de pe acest computer?",
+      "allow": "{count, plural, one {Șterge-l} few {Șterge-le} other {Șterge-le}}",
+      "restore": "{count, plural, one {Restaurează-l} few {Restaurează-le} other {Restaurează-le}}",
+      "later": "Decideți mai târziu"
+    },
+    "activity": {
+      "title": "Activitate recentă",
+      "empty": "Nu s-a întâmplat nimic încă.",
+      "clear": "Golește",
+      "to_files": "Către Fișiere",
+      "to_computer": "Către acest computer",
+      "mark_conflict": "Conflict de versiuni",
+      "mark_error": "Eroare",
+      "mark_question": "Așteaptă răspunsul dvs.",
+      "uploaded": "S-a încărcat {path}",
+      "downloaded": "S-a descărcat {path}",
+      "folder-created": "S-a creat dosarul {path}",
+      "renamed": "{detail} a fost redenumit în {path}",
+      "moved": "{detail} a fost mutat în {path}",
+      "deleted": "S-a șters {path}",
+      "trashed": "{path} a fost mutat în coșul de gunoi",
+      "conflict": "{path} a fost modificat în ambele locuri. Cealaltă versiune este păstrată ca {detail}",
+      "renamed-for-disk": "{path} se numește {detail} pe acest computer, deoarece numele său nu este permis aici",
+      "too-large": "{path} este mai mare decât permite Fișiere ({detail}). Rămâne doar pe acest computer",
+      "waiting": "{path} așteaptă serverul",
+      "mass-delete": "Întrerupt înainte de ștergerea multor elemente",
+      "error": "{path} nu a putut fi sincronizat"
+    },
+    "errors": {
+      "offline": "Serverul nu poate fi accesat",
+      "server_refused": "Serverul a refuzat modificarea",
+      "too_large": "Fișierul este prea mare pentru Fișiere",
+      "name_invalid": "Numele nu este permis",
+      "disk_full": "Discul este plin",
+      "denied": "Acces refuzat",
+      "busy": "Un alt program îl folosește",
+      "quota": "Spațiul dvs. de stocare din Fișiere este plin",
+      "not_found": "Nu mai există",
+      "policy": "Organizația dvs. nu permite acest lucru",
+      "failed": "Ceva nu a mers bine"
+    },
+    "item": {
+      "label": "Pe acest computer",
+      "synced": "Sincronizat",
+      "syncing": "Se sincronizează",
+      "pending": "Așteaptă sincronizarea",
+      "error": "Nu s-a putut sincroniza",
+      "online-only": "Doar în Fișiere, se descarcă la deschidere"
+    },
+    "show_in": {
+      "explorer": "Afișează în Explorer",
+      "finder": "Afișează în Finder",
+      "file_manager": "Afișează în managerul de fișiere",
+      "failed": "Dosarul nu a putut fi deschis."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scriere rapidă",
     "menu": "Scriere rapidă",

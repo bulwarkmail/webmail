@@ -220,6 +220,7 @@
   [data-boot-settings-tab="calendar"] [data-sk-settings-tab="calendar"],
   [data-boot-settings-tab="contacts"] [data-sk-settings-tab="contacts"],
   [data-boot-settings-tab="files"] [data-sk-settings-tab="files"],
+  [data-boot-settings-tab="files_sync"] [data-sk-settings-tab="files_sync"],
   [data-boot-settings-tab="addons"] [data-sk-settings-tab="addons"],
   [data-boot-settings-tab="offline"] [data-sk-settings-tab="offline"],
   [data-boot-settings-tab="privacy"] [data-sk-settings-tab="privacy"],
@@ -239,6 +240,7 @@
 @custom-variant boot-no-settings-addons (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="addons"]) *));
 @custom-variant boot-no-settings-offline (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="offline"]) *));
 @custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
+@custom-variant boot-settings-files-sync (&:where([data-boot-settings-tabs~="files_sync"] *));
 
 /* Settings pages with one section have no section jump row (SectionNav). */
 @custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));
