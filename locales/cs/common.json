@@ -7049,6 +7049,11 @@
     "context_search_mail": "Hledat v poště „{text}“"
   },
   "mail_p2_desk": {
+    "reader_offline": "Jste offline. Tato zpráva se otevře jen s připojením.",
+    "reader_failed": "Tuto zprávu se nepodařilo načíst.",
+    "retry": "Zkusit znovu",
+    "action_offline": "Jste offline. K tomu je potřeba připojení.",
+    "offline_bar": "Jste offline. Ke čtení a úpravám pošty je potřeba připojení.",
     "offline_default_on": "Vaše pošta je uložena v tomto zařízení, takže ji můžete číst offline."
   },
   "desktopMenuBar": {

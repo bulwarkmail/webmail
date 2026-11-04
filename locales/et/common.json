@@ -7049,6 +7049,11 @@
     "context_search_mail": "Otsi kirjadest „{text}”"
   },
   "mail_p2_desk": {
+    "reader_offline": "Oled võrguühenduseta. Selle kirja avamiseks on vaja ühendust.",
+    "reader_failed": "Seda kirja ei saanud laadida.",
+    "retry": "Proovi uuesti",
+    "action_offline": "Oled võrguühenduseta. Selleks on vaja ühendust.",
+    "offline_bar": "Oled võrguühenduseta. Kirjade lugemiseks ja muutmiseks on vaja ühendust.",
     "offline_default_on": "Sinu kirjad hoitakse selles seadmes, nii et saad neid ka ühenduseta lugeda."
   },
   "desktopMenuBar": {

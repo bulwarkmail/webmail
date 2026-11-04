@@ -7049,6 +7049,11 @@
     "context_search_mail": "Buscar «{text}» en el correo"
   },
   "mail_p2_desk": {
+    "reader_offline": "No tienes conexión. Este mensaje necesita conexión para abrirse.",
+    "reader_failed": "No se ha podido cargar este mensaje.",
+    "retry": "Reintentar",
+    "action_offline": "No tienes conexión. Esto necesita conexión.",
+    "offline_bar": "No tienes conexión. Leer y cambiar el correo necesita conexión.",
     "offline_default_on": "Tu correo se guarda en este dispositivo, así puedes leerlo sin conexión."
   },
   "desktopMenuBar": {

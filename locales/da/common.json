@@ -7049,6 +7049,11 @@
     "context_search_mail": "Søg efter “{text}” i mail"
   },
   "mail_p2_desk": {
+    "reader_offline": "Du er offline. Denne besked kræver forbindelse for at åbne.",
+    "reader_failed": "Beskeden kunne ikke indlæses.",
+    "retry": "Prøv igen",
+    "action_offline": "Du er offline. Det kræver forbindelse.",
+    "offline_bar": "Du er offline. Læsning og ændring af mail kræver forbindelse.",
     "offline_default_on": "Din mail gemmes på denne enhed, så du kan læse den offline."
   },
   "desktopMenuBar": {

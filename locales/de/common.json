@@ -7049,6 +7049,11 @@
     "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
   },
   "mail_p2_desk": {
+    "reader_offline": "Sie sind offline. Diese Nachricht lässt sich nur mit Verbindung öffnen.",
+    "reader_failed": "Diese Nachricht konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "action_offline": "Sie sind offline. Dafür braucht es eine Verbindung.",
+    "offline_bar": "Sie sind offline. Zum Lesen und Ändern von E-Mails braucht es eine Verbindung.",
     "offline_default_on": "Ihre E-Mails werden auf diesem Gerät gespeichert, damit Sie sie auch offline lesen können."
   },
   "desktopMenuBar": {

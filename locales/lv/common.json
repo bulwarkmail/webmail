@@ -7049,6 +7049,11 @@
     "context_search_mail": "Meklēt pastā “{text}”"
   },
   "mail_p2_desk": {
+    "reader_offline": "Jūs esat bezsaistē. Šīs vēstules atvēršanai vajag savienojumu.",
+    "reader_failed": "Šo vēstuli neizdevās ielādēt.",
+    "retry": "Mēģināt vēlreiz",
+    "action_offline": "Jūs esat bezsaistē. Tam vajag savienojumu.",
+    "offline_bar": "Jūs esat bezsaistē. Pasta lasīšanai un mainīšanai vajag savienojumu.",
     "offline_default_on": "Jūsu pasts tiek glabāts šajā ierīcē, tāpēc to var lasīt bezsaistē."
   },
   "desktopMenuBar": {

@@ -7049,6 +7049,11 @@
     "context_search_mail": "„{text}” keresése a levelek között"
   },
   "mail_p2_desk": {
+    "reader_offline": "Nincs kapcsolat. Ennek az üzenetnek a megnyitásához kapcsolat kell.",
+    "reader_failed": "Az üzenetet nem sikerült betölteni.",
+    "retry": "Újra",
+    "action_offline": "Nincs kapcsolat. Ehhez kapcsolat kell.",
+    "offline_bar": "Nincs kapcsolat. A levelek olvasásához és módosításához kapcsolat kell.",
     "offline_default_on": "A leveleid ezen az eszközön is megmaradnak, így kapcsolat nélkül is olvashatod őket."
   },
   "desktopMenuBar": {

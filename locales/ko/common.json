@@ -7049,6 +7049,11 @@
     "context_search_mail": "메일에서 “{text}” 검색"
   },
   "mail_p2_desk": {
+    "reader_offline": "오프라인 상태입니다. 이 메시지를 열려면 연결이 필요합니다.",
+    "reader_failed": "이 메시지를 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "action_offline": "오프라인 상태입니다. 이 작업에는 연결이 필요합니다.",
+    "offline_bar": "오프라인 상태입니다. 메일을 읽고 변경하려면 연결이 필요합니다.",
     "offline_default_on": "메일이 이 기기에 보관되어 오프라인에서도 읽을 수 있습니다."
   },
   "desktopMenuBar": {

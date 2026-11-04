@@ -7049,6 +7049,11 @@
     "context_search_mail": "Szukaj „{text}” w poczcie"
   },
   "mail_p2_desk": {
+    "reader_offline": "Jesteś offline. Ta wiadomość otworzy się tylko z połączeniem.",
+    "reader_failed": "Nie udało się wczytać tej wiadomości.",
+    "retry": "Spróbuj ponownie",
+    "action_offline": "Jesteś offline. To wymaga połączenia.",
+    "offline_bar": "Jesteś offline. Czytanie i zmienianie poczty wymaga połączenia.",
     "offline_default_on": "Twoja poczta jest przechowywana na tym urządzeniu, więc możesz ją czytać offline."
   },
   "desktopMenuBar": {

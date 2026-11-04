@@ -57,7 +57,9 @@ import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInP
 import { useRouter } from '@/i18n/navigation';
 import { useSettingsStore } from "@/stores/settings-store";
 import { useDrawnMailLayout } from "@/hooks/use-effective-mail-layout";
-import { useOfflineStore } from "@/lib/offline/state";
+import { isOfflineNow, useOfflineStore } from "@/lib/offline/state";
+import { useConnectionState } from "@/hooks/use-connection-state";
+import { ReaderOpenFailure } from "@/components/email/reader-open-failure";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
@@ -65,6 +67,7 @@ import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-quer
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
+import { guardOfflineMailChanges } from "@/lib/offline-key-guard";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
 import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
@@ -257,6 +260,11 @@ const UNIFIED_LIST_PUSH = {
 /** A draft from outside: a mailto:, or a share with files. ParsedMailto stays JSON, for sessionStorage. */
 type DraftRequest = ParsedMailto & { initialFiles?: File[]; unedited?: boolean };
 
+/** No network, or this login's mail server can't be reached. */
+function offlineNow(client: { getServerUrl?: () => string }): boolean {
+  return (typeof navigator !== 'undefined' && navigator.onLine === false) || isOfflineNow(client.getServerUrl?.());
+}
+
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
@@ -324,6 +332,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  // A message that couldn't be fetched: the reader says so, with Retry (mail-p2-7).
+  const [openFailure, setOpenFailure] = useState<{ target: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>; offline: boolean } | null>(null);
+  const tP2Desk = useTranslations('mail_p2_desk');
   // The message the palette's "Move to…" was picked for.
   const [moveDialogEmail, setMoveDialogEmail] = useState<Email | null>(null);
   // The empty reading pane's slot for a selection; the list draws into it (mail-10).
@@ -1306,14 +1317,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return state.tabs.find((tab) => tab.id === id)?.kind === 'calendar';
   });
   const mailShortcutsApply = !isEmbedded || isFocusedProTab;
+  // Offline with no mail kept on this device, a key that changes mail can't
+  // run: say so rather than do nothing (mail-p2-7).
+  const connection = useConnectionState();
+  const canChangeMailRef = useRef(connection.canChangeMail);
+  canChangeMailRef.current = connection.canChangeMail;
+  const shortcutHandlers = useMemo(
+    () => guardOfflineMailChanges(keyboardHandlers, () => canChangeMailRef.current, () => toast.info(tP2Desk('action_offline'))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tP2Desk is stable per locale
+    [keyboardHandlers],
+  );
+  // Another folder: the line about the message that didn't open goes.
+  useEffect(() => setOpenFailure(null), [selectedMailbox]);
   useKeyboardShortcuts({
     enabled: isAuthenticated && !showComposer && mailShortcutsApply,
     singleKeyShortcuts,
     emails: activeEmails,
-    selectedEmailId: selectedEmail?.id,
+    // The message that didn't open is still what the keys are about.
+    selectedEmailId: selectedEmail?.id ?? openFailure?.target.id,
     selectionCount: selectedEmailKeys.size,
     mountainViewKeys: mvShell,
-    handlers: keyboardHandlers,
+    handlers: shortcutHandlers,
   });
   const anyTabHandlers = useMemo(() => ({
     onShowHelp: keyboardHandlers.onShowHelp,
@@ -4953,6 +4977,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   ): Promise<OpenEmailOutcome> => {
     if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
+    setOpenFailure(null);
 
     // If composing, close the composer the way its X does: it keeps the
     // draft and says so. Mountain View's compose window stays open while
@@ -5077,11 +5102,24 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // Mark-as-read logic is now handled by useEffect
         return 'opened';
       }
+      // The client answers a failed fetch with no message. Offline that
+      // says nothing about the message: the reader says it needs a connection.
+      if (offlineNow(client)) {
+        abandonOpenEmail(null);
+        setOpenFailure({ target: email, offline: true });
+        return new Error('offline');
+      }
       abandonOpenEmail(previousEmail);
       return 'missing';
     } catch (error) {
       console.error('Failed to fetch email content:', error);
-      if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
+      if (openSeq === emailOpenSeqRef.current) {
+        // Offline the reader says why instead of going blank or back to the
+        // last message; another failure says so too when there's nothing to go back to.
+        const offline = offlineNow(client);
+        abandonOpenEmail(offline ? null : previousEmail);
+        if (offline || !previousEmail) setOpenFailure({ target: email, offline });
+      }
       return error instanceof Error ? error : new Error(String(error));
     }
   };
@@ -6217,7 +6255,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     }}
                     emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
                       ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
-                      : undefined}
+                      : openFailure && !isLoadingEmail
+                        ? <ReaderOpenFailure offline={openFailure.offline} onRetry={() => void handleEmailSelect(openFailure.target)} />
+                        : undefined}
                     emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}

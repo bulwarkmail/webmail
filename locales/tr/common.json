@@ -7049,6 +7049,11 @@
     "context_search_mail": "E-postalarda “{text}” ara"
   },
   "mail_p2_desk": {
+    "reader_offline": "Çevrimdışısınız. Bu iletiyi açmak için bağlantı gerekiyor.",
+    "reader_failed": "Bu ileti yüklenemedi.",
+    "retry": "Tekrar dene",
+    "action_offline": "Çevrimdışısınız. Bunun için bağlantı gerekiyor.",
+    "offline_bar": "Çevrimdışısınız. E-postaları okumak ve değiştirmek için bağlantı gerekiyor.",
     "offline_default_on": "E-postalarınız bu cihazda saklanır, böylece çevrimdışıyken de okuyabilirsiniz."
   },
   "desktopMenuBar": {

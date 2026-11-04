@@ -7049,6 +7049,11 @@
     "context_search_mail": "Søk etter «{text}» i e-post"
   },
   "mail_p2_desk": {
+    "reader_offline": "Du er frakoblet. Denne meldingen trenger tilkobling for å åpnes.",
+    "reader_failed": "Meldingen kunne ikke lastes inn.",
+    "retry": "Prøv igjen",
+    "action_offline": "Du er frakoblet. Dette trenger tilkobling.",
+    "offline_bar": "Du er frakoblet. Å lese og endre e-post trenger tilkobling.",
     "offline_default_on": "E-posten din lagres på denne enheten, så du kan lese den uten nett."
   },
   "desktopMenuBar": {

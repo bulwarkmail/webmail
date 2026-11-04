@@ -7049,6 +7049,11 @@
     "context_search_mail": "Search mail for \"{text}\""
   },
   "mail_p2_desk": {
+    "reader_offline": "You're offline. This message needs a connection to open.",
+    "reader_failed": "This message couldn't be loaded.",
+    "retry": "Try again",
+    "action_offline": "You're offline. This needs a connection.",
+    "offline_bar": "You're offline. Reading and changing mail needs a connection.",
     "offline_default_on": "Your mail is kept on this device, so you can read it offline."
   },
   "desktopMenuBar": {

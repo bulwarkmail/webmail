@@ -7061,6 +7061,11 @@
     "context_search_mail": "Tìm “{text}” trong thư"
   },
   "mail_p2_desk": {
+    "reader_offline": "Bạn đang ngoại tuyến. Cần có kết nối để mở thư này.",
+    "reader_failed": "Không tải được thư này.",
+    "retry": "Thử lại",
+    "action_offline": "Bạn đang ngoại tuyến. Việc này cần có kết nối.",
+    "offline_bar": "Bạn đang ngoại tuyến. Cần có kết nối để đọc và thay đổi thư.",
     "offline_default_on": "Thư của bạn được lưu trên thiết bị này, nên bạn có thể đọc khi ngoại tuyến."
   },
   "desktopMenuBar": {

@@ -7049,6 +7049,11 @@
     "context_search_mail": "Pesquisar «{text}» no correio"
   },
   "mail_p2_desk": {
+    "reader_offline": "Está offline. Esta mensagem precisa de ligação para abrir.",
+    "reader_failed": "Não foi possível carregar esta mensagem.",
+    "retry": "Tentar novamente",
+    "action_offline": "Está offline. Isto precisa de ligação.",
+    "offline_bar": "Está offline. Ler e alterar e-mails precisa de ligação.",
     "offline_default_on": "Os seus e-mails ficam guardados neste dispositivo, para os poder ler offline."
   },
   "desktopMenuBar": {

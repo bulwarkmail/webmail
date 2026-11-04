@@ -6,6 +6,7 @@ import { CloudOff, X } from '@/components/icons';
 import { Dialog } from '@/components/ui/dialog';
 import { IconButton } from '@/components/ui/icon-button';
 import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
+import { useConnectionState } from '@/hooks/use-connection-state';
 import { IS_LITE } from '@/lib/lite';
 import { serverKey, useOfflineStore } from '@/lib/offline/state';
 import { useAuthStore } from '@/stores/auth-store';
@@ -20,6 +21,9 @@ import { OutboxList } from './outbox-list';
  *
  * It can be hidden until what it says changes (going offline again, another
  * message waiting), for this session of the window.
+ *
+ * An account that keeps no mail here gets a one-line bar while offline too,
+ * so a message that doesn't open isn't a mystery (mail-p2-7).
  */
 const HIDDEN_KEY = 'bulwark.offlineBanner.hidden';
 
@@ -49,7 +53,23 @@ export function OfflineBanner() {
   const [hidden, setHidden] = useState<string | null>(hiddenFor);
   const [banner, setBanner] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(banner);
+  const connection = useConnectionState();
+  const tP2 = useTranslations('mail_p2_desk');
   const offline = browserOffline || serverDown;
+  if (!active) {
+    if (!account || !connection.offline) return null;
+    return (
+      <div
+        role="status"
+        data-testid="offline-banner-no-store"
+        data-window-top-row=""
+        className="flex shrink-0 items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm text-foreground sm:px-4"
+      >
+        <CloudOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 truncate" title={tP2('offline_bar')}>{tP2('offline_bar')}</span>
+      </div>
+    );
+  }
   const says = `${browserOffline ? 'offline' : serverDown ? 'down' : 'online'}|${waiting}|${conflicts}|${waitingDrafts}|${refusedDrafts}`;
   if (IS_LITE || !active || (!offline && waiting === 0 && conflicts === 0 && refusedDrafts === 0 && waitingDrafts === 0 && !open)) return null;
   const hide = () => {

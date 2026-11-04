@@ -7049,6 +7049,11 @@
     "context_search_mail": "メールで「{text}」を検索"
   },
   "mail_p2_desk": {
+    "reader_offline": "オフラインです。このメッセージを開くには接続が必要です。",
+    "reader_failed": "このメッセージを読み込めませんでした。",
+    "retry": "再試行",
+    "action_offline": "オフラインです。この操作には接続が必要です。",
+    "offline_bar": "オフラインです。メールの閲覧や変更には接続が必要です。",
     "offline_default_on": "メールはこのデバイスに保存されるので、オフラインでも読めます。"
   },
   "desktopMenuBar": {

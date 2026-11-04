@@ -7049,6 +7049,11 @@
     "context_search_mail": "Căutare „{text}” în e-mail"
   },
   "mail_p2_desk": {
+    "reader_offline": "Sunteți offline. Acest mesaj are nevoie de conexiune ca să se deschidă.",
+    "reader_failed": "Mesajul nu a putut fi încărcat.",
+    "retry": "Încercați din nou",
+    "action_offline": "Sunteți offline. Pentru asta e nevoie de conexiune.",
+    "offline_bar": "Sunteți offline. Citirea și modificarea e-mailurilor au nevoie de conexiune.",
     "offline_default_on": "E-mailurile dvs. sunt păstrate pe acest dispozitiv, ca să le puteți citi offline."
   },
   "desktopMenuBar": {

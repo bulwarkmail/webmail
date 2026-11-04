@@ -7049,6 +7049,11 @@
     "context_search_mail": "Zoek ‘{text}’ in e-mail"
   },
   "mail_p2_desk": {
+    "reader_offline": "Je bent offline. Dit bericht heeft een verbinding nodig om te openen.",
+    "reader_failed": "Dit bericht kon niet worden geladen.",
+    "retry": "Opnieuw proberen",
+    "action_offline": "Je bent offline. Hiervoor is een verbinding nodig.",
+    "offline_bar": "Je bent offline. Voor het lezen en wijzigen van mail is een verbinding nodig.",
     "offline_default_on": "Je mail wordt op dit apparaat bewaard, zodat je hem offline kunt lezen."
   },
   "desktopMenuBar": {

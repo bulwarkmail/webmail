@@ -7049,6 +7049,11 @@
     "context_search_mail": "在郵件中搜尋「{text}」"
   },
   "mail_p2_desk": {
+    "reader_offline": "您已離線。開啟這封郵件需要網路連線。",
+    "reader_failed": "無法載入這封郵件。",
+    "retry": "重試",
+    "action_offline": "您已離線。此操作需要網路連線。",
+    "offline_bar": "您已離線。閱讀和變更郵件需要網路連線。",
     "offline_default_on": "您的郵件保存在此裝置上，離線時也能閱讀。"
   },
   "desktopMenuBar": {

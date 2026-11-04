@@ -7049,6 +7049,11 @@
     "context_search_mail": "Cerca «{text}» al correu"
   },
   "mail_p2_desk": {
+    "reader_offline": "No tens connexió. Aquest missatge necessita connexió per obrir-se.",
+    "reader_failed": "No s'ha pogut carregar aquest missatge.",
+    "retry": "Torna-ho a provar",
+    "action_offline": "No tens connexió. Això necessita connexió.",
+    "offline_bar": "No tens connexió. Llegir i canviar el correu necessita connexió.",
     "offline_default_on": "El teu correu es guarda en aquest dispositiu, així el pots llegir sense connexió."
   },
   "desktopMenuBar": {
