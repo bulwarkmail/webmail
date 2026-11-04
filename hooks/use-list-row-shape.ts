@@ -36,3 +36,19 @@ export const LIST_COLUMN_CLASS = {
   date: 'w-28 shrink-0 text-end',
   size: 'w-16 shrink-0 text-end',
 } as const;
+
+/**
+ * Whether a stacked row puts its preview after the subject, on the subject's
+ * line, instead of on a line of its own (mail-15). The regular density does
+ * on a computer, which brings a row from about 96 px to about 68 px, so a
+ * 1366×768 screen lists about ten. Comfortable keeps two preview lines, and
+ * phones keep the preview under the subject, where the line is too short.
+ */
+export function showsPreviewOnSubjectLine(options: {
+  showPreview: boolean;
+  density: string;
+  isMobile: boolean;
+  mountainView: boolean;
+}): boolean {
+  return options.showPreview && options.density === 'regular' && !options.isMobile && !options.mountainView;
+}
