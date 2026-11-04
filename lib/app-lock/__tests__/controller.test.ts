@@ -85,6 +85,7 @@ function bridge(overrides: Record<string, unknown> = {}) {
     prove: vi.fn(async () => true),
     disable: vi.fn(async () => true),
     forget: vi.fn(async () => true),
+    clearOrphan: vi.fn(async () => true),
     osEnroll: vi.fn(async () => true),
     osRemove: vi.fn(async () => {}),
     osUnlock: vi.fn(async () => ({ ok: false as const, reason: 'denied' as const })),
@@ -535,6 +536,32 @@ describe('the renderer at a lock', () => {
 });
 
 describe('the desktop app', () => {
+  const settled = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+  it('asks main to clear a lock this profile has no PIN for', async () => {
+    const appLock = bridge({ status: vi.fn(async () => ({ locked: true, enrolled: true, os: null, osEnrolled: false })) });
+    bootAppLock();
+    await settled();
+    expect(appLock.clearOrphan).toHaveBeenCalledTimes(1);
+    expect(appLock.forget).not.toHaveBeenCalled();
+  });
+
+  it('leaves main alone when there is a vault, so a real lock is never questioned', async () => {
+    const raw = await createVault(PIN);
+    raw.fill(0);
+    const appLock = bridge({ status: vi.fn(async () => ({ locked: true, enrolled: true, os: null, osEnrolled: false })) });
+    bootAppLock();
+    await settled();
+    expect(appLock.clearOrphan).not.toHaveBeenCalled();
+  });
+
+  it('asks nothing when main has no lock', async () => {
+    const appLock = bridge({ status: vi.fn(async () => ({ locked: false, enrolled: false, os: null, osEnrolled: false })) });
+    bootAppLock();
+    await settled();
+    expect(appLock.clearOrphan).not.toHaveBeenCalled();
+  });
+
   it('a PIN unlock proves itself to main, and nothing can just say unlocked', async () => {
     const appLock = bridge();
     await enableAppLock(PIN);

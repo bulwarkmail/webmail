@@ -428,6 +428,8 @@ export interface DesktopAppLockBridge {
   disable: (proof: Uint8Array) => Promise<boolean>;
   /** The PIN is lost, or everyone signed out. With no proof, main asks the user natively. */
   forget: (proof?: Uint8Array) => Promise<boolean>;
+  /** Main keeps a lock and this profile has no PIN for it. Main asks the user natively, once a run. */
+  clearOrphan?: () => Promise<boolean>;
   /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
   osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
   osRemove: () => Promise<void>;
