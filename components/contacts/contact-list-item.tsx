@@ -25,9 +25,11 @@ interface ContactListItemProps {
   onFocus?: () => void;
   /** Long-press on touch: the row's menu, as right-click does (R7). */
   onLongPress?: (row: HTMLElement) => void;
+  /** The row's menu is open: it keeps the hover colour, so it's clear whose menu it is. */
+  isMenuTarget?: boolean;
 }
 
-export function ContactListItem({ contact, isSelected, isChecked, hasSelection, density, selectedContactIds, onClick, onCheckboxClick, onContextMenu, isFocused = false, onFocus, onLongPress }: ContactListItemProps) {
+export function ContactListItem({ contact, isSelected, isChecked, hasSelection, density, selectedContactIds, onClick, onCheckboxClick, onContextMenu, isFocused = false, onFocus, onLongPress, isMenuTarget = false }: ContactListItemProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const longPress = useLongPress(() => {
     if (rowRef.current) onLongPress?.(rowRef.current);
@@ -72,6 +74,7 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       aria-selected={isSelected || isChecked}
       tabIndex={isFocused ? 0 : -1}
       data-contact-id={contact.id}
+      data-menu-open={isMenuTarget || undefined}
       onFocus={onFocus}
       draggable
       onDragStart={handleDragStart}
@@ -81,7 +84,7 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
         "w-full flex items-center cursor-pointer select-none transition-all duration-200 border-b border-border outline-none focus-inset",
         isSelected
           ? "bg-selection shadow-sm"
-          : "bg-background hover:bg-muted hover:shadow-sm",
+          : isMenuTarget ? "bg-muted shadow-sm" : "bg-background hover:bg-muted hover:shadow-sm",
         isChecked && !isSelected && "ring-2 ring-primary/20 bg-selection/60",
       )}
       style={{ gap: 'var(--density-item-gap)', paddingInline: '16px', paddingBlock: 'var(--density-item-py)' }}

@@ -16,6 +16,9 @@ import { useScrollWindow } from "@/hooks/use-scroll-window";
 import type { ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useEventUserEmails } from "@/hooks/use-event-user-emails";
+import { gridReplyState } from "@/lib/calendar-reply-state";
+import { readableTextOn } from "@/lib/color-transform";
 
 interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   events: CalendarEvent[];
@@ -24,6 +27,8 @@ interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   onHoverEvent?: (event: CalendarEvent, anchorRect: DOMRect) => void;
   onHoverLeave?: () => void;
   onContextMenuEvent?: (e: React.MouseEvent, event: CalendarEvent) => void;
+  /** The "Reply" button of an unanswered invitation (pim-9). */
+  onReplyEvent?: (anchor: HTMLElement, event: CalendarEvent) => void;
   timeFormat?: "12h" | "24h";
   /** The user's calendar addresses, to mark events they declined (#1110). */
   currentUserEmails?: string[];
@@ -51,12 +56,17 @@ export function CalendarAgendaView({
   onHoverEvent,
   onHoverLeave,
   onContextMenuEvent,
+  onReplyEvent,
   timeFormat = "24h",
   currentUserEmails,
   onCreateEvent,
 }: CalendarAgendaViewProps) {
   const t = useTranslations("calendar");
+  const tEvent = useTranslations("ux_pim_event");
+  const tGrid = useTranslations("ux_pim_grid");
   const paint = useCvdColor();
+  // An event of another signed-in login is read with that login's addresses.
+  const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
   // Grid days / event dates are display dates (local fields = wall-clock in
   // the user's zone); the app-wide formatter would shift them again (#755).
   const intlFormatter = useDisplayDateFormatter();
@@ -248,20 +258,27 @@ export function CalendarAgendaView({
               // iTIP CANCEL marks the attendee's copy with status "cancelled"
               // instead of deleting it (#572); a declined invitation stays
               // listed too (#1110).
-              const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, currentUserEmails);
+              const userEmails = userEmailsFor(ev);
+              const isInactive = ev.status === "cancelled" || isDeclinedByUser(ev, userEmails);
+              // Not answered yet: a hollow dot and "Reply"; maybe: a dashed ring (pim-9).
+              const replyState = isInactive ? null : gridReplyState(ev, userEmails);
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
               const meta = [locationName, calendar?.name].filter(Boolean).join(" · ");
 
-              return (
+              const row = (
                 <button
                   key={ev.id}
+                  data-reply-state={replyState ?? undefined}
                   onClick={(e) => onSelectEvent(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
-                  className="w-full flex flex-wrap min-[30rem]:flex-nowrap items-start gap-x-3 gap-y-0.5 px-2 rounded-md hover:bg-muted/60 transition-colors text-start"
+                  className={cn(
+                    "w-full flex flex-wrap min-[30rem]:flex-nowrap items-start gap-x-3 gap-y-0.5 px-2 rounded-md hover:bg-muted/60 transition-colors text-start",
+                    replyState === "needs-action" && onReplyEvent && "pe-24",
+                  )}
                   style={{ paddingBlock: 'var(--density-item-py)' }}
                 >
                   {/* On a phone the time takes a line of its own: beside the date column it left the title two words. */}
@@ -273,7 +290,12 @@ export function CalendarAgendaView({
                       declined or cancelled (repos/branding/APP.md). */}
                   <span
                     className="w-[9px] h-[9px] mt-[5.5px] rounded-full flex-shrink-0"
-                    style={isInactive ? { boxShadow: `inset 0 0 0 1.5px ${color}` } : { backgroundColor: color }}
+                    style={replyState === "tentative"
+                      ? { border: `1.5px dashed ${color}` }
+                      : isInactive || replyState
+                        ? { boxShadow: `inset 0 0 0 1.5px ${color}` }
+                        : { backgroundColor: color }}
+                    data-agenda-dot={replyState ?? (isInactive ? "inactive" : "filled")}
                     aria-hidden="true"
                   />
 
@@ -284,6 +306,11 @@ export function CalendarAgendaView({
                       <span dir="auto" className={cn("text-sm font-medium truncate", isInactive && "line-through text-muted-foreground")} title={ev.title || t("events.no_title")}>
                         {ev.title || t("events.no_title")}
                       </span>
+                      {replyState && (
+                        <span className="ms-2 flex-shrink-0 text-xs text-muted-foreground">
+                          {tEvent(replyState === "tentative" ? "status_tentative" : "status_needs_action")}
+                        </span>
+                      )}
                     </div>
                     {(meta || getParticipantCount(ev) > 0) && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 min-w-0">
@@ -299,6 +326,23 @@ export function CalendarAgendaView({
                     )}
                   </div>
                 </button>
+              );
+              if (replyState !== "needs-action" || !onReplyEvent) return row;
+              // The answers, next to the row rather than inside its button.
+              return (
+                <div key={ev.id} className="relative">
+                  {row}
+                  <button
+                    type="button"
+                    data-reply-marker
+                    title={tGrid("reply_to_invitation")}
+                    onClick={(e) => { e.stopPropagation(); onReplyEvent(e.currentTarget, ev); }}
+                    className="absolute end-2 top-1 h-6 max-w-20 truncate rounded-xs px-2 text-xs font-semibold hover:opacity-90"
+                    style={{ backgroundColor: color, color: readableTextOn(color) }}
+                  >
+                    {tGrid("reply")}
+                  </button>
+                </div>
               );
             })}
           </div>

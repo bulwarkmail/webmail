@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { ExternalLink } from "@/components/icons";
 import { Spinner } from "@/components/ui/spinner";
-import { PreviewShell, type PreviewNeighbours } from "@/components/files/preview-shell";
+import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { IconButton } from "@/components/ui/icon-button";
 import { ZoomableImage } from "@/components/files/zoomable-image";
 import { getFilePreviewKind, imageBlobUrl, isMimeTypeSafeForInlinePreview, previewBlobType } from "@/lib/file-preview";
@@ -233,6 +233,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
 
   // Back closes the preview instead of leaving Files.
   useCloseOnBack({ onBack: onClose });
+  const closeFromBackdrop = useBackdropClose(onClose);
 
   const fileType = resolvedFileType;
   // The browser's own PDF viewer has Download and Print buttons of its own.
@@ -412,7 +413,7 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
 
         {!loading && !error && fileType === "image" && objectUrl && (
           <div className="absolute inset-0" {...noMediaSavingProps(downloadsOff)}>
-            <ZoomableImage src={objectUrl} alt={name} onBackgroundClick={onClose} />
+            <ZoomableImage src={objectUrl} alt={name} onBackgroundClick={closeFromBackdrop} />
           </div>
         )}
 
