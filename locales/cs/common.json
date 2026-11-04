@@ -5518,6 +5518,26 @@
     "share_mail_subject": "Sdílel jsem s vámi {name}",
     "share_mail_body": "Dobrý den,\n\nsdílel jsem s vámi „{name}“. Otevřete to zde:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Přidat vše do kalendáře",
+    "zone_contacts_all": "Přidat vše do kontaktů",
+    "save_to_files": "Uložit do Souborů",
+    "saved": "{name} uloženo do Souborů.",
+    "saved_copy": "Uloženo do Souborů jako {name}.",
+    "save_failed": "{name} se nepodařilo uložit do Souborů.",
+    "changed_on_server": "{name} se v Souborech změnil poté, co jste ho otevřeli.",
+    "gone_on_server": "{name} už v Souborech není.",
+    "keep_both": "Ponechat obojí",
+    "replace": "Nahradit",
+    "cancel": "Zrušit",
+    "save_as_new": "Uložit jako nový soubor",
+    "import_to_mail": "Importovat do složky pošty…",
+    "import_to_mail_title": "Importovat do složky pošty",
+    "imported_to_mail": "Importováno do {folder}.",
+    "import_to_mail_failed": "{name} se nepodařilo importovat.",
+    "import_contacts": "Importovat do kontaktů…",
+    "add_to_calendar": "Přidat do kalendáře…"
+  },
   "smime": {
     "your_certificates": "Vaše certifikáty",
     "your_certificates_desc": "Importujte a spravujte své certifikáty S/MIME pro podepisování a šifrování e-mailů",

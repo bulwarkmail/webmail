@@ -5780,6 +5780,26 @@
     "share_mail_subject": "Би {name}-г тантай хуваалцлаа",
     "share_mail_body": "Сайн байна уу,\n\nБи \"{name}\"-г тантай хуваалцлаа. Эндээс нээж болно:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Бүгдийг хуанлид нэмэх",
+    "zone_contacts_all": "Бүгдийг харилцагчид нэмэх",
+    "save_to_files": "Файлд хадгалах",
+    "saved": "{name}-г Файлд хадгаллаа.",
+    "saved_copy": "Файлд {name} нэрээр хадгаллаа.",
+    "save_failed": "{name}-г Файлд хадгалж чадсангүй.",
+    "changed_on_server": "{name}-г нээсний дараа Файлд өөрчилсөн байна.",
+    "gone_on_server": "{name} Файлд байхгүй болсон.",
+    "keep_both": "Хоёуланг нь хадгалах",
+    "replace": "Солих",
+    "cancel": "Цуцлах",
+    "save_as_new": "Шинэ файлаар хадгалах",
+    "import_to_mail": "Шуудангийн хавтас руу импортлох…",
+    "import_to_mail_title": "Шуудангийн хавтас руу импортлох",
+    "imported_to_mail": "{folder} руу импортлолоо.",
+    "import_to_mail_failed": "{name}-г импортлож чадсангүй.",
+    "import_contacts": "Харилцагчид импортлох…",
+    "add_to_calendar": "Хуанлид нэмэх…"
+  },
   "smime": {
     "your_certificates": "Таны сертификатууд",
     "your_certificates_desc": "Имэйлд гарын үсэг зурах болон шифрлэхэд ашиглах S/MIME сертификатаа импортолж, удирдана",

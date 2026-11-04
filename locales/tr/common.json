@@ -5780,6 +5780,26 @@
     "share_mail_subject": "{name} dosyasını seninle paylaştım",
     "share_mail_body": "Merhaba,\n\n\"{name}\" dosyasını seninle paylaştım. Buradan açabilirsin:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Tümünü takvime ekle",
+    "zone_contacts_all": "Tümünü kişilere ekle",
+    "save_to_files": "Dosyalar'a kaydet",
+    "saved": "{name}, Dosyalar'a kaydedildi.",
+    "saved_copy": "Dosyalar'a {name} olarak kaydedildi.",
+    "save_failed": "{name}, Dosyalar'a kaydedilemedi.",
+    "changed_on_server": "{name}, siz açtıktan sonra Dosyalar'da değiştirildi.",
+    "gone_on_server": "{name} artık Dosyalar'da yok.",
+    "keep_both": "İkisini de tut",
+    "replace": "Değiştir",
+    "cancel": "İptal",
+    "save_as_new": "Yeni dosya olarak kaydet",
+    "import_to_mail": "Bir posta klasörüne aktar…",
+    "import_to_mail_title": "Bir posta klasörüne aktar",
+    "imported_to_mail": "{folder} klasörüne aktarıldı.",
+    "import_to_mail_failed": "{name} aktarılamadı.",
+    "import_contacts": "Kişilere aktar…",
+    "add_to_calendar": "Takvime ekle…"
+  },
   "smime": {
     "your_certificates": "Sertifikalarınız",
     "your_certificates_desc": "E-postaları imzalamak ve şifrelemek için S/MIME sertifikalarınızı içe aktarın ve yönetin",

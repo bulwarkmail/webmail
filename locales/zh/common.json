@@ -5518,6 +5518,26 @@
     "share_mail_subject": "我与你共享了 {name}",
     "share_mail_body": "你好，\n\n我与你共享了“{name}”。可以在这里打开：\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "全部添加到日历",
+    "zone_contacts_all": "全部添加到联系人",
+    "save_to_files": "保存到文件",
+    "saved": "已将 {name} 保存到文件。",
+    "saved_copy": "已作为 {name} 保存到文件。",
+    "save_failed": "无法将 {name} 保存到文件。",
+    "changed_on_server": "你打开 {name} 后，它在文件中被更改了。",
+    "gone_on_server": "{name} 已不在文件中。",
+    "keep_both": "保留两者",
+    "replace": "替换",
+    "cancel": "取消",
+    "save_as_new": "另存为新文件",
+    "import_to_mail": "导入到邮件文件夹…",
+    "import_to_mail_title": "导入到邮件文件夹",
+    "imported_to_mail": "已导入到 {folder}。",
+    "import_to_mail_failed": "无法导入 {name}。",
+    "import_contacts": "导入到联系人…",
+    "add_to_calendar": "添加到日历…"
+  },
   "smime": {
     "your_certificates": "您的证书",
     "your_certificates_desc": "导入和管理您的 S/MIME 证书以对邮件进行签名和加密",

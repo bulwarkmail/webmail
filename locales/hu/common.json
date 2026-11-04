@@ -5780,6 +5780,26 @@
     "share_mail_subject": "Megosztottam veled: {name}",
     "share_mail_body": "Szia!\n\nMegosztottam veled ezt: „{name}”. Itt tudod megnyitni:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Összes hozzáadása a naptárhoz",
+    "zone_contacts_all": "Összes hozzáadása a névjegyekhez",
+    "save_to_files": "Mentés a Fájlokba",
+    "saved": "{name} mentve a Fájlokba.",
+    "saved_copy": "Mentve a Fájlokba {name} néven.",
+    "save_failed": "{name} nem menthető a Fájlokba.",
+    "changed_on_server": "{name} megváltozott a Fájlokban, miután megnyitottad.",
+    "gone_on_server": "{name} már nincs a Fájlokban.",
+    "keep_both": "Mindkettő megtartása",
+    "replace": "Csere",
+    "cancel": "Mégse",
+    "save_as_new": "Mentés új fájlként",
+    "import_to_mail": "Importálás levélmappába…",
+    "import_to_mail_title": "Importálás levélmappába",
+    "imported_to_mail": "Importálva ide: {folder}.",
+    "import_to_mail_failed": "{name} nem importálható.",
+    "import_contacts": "Importálás a névjegyekbe…",
+    "add_to_calendar": "Hozzáadás a naptárhoz…"
+  },
   "smime": {
     "your_certificates": "Tanúsítványaid",
     "your_certificates_desc": "S/MIME tanúsítványok importálása és kezelése e-mailek aláírásához és titkosításához",

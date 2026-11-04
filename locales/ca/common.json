@@ -5780,6 +5780,26 @@
     "share_mail_subject": "He compartit {name} amb tu",
     "share_mail_body": "Hola,\n\nHe compartit «{name}» amb tu. El pots obrir aquí:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Afegeix-ho tot al calendari",
+    "zone_contacts_all": "Afegeix-ho tot als contactes",
+    "save_to_files": "Desa a Fitxers",
+    "saved": "{name} s'ha desat a Fitxers.",
+    "saved_copy": "S'ha desat a Fitxers com a {name}.",
+    "save_failed": "No s'ha pogut desar {name} a Fitxers.",
+    "changed_on_server": "{name} ha canviat a Fitxers després que l'obrissis.",
+    "gone_on_server": "{name} ja no és a Fitxers.",
+    "keep_both": "Conserva’ls tots dos",
+    "replace": "Substitueix",
+    "cancel": "Cancel·la",
+    "save_as_new": "Desa com a fitxer nou",
+    "import_to_mail": "Importa a una carpeta de correu…",
+    "import_to_mail_title": "Importa a una carpeta de correu",
+    "imported_to_mail": "S'ha importat a {folder}.",
+    "import_to_mail_failed": "No s'ha pogut importar {name}.",
+    "import_contacts": "Importa als contactes…",
+    "add_to_calendar": "Afegeix al calendari…"
+  },
   "smime": {
     "your_certificates": "Els vostres certificats",
     "your_certificates_desc": "Importeu i gestioneu els certificats S/MIME per signar i xifrar correus",

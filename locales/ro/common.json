@@ -5780,6 +5780,26 @@
     "share_mail_subject": "Am partajat {name} cu tine",
     "share_mail_body": "Salut,\n\nAm partajat „{name}” cu tine. Îl poți deschide aici:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Adăugați tot în calendar",
+    "zone_contacts_all": "Adăugați tot la contacte",
+    "save_to_files": "Salvați în Fișiere",
+    "saved": "{name} a fost salvat în Fișiere.",
+    "saved_copy": "Salvat în Fișiere ca {name}.",
+    "save_failed": "{name} nu a putut fi salvat în Fișiere.",
+    "changed_on_server": "{name} a fost modificat în Fișiere după ce l-ați deschis.",
+    "gone_on_server": "{name} nu mai este în Fișiere.",
+    "keep_both": "Păstrează-le pe ambele",
+    "replace": "Înlocuiește",
+    "cancel": "Anulează",
+    "save_as_new": "Salvați ca fișier nou",
+    "import_to_mail": "Importați într-un dosar de e-mail…",
+    "import_to_mail_title": "Importați într-un dosar de e-mail",
+    "imported_to_mail": "Importat în {folder}.",
+    "import_to_mail_failed": "{name} nu a putut fi importat.",
+    "import_contacts": "Importați în contacte…",
+    "add_to_calendar": "Adăugați în calendar…"
+  },
   "smime": {
     "your_certificates": "Certificatele dvs.",
     "your_certificates_desc": "Importați și gestionați certificatele S/MIME pentru semnarea și criptarea e-mailurilor",

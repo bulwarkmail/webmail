@@ -5780,6 +5780,26 @@
     "share_mail_subject": "Jagasin sinuga faili {name}",
     "share_mail_body": "Tere\n\nJagasin sinuga „{name}“. Saad selle avada siin:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Lisa kõik kalendrisse",
+    "zone_contacts_all": "Lisa kõik kontaktidesse",
+    "save_to_files": "Salvesta kausta Failid",
+    "saved": "{name} salvestati kausta Failid.",
+    "saved_copy": "Salvestati kausta Failid nimega {name}.",
+    "save_failed": "Faili {name} ei saanud kausta Failid salvestada.",
+    "changed_on_server": "Faili {name} muudeti kaustas Failid pärast seda, kui selle avasid.",
+    "gone_on_server": "Faili {name} pole enam kaustas Failid.",
+    "keep_both": "Jäta mõlemad",
+    "replace": "Asenda",
+    "cancel": "Tühista",
+    "save_as_new": "Salvesta uue failina",
+    "import_to_mail": "Impordi meilikausta…",
+    "import_to_mail_title": "Impordi meilikausta",
+    "imported_to_mail": "Imporditi kausta {folder}.",
+    "import_to_mail_failed": "Faili {name} ei saanud importida.",
+    "import_contacts": "Impordi kontaktidesse…",
+    "add_to_calendar": "Lisa kalendrisse…"
+  },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
     "your_certificates_desc": "Impordi ja halda oma S/MIME sertifikaate e-kirjade allkirjastamiseks ja krüpteerimiseks",

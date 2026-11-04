@@ -5780,6 +5780,26 @@
     "share_mail_subject": "Jeg har delt {name} med dig",
     "share_mail_body": "Hej\n\nJeg har delt \"{name}\" med dig. Du kan åbne den her:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Føj alle til kalender",
+    "zone_contacts_all": "Føj alle til kontakter",
+    "save_to_files": "Gem i Filer",
+    "saved": "{name} er gemt i Filer.",
+    "saved_copy": "Gemt i Filer som {name}.",
+    "save_failed": "{name} kunne ikke gemmes i Filer.",
+    "changed_on_server": "{name} blev ændret i Filer, efter du åbnede den.",
+    "gone_on_server": "{name} findes ikke længere i Filer.",
+    "keep_both": "Behold begge",
+    "replace": "Erstat",
+    "cancel": "Annuller",
+    "save_as_new": "Gem som ny fil",
+    "import_to_mail": "Importér til en mailmappe…",
+    "import_to_mail_title": "Importér til en mailmappe",
+    "imported_to_mail": "Importeret til {folder}.",
+    "import_to_mail_failed": "{name} kunne ikke importeres.",
+    "import_contacts": "Importér til kontakter…",
+    "add_to_calendar": "Føj til kalender…"
+  },
   "smime": {
     "your_certificates": "Dine certifikater",
     "your_certificates_desc": "Importér og administrér dine S/MIME-certifikater til signering og kryptering af e-mails",

@@ -5780,6 +5780,26 @@
     "share_mail_subject": "{name} را با شما به اشتراک گذاشتم",
     "share_mail_body": "سلام،\n\n«{name}» را با شما به اشتراک گذاشتم. می‌توانید آن را اینجا باز کنید:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "افزودن همه به تقویم",
+    "zone_contacts_all": "افزودن همه به مخاطبان",
+    "save_to_files": "ذخیره در فایل‌ها",
+    "saved": "{name} در فایل‌ها ذخیره شد.",
+    "saved_copy": "با نام {name} در فایل‌ها ذخیره شد.",
+    "save_failed": "ذخیرهٔ {name} در فایل‌ها ممکن نشد.",
+    "changed_on_server": "{name} پس از اینکه آن را باز کردید در فایل‌ها تغییر کرد.",
+    "gone_on_server": "{name} دیگر در فایل‌ها نیست.",
+    "keep_both": "نگه‌داشتن هر دو",
+    "replace": "جایگزینی",
+    "cancel": "انصراف",
+    "save_as_new": "ذخیره به‌عنوان فایل جدید",
+    "import_to_mail": "وارد کردن به یک پوشهٔ ایمیل…",
+    "import_to_mail_title": "وارد کردن به یک پوشهٔ ایمیل",
+    "imported_to_mail": "به {folder} وارد شد.",
+    "import_to_mail_failed": "وارد کردن {name} ممکن نشد.",
+    "import_contacts": "وارد کردن به مخاطبان…",
+    "add_to_calendar": "افزودن به تقویم…"
+  },
   "smime": {
     "your_certificates": "گواهی‌های شما",
     "your_certificates_desc": "مدیریت گواهی‌های S/MIME",

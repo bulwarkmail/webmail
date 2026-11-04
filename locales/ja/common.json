@@ -5518,6 +5518,26 @@
     "share_mail_subject": "{name} を共有しました",
     "share_mail_body": "こんにちは。\n\n「{name}」を共有しました。こちらから開けます:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "すべてカレンダーに追加",
+    "zone_contacts_all": "すべて連絡先に追加",
+    "save_to_files": "ファイルに保存",
+    "saved": "{name} をファイルに保存しました。",
+    "saved_copy": "{name} としてファイルに保存しました。",
+    "save_failed": "{name} をファイルに保存できませんでした。",
+    "changed_on_server": "{name} は開いた後にファイルで変更されました。",
+    "gone_on_server": "{name} はファイルにもうありません。",
+    "keep_both": "両方残す",
+    "replace": "置き換える",
+    "cancel": "キャンセル",
+    "save_as_new": "新しいファイルとして保存",
+    "import_to_mail": "メールフォルダーにインポート…",
+    "import_to_mail_title": "メールフォルダーにインポート",
+    "imported_to_mail": "{folder} にインポートしました。",
+    "import_to_mail_failed": "{name} をインポートできませんでした。",
+    "import_contacts": "連絡先にインポート…",
+    "add_to_calendar": "カレンダーに追加…"
+  },
   "smime": {
     "your_certificates": "あなたの証明書",
     "your_certificates_desc": "メールの署名と暗号化のために S/MIME 証明書をインポートして管理します",

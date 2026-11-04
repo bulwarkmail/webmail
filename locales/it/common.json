@@ -5518,6 +5518,26 @@
     "share_mail_subject": "Ho condiviso {name} con te",
     "share_mail_body": "Ciao,\n\nho condiviso «{name}» con te. Puoi aprirlo qui:\n{link}"
   },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Aggiungi tutto al calendario",
+    "zone_contacts_all": "Aggiungi tutto ai contatti",
+    "save_to_files": "Salva in File",
+    "saved": "{name} salvato in File.",
+    "saved_copy": "Salvato in File come {name}.",
+    "save_failed": "Impossibile salvare {name} in File.",
+    "changed_on_server": "{name} è stato modificato in File dopo che lo hai aperto.",
+    "gone_on_server": "{name} non è più in File.",
+    "keep_both": "Mantieni entrambi",
+    "replace": "Sostituisci",
+    "cancel": "Annulla",
+    "save_as_new": "Salva come nuovo file",
+    "import_to_mail": "Importa in una cartella di posta…",
+    "import_to_mail_title": "Importa in una cartella di posta",
+    "imported_to_mail": "Importato in {folder}.",
+    "import_to_mail_failed": "Impossibile importare {name}.",
+    "import_contacts": "Importa nei contatti…",
+    "add_to_calendar": "Aggiungi al calendario…"
+  },
   "smime": {
     "your_certificates": "I tuoi certificati",
     "your_certificates_desc": "Importa e gestisci i tuoi certificati S/MIME per firmare e cifrare le email",
