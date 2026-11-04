@@ -7761,6 +7761,19 @@
       "failed": "Kausta ei õnnestunud avada."
     }
   },
+  "files_storage": {
+    "title": "Salvestusruum Failides",
+    "used_of": "Kasutusel {used} / {total}",
+    "used": "Kasutusel {used}",
+    "no_limit": "Server ei sea piirangut. Nii palju ruumi võtavad sinu failid.",
+    "almost_full": "Sinu salvestusruum Failides on peaaegu täis",
+    "full": "Sinu salvestusruum Failides on täis",
+    "state_synced": "Ajakohane",
+    "state_syncing": "Sünkroonib",
+    "state_paused": "Peatatud",
+    "state_offline": "Võrguühenduseta",
+    "state_error": "Seisatud"
+  },
   "desktopQuickCompose": {
     "label": "Kiirkiri",
     "menu": "Kiirkiri",

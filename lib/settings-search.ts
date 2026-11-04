@@ -373,6 +373,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   // Desktop app only; the page is in the nav only while the sync engine runs.
   files_sync: [
+    { label: 'files_storage.title', when: 'desktop' },
     { label: 'files_sync.drive.title', when: 'desktop' },
     { label: 'files_sync.drive.label', when: 'desktop' },
     { label: 'files_sync.folders.title', when: 'desktop' },

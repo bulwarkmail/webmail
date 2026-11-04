@@ -7761,6 +7761,19 @@
       "failed": "Le dossier n'a pas pu être ouvert."
     }
   },
+  "files_storage": {
+    "title": "Espace de stockage dans Fichiers",
+    "used_of": "{used} utilisés sur {total}",
+    "used": "{used} utilisés",
+    "no_limit": "Votre serveur ne fixe aucune limite. Voici ce qu'occupent vos fichiers.",
+    "almost_full": "Votre espace de stockage dans Fichiers est presque plein",
+    "full": "Votre espace de stockage dans Fichiers est plein",
+    "state_synced": "À jour",
+    "state_syncing": "Synchronisation",
+    "state_paused": "Suspendu",
+    "state_offline": "Hors ligne",
+    "state_error": "Arrêté"
+  },
   "desktopQuickCompose": {
     "label": "Rédaction rapide",
     "menu": "Rédaction rapide",

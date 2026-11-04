@@ -7762,6 +7762,19 @@
       "failed": "לא ניתן לפתוח את התיקיה."
     }
   },
+  "files_storage": {
+    "title": "אחסון בקבצים",
+    "used_of": "{used} מתוך {total} בשימוש",
+    "used": "{used} בשימוש",
+    "no_limit": "השרת לא מגדיר מגבלה. זה המקום שהקבצים שלך תופסים.",
+    "almost_full": "האחסון שלך בקבצים כמעט מלא",
+    "full": "האחסון שלך בקבצים מלא",
+    "state_synced": "מעודכן",
+    "state_syncing": "מסנכרן",
+    "state_paused": "מושהה",
+    "state_offline": "לא מקוון",
+    "state_error": "נעצר"
+  },
   "desktopQuickCompose": {
     "label": "כתיבה מהירה",
     "menu": "כתיבה מהירה",

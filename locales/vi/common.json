@@ -7773,6 +7773,19 @@
       "failed": "Không mở được thư mục."
     }
   },
+  "files_storage": {
+    "title": "Dung lượng lưu trữ trong Tệp",
+    "used_of": "Đã dùng {used} / {total}",
+    "used": "Đã dùng {used}",
+    "no_limit": "Máy chủ không đặt giới hạn. Đây là dung lượng tệp của bạn đang chiếm.",
+    "almost_full": "Dung lượng lưu trữ của bạn trong Tệp sắp đầy",
+    "full": "Dung lượng lưu trữ của bạn trong Tệp đã đầy",
+    "state_synced": "Đã cập nhật",
+    "state_syncing": "Đang đồng bộ",
+    "state_paused": "Đã tạm dừng",
+    "state_offline": "Ngoại tuyến",
+    "state_error": "Đã dừng"
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",

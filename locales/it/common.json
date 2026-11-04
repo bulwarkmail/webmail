@@ -7761,6 +7761,19 @@
       "failed": "Impossibile aprire la cartella."
     }
   },
+  "files_storage": {
+    "title": "Spazio di archiviazione in File",
+    "used_of": "{used} di {total} usati",
+    "used": "{used} usati",
+    "no_limit": "Il server non imposta alcun limite. Questo è lo spazio occupato dai tuoi file.",
+    "almost_full": "Lo spazio di archiviazione in File è quasi pieno",
+    "full": "Lo spazio di archiviazione in File è pieno",
+    "state_synced": "Aggiornato",
+    "state_syncing": "Sincronizzazione",
+    "state_paused": "In pausa",
+    "state_offline": "Offline",
+    "state_error": "Interrotto"
+  },
   "desktopQuickCompose": {
     "label": "Scrittura rapida",
     "menu": "Scrittura rapida",

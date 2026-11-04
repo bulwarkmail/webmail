@@ -7761,6 +7761,19 @@
       "failed": "Priečinok sa nepodarilo otvoriť."
     }
   },
+  "files_storage": {
+    "title": "Úložisko v Súboroch",
+    "used_of": "Využité {used} z {total}",
+    "used": "Využité {used}",
+    "no_limit": "Server nenastavuje žiadny limit. Toľko miesta zaberajú vaše súbory.",
+    "almost_full": "Vaše úložisko v Súboroch je takmer plné",
+    "full": "Vaše úložisko v Súboroch je plné",
+    "state_synced": "Aktuálne",
+    "state_syncing": "Synchronizuje sa",
+    "state_paused": "Pozastavené",
+    "state_offline": "Offline",
+    "state_error": "Zastavené"
+  },
   "desktopQuickCompose": {
     "label": "Rýchla správa",
     "menu": "Rýchla správa",

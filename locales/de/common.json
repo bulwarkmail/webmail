@@ -7761,6 +7761,19 @@
       "failed": "Der Ordner konnte nicht geöffnet werden."
     }
   },
+  "files_storage": {
+    "title": "Speicher in Dateien",
+    "used_of": "{used} von {total} belegt",
+    "used": "{used} belegt",
+    "no_limit": "Ihr Server setzt kein Limit. So viel Platz belegen Ihre Dateien.",
+    "almost_full": "Ihr Speicher in Dateien ist fast voll",
+    "full": "Ihr Speicher in Dateien ist voll",
+    "state_synced": "Aktuell",
+    "state_syncing": "Wird synchronisiert",
+    "state_paused": "Pausiert",
+    "state_offline": "Offline",
+    "state_error": "Gestoppt"
+  },
   "desktopQuickCompose": {
     "label": "Schnell schreiben",
     "menu": "Schnell schreiben",

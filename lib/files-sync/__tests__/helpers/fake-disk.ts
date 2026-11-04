@@ -15,6 +15,7 @@ import type {
   FilesControls,
   FilesDriveControls,
   FilesDriveState,
+  FilesDriveStatus,
   FilesExpect,
   FilesFetchRequest,
   FilesLocalEntry,
@@ -72,6 +73,8 @@ export class FakeDisk implements FilesControls {
   /** Supply answers false from this many bytes on (Windows no longer wants them). */
   refuseSupplyAfter: number | null = null;
   readonly driveCalls: { call: string; args: unknown[] }[] = [];
+  /** What the page told main for Explorer, in order. */
+  readonly driveStatuses: { account: string; status: FilesDriveStatus }[] = [];
   driveWanted: string[] = [];
   readonly drive?: FilesDriveControls;
   private nextWrite = 1;
@@ -442,6 +445,9 @@ export class FakeDisk implements FilesControls {
     return {
       state: async () => state(),
       onStateChange: () => () => {},
+      status: (account, status) => {
+        disk.driveStatuses.push({ account, status });
+      },
       enable: async (account, label) => {
         record('enable', account, label);
         if (!disk.driveWanted.includes(account)) disk.driveWanted.push(account);

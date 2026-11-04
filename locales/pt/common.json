@@ -7761,6 +7761,19 @@
       "failed": "Não foi possível abrir a pasta."
     }
   },
+  "files_storage": {
+    "title": "Armazenamento em Arquivos",
+    "used_of": "{used} de {total} usados",
+    "used": "{used} usados",
+    "no_limit": "Seu servidor não define limite. Este é o espaço que seus arquivos ocupam.",
+    "almost_full": "Seu armazenamento em Arquivos está quase cheio",
+    "full": "Seu armazenamento em Arquivos está cheio",
+    "state_synced": "Atualizado",
+    "state_syncing": "Sincronizando",
+    "state_paused": "Pausado",
+    "state_offline": "Offline",
+    "state_error": "Parado"
+  },
   "desktopQuickCompose": {
     "label": "Escrita rápida",
     "menu": "Escrita rápida",

@@ -7761,6 +7761,19 @@
       "failed": "No s'ha pogut obrir la carpeta."
     }
   },
+  "files_storage": {
+    "title": "Emmagatzematge de Fitxers",
+    "used_of": "{used} de {total} utilitzats",
+    "used": "{used} utilitzats",
+    "no_limit": "El servidor no posa cap límit. Això és el que ocupen els fitxers.",
+    "almost_full": "L'emmagatzematge de Fitxers és gairebé ple",
+    "full": "L'emmagatzematge de Fitxers és ple",
+    "state_synced": "Al dia",
+    "state_syncing": "Sincronitzant",
+    "state_paused": "En pausa",
+    "state_offline": "Sense connexió",
+    "state_error": "Aturat"
+  },
   "desktopQuickCompose": {
     "label": "Redacció ràpida",
     "menu": "Redacció ràpida",

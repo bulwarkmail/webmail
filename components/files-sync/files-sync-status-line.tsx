@@ -4,7 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { AlertCircle, AlertTriangle, CheckCircle2, CloudOff, Loader2, Lock, Pause, RefreshCw, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { FilesSyncRootState, FilesSyncRootStatus } from "@/lib/files-sync/types";
-import { filesSyncErrorKey, syncTimeOptions } from "./files-sync-text";
+import { statusLineText } from "./files-sync-text";
 
 const ICONS: Record<FilesSyncRootState, { icon: AppIcon; className: string }> = {
   starting: { icon: Loader2, className: "text-muted-foreground animate-spin motion-reduce:animate-none" },
@@ -28,28 +28,7 @@ export function FilesSyncStatusLine({ status, paused, className }: {
   const format = useFormatter();
   const state: FilesSyncRootState = status?.state ?? (paused ? "paused" : "starting");
 
-  let text: string;
-  switch (state) {
-    case "idle":
-      text = status?.lastSyncedAt
-        ? t("status.idle", { time: format.dateTime(new Date(status.lastSyncedAt), syncTimeOptions(status.lastSyncedAt)) })
-        : t("status.idle_never");
-      break;
-    case "syncing":
-      text = t("status.syncing", { done: status?.done ?? 0, pending: status?.pending ?? 0 });
-      break;
-    case "offline":
-      text = t("status.offline", { count: status?.pending ?? 0 });
-      break;
-    case "error":
-      text = t("status.error", { reason: t(filesSyncErrorKey(status?.errorKey)) });
-      break;
-    case "confirm-delete":
-      text = t("status.confirm_delete");
-      break;
-    default:
-      text = t(`status.${state}`);
-  }
+  const text = statusLineText(t, (date, options) => format.dateTime(date, options), status, state);
   const { icon: Icon, className: iconClass } = ICONS[state];
   return (
     <p className={cn("flex items-center gap-1.5 text-xs", state === "error" ? "text-destructive" : "text-muted-foreground", className)} data-files-sync-state={state}>

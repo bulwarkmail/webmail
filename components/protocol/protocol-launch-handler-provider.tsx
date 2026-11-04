@@ -177,7 +177,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   // Leaving the mail page ends an open composer, and its autosave waits 2
   // seconds: what was just typed is saved first. If it can't be, stay. A file
   // keeps waiting and opens once the user goes to that page.
-  const leaveFor = useCallback(async (path: "/" | "/calendar" | "/contacts") => {
+  const leaveFor = useCallback(async (path: "/" | "/calendar" | "/contacts" | "/settings/files_sync") => {
     const result = await flushComposers(FLUSH_BEFORE_LEAVING_MS);
     if (result.failed > 0 || result.timedOut) {
       toast.error(tLaunch("save_first_failed"));

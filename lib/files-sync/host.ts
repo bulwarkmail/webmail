@@ -14,15 +14,21 @@
  * - a wipe (lib/offline/wipe-registry.ts): the drive goes with everything in it, and the
  *   folders are forgotten; their files stay, they were the user's;
  * - a refused login the server was sure of: the same as a wipe for these.
+ *
+ * It also keeps each account's storage (Quota/get, at the start, after FileNode changes at most
+ * once a minute, and every five minutes) for the settings page, the Files screen and Explorer,
+ * and tells main what Explorer should show for each drive (drive-status.ts).
  */
 
-import type { FilesControls, FilesDriveState, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { FilesControls, FilesDriveState, FilesDriveStatus, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
+import { driveStatusFor, filesQuotaOf, type DriveStatusText } from './drive-status';
 import { FilesSyncEngine, type EngineTiming } from './engine';
 import type { FilesSyncErrorName } from './errors';
 import { namingFor } from './names';
 import { FilesRemote } from './remote';
-import type { FilesSyncController, FilesSyncSnapshot } from './types';
+import type { FilesQuota, FilesSyncController, FilesSyncSnapshot } from './types';
 
 /** What the host needs of the app's JMAP client. */
 export interface SessionClient {
@@ -52,6 +58,32 @@ export interface HostDeps {
   remoteFor?: (account: HostAccount) => FilesRemote | null;
   timing?: Partial<EngineTiming>;
   readUrl?: (url: string) => Promise<Uint8Array>;
+  /** The words for Explorer's status, in the page's language. Null: none sent. */
+  driveStatusText?: () => DriveStatusText | null;
+  quotaTiming?: Partial<QuotaTiming>;
+  now?: () => number;
+}
+
+export interface QuotaTiming {
+  /** After FileNode changes, at most this often. */
+  minGapMs: number;
+  /** And this often anyway. */
+  everyMs: number;
+  /** Explorer hears of a change at most this often per drive. */
+  statusGapMs: number;
+}
+
+const QUOTA_TIMING: QuotaTiming = { minGapMs: 60_000, everyMs: 5 * 60_000, statusGapMs: 1_000 };
+
+interface QuotaState {
+  /** undefined: not asked yet; null: the server sets no limit. */
+  server: StorageQuota | null | undefined;
+  /** What the files take, when the server sets no limit. */
+  filesBytes: number | null;
+  lastAt: number;
+  running: boolean;
+  again: boolean;
+  timer: ReturnType<typeof setTimeout> | null;
 }
 
 const DEVICE: Record<string, string> = { win32: 'Windows', darwin: 'Mac', linux: 'Linux' };
@@ -86,8 +118,18 @@ export class FilesSyncHost {
   /** Accounts the drive was turned on for at this sign-in already. */
   private readonly driveStarted = new Set<string>();
   private stopped = false;
+  private readonly remotes = new Map<string, FilesRemote>();
+  private readonly quotas = new Map<string, QuotaState>();
+  private quotaTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly quotaTiming: QuotaTiming;
+  private readonly now: () => number;
+  /** What main last heard for Explorer, per account, and when. */
+  private readonly sentStatus = new Map<string, { json: string; at: number }>();
+  private statusTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly deps: HostDeps) {
+    this.quotaTiming = { ...QUOTA_TIMING, ...deps.quotaTiming };
+    this.now = deps.now ?? Date.now;
     this.engine = new FilesSyncEngine({
       controls: deps.controls,
       naming: namingFor(deps.platform),
@@ -115,11 +157,17 @@ export class FilesSyncHost {
       }).catch(() => {});
       this.unsubscribe.push(drive.onStateChange((state) => {
         this.drive = state;
+        // A drive turned on again starts with nothing in Explorer: say it again.
+        this.sentStatus.clear();
         this.schedulePublish();
         void this.engine.refreshRoots();
       }));
     }
     this.deps.setController(this.controller());
+    this.quotaTimer = setInterval(() => {
+      for (const account of this.remotes.keys()) this.refreshQuota(account, true);
+    }, this.quotaTiming.everyMs);
+    (this.quotaTimer as { unref?: () => void }).unref?.();
     this.publishNow();
   }
 
@@ -127,6 +175,10 @@ export class FilesSyncHost {
     this.stopped = true;
     for (const stop of this.unsubscribe.splice(0)) stop();
     if (this.publishTimer) clearTimeout(this.publishTimer);
+    if (this.quotaTimer) clearInterval(this.quotaTimer);
+    if (this.statusTimer) clearTimeout(this.statusTimer);
+    for (const state of this.quotas.values()) if (state.timer) clearTimeout(state.timer);
+    this.quotas.clear();
     this.engine.stop();
     this.deps.setController(null);
   }
@@ -148,6 +200,7 @@ export class FilesSyncHost {
       if (now.has(id)) continue;
       // Not connected now (signed out goes through signedOut): its roots wait.
       this.accounts.delete(id);
+      this.forgetQuota(id);
       this.engine.dropAccount(id);
     }
     for (const account of accounts) {
@@ -156,7 +209,9 @@ export class FilesSyncHost {
       const remote = (this.deps.remoteFor ?? ((entry: HostAccount) => remoteForClient(entry.client)))(account);
       if (!remote) continue;
       this.accounts.set(account.id, account);
+      this.remotes.set(account.id, remote);
       this.engine.setAccount(account.id, remote);
+      this.refreshQuota(account.id, true);
     }
     this.startDrives();
     void this.engine.refreshRoots();
@@ -181,6 +236,114 @@ export class FilesSyncHost {
   /** A push for this account said FileNode changed. */
   remoteChanged(account: string): void {
     this.engine.remoteChanged(account);
+    this.refreshQuota(account, false);
+  }
+
+  // ─── Storage ────────────────────────────────────────────────
+
+  /**
+   * Quota/get for an account. `now`: at once (a new account, the five-minute round); else at
+   * most once per minGapMs, the last ask in a burst of changes going at the end of the gap.
+   */
+  private refreshQuota(account: string, now: boolean): void {
+    if (this.stopped || !this.remotes.has(account)) return;
+    let state = this.quotas.get(account);
+    if (!state) {
+      state = { server: undefined, filesBytes: null, lastAt: -Infinity, running: false, again: false, timer: null };
+      this.quotas.set(account, state);
+    }
+    if (state.running) {
+      state.again = true;
+      return;
+    }
+    const wait = now ? 0 : state.lastAt + this.quotaTiming.minGapMs - this.now();
+    if (wait > 0) {
+      if (!state.timer) {
+        state.timer = setTimeout(() => {
+          state.timer = null;
+          this.refreshQuota(account, true);
+        }, wait);
+      }
+      return;
+    }
+    if (state.timer) {
+      clearTimeout(state.timer);
+      state.timer = null;
+    }
+    void this.askQuota(account, state);
+  }
+
+  private async askQuota(account: string, state: QuotaState): Promise<void> {
+    const remote = this.remotes.get(account);
+    if (!remote) return;
+    state.running = true;
+    state.lastAt = this.now();
+    try {
+      state.server = await remote.quota();
+      state.filesBytes = state.server ? null : this.engine.filesBytes(account);
+    } catch {
+      // Offline or refused: the last answer stays until the next ask.
+    } finally {
+      state.running = false;
+    }
+    if (this.quotas.get(account) !== state) return;
+    this.schedulePublish();
+    if (state.again) {
+      state.again = false;
+      this.refreshQuota(account, false);
+    }
+  }
+
+  private forgetQuota(account: string): void {
+    const state = this.quotas.get(account);
+    if (state?.timer) clearTimeout(state.timer);
+    this.quotas.delete(account);
+    this.remotes.delete(account);
+    this.sentStatus.delete(account);
+  }
+
+  /** The account's storage as the UI and Explorer show it. */
+  quotaOf(account: string): FilesQuota | null {
+    const state = this.quotas.get(account);
+    if (!state) return null;
+    // No limit, and the tree wasn't listed when the server answered: count it once it is.
+    if (state.server === null && state.filesBytes === null) state.filesBytes = this.engine.filesBytes(account);
+    return filesQuotaOf(state.server, state.filesBytes);
+  }
+
+  /** Tells main what Explorer should show for each drive, when it changed, at most once per statusGapMs. */
+  private sendDriveStatus(): void {
+    const send = this.deps.controls.drive?.status;
+    const text = this.deps.driveStatusText?.();
+    if (!send || !text) return;
+    const statuses = this.engine.status();
+    const drives = new Map(this.engine.roots.filter((root) => root.kind === 'drive').map((root) => [root.account, root]));
+    for (const account of this.sentStatus.keys()) if (!drives.has(account)) this.sentStatus.delete(account);
+    let later = Infinity;
+    for (const [account, root] of drives) {
+      if (!this.accounts.has(account)) continue;
+      const status: FilesDriveStatus = driveStatusFor(statuses[root.id], root.paused, this.quotaOf(account), text);
+      const json = JSON.stringify(status);
+      const sent = this.sentStatus.get(account);
+      if (sent?.json === json) continue;
+      const wait = sent ? sent.at + this.quotaTiming.statusGapMs - this.now() : 0;
+      if (wait > 0) {
+        later = Math.min(later, wait);
+        continue;
+      }
+      this.sentStatus.set(account, { json, at: this.now() });
+      try {
+        send(account, status);
+      } catch {
+        // An older shell: nothing shows in Explorer.
+      }
+    }
+    if (later !== Infinity && !this.statusTimer && !this.stopped) {
+      this.statusTimer = setTimeout(() => {
+        this.statusTimer = null;
+        this.sendDriveStatus();
+      }, later);
+    }
   }
 
   online(): void {
@@ -208,6 +371,7 @@ export class FilesSyncHost {
       if (drive) await this.engine.forgetRoot(drive.id);
       this.accounts.delete(id);
       this.driveStarted.delete(id);
+      this.forgetQuota(id);
       this.engine.dropAccount(id);
       await this.deps.controls.drive?.disable(id, 'signed-out').catch(() => {});
     }
@@ -223,6 +387,7 @@ export class FilesSyncHost {
     for (const id of account === null ? [...this.accounts.keys()] : [account]) {
       this.accounts.delete(id);
       this.driveStarted.delete(id);
+      this.forgetQuota(id);
       this.engine.dropAccount(id);
     }
     await this.engine.refreshRoots();
@@ -254,7 +419,9 @@ export class FilesSyncHost {
       drive: this.drive,
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
+      quota: current ? this.quotaOf(current) : null,
     });
+    this.sendDriveStatus();
   }
 
   controller(): FilesSyncController {

@@ -7761,6 +7761,19 @@
       "failed": "無法開啟資料夾。"
     }
   },
+  "files_storage": {
+    "title": "檔案中的儲存空間",
+    "used_of": "已使用 {used}，共 {total}",
+    "used": "已使用 {used}",
+    "no_limit": "伺服器未設定上限。這是您的檔案所佔用的空間。",
+    "almost_full": "您在檔案中的儲存空間快滿了",
+    "full": "您在檔案中的儲存空間已滿",
+    "state_synced": "已是最新",
+    "state_syncing": "正在同步",
+    "state_paused": "已暫停",
+    "state_offline": "離線",
+    "state_error": "已停止"
+  },
   "desktopQuickCompose": {
     "label": "快速撰寫",
     "menu": "快速撰寫",

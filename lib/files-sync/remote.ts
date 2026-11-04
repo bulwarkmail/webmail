@@ -24,6 +24,7 @@ import { fileNodeKind, fromDraftFileNode, toDraftFileNodeCreate } from '@/lib/jm
 import { decodeFileNodeName } from '@/lib/jmap/filenode-name';
 import type { FileNode } from '@/lib/jmap/types';
 import { mediaTypeEssence, OCTET_STREAM } from '@/lib/media-type';
+import { toFilesQuota, type JMAPQuota, type StorageQuota } from '@/lib/quota';
 import { TRASH_FOLDER_NAME, trashBatchName } from '@/lib/files-trash';
 import { runChangesLoop } from '@/lib/store/engine/changes';
 import { requestLimits } from '@/lib/store/engine/limits';
@@ -31,6 +32,7 @@ import { JmapMethodError, responseFor, type JmapTransport, type MethodCall, type
 
 export const FILES_CAPABILITY = 'urn:ietf:params:jmap:filenode';
 export const FILES_USING = ['urn:ietf:params:jmap:core', FILES_CAPABILITY];
+export const QUOTA_CAPABILITY = 'urn:ietf:params:jmap:quota';
 const PROPERTIES = ['id', 'parentId', 'name', 'type', 'blobId', 'size', 'created', 'modified', 'nodeType', '@type', 'mediaType'];
 const QUERY_PAGE = 5000;
 const MOST_GETS_PER_REQUEST = 8;
@@ -97,6 +99,19 @@ export class FilesRemote {
     const session = this.session();
     const account = session.accounts[this.jmap()];
     return !!session.capabilities[FILES_CAPABILITY] && !!account?.accountCapabilities?.[FILES_CAPABILITY];
+  }
+
+  /**
+   * The storage limit Files counts against (Quota/get, lib/quota.ts toFilesQuota). Null when
+   * the server has no quotas or sets no limit for this account.
+   */
+  async quota(): Promise<StorageQuota | null> {
+    const session = this.session();
+    const jmap = this.jmap();
+    if (!session.capabilities[QUOTA_CAPABILITY] || !session.accounts[jmap]?.accountCapabilities?.[QUOTA_CAPABILITY]) return null;
+    const response = await this.transport.request([['Quota/get', { accountId: jmap, ids: null }, 'q']], ['urn:ietf:params:jmap:core', QUOTA_CAPABILITY]);
+    const quota = toFilesQuota((responseFor(response, 'q')[1].list ?? []) as JMAPQuota[]);
+    return quota && quota.total > 0 ? quota : null;
   }
 
   /** The largest upload the server takes, in bytes. 0: it doesn't say. */

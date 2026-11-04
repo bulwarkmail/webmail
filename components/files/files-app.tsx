@@ -8,6 +8,8 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
+import { useFilesSyncStore } from "@/stores/files-sync-store";
+import { filesRingQuota } from "@/lib/files-sync/drive-status";
 import { useFileStore, deletesToTrash, isSharedFilesPage, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type FileResource, type UploadReport } from "@/stores/file-store";
 import { filesDropTarget, hasQueuedFilesUpload, setFilesDropTarget, subscribeQueuedFilesUpload, takeQueuedFilesUpload } from "@/lib/file-drop/files-target";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
@@ -85,7 +87,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const accounts = useAccountStore((s) => s.accounts);
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
-  const { quota, isPushConnected } = useEmailStore();
+  const { quota: mailQuota, isPushConnected } = useEmailStore();
+  // In the desktop app the engine keeps the storage Files counts against: the ring shows the
+  // same numbers as Settings > Files on this computer and Explorer.
+  const filesQuota = useFilesSyncStore((s) => s.quota);
+  const quota = useMemo(() => filesRingQuota(filesQuota) ?? mailQuota, [filesQuota, mailQuota]);
   const {
     currentPath,
     resources,

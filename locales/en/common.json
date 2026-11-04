@@ -7761,6 +7761,19 @@
       "failed": "The folder couldn't be opened."
     }
   },
+  "files_storage": {
+    "title": "Storage in Files",
+    "used_of": "{used} of {total} used",
+    "used": "{used} used",
+    "no_limit": "Your server sets no limit. This is what your files take.",
+    "almost_full": "Your storage in Files is almost full",
+    "full": "Your storage in Files is full",
+    "state_synced": "Up to date",
+    "state_syncing": "Syncing",
+    "state_paused": "Paused",
+    "state_offline": "Offline",
+    "state_error": "Stopped"
+  },
   "desktopQuickCompose": {
     "label": "Quick compose",
     "menu": "Quick compose",

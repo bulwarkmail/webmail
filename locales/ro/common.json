@@ -7761,6 +7761,19 @@
       "failed": "Dosarul nu a putut fi deschis."
     }
   },
+  "files_storage": {
+    "title": "Spațiu de stocare în Fișiere",
+    "used_of": "{used} din {total} folosiți",
+    "used": "{used} folosiți",
+    "no_limit": "Serverul nu stabilește nicio limită. Atât ocupă fișierele dvs.",
+    "almost_full": "Spațiul dvs. de stocare din Fișiere este aproape plin",
+    "full": "Spațiul dvs. de stocare din Fișiere este plin",
+    "state_synced": "La zi",
+    "state_syncing": "Se sincronizează",
+    "state_paused": "Întrerupt",
+    "state_offline": "Offline",
+    "state_error": "Oprit"
+  },
   "desktopQuickCompose": {
     "label": "Scriere rapidă",
     "menu": "Scriere rapidă",

@@ -666,7 +666,8 @@ export interface DesktopOsFile {
 /** What the OS asks the app to do: a tray item, a jump list entry, a toast, a double-clicked file. */
 export type DesktopOsCommand =
   | { type: 'new-message' }
-  | { type: 'navigate'; target: 'inbox' | 'calendar' | 'contacts' }
+  /** `settings/files_sync`: Settings > Files on this computer, from the drive's status in Explorer. */
+  | { type: 'navigate'; target: 'inbox' | 'calendar' | 'contacts' | 'settings/files_sync' }
   | { type: 'open-message'; emailId: string; accountId?: string; context?: string }
   | { type: 'open-mailbox'; mailboxId: string }
   | { type: 'mailto'; url: string }
@@ -1082,6 +1083,22 @@ export interface FilesDriveState {
 }
 
 /**
+ * What Explorer shows for the drive on Windows 11, where OneDrive shows its own: the sync
+ * state and the storage used. The page's engine knows both, and says them in its language.
+ */
+export interface FilesDriveStatus {
+  state: 'synced' | 'syncing' | 'paused' | 'offline' | 'error';
+  /** Short, next to the state: "Up to date", "Syncing". */
+  label: string;
+  /** The line under it: "Syncing: 3 done, 5 to go", "Stopped: The disk is full". */
+  detail: string;
+  /** From the server's Quota/get. `total` null: no limit, only what's used. Null: nothing known. */
+  quota: { used: number; total: number | null; label: string } | null;
+  /** Storage nearly full or full, in words. */
+  notice: string | null;
+}
+
+/**
  * What the main page takes once, in its first render (`files.claim()`), like `auth.claim`:
  * a same-origin frame reaches the bridge through `parent`, and main can't tell its calls
  * apart. Main also takes these calls only from the main window.
@@ -1152,6 +1169,8 @@ export interface FilesDriveControls {
   supply: (fetchId: string, offset: number, data: Uint8Array) => Promise<boolean>;
   fail: (fetchId: string, error: 'offline' | 'missing' | 'failed') => void;
   setLetter: (letter: string | null) => Promise<FilesResult<FilesDriveLetterState>>;
+  /** What Explorer shows for the account's drive. Absent in shells before it. */
+  status?: (account: string, status: FilesDriveStatus) => void;
 }
 
 export interface FilesBridge {

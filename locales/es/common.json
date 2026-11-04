@@ -7761,6 +7761,19 @@
       "failed": "No se pudo abrir la carpeta."
     }
   },
+  "files_storage": {
+    "title": "Almacenamiento en Archivos",
+    "used_of": "{used} de {total} usados",
+    "used": "{used} usados",
+    "no_limit": "Tu servidor no fija ningún límite. Esto es lo que ocupan tus archivos.",
+    "almost_full": "Tu almacenamiento en Archivos está casi lleno",
+    "full": "Tu almacenamiento en Archivos está lleno",
+    "state_synced": "Al día",
+    "state_syncing": "Sincronizando",
+    "state_paused": "En pausa",
+    "state_offline": "Sin conexión",
+    "state_error": "Detenido"
+  },
   "desktopQuickCompose": {
     "label": "Redacción rápida",
     "menu": "Redacción rápida",

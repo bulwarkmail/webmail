@@ -7761,6 +7761,19 @@
       "failed": "无法打开文件夹。"
     }
   },
+  "files_storage": {
+    "title": "文件中的存储空间",
+    "used_of": "已用 {used}，共 {total}",
+    "used": "已用 {used}",
+    "no_limit": "服务器未设置上限。这是你的文件占用的空间。",
+    "almost_full": "你在文件中的存储空间快满了",
+    "full": "你在文件中的存储空间已满",
+    "state_synced": "已是最新",
+    "state_syncing": "正在同步",
+    "state_paused": "已暂停",
+    "state_offline": "离线",
+    "state_error": "已停止"
+  },
   "desktopQuickCompose": {
     "label": "快速撰写",
     "menu": "快速撰写",

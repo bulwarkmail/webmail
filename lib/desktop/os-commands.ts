@@ -23,7 +23,7 @@ import { useAuthStore } from '@/stores/auth-store';
 
 export interface OsCommandEnv {
   /** Goes to a page, saving an open composer first. */
-  leaveFor: (path: '/' | '/calendar' | '/contacts') => void | Promise<void>;
+  leaveFor: (path: '/' | '/calendar' | '/contacts' | '/settings/files_sync') => void | Promise<void>;
   /** A route change that isn't leaving anything behind. */
   push: (path: string) => void;
   /** Says something couldn't be opened. */
