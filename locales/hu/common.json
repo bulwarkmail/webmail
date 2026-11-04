@@ -7435,5 +7435,11 @@
     "send_no_consent": "Először kapcsolja be az összeomlási jelentéseket.",
     "send_no_url": "Nincs megadva cím, így nincs hová küldeni. Adjon meg egyet fent.",
     "send_failed": "Az összeomlási jelentést nem sikerült elküldeni."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Olvasatlan levelek száma a tálca ikonján",
+    "unread_badge_description": "Így akkor is látja az új leveleket, ha egy másik alkalmazásban dolgozik.",
+    "tip_compose_keys": "Új üzenet írásához nyomja meg: {keys}",
+    "tip_palette_keys": "Bármely parancs kereséséhez nyomja meg: {keys}"
   }
 }

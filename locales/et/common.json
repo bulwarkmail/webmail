@@ -1068,7 +1068,7 @@
     "submission_limit": "Server keeldus kirja saatmast, sest piirang on täis: {reason}",
     "recipients_refused": "Ei saadetud: server lükkas tagasi {recipients}.",
     "recipients_partly_refused": "Server lükkas tagasi {recipients}. Teised adressaadid saavad kirja kätte.",
-    "send_recipients_rejected": "Ei saadetud - server lükkas kõik adressaadid tagasi.",
+    "send_recipients_rejected": "Ei saadetud: server lükkas kõik adressaadid tagasi.",
     "send_plugin_failed": "Ei saadetud - saatmist käsitlev pistikprogramm ebaõnnestus või võttis liiga kaua aega. Kontrolli enne uuesti saatmist kausta Saadetud.",
     "send_some_recipients_rejected": "Saadetud, kuid mitte neile adressaatidele - server lükkas nad tagasi.",
     "continue_draft": "Jätka mustandiga",
@@ -7435,5 +7435,11 @@
     "send_no_consent": "Lülitage esmalt kokkujooksmise aruanded sisse.",
     "send_no_url": "Aadressi pole määratud, seega pole seda kuhugi saata. Sisestage see ülal.",
     "send_failed": "Kokkujooksmise aruannet ei õnnestunud saata."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Lugemata kirjade arv tegumiriba ikoonil",
+    "unread_badge_description": "Nii näete uut kirja ka siis, kui töötate teises rakenduses.",
+    "tip_compose_keys": "Uue kirja kirjutamiseks vajutage {keys}",
+    "tip_palette_keys": "Mis tahes käsu leidmiseks vajutage {keys}"
   }
 }

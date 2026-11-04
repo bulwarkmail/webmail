@@ -7435,5 +7435,11 @@
     "send_no_consent": "Najprv zapnite hlásenia o zlyhaniach.",
     "send_no_url": "Nie je nastavená žiadna adresa, takže to nie je kam odoslať. Zadajte ju vyššie.",
     "send_failed": "Hlásenie o zlyhaní sa nepodarilo odoslať."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Počet neprečítaných na ikone na paneli úloh",
+    "unread_badge_description": "Aby ste videli novú poštu, aj keď pracujete v inej aplikácii.",
+    "tip_compose_keys": "Stlačte {keys} a napíšte novú správu",
+    "tip_palette_keys": "Stlačte {keys} a nájdite akýkoľvek príkaz"
   }
 }

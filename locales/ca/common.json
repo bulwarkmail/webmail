@@ -7435,5 +7435,11 @@
     "send_no_consent": "Activa primer els informes d'errors greus.",
     "send_no_url": "No hi ha cap adreça, així que no hi ha on enviar-ho. Escriu-ne una a dalt.",
     "send_failed": "No s'ha pogut enviar l'informe d'error."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de no llegits a la icona de la barra de tasques",
+    "unread_badge_description": "Per veure el correu nou mentre treballeu en una altra aplicació.",
+    "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
+    "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
   }
 }

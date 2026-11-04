@@ -7435,5 +7435,11 @@
     "send_no_consent": "Vispirms ieslēdziet avāriju atskaites.",
     "send_no_url": "Adrese nav iestatīta, tāpēc to nav kur sūtīt. Ievadiet to augstāk.",
     "send_failed": "Avārijas atskaiti neizdevās nosūtīt."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nelasīto skaits uzdevumjoslas ikonā",
+    "unread_badge_description": "Lai redzētu jaunu pastu, kamēr strādājat citā lietotnē.",
+    "tip_compose_keys": "Nospiediet {keys}, lai rakstītu jaunu ziņojumu",
+    "tip_palette_keys": "Nospiediet {keys}, lai atrastu jebkuru komandu"
   }
 }

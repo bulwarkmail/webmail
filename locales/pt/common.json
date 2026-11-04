@@ -7435,5 +7435,11 @@
     "send_no_consent": "Ligue primeiro os relatórios de falhas.",
     "send_no_url": "Não há nenhum endereço definido, por isso não há para onde enviar. Introduza um acima.",
     "send_failed": "Não foi possível enviar o relatório de falha."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Número de não lidas no ícone da barra de tarefas",
+    "unread_badge_description": "Para ver novos e-mails enquanto trabalha noutra aplicação.",
+    "tip_compose_keys": "Prima {keys} para escrever uma nova mensagem",
+    "tip_palette_keys": "Prima {keys} para encontrar qualquer comando"
   }
 }

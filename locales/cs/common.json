@@ -7435,5 +7435,11 @@
     "send_no_consent": "Nejprve zapněte hlášení o pádech.",
     "send_no_url": "Není nastavena žádná adresa, takže to nejde kam odeslat. Zadejte ji výše.",
     "send_failed": "Hlášení o pádu se nepodařilo odeslat."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Počet nepřečtených na ikoně na hlavním panelu",
+    "unread_badge_description": "Abyste viděli novou poštu, i když pracujete v jiné aplikaci.",
+    "tip_compose_keys": "Stiskněte {keys} a napište novou zprávu",
+    "tip_palette_keys": "Stiskněte {keys} a najděte jakýkoli příkaz"
   }
 }
