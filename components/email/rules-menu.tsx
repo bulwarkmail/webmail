@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import {
@@ -27,6 +27,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { buildMailboxTree, cn, generateUUID, type MailboxNode } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
+import { sortFolderTree } from "@/lib/move-menu";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFilterStore } from "@/stores/filter-store";
 import { useQuickRuleStore, type FiltersStatus } from "@/stores/quick-rule-store";
@@ -173,7 +174,12 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
   }), [senders, listIds]);
 
   const targetIds = useMemo(() => ruleTargetMailboxIds(target.mailboxes), [target]);
-  const tree = useMemo(() => filterTree(buildMailboxTree(target.mailboxes), targetIds), [target, targetIds]);
+  // In the order every Move list has (lib/move-menu.ts).
+  const locale = useLocale();
+  const tree = useMemo(
+    () => sortFolderTree(filterTree(buildMailboxTree(target.mailboxes), targetIds), locale),
+    [target, targetIds, locale],
+  );
   const junk = useMemo(() => findJunkMailbox(target.mailboxes), [target]);
   const sourceMailboxId = useMemo(() => sourceMailboxOf(anchor, target)?.id ?? null, [anchor, target]);
 
@@ -248,21 +254,18 @@ function ContextFolderItems({
   const render = (nodes: MailboxNode[]): React.ReactNode => nodes.map((node) => {
     const Icon = mailboxIcon(node.role);
     const label = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
+    // Greyed, not plain text, so the desktop app's native copy keeps it as
+    // the head of its subfolders' submenu (data-native-submenu).
+    const enabled = model.targetIds.has(node.id);
     return (
-      <div key={node.id}>
-        {model.targetIds.has(node.id) ? (
-          <ContextMenuItem
-            icon={Icon}
-            label={label}
-            testId={`rules:${kind}:${node.id}`}
-            onClick={() => { model.moveTo(kind, node); onDone(); }}
-          />
-        ) : (
-          <div className="px-3 py-1.5 text-sm flex items-center gap-2 text-muted-foreground">
-            <Icon className="w-4 h-4 flex-shrink-0" />
-            <span>{label}</span>
-          </div>
-        )}
+      <div key={node.id} data-native-submenu={node.children.length > 0 ? "" : undefined}>
+        <ContextMenuItem
+          icon={Icon}
+          label={label}
+          disabled={!enabled}
+          testId={`rules:${kind}:${node.id}`}
+          onClick={() => { model.moveTo(kind, node); onDone(); }}
+        />
         {node.children.length > 0 && <div className="ps-4">{render(node.children)}</div>}
       </div>
     );
