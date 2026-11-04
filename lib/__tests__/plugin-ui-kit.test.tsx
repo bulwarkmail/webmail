@@ -63,7 +63,7 @@ describe('plugin UI kit components', () => {
       ['components/email/email-viewer.tsx', 'w-10 h-10 rounded-full'],
       ['components/email/email-viewer.tsx', 'text-[0.6875rem] font-semibold text-muted-foreground'],
       ['components/email/email-viewer.tsx', 'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]'],
-      ['components/identity/identity-form.tsx', 'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200'],
+      ['components/identity/signature-editor.tsx', 'flex w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 hover:border-muted-foreground'],
     ];
     const kitSource = source('lib/plugin-sandbox/ui-kit/components.tsx');
     for (const [file, classes] of copies) {
