@@ -5901,6 +5901,14 @@
     "usage_label": "Mida see seade hoiab",
     "pin_not_ready": "Seda faili ei ole selle seadme loendis veel. Proovi hetke pärast uuesti."
   },
+  "keyProtection": {
+    "browser_note": "Brauseris asub selle kirja võti samas brauseriprofiilis kui kiri. Kes profiili failid kopeerib, saab seda lugeda, seega kasuta kettakrüpteerimist.",
+    "no_secure_storage": "Selles arvutis pole turvalist võtmehoidlat, mida rakendus saaks kasutada, seega on selle kirja võti kettal ainult hägustatud. Kasuta kettakrüpteerimist.",
+    "wrap_failed": "Selle arvuti turvaline võtmehoidla ei võtnud selle kirja võtit vastu, seega pole see kaitstud nii, nagu peaks. Taaskäivita rakendus ja kasuta kettakrüpteerimist.",
+    "rekey_progress": "Selle seadme kirju krüpteeritakse uuesti: {percent}%. Võid edasi töötada.",
+    "rekey_failed": "Selle seadme kirjade uus krüpteerimine ei lõppenud, seega saab vana võti neid endiselt avada. Rakendus proovib järgmisel käivitusel uuesti.",
+    "reenroll_note": "Pääsuvõti ja süsteemi avamine kasutasid vana PIN-koodi võtit, seega eemaldati need. Kui neid kasutad, seadista need uuesti."
+  },
   "offlineDrafts": {
     "title": "Mustandid selles seadmes",
     "description": "Need mustandid on salvestatud selles seadmes. Need lähevad serverisse ise, kui server on kättesaadav.",
@@ -6812,10 +6820,10 @@
   },
   "appLock": {
     "section_title": "Rakenduse lukk",
-    "section_desc": "Küsib pärast kasutamata aega PIN-koodi, igas aknas ja vahekaardil. Lukus olles jääb selle seadme e-post krüpteerituks ja rakendusel pole selle võtit.",
+    "section_desc": "Küsib pärast kasutuseta aega PIN-koodi igas aknas ja vahekaardil. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",
     "enable_label": "Lukusta PIN-koodiga",
     "enable_desc": "Vaikimisi väljas. PIN-kood jääb sellesse seadmesse.",
-    "protects_desc": "Mille eest see kaitseb: brauseris hoiab PIN-kood selle seadme taga olija rakendusest eemal ja siia salvestatud kirjad krüpteerituna. See ei peata selles arvutis töötavat programmi, sinu paigaldatud brauserilaiendit ega kedagi, kes kopeerib brauseri failid ja saab rahulikult palju PIN-koode proovida, seega tasub valida pikem kood. Töölauarakenduses on PIN-kood seotud ka sinu sisselogimisega selles arvutis. Sinu kontot serveris see ei mõjuta.",
+    "protects_desc": "Mille eest see kaitseb: PIN-kood hoiab selle seadme juures oleva inimese rakendusest eemal. Siin hoitavad kirjad saavad uue võtme, kui lülitad luku sisse või muudad PIN-koodi, ja see võib veidi aega võtta. See ei peata selles arvutis töötavat programmi, sinu paigaldatud brauserilaiendit ega kedagi, kes kopeerib rakenduse failid ja kellel on aega proovida palju PIN-koode, seega tasub kasutada pikemat PIN-koodi. Töölauarakenduses on PIN-koodide proovimiseks vaja ka sinu sisselogimist selles arvutis. Sinu kontot serveris see ei mõjuta.",
     "enable_body": "Valige PIN-kood. Seda on vaja iga kord, kui rakendus lukustub, ja pärast uuesti laadimist või käivitamist.",
     "set_pin_title": "Valige PIN-kood",
     "change_pin": "Muuda PIN-koodi…",

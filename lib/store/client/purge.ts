@@ -38,15 +38,17 @@ export async function deleteStorePool(): Promise<void> {
     await navigator.locks.request(OWNER_LOCK, { signal: AbortSignal.timeout(POOL_LOCK_WAIT_MS) }, removePool);
   } catch (error) {
     if ((error as Error)?.name !== 'TimeoutError' && (error as Error)?.name !== 'AbortError') throw error;
-    // A tab that won't let go, stuck or asleep: the key is gone, so what can be
-    // deleted goes now, and what it still holds can't be read anyway.
+    // A tab that won't let go, stuck or asleep: the app has no key any more, so what
+    // can be deleted goes now, and what it still holds goes at the next open.
     await removePool();
   }
 }
 
 /**
- * Forgets every key first, which makes the files unreadable even if deleting
- * them fails, then has every tab stop its worker and deletes the files.
+ * Forgets every key first, so the app can't read the files even if deleting them
+ * fails, then has every tab stop its worker and deletes the files. The files going is
+ * what counts against a copy of the disk: the browser's own files can hold a forgotten key
+ * for a while (see keys.ts). A slot that couldn't be deleted goes at the next open.
  * Started synchronously: the sign-out may navigate away right after.
  */
 export function purgeStoreFiles(): Promise<void> {
@@ -65,7 +67,7 @@ export function purgeStoreFiles(): Promise<void> {
     // No BroadcastChannel: no store either.
   }
   const poolGone = deleteStorePool().catch(() => {
-    // The key is gone, so what's left can't be read.
+    // The app has no key for what's left, and the next open deletes it.
   });
   return Promise.all([keysGone, poolGone]).then(() => undefined);
 }

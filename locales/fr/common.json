@@ -5901,6 +5901,14 @@
     "usage_label": "Ce que cet appareil garde",
     "pin_not_ready": "Ce fichier n'est pas encore dans la liste de cet appareil. Réessayez dans un instant."
   },
+  "keyProtection": {
+    "browser_note": "Dans un navigateur, la clé de ces messages se trouve dans le même profil de navigateur que les messages. Quiconque copie les fichiers du profil peut les lire : utilisez donc le chiffrement du disque.",
+    "no_secure_storage": "Cet ordinateur n'a pas de stockage sécurisé de clés utilisable par l'application : la clé de ces messages est seulement masquée sur le disque. Utilisez le chiffrement du disque.",
+    "wrap_failed": "Le stockage sécurisé de clés de cet ordinateur n'a pas accepté la clé de ces messages : elle n'est donc pas protégée comme elle le devrait. Redémarrez l'application et utilisez le chiffrement du disque.",
+    "rekey_progress": "Nouveau chiffrement des messages sur cet appareil : {percent} %. Vous pouvez continuer à travailler.",
+    "rekey_failed": "Le nouveau chiffrement des messages sur cet appareil n'a pas abouti : l'ancienne clé peut donc encore les ouvrir. L'application réessaiera au prochain démarrage.",
+    "reenroll_note": "La clé d'accès et le déverrouillage système utilisaient la clé de l'ancien code PIN : ils ont donc été supprimés. Configurez-les de nouveau si vous les utilisez."
+  },
   "offlineDrafts": {
     "title": "Brouillons sur cet appareil",
     "description": "Ces brouillons sont enregistrés sur cet appareil. Ils partent seuls vers le serveur dès qu'il est joignable.",
@@ -6812,10 +6820,10 @@
   },
   "appLock": {
     "section_title": "Verrouillage de l'app",
-    "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que l'app est verrouillée, les e-mails sur cet appareil restent chiffrés et l'app n'a pas de clé pour les lire.",
+    "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
     "enable_label": "Verrouiller avec un code PIN",
     "enable_desc": "Désactivé par défaut. Le code PIN reste sur cet appareil.",
-    "protects_desc": "Contre quoi cela protège : dans un navigateur, le code PIN empêche une personne devant cet appareil d'entrer dans l'application et garde chiffrés les messages stockés ici. Il ne peut pas arrêter un programme exécuté sur cet ordinateur, une extension de navigateur que vous avez installée, ni quelqu'un qui copie les fichiers du navigateur et a le temps d'essayer de nombreux codes : un code plus long en vaut donc la peine. Dans l'application de bureau, le code PIN est aussi lié à votre session sur cet ordinateur. Votre compte sur le serveur n'est pas concerné.",
+    "protects_desc": "Contre quoi cela protège : le code PIN empêche une personne devant cet appareil d'entrer dans l'application. Les messages stockés ici reçoivent une nouvelle clé quand vous activez le verrouillage ou changez le code PIN, ce qui peut prendre un moment. Cela ne peut pas arrêter un programme exécuté sur cet ordinateur, une extension de navigateur que vous avez installée, ni quelqu'un qui copie les fichiers de l'application et a le temps d'essayer de nombreux codes : un code plus long est donc utile. Dans l'application de bureau, essayer des codes demande aussi votre session sur cet ordinateur. Votre compte sur le serveur n'est pas concerné.",
     "enable_body": "Choisissez un code PIN. Il vous sera demandé à chaque verrouillage, et après un rechargement ou un nouveau démarrage.",
     "set_pin_title": "Choisir un code PIN",
     "change_pin": "Changer le code PIN…",

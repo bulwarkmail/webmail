@@ -117,8 +117,10 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
       </SettingItem>
       <p className="pt-2 text-xs text-muted-foreground">
         What a device keeps: mail in every folder from the window the person picks (30 days, 90 days, a year or everything),
-        with calendar, contacts and files, encrypted on the device. That protects against someone copying its files, not
-        against someone using the unlocked browser or app. The limits above can only lower what people pick: where several
+        with calendar, contacts and files, encrypted on the device. In a browser the key sits in the same profile, so this doesn&apos;t stop someone
+        who copies its files: use full-disk encryption. In the desktop app the key also takes that person&apos;s login on
+        that computer. Neither stops someone using the unlocked browser or app. An app lock adds a PIN, which someone with
+        a copy can guess at their own speed, so ask for a long one. The limits above can only lower what people pick: where several
         scopes apply, the lowest value counts, so a scope can&apos;t raise what another one lowered. The app holds itself to
         them when it fetches the policy; the server can&apos;t check what is on a device. A sign-out someone asks for deletes everything.
         One that nobody asked for hides it, as the switch above says. With several accounts signed in, each account follows its own settings.

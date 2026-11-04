@@ -3,8 +3,16 @@
  *
  * Each account's database has a random 32-byte key. It is only ever stored
  * wrapped: AES-GCM with a non-extractable key that lives in IndexedDB, then
- * any extra layers on top (the desktop app's OS keychain, app lock). Forgetting
- * the record makes the file unreadable even if deleting it failed.
+ * any extra layers on top (the desktop app's OS keychain, app lock).
+ *
+ * That first key is non-extractable for script only: the browser keeps its bytes
+ * in plain form in its IndexedDB files, next to the record. So in a browser with no
+ * app lock, someone with a copy of those files can open the database. And a record
+ * deleted or overwritten here stays in those files until the browser compacts them.
+ * So forgetting a record stops the app, and script, from using the key. It doesn't
+ * make a file on disk safe from a copy of the disk: deleting the file does that. And
+ * more layers on a record only count for a key that never sat there with fewer,
+ * which is why those ask for a new key and file (`rekey`).
  */
 
 /**
@@ -35,6 +43,10 @@ export interface AccountRecord {
   /** Layers applied after the WebCrypto wrap, innermost first. */
   layers: string[];
   createdAt: number;
+  /** An older copy of this record, with fewer layers, may still be on disk: the key has to change. */
+  rekey?: true;
+  /** The file from before a new key, until it's known to be deleted. */
+  leftover?: string;
 }
 
 function promisify<T>(request: IDBRequest<T>): Promise<T> {
@@ -109,8 +121,20 @@ export async function listAccountRecords(onlyIfThere = false): Promise<AccountRe
   return withDb((db) => promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).getAll()) as Promise<AccountRecord[]>);
 }
 
-/** The account's key in hex, created on first use. Returns the record too, for the file name. */
-export async function openAccountKey(account: string, layers: readonly WrapLayer[] = []): Promise<{ keyHex: string; record: AccountRecord; fresh: boolean }> {
+function sameLayers(names: readonly string[], layers: readonly WrapLayer[]): boolean {
+  return names.length === layers.length && layers.every((layer, index) => layer.name === names[index]);
+}
+
+function hasMore(from: readonly string[], to: readonly string[]): boolean {
+  return to.some((name) => !from.includes(name));
+}
+
+/**
+ * The account's key in hex, created on first use. Returns the record too, for the file name.
+ * A record with other layers than these gets these. `wrapFailed`: it couldn't, the OS refused,
+ * and the key comes anyway since what's stored is no worse than it was. The caller says so.
+ */
+export async function openAccountKey(account: string, layers: readonly WrapLayer[] = []): Promise<{ keyHex: string; record: AccountRecord; fresh: boolean; wrapFailed?: boolean }> {
   return withDb(async (db) => {
     const wrapping = await wrapKey(db);
     const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
@@ -124,7 +148,17 @@ export async function openAccountKey(account: string, layers: readonly WrapLayer
       const raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuffer(found.iv) }, wrapping, asBuffer(data)));
       const keyHex = toHex(raw);
       raw.fill(0);
-      return { keyHex, record: found, fresh: false };
+      if (sameLayers(found.layers, layers)) return { keyHex, record: found, fresh: false };
+      let rewrapped = data;
+      try {
+        for (const layer of layers) rewrapped = new Uint8Array(await layer.wrap(rewrapped));
+      } catch {
+        return { keyHex, record: found, fresh: false, wrapFailed: true };
+      }
+      const names = layers.map((layer) => layer.name);
+      const record: AccountRecord = { ...found, wrapped: rewrapped, layers: names, ...(found.rekey || hasMore(found.layers, names) ? { rekey: true as const } : {}) };
+      await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
+      return { keyHex, record, fresh: false };
     }
     const raw = crypto.getRandomValues(new Uint8Array(32));
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -145,11 +179,15 @@ export async function openAccountKey(account: string, layers: readonly WrapLayer
   });
 }
 
-/** Adds or removes wrap layers without touching the database key. */
+/**
+ * Adds or removes wrap layers without touching the database key. More layers than before ask for
+ * a new key (`rekey`), and so does the caller who knows better, for a lock key that changed.
+ */
 export async function rewrapAccountKey(
   account: string,
   from: readonly WrapLayer[],
   to: readonly WrapLayer[],
+  options: { rekey?: boolean } = {},
 ): Promise<void> {
   await withDb(async (db) => {
     const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
@@ -161,12 +199,54 @@ export async function rewrapAccountKey(
       data = await layer.unwrap(data);
     }
     for (const layer of to) data = new Uint8Array(await layer.wrap(data));
-    const record: AccountRecord = { ...found, wrapped: data, layers: to.map((layer) => layer.name) };
+    const names = to.map((layer) => layer.name);
+    const { rekey: _before, ...rest } = found;
+    const record: AccountRecord = {
+      ...rest,
+      wrapped: data,
+      layers: names,
+      ...(options.rekey || found.rekey || hasMore(found.layers, names) ? { rekey: true as const } : {}),
+    };
     await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
   });
 }
 
-/** Forgets the account's key. The database file can't be read after this. */
+/** A new random key for a re-encryption, in hex, and a file for it. */
+export function newStoreKey(): { keyHex: string; file: string } {
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  const keyHex = toHex(raw);
+  raw.fill(0);
+  return { keyHex, file: newStoreFileName() };
+}
+
+/** The account's data is whole under this key in this file now. One write, so a crash leaves one or the other. */
+export async function replaceAccountKey(account: string, keyHex: string, file: string, layers: readonly WrapLayer[] = []): Promise<void> {
+  await withDb(async (db) => {
+    const wrapping = await wrapKey(db);
+    const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
+    if (!found) return;
+    const raw = Uint8Array.from(keyHex.match(/../g)!.map((pair) => parseInt(pair, 16)));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    let wrapped = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, wrapping, raw));
+    raw.fill(0);
+    for (const layer of layers) wrapped = new Uint8Array(await layer.wrap(wrapped));
+    const { rekey: _done, ...rest } = found;
+    const record: AccountRecord = { ...rest, file, iv, wrapped, layers: layers.map((layer) => layer.name), leftover: found.file };
+    await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
+  });
+}
+
+/** The old file is gone. */
+export async function clearLeftover(account: string): Promise<void> {
+  await withDb(async (db) => {
+    const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
+    if (!found?.leftover) return;
+    const { leftover: _gone, ...rest } = found;
+    await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(rest));
+  });
+}
+
+/** Forgets the account's key. The app can't read the database file after this. */
 export async function forgetAccountKey(account: string): Promise<void> {
   await withDb((db) => promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).delete(account)).then(() => undefined));
 }
@@ -177,6 +257,11 @@ export async function forgetAccountKey(account: string): Promise<void> {
  * database and nowhere else, because a start has to read it before any store
  * opens, and a copy in the store could never outlive the key that opens it. A
  * cleared database means a new device at the next registration.
+ *
+ * Not sealed. Sealing it with the wrap key would change nothing, since that sits beside
+ * it, and a device at the lock screen still has to hear a wipe. So someone with a copy of
+ * these files can act as this row at the instance: read whether a wipe waits, and report one
+ * as done. It reaches no mail. An admin's "wiped" means the device said so.
  */
 export interface DeviceRecord {
   account: string;
