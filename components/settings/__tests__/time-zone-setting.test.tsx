@@ -73,4 +73,27 @@ describe('time zone setting', () => {
     fireEvent.change(input, { target: { value: '+05:45' } });
     expect(optionTexts()).toEqual([expect.stringMatching(/^Kathmandu/)]);
   });
+
+  // settings-p2-20: abbreviations and an exact offset find their zones first.
+  it('finds zones by abbreviation', () => {
+    const input = openTimeZones();
+    fireEvent.change(input, { target: { value: 'CET' } });
+    const found = optionTexts();
+    expect(found.length).toBeGreaterThan(0);
+    expect(found).toEqual(expect.arrayContaining([expect.stringMatching(/^Berlin/), expect.stringMatching(/^Paris/)]));
+    fireEvent.change(input, { target: { value: 'pst' } });
+    expect(optionTexts()[0]).toMatch(/^Los Angeles/);
+  });
+
+  it('lists the exact offset before offsets that start with the same digits', () => {
+    const input = openTimeZones();
+    fireEvent.change(input, { target: { value: 'GMT+1' } });
+    const found = optionTexts();
+    const offsetOf = (text: string) => /GMT[+-]\d{2}:\d{2}/.exec(text)?.[0];
+    const first = offsetOf(found[0]);
+    // Whatever +1 is today (winter or summer time), it's listed first.
+    expect(first).toMatch(/^GMT\+01:00$/);
+    const firstOther = found.findIndex((text) => offsetOf(text) !== first);
+    expect(found.slice(firstOther).every((text) => offsetOf(text) !== 'GMT+01:00')).toBe(true);
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { timeZoneChoices, timeZoneCity } from '../time-zone-choices';
+import { parseTypedOffset, timeZoneChoices, timeZoneCity, timeZoneSearchRank } from '../time-zone-choices';
 
 const JAN = new Date(Date.UTC(2026, 0, 15, 12));
 
@@ -36,5 +36,25 @@ describe('time zone choices', () => {
   it('keeps a stored zone the runtime does not list', () => {
     const { all } = timeZoneChoices(['Europe/Berlin'], { now: JAN, extra: ['America/Ciudad_Juarez'] });
     expect(all.map((c) => c.value)).toContain('America/Ciudad_Juarez');
+  });
+});
+
+describe('time zone search', () => {
+  it('reads offsets as people type them', () => {
+    expect(parseTypedOffset('GMT+1')).toBe(60);
+    expect(parseTypedOffset('utc-5')).toBe(-300);
+    expect(parseTypedOffset('+05:30')).toBe(330);
+    expect(parseTypedOffset('-0800')).toBe(-480);
+    expect(parseTypedOffset('Berlin')).toBeNull();
+    expect(parseTypedOffset('GMT')).toBeNull();
+  });
+
+  it('puts the zones of an abbreviation and the exact offset first', () => {
+    expect(timeZoneSearchRank('CET', { value: 'Europe/Berlin', offsetMinutes: 60 }, false)).toBe(0);
+    expect(timeZoneSearchRank('cest', { value: 'Europe/Paris', offsetMinutes: 120 }, false)).toBe(0);
+    expect(timeZoneSearchRank('CET', { value: 'Asia/Tokyo', offsetMinutes: 540 }, false)).toBeNull();
+    expect(timeZoneSearchRank('GMT+1', { value: 'Europe/Berlin', offsetMinutes: 60 }, true)).toBe(0);
+    expect(timeZoneSearchRank('GMT+1', { value: 'Australia/Sydney', offsetMinutes: 660 }, true)).toBe(2);
+    expect(timeZoneSearchRank('Berlin', { value: 'Europe/Berlin', offsetMinutes: 60 }, true)).toBe(1);
   });
 });
