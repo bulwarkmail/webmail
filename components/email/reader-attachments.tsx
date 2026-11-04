@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
-import { nativeMenusAvailable } from "@/lib/desktop/native-menu";
+import { isDesktopApp } from "@/lib/desktop/bridge";
 import { IconButton } from "@/components/ui/icon-button";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -129,7 +129,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const tEdit = useTranslations("desktopEdit");
   const menu = useContextMenu<T>();
   const [desktopMenu, setDesktopMenu] = useState(false);
-  useEffect(() => setDesktopMenu(nativeMenusAvailable()), []);
+  useEffect(() => setDesktopMenu(isDesktopApp()), []);
   const menuTarget = menu.contextMenu.data;
   // Opens nothing: no preview, and downloads are off.
   const locked = (attachment: T) => downloadsOff && !opensPreview(attachment);

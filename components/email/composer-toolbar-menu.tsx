@@ -1,5 +1,6 @@
 "use client";
 
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, CONTEXT_MENU_ITEM_CLASS } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -192,7 +193,7 @@ export function ComposerPluginToolbarButtons({ surface, context, alwaysVisible =
     <>
       {actions.map((action) => {
         const Icon = iconForName(action.icon) ?? Puzzle;
-        const tip = action.shortcut ? `${action.label} (${action.shortcut})` : action.label;
+        const tip = action.shortcut ? `${action.label} (${formatShortcutCombo(action.shortcut)})` : action.label;
         return (
           <Button
             key={`${action.pluginId}:${action.id}`}

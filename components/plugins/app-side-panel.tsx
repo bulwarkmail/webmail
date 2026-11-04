@@ -20,6 +20,7 @@
 // { view, context }), and so does api.ui.openPanel there.
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { formatShortcutCombo } from '@/lib/shortcut-keys';
 import { useTranslations } from 'next-intl';
 import { PanelRightClose, PanelRightOpen } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ export function PluginPanelToggle({ open, onClick, className, buttonRef, shortcu
       size="icon"
       onClick={onClick}
       className={cn('h-8 w-8 shrink-0', className)}
-      title={shortcut ? `${label} (${shortcut})` : label}
+      title={shortcut ? `${label} (${formatShortcutCombo(shortcut)})` : label}
       aria-label={label}
       aria-pressed={open}
       aria-keyshortcuts={shortcut ?? undefined}

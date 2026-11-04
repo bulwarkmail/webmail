@@ -17,10 +17,8 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "@/components/icons";
-import { useTranslations } from "next-intl";
-import { estimateNativeMenuWidth, nativeMenuPoint, nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
 import { placeMenu } from "@/lib/menu-placement";
-import { toast } from "@/stores/toast-store";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
 interface Position {
   x: number;
@@ -210,9 +208,6 @@ interface MenuLevel {
 const MenuLevelContext = createContext<MenuLevel | null>(null);
 const neverTouched = () => false;
 
-/** The desktop app shows this menu natively: it renders hidden, submenus and all, to be read. */
-const NativeMenuContext = createContext(false);
-
 function useMenuLevel(recentTouch: () => boolean): MenuLevel {
   const [openId, setOpenId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -259,57 +254,12 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const recentTouch = useCallback(() => Date.now() - lastTouchAt.current < 800, []);
     const level = useMenuLevel(recentTouch);
     const { request: requestLevel } = level;
-    const [nativeRefused, setNativeRefused] = useState(false);
-    const nativeMode = isOpen && mounted && !nativeRefused && nativeMenusAvailable();
-    const positionRef = useRef(position);
-    positionRef.current = position;
-    const tDesktop = useTranslations("desktopUi.menu");
-    const tDesktopRef = useRef(tDesktop);
-    tDesktopRef.current = tDesktop;
 
+    // The desktop app shows this same menu, not a native copy: a native menu
+    // has no icons, and writes keys with Chromium's names rather than Windows'.
     useEffect(() => {
       setMounted(true);
     }, []);
-
-    useEffect(() => {
-      if (!isOpen) setNativeRefused(false);
-    }, [isOpen]);
-
-    // In the desktop app: read what rendered and show that natively. See lib/desktop/native-menu.ts.
-    useEffect(() => {
-      if (!nativeMode) return;
-      const root = localRef.current;
-      if (!root) return;
-      let cancelled = false;
-      void (async () => {
-        const read = await readSettledMenu(root, () => cancelled);
-        if (cancelled) return;
-        if (read.unsupported) {
-          setNativeRefused(true);
-          return;
-        }
-        const { anchor: at } = positionRef.current;
-        // From a right-click it opens at the pointer, which the OS knows best.
-        // From a button: under it, lined up with the edge the HTML menu would
-        // use. The hidden copy is as wide as its widest submenu row, not as the
-        // native menu, so the native menu's own width is estimated.
-        const place = at
-          ? nativeMenuPoint(at, estimateNativeMenuWidth(read.items), getComputedStyle(root).direction === "rtl", ANCHOR_GAP)
-          : undefined;
-        const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
-        if (cancelled) return;
-        // "More from plugins": the menu itself, with what only it can show.
-        if (outcome === "html") {
-          setNativeRefused(true);
-          return;
-        }
-        if (outcome === "gone") toast.warning(tDesktopRef.current("pick_gone"));
-        onCloseRef.current();
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [nativeMode]);
 
     const anchor = position.anchor;
     const anchorKey = anchor ? `${anchor.left},${anchor.top},${anchor.right},${anchor.bottom},${anchor.align ?? ""}` : "";
@@ -529,11 +479,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     // Once placed (it is invisible, and can't take the focus, before), the
     // first item gets the focus.
     useEffect(() => {
-      if (!isOpen || !isPositioned || nativeMode) return;
+      if (!isOpen || !isPositioned) return;
       const root = localRef.current;
       if (!root || root.contains(document.activeElement)) return;
       return focusFirstItem(root);
-    }, [isOpen, isPositioned, nativeMode]);
+    }, [isOpen, isPositioned]);
 
     const setRefs = (node: HTMLDivElement | null) => {
       localRef.current = node;
@@ -549,7 +499,6 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const renderPosition = adjustedPosition ?? position;
 
     return createPortal(
-      <NativeMenuContext.Provider value={nativeMode}>
       <MenuLevelContext.Provider value={level}>
         <div
           ref={setRefs}
@@ -565,7 +514,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             left: renderPosition.x,
             top: renderPosition.y,
             maxWidth: `calc(100vw - ${2 * VIEWPORT_MARGIN}px)`,
-            visibility: isPositioned && !nativeMode ? "visible" : "hidden",
+            visibility: isPositioned ? "visible" : "hidden",
           }}
           role="menu"
           aria-label={label}
@@ -588,8 +537,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             {children}
           </div>
         </div>
-      </MenuLevelContext.Provider>
-      </NativeMenuContext.Provider>,
+      </MenuLevelContext.Provider>,
       document.body
     );
   }
@@ -691,10 +639,9 @@ export function ContextMenuItem({
 }
 
 /**
- * The key that does what a menu row does, at the row's end, muted, as a keycap. The
- * desktop app's native menu shows it as the item's accelerator, apart from the label
- * (lib/desktop/native-menu.ts reads `data-menu-shortcut`). Key hints mean nothing
- * without a keyboard: hidden on touch (R8).
+ * The key that does what a menu row does, at the row's end, muted, as a keycap, in the
+ * app's language as Windows writes it ("Umschalt + R", "Entf" in German). Key hints mean
+ * nothing without a keyboard: hidden on touch (R8).
  */
 export function MenuShortcut({ keys, className }: { keys: string; className?: string }) {
   return (
@@ -705,7 +652,7 @@ export function MenuShortcut({ keys, className }: { keys: string; className?: st
         className
       )}
     >
-      {keys}
+      {formatShortcutCombo(keys)}
     </kbd>
   );
 }
@@ -752,7 +699,6 @@ export function ContextMenuSubMenu({
   hint,
 }: ContextMenuSubMenuProps) {
   const parent = useContext(MenuLevelContext);
-  const native = useContext(NativeMenuContext);
   const id = useId();
   // Outside a ContextMenu (a host's own panel) it keeps its own state.
   const [localOpen, setLocalOpen] = useState(false);
@@ -842,12 +788,7 @@ export function ContextMenuSubMenu({
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
 
-      {native && !disabled && (
-        <div data-submenu-panel="" role="menu" aria-label={label} hidden={false}>
-          {children}
-        </div>
-      )}
-      {!native && isOpen && !disabled && (
+      {isOpen && !disabled && (
         <MenuLevelContext.Provider value={ownLevel}>
           <SubMenuPanel
             ref={panelRef}

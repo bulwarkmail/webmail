@@ -1,14 +1,12 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContextMenu, ContextMenuHeader, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from '@/components/ui/context-menu';
-import type { BulwarkDesktopBridge, DesktopNativeMenuItem } from '../types';
+import type { BulwarkDesktopBridge } from '../types';
 import { accentColours, applySystemAccent } from '../system-accent';
 import { mergedDesktopState, registerDesktopSurface, resetDesktopCommands, runDesktopCommand, setDesktopBaseState } from '../commands';
-import { readMenu } from '../native-menu';
 import { noteOpenDraft, resetOpenDrafts, restoreUrlFor } from '../window-restore';
 import { readDesktopPrefs, resetDesktopPrefsCache, setDesktopPref } from '../preferences';
 import { closePopoutWindow, isPopoutPath } from '@/lib/popout/window-role';
-import { toast } from '@/stores/toast-store';
 
 function setBridge(bridge: Partial<BulwarkDesktopBridge> | undefined) {
   window.bulwarkDesktop = bridge as BulwarkDesktopBridge | undefined;
@@ -42,155 +40,34 @@ function testMenu(extra?: React.ReactNode, handlers: { reply?: () => void; inbox
   );
 }
 
-describe('an HTML menu shown natively', () => {
-  let popup: ReturnType<typeof vi.fn>;
-  let answer: (id: string | null) => void;
-
-  beforeEach(() => {
-    popup = vi.fn(() => new Promise<string | null>((resolve) => { answer = resolve; }));
-    setBridge({ version: 1, platform: 'win32', menu: { setState: () => {}, popup: popup as never } });
-  });
-
-  async function openMenu(children: React.ReactNode, onClose = vi.fn()) {
-    render(<ContextMenu isOpen position={{ x: 10, y: 10 }} onClose={onClose}>{children}</ContextMenu>);
-    await waitFor(() => expect(popup).toHaveBeenCalled());
-    return { items: popup.mock.calls[0][0] as DesktopNativeMenuItem[], at: popup.mock.calls[0][1], onClose };
-  }
-
-  it('reads every kind of row, in order, with submenus', async () => {
-    const { items } = await openMenu(testMenu());
-    expect(items.map((item) => item.label ?? item.type)).toEqual(['Three messages', 'Reply', 'Forward', 'separator', 'Move to', 'Rules']);
-    expect(items[0].enabled).toBe(false);
-    expect(items[2].enabled).toBe(false);
-    expect(items[4].submenu?.map((item) => item.label)).toEqual(['Inbox', 'R&D']);
-    // A disabled submenu shows, and has nothing in it.
-    expect(items[5].enabled).toBe(false);
-    expect(items[5].submenu).toBeUndefined();
-  });
-
-  it('takes the label without the shortcut or the hint', async () => {
-    const { items } = await openMenu(testMenu());
-    expect(items[1].label).toBe('Reply');
-  });
-
-  it('at the pointer from a right-click, under the button from a button', async () => {
-    const { at } = await openMenu(testMenu());
-    expect(at).toBeUndefined();
-    popup.mockClear();
-    render(
-      <ContextMenu isOpen position={{ x: 0, y: 0, anchor: { left: 40, top: 50, right: 90, bottom: 70 } }} onClose={() => {}}>
-        <ContextMenuItem label="One" onClick={() => {}} />
-      </ContextMenu>,
-    );
-    await waitFor(() => expect(popup).toHaveBeenCalled());
-    expect(popup.mock.calls[0][1]).toEqual({ x: 40, y: 74 });
-  });
-
-  it('a pick runs the HTML row, the one a browser would run, and closes the menu', async () => {
-    const reply = vi.fn();
-    const inbox = vi.fn();
-    const { items, onClose } = await openMenu(testMenu(undefined, { reply, inbox }));
-    await act(async () => {
-      answer(items[4].submenu![0].id!);
-    });
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(inbox).toHaveBeenCalledTimes(1);
-    expect(reply).not.toHaveBeenCalled();
-  });
-
-  it('dismissing it runs nothing and closes the menu', async () => {
-    const reply = vi.fn();
-    const { onClose } = await openMenu(testMenu(undefined, { reply }));
-    await act(async () => {
-      answer(null);
-    });
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(reply).not.toHaveBeenCalled();
-  });
-
-  it('the hidden copy is never visible', async () => {
-    await openMenu(testMenu());
-    const menu = document.body.querySelector<HTMLElement>('[role="menu"]');
-    expect(menu?.style.visibility).toBe('hidden');
-  });
-
-  it('stays HTML when something in it can\'t be shown natively', async () => {
-    render(
-      <ContextMenu isOpen position={{ x: 10, y: 10 }} onClose={() => {}}>
-        {testMenu(<input type="color" aria-label="Colour" />)}
-      </ContextMenu>,
-    );
-    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
-    expect(popup).not.toHaveBeenCalled();
-    expect(screen.getByRole('menuitem', { name: /Reply/ })).toBeTruthy();
-  });
-
-  it('a plugin\'s frame keeps the rest native, with a line to the HTML menu', async () => {
-    const frame = (
-      <div data-plugin-slot="context-menu-email"><iframe title="plugin" /></div>
-    );
-    const onClose = vi.fn();
-    const { items } = await openMenu(testMenu(frame), onClose);
-    expect(items.at(-1)).toMatchObject({ label: 'from_plugins' });
-    expect(items.map((item) => item.label)).toContain('Reply');
-    await act(async () => {
-      answer(items.at(-1)!.id!);
-    });
-    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
-    expect(onClose).not.toHaveBeenCalled();
-  });
-
-  it('a frame that is no plugin\'s stays HTML whole', () => {
-    const root = document.createElement('div');
-    root.innerHTML = '<button role="menuitem">Reply</button><iframe></iframe>';
-    expect(readMenu(root).unsupported).toBe(true);
-  });
-
-  it('a row that went while the menu was up says so, instead of doing nothing', async () => {
-    const warning = vi.spyOn(toast, 'warning').mockImplementation(() => '' as never);
-    const reply = vi.fn();
-    const { items, onClose } = await openMenu(testMenu(undefined, { reply }));
-    const row = screen.getAllByRole('menuitem', { hidden: true }).find((el) => el.textContent?.includes('Reply'))!;
-    row.parentElement!.remove();
-    await act(async () => {
-      answer(items[1].id!);
-    });
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(reply).not.toHaveBeenCalled();
-    expect(warning).toHaveBeenCalledWith('pick_gone');
-    warning.mockRestore();
-  });
-
-  it('a row with no words stays HTML too: a colour swatch says nothing in a native menu', () => {
-    const root = document.createElement('div');
-    root.innerHTML = '<button role="menuitem"><svg></svg></button>';
-    expect(readMenu(root).unsupported).toBe(true);
-  });
-
-  it('a search field over a list is left out, and what it searches stays', () => {
-    const root = document.createElement('div');
-    root.innerHTML = '<input type="search" /><button role="menuitem">Inbox</button>';
-    const read = readMenu(root);
-    expect(read.unsupported).toBe(false);
-    expect(read.items.map((item) => item.label)).toEqual(['Inbox']);
-  });
-
-  it('reads check and radio rows', () => {
-    const root = document.createElement('div');
-    root.innerHTML = '<button role="menuitemcheckbox" aria-checked="true">Show</button><button role="menuitemradio" aria-checked="false">Other</button>';
-    expect(readMenu(root).items).toMatchObject([
-      { type: 'checkbox', checked: true, label: 'Show' },
-      { type: 'radio', checked: false, label: 'Other' },
-    ]);
-  });
-});
-
 describe('the same menu in a browser', () => {
   it('is the HTML menu, on screen, and no bridge is asked', async () => {
     render(<ContextMenu isOpen position={{ x: 10, y: 10 }} onClose={() => {}}>{testMenu()}</ContextMenu>);
     await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
     // A closed submenu's rows aren't in the page.
     expect(screen.queryByRole('menuitem', { name: 'Inbox' })).toBeNull();
+  });
+});
+
+describe('the same menu in the desktop app', () => {
+  it('is the HTML menu too, with its icons and keys, and no native menu is asked for', async () => {
+    const popup = vi.fn(async () => null);
+    setBridge({ version: 1, platform: 'win32', menu: { setState: () => {}, popup: popup as never } });
+    document.documentElement.lang = 'de';
+    const Icon = () => <svg data-testid="row-icon" />;
+    render(
+      <ContextMenu isOpen position={{ x: 10, y: 10 }} onClose={() => {}}>
+        <ContextMenuItem icon={Icon} label="Allen antworten" onClick={() => {}} shortcut="Shift + R" />
+      </ContextMenu>,
+    );
+    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
+    const row = screen.getByRole('menuitem', { name: /Allen antworten/ });
+    expect(row.querySelector('[data-testid="row-icon"]')).not.toBeNull();
+    // Windows' own words for the keys, not Chromium's "Umschalttaste".
+    expect(row.querySelector('[data-menu-shortcut]')?.textContent).toBe('Umschalt + R');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup).not.toHaveBeenCalled();
+    document.documentElement.lang = '';
   });
 });
 
