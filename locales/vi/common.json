@@ -1752,6 +1752,7 @@
         "status_inactive": "Chưa bật trên thiết bị này",
         "status_unsupported": "Trình duyệt này không hỗ trợ Web Push",
         "status_lite": "Bulwark Lite không hỗ trợ Web Push; tính năng này cần máy chủ Bulwark.",
+        "status_demo": "Thông báo nền không khả dụng trong bản demo.",
         "status_busy": "Đang xử lý…",
         "enable": "Bật",
         "reenable": "Đăng ký lại",
@@ -1778,7 +1779,12 @@
         "confirm_revoke_message_this": "Thiết bị này sẽ ngừng nhận thông báo chạy nền ngay lập tức.",
         "shared_mailboxes_no_push": "Hộp thư được người khác chia sẻ với bạn không gửi thông báo chạy nền.",
         "error_forbidden": "Máy chủ thư không cho phép bật thông báo chạy nền cho tài khoản này.",
-        "error_over_quota": "Tài khoản này có quá nhiều lượt đăng ký push trên máy chủ thư (giới hạn thường là 15). Hãy thu hồi các thiết bị không còn dùng trong phần cài đặt thông báo rồi thử lại."
+        "error_over_quota": "Tài khoản này có quá nhiều lượt đăng ký push trên máy chủ thư (giới hạn thường là 15). Hãy thu hồi các thiết bị không còn dùng trong phần cài đặt thông báo rồi thử lại.",
+        "error_blocked": "Thông báo đang bị chặn cho trang này. Hãy cho phép trong cài đặt trang của trình duyệt rồi thử lại.",
+        "error_not_granted": "Thông báo không được cho phép nên push vẫn tắt.",
+        "error_verification_timeout": "Máy chủ thư không xác nhận thiết bị này kịp thời nên push vẫn tắt. Hãy thử lại sau một phút.",
+        "error_relay": "Hiện không thể kết nối với relay push nên push vẫn tắt. Hãy thử lại sau.",
+        "error_teardown": "Push đã tắt trong trình duyệt này nhưng không thể kết nối với máy chủ thư hoặc relay. Thông báo có thể tiếp tục đến trong vài ngày. Để dừng sớm hơn, khi có mạng trở lại hãy bật cài đặt nâng cao và thu hồi thiết bị này trong Thiết bị đã đăng ký."
       },
       "push_all": {
         "title": "Tất cả tài khoản",

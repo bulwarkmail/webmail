@@ -1780,6 +1780,7 @@
         "status_inactive": "Niewłączone na tym urządzeniu",
         "status_unsupported": "Ta przeglądarka nie obsługuje Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Powiadomienia w tle nie są dostępne w wersji demonstracyjnej.",
         "title": "Powiadomienia w tle",
         "devices_title": "Zarejestrowane urządzenia",
         "devices_desc": "Wszystkie urządzenia zarejestrowane do odbioru powiadomień w tle dla tego konta. Unieważnienie natychmiast wstrzymuje ich odbiór.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "To urządzenie natychmiast przestanie odbierać powiadomienia w tle.",
         "shared_mailboxes_no_push": "Skrzynki pocztowe udostępnione ci przez innych nie wysyłają powiadomień w tle.",
         "error_forbidden": "Serwer poczty nie zezwala na powiadomienia w tle dla tego konta.",
-        "error_over_quota": "To konto ma zbyt wiele rejestracji push na serwerze poczty (limit wynosi zwykle 15). Unieważnij nieużywane urządzenia w ustawieniach powiadomień i spróbuj ponownie."
+        "error_over_quota": "To konto ma zbyt wiele rejestracji push na serwerze poczty (limit wynosi zwykle 15). Unieważnij nieużywane urządzenia w ustawieniach powiadomień i spróbuj ponownie.",
+        "error_blocked": "Powiadomienia są zablokowane dla tej witryny. Zezwól na nie w ustawieniach witryny w przeglądarce i spróbuj ponownie.",
+        "error_not_granted": "Nie zezwolono na powiadomienia, więc push pozostaje wyłączony.",
+        "error_verification_timeout": "Serwer poczty nie potwierdził tego urządzenia na czas, więc push pozostaje wyłączony. Spróbuj ponownie za minutę.",
+        "error_relay": "Przekaźnik push jest teraz niedostępny, więc push pozostaje wyłączony. Spróbuj ponownie później.",
+        "error_teardown": "Push jest wyłączony w tej przeglądarce, ale serwer poczty lub przekaźnik był niedostępny. Powiadomienia mogą przychodzić jeszcze przez kilka dni. Aby zatrzymać je wcześniej, gdy znów będziesz online, włącz ustawienia zaawansowane i unieważnij to urządzenie w sekcji Zarejestrowane urządzenia."
       }
     },
     "language_region": {

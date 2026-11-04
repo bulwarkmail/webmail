@@ -6,7 +6,9 @@ import { RateLimitError, RequestTimeoutError } from '@/lib/jmap/client';
 import {
   buildEmailPushConfig,
   disableWebPush,
+  dropAllWebPushRegistrations,
   enableWebPush,
+  endWebPushForSignOut,
   isWebPushEnabled,
   listPushDevices,
   mailAccountsWithoutPush,
@@ -16,8 +18,10 @@ import {
   revokePushDevice,
   waitForWebPushResync,
 } from '@/lib/web-push';
+import { webPushErrorKey } from '@/lib/web-push-errors';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
+import { keepRelayRegistration } from '@/lib/pwa-notify/worker-state';
 
 const RELAY = 'https://relay.example';
 const RELAY_BASE_KEY = `bulwark.push.relayBase.v1.${'acct-1'}`;
@@ -275,7 +279,7 @@ function installFetch(activeByDevice: Record<string, boolean | 'unknown'>) {
     if (url.includes('/api/push/active/')) {
       const device = url.split('/api/push/active/')[1];
       const state = activeByDevice[device];
-      if (state === undefined || state === 'unknown') return json({ error: 'Unknown' }, 404);
+      if (state === undefined || state === 'unknown') return json({ error: 'Unknown subscription' }, 404);
       return json({ active: state });
     }
     return json({});
@@ -472,6 +476,532 @@ describe('enableWebPush', () => {
 // Registrations made before the client learned about the delivery filter are
 // repaired in the background on app start - nobody should have to find the
 // settings toggle to stop the spam pushes.
+describe('enableWebPush when the verification does not come', () => {
+  // The relay's poll stays empty until `arrivesAfterTouch` calls come in, like a
+  // Stalwart that skipped the verification until the subscription is touched.
+  function installSilentRelay(codeOnceTouched: () => boolean) {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      if (url.endsWith('/api/push/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/verify/')) return json({ verificationCode: codeOnceTouched() ? 'late-code' : null });
+      return json({});
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  }
+
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('keeps polling through a network blip', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    let polls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      if (url.endsWith('/api/push/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/verify/')) {
+        polls += 1;
+        if (polls === 1) throw new TypeError('Failed to fetch');
+        return json({ verificationCode: 'code' });
+      }
+      return json({});
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(await settled).toBe('done');
+    expect(client.verifyPushSubscription).toHaveBeenCalledWith('push-new', 'code');
+  });
+
+  it('removes its unverified subscription and reads as off when the code never comes', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    installSilentRelay(() => false);
+
+    const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    expect(await settled).toMatch(/verif/i);
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+    expect(client.verifyPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('removes its subscription when the server refuses the code', async () => {
+    const client = makeClient([]);
+    installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Verification code does not match.'));
+
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toThrow('does not match');
+
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('keeps the old subscription working when its replacement fails verification', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('nope'));
+
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false, forceRecreate: true })).rejects.toThrow('nope');
+
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBe('push-old');
+  });
+
+  it('touches the subscription after the server\'s minute, which makes it send the code', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    installSilentRelay(() => (client.updatePushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0);
+
+    const run = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    const settled = run.then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(58_000);
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(client.updatePushSubscription).toHaveBeenCalledTimes(1);
+    expect((client.updatePushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe('push-new');
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await settled).toBe('done');
+    expect(client.verifyPushSubscription).toHaveBeenCalledWith('push-new', 'late-code');
+  });
+});
+
+describe('two tabs at once', () => {
+  // What the browser's Web Locks do: one holder at a time, in order.
+  function installLocks() {
+    let tail: Promise<unknown> = Promise.resolve();
+    const request = vi.fn(async (_name: string, run: () => Promise<unknown>) => {
+      const next = tail.then(run, run);
+      tail = next.catch(() => undefined);
+      return next;
+    });
+    Object.defineProperty(navigator, 'locks', { configurable: true, value: { request } });
+    return request;
+  }
+
+  afterEach(() => {
+    delete (navigator as unknown as { locks?: unknown }).locks;
+  });
+
+  // A server that knows what was created and destroyed, as the race needs.
+  function statefulClient() {
+    const subs: JmapPushSubscription[] = [];
+    const client = makeClient(subs);
+    let next = 0;
+    (client.createPushSubscription as ReturnType<typeof vi.fn>).mockImplementation(async (params: { deviceClientId: string }) => {
+      const id = `push-${++next}`;
+      subs.push(sub(id, params.deviceClientId));
+      return id;
+    });
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockImplementation(async (id: string) => {
+      if (client.destroyed.includes(id)) throw new Error('notFound');
+    });
+    return client;
+  }
+
+  it('makes one subscription, and neither tab fails', async () => {
+    installLocks();
+    const client = statefulClient();
+    installFetch({});
+
+    const results = await Promise.allSettled([
+      enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }),
+      enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }),
+    ]);
+
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+    expect(client.destroyed).toEqual([]);
+    expect(await client.listPushSubscriptions()).toHaveLength(1);
+  });
+
+  it('waits for a running enable before turning off', async () => {
+    const request = installLocks();
+    const client = statefulClient();
+    installFetch({});
+
+    const enabling = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    await Promise.all([enabling, disableWebPush({ client, relayBaseUrl: RELAY })]);
+
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(await client.listPushSubscriptions()).toEqual([]);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('still works in a browser without Web Locks', async () => {
+    const client = statefulClient();
+    installFetch({});
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('what enabling and disabling say when they fail', () => {
+  it('tells a blocked browser from a question not answered', async () => {
+    const client = makeClient([]);
+    installFetch({});
+    (globalThis as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+    (window as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_blocked');
+
+    const unanswered = { permission: 'default', requestPermission: async () => 'default' };
+    (globalThis as unknown as { Notification: unknown }).Notification = unanswered;
+    (window as unknown as { Notification: unknown }).Notification = unanswered;
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_not_granted');
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('names an unreachable relay, and a relay that refuses', async () => {
+    const client = makeClient([]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_relay');
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      return String(input).endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({}, 500);
+    }));
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_relay');
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('names a verification that never came', async () => {
+    vi.useFakeTimers();
+    try {
+      const client = makeClient([]);
+      vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+        if (url.endsWith('/vapid-public-key')) return json({ publicKey: 'QUJD' });
+        return json({ verificationCode: null });
+      }));
+      const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).catch((e: unknown) => webPushErrorKey(e));
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(await settled).toBe('error_verification_timeout');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps naming the server refusals, and nothing for an unknown error', () => {
+    expect(webPushErrorKey(refusedMap())).toBe('error_forbidden');
+    expect(webPushErrorKey(jmapSetError('x', OVER_QUOTA))).toBe('error_over_quota');
+    expect(webPushErrorKey(new Error('boom'))).toBeNull();
+  });
+
+  it('says so when turning off could not reach the server, and still ends up off here', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+    (client.destroyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('offline'));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_teardown');
+
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('says so when turning off could not reach the relay', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_teardown');
+
+    expect(client.destroyed).toEqual(['push-mine']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('does not count a record the relay no longer has as a failure', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).resolves.toBeUndefined();
+  });
+
+  it('keeps the browser subscription for the other account, and says nothing when all went well', async () => {
+    const { browserSub } = installPushBrowser();
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem('bulwark.push.subscriptionId.v1.other-account', 'push-other');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).resolves.toBeUndefined();
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+});
+
+describe('an endpoint the push service gave up on', () => {
+  const ENDPOINT_KEY = `bulwark.push.endpoint.v1.${ACCOUNT_ID}`;
+
+  function registered() {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    localStorage.setItem(ENDPOINT_KEY, 'https://fcm.example/endpoint');
+    return makeClient([sub('push-mine', THIS_DEVICE)]);
+  }
+
+  it('gets a new subscription when the relay dropped the record for the very endpoint this browser still holds', async () => {
+    const { browserSub, registration } = installPushBrowser();
+    const client = registered();
+    installFetch({}); // The relay answers 404 for this device.
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(registration.pushManager.subscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not take a relay that lacks the route for one that lost the record', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      if (url.includes('/api/push/active/')) return json({ error: 'Not found' }, 404);
+      return url.endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('moves the other logins to the new endpoint, connected or not', async () => {
+    const { registration } = installPushBrowser();
+    const moved = { endpoint: 'https://fcm.example/moved', options: { applicationServerKey: new Uint8Array([65, 66, 67]).buffer }, getKey: () => new Uint8Array([1, 2, 3]).buffer, unsubscribe: vi.fn(async () => true) };
+    (registration.pushManager.subscribe as ReturnType<typeof vi.fn>).mockResolvedValue(moved);
+    const stored = new Map<string, string>();
+    vi.stubGlobal('caches', {
+      open: async () => ({
+        match: async (key: string) => (stored.has(key) ? new Response(stored.get(key)) : undefined),
+        put: async (key: string, res: Response) => { stored.set(key, await res.text()); },
+      }),
+    });
+    await keepRelayRegistration('other-login', { relay: 'https://relay-of-other.example', subscriptionId: 'device-other', accountLabel: 'o@example.org' }, 'QUJD');
+    const client = registered();
+    const bodies: Array<{ url: string; body: { subscriptionId: string; subscription: { endpoint: string }; accountLabel?: string } }> = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      if (url.endsWith('/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/active/')) return json({ error: 'Unknown subscription' }, 404);
+      if (url.endsWith('/api/push/register/web')) bodies.push({ url, body: JSON.parse(String(init?.body)) });
+      return json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    const other = bodies.find((b) => b.body.subscriptionId === 'device-other');
+    expect(other?.url).toBe('https://relay-of-other.example/api/push/register/web');
+    expect(other?.body.subscription.endpoint).toBe('https://fcm.example/moved');
+    expect(other?.body.accountLabel).toBe('o@example.org');
+    expect(bodies.filter((b) => b.body.subscriptionId === THIS_DEVICE)).toHaveLength(1);
+  });
+
+  it('keeps the subscription while the relay knows the record', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    installFetch({ [THIS_DEVICE]: true });
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('keeps it when the relay cannot be asked', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    const calls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('/api/push/active/')) throw new TypeError('blip');
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      return url.endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.some((url) => url.includes('/api/push/active/'))).toBe(true);
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('only registers when another account already moved the browser to a new endpoint', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    localStorage.setItem(ENDPOINT_KEY, 'https://fcm.example/older');
+    installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+    expect(localStorage.getItem(ENDPOINT_KEY)).toBe('https://fcm.example/endpoint');
+  });
+
+  it('does not mistake a move to another relay for a dead endpoint', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+});
+
+describe('a subscription id the server gave to another device', () => {
+  // Stalwart hands out the lowest free id: this browser's subscription expired,
+  // and the phone that registered next got the same id.
+  it('creates its own instead of taking over the other device\'s', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({ [OTHER_DEVICE]: true });
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+    expect(client.destroyed).toEqual([]);
+    expect(localStorage.getItem(SUB_KEY)).toBe('push-new');
+  });
+
+  it('leaves it alone when turning off', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({});
+
+    await disableWebPush({ client, relayBaseUrl: RELAY });
+
+    expect(client.destroyed).toEqual([]);
+  });
+
+  it('leaves it alone on Re-register', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({ [OTHER_DEVICE]: true });
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false, forceRecreate: true });
+
+    expect(client.destroyed).toEqual([]);
+  });
+});
+
+describe('a setup that gets stuck', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    delete (navigator as unknown as { locks?: unknown }).locks;
+  });
+
+  it('fails in the end and lets the next one through', async () => {
+    vi.useFakeTimers();
+    let tail: Promise<unknown> = Promise.resolve();
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = tail.then(run, run); tail = next.catch(() => undefined); return next; } },
+    });
+    const { registration } = installPushBrowser();
+    (registration.pushManager.getSubscription as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    (registration.pushManager.subscribe as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise(() => {}));
+    const client = makeClient([]);
+    installFetch({});
+
+    const stuck = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', () => 'failed');
+    await vi.advanceTimersByTimeAsync(1_000);
+    const second = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', () => 'failed');
+    await vi.advanceTimersByTimeAsync(200_000);
+
+    expect(await stuck).toBe('failed');
+    expect(await second).toBe('done');
+  });
+
+  it('turns off for the account it was asked about, even if the client disconnected while waiting', async () => {
+    let tail: Promise<unknown> = Promise.resolve();
+    let release = () => {};
+    tail = new Promise<void>((resolve) => { release = resolve; });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = tail.then(run, run); tail = next.catch(() => undefined); return next; } },
+    });
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    let accountId = ACCOUNT_ID;
+    (client as unknown as { getAccountId: () => string }).getAccountId = () => accountId;
+    const calls = installFetch({});
+
+    const off = disableWebPush({ client, relayBaseUrl: RELAY }).catch(() => undefined);
+    accountId = '';
+    release();
+    await off;
+
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+    expect(calls).toContainEqual({ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+  });
+});
+
+describe('a re-sync waiting its turn', () => {
+  afterEach(() => { delete (navigator as unknown as { locks?: unknown }).locks; });
+
+  it('does not bring back what another tab turned off meanwhile', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({ [THIS_DEVICE]: true });
+    let turn: Promise<unknown> = Promise.resolve();
+    let release = () => {};
+    turn = new Promise<void>((resolve) => { release = resolve; });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = turn.then(run, run); turn = next.catch(() => undefined); return next; } },
+    });
+
+    const resync = resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    await vi.waitFor(() => expect((navigator as unknown as { locks: unknown }).locks).toBeTruthy());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    localStorage.removeItem(SUB_KEY); // The other tab, holding the lock.
+    release();
+    await resync;
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+});
+
+describe('a registration from before the relay was remembered', () => {
+  it('gets the relay noted when it is refreshed', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({ [THIS_DEVICE]: true });
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe(RELAY);
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 
@@ -502,6 +1032,48 @@ describe('resyncWebPush when the relay changed (#903)', () => {
     expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
     expect(client.destroyed).toContain('push-old');
+  });
+
+  it('leaves no record on the relay it moved away from', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
+
+    expect(calls).toContainEqual({ url: `https://old-relay.example/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+    expect(calls).not.toContainEqual({ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe(RELAY);
+    expect(client.destroyed).toEqual(['push-old']);
+  });
+
+  it('keeps the old relay until the new subscription is verified', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('nope'));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false);
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe('https://old-relay.example');
+  });
+
+  it('does not contact the built-in relay to clean up when third-party traffic is off', async () => {
+    setNoThirdPartyTraffic(true);
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, DEFAULT_RELAY_BASE_URL);
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.filter((c) => c.url.startsWith(DEFAULT_RELAY_BASE_URL))).toEqual([]);
   });
 
   it('re-registers inside the daily limit when the admin switched relays, and only once', async () => {
@@ -1388,6 +1960,18 @@ describe('disableWebPush', () => {
     expect(localStorage.getItem(REFUSED_KEY)).toBeNull();
   });
 
+  it('drops the record on the relay it was registered with, not only the current one', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-tracked');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-tracked', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await disableWebPush({ client, relayBaseUrl: RELAY });
+
+    expect(calls).toContainEqual({ url: `https://old-relay.example/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+  });
+
   it('drops the relay registration for this device', async () => {
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     const client = makeClient([]);
@@ -1399,6 +1983,84 @@ describe('disableWebPush', () => {
       url: `${RELAY}/api/push/register/${THIS_DEVICE}`,
       method: 'DELETE',
     });
+  });
+});
+
+describe('endWebPushForSignOut', () => {
+  it('takes everything down for a login with push on, using the relay it registered with', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(client.destroyed).toEqual(['push-mine']);
+    expect(calls).toEqual([{ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' }]);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('does nothing and calls nobody for a login without push', async () => {
+    const client = makeClient([]);
+    const calls = installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(calls).toEqual([]);
+    expect(client.listPushSubscriptions).not.toHaveBeenCalled();
+  });
+
+  it('never throws: signing out goes on', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('offline'); }));
+    (client.destroyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('offline'));
+
+    await expect(endWebPushForSignOut(client)).resolves.toBeUndefined();
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('forgets the key material with nobody left', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const { browserSub } = installPushBrowser();
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('dropAllWebPushRegistrations', () => {
+  it('takes down every login this browser registered, connected or not, and calls no relay it did not use', async () => {
+    const { browserSub } = installPushBrowser();
+    localStorage.setItem('bulwark.push.subscriptionId.v1.a', 'x');
+    localStorage.setItem('bulwark.push.deviceClientId.v1.a', 'device-a');
+    localStorage.setItem('bulwark.push.relayBase.v1.a', RELAY);
+    localStorage.setItem('bulwark.push.subscriptionId.v1.b', 'y');
+    localStorage.setItem('bulwark.push.deviceClientId.v1.b', 'device-b');
+    const calls = installFetch({});
+
+    await dropAllWebPushRegistrations();
+
+    expect(calls).toEqual([{ url: `${RELAY}/api/push/register/device-a`, method: 'DELETE' }]);
+    expect(localStorage.getItem('bulwark.push.subscriptionId.v1.a')).toBeNull();
+    expect(localStorage.getItem('bulwark.push.subscriptionId.v1.b')).toBeNull();
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing with nothing registered', async () => {
+    const { browserSub } = installPushBrowser();
+    const calls = installFetch({});
+    await dropAllWebPushRegistrations();
+    expect(calls).toEqual([]);
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
   });
 });
 

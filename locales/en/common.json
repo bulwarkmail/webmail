@@ -1740,6 +1740,7 @@
         "status_inactive": "Not enabled on this device",
         "status_unsupported": "This browser does not support Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Background notifications aren't available in the demo.",
         "status_busy": "Working…",
         "enable": "Enable",
         "reenable": "Re-register",
@@ -1766,7 +1767,12 @@
         "confirm_revoke_message_this": "This device will stop receiving background notifications immediately.",
         "shared_mailboxes_no_push": "Mailboxes others share with you don't send background notifications.",
         "error_forbidden": "The mail server doesn't allow background notifications for this account.",
-        "error_over_quota": "This account has too many push registrations on the mail server (the limit is usually 15). Revoke devices you no longer use in the notification settings, then try again."
+        "error_over_quota": "This account has too many push registrations on the mail server (the limit is usually 15). Revoke devices you no longer use in the notification settings, then try again.",
+        "error_blocked": "Notifications are blocked for this site. Allow them in your browser's site settings, then try again.",
+        "error_not_granted": "Notifications weren't allowed, so push stays off.",
+        "error_verification_timeout": "The mail server didn't confirm this device in time, so push stays off. Try again in a minute.",
+        "error_relay": "The push relay can't be reached right now, so push stays off. Try again later.",
+        "error_teardown": "Push is off in this browser, but the mail server or the relay couldn't be reached. Notifications may keep arriving for a few days. To stop them sooner, turn on advanced settings once you're back online and revoke this device under Registered devices."
       },
       "push_all": {
         "title": "All accounts",

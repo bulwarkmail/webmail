@@ -25,7 +25,7 @@ const TRACE_ALLOWED = new Set(['node_modules', '.next', 'public', 'locales', 'pa
 
 /** Never in a standalone tree, wherever it sits outside node_modules. */
 const FORBIDDEN_DIRS = new Set(['data', 'local-data', 'repos']);
-const FORBIDDEN_FILE = /^(\.env.*|plugin-signing\.key)$/;
+const FORBIDDEN_FILE = /^(\.env.*|plugin-signing\.key)$/i;
 
 function toPosix(p) {
   return p.split(path.sep).join('/');
@@ -106,10 +106,13 @@ export function findForbidden(standaloneDir) {
   const visit = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
+      if (entry.isSymbolicLink()) {
+        // Not .next's or a package's, which aren't visited: Turbopack links those on purpose.
+        if (entry.name !== 'node_modules' && entry.name !== '.next') found.push(`${toPosix(path.relative(standaloneDir, full))} (link)`);
+      } else if (entry.isDirectory()) {
         // Packages may hold anything, and .next/server has routes named after data.
         if (entry.name === 'node_modules' || entry.name === '.next') continue;
-        if (FORBIDDEN_DIRS.has(entry.name)) found.push(toPosix(path.relative(standaloneDir, full)) + '/');
+        if (FORBIDDEN_DIRS.has(entry.name.toLowerCase())) found.push(toPosix(path.relative(standaloneDir, full)) + '/');
         else visit(full);
       } else if (FORBIDDEN_FILE.test(entry.name)) {
         found.push(toPosix(path.relative(standaloneDir, full)));

@@ -1780,6 +1780,7 @@
         "status_inactive": "Není povoleno na tomto zařízení",
         "status_unsupported": "Tento prohlížeč nepodporuje Web Push",
         "status_lite": "Web Push není v Bulwark Lite k dispozici; vyžaduje server Bulwark.",
+        "status_demo": "Oznámení na pozadí nejsou v ukázce k dispozici.",
         "title": "Oznámení na pozadí",
         "devices_title": "Registrovaná zařízení",
         "devices_desc": "Všechna zařízení registrovaná pro příjem oznamení na pozadí u tohoto účtu. Odvolání okamžitě zastaví jejich příjem.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Toto zařízení okamžitě přestane přijímat oznámení na pozadí.",
         "shared_mailboxes_no_push": "Poštovní schránky, které s vámi sdílejí ostatní, neodesílají oznámení na pozadí.",
         "error_forbidden": "Poštovní server pro tento účet nepovoluje oznámení na pozadí.",
-        "error_over_quota": "Tento účet má na poštovním serveru příliš mnoho registrací push (limit je obvykle 15). V nastavení oznámení odvolejte zařízení, která už nepoužíváte, a zkuste to znovu."
+        "error_over_quota": "Tento účet má na poštovním serveru příliš mnoho registrací push (limit je obvykle 15). V nastavení oznámení odvolejte zařízení, která už nepoužíváte, a zkuste to znovu.",
+        "error_blocked": "Oznámení jsou pro tento web blokována. Povolte je v nastavení webu v prohlížeči a zkuste to znovu.",
+        "error_not_granted": "Oznámení nebyla povolena, takže push zůstává vypnutý.",
+        "error_verification_timeout": "Poštovní server toto zařízení včas nepotvrdil, takže push zůstává vypnutý. Zkuste to znovu za minutu.",
+        "error_relay": "Push relay teď není dostupné, takže push zůstává vypnutý. Zkuste to později.",
+        "error_teardown": "Push je v tomto prohlížeči vypnutý, ale poštovní server nebo relay nebyly dostupné. Oznámení mohou ještě několik dní přicházet. Chcete-li je zastavit dříve, až budete online, zapněte pokročilá nastavení a odvolejte toto zařízení v části Registrovaná zařízení."
       }
     },
     "language_region": {

@@ -1780,6 +1780,7 @@
         "status_inactive": "在此设备上未启用",
         "status_unsupported": "此浏览器不支持 Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "演示版不提供后台通知。",
         "title": "后台通知",
         "devices_title": "已注册的设备",
         "devices_desc": "已注册接收此账户后台通知的所有设备。撤销后，该设备会立即停止接收。",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "此设备将立即停止接收后台通知。",
         "shared_mailboxes_no_push": "他人与您共享的邮箱不会发送后台通知。",
         "error_forbidden": "邮件服务器不允许此账户使用后台通知。",
-        "error_over_quota": "此账户在邮件服务器上的推送注册过多（上限通常为 15 个）。请在通知设置中撤销不再使用的设备，然后重试。"
+        "error_over_quota": "此账户在邮件服务器上的推送注册过多（上限通常为 15 个）。请在通知设置中撤销不再使用的设备，然后重试。",
+        "error_blocked": "此网站的通知已被阻止。请在浏览器的网站设置中允许通知，然后重试。",
+        "error_not_granted": "未允许通知，因此推送保持关闭。",
+        "error_verification_timeout": "邮件服务器未及时确认此设备，因此推送保持关闭。请一分钟后重试。",
+        "error_relay": "目前无法连接推送中继，因此推送保持关闭。请稍后重试。",
+        "error_teardown": "此浏览器的推送已关闭，但无法连接邮件服务器或中继。通知可能还会持续几天。如需尽快停止，请在恢复联网后打开高级设置，并在已注册设备中撤销此设备。"
       }
     },
     "language_region": {

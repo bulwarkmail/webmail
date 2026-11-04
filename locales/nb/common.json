@@ -1740,6 +1740,7 @@
         "status_inactive": "Ikke aktivert på denne enheten",
         "status_unsupported": "Denne nettleseren støtter ikke Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Bakgrunnsvarsler er ikke tilgjengelige i demoen.",
         "status_busy": "Behandler...",
         "enable": "Aktiver",
         "reenable": "Registrer på nytt",
@@ -1766,7 +1767,12 @@
         "confirm_revoke_message_this": "Denne enheten slutter umiddelbart å motta bakgrunnsvarsler.",
         "shared_mailboxes_no_push": "Postbokser som andre deler med deg, sender ikke bakgrunnsvarsler.",
         "error_forbidden": "E-postserveren tillater ikke bakgrunnsvarsler for denne kontoen.",
-        "error_over_quota": "Denne kontoen har for mange push-registreringer på e-postserveren (grensen er vanligvis 15). Tilbakekall enheter du ikke lenger bruker i varslingsinnstillingene, og prøv igjen."
+        "error_over_quota": "Denne kontoen har for mange push-registreringer på e-postserveren (grensen er vanligvis 15). Tilbakekall enheter du ikke lenger bruker i varslingsinnstillingene, og prøv igjen.",
+        "error_blocked": "Varsler er blokkert for dette nettstedet. Tillat dem i nettleserens nettstedsinnstillinger, og prøv igjen.",
+        "error_not_granted": "Varsler ble ikke tillatt, så push forblir av.",
+        "error_verification_timeout": "E-postserveren bekreftet ikke denne enheten i tide, så push forblir av. Prøv igjen om et minutt.",
+        "error_relay": "Push-reléet kan ikke nås akkurat nå, så push forblir av. Prøv igjen senere.",
+        "error_teardown": "Push er av i denne nettleseren, men e-postserveren eller reléet kunne ikke nås. Varsler kan fortsette å komme i noen dager. For å stoppe dem tidligere, slå på avanserte innstillinger når du er på nett igjen, og tilbakekall denne enheten under Registrerte enheter."
       },
       "push_all": {
           "title": "All accounts",

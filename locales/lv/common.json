@@ -1780,6 +1780,7 @@
         "status_inactive": "Nav iespējots šajā ierīcē",
         "status_unsupported": "Šī pārlūkprogramma neatbalsta Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Fona paziņojumi demonstrācijā nav pieejami.",
         "title": "Fona paziņojumi",
         "devices_title": "Reģistrētās ierīces",
         "devices_desc": "Visas ierīces, kas reģistrētas šī konta fona paziņojumu saņemšanai. Atsaucot ierīci, tā nekavējoties pārstāj tās saņemt.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Šī ierīce nekavējoties pārstās saņemt fona paziņojumus.",
         "shared_mailboxes_no_push": "Pastkastes, ko ar jums kopīgo citi, nesūta fona paziņojumus.",
         "error_forbidden": "Pasta serveris šim kontam neatļauj fona paziņojumus.",
-        "error_over_quota": "Šim kontam pasta serverī ir pārāk daudz push reģistrāciju (ierobežojums parasti ir 15). Paziņojumu iestatījumos atsauciet ierīces, kuras vairs neizmantojat, un mēģiniet vēlreiz."
+        "error_over_quota": "Šim kontam pasta serverī ir pārāk daudz push reģistrāciju (ierobežojums parasti ir 15). Paziņojumu iestatījumos atsauciet ierīces, kuras vairs neizmantojat, un mēģiniet vēlreiz.",
+        "error_blocked": "Paziņojumi šai vietnei ir bloķēti. Atļaujiet tos pārlūka vietnes iestatījumos un mēģiniet vēlreiz.",
+        "error_not_granted": "Paziņojumi netika atļauti, tāpēc push paliek izslēgts.",
+        "error_verification_timeout": "Pasta serveris laikus neapstiprināja šo ierīci, tāpēc push paliek izslēgts. Mēģiniet vēlreiz pēc minūtes.",
+        "error_relay": "Push releju pašlaik nevar sasniegt, tāpēc push paliek izslēgts. Mēģiniet vēlreiz vēlāk.",
+        "error_teardown": "Push šajā pārlūkā ir izslēgts, bet pasta serveri vai releju nevarēja sasniegt. Paziņojumi vēl dažas dienas var turpināt pienākt. Lai tos apturētu ātrāk, kad atkal būsiet tiešsaistē, ieslēdziet papildu iestatījumus un atsauciet šo ierīci sadaļā Reģistrētās ierīces."
       }
     },
     "language_region": {

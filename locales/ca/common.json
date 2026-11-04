@@ -1740,6 +1740,7 @@
         "status_inactive": "No activat en aquest dispositiu",
         "status_unsupported": "Aquest navegador no admet Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Les notificacions en segon pla no estan disponibles a la demo.",
         "status_busy": "Treballant…",
         "enable": "Activa",
         "reenable": "Torna a registrar",
@@ -1766,7 +1767,12 @@
         "confirm_revoke_message_this": "Aquest dispositiu deixarà de rebre notificacions en segon pla immediatament.",
         "shared_mailboxes_no_push": "Les bústies que altres usuaris comparteixen amb vós no envien notificacions en segon pla.",
         "error_forbidden": "El servidor de correu no permet notificacions en segon pla per a aquest compte.",
-        "error_over_quota": "Aquest compte té massa registres push al servidor de correu (el límit sol ser 15). Revoqueu els dispositius que ja no feu servir a la configuració de notificacions i torneu-ho a provar."
+        "error_over_quota": "Aquest compte té massa registres push al servidor de correu (el límit sol ser 15). Revoqueu els dispositius que ja no feu servir a la configuració de notificacions i torneu-ho a provar.",
+        "error_blocked": "Les notificacions estan bloquejades per a aquest lloc. Permet-les a la configuració del lloc del navegador i torna-ho a provar.",
+        "error_not_granted": "No s'han permès les notificacions, així que les notificacions push continuen desactivades.",
+        "error_verification_timeout": "El servidor de correu no ha confirmat aquest dispositiu a temps, així que les notificacions push continuen desactivades. Torna-ho a provar d'aquí a un minut.",
+        "error_relay": "Ara mateix no es pot accedir al repetidor de notificacions, així que les notificacions push continuen desactivades. Torna-ho a provar més tard.",
+        "error_teardown": "Les notificacions push estan desactivades en aquest navegador, però no s'ha pogut accedir al servidor de correu o al repetidor. Encara poden arribar notificacions durant uns dies. Per aturar-les abans, activa la configuració avançada quan tornis a tenir connexió i revoca aquest dispositiu a Dispositius registrats."
       },
       "push_all": {
           "title": "All accounts",

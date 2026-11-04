@@ -265,6 +265,7 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
   const registration = await pushRegistration();
   const subscription = await registration?.pushManager?.getSubscription();
   await subscription?.unsubscribe();
+  removeLocalKeys([], ['bulwark.push.']);
 }
 
 /** With nobody left after this there's nothing to lock for, and a next person shouldn't meet it. */
