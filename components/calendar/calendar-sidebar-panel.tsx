@@ -18,6 +18,7 @@ import { toast } from "@/stores/toast-store";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { taskListsOf } from "@/components/calendar/task-list-view";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -109,9 +110,11 @@ export function CalendarSidebarPanel({
   const refreshICalSubscription = useCalendarStore((s) => s.refreshICalSubscription);
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
+  const updateCalendar = useCalendarStore((s) => s.updateCalendar);
   const viewMode = useCalendarStore((s) => s.viewMode);
   const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   const toggleTaskListVisibility = useCalendarStore((s) => s.toggleTaskListVisibility);
+  const [renaming, setRenaming] = useState<Calendar | null>(null);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
@@ -273,6 +276,16 @@ export function CalendarSidebarPanel({
     }
   };
 
+  const handleRename = async (cal: Calendar, name: string) => {
+    if (!client || !name || name === cal.name) return;
+    try {
+      await updateCalendar(client, cal.id, { name });
+      toast.success(tMgmt('calendar_updated'));
+    } catch {
+      toast.error(tMgmt('error_update'));
+    }
+  };
+
   // The tasks view lists task lists, each with its own tick (pim-1): a
   // task-only list never shows in the grid, so the grid's selection can't
   // say which tasks to list.
@@ -426,6 +439,8 @@ export function CalendarSidebarPanel({
 
     const isBirthday = cal.id === BIRTHDAY_CALENDAR_ID;
     const canCreate = onCreateEvent && !isBirthday && !cal.isTasksOnly && cal.myRights?.mayWriteOwn !== false;
+    // The owner names a calendar: a sharee renaming it would rename it for everyone (pim-20).
+    const canRename = !!client && !isBirthday && !cal.isShared;
     const canShare = onShareCalendar && cal.myRights?.mayShare && !cal.isShared;
     const canSetDefault = !!client && !isBirthday && !cal.isShared && !cal.isDefault;
     const canChangeColor = !!onColorChange;
@@ -433,7 +448,7 @@ export function CalendarSidebarPanel({
     const canResetColor = !!onResetColor && hasColorOverride;
     const canClear = onClearCalendar && !isBirthday && cal.myRights?.mayDelete !== false;
     const canDelete = onDeleteCalendar && !isBirthday && !cal.isDefault && !cal.isShared;
-    const showSeparator = (canCreate || canShare || canSetDefault || canChangeColor || canResetColor) && (canClear || canDelete);
+    const showSeparator = (canCreate || canRename || canShare || canSetDefault || canChangeColor || canResetColor) && (canClear || canDelete);
     const color = cal.color || "#3b82f6";
 
     return (
@@ -443,6 +458,13 @@ export function CalendarSidebarPanel({
             icon={Plus}
             label={tMgmt('new_event_in_calendar')}
             onClick={() => { closeContextMenu(); onCreateEvent(cal); }}
+          />
+        )}
+        {canRename && (
+          <ContextMenuItem
+            icon={Pencil}
+            label={tUx('rename_calendar')}
+            onClick={() => { closeContextMenu(); setRenaming(cal); }}
           />
         )}
         {canShare && (
@@ -481,14 +503,14 @@ export function CalendarSidebarPanel({
         {canClear && (
           <ContextMenuItem
             icon={Eraser}
-            label={tMgmt('clear_events')}
+            label={tUx('clear_all_events')}
             onClick={() => { closeContextMenu(); onClearCalendar(cal); }}
           />
         )}
         {canDelete && (
           <ContextMenuItem
             icon={Trash2}
-            label={tMgmt('delete')}
+            label={tUx('delete_calendar')}
             onClick={() => { closeContextMenu(); onDeleteCalendar(cal); }}
             destructive
           />
@@ -678,6 +700,16 @@ export function CalendarSidebarPanel({
 
       {renderCalendarMenu()}
       <ConfirmDialog {...confirmDialogProps} />
+      <PromptDialog
+        isOpen={!!renaming}
+        onClose={() => setRenaming(null)}
+        onSubmit={(name) => { const cal = renaming; setRenaming(null); if (cal) void handleRename(cal, name.trim()); }}
+        title={tUx('rename_title')}
+        placeholder={tMgmt('name_placeholder')}
+        defaultValue={renaming?.name ?? ''}
+        confirmText={tUx('rename_confirm')}
+        validate={(value) => (value.trim() ? null : tUx('rename_empty'))}
+      />
     </div>
   );
 }
