@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, 모든 계정에 {total})",
     "title_all_accounts_only": "{name} (모든 계정에 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {검색 결과가 없습니다} other {대화 #개를 찾았습니다}}"
+  },
   "uxs_folders": {
     "manage_accounts": "계정 관리…",
     "apply_to_existing": "{count, plural, other {{folder}의 기존 메일 #개에 적용}}"

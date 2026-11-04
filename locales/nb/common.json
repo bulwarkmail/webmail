@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} i alle kontoer)",
     "title_all_accounts_only": "{name} ({total} i alle kontoer)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ingen treff} one {# samtale funnet} other {# samtaler funnet}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer kontoer…",
     "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"

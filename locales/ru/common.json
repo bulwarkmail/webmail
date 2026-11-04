@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} во всех аккаунтах)",
     "title_all_accounts_only": "{name} ({total} во всех аккаунтах)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ничего не найдено} one {Найдена # беседа} few {Найдено # беседы} many {Найдено # бесед} other {Найдено # беседы}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Управление аккаунтами…",
     "apply_to_existing": "{count, plural, one {Применить к # имеющемуся письму в папке {folder}} few {Применить к # имеющимся письмам в папке {folder}} many {Применить к # имеющимся письмам в папке {folder}} other {Применить к # имеющегося письма в папке {folder}}}"

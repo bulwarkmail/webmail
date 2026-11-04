@@ -36,9 +36,15 @@ describe('SearchResultCount', () => {
     expect(container.textContent).toBe('mail_list_extra.search_count {"conversations":3,"messages":10}');
   });
 
-  it('counts messages when every result is its own conversation', () => {
+  // mail-p3-7: the rows are conversations, so the line says so.
+  it('counts conversations when every result is its own conversation', () => {
     const { container } = render(<SearchResultCount emails={results.slice(0, 1)} hasMore={false} />);
-    expect(container.textContent).toBe('advanced_search.results_found {"count":1}');
+    expect(container.textContent).toBe('mail_p3_list.conversations_found {"count":1}');
+  });
+
+  it('says no results when nothing matched', () => {
+    const { container } = render(<SearchResultCount emails={[]} hasMore={false} />);
+    expect(container.textContent).toBe('mail_p3_list.conversations_found {"count":0}');
   });
 
   it('counts messages when conversations are switched off', () => {

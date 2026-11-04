@@ -1057,6 +1057,9 @@
     "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
     "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}"
+  },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
     "apply_to_existing": "{count, plural, other {นำไปใช้กับข้อความเดิม # ฉบับใน {folder}}}"

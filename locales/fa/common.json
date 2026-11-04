@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
     "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {نتیجه‌ای یافت نشد} one {# مکالمه یافت شد} other {# مکالمه یافت شد}}"
+  },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",
     "apply_to_existing": "{count, plural, one {اعمال روی # پیام موجود در {folder}} other {اعمال روی # پیام موجود در {folder}}}"

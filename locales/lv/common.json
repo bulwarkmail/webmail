@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} visos kontos)",
     "title_all_accounts_only": "{name} ({total} visos kontos)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nekas netika atrasts} zero {Atrastas # sarunas} one {Atrasta # saruna} other {Atrastas # sarunas}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Pārvaldīt kontus…",
     "apply_to_existing": "{count, plural, zero {Piemērot # esošajām vēstulēm mapē {folder}} one {Piemērot # esošajai vēstulei mapē {folder}} other {Piemērot # esošajām vēstulēm mapē {folder}}}"

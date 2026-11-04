@@ -5713,6 +5713,9 @@
     "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
     "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {לא נמצאו תוצאות} one {נמצאה שיחה אחת} two {נמצאו שתי שיחות} other {נמצאו # שיחות}}"
+  },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",
     "apply_to_existing": "{count, plural, one {החלה על הודעה קיימת אחת בתיקייה {folder}} other {החלה על # הודעות קיימות בתיקייה {folder}}}"

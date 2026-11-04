@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
     "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Neboli nájdené žiadne výsledky} one {Nájdená # konverzácia} few {Nájdené # konverzácie} many {Nájdených # konverzácií} other {Nájdených # konverzácií}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",
     "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"

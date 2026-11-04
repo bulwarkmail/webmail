@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} in alle accounts)",
     "title_all_accounts_only": "{name} ({total} in alle accounts)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Geen resultaten gevonden} one {# gesprek gevonden} other {# gesprekken gevonden}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Accounts beheren…",
     "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"

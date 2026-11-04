@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
     "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Үр дүн олдсонгүй} one {# харилцан яриа олдлоо} other {# харилцан яриа олдлоо}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Данснуудыг удирдах…",
     "apply_to_existing": "{count, plural, one {{folder} доторх байгаа # захианд хэрэглэх} other {{folder} доторх байгаа # захианд хэрэглэх}}"

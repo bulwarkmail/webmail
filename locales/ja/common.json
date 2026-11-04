@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
     "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {結果が見つかりません} other {#件の会話が見つかりました}}"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"

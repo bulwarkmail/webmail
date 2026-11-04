@@ -103,6 +103,7 @@ import {
 } from "@/lib/notification-mutes";
 import { serverSupportsEmailPush } from "@/lib/web-push";
 import { resolveFolderCounts } from "@/lib/folder-counts";
+import { batchToastTitle } from "@/lib/selection-toast";
 
 interface SidebarProps {
   mailboxes: Mailbox[];
@@ -833,6 +834,7 @@ function MailboxTreeItem({
 }) {
   const tNotifications = useTranslations('notifications');
   const tListExtra = useTranslations('mail_list_extra');
+  const tRoot = useTranslations();
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
@@ -875,7 +877,7 @@ function MailboxTreeItem({
       toastWithUndo(
         count === 1
           ? tListExtra('moved_to', { mailbox: mailboxName })
-          : tListExtra('moved_count_to', { count, mailbox: mailboxName }),
+          : batchToastTitle(tRoot, 'move', count, useSettingsStore.getState().disableThreading, mailboxName),
         undoMoveAction(useAuthStore.getState().client, restore, undoLabels(tNotifications), receipts),
       );
     },

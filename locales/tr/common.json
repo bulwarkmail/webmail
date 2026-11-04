@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
     "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Sonuç bulunamadı} one {# konuşma bulundu} other {# konuşma bulundu}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",
     "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"

@@ -1442,18 +1442,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // of seven, or Move for the open one only, would act on mail nobody picked.
   const desktopMulti = selectedEmailKeys.size > 1;
   const desktopSingle = !showComposer && !!selectedEmail && !desktopMulti;
-  const tListExtra = useTranslations('mail_list_extra');
   /** Message > Move to… on the selection, as the selection bar's Move does: one toast with the count. */
   const moveSelectionTo = async (mailboxId: string) => {
     if (!client) return;
-    const count = selectedEmailKeys.size;
+    // Counted as the selection bar counts: conversations when it shows them (mail-p3-7).
+    const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
     const destination = mailboxes.find((m) => m.id === mailboxId);
     await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-      success: destination
-        ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
-        : tNotifications('emails_moved', { count }),
+      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
       error: tNotifications('move_failed'),
       undo: undoMoveAction(client, restore, undo, receipts),
     });

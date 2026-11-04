@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} a tots els comptes)",
     "title_all_accounts_only": "{name} ({total} a tots els comptes)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No s'ha trobat cap resultat} one {# conversa trobada} other {# converses trobades}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestiona els comptes…",
     "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"

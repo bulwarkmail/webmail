@@ -3907,6 +3907,9 @@
     "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
     "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nincs találat} one {# beszélgetés található} other {# beszélgetés található}}"
+  },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",
     "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
