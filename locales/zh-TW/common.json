@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "關閉",
       "start_at_login": "登入 Windows 時啟動 Bulwark",
       "start_at_login_why": "和 OneDrive 一樣，磁碟機需要 Bulwark 在執行。",
-      "closed_warning": "Bulwark 關閉時，無法開啟磁碟機中的檔案。"
+      "closed_warning": "Bulwark 關閉時，無法開啟磁碟機中的檔案。",
+      "where": "在檔案總管中顯示為 Bulwark Files",
+      "where_letter": "在檔案總管中顯示為 Bulwark Files ({letter}:)",
+      "open": "開啟",
+      "letter_note": "透過磁碟機代號存取時，檔案總管不會顯示同步狀態和「永遠保留在此裝置上」。它們會顯示在檔案總管的 Bulwark Files 下。",
+      "letter_failed": "無法設定磁碟機代號。請再試一次。"
     },
     "tray": {
       "idle": "Bulwark Files: 已是最新",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "無法同步"
+    },
+    "folders": {
+      "stop": "停止同步…"
     }
   },
   "desktopQuickCompose": {

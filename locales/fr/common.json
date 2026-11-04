@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Masquer",
       "start_at_login": "Démarrer Bulwark à l'ouverture de session Windows",
       "start_at_login_why": "Le lecteur a besoin que Bulwark tourne, comme OneDrive.",
-      "closed_warning": "Les fichiers du lecteur ne s'ouvrent pas quand Bulwark est fermé."
+      "closed_warning": "Les fichiers du lecteur ne s'ouvrent pas quand Bulwark est fermé.",
+      "where": "Dans l'Explorateur de fichiers sous le nom Bulwark Files",
+      "where_letter": "Dans l'Explorateur de fichiers sous le nom Bulwark Files ({letter}:)",
+      "open": "Ouvrir",
+      "letter_note": "Par la lettre, l'Explorateur de fichiers n'affiche ni l'état de synchronisation ni « Toujours conserver sur cet appareil ». Ils s'affichent sous Bulwark Files dans l'Explorateur.",
+      "letter_failed": "La lettre de lecteur n'a pas pu être définie. Réessayez."
     },
     "tray": {
       "idle": "Bulwark Files: À jour",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Synchronisation impossible"
+    },
+    "folders": {
+      "stop": "Arrêter la synchronisation…"
     }
   },
   "desktopQuickCompose": {

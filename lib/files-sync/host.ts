@@ -179,6 +179,7 @@ export class FilesSyncHost {
         // A drive turned on again starts with nothing in Explorer: say it again.
         this.sentStatus.clear();
         this.schedulePublish();
+        this.driveStateChanged(state);
         void this.engine.refreshRoots();
       }));
       if (drive.onFlush) this.unsubscribe.push(drive.onFlush((request) => void this.flushForPolicy(request.requestId, request.accounts)));
@@ -242,6 +243,12 @@ export class FilesSyncHost {
     this.startDrives();
     void this.engine.refreshRoots();
     this.schedulePublish();
+  }
+
+  /** The organisation's word on the drive changed: one it turned off comes back by itself once it's allowed (files-p3-19). */
+  private driveStateChanged(state: FilesDriveState): void {
+    if (state.forcedOff) this.driveStarted.clear();
+    this.startDrives();
   }
 
   /** A sign-in brings back the drive of an account that had it, without a click. */
@@ -593,6 +600,7 @@ export class FilesSyncHost {
       clearActivity: () => {
         if (this.current) this.engine.clearActivity(this.current);
       },
+      openRoot: (rootId) => controls.showInFolder(rootId, '').catch(() => false),
       pendingHere: async (rootId) => (await this.engine.pendingHere(rootId)) ?? [],
       flushRoot: (rootId, options) => this.engine.flushRoot(rootId, options),
       openRescue: async () => (await controls.drive?.openRescue?.().catch(() => false)) ?? false,

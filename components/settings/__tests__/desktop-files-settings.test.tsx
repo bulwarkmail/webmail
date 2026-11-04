@@ -37,6 +37,7 @@ function fakeController(): Fake {
       return 'done';
     }),
     openRescue: vi.fn(async () => true),
+    openRoot: vi.fn(async () => true),
     dismissRescue: vi.fn(),
   } as never;
 }
@@ -214,7 +215,7 @@ describe('Files on this computer settings page', () => {
   it('asks before removing a folder, saying its files stay', async () => {
     setup({ roots: [folderRoot()] });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stop syncing…' }));
     const dialog = screen.getByRole('alertdialog');
     expect(dialog).toHaveTextContent('The files on this computer stay where they are');
     expect(controller.removeRoot).not.toHaveBeenCalled();
@@ -230,7 +231,7 @@ describe('Files on this computer settings page', () => {
       return 'stuck';
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stop syncing…' }));
     fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Stop syncing' }));
     const dialog = await screen.findByRole('alertdialog', { name: "Some changes can't be uploaded now" });
     expect(dialog).toHaveTextContent('stays in the folder on this computer');
@@ -326,7 +327,7 @@ describe('Files on this computer settings page', () => {
     expect(screen.queryByRole('button', { name: 'Add folder…' })).toBeNull();
     expect(screen.getByTestId('files-sync-folders-locked')).toHaveTextContent(en.settings.org_locked);
     // The folder can still be removed; its files stay.
-    expect(screen.getByRole('button', { name: 'Remove…' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stop syncing…' })).toBeInTheDocument();
   });
 
   it('lists recent activity newest first, marks conflicts and errors, and clears it', () => {
@@ -439,6 +440,73 @@ describe('Files on this computer settings page', () => {
     expect(controller.confirmMassDelete).toHaveBeenCalledWith('r1', true);
     fireEvent.click(within(second).getByRole('button', { name: 'Bring them back' }));
     expect(controller.confirmMassDelete).toHaveBeenLastCalledWith('r2', false);
+  });
+});
+
+describe('opening, pausing and the letter (files-p3-7, p3-10, p3-14 to p3-19, settings-p3-3)', () => {
+  const driveRoot = () => folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc', path: 'C:\\Users\\ann\\Bulwark Files\\ann@example.org' });
+
+  it('says where the drive is, with its letter, and opens it', () => {
+    setup({ drive: drive({ wanted: ['acc'], letter: { letter: 'Z', chosen: 'Z', locked: false, available: ['X'] } }), roots: [driveRoot()] });
+    renderPage();
+    const where = screen.getByTestId('files-sync-drive-where');
+    expect(where).toHaveTextContent('In File Explorer as Bulwark Files (Z:)');
+    expect(where).toHaveTextContent('C:\\Users\\ann\\Bulwark Files\\ann@example.org');
+    fireEvent.click(within(where).getByRole('button', { name: 'Open' }));
+    expect(controller.openRoot).toHaveBeenCalledWith('d1');
+    // The letter option says what Explorer shows through it.
+    expect(screen.getByText(/Through the letter, File Explorer shows no sync status/)).toBeInTheDocument();
+  });
+
+  it('pauses and resumes the drive', () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [driveRoot()] });
+    renderPage();
+    fireEvent.click(within(screen.getByTestId('files-sync-drive-where')).getByRole('button', { name: 'Pause' }));
+    expect(controller.setPaused).toHaveBeenCalledWith('d1', true);
+  });
+
+  it('says Starting… while the drive is wanted and not there yet', () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [] });
+    renderPage();
+    expect(screen.getByText('Starting…')).toBeInTheDocument();
+  });
+
+  it('opens a synced folder from its path and its Open button', () => {
+    setup({ roots: [folderRoot()] });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'C:\\Users\\ann\\Documents\\Projects' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(controller.openRoot).toHaveBeenCalledTimes(2);
+    expect(controller.openRoot).toHaveBeenCalledWith('r1');
+  });
+
+  it('hides Pause while a folder waits for the mass-delete answer', () => {
+    setup({ roots: [folderRoot()], status: { r1: { rootId: 'r1', state: 'confirm-delete', pending: 0, done: 0, lastSyncedAt: null, massDelete: { count: 70, deletedOn: 'files' } } } });
+    renderPage();
+    const row = document.querySelector('[data-files-sync-root="r1"]') as HTMLElement;
+    expect(within(row).queryByRole('button', { name: 'Pause' })).toBeNull();
+    expect(within(row).queryByRole('button', { name: 'Resume' })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Bring them back' })).toBeInTheDocument();
+  });
+
+  it('shows no letter row while the organisation keeps the drive off, even with a forced letter', () => {
+    setup({ drive: drive({ forcedOff: true, wanted: ['acc'], letter: { letter: null, chosen: null, locked: true, available: [] } }) });
+    renderPage();
+    expect(screen.queryByRole('combobox', { name: 'Drive letter' })).toBeNull();
+  });
+
+  it("says a letter that couldn't be set in its own words, and nothing when no key press came with it", async () => {
+    setup({ drive: drive({ wanted: ['acc'] }), roots: [driveRoot()] });
+    controller.setDriveLetter.mockResolvedValueOnce({ ok: false, error: 'gesture' });
+    renderPage();
+    const select = screen.getByRole('combobox', { name: 'Drive letter' });
+    fireEvent.change(select, { target: { value: 'X' } });
+    await act(async () => {});
+    expect(screen.queryByRole('alert')).toBeNull();
+    controller.setDriveLetter.mockResolvedValueOnce({ ok: false, error: 'exists' });
+    fireEvent.change(select, { target: { value: 'Z' } });
+    expect(await screen.findByRole('alert')).toHaveTextContent("The drive letter couldn't be set. Try again.");
+    expect(screen.queryByText("The folder couldn't be added. Try again.")).toBeNull();
   });
 });
 

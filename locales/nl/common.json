@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Sluiten",
       "start_at_login": "Bulwark starten bij aanmelden bij Windows",
       "start_at_login_why": "Het station heeft Bulwark nodig, net als OneDrive.",
-      "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is."
+      "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is.",
+      "where": "In Verkenner als Bulwark Files",
+      "where_letter": "In Verkenner als Bulwark Files ({letter}:)",
+      "open": "Openen",
+      "letter_note": "Via de letter toont Verkenner geen synchronisatiestatus en geen ‘Altijd op dit apparaat bewaren’. Die ziet u onder Bulwark Files in Verkenner.",
+      "letter_failed": "De stationsletter kon niet worden ingesteld. Probeer het opnieuw."
     },
     "tray": {
       "idle": "Bulwark Files: Bijgewerkt",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Kan niet synchroniseren"
+    },
+    "folders": {
+      "stop": "Stoppen met synchroniseren…"
     }
   },
   "desktopQuickCompose": {

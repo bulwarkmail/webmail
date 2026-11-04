@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Приховати",
       "start_at_login": "Запускати Bulwark під час входу у Windows",
       "start_at_login_why": "Диску потрібен запущений Bulwark, як OneDrive.",
-      "closed_warning": "Файли на диску не відкриються, поки Bulwark закритий."
+      "closed_warning": "Файли на диску не відкриються, поки Bulwark закритий.",
+      "where": "У Провіднику як Bulwark Files",
+      "where_letter": "У Провіднику як Bulwark Files ({letter}:)",
+      "open": "Відкрити",
+      "letter_note": "Через літеру диска Провідник не показує стан синхронізації та «Завжди зберігати на цьому пристрої». Вони видні в розділі Bulwark Files у Провіднику.",
+      "letter_failed": "Не вдалося призначити літеру диска. Спробуйте ще раз."
     },
     "tray": {
       "idle": "Bulwark Files: Синхронізовано",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Не вдається синхронізувати"
+    },
+    "folders": {
+      "stop": "Зупинити синхронізацію…"
     }
   },
   "desktopQuickCompose": {

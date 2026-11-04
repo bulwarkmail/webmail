@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import {
-  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, FolderSync, HardDrive, HelpCircle, Loader2, Trash2, type AppIcon,
+  AlertCircle, AlertTriangle, ArrowDown, ArrowUp, FolderOpen, FolderSync, HardDrive, HelpCircle, Loader2, Trash2, type AppIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -141,6 +141,7 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   const controller = useFilesSyncStore((s) => s.controller);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [letterError, setLetterError] = useState(false);
 
   const on = !drive.forcedOff && !!account && drive.wanted.includes(account);
   const driveRoot = roots.find((r) => r.kind === "drive" && r.account === account);
@@ -168,11 +169,16 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   const chooseLetter = (value: string) => {
     if (!controller) return;
     setError(null);
+    setLetterError(false);
+    // Its own words (files-p3-15). No real key press or click reached the app: nothing to say,
+    // the list shows the letter in use again.
     void controller.setDriveLetter(value === "none" ? null : value).then(
-      (result) => { if (!result.ok) setError(addErrorKey(result.error)); },
-      () => setError("folders.add_failed.failed"),
+      (result) => { if (!result.ok && result.error !== "gesture") setLetterError(true); },
+      () => setLetterError(true),
     );
   };
+  const driveStatus = driveRoot ? status[driveRoot.id] : undefined;
+  const drivePaused = !!driveRoot && (driveRoot.paused || driveStatus?.state === "paused");
 
   return (
     <SettingsSection id="drive" title={t("drive.title")}>
@@ -188,7 +194,26 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
           onChange={toggle}
         />
       </SettingItem>
-      {on && driveRoot && <FilesSyncStatusLine status={status[driveRoot.id]} paused={driveRoot.paused} />}
+      {/* On and not there yet (a sign-in, the policy allowing it again): "Starting…" (files-p3-19). */}
+      {on && <FilesSyncStatusLine status={driveStatus} paused={driveRoot?.paused} />}
+      {on && driveRoot && (
+        <div className="flex flex-wrap items-center justify-between gap-2" data-testid="files-sync-drive-where">
+          <p className="text-sm text-foreground min-w-0">
+            {drive.letter.letter ? tx("where_letter", { letter: drive.letter.letter }) : tx("where")}
+            <span className="block text-xs text-muted-foreground break-all" dir="auto">{driveRoot.path}</span>
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <Button size="sm" variant="outline" className="gap-1.5" disabled={!controller} onClick={() => { void controller?.openRoot(driveRoot.id); }} data-testid="files-sync-drive-open">
+              <FolderOpen className="w-4 h-4" />{tx("open")}
+            </Button>
+            {driveStatus?.state !== "confirm-delete" && (
+              <Button size="sm" variant="outline" disabled={!controller} onClick={() => { void controller?.setPaused(driveRoot.id, !drivePaused).catch(() => {}); }} data-testid="files-sync-drive-pause">
+                {drivePaused ? t("folders.resume") : t("folders.pause")}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       {on && startAtLogin !== null && (
         <div className="ms-4 ps-3 border-s-2 border-s-border py-1 space-y-1">
           <label className="flex items-start gap-2 cursor-pointer">
@@ -225,8 +250,9 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
       {on && driveRoot && status[driveRoot.id]?.state === "confirm-delete" && status[driveRoot.id]?.massDelete && (
         <MassDeleteQuestion root={driveRoot} status={status[driveRoot.id]} />
       )}
-      {(on || letter.locked) && drive.supported && (
-        <SettingItem label={t("drive.letter_label")} description={t("drive.letter_description")} locked={letter.locked}>
+      {/* Forced off, a letter has nothing to point at (files-p3-18). */}
+      {(on || letter.locked) && drive.supported && !drive.forcedOff && (
+        <SettingItem label={t("drive.letter_label")} description={`${t("drive.letter_description")} ${tx("letter_note")}`} locked={letter.locked}>
           <Select
             value={letterValue}
             disabled={letter.locked || !controller}
@@ -238,6 +264,7 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
           />
         </SettingItem>
       )}
+      {letterError && <p role="alert" className="text-sm text-destructive">{tx("letter_failed")}</p>}
       {error && <p role="alert" className="text-sm text-destructive">{t(error)}</p>}
     </SettingsSection>
   );
@@ -357,23 +384,30 @@ function FoldersSection() {
 
 function FolderRow({ root, onRemove }: { root: FilesRoot; onRemove: () => void }) {
   const t = useTranslations("files_sync");
+  const tx = useTranslations("files_sync_extra");
   const status = useFilesSyncStore((s) => s.status[root.id]);
   const controller = useFilesSyncStore((s) => s.controller);
   const paused = root.paused || status?.state === "paused";
   const blocked = status?.state === "blocked";
+  // Waiting for the mass-delete answer: its two buttons are the way on (files-p3-17).
+  const asking = status?.state === "confirm-delete";
+  const open = () => { void controller?.openRoot(root.id); };
   return (
     <li className="p-3" data-files-sync-root={root.id}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-2.5 min-w-0">
           <FolderSync className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <div className="min-w-0 space-y-0.5">
-            <p className="text-sm font-medium text-foreground break-all" dir="auto">{root.path}</p>
+            <button type="button" className="text-start text-sm font-medium text-primary hover:underline break-all" dir="auto" onClick={open} disabled={!controller}>{root.path}</button>
             <p className="text-xs text-muted-foreground break-words">{t("folders.paired_with", { folder: root.remoteLabel })}</p>
             <FilesSyncStatusLine status={status} paused={root.paused} />
           </div>
         </div>
-        <div className="flex gap-2 shrink-0">
-          {!blocked && (
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Button size="sm" variant="outline" className="gap-1.5" disabled={!controller} onClick={open}>
+            <FolderOpen className="w-4 h-4" />{tx("drive.open")}
+          </Button>
+          {!blocked && !asking && (
             <Button
               size="sm"
               variant="outline"
@@ -383,7 +417,8 @@ function FolderRow({ root, onRemove }: { root: FilesRoot; onRemove: () => void }
               {paused ? t("folders.resume") : t("folders.pause")}
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={onRemove}>{t("folders.remove")}</Button>
+          {/* The button says what happens, as the question does (files-p3-16). */}
+          <Button size="sm" variant="outline" onClick={onRemove}>{tx("folders.stop")}</Button>
         </div>
       </div>
       {status?.state === "confirm-delete" && status.massDelete && <MassDeleteQuestion root={root} status={status} />}

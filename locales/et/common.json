@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Peida",
       "start_at_login": "Käivita Bulwark Windowsi sisselogimisel",
       "start_at_login_why": "Draiv vajab töötavat Bulwarki, nagu OneDrive.",
-      "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud."
+      "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud.",
+      "where": "Failihalduris nimega Bulwark Files",
+      "where_letter": "Failihalduris nimega Bulwark Files ({letter}:)",
+      "open": "Ava",
+      "letter_note": "Draivitähe kaudu ei näita Failihaldur sünkroonimise olekut ega valikut „Hoia alati selles seadmes“. Need on näha Failihalduris Bulwark Files all.",
+      "letter_failed": "Draivitähte ei õnnestunud määrata. Proovige uuesti."
     },
     "tray": {
       "idle": "Bulwark Files: Ajakohane",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Ei saa sünkroonida"
+    },
+    "folders": {
+      "stop": "Lõpeta sünkroonimine…"
     }
   },
   "desktopQuickCompose": {

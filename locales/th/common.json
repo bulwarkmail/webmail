@@ -7808,7 +7808,12 @@
       "rescued_dismiss": "ปิด",
       "start_at_login": "เริ่ม Bulwark เมื่อลงชื่อเข้าใช้ Windows",
       "start_at_login_why": "ไดรฟ์ต้องให้ Bulwark ทำงานอยู่ เช่นเดียวกับ OneDrive",
-      "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่"
+      "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่",
+      "where": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files",
+      "where_letter": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files ({letter}:)",
+      "open": "เปิด",
+      "letter_note": "เมื่อเปิดผ่านอักษรไดรฟ์ ตัวสำรวจไฟล์จะไม่แสดงสถานะการซิงค์และ “เก็บไว้บนอุปกรณ์นี้เสมอ” ดูได้ที่ Bulwark Files ในตัวสำรวจ",
+      "letter_failed": "ตั้งอักษรไดรฟ์ไม่ได้ ลองอีกครั้ง"
     },
     "tray": {
       "idle": "Bulwark Files: เป็นปัจจุบัน",
@@ -7832,6 +7837,9 @@
     },
     "cant_sync": {
       "title": "ซิงค์ไม่ได้"
+    },
+    "folders": {
+      "stop": "หยุดซิงค์…"
     }
   },
   "desktopQuickCompose": {

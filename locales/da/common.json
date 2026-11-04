@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Luk",
       "start_at_login": "Start Bulwark, når du logger på Windows",
       "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
-      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket."
+      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket.",
+      "where": "I Stifinder som Bulwark Files",
+      "where_letter": "I Stifinder som Bulwark Files ({letter}:)",
+      "open": "Åbn",
+      "letter_note": "Via drevbogstavet viser Stifinder hverken synkroniseringsstatus eller “Behold altid på denne enhed”. De vises under Bulwark Files i Stifinder.",
+      "letter_failed": "Drevbogstavet kunne ikke angives. Prøv igen."
     },
     "tray": {
       "idle": "Bulwark Files: Opdateret",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stop synkronisering…"
     }
   },
   "desktopQuickCompose": {

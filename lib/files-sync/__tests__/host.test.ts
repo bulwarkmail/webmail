@@ -5,7 +5,7 @@
 import { render } from '@testing-library/react';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DesktopOsNotification, FilesControls } from '@/lib/desktop/types';
+import type { DesktopOsNotification, FilesControls, FilesDriveState } from '@/lib/desktop/types';
 import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { noteCredentialsRejected } from '@/lib/offline/credentials-rejected';
 import { runWipeCleaners } from '@/lib/offline/wipe-registry';
@@ -401,6 +401,28 @@ describe('OS notifications and the tray line (files-p3-5)', () => {
     await settle(r.host);
     await settle(r.host);
     expect(r.disk.driveStatuses.at(-1)?.status.tray).toBe('Bulwark Files: idle');
+    r.host.stop();
+  });
+});
+
+describe('the policy allowing the drive again (files-p3-19)', () => {
+  it('turns the wanted drive back on at once, without a click or a visit to the settings page', async () => {
+    const r = rig({ drive: true, wanted: ['a1'] });
+    let listener: ((state: FilesDriveState) => void) | null = null;
+    r.disk.drive!.onStateChange = (next) => {
+      listener = next;
+      return () => {};
+    };
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    expect(r.disk.driveCalls.filter((call) => call.call === 'enable')).toHaveLength(1);
+    const state = await r.disk.drive!.state();
+    listener!({ ...state, forcedOff: true });
+    await settle(r.host);
+    listener!({ ...state, forcedOff: false });
+    await settle(r.host);
+    expect(r.disk.driveCalls.filter((call) => call.call === 'enable')).toHaveLength(2);
     r.host.stop();
   });
 });

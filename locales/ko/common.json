@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "닫기",
       "start_at_login": "Windows에 로그인하면 Bulwark 시작",
       "start_at_login_why": "OneDrive처럼 드라이브는 Bulwark가 실행 중이어야 합니다.",
-      "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다."
+      "closed_warning": "Bulwark가 닫혀 있으면 드라이브의 파일을 열 수 없습니다.",
+      "where": "파일 탐색기에서 Bulwark Files",
+      "where_letter": "파일 탐색기에서 Bulwark Files ({letter}:)",
+      "open": "열기",
+      "letter_note": "드라이브 문자로 열면 파일 탐색기에 동기화 상태와 '이 장치에 항상 유지'가 표시되지 않습니다. 탐색기의 Bulwark Files 아래에 표시됩니다.",
+      "letter_failed": "드라이브 문자를 설정하지 못했습니다. 다시 시도하세요."
     },
     "tray": {
       "idle": "Bulwark Files: 최신 상태",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "동기화할 수 없음"
+    },
+    "folders": {
+      "stop": "동기화 중지…"
     }
   },
   "desktopQuickCompose": {

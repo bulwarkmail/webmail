@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Dispensar",
       "start_at_login": "Iniciar o Bulwark ao entrar no Windows",
       "start_at_login_why": "A unidade precisa do Bulwark aberto, como o OneDrive.",
-      "closed_warning": "Os arquivos da unidade não abrem enquanto o Bulwark estiver fechado."
+      "closed_warning": "Os arquivos da unidade não abrem enquanto o Bulwark estiver fechado.",
+      "where": "No Explorador de Arquivos como Bulwark Files",
+      "where_letter": "No Explorador de Arquivos como Bulwark Files ({letter}:)",
+      "open": "Abrir",
+      "letter_note": "Pela letra, o Explorador de Arquivos não mostra o status de sincronização nem “Sempre manter neste dispositivo”. Eles aparecem em Bulwark Files, no Explorador.",
+      "letter_failed": "Não foi possível definir a letra da unidade. Tente de novo."
     },
     "tray": {
       "idle": "Bulwark Files: Atualizado",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Não é possível sincronizar"
+    },
+    "folders": {
+      "stop": "Parar de sincronizar…"
     }
   },
   "desktopQuickCompose": {

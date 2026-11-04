@@ -17,6 +17,8 @@ import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
 import { cn } from "@/lib/utils";
 import { isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
 import { PluginActions } from "@/components/plugins/plugin-actions";
+import { useShowFolderOnScreen } from "@/components/files-sync/files-sync-item";
+import { useFileStore } from "@/stores/file-store";
 import type { FileResourceView } from "@/lib/plugin-types";
 
 export type SortKey = "name" | "size" | "modified";
@@ -378,6 +380,7 @@ export function FilesHeader({
               <RefreshCw className={cn(isLoading && "animate-spin [animation-direction:reverse]")} />
             </ToolbarButton>
           )}
+          {!compact && !toolsHidden && <ShowFolderOnScreen />}
           {!narrow && <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />}
           {toggleSlot}
           <PhoneHeaderActions
@@ -481,4 +484,16 @@ function SortItem({ label, checked, onClick }: {
 function SelectionPluginActions({ files, mimeType, overflow }: { files: FileResourceView[]; mimeType?: string; overflow?: boolean }) {
   const context = useMemo(() => ({ files }), [files]);
   return <PluginActions surface="file-actions" context={context} mimeType={mimeType} compact overflow={overflow} className="flex-nowrap gap-0.5 flex-shrink-0" />;
+}
+
+/** "Show in Explorer" for the folder on screen, when the drive or a synced folder has it (files-p3-9). */
+function ShowFolderOnScreen() {
+  const folderId = useFileStore((s) => s.currentParentId);
+  const show = useShowFolderOnScreen(folderId);
+  if (!show) return null;
+  return (
+    <ToolbarButton label={show.label} onClick={show.run} data-testid="files-sync-show-folder">
+      <FolderOpen />
+    </ToolbarButton>
+  );
 }

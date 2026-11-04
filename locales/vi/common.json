@@ -7812,7 +7812,12 @@
       "rescued_dismiss": "Bỏ qua",
       "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
       "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
-      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng."
+      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng.",
+      "where": "Trong Trình khám phá Tệp với tên Bulwark Files",
+      "where_letter": "Trong Trình khám phá Tệp với tên Bulwark Files ({letter}:)",
+      "open": "Mở",
+      "letter_note": "Qua ký tự ổ đĩa, Trình khám phá Tệp không hiện trạng thái đồng bộ và “Luôn giữ trên thiết bị này”. Chúng hiện dưới Bulwark Files trong Trình khám phá.",
+      "letter_failed": "Không thể đặt ký tự ổ đĩa. Hãy thử lại."
     },
     "tray": {
       "idle": "Bulwark Files: Đã cập nhật",
@@ -7836,6 +7841,9 @@
     },
     "cant_sync": {
       "title": "Không thể đồng bộ"
+    },
+    "folders": {
+      "stop": "Ngừng đồng bộ…"
     }
   },
   "desktopQuickCompose": {

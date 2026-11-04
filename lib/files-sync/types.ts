@@ -142,6 +142,8 @@ export interface FilesSyncController {
   coverage: (nodeId: string) => FilesSyncCoverage | null;
   /** Explorer, Finder or the file manager, on that file or folder. */
   showInFolder: (nodeId: string) => Promise<boolean>;
+  /** Opens a root's own folder (the drive, a synced folder) in Explorer, Finder or the file manager. */
+  openRoot: (rootId: string) => Promise<boolean>;
   clearActivity: () => void;
   /** Files changed or made here that aren't in Files yet: what stopping this root now would leave behind. */
   pendingHere: (rootId: string) => Promise<string[]>;

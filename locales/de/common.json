@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Ausblenden",
       "start_at_login": "Bulwark bei der Anmeldung an Windows starten",
       "start_at_login_why": "Das Laufwerk braucht Bulwark im Hintergrund, wie OneDrive.",
-      "closed_warning": "Dateien im Laufwerk lassen sich nicht öffnen, solange Bulwark geschlossen ist."
+      "closed_warning": "Dateien im Laufwerk lassen sich nicht öffnen, solange Bulwark geschlossen ist.",
+      "where": "Im Explorer als Bulwark Files",
+      "where_letter": "Im Explorer als Bulwark Files ({letter}:)",
+      "open": "Öffnen",
+      "letter_note": "Über den Laufwerksbuchstaben zeigt der Explorer keinen Synchronisierungsstatus und kein „Immer auf diesem Gerät beibehalten“. Beides sehen Sie unter Bulwark Files im Explorer.",
+      "letter_failed": "Der Laufwerksbuchstabe konnte nicht festgelegt werden. Versuchen Sie es noch einmal."
     },
     "tray": {
       "idle": "Bulwark Files: Auf dem neuesten Stand",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Synchronisierung nicht möglich"
+    },
+    "folders": {
+      "stop": "Synchronisierung beenden…"
     }
   },
   "desktopQuickCompose": {

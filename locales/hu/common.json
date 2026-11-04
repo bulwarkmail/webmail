@@ -7800,7 +7800,12 @@
       "rescued_dismiss": "Elrejtés",
       "start_at_login": "A Bulwark indítása a Windowsba való bejelentkezéskor",
       "start_at_login_why": "A meghajtóhoz futnia kell a Bulwarknak, ahogy a OneDrive-nál is.",
-      "closed_warning": "A meghajtón lévő fájlok nem nyílnak meg, amíg a Bulwark be van zárva."
+      "closed_warning": "A meghajtón lévő fájlok nem nyílnak meg, amíg a Bulwark be van zárva.",
+      "where": "A Fájlkezelőben Bulwark Files néven",
+      "where_letter": "A Fájlkezelőben Bulwark Files ({letter}:) néven",
+      "open": "Megnyitás",
+      "letter_note": "A meghajtóbetűjelen át a Fájlkezelő nem mutatja a szinkronizálás állapotát és a „Mindig maradjon ezen az eszközön” lehetőséget. Ezek a Fájlkezelőben a Bulwark Files alatt látszanak.",
+      "letter_failed": "A meghajtóbetűjelet nem sikerült beállítani. Próbálja újra."
     },
     "tray": {
       "idle": "Bulwark Files: Naprakész",
@@ -7824,6 +7829,9 @@
     },
     "cant_sync": {
       "title": "Nem szinkronizálható"
+    },
+    "folders": {
+      "stop": "Szinkronizálás leállítása…"
     }
   },
   "desktopQuickCompose": {

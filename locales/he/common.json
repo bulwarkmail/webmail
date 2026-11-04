@@ -7801,7 +7801,12 @@
       "rescued_dismiss": "סגירה",
       "start_at_login": "להפעיל את Bulwark בכניסה ל-Windows",
       "start_at_login_why": "הכונן צריך ש-Bulwark יפעל, כמו OneDrive.",
-      "closed_warning": "קבצים בכונן לא נפתחים כש-Bulwark סגור."
+      "closed_warning": "קבצים בכונן לא נפתחים כש-Bulwark סגור.",
+      "where": "בסייר הקבצים בשם Bulwark Files",
+      "where_letter": "בסייר הקבצים בשם Bulwark Files ({letter}:)",
+      "open": "פתיחה",
+      "letter_note": "דרך אות הכונן סייר הקבצים לא מציג מצב סנכרון ולא „שמור תמיד במכשיר זה”. הם מופיעים תחת Bulwark Files בסייר.",
+      "letter_failed": "לא ניתן היה להגדיר את אות הכונן. כדאי לנסות שוב."
     },
     "tray": {
       "idle": "Bulwark Files: מעודכן",
@@ -7825,6 +7830,9 @@
     },
     "cant_sync": {
       "title": "לא ניתן לסנכרן"
+    },
+    "folders": {
+      "stop": "הפסקת הסנכרון…"
     }
   },
   "desktopQuickCompose": {

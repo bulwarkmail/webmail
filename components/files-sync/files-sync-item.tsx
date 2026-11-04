@@ -52,6 +52,28 @@ export function useShowInFolder(nodeId: string | null | undefined): { label: str
   };
 }
 
+/**
+ * The Files screen's header: the folder on screen in Explorer (Finder, file manager), when a
+ * root covers it; at the top of Files with the drive on, the drive itself (files-p3-9).
+ */
+export function useShowFolderOnScreen(folderId: string | null): { label: string; run: () => void } | null {
+  const t = useTranslations("files_sync");
+  const available = useFilesSyncStore((s) => s.available);
+  const controller = useFilesSyncStore((s) => s.controller);
+  const account = useFilesSyncStore((s) => s.account);
+  const roots = useFilesSyncStore((s) => s.roots);
+  useFilesSyncStore((s) => s.items);
+  if (!available || !controller) return null;
+  const label = t(showInKey(getDesktopBridge()?.platform));
+  const fail = () => toast.error(t("show_in.failed"));
+  if (folderId && controller.coverage(folderId)) {
+    return { label, run: () => { void controller.showInFolder(folderId).then((shown) => { if (!shown) fail(); }, fail); } };
+  }
+  const drive = folderId === null ? roots.find((root) => root.kind === "drive" && root.account === account) : undefined;
+  if (!drive) return null;
+  return { label, run: () => { void controller.openRoot(drive.id).then((shown) => { if (!shown) fail(); }, fail); } };
+}
+
 /** The menu entry of a row on the Files screen. */
 export function ShowInFolderMenuItem({ nodeId, onRan }: { nodeId: string; onRan: () => void }) {
   const showIn = useShowInFolder(nodeId);
