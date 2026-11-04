@@ -1345,6 +1345,30 @@
     "apply": "Usar este texto",
     "apply_hint": "Substitui o assunto e o texto abaixo."
   },
+  "uxs_vacation": {
+    "default_subject": "Fora do escritório",
+    "default_message": "Obrigado pelo seu e-mail. Estou fora do escritório e responderei quando voltar.",
+    "write_message_first": "Escreva primeiro uma mensagem. Sem ela, as pessoas receberiam uma resposta vazia.",
+    "enter_address_first": "Introduza primeiro o endereço para onde reencaminhar.",
+    "message_title": "A sua resposta",
+    "message_label": "Mensagem",
+    "message_description": "O que recebem as pessoas que lhe escrevem. Pode usar formatação e ligações.",
+    "from_label": "De (opcional)",
+    "from_description": "Deixe vazio para começar já.",
+    "until_label": "Até (opcional)",
+    "until_description": "Deixe vazio para continuar a responder até desligar.",
+    "audience_all": "Todos",
+    "audience_internal": "Só a minha organização ({domains})",
+    "audience_external": "Só pessoas de fora da minha organização",
+    "signature_label": "Assinatura",
+    "signature_plain_label": "Assinatura (texto simples)",
+    "signature_plain_description": "Escreve apenas texto simples (Composição), por isso a assinatura também é texto simples.",
+    "edit_as_html": "Editar como HTML",
+    "edit_formatted": "Voltar ao editor com formatação",
+    "html_source_label": "Assinatura em HTML",
+    "signature_size": "{bytes} de {max} bytes usados",
+    "signature_too_long": "Demasiado longa para o servidor ({bytes} de {max} bytes). Encurte-a."
+  },
   "retention_notice": {
     "line": "As mensagens aqui são eliminadas {count, plural, one {# dia} other {# dias}} depois de serem movidas para cá."
   },

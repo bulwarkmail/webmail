@@ -1345,6 +1345,30 @@
     "apply": "استخدام هذا النص",
     "apply_hint": "يستبدل الموضوع والنص أدناه."
   },
+  "uxs_vacation": {
+    "default_subject": "خارج المكتب",
+    "default_message": "شكرًا على رسالتك. أنا خارج المكتب حاليًا وسأرد عند عودتي.",
+    "write_message_first": "اكتب رسالة أولًا. بدونها سيتلقى الناس ردًا فارغًا.",
+    "enter_address_first": "أدخل أولًا العنوان الذي ستُعاد التوجيه إليه.",
+    "message_title": "ردّك",
+    "message_label": "الرسالة",
+    "message_description": "ما يتلقاه من يراسلك. يمكنك استخدام التنسيق والروابط.",
+    "from_label": "من (اختياري)",
+    "from_description": "اتركه فارغًا للبدء فورًا.",
+    "until_label": "حتى (اختياري)",
+    "until_description": "اتركه فارغًا لمواصلة الرد حتى توقفه.",
+    "audience_all": "الجميع",
+    "audience_internal": "مؤسستي فقط ({domains})",
+    "audience_external": "من هم خارج مؤسستي فقط",
+    "signature_label": "التوقيع",
+    "signature_plain_label": "التوقيع (نص عادي)",
+    "signature_plain_description": "أنت تكتب نصًا عاديًا فقط (الكتابة)، لذا توقيعك نص عادي أيضًا.",
+    "edit_as_html": "تحرير بتنسيق HTML",
+    "edit_formatted": "العودة إلى محرر التنسيق",
+    "html_source_label": "التوقيع بتنسيق HTML",
+    "signature_size": "مستخدم {bytes} من {max} بايت",
+    "signature_too_long": "طويل جدًا بالنسبة للخادم ({bytes} من {max} بايت). اجعله أقصر."
+  },
   "retention_notice": {
     "line": "تُحذف الرسائل هنا بعد {count, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} من نقلها إلى هنا."
   },

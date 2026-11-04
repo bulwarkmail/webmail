@@ -1345,6 +1345,30 @@
     "apply": "이 내용 사용",
     "apply_hint": "아래 제목과 본문을 바꿉니다."
   },
+  "uxs_vacation": {
+    "default_subject": "부재중",
+    "default_message": "이메일 감사합니다. 지금은 자리에 없으며 돌아오면 답장드리겠습니다.",
+    "write_message_first": "먼저 메시지를 작성하세요. 메시지가 없으면 빈 답장이 보내집니다.",
+    "enter_address_first": "먼저 전달할 주소를 입력하세요.",
+    "message_title": "답장 내용",
+    "message_label": "메시지",
+    "message_description": "나에게 메일을 보낸 사람이 받는 내용입니다. 서식과 링크를 쓸 수 있습니다.",
+    "from_label": "시작 (선택)",
+    "from_description": "비워 두면 바로 시작합니다.",
+    "until_label": "종료 (선택)",
+    "until_description": "비워 두면 끌 때까지 계속 답장합니다.",
+    "audience_all": "모든 사람",
+    "audience_internal": "내 조직만 ({domains})",
+    "audience_external": "내 조직 밖의 사람만",
+    "signature_label": "서명",
+    "signature_plain_label": "서명 (일반 텍스트)",
+    "signature_plain_description": "일반 텍스트로만 작성하도록 설정되어 있어(작성) 서명도 일반 텍스트입니다.",
+    "edit_as_html": "HTML로 편집",
+    "edit_formatted": "서식 편집기로 돌아가기",
+    "html_source_label": "HTML 서명",
+    "signature_size": "{max}바이트 중 {bytes}바이트 사용",
+    "signature_too_long": "서버에 비해 너무 깁니다({max}바이트 중 {bytes}바이트). 줄여 주세요."
+  },
   "retention_notice": {
     "line": "여기 있는 메일은 이곳으로 옮겨진 지 {count, plural, other {#일}} 후에 삭제됩니다."
   },

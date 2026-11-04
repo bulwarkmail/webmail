@@ -1345,6 +1345,30 @@
     "apply": "このテキストを使う",
     "apply_hint": "下の件名と本文を置き換えます。"
   },
+  "uxs_vacation": {
+    "default_subject": "不在",
+    "default_message": "メールをありがとうございます。現在不在のため、戻り次第お返事します。",
+    "write_message_first": "先にメッセージを入力してください。入力しないと、空の返信が送られます。",
+    "enter_address_first": "先に転送先のアドレスを入力してください。",
+    "message_title": "返信内容",
+    "message_label": "メッセージ",
+    "message_description": "あなたにメールを送った人が受け取る内容です。書式やリンクを使えます。",
+    "from_label": "開始（任意）",
+    "from_description": "空欄にするとすぐに始まります。",
+    "until_label": "終了（任意）",
+    "until_description": "空欄にすると、オフにするまで返信を続けます。",
+    "audience_all": "全員",
+    "audience_internal": "自分の組織のみ（{domains}）",
+    "audience_external": "組織外の人のみ",
+    "signature_label": "署名",
+    "signature_plain_label": "署名（プレーンテキスト）",
+    "signature_plain_description": "プレーンテキストのみで作成する設定（作成）のため、署名もプレーンテキストです。",
+    "edit_as_html": "HTML で編集",
+    "edit_formatted": "書式エディターに戻る",
+    "html_source_label": "HTML の署名",
+    "signature_size": "{max} バイト中 {bytes} バイト使用",
+    "signature_too_long": "サーバーには長すぎます（{max} バイト中 {bytes} バイト）。短くしてください。"
+  },
   "retention_notice": {
     "line": "ここにあるメッセージは、移動されてから{count, plural, other {#日}}後に削除されます。"
   },

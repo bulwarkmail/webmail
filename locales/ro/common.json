@@ -1345,6 +1345,30 @@
     "apply": "Folosiți acest text",
     "apply_hint": "Înlocuiește subiectul și textul de mai jos."
   },
+  "uxs_vacation": {
+    "default_subject": "În afara biroului",
+    "default_message": "Vă mulțumesc pentru e-mail. Sunt în afara biroului și voi răspunde când mă întorc.",
+    "write_message_first": "Scrieți mai întâi un mesaj. Fără el, oamenii ar primi un răspuns gol.",
+    "enter_address_first": "Introduceți mai întâi adresa către care se redirecționează.",
+    "message_title": "Răspunsul dvs.",
+    "message_label": "Mesaj",
+    "message_description": "Ce primesc cei care vă scriu. Puteți folosi formatare și linkuri.",
+    "from_label": "De la (opțional)",
+    "from_description": "Lăsați gol pentru a începe imediat.",
+    "until_label": "Până la (opțional)",
+    "until_description": "Lăsați gol pentru a răspunde până îl dezactivați.",
+    "audience_all": "Tuturor",
+    "audience_internal": "Doar organizației mele ({domains})",
+    "audience_external": "Doar persoanelor din afara organizației mele",
+    "signature_label": "Semnătură",
+    "signature_plain_label": "Semnătură (text simplu)",
+    "signature_plain_description": "Scrieți doar text simplu (Redactarea), deci și semnătura este text simplu.",
+    "edit_as_html": "Editați ca HTML",
+    "edit_formatted": "Înapoi la editorul cu formatare",
+    "html_source_label": "Semnătură HTML",
+    "signature_size": "{bytes} din {max} octeți folosiți",
+    "signature_too_long": "Prea lungă pentru server ({bytes} din {max} octeți). Scurtați-o."
+  },
   "retention_notice": {
     "line": "Mesajele de aici sunt șterse la {count, plural, one {# zi} few {# zile} other {# de zile}} după ce au fost mutate aici."
   },

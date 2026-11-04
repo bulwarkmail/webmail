@@ -1345,6 +1345,30 @@
     "apply": "Kasuta seda teksti",
     "apply_hint": "Asendab allpool oleva teema ja teksti."
   },
+  "uxs_vacation": {
+    "default_subject": "Kontorist eemal",
+    "default_message": "Aitäh kirja eest. Olen kontorist eemal ja vastan, kui tagasi olen.",
+    "write_message_first": "Kirjuta esmalt sõnum. Ilma selleta saaksid inimesed tühja vastuse.",
+    "enter_address_first": "Sisesta esmalt aadress, kuhu edasi saata.",
+    "message_title": "Sinu vastus",
+    "message_label": "Sõnum",
+    "message_description": "Seda saavad need, kes sulle kirjutavad. Võid kasutada vormindust ja linke.",
+    "from_label": "Alates (valikuline)",
+    "from_description": "Jäta tühjaks, et alustada kohe.",
+    "until_label": "Kuni (valikuline)",
+    "until_description": "Jäta tühjaks, et vastata, kuni selle välja lülitad.",
+    "audience_all": "Kõigile",
+    "audience_internal": "Ainult minu organisatsioonile ({domains})",
+    "audience_external": "Ainult inimestele väljastpoolt minu organisatsiooni",
+    "signature_label": "Allkiri",
+    "signature_plain_label": "Allkiri (lihttekst)",
+    "signature_plain_description": "Kirjutad ainult lihtteksti (Kirjutamine), seega on ka allkiri lihttekst.",
+    "edit_as_html": "Muuda HTML-ina",
+    "edit_formatted": "Tagasi vormindusega redaktorisse",
+    "html_source_label": "Allkiri HTML-ina",
+    "signature_size": "Kasutatud {bytes} / {max} baiti",
+    "signature_too_long": "Serveri jaoks liiga pikk ({bytes} / {max} baiti). Tee lühemaks."
+  },
   "retention_notice": {
     "line": "Siin olevad kirjad kustutatakse {count, plural, one {# päev} other {# päeva}} pärast siia teisaldamist."
   },

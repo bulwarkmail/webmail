@@ -1288,6 +1288,30 @@
     "apply": "שימוש בטקסט הזה",
     "apply_hint": "מחליף את הנושא והטקסט שלמטה."
   },
+  "uxs_vacation": {
+    "default_subject": "מחוץ למשרד",
+    "default_message": "תודה על הודעתך. אני מחוץ למשרד ואענה כשאחזור.",
+    "write_message_first": "כתבו קודם הודעה. בלעדיה אנשים יקבלו תשובה ריקה.",
+    "enter_address_first": "הזינו קודם את הכתובת להעברה.",
+    "message_title": "התשובה שלך",
+    "message_label": "הודעה",
+    "message_description": "מה שמקבלים מי שכותבים אליך. אפשר להשתמש בעיצוב ובקישורים.",
+    "from_label": "מ־ (לא חובה)",
+    "from_description": "השאירו ריק כדי להתחיל מיד.",
+    "until_label": "עד (לא חובה)",
+    "until_description": "השאירו ריק כדי להמשיך להשיב עד שתכבו.",
+    "audience_all": "כולם",
+    "audience_internal": "רק הארגון שלי ({domains})",
+    "audience_external": "רק אנשים מחוץ לארגון שלי",
+    "signature_label": "חתימה",
+    "signature_plain_label": "חתימה (טקסט פשוט)",
+    "signature_plain_description": "את/ה כותב/ת רק טקסט פשוט (הרכבה), ולכן גם החתימה היא טקסט פשוט.",
+    "edit_as_html": "עריכה כ־HTML",
+    "edit_formatted": "חזרה לעורך העיצוב",
+    "html_source_label": "חתימה כ־HTML",
+    "signature_size": "בשימוש {bytes} מתוך {max} בתים",
+    "signature_too_long": "ארוכה מדי עבור השרת ({bytes} מתוך {max} בתים). קצרו אותה."
+  },
   "retention_notice": {
     "line": "ההודעות כאן נמחקות {count, plural, one {יום אחד} two {יומיים} other {# ימים}} אחרי שהועברו לכאן."
   },

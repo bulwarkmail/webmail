@@ -1345,6 +1345,30 @@
     "apply": "Použít tento text",
     "apply_hint": "Nahradí předmět a text níže."
   },
+  "uxs_vacation": {
+    "default_subject": "Mimo kancelář",
+    "default_message": "Děkuji za váš e-mail. Jsem mimo kancelář a odpovím, až se vrátím.",
+    "write_message_first": "Nejdřív napište zprávu. Bez ní by lidé dostali prázdnou odpověď.",
+    "enter_address_first": "Nejdřív zadejte adresu, na kterou se má přeposílat.",
+    "message_title": "Vaše odpověď",
+    "message_label": "Zpráva",
+    "message_description": "Co dostanou lidé, kteří vám napíšou. Můžete použít formátování a odkazy.",
+    "from_label": "Od (nepovinné)",
+    "from_description": "Nechte prázdné, aby to začalo hned.",
+    "until_label": "Do (nepovinné)",
+    "until_description": "Nechte prázdné, aby se odpovídalo, dokud to nevypnete.",
+    "audience_all": "Všem",
+    "audience_internal": "Jen mé organizaci ({domains})",
+    "audience_external": "Jen lidem mimo mou organizaci",
+    "signature_label": "Podpis",
+    "signature_plain_label": "Podpis (prostý text)",
+    "signature_plain_description": "Píšete jen prostý text (Psaní), takže i váš podpis je prostý text.",
+    "edit_as_html": "Upravit jako HTML",
+    "edit_formatted": "Zpět do editoru s formátováním",
+    "html_source_label": "Podpis jako HTML",
+    "signature_size": "Využito {bytes} z {max} bajtů",
+    "signature_too_long": "Pro server příliš dlouhý ({bytes} z {max} bajtů). Zkraťte ho."
+  },
   "retention_notice": {
     "line": "Zprávy zde se smažou {count, plural, one {# den} few {# dny} many {# dne} other {# dní}} poté, co sem byly přesunuty."
   },

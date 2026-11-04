@@ -1345,6 +1345,30 @@
     "apply": "Usa questo testo",
     "apply_hint": "Sostituisce l'oggetto e il testo qui sotto."
   },
+  "uxs_vacation": {
+    "default_subject": "Fuori ufficio",
+    "default_message": "Grazie per la tua email. Sono fuori ufficio e risponderò al mio rientro.",
+    "write_message_first": "Scrivi prima un messaggio. Senza, le persone riceverebbero una risposta vuota.",
+    "enter_address_first": "Inserisci prima l'indirizzo a cui inoltrare.",
+    "message_title": "La tua risposta",
+    "message_label": "Messaggio",
+    "message_description": "Ciò che riceve chi ti scrive. Puoi usare formattazione e link.",
+    "from_label": "Dal (facoltativo)",
+    "from_description": "Lascia vuoto per iniziare subito.",
+    "until_label": "Al (facoltativo)",
+    "until_description": "Lascia vuoto per continuare a rispondere finché non lo disattivi.",
+    "audience_all": "Tutti",
+    "audience_internal": "Solo la mia organizzazione ({domains})",
+    "audience_external": "Solo persone esterne alla mia organizzazione",
+    "signature_label": "Firma",
+    "signature_plain_label": "Firma (testo semplice)",
+    "signature_plain_description": "Scrivi solo testo semplice (Composizione), quindi anche la firma è testo semplice.",
+    "edit_as_html": "Modifica come HTML",
+    "edit_formatted": "Torna all'editor con formattazione",
+    "html_source_label": "Firma in HTML",
+    "signature_size": "{bytes} di {max} byte usati",
+    "signature_too_long": "Troppo lunga per il server ({bytes} di {max} byte). Accorciala."
+  },
   "retention_notice": {
     "line": "I messaggi qui vengono eliminati {count, plural, one {# giorno} other {# giorni}} dopo essere stati spostati qui."
   },

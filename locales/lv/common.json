@@ -1345,6 +1345,30 @@
     "apply": "Izmantot šo tekstu",
     "apply_hint": "Aizstāj tālāk esošo tēmu un tekstu."
   },
+  "uxs_vacation": {
+    "default_subject": "Ārpus biroja",
+    "default_message": "Paldies par vēstuli. Esmu ārpus biroja un atbildēšu, kad atgriezīšos.",
+    "write_message_first": "Vispirms uzrakstiet ziņojumu. Bez tā cilvēki saņemtu tukšu atbildi.",
+    "enter_address_first": "Vispirms ievadiet adresi, uz kuru pārsūtīt.",
+    "message_title": "Jūsu atbilde",
+    "message_label": "Ziņojums",
+    "message_description": "To saņem tie, kas jums raksta. Varat izmantot formatējumu un saites.",
+    "from_label": "No (neobligāti)",
+    "from_description": "Atstājiet tukšu, lai sāktu uzreiz.",
+    "until_label": "Līdz (neobligāti)",
+    "until_description": "Atstājiet tukšu, lai atbildētu, līdz to izslēgsiet.",
+    "audience_all": "Visiem",
+    "audience_internal": "Tikai manai organizācijai ({domains})",
+    "audience_external": "Tikai cilvēkiem ārpus manas organizācijas",
+    "signature_label": "Paraksts",
+    "signature_plain_label": "Paraksts (vienkāršs teksts)",
+    "signature_plain_description": "Jūs rakstāt tikai vienkāršu tekstu (Rakstīšana), tāpēc arī paraksts ir vienkāršs teksts.",
+    "edit_as_html": "Rediģēt kā HTML",
+    "edit_formatted": "Atpakaļ uz formatēšanas redaktoru",
+    "html_source_label": "Paraksts kā HTML",
+    "signature_size": "Izmantoti {bytes} no {max} baitiem",
+    "signature_too_long": "Serverim par garu ({bytes} no {max} baitiem). Saīsiniet to."
+  },
   "retention_notice": {
     "line": "Šeit esošie ziņojumi tiek dzēsti {count, plural, zero {# dienas} one {# dienu} other {# dienas}} pēc to pārvietošanas šeit."
   },

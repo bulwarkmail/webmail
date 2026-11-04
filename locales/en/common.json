@@ -1345,6 +1345,30 @@
     "apply": "Use this text",
     "apply_hint": "Replaces the subject and text below."
   },
+  "uxs_vacation": {
+    "default_subject": "Out of office",
+    "default_message": "Thank you for your email. I'm out of the office and will reply when I'm back.",
+    "write_message_first": "Write a message first. Without one, people would get an empty reply.",
+    "enter_address_first": "Enter the address to forward to first.",
+    "message_title": "Your reply",
+    "message_label": "Message",
+    "message_description": "What people get when they write to you. You can use formatting and links.",
+    "from_label": "From (optional)",
+    "from_description": "Leave it empty to start right away.",
+    "until_label": "Until (optional)",
+    "until_description": "Leave it empty to keep replying until you turn it off.",
+    "audience_all": "Everyone",
+    "audience_internal": "Only my organisation ({domains})",
+    "audience_external": "Only people outside my organisation",
+    "signature_label": "Signature",
+    "signature_plain_label": "Signature (plain text)",
+    "signature_plain_description": "You write plain text only (Composing), so your signature is plain text too.",
+    "edit_as_html": "Edit as HTML",
+    "edit_formatted": "Back to the formatting editor",
+    "html_source_label": "Signature as HTML",
+    "signature_size": "{bytes} of {max} bytes used",
+    "signature_too_long": "Too long for the server ({bytes} of {max} bytes). Make it shorter."
+  },
   "retention_notice": {
     "line": "Messages here are deleted {count, plural, one {# day} other {# days}} after they were moved here."
   },

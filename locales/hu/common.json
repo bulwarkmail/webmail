@@ -1345,6 +1345,30 @@
     "apply": "Ennek a szövegnek a használata",
     "apply_hint": "Lecseréli a lenti tárgyat és szöveget."
   },
+  "uxs_vacation": {
+    "default_subject": "Házon kívül",
+    "default_message": "Köszönöm a levelét. Jelenleg nem vagyok az irodában, visszatérésem után válaszolok.",
+    "write_message_first": "Előbb írjon üzenetet. Nélküle az emberek üres választ kapnának.",
+    "enter_address_first": "Előbb adja meg a címet, ahová továbbítson.",
+    "message_title": "Az Ön válasza",
+    "message_label": "Üzenet",
+    "message_description": "Ezt kapják, akik írnak Önnek. Használhat formázást és hivatkozásokat.",
+    "from_label": "Ettől (nem kötelező)",
+    "from_description": "Hagyja üresen az azonnali kezdéshez.",
+    "until_label": "Eddig (nem kötelező)",
+    "until_description": "Hagyja üresen, hogy a válaszolás addig tartson, amíg ki nem kapcsolja.",
+    "audience_all": "Mindenkinek",
+    "audience_internal": "Csak a szervezetemnek ({domains})",
+    "audience_external": "Csak a szervezetemen kívülieknek",
+    "signature_label": "Aláírás",
+    "signature_plain_label": "Aláírás (egyszerű szöveg)",
+    "signature_plain_description": "Csak egyszerű szöveget ír (Írás), ezért az aláírása is egyszerű szöveg.",
+    "edit_as_html": "Szerkesztés HTML-ként",
+    "edit_formatted": "Vissza a formázó szerkesztőhöz",
+    "html_source_label": "Aláírás HTML-ként",
+    "signature_size": "{bytes} / {max} bájt felhasználva",
+    "signature_too_long": "Túl hosszú a szervernek ({bytes} / {max} bájt). Rövidítse le."
+  },
   "retention_notice": {
     "line": "Az itt lévő üzenetek az ide helyezésük után {count, plural, one {# nappal} other {# nappal}} törlődnek."
   },

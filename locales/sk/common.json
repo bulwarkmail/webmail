@@ -1345,6 +1345,30 @@
     "apply": "Použiť tento text",
     "apply_hint": "Nahradí predmet a text nižšie."
   },
+  "uxs_vacation": {
+    "default_subject": "Mimo kancelárie",
+    "default_message": "Ďakujem za váš e-mail. Som mimo kancelárie a odpoviem, keď sa vrátim.",
+    "write_message_first": "Najprv napíšte správu. Bez nej by ľudia dostali prázdnu odpoveď.",
+    "enter_address_first": "Najprv zadajte adresu, na ktorú sa má preposielať.",
+    "message_title": "Vaša odpoveď",
+    "message_label": "Správa",
+    "message_description": "Toto dostanú ľudia, ktorí vám napíšu. Môžete použiť formátovanie a odkazy.",
+    "from_label": "Od (nepovinné)",
+    "from_description": "Nechajte prázdne, aby sa začalo hneď.",
+    "until_label": "Do (nepovinné)",
+    "until_description": "Nechajte prázdne, aby sa odpovedalo, kým to nevypnete.",
+    "audience_all": "Všetkým",
+    "audience_internal": "Len mojej organizácii ({domains})",
+    "audience_external": "Len ľuďom mimo mojej organizácie",
+    "signature_label": "Podpis",
+    "signature_plain_label": "Podpis (obyčajný text)",
+    "signature_plain_description": "Píšete len obyčajný text (Písanie), takže aj váš podpis je obyčajný text.",
+    "edit_as_html": "Upraviť ako HTML",
+    "edit_formatted": "Späť do editora s formátovaním",
+    "html_source_label": "Podpis ako HTML",
+    "signature_size": "Využitých {bytes} z {max} bajtov",
+    "signature_too_long": "Pre server príliš dlhý ({bytes} z {max} bajtov). Skráťte ho."
+  },
   "retention_notice": {
     "line": "Správy tu sa vymažú {count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}} po presunutí sem."
   },

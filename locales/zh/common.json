@@ -1345,6 +1345,30 @@
     "apply": "使用此文字",
     "apply_hint": "替换下方的主题和正文。"
   },
+  "uxs_vacation": {
+    "default_subject": "外出",
+    "default_message": "感谢您的来信。我目前不在办公室，回来后会尽快回复。",
+    "write_message_first": "请先写一条消息。没有消息的话，对方会收到空白回复。",
+    "enter_address_first": "请先输入要转发到的地址。",
+    "message_title": "您的回复",
+    "message_label": "消息",
+    "message_description": "给您写信的人会收到的内容。可以使用格式和链接。",
+    "from_label": "开始（可选）",
+    "from_description": "留空则立即开始。",
+    "until_label": "结束（可选）",
+    "until_description": "留空则一直回复，直到您关闭。",
+    "audience_all": "所有人",
+    "audience_internal": "仅限我的组织（{domains}）",
+    "audience_external": "仅限组织外的人",
+    "signature_label": "签名",
+    "signature_plain_label": "签名（纯文本）",
+    "signature_plain_description": "您设置为只写纯文本（撰写），所以签名也是纯文本。",
+    "edit_as_html": "以 HTML 编辑",
+    "edit_formatted": "返回格式编辑器",
+    "html_source_label": "HTML 签名",
+    "signature_size": "已用 {bytes} / {max} 字节",
+    "signature_too_long": "对服务器来说太长（{bytes} / {max} 字节）。请缩短。"
+  },
   "retention_notice": {
     "line": "此处的邮件会在移入 {count, plural, other {# 天}} 后删除。"
   },

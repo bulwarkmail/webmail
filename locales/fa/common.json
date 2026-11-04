@@ -1345,6 +1345,30 @@
     "apply": "استفاده از این متن",
     "apply_hint": "موضوع و متن زیر را جایگزین می‌کند."
   },
+  "uxs_vacation": {
+    "default_subject": "خارج از دفتر",
+    "default_message": "از ایمیل شما سپاسگزارم. در حال حاضر خارج از دفتر هستم و پس از بازگشت پاسخ می‌دهم.",
+    "write_message_first": "اول یک پیام بنویسید. بدون آن، افراد پاسخی خالی دریافت می‌کنند.",
+    "enter_address_first": "اول نشانی‌ای را که باید به آن هدایت شود وارد کنید.",
+    "message_title": "پاسخ شما",
+    "message_label": "پیام",
+    "message_description": "آنچه افرادی که به شما می‌نویسند دریافت می‌کنند. می‌توانید از قالب‌بندی و پیوند استفاده کنید.",
+    "from_label": "از (اختیاری)",
+    "from_description": "برای شروع فوری خالی بگذارید.",
+    "until_label": "تا (اختیاری)",
+    "until_description": "خالی بگذارید تا پاسخ دادن تا زمانی که خاموشش کنید ادامه یابد.",
+    "audience_all": "همه",
+    "audience_internal": "فقط سازمان من ({domains})",
+    "audience_external": "فقط افراد بیرون از سازمان من",
+    "signature_label": "امضا",
+    "signature_plain_label": "امضا (متن ساده)",
+    "signature_plain_description": "شما فقط متن ساده می‌نویسید (نوشتن)، پس امضای شما هم متن ساده است.",
+    "edit_as_html": "ویرایش به‌صورت HTML",
+    "edit_formatted": "بازگشت به ویرایشگر قالب‌بندی",
+    "html_source_label": "امضا به‌صورت HTML",
+    "signature_size": "{bytes} از {max} بایت استفاده شده",
+    "signature_too_long": "برای سرور بیش از حد طولانی است ({bytes} از {max} بایت). کوتاه‌ترش کنید."
+  },
   "retention_notice": {
     "line": "پیام‌های اینجا {count, plural, one {# روز} other {# روز}} پس از انتقال به اینجا حذف می‌شوند."
   },

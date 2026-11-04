@@ -712,6 +712,30 @@
     "apply": "ใช้ข้อความนี้",
     "apply_hint": "แทนที่หัวเรื่องและข้อความด้านล่าง"
   },
+  "uxs_vacation": {
+    "default_subject": "ไม่อยู่ที่สำนักงาน",
+    "default_message": "ขอบคุณสำหรับอีเมล ตอนนี้ฉันไม่อยู่ที่สำนักงาน และจะตอบกลับเมื่อกลับมา",
+    "write_message_first": "เขียนข้อความก่อน ถ้าไม่มีข้อความ ผู้คนจะได้รับคำตอบว่างเปล่า",
+    "enter_address_first": "ใส่ที่อยู่ที่จะส่งต่อไปก่อน",
+    "message_title": "คำตอบของคุณ",
+    "message_label": "ข้อความ",
+    "message_description": "สิ่งที่คนที่เขียนถึงคุณจะได้รับ ใช้การจัดรูปแบบและลิงก์ได้",
+    "from_label": "ตั้งแต่ (ไม่บังคับ)",
+    "from_description": "เว้นว่างไว้เพื่อเริ่มทันที",
+    "until_label": "จนถึง (ไม่บังคับ)",
+    "until_description": "เว้นว่างไว้เพื่อตอบกลับต่อไปจนกว่าคุณจะปิด",
+    "audience_all": "ทุกคน",
+    "audience_internal": "เฉพาะองค์กรของฉัน ({domains})",
+    "audience_external": "เฉพาะคนนอกองค์กรของฉัน",
+    "signature_label": "ลายเซ็น",
+    "signature_plain_label": "ลายเซ็น (ข้อความธรรมดา)",
+    "signature_plain_description": "คุณเขียนเป็นข้อความธรรมดาเท่านั้น (การเขียน) ลายเซ็นจึงเป็นข้อความธรรมดาด้วย",
+    "edit_as_html": "แก้ไขเป็น HTML",
+    "edit_formatted": "กลับไปที่ตัวแก้ไขแบบจัดรูปแบบ",
+    "html_source_label": "ลายเซ็นแบบ HTML",
+    "signature_size": "ใช้ไป {bytes} จาก {max} ไบต์",
+    "signature_too_long": "ยาวเกินไปสำหรับเซิร์ฟเวอร์ ({bytes} จาก {max} ไบต์) โปรดทำให้สั้นลง"
+  },
   "retention_notice": {
     "line": "ข้อความที่นี่จะถูกลบ {count, plural, other {# วัน}} หลังจากย้ายมาที่นี่"
   },

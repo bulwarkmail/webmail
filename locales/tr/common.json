@@ -1345,6 +1345,30 @@
     "apply": "Bu metni kullan",
     "apply_hint": "Aşağıdaki konu ve metnin yerine geçer."
   },
+  "uxs_vacation": {
+    "default_subject": "Ofis dışında",
+    "default_message": "E-postanız için teşekkürler. Şu an ofis dışındayım, döndüğümde yanıt vereceğim.",
+    "write_message_first": "Önce bir ileti yazın. İleti olmadan insanlar boş bir yanıt alır.",
+    "enter_address_first": "Önce iletilecek adresi girin.",
+    "message_title": "Yanıtınız",
+    "message_label": "İleti",
+    "message_description": "Size yazan kişilerin alacağı metin. Biçimlendirme ve bağlantı kullanabilirsiniz.",
+    "from_label": "Başlangıç (isteğe bağlı)",
+    "from_description": "Hemen başlamak için boş bırakın.",
+    "until_label": "Bitiş (isteğe bağlı)",
+    "until_description": "Siz kapatana kadar yanıt vermeye devam etmek için boş bırakın.",
+    "audience_all": "Herkese",
+    "audience_internal": "Yalnızca kuruluşuma ({domains})",
+    "audience_external": "Yalnızca kuruluşum dışındakilere",
+    "signature_label": "İmza",
+    "signature_plain_label": "İmza (düz metin)",
+    "signature_plain_description": "Yalnızca düz metin yazıyorsunuz (Yazma), bu yüzden imzanız da düz metin.",
+    "edit_as_html": "HTML olarak düzenle",
+    "edit_formatted": "Biçimlendirme düzenleyicisine dön",
+    "html_source_label": "HTML imza",
+    "signature_size": "{max} bayttan {bytes} bayt kullanıldı",
+    "signature_too_long": "Sunucu için çok uzun ({max} bayttan {bytes} bayt). Kısaltın."
+  },
   "retention_notice": {
     "line": "Buradaki iletiler buraya taşındıktan {count, plural, one {# gün} other {# gün}} sonra silinir."
   },
