@@ -302,6 +302,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [handedOffSource, setHandedOffSource] = useState<{ session: number; emailId?: string; source?: EmailWriteSource } | null>(null);
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
+  const composerRemountRef = useRef(composerRemount);
+  composerRemountRef.current = composerRemount;
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
   const dockedSessionRef = useRef<number | null>(null);
@@ -5275,6 +5277,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         sessionKey={`inline-${composerSessionId}`}
         sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
+          // A replaced session, or a stand-in superseded by a recovery remount,
+          // no longer owns this slot. Empty snapshots from its owner are valid.
+          if (composerSessionRef.current !== composerSessionId || composerRemountRef.current !== composerRemount) return;
           setComposerPrefill(null);
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
             suppressComposerStateSaveSessionRef.current = null;
@@ -5297,8 +5302,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // Still open in another host: the one mounted there started before
           // these edits arrived. The composer calls the handler of its first
           // render, so composerHost is the host this instance lived in.
-          if (showComposerRef.current && composerSessionRef.current === composerSessionId && composerHostRef.current !== composerHost) {
-            setComposerRemount((n) => n + 1);
+          if (showComposerRef.current && composerHostRef.current !== composerHost) {
+            // Relinquish ownership now, before the stand-in's cleanup (including
+            // Strict Mode's effect replay) can replace the snapshot below.
+            composerRemountRef.current += 1;
+            setComposerRemount(composerRemountRef.current);
           }
           setPendingDraft(data);
         }}
