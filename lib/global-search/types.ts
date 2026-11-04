@@ -31,6 +31,11 @@ interface HitBase {
   title: string;
   /** Folder / address book / calendar / drive path - shown after the account label. */
   subtitle: string;
+  /**
+   * The calendar or address book in `subtitle`, and what follows it, so the screen can
+   * call Stalwart's default one "Calendar" or "Contacts" in the user's language (p2-3).
+   */
+  collection?: { kind: 'calendar' | 'addressBook'; name: string; isShared?: boolean; rest: string };
   /** ISO timestamp used for recency ordering (receivedAt, event start, file modified). */
   date: string | null;
   source: HitSource;

@@ -5272,6 +5272,12 @@
     "declined_many": "Has rebutjat {count} reunions d'aquesta sèrie.",
     "answers_series": "La teva resposta val per a totes les reunions de la sèrie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "fins a les {time}",
+    "week_all_days": "Mostra tota la setmana",
+    "week_days_short": "{count, plural, one {# dia} other {# dies}}",
+    "print": "Imprimeix…"
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "No s'ha pogut importar {name}.",
     "import_contacts": "Importa als contactes…",
     "add_to_calendar": "Afegeix al calendari…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fitxers editats",
+    "hide": "Amaga",
+    "discard_detail_file": "Es suprimeixen els canvis d'aquesta còpia. El fitxer de Fitxers no canvia.",
+    "saved_auto": "{name} s'ha desat a Fitxers. Els desaments posteriors des del seu programa hi aniran sols."
   },
   "smime": {
     "your_certificates": "Els vostres certificats",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Es conserva",
     "import_show": "Mostra"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacte seleccionat} other {# contactes seleccionats}}",
+    "selection_more": "i {count} més",
+    "no_addresses": "Cap dels contactes seleccionats té adreça electrònica.",
+    "task_open": "Obre",
+    "due_next_week": "La setmana vinent",
+    "due_none": "Sense data de venciment",
+    "due_pick": "Tria una data…",
+    "move_to_list": "Mou a la llista",
+    "dupes_legend": "{count, plural, one {1 ja és a Contactes:} other {# ja són a Contactes:}}",
+    "dupes_skip": "Omet-los",
+    "dupes_update": "Actualitza els contactes existents",
+    "dupes_updates": "Actualitza el contacte",
+    "upload_cancelled": "Pujada cancel·lada",
+    "upload_cancelled_partial": "{count, plural, one {S'ha pujat 1 fitxer} other {S'han pujat # fitxers}} abans de cancel·lar",
+    "download_cancelled": "S'ha cancel·lat la baixada"
   },
   "desktopEdit": {
     "edit": "Edita",

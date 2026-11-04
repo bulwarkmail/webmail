@@ -5272,6 +5272,12 @@
     "declined_many": "Hai rifiutato {count} riunioni di questa serie.",
     "answers_series": "La tua risposta vale per tutte le riunioni della serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "fino alle {time}",
+    "week_all_days": "Mostra tutta la settimana",
+    "week_days_short": "{count, plural, one {# giorno} other {# giorni}}",
+    "print": "Stampa…"
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "Impossibile importare {name}.",
     "import_contacts": "Importa nei contatti…",
     "add_to_calendar": "Aggiungi al calendario…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "File modificati",
+    "hide": "Nascondi",
+    "discard_detail_file": "Le modifiche a questa copia vengono eliminate. Il file in File non cambia.",
+    "saved_auto": "{name} salvato in File. I salvataggi successivi dal suo programma ci finiscono da soli."
   },
   "smime": {
     "your_certificates": "I tuoi certificati",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Mantenuto",
     "import_show": "Mostra"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contatto selezionato} other {# contatti selezionati}}",
+    "selection_more": "e altri {count}",
+    "no_addresses": "Nessuno dei contatti selezionati ha un indirizzo email.",
+    "task_open": "Apri",
+    "due_next_week": "La prossima settimana",
+    "due_none": "Nessuna scadenza",
+    "due_pick": "Scegli una data…",
+    "move_to_list": "Sposta nell’elenco",
+    "dupes_legend": "{count, plural, one {1 è già in Contatti:} other {# sono già in Contatti:}}",
+    "dupes_skip": "Saltali",
+    "dupes_update": "Aggiorna i contatti esistenti",
+    "dupes_updates": "Aggiorna il contatto",
+    "upload_cancelled": "Caricamento annullato",
+    "upload_cancelled_partial": "{count, plural, one {1 file era già stato caricato} other {# file erano già stati caricati}} prima dell'annullamento",
+    "download_cancelled": "Download annullato"
   },
   "desktopEdit": {
     "edit": "Modifica",

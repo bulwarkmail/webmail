@@ -389,7 +389,7 @@
     "no_scheduled_emails": "No scheduled emails",
     "no_scheduled_emails_description": "Messages scheduled for later will appear here.",
     "scheduled_count": "{count, plural, one {1 scheduled email} other {# scheduled emails}}",
-    "scheduled_actions_hint": "Scheduled messages can be canceled, rescheduled, or edited from their scheduled actions.",
+    "scheduled_actions_hint": "Scheduled messages can be cancelled, rescheduled, or edited from their scheduled actions.",
     "cancel_scheduled_send": "Cancel send",
     "reschedule_send": "Reschedule",
     "cancel_and_edit": "Cancel and edit",
@@ -5272,6 +5272,12 @@
     "declined_many": "You declined {count} meetings of this series.",
     "answers_series": "Your answer counts for every meeting in the series."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "until {time}",
+    "week_all_days": "Show the whole week",
+    "week_days_short": "{count, plural, one {# day} other {# days}}",
+    "print": "Print…"
+  },
   "calendar_event_notifications": {
     "someone": "Someone",
     "invited": "{name} invited you to \"{title}\"",
@@ -5649,8 +5655,8 @@
     "no_accounts": "No connected accounts.",
     "uploading": "Uploading...",
     "upload_success": "{count, plural, one {1 file uploaded} other {# files uploaded}}",
-    "upload_canceled": "Upload canceled",
-    "upload_canceled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you canceled",
+    "upload_canceled": "Upload cancelled",
+    "upload_canceled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you cancelled",
     "upload_error": "Couldn't upload the file",
     "upload_failed": "{count, plural, one {1 file could not be uploaded} other {# files could not be uploaded}}",
     "error_over_quota": "You have reached the limit on files or folders. Delete some and try again.",
@@ -5705,7 +5711,7 @@
     "download_error": "Couldn't download",
     "download_zip": "Download as zip",
     "zipping": "Preparing {name}",
-    "download_canceled": "Download canceled",
+    "download_canceled": "Download cancelled",
     "zip_error": "Couldn't download {name}",
     "not_available": "File storage is not available on this server",
     "cancel": "Cancel",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name} could not be imported.",
     "import_contacts": "Import into contacts…",
     "add_to_calendar": "Add to calendar…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Edited files",
+    "hide": "Hide",
+    "discard_detail_file": "Your edits to this copy are deleted. The file in Files doesn't change.",
+    "saved_auto": "{name} saved to Files. Later saves from its program go there on their own."
   },
   "smime": {
     "your_certificates": "Your Certificates",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Photo",
     "merge_kept": "Kept",
     "import_show": "Show"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selected} other {# contacts selected}}",
+    "selection_more": "and {count} more",
+    "no_addresses": "None of the selected contacts has an email address.",
+    "task_open": "Open",
+    "due_next_week": "Next week",
+    "due_none": "No due date",
+    "due_pick": "Pick a date…",
+    "move_to_list": "Move to list",
+    "dupes_legend": "{count, plural, one {1 is already in Contacts:} other {# are already in Contacts:}}",
+    "dupes_skip": "Skip them",
+    "dupes_update": "Update the existing contacts",
+    "dupes_updates": "Updates the contact",
+    "upload_cancelled": "Upload cancelled",
+    "upload_cancelled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you cancelled",
+    "download_cancelled": "Download cancelled"
   },
   "desktopEdit": {
     "edit": "Edit",

@@ -135,58 +135,6 @@ export function FilesHeader({
   // The row is px-3; the margin puts the button where the reader has it (px-4, lg:px-6).
   const toggleSlot = panelToggle ? <div className="flex items-center shrink-0 me-1 lg:me-3" data-panel-toggle-slot="">{panelToggle}</div> : null;
 
-  if (selection) {
-    return (
-      <div role="toolbar" aria-label={t("selection_actions")} className={cn(headerClass, "bg-accent/40")}>
-        <IconButton label={t("clear_selection")} onClick={selection.onClear}>
-          <X />
-        </IconButton>
-        <span className="text-sm font-medium me-2 whitespace-nowrap" aria-live="polite">
-          {t("selected_count", { count: selection.count })}
-        </span>
-        <div className="flex items-center gap-0.5 min-w-0 overflow-x-auto">
-          {selection.trash ? (
-            <>
-              {selection.onRestore && (
-                <ToolButton icon={RotateCcw} label={t("restore")} onClick={selection.onRestore} compact />
-              )}
-              <ToolButton icon={Trash2} label={t("delete_forever")} onClick={selection.onDelete} compact destructive />
-            </>
-          ) : (
-          <>
-          {/* All icons with a tooltip, as in Mail's selection bar: one kind of button. */}
-          {selection.canOpen && (
-            <ToolButton icon={FolderOpen} label={t("open")} onClick={selection.onOpen} compact />
-          )}
-          {selection.fileCount > 0 && (
-            <ToolButton icon={Download} label={t("download")} onClick={selection.onDownload} compact />
-          )}
-          {selection.canShare && (
-            <ToolButton icon={Share2} label={tMenu("files_share_button")} onClick={selection.onShare} compact />
-          )}
-          {selection.canRename && (
-            <ToolButton icon={Pencil} label={t("rename")} onClick={selection.onRename} compact />
-          )}
-          {selection.onMoveTo && (
-            <ToolButton icon={FolderInput} label={t("move_to")} onClick={selection.onMoveTo} compact />
-          )}
-          <ToolButton icon={Scissors} label={t("cut")} onClick={selection.onCut} compact />
-          <ToolButton icon={Copy} label={t("copy")} onClick={selection.onCopy} compact />
-          {!compact && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
-          {!compact && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} />}
-          </>
-          )}
-        </div>
-        {/* Outside the scrolling row, so Delete and the "more" button never scroll out of sight. */}
-        {compact && !selection.trash && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
-        {compact && !selection.trash && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} overflow />}
-        <div className="flex-1" />
-        {!narrow && <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />}
-        {toggleSlot}
-      </div>
-    );
-  }
-
   // Deep paths keep the root and the last folders; the rest go in a menu.
   // A phone only fits the folder you are in, with the way up in the menu.
   const onlyLast = narrow ? crumbs.length > 1 : compact && crumbs.length > 2;
@@ -236,6 +184,103 @@ export function FilesHeader({
     );
   };
 
+  const overflowMenuEl = (
+    <ContextMenu ref={overflowMenu.menuRef} isOpen={overflowMenu.contextMenu.isOpen} position={overflowMenu.contextMenu.position} onClose={overflowMenu.closeContextMenu}>
+      {(overflowMenu.contextMenu.data ?? []).map((crumb) => (
+        <ContextMenuItem
+          key={crumb.path}
+          icon={Folder}
+          label={crumb.name}
+          onClick={() => { overflowMenu.closeContextMenu(); onNavigateCrumb(crumb); }}
+        />
+      ))}
+    </ContextMenu>
+  );
+
+  const treeButton = onMenuClick && (
+    <ToolbarButton
+      label={t("open_folder_tree")}
+      onClick={onMenuClick}
+      aria-expanded={menuOpen}
+    >
+      <Menu />
+    </ToolbarButton>
+  );
+
+  if (selection) {
+    return (
+      <div role="toolbar" aria-label={t("selection_actions")} className={cn(headerClass, "bg-accent/40")}>
+        {/* Where you are stays, so another folder is a click away while something is ticked (pim-p3-11). */}
+        {treeButton}
+        <nav aria-label={t("breadcrumbs")} className="min-w-0 shrink max-w-[40%] me-1" data-testid="selection-breadcrumbs">
+          <ol className="flex items-center text-sm min-w-0">
+            {crumbs.length > 1 && (
+              <li className="flex items-center shrink-0">
+                <button
+                  type="button"
+                  className="px-1.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                  aria-label={t("show_path")}
+                  aria-haspopup="menu"
+                  onClick={(e) => overflowMenu.openContextMenuFrom(e.currentTarget, crumbs.slice(0, -1))}
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+              </li>
+            )}
+            {crumbs.slice(-1).map((c) => renderCrumb(c, crumbs.length > 1 ? 1 : 0))}
+          </ol>
+        </nav>
+        <div className="h-5 w-px bg-border shrink-0 me-1" aria-hidden="true" />
+        <IconButton label={t("clear_selection")} onClick={selection.onClear}>
+          <X />
+        </IconButton>
+        <span className="text-sm font-medium me-2 whitespace-nowrap" aria-live="polite">
+          {t("selected_count", { count: selection.count })}
+        </span>
+        <div className="flex items-center gap-0.5 min-w-0 overflow-x-auto">
+          {selection.trash ? (
+            <>
+              {selection.onRestore && (
+                <ToolButton icon={RotateCcw} label={t("restore")} onClick={selection.onRestore} compact />
+              )}
+              <ToolButton icon={Trash2} label={t("delete_forever")} onClick={selection.onDelete} compact destructive />
+            </>
+          ) : (
+          <>
+          {/* All icons with a tooltip, as in Mail's selection bar: one kind of button. */}
+          {selection.canOpen && (
+            <ToolButton icon={FolderOpen} label={t("open")} onClick={selection.onOpen} compact />
+          )}
+          {selection.fileCount > 0 && (
+            <ToolButton icon={Download} label={t("download")} onClick={selection.onDownload} compact />
+          )}
+          {selection.canShare && (
+            <ToolButton icon={Share2} label={tMenu("files_share_button")} onClick={selection.onShare} compact />
+          )}
+          {selection.canRename && (
+            <ToolButton icon={Pencil} label={t("rename")} onClick={selection.onRename} compact />
+          )}
+          {selection.onMoveTo && (
+            <ToolButton icon={FolderInput} label={t("move_to")} onClick={selection.onMoveTo} compact />
+          )}
+          <ToolButton icon={Scissors} label={t("cut")} onClick={selection.onCut} compact />
+          <ToolButton icon={Copy} label={t("copy")} onClick={selection.onCopy} compact />
+          {!compact && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
+          {!compact && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} />}
+          </>
+          )}
+        </div>
+        {/* Outside the scrolling row, so Delete and the "more" button never scroll out of sight. */}
+        {compact && !selection.trash && <ToolButton icon={Trash2} label={t("delete")} onClick={selection.onDelete} compact destructive />}
+        {compact && !selection.trash && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} overflow />}
+        <div className="flex-1" />
+        {!narrow && <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />}
+        {toggleSlot}
+        {overflowMenuEl}
+      </div>
+    );
+  }
+
   const searchField = (
     <ToolbarSearch
       ref={searchInputRef}
@@ -272,15 +317,7 @@ export function FilesHeader({
 
   return (
     <div role="toolbar" aria-label={t("toolbar")} className={headerClass}>
-      {onMenuClick && (
-        <ToolbarButton
-          label={t("open_folder_tree")}
-          onClick={onMenuClick}
-          aria-expanded={menuOpen}
-        >
-          <Menu />
-        </ToolbarButton>
-      )}
+      {treeButton}
 
       <nav aria-label={t("breadcrumbs")} className="flex-1 min-w-0">
         <ol className="flex items-center text-sm min-w-0">
@@ -424,16 +461,7 @@ export function FilesHeader({
         />
       </ContextMenu>
 
-      <ContextMenu ref={overflowMenu.menuRef} isOpen={overflowMenu.contextMenu.isOpen} position={overflowMenu.contextMenu.position} onClose={overflowMenu.closeContextMenu}>
-        {(overflowMenu.contextMenu.data ?? []).map((crumb) => (
-          <ContextMenuItem
-            key={crumb.path}
-            icon={Folder}
-            label={crumb.name}
-            onClick={() => { overflowMenu.closeContextMenu(); onNavigateCrumb(crumb); }}
-          />
-        ))}
-      </ContextMenu>
+      {overflowMenuEl}
     </div>
   );
 }

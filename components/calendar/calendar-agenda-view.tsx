@@ -3,7 +3,7 @@
 import { useMemo, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
-import { format, isTomorrow, startOfDay } from "date-fns";
+import { addDays, format, isTomorrow, startOfDay } from "date-fns";
 import { CalendarDays, MapPin, Users } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,6 +19,7 @@ import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
 import { gridReplyState } from "@/lib/calendar-reply-state";
 import { readableTextOn } from "@/lib/color-transform";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface CalendarAgendaViewProps extends ScrollWindowViewProps {
   events: CalendarEvent[];
@@ -40,6 +41,24 @@ interface DayGroup {
   date: Date;
   dateKey: string;
   events: CalendarEvent[];
+}
+
+/**
+ * How a timed event reads on one day of the list (pim-p3-16): its range on
+ * the day it starts, "until 07:30" on the day an overnight one ends, "All
+ * day" on a day it covers whole. `sortAt` places it in that day's list: an
+ * event going on from the day before sorts by its end there, not by a start
+ * the day before.
+ */
+export function agendaDayPart(event: CalendarEvent, day: Date): { kind: "all-day" | "range" | "until"; sortAt: number } {
+  const dayStart = startOfDay(day);
+  if (event.showWithoutTime) return { kind: "all-day", sortAt: dayStart.getTime() - 1 };
+  const start = getEventStartDate(event);
+  const end = getEventEndDate(event);
+  if (start >= dayStart) return { kind: "range", sortAt: start.getTime() };
+  const nextDay = addDays(dayStart, 1);
+  if (end >= nextDay) return { kind: "all-day", sortAt: dayStart.getTime() - 1 };
+  return { kind: "until", sortAt: end.getTime() };
 }
 
 export function CalendarAgendaView({
@@ -64,6 +83,8 @@ export function CalendarAgendaView({
   const t = useTranslations("calendar");
   const tEvent = useTranslations("ux_pim_event");
   const tGrid = useTranslations("ux_pim_grid");
+  const tCal = useTranslations("ux_p3_pim_cal");
+  const shownName = useCollectionNames();
   const paint = useCvdColor();
   // An event of another signed-in login is read with that login's addresses.
   const userEmailsFor = useEventUserEmails(currentUserEmails ?? []);
@@ -119,6 +140,9 @@ export function CalendarAgendaView({
     }
 
     groups.sort((a, b) => a.date.getTime() - b.date.getTime());
+    for (const group of groups) {
+      group.events.sort((a, b) => agendaDayPart(a, group.date).sortAt - agendaDayPart(b, group.date).sortAt);
+    }
     return groups;
   }, [events, rangeStart, rangeEnd]);
 
@@ -265,7 +289,7 @@ export function CalendarAgendaView({
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
-              const meta = [locationName, calendar?.name].filter(Boolean).join(" · ");
+              const meta = [locationName, calendar ? shownName.calendar(calendar) : null].filter(Boolean).join(" · ");
 
               const row = (
                 <button
@@ -283,7 +307,12 @@ export function CalendarAgendaView({
                 >
                   {/* On a phone the time takes a line of its own: beside the date column it left the title two words. */}
                   <span className="basis-full min-[30rem]:basis-auto min-[30rem]:w-28 sm:w-32 flex-shrink-0 text-sm text-muted-foreground tabular-nums">
-                    {ev.showWithoutTime ? t("events.all_day") : <bdi dir="ltr">{`${formatTime(start)} – ${formatTime(end)}`}</bdi>}
+                    {(() => {
+                      const part = agendaDayPart(ev, group.date).kind;
+                      if (part === "all-day") return t("events.all_day");
+                      if (part === "until") return tCal("agenda_until", { time: formatTime(end) });
+                      return <bdi dir="ltr">{`${formatTime(start)} – ${formatTime(end)}`}</bdi>;
+                    })()}
                   </span>
 
                   {/* Calendar colour as a dot on the title line; hollow when

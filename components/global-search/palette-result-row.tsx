@@ -9,6 +9,7 @@ import { parseSearchSnippet, type SnippetSegment } from "@/lib/search-snippet";
 import type { GlobalSearchHit } from "@/lib/global-search/types";
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
 import { cn } from "@/lib/utils";
+import { useHitSubtitle } from "./hit-subtitle";
 
 function MailSenderAvatar({ email }: { email: Extract<GlobalSearchHit, { kind: 'mail' }>['email'] }) {
   const from = email.from?.[0];
@@ -84,7 +85,7 @@ export interface PaletteResultRowProps {
 export function PaletteResultRow({ hit, onOpen, className, id, selected = false, tabIndex, onMouseMove }: PaletteResultRowProps) {
   const t = useTranslations('global_search');
   const title = hit.title || (hit.kind === 'mail' ? t('no_subject') : hit.id);
-  const subtitle = [hit.accountLabel, hit.subtitle].filter(Boolean).join(' · ');
+  const subtitle = useHitSubtitle()(hit);
   const snippet = hit.kind === 'mail' && hit.snippet?.preview ? hit.snippet.preview : null;
   return (
     <button

@@ -5272,6 +5272,12 @@
     "declined_many": "Ați refuzat {count} întâlniri din această serie.",
     "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "până la {time}",
+    "week_all_days": "Afișează toată săptămâna",
+    "week_days_short": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "print": "Imprimare…"
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name} nu a putut fi importat.",
     "import_contacts": "Importați în contacte…",
     "add_to_calendar": "Adăugați în calendar…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fișiere editate",
+    "hide": "Ascunde",
+    "discard_detail_file": "Modificările din această copie se șterg. Fișierul din Fișiere nu se schimbă.",
+    "saved_auto": "{name} a fost salvat în Fișiere. Salvările următoare din programul lui ajung acolo singure."
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Fotografie",
     "merge_kept": "Se păstrează",
     "import_show": "Afișează"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selectat} few {# contacte selectate} other {# de contacte selectate}}",
+    "selection_more": "și încă {count}",
+    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail.",
+    "task_open": "Deschide",
+    "due_next_week": "Săptămâna viitoare",
+    "due_none": "Fără termen",
+    "due_pick": "Alege o dată…",
+    "move_to_list": "Mută în listă",
+    "dupes_legend": "{count, plural, one {1 este deja în Contacte:} few {# sunt deja în Contacte:} other {# sunt deja în Contacte:}}",
+    "dupes_skip": "Omite-le",
+    "dupes_update": "Actualizează contactele existente",
+    "dupes_updates": "Actualizează contactul",
+    "upload_cancelled": "Încărcare anulată",
+    "upload_cancelled_partial": "{count, plural, one {1 fișier a fost încărcat} few {# fișiere au fost încărcate} other {# de fișiere au fost încărcate}} înainte de anulare",
+    "download_cancelled": "Descărcare anulată"
   },
   "desktopEdit": {
     "edit": "Editează",

@@ -5272,6 +5272,12 @@
     "declined_many": "Lükkasite tagasi {count} selle sarja kohtumist.",
     "answers_series": "Teie vastus kehtib sarja kõigile kohtumistele."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "kuni {time}",
+    "week_all_days": "Näita kogu nädalat",
+    "week_days_short": "{count, plural, one {# päev} other {# päeva}}",
+    "print": "Prindi…"
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "Faili {name} ei saanud importida.",
     "import_contacts": "Impordi kontaktidesse…",
     "add_to_calendar": "Lisa kalendrisse…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Muudetud failid",
+    "hide": "Peida",
+    "discard_detail_file": "Selle koopia muudatused kustutatakse. Fail jaotises Failid ei muutu.",
+    "saved_auto": "{name} salvestati jaotisesse Failid. Hilisemad salvestused selle programmist lähevad sinna ise."
   },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Jääb alles",
     "import_show": "Näita"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valitud} other {# kontakti valitud}}",
+    "selection_more": "ja veel {count}",
+    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi.",
+    "task_open": "Ava",
+    "due_next_week": "Järgmisel nädalal",
+    "due_none": "Tähtajata",
+    "due_pick": "Vali kuupäev…",
+    "move_to_list": "Teisalda loendisse",
+    "dupes_legend": "{count, plural, one {1 on juba kontaktides:} other {# on juba kontaktides:}}",
+    "dupes_skip": "Jäta vahele",
+    "dupes_update": "Uuenda olemasolevaid kontakte",
+    "dupes_updates": "Uuendab kontakti",
+    "upload_cancelled": "Üleslaadimine tühistatud",
+    "upload_cancelled_partial": "{count, plural, one {1 fail} other {# faili}} laaditi üles enne tühistamist",
+    "download_cancelled": "Allalaadimine tühistati"
   },
   "desktopEdit": {
     "edit": "Muuda",

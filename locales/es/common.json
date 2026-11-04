@@ -5272,6 +5272,12 @@
     "declined_many": "Rechazaste {count} reuniones de esta serie.",
     "answers_series": "Tu respuesta vale para todas las reuniones de la serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "hasta las {time}",
+    "week_all_days": "Mostrar toda la semana",
+    "week_days_short": "{count, plural, one {# día} other {# días}}",
+    "print": "Imprimir…"
+  },
   "advanced_search": {
     "title": "Búsqueda avanzada",
     "from": "De",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "No se pudo importar {name}.",
     "import_contacts": "Importar a contactos…",
     "add_to_calendar": "Añadir al calendario…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Archivos editados",
+    "hide": "Ocultar",
+    "discard_detail_file": "Se eliminan tus cambios en esta copia. El archivo de Archivos no cambia.",
+    "saved_auto": "{name} guardado en Archivos. Lo que guardes después desde su programa irá allí solo."
   },
   "smime": {
     "your_certificates": "Tus certificados",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Se conserva",
     "import_show": "Mostrar"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacto seleccionado} other {# contactos seleccionados}}",
+    "selection_more": "y {count} más",
+    "no_addresses": "Ninguno de los contactos seleccionados tiene dirección de correo.",
+    "task_open": "Abrir",
+    "due_next_week": "La próxima semana",
+    "due_none": "Sin fecha de vencimiento",
+    "due_pick": "Elegir una fecha…",
+    "move_to_list": "Mover a la lista",
+    "dupes_legend": "{count, plural, one {1 ya está en Contactos:} other {# ya están en Contactos:}}",
+    "dupes_skip": "Omitirlos",
+    "dupes_update": "Actualizar los contactos existentes",
+    "dupes_updates": "Actualiza el contacto",
+    "upload_cancelled": "Subida cancelada",
+    "upload_cancelled_partial": "{count, plural, one {Se subió 1 archivo} other {Se subieron # archivos}} antes de cancelar",
+    "download_cancelled": "Descarga cancelada"
   },
   "desktopEdit": {
     "edit": "Editar",

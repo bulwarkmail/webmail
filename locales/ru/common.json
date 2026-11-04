@@ -5272,6 +5272,12 @@
     "declined_many": "Вы отклонили встреч этой серии: {count}.",
     "answers_series": "Ваш ответ относится ко всем встречам серии."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "до {time}",
+    "week_all_days": "Показать всю неделю",
+    "week_days_short": "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
+    "print": "Печать…"
+  },
   "advanced_search": {
     "title": "Расширенный поиск",
     "from": "От",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "Не удалось импортировать {name}.",
     "import_contacts": "Импортировать в контакты…",
     "add_to_calendar": "Добавить в календарь…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Изменённые файлы",
+    "hide": "Скрыть",
+    "discard_detail_file": "Ваши правки в этой копии будут удалены. Файл в разделе «Файлы» не изменится.",
+    "saved_auto": "{name} сохранён в «Файлы». Следующие сохранения из программы попадут туда сами."
   },
   "smime": {
     "your_certificates": "Ваши сертификаты",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Фото",
     "merge_kept": "Сохранится",
     "import_show": "Показать"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Выбран # контакт} few {Выбрано # контакта} other {Выбрано # контактов}}",
+    "selection_more": "и ещё {count}",
+    "no_addresses": "Ни у одного из выбранных контактов нет адреса эл. почты.",
+    "task_open": "Открыть",
+    "due_next_week": "На следующей неделе",
+    "due_none": "Без срока",
+    "due_pick": "Выбрать дату…",
+    "move_to_list": "Переместить в список",
+    "dupes_legend": "{count, plural, one {# уже есть в контактах:} few {# уже есть в контактах:} other {# уже есть в контактах:}}",
+    "dupes_skip": "Пропустить",
+    "dupes_update": "Обновить существующие контакты",
+    "dupes_updates": "Обновит контакт",
+    "upload_cancelled": "Загрузка отменена",
+    "upload_cancelled_partial": "{count, plural, one {# файл был загружен} few {# файла было загружено} many {# файлов было загружено} other {# файла было загружено}} до отмены",
+    "download_cancelled": "Скачивание отменено"
   },
   "desktopEdit": {
     "edit": "Изменить",

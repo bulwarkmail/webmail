@@ -5272,6 +5272,12 @@
     "declined_many": "Odrzucono {count} spotkań z tej serii.",
     "answers_series": "Twoja odpowiedź dotyczy wszystkich spotkań z serii."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Pokaż cały tydzień",
+    "week_days_short": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+    "print": "Drukuj…"
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "Nie udało się zaimportować {name}.",
     "import_contacts": "Importuj do kontaktów…",
     "add_to_calendar": "Dodaj do kalendarza…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Edytowane pliki",
+    "hide": "Ukryj",
+    "discard_detail_file": "Twoje zmiany w tej kopii zostaną usunięte. Plik w Plikach się nie zmieni.",
+    "saved_auto": "Zapisano {name} w Plikach. Kolejne zapisy z jego programu trafią tam same."
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Zdjęcie",
     "merge_kept": "Zostaje",
     "import_show": "Pokaż"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Wybrano # kontakt} few {Wybrano # kontakty} other {Wybrano # kontaktów}}",
+    "selection_more": "i {count} więcej",
+    "no_addresses": "Żaden z wybranych kontaktów nie ma adresu e-mail.",
+    "task_open": "Otwórz",
+    "due_next_week": "W przyszłym tygodniu",
+    "due_none": "Bez terminu",
+    "due_pick": "Wybierz datę…",
+    "move_to_list": "Przenieś do listy",
+    "dupes_legend": "{count, plural, one {1 jest już w Kontaktach:} few {# są już w Kontaktach:} other {# jest już w Kontaktach:}}",
+    "dupes_skip": "Pomiń je",
+    "dupes_update": "Zaktualizuj istniejące kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Anulowano przesyłanie",
+    "upload_cancelled_partial": "{count, plural, one {Przed anulowaniem przesłano 1 plik} few {Przed anulowaniem przesłano # pliki} many {Przed anulowaniem przesłano # plików} other {Przed anulowaniem przesłano # pliku}}",
+    "download_cancelled": "Anulowano pobieranie"
   },
   "desktopEdit": {
     "edit": "Edytuj",

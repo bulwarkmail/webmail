@@ -5272,6 +5272,12 @@
     "declined_many": "Odmítli jste {count} schůzek této série.",
     "answers_series": "Vaše odpověď platí pro všechny schůzky série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobrazit celý týden",
+    "week_days_short": "{count, plural, one {# den} few {# dny} many {# dne} other {# dní}}",
+    "print": "Tisk…"
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "{name} se nepodařilo importovat.",
     "import_contacts": "Importovat do kontaktů…",
     "add_to_calendar": "Přidat do kalendáře…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené soubory",
+    "hide": "Skrýt",
+    "discard_detail_file": "Vaše úpravy této kopie se smažou. Soubor v Souborech se nezmění.",
+    "saved_auto": "{name} uložen do Souborů. Další uložení z jeho programu tam půjdou sama."
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Fotka",
     "merge_kept": "Zůstane",
     "import_show": "Zobrazit"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybrán # kontakt} few {Vybrány # kontakty} other {Vybráno # kontaktů}}",
+    "selection_more": "a {count} další",
+    "no_addresses": "Žádný z vybraných kontaktů nemá e-mailovou adresu.",
+    "task_open": "Otevřít",
+    "due_next_week": "Příští týden",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrat datum…",
+    "move_to_list": "Přesunout do seznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktech:} few {# už jsou v Kontaktech:} other {# už je v Kontaktech:}}",
+    "dupes_skip": "Přeskočit",
+    "dupes_update": "Aktualizovat existující kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávání zrušeno",
+    "upload_cancelled_partial": "Před zrušením {count, plural, one {byl nahrán 1 soubor} few {byly nahrány # soubory} many {bylo nahráno # souboru} other {bylo nahráno # souborů}}",
+    "download_cancelled": "Stahování zrušeno"
   },
   "desktopEdit": {
     "edit": "Upravit",

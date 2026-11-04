@@ -5272,6 +5272,12 @@
     "declined_many": "Vous avez refusé {count} réunions de cette série.",
     "answers_series": "Votre réponse vaut pour toutes les réunions de la série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "jusqu’à {time}",
+    "week_all_days": "Afficher toute la semaine",
+    "week_days_short": "{count, plural, one {# jour} other {# jours}}",
+    "print": "Imprimer…"
+  },
   "advanced_search": {
     "title": "Recherche avancée",
     "from": "De",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "Impossible d'importer {name}.",
     "import_contacts": "Importer dans les contacts…",
     "add_to_calendar": "Ajouter au calendrier…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fichiers modifiés",
+    "hide": "Masquer",
+    "discard_detail_file": "Vos modifications de cette copie sont supprimées. Le fichier dans Fichiers ne change pas.",
+    "saved_auto": "{name} enregistré dans Fichiers. Les enregistrements suivants depuis son programme y vont d'eux-mêmes."
   },
   "smime": {
     "your_certificates": "Vos certificats",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Photo",
     "merge_kept": "Conservé",
     "import_show": "Afficher"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact sélectionné} other {# contacts sélectionnés}}",
+    "selection_more": "et {count} de plus",
+    "no_addresses": "Aucun des contacts sélectionnés n’a d’adresse e-mail.",
+    "task_open": "Ouvrir",
+    "due_next_week": "La semaine prochaine",
+    "due_none": "Pas d’échéance",
+    "due_pick": "Choisir une date…",
+    "move_to_list": "Déplacer vers la liste",
+    "dupes_legend": "{count, plural, one {1 est déjà dans Contacts :} other {# sont déjà dans Contacts :}}",
+    "dupes_skip": "Les ignorer",
+    "dupes_update": "Mettre à jour les contacts existants",
+    "dupes_updates": "Met à jour le contact",
+    "upload_cancelled": "Téléversement annulé",
+    "upload_cancelled_partial": "{count, plural, one {1 fichier a été téléversé} other {# fichiers ont été téléversés}} avant l'annulation",
+    "download_cancelled": "Téléchargement annulé"
   },
   "desktopEdit": {
     "edit": "Modifier",

@@ -12,7 +12,7 @@ import {
   type CsvColumn, type CsvTable, type CsvTarget,
 } from "@/lib/contacts/csv-import";
 import type { AddressBook, ContactCard } from "@/lib/jmap/types";
-import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { getContactDisplayName, getContactPrimaryEmail, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { isOfflineNow } from "@/lib/offline/state";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
@@ -32,6 +32,11 @@ interface ContactImportDialogProps {
    * page of its own that only has Close. Without it the dialog shows the count.
    */
   onImported?: (count: number, addressBookId?: string) => void;
+  /**
+   * "Update the existing contacts" for rows already in Contacts (pim-p3-15): what the
+   * file has goes into the card it matched. Resolves how many were updated.
+   */
+  onUpdateExisting?: (pairs: Array<{ existingId: string; card: ContactCard }>) => Promise<number>;
 }
 
 /** The file's bytes; jsdom's File has no arrayBuffer(). */
@@ -56,10 +61,17 @@ export function ContactImportDialog({
   onImport,
   onClose,
   initialFile,
-  addressBooks = [],
+  addressBooks: allBooks = [],
   defaultAddressBookId,
   onImported,
+  onUpdateExisting,
 }: ContactImportDialogProps) {
+  // The app's own Trusted Senders book isn't one the sidebar shows, so it isn't offered here (pim-p3-15).
+  const addressBooks = allBooks.filter((book) => book.isShared || book.name !== TRUSTED_SENDERS_BOOK_NAME);
+  const tPc = useTranslations("ux_p3_pim_pc");
+  const existingIds = new Set(existingContacts.map((c) => c.id));
+  // Skip the rows already in Contacts, or put what they have into the cards they matched.
+  const [dupeMode, setDupeMode] = useState<"skip" | "update">("skip");
   const t = useTranslations("contacts");
   const shownName = useCollectionNames();
   const tCsv = useTranslations("ux_pim_cimport");
@@ -85,6 +97,7 @@ export function ContactImportDialog({
     const dupes = detectDuplicates(existingContacts, contacts);
     setParsed(contacts);
     setDuplicates(dupes);
+    setDupeMode("skip");
     const initialSelected = new Set<number>();
     contacts.forEach((_, idx) => {
       if (!dupes.has(idx)) initialSelected.add(idx);
@@ -195,14 +208,36 @@ export function ContactImportDialog({
     setError(null);
   };
 
+  /** A row that matched a card already in Contacts (not only an earlier row of the file). */
+  const updatesExisting = (idx: number) => {
+    const match = duplicates.get(idx);
+    return dupeMode === "update" && !!onUpdateExisting && match !== undefined && existingIds.has(match);
+  };
+  const existingDupes = [...duplicates.entries()].filter(([, id]) => existingIds.has(id)).map(([idx]) => idx);
+
+  const chooseDupeMode = (mode: "skip" | "update") => {
+    setDupeMode(mode);
+    setSelected((current) => {
+      const next = new Set(current);
+      for (const idx of existingDupes) {
+        if (mode === "update") next.add(idx);
+        else next.delete(idx);
+      }
+      return next;
+    });
+  };
+
   const handleImport = async () => {
-    const toImport = parsed.filter((_, i) => selected.has(i));
-    if (toImport.length === 0) return;
+    const chosen = parsed.map((card, idx) => ({ card, idx })).filter(({ idx }) => selected.has(idx));
+    if (chosen.length === 0) return;
+    const toImport = chosen.filter(({ idx }) => !updatesExisting(idx)).map(({ card }) => card);
+    const toUpdate = chosen.filter(({ idx }) => updatesExisting(idx)).map(({ card, idx }) => ({ existingId: duplicates.get(idx)!, card }));
 
     setIsImporting(true);
     try {
       const target = addressBooks.length > 0 && bookId ? bookId : undefined;
-      const count = await onImport(toImport, target);
+      const count = (toImport.length > 0 ? await onImport(toImport, target) : 0)
+        + (toUpdate.length > 0 && onUpdateExisting ? await onUpdateExisting(toUpdate) : 0);
       if (onImported) {
         onClose();
         onImported(count, target);
@@ -389,6 +424,21 @@ export function ContactImportDialog({
               </div>
             </div>
 
+            {onUpdateExisting && existingDupes.length > 0 && (
+              <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" data-testid="import-duplicates-choice">
+                <legend className="sr-only">{tPc("dupes_legend", { count: existingDupes.length })}</legend>
+                <span aria-hidden="true" className="font-medium">{tPc("dupes_legend", { count: existingDupes.length })}</span>
+                <label className="flex items-center gap-1.5">
+                  <input type="radio" name="import-dupes" checked={dupeMode === "skip"} onChange={() => chooseDupeMode("skip")} />
+                  {tPc("dupes_skip")}
+                </label>
+                <label className="flex items-center gap-1.5">
+                  <input type="radio" name="import-dupes" checked={dupeMode === "update"} onChange={() => chooseDupeMode("update")} />
+                  {tPc("dupes_update")}
+                </label>
+              </fieldset>
+            )}
+
             <div className="border rounded-md divide-y divide-border max-h-96 overflow-y-auto">
               {parsed.map((contact, idx) => {
                 const cName = getContactDisplayName(contact);
@@ -421,7 +471,7 @@ export function ContactImportDialog({
                     </div>
                     {isDupe && (
                       <span className="text-xs px-1.5 py-0.5 rounded bg-warning/15 text-warning flex-shrink-0">
-                        {t("import.duplicate")}
+                        {isSelected && updatesExisting(idx) ? tPc("dupes_updates") : t("import.duplicate")}
                       </span>
                     )}
                   </button>

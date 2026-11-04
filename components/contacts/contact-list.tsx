@@ -131,6 +131,8 @@ interface ContactListProps {
   onMergeContact?: (contact: ContactCard) => void;
   /** Two or more ticked: merge them. */
   onBulkMerge?: () => void;
+  /** One new message to everyone ticked. */
+  onBulkCompose?: () => void;
   /** A line over the list, e.g. "Possible duplicates (2)". */
   banner?: React.ReactNode;
   /** Move contacts to another address book; undefined where there is none. */
@@ -173,6 +175,7 @@ export function ContactList({
   onComposeContact,
   onMergeContact,
   onBulkMerge,
+  onBulkCompose,
   banner,
   onMoveContacts,
   onMenuClick,
@@ -817,6 +820,7 @@ export function ContactList({
           onBatchAddToGroup={onBulkAddToGroup}
           onBatchDelete={onBulkDelete}
           onBatchMerge={onBulkMerge}
+          onBatchCompose={onBulkCompose}
           readOnly={isContactReadOnly?.(contextMenu.data) ?? false}
         />
       )}

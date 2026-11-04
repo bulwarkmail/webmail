@@ -740,7 +740,14 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const actorSummary = parsedEvent ? getInvitationActorSummary(parsedEvent, method) : null;
   const actorName = actorSummary?.name || actorSummary?.email || t('actor_unknown');
   const actorStatus = getParticipationLabel(t, actorSummary?.participationStatus ?? null);
-  const actorMessage = actorSummary ? getActorMessage(t, method, actorName, actorStatus) : null;
+  // "Sent by Ben" two lines under "Organized by Ben" says nothing new (pim-p3-17).
+  const actorIsOrganizer = !!actorSummary && !!summary?.organizer && (
+    actorSummary.email && summary.organizerEmail
+      ? actorSummary.email.toLowerCase() === summary.organizerEmail.toLowerCase()
+      : !!actorSummary.name && actorSummary.name === summary.organizer
+  );
+  const sentByOrganizer = actorIsOrganizer && (method === 'request' || method === 'publish' || method === 'add' || method === 'cancel');
+  const actorMessage = actorSummary && !sentByOrganizer ? getActorMessage(t, method, actorName, actorStatus) : null;
   // For REQUEST method, allow RSVP even if we can't find the user in participants:
   // the email was sent TO the user, so they are an attendee. handleRsvp handles
   // the import-then-find-participant flow for this case.

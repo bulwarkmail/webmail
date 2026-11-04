@@ -5272,6 +5272,12 @@
     "declined_many": "Odmietli ste {count} stretnutí tejto série.",
     "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobraziť celý týždeň",
+    "week_days_short": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
+    "print": "Tlačiť…"
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name} sa nepodarilo importovať.",
     "import_contacts": "Importovať do kontaktov…",
     "add_to_calendar": "Pridať do kalendára…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené súbory",
+    "hide": "Skryť",
+    "discard_detail_file": "Vaše úpravy tejto kópie sa odstránia. Súbor v Súboroch sa nezmení.",
+    "saved_auto": "{name} uložený do Súborov. Ďalšie uloženia z jeho programu tam pôjdu samy."
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Fotka",
     "merge_kept": "Zostane",
     "import_show": "Zobraziť"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybraný # kontakt} few {Vybrané # kontakty} other {Vybraných # kontaktov}}",
+    "selection_more": "a ďalšie {count}",
+    "no_addresses": "Žiadny z vybraných kontaktov nemá e-mailovú adresu.",
+    "task_open": "Otvoriť",
+    "due_next_week": "Budúci týždeň",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrať dátum…",
+    "move_to_list": "Presunúť do zoznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktoch:} few {# už sú v Kontaktoch:} other {# už je v Kontaktoch:}}",
+    "dupes_skip": "Preskočiť",
+    "dupes_update": "Aktualizovať existujúce kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávanie zrušené",
+    "upload_cancelled_partial": "Pred zrušením {count, plural, one {sa nahral 1 súbor} few {sa nahrali # súbory} many {sa nahralo # súboru} other {sa nahralo # súborov}}",
+    "download_cancelled": "Sťahovanie zrušené"
   },
   "desktopEdit": {
     "edit": "Upraviť",

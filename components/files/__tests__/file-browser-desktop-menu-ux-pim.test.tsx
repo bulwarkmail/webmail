@@ -87,4 +87,24 @@ describe('Files in the desktop menus', () => {
     expect(ran).toBe(true);
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'search_placeholder' }));
   });
+
+  // pim-p3-18: File > New folder… and Upload files… in Files.
+  it('File > New folder… and Upload files… are on offer and do what the toolbar does', async () => {
+    const setState = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState, onCommand: () => () => {} } } as unknown as BulwarkDesktopBridge;
+    renderBrowser();
+    await waitFor(() => expect(setState).toHaveBeenCalled());
+    expect(setState.mock.lastCall![0]).toMatchObject({ 'file.newFolder': true, 'file.uploadFiles': true });
+
+    const input = document.querySelector('input[type="file"]:not([webkitdirectory])') as HTMLInputElement;
+    const picked = vi.spyOn(input, 'click').mockImplementation(() => {});
+    let ran = false;
+    act(() => { ran = runDesktopCommand('file.uploadFiles'); });
+    expect(ran).toBe(true);
+    expect(picked).toHaveBeenCalled();
+
+    act(() => { ran = runDesktopCommand('file.newFolder'); });
+    expect(ran).toBe(true);
+    expect(await screen.findByRole('dialog')).toBeTruthy();
+  });
 });

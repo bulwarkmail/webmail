@@ -5272,6 +5272,12 @@
     "declined_many": "Du afslog {count} møder i denne serie.",
     "answers_series": "Dit svar gælder alle møder i serien."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele ugen",
+    "week_days_short": "{count, plural, one {# dag} other {# dage}}",
+    "print": "Udskriv…"
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name} kunne ikke importeres.",
     "import_contacts": "Importér til kontakter…",
     "add_to_calendar": "Føj til kalender…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerede filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Dine ændringer i denne kopi slettes. Filen i Filer ændres ikke.",
+    "saved_auto": "{name} er gemt i Filer. Senere gemninger fra programmet havner der af sig selv."
   },
   "smime": {
     "your_certificates": "Dine certifikater",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Beholdes",
     "import_show": "Vis"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} mere",
+    "no_addresses": "Ingen af de valgte kontakter har en e-mailadresse.",
+    "task_open": "Åbn",
+    "due_next_week": "Næste uge",
+    "due_none": "Ingen forfaldsdato",
+    "due_pick": "Vælg en dato…",
+    "move_to_list": "Flyt til liste",
+    "dupes_legend": "{count, plural, one {1 findes allerede i Kontakter:} other {# findes allerede i Kontakter:}}",
+    "dupes_skip": "Spring dem over",
+    "dupes_update": "Opdater de eksisterende kontakter",
+    "dupes_updates": "Opdaterer kontakten",
+    "upload_cancelled": "Upload annulleret",
+    "upload_cancelled_partial": "{count, plural, one {1 fil blev} other {# filer blev}} uploadet, før du annullerede",
+    "download_cancelled": "Download annulleret"
   },
   "desktopEdit": {
     "edit": "Rediger",

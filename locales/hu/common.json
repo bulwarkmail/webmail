@@ -5272,6 +5272,12 @@
     "declined_many": "A sorozat {count} alkalmát utasította el.",
     "answers_series": "A válasza a sorozat minden alkalmára vonatkozik."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "eddig: {time}",
+    "week_all_days": "Az egész hét megjelenítése",
+    "week_days_short": "{count, plural, one {# nap} other {# nap}}",
+    "print": "Nyomtatás…"
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name} nem importálható.",
     "import_contacts": "Importálás a névjegyekbe…",
     "add_to_calendar": "Hozzáadás a naptárhoz…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Szerkesztett fájlok",
+    "hide": "Elrejtés",
+    "discard_detail_file": "A másolaton végzett módosításai törlődnek. A Fájlokban lévő fájl nem változik.",
+    "saved_auto": "{name} mentve a Fájlokba. A programjából későbbi mentések maguktól oda kerülnek."
   },
   "smime": {
     "your_certificates": "Tanúsítványaid",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Fénykép",
     "merge_kept": "Megmarad",
     "import_show": "Megjelenítés"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# névjegy kijelölve} other {# névjegy kijelölve}}",
+    "selection_more": "és még {count}",
+    "no_addresses": "A kijelölt névjegyek egyikének sincs e-mail-címe.",
+    "task_open": "Megnyitás",
+    "due_next_week": "Jövő héten",
+    "due_none": "Nincs határidő",
+    "due_pick": "Dátum választása…",
+    "move_to_list": "Áthelyezés listába",
+    "dupes_legend": "{count, plural, one {1 már szerepel a Névjegyekben:} other {# már szerepel a Névjegyekben:}}",
+    "dupes_skip": "Kihagyás",
+    "dupes_update": "A meglévő névjegyek frissítése",
+    "dupes_updates": "Frissíti a névjegyet",
+    "upload_cancelled": "Feltöltés megszakítva",
+    "upload_cancelled_partial": "{count, plural, one {1 fájl} other {# fájl}} feltöltődött a megszakítás előtt",
+    "download_cancelled": "Letöltés megszakítva"
   },
   "desktopEdit": {
     "edit": "Szerkesztés",

@@ -5272,6 +5272,12 @@
     "declined_many": "Jūs atteicāt {count} šīs sērijas sapulces.",
     "answers_series": "Jūsu atbilde attiecas uz visām sērijas sapulcēm."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "līdz {time}",
+    "week_all_days": "Rādīt visu nedēļu",
+    "week_days_short": "{count, plural, zero {# dienas} one {# diena} other {# dienas}}",
+    "print": "Drukāt…"
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "{name} neizdevās importēt.",
     "import_contacts": "Importēt kontaktos…",
     "add_to_calendar": "Pievienot kalendāram…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Rediģētie faili",
+    "hide": "Paslēpt",
+    "discard_detail_file": "Jūsu labojumi šajā kopijā tiek dzēsti. Fails sadaļā Faili nemainās.",
+    "saved_auto": "{name} saglabāts sadaļā Faili. Turpmākās saglabāšanas no tā programmas nonāks tur pašas."
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Saglabājas",
     "import_show": "Rādīt"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Atlasīts # kontakts} other {Atlasīti # kontakti}}",
+    "selection_more": "un vēl {count}",
+    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses.",
+    "task_open": "Atvērt",
+    "due_next_week": "Nākamnedēļ",
+    "due_none": "Bez termiņa",
+    "due_pick": "Izvēlēties datumu…",
+    "move_to_list": "Pārvietot uz sarakstu",
+    "dupes_legend": "{count, plural, one {# jau ir kontaktos:} other {# jau ir kontaktos:}}",
+    "dupes_skip": "Izlaist",
+    "dupes_update": "Atjaunināt esošos kontaktus",
+    "dupes_updates": "Atjaunina kontaktu",
+    "upload_cancelled": "Augšupielāde atcelta",
+    "upload_cancelled_partial": "{count, plural, zero {# faili tika augšupielādēti} one {# fails tika augšupielādēts} other {# faili tika augšupielādēti}} pirms atcelšanas",
+    "download_cancelled": "Lejupielāde atcelta"
   },
   "desktopEdit": {
     "edit": "Rediģēt",

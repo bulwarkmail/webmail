@@ -5272,6 +5272,12 @@
     "declined_many": "Та энэ цувралын {count} уулзалтаас татгалзсан.",
     "answers_series": "Таны хариу цувралын бүх уулзалтад хамаарна."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time} хүртэл",
+    "week_all_days": "Бүх долоо хоногийг харуулах",
+    "week_days_short": "{count, plural, one {# өдөр} other {# өдөр}}",
+    "print": "Хэвлэх…"
+  },
   "calendar_event_notifications": {
     "someone": "Хэн нэгэн",
     "invited": "{name} таныг \"{title}\"-д урилаа",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "{name}-г импортлож чадсангүй.",
     "import_contacts": "Харилцагчид импортлох…",
     "add_to_calendar": "Хуанлид нэмэх…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Засварласан файлууд",
+    "hide": "Нуух",
+    "discard_detail_file": "Энэ хуулбарт хийсэн засварууд устна. Файлууд дахь файл өөрчлөгдөхгүй.",
+    "saved_auto": "{name} Файлууд руу хадгалагдлаа. Цаашид программаасаа хадгалахад өөрөө тийшээ очно."
   },
   "smime": {
     "your_certificates": "Таны сертификатууд",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Зураг",
     "merge_kept": "Хадгалагдана",
     "import_show": "Харуулах"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# харилцагч сонгосон} other {# харилцагч сонгосон}}",
+    "selection_more": "болон өөр {count}",
+    "no_addresses": "Сонгосон харилцагчдын хэнд нь ч имэйл хаяг алга.",
+    "task_open": "Нээх",
+    "due_next_week": "Дараа долоо хоногт",
+    "due_none": "Дуусах огноогүй",
+    "due_pick": "Огноо сонгох…",
+    "move_to_list": "Жагсаалт руу зөөх",
+    "dupes_legend": "{count, plural, one {1 нь харилцагчдад аль хэдийн байна:} other {# нь харилцагчдад аль хэдийн байна:}}",
+    "dupes_skip": "Алгасах",
+    "dupes_update": "Байгаа харилцагчдыг шинэчлэх",
+    "dupes_updates": "Харилцагчийг шинэчилнэ",
+    "upload_cancelled": "Байршуулалт цуцлагдлаа",
+    "upload_cancelled_partial": "Цуцлахаас өмнө {count, plural, one {1 файл} other {# файл}} байршуулагдсан",
+    "download_cancelled": "Татаж авалтыг цуцаллаа"
   },
   "desktopEdit": {
     "edit": "Засах",

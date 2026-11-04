@@ -5272,6 +5272,12 @@
     "declined_many": "このシリーズの {count} 件を辞退しました。",
     "answers_series": "回答はシリーズのすべての会議に適用されます。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time}まで",
+    "week_all_days": "1週間すべてを表示",
+    "week_days_short": "{count, plural, other {#日}}",
+    "print": "印刷…"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "{name} をインポートできませんでした。",
     "import_contacts": "連絡先にインポート…",
     "add_to_calendar": "カレンダーに追加…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "編集したファイル",
+    "hide": "非表示",
+    "discard_detail_file": "このコピーへの編集は削除されます。ファイル内のファイルは変わりません。",
+    "saved_auto": "{name} をファイルに保存しました。今後このプログラムで保存すると自動でそこに保存されます。"
   },
   "smime": {
     "your_certificates": "あなたの証明書",
@@ -7609,6 +7621,23 @@
     "merge_photo": "写真",
     "merge_kept": "残ります",
     "import_show": "表示"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {#件の連絡先を選択中}}",
+    "selection_more": "ほか{count}件",
+    "no_addresses": "選択した連絡先にはメールアドレスがありません。",
+    "task_open": "開く",
+    "due_next_week": "来週",
+    "due_none": "期限なし",
+    "due_pick": "日付を選択…",
+    "move_to_list": "リストへ移動",
+    "dupes_legend": "{count, plural, other {#件は連絡先に登録済み:}}",
+    "dupes_skip": "スキップ",
+    "dupes_update": "既存の連絡先を更新",
+    "dupes_updates": "連絡先を更新",
+    "upload_cancelled": "アップロードをキャンセルしました",
+    "upload_cancelled_partial": "キャンセル前に{count, plural, other {#件のファイル}}がアップロードされました",
+    "download_cancelled": "ダウンロードをキャンセルしました"
   },
   "desktopEdit": {
     "edit": "編集",

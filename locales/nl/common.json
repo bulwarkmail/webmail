@@ -5272,6 +5272,12 @@
     "declined_many": "U hebt {count} afspraken van deze reeks afgeslagen.",
     "answers_series": "Uw antwoord geldt voor alle afspraken in de reeks."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "tot {time}",
+    "week_all_days": "Hele week tonen",
+    "week_days_short": "{count, plural, one {# dag} other {# dagen}}",
+    "print": "Afdrukken…"
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "{name} kon niet worden geïmporteerd.",
     "import_contacts": "Importeren in contacten…",
     "add_to_calendar": "Aan agenda toevoegen…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Bewerkte bestanden",
+    "hide": "Verbergen",
+    "discard_detail_file": "Je wijzigingen in deze kopie worden verwijderd. Het bestand in Bestanden verandert niet.",
+    "saved_auto": "{name} opgeslagen in Bestanden. Latere opslagen vanuit het programma gaan er vanzelf heen."
   },
   "smime": {
     "your_certificates": "Uw certificaten",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Blijft bewaard",
     "import_show": "Tonen"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact geselecteerd} other {# contacten geselecteerd}}",
+    "selection_more": "en nog {count}",
+    "no_addresses": "Geen van de geselecteerde contacten heeft een e-mailadres.",
+    "task_open": "Openen",
+    "due_next_week": "Volgende week",
+    "due_none": "Geen vervaldatum",
+    "due_pick": "Datum kiezen…",
+    "move_to_list": "Naar lijst verplaatsen",
+    "dupes_legend": "{count, plural, one {1 staat al in Contacten:} other {# staan al in Contacten:}}",
+    "dupes_skip": "Overslaan",
+    "dupes_update": "Bestaande contacten bijwerken",
+    "dupes_updates": "Werkt het contact bij",
+    "upload_cancelled": "Uploaden geannuleerd",
+    "upload_cancelled_partial": "{count, plural, one {1 bestand was} other {# bestanden waren}} al geüpload voordat u annuleerde",
+    "download_cancelled": "Download geannuleerd"
   },
   "desktopEdit": {
     "edit": "Bewerken",

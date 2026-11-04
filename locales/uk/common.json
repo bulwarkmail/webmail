@@ -5272,6 +5272,12 @@
     "declined_many": "Ви відхилили зустрічей цієї серії: {count}.",
     "answers_series": "Ваша відповідь стосується всіх зустрічей серії."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "до {time}",
+    "week_all_days": "Показати весь тиждень",
+    "week_days_short": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
+    "print": "Друк…"
+  },
   "advanced_search": {
     "title": "Розширений пошук",
     "from": "Від",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "Не вдалося імпортувати {name}.",
     "import_contacts": "Імпортувати в контакти…",
     "add_to_calendar": "Додати до календаря…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Змінені файли",
+    "hide": "Сховати",
+    "discard_detail_file": "Ваші зміни в цій копії буде видалено. Файл у розділі «Файли» не зміниться.",
+    "saved_auto": "{name} збережено у «Файли». Наступні збереження з програми потраплятимуть туди самі."
   },
   "smime": {
     "your_certificates": "Ваші сертифікати",
@@ -7609,6 +7621,23 @@
     "merge_photo": "Фото",
     "merge_kept": "Залишиться",
     "import_show": "Показати"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Вибрано # контакт} few {Вибрано # контакти} many {Вибрано # контактів} other {Вибрано # контакту}}",
+    "selection_more": "і ще {count}",
+    "no_addresses": "Жоден із вибраних контактів не має адреси ел. пошти.",
+    "task_open": "Відкрити",
+    "due_next_week": "Наступного тижня",
+    "due_none": "Без терміну",
+    "due_pick": "Вибрати дату…",
+    "move_to_list": "Перемістити до списку",
+    "dupes_legend": "{count, plural, one {# вже є в контактах:} few {# вже є в контактах:} many {# вже є в контактах:} other {# вже є в контактах:}}",
+    "dupes_skip": "Пропустити",
+    "dupes_update": "Оновити наявні контакти",
+    "dupes_updates": "Оновить контакт",
+    "upload_cancelled": "Завантаження скасовано",
+    "upload_cancelled_partial": "{count, plural, one {# файл було завантажено} few {# файли було завантажено} many {# файлів було завантажено} other {# файлу було завантажено}} до скасування",
+    "download_cancelled": "Завантаження скасовано"
   },
   "desktopEdit": {
     "edit": "Редагувати",

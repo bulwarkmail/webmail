@@ -2743,6 +2743,12 @@
     "import_contacts": "นำเข้าไปยังรายชื่อติดต่อ…",
     "add_to_calendar": "เพิ่มในปฏิทิน…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "ไฟล์ที่แก้ไข",
+    "hide": "ซ่อน",
+    "discard_detail_file": "การแก้ไขในสำเนานี้จะถูกลบ ไฟล์ในไฟล์จะไม่เปลี่ยน",
+    "saved_auto": "บันทึก {name} ลงในไฟล์แล้ว การบันทึกครั้งต่อไปจากโปรแกรมจะไปที่นั่นเอง"
+  },
   "protocol_handlers": {
     "title": "แอปพลิเคชันเริ่มต้น",
     "description": "เลือกว่าจะเปิดลิงก์อีเมลและปฏิทินใน {appName} หรือไม่",
@@ -4704,6 +4710,12 @@
     "declined_dates": "คุณปฏิเสธวันที่ {dates}",
     "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
     "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "จนถึง {time}",
+    "week_all_days": "แสดงทั้งสัปดาห์",
+    "week_days_short": "{count, plural, other {# วัน}}",
+    "print": "พิมพ์…"
   },
   "settings": {
     "title": "การตั้งค่า",
@@ -7617,6 +7629,23 @@
     "merge_photo": "รูปภาพ",
     "merge_kept": "เก็บไว้",
     "import_show": "แสดง"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
+    "selection_more": "และอีก {count} รายการ",
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล",
+    "task_open": "เปิด",
+    "due_next_week": "สัปดาห์หน้า",
+    "due_none": "ไม่มีวันครบกำหนด",
+    "due_pick": "เลือกวันที่…",
+    "move_to_list": "ย้ายไปยังรายการ",
+    "dupes_legend": "{count, plural, other {# รายการมีอยู่ในรายชื่อติดต่อแล้ว:}}",
+    "dupes_skip": "ข้าม",
+    "dupes_update": "อัปเดตผู้ติดต่อที่มีอยู่",
+    "dupes_updates": "อัปเดตผู้ติดต่อ",
+    "upload_cancelled": "ยกเลิกการอัปโหลดแล้ว",
+    "upload_cancelled_partial": "อัปโหลดแล้ว {count, plural, other {# ไฟล์}} ก่อนที่คุณจะยกเลิก",
+    "download_cancelled": "ยกเลิกการดาวน์โหลดแล้ว"
   },
   "desktopEdit": {
     "edit": "แก้ไข",

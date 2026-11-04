@@ -5272,6 +5272,12 @@
     "declined_many": "رفضت {count} من مواعيد هذه السلسلة.",
     "answers_series": "ينطبق ردك على كل مواعيد السلسلة."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "حتى {time}",
+    "week_all_days": "عرض الأسبوع كاملًا",
+    "week_days_short": "{count, plural, zero {# أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",
+    "print": "طباعة…"
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "تعذّر استيراد {name}.",
     "import_contacts": "استيراد إلى جهات الاتصال…",
     "add_to_calendar": "إضافة إلى التقويم…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "الملفات المعدلة",
+    "hide": "إخفاء",
+    "discard_detail_file": "تُحذف تعديلاتك على هذه النسخة. لا يتغير الملف في الملفات.",
+    "saved_auto": "تم حفظ {name} في الملفات. ما تحفظه لاحقًا من برنامجه يذهب إلى هناك تلقائيًا."
   },
   "smime": {
     "your_certificates": "شهاداتك",
@@ -7609,6 +7621,23 @@
     "merge_photo": "صورة",
     "merge_kept": "محفوظ",
     "import_show": "عرض"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {تم تحديد جهة اتصال واحدة} other {تم تحديد # جهة اتصال}}",
+    "selection_more": "و{count} غيرهم",
+    "no_addresses": "لا تملك أي من جهات الاتصال المحددة عنوان بريد إلكتروني.",
+    "task_open": "فتح",
+    "due_next_week": "الأسبوع القادم",
+    "due_none": "بلا تاريخ استحقاق",
+    "due_pick": "اختيار تاريخ…",
+    "move_to_list": "نقل إلى قائمة",
+    "dupes_legend": "{count, plural, one {واحدة موجودة في جهات الاتصال:} other {# موجودة في جهات الاتصال:}}",
+    "dupes_skip": "تخطيها",
+    "dupes_update": "تحديث جهات الاتصال الموجودة",
+    "dupes_updates": "يحدّث جهة الاتصال",
+    "upload_cancelled": "تم إلغاء الرفع",
+    "upload_cancelled_partial": "{count, plural, zero {لم يُرفع أي ملف} one {تم رفع ملف واحد} two {تم رفع ملفين} few {تم رفع # ملفات} many {تم رفع # ملفًا} other {تم رفع # ملف}} قبل الإلغاء",
+    "download_cancelled": "أُلغي التنزيل"
   },
   "desktopEdit": {
     "edit": "تعديل",

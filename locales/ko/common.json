@@ -5272,6 +5272,12 @@
     "declined_many": "이 시리즈의 일정 {count}개를 거절했습니다.",
     "answers_series": "답변은 시리즈의 모든 일정에 적용됩니다."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time}까지",
+    "week_all_days": "한 주 전체 보기",
+    "week_days_short": "{count, plural, other {#일}}",
+    "print": "인쇄…"
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",
@@ -5583,6 +5589,12 @@
     "import_to_mail_failed": "{name}을(를) 가져오지 못했습니다.",
     "import_contacts": "연락처로 가져오기…",
     "add_to_calendar": "캘린더에 추가…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "편집한 파일",
+    "hide": "숨기기",
+    "discard_detail_file": "이 사본의 편집 내용이 삭제됩니다. 파일에 있는 파일은 바뀌지 않습니다.",
+    "saved_auto": "{name}을(를) 파일에 저장했습니다. 이후 해당 프로그램에서 저장하면 자동으로 그곳에 저장됩니다."
   },
   "smime": {
     "your_certificates": "내 인증서",
@@ -7609,6 +7621,23 @@
     "merge_photo": "사진",
     "merge_kept": "유지됨",
     "import_show": "보기"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {연락처 #개 선택됨}}",
+    "selection_more": "외 {count}개",
+    "no_addresses": "선택한 연락처 중 이메일 주소가 있는 연락처가 없습니다.",
+    "task_open": "열기",
+    "due_next_week": "다음 주",
+    "due_none": "마감일 없음",
+    "due_pick": "날짜 선택…",
+    "move_to_list": "목록으로 이동",
+    "dupes_legend": "{count, plural, other {#개는 이미 연락처에 있음:}}",
+    "dupes_skip": "건너뛰기",
+    "dupes_update": "기존 연락처 업데이트",
+    "dupes_updates": "연락처 업데이트",
+    "upload_cancelled": "업로드가 취소되었어요",
+    "upload_cancelled_partial": "취소하기 전에 {count, plural, other {#개의 파일}}이 업로드되었어요",
+    "download_cancelled": "다운로드를 취소했습니다"
   },
   "desktopEdit": {
     "edit": "편집",

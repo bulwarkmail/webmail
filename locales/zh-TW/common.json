@@ -5272,6 +5272,12 @@
     "declined_many": "您已拒絕此系列中的 {count} 場會議。",
     "answers_series": "您的回覆適用於此系列的所有會議。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "至 {time}",
+    "week_all_days": "顯示整週",
+    "week_days_short": "{count, plural, other {#天}}",
+    "print": "列印…"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "無法匯入 {name}。",
     "import_contacts": "匯入到聯絡人…",
     "add_to_calendar": "加入行事曆…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "已編輯的檔案",
+    "hide": "隱藏",
+    "discard_detail_file": "你對此副本的編輯將被刪除。檔案中的檔案不會改變。",
+    "saved_auto": "{name} 已儲存到檔案。之後從其程式儲存時會自動存到那裡。"
   },
   "smime": {
     "your_certificates": "您的憑證",
@@ -7609,6 +7621,23 @@
     "merge_photo": "相片",
     "merge_kept": "保留",
     "import_show": "顯示"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {已選取 # 位聯絡人}}",
+    "selection_more": "以及另外 {count} 位",
+    "no_addresses": "所選聯絡人都沒有電子郵件地址。",
+    "task_open": "開啟",
+    "due_next_week": "下週",
+    "due_none": "無截止日期",
+    "due_pick": "選擇日期…",
+    "move_to_list": "移到清單",
+    "dupes_legend": "{count, plural, other {# 位已在聯絡人中：}}",
+    "dupes_skip": "略過",
+    "dupes_update": "更新現有聯絡人",
+    "dupes_updates": "更新聯絡人",
+    "upload_cancelled": "已取消上傳",
+    "upload_cancelled_partial": "取消前已上傳 {count, plural, other {# 個檔案}}",
+    "download_cancelled": "已取消下載"
   },
   "desktopEdit": {
     "edit": "編輯",

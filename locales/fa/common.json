@@ -5272,6 +5272,12 @@
     "declined_many": "{count} جلسه از این سری را رد کردید.",
     "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "تا {time}",
+    "week_all_days": "نمایش کل هفته",
+    "week_days_short": "{count, plural, one {# روز} other {# روز}}",
+    "print": "چاپ…"
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",
@@ -5850,6 +5856,12 @@
     "import_to_mail_failed": "وارد کردن {name} ممکن نشد.",
     "import_contacts": "وارد کردن به مخاطبان…",
     "add_to_calendar": "افزودن به تقویم…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "پرونده‌های ویرایش‌شده",
+    "hide": "پنهان کردن",
+    "discard_detail_file": "ویرایش‌های شما در این نسخه حذف می‌شود. پرونده در «پرونده‌ها» تغییر نمی‌کند.",
+    "saved_auto": "{name} در «پرونده‌ها» ذخیره شد. ذخیره‌های بعدی از برنامه‌اش خودکار به آنجا می‌رود."
   },
   "smime": {
     "your_certificates": "گواهی‌های شما",
@@ -7609,6 +7621,23 @@
     "merge_photo": "عکس",
     "merge_kept": "حفظ می‌شود",
     "import_show": "نمایش"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# مخاطب انتخاب شد} other {# مخاطب انتخاب شد}}",
+    "selection_more": "و {count} مورد دیگر",
+    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند.",
+    "task_open": "باز کردن",
+    "due_next_week": "هفتهٔ بعد",
+    "due_none": "بدون موعد",
+    "due_pick": "انتخاب تاریخ…",
+    "move_to_list": "انتقال به فهرست",
+    "dupes_legend": "{count, plural, one {۱ مورد از قبل در مخاطبان است:} other {# مورد از قبل در مخاطبان است:}}",
+    "dupes_skip": "رد کردن",
+    "dupes_update": "به‌روزرسانی مخاطبان موجود",
+    "dupes_updates": "مخاطب را به‌روز می‌کند",
+    "upload_cancelled": "بارگذاری لغو شد",
+    "upload_cancelled_partial": "{count, plural, one {۱ فایل} other {# فایل}} پیش از لغو بارگذاری شد",
+    "download_cancelled": "دانلود لغو شد"
   },
   "desktopEdit": {
     "edit": "ویرایش",

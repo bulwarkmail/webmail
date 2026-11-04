@@ -170,7 +170,14 @@ export function ContactMergeDialog({ cards: initialCards, pickFor, candidates = 
     }
   };
 
-  const otherNames = plan.others.map((c) => getContactDisplayName(c) || getContactPrimaryEmail(c) || "-").join(", ");
+  // Merged cards often share the name: then the address says which one goes (pim-p3-17).
+  const keptName = getContactDisplayName(plan.keep);
+  const otherNames = plan.others.map((c) => {
+    const name = getContactDisplayName(c);
+    const email = getContactPrimaryEmail(c);
+    if (!name) return email || "-";
+    return name === keptName && email ? `${name} (${email})` : name;
+  }).join(", ");
 
   return (
     <Dialog
