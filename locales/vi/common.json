@@ -893,6 +893,11 @@
     "read_aloud_stop": "Dừng đọc",
     "reader_view": "Chế độ đọc"
   },
+  "reader_actions": {
+    "restore": "Khôi phục",
+    "restore_to": "Chuyển lại vào {folder}",
+    "delete_forever": "Xóa vĩnh viễn"
+  },
   "external_mail": {
     "sender_label": "Bên ngoài",
     "sender_tooltip": "Từ {domain}, bên ngoài tổ chức của bạn",

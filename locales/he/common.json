@@ -836,6 +836,11 @@
     "read_aloud_stop": "עצירת ההקראה",
     "reader_view": "תצוגת קריאה"
   },
+  "reader_actions": {
+    "restore": "שחזור",
+    "restore_to": "החזרה אל {folder}",
+    "delete_forever": "מחיקה לצמיתות"
+  },
   "external_mail": {
     "sender_label": "חיצוני",
     "sender_tooltip": "מ־{domain}, מחוץ לארגון שלך",

@@ -95,6 +95,7 @@ import {
   Minus,
   ShieldCheck,
   ShieldAlert,
+  RotateCcw,
   Copy,
   Brain,
   Keyboard,
@@ -140,7 +141,9 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
-import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, emailWriteSource, bulkDeleteIsPermanent, type EmailBlobContext } from "@/stores/email-store";
+import { trashRestoreTarget } from "@/lib/trash-restore-target";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
 import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
@@ -1463,6 +1466,15 @@ export function EmailViewer({
 
   // Detect if current mailbox is Junk folder
   const isInJunkFolder = currentMailboxRole === 'junk';
+  // Trash offers Restore in Archive's place; there and wherever a delete
+  // destroys the mail, Delete says "Delete forever".
+  const isInTrashFolder = currentMailboxRole === 'trash';
+  const tActions = useTranslations('reader_actions');
+  const tSidebarNames = useTranslations('sidebar');
+  // Read for the re-render: bulkDeleteIsPermanent reads them from the store.
+  useSettingsStore((state) => state.deleteAction);
+  useSettingsStore((state) => state.permanentlyDeleteJunk);
+  const deleteIsPermanent = bulkDeleteIsPermanent({ role: currentMailboxRole });
   // Marking your own outgoing mail as spam makes no sense - hide the action
   // in Sent, Drafts and Scheduled.
   const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
@@ -1998,6 +2010,8 @@ export function EmailViewer({
     }),
     [mailboxes, selectedMailbox, moveOwnerAccountId, email],
   );
+
+  const restoreTarget = isInTrashFolder && email ? trashRestoreTarget(email, mailboxes, identities, moveOwnerAccountId) : undefined;
 
   // Close dropdown menus on click outside
   useEffect(() => {
@@ -3469,7 +3483,8 @@ export function EmailViewer({
   const [iframeReadyFor, setIframeReadyFor] = useState<string | null>(null);
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
-  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading
+  // Not on spam: a reply confirms the address to the sender.
+  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
@@ -4250,7 +4265,10 @@ ${printWatermark ? printWatermark.html : ''}
   const toolbarShownActions = (): ReadonlySet<MessageActionKey> => {
     const shown = new Set<MessageActionKey>(['delete', 'edit_draft']);
     toolbarRef.current?.querySelectorAll<HTMLElement>('[data-overflow-item]').forEach((item) => {
-      const key = TOOLBAR_PRIORITY_ACTIONS[item.dataset.overflowPriority ?? ''];
+      // A button standing in for another (Not spam in Archive's place) says which entry it is.
+      const key = item.dataset.overflowAction !== undefined
+        ? item.dataset.overflowAction as MessageActionKey
+        : TOOLBAR_PRIORITY_ACTIONS[item.dataset.overflowPriority ?? ''];
       if (key && item.getClientRects().length > 0) shown.add(key);
     });
     if (isMobile && !mvMobileViewer) {
@@ -4467,8 +4485,40 @@ ${printWatermark ? printWatermark.html : ''}
       {/* Right: Organize actions - order: archive, delete, move, tag, spam, read state, print, view source */}
       {!isScheduled && (
       <div className="flex items-center gap-0 sm:gap-0.5">
-        {/* Archive */}
-        {archiveActionEnabled && (
+        {/* Archive. In Spam "Not spam" takes its place, in Trash "Restore". */}
+        {isInJunkFolder && onUndoSpam && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onUndoSpam}
+            data-overflow-item
+            data-overflow-priority="4"
+            data-overflow-action="spam"
+            data-testid="reader-not-spam"
+            className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer ? "order-1" : "hover:bg-emerald-50 dark:hover:bg-emerald-950/30")}
+            title={t('spam.not_spam_title')}
+          >
+            <ShieldCheck className={cn("h-4 w-4", !mvViewer && "text-emerald-600 dark:text-emerald-400")} />
+            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('spam.not_spam_title')}</span>}
+          </Button>
+        )}
+        {isInTrashFolder && restoreTarget && onMoveToMailbox && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMoveToMailbox(restoreTarget.id)}
+            data-overflow-item
+            data-overflow-priority="4"
+            data-overflow-action=""
+            data-testid="reader-restore"
+            className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+            title={tActions('restore_to', { folder: localizeMailboxName(restoreTarget.role, restoreTarget.name, (key) => tSidebarNames(`mailboxes.${key}`)) })}
+          >
+            <RotateCcw className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
+          </Button>
+        )}
+        {archiveActionEnabled && !isInJunkFolder && !isInTrashFolder && (
           <Button
             variant="ghost"
             size="sm"
@@ -4488,10 +4538,11 @@ ${printWatermark ? printWatermark.html : ''}
           size="sm"
           onClick={onDelete}
           className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-3")}
-          title={t('tooltips.delete')}
+          title={deleteIsPermanent ? tActions('delete_forever') : t('tooltips.delete')}
+          data-testid="reader-delete"
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -4558,7 +4609,7 @@ ${printWatermark ? printWatermark.html : ''}
         </div>
 
         {/* Spam */}
-        {spamApplicable && (onMarkAsSpam || onUndoSpam) && (
+        {spamApplicable && !isInJunkFolder && onMarkAsSpam && (
           <Button
             variant="ghost"
             size="sm"

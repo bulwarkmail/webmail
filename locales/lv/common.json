@@ -893,6 +893,11 @@
     "read_aloud_stop": "Beigt nolasīšanu",
     "reader_view": "Lasīšanas skats"
   },
+  "reader_actions": {
+    "restore": "Atjaunot",
+    "restore_to": "Pārvietot atpakaļ uz {folder}",
+    "delete_forever": "Dzēst neatgriezeniski"
+  },
   "external_mail": {
     "sender_label": "Ārējs",
     "sender_tooltip": "No {domain}, ārpus jūsu organizācijas",

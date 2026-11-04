@@ -893,6 +893,11 @@
     "read_aloud_stop": "Detener la lectura",
     "reader_view": "Vista de lectura"
   },
+  "reader_actions": {
+    "restore": "Restaurar",
+    "restore_to": "Volver a mover a {folder}",
+    "delete_forever": "Eliminar para siempre"
+  },
   "external_mail": {
     "sender_label": "Externo",
     "sender_tooltip": "De {domain}, fuera de tu organización",

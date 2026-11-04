@@ -893,6 +893,11 @@
     "read_aloud_stop": "Stopp opplesning",
     "reader_view": "Lesevisning"
   },
+  "reader_actions": {
+    "restore": "Gjenopprett",
+    "restore_to": "Flytt tilbake til {folder}",
+    "delete_forever": "Slett for godt"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, utenfor organisasjonen din",

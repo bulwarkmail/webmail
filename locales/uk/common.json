@@ -893,6 +893,11 @@
     "read_aloud_stop": "Зупинити читання",
     "reader_view": "Режим читання"
   },
+  "reader_actions": {
+    "restore": "Відновити",
+    "restore_to": "Повернути до теки {folder}",
+    "delete_forever": "Видалити назавжди"
+  },
   "external_mail": {
     "sender_label": "Зовнішнє",
     "sender_tooltip": "З домену {domain}, поза вашою організацією",

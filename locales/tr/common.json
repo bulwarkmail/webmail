@@ -893,6 +893,11 @@
     "read_aloud_stop": "Okumayı durdur",
     "reader_view": "Okuma görünümü"
   },
+  "reader_actions": {
+    "restore": "Geri yükle",
+    "restore_to": "{folder} klasörüne geri taşı",
+    "delete_forever": "Kalıcı olarak sil"
+  },
   "external_mail": {
     "sender_label": "Harici",
     "sender_tooltip": "{domain} adresinden, kuruluşunuzun dışından",

@@ -893,6 +893,11 @@
     "read_aloud_stop": "읽기 중지",
     "reader_view": "읽기 보기"
   },
+  "reader_actions": {
+    "restore": "복원",
+    "restore_to": "{folder}(으)로 되돌리기",
+    "delete_forever": "영구 삭제"
+  },
   "external_mail": {
     "sender_label": "외부",
     "sender_tooltip": "{domain}에서 보냄, 조직 외부",

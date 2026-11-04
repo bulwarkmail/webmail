@@ -893,6 +893,11 @@
     "read_aloud_stop": "Ukončit předčítání",
     "reader_view": "Zobrazení pro čtení"
   },
+  "reader_actions": {
+    "restore": "Obnovit",
+    "restore_to": "Přesunout zpět do složky {folder}",
+    "delete_forever": "Smazat natrvalo"
+  },
   "external_mail": {
     "sender_label": "Externí",
     "sender_tooltip": "Z {domain}, mimo vaši organizaci",
