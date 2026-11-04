@@ -189,8 +189,9 @@ export function MoveFolderList({
     <div data-move-folder-list="">
       {showFilter && (
         <div className={cn("sticky top-0 z-10 bg-background", panel ? "px-4 py-2" : "px-2 pt-1 pb-1")}>
-          <label className="flex items-center gap-2 rounded-md border border-border px-2 focus-within:ring-2 focus-within:ring-ring">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          {/* The field is the whole box, so the app's focus ring goes round all of it. */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute start-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               ref={inputRef}
               type="text"
@@ -205,10 +206,10 @@ export function MoveFolderList({
               }}
               placeholder={t("filter_placeholder")}
               aria-label={t("filter_placeholder")}
-              className={cn("min-w-0 flex-1 bg-transparent text-sm focus:outline-none", panel ? "h-10" : "h-8")}
+              className={cn("focus-inset w-full min-w-0 rounded-md border border-border bg-transparent ps-8 pe-2 text-sm", panel ? "h-10" : "h-8")}
               data-testid="move-filter"
             />
-          </label>
+          </div>
         </div>
       )}
 

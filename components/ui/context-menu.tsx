@@ -781,7 +781,8 @@ export function ContextMenuSubMenu({
             className="min-w-[180px] max-w-[min(20rem,calc(100vw-20px))] bg-background rounded-md shadow-lg border border-border"
             role="menu"
           >
-            <div className="py-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
+            {/* As tall as the window allows (it's moved up to fit), then it scrolls. */}
+            <div className="py-1 max-h-[calc(100vh-22px)] overflow-y-auto">
               {children}
             </div>
           </SubMenuPanel>
