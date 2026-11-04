@@ -6462,6 +6462,19 @@
     "group_account": "Бүртгэл",
     "switch_to": "{account} руу шилжих"
   },
+  "menuAudit": {
+    "offline_header": "Та офлайн байна. Зарим үйлдэлд холболт хэрэгтэй.",
+    "files_new_folder": "Шинэ хавтас…",
+    "files_new_file": "Шинэ файл…",
+    "files_new_text_file": "Шинэ текст файл…",
+    "files_upload_files": "Файл байршуулах…",
+    "files_upload_folder": "Хавтас байршуулах…",
+    "files_share": "Хуваалцах…",
+    "files_share_button": "Хуваалцах",
+    "contacts_add_to_group": "Бүлэгт нэмэх…",
+    "contacts_bulk_add_to_group": "Бүлэгт нэмэх…",
+    "schedule_send": "Хуваарь илгээх…"
+  },
   "notification_center": {
     "title": "Мэдэгдэл",
     "mark_all_read": "Бүгдийг уншсан болгох",

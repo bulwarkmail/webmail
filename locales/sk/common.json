@@ -6462,6 +6462,19 @@
     "group_account": "Účet",
     "switch_to": "Prepnúť na {account}"
   },
+  "menuAudit": {
+    "offline_header": "Ste offline. Niektoré akcie potrebujú pripojenie.",
+    "files_new_folder": "Nový priečinok…",
+    "files_new_file": "Nový súbor…",
+    "files_new_text_file": "Nový textový súbor…",
+    "files_upload_files": "Nahrať súbory…",
+    "files_upload_folder": "Nahrať priečinok…",
+    "files_share": "Zdieľať…",
+    "files_share_button": "Zdieľať",
+    "contacts_add_to_group": "Pridať do skupiny…",
+    "contacts_bulk_add_to_group": "Pridať do skupiny…",
+    "schedule_send": "Naplánovať odoslanie…"
+  },
   "notification_center": {
     "title": "Oznámenia",
     "mark_all_read": "Označiť všetko ako prečítané",

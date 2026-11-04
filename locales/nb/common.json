@@ -6462,6 +6462,19 @@
     "group_account": "Konto",
     "switch_to": "Bytt til {account}"
   },
+  "menuAudit": {
+    "offline_header": "Du er frakoblet. Noen handlinger trenger tilkobling.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Last opp filer…",
+    "files_upload_folder": "Last opp mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Legg til i gruppe…",
+    "contacts_bulk_add_to_group": "Legg til i gruppe…",
+    "schedule_send": "Planlegg sending…"
+  },
   "notification_center": {
     "title": "Varsler",
     "mark_all_read": "Merk alle som lest",

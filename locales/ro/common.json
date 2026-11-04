@@ -6462,6 +6462,19 @@
     "group_account": "Cont",
     "switch_to": "Comută la {account}"
   },
+  "menuAudit": {
+    "offline_header": "Sunteți offline. Unele acțiuni au nevoie de conexiune.",
+    "files_new_folder": "Dosar nou…",
+    "files_new_file": "Fișier nou…",
+    "files_new_text_file": "Fișier text nou…",
+    "files_upload_files": "Încărcați fișiere…",
+    "files_upload_folder": "Încărcare folder…",
+    "files_share": "Distribuie…",
+    "files_share_button": "Distribuie",
+    "contacts_add_to_group": "Adaugă la grup…",
+    "contacts_bulk_add_to_group": "Adaugă la grup…",
+    "schedule_send": "Programează trimiterea…"
+  },
   "notification_center": {
     "title": "Notificări",
     "mark_all_read": "Marchează toate ca citite",

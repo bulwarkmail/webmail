@@ -6462,6 +6462,19 @@
     "group_account": "账户",
     "switch_to": "切换到 {account}"
   },
+  "menuAudit": {
+    "offline_header": "您已离线。部分操作需要联网。",
+    "files_new_folder": "新建文件夹…",
+    "files_new_file": "新建文件…",
+    "files_new_text_file": "新建文本文件…",
+    "files_upload_files": "上传文件…",
+    "files_upload_folder": "上传文件夹…",
+    "files_share": "共享…",
+    "files_share_button": "共享",
+    "contacts_add_to_group": "加入群组…",
+    "contacts_bulk_add_to_group": "添加到群组…",
+    "schedule_send": "计划发送…"
+  },
   "notification_center": {
     "title": "通知",
     "mark_all_read": "全部标为已读",

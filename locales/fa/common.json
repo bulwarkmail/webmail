@@ -6462,6 +6462,19 @@
     "group_account": "حساب",
     "switch_to": "رفتن به {account}"
   },
+  "menuAudit": {
+    "offline_header": "آفلاین هستید. برخی کارها به اتصال نیاز دارند.",
+    "files_new_folder": "پوشه جدید…",
+    "files_new_file": "فایل جدید…",
+    "files_new_text_file": "فایل متنی جدید…",
+    "files_upload_files": "بارگذاری فایل‌ها…",
+    "files_upload_folder": "بارگذاری پوشه…",
+    "files_share": "اشتراک‌گذاری…",
+    "files_share_button": "اشتراک‌گذاری",
+    "contacts_add_to_group": "افزودن به گروه…",
+    "contacts_bulk_add_to_group": "افزودن به گروه…",
+    "schedule_send": "زمان‌بندی ارسال…"
+  },
   "notification_center": {
     "title": "اعلان‌ها",
     "mark_all_read": "علامت‌گذاری همه به‌عنوان خوانده‌شده",

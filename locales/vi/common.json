@@ -6474,6 +6474,19 @@
     "group_account": "Tài khoản",
     "switch_to": "Chuyển sang {account}"
   },
+  "menuAudit": {
+    "offline_header": "Bạn đang ngoại tuyến. Một số thao tác cần kết nối.",
+    "files_new_folder": "Thư mục mới…",
+    "files_new_file": "Tệp mới…",
+    "files_new_text_file": "Tệp văn bản mới…",
+    "files_upload_files": "Tải tệp lên…",
+    "files_upload_folder": "Tải lên thư mục…",
+    "files_share": "Chia sẻ…",
+    "files_share_button": "Chia sẻ",
+    "contacts_add_to_group": "Thêm vào nhóm…",
+    "contacts_bulk_add_to_group": "Thêm vào nhóm…",
+    "schedule_send": "Lên lịch gửi…"
+  },
   "notification_center": {
     "title": "Thông báo",
     "mark_all_read": "Đánh dấu tất cả đã đọc",

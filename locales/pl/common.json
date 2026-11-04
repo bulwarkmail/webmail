@@ -6462,6 +6462,19 @@
     "group_account": "Konto",
     "switch_to": "Przełącz na {account}"
   },
+  "menuAudit": {
+    "offline_header": "Jesteś offline. Niektóre działania wymagają połączenia.",
+    "files_new_folder": "Nowy folder…",
+    "files_new_file": "Nowy plik…",
+    "files_new_text_file": "Nowy plik tekstowy…",
+    "files_upload_files": "Prześlij pliki…",
+    "files_upload_folder": "Prześlij folder…",
+    "files_share": "Udostępnij…",
+    "files_share_button": "Udostępnij",
+    "contacts_add_to_group": "Dodaj do grupy…",
+    "contacts_bulk_add_to_group": "Dodaj do grupy…",
+    "schedule_send": "Zaplanuj wysyłkę…"
+  },
   "notification_center": {
     "title": "Powiadomienia",
     "mark_all_read": "Oznacz wszystkie jako przeczytane",

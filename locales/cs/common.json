@@ -6462,6 +6462,19 @@
     "group_account": "Účet",
     "switch_to": "Přepnout na {account}"
   },
+  "menuAudit": {
+    "offline_header": "Jste offline. Některé akce potřebují připojení.",
+    "files_new_folder": "Nová složka…",
+    "files_new_file": "Nový soubor…",
+    "files_new_text_file": "Nový textový soubor…",
+    "files_upload_files": "Nahrát soubory…",
+    "files_upload_folder": "Nahrát složku…",
+    "files_share": "Sdílet…",
+    "files_share_button": "Sdílet",
+    "contacts_add_to_group": "Přidat do skupiny…",
+    "contacts_bulk_add_to_group": "Přidat do skupiny…",
+    "schedule_send": "Naplánovat odeslání…"
+  },
   "notification_center": {
     "title": "Oznámení",
     "mark_all_read": "Označit vše jako přečtené",

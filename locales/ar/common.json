@@ -6462,6 +6462,19 @@
     "group_account": "الحساب",
     "switch_to": "التبديل إلى {account}"
   },
+  "menuAudit": {
+    "offline_header": "أنت غير متصل. بعض الإجراءات تحتاج إلى اتصال.",
+    "files_new_folder": "مجلد جديد…",
+    "files_new_file": "ملف جديد…",
+    "files_new_text_file": "ملف نصي جديد…",
+    "files_upload_files": "رفع الملفات…",
+    "files_upload_folder": "رفع مجلد…",
+    "files_share": "مشاركة…",
+    "files_share_button": "مشاركة",
+    "contacts_add_to_group": "إضافة إلى مجموعة…",
+    "contacts_bulk_add_to_group": "إضافة إلى مجموعة…",
+    "schedule_send": "جدولة الإرسال…"
+  },
   "notification_center": {
     "title": "الإشعارات",
     "mark_all_read": "تعليم الكل كمقروء",

@@ -6462,6 +6462,19 @@
     "group_account": "Conta",
     "switch_to": "Mudar para {account}"
   },
+  "menuAudit": {
+    "offline_header": "Está offline. Algumas ações precisam de ligação.",
+    "files_new_folder": "Nova pasta…",
+    "files_new_file": "Novo arquivo…",
+    "files_new_text_file": "Novo arquivo de texto…",
+    "files_upload_files": "Carregar arquivos…",
+    "files_upload_folder": "Carregar pasta…",
+    "files_share": "Compartilhar…",
+    "files_share_button": "Compartilhar",
+    "contacts_add_to_group": "Adicionar ao grupo…",
+    "contacts_bulk_add_to_group": "Adicionar ao grupo…",
+    "schedule_send": "Agendar envio…"
+  },
   "notification_center": {
     "title": "Notificações",
     "mark_all_read": "Marcar todas como lidas",

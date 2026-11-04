@@ -35,6 +35,8 @@ interface ContactDetailProps {
   onPrint?: () => void;
   isMobile?: boolean;
   className?: string;
+  /** In an address book shared read-only: no Edit, Move or Delete. */
+  readOnly?: boolean;
 }
 
 // Contexts and phone features the contact form offers, shown with the same
@@ -74,7 +76,7 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
   const t = useTranslations("contacts");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -173,7 +175,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               </a>
             )}
             {/* A phone's row has no room for this label: the ⋮ fell onto a line of its own. */}
-            {isMobile ? (
+            {readOnly ? null : isMobile ? (
               <ToolbarButton label={t("form.edit_title")} onClick={onEdit} className="touch-manipulation">
                 <Pencil />
               </ToolbarButton>
@@ -207,6 +209,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 onClose={moreMenu.closeContextMenu}
                 menuRef={moreMenu.menuRef}
                 inDetail
+                readOnly={readOnly}
                 onCompose={onCompose}
                 onDelete={onDelete}
                 onAddToGroup={onAddToGroup}

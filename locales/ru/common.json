@@ -6462,6 +6462,19 @@
     "group_account": "Аккаунт",
     "switch_to": "Переключиться на {account}"
   },
+  "menuAudit": {
+    "offline_header": "Нет подключения. Для некоторых действий нужна сеть.",
+    "files_new_folder": "Новая папка…",
+    "files_new_file": "Новый файл…",
+    "files_new_text_file": "Новый текстовый файл…",
+    "files_upload_files": "Загрузить файлы…",
+    "files_upload_folder": "Загрузить папку…",
+    "files_share": "Поделиться…",
+    "files_share_button": "Поделиться",
+    "contacts_add_to_group": "Добавить в группу…",
+    "contacts_bulk_add_to_group": "Добавить в группу…",
+    "schedule_send": "Запланировать отправку…"
+  },
   "notification_center": {
     "title": "Уведомления",
     "mark_all_read": "Отметить все как прочитанные",

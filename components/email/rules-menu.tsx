@@ -410,10 +410,13 @@ export function RulesContextSubMenu({
   anchor,
   senderEmails,
   onClose,
+  disabled = false,
 }: {
   anchor: Email;
   senderEmails: Email[];
   onClose: () => void;
+  /** Rules are saved on the server: greyed out offline. */
+  disabled?: boolean;
 }) {
   const t = useTranslations("context_menu");
   const accountEmails = useMemo(
@@ -427,7 +430,7 @@ export function RulesContextSubMenu({
       icon={Filter}
       label={t("rules.title")}
       testId="ctx-rules"
-      disabled={availability === "cross_account"}
+      disabled={disabled || availability === "cross_account"}
       hint={availability === "cross_account" ? t("rules.cross_account") : undefined}
     >
       {target && <ContextRulesContent anchor={anchor} senderEmails={senderEmails} target={target} onDone={onClose} />}
@@ -804,7 +807,7 @@ function FolderRulesContent({
  * saved rules over the mail already in the folder (#1166). Hidden for shared
  * folders and accounts without Sieve.
  */
-export function FolderRulesSubMenu({ mailbox, onClose }: { mailbox: Mailbox; onClose: () => void }) {
+export function FolderRulesSubMenu({ mailbox, onClose, disabled = false }: { mailbox: Mailbox; onClose: () => void; disabled?: boolean }) {
   const t = useTranslations("context_menu");
   const client = useAuthStore((s) => s.client);
   const target = useMemo(
@@ -813,7 +816,7 @@ export function FolderRulesSubMenu({ mailbox, onClose }: { mailbox: Mailbox; onC
   );
   if (!target || !target.supportsSieve) return null;
   return (
-    <ContextMenuSubMenu icon={Filter} label={t("rules.title")} testId="mailbox-rules">
+    <ContextMenuSubMenu icon={Filter} label={t("rules.title")} testId="mailbox-rules" disabled={disabled}>
       <FolderRulesContent mailbox={mailbox} target={target} onDone={onClose} />
     </ContextMenuSubMenu>
   );

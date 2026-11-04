@@ -6462,6 +6462,19 @@
     "group_account": "Обліковий запис",
     "switch_to": "Перейти до {account}"
   },
+  "menuAudit": {
+    "offline_header": "Немає з’єднання. Для деяких дій потрібна мережа.",
+    "files_new_folder": "Нова папка…",
+    "files_new_file": "Новий файл…",
+    "files_new_text_file": "Новий текстовий файл…",
+    "files_upload_files": "Завантажити файли…",
+    "files_upload_folder": "Завантажити папку…",
+    "files_share": "Поділитися…",
+    "files_share_button": "Поділитися",
+    "contacts_add_to_group": "Додати до групи…",
+    "contacts_bulk_add_to_group": "Додати до групи…",
+    "schedule_send": "Запланувати надсилання…"
+  },
   "notification_center": {
     "title": "Сповіщення",
     "mark_all_read": "Позначити всі як прочитані",

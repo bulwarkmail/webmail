@@ -125,6 +125,7 @@ export function FilesSidebar({
   onDropToTrash,
 }: FilesSidebarProps) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const newMenu = useContextMenu<null>();
   const itemMenu = useContextMenu<MenuTarget>();
   const newButtonRef = useRef<HTMLButtonElement>(null);
@@ -274,10 +275,10 @@ export function FilesSidebar({
   const createItems = (path: string, id: string | null) => (
     <>
       <ContextMenuSeparator />
-      <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => run(() => onCreateIn(path, id, "folder"))} />
-      <ContextMenuItem icon={FilePlus} label={newFileLabel ?? t("new_text_file")} onClick={() => run(() => onCreateIn(path, id, "text"))} />
-      <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => run(() => onCreateIn(path, id, "files"))} />
-      <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => run(() => onCreateIn(path, id, "dir"))} />
+      <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => run(() => onCreateIn(path, id, "folder"))} />
+      <ContextMenuItem icon={FilePlus} label={newFileLabel ?? tMenu("files_new_text_file")} onClick={() => run(() => onCreateIn(path, id, "text"))} />
+      <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => run(() => onCreateIn(path, id, "files"))} />
+      <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => run(() => onCreateIn(path, id, "dir"))} />
     </>
   );
 
@@ -455,11 +456,11 @@ export function FilesSidebar({
       </nav>
 
       <ContextMenu ref={newMenu.menuRef} isOpen={newMenu.contextMenu.isOpen} position={newMenu.contextMenu.position} onClose={newMenu.closeContextMenu}>
-        <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => { newMenu.closeContextMenu(); onUploadFiles(); }} />
-        <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => { newMenu.closeContextMenu(); onUploadFolder(); }} />
+        <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => { newMenu.closeContextMenu(); onUploadFiles(); }} />
+        <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => { newMenu.closeContextMenu(); onUploadFolder(); }} />
         <ContextMenuSeparator />
-        <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => { newMenu.closeContextMenu(); onNewFolder(); }} />
-        <ContextMenuItem icon={FilePlus} label={newFileLabel ?? t("new_text_file")} onClick={() => { newMenu.closeContextMenu(); onNewTextFile(); }} />
+        <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => { newMenu.closeContextMenu(); onNewFolder(); }} />
+        <ContextMenuItem icon={FilePlus} label={newFileLabel ?? tMenu("files_new_text_file")} onClick={() => { newMenu.closeContextMenu(); onNewTextFile(); }} />
       </ContextMenu>
 
       <ContextMenu ref={itemMenu.menuRef} isOpen={itemMenu.contextMenu.isOpen} position={itemMenu.contextMenu.position} onClose={itemMenu.closeContextMenu}>
@@ -484,7 +485,7 @@ export function FilesSidebar({
                   Details act on the list and are left out here (R6). */}
               {(!folder.isShared || canShare(folder)) && <ContextMenuSeparator />}
               {canShare(folder) && (
-                <ContextMenuItem icon={Share2} label={t("share")} onClick={() => run(() => onShare(folder))} />
+                <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => run(() => onShare(folder))} />
               )}
               {!folder.isShared && (
                 <ContextMenuItem
