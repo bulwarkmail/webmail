@@ -19,7 +19,8 @@ import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow,
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { parseDuration, getEventColor } from "./event-card";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
-import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, listTimeZones, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
+import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
+import { TimeZonePicker } from "@/components/settings/time-zone-picker";
 import { addToWall, compareWall, displayToZoneWall, eventFormTimeZone, eventZonedTimes, timeZoneCity, wallFields, zonedTimesText, zoneFieldsToDisplay, zoneWallDurationMs, zoneWallToDisplay } from "@/lib/event-time-zone";
 import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule";
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
@@ -35,12 +36,15 @@ import {
   participantFieldsToSave,
   userOrganizes,
 } from "@/lib/calendar-participants";
-import { canUserRsvp, getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
+import { canUserRsvp, getEventEditability } from "@/lib/calendar-editability";
+import { eventTargets, preferredTarget } from "@/lib/calendar-targets";
+import { CalendarSelect } from "@/components/calendar/calendar-select";
+import { useAccountStore } from "@/stores/account-store";
+import { useCalendarStore } from "@/stores/calendar-store";
 import { changesWhen, type EditorAttendee, type EventEditorState } from "@/lib/recurrence-scope-edit";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
-import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
@@ -58,7 +62,6 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
-import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export interface PendingEventPreview {
   start: Date;
@@ -85,7 +88,13 @@ interface EventModalProps {
    */
   onSave: (data: Partial<CalendarEvent>, sendSchedulingMessages?: boolean, editor?: EventEditorState) => void | Promise<void>;
   onDelete?: (id: string, sendSchedulingMessages?: boolean) => void;
-  onDuplicate?: (data: Partial<CalendarEvent>) => void;
+  /** Opens the editor on an unsaved copy of the event (copyOf). */
+  onDuplicate?: (event: CalendarEvent) => void;
+  /**
+   * A new event that starts as a copy of this one: same date and time, text,
+   * places, repeat, alerts and guests. Nothing is saved until Save (pim-p2-17).
+   */
+  copyOf?: CalendarEvent | null;
   /** `sentBy`: answering for the calendar's owner (lib/calendar-delegate.ts). */
   onRsvp?: (eventId: string, participantId: string, status: CalendarParticipant['participationStatus'], sentBy?: string) => void;
   onClose: () => void;
@@ -266,6 +275,7 @@ export function EventModal({
   onSave,
   onDelete,
   onDuplicate,
+  copyOf = null,
   onRsvp,
   onClose,
   onPreviewChange,
@@ -276,7 +286,6 @@ export function EventModal({
   maxParticipants = null,
   isMobile = false,
 }: EventModalProps) {
-  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   // Ids that tie each visible label to its field.
@@ -299,6 +308,8 @@ export function EventModal({
     ? "absolute inset-0 z-40 flex flex-col bg-background"
     : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]";
   const isEdit = !!event;
+  // What the form starts from: the event, or for a copy the event copied.
+  const seed = event ?? copyOf;
   const formatEventDate = useFormatEventDate();
   const { formatDateRangeLabel } = useCalendarLocale();
   const [mode, setMode] = useState<"view" | "edit">(isEdit && !startInEditMode ? "view" : "edit");
@@ -346,9 +357,9 @@ export function EventModal({
   }, [event, currentUserEmails]);
 
   const existingParticipants = useMemo(() => {
-    if (!event) return [];
-    return getParticipantList(event, { resolveName: resolveContactName });
-  }, [event, resolveContactName]);
+    if (!seed) return [];
+    return getParticipantList(seed, { resolveName: resolveContactName });
+  }, [seed, resolveContactName]);
 
   const organizerInfo = useMemo(() => {
     if (!event?.participants) return null;
@@ -357,7 +368,7 @@ export function EventModal({
   }, [event, existingParticipants]);
 
   const getInitialStart = (): Date => {
-    if (event?.start) return getEventStartDate(event);
+    if (seed?.start) return getEventStartDate(seed);
     if (defaultDate) {
       const d = new Date(defaultDate);
       if (defaultEndDate) return d;
@@ -371,31 +382,31 @@ export function EventModal({
   };
 
   const getInitialEnd = (): Date => {
-    if (event?.start) {
-      if (event.showWithoutTime) {
-        return getEventDisplayEndDate(event);
+    if (seed?.start) {
+      if (seed.showWithoutTime) {
+        return getEventDisplayEndDate(seed);
       }
-      return getEventEndDate(event);
+      return getEventEndDate(seed);
     }
     if (defaultEndDate) return new Date(defaultEndDate);
     return addHours(getInitialStart(), 1);
   };
 
-  const [title, setTitle] = useState(event?.title || defaultTitle || "");
+  const [title, setTitle] = useState(seed?.title || defaultTitle || "");
   // An HTML description is shown and edited as its text.
-  const eventDescription = useMemo(() => (event ? descriptionAsText(event) : ""), [event]);
+  const eventDescription = useMemo(() => (seed ? descriptionAsText(seed) : ""), [seed]);
   const [description, setDescription] = useState(eventDescription);
   const [location, setLocation] = useState(
-    event?.locations ? Object.values(event.locations)[0]?.name || "" : ""
+    seed?.locations ? Object.values(seed.locations)[0]?.name || "" : ""
   );
   const [virtualLocation, setVirtualLocation] = useState(
-    event?.virtualLocations ? Object.values(event.virtualLocations)[0]?.uri || "" : ""
+    seed?.virtualLocations ? Object.values(seed.virtualLocations)[0]?.uri || "" : ""
   );
   // The zone the date and time fields are in, and a save writes: the
   // event's own, the user's for a new event, none for a floating one. An
   // edit used to save every event in the user's zone (pim-2).
   const userTimeZone = getEffectiveTimeZone();
-  const [timeZone, setTimeZone] = useState<string | null>(() => eventFormTimeZone(event, userTimeZone));
+  const [timeZone, setTimeZone] = useState<string | null>(() => eventFormTimeZone(seed, userTimeZone));
   const [showZonePicker, setShowZonePicker] = useState(false);
   const [initialStartWall] = useState(() => displayToZoneWall(getInitialStart(), timeZone));
   const [initialEndWall] = useState(() => displayToZoneWall(getInitialEnd(), timeZone));
@@ -403,14 +414,9 @@ export function EventModal({
   const [startTime, setStartTime] = useState(formatTimeInput(initialStartWall));
   const [endDate, setEndDate] = useState(formatDateInput(initialEndWall));
   const [endTime, setEndTime] = useState(formatTimeInput(initialEndWall));
-  const [allDay, setAllDay] = useState(event?.showWithoutTime || defaultAllDay || false);
+  const [allDay, setAllDay] = useState(seed?.showWithoutTime || defaultAllDay || false);
   // The zone the fields are on: none for an all-day event.
   const fieldZone = allDay ? null : timeZone;
-  const zoneOptions = useMemo(() => {
-    if (!showZonePicker) return [];
-    const zones = listTimeZones();
-    return timeZone && !zones.includes(timeZone) ? [timeZone, ...zones] : zones;
-  }, [showZonePicker, timeZone]);
   // The form's times on the user's clock, beside another zone's.
   const formYourTimes = useMemo(() => {
     if (!fieldZone || fieldZone === userTimeZone) return null;
@@ -437,37 +443,42 @@ export function EventModal({
   };
   const handleStartDateChange = (v: string) => { setStartDate(v); shiftEndKeepingDuration(v, startTime); };
   const handleStartTimeChange = (v: string) => { setStartTime(v); shiftEndKeepingDuration(startDate, v); };
+  // New events go to the account on screen (pim-p2-4): the calendar last
+  // picked there, else its default one. Never a task list (pim-p2-2).
+  const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
+  const lastEventCalendarIds = useCalendarStore((s) => s.lastEventCalendarIds);
   const [calendarId, setCalendarId] = useState<string>(() => {
     if (event?.calendarIds) return getPrimaryCalendarId(event) || calendars[0]?.id || "";
-    if (defaultCalendarId && calendars.some(c => c.id === defaultCalendarId)) return defaultCalendarId;
-    const defaultCal = calendars.find(c => c.isDefault);
+    const targets = eventTargets(calendars, isSubscriptionCalendar);
+    if (defaultCalendarId && targets.some(c => c.id === defaultCalendarId)) return defaultCalendarId;
     // Never default new events into a subscription / read-only calendar (#762).
-    return defaultCal?.id
-      || calendars.find(c => canCreateEventsIn(c, isSubscriptionCalendar))?.id
+    return preferredTarget(targets, activeLocalAccountId, lastEventCalendarIds)?.id
       || calendars[0]?.id || "";
   });
 
-  // Calendars offered as create/move targets: writable, non-subscription, plus
-  // the event's current calendar so an in-place edit never blanks the select.
+  // Calendars offered as create/move targets: writable, non-subscription,
+  // holding events (a task list never shows in the grid, so an event saved
+  // there seemed lost, pim-p2-2), plus the event's current calendar so an
+  // in-place edit never blanks the select.
   // An existing event moves only within its own login: the update goes to
   // that login's server, which doesn't know another login's calendar ids.
   const eventLogin = useMemo(() => {
     const primary = event?.calendarIds ? getPrimaryCalendarId(event) : undefined;
-    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId } : { known: false, login: undefined };
+    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId, primary } : { known: false, login: undefined, primary: undefined };
   }, [event, calendars]);
   const selectableCalendars = useMemo(
-    () => calendars.filter(c => (canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId)
-      && (!eventLogin.known || c.localAccountId === eventLogin.login)),
-    [calendars, isSubscriptionCalendar, calendarId, eventLogin]
+    () => eventTargets(calendars, isSubscriptionCalendar, eventLogin.primary)
+      .filter(c => !eventLogin.known || c.localAccountId === eventLogin.login),
+    [calendars, isSubscriptionCalendar, eventLogin]
   );
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
-    if (!event?.recurrenceRules?.length) return "none";
-    const rule = event.recurrenceRules[0];
+    if (!seed?.recurrenceRules?.length) return "none";
+    const rule = seed.recurrenceRules[0];
     return isSimpleRecurrenceRule(rule) ? (rule.frequency as RecurrenceOption) : "custom";
   });
   const [customRule, setCustomRule] = useState<CalendarRecurrenceRule | null>(() => {
-    if (!event?.recurrenceRules?.length) return null;
-    const rule = event.recurrenceRules[0];
+    if (!seed?.recurrenceRules?.length) return null;
+    const rule = seed.recurrenceRules[0];
     return isSimpleRecurrenceRule(rule) ? null : rule;
   });
   // The recurrence the editor opened with: a rule the user did not touch is
@@ -495,11 +506,11 @@ export function EventModal({
     [customRule, t, locale]
   );
   // A new event starts on the calendar's default alerts.
-  const [useDefaultAlerts, setUseDefaultAlerts] = useState(() => (event ? event.useDefaultAlerts === true : true));
+  const [useDefaultAlerts, setUseDefaultAlerts] = useState(() => (seed ? seed.useDefaultAlerts === true : true));
   // Alerts the rows can't represent (absolute triggers, offsets after the
   // start or relative to the end) are kept here so they survive a save.
   const [initialAlerts] = useState(() =>
-    event && !event.useDefaultAlerts ? alertRowsOf(event.alerts) : { rows: [], preserved: {} }
+    seed && !seed.useDefaultAlerts ? alertRowsOf(seed.alerts) : { rows: [], preserved: {} }
   );
   const [preservedAlerts, setPreservedAlerts] = useState<Record<string, CalendarEventAlert>>(initialAlerts.preserved);
   const [alertRows, setAlertRows] = useState<AlertRow[]>(initialAlerts.rows);
@@ -538,7 +549,19 @@ export function EventModal({
   // The attendees the editor opened with: a save for every occurrence of a
   // series applies only those the user added or removed.
   const [initialAttendees] = useState<EditorAttendee[]>(() => {
-    if (!event?.participants) return [];
+    if (!seed?.participants) return [];
+    // A copy is the user's own event: everyone else is invited, its old
+    // organizer too, and the user isn't a guest of it.
+    if (!event) {
+      const mine = new Set(currentUserEmails.map((e) => e.toLowerCase()));
+      return existingParticipants.reduce<{ name: string; email: string }[]>((acc, p) => {
+        const key = p.email.trim().toLowerCase();
+        if (!key || mine.has(key)) return acc;
+        mine.add(key);
+        acc.push({ name: p.name, email: p.email.trim() });
+        return acc;
+      }, []);
+    }
     // Never seed the invite list with the organizer or with a repeated address:
     // handleSave writes the organizer separately, so either would round-trip
     // into a duplicate entry every time the event is saved (#731). The
@@ -852,9 +875,13 @@ export function EventModal({
     // invitation e-mails then render as a "Description" heading over blank space.
     // An HTML description the user did not touch stays as it was; one they
     // edited is saved as the plain text it now is.
-    const keepsHtml = !!event && isHtmlDescription(event) && trimmedDescription === eventDescription.trim();
+    const keepsHtml = !!seed && isHtmlDescription(seed) && trimmedDescription === eventDescription.trim();
     if ((trimmedDescription || event) && !keepsHtml) {
       Object.assign(data, plainDescriptionFields(event, trimmedDescription));
+    } else if (keepsHtml && !event) {
+      // A copy keeps the formatted description it was made from.
+      data.description = seed.description;
+      data.descriptionContentType = seed.descriptionContentType;
     }
 
     if (!event) {
@@ -1004,7 +1031,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, seed, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1021,7 +1048,7 @@ export function EventModal({
 
   const handleDuplicate = useCallback(() => {
     if (!event || !onDuplicate) return;
-    onDuplicate(buildDuplicateEventData(event));
+    onDuplicate(event);
   }, [event, onDuplicate]);
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -1419,17 +1446,16 @@ export function EventModal({
             <div data-testid="event-time-zone">
               {showZonePicker ? (
                 <>
-                  <label htmlFor={labelFor("time_zone")} className="text-sm font-medium mb-1 block">{tEvent("time_zone")}</label>
-                  <select
-                    id={labelFor("time_zone")}
+                  <div className="text-sm font-medium mb-1">{tEvent("time_zone")}</div>
+                  {/* Settings' picker (pim-p2-5): cities with offsets, common zones first, searchable. */}
+                  <TimeZonePicker
                     value={fieldZone}
-                    onChange={(e) => setTimeZone(e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-                  >
-                    {zoneOptions.map((zone) => (
-                      <option key={zone} value={zone}>{zone.replace(/_/g, " ")}</option>
-                    ))}
-                  </select>
+                    onChange={setTimeZone}
+                    withAuto={false}
+                    label={tEvent("time_zone")}
+                    className="w-full"
+                    defaultOpen
+                  />
                 </>
               ) : fieldZone !== userTimeZone ? (
                 <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
@@ -1441,7 +1467,8 @@ export function EventModal({
                   )}
                 </div>
               ) : (
-                <button type="button" onClick={() => setShowZonePicker(true)} className="text-xs text-primary hover:underline">
+                // A link in both themes: dark's primary is near white and read as a label (pim-p2-19).
+                <button type="button" onClick={() => setShowZonePicker(true)} className="text-xs text-blue-600 dark:text-blue-400 underline-offset-2 hover:underline">
                   {tEvent("time_zone")}
                 </button>
               )}
@@ -1521,18 +1548,13 @@ export function EventModal({
           {selectableCalendars.length > 1 && (
             <div>
               <label htmlFor={labelFor("calendar_select")} className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
-              <select
+              <CalendarSelect
                 id={labelFor("calendar_select")}
+                calendars={selectableCalendars}
                 value={calendarId}
-                onChange={(e) => setCalendarId(e.target.value)}
+                onChange={setCalendarId}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              >
-                {selectableCalendars.map((cal) => (
-                  <option key={cal.id} value={cal.id}>
-                    {shownName.calendar(cal)}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           )}
 

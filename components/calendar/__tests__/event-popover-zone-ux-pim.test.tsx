@@ -76,7 +76,8 @@ describe('event popover', () => {
 });
 
 describe('quick create (pim-21)', () => {
-  const long = 'Stalwart Calendar (dso-ux-pim@example.org)';
+  // Not Stalwart's default name: that one shows as plain "Calendar" now.
+  const long = 'Release planning for the spring quarter (team)';
   const calendars = [
     { id: 'a', name: long, color: '#3b82f6' },
     { id: 'b', name: 'Work', color: '#22c55e' },

@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "{name} 共享：",
     "freebusy_description": "共享对象能看到你何时忙碌，看不到活动内容。“建议时间”会用到它。"
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "列表",
+    "task_list_not_in_calendar": "{name}（任务列表，不在日历中显示）",
+    "copy_to_account": "复制到 {address}",
+    "copied_to_account": "已复制到 {address}",
+    "delete_original": "删除原日程"
+  },
   "calendar_offline": {
     "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "你已接受。",
     "answered_declined_nodate": "你已拒绝。",
     "answered_tentative_nodate": "你已答复暂定。"
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "重复：{rule}",
+    "declined_dates": "您已拒绝 {dates} 的会议。",
+    "declined_many": "您已拒绝此系列中的 {count} 次会议。",
+    "answers_series": "您的回复适用于此系列的所有会议。"
   },
   "advanced_search": {
     "title": "高级搜索",
@@ -5546,6 +5559,26 @@
     "send_message": "发送消息",
     "share_mail_subject": "我与你共享了 {name}",
     "share_mail_body": "你好，\n\n我与你共享了“{name}”。可以在这里打开：\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "全部添加到日历",
+    "zone_contacts_all": "全部添加到联系人",
+    "save_to_files": "保存到文件",
+    "saved": "已将 {name} 保存到文件。",
+    "saved_copy": "已作为 {name} 保存到文件。",
+    "save_failed": "无法将 {name} 保存到文件。",
+    "changed_on_server": "你打开 {name} 后，它在文件中被更改了。",
+    "gone_on_server": "{name} 已不在文件中。",
+    "keep_both": "保留两者",
+    "replace": "替换",
+    "cancel": "取消",
+    "save_as_new": "另存为新文件",
+    "import_to_mail": "导入到邮件文件夹…",
+    "import_to_mail_title": "导入到邮件文件夹",
+    "imported_to_mail": "已导入到 {folder}。",
+    "import_to_mail_failed": "无法导入 {name}。",
+    "import_contacts": "导入到联系人…",
+    "add_to_calendar": "添加到日历…"
   },
   "smime": {
     "your_certificates": "您的证书",
@@ -7555,6 +7588,18 @@
     "import_mail": "邮件…",
     "import_calendar": "日历…",
     "import_contacts": "联系人…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "刷新",
+    "menu_today": "今天",
+    "menu_next_period": "下一时段",
+    "menu_previous_period": "上一时段",
+    "account_scope_label": "正在显示 {address}。切换账户",
+    "account_scope_menu": "切换账户",
+    "merge_links": "链接",
+    "merge_photo": "照片",
+    "merge_kept": "保留",
+    "import_show": "显示"
   },
   "desktopEdit": {
     "edit": "编辑",

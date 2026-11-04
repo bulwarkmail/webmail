@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Zdieľa {name}:",
     "freebusy_description": "Ten, s kým zdieľate, vidí, kedy ste obsadení, nie aké máte udalosti. Používa to funkcia Navrhnúť časy."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Zoznam",
+    "task_list_not_in_calendar": "{name} (zoznam úloh, v kalendári sa nezobrazuje)",
+    "copy_to_account": "Kopírovať do {address}",
+    "copied_to_account": "Skopírované do {address}",
+    "delete_original": "Odstrániť originál"
+  },
   "calendar_offline": {
     "split_needs_server": "Táto zmena vyžaduje pripojenie k serveru. Zatiaľ zmeňte iba túto udalosť alebo to skúste znova, keď budete online."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Prijali ste.",
     "answered_declined_nodate": "Odmietli ste.",
     "answered_tentative_nodate": "Odpovedali ste možno."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Opakuje sa: {rule}",
+    "declined_dates": "Odmietli ste {dates}.",
+    "declined_many": "Odmietli ste {count} stretnutí tejto série.",
+    "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
   },
   "calendar_event_notifications": {
     "someone": "Niekto",
@@ -5808,6 +5821,26 @@
     "send_message": "Poslať správu",
     "share_mail_subject": "Zdieľal som s vami {name}",
     "share_mail_body": "Dobrý deň,\n\nzdieľal som s vami „{name}“. Otvoríte to tu:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Pridať všetko do kalendára",
+    "zone_contacts_all": "Pridať všetko do kontaktov",
+    "save_to_files": "Uložiť do Súborov",
+    "saved": "{name} sa uložil do Súborov.",
+    "saved_copy": "Uložené do Súborov ako {name}.",
+    "save_failed": "{name} sa nepodarilo uložiť do Súborov.",
+    "changed_on_server": "{name} sa v Súboroch zmenil potom, ako ste ho otvorili.",
+    "gone_on_server": "{name} už v Súboroch nie je.",
+    "keep_both": "Ponechať oboje",
+    "replace": "Nahradiť",
+    "cancel": "Zrušiť",
+    "save_as_new": "Uložiť ako nový súbor",
+    "import_to_mail": "Importovať do priečinka pošty…",
+    "import_to_mail_title": "Importovať do priečinka pošty",
+    "imported_to_mail": "Importované do {folder}.",
+    "import_to_mail_failed": "{name} sa nepodarilo importovať.",
+    "import_contacts": "Importovať do kontaktov…",
+    "add_to_calendar": "Pridať do kalendára…"
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7555,6 +7588,18 @@
     "import_mail": "Pošta…",
     "import_calendar": "Kalendár…",
     "import_contacts": "Kontakty…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Obnoviť",
+    "menu_today": "Dnes",
+    "menu_next_period": "Ďalšie obdobie",
+    "menu_previous_period": "Predchádzajúce obdobie",
+    "account_scope_label": "Zobrazuje sa {address}. Prepnúť účet",
+    "account_scope_menu": "Prepnúť účet",
+    "merge_links": "Odkazy",
+    "merge_photo": "Fotka",
+    "merge_kept": "Zostane",
+    "import_show": "Zobraziť"
   },
   "desktopEdit": {
     "edit": "Upraviť",
