@@ -6398,7 +6398,9 @@
     "encrypt": "암호화…",
     "encrypt_hint": "S/MIME 또는 PGP 추가 기능이 필요합니다. 설정을 엽니다.",
     "quick_reply_to": "{names}에게 답장…",
-    "open_full_editor": "전체 편집기에서 열기"
+    "open_full_editor": "전체 편집기에서 열기",
+    "forward_to_label": "받는 사람",
+    "forward_cc_label": "참조"
   },
   "plugin_list": {
     "filters": "필터",

@@ -6398,7 +6398,9 @@
     "encrypt": "Cifrar…",
     "encrypt_hint": "Necesita un complemento S/MIME o PGP. Abre la Configuración.",
     "quick_reply_to": "Responder a {names}…",
-    "open_full_editor": "Abrir el editor completo"
+    "open_full_editor": "Abrir el editor completo",
+    "forward_to_label": "Para",
+    "forward_cc_label": "CC"
   },
   "plugin_list": {
     "filters": "Filtros",

@@ -6398,7 +6398,9 @@
     "encrypt": "Criptează…",
     "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările.",
     "quick_reply_to": "Răspuns către {names}…",
-    "open_full_editor": "Deschide în editorul complet"
+    "open_full_editor": "Deschide în editorul complet",
+    "forward_to_label": "Către",
+    "forward_cc_label": "Cc"
   },
   "plugin_list": {
     "filters": "Filtre",

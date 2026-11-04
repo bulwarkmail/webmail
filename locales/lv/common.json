@@ -6398,7 +6398,9 @@
     "encrypt": "Šifrēt…",
     "encrypt_hint": "Nepieciešams S/MIME vai PGP papildinājums. Atver iestatījumus.",
     "quick_reply_to": "Atbilde: {names}…",
-    "open_full_editor": "Atvērt pilnajā redaktorā"
+    "open_full_editor": "Atvērt pilnajā redaktorā",
+    "forward_to_label": "Kam",
+    "forward_cc_label": "Kopija"
   },
   "plugin_list": {
     "filters": "Filtri",

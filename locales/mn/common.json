@@ -6398,7 +6398,9 @@
     "encrypt": "Шифрлэх…",
     "encrypt_hint": "S/MIME эсвэл PGP нэмэлт хэрэгтэй. Тохиргоог нээнэ.",
     "quick_reply_to": "{names} руу хариу бичих…",
-    "open_full_editor": "Бүтэн засварлагчид нээх"
+    "open_full_editor": "Бүтэн засварлагчид нээх",
+    "forward_to_label": "Хэнд",
+    "forward_cc_label": "Хуулбар"
   },
   "plugin_list": {
     "filters": "Шүүлтүүр",

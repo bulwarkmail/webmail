@@ -6398,7 +6398,9 @@
     "encrypt": "تشفير…",
     "encrypt_hint": "يتطلب إضافة S/MIME أو PGP. يفتح الإعدادات.",
     "quick_reply_to": "الرد على {names}…",
-    "open_full_editor": "فتح المحرر الكامل"
+    "open_full_editor": "فتح المحرر الكامل",
+    "forward_to_label": "إلى",
+    "forward_cc_label": "نسخة"
   },
   "plugin_list": {
     "filters": "المرشحات",

@@ -6398,7 +6398,9 @@
     "encrypt": "Titkosítás…",
     "encrypt_hint": "S/MIME vagy PGP bővítmény kell hozzá. Megnyitja a Beállításokat.",
     "quick_reply_to": "Válasz neki: {names}…",
-    "open_full_editor": "Megnyitás a teljes szerkesztőben"
+    "open_full_editor": "Megnyitás a teljes szerkesztőben",
+    "forward_to_label": "Címzett",
+    "forward_cc_label": "Másolat"
   },
   "plugin_list": {
     "filters": "Szűrők",

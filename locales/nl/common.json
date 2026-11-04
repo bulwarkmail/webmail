@@ -6398,7 +6398,9 @@
     "encrypt": "Versleutelen…",
     "encrypt_hint": "Vereist een S/MIME- of PGP-add-on. Opent Instellingen.",
     "quick_reply_to": "Antwoord aan {names}…",
-    "open_full_editor": "Openen in volledige editor"
+    "open_full_editor": "Openen in volledige editor",
+    "forward_to_label": "Aan",
+    "forward_cc_label": "CC"
   },
   "plugin_list": {
     "filters": "Filters",

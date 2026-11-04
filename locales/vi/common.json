@@ -6410,7 +6410,9 @@
     "encrypt": "Mã hóa…",
     "encrypt_hint": "Cần tiện ích S/MIME hoặc PGP. Mở Cài đặt.",
     "quick_reply_to": "Trả lời {names}…",
-    "open_full_editor": "Mở trong trình soạn thảo đầy đủ"
+    "open_full_editor": "Mở trong trình soạn thảo đầy đủ",
+    "forward_to_label": "Đến",
+    "forward_cc_label": "CC"
   },
   "plugin_list": {
     "filters": "Bộ lọc",

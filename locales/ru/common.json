@@ -6398,7 +6398,9 @@
     "encrypt": "Зашифровать…",
     "encrypt_hint": "Нужно дополнение S/MIME или PGP. Открывает настройки.",
     "quick_reply_to": "Ответ для {names}…",
-    "open_full_editor": "Открыть в полном редакторе"
+    "open_full_editor": "Открыть в полном редакторе",
+    "forward_to_label": "Кому",
+    "forward_cc_label": "Копия"
   },
   "plugin_list": {
     "filters": "Фильтры",

@@ -6398,7 +6398,9 @@
     "encrypt": "رمزگذاری…",
     "encrypt_hint": "به افزونهٔ S/MIME یا PGP نیاز دارد. تنظیمات را باز می‌کند.",
     "quick_reply_to": "پاسخ به {names}…",
-    "open_full_editor": "باز کردن ویرایشگر کامل"
+    "open_full_editor": "باز کردن ویرایشگر کامل",
+    "forward_to_label": "به",
+    "forward_cc_label": "رونوشت"
   },
   "plugin_list": {
     "filters": "فیلترها",

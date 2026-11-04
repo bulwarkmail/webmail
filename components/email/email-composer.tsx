@@ -53,6 +53,7 @@ import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, re
 import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
+import { forwardRecipientLines } from "@/lib/quote-header";
 import { ScheduleSendDialog } from "./schedule-send-dialog";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -839,6 +840,7 @@ export function EmailComposer({
             ? `${from.name} <${from.email}>`
             : (from.email || from.name || tCommon('unknown')))
         : tCommon('unknown');
+      const forwardLines = forwardRecipientLines(replyTo, { toLabel: tWords('forward_to_label'), ccLabel: tWords('forward_cc_label') });
 
       const originalText = replyTo.body || (replyTo.htmlBody ? htmlToPlainText(replyTo.htmlBody) : '');
       const quotedText = originalText.split('\n').map(line => `> ${line}`).join('\n');
@@ -859,7 +861,7 @@ export function EmailComposer({
       }
 
       if (mode === 'forward') {
-        return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}\n\n${originalText}`;
+        return `${prefix}${signatureBlock}\n\n${tQuote('forwarded_separator')}\n${tQuote('from_label')}: ${fromStrFull}\n${tQuote('date_label')}: ${date}\n${tQuote('subject_label')}: ${replyTo.subject || ''}${forwardLines.map((line) => `\n${line.label}: ${line.value}`).join('')}\n\n${originalText}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
         return `${prefix}${signatureBlock}\n\n${tQuote('reply_line', { date, from: fromStrFull })}\n${quotedText}`;
       }
@@ -889,6 +891,8 @@ export function EmailComposer({
           ? `${from.name} <${from.email}>`
           : (from.email || from.name || tCommon('unknown')))
       : tCommon('unknown');
+    const forwardLinesHtml = forwardRecipientLines(replyTo, { toLabel: tWords('forward_to_label'), ccLabel: tWords('forward_cc_label') })
+      .map((line) => `${line.label}: ${escapeHtml(line.value)}<br>`).join('');
 
     // Like a new mail, an empty line above the signature gives the cursor a
     // place for the reply. Without it the reply started on the "-- " line (#1503).
@@ -937,7 +941,7 @@ export function EmailComposer({
       // HTML-escape user-controlled values: an unescaped sender "Name <email>"
       // has its "<email>" eaten as a bogus HTML tag by the rich-text editor (#482).
       const quoteHeader = mode === 'forward'
-        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>`
+        ? `${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}<br>`
         : `${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br>`;
       // Embed the original as a QuotedHtml island (verbatim, schema-free) so
       // its layout survives the editor round-trip. Sanitize first to strip
@@ -953,7 +957,7 @@ export function EmailComposer({
     if (replyTo.body) {
       const escapedOriginal = replyTo.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
       if (mode === 'forward') {
-        return `${head}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br><br>${escapedOriginal}`;
+        return `${head}<br><br>${tQuote('forwarded_separator')}<br>${tQuote('from_label')}: ${escapeHtml(fromStrFull)}<br>${tQuote('date_label')}: ${escapeHtml(date)}<br>${tQuote('subject_label')}: ${escapeHtml(replyTo.subject || '')}<br>${forwardLinesHtml}<br>${escapedOriginal}`;
       } else if (mode === 'reply' || mode === 'replyAll') {
         return `${head}<br><br>${replyHeader(`<p>${tQuote('reply_line', { date: escapeHtml(date), from: escapeHtml(fromStrFull) })}<br></p>`)}<blockquote style="margin:0 0 0 0.8ex;border-left:2px solid #ccc;padding-left:1ex">${escapedOriginal}</blockquote>`;
       }

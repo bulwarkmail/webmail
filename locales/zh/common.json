@@ -6398,7 +6398,9 @@
     "encrypt": "加密…",
     "encrypt_hint": "需要 S/MIME 或 PGP 附加组件。将打开设置。",
     "quick_reply_to": "回复 {names}…",
-    "open_full_editor": "在完整编辑器中打开"
+    "open_full_editor": "在完整编辑器中打开",
+    "forward_to_label": "收件人",
+    "forward_cc_label": "抄送"
   },
   "plugin_list": {
     "filters": "筛选",

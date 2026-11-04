@@ -6398,7 +6398,9 @@
     "encrypt": "Šifrovat…",
     "encrypt_hint": "Vyžaduje doplněk S/MIME nebo PGP. Otevře Nastavení.",
     "quick_reply_to": "Odpověď pro {names}…",
-    "open_full_editor": "Otevřít v plném editoru"
+    "open_full_editor": "Otevřít v plném editoru",
+    "forward_to_label": "Komu",
+    "forward_cc_label": "Kopie"
   },
   "plugin_list": {
     "filters": "Filtry",

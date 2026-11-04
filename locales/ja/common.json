@@ -6398,7 +6398,9 @@
     "encrypt": "暗号化…",
     "encrypt_hint": "S/MIME または PGP のアドオンが必要です。設定を開きます。",
     "quick_reply_to": "{names} に返信…",
-    "open_full_editor": "フルエディターで開く"
+    "open_full_editor": "フルエディターで開く",
+    "forward_to_label": "宛先",
+    "forward_cc_label": "CC"
   },
   "plugin_list": {
     "filters": "フィルター",

@@ -3319,7 +3319,9 @@
     "encrypt": "เข้ารหัส…",
     "encrypt_hint": "ต้องใช้ส่วนเสริม S/MIME หรือ PGP จะเปิดการตั้งค่า",
     "quick_reply_to": "ตอบกลับถึง {names}…",
-    "open_full_editor": "เปิดในตัวแก้ไขเต็มรูปแบบ"
+    "open_full_editor": "เปิดในตัวแก้ไขเต็มรูปแบบ",
+    "forward_to_label": "ถึง",
+    "forward_cc_label": "สำเนา"
   },
   "plugin_list": {
     "filters": "ตัวกรอง",

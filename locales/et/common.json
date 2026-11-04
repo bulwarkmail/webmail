@@ -6398,7 +6398,9 @@
     "encrypt": "Krüpteeri…",
     "encrypt_hint": "Vajab S/MIME või PGP lisa. Avab seaded.",
     "quick_reply_to": "Vastus saajale {names}…",
-    "open_full_editor": "Ava täielik redaktor"
+    "open_full_editor": "Ava täielik redaktor",
+    "forward_to_label": "Saajale",
+    "forward_cc_label": "Koopia"
   },
   "plugin_list": {
     "filters": "Filtrid",

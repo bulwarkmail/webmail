@@ -6398,7 +6398,9 @@
     "encrypt": "Şifrele…",
     "encrypt_hint": "S/MIME veya PGP eklentisi gerekir. Ayarlar'ı açar.",
     "quick_reply_to": "Yanıtla: {names}…",
-    "open_full_editor": "Tam düzenleyicide aç"
+    "open_full_editor": "Tam düzenleyicide aç",
+    "forward_to_label": "Kime",
+    "forward_cc_label": "Cc"
   },
   "plugin_list": {
     "filters": "Filtreler",

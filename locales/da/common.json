@@ -6398,7 +6398,9 @@
     "encrypt": "Krypter…",
     "encrypt_hint": "Kræver en S/MIME- eller PGP-tilføjelse. Åbner Indstillinger.",
     "quick_reply_to": "Svar til {names}…",
-    "open_full_editor": "Åbn fuld editor"
+    "open_full_editor": "Åbn fuld editor",
+    "forward_to_label": "Til",
+    "forward_cc_label": "Cc"
   },
   "plugin_list": {
     "filters": "Filtre",

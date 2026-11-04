@@ -6399,7 +6399,9 @@
     "encrypt": "הצפנה…",
     "encrypt_hint": "דורש תוסף S/MIME או PGP. פותח את ההגדרות.",
     "quick_reply_to": "תשובה אל {names}…",
-    "open_full_editor": "פתיחה בעורך המלא"
+    "open_full_editor": "פתיחה בעורך המלא",
+    "forward_to_label": "אל",
+    "forward_cc_label": "עותק"
   },
   "plugin_list": {
     "filters": "מסננים",
