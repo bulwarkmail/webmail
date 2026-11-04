@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Kohatäitetekst, mida saajad näevad:",
     "warning_proofreading": "Lahendamata õigekirja- või grammatikavead: {count}",
     "empty_text_title": "Kas saata ilma tekstita?",
-    "empty_text_message": "Selles kirjas pole teksti ega manust. Kas saata see ikkagi?"
+    "empty_text_message": "Selles kirjas pole teksti ega manust. Kas saata see ikkagi?",
+    "scheduled_for": "Ajastatud: {when}"
   },
   "org_templates": {
     "section_personal": "Minu mallid",

@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Texto de espaço reservado que os destinatários verão:",
     "warning_proofreading": "Erros de ortografia ou gramática em aberto: {count}",
     "empty_text_title": "Enviar sem texto?",
-    "empty_text_message": "Esta mensagem não tem texto nem anexo. Enviar mesmo assim?"
+    "empty_text_message": "Esta mensagem não tem texto nem anexo. Enviar mesmo assim?",
+    "scheduled_for": "Agendado para {when}"
   },
   "org_templates": {
     "section_personal": "Meus modelos",

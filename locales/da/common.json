@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Pladsholdertekst, som modtagerne vil se:",
     "warning_proofreading": "Åbne stave- eller grammatikfejl: {count}",
     "empty_text_title": "Send uden tekst?",
-    "empty_text_message": "Denne besked har ingen tekst og ingen vedhæftet fil. Send den alligevel?"
+    "empty_text_message": "Denne besked har ingen tekst og ingen vedhæftet fil. Send den alligevel?",
+    "scheduled_for": "Planlagt til {when}"
   },
   "org_templates": {
     "section_personal": "Mine skabeloner",

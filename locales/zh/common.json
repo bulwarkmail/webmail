@@ -3906,7 +3906,8 @@
     "warning_placeholders": "收件人会看到的占位文本：",
     "warning_proofreading": "未处理的拼写或语法问题：{count}",
     "empty_text_title": "不写正文就发送？",
-    "empty_text_message": "这封邮件没有正文，也没有附件。仍然发送？"
+    "empty_text_message": "这封邮件没有正文，也没有附件。仍然发送？",
+    "scheduled_for": "已安排在 {when} 发送"
   },
   "org_templates": {
     "section_personal": "我的模板",

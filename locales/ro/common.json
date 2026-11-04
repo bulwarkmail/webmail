@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Text substituent pe care îl vor vedea destinatarii:",
     "warning_proofreading": "Greșeli de ortografie sau gramatică nerezolvate: {count}",
     "empty_text_title": "Trimiteți fără text?",
-    "empty_text_message": "Acest mesaj nu are text și nici atașament. Îl trimiteți totuși?"
+    "empty_text_message": "Acest mesaj nu are text și nici atașament. Îl trimiteți totuși?",
+    "scheduled_for": "Programat pentru {when}"
   },
   "org_templates": {
     "section_personal": "Șabloanele mele",

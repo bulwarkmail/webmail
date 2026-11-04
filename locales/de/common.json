@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Platzhaltertext, den die Empfänger sehen:",
     "warning_proofreading": "Offene Rechtschreib- oder Grammatikfehler: {count}",
     "empty_text_title": "Ohne Text senden?",
-    "empty_text_message": "Diese Nachricht hat keinen Text und keinen Anhang. Trotzdem senden?"
+    "empty_text_message": "Diese Nachricht hat keinen Text und keinen Anhang. Trotzdem senden?",
+    "scheduled_for": "Geplant für {when}"
   },
   "org_templates": {
     "section_personal": "Meine Vorlagen",

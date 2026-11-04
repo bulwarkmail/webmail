@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Tekst zastępczy, który zobaczą odbiorcy:",
     "warning_proofreading": "Nierozwiązane błędy pisowni lub gramatyki: {count}",
     "empty_text_title": "Wysłać bez treści?",
-    "empty_text_message": "Ta wiadomość nie ma treści ani załącznika. Wysłać ją mimo to?"
+    "empty_text_message": "Ta wiadomość nie ma treści ani załącznika. Wysłać ją mimo to?",
+    "scheduled_for": "Zaplanowano na {when}"
   },
   "org_templates": {
     "section_personal": "Moje szablony",

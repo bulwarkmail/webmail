@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Text de mostra que veuran els destinataris:",
     "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
     "empty_text_title": "Vols enviar-lo sense text?",
-    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?"
+    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?",
+    "scheduled_for": "Programat per a {when}"
   },
   "org_templates": {
     "section_personal": "Les meves plantilles",

@@ -2941,9 +2941,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       ? Math.max(remainingMs - 1000, 1000)
       : Math.max(sendDelaySeconds, 8) * 1000;
 
+    // A message scheduled for later says when it goes, and offers Cancel
+    // where a send-delay window offers Undo send.
     toast.success(isUndoWindow
       ? t('email_viewer.sending_in', { seconds: Math.round(remainingMs / 1000) })
-      : t('email_viewer.scheduled_send_created'), {
+      : t('compose_send.scheduled_for', { when: formatScheduledSendAt(pending.sendAt, useSettingsStore.getState().timeFormat) }), {
       duration: undoDurationMs,
       pauseOnHover: false,
       secondaryAction: (pending.emailId && pending.identityId)
@@ -2985,7 +2987,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
         : undefined,
       action: {
-        label: t('email_viewer.undo_send'),
+        label: isUndoWindow ? t('email_viewer.undo_send') : tCommon('cancel'),
         onClick: () => {
           if (!undoClient) return refuseSignedOut();
           void (async () => {

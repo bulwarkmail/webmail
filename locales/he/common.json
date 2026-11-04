@@ -3803,7 +3803,8 @@
     "warning_placeholders": "טקסט ממלא מקום שהנמענים יראו:",
     "warning_proofreading": "שגיאות כתיב או דקדוק פתוחות: {count}",
     "empty_text_title": "לשלוח ללא טקסט?",
-    "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?"
+    "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?",
+    "scheduled_for": "מתוזמן ל-{when}"
   },
   "org_templates": {
     "section_personal": "התבניות שלי",

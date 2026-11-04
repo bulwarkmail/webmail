@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Texto de marcador que verán los destinatarios:",
     "warning_proofreading": "Errores de ortografía o gramática pendientes: {count}",
     "empty_text_title": "¿Enviar sin texto?",
-    "empty_text_message": "Este mensaje no tiene texto ni archivos adjuntos. ¿Enviarlo de todos modos?"
+    "empty_text_message": "Este mensaje no tiene texto ni archivos adjuntos. ¿Enviarlo de todos modos?",
+    "scheduled_for": "Programado para {when}"
   },
   "org_templates": {
     "section_personal": "Mis plantillas",

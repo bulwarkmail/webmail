@@ -3906,7 +3906,8 @@
     "warning_placeholders": "نص مؤقت سيراه المستلمون:",
     "warning_proofreading": "مشكلات إملائية أو نحوية مفتوحة: {count}",
     "empty_text_title": "هل تريد الإرسال بدون نص؟",
-    "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟"
+    "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟",
+    "scheduled_for": "مجدولة في {when}"
   },
   "org_templates": {
     "section_personal": "قوالبي",

@@ -119,6 +119,18 @@ describe('undo send toast', () => {
     expect(toast.pauseOnHover).toBe(false);
   });
 
+  // compose-23: "Email scheduled for sending" with "Undo send" said neither
+  // when it goes nor that the button cancels it.
+  it('says when a scheduled message goes, with Cancel and Send now', async () => {
+    render(<MailApp />);
+    sendDelayedBy(3 * 86_400_000);
+
+    await waitFor(() => expect(useToastStore.getState().toasts.some((t) => t.title === 'compose_send.scheduled_for')).toBe(true));
+    const toast = useToastStore.getState().toasts.find((t) => t.title === 'compose_send.scheduled_for')!;
+    expect(toast.action?.label).toBe('cancel');
+    expect(toast.secondaryAction?.label).toBe('email_viewer.send_now');
+  });
+
   it('says so when the undo comes too late', async () => {
     cancelUndoSend.mockRejectedValue(new Error('The requested message is no longer in the queue.'));
     vi.spyOn(console, 'error').mockImplementation(() => {});

@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Zástupný text, který příjemci uvidí:",
     "warning_proofreading": "Nevyřešené pravopisné či gramatické chyby: {count}",
     "empty_text_title": "Odeslat bez textu?",
-    "empty_text_message": "Tato zpráva nemá text ani přílohu. Přesto ji odeslat?"
+    "empty_text_message": "Tato zpráva nemá text ani přílohu. Přesto ji odeslat?",
+    "scheduled_for": "Naplánováno na {when}"
   },
   "org_templates": {
     "section_personal": "Moje šablony",

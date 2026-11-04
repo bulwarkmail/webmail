@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Хүлээн авагчид харах орлуулах текст:",
     "warning_proofreading": "Засаагүй зөв бичгийн болон дүрмийн алдаа: {count}",
     "empty_text_title": "Текстгүй илгээх үү?",
-    "empty_text_message": "Энэ захиад текст ч, хавсралт ч алга. Ямар ч байсан илгээх үү?"
+    "empty_text_message": "Энэ захиад текст ч, хавсралт ч алга. Ямар ч байсан илгээх үү?",
+    "scheduled_for": "{when}-д илгээхээр товлосон"
   },
   "org_templates": {
     "section_personal": "Миний загварууд",

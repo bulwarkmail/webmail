@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Texte de remplacement que les destinataires verront :",
     "warning_proofreading": "Fautes d'orthographe ou de grammaire restantes : {count}",
     "empty_text_title": "Envoyer sans texte ?",
-    "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?"
+    "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?",
+    "scheduled_for": "Programmé pour {when}"
   },
   "org_templates": {
     "section_personal": "Mes modèles",

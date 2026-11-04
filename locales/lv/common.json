@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Vietturu teksts, ko redzēs saņēmēji:",
     "warning_proofreading": "Neatrisinātas pareizrakstības vai gramatikas kļūdas: {count}",
     "empty_text_title": "Sūtīt bez teksta?",
-    "empty_text_message": "Šai vēstulei nav ne teksta, ne pielikuma. Vai tomēr to sūtīt?"
+    "empty_text_message": "Šai vēstulei nav ne teksta, ne pielikuma. Vai tomēr to sūtīt?",
+    "scheduled_for": "Ieplānots: {when}"
   },
   "org_templates": {
     "section_personal": "Manas veidnes",

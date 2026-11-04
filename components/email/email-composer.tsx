@@ -2793,6 +2793,13 @@ export function EmailComposer({
   // Plugin entries make the Send and Attach buttons menus even where the app
   // itself has nothing else to put there.
   const hasSendMenuActions = usePluginActions('composer-send-menu').length > 0;
+  // With nothing but "Schedule send" in Send's menu, the arrow opens the
+  // schedule dialog itself: a menu with one item was one click too many.
+  const sendArrowSchedules = !hasSendMenuActions && !!composerClient?.hasDelayedSend();
+  const handleSendArrow = (e: React.MouseEvent<HTMLElement>) => {
+    if (sendArrowSchedules) openScheduleDialog();
+    else toggleSendMenu(e);
+  };
   const hasAttachMenuActions = usePluginActions('composer-attach-menu').length > 0;
   // Ticked plugin options count in the Options button's badge like the app's own.
   const pluginOptionsOn = usePluginActions('composer-options-menu').filter((a) => a.checked).length;
@@ -4850,14 +4857,14 @@ export function EmailComposer({
             <Button
               type="button"
               onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
-              onClick={toggleSendMenu}
+              onClick={handleSendArrow}
               disabled={!canSend || isSending || isSavingAndClosing}
               title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
               aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
               size="sm"
               className="h-11 min-w-11 rounded-s-none px-2"
-              aria-haspopup="menu"
-              aria-expanded={showSendMenu}
+              aria-haspopup={sendArrowSchedules ? 'dialog' : 'menu'}
+              aria-expanded={sendArrowSchedules ? undefined : showSendMenu}
             >
               <ChevronDown className="w-4 h-4" />
             </Button>
@@ -5717,13 +5724,13 @@ export function EmailComposer({
                 <Button
                   type="button"
                   onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
-                  onClick={toggleSendMenu}
+                  onClick={handleSendArrow}
                   disabled={!canSend || isSending || isSavingAndClosing}
                   title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   className="rounded-s-none px-2"
-                  aria-haspopup="menu"
-                  aria-expanded={showSendMenu}
+                  aria-haspopup={sendArrowSchedules ? 'dialog' : 'menu'}
+                  aria-expanded={sendArrowSchedules ? undefined : showSendMenu}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </Button>

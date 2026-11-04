@@ -3906,7 +3906,8 @@
     "warning_placeholders": "受信者に表示されるプレースホルダー:",
     "warning_proofreading": "未解決のスペル・文法の問題: {count}",
     "empty_text_title": "本文なしで送信しますか？",
-    "empty_text_message": "このメッセージには本文も添付ファイルもありません。そのまま送信しますか？"
+    "empty_text_message": "このメッセージには本文も添付ファイルもありません。そのまま送信しますか？",
+    "scheduled_for": "{when} に送信予定"
   },
   "org_templates": {
     "section_personal": "マイテンプレート",

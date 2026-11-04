@@ -3906,7 +3906,8 @@
     "warning_placeholders": "Placeholder text that recipients will see:",
     "warning_proofreading": "Open spelling or grammar issues: {count}",
     "empty_text_title": "Send without text?",
-    "empty_text_message": "This message has no text and no attachment. Send it anyway?"
+    "empty_text_message": "This message has no text and no attachment. Send it anyway?",
+    "scheduled_for": "Scheduled for {when}"
   },
   "org_templates": {
     "section_personal": "My templates",
