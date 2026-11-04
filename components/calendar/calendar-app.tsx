@@ -2362,9 +2362,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             {renderView()}
           </div>
 
-          {/* Desktop event panel */}
+          {/* Desktop event panel: a sheet over the grid from the right, as
+              on small screens, so the week keeps its width (pim-25). Above
+              the views' sticky headers (z-50) inside this isolated row. */}
           {!isMobile && showEventModal && (
-            <div className="w-[400px] border-s border-border flex-shrink-0 overflow-hidden">
+            <div data-testid="event-panel" className="absolute inset-y-0 end-0 z-[55] w-[400px] max-w-full border-s border-border bg-background shadow-xl overflow-hidden">
               <EventModal
                 key={`${editEvent?.id ?? 'new'}${modalStartsInEdit ? ':edit' : ''}`}
                 event={editEvent}
