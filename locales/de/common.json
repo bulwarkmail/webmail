@@ -123,7 +123,7 @@
     "sign_out_of": "Von {account} abmelden",
     "sign_out_all": "Von allen Konten abmelden",
     "add_account": "Konto hinzufügen",
-    "set_as_default": "Als Standard festlegen",
+    "set_as_default": "Dieses Konto beim Start öffnen",
     "switch_account": "Konto wechseln",
     "contacts": "Kontakte",
     "calendar": "Kalender",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "E-Mail-Labels",
-      "description": "Labels definieren, um Ihre E-Mails mit Farben zu organisieren. Diese werden als JMAP-Keywords auf dem Server gespeichert.",
+      "description": "Erstellen Sie Labels, um Ihre E-Mails zu ordnen. Die Labels werden mit Ihren E-Mails auf dem Server gespeichert.",
       "add_keyword": "Label hinzufügen",
       "label_field": "Anzeigename",
       "label_placeholder": "z.B. Arbeit, Privat, Dringend",
@@ -1726,8 +1726,8 @@
         "hide": "Ausblenden"
       },
       "unrecognized": {
-        "title": "Labels vom Server wiederherstellen",
-        "description": "Labelnamen und -farben werden in diesem Browser gespeichert, die Labels selbst liegen jedoch als JMAP-Keywords auf Ihren E-Mails. Durchsuchen Sie Ihre E-Mails nach Keywords, zu denen es hier kein Label gibt, und fügen Sie diese wieder hinzu.",
+        "title": "Labels an Ihren E-Mails finden, die hier fehlen",
+        "description": "Dieser Browser speichert die Namen und Farben Ihrer Labels. Die Labels selbst sind an Ihren E-Mails gespeichert. Suchen Sie in Ihren E-Mails nach Labels, die hier fehlen, und fügen Sie sie wieder hinzu.",
         "scan": "Nach Labels suchen",
         "rescan": "Erneut suchen",
         "scanning": "Suche läuft… {scanned} von {total} E-Mails",
@@ -2209,8 +2209,8 @@
         "title": "Angemeldete Konten",
         "description": "Ziehen Sie zum Sortieren, wie Konten im Kontomenü erscheinen",
         "active": "Aktuell aktives Konto",
-        "default_badge": "Standardkonto",
-        "set_default": "Als Standard festlegen",
+        "default_badge": "Wird beim Start geöffnet",
+        "set_default": "Dieses Konto beim Start öffnen",
         "switch_to": "Zu diesem Konto wechseln",
         "move_up": "Nach oben",
         "move_down": "Nach unten",
@@ -2794,15 +2794,15 @@
       "not_supported": "Ihr Mailserver unterstützt keine E-Mail-Filter.",
       "rule_name": "Regelname",
       "rule_name_placeholder": "z.B. Newsletter sortieren",
-      "match_all": "ALLE Bedingungen erfüllen",
-      "match_any": "EINE beliebige Bedingung erfüllen",
+      "match_all": "Alle Bedingungen müssen zutreffen",
+      "match_any": "Eine Bedingung genügt",
       "conditions": "Bedingungen",
       "add_condition": "Bedingung hinzufügen",
       "actions": "Aktionen",
       "add_action": "Aktion hinzufügen",
       "remove_condition": "Bedingung entfernen",
       "remove_action": "Aktion entfernen",
-      "stop_processing": "Verarbeitung nachfolgender Regeln stoppen",
+      "stop_processing": "Spätere Regeln nicht anwenden",
       "include_spam": "Auch als Spam markierte Nachrichten verschieben",
       "attachment_type_placeholder": "z.B. pdf, doc, jpg",
       "value_placeholder_multi": "Wert (mehrere mit Komma trennen)",
@@ -2844,7 +2844,7 @@
         "discard": "Lautlos löschen",
         "reject": "Mit Nachricht ablehnen",
         "keep": "Im Posteingang behalten",
-        "stop": "Verarbeitung stoppen"
+        "stop": "Spätere Regeln nicht anwenden"
       },
       "move_to_folder": "Ordner auswählen",
       "copy_to_folder": "Ordner auswählen",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "Ordner ist nicht leer",
     "delete_with_contents_message": "Der Ordner „{name}“ enthält noch {count, plural, one {1 Nachricht} other {# Nachrichten}}. Ordner samt allen Nachrichten löschen? Das kann nicht rückgängig gemacht werden.",
     "delete_with_contents_confirm": "Ordner und Nachrichten löschen"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Konten verwalten…",
+    "apply_to_existing": "{count, plural, one {Auf # vorhandene Nachricht in {folder} anwenden} other {Auf # vorhandene Nachrichten in {folder} anwenden}}"
   },
   "shortcuts": {
     "title": "Tastaturkürzel",

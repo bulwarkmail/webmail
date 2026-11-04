@@ -123,7 +123,7 @@
     "sign_out_of": "{account} hesabından çıkış yap",
     "sign_out_all": "Tüm hesaplardan çıkış yap",
     "add_account": "Hesap ekle",
-    "set_as_default": "Varsayılan olarak ayarla",
+    "set_as_default": "Bu hesabı başlangıçta aç",
     "switch_account": "Hesap değiştir",
     "contacts": "Kişiler",
     "calendar": "Takvim",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "E-posta Etiketleri",
-      "description": "E-postalarınızı renklerle düzenlemek için etiketler tanımlayın. Bunlar sunucuda JMAP anahtar sözcükleri olarak saklanır.",
+      "description": "İletilerinizi düzenlemek için etiketler oluşturun. Etiketler iletilerinizle birlikte sunucuda saklanır.",
       "add_keyword": "Etiket Ekle",
       "label_field": "Görünen Ad",
       "label_placeholder": "ör. İş, Kişisel, Acil",
@@ -1726,8 +1726,8 @@
         "hide": "Gizle"
       },
       "unrecognized": {
-        "title": "Etiketleri sunucudan kurtar",
-        "description": "Etiket adları ve renkleri bu tarayıcıda saklanır, ancak etiketlerin kendisi JMAP anahtar sözcükleri olarak e-postalarınızda bulunur. Burada karşılığı olmayan anahtar sözcükler için postanızı tarayın ve bunları geri ekleyin.",
+        "title": "İletilerinizde olup burada eksik olan etiketleri bul",
+        "description": "Bu tarayıcı etiketlerinizin adlarını ve renklerini saklar. Etiketlerin kendisi iletilerinizde saklanır. Postanızda burada eksik olan etiketleri arayın ve yeniden ekleyin.",
         "scan": "Etiketleri tara",
         "rescan": "Yeniden tara",
         "scanning": "Taranıyor… {total} e-postadan {scanned} tanesi",
@@ -2209,8 +2209,8 @@
         "title": "Oturum açılmış hesaplar",
         "description": "Hesapların hesap menüsünde görüntülenme sırasını değiştirmek için sürükleyin",
         "active": "Şu anda etkin hesap",
-        "default_badge": "Varsayılan hesap",
-        "set_default": "Varsayılan olarak ayarla",
+        "default_badge": "Başlangıçta açılır",
+        "set_default": "Bu hesabı başlangıçta aç",
         "switch_to": "Bu hesaba geç",
         "move_up": "Yukarı taşı",
         "move_down": "Aşağı taşı",
@@ -2794,15 +2794,15 @@
       "not_supported": "Posta sunucunuz e-posta filtrelerini desteklemiyor.",
       "rule_name": "Kural Adı",
       "rule_name_placeholder": "ör. Bültenleri sırala",
-      "match_all": "TÜM koşullarla eşleş",
-      "match_any": "HERHANGİ bir koşulla eşleş",
+      "match_all": "Tüm koşullarla eşleş",
+      "match_any": "Herhangi bir koşulla eşleş",
       "conditions": "Koşullar",
       "add_condition": "Koşul Ekle",
       "actions": "İşlemler",
       "add_action": "İşlem Ekle",
       "remove_condition": "Koşulu kaldır",
       "remove_action": "Eylemi kaldır",
-      "stop_processing": "Sonraki kuralları işlemeyi durdur",
+      "stop_processing": "Sonraki kuralları uygulama",
       "include_spam": "İstenmeyen olarak işaretlenen iletileri de taşı",
       "attachment_type_placeholder": "örn. pdf, doc, jpg",
       "value_placeholder_multi": "Değer (birden fazla virgülle ayrılır)",
@@ -2844,7 +2844,7 @@
         "discard": "At (sessizce sil)",
         "reject": "İletiyle reddet",
         "keep": "Gelen kutusunda tut",
-        "stop": "İşlemeyi durdur"
+        "stop": "Sonraki kuralları uygulama"
       },
       "move_to_folder": "Klasör seçin",
       "copy_to_folder": "Klasör seçin",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "Klasör boş değil",
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
     "delete_with_contents_confirm": "Klasörü ve iletileri sil"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Hesapları yönet…",
+    "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"
   },
   "shortcuts": {
     "title": "Klavye kısayolları",

@@ -59,8 +59,9 @@ describe('AccountSwitcher under Mountain View', () => {
 
     const row = screen.getByTestId('account-option');
     expect(row.getAttribute('style') ?? '').not.toMatch(/border/);
-    // Tailwind's `hidden`: jsdom has no style sheet to compute visibility from.
-    expect(within(row).getByText('mail.example.com').closest('.hidden')).not.toBeNull();
+    // Not drawn at all now (settings-14): the server line is only for an
+    // account in trouble or for two accounts with one address.
+    expect(within(row).queryByText('mail.example.com')).toBeNull();
   });
 
   it('keeps the server line for an account in trouble', () => {
@@ -119,13 +120,14 @@ describe('AccountSwitcher under Mountain View', () => {
     expect(screen.queryByTestId('all-inboxes')).toBeNull();
   });
 
-  it('leaves the default layout listing every account, unread-free', () => {
+  it('leaves the default layout listing every account, each with its unread', () => {
     useSettingsStore.setState({ interfaceLayout: 'default' } as never);
     render(<AccountSwitcher variant="header" onSelectAllInboxes={vi.fn()} />);
     openPopover();
 
     expect(screen.getAllByTestId('account-option')).toHaveLength(2);
     expect(screen.queryByTestId('all-inboxes')).toBeNull();
-    expect(screen.queryByText('5')).toBeNull();
+    // settings-14: the default layout shows the unread counts too.
+    expect(screen.getByText('5')).toBeInTheDocument();
   });
 });

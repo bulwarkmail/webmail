@@ -123,7 +123,7 @@
     "sign_out_of": "Disconnetti da {account}",
     "sign_out_all": "Disconnetti da tutti gli account",
     "add_account": "Aggiungi account",
-    "set_as_default": "Imposta come predefinito",
+    "set_as_default": "Apri questo account all'avvio",
     "switch_account": "Cambia account",
     "contacts": "Contatti",
     "calendar": "Calendario",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "Etichette e-mail",
-      "description": "Definisci etichette per organizzare le tue e-mail con i colori. Vengono archiviate come parole chiave JMAP sul server.",
+      "description": "Crea etichette per ordinare i messaggi. Le etichette vengono salvate con i messaggi sul server.",
       "add_keyword": "Aggiungi etichetta",
       "label_field": "Nome visualizzato",
       "label_placeholder": "es. Lavoro, Personale, Urgente",
@@ -1726,8 +1726,8 @@
         "hide": "Nascondi"
       },
       "unrecognized": {
-        "title": "Recupera le etichette dal server",
-        "description": "I nomi e i colori delle etichette sono salvati in questo browser, ma le etichette vere e proprie si trovano sulle tue e-mail come parole chiave JMAP. Analizza la posta alla ricerca di parole chiave che nessuna etichetta qui spiega, poi aggiungile di nuovo.",
+        "title": "Trova le etichette dei messaggi che mancano qui",
+        "description": "Questo browser conserva i nomi e i colori delle etichette. Le etichette vere e proprie sono salvate sui messaggi. Cerca nella posta le etichette che mancano qui e aggiungile di nuovo.",
         "scan": "Cerca etichette",
         "rescan": "Analizza di nuovo",
         "scanning": "Analisi in corso… {scanned} di {total} e-mail",
@@ -2209,8 +2209,8 @@
         "title": "Account connessi",
         "description": "Trascina per riordinare la visualizzazione degli account nel menu a discesa",
         "active": "Account attualmente attivo",
-        "default_badge": "Account predefinito",
-        "set_default": "Imposta come predefinito",
+        "default_badge": "Si apre all'avvio",
+        "set_default": "Apri questo account all'avvio",
         "switch_to": "Passa a questo account",
         "move_up": "Sposta su",
         "move_down": "Sposta giù",
@@ -2794,15 +2794,15 @@
       "not_supported": "Il tuo server di posta non supporta i filtri email.",
       "rule_name": "Nome della regola",
       "rule_name_placeholder": "es. Ordina newsletter",
-      "match_all": "Corrispondere a TUTTE le condizioni",
-      "match_any": "Corrispondere a QUALSIASI condizione",
+      "match_all": "Corrisponde a tutte le condizioni",
+      "match_any": "Corrisponde a una qualsiasi condizione",
       "conditions": "Condizioni",
       "add_condition": "Aggiungi condizione",
       "actions": "Azioni",
       "add_action": "Aggiungi azione",
       "remove_condition": "Rimuovi condizione",
       "remove_action": "Rimuovi azione",
-      "stop_processing": "Interrompere l'elaborazione delle regole successive",
+      "stop_processing": "Non applicare le regole successive",
       "include_spam": "Sposta anche i messaggi contrassegnati come spam",
       "attachment_type_placeholder": "es. pdf, doc, jpg",
       "value_placeholder_multi": "Valore (più valori separati da virgole)",
@@ -2844,7 +2844,7 @@
         "discard": "Elimina silenziosamente",
         "reject": "Rifiuta con messaggio",
         "keep": "Mantieni nella posta in arrivo",
-        "stop": "Interrompi elaborazione"
+        "stop": "Non applicare le regole successive"
       },
       "move_to_folder": "Seleziona cartella",
       "copy_to_folder": "Seleziona cartella",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "Nome cartella",
     "create": "Crea",
     "rename_confirm": "Rinomina"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestisci account…",
+    "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"
   },
   "shortcuts": {
     "title": "Scorciatoie da tastiera",

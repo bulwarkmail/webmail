@@ -123,7 +123,7 @@
     "sign_out_of": "Tanca la sessió de {account}",
     "sign_out_all": "Tanca la sessió de tots els comptes",
     "add_account": "Afegeix un compte",
-    "set_as_default": "Estableix com a predeterminat",
+    "set_as_default": "Obre aquest compte en iniciar",
     "switch_account": "Canvia de compte",
     "contacts": "Contactes",
     "calendar": "Calendari",
@@ -1694,7 +1694,7 @@
     },
     "keywords": {
       "title": "Etiquetes de correu",
-      "description": "Definiu etiquetes per organitzar els correus amb colors. Es desen com a paraules clau JMAP al servidor.",
+      "description": "Creeu etiquetes per ordenar els missatges. Les etiquetes es desen amb els missatges al servidor.",
       "add_keyword": "Afegeix una etiqueta",
       "label_field": "Nom mostrat",
       "label_placeholder": "p. ex. Feina, Personal, Urgent",
@@ -1729,8 +1729,8 @@
         "hide": "Amaga"
       },
       "unrecognized": {
-        "title": "Recupera etiquetes del servidor",
-        "description": "Els noms i els colors de les etiquetes es desen en aquest navegador, però les etiquetes viuen als vostres correus com a paraules clau JMAP. Analitzeu el correu per trobar paraules clau que cap etiqueta d'aquí no expliqui i torneu-les a afegir.",
+        "title": "Cerca etiquetes dels missatges que falten aquí",
+        "description": "Aquest navegador desa els noms i els colors de les etiquetes. Les etiquetes es desen als missatges. Cerqueu al correu les etiquetes que falten aquí i torneu-les a afegir.",
         "scan": "Cerca etiquetes",
         "rescan": "Torna a cercar",
         "scanning": "S'està analitzant… {scanned} de {total} correus",
@@ -2212,8 +2212,8 @@
         "title": "Comptes amb la sessió iniciada",
         "description": "Arrossegueu per reordenar com apareixen els comptes al menú desplegable",
         "active": "Compte actiu actualment",
-        "default_badge": "Compte predeterminat",
-        "set_default": "Estableix com a predeterminat",
+        "default_badge": "S'obre en iniciar",
+        "set_default": "Obre aquest compte en iniciar",
         "switch_to": "Canvia a aquest compte",
         "move_up": "Mou amunt",
         "move_down": "Mou avall",
@@ -2801,15 +2801,15 @@
       "not_supported": "El servidor de correu no admet filtres de correu.",
       "rule_name": "Nom de la regla",
       "rule_name_placeholder": "p. ex., Ordena els butlletins",
-      "match_all": "Coincideix amb TOTES les condicions",
-      "match_any": "Coincideix amb QUALSEVOL condició",
+      "match_all": "Coincideix amb totes les condicions",
+      "match_any": "Coincideix amb qualsevol condició",
       "conditions": "Condicions",
       "add_condition": "Afegeix una condició",
       "actions": "Accions",
       "add_action": "Afegeix una acció",
       "remove_condition": "Treu la condició",
       "remove_action": "Treu l'acció",
-      "stop_processing": "Atura el processament de les regles següents",
+      "stop_processing": "No apliquis les regles següents",
       "include_spam": "Mou també els missatges marcats com a correu brossa",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (múltiples separats per comes)",
@@ -2851,7 +2851,7 @@
         "discard": "Descarta (suprimeix silenciosament)",
         "reject": "Rebutja amb un missatge",
         "keep": "Mantén a la safata d'entrada",
-        "stop": "Atura el processament"
+        "stop": "No apliquis les regles següents"
       },
       "move_to_folder": "Selecciona una carpeta",
       "copy_to_folder": "Selecciona una carpeta",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "La carpeta no està buida",
     "delete_with_contents_message": "La carpeta \"{name}\" encara conté {count, plural, one {1 missatge} other {# missatges}}. Vols suprimir la carpeta i tots els seus missatges? No es pot desfer.",
     "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestiona els comptes…",
+    "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"
   },
   "shortcuts": {
     "title": "Dreceres de teclat",

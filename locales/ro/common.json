@@ -123,7 +123,7 @@
     "sign_out_of": "Deconectați-vă de pe {account}",
     "sign_out_all": "Deconectați-vă de la toate conturile",
     "add_account": "Adăugare cont",
-    "set_as_default": "Setați ca implicită",
+    "set_as_default": "Deschideți acest cont la pornire",
     "switch_account": "Schimbă contul",
     "contacts": "Contacte",
     "calendar": "Calendar",
@@ -1694,7 +1694,7 @@
     },
     "keywords": {
       "title": "Etichete de e-mail",
-      "description": "Definiți etichete pentru a vă organiza e-mailurile pe culori. Acestea sunt stocate pe server sub formă de cuvinte-cheie dJMAP.",
+      "description": "Creați etichete pentru a vă sorta mesajele. Etichetele sunt salvate împreună cu mesajele pe server.",
       "add_keyword": "Adăugați etichetă",
       "label_field": "Nume afișat",
       "label_placeholder": "de ex. Serviciu, Personal, Urgent",
@@ -1729,8 +1729,8 @@
         "hide": "Ascunde"
       },
       "unrecognized": {
-        "title": "Recuperați etichetele de pe server",
-        "description": "Numele și culorile etichetelor sunt stocate în acest browser, dar etichetele în sine se află pe e-mailurile dvs. sub formă de cuvinte-cheie JMAP. Scanați corespondența pentru cuvinte-cheie care nu au o etichetă aici și adăugați-le înapoi.",
+        "title": "Găsiți etichetele de pe mesaje care lipsesc aici",
+        "description": "Acest browser păstrează numele și culorile etichetelor. Etichetele în sine sunt salvate pe mesaje. Căutați în e-mailuri etichetele care lipsesc aici și adăugați-le din nou.",
         "scan": "Căutați etichete",
         "rescan": "Scanați din nou",
         "scanning": "Se scanează… {scanned} din {total} e-mailuri",
@@ -2212,8 +2212,8 @@
         "title": "Conturi conectate",
         "description": "Trageți pentru a reordona modul în care apar conturile în meniul derulant al conturilor",
         "active": "Cont activ în prezent",
-        "default_badge": "Cont implicit",
-        "set_default": "Setați ca implicită",
+        "default_badge": "Se deschide la pornire",
+        "set_default": "Deschideți acest cont la pornire",
         "switch_to": "Treceți la acest cont",
         "move_up": "Sus",
         "move_down": "Derulați în jos",
@@ -2801,15 +2801,15 @@
       "not_supported": "Serverul dvs. de e-mail nu acceptă filtre de e-mail.",
       "rule_name": "Numele regulii",
       "rule_name_placeholder": "de ex., Sortează buletinele informative",
-      "match_all": "Îndepliniți TOATE condițiile",
-      "match_any": "Îndepliniți ORICE condiție",
+      "match_all": "Îndeplinește toate condițiile",
+      "match_any": "Îndeplinește oricare condiție",
       "conditions": "Condiții",
       "add_condition": "Adăugați condiție",
       "actions": "Acțiuni",
       "add_action": "Adăugare acțiune",
       "remove_condition": "Elimină condiția",
       "remove_action": "Elimină acțiunea",
-      "stop_processing": "Opriți procesarea regulilor următoare",
+      "stop_processing": "Nu aplicați regulile următoare",
       "include_spam": "Mută și mesajele marcate ca spam",
       "attachment_type_placeholder": "de ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valoare (mai multe valori separate prin virgule)",
@@ -2851,7 +2851,7 @@
         "discard": "Ignorare (ștergere fără confirmare)",
         "reject": "Respinge cu mesaj",
         "keep": "Păstrează în căsuța de primire",
-        "stop": "Opriți procesarea"
+        "stop": "Nu aplicați regulile următoare"
       },
       "move_to_folder": "Selectează folderul",
       "copy_to_folder": "Selectează folderul",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "Dosarul nu este gol",
     "delete_with_contents_message": "Dosarul „{name}” încă mai conține {count, plural, one {1 mesaj} other {# mesaje}}. Ștergi dosarul și toate mesajele sale? Acțiunea nu poate fi anulată.",
     "delete_with_contents_confirm": "Șterge dosarul și mesajele"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestionați conturile…",
+    "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"
   },
   "shortcuts": {
     "title": "Comenzi rapide de la tastatură",

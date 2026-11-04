@@ -123,7 +123,7 @@
     "sign_out_of": "退出 {account}",
     "sign_out_all": "退出所有账户",
     "add_account": "添加账户",
-    "set_as_default": "设为默认",
+    "set_as_default": "启动时打开此账户",
     "switch_account": "切换账户",
     "contacts": "联系人",
     "calendar": "日历",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "电子邮件标签",
-      "description": "定义标签以使用颜色组织您的电子邮件。这些标签作为JMAP关键词存储在服务器上。",
+      "description": "创建标签来整理邮件。标签与邮件一起保存在服务器上。",
       "add_keyword": "添加标签",
       "label_field": "显示名称",
       "label_placeholder": "例如工作、个人、紧急",
@@ -1726,8 +1726,8 @@
         "hide": "隐藏"
       },
       "unrecognized": {
-        "title": "从服务器恢复标签",
-        "description": "标签的名称和颜色保存在此浏览器中，但标签本身以 JMAP 关键词的形式存在于邮件上。扫描邮件以查找此处没有对应标签的关键词，然后重新添加它们。",
+        "title": "查找邮件上有但这里缺少的标签",
+        "description": "此浏览器保存标签的名称和颜色。标签本身保存在邮件上。在邮件中查找这里缺少的标签，然后重新添加。",
         "scan": "扫描标签",
         "rescan": "重新扫描",
         "scanning": "正在扫描… {total} 封邮件中的 {scanned} 封",
@@ -2209,8 +2209,8 @@
         "title": "已登录账户",
         "description": "拖动以重新排序账户在账户下拉菜单中的显示顺序",
         "active": "当前活动账户",
-        "default_badge": "默认账户",
-        "set_default": "设为默认",
+        "default_badge": "启动时打开",
+        "set_default": "启动时打开此账户",
         "switch_to": "切换到此账户",
         "move_up": "上移",
         "move_down": "下移",
@@ -2795,14 +2795,14 @@
       "rule_name": "规则名称",
       "rule_name_placeholder": "例如，整理订阅邮件",
       "match_all": "匹配所有条件",
-      "match_any": "匹配任何条件",
+      "match_any": "匹配任一条件",
       "conditions": "条件",
       "add_condition": "添加条件",
       "actions": "操作",
       "add_action": "添加操作",
       "remove_condition": "移除条件",
       "remove_action": "移除操作",
-      "stop_processing": "停止处理后续规则",
+      "stop_processing": "不再应用后面的规则",
       "include_spam": "同时移动被标记为垃圾邮件的邮件",
       "attachment_type_placeholder": "例如：pdf、doc、jpg",
       "value_placeholder_multi": "值（多个用逗号分隔）",
@@ -2844,7 +2844,7 @@
         "discard": "丢弃（静默删除）",
         "reject": "拒绝并留言",
         "keep": "保留在收件箱中",
-        "stop": "停止处理"
+        "stop": "不再应用后面的规则"
       },
       "move_to_folder": "选择文件夹",
       "copy_to_folder": "选择文件夹",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "文件夹名称",
     "create": "创建",
     "rename_confirm": "重命名"
+  },
+  "uxs_folders": {
+    "manage_accounts": "管理账户…",
+    "apply_to_existing": "{count, plural, other {应用于{folder}中的 # 封已有邮件}}"
   },
   "shortcuts": {
     "title": "键盘快捷键",

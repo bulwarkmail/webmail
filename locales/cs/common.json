@@ -123,7 +123,7 @@
     "sign_out_of": "Odhlásit se z {account}",
     "sign_out_all": "Odhlásit se ze všech účtů",
     "add_account": "Přidat účet",
-    "set_as_default": "Nastavit jako výchozí",
+    "set_as_default": "Otevírat tento účet při spuštění",
     "switch_account": "Přepnout účet",
     "contacts": "Kontakty",
     "calendar": "Kalendář",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "E-mailové štítky",
-      "description": "Definujte štítky pro organizaci e-mailů pomocí barev. Ukládají se jako klíčová slova JMAP na serveru.",
+      "description": "Vytvořte štítky pro třídění zpráv. Štítky se ukládají se zprávami na serveru.",
       "add_keyword": "Přidat štítek",
       "label_field": "Zobrazovaný název",
       "label_placeholder": "např. Práce, Osobní, Naliehavé",
@@ -1726,8 +1726,8 @@
         "hide": "Skrýt"
       },
       "unrecognized": {
-        "title": "Obnovit štítky ze serveru",
-        "description": "Názvy a barvy štítků jsou uloženy v tomto prohlížeči, ale samotné štítky jsou na vašich zprávách jako klíčová slova JMAP. Prohledejte poštu na klíčová slova, která zde žádný štítek nepokrývá, a přidejte je zpět.",
+        "title": "Najít štítky na zprávách, které tu chybí",
+        "description": "Tento prohlížeč ukládá názvy a barvy štítků. Samotné štítky jsou uložené na zprávách. Vyhledejte v poště štítky, které tu chybí, a znovu je přidejte.",
         "scan": "Vyhledat štítky",
         "rescan": "Hledat znovu",
         "scanning": "Prohledávání… {scanned} z {total} zpráv",
@@ -2209,8 +2209,8 @@
         "title": "Přihlášené účty",
         "description": "Přetažením změňte pořadí účtů v rozbalovacím seznamu",
         "active": "Aktuálně aktivní účet",
-        "default_badge": "Výchozí účet",
-        "set_default": "Nastavit jako výchozí",
+        "default_badge": "Otevírá se při spuštění",
+        "set_default": "Otevírat tento účet při spuštění",
         "switch_to": "Přepnout na tento účet",
         "move_up": "Posunout nahoru",
         "move_down": "Posunout dolů",
@@ -2794,15 +2794,15 @@
       "not_supported": "Váš poštovní server nepodporuje e-mailové filtry.",
       "rule_name": "Název pravidla",
       "rule_name_placeholder": "např. Třídit newslettery",
-      "match_all": "Splňuje VŠECHNY podmínky",
-      "match_any": "Splňuje JAKOUKOLI podmínku",
+      "match_all": "Splňuje všechny podmínky",
+      "match_any": "Splňuje kteroukoli podmínku",
       "conditions": "Podmínky",
       "add_condition": "Přidat podmínku",
       "actions": "Akce",
       "add_action": "Přidat akci",
       "remove_condition": "Odebrat podmínku",
       "remove_action": "Odebrat akci",
-      "stop_processing": "Zastavit zpracování dalších pravidel",
+      "stop_processing": "Další pravidla nepoužívat",
       "include_spam": "Přesouvat i zprávy označené jako spam",
       "attachment_type_placeholder": "např. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (více oddělených čárkami)",
@@ -2844,7 +2844,7 @@
         "discard": "Zahodit (tiše odstranit)",
         "reject": "Odmítnout se zprávou",
         "keep": "Ponechat v Doručených",
-        "stop": "Zastavit zpracování"
+        "stop": "Další pravidla nepoužívat"
       },
       "move_to_folder": "Vyberte složku",
       "copy_to_folder": "Vyberte složku",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "Složka není prázdná",
     "delete_with_contents_message": "Složka „{name}“ stále obsahuje {count, plural, one {1 zprávu} few {# zprávy} other {# zpráv}}. Smazat složku i všechny její zprávy? Tuto akci nelze vrátit.",
     "delete_with_contents_confirm": "Smazat složku i zprávy"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Spravovat účty…",
+    "apply_to_existing": "{count, plural, one {Použít na # existující zprávu ve složce {folder}} few {Použít na # existující zprávy ve složce {folder}} many {Použít na # existující zprávy ve složce {folder}} other {Použít na # existujících zpráv ve složce {folder}}}"
   },
   "shortcuts": {
     "title": "Klávesové zkratky",

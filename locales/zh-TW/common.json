@@ -123,7 +123,7 @@
     "sign_out_of": "登出 {account}",
     "sign_out_all": "登出所有帳號",
     "add_account": "新增帳號",
-    "set_as_default": "設為預設",
+    "set_as_default": "啟動時開啟此帳號",
     "switch_account": "切換帳號",
     "contacts": "聯絡人",
     "calendar": "行事曆",
@@ -1694,7 +1694,7 @@
     },
     "keywords": {
       "title": "電子郵件標籤",
-      "description": "定義用來整理郵件的標籤。這些標籤會以 JMAP 關鍵字儲存在伺服器上。",
+      "description": "建立標籤來整理郵件。標籤會和郵件一起儲存在伺服器上。",
       "add_keyword": "新增標籤",
       "label_field": "顯示名稱",
       "label_placeholder": "例如工作、個人、緊急",
@@ -1729,8 +1729,8 @@
         "hide": "隱藏"
       },
       "unrecognized": {
-        "title": "從伺服器復原標籤",
-        "description": "標籤名稱與顏色儲存在此瀏覽器中，標籤本身則以 JMAP 關鍵字附加在郵件上。掃描郵件以尋找這裡尚未定義的關鍵字，再將它們加回來。",
+        "title": "尋找郵件上有但這裡缺少的標籤",
+        "description": "此瀏覽器會儲存標籤的名稱與顏色。標籤本身儲存在郵件上。在郵件中尋找這裡缺少的標籤，再將它們加回來。",
         "scan": "掃描標籤",
         "rescan": "重新掃描",
         "scanning": "正在掃描… {total} 封郵件中的 {scanned} 封",
@@ -2212,8 +2212,8 @@
         "title": "已登入帳號",
         "description": "拖曳以重新排序帳號在帳號下拉選單中的顯示順序",
         "active": "使用中的帳號",
-        "default_badge": "預設帳號",
-        "set_default": "設為預設",
+        "default_badge": "啟動時開啟",
+        "set_default": "啟動時開啟此帳號",
         "switch_to": "切換到此帳號",
         "move_up": "上移",
         "move_down": "下移",
@@ -2809,7 +2809,7 @@
       "add_action": "新增動作",
       "remove_condition": "移除條件",
       "remove_action": "移除動作",
-      "stop_processing": "停止處理後續規則",
+      "stop_processing": "不再套用後面的規則",
       "include_spam": "同時移動被標記為垃圾郵件的郵件",
       "attachment_type_placeholder": "例如：pdf、doc、jpg",
       "value_placeholder_multi": "值（多個用逗號分隔）",
@@ -2851,7 +2851,7 @@
         "discard": "捨棄（直接刪除）",
         "reject": "附上訊息拒絕",
         "keep": "保留在收件匣中",
-        "stop": "停止處理"
+        "stop": "不再套用後面的規則"
       },
       "move_to_folder": "選取信件匣",
       "copy_to_folder": "選取信件匣",
@@ -3786,6 +3786,10 @@
     "delete_with_contents_title": "資料夾不是空的",
     "delete_with_contents_message": "資料夾「{name}」中仍有 {count} 封郵件。要刪除該資料夾及其所有郵件嗎？此操作無法復原。",
     "delete_with_contents_confirm": "刪除資料夾和郵件"
+  },
+  "uxs_folders": {
+    "manage_accounts": "管理帳號…",
+    "apply_to_existing": "{count, plural, other {套用到{folder}中的 # 封既有郵件}}"
   },
   "shortcuts": {
     "title": "鍵盤快速鍵",

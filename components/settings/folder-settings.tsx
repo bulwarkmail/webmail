@@ -40,6 +40,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { isFolderCountMode } from '@/lib/folder-counts';
+import { localizeMailboxName } from '@/lib/mailbox-label';
 
 // Must match the per-level indentation used in the row styles below: dragging
 // a folder this many pixels right/left targets one nesting level deeper/higher.
@@ -164,6 +165,11 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
 
 export function FolderSettings() {
   const t = useTranslations('settings.folders');
+  const tSidebar = useTranslations('sidebar');
+  // Folders with a role read as in the sidebar (Sent, Spam, Trash), never
+  // by the server's name ("Sent Items", "Junk Mail").
+  const folderName = (mb: { role?: string | null; name: string }): string =>
+    localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`));
   const { client } = useAuthStore();
   const { mailboxes, fetchMailboxes, createMailbox, renameMailbox, deleteMailbox, setMailboxRole, reorderMailboxes, moveMailbox, moveMailboxes } = useEmailStore();
 
@@ -304,15 +310,15 @@ export function FolderSettings() {
   };
   moveRoots.forEach(blockSubtree);
 
-  const getFolderPath = (mb: { parentId?: string; name: string }): string => {
-    const parts = [mb.name];
+  const getFolderPath = (mb: { parentId?: string; name: string; role?: string | null }): string => {
+    const parts = [folderName(mb)];
     const seen = new Set<string>();
     let parentId = mb.parentId;
     while (parentId && !seen.has(parentId)) {
       seen.add(parentId);
       const parent = ownMailboxes.find(p => p.id === parentId);
       if (!parent) break;
-      parts.unshift(parent.name);
+      parts.unshift(folderName(parent));
       parentId = parent.parentId;
     }
     return parts.join(' / ');
@@ -515,7 +521,8 @@ export function FolderSettings() {
 
   const renderCreateInline = (parentId: string | null, depth: number) => {
     if (!isCreating || creatingParentId !== parentId) return null;
-    const parentName = parentId ? ownMailboxes.find(m => m.id === parentId)?.name : null;
+    const parent = parentId ? ownMailboxes.find(m => m.id === parentId) : undefined;
+    const parentName = parent ? folderName(parent) : null;
     return (
       <div
         className="flex flex-wrap items-center gap-2 mt-1 p-2.5 bg-muted/30 rounded-md border border-border"
@@ -637,7 +644,7 @@ export function FolderSettings() {
                 type="button"
                 role="checkbox"
                 aria-checked={isSelected}
-                aria-label={t('select_folder', { name: mb.name })}
+                aria-label={t('select_folder', { name: folderName(mb) })}
                 title={t('select_hint')}
                 // Keep Shift+click from selecting the page text in between.
                 onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
@@ -658,7 +665,7 @@ export function FolderSettings() {
             {/* Expand/collapse toggle for folders with children */}
             {hasChildren ? (
               <IconButton
-                label={isExpanded ? t('collapse', { name: mb.name }) : t('expand', { name: mb.name })}
+                label={isExpanded ? t('collapse', { name: folderName(mb) }) : t('expand', { name: folderName(mb) })}
                 aria-expanded={isExpanded}
                 onClick={() => toggleExpanded(mb.id)}
                 className="h-5 w-5 text-muted-foreground flex-shrink-0"
@@ -707,12 +714,7 @@ export function FolderSettings() {
                 />
               )}
             </div>
-            <span className="text-sm text-foreground truncate" title={mb.name} dir="auto">{mb.name}</span>
-            {mb.role && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
-                {t(`role_${mb.role}`)}
-              </span>
-            )}
+            <span className="text-sm text-foreground truncate" title={folderName(mb)} dir="auto">{folderName(mb)}</span>
             {mb.unreadEmails > 0 && (
               <span className="text-xs tabular-nums px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium flex-shrink-0">
                 {mb.unreadEmails}
@@ -722,7 +724,7 @@ export function FolderSettings() {
           {/* Phone: the counter and the row actions don't fit next to the
               name, so they sit behind a ⋮ (right-click opens it too). */}
           <IconButton
-            label={t('actions', { name: mb.name })}
+            label={t('actions', { name: folderName(mb) })}
             className="sm:hidden flex-shrink-0 text-muted-foreground"
             onClick={(e) => openContextMenuFrom(e.currentTarget, mb, 'end')}
           >
@@ -732,7 +734,7 @@ export function FolderSettings() {
             <Select
               value={folderCountModes?.[mb.id] ?? ''}
               onChange={(value) => setCountMode(mb.id, value)}
-              ariaLabel={t('count_mode', { name: mb.name })}
+              ariaLabel={t('count_mode', { name: folderName(mb) })}
               className="px-1.5 py-0.5 text-xs max-w-[9rem] pointer-coarse:max-w-[12rem]"
               options={countModeOptions}
             />
@@ -906,11 +908,11 @@ export function FolderSettings() {
           const orderedMailboxes = flattenMailboxTree(folderTree);
           // Disambiguate duplicate folder names by appending parent path
           const nameCounts = new Map<string, number>();
-          orderedMailboxes.forEach(mb => nameCounts.set(mb.name, (nameCounts.get(mb.name) || 0) + 1));
+          orderedMailboxes.forEach(mb => nameCounts.set(folderName(mb), (nameCounts.get(folderName(mb)) || 0) + 1));
           const getParentPath = (mb: { parentId?: string; name: string }) => {
             if (!mb.parentId) return '';
             const parent = ownMailboxes.find(p => p.id === mb.parentId);
-            return parent ? `${parent.name}/` : '';
+            return parent ? `${folderName(parent)}/` : '';
           };
 
           return (
@@ -922,9 +924,9 @@ export function FolderSettings() {
                   { value: '', label: t('role_none') },
                   ...orderedMailboxes.map(mb => ({
                     value: mb.id,
-                    label: (nameCounts.get(mb.name) || 0) > 1
-                      ? `${getParentPath(mb)}${mb.name} (${mb.id.slice(-6)})`
-                      : mb.name,
+                    label: (nameCounts.get(folderName(mb)) || 0) > 1
+                      ? `${getParentPath(mb)}${folderName(mb)} (${mb.id.slice(-6)})`
+                      : folderName(mb),
                   })),
                 ]}
               />

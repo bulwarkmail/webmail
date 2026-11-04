@@ -123,7 +123,7 @@
     "sign_out_of": "{account}에서 로그아웃",
     "sign_out_all": "모든 계정에서 로그아웃",
     "add_account": "계정 추가",
-    "set_as_default": "기본값으로 설정",
+    "set_as_default": "시작할 때 이 계정 열기",
     "switch_account": "계정 전환",
     "contacts": "연락처",
     "calendar": "캘린더",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "이메일 태그",
-      "description": "색상으로 이메일을 정리하기 위한 태그를 정의합니다. 서버에 JMAP 키워드로 저장됩니다.",
+      "description": "태그를 만들어 메일을 정리하세요. 태그는 메일과 함께 서버에 저장돼요.",
       "add_keyword": "태그 추가",
       "label_field": "표시 이름",
       "label_placeholder": "예: 업무, 개인, 긴급",
@@ -1726,8 +1726,8 @@
         "hide": "숨기기"
       },
       "unrecognized": {
-        "title": "서버에서 태그 복구",
-        "description": "태그 이름과 색상은 이 브라우저에 저장되지만, 태그 자체는 JMAP 키워드로 메일에 저장돼요. 여기에 정의되지 않은 키워드를 메일에서 검색해서 다시 추가할 수 있어요.",
+        "title": "여기에 없는 메일의 태그 찾기",
+        "description": "이 브라우저는 태그의 이름과 색상을 저장해요. 태그 자체는 메일에 저장돼요. 여기에 없는 태그를 메일에서 찾아 다시 추가하세요.",
         "scan": "태그 검색",
         "rescan": "다시 검색",
         "scanning": "검색 중… {total}개 중 {scanned}개",
@@ -2209,8 +2209,8 @@
         "title": "로그인된 계정",
         "description": "끌어서 계정 드롭다운에 표시되는 순서를 변경합니다",
         "active": "현재 활성 계정",
-        "default_badge": "기본 계정",
-        "set_default": "기본으로 설정",
+        "default_badge": "시작할 때 열림",
+        "set_default": "시작할 때 이 계정 열기",
         "switch_to": "이 계정으로 전환",
         "move_up": "위로 이동",
         "move_down": "아래로 이동",
@@ -2794,15 +2794,15 @@
       "not_supported": "사용 중인 메일 서버는 이메일 필터를 지원하지 않아요.",
       "rule_name": "규칙 이름",
       "rule_name_placeholder": "예: 뉴스레터 분류",
-      "match_all": "모든 조건 만족 (AND)",
-      "match_any": "조건 중 하나라도 만족 (OR)",
+      "match_all": "모든 조건 만족",
+      "match_any": "조건 중 하나라도 만족",
       "conditions": "조건",
       "add_condition": "조건 추가",
       "actions": "동작",
       "add_action": "동작 추가",
       "remove_condition": "조건 제거",
       "remove_action": "동작 제거",
-      "stop_processing": "이후 규칙 무시하기",
+      "stop_processing": "이후 규칙 적용 안 함",
       "include_spam": "스팸으로 표시된 메시지도 이동",
       "attachment_type_placeholder": "예: pdf, doc, jpg",
       "value_placeholder_multi": "값 (쉼표로 여러 개 구분)",
@@ -2844,7 +2844,7 @@
         "discard": "삭제 (조용히 지움)",
         "reject": "메시지와 함께 수신 거부",
         "keep": "받은편지함에 유지",
-        "stop": "더 이상 처리 안 함"
+        "stop": "이후 규칙 적용 안 함"
       },
       "move_to_folder": "폴더 선택",
       "copy_to_folder": "폴더 선택",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "폴더 이름",
     "create": "만들기",
     "rename_confirm": "이름 바꾸기"
+  },
+  "uxs_folders": {
+    "manage_accounts": "계정 관리…",
+    "apply_to_existing": "{count, plural, other {{folder}의 기존 메일 #개에 적용}}"
   },
   "shortcuts": {
     "title": "단축키",

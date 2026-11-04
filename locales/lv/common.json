@@ -123,7 +123,7 @@
     "sign_out_of": "Izrakstīties no {account}",
     "sign_out_all": "Izrakstīties no visiem kontiem",
     "add_account": "Pievienot kontu",
-    "set_as_default": "Iestatīt kā noklusējumu",
+    "set_as_default": "Atvērt šo kontu startā",
     "switch_account": "Mainīt kontu",
     "contacts": "Kontakti",
     "calendar": "Kalendārs",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "E-pasta tagi",
-      "description": "Definējiet tagus, lai organizētu e-pastus ar krāsām. Tie tiek saglabāti kā JMAP atslēgvārdi serverī.",
+      "description": "Izveidojiet tagus, lai kārtotu vēstules. Tagi tiek saglabāti kopā ar vēstulēm serverī.",
       "add_keyword": "Pievienot tagu",
       "label_field": "Redzamais nosaukums",
       "label_placeholder": "piem., Darbs, Personīgi, Steidzami",
@@ -1726,8 +1726,8 @@
         "hide": "Slēpt"
       },
       "unrecognized": {
-        "title": "Atgūt tagus no servera",
-        "description": "Tagu nosaukumi un krāsas tiek glabāti šajā pārlūkā, bet paši tagi atrodas jūsu vēstulēs kā JMAP atslēgvārdi. Pārmeklējiet pastu, lai atrastu atslēgvārdus, kuriem šeit nav taga, un pievienojiet tos atpakaļ.",
+        "title": "Atrast vēstulēs tagus, kuru šeit trūkst",
+        "description": "Šis pārlūks glabā jūsu tagu nosaukumus un krāsas. Paši tagi ir saglabāti vēstulēs. Meklējiet pastā tagus, kuru šeit trūkst, un pievienojiet tos vēlreiz.",
         "scan": "Meklēt tagus",
         "rescan": "Meklēt vēlreiz",
         "scanning": "Notiek meklēšana… {scanned} no {total} vēstulēm",
@@ -2209,8 +2209,8 @@
         "title": "Pieteiktie konti",
         "description": "Velciet, lai mainītu kontu secību kontu izvēlnē",
         "active": "Pašlaik aktīvais konts",
-        "default_badge": "Noklusējuma konts",
-        "set_default": "Iestatīt kā noklusējumu",
+        "default_badge": "Atveras startā",
+        "set_default": "Atvērt šo kontu startā",
         "switch_to": "Pārslēgties uz šo kontu",
         "move_up": "Pārvietot uz augšu",
         "move_down": "Pārvietot uz leju",
@@ -2794,15 +2794,15 @@
       "not_supported": "Jūsu pasta serveris neatbalsta filtrus.",
       "rule_name": "Noteikuma nosaukums",
       "rule_name_placeholder": "piem., Ziņu izdevumu šķirošana",
-      "match_all": "Atbilst VISIEM nosacījumiem",
-      "match_any": "Atbilst JEBKURAM nosacījumam",
+      "match_all": "Atbilst visiem nosacījumiem",
+      "match_any": "Atbilst jebkuram nosacījumam",
       "conditions": "Nosacījumi",
       "add_condition": "Pievienot nosacījumu",
       "actions": "Darbības",
       "add_action": "Pievienot darbību",
       "remove_condition": "Noņemt nosacījumu",
       "remove_action": "Noņemt darbību",
-      "stop_processing": "Pārtraukt nākamo noteikumu apstrādi",
+      "stop_processing": "Nepiemērot nākamos noteikumus",
       "include_spam": "Pārvietot arī ziņas, kas atzīmētas kā mēstules",
       "attachment_type_placeholder": "piem. pdf, doc, jpg",
       "value_placeholder_multi": "Vērtība (vairākas atdalītas ar komatu)",
@@ -2844,7 +2844,7 @@
         "discard": "Dzēst (bez paziņojuma)",
         "reject": "Noraidīt ar ziņojumu",
         "keep": "Atstāt iesūtnē",
-        "stop": "Pārtraukt apstrādi"
+        "stop": "Nepiemērot nākamos noteikumus"
       },
       "move_to_folder": "Izvēlēties mapi",
       "copy_to_folder": "Izvēlēties mapi",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "Mapes nosaukums",
     "create": "Izveidot",
     "rename_confirm": "Pārsaukt"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Pārvaldīt kontus…",
+    "apply_to_existing": "{count, plural, zero {Piemērot # esošajām vēstulēm mapē {folder}} one {Piemērot # esošajai vēstulei mapē {folder}} other {Piemērot # esošajām vēstulēm mapē {folder}}}"
   },
   "shortcuts": {
     "title": "Īsinājumtaustiņi",

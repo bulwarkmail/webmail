@@ -123,7 +123,7 @@
     "sign_out_of": "Cerrar sesión de {account}",
     "sign_out_all": "Cerrar sesión de todas las cuentas",
     "add_account": "Agregar cuenta",
-    "set_as_default": "Establecer como predeterminada",
+    "set_as_default": "Abrir esta cuenta al iniciar",
     "switch_account": "Cambiar cuenta",
     "contacts": "Contactos",
     "calendar": "Calendario",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "Etiquetas de correo",
-      "description": "Define etiquetas para organizar tus correos con colores. Se almacenan como palabras clave JMAP en el servidor.",
+      "description": "Crea etiquetas para ordenar tus mensajes. Las etiquetas se guardan con tus mensajes en el servidor.",
       "add_keyword": "Añadir etiqueta",
       "label_field": "Nombre para mostrar",
       "label_placeholder": "ej. Trabajo, Personal, Urgente",
@@ -1726,8 +1726,8 @@
         "hide": "Ocultar"
       },
       "unrecognized": {
-        "title": "Recuperar etiquetas del servidor",
-        "description": "Los nombres y colores de las etiquetas se guardan en este navegador, pero las etiquetas en sí están en tus correos como palabras clave JMAP. Analiza tu correo en busca de palabras clave que ninguna etiqueta de aquí explique y vuelve a añadirlas.",
+        "title": "Buscar etiquetas de tus mensajes que faltan aquí",
+        "description": "Este navegador guarda los nombres y colores de tus etiquetas. Las etiquetas en sí se guardan en tus mensajes. Busca en tu correo las etiquetas que faltan aquí y vuelve a añadirlas.",
         "scan": "Buscar etiquetas",
         "rescan": "Analizar de nuevo",
         "scanning": "Analizando… {scanned} de {total} correos",
@@ -2209,8 +2209,8 @@
         "title": "Cuentas conectadas",
         "description": "Arrastra para reordenar cómo aparecen las cuentas en el menú desplegable",
         "active": "Cuenta actualmente activa",
-        "default_badge": "Cuenta predeterminada",
-        "set_default": "Establecer como predeterminada",
+        "default_badge": "Se abre al iniciar",
+        "set_default": "Abrir esta cuenta al iniciar",
         "switch_to": "Cambiar a esta cuenta",
         "move_up": "Mover arriba",
         "move_down": "Mover abajo",
@@ -2794,15 +2794,15 @@
       "not_supported": "Su servidor de correo no admite filtros de correo electrónico.",
       "rule_name": "Nombre de la regla",
       "rule_name_placeholder": "ej. Ordenar boletines",
-      "match_all": "Coincidir con TODAS las condiciones",
-      "match_any": "Coincidir con CUALQUIER condición",
+      "match_all": "Coincidir con todas las condiciones",
+      "match_any": "Coincidir con cualquier condición",
       "conditions": "Condiciones",
       "add_condition": "Agregar condición",
       "actions": "Acciones",
       "add_action": "Agregar acción",
       "remove_condition": "Quitar condición",
       "remove_action": "Quitar acción",
-      "stop_processing": "Detener el procesamiento de reglas posteriores",
+      "stop_processing": "No aplicar las reglas siguientes",
       "include_spam": "Mover también los mensajes marcados como spam",
       "attachment_type_placeholder": "p. ej. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (varios separados por comas)",
@@ -2844,7 +2844,7 @@
         "discard": "Descartar (eliminar silenciosamente)",
         "reject": "Rechazar con mensaje",
         "keep": "Mantener en la bandeja de entrada",
-        "stop": "Detener procesamiento"
+        "stop": "No aplicar las reglas siguientes"
       },
       "move_to_folder": "Seleccionar carpeta",
       "copy_to_folder": "Seleccionar carpeta",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "Nombre de carpeta",
     "create": "Crear",
     "rename_confirm": "Renombrar"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Gestionar cuentas…",
+    "apply_to_existing": "{count, plural, one {Aplicar a # mensaje existente en {folder}} other {Aplicar a # mensajes existentes en {folder}}}"
   },
   "shortcuts": {
     "title": "Atajos de teclado",

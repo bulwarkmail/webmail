@@ -123,7 +123,7 @@
     "sign_out_of": "Uitloggen van {account}",
     "sign_out_all": "Uitloggen van alle accounts",
     "add_account": "Account toevoegen",
-    "set_as_default": "Als standaard instellen",
+    "set_as_default": "Dit account openen bij het starten",
     "switch_account": "Account wisselen",
     "contacts": "Contacten",
     "calendar": "Agenda",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "E-maillabels",
-      "description": "Definieer labels om uw e-mails te organiseren. Deze worden opgeslagen als JMAP-trefwoorden op de server.",
+      "description": "Maak labels om uw berichten te ordenen. De labels worden met uw berichten op de server opgeslagen.",
       "add_keyword": "Label toevoegen",
       "label_field": "Weergavenaam",
       "label_placeholder": "bijv. Werk, Persoonlijk, Urgent",
@@ -1726,8 +1726,8 @@
         "hide": "Verbergen"
       },
       "unrecognized": {
-        "title": "Labels van de server herstellen",
-        "description": "Labelnamen en -kleuren worden in deze browser bewaard, maar de labels zelf staan als JMAP-trefwoorden op uw e-mails. Doorzoek uw e-mail op trefwoorden waarvoor hier geen label bestaat en voeg ze weer toe.",
+        "title": "Labels op uw berichten zoeken die hier ontbreken",
+        "description": "Deze browser bewaart de namen en kleuren van uw labels. De labels zelf staan op uw berichten. Zoek in uw e-mail naar labels die hier ontbreken en voeg ze opnieuw toe.",
         "scan": "Zoeken naar labels",
         "rescan": "Opnieuw zoeken",
         "scanning": "Bezig met zoeken… {scanned} van {total} e-mails",
@@ -2209,8 +2209,8 @@
         "title": "Aangemelde accounts",
         "description": "Sleep om de volgorde aan te passen waarin accounts in het accountmenu verschijnen",
         "active": "Momenteel actief account",
-        "default_badge": "Standaardaccount",
-        "set_default": "Als standaard instellen",
+        "default_badge": "Opent bij het starten",
+        "set_default": "Dit account openen bij het starten",
         "switch_to": "Overschakelen naar dit account",
         "move_up": "Omhoog verplaatsen",
         "move_down": "Omlaag verplaatsen",
@@ -2794,15 +2794,15 @@
       "not_supported": "Uw mailserver ondersteunt geen e-mailfilters.",
       "rule_name": "Regelnaam",
       "rule_name_placeholder": "bijv. Nieuwsbrieven sorteren",
-      "match_all": "Aan ALLE voorwaarden voldoen",
-      "match_any": "Aan EEN willekeurige voorwaarde voldoen",
+      "match_all": "Aan alle voorwaarden voldoen",
+      "match_any": "Aan een van de voorwaarden voldoen",
       "conditions": "Voorwaarden",
       "add_condition": "Voorwaarde toevoegen",
       "actions": "Acties",
       "add_action": "Actie toevoegen",
       "remove_condition": "Voorwaarde verwijderen",
       "remove_action": "Actie verwijderen",
-      "stop_processing": "Verwerking van volgende regels stoppen",
+      "stop_processing": "Latere regels niet toepassen",
       "include_spam": "Ook berichten verplaatsen die als spam zijn gemarkeerd",
       "attachment_type_placeholder": "bijv. pdf, doc, jpg",
       "value_placeholder_multi": "Waarde (meerdere met komma's gescheiden)",
@@ -2844,7 +2844,7 @@
         "discard": "Stilletjes verwijderen",
         "reject": "Afwijzen met bericht",
         "keep": "In postvak IN houden",
-        "stop": "Verwerking stoppen"
+        "stop": "Latere regels niet toepassen"
       },
       "move_to_folder": "Map selecteren",
       "copy_to_folder": "Map selecteren",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "Mapnaam",
     "create": "Aanmaken",
     "rename_confirm": "Hernoemen"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Accounts beheren…",
+    "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"
   },
   "shortcuts": {
     "title": "Sneltoetsen",

@@ -123,7 +123,7 @@
     "sign_out_of": "Wyloguj się z {account}",
     "sign_out_all": "Wyloguj się ze wszystkich kont",
     "add_account": "Dodaj konto",
-    "set_as_default": "Ustaw jako domyślne",
+    "set_as_default": "Otwieraj to konto przy starcie",
     "switch_account": "Przełącz konto",
     "contacts": "Kontakty",
     "calendar": "Kalendarz",
@@ -1691,7 +1691,7 @@
     },
     "keywords": {
       "title": "Etykiety e-mail",
-      "description": "Zdefiniuj etykiety do organizowania e-maili za pomocą kolorów. Są one przechowywane jako słowa kluczowe JMAP na serwerze.",
+      "description": "Twórz etykiety, aby porządkować wiadomości. Etykiety są zapisywane razem z wiadomościami na serwerze.",
       "add_keyword": "Dodaj etykietę",
       "label_field": "Nazwa wyświetlana",
       "label_placeholder": "np. Praca, Osobiste, Pilne",
@@ -1726,8 +1726,8 @@
         "hide": "Ukryj"
       },
       "unrecognized": {
-        "title": "Odzyskaj etykiety z serwera",
-        "description": "Nazwy i kolory etykiet są zapisane w tej przeglądarce, ale same etykiety znajdują się w wiadomościach jako słowa kluczowe JMAP. Przeskanuj pocztę w poszukiwaniu słów kluczowych, dla których nie ma tu etykiety, i dodaj je ponownie.",
+        "title": "Znajdź etykiety na wiadomościach, których tu brakuje",
+        "description": "Ta przeglądarka przechowuje nazwy i kolory etykiet. Same etykiety są zapisane na wiadomościach. Przeszukaj pocztę w poszukiwaniu etykiet, których tu brakuje, i dodaj je ponownie.",
         "scan": "Szukaj etykiet",
         "rescan": "Skanuj ponownie",
         "scanning": "Skanowanie… {scanned} z {total} wiadomości",
@@ -2209,8 +2209,8 @@
         "title": "Zalogowane konta",
         "description": "Przeciągnij, aby zmienić kolejność wyświetlania kont w menu rozwijanym",
         "active": "Aktualnie aktywne konto",
-        "default_badge": "Konto domyślne",
-        "set_default": "Ustaw jako domyślne",
+        "default_badge": "Otwiera się przy starcie",
+        "set_default": "Otwieraj to konto przy starcie",
         "switch_to": "Przełącz na to konto",
         "move_up": "Przesuń w górę",
         "move_down": "Przesuń w dół",
@@ -2794,15 +2794,15 @@
       "not_supported": "Twój serwer pocztowy nie obsługuje filtrów wiadomości e-mail.",
       "rule_name": "Nazwa reguły",
       "rule_name_placeholder": "np. Sortuj newslettery",
-      "match_all": "Dopasuj WSZYSTKIE warunki",
-      "match_any": "Dopasuj DOWOLNY warunek",
+      "match_all": "Spełnione wszystkie warunki",
+      "match_any": "Spełniony dowolny warunek",
       "conditions": "Warunki",
       "add_condition": "Dodaj warunek",
       "actions": "Akcje",
       "add_action": "Dodaj akcję",
       "remove_condition": "Usuń warunek",
       "remove_action": "Usuń akcję",
-      "stop_processing": "Zatrzymaj przetwarzanie kolejnych reguł",
+      "stop_processing": "Nie stosuj kolejnych reguł",
       "include_spam": "Przenoś również wiadomości oznaczone jako spam",
       "attachment_type_placeholder": "np. pdf, doc, jpg",
       "value_placeholder_multi": "Wartość (kilka oddzielonych przecinkami)",
@@ -2844,7 +2844,7 @@
         "discard": "Odrzuć (usuń po cichu)",
         "reject": "Odrzuć z wiadomością",
         "keep": "Pozostaw w Odebranych",
-        "stop": "Zatrzymaj przetwarzanie"
+        "stop": "Nie stosuj kolejnych reguł"
       },
       "move_to_folder": "Wybierz folder",
       "copy_to_folder": "Wybierz folder",
@@ -3786,6 +3786,10 @@
     "placeholder_folder_name": "Nazwa folderu",
     "create": "Utwórz",
     "rename_confirm": "Zmień nazwę"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Zarządzaj kontami…",
+    "apply_to_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości w folderze {folder}} few {Zastosuj do # istniejących wiadomości w folderze {folder}} many {Zastosuj do # istniejących wiadomości w folderze {folder}} other {Zastosuj do # istniejącej wiadomości w folderze {folder}}}"
   },
   "shortcuts": {
     "title": "Skróty klawiszowe",
