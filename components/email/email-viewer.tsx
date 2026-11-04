@@ -3516,6 +3516,21 @@ export function EmailViewer({
   // Not on spam: a reply confirms the address to the sender.
   const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
+  // Toasts sit above the quick reply box, as above a composer's footer
+  // (compose-p2-17): its height for toast.tsx, as it grows when focused.
+  useEffect(() => {
+    const box = quickReplyBoxRef.current;
+    if (!showQuickReply || !box || typeof ResizeObserver === 'undefined') return;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--quick-reply-height', `${box.offsetHeight}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(box);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--quick-reply-height');
+    };
+  }, [showQuickReply]);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
   // Read aloud (browser speech): the body as shown, HTML frame or plain text.
@@ -6191,7 +6206,7 @@ ${printWatermark ? printWatermark.html : ''}
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div ref={quickReplyBoxRef} className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={quickReplyBoxRef} data-quick-reply-box="" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
