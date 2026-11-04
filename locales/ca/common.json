@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Compta el correu no llegit de tots els comptes",
       "description": "El número de la pestanya, la icona de l'aplicació i la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada."
-    }
+    },
+    "empty_hint": "Podeu buidar la carpeta {folder} per eliminar definitivament tots els missatges."
   },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",

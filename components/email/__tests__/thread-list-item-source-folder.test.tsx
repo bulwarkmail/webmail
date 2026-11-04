@@ -95,6 +95,14 @@ describe('ThreadListItem folder chip in search results (#1172)', () => {
       expect(screen.getByTitle('Archive')).toBeTruthy();
     });
 
+    // Usability test 2026-11-04, mail-14: the chip said the server's "Sent Items".
+    it('names a folder with a role the way the sidebar does', () => {
+      useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
+      renderThread(emails().map((e) => ({ ...e, sourceFolder: 'Sent Items', sourceFolderRole: 'sent' })));
+      expect(screen.getByTitle('mailboxes.sent')).toBeTruthy();
+      expect(screen.queryByTitle('Sent Items')).toBeNull();
+    });
+
     it('shows the folder when the search covers all folders', () => {
       useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: SEARCH_SCOPE_ALL_FOLDERS });
       renderThread(emails());

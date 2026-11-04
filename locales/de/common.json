@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Ungelesene Mails aller Konten zählen",
       "description": "Die Zahl am Tab, am App-Symbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen."
-    }
+    },
+    "empty_hint": "Sie können den Ordner {folder} leeren, um alle Nachrichten dauerhaft zu entfernen."
   },
   "protocol_handlers": {
     "title": "Standard-Apps",

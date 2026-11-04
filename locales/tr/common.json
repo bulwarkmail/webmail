@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Tüm hesaplardaki okunmamış postaları say",
       "description": "Sekmedeki, uygulama simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
-    }
+    },
+    "empty_hint": "Tüm iletileri kalıcı olarak kaldırmak için {folder} klasörünü boşaltabilirsiniz."
   },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",

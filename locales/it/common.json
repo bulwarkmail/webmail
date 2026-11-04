@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Conta la posta non letta di tutti gli account",
       "description": "Il numero sulla scheda, sull'icona dell'app e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati."
-    }
+    },
+    "empty_hint": "Puoi svuotare la cartella {folder} per rimuovere definitivamente tutti i messaggi."
   },
   "protocol_handlers": {
     "title": "App predefinite",

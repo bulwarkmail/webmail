@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Ongelezen mail van alle accounts tellen",
       "description": "Het getal op het tabblad, het app-pictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op."
-    }
+    },
+    "empty_hint": "U kunt de map {folder} legen om alle berichten permanent te verwijderen."
   },
   "protocol_handlers": {
     "title": "Standaardapps",

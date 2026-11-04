@@ -40,6 +40,7 @@ import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEm
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
@@ -186,6 +187,7 @@ export function EmailList({
   const tNotifications = useTranslations('notifications');
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
+  const tUnread = useTranslations('account_unread');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const isDesktopPane = useIsDesktop();
   const isEmbeddedList = useIsEmbedded();
@@ -1160,7 +1162,8 @@ export function EmailList({
         <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{currentMailbox?.role === 'junk' ? t('empty_folder.junk_hint') : t('empty_folder.trash_hint')}</span>
+            {/* Named as in the sidebar ("Spam"), not by the server ("Junk"). */}
+            <span>{tUnread('empty_hint', { folder: localizeMailboxName(currentMailbox?.role, currentMailbox?.name ?? '', (k) => tSidebar(`mailboxes.${k}`)) })}</span>
           </div>
           <Button
             variant="outline"

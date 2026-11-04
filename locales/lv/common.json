@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Skaitīt nelasītās vēstules visos kontos",
       "description": "Skaitlis cilnē, lietotnes ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes."
-    }
+    },
+    "empty_hint": "Jūs varat iztīrīt mapi {folder}, lai neatgriezeniski dzēstu visus ziņojumus."
   },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",

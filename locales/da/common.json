@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Tæl ulæst post i alle konti",
       "description": "Tallet på fanen, appikonet og i proceslinjen lægger indbakkerne for alle loggede-ind konti sammen."
-    }
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for permanent at fjerne alle beskeder."
   },
   "protocol_handlers": {
     "title": "Standardapps",

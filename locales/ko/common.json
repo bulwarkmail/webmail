@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "모든 계정의 읽지 않은 메일 세기",
       "description": "탭, 앱 아이콘, 알림 영역의 숫자에 로그인한 모든 계정의 받은편지함을 합산해 표시해요."
-    }
+    },
+    "empty_hint": "{folder} 폴더를 비워 모든 메시지를 영구적으로 삭제할 수 있어요."
   },
   "protocol_handlers": {
     "title": "기본 앱",

@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Tell ulest e-post i alle kontoer",
       "description": "Tallet på fanen, appikonet og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer."
-    }
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for å fjerne alle meldinger permanent."
   },
   "protocol_handlers": {
     "title": "Standardapper",

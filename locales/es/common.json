@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Contar el correo sin leer de todas las cuentas",
       "description": "El número de la pestaña, el icono de la aplicación y la bandeja del sistema suma las bandejas de entrada de todas las cuentas con sesión iniciada."
-    }
+    },
+    "empty_hint": "Puede vaciar la carpeta {folder} para eliminar permanentemente todos los mensajes."
   },
   "protocol_handlers": {
     "title": "Aplicaciones predeterminadas",

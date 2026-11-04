@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Loe kõigi kontode lugemata kirjad kokku",
       "description": "Vahekaardi, rakenduse ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid."
-    }
+    },
+    "empty_hint": "Kausta {folder} tühjendades saad kõik kirjad jäädavalt eemaldada."
   },
   "protocol_handlers": {
     "title": "Vaikerakendused",

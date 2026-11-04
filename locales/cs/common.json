@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Počítat nepřečtenou poštu ve všech účtech",
       "description": "Číslo na kartě, na ikoně aplikace a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů."
-    }
+    },
+    "empty_hint": "Můžete vyprázdnit složku {folder} a trvale odstranit všechny zprávy."
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",

@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "計算所有帳號的未讀郵件",
       "description": "分頁、應用程式圖示和系統匣上的數字會合計所有已登入帳號的收件匣。"
-    }
+    },
+    "empty_hint": "您可以清空「{folder}」信件匣，永久刪除其中的所有郵件。"
   },
   "protocol_handlers": {
     "title": "預設應用程式",

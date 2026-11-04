@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Count unread mail in all accounts",
       "description": "The number on the tab, the app icon and the tray adds up the inboxes of every signed-in account."
-    }
+    },
+    "empty_hint": "You can empty the {folder} folder to permanently remove all messages."
   },
   "protocol_handlers": {
     "title": "Default apps",

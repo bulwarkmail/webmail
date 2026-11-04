@@ -39,6 +39,7 @@ import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { brandIndicatorDomain } from "@/lib/email-headers";
 import { useTranslations } from "next-intl";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 
 /**
  * Unread bullet in the row gutter.
@@ -310,7 +311,10 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
  * aggregate "All …" views (All Mail / unified / cross-account) where rows come
  * from different folders. `email.sourceFolder` is stamped at fetch time.
  */
-function SourceFolderTag({ name, tight }: { name: string; tight?: boolean }) {
+function SourceFolderTag({ name: serverName, role, tight }: { name: string; role?: string; tight?: boolean }) {
+  // The sidebar's name for the folder: "Sent", not the server's "Sent Items".
+  const tSidebar = useTranslations("sidebar");
+  const name = localizeMailboxName(role, serverName, (key) => tSidebar(`mailboxes.${key}`));
   return (
     <span
       className={cn("inline-flex shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground", tight ? "max-w-[4.5rem]" : "max-w-[8rem]")}
@@ -845,7 +849,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </>
                   )}
                   {showPaperclip && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
+                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} role={email.sourceFolderRole} tight={senderLineTight} />}
                   {scheduledSendLabel ? (
                     <span
                       className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -923,7 +927,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
+                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} role={email.sourceFolderRole} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
@@ -1616,7 +1620,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </>
                     )}
                     {hasAttachment && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
+                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} role={latestEmail.sourceFolderRole} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -1702,7 +1706,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
+                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} role={latestEmail.sourceFolderRole} tight={senderLineTight} />}
                       {scheduledSendLabel ? (
                         <span
                           className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"

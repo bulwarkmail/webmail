@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Đếm thư chưa đọc của mọi tài khoản",
       "description": "Con số trên tab, biểu tượng ứng dụng và khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập."
-    }
+    },
+    "empty_hint": "Bạn có thể làm trống thư mục {folder} để xóa vĩnh viễn tất cả thư."
   },
   "protocol_handlers": {
     "title": "Ứng dụng mặc định",

@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Licz nieprzeczytaną pocztę ze wszystkich kont",
       "description": "Liczba na karcie, ikonie aplikacji i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont."
-    }
+    },
+    "empty_hint": "Możesz opróżnić folder {folder}, aby trwale usunąć wszystkie wiadomości."
   },
   "protocol_handlers": {
     "title": "Aplikacje domyślne",

@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Contar os e-mails não lidos de todas as contas",
       "description": "O número na aba, no ícone do app e na bandeja do sistema soma as caixas de entrada de todas as contas conectadas."
-    }
+    },
+    "empty_hint": "Você pode esvaziar a pasta {folder} para remover permanentemente todas as mensagens."
   },
   "protocol_handlers": {
     "title": "Aplicativos padrão",

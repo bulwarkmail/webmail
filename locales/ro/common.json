@@ -220,7 +220,8 @@
     "badge_all_accounts": {
       "label": "Numără mesajele necitite din toate conturile",
       "description": "Numărul de pe filă, de pe pictograma aplicației și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate."
-    }
+    },
+    "empty_hint": "Puteți goli folderul {folder} pentru a șterge definitiv toate mesajele."
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",
