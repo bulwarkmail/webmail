@@ -14,9 +14,10 @@ import type { Email } from "@/lib/jmap/types";
 import type { ProComposeTabData } from "@/stores/pro-tab-store";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { announceMailChanged, openPopoutChannel } from "@/lib/popout/channel";
-import { openComposerWindow } from "@/lib/popout/open";
+import { messagePopoutUrl, openComposerWindow } from "@/lib/popout/open";
 import { closePopoutWindow } from "@/lib/popout/window-role";
 import { PopoutNotice, PopoutShell, PopoutSkeleton } from "./popout-shell";
+import { PopoutSavedMessage } from "./popout-saved-message";
 
 /** How often an open message checks that it is still there, without a main window to say so. */
 const CHECK_INTERVAL_MS = 60_000;
@@ -25,7 +26,17 @@ const CHECK_INTERVAL_MS = 60_000;
  * The id from the address bar: a page the service worker kept for a start
  * without the network was rendered for another id.
  */
-function readLaunch(paramId: string): { emailId: string; accountId?: string; ownerAccountId?: string; fromLink?: boolean } {
+interface Launch {
+  emailId: string;
+  accountId?: string;
+  ownerAccountId?: string;
+  fromLink?: boolean;
+  /** A message from a file, uploaded as this blob (popout-saved-message.tsx). */
+  blobId?: string;
+  fileName?: string;
+}
+
+function readLaunch(paramId: string): Launch {
   if (typeof window === "undefined") return { emailId: paramId };
   const segments = window.location.pathname.split("/").filter(Boolean);
   const at = segments.lastIndexOf("message");
@@ -36,7 +47,40 @@ function readLaunch(paramId: string): { emailId: string; accountId?: string; own
     // A malformed address: the route's own value.
   }
   const search = new URLSearchParams(window.location.search);
-  return { emailId, accountId: search.get("account") ?? undefined, ownerAccountId: search.get("owner") ?? undefined, fromLink: search.get("via") === "link" };
+  return {
+    emailId,
+    accountId: search.get("account") ?? undefined,
+    ownerAccountId: search.get("owner") ?? undefined,
+    fromLink: search.get("via") === "link",
+    blobId: search.get("blob") ?? undefined,
+    fileName: search.get("name") ?? undefined,
+  };
+}
+
+/** Reply and forward from a message window open a composer window of their own. */
+function useComposeWindow(login: string | undefined): (data: Omit<ProComposeTabData, "sessionId">) => Promise<boolean> {
+  const t = useTranslations("pwaWindows");
+  return useCallback(async (data: Omit<ProComposeTabData, "sessionId">) => {
+    const opened = openComposerWindow(login);
+    if (!opened) {
+      toast.error(t("popup_blocked"));
+      return false;
+    }
+    const shown = await opened.handOver({
+      mode: data.mode,
+      replyTo: data.replyTo,
+      initialDraftText: data.initialDraftText,
+      initialData: data.initialData,
+      prefill: data.prefill,
+      sourceEmailId: data.sourceEmailId,
+      sourceEmailSource: data.sourceEmailSource,
+    });
+    if (!shown) {
+      opened.cancel();
+      toast.error(t("window_not_ready"));
+    }
+    return shown;
+  }, [login, t]);
 }
 
 type Presence = "present" | "gone";
@@ -145,28 +189,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
     useEmailStore.setState({ emails: [email], selectedMailbox: Object.keys(email.mailboxIds ?? {})[0] ?? "" });
   }, []);
 
-  // Reply and forward open a composer window of their own.
-  const openCompose = useCallback(async (data: Omit<ProComposeTabData, "sessionId">) => {
-    const opened = openComposerWindow(login);
-    if (!opened) {
-      toast.error(t("popup_blocked"));
-      return false;
-    }
-    const shown = await opened.handOver({
-      mode: data.mode,
-      replyTo: data.replyTo,
-      initialDraftText: data.initialDraftText,
-      initialData: data.initialData,
-      prefill: data.prefill,
-      sourceEmailId: data.sourceEmailId,
-      sourceEmailSource: data.sourceEmailSource,
-    });
-    if (!shown) {
-      opened.cancel();
-      toast.error(t("window_not_ready"));
-    }
-    return shown;
-  }, [login, t]);
+  const openCompose = useComposeWindow(login);
 
   if (!foldersReady) return <PopoutSkeleton label={t("opening")} />;
 
@@ -207,10 +230,21 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
 
 /** `/popout/message/<id>`: one message in its own window, with no rail, sidebar or list. */
 export function PopoutMessageApp({ id }: { id: string }) {
-  const [launch] = useState(() => readLaunch(id));
+  const [launch, setLaunch] = useState(() => readLaunch(id));
+  const openCompose = useComposeWindow(launch.accountId);
+  // A message from a file went into a folder: from now on the window is that message's,
+  // and a reload opens it there.
+  const onImported = useCallback((target: { emailId: string; ownerAccountId?: string }) => {
+    window.history.replaceState(window.history.state, "", messagePopoutUrl({ emailId: target.emailId, localAccountId: launch.accountId, ownerAccountId: target.ownerAccountId }));
+    setLaunch({ emailId: target.emailId, accountId: launch.accountId, ownerAccountId: target.ownerAccountId });
+  }, [launch.accountId]);
   return (
     <PopoutShell kind="message" accountId={launch.accountId}>
-      <PopoutMessage emailId={launch.emailId} accountId={launch.accountId} ownerAccountId={launch.ownerAccountId} fromLink={launch.fromLink} />
+      {launch.blobId ? (
+        <PopoutSavedMessage blobId={launch.blobId} name={launch.fileName} accountId={launch.accountId} openCompose={openCompose} onImported={onImported} />
+      ) : (
+        <PopoutMessage key={launch.emailId} emailId={launch.emailId} accountId={launch.accountId} ownerAccountId={launch.ownerAccountId} fromLink={launch.fromLink} />
+      )}
     </PopoutShell>
   );
 }

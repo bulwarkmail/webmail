@@ -75,6 +75,20 @@ export function openMessageWindow(target: MessageWindowTarget): boolean {
   return focused(openWindow(messagePopoutUrl(target), `bulwark-message-${target.emailId.replace(/\W/g, '_')}`, 'message'));
 }
 
+/**
+ * A message from a file (an .eml opened from the OS), uploaded as `blobId`, in a
+ * message window of its own. It is in no folder until Move imports it.
+ */
+export function savedMessagePopoutUrl(target: { blobId: string; name?: string; localAccountId?: string | null }): string {
+  // `_`: the message window's page the offline shell keeps (lib/offline/shell.ts).
+  return appPath('/popout/message/_') + query({ blob: target.blobId, name: target.name, account: target.localAccountId });
+}
+
+/** The same file twice focuses the same window. */
+export function openSavedMessageWindow(target: { blobId: string; name?: string; localAccountId?: string | null }): boolean {
+  return focused(openWindow(savedMessagePopoutUrl(target), `bulwark-message-file-${target.blobId.replace(/\W/g, '_')}`, 'message'));
+}
+
 /** A new message in its own window, with nothing to hand over. */
 export function openNewComposerWindow(localAccountId?: string | null): boolean {
   const name = `bulwark-compose-new-${Date.now().toString(36)}`;

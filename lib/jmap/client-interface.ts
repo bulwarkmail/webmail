@@ -287,6 +287,12 @@ export interface IJMAPClient {
   getEmailQuerySortOptions?(accountId?: string): string[] | null;
   getEmailsInMailbox(mailboxId: string): Promise<Email[]>;
   getEmail(emailId: string, accountId?: string): Promise<Email | null>;
+  /**
+   * An uploaded message (Email/parse) with what the reader shows. It is in no
+   * folder: its id is the blobId, and it has no folders or keywords. Null when
+   * the blob isn't a message. Throws when the server can't be asked.
+   */
+  parseEmailBlob?(blobId: string, accountId?: string): Promise<Email | null>;
   getSomeEmails(emailsId: string[], accountId?: string): Promise<Email[]>
   /**
    * Attachment parts per email id for list-row chips, fetched lazily because
