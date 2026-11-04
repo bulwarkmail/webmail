@@ -5213,7 +5213,7 @@
     "title": "웹메일에 오신 것을 환영해요!",
     "tip_compose": "c 키를 누르면 바로 새 메일을 쓸 수 있어요",
     "tip_shortcuts": "? 키를 누르면 모든 단축키를 확인할 수 있어요",
-    "tip_sidebar": "캘린더, 연락처, 설정은 사이드바 메뉴에 있어요",
+    "tip_sidebar": "캘린더, 연락처, 설정은 왼쪽 막대에 있습니다",
     "tip_settings": "설정에서 나만의 스타일로 꾸며보세요",
     "tip_compose_touch": "연필 버튼을 눌러 새 메일을 작성하세요",
     "tip_sidebar_touch": "캘린더, 연락처, 설정은 하단 막대에 있습니다",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "메일에서 “{text}” 검색"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "오프라인 상태입니다. 이 메시지를 열려면 연결이 필요합니다.",
+    "reader_failed": "이 메시지를 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "action_offline": "오프라인 상태입니다. 이 작업에는 연결이 필요합니다.",
+    "offline_bar": "오프라인 상태입니다. 메일을 읽고 변경하려면 연결이 필요합니다.",
+    "offline_default_on": "메일이 이 기기에 보관되어 오프라인에서도 읽을 수 있습니다."
   },
   "desktopMenuBar": {
     "always_show_label": "메뉴 막대 항상 표시",

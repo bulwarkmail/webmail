@@ -5388,7 +5388,7 @@
     "title": "Vitajte vo svojej poštovej schránke",
     "tip_compose": "Stlačte c na napísanie nového e-mailu",
     "tip_shortcuts": "Stlačte ? na zobrazenie všetkých klávesových skratiek",
-    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete v postrannom paneli",
+    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete na lište vľavo",
     "tip_settings": "Prispôsobte si aplikáciu v Nastaveniach",
     "tip_compose_touch": "Ťuknutím na tlačidlo s ceruzkou napíšete nový e-mail",
     "tip_sidebar_touch": "Kalendár, Kontakty a Nastavenia nájdete na lište dole",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Hľadať „{text}“ v pošte"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Ste offline. Táto správa sa otvorí len s pripojením.",
+    "reader_failed": "Túto správu sa nepodarilo načítať.",
+    "retry": "Skúsiť znova",
+    "action_offline": "Ste offline. Na to je potrebné pripojenie.",
+    "offline_bar": "Ste offline. Na čítanie a úpravy pošty je potrebné pripojenie.",
+    "offline_default_on": "Vaša pošta je uložená v tomto zariadení, takže ju môžete čítať offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Vždy zobrazovať panel ponúk",

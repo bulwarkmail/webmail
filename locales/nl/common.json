@@ -5213,7 +5213,7 @@
     "title": "Welkom bij uw mailbox",
     "tip_compose": "Druk op c om een nieuwe e-mail te schrijven",
     "tip_shortcuts": "Druk op ? om alle sneltoetsen te bekijken",
-    "tip_sidebar": "Vind Agenda, Contacten en Instellingen in het zijmenu",
+    "tip_sidebar": "Agenda, Contacten en Instellingen staan in de balk links",
     "tip_settings": "Pas uw ervaring aan in Instellingen",
     "tip_compose_touch": "Tik op de potloodknop om een nieuwe e-mail te schrijven",
     "tip_sidebar_touch": "Agenda, Contacten en Instellingen vind je in de balk onderaan",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Zoek ‘{text}’ in e-mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Je bent offline. Dit bericht heeft een verbinding nodig om te openen.",
+    "reader_failed": "Dit bericht kon niet worden geladen.",
+    "retry": "Opnieuw proberen",
+    "action_offline": "Je bent offline. Hiervoor is een verbinding nodig.",
+    "offline_bar": "Je bent offline. Voor het lezen en wijzigen van mail is een verbinding nodig.",
+    "offline_default_on": "Je mail wordt op dit apparaat bewaard, zodat je hem offline kunt lezen."
   },
   "desktopMenuBar": {
     "always_show_label": "Menubalk altijd tonen",

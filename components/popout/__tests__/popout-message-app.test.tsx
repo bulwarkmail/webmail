@@ -94,6 +94,13 @@ describe('a message opened from a bulwark:// link', () => {
 });
 
 describe('PopoutMessageApp', () => {
+  // pass-2 mail-p2-5: the window showed one message of a conversation.
+  it('reads the message in its conversation, as the reading pane does', async () => {
+    render(<PopoutMessageApp id="m/1" />);
+    await settle();
+    expect((view as unknown as { conversation?: boolean }).conversation).toBe(true);
+  });
+
   it('opens the message of the address, through its login and account', async () => {
     render(<PopoutMessageApp id="rendered-for-another-id" />);
     await settle();

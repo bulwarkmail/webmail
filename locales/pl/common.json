@@ -5213,7 +5213,7 @@
     "title": "Witaj w swojej skrzynce pocztowej",
     "tip_compose": "Naciśnij c, aby napisać nową wiadomość e-mail",
     "tip_shortcuts": "Naciśnij ?, aby zobaczyć wszystkie skróty klawiszowe",
-    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia znajdziesz w menu bocznym",
+    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia są na pasku po lewej",
     "tip_settings": "Dostosuj działanie aplikacji w Ustawieniach",
     "tip_compose_touch": "Stuknij przycisk z ołówkiem, aby napisać nowy e-mail",
     "tip_sidebar_touch": "Kalendarz, Kontakty i Ustawienia znajdziesz na dolnym pasku",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Szukaj „{text}” w poczcie"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Jesteś offline. Ta wiadomość otworzy się tylko z połączeniem.",
+    "reader_failed": "Nie udało się wczytać tej wiadomości.",
+    "retry": "Spróbuj ponownie",
+    "action_offline": "Jesteś offline. To wymaga połączenia.",
+    "offline_bar": "Jesteś offline. Czytanie i zmienianie poczty wymaga połączenia.",
+    "offline_default_on": "Twoja poczta jest przechowywana na tym urządzeniu, więc możesz ją czytać offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Zawsze pokazuj pasek menu",

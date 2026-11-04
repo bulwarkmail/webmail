@@ -5213,7 +5213,7 @@
     "title": "欢迎使用邮箱",
     "tip_compose": "按 c 撰写新邮件",
     "tip_shortcuts": "按？查看所有键盘快捷键",
-    "tip_sidebar": "在侧边栏菜单中查找日历、联系人和设置",
+    "tip_sidebar": "日历、联系人和设置在左侧栏中",
     "tip_settings": "在\"设置\"中自定义您的体验",
     "tip_compose_touch": "点按铅笔按钮写新邮件",
     "tip_sidebar_touch": "日历、联系人和设置位于底部栏",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "在邮件中搜索“{text}”"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "您已离线。打开这封邮件需要网络连接。",
+    "reader_failed": "无法加载这封邮件。",
+    "retry": "重试",
+    "action_offline": "您已离线。此操作需要网络连接。",
+    "offline_bar": "您已离线。阅读和更改邮件需要网络连接。",
+    "offline_default_on": "您的邮件保存在此设备上，离线时也能阅读。"
   },
   "desktopMenuBar": {
     "always_show_label": "始终显示菜单栏",

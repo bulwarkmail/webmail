@@ -5213,7 +5213,7 @@
     "title": "Bienvenue dans votre boite mail",
     "tip_compose": "Appuyez sur c pour composer un nouvel email",
     "tip_shortcuts": "Appuyez sur ? pour voir tous les raccourcis clavier",
-    "tip_sidebar": "Retrouvez le Calendrier, les Contacts et les Parametres dans le menu lateral",
+    "tip_sidebar": "Calendrier, Contacts et Paramètres sont dans la barre à gauche",
     "tip_settings": "Personnalisez votre experience dans les Parametres",
     "tip_compose_touch": "Touchez le bouton crayon pour écrire un nouvel e-mail",
     "tip_sidebar_touch": "Agenda, Contacts et Paramètres se trouvent dans la barre du bas",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Rechercher « {text} » dans les messages"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Vous êtes hors ligne. Ce message a besoin d'une connexion pour s'ouvrir.",
+    "reader_failed": "Ce message n'a pas pu être chargé.",
+    "retry": "Réessayer",
+    "action_offline": "Vous êtes hors ligne. Cette action a besoin d'une connexion.",
+    "offline_bar": "Vous êtes hors ligne. Lire et modifier les e-mails demande une connexion.",
+    "offline_default_on": "Vos e-mails sont gardés sur cet appareil : vous pouvez les lire hors ligne."
   },
   "desktopMenuBar": {
     "always_show_label": "Toujours afficher la barre de menus",

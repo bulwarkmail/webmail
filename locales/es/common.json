@@ -5213,7 +5213,7 @@
     "title": "Bienvenido a tu buzón",
     "tip_compose": "Pulsa c para redactar un nuevo correo",
     "tip_shortcuts": "Pulsa ? para ver todos los atajos de teclado",
-    "tip_sidebar": "Encuentra Calendario, Contactos y Ajustes en el menú lateral",
+    "tip_sidebar": "Calendario, Contactos y Ajustes están en la barra de la izquierda",
     "tip_settings": "Personaliza tu experiencia en Ajustes",
     "tip_compose_touch": "Toca el botón del lápiz para escribir un correo nuevo",
     "tip_sidebar_touch": "Encontrarás Calendario, Contactos y Ajustes en la barra inferior",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Buscar «{text}» en el correo"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "No tienes conexión. Este mensaje necesita conexión para abrirse.",
+    "reader_failed": "No se ha podido cargar este mensaje.",
+    "retry": "Reintentar",
+    "action_offline": "No tienes conexión. Esto necesita conexión.",
+    "offline_bar": "No tienes conexión. Leer y cambiar el correo necesita conexión.",
+    "offline_default_on": "Tu correo se guarda en este dispositivo, así puedes leerlo sin conexión."
   },
   "desktopMenuBar": {
     "always_show_label": "Mostrar siempre la barra de menús",

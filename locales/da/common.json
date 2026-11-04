@@ -5388,7 +5388,7 @@
     "title": "Velkommen til din postkasse",
     "tip_compose": "Tryk c for at skrive en ny e-mail",
     "tip_shortcuts": "Tryk ? for at se alle tastaturgenveje",
-    "tip_sidebar": "Find Kalender, Kontakter og Indstillinger i sidepanelets menu",
+    "tip_sidebar": "Kalender, Kontakter og Indstillinger findes i bjælken til venstre",
     "tip_settings": "Tilpas din oplevelse i Indstillinger",
     "tip_compose_touch": "Tryk på blyantknappen for at skrive en ny e-mail",
     "tip_sidebar_touch": "Kalender, Kontakter og Indstillinger finder du i bjælken nederst",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Søg efter “{text}” i mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Du er offline. Denne besked kræver forbindelse for at åbne.",
+    "reader_failed": "Beskeden kunne ikke indlæses.",
+    "retry": "Prøv igen",
+    "action_offline": "Du er offline. Det kræver forbindelse.",
+    "offline_bar": "Du er offline. Læsning og ændring af mail kræver forbindelse.",
+    "offline_default_on": "Din mail gemmes på denne enhed, så du kan læse den offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Vis altid menulinjen",

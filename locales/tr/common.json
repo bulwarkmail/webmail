@@ -5388,7 +5388,7 @@
     "title": "Posta kutunuza hoş geldiniz",
     "tip_compose": "Yeni e-posta oluşturmak için c tuşuna basın",
     "tip_shortcuts": "Tüm klavye kısayollarını görmek için ? tuşuna basın",
-    "tip_sidebar": "Takvim, Kişiler ve Ayarlar'ı kenar çubuğu menüsünde bulabilirsiniz",
+    "tip_sidebar": "Takvim, Kişiler ve Ayarlar soldaki çubukta",
     "tip_settings": "Deneyiminizi Ayarlar'dan özelleştirin",
     "tip_compose_touch": "Yeni bir e-posta yazmak için kalem düğmesine dokunun",
     "tip_sidebar_touch": "Takvim, Kişiler ve Ayarlar alttaki çubukta",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "E-postalarda “{text}” ara"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Çevrimdışısınız. Bu iletiyi açmak için bağlantı gerekiyor.",
+    "reader_failed": "Bu ileti yüklenemedi.",
+    "retry": "Tekrar dene",
+    "action_offline": "Çevrimdışısınız. Bunun için bağlantı gerekiyor.",
+    "offline_bar": "Çevrimdışısınız. E-postaları okumak ve değiştirmek için bağlantı gerekiyor.",
+    "offline_default_on": "E-postalarınız bu cihazda saklanır, böylece çevrimdışıyken de okuyabilirsiniz."
   },
   "desktopMenuBar": {
     "always_show_label": "Menü çubuğunu her zaman göster",

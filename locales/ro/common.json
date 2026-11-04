@@ -5388,7 +5388,7 @@
     "title": "Bine ați venit în căsuța dvs. poștală",
     "tip_compose": "Apăsați tasta c pentru a redacta un e-mail nou",
     "tip_shortcuts": "Apăsați tasta „?” pentru a vedea toate comenzile rapide de la tastatură",
-    "tip_sidebar": "Găsiți Calendar, Contacte și Setări în meniul din bara laterală",
+    "tip_sidebar": "Calendarul, Contactele și Setările sunt în bara din stânga",
     "tip_settings": "Personalizați-vă experiența în Setări",
     "tip_compose_touch": "Atinge butonul cu creion pentru a scrie un e-mail nou",
     "tip_sidebar_touch": "Calendarul, Contactele și Setările sunt în bara de jos",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Căutare „{text}” în e-mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sunteți offline. Acest mesaj are nevoie de conexiune ca să se deschidă.",
+    "reader_failed": "Mesajul nu a putut fi încărcat.",
+    "retry": "Încercați din nou",
+    "action_offline": "Sunteți offline. Pentru asta e nevoie de conexiune.",
+    "offline_bar": "Sunteți offline. Citirea și modificarea e-mailurilor au nevoie de conexiune.",
+    "offline_default_on": "E-mailurile dvs. sunt păstrate pe acest dispozitiv, ca să le puteți citi offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Afișează mereu bara de meniu",

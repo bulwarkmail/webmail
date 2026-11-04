@@ -5213,7 +5213,7 @@
     "title": "Benvenuto nella tua casella di posta",
     "tip_compose": "Premi c per scrivere una nuova email",
     "tip_shortcuts": "Premi ? per vedere tutte le scorciatoie da tastiera",
-    "tip_sidebar": "Trova Calendario, Contatti e Impostazioni nel menu laterale",
+    "tip_sidebar": "Calendario, Contatti e Impostazioni sono nella barra a sinistra",
     "tip_settings": "Personalizza la tua esperienza nelle Impostazioni",
     "tip_compose_touch": "Tocca il pulsante a matita per scrivere una nuova email",
     "tip_sidebar_touch": "Calendario, Contatti e Impostazioni sono nella barra in basso",
@@ -7068,6 +7068,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Cerca «{text}» nella posta"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sei offline. Questo messaggio ha bisogno di una connessione per aprirsi.",
+    "reader_failed": "Impossibile caricare questo messaggio.",
+    "retry": "Riprova",
+    "action_offline": "Sei offline. Serve una connessione.",
+    "offline_bar": "Sei offline. Per leggere e modificare la posta serve una connessione.",
+    "offline_default_on": "La tua posta è conservata su questo dispositivo, così puoi leggerla offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Mostra sempre la barra dei menu",
