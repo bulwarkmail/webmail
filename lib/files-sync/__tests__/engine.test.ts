@@ -302,7 +302,10 @@ describe('names the disk cannot hold', () => {
       },
     });
     expect(s.disk.listing('r1')).toEqual(['CON_.txt', 'Report.txt', 'a：b？.txt', 'report (2).txt', 'trail._']);
-    expect(s.kinds()).toEqual(expect.arrayContaining(['renamed-for-disk a：b？.txt (a：b？.txt)', 'renamed-for-disk report (2).txt (report (2).txt)']));
+    // The line names the file as Files has it and as it is here, and why (files-p3-12).
+    expect(s.kinds()).toEqual(expect.arrayContaining(['renamed-for-disk a:b?.txt (a：b？.txt)', 'renamed-for-disk report.txt (report (2).txt)']));
+    const why = Object.fromEntries(s.engine.activity.filter((entry) => entry.kind === 'renamed-for-disk').map((entry) => [entry.path, entry.messageKey]));
+    expect(why).toMatchObject({ 'a:b?.txt': 'disk_name', 'report.txt': 'disk_case', 'CON.txt': 'disk_name' });
     const id = s.server.find('Sync/a:b?.txt')!.id;
     // An edit here goes to the same node, under the name it has in Files.
     s.disk.write('r1', 'a：b？.txt', 'edited');
@@ -367,10 +370,23 @@ describe('reading and uploading', () => {
     await s.sync();
     await s.sync();
     expect(s.server.uploads).toEqual([]);
+    // Listed as can't sync until it fits or goes (files-p3-13).
+    expect(s.engine.status().r1.cantSync).toEqual([{ path: 'huge.bin', limit: 10 }]);
     expect(s.engine.activity.filter((entry) => entry.kind === 'too-large')).toEqual([expect.objectContaining({ path: 'huge.bin', detail: '10', messageKey: 'errors.too_large' })]);
     s.disk.write('r1', 'huge.bin', 'small');
     await s.sync();
     expect(s.server.content(s.server.find('Sync/huge.bin')!.id)).toBe('small');
+    expect(s.engine.status().r1.cantSync).toEqual([]);
+  });
+
+  it("forgets a file it couldn't upload once it's gone from here", async () => {
+    const s = await setup({ server: { maxSizeUpload: 10 } });
+    s.disk.write('r1', 'huge.bin', 'x'.repeat(20));
+    await s.sync();
+    expect(s.engine.status().r1.cantSync).toHaveLength(1);
+    s.disk.deleteUser('r1', 'huge.bin');
+    await s.sync();
+    expect(s.engine.status().r1.cantSync).toEqual([]);
   });
 
   it('writes a downloaded file in pieces and leaves nothing half written', async () => {
@@ -390,8 +406,9 @@ describe('offline', () => {
     s.disk.write('r1', 'a.txt', 'v2');
     s.disk.write('r1', 'b.txt', 'new');
     await s.sync();
-    expect(s.engine.status().r1.state).toBe('offline');
-    expect(s.engine.activity[0]).toMatchObject({ kind: 'waiting', messageKey: 'errors.offline' });
+    expect(s.engine.status().r1).toMatchObject({ state: 'offline', pending: 2 });
+    // One line for the root, with how many wait (files-p3-6).
+    expect(s.engine.activity[0]).toMatchObject({ kind: 'waiting', path: '', detail: '2', messageKey: 'errors.offline', account: 'a1' });
     await s.sync();
     expect(s.engine.activity.filter((entry) => entry.kind === 'waiting')).toHaveLength(1);
     s.server.offline = false;

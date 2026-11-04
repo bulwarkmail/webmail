@@ -7825,6 +7825,17 @@
     "notify": {
       "conflict_title": "Một tệp đã bị thay đổi ở hai nơi",
       "problem_title": "Không thể đồng bộ một tệp"
+    },
+    "activity": {
+      "waiting_count": "Thay đổi đang chờ máy chủ: {count}",
+      "disk_name": "{path} trong Tệp có tên {detail} trên máy tính này vì một số ký tự không được phép ở đây",
+      "disk_case": "{path} trong Tệp có tên {detail} trên máy tính này vì ở đây đã có tên chỉ khác chữ hoa và chữ thường",
+      "disk_group": "Tên trong Tệp mà máy tính này không cho phép: {count}. Ở đây chúng có tên hơi khác.",
+      "show": "Hiện",
+      "hide": "Ẩn"
+    },
+    "cant_sync": {
+      "title": "Không thể đồng bộ"
     }
   },
   "desktopQuickCompose": {

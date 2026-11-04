@@ -35,6 +35,8 @@ export interface FilesSyncRootStatus {
   lastSyncedAt: number | null;
   /** For `error`: a key in the `files_sync` namespace saying what went wrong. */
   errorKey?: string;
+  /** Files that stay here because Files won't take them (over the upload limit), until they are removed or fit. */
+  cantSync?: { path: string; limit: number }[];
   /** For `confirm-delete`: how many items were deleted, and where (MassDeleteOrigin). */
   massDelete?: { count: number; deletedOn: MassDeleteOrigin };
 }
@@ -74,13 +76,18 @@ export interface FilesSyncActivity {
   id: string;
   at: number;
   rootId: string;
+  /** The local account the root was for: lines stay with it after the root goes, and across restarts. */
+  account?: string;
   kind: FilesSyncActivityKind;
   /** `up`: to Files. `down`: to this computer. */
   direction: 'up' | 'down' | null;
   /** Relative to the root, `/` between parts. */
   path: string;
   detail?: string;
-  /** For `error` and `waiting`: a key in the `files_sync` namespace. */
+  /**
+   * For `error` and `waiting`: a key in the `files_sync` namespace. For `renamed-for-disk`: why,
+   * `disk_name` (characters this computer doesn't allow) or `disk_case` (taken in another case).
+   */
   messageKey?: string;
 }
 

@@ -10,7 +10,7 @@ import { WindowControlsHost } from '@/components/layout/window-controls-host';
 import { noteCredentialsRejected } from '@/lib/offline/credentials-rejected';
 import { runWipeCleaners } from '@/lib/offline/wipe-registry';
 import { runBeforeSignOut } from '@/lib/sign-out-cleanup';
-import type { FilesSyncController, FilesSyncSnapshot } from '../types';
+import type { FilesSyncActivity, FilesSyncController, FilesSyncSnapshot } from '../types';
 import { claimFilesControls, resetFilesControlsForTests } from '../controls';
 import type { DriveStatusText } from '../drive-status';
 import { FilesSyncHost, type HostAccount, type QuotaTiming } from '../host';
@@ -402,6 +402,74 @@ describe('OS notifications and the tray line (files-p3-5)', () => {
     await settle(r.host);
     expect(r.disk.driveStatuses.at(-1)?.status.tray).toBe('Bulwark Files: idle');
     r.host.stop();
+  });
+});
+
+describe('Recent activity across restarts (files-p3-11)', () => {
+  function memoryStore() {
+    const kept = new Map<string, FilesSyncActivity[]>();
+    return {
+      kept,
+      store: {
+        load: (account: string) => kept.get(account) ?? [],
+        save: (account: string, lines: FilesSyncActivity[]) => {
+          if (lines.length === 0) kept.delete(account);
+          else kept.set(account, lines);
+        },
+        remove: (account: string) => {
+          kept.delete(account);
+        },
+      },
+    };
+  }
+
+  function hostWith(disk: FakeDisk, server: FakeServer, store: ReturnType<typeof memoryStore>['store']) {
+    let published: Partial<FilesSyncSnapshot> = {};
+    const host = new FilesSyncHost({
+      controls: disk,
+      platform: 'win32',
+      publish: (patch) => {
+        published = { ...published, ...patch };
+      },
+      setController: () => {},
+      folderSyncForcedOff: () => false,
+      downloadsForbidden: () => false,
+      remoteFor: () => server.remote(),
+      readUrl: disk.readUrl,
+      timing: FAST,
+      activityStore: store,
+    });
+    return { host, snapshot: () => published };
+  }
+
+  it("keeps an account's lines over a restart and a removed folder, until a sign-out", async () => {
+    const disk = new FakeDisk({ caseInsensitive: true });
+    const server = new FakeServer();
+    const folder = server.folder('Sync');
+    disk.addRoot({ id: 'r1', account: 'a1', remoteId: folder.id });
+    disk.write('r1', 'a.txt', 'a');
+    const memory = memoryStore();
+    const account: HostAccount = { id: 'a1', label: 'a@example.org', client: { getSessionSnapshot: () => server.session, getAuthHeader: () => 'Basic x' } };
+    const first = hostWith(disk, server, memory.store);
+    first.host.start();
+    first.host.setAccounts([account], 'a1');
+    await settle(first.host);
+    expect(memory.kept.get('a1')?.map((line) => `${line.kind} ${line.path}`)).toEqual(['uploaded a.txt']);
+    first.host.stop();
+
+    // The app starts again: the line is there before anything new happens.
+    const second = hostWith(disk, server, memory.store);
+    second.host.start();
+    second.host.setAccounts([account], 'a1');
+    await settle(second.host);
+    expect(second.snapshot().activity?.map((line) => `${line.kind} ${line.path}`)).toEqual(['uploaded a.txt']);
+    // The folder stops syncing: its lines stay until Clear.
+    await second.host.engine.removeRoot('r1');
+    await settle(second.host);
+    expect(second.snapshot().activity).toHaveLength(1);
+    await second.host.signedOut('a1', true);
+    expect(memory.kept.has('a1')).toBe(false);
+    second.host.stop();
   });
 });
 

@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "一個檔案在兩處被變更",
       "problem_title": "有檔案無法同步"
+    },
+    "activity": {
+      "waiting_count": "等待伺服器的變更：{count}",
+      "disk_name": "檔案中的 {path} 在這部電腦上名為 {detail}，因為其中一些字元在這裡不允許使用",
+      "disk_case": "檔案中的 {path} 在這部電腦上名為 {detail}，因為這裡已有一個僅大小寫不同的名稱",
+      "disk_group": "這部電腦不允許的檔案名稱：{count}。它們在這裡的名稱略有不同。",
+      "show": "顯示",
+      "hide": "隱藏"
+    },
+    "cant_sync": {
+      "title": "無法同步"
     }
   },
   "desktopQuickCompose": {

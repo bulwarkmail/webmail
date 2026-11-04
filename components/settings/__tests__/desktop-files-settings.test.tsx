@@ -256,7 +256,8 @@ describe('Files on this computer settings page', () => {
     setup({ roots, status });
     renderPage();
     const line = (id: string) => document.querySelector(`[data-files-sync-root="${id}"] [data-files-sync-state]`)!.textContent;
-    expect(line('idle')).toMatch(/^Up to date\. Last synced .*2:05/);
+    // The app's 24-hour setting (the default), not the language's 12-hour clock (settings-p3-12).
+    expect(line('idle')).toBe('Up to date. Last synced 14:05');
     expect(line('syncing')).toBe('Syncing: 3 done, 7 to go');
     expect(line('paused')).toBe('Paused');
     expect(line('offline')).toBe('Offline. 2 changes wait for the server');
@@ -361,11 +362,64 @@ describe('Files on this computer settings page', () => {
     for (const row of rows) expect(row.textContent).not.toMatch(/files_sync\.|\{/);
   });
 
-  it('says when nothing happened yet', () => {
+  it('says when nothing happened yet, with no Clear to press', () => {
     setup({ roots: [folderRoot()] });
     renderPage();
     expect(screen.getByText('Nothing has happened yet.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+  });
+
+  it("follows the app's 12-hour setting for times (settings-p3-12)", async () => {
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const before = useSettingsStore.getState().timeFormat;
+    useSettingsStore.setState({ timeFormat: '12h' });
+    const at = Date.UTC(2026, 10, 4, 14, 5);
+    vi.useFakeTimers({ now: at + 60_000, toFake: ['Date'] });
+    try {
+      setup({
+        roots: [folderRoot()],
+        status: { r1: { rootId: 'r1', state: 'idle', pending: 0, done: 0, lastSyncedAt: at } },
+        activity: [{ id: 'x', at, rootId: 'r1', account: 'acc', kind: 'uploaded', direction: 'up', path: 'a.txt' }],
+      });
+      renderPage();
+      expect(document.querySelector('[data-files-sync-root="r1"] [data-files-sync-state]')!.textContent).toBe('Up to date. Last synced 2:05 PM');
+      expect(screen.getByTestId('files-sync-activity').querySelector('time')!.textContent).toBe('2:05 PM');
+    } finally {
+      vi.useRealTimers();
+      useSettingsStore.setState({ timeFormat: before });
+    }
+  });
+
+  it('says how many changes wait while offline, names a file Files has under another name here and why, and groups many such lines', () => {
+    const line = (id: string, extra: Partial<FilesSyncActivity>): FilesSyncActivity => ({ id, at: 1, rootId: 'r1', account: 'acc', kind: 'uploaded', direction: null, path: '', ...extra });
+    setup({
+      roots: [folderRoot()],
+      activity: [
+        line('w', { kind: 'waiting', detail: '3', messageKey: 'errors.offline', at: 10 }),
+        line('n', { kind: 'renamed-for-disk', path: 'Seed/back\\slash.txt', detail: 'back＼slash.txt', messageKey: 'disk_name', at: 9 }),
+        line('u', { kind: 'uploaded', path: 'x.txt', at: 8 }),
+        ...[1, 2, 3, 4].map((n) => line(`g${n}`, { kind: 'renamed-for-disk', path: `Seed/Report${n}.txt`, detail: `report${n} (2).txt`, messageKey: 'disk_case', at: 5 - n })),
+      ],
+    });
+    renderPage();
+    const list = screen.getByTestId('files-sync-activity');
+    expect(list).toHaveTextContent("Changes waiting for the server: 3: The server can't be reached");
+    expect(list).toHaveTextContent("Seed/back\\slash.txt in Files is called back＼slash.txt on this computer, because some of its characters aren't allowed here");
+    const group = list.querySelector('[data-activity-kind="renamed-for-disk-group"]') as HTMLElement;
+    expect(group).toHaveTextContent("Names in Files that this computer doesn't allow: 4.");
+    expect(group).not.toHaveTextContent('Seed/Report1.txt');
+    fireEvent.click(within(group).getByRole('button', { name: 'Show' }));
+    expect(group).toHaveTextContent('Seed/Report1.txt in Files is called report1 (2).txt on this computer, because a name that differs only in upper and lower case is already here');
+  });
+
+  it("keeps files that can't sync on top until they're gone (files-p3-13)", () => {
+    setup({
+      roots: [folderRoot()],
+      status: { r1: { rootId: 'r1', state: 'idle', pending: 0, done: 0, lastSyncedAt: null, cantSync: [{ path: 'huge.iso', limit: 50 * 1048576 }] } },
+    });
+    renderPage();
+    expect(screen.getByTestId('files-sync-cant-sync')).toHaveTextContent("Can't sync");
+    expect(screen.getByTestId('files-sync-cant-sync')).toHaveTextContent('huge.iso is bigger than Files allows (50 MB). It stays on this computer only');
   });
 
   it('asks about a mass delete in the folder row, with both answers', () => {

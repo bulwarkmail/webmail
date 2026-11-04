@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Un fitxer s'ha canviat en dos llocs",
       "problem_title": "Un fitxer no es pot sincronitzar"
+    },
+    "activity": {
+      "waiting_count": "Canvis que esperen el servidor: {count}",
+      "disk_name": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè alguns dels seus caràcters no s'hi permeten",
+      "disk_case": "{path} a Fitxers es diu {detail} en aquest ordinador, perquè ja hi ha un nom que només canvia en majúscules i minúscules",
+      "disk_group": "Noms de Fitxers que aquest ordinador no permet: {count}. Aquí tenen noms una mica diferents.",
+      "show": "Mostra",
+      "hide": "Amaga"
+    },
+    "cant_sync": {
+      "title": "No es pot sincronitzar"
     }
   },
   "desktopQuickCompose": {

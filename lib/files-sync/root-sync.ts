@@ -50,6 +50,7 @@ import {
   isUnderPath,
   joinPath,
   nameKey,
+  needsDiskName,
   parentPath,
   pathKey,
   type DiskNaming,
@@ -209,6 +210,8 @@ export class RootSync {
   private dirty = false;
   private saveChain: Promise<void> = Promise.resolve();
   private waitingSaid = false;
+  /** What waits here, counted when the server went away. */
+  private offlineWaiting: number | null = null;
   /** Nodes being placed by this pass, for items: `syncing`. */
   private busy = new Set<string>();
   /** Says the root was stopped for good: no pass runs again. */
@@ -377,6 +380,10 @@ export class RootSync {
       await this.save();
     } catch (error) {
       await this.save();
+      if (isOffline(error) || (error as Stop)?.why === 'offline') {
+        // How much waits, for "Offline. 3 changes wait" (files-p3-6).
+        this.offlineWaiting = await this.pendingHere().then((waiting) => waiting.length, () => null);
+      }
       return this.stopWith(error);
     }
     this.allowDeletes = false;
@@ -389,7 +396,8 @@ export class RootSync {
     }
     this.updateItems();
     const pending = this.failed.size;
-    this.setStatus({ state: 'idle', pending, lastSyncedAt: this.host.now() });
+    this.offlineWaiting = null;
+    this.setStatus({ state: 'idle', pending, lastSyncedAt: this.host.now(), cantSync: this.cantSync() });
     return soon ? 'soon' : 'idle';
   }
 
@@ -410,12 +418,14 @@ export class RootSync {
       return 'retry';
     }
     if (isOffline(error) || why === 'offline') {
+      const pending = this.offlineWaiting ?? Math.max(this.status.pending, this.failed.size);
       if (!this.waitingSaid) {
         this.waitingSaid = true;
-        this.log('waiting', null, '', { messageKey: errorKey('offline') });
+        // No path: the root waits as a whole. `detail`: how many changes.
+        this.log('waiting', null, '', { detail: String(pending), messageKey: errorKey('offline') });
       }
       this.updateItems();
-      this.setStatus({ state: 'offline', pending: Math.max(this.status.pending, this.failed.size) });
+      this.setStatus({ state: 'offline', pending });
       return 'retry';
     }
     if (isAuthRefused(error) || why === 'auth') {
@@ -451,6 +461,10 @@ export class RootSync {
       this.record = emptyRecord(this.root.remoteId);
     }
 
+    // Too large and gone from here since: nothing to say about it any more.
+    const here = new Set(entries.map((entry) => entry.path));
+    for (const path of Object.keys(this.record_.tooLarge)) if (!here.has(path)) delete this.record_.tooLarge[path];
+
     const round = new Round(this, entries, view);
     round.match();
     let did = 0;
@@ -477,6 +491,12 @@ export class RootSync {
     this.lastSeen = round.matched;
     if (did > 0) await this.save();
     return did;
+  }
+
+  /** Files over the upload limit that are still here, for the "Can't sync" list (files-p3-13). */
+  private cantSync(): { path: string; limit: number }[] {
+    const limit = this.account.remote.maxUpload() ?? 0;
+    return Object.keys(this.record_.tooLarge).sort().map((path) => ({ path, limit }));
   }
 
   private updateItems(): void {
@@ -529,6 +549,14 @@ export class RootSync {
   }
   /** @internal */ logActivity(kind: FilesSyncActivityKind, direction: 'up' | 'down' | null, path: string, extra: { detail?: string; messageKey?: string } = {}): void {
     this.log(kind, direction, path, extra);
+  }
+  /**
+   * @internal A name Files has that this computer can't hold, so it's another here. `path` is the
+   * Files name in its folder here, `detail` the name on disk, `messageKey` why (files-p3-12).
+   */
+  logDiskName(folder: string, filesName: string, diskName: string): void {
+    const why = needsDiskName(filesName, this.host.naming) ? 'disk_name' : 'disk_case';
+    this.log('renamed-for-disk', 'down', joinPath(folder, filesName), { detail: diskName, messageKey: why });
   }
   /** @internal */ logFailure(path: string, name: FilesSyncErrorName, direction: 'up' | 'down' | null = null): void {
     this.logError(path, name, direction);
@@ -771,7 +799,7 @@ class Round {
         this.claim(moved);
         this.remember({ ...this.adoptLocal(this.adoptRemote(item, node), moved) });
         this.sync.logActivity(folder !== parentPath(entry.path) ? 'moved' : 'renamed', 'down', target, { detail: entry.path });
-        if (wanted !== node.name) this.sync.logActivity('renamed-for-disk', 'down', target, { detail: wanted });
+        if (wanted !== node.name) this.sync.logDiskName(folder, node.name, wanted);
         return true;
       });
     }
@@ -1034,14 +1062,14 @@ class Round {
         this.matched.set(node.id, reserved);
         this.remember(this.itemOf(node, null, path));
         places.push({ node, path });
-        if (name !== node.name) this.sync.logActivity('renamed-for-disk', 'down', path, { detail: name });
+        if (name !== node.name) this.sync.logDiskName(folder, node.name, name);
         continue;
       }
       did += await this.step(node.id, path, 'down', async () => {
         await this.bringDown(node.id, node, path);
         if (node.kind === 'directory') this.sync.logActivity('folder-created', 'down', path);
         else this.sync.logActivity('downloaded', 'down', path);
-        if (name !== node.name) this.sync.logActivity('renamed-for-disk', 'down', path, { detail: name });
+        if (name !== node.name) this.sync.logDiskName(folder, node.name, name);
         return true;
       });
     }

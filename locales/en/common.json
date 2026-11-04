@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "A file was changed in two places",
       "problem_title": "A file can't be synced"
+    },
+    "activity": {
+      "waiting_count": "Changes waiting for the server: {count}",
+      "disk_name": "{path} in Files is called {detail} on this computer, because some of its characters aren't allowed here",
+      "disk_case": "{path} in Files is called {detail} on this computer, because a name that differs only in upper and lower case is already here",
+      "disk_group": "Names in Files that this computer doesn't allow: {count}. They have slightly different names here.",
+      "show": "Show",
+      "hide": "Hide"
+    },
+    "cant_sync": {
+      "title": "Can't sync"
     }
   },
   "desktopQuickCompose": {

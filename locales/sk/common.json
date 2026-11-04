@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Súbor sa zmenil na dvoch miestach",
       "problem_title": "Súbor nemožno synchronizovať"
+    },
+    "activity": {
+      "waiting_count": "Zmeny čakajúce na server: {count}",
+      "disk_name": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo niektoré jeho znaky tu nie sú povolené",
+      "disk_case": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo tu už je názov, ktorý sa líši len veľkosťou písmen",
+      "disk_group": "Názvy v Súboroch, ktoré tento počítač nepovoľuje: {count}. Tu majú trochu iné názvy.",
+      "show": "Zobraziť",
+      "hide": "Skryť"
+    },
+    "cant_sync": {
+      "title": "Nemožno synchronizovať"
     }
   },
   "desktopQuickCompose": {

@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "파일이 두 곳에서 변경되었습니다",
       "problem_title": "파일을 동기화할 수 없습니다"
+    },
+    "activity": {
+      "waiting_count": "서버를 기다리는 변경 내용: {count}",
+      "disk_name": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 일부 문자를 여기서 쓸 수 없기 때문입니다",
+      "disk_case": "파일의 {path}은(는) 이 컴퓨터에서 {detail}(이)라는 이름입니다. 대소문자만 다른 이름이 이미 있기 때문입니다",
+      "disk_group": "이 컴퓨터에서 허용되지 않는 파일 이름: {count}. 여기서는 이름이 조금 다릅니다.",
+      "show": "보기",
+      "hide": "숨기기"
+    },
+    "cant_sync": {
+      "title": "동기화할 수 없음"
     }
   },
   "desktopQuickCompose": {

@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Egy fájl két helyen módosult",
       "problem_title": "Egy fájl nem szinkronizálható"
+    },
+    "activity": {
+      "waiting_count": "A kiszolgálóra váró változások: {count}",
+      "disk_name": "A Fájlokban lévő {path} ezen a számítógépen {detail} nevet kapott, mert egyes karakterei itt nem engedélyezettek",
+      "disk_case": "A Fájlokban lévő {path} ezen a számítógépen {detail} nevet kapott, mert itt már van egy csak kis- és nagybetűben eltérő név",
+      "disk_group": "A Fájlokban lévő, ezen a számítógépen nem engedélyezett nevek: {count}. Itt kissé más nevük van.",
+      "show": "Megjelenítés",
+      "hide": "Elrejtés"
+    },
+    "cant_sync": {
+      "title": "Nem szinkronizálható"
     }
   },
   "desktopQuickCompose": {

@@ -20,6 +20,7 @@ import type { FilesSyncActivity, FilesSyncActivityKind } from "@/lib/files-sync/
 import { filesQuotaLevel } from "@/lib/files-sync/drive-status";
 import { requestFlush } from "@/lib/files-sync/flush-requests";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
 import { OrgLockedNote } from "./org-locked-note";
 import { SettingItem, SettingsSection, Select, ToggleSwitch } from "./settings-section";
@@ -409,60 +410,137 @@ function ActivityMark({ item }: { item: FilesSyncActivity }) {
   );
 }
 
+/** More names this computer can't hold than this, one after another: one line with "Show" (files-p3-12). */
+const DISK_NAME_GROUP = 3;
+
+type ActivityRow = { kind: "line"; item: FilesSyncActivity } | { kind: "disk-names"; key: string; items: FilesSyncActivity[] };
+
+/** Runs of "is called … on this computer" (a first sync has many) become one row. */
+function activityRows(items: FilesSyncActivity[]): ActivityRow[] {
+  const rows: ActivityRow[] = [];
+  let run: FilesSyncActivity[] = [];
+  const flush = () => {
+    if (run.length > DISK_NAME_GROUP) rows.push({ kind: "disk-names", key: run[0].id, items: run });
+    else for (const item of run) rows.push({ kind: "line", item });
+    run = [];
+  };
+  for (const item of items) {
+    if (item.kind === "renamed-for-disk" && (run.length === 0 || run[0].rootId === item.rootId)) {
+      run.push(item);
+      continue;
+    }
+    flush();
+    if (item.kind === "renamed-for-disk") run.push(item);
+    else rows.push({ kind: "line", item });
+  }
+  flush();
+  return rows;
+}
+
 function ActivitySection() {
   const t = useTranslations("files_sync");
+  const tx = useTranslations("files_sync_extra");
   const format = useFormatter();
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const activity = useFilesSyncStore((s) => s.activity);
   const roots = useFilesSyncStore((s) => s.roots);
+  const status = useFilesSyncStore((s) => s.status);
   const controller = useFilesSyncStore((s) => s.controller);
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   const items = useMemo(() => [...activity].sort((a, b) => b.at - a.at), [activity]);
+  const rows = useMemo(() => activityRows(items), [items]);
   const rootById = useMemo(() => new Map(roots.map((r) => [r.id, r])), [roots]);
+  // Files that stay here until they're removed or fit (files-p3-13): on top, not lost in the list.
+  const cantSync = roots.flatMap((root) => (status[root.id]?.cantSync ?? []).map((entry) => ({ root, ...entry })));
 
-  const message = (item: FilesSyncActivity) => activityMessage(t, item, formatFileSize);
+  const message = (item: FilesSyncActivity) => activityMessage(t, item, formatFileSize, tx);
+  const time = (at: number) => format.dateTime(new Date(at), syncTimeOptions(at, Date.now(), timeFormat));
+
+  const line = (item: FilesSyncActivity) => {
+    const root = rootById.get(item.rootId);
+    const marked = ERROR_KINDS.has(item.kind) || item.kind === "conflict" || item.kind === "mass-delete";
+    return (
+      <li
+        key={item.id}
+        className={cn("flex items-start gap-2 px-3 py-2 text-sm", ERROR_KINDS.has(item.kind) && "bg-destructive/5", item.kind === "conflict" && "bg-amber-500/5")}
+        data-activity-kind={item.kind}
+      >
+        <ActivityMark item={item} />
+        <time dateTime={new Date(item.at).toISOString()} className="text-xs text-muted-foreground tabular-nums shrink-0 mt-0.5">
+          {time(item.at)}
+        </time>
+        {root && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground shrink-0 max-w-[30%] mt-0.5">
+            {root.kind === "drive" ? <HardDrive className="w-3 h-3 shrink-0" aria-hidden="true" /> : <FolderSync className="w-3 h-3 shrink-0" aria-hidden="true" />}
+            <span className="truncate">{rootName(root, t("drive.root_name"))}</span>
+          </span>
+        )}
+        <span className={cn("min-w-0 flex-1 break-words", marked && "font-medium")} dir="auto">{message(item)}</span>
+      </li>
+    );
+  };
 
   return (
     <SettingsSection id="activity" title={t("activity.title")}>
+      {cantSync.length > 0 && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 space-y-1" data-testid="files-sync-cant-sync">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-destructive">
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />{tx("cant_sync.title")}
+          </p>
+          <ul className="space-y-1">
+            {cantSync.map((entry) => (
+              <li key={`${entry.root.id}:${entry.path}`} className="text-sm text-foreground break-words" dir="auto">
+                {t("activity.too-large", { path: entry.path, detail: formatFileSize(entry.limit) })}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("activity.empty")}</p>
       ) : (
         <ul className="max-h-96 overflow-y-auto divide-y divide-border/60 rounded-md border border-border" data-testid="files-sync-activity">
-          {items.map((item) => {
-            const root = rootById.get(item.rootId);
-            const marked = ERROR_KINDS.has(item.kind) || item.kind === "conflict" || item.kind === "mass-delete";
+          {rows.map((row) => {
+            if (row.kind === "line") return line(row.item);
+            const shown = open.has(row.key);
+            const toggle = () => setOpen((prev) => {
+              const next = new Set(prev);
+              if (next.has(row.key)) next.delete(row.key);
+              else next.add(row.key);
+              return next;
+            });
             return (
-              <li
-                key={item.id}
-                className={cn("flex items-start gap-2 px-3 py-2 text-sm", ERROR_KINDS.has(item.kind) && "bg-destructive/5", item.kind === "conflict" && "bg-amber-500/5")}
-                data-activity-kind={item.kind}
-              >
-                <ActivityMark item={item} />
-                <time dateTime={new Date(item.at).toISOString()} className="text-xs text-muted-foreground tabular-nums shrink-0 mt-0.5">
-                  {format.dateTime(new Date(item.at), syncTimeOptions(item.at))}
-                </time>
-                {root && (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground shrink-0 max-w-[30%] mt-0.5">
-                    {root.kind === "drive" ? <HardDrive className="w-3 h-3 shrink-0" aria-hidden="true" /> : <FolderSync className="w-3 h-3 shrink-0" aria-hidden="true" />}
-                    <span className="truncate">{rootName(root, t("drive.root_name"))}</span>
-                  </span>
-                )}
-                <span className={cn("min-w-0 flex-1 break-words", marked && "font-medium")} dir="auto">{message(item)}</span>
+              <li key={row.key} data-activity-kind="renamed-for-disk-group">
+                <div className="flex items-start gap-2 px-3 py-2 text-sm">
+                  <span className="w-3.5 shrink-0" aria-hidden="true" />
+                  <time dateTime={new Date(row.items[0].at).toISOString()} className="text-xs text-muted-foreground tabular-nums shrink-0 mt-0.5">
+                    {time(row.items[0].at)}
+                  </time>
+                  <span className="min-w-0 flex-1 break-words">{tx("activity.disk_group", { count: row.items.length })}</span>
+                  <Button size="sm" variant="ghost" className="h-6 px-2 shrink-0" aria-expanded={shown} onClick={toggle}>
+                    {shown ? tx("activity.hide") : tx("activity.show")}
+                  </Button>
+                </div>
+                {shown && <ul className="divide-y divide-border/60 border-t border-border/60">{row.items.map(line)}</ul>}
               </li>
             );
           })}
         </ul>
       )}
-      <div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5"
-          disabled={items.length === 0 || !controller}
-          onClick={() => controller?.clearActivity()}
-          data-testid="files-sync-clear-activity"
-        >
-          <Trash2 className="w-4 h-4" />{t("activity.clear")}
-        </Button>
-      </div>
+      {items.length > 0 && (
+        <div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            disabled={!controller}
+            onClick={() => controller?.clearActivity()}
+            data-testid="files-sync-clear-activity"
+          >
+            <Trash2 className="w-4 h-4" />{t("activity.clear")}
+          </Button>
+        </div>
+      )}
     </SettingsSection>
   );
 }

@@ -23,6 +23,7 @@ import { RemoteTree, type FilesRemote } from './remote';
 import { RootSync, type AccountLink, type ActivityInput } from './root-sync';
 import type { FilesFlushOptions, FilesFlushOutcome, FilesSyncActivity, FilesSyncCoverage, FilesSyncItemStatus, FilesSyncRootStatus } from './types';
 
+/** Lines kept per account (files-p3-11). */
 export const ACTIVITY_LIMIT = 200;
 /** How long uploading what waits before a root stops may take at most. */
 const FLUSH_LIMIT_MS = 10 * 60_000;
@@ -606,15 +607,31 @@ export class FilesSyncEngine {
     return null;
   }
 
-  clearActivity(): void {
-    this.activity = [];
+  /** An account's lines, or every account's without one. */
+  clearActivity(account?: string): void {
+    this.activity = account === undefined ? [] : this.activity.filter((entry) => entry.account !== account);
+    this.update();
+  }
+
+  /** An account's lines, newest first. */
+  activityOf(account: string): FilesSyncActivity[] {
+    return this.activity.filter((entry) => entry.account === account);
+  }
+
+  /** Lines kept from before (the host's store): merged with what came since, newest first, capped per account. */
+  restoreActivity(account: string, entries: FilesSyncActivity[]): void {
+    const known = new Set(this.activity.map((entry) => entry.id));
+    const added = entries.filter((entry) => !known.has(entry.id)).map((entry) => ({ ...entry, account }));
+    if (added.length === 0) return;
+    this.activity = capPerAccount([...this.activity, ...added].sort((a, b) => b.at - a.at));
     this.update();
   }
 
   private addActivity(entry: ActivityInput): void {
     this.activitySeq += 1;
-    const line: FilesSyncActivity = { id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry };
-    this.activity = [line, ...this.activity].slice(0, ACTIVITY_LIMIT);
+    const account = this.runners.get(entry.rootId)?.sync.root.account ?? this.roots.find((root) => root.id === entry.rootId)?.account;
+    const line: FilesSyncActivity = { id: `${this.now()}-${this.activitySeq}`, at: this.now(), ...entry, ...(account ? { account } : {}) };
+    this.activity = capPerAccount([line, ...this.activity]);
     this.update();
     try {
       this.options.onActivity?.(line);
@@ -732,6 +749,17 @@ export class FilesSyncEngine {
     flush(true);
     await chain;
   }
+}
+
+/** At most ACTIVITY_LIMIT lines per account, in the order given. */
+function capPerAccount(lines: FilesSyncActivity[]): FilesSyncActivity[] {
+  const counts = new Map<string, number>();
+  return lines.filter((line) => {
+    const key = line.account ?? '';
+    const count = (counts.get(key) ?? 0) + 1;
+    counts.set(key, count);
+    return count <= ACTIVITY_LIMIT;
+  });
 }
 
 function joinParts(parts: Uint8Array[], size: number): Uint8Array {

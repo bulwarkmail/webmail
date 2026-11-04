@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Een bestand is op twee plekken gewijzigd",
       "problem_title": "Een bestand kan niet worden gesynchroniseerd"
+    },
+    "activity": {
+      "waiting_count": "Wijzigingen die op de server wachten: {count}",
+      "disk_name": "{path} in Bestanden heet op deze computer {detail}, omdat sommige tekens hier niet zijn toegestaan",
+      "disk_case": "{path} in Bestanden heet op deze computer {detail}, omdat hier al een naam staat die alleen in hoofdletters en kleine letters verschilt",
+      "disk_group": "Namen in Bestanden die deze computer niet toestaat: {count}. Ze hebben hier een iets andere naam.",
+      "show": "Weergeven",
+      "hide": "Verbergen"
+    },
+    "cant_sync": {
+      "title": "Kan niet synchroniseren"
     }
   },
   "desktopQuickCompose": {

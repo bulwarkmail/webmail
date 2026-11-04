@@ -25,6 +25,7 @@
 import type { DesktopOsNotification, FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
 import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
+import type { ActivityStore } from './activity-store';
 import { driveStatusFor, filesQuotaOf, type DriveStatusText } from './drive-status';
 import { FilesSyncEngine, type EngineTiming } from './engine';
 import { requestFlush } from './flush-requests';
@@ -67,6 +68,8 @@ export interface HostDeps {
   /** Shows an OS notification; main shows none while the main window has the focus. */
   notify?: (notification: DesktopOsNotification) => void;
   notifyText?: () => FilesNotifyText | null;
+  /** Where Recent activity is kept across restarts. None: it isn't. */
+  activityStore?: ActivityStore;
   quotaTiming?: Partial<QuotaTiming>;
   now?: () => number;
 }
@@ -137,6 +140,10 @@ export class FilesSyncHost {
   private statusTimer: ReturnType<typeof setTimeout> | null = null;
   /** Turning the drive off copied files that weren't uploaded: the settings page says where. */
   private rescued: FilesRescued | null = null;
+  /** Accounts whose kept activity was read back this run. */
+  private readonly activityRestored = new Set<string>();
+  /** What was last written per account, to write only when it changed. */
+  private readonly activitySaved = new Map<string, string>();
 
   constructor(private readonly deps: HostDeps) {
     this.quotaTiming = { ...QUOTA_TIMING, ...deps.quotaTiming };
@@ -217,6 +224,12 @@ export class FilesSyncHost {
       this.engine.dropAccount(id);
     }
     for (const account of accounts) {
+      if (!this.activityRestored.has(account.id)) {
+        this.activityRestored.add(account.id);
+        const kept = this.deps.activityStore?.load(account.id) ?? [];
+        if (kept.length > 0) this.engine.restoreActivity(account.id, kept);
+        this.activitySaved.set(account.id, signatureOf(this.engine.activityOf(account.id)));
+      }
       const known = this.accounts.get(account.id);
       if (known && known.client === account.client) continue;
       const remote = (this.deps.remoteFor ?? ((entry: HostAccount) => remoteForClient(entry.client)))(account);
@@ -446,6 +459,8 @@ export class FilesSyncHost {
     for (const id of ids) {
       const drive = await this.driveRootOf(id);
       if (drive && chosen) await this.engine.forgetRoot(drive.id);
+      // Its Recent activity goes with a sign-out the user chose; one nobody chose goes on later.
+      if (chosen) this.forgetActivity(id);
       this.accounts.delete(id);
       this.driveStarted.delete(id);
       this.forgetQuota(id);
@@ -461,13 +476,34 @@ export class FilesSyncHost {
    */
   async removeAccountData(account: string | null, reason: 'wipe' | 'refused'): Promise<void> {
     await removeAccountData(this.deps.controls, account, reason, [...this.accounts.keys(), ...this.engine.roots.map((root) => root.account)]);
-    for (const id of account === null ? [...this.accounts.keys()] : [account]) {
+    for (const id of account === null ? [...new Set([...this.accounts.keys(), ...this.activityRestored])] : [account]) {
       this.accounts.delete(id);
       this.driveStarted.delete(id);
       this.forgetQuota(id);
       this.engine.dropAccount(id);
+      this.forgetActivity(id);
     }
     await this.engine.refreshRoots();
+  }
+
+  private forgetActivity(account: string): void {
+    this.engine.clearActivity(account);
+    this.deps.activityStore?.remove(account);
+    this.activitySaved.delete(account);
+    this.activityRestored.delete(account);
+  }
+
+  /** Writes an account's Recent activity when it changed. */
+  private saveActivity(): void {
+    const store = this.deps.activityStore;
+    if (!store) return;
+    for (const account of this.activityRestored) {
+      const lines = this.engine.activityOf(account);
+      const signature = signatureOf(lines);
+      if (this.activitySaved.get(account) === signature) continue;
+      this.activitySaved.set(account, signature);
+      store.save(account, lines);
+    }
   }
 
   // ─── The store ──────────────────────────────────────────────
@@ -492,7 +528,8 @@ export class FilesSyncHost {
       account: current,
       roots,
       status,
-      activity: this.engine.activity.filter((entry) => ids.has(entry.rootId)),
+      // The account's, with the lines of roots that went since (files-p3-11, settings-p3-12).
+      activity: current ? this.engine.activity.filter((entry) => entry.account === current || (!entry.account && ids.has(entry.rootId))) : [],
       drive: this.drive,
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
@@ -500,6 +537,7 @@ export class FilesSyncHost {
       rescued: this.rescued,
     });
     this.sendDriveStatus();
+    this.saveActivity();
   }
 
   controller(): FilesSyncController {
@@ -552,7 +590,9 @@ export class FilesSyncHost {
         if (!coverage) return false;
         return controls.showInFolder(coverage.rootId, coverage.path);
       },
-      clearActivity: () => this.engine.clearActivity(),
+      clearActivity: () => {
+        if (this.current) this.engine.clearActivity(this.current);
+      },
       pendingHere: async (rootId) => (await this.engine.pendingHere(rootId)) ?? [],
       flushRoot: (rootId, options) => this.engine.flushRoot(rootId, options),
       openRescue: async () => (await controls.drive?.openRescue?.().catch(() => false)) ?? false,
@@ -562,6 +602,11 @@ export class FilesSyncHost {
       },
     };
   }
+}
+
+/** Changes when lines come or go. */
+function signatureOf(lines: { id: string }[]): string {
+  return `${lines.length}:${lines[0]?.id ?? ''}:${lines.at(-1)?.id ?? ''}`;
 }
 
 /**

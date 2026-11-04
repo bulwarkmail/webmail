@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "ファイルが 2 か所で変更されました",
       "problem_title": "ファイルを同期できません"
+    },
+    "activity": {
+      "waiting_count": "サーバーを待っている変更: {count}",
+      "disk_name": "ファイルの {path} は、このパソコンでは {detail} という名前です。一部の文字がここでは使えないためです",
+      "disk_case": "ファイルの {path} は、このパソコンでは {detail} という名前です。大文字と小文字だけが違う名前がすでにあるためです",
+      "disk_group": "このパソコンで使えないファイルの名前: {count}。ここでは少し違う名前になっています。",
+      "show": "表示",
+      "hide": "非表示"
+    },
+    "cant_sync": {
+      "title": "同期できません"
     }
   },
   "desktopQuickCompose": {

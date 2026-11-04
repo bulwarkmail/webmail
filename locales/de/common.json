@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Eine Datei wurde an zwei Stellen geändert",
       "problem_title": "Eine Datei kann nicht synchronisiert werden"
+    },
+    "activity": {
+      "waiting_count": "Änderungen, die auf den Server warten: {count}",
+      "disk_name": "{path} in Dateien heißt auf diesem Computer {detail}, weil einige Zeichen darin hier nicht erlaubt sind",
+      "disk_case": "{path} in Dateien heißt auf diesem Computer {detail}, weil hier schon ein Name liegt, der sich nur in Groß- und Kleinschreibung unterscheidet",
+      "disk_group": "Namen in Dateien, die dieser Computer nicht erlaubt: {count}. Sie heißen hier etwas anders.",
+      "show": "Anzeigen",
+      "hide": "Ausblenden"
+    },
+    "cant_sync": {
+      "title": "Synchronisierung nicht möglich"
     }
   },
   "desktopQuickCompose": {

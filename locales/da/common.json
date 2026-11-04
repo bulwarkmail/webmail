@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "En fil blev ændret to steder",
       "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Ændringer, der venter på serveren: {count}",
+      "disk_name": "{path} i Filer hedder {detail} på denne computer, fordi nogle af tegnene ikke er tilladt her",
+      "disk_case": "{path} i Filer hedder {detail} på denne computer, fordi der allerede er et navn her, der kun adskiller sig i store og små bogstaver",
+      "disk_group": "Navne i Filer, som denne computer ikke tillader: {count}. De har lidt andre navne her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
     }
   },
   "desktopQuickCompose": {

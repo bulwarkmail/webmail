@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { AlertCircle, AlertTriangle, CheckCircle2, CloudOff, Loader2, Lock, Pause, RefreshCw, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { FilesSyncRootState, FilesSyncRootStatus } from "@/lib/files-sync/types";
+import { useSettingsStore } from "@/stores/settings-store";
 import { statusLineText } from "./files-sync-text";
 
 const ICONS: Record<FilesSyncRootState, { icon: AppIcon; className: string }> = {
@@ -26,9 +27,11 @@ export function FilesSyncStatusLine({ status, paused, className }: {
 }) {
   const t = useTranslations("files_sync");
   const format = useFormatter();
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const state: FilesSyncRootState = status?.state ?? (paused ? "paused" : "starting");
 
-  const text = statusLineText(t, (date, options) => format.dateTime(date, options), status, state);
+  // The app's 12- or 24-hour setting, not the language's own (settings-p3-12).
+  const text = statusLineText(t, (date, options) => format.dateTime(date, { ...options, hour12: timeFormat === "12h" }), status, state);
   const { icon: Icon, className: iconClass } = ICONS[state];
   return (
     <p className={cn("flex items-center gap-1.5 text-xs", state === "error" ? "text-destructive" : "text-muted-foreground", className)} data-files-sync-state={state}>

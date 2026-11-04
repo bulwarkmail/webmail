@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Un file è stato modificato in due punti",
       "problem_title": "Un file non può essere sincronizzato"
+    },
+    "activity": {
+      "waiting_count": "Modifiche in attesa del server: {count}",
+      "disk_name": "{path} in File si chiama {detail} su questo computer, perché alcuni suoi caratteri qui non sono consentiti",
+      "disk_case": "{path} in File si chiama {detail} su questo computer, perché qui c'è già un nome che differisce solo per maiuscole e minuscole",
+      "disk_group": "Nomi in File non consentiti su questo computer: {count}. Qui hanno nomi leggermente diversi.",
+      "show": "Mostra",
+      "hide": "Nascondi"
+    },
+    "cant_sync": {
+      "title": "Impossibile sincronizzare"
     }
   },
   "desktopQuickCompose": {

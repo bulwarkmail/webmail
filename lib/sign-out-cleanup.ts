@@ -29,6 +29,8 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'search-history-storage',
   'files-favorites',
   'files-recent-files',
+  // Files on this computer's Recent activity (lib/files-sync/activity-store.ts): file names.
+  'bulwark-files-activity',
   'files-last-parent-id',
   'files-path-stack',
   // Names of the people the user gave access to (Settings > Sharing).

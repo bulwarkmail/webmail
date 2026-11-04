@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Um arquivo foi alterado em dois lugares",
       "problem_title": "Um arquivo não pode ser sincronizado"
+    },
+    "activity": {
+      "waiting_count": "Alterações aguardando o servidor: {count}",
+      "disk_name": "{path} em Arquivos se chama {detail} neste computador, porque alguns caracteres não são permitidos aqui",
+      "disk_case": "{path} em Arquivos se chama {detail} neste computador, porque já existe aqui um nome que só difere em maiúsculas e minúsculas",
+      "disk_group": "Nomes em Arquivos que este computador não permite: {count}. Aqui eles têm nomes um pouco diferentes.",
+      "show": "Mostrar",
+      "hide": "Ocultar"
+    },
+    "cant_sync": {
+      "title": "Não é possível sincronizar"
     }
   },
   "desktopQuickCompose": {

@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Plik zmieniono w dwóch miejscach",
       "problem_title": "Nie można zsynchronizować pliku"
+    },
+    "activity": {
+      "waiting_count": "Zmiany czekające na serwer: {count}",
+      "disk_name": "{path} w Plikach nazywa się na tym komputerze {detail}, bo niektóre znaki nie są tu dozwolone",
+      "disk_case": "{path} w Plikach nazywa się na tym komputerze {detail}, bo jest tu już nazwa różniąca się tylko wielkością liter",
+      "disk_group": "Nazwy w Plikach niedozwolone na tym komputerze: {count}. Mają tu nieco inne nazwy.",
+      "show": "Pokaż",
+      "hide": "Ukryj"
+    },
+    "cant_sync": {
+      "title": "Nie można zsynchronizować"
     }
   },
   "desktopQuickCompose": {

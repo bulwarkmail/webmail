@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Bir dosya iki yerde değiştirildi",
       "problem_title": "Bir dosya eşitlenemiyor"
+    },
+    "activity": {
+      "waiting_count": "Sunucuyu bekleyen değişiklikler: {count}",
+      "disk_name": "Dosyalar'daki {path} bu bilgisayarda {detail} adını taşıyor, çünkü bazı karakterlerine burada izin verilmiyor",
+      "disk_case": "Dosyalar'daki {path} bu bilgisayarda {detail} adını taşıyor, çünkü burada yalnızca büyük-küçük harfle ayrılan bir ad zaten var",
+      "disk_group": "Bu bilgisayarın izin vermediği Dosyalar adları: {count}. Burada biraz farklı adları var.",
+      "show": "Göster",
+      "hide": "Gizle"
+    },
+    "cant_sync": {
+      "title": "Eşitlenemiyor"
     }
   },
   "desktopQuickCompose": {

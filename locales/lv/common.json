@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Fails mainīts divās vietās",
       "problem_title": "Failu nevar sinhronizēt"
+    },
+    "activity": {
+      "waiting_count": "Izmaiņas, kas gaida serveri: {count}",
+      "disk_name": "{path} sadaļā Faili šajā datorā saucas {detail}, jo dažas rakstzīmes šeit nav atļautas",
+      "disk_case": "{path} sadaļā Faili šajā datorā saucas {detail}, jo šeit jau ir nosaukums, kas atšķiras tikai ar lielajiem un mazajiem burtiem",
+      "disk_group": "Nosaukumi sadaļā Faili, ko šis dators neatļauj: {count}. Šeit tiem ir nedaudz citi nosaukumi.",
+      "show": "Rādīt",
+      "hide": "Paslēpt"
+    },
+    "cant_sync": {
+      "title": "Nevar sinhronizēt"
     }
   },
   "desktopQuickCompose": {

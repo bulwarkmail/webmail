@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Faili muudeti kahes kohas",
       "problem_title": "Faili ei saa sünkroonida"
+    },
+    "activity": {
+      "waiting_count": "Serverit ootavad muudatused: {count}",
+      "disk_name": "Failides olev {path} on selles arvutis nimega {detail}, sest mõni selle märk pole siin lubatud",
+      "disk_case": "Failides olev {path} on selles arvutis nimega {detail}, sest siin on juba nimi, mis erineb vaid suur- ja väiketähtede poolest",
+      "disk_group": "Failide nimed, mida see arvuti ei luba: {count}. Siin on neil veidi teised nimed.",
+      "show": "Näita",
+      "hide": "Peida"
+    },
+    "cant_sync": {
+      "title": "Ei saa sünkroonida"
     }
   },
   "desktopQuickCompose": {

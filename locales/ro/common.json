@@ -7813,6 +7813,17 @@
     "notify": {
       "conflict_title": "Un fișier a fost modificat în două locuri",
       "problem_title": "Un fișier nu poate fi sincronizat"
+    },
+    "activity": {
+      "waiting_count": "Modificări care așteaptă serverul: {count}",
+      "disk_name": "{path} din Fișiere se numește {detail} pe acest computer, pentru că unele caractere nu sunt permise aici",
+      "disk_case": "{path} din Fișiere se numește {detail} pe acest computer, pentru că aici există deja un nume care diferă doar prin majuscule",
+      "disk_group": "Nume din Fișiere pe care acest computer nu le permite: {count}. Aici au nume puțin diferite.",
+      "show": "Afișează",
+      "hide": "Ascunde"
+    },
+    "cant_sync": {
+      "title": "Nu se poate sincroniza"
     }
   },
   "desktopQuickCompose": {

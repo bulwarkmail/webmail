@@ -38,7 +38,7 @@ export function rootName(root: FilesRoot, driveName: string): string {
 }
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
-type FormatTime = (date: Date, options: ReturnType<typeof syncTimeOptions>) => string;
+type FormatTime = (date: Date, options: SyncTimeOptions) => string;
 
 /**
  * How a root is doing, in a line: "Up to date. Last synced 14:05", "Syncing: 3 done, 5 to go".
@@ -75,8 +75,19 @@ export function massDeleteText(t: Translate, root: FilesRoot, massDelete: NonNul
     : t("mass_delete.remote", { count: massDelete.count, folder: root.kind === "drive" ? driveName : root.remoteLabel || driveName });
 }
 
-/** An activity line in words. `t` is the `files_sync` namespace. */
-export function activityMessage(t: Translate, item: FilesSyncActivity, formatSize: (bytes: number) => string): string {
+/**
+ * An activity line in words. `t` is the `files_sync` namespace, `tx` `files_sync_extra`: a root
+ * waiting as a whole says how many changes wait (files-p3-6), a name this computer can't hold
+ * says why (files-p3-12). Without `tx`, as before.
+ */
+export function activityMessage(t: Translate, item: FilesSyncActivity, formatSize: (bytes: number) => string, tx?: Translate): string {
+  if (tx && item.kind === "waiting" && !item.path) {
+    const text = tx("activity.waiting_count", { count: Number(item.detail) || 0 });
+    return item.messageKey ? `${text}: ${t(filesSyncErrorKey(item.messageKey))}` : text;
+  }
+  if (tx && item.kind === "renamed-for-disk" && (item.messageKey === "disk_name" || item.messageKey === "disk_case")) {
+    return tx(`activity.${item.messageKey}`, { path: item.path, detail: item.detail ?? "" });
+  }
   const detail = item.kind === "too-large" && item.detail && /^\d+$/.test(item.detail)
     ? formatSize(Number(item.detail))
     : item.detail ?? "";
@@ -105,10 +116,23 @@ export function trayLineText(t: Translate, status: FilesSyncRootStatus | undefin
   }
 }
 
-/** A time as "14:05" today and "3 Nov, 14:05" before. */
-export function syncTimeOptions(at: number, now = Date.now()): { hour: "numeric"; minute: "2-digit"; day?: "numeric"; month?: "short" } {
+export interface SyncTimeOptions {
+  hour: "numeric";
+  minute: "2-digit";
+  day?: "numeric";
+  month?: "short";
+  hour12?: boolean;
+}
+
+/**
+ * A time as "14:05" today and "3 Nov, 14:05" before, in the app's 12- or 24-hour setting
+ * (settings-p3-12) when it's given; the language is the formatter's.
+ */
+export function syncTimeOptions(at: number, now = Date.now(), timeFormat?: "12h" | "24h"): SyncTimeOptions {
   const sameDay = new Date(at).toDateString() === new Date(now).toDateString();
-  return sameDay
+  const options: SyncTimeOptions = sameDay
     ? { hour: "numeric", minute: "2-digit" }
     : { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" };
+  if (timeFormat) options.hour12 = timeFormat === "12h";
+  return options;
 }
