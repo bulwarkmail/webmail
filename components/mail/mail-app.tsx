@@ -12,7 +12,7 @@ import { MessageListTabs, useMessageListPanelProps } from "@/components/email/me
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ReplyDock } from "@/components/mail/reply-dock";
-import { addEcho, isUndoWindow, mergeEchoes, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
+import { addEcho, isUndoWindow, mergeEchoes, nextSendTime, raiseThreadCount, scheduledShownTotal, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
 import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 
 /** What waits with a send in its Undo window (mail-p2-8). */
@@ -1093,6 +1093,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setCursorOnly(false);
     },
     onCloseEmail: () => {
+      // Escape with nothing open or ticked leaves a search (mail-p3-3).
+      const { selectedEmailKeys: ticked } = useEmailStore.getState();
+      if (!selectedEmail && ticked.size === 0 && (searchQuery || !isFilterEmpty(searchFilters))) {
+        void handleClearSearch();
+        return;
+      }
       setCursorOnly(false);
       selectEmail(null);
       if (isMobile) {
@@ -1435,18 +1441,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // of seven, or Move for the open one only, would act on mail nobody picked.
   const desktopMulti = selectedEmailKeys.size > 1;
   const desktopSingle = !showComposer && !!selectedEmail && !desktopMulti;
-  const tListExtra = useTranslations('mail_list_extra');
   /** Message > Move to… on the selection, as the selection bar's Move does: one toast with the count. */
   const moveSelectionTo = async (mailboxId: string) => {
     if (!client) return;
-    const count = selectedEmailKeys.size;
+    // Counted as the selection bar counts: conversations when it shows them (mail-p3-7).
+    const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
     const destination = mailboxes.find((m) => m.id === mailboxId);
     await runBatchEmailAction(() => useEmailStore.getState().batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-      success: destination
-        ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
-        : tNotifications('emails_moved', { count }),
+      success: batchToastTitle(t, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
       error: tNotifications('move_failed'),
       undo: undoMoveAction(client, restore, undo, receipts),
     });
@@ -1547,6 +1551,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setScheduledView(false);
     }
   }, [delayedSendSupported, isScheduledView, setScheduledView]);
+
+  // Scheduled's count drops a send once its time has come: re-read then.
+  const scheduledSends = useEmailStore((s) => s.scheduledSubmissionByEmailId);
+  const [scheduledClock, setScheduledClock] = useState(() => Date.now());
+  useEffect(() => {
+    const next = nextSendTime(scheduledSends.values(), scheduledClock);
+    // Only sends due soon; a timer days out is pointless.
+    if (next === null || next - Date.now() > 10 * 60_000) return;
+    const timer = setTimeout(() => setScheduledClock(Date.now()), Math.max(0, next - Date.now()) + 50);
+    return () => clearTimeout(timer);
+  }, [scheduledSends, scheduledClock]);
 
   useEffect(() => {
     if (!pendingUndoSend) return;
@@ -3711,11 +3726,38 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // was open in the reading pane. Phones stay in the list.
   const reopenEmailRef = useRef<((email: Email) => Promise<unknown>) | null>(null);
   const reopenAfterUndo = (email: Email) => {
-    const { selectedEmail: open } = useEmailStore.getState();
+    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
     if (isMobile || !open || emailKeyFor(open) !== emailKeyFor(email)) return undefined;
     const key = emailKeyFor(email);
+    // What was unread before the action: the message opened in its place gets
+    // marked read by opening, and Undo leaves it for the one put back, so it
+    // gets its unread mark back (mail-p3-6).
+    const unreadBefore = new Set(rows.filter((e) => !e.keywords?.$seen).map(emailKeyFor));
+    const actionClient = client;
+    // The message the action opens next; one the user picks after it keeps its mark.
+    let opened: string | null = null;
+    const stopWatching = useEmailStore.subscribe((state, prev) => {
+      if (state.selectedEmail === prev.selectedEmail || !state.selectedEmail) return;
+      const next = emailKeyFor(state.selectedEmail);
+      if (next === key) return;
+      opened = next;
+      stopWatching();
+    });
+    setTimeout(stopWatching, 60_000);
     return () => {
-      const restored = useEmailStore.getState().emails.find((e) => emailKeyFor(e) === key);
+      stopWatching();
+      const state = useEmailStore.getState();
+      const shown = state.selectedEmail;
+      if (actionClient && shown && opened !== null && emailKeyFor(shown) === opened) {
+        const thread = threadKeyFor(shown);
+        for (const e of state.emails) {
+          if (threadKeyFor(e) !== thread || !e.keywords?.$seen || !unreadBefore.has(emailKeyFor(e))) continue;
+          void state.markAsRead(actionClient, e.id, false, emailKeyFor(e)).catch((error) => {
+            debug.error('Failed to mark unread again after Undo:', error);
+          });
+        }
+      }
+      const restored = state.emails.find((e) => emailKeyFor(e) === key);
       if (restored) void reopenEmailRef.current?.(restored);
     };
   };
@@ -4068,8 +4110,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // across folders). Returns true when it cleared, so the caller browses
   // rather than re-searching. Reads the current query/filters from the
   // closure to decide whether there was anything to clear.
-  const clearSearchIfFolderChangeResets = (): boolean => {
-    if (!useSettingsStore.getState().clearSearchOnFolderChange) return false;
+  // A click on the folder already open always leaves the search and shows
+  // the folder, as in Gmail, Outlook and Thunderbird (mail-p3-3); another
+  // folder keeps the search unless the user chose to reset it.
+  const clearSearchIfFolderChangeResets = (sameFolder = false): boolean => {
+    if (!sameFolder && !useSettingsStore.getState().clearSearchOnFolderChange) return false;
     if (isFilterEmpty(searchFilters) && !searchQuery) return false;
     setSearchQuery("");
     clearSearchFilters();
@@ -4121,6 +4166,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleMailboxSelect = async (mailboxId: string) => {
+    const sameFolder = mailboxId === selectedMailbox;
     // A shared account's Scheduled row arrives as "__scheduled__:<accountId>";
     // the store only ever sees the plain virtual id plus the account scope.
     const scheduledSelection = parseScheduledMailboxId(mailboxId);
@@ -4160,7 +4206,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // Another folder was picked while the accounts loaded; entering this
       // view now would put it over that folder (#1102).
       if (!isSameView()) return;
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       // Keep an active search across the switch and re-run it in this view
       // (mirrors normal mailboxes), preserving advanced filters; otherwise browse.
       if (client && !searchCleared && (!isFilterEmpty(searchFilters) || searchQuery)) {
@@ -4193,7 +4239,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const isSameView = captureViewToken();
       const populated = await buildPopulatedUnifiedAccounts();
       if (!isSameView()) return;
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       // Keep an active search across the switch and re-run it in this view
       // (mirrors normal mailboxes), preserving advanced filters; otherwise browse.
       if (client && !searchCleared && (!isFilterEmpty(searchFilters) || searchQuery)) {
@@ -4230,7 +4276,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // through advancedSearch (which also includes the text query) — falling
       // back to fetchEmails would silently drop them while the UI still shows
       // them as active (#553).
-      const searchCleared = clearSearchIfFolderChangeResets();
+      const searchCleared = clearSearchIfFolderChangeResets(sameFolder);
       if (!searchCleared && !isFilterEmpty(searchFilters)) {
         await advancedSearch(client);
       } else if (!searchCleared && searchQuery) {
@@ -5055,6 +5101,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setMvConversationResult((prev) => prev && prev.threadId === ref.threadId
       ? { ...prev, emails: mergeEchoes(settled, prev.emails) }
       : prev);
+    // The list row counts the reply too, once the server has it (mail-p3, p2-1).
+    useEmailStore.setState((state) => {
+      const counts = raiseThreadCount(state.threadEmailCounts, threadKeyFor(ref), fresh.length);
+      return counts ? { threadEmailCounts: counts } : {};
+    });
   };
   const echoSentReply = (replied: Email | null | undefined, sent: {
     emailId?: string; to: string[]; cc?: string[]; subject: string; text: string; fromEmail?: string; fromName?: string;
@@ -5295,8 +5346,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           ? localizeMailboxName(mb.role, mb.name, (k) => t(`sidebar.mailboxes.${k}`))
           : "Inbox";
       })();
-  // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8).
-  const heldSendView = withoutHeldSend(mailboxes, scheduledTotal, pendingUndoSend);
+  // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8),
+  // nor once its time has come and the server still lists it (mail-p3, p2-1).
+  const heldSendView = withoutHeldSend(mailboxes, scheduledShownTotal(scheduledTotal, scheduledSends.values(), scheduledClock), pendingUndoSend);
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile;
   // Under Mountain View on desktop the composer floats over the list in a

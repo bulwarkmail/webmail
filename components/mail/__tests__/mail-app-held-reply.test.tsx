@@ -12,6 +12,7 @@ import { useQuickReplyRestoreStore } from '@/stores/quick-reply-restore-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { clearAllHooks } from '@/lib/plugin-hooks';
 import { forgetEmailPrefetches } from '@/lib/email-prefetch';
+import { threadKeyFor } from '@/lib/thread-utils';
 
 // mail-p2-1: a quick reply that went out shows in the open conversation at
 // once. mail-p2-8: during its Undo window it isn't counted in Sent or
@@ -25,11 +26,12 @@ vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentTy
     return <Suspense fallback={null}><Component {...props} /></Suspense>;
   };
 } }));
-type ViewerProps = { mvConversation?: { id: string }[]; onQuickReply?: (body: string) => Promise<boolean | void>; onReply?: () => void };
+type ViewerProps = { mvConversation?: { id: string; isScheduled?: boolean }[]; onQuickReply?: (body: string) => Promise<boolean | void>; onReply?: () => void };
 vi.mock('@/components/email/email-viewer', () => ({
   EmailViewer: ({ mvConversation, onQuickReply, onReply }: ViewerProps) => (
     <div>
       <div data-testid="reader">{mvConversation ? mvConversation.map((e) => e.id).join(',') : 'no conversation'}</div>
+      <div data-testid="reader-scheduled">{(mvConversation ?? []).filter((e) => e.isScheduled).map((e) => e.id).join(',')}</div>
       <button type="button" onClick={() => void onQuickReply?.('Thanks, see you there')}>quick send</button>
       <button type="button" onClick={() => onReply?.()}>reply</button>
     </div>
@@ -214,4 +216,40 @@ describe('a quick reply in its Undo window', () => {
     expect(back).toHaveAttribute('data-body', '<p>Works for me</p>');
     expect(back.closest('[data-reply-dock]')).not.toBeNull();
   });
+});
+
+// mail-p3 (p2-1 left over): after "Sent" the reply's card kept a scheduled
+// clock for about 15 s, Scheduled counted 1, and the row's count lagged.
+describe('a quick reply once the server has it', () => {
+  it('shows no scheduled clock, counts in its row, and leaves Scheduled once its time has come', async () => {
+    render(<MailApp />);
+    const reader = await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await waitFor(() => expect(reader).toHaveTextContent('m0,m1'));
+    // From the send on, the server's thread holds the reply, held as a submission.
+    const sentCopy = row('sent-1', 40, { mailboxIds: { sent: true }, from: [{ name: 'Me', email: 'a@example.org' }] });
+    client.getThread = vi.fn(async (threadId: string) => ({ id: threadId, emailIds: ['m0', 'm1', 'sent-1'] }));
+    client.getSomeEmails = vi.fn(async (ids: string[]) => [row('m0', 0), row('m1', 30), sentCopy].filter((e) => ids.includes(e.id)));
+    const sendAt = () => new Date(Date.now() + 5000).toISOString();
+    useEmailStore.setState({
+      scheduledSubmissionByEmailId: new Map([['login-a|acc|sent-1', { submissionId: 'sub-1', sendAt: sendAt(), identityId: 'i', undoStatus: 'pending' }]]),
+    } as never);
+
+    fireEvent.click(screen.getByRole('button', { name: 'quick send' }));
+    await waitFor(() => expect(reader).toHaveTextContent('m0,m1,sent-1'));
+    // The read-back two seconds later finds the server copy.
+    await waitFor(() => expect(client.getThread).toHaveBeenCalled(), { timeout: 4000 });
+    await waitFor(() => expect(useEmailStore.getState().threadEmailCounts.get(threadKeyFor(row('m1', 30)))).toBe(3), { timeout: 4000 });
+    expect(screen.getByTestId('reader-scheduled')).toHaveTextContent(/^$/);
+
+    // The Undo window is over and the send time has passed, but the server
+    // still lists the submission for a moment.
+    act(() => {
+      useEmailStore.setState({
+        pendingUndoSend: null,
+        scheduledTotal: 1,
+        scheduledSubmissionByEmailId: new Map([['login-a|acc|sent-1', { submissionId: 'sub-1', sendAt: new Date(Date.now() - 1000).toISOString(), identityId: 'i', undoStatus: 'pending' }]]),
+      } as never);
+    });
+    await waitFor(() => expect(screen.getByTestId('sidebar-counts')).toHaveTextContent('scheduled 0'));
+  }, 15_000);
 });

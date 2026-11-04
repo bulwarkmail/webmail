@@ -3907,6 +3907,12 @@
     "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
     "title_all_accounts_only": "{name} ({total} in tutti gli account)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nessun risultato trovato} one {# conversazione trovata} other {# conversazioni trovate}}",
+    "name_unread_sub": "{name}, {count} da leggere, altri {sub} nelle sottocartelle",
+    "name_unread_only_sub": "{name}, {sub} da leggere nelle sottocartelle",
+    "sub_unread": "{sub} da leggere nelle sottocartelle"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestisci account…",
     "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"

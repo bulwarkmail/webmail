@@ -3907,6 +3907,12 @@
     "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
     "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {結果が見つかりません} other {#件の会話が見つかりました}}",
+    "name_unread_sub": "{name}、未読 {count} 件、サブフォルダーにさらに {sub} 件",
+    "name_unread_only_sub": "{name}、サブフォルダーに未読 {sub} 件",
+    "sub_unread": "サブフォルダーに未読 {sub} 件"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"

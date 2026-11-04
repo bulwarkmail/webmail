@@ -3907,6 +3907,12 @@
     "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
     "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {لم يتم العثور على نتائج} one {تم العثور على محادثة واحدة} two {تم العثور على محادثتين} few {تم العثور على # محادثات} many {تم العثور على # محادثة} other {تم العثور على # محادثة}}",
+    "name_unread_sub": "{name}، غير مقروءة: {count}، وفي المجلدات الفرعية: {sub}",
+    "name_unread_only_sub": "{name}، غير مقروءة في المجلدات الفرعية: {sub}",
+    "sub_unread": "غير مقروءة في المجلدات الفرعية: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",
     "apply_to_existing": "{count, plural, one {تطبيق على رسالة موجودة واحدة في {folder}} other {تطبيق على # رسائل موجودة في {folder}}}"

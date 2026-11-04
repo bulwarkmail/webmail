@@ -3907,6 +3907,12 @@
     "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
     "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Tulemusi ei leitud} one {# vestlus leitud} other {# vestlust leitud}}",
+    "name_unread_sub": "{name}, lugemata: {count}, alamkaustades veel {sub}",
+    "name_unread_only_sub": "{name}, alamkaustades lugemata: {sub}",
+    "sub_unread": "Alamkaustades lugemata: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Halda kontosid…",
     "apply_to_existing": "{count, plural, one {Rakenda # olemasolevale kirjale kaustas {folder}} other {Rakenda # olemasolevale kirjale kaustas {folder}}}"

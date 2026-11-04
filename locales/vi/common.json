@@ -3919,6 +3919,12 @@
     "title_all_accounts": "{name} ({count}, {total} trong mọi tài khoản)",
     "title_all_accounts_only": "{name} ({total} trong mọi tài khoản)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Không tìm thấy kết quả nào} other {Tìm thấy # cuộc trò chuyện}}",
+    "name_unread_sub": "{name}, {count} chưa đọc, thêm {sub} trong thư mục con",
+    "name_unread_only_sub": "{name}, {sub} chưa đọc trong thư mục con",
+    "sub_unread": "{sub} chưa đọc trong thư mục con"
+  },
   "uxs_folders": {
     "manage_accounts": "Quản lý tài khoản…",
     "apply_to_existing": "{count, plural, one {Áp dụng cho # thư hiện có trong {folder}} other {Áp dụng cho # thư hiện có trong {folder}}}"
