@@ -154,7 +154,8 @@ export function SelectionView({ title, unread, entries, shortcutOf, onMove, onMo
     const key = shortcutOf(entry);
     return (
       <Button
-        key={`${entry.key}-${entry.testId ?? index}`}
+        // Star keeps its button when it turns into Unstar, and with it the focus.
+        key={entry.key === "read" ? `read-${entry.testId}` : entry.key}
         {...common}
         title={key ? `${entry.label} (${key})` : entry.label}
         data-testid={paneTestId(entry)}
