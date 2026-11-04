@@ -172,3 +172,55 @@ describe('Compose while a reply is docked (compose-p2-1)', () => {
     });
   }
 });
+
+describe('another composer while one is open (compose-p2-2)', () => {
+  it('closes the reply through its own close (save, "Draft saved") before Compose opens', async () => {
+    stub.close = 'saves';
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    await screen.findByTestId('stub-composer');
+
+    fireEvent.click(screen.getByText('stub compose'));
+    await waitFor(() => expect(composerMode()).toBe('compose'));
+    expect(stub.closes).toEqual(['reply']);
+  });
+
+  for (const [action, mode] of [['stub reply all', 'replyAll'], ['stub forward', 'forward']] as const) {
+    it(`closes the reply through its own close before ${action} opens`, async () => {
+      stub.close = 'saves';
+      render(<MailApp />);
+      fireEvent.click(await screen.findByText('stub reply'));
+      await screen.findByTestId('stub-composer');
+
+      fireEvent.click(screen.getByText(action));
+      await waitFor(() => expect(composerMode()).toBe(mode));
+      expect(stub.closes).toEqual(['reply']);
+    });
+  }
+
+  it('closes a new message before another new message opens', async () => {
+    stub.close = 'saves';
+    render(<MailApp />);
+    fireEvent.click(screen.getByText('stub compose'));
+    await screen.findByTestId('stub-composer');
+    const mounted = stub.mounts.length;
+
+    fireEvent.click(screen.getByText('stub compose'));
+    await waitFor(() => expect(stub.mounts.length).toBe(mounted + 1));
+    expect(stub.closes).toEqual(['compose']);
+  });
+
+  it('keeps the open composer when its save fails', async () => {
+    stub.close = 'fails';
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText('stub reply'));
+    await screen.findByTestId('stub-composer');
+    const mounted = stub.mounts.length;
+
+    fireEvent.click(screen.getByText('stub compose'));
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+    expect(stub.closes).toEqual(['reply']);
+    expect(stub.mounts.length).toBe(mounted);
+    expect(composerMode()).toBe('reply');
+  });
+});

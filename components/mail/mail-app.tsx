@@ -319,6 +319,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // already uses the same seam), so entry points that replace the session can
   // ask before discarding unsaved text.
   const composerRequestCloseRef = useRef<((afterClose?: () => void) => void) | null>(null);
+  // One composer at a time (compose-p2-2). Whatever opens a composer closes
+  // the one on screen first, the way its X does: it saves and says "Draft
+  // saved" with Discard, then the new one opens. When that save fails the old
+  // composer stays with its question, and this never settles: nothing opens.
+  const closeOpenComposer = useCallback(() => new Promise<void>((resolve) => {
+    const requestClose = composerRequestCloseRef.current;
+    if (showComposerRef.current && requestClose) requestClose(resolve);
+    else resolve();
+  }), []);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const { dialogProps: promptDialogProps, prompt: promptDialog } = usePromptDialog();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
@@ -1176,12 +1185,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
     onCompose: () => {
-      void withComposeGate('compose', {}, () => {
-        startFreshComposerSession();
-        setComposerMode('compose');
-        setShowComposer(true);
-        if (isMobile) setActiveView('viewer');
-      });
+      void handleCompose();
     },
     onFocusSearch: () => {
       if (isScheduledView) return;
@@ -2824,11 +2828,24 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setPendingDraft(null);
   }, []);
 
+  // A new message, from every Compose and New message there is.
+  const handleCompose = async (onOpen?: () => void) => {
+    await closeOpenComposer();
+    await withComposeGate('compose', {}, () => {
+      startFreshComposerSession();
+      setComposerMode('compose');
+      setShowComposer(true);
+      if (isMobile) setActiveView('viewer');
+      onOpen?.();
+    });
+  };
+
   // A minimised composer's edits live only in pendingDraft. Before an
   // automatic sign-out it is opened again and saves them itself.
   useMinimisedComposerFlush(!showComposer && pendingDraft?.unsaved === true, () => setShowComposer(true));
 
   const handleReply = async (draftText?: string) => {
+    await closeOpenComposer();
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
       const enrichedEmail = await emailHooks.onBeforeComposeOpenToReply.transform(selectedEmail);
@@ -2867,6 +2884,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       : selectedEmail;
     let draft = draftCandidate;
     if (!draft) return;
+    await closeOpenComposer();
 
     // The login and account the draft lives in (resolveDraftSource). The
     // composer removes the old version there when it saves, sends or
@@ -3121,6 +3139,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [cancelUndoSend, clearPendingUndoSend, client, fetchScheduledEmails, isScheduledView, pendingUndoSend?.submissionId, sendDelaySeconds, t, tComposer, tViewer]);
 
   const handleReplyAll = async (draftText?: string) => {
+    await closeOpenComposer();
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
       const enrichedEmail = await emailHooks.onBeforeComposeOpenToReplyAll.transform(selectedEmail);
@@ -3210,6 +3229,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [isEmbedded]);
 
   const handleForward = async () => {
+    await closeOpenComposer();
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
       const enrichedEmail = await emailHooks.onBeforeComposeOpenToForward.transform(selectedEmail);
@@ -3256,6 +3276,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // unselected row. See the list context-menu wiring below.
   const handleForwardAsAttachment = async (email: Email | null = selectedEmail) => {
     if (!email) return;
+    await closeOpenComposer();
     email = await emailHooks.onBeforeComposeOpenToForwardAsAttachment.transform(email);
     // Same filename options "Export as .eml" uses (see emailFilenameOptions
     // in email-viewer.tsx), so the two actions produce consistent filenames
@@ -3324,6 +3345,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleBatchForwardAsAttachment = async () => {
     const selected = resolveSelectedEmails(useEmailStore.getState());
     if (selected.length < 2) return; // menu only offers this for >1; guards future wiring
+    await closeOpenComposer();
 
     const {
       emailDownloadTemplate,
@@ -4817,14 +4839,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onImportEmail: handleImportEmailFromContextMenu,
     onRefreshMailboxes: handleRefreshMailboxes,
     onCompose: () => {
-      void withComposeGate('compose', {}, () => {
-        startFreshComposerSession();
-        setComposerMode('compose');
-        setShowComposer(true);
-        if (isMobile) {
-          setSidebarOpen(false);
-          setActiveView('viewer');
-        }
+      void handleCompose(() => {
+        if (isMobile) setSidebarOpen(false);
       });
     },
     onSidebarClose: () => setSidebarOpen(false),
@@ -5155,6 +5171,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Handle reply from conversation view
   const handleConversationReply = async (email: Email) => {
+    await closeOpenComposer();
     email = await emailHooks.onBeforeComposeOpenToReply.transform(email);
     selectEmail(email);
     await prepareComposerQuoteHeader(email, 'reply');
@@ -5167,6 +5184,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleConversationReplyAll = async (email: Email) => {
+    await closeOpenComposer();
     email = await emailHooks.onBeforeComposeOpenToReplyAll.transform(email);
     selectEmail(email);
     await prepareComposerQuoteHeader(email, 'replyAll');
@@ -5179,6 +5197,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleConversationForward = async (email: Email) => {
+    await closeOpenComposer();
     email = await emailHooks.onBeforeComposeOpenToForward.transform(email);
     selectEmail(email);
     await prepareComposerQuoteHeader(email, 'forward');
@@ -5888,12 +5907,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 }}
                 onClearSearch={() => void handleClearSearch()}
                 onCompose={() => {
-                  void withComposeGate('compose', {}, () => {
-                    startFreshComposerSession();
-                    setComposerMode('compose');
-                    setShowComposer(true);
-                    if (isMobile) setActiveView('viewer');
-                  });
+                  void handleCompose();
                 }}
                 onMarkAsRead={async (email, read) => {
                   await markReadWithUndo(email, read).catch(toastUpdateFailure);
@@ -5936,12 +5950,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 button no longer sits on the list's rows. */}
             {!mvShell && (isMobile || isEmbedded) && <Button
               onClick={() => {
-                void withComposeGate('compose', {}, () => {
-                  startFreshComposerSession();
-                  setComposerMode('compose');
-                  setShowComposer(true);
-                  if (isMobile) setActiveView('viewer');
-                });
+                void handleCompose();
               }}
               className={cn(
                 // Under the drawer's backdrop (z-40), which comes earlier in the page.
@@ -6216,11 +6225,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       }
                     }}
                     onCompose={() => {
-                      void withComposeGate('compose', {}, () => {
-                        startFreshComposerSession();
-                        setComposerMode('compose');
-                        setShowComposer(true);
-                      });
+                      void handleCompose();
                     }}
                     emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
                       ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
