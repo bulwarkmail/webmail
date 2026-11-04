@@ -1335,6 +1335,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const desktopSingle = !showComposer && !!selectedEmail;
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
+  // A shared folder you may only read from: nothing can leave it.
+  const desktopMayRemove = mailboxes.find((m) => m.id === selectedMailbox)?.myRights?.mayRemoveItems !== false;
   useDesktopCommands({
     'file.newMessage': keyboardHandlers.onCompose,
     'edit.search': keyboardHandlers.onFocusSearch,
@@ -1361,6 +1363,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'go.nextUnread': keyboardHandlers.onNextUnread,
   }, {
     'view.refresh': true,
+    // Ctrl+E in the composer belongs to its editor, not to search.
+    'edit.search': !showComposer,
     'view.layout.split': { enabled: !layoutFixed, checked: mailLayoutSetting === 'split' },
     'view.layout.horizontal': { enabled: !layoutFixed, checked: mailLayoutSetting === 'horizontal' },
     'view.layout.focus': { enabled: !layoutFixed, checked: mailLayoutSetting === 'focus' },
@@ -1370,10 +1374,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
     'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
     'message.star': desktopSingle,
-    'message.move': desktopSingle,
-    'message.archive': desktopTarget && archiveActionEnabled,
-    'message.spam': desktopTarget,
-    'message.delete': desktopTarget,
+    'message.move': desktopSingle && desktopMayRemove,
+    'message.archive': desktopTarget && archiveActionEnabled && desktopMayRemove,
+    'message.spam': desktopTarget && desktopMayRemove,
+    'message.delete': desktopTarget && desktopMayRemove,
     'message.openWindow': desktopSingle && !!openEmailInWindow,
     'go.sent': true,
     'go.drafts': true,
