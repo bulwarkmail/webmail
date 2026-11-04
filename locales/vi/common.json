@@ -124,7 +124,9 @@
     "pause_label": "Tạm dừng thông báo",
     "pause_description": "Không có âm thanh, cửa sổ bật lên hoặc thông báo bằng giọng nói cho thư mới cho đến khi bạn tắt lại.",
     "dnd_link_app": "Tạm dừng thông báo và đặt giờ yên tĩnh trên trang Thông báo.",
-    "dnd_link_browser": "Tạm dừng thông báo trên trang Thông báo."
+    "dnd_link_browser": "Tạm dừng thông báo trên trang Thông báo.",
+    "backup_app": "Xuất cài đặt ra tệp và nhập chúng trên các thiết bị khác của bạn.",
+    "sync_app": "Các thiết bị khác đã đăng nhập tài khoản này sẽ nhận cùng cài đặt."
   },
   "sidebar": {
     "close": "Đóng",

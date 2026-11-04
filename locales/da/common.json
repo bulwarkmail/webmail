@@ -124,7 +124,9 @@
     "pause_label": "Sæt notifikationer på pause",
     "pause_description": "Ingen lyde, pop op-vinduer eller oplæste beskeder om nye mails, indtil du slår det fra igen.",
     "dnd_link_app": "Sæt notifikationer på pause, og indstil stille timer på siden Notifikationer.",
-    "dnd_link_browser": "Sæt notifikationer på pause på siden Notifikationer."
+    "dnd_link_browser": "Sæt notifikationer på pause på siden Notifikationer.",
+    "backup_app": "Eksportér dine indstillinger til en fil, og importér dem på dine andre enheder.",
+    "sync_app": "Andre enheder, der er logget ind på denne konto, får de samme indstillinger."
   },
   "sidebar": {
     "close": "Luk",

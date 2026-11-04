@@ -124,7 +124,9 @@
     "pause_label": "Meldingen pauzeren",
     "pause_description": "Geen geluiden, pop-ups of gesproken aankondigingen voor nieuwe e-mail totdat u dit weer uitzet.",
     "dnd_link_app": "Meldingen pauzeren en stille uren instellen doet u op de pagina Meldingen.",
-    "dnd_link_browser": "Meldingen pauzeren doet u op de pagina Meldingen."
+    "dnd_link_browser": "Meldingen pauzeren doet u op de pagina Meldingen.",
+    "backup_app": "Exporteer uw instellingen naar een bestand en importeer ze op uw andere apparaten.",
+    "sync_app": "Andere apparaten die met dit account zijn aangemeld, krijgen dezelfde instellingen."
   },
   "sidebar": {
     "close": "Sluiten",

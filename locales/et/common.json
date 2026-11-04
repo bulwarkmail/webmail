@@ -124,7 +124,9 @@
     "pause_label": "Peata teavitused",
     "pause_description": "Uute kirjade kohta ei anta helisid, hüpikaknaid ega häälteateid, kuni selle uuesti välja lülitad.",
     "dnd_link_app": "Teavitused saad peatada ja vaikse aja määrata lehel Teavitused.",
-    "dnd_link_browser": "Teavitused saad peatada lehel Teavitused."
+    "dnd_link_browser": "Teavitused saad peatada lehel Teavitused.",
+    "backup_app": "Ekspordi oma seaded faili ja impordi need oma teistes seadmetes.",
+    "sync_app": "Teised selle kontoga sisse logitud seadmed saavad samad seaded."
   },
   "sidebar": {
     "close": "Sulge",

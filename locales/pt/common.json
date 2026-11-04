@@ -124,7 +124,9 @@
     "pause_label": "Pausar notificações",
     "pause_description": "Sem sons, janelas pop-up nem avisos falados para correio novo, até voltar a desativar esta opção.",
     "dnd_link_app": "Pause as notificações e defina as horas de silêncio na página Notificações.",
-    "dnd_link_browser": "Pause as notificações na página Notificações."
+    "dnd_link_browser": "Pause as notificações na página Notificações.",
+    "backup_app": "Exporte as suas definições para um ficheiro e importe-as nos seus outros dispositivos.",
+    "sync_app": "Os outros dispositivos com sessão iniciada nesta conta recebem as mesmas definições."
   },
   "sidebar": {
     "close": "Fechar",

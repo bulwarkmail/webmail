@@ -124,7 +124,9 @@
     "pause_label": "暂停通知",
     "pause_description": "新邮件不发出声音、不弹出窗口、不语音播报，直到您再次关闭此项。",
     "dnd_link_app": "在“通知”页面暂停通知并设置免打扰时段。",
-    "dnd_link_browser": "在“通知”页面暂停通知。"
+    "dnd_link_browser": "在“通知”页面暂停通知。",
+    "backup_app": "将设置导出到文件，然后在其他设备上导入。",
+    "sync_app": "登录此账户的其他设备会获得相同的设置。"
   },
   "sidebar": {
     "close": "关闭",

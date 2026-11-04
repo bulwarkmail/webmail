@@ -124,7 +124,9 @@
     "pause_label": "Pozastavit oznámení",
     "pause_description": "Žádné zvuky, vyskakovací okna ani hlasová hlášení o nové poště, dokud to znovu nevypnete.",
     "dnd_link_app": "Oznámení pozastavíte a dobu klidu nastavíte na stránce Oznámení.",
-    "dnd_link_browser": "Oznámení pozastavíte na stránce Oznámení."
+    "dnd_link_browser": "Oznámení pozastavíte na stránce Oznámení.",
+    "backup_app": "Exportujte nastavení do souboru a importujte je na svých dalších zařízeních.",
+    "sync_app": "Ostatní zařízení přihlášená k tomuto účtu dostanou stejná nastavení."
   },
   "sidebar": {
     "close": "Zavřít",

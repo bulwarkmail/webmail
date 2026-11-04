@@ -124,7 +124,9 @@
     "pause_label": "Pause notifications",
     "pause_description": "No sounds, pop-ups or spoken announcements for new mail until you turn this off again.",
     "dnd_link_app": "Pause notifications and set quiet hours on the Notifications page.",
-    "dnd_link_browser": "Pause notifications on the Notifications page."
+    "dnd_link_browser": "Pause notifications on the Notifications page.",
+    "backup_app": "Export your settings to a file and import them on your other devices.",
+    "sync_app": "Other devices signed in to this account get the same settings."
   },
   "sidebar": {
     "close": "Close",

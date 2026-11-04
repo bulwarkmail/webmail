@@ -124,7 +124,9 @@
     "pause_label": "Apturēt paziņojumus",
     "pause_description": "Nav skaņu, uznirstošo logu vai balss paziņojumu par jaunu pastu, līdz to atkal izslēdzat.",
     "dnd_link_app": "Paziņojumus apturat un klusuma stundas iestatāt lapā Paziņojumi.",
-    "dnd_link_browser": "Paziņojumus apturat lapā Paziņojumi."
+    "dnd_link_browser": "Paziņojumus apturat lapā Paziņojumi.",
+    "backup_app": "Eksportējiet iestatījumus failā un importējiet tos citās savās ierīcēs.",
+    "sync_app": "Citas ierīces, kurās pierakstīts šis konts, saņem tos pašus iestatījumus."
   },
   "sidebar": {
     "close": "Aizvērt",

@@ -124,7 +124,9 @@
     "pause_label": "Benachrichtigungen pausieren",
     "pause_description": "Keine Töne, Pop-ups oder Ansagen für neue E-Mails, bis Sie das wieder ausschalten.",
     "dnd_link_app": "Benachrichtigungen pausieren und Ruhezeiten festlegen können Sie auf der Seite Benachrichtigungen.",
-    "dnd_link_browser": "Benachrichtigungen pausieren können Sie auf der Seite Benachrichtigungen."
+    "dnd_link_browser": "Benachrichtigungen pausieren können Sie auf der Seite Benachrichtigungen.",
+    "backup_app": "Exportieren Sie Ihre Einstellungen in eine Datei und importieren Sie sie auf Ihren anderen Geräten.",
+    "sync_app": "Andere Geräte, die mit diesem Konto angemeldet sind, erhalten dieselben Einstellungen."
   },
   "sidebar": {
     "close": "Schließen",

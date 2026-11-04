@@ -124,7 +124,9 @@
     "pause_label": "Pozastaviť upozornenia",
     "pause_description": "Bez zvukov, vyskakovacích okien a hlasových hlásení o nových e-mailoch, kým to znova nevypnete.",
     "dnd_link_app": "Upozornenia pozastavíte a čas pokoja nastavíte na stránke Upozornenia.",
-    "dnd_link_browser": "Upozornenia pozastavíte na stránke Upozornenia."
+    "dnd_link_browser": "Upozornenia pozastavíte na stránke Upozornenia.",
+    "backup_app": "Exportujte nastavenia do súboru a importujte ich na ďalších zariadeniach.",
+    "sync_app": "Ostatné zariadenia prihlásené do tohto účtu dostanú rovnaké nastavenia."
   },
   "sidebar": {
     "unified_mailbox": "Zjednotená schránka",

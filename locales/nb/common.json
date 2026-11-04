@@ -124,7 +124,9 @@
     "pause_label": "Sett varsler på pause",
     "pause_description": "Ingen lyder, hurtigvinduer eller opplest informasjon om ny e-post før du slår dette av igjen.",
     "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
-    "dnd_link_browser": "Sett varsler på pause på siden Varsler."
+    "dnd_link_browser": "Sett varsler på pause på siden Varsler.",
+    "backup_app": "Eksporter innstillingene dine til en fil, og importer dem på de andre enhetene dine.",
+    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene."
   },
   "sidebar": {
     "close": "Lukk",

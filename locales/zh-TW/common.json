@@ -124,7 +124,9 @@
     "pause_label": "暫停通知",
     "pause_description": "新郵件不發出聲音、不跳出視窗、不語音播報，直到您再次關閉此項。",
     "dnd_link_app": "在「通知」頁面暫停通知並設定勿擾時段。",
-    "dnd_link_browser": "在「通知」頁面暫停通知。"
+    "dnd_link_browser": "在「通知」頁面暫停通知。",
+    "backup_app": "將設定匯出成檔案，再在其他裝置上匯入。",
+    "sync_app": "登入此帳號的其他裝置會取得相同的設定。"
   },
   "sidebar": {
     "close": "關閉",

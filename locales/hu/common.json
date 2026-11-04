@@ -124,7 +124,9 @@
     "pause_label": "Értesítések szüneteltetése",
     "pause_description": "Nincsenek hangok, felugró ablakok vagy felolvasott közlemények az új levelekről, amíg újra ki nem kapcsolja.",
     "dnd_link_app": "Az értesítéseket szüneteltetheti és a csendes órákat beállíthatja az Értesítések oldalon.",
-    "dnd_link_browser": "Az értesítéseket szüneteltetheti az Értesítések oldalon."
+    "dnd_link_browser": "Az értesítéseket szüneteltetheti az Értesítések oldalon.",
+    "backup_app": "Exportálja a beállításait egy fájlba, és importálja őket a többi eszközén.",
+    "sync_app": "Az ezzel a fiókkal bejelentkezett többi eszköz ugyanezeket a beállításokat kapja."
   },
   "sidebar": {
     "close": "Bezárás",

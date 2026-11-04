@@ -124,7 +124,9 @@
     "pause_label": "Întrerupeți notificările",
     "pause_description": "Fără sunete, ferestre pop-up sau anunțuri vocale pentru e-mailurile noi, până când opriți din nou această opțiune.",
     "dnd_link_app": "Întrerupeți notificările și setați orele de liniște pe pagina Notificări.",
-    "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări."
+    "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări.",
+    "backup_app": "Exportați setările într-un fișier și importați-le pe celelalte dispozitive.",
+    "sync_app": "Celelalte dispozitive conectate la acest cont primesc aceleași setări."
   },
   "sidebar": {
     "close": "Închide",

@@ -124,7 +124,9 @@
     "pause_label": "Wstrzymaj powiadomienia",
     "pause_description": "Bez dźwięków, wyskakujących okien i komunikatów głosowych o nowej poczcie, dopóki znów tego nie wyłączysz.",
     "dnd_link_app": "Powiadomienia wstrzymasz i godziny ciszy ustawisz na stronie Powiadomienia.",
-    "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia."
+    "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia.",
+    "backup_app": "Wyeksportuj ustawienia do pliku i zaimportuj je na innych urządzeniach.",
+    "sync_app": "Inne urządzenia zalogowane na to konto dostają te same ustawienia."
   },
   "sidebar": {
     "close": "Zamknij",

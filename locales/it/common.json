@@ -124,7 +124,9 @@
     "pause_label": "Sospendi le notifiche",
     "pause_description": "Nessun suono, finestra a comparsa o annuncio vocale per la nuova posta finché non lo disattivi di nuovo.",
     "dnd_link_app": "Sospendi le notifiche e imposta le ore di silenzio nella pagina Notifiche.",
-    "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche."
+    "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche.",
+    "backup_app": "Esporta le impostazioni in un file e importale sugli altri dispositivi.",
+    "sync_app": "Gli altri dispositivi collegati a questo account ricevono le stesse impostazioni."
   },
   "sidebar": {
     "close": "Chiudi",
