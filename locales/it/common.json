@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "Hai rifiutato.",
     "answered_tentative_nodate": "Hai risposto forse."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Si ripete: {rule}",
+    "declined_dates": "Hai rifiutato il {dates}.",
+    "declined_many": "Hai rifiutato {count} riunioni di questa serie.",
+    "answers_series": "La tua risposta vale per tutte le riunioni della serie."
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",

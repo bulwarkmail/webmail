@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "你已拒绝。",
     "answered_tentative_nodate": "你已答复暂定。"
   },
+  "ux_p2_pim_calx": {
+    "repeats": "重复：{rule}",
+    "declined_dates": "您已拒绝 {dates} 的会议。",
+    "declined_many": "您已拒绝此系列中的 {count} 次会议。",
+    "answers_series": "您的回复适用于此系列的所有会议。"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",

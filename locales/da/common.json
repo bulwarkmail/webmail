@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "Du afslog.",
     "answered_tentative_nodate": "Du svarede måske."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Gentages: {rule}",
+    "declined_dates": "Du afslog {dates}.",
+    "declined_many": "Du afslog {count} møder i denne serie.",
+    "answers_series": "Dit svar gælder alle møder i serien."
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",

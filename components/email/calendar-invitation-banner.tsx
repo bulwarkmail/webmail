@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  Repeat,
 } from '@/components/icons';
 import { useTranslations, useLocale } from 'next-intl';
 import { InvitationPrintSync } from '@/lib/print/invitation-print';
@@ -39,6 +40,8 @@ import {
   invitationAnsweredAt,
   invitationAnsweredKey,
   findParticipantByEmails,
+  isSeriesInvitation,
+  seriesAnswers,
   extractMethodFromRawIcs,
   type EventSummary,
   type InvitationMethod,
@@ -55,6 +58,7 @@ import { useCalendarErrorMessage } from '@/hooks/use-calendar-error-message';
 import { useAccountOwner } from '@/components/calendar/answer-bars';
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { resolveTimeZone } from '@/lib/timezone';
+import { buildRecurrenceSummary } from '@/components/calendar/recurrence-editor';
 
 interface InvitationChangeItem {
   label: string;
@@ -384,6 +388,8 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const shownName = useCollectionNames();
   const t = useTranslations('email_viewer.calendar_invitation');
   const tEvent = useTranslations('ux_pim_event');
+  const tCalendar = useTranslations('calendar');
+  const tSeries = useTranslations('ux_p2_pim_calx');
   const describeError = useCalendarErrorMessage();
   const locale = useLocale();
   const router = useRouter();
@@ -479,6 +485,10 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // What removing a cancelled meeting from the calendar takes, read from the
   // events stored with its uid; null until known.
   const [cancelRemoval, setCancelRemoval] = useState<CancellationRemoval | null>(null);
+  // An invitation to a series is answered as a series (pim-p2-8): the series as
+  // stored, with the occurrences answered on their own. The calendar holds the
+  // occurrences, and the first of them was read as the answer.
+  const [seriesMaster, setSeriesMaster] = useState<CalendarEvent | null>(null);
 
   const attachment = findCalendarAttachment(email);
 
@@ -577,6 +587,20 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   const method = detectedMethod !== 'unknown' ? detectedMethod : rawIcsMethod;
   const isCancellation = method === 'cancel';
 
+  const seriesUid = isSeriesInvitation(parsedEvent) ? parsedEvent?.uid ?? null : null;
+  useEffect(() => {
+    setSeriesMaster(null);
+    if (!client || !supportsCalendar || !seriesUid || sharedMailAccount) return;
+    let current = true;
+    client.queryCalendarEvents({ uid: seriesUid })
+      .then((stored) => {
+        const master = stored.find((e) => e.uid === seriesUid && !e.recurrenceId && !e.isShared) ?? null;
+        if (current) setSeriesMaster(master);
+      })
+      .catch(() => { /* the occurrence the calendar holds stands in */ });
+    return () => { current = false; };
+  }, [client, supportsCalendar, seriesUid, sharedMailAccount]);
+
   useEffect(() => {
     setCancelRemoval(null);
     if (!client || !supportsCalendar || !isCancellation || !parsedEvent?.uid) return;
@@ -634,8 +658,13 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
   // answering there would answer for them (or, on Stalwart 0.16, for
   // whichever address it picks; the duplicate attendees and wrong senders of
   // #634).
-  const existingEvent = parsedEvent?.uid
+  const storedCopy = parsedEvent?.uid
     ? storeEvents.find((e) => e.uid === parsedEvent.uid && (sharedMailAccount ? e.accountId === sharedMailAccount : !e.isShared))
+    : null;
+  const existingEvent = seriesMaster ?? storedCopy;
+  const isSeries = isSeriesInvitation(parsedEvent);
+  const seriesRule = isSeries && parsedEvent?.recurrenceRules?.[0]
+    ? buildRecurrenceSummary(parsedEvent.recurrenceRules[0], tCalendar, locale)
     : null;
 
   const currentUserParticipant = existingEvent
@@ -679,6 +708,21 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     })
     : null;
   const bannerInfo = answeredInfo ?? getBannerInfo(t, method, userIsOrganizer, supportsCalendar);
+  // "You declined Nov 3": the weeks answered no on their own, by their date.
+  const declinedOccurrences = seriesMaster && method === 'request' && !rsvpStatus
+    ? seriesAnswers(seriesMaster, actingEmails).declined
+    : [];
+  const occurrenceDate = (recurrenceId: string) => {
+    const at = new Date(`${recurrenceId.slice(0, 19)}Z`);
+    return isNaN(at.getTime()) ? recurrenceId : new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(at);
+  };
+  const declinedInfo = declinedOccurrences.length === 0
+    ? null
+    : declinedOccurrences.length > 3
+      ? tSeries('declined_many', { count: declinedOccurrences.length })
+      : tSeries('declined_dates', {
+        dates: new Intl.ListFormat(locale, { type: 'conjunction' }).format(declinedOccurrences.map(occurrenceDate)),
+      });
   const trustAssessment = parsedEvent && !userIsSender ? getInvitationTrustAssessment(parsedEvent, email, method, identityEmails) : null;
   const trustMessage = trustAssessment ? getTrustMessage(t, trustAssessment) : null;
   const participationLabel = getParticipationLabel(t, currentRsvp);
@@ -1043,6 +1087,12 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                 </span>
               </span>
             )}
+            {seriesRule && (
+              <span className="flex items-center gap-1.5 min-w-0" data-testid="invitation-repeats">
+                <Repeat className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{tSeries('repeats', { rule: seriesRule })}</span>
+              </span>
+            )}
             {summary.location && (
               <span className="flex items-center gap-1.5 min-w-0">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1112,9 +1162,10 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
         )}
 
         {/* Info / actor messages */}
-        {showDetails && (bannerInfo || actorMessage || actorSummary?.participationComment) && (
+        {showDetails && (bannerInfo || declinedInfo || actorMessage || actorSummary?.participationComment) && (
           <div className="space-y-0.5 text-xs text-muted-foreground">
             {bannerInfo && <p className="leading-relaxed">{bannerInfo}</p>}
+            {declinedInfo && <p className="leading-relaxed" data-testid="invitation-declined-occurrences">{declinedInfo}</p>}
             {cancellationOutdated && <p className="leading-relaxed">{t('cancel_outdated')}</p>}
             {actorMessage && <p>{actorMessage}</p>}
             {actorSummary?.participationComment && (
@@ -1206,6 +1257,9 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
                 <X className="w-3.5 h-3.5" />
                 {t('decline')}
               </button>
+              {isSeries && (
+                <span className="text-xs text-muted-foreground" data-testid="invitation-answers-series">{tSeries('answers_series')}</span>
+              )}
               <div className="w-px h-5 bg-border mx-1" />
             </>
           )}

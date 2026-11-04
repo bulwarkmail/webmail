@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "Odmítli jste.",
     "answered_tentative_nodate": "Odpověděli jste možná."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Opakuje se: {rule}",
+    "declined_dates": "Odmítli jste {dates}.",
+    "declined_many": "Odmítli jste {count} schůzek této série.",
+    "answers_series": "Vaše odpověď platí pro všechny schůzky série."
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",

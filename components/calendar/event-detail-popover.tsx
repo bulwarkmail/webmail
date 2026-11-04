@@ -114,12 +114,20 @@ function computePosition(
   };
 }
 
-function formatDurationDisplay(minutes: number): string {
-  if (minutes < 60) return `${minutes}min`;
+/** "1 hr 30 min", "1 Std. 30 Min.": the language's own short units (pim-p2-19). */
+export function formatDurationDisplay(minutes: number, locale: string): string {
+  const unit = (value: number, name: "hour" | "minute") => {
+    try {
+      return new Intl.NumberFormat(locale, { style: "unit", unit: name, unitDisplay: "short" }).format(value);
+    } catch {
+      return `${value}${name === "hour" ? "h" : "min"}`;
+    }
+  };
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (m === 0) return `${h}h`;
-  return `${h}h${m}min`;
+  if (h === 0) return unit(m, "minute");
+  if (m === 0) return unit(h, "hour");
+  return `${unit(h, "hour")} ${unit(m, "minute")}`;
 }
 
 function getRecurrenceLabel(event: CalendarEvent, t: ReturnType<typeof useTranslations>, locale: string): string | null {
@@ -506,7 +514,7 @@ export function EventDetailPopover({
                     </span>
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    ({formatDurationDisplay(durationMinutes)})
+                    ({formatDurationDisplay(durationMinutes, locale)})
                   </div>
                   {zoned && zonedText && (
                     <div className="text-muted-foreground text-xs" data-testid="event-zone-times">
@@ -529,7 +537,7 @@ export function EventDetailPopover({
                 ) : (
                   <div className="text-muted-foreground">
                     <bdi dir="ltr">{formatTime(startDate)} – {formatTime(endDate)}</bdi>
-                    <span className="ms-1.5 text-xs">({formatDurationDisplay(durationMinutes)})</span>
+                    <span className="ms-1.5 text-xs">({formatDurationDisplay(durationMinutes, locale)})</span>
                   </div>
                 )}
               </>

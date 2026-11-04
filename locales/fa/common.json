@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "رد کردید.",
     "answered_tentative_nodate": "پاسخ «شاید» دادید."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "تکرار: {rule}",
+    "declined_dates": "جلسهٔ {dates} را رد کردید.",
+    "declined_many": "{count} جلسه از این سری را رد کردید.",
+    "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",

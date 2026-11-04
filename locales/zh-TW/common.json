@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "你已拒絕。",
     "answered_tentative_nodate": "你已回覆暫定。"
   },
+  "ux_p2_pim_calx": {
+    "repeats": "重複：{rule}",
+    "declined_dates": "您已拒絕 {dates} 的會議。",
+    "declined_many": "您已拒絕此系列中的 {count} 場會議。",
+    "answers_series": "您的回覆適用於此系列的所有會議。"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",

@@ -638,6 +638,14 @@ html[data-window-controls] [data-own-window-close] {
   display: none;
 }
 
+/*
+ * A sheet docked at the window's end (the calendar's event and task panels) has its title
+ * and close at the top and Save at the foot: toasts stand beside it, not on it (pim-p2-19).
+ */
+body:has([data-end-sheet]) [data-toast-container] {
+  inset-inline-end: calc(var(--end-sheet-width, 400px) + 1.25rem);
+}
+
 /* Toasts that step out of the focus's way go to the top end corner: below the controls there. */
 html[data-window-controls] [data-toast-container][data-dodging] {
   top: calc(var(--titlebar-row-height) + 0.75rem) !important;

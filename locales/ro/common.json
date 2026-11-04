@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "Ai refuzat.",
     "answered_tentative_nodate": "Ai răspuns poate."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Se repetă: {rule}",
+    "declined_dates": "Ați refuzat {dates}.",
+    "declined_many": "Ați refuzat {count} întâlniri din această serie.",
+    "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",

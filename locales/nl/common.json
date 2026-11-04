@@ -5233,6 +5233,12 @@
     "answered_declined_nodate": "Je hebt geweigerd.",
     "answered_tentative_nodate": "Je hebt misschien geantwoord."
   },
+  "ux_p2_pim_calx": {
+    "repeats": "Herhaalt: {rule}",
+    "declined_dates": "U hebt {dates} afgeslagen.",
+    "declined_many": "U hebt {count} afspraken van deze reeks afgeslagen.",
+    "answers_series": "Uw antwoord geldt voor alle afspraken in de reeks."
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",

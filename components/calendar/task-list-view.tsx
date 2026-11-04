@@ -125,9 +125,24 @@ function getTaskPriorityIcon(priority: number) {
 
 type FormatDate = ReturnType<typeof useDisplayDateFormatter>["dateTime"];
 
-function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<typeof useTranslations>, timeFormat: string, formatDate: FormatDate): { label: string; className: string } {
+/** Done and cancelled tasks are never overdue (pim-p2-12); a task due today isn't yet. */
+export function isTaskOverdue(task: Pick<CalendarTask, "due" | "progress">): boolean {
+  if (!task.due || task.progress === "completed" || task.progress === "cancelled") return false;
+  const dueDate = parseISO(task.due);
+  return isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+}
+
+export function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<typeof useTranslations>, timeFormat: string, formatDate: FormatDate, done = false): { label: string; className: string } {
   const dueDate = parseISO(due);
-  const overdue = isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+  const overdue = !done && isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
+
+  // A finished task's date is a fact, not a warning: plain date, grey.
+  if (done) {
+    const formatted = showWithoutTime
+      ? formatDate(dueDate, { month: "short", day: "numeric" })
+      : formatDate(dueDate, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: timeFormat === "12h" });
+    return { label: formatted, className: "text-muted-foreground" };
+  }
 
   if (isDisplayToday(dueDate)) {
     return {
@@ -184,10 +199,7 @@ export function filterTasksForList(
       result = result.filter(task => task.progress === "completed");
       break;
     case "overdue":
-      result = result.filter(task => {
-        if (!task.due || task.progress === "completed" || task.progress === "cancelled") return false;
-        return isBefore(parseISO(task.due), displayNow()) && !isDisplayToday(parseISO(task.due));
-      });
+      result = result.filter(isTaskOverdue);
       break;
   }
 
@@ -260,7 +272,7 @@ export function TaskListView({
           const cal = calendars.find(c => task.calendarIds[c.id]);
           const isCompleted = task.progress === "completed";
           const priorityIcon = getTaskPriorityIcon(task.priority);
-          const dueDateInfo = task.due ? getDueDateLabel(task.due, task.showWithoutTime, t, timeFormat, formatDate) : null;
+          const dueDateInfo = task.due ? getDueDateLabel(task.due, task.showWithoutTime, t, timeFormat, formatDate, task.progress === "completed" || task.progress === "cancelled") : null;
 
           return (
             <div

@@ -1,5 +1,6 @@
 import { format, isSameDay } from "date-fns";
 import type { CalendarEvent } from "@/lib/jmap/types";
+import { timeZoneCity as friendlyCity } from "@/lib/time-zone-choices";
 import {
   canonicalTimeZone,
   fromDisplayDate,
@@ -101,8 +102,8 @@ export function zoneWallDurationMs(a: WallClock, b: WallClock, zone: string | nu
 
 /** "America/New_York" as people say it: "New York". */
 export function timeZoneCity(zone: string): string {
-  const last = zone.split("/").pop() || zone;
-  return last.replace(/_/g, " ");
+  // Settings' names (pim-p2-5): current city names ("Kyiv", not "Kiev").
+  return friendlyCity(zone);
 }
 
 /** Whether the clocks in `a` and `b` read alike at `instant`. */
