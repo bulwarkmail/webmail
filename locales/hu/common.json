@@ -427,6 +427,18 @@
     "new_folder_title": "Új mappa",
     "new_subfolder_title": "Új almappa"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# beszélgetés archiválva} other {# beszélgetés archiválva}}",
+    "conversations_to_trash": "{count, plural, one {# beszélgetés áthelyezve a kukába} other {# beszélgetés áthelyezve a kukába}}",
+    "conversations_deleted": "{count, plural, one {# beszélgetés törölve} other {# beszélgetés törölve}}",
+    "conversations_moved_to": "{count, plural, one {# beszélgetés áthelyezve ide: {mailbox}} other {# beszélgetés áthelyezve ide: {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# beszélgetés áthelyezve} other {# beszélgetés áthelyezve}}",
+    "select_all_in_folder": "{count, plural, one {A(z) # beszélgetés kijelölése itt: {folder}} other {Mind a(z) # beszélgetés kijelölése itt: {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {A(z) # e-mail kijelölése itt: {folder}} other {Mind a(z) # e-mail kijelölése itt: {folder}}}",
+    "select_all_conversations": "{count, plural, one {A(z) # beszélgetés kijelölése} other {Mind a(z) # beszélgetés kijelölése}}",
+    "select_all_emails": "{count, plural, one {A(z) # e-mail kijelölése} other {Mind a(z) # e-mail kijelölése}}",
+    "selecting_all": "Kijelölés…"
+  },
   "shared_tags": {
     "title": "Megosztott címkék",
     "description": "A csoportos postafiókjaid címkéi. A csoportban mindenki ugyanazokat a neveket és színeket látja a leveleken.",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Késleltetett küldés",
-    "schedule_send_description": "Válaszd ki, mikor küldje el a szerver az üzenetet.",
+    "schedule_send_description": "Válaszd ki, mikor menjen el.",
     "schedule_preset": {
       "this_morning": "Ma reggel",
       "this_afternoon": "Ma délután",
@@ -1163,6 +1175,7 @@
       "edit_link": "Hivatkozás szerkesztése",
       "remove_link": "Hivatkozás eltávolítása",
       "link_address": "Hivatkozás címe",
+      "link_text": "Szöveg",
       "link_invalid": "A cím nem tartalmazhat szóközt",
       "table": "Táblázat",
       "clear_formatting": "Formázás törlése",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "A(z) „{name}” mappa még {count, plural, one {1 üzenetet} other {# üzenetet}} tartalmaz. Törlöd a mappát az összes üzenetével együtt? Ez nem vonható vissza.",
     "delete_with_contents_confirm": "Mappa és üzenetek törlése"
   },
+  "mail_p2_folders": {
+    "all_folders": "Összes mappa",
+    "empty_trash": "Kuka ürítése",
+    "empty_spam": "Spam ürítése",
+    "empty_trash_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a kukából? Ez nem vonható vissza.",
+    "empty_spam_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a spamből? Ez nem vonható vissza.",
+    "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
+    "title_all_accounts_only": "{name} ({total} az összes fiókban)"
+  },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",
     "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
     "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
+  },
+  "mail_p2_conv": {
+    "show_message": "Üzenet megjelenítése",
+    "back_to_reply": "Vissza a válaszhoz"
   },
   "identities": {
     "modal_title": "Küldő azonosságok kezelése",
@@ -4105,6 +4131,9 @@
     "sending": "Küldés…",
     "sent": "Elküldve",
     "view": "Megtekintés",
+    "template_saved": "Sablon mentve",
+    "schedule_anyway": "Időzítés így is",
+    "schedule_warnings_title": "Időzíti így is ezt az üzenetet?",
     "picker_button": "Hozzáadás a névjegyekből",
     "picker_title": "Címzettek hozzáadása",
     "tab_contacts": "Névjegyek",
@@ -5560,7 +5589,7 @@
     "title": "Üdvözlünk a postafiókodban",
     "tip_compose": "Nyomd meg a c billentyűt új e-mail írásához",
     "tip_shortcuts": "Nyomd meg a ? billentyűt az összes billentyűparancs megtekintéséhez",
-    "tip_sidebar": "Találd meg a Naptár, Névjegyek és Beállítások menüpontokat az oldalsávban",
+    "tip_sidebar": "A Naptár, a Névjegyek és a Beállítások a bal oldali sávban vannak",
     "tip_settings": "Testreszabhatod a felhasználói élményt a Beállításokban",
     "tip_compose_touch": "Új e-mail írásához koppints a ceruza gombra",
     "tip_sidebar_touch": "A Naptár, a Névjegyek és a Beállítások az alsó sávban vannak",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "„{text}” keresése a levelek között"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Nincs kapcsolat. Ennek az üzenetnek a megnyitásához kapcsolat kell.",
+    "reader_failed": "Az üzenetet nem sikerült betölteni.",
+    "retry": "Újra",
+    "action_offline": "Nincs kapcsolat. Ehhez kapcsolat kell.",
+    "offline_bar": "Nincs kapcsolat. A levelek olvasásához és módosításához kapcsolat kell.",
+    "offline_default_on": "A leveleid ezen az eszközön is megmaradnak, így kapcsolat nélkül is olvashatod őket."
   },
   "desktopMenuBar": {
     "always_show_label": "Menüsor mindig látható",

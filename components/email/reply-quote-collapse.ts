@@ -2,7 +2,7 @@
 
 import { Extension } from '@tiptap/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey, Selection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, Selection, TextSelection, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 export const REPLY_QUOTE_START_ATTRIBUTE = 'data-reply-quote-start';
@@ -59,6 +59,55 @@ function quoteRanges(doc: PMNode): QuoteRange[] {
   return ranges;
 }
 
+const isSignature = (node: PMNode) => node.type.name === 'signatureBlock' || Boolean(node.attrs['data-signature-block']);
+
+function collapsedRanges(state: EditorState): QuoteRange[] {
+  const expanded = quoteKey.getState(state)?.expanded ?? new Set<number>();
+  return quoteRanges(state.doc).filter((range) => !expanded.has(range.from));
+}
+
+/**
+ * Where the user's own text ends: the end of the last paragraph above the
+ * folded quote or the signature, whichever comes first. Null when the body
+ * has neither, so the end of the body is the end of the text.
+ */
+export function userTextEnd(state: EditorState): number | null {
+  const ranges = quoteRanges(state.doc);
+  let boundary: number | null = collapsedRanges(state)[0]?.from ?? null;
+  state.doc.forEach((node, pos) => {
+    if (isSignature(node) && (boundary === null || pos < boundary)) boundary = pos;
+  });
+  if (boundary === null) return null;
+  let end: number | null = null;
+  state.doc.forEach((node, pos) => {
+    if (pos + node.nodeSize > boundary! || !node.isTextblock || isSignature(node)) return;
+    if (ranges.some((range) => pos >= range.from && pos < range.to)) return;
+    end = pos + node.nodeSize - 1;
+  });
+  return end;
+}
+
+/**
+ * A click that lands under a folded quote (on the empty line the editor keeps
+ * at the end) would write below the hidden original, where the user can't see
+ * it. It goes to the end of their own text above the quote instead
+ * (compose-p2-3). Lines the user can see below the quote keep their click.
+ */
+function clickBelowCollapsedQuote(state: EditorState, pos: number): boolean {
+  const ranges = collapsedRanges(state);
+  const first = ranges[0];
+  if (!first || pos < first.from) return false;
+  const $pos = state.doc.resolve(pos);
+  const topPos = $pos.depth > 0 ? $pos.before(1) : pos;
+  let hiddenOrEmpty = true;
+  state.doc.forEach((node, nodePos) => {
+    if (nodePos < first.from || nodePos > topPos) return;
+    if (ranges.some((range) => nodePos >= range.from && nodePos < range.to)) return;
+    if (!node.isTextblock || isSignature(node) || node.content.size > 0) hiddenOrEmpty = false;
+  });
+  return hiddenOrEmpty;
+}
+
 /** Visibility is a view decoration, never a document edit or an undo step. */
 export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string }>({
   name: 'replyQuoteCollapse',
@@ -107,6 +156,13 @@ export const ReplyQuoteCollapse = Extension.create<{ show: string; hide: string 
         },
       },
       props: {
+        handleClick(view, pos) {
+          if (!clickBelowCollapsedQuote(view.state, pos)) return false;
+          const end = userTextEnd(view.state);
+          if (end === null) return false;
+          view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+          return true;
+        },
         decorations(state) {
           const expanded = quoteKey.getState(state)?.expanded ?? new Set<number>();
           const decorations: Decoration[] = [];

@@ -12,7 +12,7 @@ const { MailboxContextMenu } = await import('../mailbox-context-menu');
 const folder = { id: 'p', name: 'Projects', sortOrder: 1, totalEmails: 2, unreadEmails: 0, myRights: {} } as unknown as Mailbox;
 
 describe('MailboxContextMenu', () => {
-  it('ends with Empty folder and Delete folder', () => {
+  it('ends with Delete folder', () => {
     render(
       <MailboxContextMenu
         target={{ kind: 'mailbox', mailbox: folder, hasChildren: false }}
@@ -28,7 +28,8 @@ describe('MailboxContextMenu', () => {
       />,
     );
     const labels = screen.getAllByRole('menuitem').map((item) => item.textContent);
-    expect(labels.slice(-2)).toEqual(['empty_folder_generic', 'delete_folder']);
+    // A folder of your own has no Empty: it is offered on Trash and Spam only.
+    expect(labels.slice(-1)).toEqual(['delete_folder']);
     expect(labels).toContain('refresh');
   });
 });

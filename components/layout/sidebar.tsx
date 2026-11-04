@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Folder,
   FolderOpen,
+  FolderSync,
   User,
   Users,
   Palmtree,
@@ -172,6 +173,8 @@ interface SidebarProps {
 const ROW_PX_BASE = FOLDER_ROW_PX_BASE;
 const CHEVRON_SLOT = FOLDER_CHEVRON_SLOT;
 const INDENT_STEP = 12;
+/** How long the pointer rests on the folded column before the tree floats out. */
+const RAIL_HOVER_DELAY_MS = 350;
 
 // Icons and colours follow the JMAP role only.
 const getIconForMailbox = (role?: string, hasChildren?: boolean, isExpanded?: boolean, id?: string) => {
@@ -497,8 +500,22 @@ function SidebarRow({
         )}
         title={isCollapsed ? label : undefined}
       >
-        <span className="flex items-center justify-center flex-shrink-0 w-4 h-4">
+        <span className="relative flex items-center justify-center flex-shrink-0 w-4 h-4">
           {icon}
+          {/* Folded to icons, the count rides on the icon (p2-9); the name says it already. */}
+          {isCollapsed && unreadForName > 0 && (
+            unreadCountStyle === 'dot' ? (
+              <span aria-hidden="true" data-testid="folded-unread" className="absolute -top-0.5 -end-1 w-2 h-2 rounded-full bg-primary ring-2 ring-secondary" />
+            ) : (
+              <span
+                aria-hidden="true"
+                data-testid="folded-unread"
+                className="absolute -top-2 -end-3 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[0.625rem] leading-4 font-semibold tabular-nums text-center ring-2 ring-secondary"
+              >
+                {unreadForName > 99 ? '99+' : unreadForName}
+              </span>
+            )
+          )}
         </span>
         {!isCollapsed && (
           <>
@@ -545,6 +562,20 @@ function SidebarRow({
         </IconButton>
       )}
     </div>
+  );
+}
+
+/** A folder of one's own on the folded strip: its first letter in a small box. */
+function FolderInitial({ name, className }: { name: string; className?: string }) {
+  const initial = Array.from(name.trim())[0]?.toLocaleUpperCase() ?? '?';
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="folder-initial"
+      className={cn(className, "grid place-items-center rounded-[0.25rem] border border-current text-[0.625rem] font-semibold leading-none")}
+    >
+      {initial}
+    </span>
   );
 }
 
@@ -709,6 +740,9 @@ function MailboxTreeItem({
   const isVirtualNode = node.id.startsWith('shared-');
   const isSelected = selectedMailbox === node.id;
   const label = sharedAccountName ?? localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
+  // Folded to icons, eight folders of one's own were eight identical folder
+  // icons (p2-9): each shows its first letter instead.
+  const letterIcon = isCollapsed && !node.role && !sharedAccountName && !isVirtualNode;
   // Only for the active login's folders: its client tells a missing
   // accountId (own mailbox) apart.
   const muted = useMutedMailbox(isVirtualNode || dragAccountId || pickOnly ? null : node);
@@ -752,7 +786,9 @@ function MailboxTreeItem({
   return (
     <>
       <SidebarRow
-        icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, sharedAccountName ? undefined : node.role)} />}
+        icon={letterIcon
+          ? <FolderInitial name={label} className={getIconClass(isSelected, false, false)} />
+          : <Icon className={getIconClass(isSelected, isVirtualNode, colorful, sharedAccountName ? undefined : node.role)} />}
         label={label}
         testRole={node.role}
         testName={node.name}
@@ -1177,8 +1213,23 @@ function SidebarImpl({
   // floats rather than widening the column, or every hover would reflow the
   // list behind it.
   const [railHovered, setRailHovered] = useState(false);
-  const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
+  // The default layout's folded column floats the whole tree out too, so
+  // subfolders and folder names are a hover or a click away (p2-9). A hover
+  // waits a moment there, so passing over the column on the way to the list
+  // doesn't open it; "All folders" opens it by click, tap or keyboard.
+  const [railOpen, setRailOpen] = useState(false);
+  const railHoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const allFoldersRef = useRef<HTMLButtonElement>(null);
+  const hoverExpanded = sidebarCollapsed && !isDrawer && (railHovered || railOpen);
   const isCollapsed = sidebarCollapsed && !hoverExpanded && !isDrawer;
+  const closeRailPeek = useCallback(() => {
+    if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
+    railHoverTimer.current = null;
+    setRailHovered(false);
+    setRailOpen(false);
+  }, []);
+  useEffect(() => () => { if (railHoverTimer.current) clearTimeout(railHoverTimer.current); }, []);
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
@@ -1276,6 +1327,31 @@ function SidebarImpl({
     crossAccountActive, restoring: restoringAccounts, scope: unifiedScope, accounts,
   }), [crossAccountActive, restoringAccounts, accounts, unifiedScope]);
   const t = useTranslations('sidebar');
+  const tP2 = useTranslations('mail_p2_folders');
+
+  // A pick in the floated tree folds it away again (the hover peek of the
+  // default layout, and the one "All folders" opened).
+  const pickedRef = useRef({ mailbox: selectedMailbox, keyword: selectedKeyword });
+  useEffect(() => {
+    const before = pickedRef.current;
+    pickedRef.current = { mailbox: selectedMailbox, keyword: selectedKeyword };
+    if (before.mailbox === selectedMailbox && before.keyword === selectedKeyword) return;
+    if (railOpen || !mvShell) closeRailPeek();
+  }, [selectedMailbox, selectedKeyword, railOpen, mvShell, closeRailPeek]);
+  // Opened from "All folders": the focus goes to the open folder in the tree,
+  // and a press anywhere outside folds it away.
+  useEffect(() => {
+    if (!railOpen) return;
+    const root = rootRef.current;
+    const target = root?.querySelector<HTMLElement>('nav [aria-current="page"]')
+      ?? root?.querySelector<HTMLElement>('nav button:not([disabled])');
+    target?.focus();
+    const onPointerDown = (e: PointerEvent) => {
+      if (root && !root.contains(e.target as Node)) closeRailPeek();
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [railOpen, closeRailPeek]);
 
   useEffect(() => {
     const stored = localStorage.getItem('expandedMailboxes');
@@ -1902,10 +1978,32 @@ function SidebarImpl({
 
   return (
     <div
+      ref={rootRef}
       // The peek of the collapsed rail; not with hover opening turned off.
-      onMouseEnter={mvShell && sidebarCollapsed ? () => { if (hoverOpens()) setRailHovered(true); } : undefined}
-      onMouseLeave={mvShell && sidebarCollapsed ? () => setRailHovered(false) : undefined}
-      data-mv-rail-peek={hoverExpanded ? "" : undefined}
+      onMouseEnter={sidebarCollapsed && !isDrawer ? () => {
+        if (!hoverOpens()) return;
+        if (mvShell) { setRailHovered(true); return; }
+        if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
+        railHoverTimer.current = setTimeout(() => setRailHovered(true), RAIL_HOVER_DELAY_MS);
+      } : undefined}
+      onMouseLeave={sidebarCollapsed && !isDrawer ? () => {
+        if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
+        railHoverTimer.current = null;
+        setRailHovered(false);
+      } : undefined}
+      onKeyDown={railOpen || railHovered ? (e) => {
+        if (e.key !== 'Escape' || e.defaultPrevented) return;
+        e.preventDefault();
+        const hadFocus = rootRef.current?.contains(document.activeElement);
+        closeRailPeek();
+        if (hadFocus) requestAnimationFrame(() => allFoldersRef.current?.focus());
+      } : undefined}
+      onBlur={railOpen ? (e) => {
+        const next = e.relatedTarget as Node | null;
+        if (next && !e.currentTarget.contains(next)) closeRailPeek();
+      } : undefined}
+      data-mv-rail-peek={hoverExpanded && mvShell ? "" : undefined}
+      data-folder-peek={hoverExpanded && !mvShell ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         // Mountain View's navigation sits on the canvas, with no rule between
@@ -1914,7 +2012,7 @@ function SidebarImpl({
         "max-desk:w-full",
         // Mountain View's collapsed column is 72px (--mv-rail-w), wide enough
         // for its round compose button; the default layout's rail is 48px.
-        isCollapsed && !mvShell ? "desk:w-12" : "desk:w-full",
+        isCollapsed && !mvShell ? "desk:w-12" : hoverExpanded && !mvShell ? "desk:w-64" : "desk:w-full",
         // Floats out of the rail's own column rather than widening it, so the
         // message list underneath never moves while the pointer passes over.
         // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
@@ -2287,6 +2385,20 @@ function SidebarImpl({
         {!isCollapsed && <PluginSidebarSections mailboxId={selectedKeyword ? null : selectedMailbox || null} />}
         {!isCollapsed && <PluginSlot name="sidebar-widget" className="border-t border-border" />}
       </nav>
+
+      {/* Folded: the whole tree, subfolders included, one click away (p2-9). */}
+      {isCollapsed && !mvShell && (
+        <div className="flex justify-center border-t border-border py-2">
+          <IconButton
+            ref={allFoldersRef}
+            label={tP2("all_folders")}
+            data-testid="folded-all-folders"
+            onClick={() => setRailOpen(true)}
+          >
+            <FolderSync />
+          </IconButton>
+        </div>
+      )}
 
       <MailboxContextMenu
         target={mailboxContextMenu.data}

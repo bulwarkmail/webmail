@@ -341,6 +341,28 @@ describe('the window controls over the app', () => {
     expect(root.hasAttribute(CONTROLS_LEFT_ATTRIBUTE)).toBe(true);
   });
 
+  // mail-p2-16: the desktop app sends geometrychange while the page still has
+  // its old width; the controls' share came out of that and stayed wrong.
+  it('measures again with the new width once the window has resized', () => {
+    const before = window.innerWidth;
+    const fake = overlayAt(0, before - 137);
+    render(<WindowControlsHost />);
+    expect(rightInset()).toBe('137px');
+    act(() => {
+      (fake as unknown as { getTitlebarAreaRect: () => object }).getTitlebarAreaRect = () => ({ x: 0, y: 0, width: 800 - 137, height: 56 });
+      fake.dispatchEvent(new Event('geometrychange'));
+    });
+    act(() => {
+      Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true, writable: true });
+      window.dispatchEvent(new Event('resize'));
+    });
+    try {
+      expect(rightInset()).toBe('137px');
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { value: before, configurable: true, writable: true });
+    }
+  });
+
   it('follows geometrychange, and takes everything back when the overlay goes', () => {
     const fake = overlayAt(0, window.innerWidth - 138);
     render(<WindowControlsHost />);

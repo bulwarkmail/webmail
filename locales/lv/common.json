@@ -427,6 +427,18 @@
     "new_folder_title": "Jauna mape",
     "new_subfolder_title": "Jauna apakšmape"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, zero {# sarunas arhivētas} one {# saruna arhivēta} other {# sarunas arhivētas}}",
+    "conversations_to_trash": "{count, plural, zero {# sarunas pārvietotas uz atkritni} one {# saruna pārvietota uz atkritni} other {# sarunas pārvietotas uz atkritni}}",
+    "conversations_deleted": "{count, plural, zero {# sarunas izdzēstas} one {# saruna izdzēsta} other {# sarunas izdzēstas}}",
+    "conversations_moved_to": "{count, plural, zero {# sarunas pārvietotas uz {mailbox}} one {# saruna pārvietota uz {mailbox}} other {# sarunas pārvietotas uz {mailbox}}}",
+    "conversations_moved": "{count, plural, zero {# sarunas pārvietotas} one {# saruna pārvietota} other {# sarunas pārvietotas}}",
+    "select_all_in_folder": "{count, plural, zero {Atlasīt visas # sarunas mapē {folder}} one {Atlasīt # sarunu mapē {folder}} other {Atlasīt visas # sarunas mapē {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, zero {Atlasīt visas # vēstules mapē {folder}} one {Atlasīt # vēstuli mapē {folder}} other {Atlasīt visas # vēstules mapē {folder}}}",
+    "select_all_conversations": "{count, plural, zero {Atlasīt visas # sarunas} one {Atlasīt # sarunu} other {Atlasīt visas # sarunas}}",
+    "select_all_emails": "{count, plural, zero {Atlasīt visas # vēstules} one {Atlasīt # vēstuli} other {Atlasīt visas # vēstules}}",
+    "selecting_all": "Atlasa…"
+  },
   "shared_tags": {
     "title": "Kopīgotie tagi",
     "description": "Jūsu grupu pastkastu tagi. Visi grupā redz vienādus nosaukumus un krāsas pie tās vēstulēm.",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "Ievadiet URL",
     "sending": "Sūta...",
     "schedule_send": "Ieplānot sūtīšanu",
-    "schedule_send_description": "Izvēlieties, kad serverim jānosūta šis ziņojums.",
+    "schedule_send_description": "Izvēlieties, kad to nosūtīt.",
     "schedule_preset": {
       "this_morning": "Šorīt",
       "this_afternoon": "Šodien pēcpusdienā",
@@ -1163,6 +1175,7 @@
       "edit_link": "Rediģēt saiti",
       "remove_link": "Noņemt saiti",
       "link_address": "Saites adrese",
+      "link_text": "Teksts",
       "link_invalid": "Adresē nedrīkst būt atstarpju",
       "table": "Tabula",
       "clear_formatting": "Notīrīt formatējumu",
@@ -3881,6 +3894,15 @@
     "create": "Izveidot",
     "rename_confirm": "Pārsaukt"
   },
+  "mail_p2_folders": {
+    "all_folders": "Visas mapes",
+    "empty_trash": "Iztukšot miskasti",
+    "empty_spam": "Iztukšot mēstules",
+    "empty_trash_confirm": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} miskastē? To nevar atsaukt.",
+    "empty_spam_confirm": "Neatgriezeniski dzēst {count, plural, =1 {vēstuli} zero {visas # vēstules} one {visas # vēstuli} other {visas # vēstules}} mēstulēs? To nevar atsaukt.",
+    "title_all_accounts": "{name} ({count}, {total} visos kontos)",
+    "title_all_accounts_only": "{name} ({total} visos kontos)"
+  },
   "uxs_folders": {
     "manage_accounts": "Pārvaldīt kontus…",
     "apply_to_existing": "{count, plural, zero {Piemērot # esošajām vēstulēm mapē {folder}} one {Piemērot # esošajai vēstulei mapē {folder}} other {Piemērot # esošajām vēstulēm mapē {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}",
     "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
+  },
+  "mail_p2_conv": {
+    "show_message": "Rādīt ziņojumu",
+    "back_to_reply": "Atpakaļ pie atbildes"
   },
   "identities": {
     "modal_title": "Pārvaldīt sūtītāja identitātes",
@@ -4105,6 +4131,9 @@
     "sending": "Sūta…",
     "sent": "Nosūtīts",
     "view": "Skatīt",
+    "template_saved": "Veidne saglabāta",
+    "schedule_anyway": "Ieplānot tik un tā",
+    "schedule_warnings_title": "Vai tomēr ieplānot šo vēstuli?",
     "picker_button": "Pievienot no kontaktiem",
     "picker_title": "Pievienot saņēmējus",
     "tab_contacts": "Kontakti",
@@ -5298,7 +5327,7 @@
     "title": "Laipni lūdzam jūsu pastkastē",
     "tip_compose": "Nospiediet c, lai rakstītu jaunu vēstuli",
     "tip_shortcuts": "Nospiediet ?, lai skatītu visus īsinājumtaustiņus",
-    "tip_sidebar": "Kalendāru, Kontaktus un Iestatījumus atradīsiet sānu joslā",
+    "tip_sidebar": "Kalendārs, Kontakti un Iestatījumi ir joslā kreisajā pusē",
     "tip_settings": "Pielāgojiet saskarni sadaļā «Iestatījumi»",
     "tip_compose_touch": "Pieskarieties zīmuļa pogai, lai rakstītu jaunu e-pastu",
     "tip_sidebar_touch": "Kalendārs, Kontakti un Iestatījumi ir apakšējā joslā",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Meklēt pastā “{text}”"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Jūs esat bezsaistē. Šīs vēstules atvēršanai vajag savienojumu.",
+    "reader_failed": "Šo vēstuli neizdevās ielādēt.",
+    "retry": "Mēģināt vēlreiz",
+    "action_offline": "Jūs esat bezsaistē. Tam vajag savienojumu.",
+    "offline_bar": "Jūs esat bezsaistē. Pasta lasīšanai un mainīšanai vajag savienojumu.",
+    "offline_default_on": "Jūsu pasts tiek glabāts šajā ierīcē, tāpēc to var lasīt bezsaistē."
   },
   "desktopMenuBar": {
     "always_show_label": "Vienmēr rādīt izvēļņu joslu",

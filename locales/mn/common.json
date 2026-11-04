@@ -427,6 +427,18 @@
     "new_folder_title": "Шинэ хавтас",
     "new_subfolder_title": "Шинэ дэд хавтас"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# харилцан яриаг архивласан} other {# харилцан яриаг архивласан}}",
+    "conversations_to_trash": "{count, plural, one {# харилцан яриаг хогийн сав руу зөөсөн} other {# харилцан яриаг хогийн сав руу зөөсөн}}",
+    "conversations_deleted": "{count, plural, one {# харилцан яриаг устгасан} other {# харилцан яриаг устгасан}}",
+    "conversations_moved_to": "{count, plural, one {# харилцан яриаг {mailbox} руу зөөсөн} other {# харилцан яриаг {mailbox} руу зөөсөн}}",
+    "conversations_moved": "{count, plural, one {# харилцан яриаг зөөсөн} other {# харилцан яриаг зөөсөн}}",
+    "select_all_in_folder": "{count, plural, one {{folder} доторх # харилцан яриаг сонгох} other {{folder} доторх бүх # харилцан яриаг сонгох}}",
+    "select_all_emails_in_folder": "{count, plural, one {{folder} доторх # имэйлийг сонгох} other {{folder} доторх бүх # имэйлийг сонгох}}",
+    "select_all_conversations": "{count, plural, one {# харилцан яриаг сонгох} other {Бүх # харилцан яриаг сонгох}}",
+    "select_all_emails": "{count, plural, one {# имэйлийг сонгох} other {Бүх # имэйлийг сонгох}}",
+    "selecting_all": "Сонгож байна…"
+  },
   "shared_tags": {
     "title": "Хуваалцсан тагууд",
     "description": "Таны бүлгийн шуудангийн хайрцгуудын тагууд. Бүлгийн бүх гишүүн түүний захидлууд дээр ижил нэр, өнгийг хардаг.",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Хуваарь илгээх",
-    "schedule_send_description": "Сервер энэ мессежийг хэзээ гаргахыг сонгоно уу.",
+    "schedule_send_description": "Хэзээ илгээхээ сонгоно уу.",
     "schedule_preset": {
       "this_morning": "Өнөө өглөө",
       "this_afternoon": "Өнөөдөр үдээс хойш",
@@ -1163,6 +1175,7 @@
       "edit_link": "Холбоос засах",
       "remove_link": "Холбоос хасах",
       "link_address": "Холбоосын хаяг",
+      "link_text": "Текст",
       "link_invalid": "Хаяг хоосон зай агуулж болохгүй",
       "table": "Хүснэгт",
       "clear_formatting": "Форматыг арилгах",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "\"{name}\" хавтсанд одоо ч {count} зурвас байна. Хавтас болон бүх зурвасыг устгах уу? Үүнийг буцаах боломжгүй.",
     "delete_with_contents_confirm": "Хавтас болон зурвасыг устгах"
   },
+  "mail_p2_folders": {
+    "all_folders": "Бүх хавтас",
+    "empty_trash": "Хогийн савыг хоослох",
+    "empty_spam": "Спамыг хоослох",
+    "empty_trash_confirm": "Хогийн саван дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "empty_spam_confirm": "Спам дахь {count, plural, one {захидлыг} other {бүх # захидлыг}} бүрмөсөн устгах уу? Буцаах боломжгүй.",
+    "title_all_accounts": "{name} ({count}, бүх бүртгэлд {total})",
+    "title_all_accounts_only": "{name} (бүх бүртгэлд {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "Данснуудыг удирдах…",
     "apply_to_existing": "{count, plural, one {{folder} доторх байгаа # захианд хэрэглэх} other {{folder} доторх байгаа # захианд хэрэглэх}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Өмнөх # захиа харуулах} other {Өмнөх # захиа харуулах}}",
     "return_to_list_follows_layout": "Та өөрчлөхөөс нааш энэ нь байрлалаас хамаарна: жагсаалт ба захиа зэрэгцэн байвал унтраалттай, бусад үед асаалттай."
+  },
+  "mail_p2_conv": {
+    "show_message": "Захидлыг харах",
+    "back_to_reply": "Хариулт руу буцах"
   },
   "identities": {
     "modal_title": "Илгээж буй таниулбаруудыг удирдах",
@@ -4105,6 +4131,9 @@
     "sending": "Илгээж байна…",
     "sent": "Илгээгдлээ",
     "view": "Харах",
+    "template_saved": "Загвар хадгалагдлаа",
+    "schedule_anyway": "Ямар ч байсан хуваарьт оруулах",
+    "schedule_warnings_title": "Энэ захиаг ямар ч байсан хуваарьт оруулах уу?",
     "picker_button": "Харилцагчдаас нэмэх",
     "picker_title": "Хүлээн авагч нэмэх",
     "tab_contacts": "Харилцагчид",
@@ -5560,7 +5589,7 @@
     "title": "Таны шуудангийн хайрцагт тавтай морил",
     "tip_compose": "Шинэ имэйл бичихийн тулд c товчийг дарна уу",
     "tip_shortcuts": "Дарах уу? бүх гарын товчлолыг харахын тулд",
-    "tip_sidebar": "Хажуугийн цэснээс Хуанли, Харилцагчид болон Тохиргоог олоорой",
+    "tip_sidebar": "Хуанли, Харилцагчид, Тохиргоо зүүн талын самбарт байна",
     "tip_settings": "Тохиргооноос өөрийн туршлагаа тохируулна уу",
     "tip_compose_touch": "Шинэ имэйл бичихийн тулд харандаа товчийг дарна уу",
     "tip_sidebar_touch": "Хуанли, Харилцагчид болон Тохиргоо доод самбарт байна",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Захидлаас “{text}”-г хайх"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Та офлайн байна. Энэ захиаг нээхэд холболт хэрэгтэй.",
+    "reader_failed": "Энэ захиаг ачаалж чадсангүй.",
+    "retry": "Дахин оролдох",
+    "action_offline": "Та офлайн байна. Үүнд холболт хэрэгтэй.",
+    "offline_bar": "Та офлайн байна. Захиа унших, өөрчлөхөд холболт хэрэгтэй.",
+    "offline_default_on": "Таны захиа энэ төхөөрөмж дээр хадгалагддаг тул офлайн үед ч уншиж болно."
   },
   "desktopMenuBar": {
     "always_show_label": "Цэсний мөрийг үргэлж харуулах",

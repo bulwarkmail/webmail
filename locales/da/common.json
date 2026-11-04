@@ -427,6 +427,18 @@
     "new_folder_title": "Ny mappe",
     "new_subfolder_title": "Ny undermappe"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# samtale arkiveret} other {# samtaler arkiveret}}",
+    "conversations_to_trash": "{count, plural, one {# samtale flyttet til papirkurven} other {# samtaler flyttet til papirkurven}}",
+    "conversations_deleted": "{count, plural, one {# samtale slettet} other {# samtaler slettet}}",
+    "conversations_moved_to": "{count, plural, one {# samtale flyttet til {mailbox}} other {# samtaler flyttet til {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# samtale flyttet} other {# samtaler flyttet}}",
+    "select_all_in_folder": "{count, plural, one {Vælg den # samtale i {folder}} other {Vælg alle # samtaler i {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vælg den # e-mail i {folder}} other {Vælg alle # e-mails i {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vælg den # samtale} other {Vælg alle # samtaler}}",
+    "select_all_emails": "{count, plural, one {Vælg den # e-mail} other {Vælg alle # e-mails}}",
+    "selecting_all": "Vælger…"
+  },
   "shared_tags": {
     "title": "Delte tags",
     "description": "Tags i dine gruppepostkasser. Alle i gruppen ser de samme navne og farver på dens mail.",
@@ -1112,7 +1124,7 @@
     },
     "link_url_prompt": "Indtast URL'en",
     "schedule_send": "Planlæg afsendelse",
-    "schedule_send_description": "Vælg hvornår serveren skal frigive denne besked.",
+    "schedule_send_description": "Vælg hvornår den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag formiddag",
       "this_afternoon": "I eftermiddag",
@@ -1163,6 +1175,7 @@
       "edit_link": "Rediger link",
       "remove_link": "Fjern link",
       "link_address": "Linkadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen må ikke indeholde mellemrum",
       "table": "Tabel",
       "clear_formatting": "Ryd formatering",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "Mappen \"{name}\" indeholder stadig {count, plural, one {1 besked} other {# beskeder}}. Slet mappen og alle dens beskeder? Dette kan ikke fortrydes.",
     "delete_with_contents_confirm": "Slet mappe og beskeder"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mapper",
+    "empty_trash": "Tøm papirkurven",
+    "empty_spam": "Tøm spam",
+    "empty_trash_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i papirkurven for altid? Det kan ikke fortrydes.",
+    "empty_spam_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i spam for altid? Det kan ikke fortrydes.",
+    "title_all_accounts": "{name} ({count}, {total} i alle konti)",
+    "title_all_accounts_only": "{name} ({total} i alle konti)"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer konti…",
     "apply_to_existing": "{count, plural, one {Anvend på # eksisterende besked i {folder}} other {Anvend på # eksisterende beskeder i {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Vis # ældre besked} other {Vis # ældre beskeder}}",
     "return_to_list_follows_layout": "Indtil du ændrer det, følger det layoutet: fra, når listen og beskeden står side om side, ellers til."
+  },
+  "mail_p2_conv": {
+    "show_message": "Vis beskeden",
+    "back_to_reply": "Tilbage til dit svar"
   },
   "identities": {
     "modal_title": "Administrér afsenderidentiteter",
@@ -4105,6 +4131,9 @@
     "sending": "Sender…",
     "sent": "Sendt",
     "view": "Vis",
+    "template_saved": "Skabelon gemt",
+    "schedule_anyway": "Planlæg alligevel",
+    "schedule_warnings_title": "Planlæg denne besked alligevel?",
     "picker_button": "Tilføj fra kontakter",
     "picker_title": "Tilføj modtagere",
     "tab_contacts": "Kontakter",
@@ -5560,7 +5589,7 @@
     "title": "Velkommen til din postkasse",
     "tip_compose": "Tryk c for at skrive en ny e-mail",
     "tip_shortcuts": "Tryk ? for at se alle tastaturgenveje",
-    "tip_sidebar": "Find Kalender, Kontakter og Indstillinger i sidepanelets menu",
+    "tip_sidebar": "Kalender, Kontakter og Indstillinger findes i bjælken til venstre",
     "tip_settings": "Tilpas din oplevelse i Indstillinger",
     "tip_compose_touch": "Tryk på blyantknappen for at skrive en ny e-mail",
     "tip_sidebar_touch": "Kalender, Kontakter og Indstillinger finder du i bjælken nederst",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Søg efter “{text}” i mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Du er offline. Denne besked kræver forbindelse for at åbne.",
+    "reader_failed": "Beskeden kunne ikke indlæses.",
+    "retry": "Prøv igen",
+    "action_offline": "Du er offline. Det kræver forbindelse.",
+    "offline_bar": "Du er offline. Læsning og ændring af mail kræver forbindelse.",
+    "offline_default_on": "Din mail gemmes på denne enhed, så du kan læse den offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Vis altid menulinjen",

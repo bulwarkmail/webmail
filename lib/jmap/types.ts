@@ -113,6 +113,11 @@ export interface Email {
   scheduledAccountId?: string;
   isScheduled?: boolean;
   isSmimeScheduled?: boolean;
+  /**
+   * Client-only: a reply just sent, shown in the open conversation before the
+   * server's copy is read back (lib/held-send.ts).
+   */
+  sentEcho?: boolean;
 }
 
 export interface SendEmailResult {

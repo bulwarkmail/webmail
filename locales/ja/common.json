@@ -427,6 +427,18 @@
     "new_folder_title": "新しいフォルダー",
     "new_subfolder_title": "新しいサブフォルダー"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {#件の会話をアーカイブしました}}",
+    "conversations_to_trash": "{count, plural, other {#件の会話をゴミ箱に移動しました}}",
+    "conversations_deleted": "{count, plural, other {#件の会話を削除しました}}",
+    "conversations_moved_to": "{count, plural, other {#件の会話を{mailbox}に移動しました}}",
+    "conversations_moved": "{count, plural, other {#件の会話を移動しました}}",
+    "select_all_in_folder": "{count, plural, other {{folder}の#件の会話をすべて選択}}",
+    "select_all_emails_in_folder": "{count, plural, other {{folder}の#件のメールをすべて選択}}",
+    "select_all_conversations": "{count, plural, other {#件の会話をすべて選択}}",
+    "select_all_emails": "{count, plural, other {#件のメールをすべて選択}}",
+    "selecting_all": "選択しています…"
+  },
   "shared_tags": {
     "title": "共有タグ",
     "description": "グループメールボックスのタグです。グループの全員が、そのメールに同じ名前と色のタグを見ることができます。",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "URLを入力してください",
     "sending": "送信中...",
     "schedule_send": "送信を予約",
-    "schedule_send_description": "サーバーがこのメッセージを送信する日時を選択します。",
+    "schedule_send_description": "送信する日時を選んでください。",
     "schedule_preset": {
       "this_morning": "今朝",
       "this_afternoon": "今日の午後",
@@ -1163,6 +1175,7 @@
       "edit_link": "リンクを編集",
       "remove_link": "リンクを解除",
       "link_address": "リンク先のアドレス",
+      "link_text": "テキスト",
       "link_invalid": "アドレスに空白は使えません",
       "table": "表",
       "clear_formatting": "書式をクリア",
@@ -3881,6 +3894,15 @@
     "create": "作成",
     "rename_confirm": "名前を変更"
   },
+  "mail_p2_folders": {
+    "all_folders": "すべてのフォルダー",
+    "empty_trash": "ゴミ箱を空にする",
+    "empty_spam": "迷惑メールを空にする",
+    "empty_trash_confirm": "ゴミ箱の{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "empty_spam_confirm": "迷惑メールの{count, plural, other {# 件のメッセージ}}をすべて完全に削除しますか？元に戻せません。",
+    "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
+    "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
     "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
+  },
+  "mail_p2_conv": {
+    "show_message": "メッセージを表示",
+    "back_to_reply": "返信に戻る"
   },
   "identities": {
     "modal_title": "送信者情報を管理",
@@ -4105,6 +4131,9 @@
     "sending": "送信中…",
     "sent": "送信しました",
     "view": "表示",
+    "template_saved": "テンプレートを保存しました",
+    "schedule_anyway": "そのまま予約",
+    "schedule_warnings_title": "このメッセージをそのまま予約しますか？",
     "picker_button": "連絡先から追加",
     "picker_title": "宛先を追加",
     "tab_contacts": "連絡先",
@@ -5298,7 +5327,7 @@
     "title": "メールボックスへようこそ",
     "tip_compose": "cキーで新しいメールを作成",
     "tip_shortcuts": "?キーですべてのショートカットを表示",
-    "tip_sidebar": "サイドバーからカレンダー、連絡先、設定にアクセス",
+    "tip_sidebar": "カレンダー、連絡先、設定は左側のバーにあります",
     "tip_settings": "設定でカスタマイズできます",
     "tip_compose_touch": "鉛筆ボタンをタップして新しいメールを作成",
     "tip_sidebar_touch": "カレンダー、連絡先、設定は下部のバーにあります",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "メールで「{text}」を検索"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "オフラインです。このメッセージを開くには接続が必要です。",
+    "reader_failed": "このメッセージを読み込めませんでした。",
+    "retry": "再試行",
+    "action_offline": "オフラインです。この操作には接続が必要です。",
+    "offline_bar": "オフラインです。メールの閲覧や変更には接続が必要です。",
+    "offline_default_on": "メールはこのデバイスに保存されるので、オフラインでも読めます。"
   },
   "desktopMenuBar": {
     "always_show_label": "メニューバーを常に表示",

@@ -427,6 +427,18 @@
     "new_folder_title": "新建文件夹",
     "new_subfolder_title": "新建子文件夹"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {已归档 # 个会话}}",
+    "conversations_to_trash": "{count, plural, other {已将 # 个会话移至已删除}}",
+    "conversations_deleted": "{count, plural, other {已删除 # 个会话}}",
+    "conversations_moved_to": "{count, plural, other {已将 # 个会话移至 {mailbox}}}",
+    "conversations_moved": "{count, plural, other {已移动 # 个会话}}",
+    "select_all_in_folder": "{count, plural, other {选择 {folder} 中的全部 # 个会话}}",
+    "select_all_emails_in_folder": "{count, plural, other {选择 {folder} 中的全部 # 封邮件}}",
+    "select_all_conversations": "{count, plural, other {选择全部 # 个会话}}",
+    "select_all_emails": "{count, plural, other {选择全部 # 封邮件}}",
+    "selecting_all": "正在选择…"
+  },
   "shared_tags": {
     "title": "共享标签",
     "description": "您的群组邮箱的标签。群组中的每个人在其邮件上看到的名称和颜色都相同。",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "输入 URL",
     "sending": "发送中...",
     "schedule_send": "计划发送",
-    "schedule_send_description": "选择服务器应何时发送此邮件。",
+    "schedule_send_description": "选择发送时间。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -1163,6 +1175,7 @@
       "edit_link": "编辑链接",
       "remove_link": "移除链接",
       "link_address": "链接地址",
+      "link_text": "文本",
       "link_invalid": "地址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",
@@ -3881,6 +3894,15 @@
     "create": "创建",
     "rename_confirm": "重命名"
   },
+  "mail_p2_folders": {
+    "all_folders": "所有文件夹",
+    "empty_trash": "清空已删除",
+    "empty_spam": "清空垃圾邮件",
+    "empty_trash_confirm": "要永久删除已删除中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。",
+    "empty_spam_confirm": "要永久删除垃圾邮件中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。",
+    "title_all_accounts": "{name} ({count}、所有账户共 {total})",
+    "title_all_accounts_only": "{name} (所有账户共 {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "管理账户…",
     "apply_to_existing": "{count, plural, other {应用于{folder}中的 # 封已有邮件}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
+  },
+  "mail_p2_conv": {
+    "show_message": "显示邮件",
+    "back_to_reply": "返回回复"
   },
   "identities": {
     "modal_title": "管理发送身份",
@@ -4105,6 +4131,9 @@
     "sending": "正在发送…",
     "sent": "已发送",
     "view": "查看",
+    "template_saved": "模板已保存",
+    "schedule_anyway": "仍然计划发送",
+    "schedule_warnings_title": "仍然计划发送这封邮件？",
     "picker_button": "从联系人添加",
     "picker_title": "添加收件人",
     "tab_contacts": "联系人",
@@ -5298,7 +5327,7 @@
     "title": "欢迎使用邮箱",
     "tip_compose": "按 c 撰写新邮件",
     "tip_shortcuts": "按？查看所有键盘快捷键",
-    "tip_sidebar": "在侧边栏菜单中查找日历、联系人和设置",
+    "tip_sidebar": "日历、联系人和设置在左侧栏中",
     "tip_settings": "在\"设置\"中自定义您的体验",
     "tip_compose_touch": "点按铅笔按钮写新邮件",
     "tip_sidebar_touch": "日历、联系人和设置位于底部栏",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "在邮件中搜索“{text}”"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "您已离线。打开这封邮件需要网络连接。",
+    "reader_failed": "无法加载这封邮件。",
+    "retry": "重试",
+    "action_offline": "您已离线。此操作需要网络连接。",
+    "offline_bar": "您已离线。阅读和更改邮件需要网络连接。",
+    "offline_default_on": "您的邮件保存在此设备上，离线时也能阅读。"
   },
   "desktopMenuBar": {
     "always_show_label": "始终显示菜单栏",

@@ -96,6 +96,24 @@ describe('reader toolbar overflow', () => {
     expect(labels).toEqual(expect.arrayContaining(['reply', 'reply_all', 'forward', 'archive', 'delete', 'move']));
   });
 
+  it('keeps the names of Reply, Archive, Delete and Move while only those fit (mail-p2-15)', () => {
+    // 600 px: every label needs 400 per group, the main four's 280, none 250.
+    const spies = [
+      vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (this: HTMLElement) {
+        const step = this.closest('[data-toolbar-compact]')?.getAttribute('data-toolbar-compact');
+        return step === 'all' ? 250 : step === 'secondary' ? 280 : 400;
+      }),
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(600),
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(40),
+    ];
+    restore = () => spies.forEach((spy) => spy.mockRestore());
+    const { container } = viewer();
+    expect(toolbar(container).getAttribute('data-toolbar-compact')).toBe('secondary');
+    expect(hiddenPriorities(container)).toEqual([]);
+    const kept = Array.from(container.querySelectorAll('[data-toolbar-label="primary"]')).map((label) => label.textContent);
+    expect(kept.sort()).toEqual(['archive', 'delete', 'move', 'reply']);
+  });
+
   it('then hides the optional buttons, never Reply, Reply all, Forward, Archive or Move', () => {
     restore = layout(500, 400);
     const { container } = viewer();

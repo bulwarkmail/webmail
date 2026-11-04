@@ -28,6 +28,9 @@ export function OfflineHost() {
   const tStorage = useTranslations('offlineStorage');
   const tStorageRef = useRef(tStorage);
   tStorageRef.current = tStorage;
+  const tNotice = useTranslations('mail_p2_desk');
+  const tNoticeRef = useRef(tNotice);
+  tNoticeRef.current = tNotice;
   const tKey = useTranslations('keyProtection');
   const tKeyRef = useRef(tKey);
   tKeyRef.current = tKey;
@@ -79,7 +82,8 @@ export function OfflineHost() {
           break;
         case 'default-on':
           // A first-start notice, not a toast: it stays until closed, and covers nothing.
-          showFirstStartNotice({ id: 'offline-default-on', text: tStorageRef.current('default_on'), action: openStorage });
+          // One line in the bar; its button says where to change it.
+          showFirstStartNotice({ id: 'offline-default-on', text: tNoticeRef.current('offline_default_on'), action: openStorage });
           break;
         case 'legacy-stranded':
           toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });

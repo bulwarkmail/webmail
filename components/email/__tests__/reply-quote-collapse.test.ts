@@ -5,7 +5,7 @@ import Paragraph from '@tiptap/extension-paragraph';
 import { trailingParagraphBreakRule } from '../paragraph-breaks';
 import { QuotedHtml, buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { SignatureBlock, buildSignatureBlock } from '../signature-block';
-import { ReplyQuoteCollapse, markReplyQuoteHeader } from '../reply-quote-collapse';
+import { ReplyQuoteCollapse, markReplyQuoteHeader, userTextEnd } from '../reply-quote-collapse';
 
 const HEADER = markReplyQuoteHeader('<div>On Monday, Bob wrote:<br></div>');
 const ORIGINAL = '<p>Original message</p><img src="cid:logo"><blockquote>Earlier reply</blockquote>';
@@ -166,5 +166,51 @@ describe('reply quote visibility', () => {
     expect(markReplyQuoteHeader(unknown)).toBe(unknown);
     mount(`<p>Response</p>${markReplyQuoteHeader('<p><b>From:</b> Bob</p>')}${QUOTE}`);
     expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+
+// compose-p2-3: a click under the folded quote used to put the caret on the
+// empty last line, below the hidden original, where the text went unseen.
+describe('a click in a reply with a folded quote', () => {
+  const click = (e: Editor, pos: number) => {
+    let handled = false;
+    e.view.someProp('handleClick', (handler) => { handled = handler(e.view, pos, new MouseEvent('click')) || handled; return handled; });
+    return handled;
+  };
+  const lastPos = (e: Editor) => e.state.doc.content.size - 1;
+
+  it('puts the caret at the end of the text above the quote', () => {
+    const e = mount();
+    expect(e.state.doc.lastChild?.type.name).toBe('paragraph');
+    expect(click(e, lastPos(e))).toBe(true);
+    expect(e.state.selection.from).toBe(1 + 'My response'.length);
+    expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the click where it was once the quote is shown', () => {
+    const e = mount();
+    toggle().click();
+    expect(click(e, lastPos(e))).toBe(false);
+  });
+
+  it('keeps a click on a line the user can see below the quote', () => {
+    const e = mount(`<p>My response</p>${HEADER}${QUOTE}<p>Postscript</p>`);
+    expect(click(e, lastPos(e) - 2)).toBe(false);
+  });
+
+  it('keeps a click in the text above the quote', () => {
+    const e = mount();
+    expect(click(e, 3)).toBe(false);
+  });
+
+  it.each(['above', 'below'])('ends the text before a signature %s the quote', (position) => {
+    const signature = buildSignatureBlock('<b>My signature</b>');
+    const e = mount(`<p>My response</p>${position === 'above' ? signature : ''}${HEADER}${QUOTE}${position === 'below' ? signature : ''}`);
+    expect(userTextEnd(e.state)).toBe(1 + 'My response'.length);
+  });
+
+  it('has no end of text in a body with neither quote nor signature', () => {
+    const e = mount('<p>Just text</p>');
+    expect(userTextEnd(e.state)).toBeNull();
   });
 });

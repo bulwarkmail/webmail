@@ -427,6 +427,18 @@
     "new_folder_title": "Dosar nou",
     "new_subfolder_title": "Subfolder nou"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversație arhivată} few {# conversații arhivate} other {# de conversații arhivate}}",
+    "conversations_to_trash": "{count, plural, one {# conversație mutată în coșul de gunoi} few {# conversații mutate în coșul de gunoi} other {# de conversații mutate în coșul de gunoi}}",
+    "conversations_deleted": "{count, plural, one {# conversație ștearsă} few {# conversații șterse} other {# de conversații șterse}}",
+    "conversations_moved_to": "{count, plural, one {# conversație mutată în {mailbox}} few {# conversații mutate în {mailbox}} other {# de conversații mutate în {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversație mutată} few {# conversații mutate} other {# de conversații mutate}}",
+    "select_all_in_folder": "{count, plural, one {Selectează # conversație din {folder}} few {Selectează toate cele # conversații din {folder}} other {Selectează toate cele # de conversații din {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selectează # e-mail din {folder}} few {Selectează toate cele # e-mailuri din {folder}} other {Selectează toate cele # de e-mailuri din {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selectează # conversație} few {Selectează toate cele # conversații} other {Selectează toate cele # de conversații}}",
+    "select_all_emails": "{count, plural, one {Selectează # e-mail} few {Selectează toate cele # e-mailuri} other {Selectează toate cele # de e-mailuri}}",
+    "selecting_all": "Se selectează…"
+  },
   "shared_tags": {
     "title": "Etichete partajate",
     "description": "Etichetele căsuțelor dvs. de grup. Toți membrii grupului văd aceleași nume și culori pe mesajele lui.",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Programează trimiterea",
-    "schedule_send_description": "Alegeți momentul în care serverul ar trebui să transmită acest mesaj.",
+    "schedule_send_description": "Alegeți când să fie trimis.",
     "schedule_preset": {
       "this_morning": "Azi dimineață",
       "this_afternoon": "Azi după-amiază",
@@ -1163,6 +1175,7 @@
       "edit_link": "Editează linkul",
       "remove_link": "Elimină linkul",
       "link_address": "Adresa linkului",
+      "link_text": "Text",
       "link_invalid": "Adresa nu poate conține spații",
       "table": "Tabel",
       "clear_formatting": "Șterge formatarea",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "Dosarul „{name}” încă mai conține {count, plural, one {1 mesaj} other {# mesaje}}. Ștergi dosarul și toate mesajele sale? Acțiunea nu poate fi anulată.",
     "delete_with_contents_confirm": "Șterge dosarul și mesajele"
   },
+  "mail_p2_folders": {
+    "all_folders": "Toate dosarele",
+    "empty_trash": "Golește coșul de gunoi",
+    "empty_spam": "Golește spamul",
+    "empty_trash_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi? Nu se poate anula.",
+    "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula.",
+    "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
+    "title_all_accounts_only": "{name} ({total} în toate conturile)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionați conturile…",
     "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
+  },
+  "mail_p2_conv": {
+    "show_message": "Afișează mesajul",
+    "back_to_reply": "Înapoi la răspuns"
   },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",
@@ -4105,6 +4131,9 @@
     "sending": "Se trimite…",
     "sent": "Trimis",
     "view": "Vezi",
+    "template_saved": "Șablon salvat",
+    "schedule_anyway": "Programează oricum",
+    "schedule_warnings_title": "Programați totuși acest mesaj?",
     "picker_button": "Adaugă din contacte",
     "picker_title": "Adaugă destinatari",
     "tab_contacts": "Contacte",
@@ -5560,7 +5589,7 @@
     "title": "Bine ați venit în căsuța dvs. poștală",
     "tip_compose": "Apăsați tasta c pentru a redacta un e-mail nou",
     "tip_shortcuts": "Apăsați tasta „?” pentru a vedea toate comenzile rapide de la tastatură",
-    "tip_sidebar": "Găsiți Calendar, Contacte și Setări în meniul din bara laterală",
+    "tip_sidebar": "Calendarul, Contactele și Setările sunt în bara din stânga",
     "tip_settings": "Personalizați-vă experiența în Setări",
     "tip_compose_touch": "Atinge butonul cu creion pentru a scrie un e-mail nou",
     "tip_sidebar_touch": "Calendarul, Contactele și Setările sunt în bara de jos",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Căutare „{text}” în e-mail"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sunteți offline. Acest mesaj are nevoie de conexiune ca să se deschidă.",
+    "reader_failed": "Mesajul nu a putut fi încărcat.",
+    "retry": "Încercați din nou",
+    "action_offline": "Sunteți offline. Pentru asta e nevoie de conexiune.",
+    "offline_bar": "Sunteți offline. Citirea și modificarea e-mailurilor au nevoie de conexiune.",
+    "offline_default_on": "E-mailurile dvs. sunt păstrate pe acest dispozitiv, ca să le puteți citi offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Afișează mereu bara de meniu",

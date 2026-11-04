@@ -427,6 +427,18 @@
     "new_folder_title": "新增信件匣",
     "new_subfolder_title": "新增子信件匣"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {已封存 # 個對話串}}",
+    "conversations_to_trash": "{count, plural, other {已將 # 個對話串移至垃圾桶}}",
+    "conversations_deleted": "{count, plural, other {已刪除 # 個對話串}}",
+    "conversations_moved_to": "{count, plural, other {已將 # 個對話串移至 {mailbox}}}",
+    "conversations_moved": "{count, plural, other {已移動 # 個對話串}}",
+    "select_all_in_folder": "{count, plural, other {選取 {folder} 中的全部 # 個對話串}}",
+    "select_all_emails_in_folder": "{count, plural, other {選取 {folder} 中的全部 # 封郵件}}",
+    "select_all_conversations": "{count, plural, other {選取全部 # 個對話串}}",
+    "select_all_emails": "{count, plural, other {選取全部 # 封郵件}}",
+    "selecting_all": "正在選取…"
+  },
   "shared_tags": {
     "title": "共用標籤",
     "description": "您的群組信箱標籤。群組中的每個人在其郵件上看到的名稱和顏色都相同。",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "排程寄送",
-    "schedule_send_description": "選擇伺服器要在何時送出這封郵件。",
+    "schedule_send_description": "選擇寄送時間。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -1163,6 +1175,7 @@
       "edit_link": "編輯連結",
       "remove_link": "移除連結",
       "link_address": "連結網址",
+      "link_text": "文字",
       "link_invalid": "網址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "資料夾「{name}」中仍有 {count} 封郵件。要刪除該資料夾及其所有郵件嗎？此操作無法復原。",
     "delete_with_contents_confirm": "刪除資料夾和郵件"
   },
+  "mail_p2_folders": {
+    "all_folders": "所有信件匣",
+    "empty_trash": "清空垃圾桶",
+    "empty_spam": "清空垃圾郵件",
+    "empty_trash_confirm": "要永久刪除垃圾桶中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
+    "empty_spam_confirm": "要永久刪除垃圾郵件中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
+    "title_all_accounts": "{name} ({count}、所有帳號共 {total})",
+    "title_all_accounts_only": "{name} (所有帳號共 {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",
     "apply_to_existing": "{count, plural, other {套用到{folder}中的 # 封既有郵件}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {顯示 # 封較早的郵件}}",
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
+  },
+  "mail_p2_conv": {
+    "show_message": "顯示郵件",
+    "back_to_reply": "返回回覆"
   },
   "identities": {
     "modal_title": "管理寄件身分",
@@ -4105,6 +4131,9 @@
     "sending": "正在傳送…",
     "sent": "已傳送",
     "view": "檢視",
+    "template_saved": "範本已儲存",
+    "schedule_anyway": "仍然排程",
+    "schedule_warnings_title": "仍然排程這封郵件？",
     "picker_button": "從聯絡人新增",
     "picker_title": "新增收件者",
     "tab_contacts": "聯絡人",
@@ -5560,7 +5589,7 @@
     "title": "歡迎使用您的信件匣",
     "tip_compose": "按 c 撰寫新郵件",
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
-    "tip_sidebar": "可在側邊欄選單找到行事曆、聯絡人與設定",
+    "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
     "tip_compose_touch": "點按鉛筆按鈕撰寫新郵件",
     "tip_sidebar_touch": "行事曆、聯絡人和設定位於底部列",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "在郵件中搜尋「{text}」"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "您已離線。開啟這封郵件需要網路連線。",
+    "reader_failed": "無法載入這封郵件。",
+    "retry": "重試",
+    "action_offline": "您已離線。此操作需要網路連線。",
+    "offline_bar": "您已離線。閱讀和變更郵件需要網路連線。",
+    "offline_default_on": "您的郵件保存在此裝置上，離線時也能閱讀。"
   },
   "desktopMenuBar": {
     "always_show_label": "永遠顯示選單列",

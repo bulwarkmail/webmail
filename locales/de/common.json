@@ -427,6 +427,18 @@
     "new_folder_title": "Neuer Ordner",
     "new_subfolder_title": "Neuer Unterordner"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# Unterhaltung archiviert} other {# Unterhaltungen archiviert}}",
+    "conversations_to_trash": "{count, plural, one {# Unterhaltung in den Papierkorb verschoben} other {# Unterhaltungen in den Papierkorb verschoben}}",
+    "conversations_deleted": "{count, plural, one {# Unterhaltung gelöscht} other {# Unterhaltungen gelöscht}}",
+    "conversations_moved_to": "{count, plural, one {# Unterhaltung nach {mailbox} verschoben} other {# Unterhaltungen nach {mailbox} verschoben}}",
+    "conversations_moved": "{count, plural, one {# Unterhaltung verschoben} other {# Unterhaltungen verschoben}}",
+    "select_all_in_folder": "{count, plural, one {Die # Unterhaltung in {folder} auswählen} other {Alle # Unterhaltungen in {folder} auswählen}}",
+    "select_all_emails_in_folder": "{count, plural, one {Die # E-Mail in {folder} auswählen} other {Alle # E-Mails in {folder} auswählen}}",
+    "select_all_conversations": "{count, plural, one {Die # Unterhaltung auswählen} other {Alle # Unterhaltungen auswählen}}",
+    "select_all_emails": "{count, plural, one {Die # E-Mail auswählen} other {Alle # E-Mails auswählen}}",
+    "selecting_all": "Wird ausgewählt…"
+  },
   "shared_tags": {
     "title": "Geteilte Labels",
     "description": "Labels Ihrer Gruppenpostfächer. Alle in der Gruppe sehen dieselben Namen und Farben an ihren Nachrichten.",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "URL eingeben",
     "sending": "Wird gesendet...",
     "schedule_send": "Senden planen",
-    "schedule_send_description": "Wählen Sie, wann der Server diese Nachricht freigeben soll.",
+    "schedule_send_description": "Wählen Sie, wann gesendet werden soll.",
     "schedule_preset": {
       "this_morning": "Heute früh",
       "this_afternoon": "Heute Nachmittag",
@@ -1163,6 +1175,7 @@
       "edit_link": "Link bearbeiten",
       "remove_link": "Link entfernen",
       "link_address": "Linkadresse",
+      "link_text": "Text",
       "link_invalid": "Die Adresse darf keine Leerzeichen enthalten",
       "table": "Tabelle",
       "clear_formatting": "Formatierung löschen",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "Der Ordner „{name}“ enthält noch {count, plural, one {1 Nachricht} other {# Nachrichten}}. Ordner samt allen Nachrichten löschen? Das kann nicht rückgängig gemacht werden.",
     "delete_with_contents_confirm": "Ordner und Nachrichten löschen"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle Ordner",
+    "empty_trash": "Papierkorb leeren",
+    "empty_spam": "Spam leeren",
+    "empty_trash_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "empty_spam_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Spam endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "title_all_accounts": "{name} ({count}, {total} in allen Konten)",
+    "title_all_accounts_only": "{name} ({total} in allen Konten)"
+  },
   "uxs_folders": {
     "manage_accounts": "Konten verwalten…",
     "apply_to_existing": "{count, plural, one {Auf # vorhandene Nachricht in {folder} anwenden} other {Auf # vorhandene Nachrichten in {folder} anwenden}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
     "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
+  },
+  "mail_p2_conv": {
+    "show_message": "Nachricht anzeigen",
+    "back_to_reply": "Zurück zur Antwort"
   },
   "identities": {
     "modal_title": "Sendeidentitäten verwalten",
@@ -4105,6 +4131,9 @@
     "sending": "Wird gesendet…",
     "sent": "Gesendet",
     "view": "Anzeigen",
+    "template_saved": "Vorlage gespeichert",
+    "schedule_anyway": "Trotzdem planen",
+    "schedule_warnings_title": "Diese Nachricht trotzdem planen?",
     "picker_button": "Aus Kontakten hinzufügen",
     "picker_title": "Empfänger hinzufügen",
     "tab_contacts": "Kontakte",
@@ -5298,7 +5327,7 @@
     "title": "Willkommen in Ihrem Postfach",
     "tip_compose": "Drücken Sie c, um eine neue E-Mail zu verfassen",
     "tip_shortcuts": "Drücken Sie ?, um alle Tastaturkürzel anzuzeigen",
-    "tip_sidebar": "Finden Sie Kalender, Kontakte und Einstellungen im Seitenmenü",
+    "tip_sidebar": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste links",
     "tip_settings": "Passen Sie Ihre Erfahrung in den Einstellungen an",
     "tip_compose_touch": "Tippen Sie auf den Stift, um eine neue E-Mail zu schreiben",
     "tip_sidebar_touch": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste unten",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Sie sind offline. Diese Nachricht lässt sich nur mit Verbindung öffnen.",
+    "reader_failed": "Diese Nachricht konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "action_offline": "Sie sind offline. Dafür braucht es eine Verbindung.",
+    "offline_bar": "Sie sind offline. Zum Lesen und Ändern von E-Mails braucht es eine Verbindung.",
+    "offline_default_on": "Ihre E-Mails werden auf diesem Gerät gespeichert, damit Sie sie auch offline lesen können."
   },
   "desktopMenuBar": {
     "always_show_label": "Menüleiste immer anzeigen",

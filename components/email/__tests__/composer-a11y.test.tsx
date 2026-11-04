@@ -253,6 +253,12 @@ describe('recipient fields (SR-06, CV-02)', () => {
     expect(screen.getByRole('list', { name: 'to:' })).toBeInTheDocument();
   });
 
+  // compose-p2-18: the ring outside the input was cut by the field's scroller.
+  it("draws the To field's keyboard focus ring inside it", () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    expect(screen.getByRole('combobox', { name: 'to:' })).toHaveClass('focus-inset');
+  });
+
   it('labels the subject field', () => {
     render(<EmailComposer initialData={DRAFT} />);
     expect(screen.getByLabelText('subject_label')).toBe(screen.getByTestId('composer-subject'));
@@ -392,6 +398,21 @@ describe('moving a recipient by keyboard (MO-07)', () => {
     await waitFor(() => expect(screen.queryByRole('list', { name: 'to:' })).toBeNull());
     expect(within(screen.getByRole('list', { name: 'cc_label' })).getByRole('listitem')).toHaveTextContent('Anna Berg');
     expect(liveRegion()).toHaveTextContent('recipient_moved:Anna Berg|cc');
+  });
+
+  // compose-p2-16: a click did nothing visible, and Escape then closed the composer.
+  it('opens the chip menu on a click, and Escape closes only the menu', async () => {
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'anna@example.com' }} onClose={onClose} />);
+    const chip = within(screen.getByRole('list', { name: 'to:' })).getByRole('listitem');
+    fireEvent.click(chip.querySelector('.truncate')!);
+
+    const move = await screen.findByTestId('recipient-move-bcc');
+    fireEvent.keyDown(move, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByTestId('recipient-move-bcc')).toBeNull());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
   });
 
   it('opens the chip menu with Shift+F10 too', async () => {

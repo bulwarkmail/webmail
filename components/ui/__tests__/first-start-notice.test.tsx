@@ -74,3 +74,35 @@ describe('first-start notices', () => {
     expect(screen.queryByText('Mail is kept on this device.')).toBeNull();
   });
 });
+
+// pass-2 mail-p2-19: offline, the desktop app showed the offline bar and, under
+// it, this notice four lines tall saying much the same.
+describe('first-start notices and the offline bar', () => {
+  afterEach(() => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true });
+  });
+
+  it('wait while offline and come back online', () => {
+    render(<FirstStartNoticeBar />);
+    act(() => showFirstStartNotice({ id: 'kept', text: 'Mail is kept on this device.' }));
+    expect(screen.getByText('Mail is kept on this device.')).toBeTruthy();
+    act(() => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+      window.dispatchEvent(new Event('offline'));
+    });
+    expect(screen.queryByText('Mail is kept on this device.')).toBeNull();
+    act(() => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true });
+      window.dispatchEvent(new Event('online'));
+    });
+    expect(screen.getByText('Mail is kept on this device.')).toBeTruthy();
+  });
+
+  it('keep to one line, the whole text on hover', () => {
+    render(<FirstStartNoticeBar />);
+    act(() => showFirstStartNotice({ id: 'long', text: 'A long text that would wrap to four lines in a narrow list.' }));
+    const text = screen.getByText('A long text that would wrap to four lines in a narrow list.');
+    expect(text.className).toContain('truncate');
+    expect(text.getAttribute('title')).toBe('A long text that would wrap to four lines in a narrow list.');
+  });
+});

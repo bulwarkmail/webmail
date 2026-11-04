@@ -54,24 +54,38 @@ beforeEach(() => {
   useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox' });
 });
 
-// mail-15: the default density shows one preview line, so more rows fit;
-// comfortable keeps two.
+// mail-15: the default density puts the preview after the subject, on the
+// subject's line, so about ten rows fit at 1366×768 (they were about 96 px,
+// seven on screen); comfortable keeps two preview lines, and a phone keeps
+// the preview under the subject.
 describe('list row preview lines', () => {
-  it.each([
-    ['regular', 'line-clamp-1'],
-    ['comfortable', 'line-clamp-2'],
-  ] as const)('a %s row clamps its preview with %s', (density, clamp) => {
-    useSettingsStore.setState({ density });
-    renderRow([makeEmail()]);
-    expect(screen.getByText(PREVIEW).className.split(/\s+/)).toContain(clamp);
-  });
+  const onSubjectLine = () => {
+    const preview = screen.getByText(PREVIEW, { exact: false });
+    return preview.closest('[data-row-preview]') !== null;
+  };
 
   it.each([
-    ['regular', 'line-clamp-1'],
-    ['comfortable', 'line-clamp-2'],
-  ] as const)('a %s conversation row clamps its preview with %s', (density, clamp) => {
-    useSettingsStore.setState({ density });
-    renderRow([makeEmail({ id: 'a' }), makeEmail({ id: 'b', receivedAt: '2024-01-16T10:00:00Z' })]);
-    expect(screen.getByText(PREVIEW).className.split(/\s+/)).toContain(clamp);
+    ['message', [makeEmail()]],
+    ['conversation', [makeEmail({ id: 'a' }), makeEmail({ id: 'b', receivedAt: '2024-01-16T10:00:00Z' })]],
+  ] as const)('a regular %s row shows its preview on the subject line', (_kind, emails) => {
+    useSettingsStore.setState({ density: 'regular' });
+    renderRow([...emails]);
+    expect(onSubjectLine()).toBe(true);
+    expect(document.querySelector('p.line-clamp-1')).toBeNull();
+  });
+
+  it('a comfortable row keeps two preview lines of its own', () => {
+    useSettingsStore.setState({ density: 'comfortable' });
+    renderRow([makeEmail()]);
+    expect(onSubjectLine()).toBe(false);
+    expect(screen.getByText(PREVIEW).className.split(/\s+/)).toContain('line-clamp-2');
+  });
+
+  it('a regular row on a phone keeps the preview under the subject', () => {
+    useUIStore.setState({ isMobile: true });
+    useSettingsStore.setState({ density: 'regular' });
+    renderRow([makeEmail()]);
+    expect(onSubjectLine()).toBe(false);
+    expect(screen.getByText(PREVIEW).className.split(/\s+/)).toContain('line-clamp-1');
   });
 });

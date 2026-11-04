@@ -63,7 +63,8 @@ describe('the notice that the desktop app keeps mail on this device', () => {
     render(<OfflineHost />);
     offlineNotify({ kind: 'default-on' });
     expect(useToastStore.getState().toasts).toHaveLength(0);
-    expect(firstStartNoticesWaiting().map((n) => n.text)).toEqual(['default_on']);
+    // One line now (pass-2 mail-p2-19): the text that fits it, with Open settings.
+    expect(firstStartNoticesWaiting().map((n) => n.text)).toEqual(['offline_default_on']);
     expect(firstStartNoticesWaiting()[0].action?.label).toBe('open_settings');
   });
 });

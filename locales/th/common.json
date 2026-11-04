@@ -639,6 +639,10 @@
     "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
     "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
   },
+  "mail_p2_conv": {
+    "show_message": "แสดงข้อความ",
+    "back_to_reply": "กลับไปที่คำตอบของคุณ"
+  },
   "notifications": {
     "email_sent": "ส่งอีเมลแล้ว",
     "email_deleted": "ลบอีเมลแล้ว",
@@ -901,6 +905,18 @@
     "new_folder_title": "สร้างโฟลเดอร์ใหม่",
     "new_subfolder_title": "สร้างโฟลเดอร์ย่อยใหม่"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {เก็บถาวร # การสนทนาแล้ว}}",
+    "conversations_to_trash": "{count, plural, other {ย้าย # การสนทนาไปถังขยะแล้ว}}",
+    "conversations_deleted": "{count, plural, other {ลบ # การสนทนาแล้ว}}",
+    "conversations_moved_to": "{count, plural, other {ย้าย # การสนทนาไปยัง {mailbox} แล้ว}}",
+    "conversations_moved": "{count, plural, other {ย้าย # การสนทนาแล้ว}}",
+    "select_all_in_folder": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการใน {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับใน {folder}}}",
+    "select_all_conversations": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการ}}",
+    "select_all_emails": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับ}}",
+    "selecting_all": "กำลังเลือก…"
+  },
   "shared_tags": {
     "title": "ป้ายกำกับที่แชร์",
     "description": "ป้ายกำกับของกล่องจดหมายกลุ่มของคุณ ทุกคนในกลุ่มจะเห็นชื่อและสีเดียวกันบนอีเมลของกลุ่ม",
@@ -1031,6 +1047,15 @@
     "delete_with_contents_title": "โฟลเดอร์ไม่ว่าง",
     "delete_with_contents_message": "โฟลเดอร์ “{name}” ยังมีข้อความอยู่ {count, plural, other {# ข้อความ}} ต้องการลบโฟลเดอร์และข้อความทั้งหมดภายในหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "delete_with_contents_confirm": "ลบโฟลเดอร์และข้อความทั้งหมด"
+  },
+  "mail_p2_folders": {
+    "all_folders": "โฟลเดอร์ทั้งหมด",
+    "empty_trash": "ล้างถังขยะ",
+    "empty_spam": "ล้างสแปม",
+    "empty_trash_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
+    "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
@@ -1236,6 +1261,9 @@
     "sending": "กำลังส่ง…",
     "sent": "ส่งแล้ว",
     "view": "ดู",
+    "template_saved": "บันทึกเทมเพลตแล้ว",
+    "schedule_anyway": "กำหนดเวลาต่อไป",
+    "schedule_warnings_title": "กำหนดเวลาส่งข้อความนี้ต่อไปหรือไม่",
     "picker_button": "เพิ่มจากผู้ติดต่อ",
     "picker_title": "เพิ่มผู้รับ",
     "tab_contacts": "ผู้ติดต่อ",
@@ -1504,7 +1532,7 @@
       "unfinished": []
     },
     "schedule_send": "กำหนดเวลาส่ง",
-    "schedule_send_description": "เลือกเวลาที่ต้องการให้เซิร์ฟเวอร์ส่งข้อความนี้",
+    "schedule_send_description": "เลือกเวลาที่จะส่ง",
     "schedule_preset": {
       "this_morning": "เช้านี้",
       "this_afternoon": "บ่ายนี้",
@@ -1555,6 +1583,7 @@
       "edit_link": "แก้ไขลิงก์",
       "remove_link": "นำลิงก์ออก",
       "link_address": "ที่อยู่ลิงก์",
+      "link_text": "ข้อความ",
       "link_invalid": "ที่อยู่ต้องไม่มีช่องว่าง",
       "table": "ตาราง",
       "clear_formatting": "ล้างการจัดรูปแบบ",
@@ -2153,7 +2182,7 @@
     "title": "ยินดีต้อนรับสู่กล่องจดหมายของคุณ",
     "tip_compose": "กด c เพื่อเขียนอีเมลใหม่",
     "tip_shortcuts": "กด ? เพื่อดูแป้นพิมพ์ลัดทั้งหมด",
-    "tip_sidebar": "เข้าถึง ปฏิทิน ผู้ติดต่อ และการตั้งค่า ได้จากเมนูแถบด้านข้าง",
+    "tip_sidebar": "ปฏิทิน รายชื่อติดต่อ และการตั้งค่าอยู่ในแถบด้านซ้าย",
     "tip_settings": "ปรับแต่งประสบการณ์การใช้งานของคุณได้ที่ การตั้งค่า",
     "tip_compose_touch": "แตะไอคอนดินสอเพื่อเขียนอีเมลใหม่",
     "tip_sidebar_touch": "เข้าถึง ปฏิทิน ผู้ติดต่อ และการตั้งค่า ได้จากแถบเมนูด้านล่าง",
@@ -7283,6 +7312,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "ค้นหา “{text}” ในอีเมล"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "คุณออฟไลน์อยู่ ข้อความนี้ต้องมีการเชื่อมต่อจึงจะเปิดได้",
+    "reader_failed": "โหลดข้อความนี้ไม่ได้",
+    "retry": "ลองอีกครั้ง",
+    "action_offline": "คุณออฟไลน์อยู่ การทำงานนี้ต้องมีการเชื่อมต่อ",
+    "offline_bar": "คุณออฟไลน์อยู่ การอ่านและแก้ไขอีเมลต้องมีการเชื่อมต่อ",
+    "offline_default_on": "อีเมลของคุณถูกเก็บไว้ในอุปกรณ์นี้ คุณจึงอ่านได้แม้ออฟไลน์"
   },
   "desktopMenuBar": {
     "always_show_label": "แสดงแถบเมนูเสมอ",

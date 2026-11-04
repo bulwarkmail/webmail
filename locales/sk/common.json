@@ -427,6 +427,18 @@
     "new_folder_title": "Nový priečinok",
     "new_subfolder_title": "Nový podpriečinok"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konverzácia archivovaná} few {# konverzácie archivované} many {# konverzácií archivovaných} other {# konverzácií archivovaných}}",
+    "conversations_to_trash": "{count, plural, one {# konverzácia presunutá do koša} few {# konverzácie presunuté do koša} many {# konverzácií presunutých do koša} other {# konverzácií presunutých do koša}}",
+    "conversations_deleted": "{count, plural, one {# konverzácia odstránená} few {# konverzácie odstránené} many {# konverzácií odstránených} other {# konverzácií odstránených}}",
+    "conversations_moved_to": "{count, plural, one {# konverzácia presunutá do {mailbox}} few {# konverzácie presunuté do {mailbox}} many {# konverzácií presunutých do {mailbox}} other {# konverzácií presunutých do {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# konverzácia presunutá} few {# konverzácie presunuté} many {# konverzácií presunutých} other {# konverzácií presunutých}}",
+    "select_all_in_folder": "{count, plural, one {Vybrať # konverzáciu v priečinku {folder}} few {Vybrať všetky # konverzácie v priečinku {folder}} many {Vybrať všetkých # konverzácií v priečinku {folder}} other {Vybrať všetkých # konverzácií v priečinku {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vybrať # e-mail v priečinku {folder}} few {Vybrať všetky # e-maily v priečinku {folder}} many {Vybrať všetkých # e-mailov v priečinku {folder}} other {Vybrať všetkých # e-mailov v priečinku {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vybrať # konverzáciu} few {Vybrať všetky # konverzácie} many {Vybrať všetkých # konverzácií} other {Vybrať všetkých # konverzácií}}",
+    "select_all_emails": "{count, plural, one {Vybrať # e-mail} few {Vybrať všetky # e-maily} many {Vybrať všetkých # e-mailov} other {Vybrať všetkých # e-mailov}}",
+    "selecting_all": "Vyberá sa…"
+  },
   "shared_tags": {
     "title": "Zdieľané štítky",
     "description": "Štítky vašich skupinových schránok. Všetci v skupine vidia pri jej pošte rovnaké názvy a farby.",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Naplánovať odoslanie",
-    "schedule_send_description": "Vyberte, kedy má server túto správu odoslať.",
+    "schedule_send_description": "Vyberte, kedy sa má odoslať.",
     "schedule_preset": {
       "this_morning": "Dnes ráno",
       "this_afternoon": "Dnes popoludní",
@@ -1163,6 +1175,7 @@
       "edit_link": "Upraviť odkaz",
       "remove_link": "Odstrániť odkaz",
       "link_address": "Adresa odkazu",
+      "link_text": "Text",
       "link_invalid": "Adresa nesmie obsahovať medzery",
       "table": "Tabuľka",
       "clear_formatting": "Vymazať formátovanie",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "Priečinok „{name}“ stále obsahuje {count, plural, one {1 správu} few {# správy} other {# správ}}. Odstrániť priečinok aj všetky jeho správy? Túto akciu nie je možné vrátiť späť.",
     "delete_with_contents_confirm": "Odstrániť priečinok a správy"
   },
+  "mail_p2_folders": {
+    "all_folders": "Všetky priečinky",
+    "empty_trash": "Vyprázdniť kôš",
+    "empty_spam": "Vyprázdniť spam",
+    "empty_trash_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši? Nedá sa to vrátiť späť.",
+    "empty_spam_confirm": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v spame? Nedá sa to vrátiť späť.",
+    "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
+    "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",
     "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
+  },
+  "mail_p2_conv": {
+    "show_message": "Zobraziť správu",
+    "back_to_reply": "Späť na odpoveď"
   },
   "identities": {
     "modal_title": "Správa identít odosielateľa",
@@ -4105,6 +4131,9 @@
     "sending": "Odosielanie…",
     "sent": "Odoslané",
     "view": "Zobraziť",
+    "template_saved": "Šablóna uložená",
+    "schedule_anyway": "Naplánovať aj tak",
+    "schedule_warnings_title": "Naplánovať túto správu aj tak?",
     "picker_button": "Pridať z kontaktov",
     "picker_title": "Pridať príjemcov",
     "tab_contacts": "Kontakty",
@@ -5560,7 +5589,7 @@
     "title": "Vitajte vo svojej poštovej schránke",
     "tip_compose": "Stlačte c na napísanie nového e-mailu",
     "tip_shortcuts": "Stlačte ? na zobrazenie všetkých klávesových skratiek",
-    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete v postrannom paneli",
+    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete na lište vľavo",
     "tip_settings": "Prispôsobte si aplikáciu v Nastaveniach",
     "tip_compose_touch": "Ťuknutím na tlačidlo s ceruzkou napíšete nový e-mail",
     "tip_sidebar_touch": "Kalendár, Kontakty a Nastavenia nájdete na lište dole",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Hľadať „{text}“ v pošte"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Ste offline. Táto správa sa otvorí len s pripojením.",
+    "reader_failed": "Túto správu sa nepodarilo načítať.",
+    "retry": "Skúsiť znova",
+    "action_offline": "Ste offline. Na to je potrebné pripojenie.",
+    "offline_bar": "Ste offline. Na čítanie a úpravy pošty je potrebné pripojenie.",
+    "offline_default_on": "Vaša pošta je uložená v tomto zariadení, takže ju môžete čítať offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Vždy zobrazovať panel ponúk",

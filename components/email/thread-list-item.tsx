@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
 import { emailListDate } from "@/lib/email-date";
@@ -16,7 +17,7 @@ import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, Messa
 import type { AppIcon } from "@/components/icons";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useShallow } from "zustand/react/shallow";
-import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
+import { useListRowShape, LIST_COLUMN_CLASS, showsPreviewOnSubjectLine } from "@/hooks/use-list-row-shape";
 import { SizeCell } from "./list-columns";
 import { accountTintKey, generateAvatarColor } from "@/lib/account-utils";
 import { useUIStore } from "@/stores/ui-store";
@@ -498,6 +499,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     // together.
     const mvRow = interfaceLayout === 'mountain-view' && oneLineRow;
     const mvMobileRow = interfaceLayout === 'mountain-view' && isMobile;
+    const previewOnSubjectLine = showsPreviewOnSubjectLine({ showPreview, density, isMobile, mountainView: interfaceLayout === 'mountain-view' });
     const trimmedPreview = cleanPreview(email.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // Search hits carry server snippets with the matched terms marked; they
@@ -971,7 +973,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   </div>
                 </div>
 
-                <div className="mb-1 flex min-w-0 items-center gap-1.5">
+                <div className={cn("flex min-w-0 items-center gap-1.5", !previewOnSubjectLine && "mb-1")}>
                   {tagPlacement === 'subject' && tagIds.length > 0 && (
                       <span className={TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
@@ -986,11 +988,16 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       : "font-normal text-foreground/90"
                   )}>
                     <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
+                    {previewOnSubjectLine && (
+                      <span data-row-preview="" className="font-normal text-muted-foreground">
+                        {' – '}<span dir="auto">{previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || t('no_preview_available'))}</span>
+                      </span>
+                    )}
                   </span>
                   <PluginRowBadges email={email} />
                 </div>
 
-                {showPreview && density !== 'extra-compact' && density !== 'compact' && (
+                {showPreview && !previewOnSubjectLine && density !== 'extra-compact' && density !== 'compact' && (
                   <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                     <p dir="auto" className={cn(
                       "text-sm leading-relaxed",
@@ -1031,7 +1038,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             onMarkAsSpam={onMarkAsSpam}
             onUndoSpam={onUndoSpam}
             isInJunk={currentMailboxRole === 'junk'}
-            spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+            spamApplicable={spamApplicableIn(currentMailboxRole)}
             mailboxRole={currentMailboxRole ?? null}
             pinToFirstLine={mvRow}
           />
@@ -1092,6 +1099,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     // together.
     const mvRow = interfaceLayout === 'mountain-view' && oneLineRow;
     const mvMobileRow = interfaceLayout === 'mountain-view' && isMobile;
+    const previewOnSubjectLine = showsPreviewOnSubjectLine({ showPreview, density, isMobile, mountainView: interfaceLayout === 'mountain-view' });
     const trimmedPreview = cleanPreview(latestEmail.preview);
     const inlinePreview = showPreview && trimmedPreview ? ` ${trimmedPreview}` : '';
     // In a search the matched mail need not be the thread's latest one: show
@@ -1759,7 +1767,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     </div>
                   </div>
 
-                  <div className="mb-1 flex min-w-0 items-center gap-1.5">
+                  <div className={cn("flex min-w-0 items-center gap-1.5", !previewOnSubjectLine && "mb-1")}>
                     {tagPlacement === 'subject' && tagIds.length > 0 && (
                         <span className={TAG_GROUP_CLASS}>
                           {tagIds.map((id) => (
@@ -1774,11 +1782,16 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         : "font-normal text-foreground/90"
                     )}>
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (latestEmail.subject || tNoSubject)}</bdi>
+                      {previewOnSubjectLine && (
+                        <span data-row-preview="" className="font-normal text-muted-foreground">
+                          {' – '}<span dir="auto">{previewSnippet ? <SearchSnippetText snippet={previewSnippet} /> : (trimmedPreview || tEmailViewer('no_preview_available'))}</span>
+                        </span>
+                      )}
                     </span>
                     <PluginRowBadges email={latestEmail} />
                   </div>
 
-                  {showPreview && density !== 'extra-compact' && density !== 'compact' && (
+                  {showPreview && !previewOnSubjectLine && density !== 'extra-compact' && density !== 'compact' && (
                     <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                       <p dir="auto" className={cn(
                         "text-sm leading-relaxed",
@@ -1823,7 +1836,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
               onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
               isInJunk={currentMailboxRole === 'junk'}
-              spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
+              spamApplicable={spamApplicableIn(currentMailboxRole)}
               mailboxRole={currentMailboxRole ?? null}
               pinToFirstLine={mvRow}
             />

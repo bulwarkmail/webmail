@@ -46,8 +46,24 @@ const ids = (nodes: MoveMenuNode[]): string[] => nodes.flatMap((n) => [n.id, ...
 describe('buildMoveMenu', () => {
   it('lists system folders first in mail-client order, then the rest by name', () => {
     const { nodes } = buildMoveMenu(mailboxes, { currentMailboxId: 'work', ownerAccountId: 'A', locale: 'en' });
-    // Drafts can't take a moved message; the server's sortOrder doesn't count.
-    expect(names(nodes)).toEqual(['Inbox', 'Sent Items', 'Archive', 'Junk Mail', 'Trash', 'apple', 'Read only', 'Receipts', 'Work', 'Zettelkasten']);
+    // Drafts and Sent can't take a moved message (pass 2 p2-18 for Sent);
+    // the server's sortOrder doesn't put a folder above the Inbox.
+    expect(names(nodes)).toEqual(['Inbox', 'Archive', 'Junk Mail', 'Trash', 'apple', 'Read only', 'Receipts', 'Work', 'Zettelkasten']);
+  });
+
+  // p2-18: the sidebar showed Receipts > 2026, 2025, the Move list 2025, 2026.
+  it("orders the user's folders as the sidebar does: set order, then years newest first", () => {
+    const boxes = [
+      own('inbox', 'Inbox', { role: 'inbox', sortOrder: 10 }),
+      own('receipts', 'Receipts'),
+      own('y2025', '2025', { parentId: 'receipts' }),
+      own('y2026', '2026', { parentId: 'receipts' }),
+      own('b', 'Beta', { sortOrder: 2 }),
+      own('a', 'Alpha', { sortOrder: 3 }),
+    ];
+    const { nodes } = buildMoveMenu(boxes, { ownerAccountId: 'A', locale: 'en' });
+    expect(names(nodes)).toEqual(['Inbox', 'Receipts', 'Beta', 'Alpha']);
+    expect(names(nodes.find((n) => n.id === 'receipts')!.children)).toEqual(['2026', '2025']);
   });
 
   it('keeps the nesting, sorts numbers as numbers, and keeps a read-only parent as a step', () => {
@@ -65,7 +81,7 @@ describe('buildMoveMenu', () => {
     const inInbox = { mailboxIds: { inbox: true } } as unknown as Email;
     const { nodes, targetCount } = buildMoveMenu(mailboxes, { currentMailboxId: 'inbox', ownerAccountId: 'A', emails: [inInbox] });
     expect(nodes[0]).toMatchObject({ id: 'inbox', enabled: false, current: true });
-    expect(targetCount).toBe(13);
+    expect(targetCount).toBe(12);
   });
 
   it('lets a search hit from another folder move into the open one (#1452)', () => {
@@ -90,8 +106,8 @@ describe('buildMoveMenu', () => {
     const inInbox = { mailboxIds: { inbox: true } } as unknown as Email;
     const recentIds = (account: string | undefined) => (account === 'A' ? ['gone', 'inbox', 'acme', 'S:projects', 'sent', 'trash'] : []);
     const { recent } = buildMoveMenu(mailboxes, { currentMailboxId: 'inbox', ownerAccountId: 'A', emails: [inInbox], recentIds });
-    // A deleted folder and the open one drop out; three show.
-    expect(recent.map((n) => n.id)).toEqual(['acme', 'S:projects', 'sent']);
+    // A deleted folder, the open one and Sent drop out; three show.
+    expect(recent.map((n) => n.id)).toEqual(['acme', 'S:projects', 'trash']);
   });
 });
 

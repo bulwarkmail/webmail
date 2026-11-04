@@ -10,14 +10,17 @@ export const MAIL_SHORTCUTS = {
     { key: "n", description: "shortcuts.navigation.next_unread" },
     { key: "g → i / s / t / d / a", description: "shortcuts.navigation.go_to_folder", layout: "mountain-view" },
   ],
+  // The same keys the toolbar tooltips and message menus show
+  // (components/email/message-action-shortcuts.ts). `a` and `#` still work,
+  // unadvertised (mail-p2-13).
   actions: [
     { key: "r", description: "shortcuts.actions.reply", desktopKey: "Mod + R" },
-    { key: "R / a", description: "shortcuts.actions.reply_all", desktopKey: "Mod + Shift + R" },
+    { key: "Shift + R", description: "shortcuts.actions.reply_all", desktopKey: "Mod + Shift + R" },
     // Ctrl+F forwards with a message selected (Outlook) and searches elsewhere; Ctrl+Shift+F still works.
     { key: "f", description: "shortcuts.actions.forward", desktopKey: "Mod + Shift + F", desktopPcKey: "Ctrl + F / Ctrl + Shift + F" },
     { key: "s", description: "shortcuts.actions.star" },
     { key: "e", description: "shortcuts.actions.archive", feature: "archiveActionEnabled" },
-    { key: "# / Del", description: "shortcuts.actions.delete" },
+    { key: "Del", description: "shortcuts.actions.delete" },
     { key: "u", description: "shortcuts.actions.mark_unread", desktopPcKey: "Ctrl + U" },
     { key: "Shift + I", description: "shortcuts.actions.mark_read", desktopWindowsKey: "Ctrl + Q" },
     { key: "!", description: "shortcuts.actions.toggle_spam" },

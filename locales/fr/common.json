@@ -427,6 +427,18 @@
     "new_folder_title": "Nouveau dossier",
     "new_subfolder_title": "Nouveau sous-dossier"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversation archivée} other {# conversations archivées}}",
+    "conversations_to_trash": "{count, plural, one {# conversation déplacée dans la corbeille} other {# conversations déplacées dans la corbeille}}",
+    "conversations_deleted": "{count, plural, one {# conversation supprimée} other {# conversations supprimées}}",
+    "conversations_moved_to": "{count, plural, one {# conversation déplacée vers {mailbox}} other {# conversations déplacées vers {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversation déplacée} other {# conversations déplacées}}",
+    "select_all_in_folder": "{count, plural, one {Sélectionner la # conversation de {folder}} other {Sélectionner les # conversations de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Sélectionner le # e-mail de {folder}} other {Sélectionner les # e-mails de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Sélectionner la # conversation} other {Sélectionner les # conversations}}",
+    "select_all_emails": "{count, plural, one {Sélectionner le # e-mail} other {Sélectionner les # e-mails}}",
+    "selecting_all": "Sélection…"
+  },
   "shared_tags": {
     "title": "Étiquettes partagées",
     "description": "Les étiquettes de vos boîtes aux lettres de groupe. Tous les membres du groupe voient les mêmes noms et couleurs sur ses messages.",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "Saisissez l'URL",
     "sending": "Envoi...",
     "schedule_send": "Planifier l’envoi",
-    "schedule_send_description": "Choisissez quand le serveur doit libérer ce message.",
+    "schedule_send_description": "Choisissez quand l’envoyer.",
     "schedule_preset": {
       "this_morning": "Ce matin",
       "this_afternoon": "Cet après-midi",
@@ -1163,6 +1175,7 @@
       "edit_link": "Modifier le lien",
       "remove_link": "Retirer le lien",
       "link_address": "Adresse du lien",
+      "link_text": "Texte",
       "link_invalid": "L'adresse ne peut pas contenir d'espaces",
       "table": "Tableau",
       "clear_formatting": "Effacer la mise en forme",
@@ -3881,6 +3894,15 @@
     "create": "Créer",
     "rename_confirm": "Renommer"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tous les dossiers",
+    "empty_trash": "Vider la corbeille",
+    "empty_spam": "Vider le spam",
+    "empty_trash_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de la corbeille ? Impossible de revenir en arrière.",
+    "empty_spam_confirm": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} du spam ? Impossible de revenir en arrière.",
+    "title_all_accounts": "{name} ({count}, {total} dans tous les comptes)",
+    "title_all_accounts_only": "{name} ({total} dans tous les comptes)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gérer les comptes…",
     "apply_to_existing": "{count, plural, one {Appliquer à # message existant dans {folder}} other {Appliquer à # messages existants dans {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Afficher # message plus ancien} other {Afficher # messages plus anciens}}",
     "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
+  },
+  "mail_p2_conv": {
+    "show_message": "Afficher le message",
+    "back_to_reply": "Revenir à votre réponse"
   },
   "identities": {
     "modal_title": "Gérer les identités d'envoi",
@@ -4105,6 +4131,9 @@
     "sending": "Envoi…",
     "sent": "Envoyé",
     "view": "Afficher",
+    "template_saved": "Modèle enregistré",
+    "schedule_anyway": "Planifier quand même",
+    "schedule_warnings_title": "Planifier ce message quand même ?",
     "picker_button": "Ajouter depuis les contacts",
     "picker_title": "Ajouter des destinataires",
     "tab_contacts": "Contacts",
@@ -5298,7 +5327,7 @@
     "title": "Bienvenue dans votre boite mail",
     "tip_compose": "Appuyez sur c pour composer un nouvel email",
     "tip_shortcuts": "Appuyez sur ? pour voir tous les raccourcis clavier",
-    "tip_sidebar": "Retrouvez le Calendrier, les Contacts et les Parametres dans le menu lateral",
+    "tip_sidebar": "Calendrier, Contacts et Paramètres sont dans la barre à gauche",
     "tip_settings": "Personnalisez votre experience dans les Parametres",
     "tip_compose_touch": "Touchez le bouton crayon pour écrire un nouvel e-mail",
     "tip_sidebar_touch": "Agenda, Contacts et Paramètres se trouvent dans la barre du bas",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Rechercher « {text} » dans les messages"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Vous êtes hors ligne. Ce message a besoin d'une connexion pour s'ouvrir.",
+    "reader_failed": "Ce message n'a pas pu être chargé.",
+    "retry": "Réessayer",
+    "action_offline": "Vous êtes hors ligne. Cette action a besoin d'une connexion.",
+    "offline_bar": "Vous êtes hors ligne. Lire et modifier les e-mails demande une connexion.",
+    "offline_default_on": "Vos e-mails sont gardés sur cet appareil : vous pouvez les lire hors ligne."
   },
   "desktopMenuBar": {
     "always_show_label": "Toujours afficher la barre de menus",

@@ -427,6 +427,18 @@
     "new_folder_title": "Nova pasta",
     "new_subfolder_title": "Nova subpasta"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversa arquivada} other {# conversas arquivadas}}",
+    "conversations_to_trash": "{count, plural, one {# conversa movida para a lixeira} other {# conversas movidas para a lixeira}}",
+    "conversations_deleted": "{count, plural, one {# conversa excluída} other {# conversas excluídas}}",
+    "conversations_moved_to": "{count, plural, one {# conversa movida para {mailbox}} other {# conversas movidas para {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversa movida} other {# conversas movidas}}",
+    "select_all_in_folder": "{count, plural, one {Selecionar a # conversa em {folder}} other {Selecionar todas as # conversas em {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selecionar o # e-mail em {folder}} other {Selecionar todos os # e-mails em {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selecionar a # conversa} other {Selecionar todas as # conversas}}",
+    "select_all_emails": "{count, plural, one {Selecionar o # e-mail} other {Selecionar todos os # e-mails}}",
+    "selecting_all": "Selecionando…"
+  },
   "shared_tags": {
     "title": "Etiquetas compartilhadas",
     "description": "Etiquetas das suas caixas de grupo. Todos no grupo veem os mesmos nomes e cores nos e-mails dela.",
@@ -1112,7 +1124,7 @@
     "link_url_prompt": "Insira a URL",
     "sending": "Enviando...",
     "schedule_send": "Agendar envio",
-    "schedule_send_description": "Escolha quando o servidor deve liberar esta mensagem.",
+    "schedule_send_description": "Escolha quando enviar.",
     "schedule_preset": {
       "this_morning": "Esta manhã",
       "this_afternoon": "Esta tarde",
@@ -1163,6 +1175,7 @@
       "edit_link": "Editar link",
       "remove_link": "Remover link",
       "link_address": "Endereço do link",
+      "link_text": "Texto",
       "link_invalid": "O endereço não pode conter espaços",
       "table": "Tabela",
       "clear_formatting": "Limpar formatação",
@@ -3881,6 +3894,15 @@
     "create": "Criar",
     "rename_confirm": "Renomear"
   },
+  "mail_p2_folders": {
+    "all_folders": "Todas as pastas",
+    "empty_trash": "Esvaziar lixeira",
+    "empty_spam": "Esvaziar spam",
+    "empty_trash_confirm": "Excluir para sempre {count, plural, one {a mensagem} other {as # mensagens}} da lixeira? Não é possível desfazer.",
+    "empty_spam_confirm": "Excluir para sempre {count, plural, one {a mensagem} other {as # mensagens}} do spam? Não é possível desfazer.",
+    "title_all_accounts": "{name} ({count}, {total} em todas as contas)",
+    "title_all_accounts_only": "{name} ({total} em todas as contas)"
+  },
   "uxs_folders": {
     "manage_accounts": "Gerir contas…",
     "apply_to_existing": "{count, plural, one {Aplicar a # mensagem existente em {folder}} other {Aplicar a # mensagens existentes em {folder}}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostrar # mensagem anterior} other {Mostrar # mensagens anteriores}}",
     "return_to_list_follows_layout": "Enquanto não alterar, segue o layout: desligado quando a lista e a mensagem estão lado a lado, ligado nos outros casos."
+  },
+  "mail_p2_conv": {
+    "show_message": "Mostrar a mensagem",
+    "back_to_reply": "Voltar à sua resposta"
   },
   "identities": {
     "modal_title": "Gerenciar Identidades de Envio",
@@ -4105,6 +4131,9 @@
     "sending": "Enviando…",
     "sent": "Enviado",
     "view": "Ver",
+    "template_saved": "Modelo guardado",
+    "schedule_anyway": "Agendar mesmo assim",
+    "schedule_warnings_title": "Agendar esta mensagem mesmo assim?",
     "picker_button": "Adicionar dos contatos",
     "picker_title": "Adicionar destinatários",
     "tab_contacts": "Contatos",
@@ -5298,7 +5327,7 @@
     "title": "Bem-vindo à sua caixa de entrada",
     "tip_compose": "Pressione c para escrever um novo e-mail",
     "tip_shortcuts": "Pressione ? para ver todos os atalhos de teclado",
-    "tip_sidebar": "Encontre Calendário, Contatos e Configurações no menu lateral",
+    "tip_sidebar": "Calendário, Contactos e Definições estão na barra à esquerda",
     "tip_settings": "Personalize sua experiência nas Configurações",
     "tip_compose_touch": "Toque no botão de lápis para escrever um novo e-mail",
     "tip_sidebar_touch": "Calendário, Contatos e Configurações ficam na barra inferior",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "Pesquisar «{text}» no correio"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Está offline. Esta mensagem precisa de ligação para abrir.",
+    "reader_failed": "Não foi possível carregar esta mensagem.",
+    "retry": "Tentar novamente",
+    "action_offline": "Está offline. Isto precisa de ligação.",
+    "offline_bar": "Está offline. Ler e alterar e-mails precisa de ligação.",
+    "offline_default_on": "Os seus e-mails ficam guardados neste dispositivo, para os poder ler offline."
   },
   "desktopMenuBar": {
     "always_show_label": "Mostrar sempre a barra de menus",

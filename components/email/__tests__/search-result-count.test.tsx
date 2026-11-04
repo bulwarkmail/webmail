@@ -47,7 +47,13 @@ describe('SearchResultCount', () => {
     expect(container.textContent).toBe('advanced_search.results_found {"count":10}');
   });
 
-  it('keeps "10+ results" while more can load', () => {
+  it('counts conversations while more can load and the list groups them', () => {
+    const { container } = render(<SearchResultCount emails={results} hasMore />);
+    expect(container.textContent).toBe('email_list.conversations_count_plus {"count":3}');
+  });
+
+  it('keeps "10+ results" while more can load and conversations are off', () => {
+    useSettingsStore.setState({ disableThreading: true });
     const { container } = render(<SearchResultCount emails={results} hasMore />);
     expect(container.textContent).toBe('advanced_search.results_found_more {"count":10}');
   });

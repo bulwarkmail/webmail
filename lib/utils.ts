@@ -193,8 +193,13 @@ export function formatDate(
     return cachedDateFormat(numericLocale, { timeZone, year: "2-digit", month: "numeric", day: "numeric" }).format(d);
   }
 
-  const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (daysAgo < 7) {
+  // Count calendar days in the display zone, not 24-hour periods: a mail
+  // from last Wednesday must never read "Wed" on a Wednesday (mail-p2-10).
+  // The weekday only names the last six days; older mail gets its date.
+  const daysAgo = Math.round(
+    (Date.UTC(nowWall.year, nowWall.month - 1, nowWall.day) - Date.UTC(dWall.year, dWall.month - 1, dWall.day)) / 86400000,
+  );
+  if (daysAgo >= 0 && daysAgo < 7) {
     // German Intl outputs "Fr." with a trailing dot for `weekday: 'short'`;
     // strip it so the result reads cleanly next to the time.
     const weekday = cachedDateFormat(uiLocale, { timeZone, weekday: "short" })

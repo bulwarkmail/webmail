@@ -427,6 +427,18 @@
     "new_folder_title": "Yeni klasör",
     "new_subfolder_title": "Yeni alt klasör"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konuşma arşivlendi} other {# konuşma arşivlendi}}",
+    "conversations_to_trash": "{count, plural, one {# konuşma Çöp Kutusuna taşındı} other {# konuşma Çöp Kutusuna taşındı}}",
+    "conversations_deleted": "{count, plural, one {# konuşma silindi} other {# konuşma silindi}}",
+    "conversations_moved_to": "{count, plural, one {# konuşma {mailbox} klasörüne taşındı} other {# konuşma {mailbox} klasörüne taşındı}}",
+    "conversations_moved": "{count, plural, one {# konuşma taşındı} other {# konuşma taşındı}}",
+    "select_all_in_folder": "{count, plural, one {{folder} klasöründeki # konuşmayı seç} other {{folder} klasöründeki # konuşmanın tümünü seç}}",
+    "select_all_emails_in_folder": "{count, plural, one {{folder} klasöründeki # e-postayı seç} other {{folder} klasöründeki # e-postanın tümünü seç}}",
+    "select_all_conversations": "{count, plural, one {# konuşmayı seç} other {# konuşmanın tümünü seç}}",
+    "select_all_emails": "{count, plural, one {# e-postayı seç} other {# e-postanın tümünü seç}}",
+    "selecting_all": "Seçiliyor…"
+  },
   "shared_tags": {
     "title": "Paylaşılan etiketler",
     "description": "Grup posta kutularınızın etiketleri. Gruptaki herkes iletilerinde aynı adları ve renkleri görür.",
@@ -1112,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Göndermeyi zamanla",
-    "schedule_send_description": "Sunucunun bu iletiyi ne zaman göndereceğini seçin.",
+    "schedule_send_description": "Ne zaman gönderileceğini seçin.",
     "schedule_preset": {
       "this_morning": "Bu sabah",
       "this_afternoon": "Bu öğleden sonra",
@@ -1163,6 +1175,7 @@
       "edit_link": "Bağlantıyı düzenle",
       "remove_link": "Bağlantıyı kaldır",
       "link_address": "Bağlantı adresi",
+      "link_text": "Metin",
       "link_invalid": "Adres boşluk içeremez",
       "table": "Tablo",
       "clear_formatting": "Biçimlendirmeyi temizle",
@@ -3881,6 +3894,15 @@
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
     "delete_with_contents_confirm": "Klasörü ve iletileri sil"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tüm klasörler",
+    "empty_trash": "Çöp Kutusunu boşalt",
+    "empty_spam": "Spam klasörünü boşalt",
+    "empty_trash_confirm": "Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
+    "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
+  },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",
     "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"
@@ -3959,6 +3981,10 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
     "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
+  },
+  "mail_p2_conv": {
+    "show_message": "İletiyi göster",
+    "back_to_reply": "Yanıtınıza dönün"
   },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",
@@ -4105,6 +4131,9 @@
     "sending": "Gönderiliyor…",
     "sent": "Gönderildi",
     "view": "Görüntüle",
+    "template_saved": "Şablon kaydedildi",
+    "schedule_anyway": "Yine de zamanla",
+    "schedule_warnings_title": "Bu ileti yine de zamanlansın mı?",
     "picker_button": "Kişilerden ekle",
     "picker_title": "Alıcı ekle",
     "tab_contacts": "Kişiler",
@@ -5560,7 +5589,7 @@
     "title": "Posta kutunuza hoş geldiniz",
     "tip_compose": "Yeni e-posta oluşturmak için c tuşuna basın",
     "tip_shortcuts": "Tüm klavye kısayollarını görmek için ? tuşuna basın",
-    "tip_sidebar": "Takvim, Kişiler ve Ayarlar'ı kenar çubuğu menüsünde bulabilirsiniz",
+    "tip_sidebar": "Takvim, Kişiler ve Ayarlar soldaki çubukta",
     "tip_settings": "Deneyiminizi Ayarlar'dan özelleştirin",
     "tip_compose_touch": "Yeni bir e-posta yazmak için kalem düğmesine dokunun",
     "tip_sidebar_touch": "Takvim, Kişiler ve Ayarlar alttaki çubukta",
@@ -7275,6 +7304,14 @@
   },
   "desktop_mail": {
     "context_search_mail": "E-postalarda “{text}” ara"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Çevrimdışısınız. Bu iletiyi açmak için bağlantı gerekiyor.",
+    "reader_failed": "Bu ileti yüklenemedi.",
+    "retry": "Tekrar dene",
+    "action_offline": "Çevrimdışısınız. Bunun için bağlantı gerekiyor.",
+    "offline_bar": "Çevrimdışısınız. E-postaları okumak ve değiştirmek için bağlantı gerekiyor.",
+    "offline_default_on": "E-postalarınız bu cihazda saklanır, böylece çevrimdışıyken de okuyabilirsiniz."
   },
   "desktopMenuBar": {
     "always_show_label": "Menü çubuğunu her zaman göster",

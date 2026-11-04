@@ -6,9 +6,11 @@
  * - The message's own account at the top. Other accounts a move can reach
  *   (shared ones) come after it, each under its own name.
  * - System folders first, in the order mail clients use (Inbox, Drafts,
- *   Sent, Archive, Spam, Trash), then the user's folders by name, sorted
- *   for the interface language. The server's sortOrder doesn't count here:
- *   the sidebar honours it, a Move list is for finding a folder by name.
+ *   Sent, Archive, Spam, Trash), then the user's folders in the sidebar's
+ *   order: an order the user set, year folders newest first, then by name
+ *   for the interface language (usability test 2026-11-04, p2-18). The
+ *   server's sortOrder doesn't put a user's folder above the Inbox here.
+ * - Not Drafts or Sent: mail isn't moved into either (pass-1 mail-12).
  * - Nesting kept. The open folder stays in the list, disabled, when the
  *   messages are all in it (#1452: a search hit from elsewhere can move in).
  * - The last few folders moved to, per account, as "Recent".
@@ -37,6 +39,8 @@ export interface MoveMenuNode {
   /** Names of the folders above it, outermost first. */
   path: string[];
   children: MoveMenuNode[];
+  /** The folder's sortOrder, which orders the user's folders as the sidebar does. */
+  sortOrder?: number;
 }
 
 export interface MoveMenuAccount {
@@ -75,10 +79,21 @@ function rolePosition(role: string | null | undefined): number {
   return at < 0 ? SYSTEM_FOLDER_ORDER.length : at;
 }
 
+const YEAR = /^\d{4}$/;
+
+type Sortable = Pick<MoveMenuNode, "role" | "name"> & { sortOrder?: number };
+
 export function compareMoveNodes(collator: Intl.Collator) {
-  return (a: Pick<MoveMenuNode, "role" | "name">, b: Pick<MoveMenuNode, "role" | "name">): number => {
+  return (a: Sortable, b: Sortable): number => {
     const byRole = rolePosition(a.role) - rolePosition(b.role);
     if (byRole !== 0) return byRole;
+    // The user's own folders as the sidebar lists them (lib/utils.ts
+    // buildMailboxTree): a set order first, then years newest first.
+    if (!a.role && !b.role) {
+      const byOrder = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      if (byOrder !== 0) return byOrder;
+      if (YEAR.test(a.name) && YEAR.test(b.name)) return Number(b.name) - Number(a.name);
+    }
     return collator.compare(a.name, b.name);
   };
 }
@@ -91,9 +106,9 @@ function makeCollator(locale?: string): Intl.Collator {
   }
 }
 
-/** A target: may take mail, isn't Drafts, isn't a virtual header. */
+/** A target: may take mail, isn't Drafts or Sent, isn't a virtual header. */
 function isTarget(mailbox: Mailbox): boolean {
-  return mailbox.role !== "drafts" && !mailbox.id.startsWith("shared-") && !!mailbox.myRights?.mayAddItems;
+  return mailbox.role !== "drafts" && mailbox.role !== "sent" && !mailbox.id.startsWith("shared-") && !!mailbox.myRights?.mayAddItems;
 }
 
 /** One account's folders as a sorted tree, with only the branches that lead somewhere. */
@@ -128,7 +143,7 @@ function accountTree(
       // A folder that can't take mail stays as a step to the ones below it;
       // the open folder stays so the list reads like the sidebar.
       if (!enabled && !children.length && !(current && isTarget(box))) continue;
-      out.push({ id: box.id, name: box.name, role: box.role ?? null, enabled, current, path, children });
+      out.push({ id: box.id, name: box.name, role: box.role ?? null, enabled, current, path, children, sortOrder: box.sortOrder });
     }
     return out.sort(compare);
   };
