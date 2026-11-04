@@ -360,7 +360,8 @@ describe('thread-summary', () => {
     render(<ThreadConversationView thread={thread} emails={[conversation[1], conversation[0]]} onBack={() => {}} />);
 
     const frame = screen.getByTestId('slot-thread-summary');
-    expect(slotProps(frame)).toEqual({ threadId: 't1', emailIds: ['m2', 'm1'], deviceType: 'mobile' });
+    // Oldest first, as the cards below it.
+    expect(slotProps(frame)).toEqual({ threadId: 't1', emailIds: ['m1', 'm2'], deviceType: 'mobile' });
     expect(follows(frame, screen.getAllByText('Alice')[0])).toBe(true);
   });
 
