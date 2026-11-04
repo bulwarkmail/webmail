@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Loader2 } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingItem } from './settings-section';
 import { useAuthStore } from '@/stores/auth-store';
@@ -19,7 +18,6 @@ import { toast } from '@/stores/toast-store';
  */
 export function YourNameRow({ fallbackName }: { fallbackName?: string }) {
   const t = useTranslations('uxs2_ident.your_name');
-  const tForm = useTranslations('identities.form');
   const tCommon = useTranslations('common');
   const client = useAuthStore((s) => s.client);
   const identity = useAuthStore((s) => s.primaryIdentity);
@@ -30,6 +28,36 @@ export function YourNameRow({ fallbackName }: { fallbackName?: string }) {
 
   useEffect(() => { setName(current); }, [current]);
 
+  // Saves like the other fields here: on Enter, when the field loses the focus, and when
+  // the page goes away with a change still typed (settings-p3-10). No Save button.
+  const latest = useRef({ name, current, client, identity, t });
+  latest.current = { name, current, client, identity, t };
+  const savingName = useRef<string | null>(null);
+
+  const save = useCallback(async (quiet = false) => {
+    const { name: typed, current: stored, client: jmap, identity: primary, t: tr } = latest.current;
+    const next = typed.trim();
+    if (!jmap || !primary || next === stored.trim() || savingName.current === next) return;
+    savingName.current = next;
+    if (!quiet) setSaving(true);
+    try {
+      if (!(await saveIdentityChanges(jmap, primary, { name: next }))) return;
+      useAuthStore.getState().syncIdentities();
+      if (quiet) return;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      toast.success(tr('saved'));
+    } catch (error) {
+      toast.error(tr('error'), error instanceof Error ? error.message : undefined);
+    } finally {
+      savingName.current = null;
+      if (!quiet) setSaving(false);
+    }
+  }, []);
+
+  // Leaving for another page: what's typed is saved, not dropped.
+  useEffect(() => () => { void save(true); }, [save]);
+
   if (!identity || !client) {
     return (
       <SettingItem label={t('label')} description={t('description')}>
@@ -37,21 +65,6 @@ export function YourNameRow({ fallbackName }: { fallbackName?: string }) {
       </SettingItem>
     );
   }
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      if (!(await saveIdentityChanges(client, identity, { name: name.trim() }))) return;
-      useAuthStore.getState().syncIdentities();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      toast.success(t('saved'));
-    } catch (error) {
-      toast.error(t('error'), error instanceof Error ? error.message : undefined);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <SettingItem label={t('label')} description={t('description')}>
@@ -62,14 +75,16 @@ export function YourNameRow({ fallbackName }: { fallbackName?: string }) {
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onBlur={() => { void save(); }}
           maxLength={256}
           autoComplete="name"
+          aria-label={t('label')}
           className="w-48"
-          disabled={saving}
+          readOnly={saving}
         />
-        <Button type="submit" size="sm" disabled={saving || name.trim() === current.trim()}>
-          {saved ? <Check className="w-4 h-4" /> : saving ? <Loader2 className="w-4 h-4 animate-spin" /> : tForm('save')}
-        </Button>
+        <span className="w-4 h-4 flex items-center justify-center text-muted-foreground" aria-hidden="true">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-success" /> : null}
+        </span>
       </form>
     </SettingItem>
   );
