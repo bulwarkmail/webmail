@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { EmailComposer, type ComposerDraftData } from "@/components/email/email-composer";
 import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -313,6 +314,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   const [sessionKey] = useState(() => `popout-${handoffId ?? Date.now().toString(36)}`);
 
   const mode = payload.initialData?.mode ?? payload.mode;
+  // The Window menu names a composer by its subject, or "New message" before there is one.
+  const [subject, setSubject] = useState(payload.initialData?.subject ?? "");
+  useDesktopWindowName(subject.trim() || t("email_composer.new_message"));
   useDocumentTitle(
     mode === "reply" ? t("email_composer.reply")
       : mode === "replyAll" ? t("email_composer.reply_all")
@@ -523,6 +527,7 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
         ownWindow={ownWindow}
         popOut={mainHoldsLogin ? backToMain : undefined}
         popOutToMainLabel={mainHoldsLogin ? tQuick("back_to_main") : undefined}
+        onSubjectChange={setSubject}
         className="min-h-0 flex-1"
       />
     </ErrorBoundary>

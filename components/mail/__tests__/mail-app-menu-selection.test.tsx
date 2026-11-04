@@ -88,6 +88,7 @@ const message = (id: string) => ({ id, threadId: `t-${id}`, subject: `Subject ${
 const [a, b, c] = ['a', 'b', 'c'].map(message);
 
 let reported: Record<string, unknown> = {};
+let named: string[] = [];
 let batchMoveToMailbox: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
@@ -95,10 +96,12 @@ beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} })));
   reported = {};
+  named = [];
   (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
     version: 1,
     platform: 'win32',
     menu: { setState: (state: Record<string, unknown>) => { reported = state; }, onCommand: () => () => {} },
+    windows: { setMenuName: (name: string) => { named.push(name); } },
   };
   usePluginStore.setState({ initializePlugins: vi.fn().mockResolvedValue(undefined) });
   useThemeStore.setState({ syncServerThemes: vi.fn().mockResolvedValue(undefined) });
@@ -167,5 +170,14 @@ describe('the Message menu with three messages selected', () => {
     act(() => { runDesktopCommand('message.move'); });
     expect(useMoveDialogStore.getState().request).toBeNull();
     expect(batchMoveToMailbox).not.toHaveBeenCalled();
+  });
+});
+
+describe('the Window menu name of the main window', () => {
+  it('is the folder, not the message open in it, so it never reads like the window of that message', async () => {
+    useEmailStore.setState({ selectedEmailKeys: new Set() } as never);
+    render(<MailApp />);
+    await waitFor(() => expect(named.at(-1)).toBe('sidebar.mailboxes.inbox'));
+    expect(named).not.toContain('Subject a');
   });
 });

@@ -114,6 +114,7 @@ import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { IS_LITE } from "@/lib/lite";
 import { findMeetingLink } from "@/lib/event-links";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
@@ -160,6 +161,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const tSidebar = useTranslations("sidebar");
   const tOffline = useTranslations("calendar_offline");
   useDocumentTitle(tSidebar("calendar"));
+  useDesktopWindowName(tSidebar("calendar"), { withAccount: true });
   const skeletonLabels = useSkeletonLabels();
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();

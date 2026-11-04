@@ -146,6 +146,7 @@ import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-iden
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog, MoveToDialogHost, useMoveDialogStore } from "@/components/email/move-to-dialog";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
@@ -1524,6 +1525,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle });
   }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle]);
   useDocumentTitle(titleContext);
+  // The Window menu names this window by its folder, never by the open message (desktop-p2-5).
+  const windowView = useMemo(() => {
+    const mailbox = selectedMailbox ? mailboxes.find(mb => mb.id === selectedMailbox) : undefined;
+    return mailbox ? localizeMailboxName(mailbox.role, mailbox.name, (k) => t(`sidebar.mailboxes.${k}`)) : t('sidebar.mail');
+  }, [selectedMailbox, mailboxes, t]);
+  useDesktopWindowName(windowView, { withAccount: true });
 
   // When this page is rendered inside the Pro shell as the Mail tab body,
   // we hoist every "show composer" intent into its own Pro tab and reset
