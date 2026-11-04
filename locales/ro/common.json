@@ -926,6 +926,13 @@
     "restore_to": "Mută înapoi în {folder}",
     "delete_forever": "Șterge definitiv"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mută în Primite",
+    "delete_forever_title": "Ștergi definitiv acest mesaj?",
+    "delete_forever_batch_title": "{count, plural, one {Ștergi definitiv acest mesaj?} other {Ștergi definitiv aceste # mesaje?}}",
+    "delete_forever_message": "Nu îl mai poți recupera.",
+    "delete_forever_batch_message": "{count, plural, one {Nu îl mai poți recupera.} other {Nu le mai poți recupera.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De la {domain}, din afara organizației dvs.",

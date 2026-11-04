@@ -926,6 +926,13 @@
     "restore_to": "Flytt tilbake til {folder}",
     "delete_forever": "Slett for godt"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flytt til innboksen",
+    "delete_forever_title": "Slette denne meldingen for godt?",
+    "delete_forever_batch_title": "{count, plural, one {Slette denne meldingen for godt?} other {Slette disse # meldingene for godt?}}",
+    "delete_forever_message": "Du får den ikke tilbake.",
+    "delete_forever_batch_message": "{count, plural, one {Du får den ikke tilbake.} other {Du får dem ikke tilbake.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, utenfor organisasjonen din",

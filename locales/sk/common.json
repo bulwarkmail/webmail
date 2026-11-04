@@ -926,6 +926,13 @@
     "restore_to": "Presunúť späť do priečinka {folder}",
     "delete_forever": "Odstrániť natrvalo"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Presunúť do Doručených",
+    "delete_forever_title": "Odstrániť túto správu natrvalo?",
+    "delete_forever_batch_title": "{count, plural, one {Odstrániť túto správu natrvalo?} other {Odstrániť tieto správy (#) natrvalo?}}",
+    "delete_forever_message": "Nebude ju možné obnoviť.",
+    "delete_forever_batch_message": "{count, plural, one {Nebude ju možné obnoviť.} other {Nebude ich možné obnoviť.}}"
+  },
   "external_mail": {
     "sender_label": "Externé",
     "sender_tooltip": "Z {domain}, mimo vašej organizácie",

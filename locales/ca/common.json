@@ -926,6 +926,13 @@
     "restore_to": "Torna a moure a {folder}",
     "delete_forever": "Suprimeix per sempre"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mou a la safata d'entrada",
+    "delete_forever_title": "Vols suprimir aquest missatge per sempre?",
+    "delete_forever_batch_title": "{count, plural, one {Vols suprimir aquest missatge per sempre?} other {Vols suprimir aquests # missatges per sempre?}}",
+    "delete_forever_message": "No el podràs recuperar.",
+    "delete_forever_batch_message": "{count, plural, one {No el podràs recuperar.} other {No els podràs recuperar.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De {domain}, fora de la vostra organització",

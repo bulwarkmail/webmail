@@ -926,6 +926,13 @@
     "restore_to": "移回 {folder}",
     "delete_forever": "永久刪除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "移到收件匣",
+    "delete_forever_title": "要永久刪除這封郵件嗎？",
+    "delete_forever_batch_title": "{count, plural, one {要永久刪除這封郵件嗎？} other {要永久刪除這 # 封郵件嗎？}}",
+    "delete_forever_message": "刪除後無法復原。",
+    "delete_forever_batch_message": "{count, plural, one {刪除後無法復原。} other {刪除後無法復原。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "來自 {domain}，位於您的組織之外",

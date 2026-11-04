@@ -926,6 +926,13 @@
     "restore_to": "Teisalda tagasi kausta {folder}",
     "delete_forever": "Kustuta jäädavalt"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Teisalda saabunutesse",
+    "delete_forever_title": "Kas kustutada see kiri jäädavalt?",
+    "delete_forever_batch_title": "{count, plural, one {Kas kustutada see kiri jäädavalt?} other {Kas kustutada need # kirja jäädavalt?}}",
+    "delete_forever_message": "Seda ei saa tagasi.",
+    "delete_forever_batch_message": "{count, plural, one {Seda ei saa tagasi.} other {Neid ei saa tagasi.}}"
+  },
   "external_mail": {
     "sender_label": "Väline",
     "sender_tooltip": "Domeenilt {domain}, väljastpoolt sinu organisatsiooni",

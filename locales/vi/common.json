@@ -926,6 +926,13 @@
     "restore_to": "Chuyển lại vào {folder}",
     "delete_forever": "Xóa vĩnh viễn"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Chuyển vào Hộp thư đến",
+    "delete_forever_title": "Xóa vĩnh viễn thư này?",
+    "delete_forever_batch_title": "{count, plural, one {Xóa vĩnh viễn thư này?} other {Xóa vĩnh viễn # thư này?}}",
+    "delete_forever_message": "Bạn sẽ không lấy lại được.",
+    "delete_forever_batch_message": "{count, plural, one {Bạn sẽ không lấy lại được.} other {Bạn sẽ không lấy lại được.}}"
+  },
   "external_mail": {
     "sender_label": "Bên ngoài",
     "sender_tooltip": "Từ {domain}, bên ngoài tổ chức của bạn",

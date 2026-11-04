@@ -25,6 +25,7 @@ import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor } from "@/lib/thread-utils";
 import { emailInMailbox } from "@/lib/move-targets";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { cn } from "@/lib/utils";
 import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { messagePriorityFromHeaders } from '@/lib/message-priority';
@@ -448,6 +449,22 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
+    // In Archive the same action brings it back to the Inbox (mail-p3-4).
+    const { selectedMailbox } = useEmailStore.getState();
+    const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
+      ?? mailboxes.find((m) => emailInMailbox(email, m));
+    const archiveInbox = archiveInboxTarget(mailboxes, current?.id);
+    if (archiveInbox) {
+      const restore = restoreBatchesFor([email], client);
+      try {
+        if (!(await moveToMailbox(client, email.id, archiveInbox.id, emailKeyFor(email)))) return;
+        await offerMoveUndo('move', client, restore, t, isPopoutWindow());
+        onClose();
+      } catch (err) {
+        console.error('Move to Inbox failed:', err);
+      }
+      return;
+    }
     const archiveMb = mailboxes.find((m) => m.role === 'archive');
     if (!archiveMb) return;
     if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;

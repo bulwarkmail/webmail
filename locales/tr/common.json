@@ -926,6 +926,13 @@
     "restore_to": "{folder} klasörüne geri taşı",
     "delete_forever": "Kalıcı olarak sil"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Gelen Kutusu'na taşı",
+    "delete_forever_title": "Bu ileti kalıcı olarak silinsin mi?",
+    "delete_forever_batch_title": "{count, plural, one {Bu ileti kalıcı olarak silinsin mi?} other {Bu # ileti kalıcı olarak silinsin mi?}}",
+    "delete_forever_message": "Geri alamazsınız.",
+    "delete_forever_batch_message": "{count, plural, one {Geri alamazsınız.} other {Geri alamazsınız.}}"
+  },
   "external_mail": {
     "sender_label": "Harici",
     "sender_tooltip": "{domain} adresinden, kuruluşunuzun dışından",

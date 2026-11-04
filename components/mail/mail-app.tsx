@@ -91,6 +91,7 @@ import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { composerDataFromDraft } from "@/lib/draft-composer-data";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
@@ -3824,7 +3825,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleArchive = async (emailToArchive: Email | null = selectedEmail) => {
-    if (!client || !emailToArchive || !isArchiveActionEnabled()) return;
+    if (!client || !emailToArchive) return;
+    // In Archive, E and Archive's place in the menus bring it back to the
+    // Inbox instead (mail-p3-4).
+    const archiveInbox = isUnifiedView ? undefined : archiveInboxTarget(mailboxes, selectedMailbox);
+    if (archiveInbox) {
+      await handleMoveToMailbox(emailToArchive.id, archiveInbox.id, emailKeyFor(emailToArchive));
+      return;
+    }
+    if (!isArchiveActionEnabled()) return;
     if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;
 
     // In a list that mixes accounts (the unified views, a tag view) the archive

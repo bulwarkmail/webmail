@@ -926,6 +926,13 @@
     "restore_to": "Mover de volta para {folder}",
     "delete_forever": "Eliminar para sempre"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mover para a Caixa de Entrada",
+    "delete_forever_title": "Eliminar esta mensagem para sempre?",
+    "delete_forever_batch_title": "{count, plural, one {Eliminar esta mensagem para sempre?} other {Eliminar estas # mensagens para sempre?}}",
+    "delete_forever_message": "Não poderá recuperá-la.",
+    "delete_forever_batch_message": "{count, plural, one {Não poderá recuperá-la.} other {Não poderá recuperá-las.}}"
+  },
   "external_mail": {
     "sender_label": "Externo",
     "sender_tooltip": "De {domain}, fora da sua organização",

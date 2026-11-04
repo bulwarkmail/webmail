@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEmailStore, removalFolder, canRemoveFromFolder } from "@/stores/email-store";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { Email, Mailbox } from "@/lib/jmap/types";
 import {
@@ -72,6 +73,8 @@ interface EmailContextMenuProps {
   onTogglePinned?: () => void;
   onDelete?: () => void;
   onArchive?: () => void;
+  /** In Archive: what takes Archive's place, when the host knows better than the browsed folder (a message window). */
+  onMoveToInbox?: () => void;
   onSetTag?: (tagId: string | null) => void;
   onMoveToMailbox?: (mailboxId: string) => void;
   /**
@@ -172,6 +175,7 @@ export function EmailContextMenu({
   onTogglePinned,
   onDelete,
   onArchive,
+  onMoveToInbox,
   onSetTag,
   onMoveToMailbox,
   onRemoveFromFolder,
@@ -286,6 +290,8 @@ export function EmailContextMenu({
   const batchRestoreTo = inTrash && onBatchMoveToMailbox && showBatchActions
     ? restoreTargetForAll(batchEmails ?? [], mailboxes, selectedMailbox)
     : undefined;
+  // In Archive: back to the Inbox in Archive's place (mail-p3-4).
+  const inboxTo = onMoveToMailbox ? archiveInboxTarget(mailboxes, selectedMailbox) : undefined;
 
   // One message: the shared action list (R6), the same the reader's ⋮ and
   // the phone panel show.
@@ -317,6 +323,7 @@ export function EmailContextMenu({
     onPrint,
     onViewSource,
     onRestore: restoreTo ? () => onMoveToMailbox?.(restoreTo) : undefined,
+    onMoveToInbox: onMoveToInbox ?? (inboxTo ? () => onMoveToMailbox?.(inboxTo.id) : undefined),
     omit,
     views,
     extras,

@@ -926,6 +926,13 @@
     "restore_to": "{folder} руу буцаах",
     "delete_forever": "Бүрмөсөн устгах"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Ирсэн имэйл рүү зөөх",
+    "delete_forever_title": "Энэ зурвасыг бүрмөсөн устгах уу?",
+    "delete_forever_batch_title": "{count, plural, one {Энэ зурвасыг бүрмөсөн устгах уу?} other {Эдгээр # зурвасыг бүрмөсөн устгах уу?}}",
+    "delete_forever_message": "Үүнийг буцааж авах боломжгүй.",
+    "delete_forever_batch_message": "{count, plural, one {Үүнийг буцааж авах боломжгүй.} other {Тэдгээрийг буцааж авах боломжгүй.}}"
+  },
   "external_mail": {
     "sender_label": "Гадаад",
     "sender_tooltip": "{domain}-аас, таны байгууллагаас гадуур",

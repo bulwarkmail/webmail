@@ -926,6 +926,13 @@
     "restore_to": "Przenieś z powrotem do folderu {folder}",
     "delete_forever": "Usuń na zawsze"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Przenieś do Odebranych",
+    "delete_forever_title": "Usunąć tę wiadomość na zawsze?",
+    "delete_forever_batch_title": "{count, plural, one {Usunąć tę wiadomość na zawsze?} other {Usunąć te wiadomości (#) na zawsze?}}",
+    "delete_forever_message": "Nie da się jej odzyskać.",
+    "delete_forever_batch_message": "{count, plural, one {Nie da się jej odzyskać.} other {Nie da się ich odzyskać.}}"
+  },
   "external_mail": {
     "sender_label": "Zewnętrzny",
     "sender_tooltip": "Z domeny {domain}, spoza Twojej organizacji",

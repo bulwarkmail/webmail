@@ -926,6 +926,13 @@
     "restore_to": "Terugzetten naar {folder}",
     "delete_forever": "Definitief verwijderen"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Naar Postvak IN",
+    "delete_forever_title": "Dit bericht definitief verwijderen?",
+    "delete_forever_batch_title": "{count, plural, one {Dit bericht definitief verwijderen?} other {Deze # berichten definitief verwijderen?}}",
+    "delete_forever_message": "Je kunt het niet terughalen.",
+    "delete_forever_batch_message": "{count, plural, one {Je kunt het niet terughalen.} other {Je kunt ze niet terughalen.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Van {domain}, buiten je organisatie",

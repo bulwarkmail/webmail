@@ -926,6 +926,13 @@
     "restore_to": "Zurück nach {folder} verschieben",
     "delete_forever": "Endgültig löschen"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "In den Posteingang verschieben",
+    "delete_forever_title": "Diese Nachricht endgültig löschen?",
+    "delete_forever_batch_title": "{count, plural, one {Diese Nachricht endgültig löschen?} other {Diese # Nachrichten endgültig löschen?}}",
+    "delete_forever_message": "Sie können sie nicht zurückholen.",
+    "delete_forever_batch_message": "{count, plural, one {Sie können sie nicht zurückholen.} other {Sie können sie nicht zurückholen.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Von {domain}, außerhalb Ihrer Organisation",

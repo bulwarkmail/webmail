@@ -926,6 +926,13 @@
     "restore_to": "{folder} に戻す",
     "delete_forever": "完全に削除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "受信トレイに移動",
+    "delete_forever_title": "このメッセージを完全に削除しますか？",
+    "delete_forever_batch_title": "{count, plural, one {このメッセージを完全に削除しますか？} other {これら # 件のメッセージを完全に削除しますか？}}",
+    "delete_forever_message": "元に戻すことはできません。",
+    "delete_forever_batch_message": "{count, plural, one {元に戻すことはできません。} other {元に戻すことはできません。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "{domain} から（組織外）",

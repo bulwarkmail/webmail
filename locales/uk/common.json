@@ -926,6 +926,13 @@
     "restore_to": "Повернути до теки {folder}",
     "delete_forever": "Видалити назавжди"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Перемістити до Вхідних",
+    "delete_forever_title": "Видалити це повідомлення назавжди?",
+    "delete_forever_batch_title": "{count, plural, one {Видалити це повідомлення назавжди?} other {Видалити ці повідомлення (#) назавжди?}}",
+    "delete_forever_message": "Повернути його не вийде.",
+    "delete_forever_batch_message": "{count, plural, one {Повернути його не вийде.} other {Повернути їх не вийде.}}"
+  },
   "external_mail": {
     "sender_label": "Зовнішнє",
     "sender_tooltip": "З домену {domain}, поза вашою організацією",

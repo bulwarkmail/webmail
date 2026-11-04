@@ -926,6 +926,13 @@
     "restore_to": "Pārvietot atpakaļ uz {folder}",
     "delete_forever": "Dzēst neatgriezeniski"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Pārvietot uz Iesūtni",
+    "delete_forever_title": "Neatgriezeniski dzēst šo ziņojumu?",
+    "delete_forever_batch_title": "{count, plural, one {Neatgriezeniski dzēst šo ziņojumu?} other {Neatgriezeniski dzēst šos # ziņojumus?}}",
+    "delete_forever_message": "To vairs nevarēs atgūt.",
+    "delete_forever_batch_message": "{count, plural, one {To vairs nevarēs atgūt.} other {Tos vairs nevarēs atgūt.}}"
+  },
   "external_mail": {
     "sender_label": "Ārējs",
     "sender_tooltip": "No {domain}, ārpus jūsu organizācijas",

@@ -870,6 +870,13 @@
     "restore_to": "החזרה אל {folder}",
     "delete_forever": "מחיקה לצמיתות"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "העברה לדואר הנכנס",
+    "delete_forever_title": "למחוק את ההודעה הזו לצמיתות?",
+    "delete_forever_batch_title": "{count, plural, one {למחוק את ההודעה הזו לצמיתות?} other {למחוק את # ההודעות האלה לצמיתות?}}",
+    "delete_forever_message": "לא תהיה דרך לשחזר אותה.",
+    "delete_forever_batch_message": "{count, plural, one {לא תהיה דרך לשחזר אותה.} other {לא תהיה דרך לשחזר אותן.}}"
+  },
   "external_mail": {
     "sender_label": "חיצוני",
     "sender_tooltip": "מ־{domain}, מחוץ לארגון שלך",

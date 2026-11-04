@@ -926,6 +926,13 @@
     "restore_to": "Flyt tilbage til {folder}",
     "delete_forever": "Slet permanent"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flyt til Indbakke",
+    "delete_forever_title": "Slet denne besked permanent?",
+    "delete_forever_batch_title": "{count, plural, one {Slet denne besked permanent?} other {Slet disse # beskeder permanent?}}",
+    "delete_forever_message": "Du kan ikke få den tilbage.",
+    "delete_forever_batch_message": "{count, plural, one {Du kan ikke få den tilbage.} other {Du kan ikke få dem tilbage.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, uden for din organisation",

@@ -926,6 +926,13 @@
     "restore_to": "Remettre dans {folder}",
     "delete_forever": "Supprimer définitivement"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Déplacer vers la boîte de réception",
+    "delete_forever_title": "Supprimer définitivement ce message ?",
+    "delete_forever_batch_title": "{count, plural, one {Supprimer définitivement ce message ?} other {Supprimer définitivement ces # messages ?}}",
+    "delete_forever_message": "Vous ne pourrez pas le récupérer.",
+    "delete_forever_batch_message": "{count, plural, one {Vous ne pourrez pas le récupérer.} other {Vous ne pourrez pas les récupérer.}}"
+  },
   "external_mail": {
     "sender_label": "Externe",
     "sender_tooltip": "De {domain}, hors de votre organisation",

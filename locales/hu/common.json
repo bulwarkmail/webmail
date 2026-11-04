@@ -926,6 +926,13 @@
     "restore_to": "Visszahelyezés ide: {folder}",
     "delete_forever": "Végleges törlés"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Áthelyezés a Beérkező levelekbe",
+    "delete_forever_title": "Véglegesen törlöd ezt az üzenetet?",
+    "delete_forever_batch_title": "{count, plural, one {Véglegesen törlöd ezt az üzenetet?} other {Véglegesen törlöd ezt a(z) # üzenetet?}}",
+    "delete_forever_message": "Nem tudod visszahozni.",
+    "delete_forever_batch_message": "{count, plural, one {Nem tudod visszahozni.} other {Nem tudod visszahozni őket.}}"
+  },
   "external_mail": {
     "sender_label": "Külső",
     "sender_tooltip": "Innen: {domain}, a szervezeteden kívülről",

@@ -2146,6 +2146,13 @@
     "restore_to": "ย้ายกลับไปที่ {folder}",
     "delete_forever": "ลบถาวร"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "ย้ายไปที่กล่องข้อความ",
+    "delete_forever_title": "ลบข้อความนี้อย่างถาวรหรือไม่",
+    "delete_forever_batch_title": "{count, plural, one {ลบข้อความนี้อย่างถาวรหรือไม่} other {ลบข้อความ # ฉบับนี้อย่างถาวรหรือไม่}}",
+    "delete_forever_message": "คุณจะกู้คืนไม่ได้",
+    "delete_forever_batch_message": "{count, plural, one {คุณจะกู้คืนไม่ได้} other {คุณจะกู้คืนไม่ได้}}"
+  },
   "external_mail": {
     "sender_label": "ภายนอก",
     "sender_tooltip": "จาก {domain} ซึ่งอยู่นอกองค์กรของคุณ",

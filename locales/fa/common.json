@@ -926,6 +926,13 @@
     "restore_to": "انتقال دوباره به {folder}",
     "delete_forever": "حذف برای همیشه"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "انتقال به صندوق ورودی",
+    "delete_forever_title": "این پیام برای همیشه حذف شود؟",
+    "delete_forever_batch_title": "{count, plural, one {این پیام برای همیشه حذف شود؟} other {این # پیام برای همیشه حذف شوند؟}}",
+    "delete_forever_message": "دیگر نمی‌توانید آن را برگردانید.",
+    "delete_forever_batch_message": "{count, plural, one {دیگر نمی‌توانید آن را برگردانید.} other {دیگر نمی‌توانید آن‌ها را برگردانید.}}"
+  },
   "external_mail": {
     "sender_label": "خارجی",
     "sender_tooltip": "از {domain}، خارج از سازمان شما",

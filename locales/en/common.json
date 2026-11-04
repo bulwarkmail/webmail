@@ -926,6 +926,13 @@
     "restore_to": "Move back to {folder}",
     "delete_forever": "Delete forever"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Move to Inbox",
+    "delete_forever_title": "Delete this message forever?",
+    "delete_forever_batch_title": "{count, plural, one {Delete this message forever?} other {Delete these # messages forever?}}",
+    "delete_forever_message": "You can't get it back.",
+    "delete_forever_batch_message": "{count, plural, one {You can't get it back.} other {You can't get them back.}}"
+  },
   "external_mail": {
     "sender_label": "External",
     "sender_tooltip": "From {domain}, outside your organisation",

@@ -57,7 +57,7 @@ import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, clea
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { emailInMailbox, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
@@ -128,6 +128,7 @@ import {
   ArrowLeft,
   Pencil,
   Paperclip,
+  Inbox,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useLocale, useTranslations } from "next-intl";
@@ -203,6 +204,7 @@ import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
@@ -1272,6 +1274,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onForwardAsAttachment={options.onForwardAsAttachment}
       onEditDraft={options.onEditDraft}
       onArchive={options.onArchive}
+      onMoveToInbox={options.onMoveToInbox}
       onDelete={options.onDelete}
       onMarkAsRead={options.onMarkAsRead}
       onToggleStar={options.onToggleStar}
@@ -1592,6 +1595,7 @@ export function EmailViewer({
   // destroys the mail, Delete says "Delete forever".
   const isInTrashFolder = currentMailboxRole === 'trash';
   const tActions = useTranslations('reader_actions');
+  const tP3 = useTranslations('mail_p3_actions');
   // Read for the re-render: bulkDeleteIsPermanent reads them from the store.
   useSettingsStore((state) => state.deleteAction);
   useSettingsStore((state) => state.permanentlyDeleteJunk);
@@ -2193,6 +2197,11 @@ export function EmailViewer({
   // Where this device saw it come from, else a guess by what the message is.
   const restoreTarget = isInTrashFolder && email
     ? rememberedTrashOrigin(email, mailboxes) ?? trashRestoreTarget(email, mailboxes, identities, moveOwnerAccountId)
+    : undefined;
+  // In Archive "Move to Inbox" takes Archive's place (mail-p3-4). A message
+  // window browses no folder: there the message's own folder decides.
+  const archiveInbox = onMoveToMailbox && email
+    ? archiveInboxTarget(mailboxes, selectedMailbox || mailboxes.find((m) => emailInMailbox(email, m))?.id)
     : undefined;
 
   // Close dropdown menus on click outside
@@ -4583,6 +4592,7 @@ ${printWatermark ? printWatermark.html : ''}
     onRestore: currentMailboxRole === 'trash' && onMoveToMailbox
       ? () => { if (restoreTarget) onMoveToMailbox(restoreTarget.id); }
       : undefined,
+    onMoveToInbox: archiveInbox && onMoveToMailbox ? () => onMoveToMailbox(archiveInbox.id) : undefined,
     omit: readerMenuOmit,
     views: readerViews,
   };
@@ -4767,7 +4777,22 @@ ${printWatermark ? printWatermark.html : ''}
             {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
-        {archiveActionEnabled && !isInJunkFolder && !isInTrashFolder && (
+        {archiveInbox && onMoveToMailbox && !isInJunkFolder && !isInTrashFolder && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMoveToMailbox(archiveInbox.id)}
+            data-overflow-item
+            data-overflow-priority="4"
+            data-testid="reader-move-to-inbox"
+            className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+            title={withShortcut(tP3('move_to_inbox'), 'archive')}
+          >
+            <Inbox className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tP3('move_to_inbox')}</span>}
+          </Button>
+        )}
+        {archiveActionEnabled && !archiveInbox && !isInJunkFolder && !isInTrashFolder && (
           <Button
             variant="ghost"
             size="sm"

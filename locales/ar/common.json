@@ -926,6 +926,13 @@
     "restore_to": "إعادة النقل إلى {folder}",
     "delete_forever": "حذف نهائي"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "نقل إلى البريد الوارد",
+    "delete_forever_title": "حذف هذه الرسالة نهائيًا؟",
+    "delete_forever_batch_title": "{count, plural, one {حذف هذه الرسالة نهائيًا؟} other {حذف هذه الرسائل (#) نهائيًا؟}}",
+    "delete_forever_message": "لا يمكنك استعادتها.",
+    "delete_forever_batch_message": "{count, plural, one {لا يمكنك استعادتها.} other {لا يمكنك استعادتها.}}"
+  },
   "external_mail": {
     "sender_label": "خارجي",
     "sender_tooltip": "من {domain}، من خارج مؤسستك",

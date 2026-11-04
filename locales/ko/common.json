@@ -926,6 +926,13 @@
     "restore_to": "{folder}(으)로 되돌리기",
     "delete_forever": "영구 삭제"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "받은편지함으로 이동",
+    "delete_forever_title": "이 메시지를 영구 삭제할까요?",
+    "delete_forever_batch_title": "{count, plural, one {이 메시지를 영구 삭제할까요?} other {메시지 #개를 영구 삭제할까요?}}",
+    "delete_forever_message": "되돌릴 수 없습니다.",
+    "delete_forever_batch_message": "{count, plural, one {되돌릴 수 없습니다.} other {되돌릴 수 없습니다.}}"
+  },
   "external_mail": {
     "sender_label": "외부",
     "sender_tooltip": "{domain}에서 보냄, 조직 외부",
