@@ -45,24 +45,35 @@ test.describe('Multi-account contacts', () => {
   test('address books from both accounts stay aggregated across a switch', async ({ page }) => {
     await login(page, alice);
     await addAccount(page, bob);
-    const bobId = await accountId(page, bob.email);
+    // Adding bob made him the active account: the switch below goes back to alice.
+    const aliceId = await accountId(page, alice.email);
     await enableProInterface(page);
 
     await openContacts(page);
 
     // Both accounts' (default) address books aggregate into one list with
-    // distinct names.
+    // distinct names. The first row shows before the list of every login has
+    // come: wait until both own books are in it. Books another principal
+    // shares with both (a group's) are listed once per login.
+    const owners = async () => new Set((await addressBookRows(page)).map((b) => b.account));
+    await expect.poll(async () => [...await owners()].filter((o) => o === alice.email || o === bob.email).sort(), { timeout: 30000 })
+      .toEqual([alice.email, bob.email].sort());
     const before = await addressBookRows(page);
     expect(before.length).toBeGreaterThanOrEqual(2);
     const namesBefore = new Set(before.map((b) => b.name));
     expect(namesBefore.size).toBeGreaterThanOrEqual(2);
+    const shape = (rows: Array<{ name: string; account: string }>) => rows.map((b) => `${b.account}|${b.name}`).sort();
 
     // Switch the active account: the previously-active account's ids flip
     // raw<->namespaced. The aggregated list must remain the same set (no loss,
-    // no duplication, no corruption from the id-form change).
-    await switchTo(page, bobId);
+    // no duplication, no corruption from the id-form change), once the
+    // switch's fetch has landed.
+    await switchTo(page, aliceId);
     await openContacts(page);
 
+    await expect.poll(async () => shape(await addressBookRows(page)), { timeout: 30000 }).toEqual(shape(before));
+    // And it stays that way: no later answer adds or drops a book.
+    await page.waitForTimeout(3000);
     const after = await addressBookRows(page);
     expect(after.length).toBe(before.length);
     expect(new Set(after.map((b) => b.name))).toEqual(namesBefore);
