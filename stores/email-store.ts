@@ -25,7 +25,7 @@ import { emailInMailbox } from "@/lib/move-targets";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
-import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, findMailboxByRole, resolveJmapTarget, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
+import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, resolveJmapTarget, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, dedupeUnifiedAccounts, unifiedServerKey, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
@@ -702,9 +702,10 @@ interface EmailStore {
   fetchUnifiedEmails: (accounts: UnifiedAccountClient[], role: UnifiedMailboxRole) => Promise<void>;
   loadMoreUnifiedEmails: (accounts: UnifiedAccountClient[]) => Promise<void>;
   refreshUnifiedCounts: (accounts: UnifiedAccountClient[]) => Promise<void>;
-  // Empties the given role's mailbox (e.g. trash/junk) in every account that
-  // has one - the "All Trash" sidebar row's empty-folder action. Per-account
-  // failures are collected rather than aborting the whole batch.
+  // Empties the given role's mailbox (Trash) in every one of the user's own
+  // accounts that has one - the "All Trash" sidebar row's empty-folder action.
+  // Shared/group owners are left alone. Per-account failures are collected
+  // rather than aborting the whole batch.
   emptyUnifiedMailbox: (
     accounts: UnifiedAccountClient[],
     role: UnifiedMailboxRole,
@@ -8217,8 +8218,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // into a shared `total` inline: `total += await x` reads `total` BEFORE
     // awaiting, so concurrent iterations racing on the same closure variable
     // clobber each other's contribution instead of adding to it.
-    const counts = await Promise.all(accounts.map(async (account): Promise<number> => {
-      const mailbox = findMailboxByRole(account.mailboxes, role);
+    // Only the user's own logins. With "include group accounts" the unified
+    // scope also holds group and delegated owners (isShared entries), and
+    // their Trash belongs to someone else.
+    const own = accounts.filter((account) => !account.isShared);
+    const counts = await Promise.all(own.map(async (account): Promise<number> => {
+      const mailbox = account.mailboxes.find((m) => m.role === role && !m.isShared);
       if (!mailbox) return 0;
       try {
         const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);

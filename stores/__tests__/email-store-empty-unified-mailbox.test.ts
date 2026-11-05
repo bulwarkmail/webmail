@@ -89,10 +89,24 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
     expect(errors.size).toBe(0);
   });
 
-  it('routes a shared account through its owner-scoped originalId + accountId', async () => {
+  // With "include group accounts" the unified scope also lists group and
+  // delegated owners. Their Trash is someone else's and must stay as it is.
+  it('leaves a group or delegated owner’s Trash alone', async () => {
     const client = makeClient(vi.fn().mockResolvedValue(1));
 
     const accounts: UnifiedAccountClient[] = [
+      {
+        accountId: 'account-a',
+        accountLabel: 'A',
+        client,
+        // A shared Trash in a login's own list is passed over too.
+        mailboxes: [
+          makeMailbox({ id: 'owner-y:y-trash', originalId: 'y-trash', isShared: true, accountId: 'owner-y' }),
+          makeMailbox({ id: 'a-trash' }),
+        ],
+        clientAccountId: 'account-a',
+        jmapAccountId: 'account-a',
+      },
       {
         accountId: 'owner-x',
         accountLabel: 'Owner X',
@@ -104,9 +118,11 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
       },
     ];
 
-    await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+    const { total } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
 
-    expect(client.emptyMailbox).toHaveBeenCalledWith('x-trash', 'owner-x');
+    expect(client.emptyMailbox).toHaveBeenCalledTimes(1);
+    expect(client.emptyMailbox).toHaveBeenCalledWith('a-trash', undefined);
+    expect(total).toBe(1);
   });
 
   it('collects a per-account failure instead of aborting the whole batch', async () => {
