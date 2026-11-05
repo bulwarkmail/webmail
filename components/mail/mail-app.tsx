@@ -332,6 +332,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [handedOffSource, setHandedOffSource] = useState<{ session: number; emailId?: string; source?: EmailWriteSource } | null>(null);
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
+  const composerRemountRef = useRef(composerRemount);
+  composerRemountRef.current = composerRemount;
   const composerHostRef = useRef('pane');
   // The compose session docked under its message (dockedReply).
   const [dockedSession, setDockedSession] = useState<number | null>(null);
@@ -5816,6 +5818,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // the dock and the pane for ever (React error 185, compose-p2-1).
           // Whatever opens a composer closes the old one first, which saves it.
           if (composerSessionRef.current !== composerSessionId) return;
+          // A recovery remount supersedes the stand-in in the new host.
+          // Empty snapshots are still valid from the current owner.
+          if (composerRemountRef.current !== composerRemount) return;
           setComposerPrefill(null);
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
             suppressComposerStateSaveSessionRef.current = null;
@@ -5838,8 +5843,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           // Still open in another host: the one mounted there started before
           // these edits arrived. The composer calls the handler of its first
           // render, so composerHost is the host this instance lived in.
-          if (showComposerRef.current && composerSessionRef.current === composerSessionId && composerHostRef.current !== composerHost) {
-            setComposerRemount((n) => n + 1);
+          if (showComposerRef.current && composerHostRef.current !== composerHost) {
+            // Relinquish ownership now, before the stand-in's cleanup (including
+            // Strict Mode's effect replay) can replace the snapshot below.
+            composerRemountRef.current += 1;
+            setComposerRemount(composerRemountRef.current);
           }
           setPendingDraft(data);
         }}
