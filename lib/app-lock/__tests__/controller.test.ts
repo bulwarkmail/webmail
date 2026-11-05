@@ -11,22 +11,26 @@ import {
   appLockKeyLayers,
   bootAppLock,
   disableAppLock,
+  disableHello,
   enableAppLock,
+  enableHello,
   forgetEverything,
   getAppLockPhase,
+  helloState,
   lockEverywhere,
   resetAppLockForTests,
   setReloadForTests,
   startAppLock,
   STAY_RETRY_MS,
   storeKeyLayers,
+  unlockWithHello,
   unlockWithOs,
   unlockWithPin,
 } from '../controller';
 import { importLockKey, LOCK_LAYER, lockLayer } from '../crypto';
 import { appLockRequired, effectiveTimeout } from '../policy';
 import { APP_LOCK_KEY, appLockBootScript, isAppLockedNow, readAppLockFile, setLockedHere } from '../state';
-import { createVault, deleteVault, openVaultWithPin, readVault, rotateVaultKey, sealDraft, VaultExistsError, WrongPinError } from '../vault';
+import { createVault, deleteVault, openVaultWithPin, pinBlockedUntil, readVault, rotateVaultKey, sealDraft, VaultExistsError, WrongPinError } from '../vault';
 
 const PIN = 'correct-pin';
 
@@ -979,5 +983,182 @@ describe('off', () => {
     await enableAppLock(PIN);
     await expect(disableAppLock('wrong-pin')).rejects.toMatchObject({ name: 'WrongPinError' });
     expect(readAppLockFile().on).toBe(true);
+  });
+});
+
+describe('Windows Hello', () => {
+  /**
+   * Main's side, with a signer standing in for the key credential: deterministic, as RSA PKCS#1 v1.5
+   * is. It signs only while main is locked or with the proof of the lock as it stands, as main does.
+   */
+  function helloShell() {
+    const state = { answer: 'ok' as 'ok' | 'cancelled' | 'missing', enrolled: false, locked: false, proofs: new Set<string>() };
+    const secret = crypto.getRandomValues(new Uint8Array(32));
+    const sign = async (salt: Uint8Array) => {
+      const key = await crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      return new Uint8Array(await crypto.subtle.sign('HMAC', key, salt.slice().buffer as ArrayBuffer));
+    };
+    const id = (bytes?: Uint8Array) => (bytes ? Array.from(bytes).join() : '');
+    const helloEnroll = vi.fn(async (_proof: Uint8Array, salt: Uint8Array) => {
+      if (state.answer !== 'ok') return { ok: false as const, reason: state.answer };
+      state.enrolled = true;
+      return { ok: true as const, signature: await sign(salt) };
+    });
+    const helloSign = vi.fn(async (salt: Uint8Array, proof?: Uint8Array) => {
+      if (!state.locked && !state.proofs.has(id(proof))) return { ok: false as const, reason: 'not-locked' as const };
+      if (!state.enrolled) return { ok: false as const, reason: 'missing' as const };
+      if (state.answer !== 'ok') return { ok: false as const, reason: state.answer };
+      return { ok: true as const, signature: await sign(salt) };
+    });
+    const helloRemove = vi.fn(async () => {
+      state.enrolled = false;
+    });
+    const helloCancel = vi.fn();
+    const appLock = bridge({
+      status: vi.fn(async () => ({ locked: state.locked, enrolled: true, os: null, osEnrolled: false, hello: { available: true, allowed: true, enrolled: state.enrolled } })),
+      enroll: vi.fn(async (proof: Uint8Array) => {
+        state.proofs.add(id(proof));
+        return true;
+      }),
+      prove: vi.fn(async (proof: Uint8Array) => {
+        state.proofs.add(id(proof));
+        state.locked = false;
+        return true;
+      }),
+    });
+    appLock.lock = vi.fn(() => {
+      state.locked = true;
+    });
+    appLock.claim = vi.fn(() => ({ lock: appLock.lock, osUnlock: appLock.osUnlock, helloEnroll, helloSign, helloRemove, helloCancel })) as never;
+    return { appLock, state, helloEnroll, helloSign, helloRemove, helloCancel };
+  }
+
+  it('turning it on wraps the lock key under the signature, and the lock screen opens the store with it', async () => {
+    const shell = helloShell();
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    expect(await helloState()).toEqual({ shown: true, on: false });
+    await enableHello(PIN);
+    const [proof, salt] = shell.helloEnroll.mock.calls[0];
+    expect(proof).toHaveLength(32);
+    expect(salt).toHaveLength(32);
+    expect(Array.from((await readVault())!.hello!.salt)).toEqual(Array.from(salt));
+    expect(await helloState()).toEqual({ shown: true, on: true });
+
+    await lockedAndReloaded();
+    asNewDocument();
+    expect(getAppLockPhase()).toBe('locked');
+    await unlockWithHello();
+    expect(getAppLockPhase()).toBe('open');
+    // Asked while locked, with nothing but the salt; the unlock is proved to main with the key.
+    const asked = shell.helloSign.mock.calls.at(-1)!;
+    expect(Array.from(asked[0])).toEqual(Array.from(salt));
+    expect(asked[1]).toBeUndefined();
+    expect(shell.appLock.prove).toHaveBeenCalled();
+    await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ fresh: false });
+  });
+
+  it('a no from Hello leaves it locked with the PIN to go, and costs no PIN try', async () => {
+    const shell = helloShell();
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    await lockedAndReloaded();
+    asNewDocument();
+    shell.state.answer = 'cancelled';
+    await expect(unlockWithHello()).rejects.toMatchObject({ name: 'HelloError', reason: 'cancelled' });
+    expect(getAppLockPhase()).toBe('locked');
+    expect((await readVault())?.hello).toBeDefined();
+    expect(await pinBlockedUntil()).toBe(0);
+    await unlockWithPin(PIN);
+    expect(getAppLockPhase()).toBe('open');
+  });
+
+  it('a key credential Windows lost takes the wrap with it, and the PIN still opens', async () => {
+    const shell = helloShell();
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    await lockedAndReloaded();
+    asNewDocument();
+    shell.state.enrolled = false;
+    await expect(unlockWithHello()).rejects.toMatchObject({ name: 'HelloError', reason: 'missing' });
+    expect((await readVault())?.hello).toBeUndefined();
+    await unlockWithPin(PIN);
+    expect(getAppLockPhase()).toBe('open');
+  });
+
+  it('a new PIN asks Hello for a new wrap of the new key; a no turns Hello off and says so', async () => {
+    const shell = helloShell();
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    const first = (await readVault())!.hello!;
+    expect(await changeAppLockPin(PIN, 'next-pin-5521')).toMatchObject({ helloOff: false });
+    // Unlocked, so with the proof of the new lock.
+    expect(shell.helloSign.mock.calls.at(-1)?.[1]).toHaveLength(32);
+    const second = (await readVault())!.hello!;
+    expect(Array.from(second.salt)).not.toEqual(Array.from(first.salt));
+    await lockedAndReloaded();
+    asNewDocument();
+    await unlockWithHello();
+    await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ fresh: false });
+
+    shell.state.answer = 'cancelled';
+    expect(await changeAppLockPin('next-pin-5521', 'third-pin-7731')).toMatchObject({ helloOff: true });
+    expect((await readVault())?.hello).toBeUndefined();
+    expect(shell.helloRemove).toHaveBeenCalled();
+    expect(shell.state.enrolled).toBe(false);
+  });
+
+  it('turning it off takes the wrap and the key credential', async () => {
+    const shell = helloShell();
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    await disableHello();
+    expect((await readVault())?.hello).toBeUndefined();
+    expect(shell.helloRemove).toHaveBeenCalledTimes(1);
+    expect(await helloState()).toEqual({ shown: true, on: false });
+  });
+
+  it('a wrap whose key credential main no longer has is dropped when anyone looks', async () => {
+    const shell = helloShell();
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    shell.state.enrolled = false;
+    expect(await helloState()).toEqual({ shown: true, on: false });
+    expect((await readVault())?.hello).toBeUndefined();
+  });
+
+  it('the AppLockHelloAllowed policy forced off hides it and drops the wrap and the key credential', async () => {
+    const shell = helloShell();
+    await enableAppLock(PIN);
+    await enableHello(PIN);
+    (window as unknown as { bulwarkDesktop: Record<string, unknown> }).bulwarkDesktop.policy = {
+      get: () => ({ AppLockHelloAllowed: { value: false, locked: true, source: 'forced-machine' } }),
+      onChange: () => () => {},
+    };
+    stopTab = startAppLock();
+    await vi.waitFor(() => expect(shell.helloRemove).toHaveBeenCalled());
+    expect((await readVault())?.hello).toBeUndefined();
+    expect(await helloState()).toEqual({ shown: false, on: false });
+    await expect(enableHello(PIN)).rejects.toMatchObject({ name: 'HelloError' });
+  });
+
+  it('a recommended off is no off: only a forced value turns it off', async () => {
+    helloShell();
+    await enableAppLock(PIN);
+    (window as unknown as { bulwarkDesktop: Record<string, unknown> }).bulwarkDesktop.policy = {
+      get: () => ({ AppLockHelloAllowed: { value: false, locked: false, source: 'recommended-machine' } }),
+      onChange: () => () => {},
+    };
+    expect(await helloState()).toEqual({ shown: true, on: false });
+  });
+
+  it('isn\'t offered by a shell without it, nor in a browser', async () => {
+    bridge();
+    await enableAppLock(PIN);
+    expect(await helloState()).toEqual({ shown: false, on: false });
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    resetAppLockForTests();
+    expect(await helloState()).toEqual({ shown: false, on: false });
   });
 });

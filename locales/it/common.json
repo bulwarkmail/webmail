@@ -7468,6 +7468,25 @@
     "blocked_seconds": "Troppi tentativi. Riprova tra {count, plural, one {# secondo} other {# secondi}}.",
     "blocked_minutes": "Troppi tentativi. Riprova tra {count, plural, one {# minuto} other {# minuti}}."
   },
+  "appLockHello": {
+    "switch_label": "Sblocca con Windows Hello",
+    "switch_desc": "Usa il volto, l'impronta o il PIN di Windows. Il PIN dell'app continua a funzionare.",
+    "protects": "Con Windows Hello attivo, Windows conserva per questa app una chiave che funziona solo dopo che Windows Hello ha verificato che sei tu. Anche la chiave dell'app viene bloccata con essa, quindi per sbloccare servono il volto, l'impronta o il PIN di Windows, e un altro programma su questo computer non può usare quella chiave senza che Windows te lo chieda prima. Il PIN dell'app continua a funzionare e ti serve se Windows Hello viene reimpostato o disattivato.",
+    "enable_title": "Attiva Windows Hello",
+    "enable_body": "Inserisci il PIN dell'app. Poi Windows ti chiede di confermare con Windows Hello.",
+    "enable_failed": "Non è stato possibile attivare Windows Hello. Riprova.",
+    "cancelled": "Windows Hello è stato annullato.",
+    "unsupported": "Windows Hello su questo computer non può proteggere la chiave. Il tuo PIN continua a funzionare.",
+    "unavailable": "Windows Hello non è disponibile su questo computer.",
+    "busy": "Windows Hello è occupato o bloccato. Riprova più tardi.",
+    "off_after_pin_change": "Windows Hello ora è disattivato, perché non ha confermato dopo il cambio del PIN. Riattivalo se lo usi.",
+    "prompt": "Conferma che sei tu con Windows Hello.",
+    "waiting": "In attesa di Windows Hello…",
+    "use_hello": "Sblocca con Windows Hello",
+    "use_pin": "Usa il PIN",
+    "failed": "Windows Hello non ha sbloccato l'app. Inserisci il PIN.",
+    "gone": "Windows Hello non sblocca più l'app su questo computer. Inserisci il PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Fusi orari comuni",
     "time_zone_all": "Tutti i fusi orari",

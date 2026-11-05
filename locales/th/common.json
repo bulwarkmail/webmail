@@ -7476,6 +7476,25 @@
     "blocked_seconds": "ลองหลายครั้งเกินไป ลองอีกครั้งใน {count, plural, other {# วินาที}}",
     "blocked_minutes": "ลองหลายครั้งเกินไป ลองอีกครั้งใน {count, plural, other {# นาที}}"
   },
+  "appLockHello": {
+    "switch_label": "ปลดล็อกด้วย Windows Hello",
+    "switch_desc": "ใช้ใบหน้า ลายนิ้วมือ หรือ PIN ของ Windows โดย PIN ของแอปยังใช้ได้อยู่",
+    "protects": "เมื่อเปิด Windows Hello แล้ว Windows จะเก็บกุญแจสำหรับแอปนี้ไว้ ซึ่งใช้ได้ก็ต่อเมื่อ Windows Hello ตรวจสอบแล้วว่าเป็นคุณ กุญแจของแอปก็ถูกล็อกด้วยกุญแจนี้ด้วย การปลดล็อกจึงต้องใช้ใบหน้า ลายนิ้วมือ หรือ PIN ของ Windows และโปรแกรมอื่นในคอมพิวเตอร์เครื่องนี้ใช้กุญแจนั้นไม่ได้หาก Windows ไม่ได้ถามคุณก่อน PIN ของแอปยังใช้ได้อยู่ และคุณต้องใช้ PIN นั้นหาก Windows Hello ถูกรีเซ็ตหรือปิด",
+    "enable_title": "เปิด Windows Hello",
+    "enable_body": "ใส่ PIN ของแอป จากนั้น Windows จะขอให้คุณยืนยันด้วย Windows Hello",
+    "enable_failed": "เปิด Windows Hello ไม่สำเร็จ ลองอีกครั้ง",
+    "cancelled": "ยกเลิก Windows Hello แล้ว",
+    "unsupported": "Windows Hello ในคอมพิวเตอร์เครื่องนี้ปกป้องกุญแจไม่ได้ PIN ของคุณยังใช้ได้อยู่",
+    "unavailable": "ไม่มี Windows Hello ในคอมพิวเตอร์เครื่องนี้",
+    "busy": "Windows Hello ไม่ว่างหรือถูกล็อกอยู่ ลองอีกครั้งในภายหลัง",
+    "off_after_pin_change": "Windows Hello ปิดอยู่ในตอนนี้ เพราะไม่ได้ยืนยันหลังจากเปลี่ยน PIN เปิดอีกครั้งหากคุณใช้งาน",
+    "prompt": "ยืนยันด้วย Windows Hello ว่าเป็นคุณ",
+    "waiting": "กำลังรอ Windows Hello…",
+    "use_hello": "ปลดล็อกด้วย Windows Hello",
+    "use_pin": "ใช้ PIN แทน",
+    "failed": "Windows Hello ไม่ได้ปลดล็อกแอป ใส่ PIN ของคุณ",
+    "gone": "Windows Hello ปลดล็อกแอปในคอมพิวเตอร์เครื่องนี้ไม่ได้อีกต่อไป ใส่ PIN ของคุณ"
+  },
   "uxs_general": {
     "time_zone_common": "เขตเวลาที่ใช้บ่อย",
     "time_zone_all": "เขตเวลาทั้งหมด",

@@ -7468,6 +7468,25 @@
     "blocked_seconds": "Zbyt wiele prób. Spróbuj za {count, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}}.",
     "blocked_minutes": "Zbyt wiele prób. Spróbuj za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}."
   },
+  "appLockHello": {
+    "switch_label": "Odblokowuj za pomocą Windows Hello",
+    "switch_desc": "Twarzą, odciskiem palca lub kodem PIN systemu Windows. PIN aplikacji nadal działa.",
+    "protects": "Gdy Windows Hello jest włączone, Windows przechowuje dla tej aplikacji klucz, który działa dopiero wtedy, gdy Windows Hello sprawdzi, że to Ty. Klucz aplikacji jest też nim zablokowany, więc do odblokowania potrzebna jest Twoja twarz, odcisk palca lub PIN systemu Windows, a inny program na tym komputerze nie może użyć tego klucza, zanim Windows Cię o to nie zapyta. PIN aplikacji nadal działa i będzie potrzebny, jeśli Windows Hello zostanie zresetowane lub wyłączone.",
+    "enable_title": "Włącz Windows Hello",
+    "enable_body": "Wpisz PIN aplikacji. Potem Windows poprosi o potwierdzenie za pomocą Windows Hello.",
+    "enable_failed": "Nie udało się włączyć Windows Hello. Spróbuj ponownie.",
+    "cancelled": "Windows Hello zostało anulowane.",
+    "unsupported": "Windows Hello na tym komputerze nie może chronić klucza. Twój PIN nadal działa.",
+    "unavailable": "Windows Hello nie jest dostępne na tym komputerze.",
+    "busy": "Windows Hello jest zajęte lub zablokowane. Spróbuj później.",
+    "off_after_pin_change": "Windows Hello jest teraz wyłączone, bo nie potwierdziło po zmianie kodu PIN. Włącz je ponownie, jeśli z niego korzystasz.",
+    "prompt": "Potwierdź za pomocą Windows Hello, że to Ty.",
+    "waiting": "Czekanie na Windows Hello…",
+    "use_hello": "Odblokuj za pomocą Windows Hello",
+    "use_pin": "Użyj kodu PIN",
+    "failed": "Windows Hello nie odblokowało aplikacji. Wpisz PIN.",
+    "gone": "Windows Hello nie odblokowuje już aplikacji na tym komputerze. Wpisz PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Popularne strefy czasowe",
     "time_zone_all": "Wszystkie strefy czasowe",

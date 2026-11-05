@@ -495,6 +495,21 @@ export type DesktopOsUnlockKind = 'hello' | 'touchid';
 
 export type DesktopOsUnlockAnswer = { ok: true; key: Uint8Array } | { ok: false; reason: 'unavailable' | 'denied' | 'not-locked' | 'failed' };
 
+/** A signature from the lock's Windows Hello key credential, or why there's none. */
+export type DesktopHelloAnswer =
+  | { ok: true; signature: Uint8Array }
+  | { ok: false; reason: 'cancelled' | 'busy' | 'unavailable' | 'missing' | 'unsupported' | 'policy' | 'not-locked' | 'failed' };
+
+/** Windows Hello for the lock. Absent off Windows and on an older shell. */
+export interface DesktopHelloStatus {
+  /** Windows can show the prompt here. */
+  available: boolean;
+  /** The AppLockHelloAllowed policy. */
+  allowed: boolean;
+  /** This profile has a key credential for the lock. */
+  enrolled: boolean;
+}
+
 /**
  * App lock in the desktop app. Main holds whether it's locked, and nothing a page says can
  * lift that: `prove` needs what only a real unlock gives, Windows Hello and Touch ID run in
@@ -516,6 +531,17 @@ export interface DesktopAppLockControls {
   /** Ends this page's renderer and loads the page in a new one. Only while main says locked. */
   replaceRenderer?: () => void;
   /**
+   * Windows Hello: a new key credential and its signature for this salt. Unlocked, with the proof.
+   * Absent on an older shell.
+   */
+  helloEnroll?: (proof: Uint8Array, salt: Uint8Array) => Promise<DesktopHelloAnswer>;
+  /** The signature for this salt, behind a Hello prompt. Locked it needs nothing, unlocked the proof. */
+  helloSign?: (salt: Uint8Array, proof?: Uint8Array) => Promise<DesktopHelloAnswer>;
+  /** Ends a Hello prompt that's waiting. */
+  helloCancel?: () => void;
+  /** Deletes the key credential. */
+  helloRemove?: () => Promise<void>;
+  /**
    * What only main can delete. `account` null: everything on this device, and then `finishLocalWipe`.
    * `failed` names what didn't go, and the wipe isn't reported as done. Absent on an older shell.
    */
@@ -525,7 +551,7 @@ export interface DesktopAppLockControls {
 }
 
 export interface DesktopAppLockBridge {
-  status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean }>;
+  status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean; hello?: DesktopHelloStatus }>;
   /** Once per document: the calls only the page itself may make. Null for whoever comes second. */
   claim: () => DesktopAppLockControls | null;
   /** Sets up the proof. False when one exists. */

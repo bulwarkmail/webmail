@@ -7468,6 +7468,25 @@
     "blocked_seconds": "محاولات كثيرة جدًا. حاول بعد {count, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتين} few {# ثوانٍ} many {# ثانية} other {# ثانية}}.",
     "blocked_minutes": "محاولات كثيرة جدًا. حاول بعد {count, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}."
   },
+  "appLockHello": {
+    "switch_label": "فتح القفل باستخدام Windows Hello",
+    "switch_desc": "استخدم وجهك أو بصمتك أو رمز PIN الخاص بـ Windows. يبقى رمز PIN الخاص بالتطبيق صالحًا.",
+    "protects": "عند تشغيل Windows Hello، يحتفظ Windows بمفتاح لهذا التطبيق لا يعمل إلا بعد أن يتحقق Windows Hello من أنك أنت. ويُقفل مفتاح التطبيق به أيضًا، لذا يتطلب فتح القفل وجهك أو بصمتك أو رمز PIN الخاص بـ Windows، ولا يستطيع برنامج آخر على هذا الكمبيوتر استخدام هذا المفتاح دون أن يسألك Windows أولًا. يبقى رمز PIN الخاص بالتطبيق صالحًا، وستحتاج إليه إذا أُعيد ضبط Windows Hello أو أُوقف.",
+    "enable_title": "تشغيل Windows Hello",
+    "enable_body": "أدخل رمز PIN الخاص بالتطبيق. بعد ذلك يطلب منك Windows التأكيد باستخدام Windows Hello.",
+    "enable_failed": "تعذّر تشغيل Windows Hello. حاول مرة أخرى.",
+    "cancelled": "أُلغي Windows Hello.",
+    "unsupported": "لا يستطيع Windows Hello على هذا الكمبيوتر حماية المفتاح. يبقى رمز PIN صالحًا.",
+    "unavailable": "Windows Hello غير متاح على هذا الكمبيوتر.",
+    "busy": "Windows Hello مشغول أو مقفل. حاول لاحقًا.",
+    "off_after_pin_change": "أصبح Windows Hello متوقفًا لأنه لم يؤكد بعد تغيير رمز PIN. شغّله مرة أخرى إن كنت تستخدمه.",
+    "prompt": "أكّد أنك أنت باستخدام Windows Hello.",
+    "waiting": "في انتظار Windows Hello…",
+    "use_hello": "فتح القفل باستخدام Windows Hello",
+    "use_pin": "استخدام رمز PIN بدلًا من ذلك",
+    "failed": "لم يفتح Windows Hello قفل التطبيق. أدخل رمز PIN.",
+    "gone": "لم يعد Windows Hello يفتح قفل التطبيق على هذا الكمبيوتر. أدخل رمز PIN."
+  },
   "uxs_general": {
     "time_zone_common": "المناطق الزمنية الشائعة",
     "time_zone_all": "كل المناطق الزمنية",

@@ -7480,6 +7480,25 @@
     "blocked_seconds": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# giây}}.",
     "blocked_minutes": "Quá nhiều lần thử. Hãy thử lại sau {count, plural, other {# phút}}."
   },
+  "appLockHello": {
+    "switch_label": "Mở khóa bằng Windows Hello",
+    "switch_desc": "Dùng khuôn mặt, vân tay hoặc mã PIN Windows. Mã PIN của ứng dụng vẫn dùng được.",
+    "protects": "Khi bật Windows Hello, Windows giữ cho ứng dụng này một khóa chỉ hoạt động sau khi Windows Hello đã xác nhận đúng là bạn. Khóa của ứng dụng cũng được khóa bằng nó, nên muốn mở khóa cần khuôn mặt, vân tay hoặc mã PIN Windows của bạn, và chương trình khác trên máy tính này không thể dùng khóa đó nếu Windows chưa hỏi bạn trước. Mã PIN của ứng dụng vẫn dùng được, và bạn cần nó nếu Windows Hello bị đặt lại hoặc bị tắt.",
+    "enable_title": "Bật Windows Hello",
+    "enable_body": "Hãy nhập mã PIN của ứng dụng. Sau đó Windows sẽ yêu cầu bạn xác nhận bằng Windows Hello.",
+    "enable_failed": "Không bật được Windows Hello. Hãy thử lại.",
+    "cancelled": "Đã hủy Windows Hello.",
+    "unsupported": "Windows Hello trên máy tính này không bảo vệ được khóa. Mã PIN của bạn vẫn dùng được.",
+    "unavailable": "Máy tính này không có Windows Hello.",
+    "busy": "Windows Hello đang bận hoặc bị khóa. Hãy thử lại sau.",
+    "off_after_pin_change": "Windows Hello hiện đã tắt vì không xác nhận sau khi đổi mã PIN. Hãy bật lại nếu bạn dùng nó.",
+    "prompt": "Hãy xác nhận đúng là bạn bằng Windows Hello.",
+    "waiting": "Đang chờ Windows Hello…",
+    "use_hello": "Mở khóa bằng Windows Hello",
+    "use_pin": "Dùng mã PIN",
+    "failed": "Windows Hello không mở khóa được ứng dụng. Hãy nhập mã PIN.",
+    "gone": "Windows Hello không còn mở khóa ứng dụng trên máy tính này. Hãy nhập mã PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Múi giờ phổ biến",
     "time_zone_all": "Tất cả múi giờ",

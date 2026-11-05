@@ -20,6 +20,7 @@ interface PolicyEntry<T> {
 interface LockPolicies {
   AppLockRequired?: PolicyEntry<boolean>;
   AppLockTimeoutMinutes?: PolicyEntry<number | null>;
+  AppLockHelloAllowed?: PolicyEntry<boolean>;
 }
 
 interface PolicyBridge {
@@ -43,6 +44,15 @@ function read(): LockPolicies {
 export function appLockRequired(): boolean {
   const entry = read().AppLockRequired;
   return entry?.locked === true && entry.value === true;
+}
+
+/**
+ * Windows Hello as a way to unlock, AppLockHelloAllowed: on unless forced off. Off hides the
+ * switch and drops an existing Hello wrap. Main refuses as well, and deletes the key credential.
+ */
+export function appLockHelloAllowed(): boolean {
+  const entry = read().AppLockHelloAllowed;
+  return !(entry?.locked === true && entry.value === false);
 }
 
 export interface EffectiveTimeout {
