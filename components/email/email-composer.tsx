@@ -140,6 +140,7 @@ import { classifyOutgoing, isLabelRequiredError, labelMissing, labelsPolicyFor, 
 import { beginLabelTakeover, endLabelTakeover } from "@/lib/outgoing/classification-raw";
 import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { beginComposeTakeover, endComposeTakeover } from "@/lib/outgoing/compose-takeover";
+import { cleanOutgoingKeywords } from "@/lib/outgoing/outgoing-keywords";
 import { recipientsChanged, runPluginSendCheck, sendGuardMessageKey } from "@/lib/outgoing/plugin-send-check";
 import { externalRecipientsFor, inspectAttachments, sniffFile } from "@/lib/outgoing/send-check-payload";
 import { whenPolicySettled } from "@/stores/policy-store";
@@ -400,6 +401,8 @@ interface EmailComposerProps {
     labelHeaders?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
+    /** Keywords plugins set for the Sent copy (lib/outgoing/outgoing-keywords.ts). */
+    keywords?: string[];
   },
   /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
   state?: ComposerDraftData,
@@ -4384,6 +4387,7 @@ export function EmailComposer({
           { plainTextMode, forwardedSeparator: tQuote('forwarded_separator') },
         ),
         externalRecipients: await externalRecipientsFor({ ...outgoingContext, ...recipients }),
+        ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
       });
       const sendCheck = await runPluginSendCheck(() => buildCheck(recipientsAtCheck));
       if (sendCheck !== 'allowed') {
@@ -4493,8 +4497,12 @@ export function EmailComposer({
           fromEmail,
           attachments: uploadedAttachments.map(a => ({ name: a.name, type: a.type, size: a.size })),
           inReplyTo: threadingHeaders?.inReplyTo?.[0],
+          ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
+          // Plugins with email:write add keywords for the Sent copy here.
+          keywords: [],
         };
         const outgoing = await emailHooks.onTransformOutgoingEmail.transform(transformInput);
+        const outgoingKeywords = cleanOutgoingKeywords(outgoing.keywords);
         // A plugin that adds or changes recipients after the send checks
         // (an automatic Bcc) could take the message outside after an
         // "only outside the organisation" rule passed: check it again for
@@ -4574,6 +4582,7 @@ export function EmailComposer({
           labelHeaders: labelled.labelHeaders,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
+          ...(outgoingKeywords.length > 0 ? { keywords: outgoingKeywords } : {}),
         }, handedToHost);
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);

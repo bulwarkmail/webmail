@@ -35,7 +35,7 @@ import { clearSidePanel } from './side-panels';
 import { cancelPluginProxyRequests } from './proxy-client';
 import { cancelConnectFor } from './connect-dialog';
 import { isHookHandedOver } from './host-features';
-import { hookArgsFor } from './hook-payload';
+import { hookArgsFor, hookResultFor } from './hook-payload';
 import { rememberDeclaredHooks } from '../plugin-send-guards';
 import type { SlotName } from '../plugin-types';
 import { PLUGIN_REFUSED_ERROR, pluginAllowed } from '../outgoing-hosts';
@@ -336,7 +336,8 @@ async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): P
       const proxy = (...args: unknown[]) => (
         isHookHandedOver(pluginId, hookName) || !mayReceiveHookCall(plugin, hookName, args)
           ? undefined
-          : bg.invokeHook(hookName, hookArgsFor(plugin, hookName, args))
+          : Promise.resolve(bg.invokeHook(hookName, hookArgsFor(plugin, hookName, args)))
+            .then((result) => hookResultFor(plugin, hookName, args, result))
       );
       hookDisposables.push(bus.register(plugin.id, proxy as (...a: unknown[]) => unknown));
       if (hookName === 'onEmailOpen') openHandler = proxy;

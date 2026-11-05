@@ -150,6 +150,13 @@ describe('prepareQuickReply and plugin send checks', () => {
     expect(seen[0].externalRecipients).toEqual(['eve@other.test']);
   });
 
+  it('names the quick reply plugins know, by the id its actions hand out', async () => {
+    const seen: OutgoingEmail[] = [];
+    emailHooks.onBeforeEmailSend.register('guard', (email: OutgoingEmail) => { seen.push(email); return undefined; });
+    expect(await prepareQuickReply({ ...input(text), composerId: 'quick-1' })).not.toBeNull();
+    expect(seen[0].composerId).toBe('quick-1');
+  });
+
   it('fails closed when a check crashes', async () => {
     emailHooks.onBeforeEmailSend.register('guard', () => { throw new Error('boom'); });
     const stopped: string[] = [];

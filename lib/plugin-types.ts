@@ -1272,6 +1272,25 @@ export interface OutgoingEmail {
    * recipient warning is off. Empty when every recipient is internal.
    */
   externalRecipients?: string[];
+  /**
+   * Bulwark 1.21 and later: the id of the composer the message is sent from,
+   * the same id its actions and slots hand out (api.composer.*), so a plugin
+   * knows which of its drafts goes out. Set in the composer (docked, full,
+   * pop-out window, Pro tab, quick compose; also for a scheduled send or one
+   * with Undo) and in a quick reply (onBeforeEmailSend only); absent for a
+   * plugin's forward. A plugin can't change it.
+   */
+  composerId?: string;
+  /**
+   * Bulwark 1.21 and later, onTransformOutgoingEmail: keywords to set on the
+   * message, so its copy in Sent carries them from the start. Only from a
+   * plugin with `email:write`; others' changes to the list are dropped.
+   * Custom keywords in RFC 8621 syntax (printable ASCII without spaces and
+   * the characters ( ) { ] % * " and backslash), plus `$flagged` and
+   * Bulwark's tags (`$label:<id>`); other `$` keywords are the system's and
+   * are dropped, as are invalid ones. At most 10. Starts as an empty list.
+   */
+  keywords?: string[];
 }
 /**
  * Passed to onBeforeDraftAutoSave handlers as a transform value.

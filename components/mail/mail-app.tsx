@@ -2771,6 +2771,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     headers?: Record<string, string>;
     labelHeaders?: Record<string, string>;
     composerId?: string;
+    keywords?: string[];
   }, composerState?: ComposerDraftData) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
@@ -4902,7 +4903,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Resolves true once the reply went out (or was scheduled), false when it
   // stopped before sending, so the quick-reply box keeps the text.
-  const handleQuickReply = async (body: string): Promise<boolean> => {
+  const handleQuickReply = async (body: string, extra?: { composerId?: string }): Promise<boolean> => {
     if (!client || !selectedEmail) return false;
 
     // Quick reply follows the composer's addressing rules and sends from the
@@ -4989,6 +4990,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       identityId: sendingIdentity?.id,
       subject: replySubject,
       inReplyTo: threading?.inReplyTo?.[0],
+      composerId: extra?.composerId,
       // A plugin that said no told the user; one that crashed didn't.
       onSendCheckStopped: (outcome) => {
         if (outcome === 'failed') toast.error(t('email_composer.send_guard_failed'));
