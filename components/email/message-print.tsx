@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { PrintRoot } from "@/components/print/print-root";
 import type { InvitationPrint } from "@/lib/print/invitation-print";
+import { useActivePrintTheme } from "@/lib/print/active-print-theme";
 
 export interface MessagePrintFields {
   subject: string;
@@ -44,6 +45,8 @@ table { max-width: 100%; }
  */
 export function MessagePrint({ fields }: { fields: MessagePrintFields }) {
   const t = useTranslations("email_viewer");
+  // A plugin's print style may add a letterhead: plain text above and below.
+  const printTheme = useActivePrintTheme();
   const meta: Array<[string, string]> = [
     [t("from"), fields.sender],
     [t("to"), fields.to],
@@ -59,8 +62,9 @@ export function MessagePrint({ fields }: { fields: MessagePrintFields }) {
   }, [bodyHtml, plain]);
 
   return (
-    <PrintRoot orientation="portrait" title={fields.subject}>
+    <PrintRoot orientation="portrait" title={fields.subject} themeMargin>
       <article className="pr-message">
+        {printTheme?.header && <div className="pr-letterhead-header" data-print-letterhead="header" dir="auto">{printTheme.header}</div>}
         <header className="pr-header">
           <h1 className="pr-title" dir="auto">{fields.subject}</h1>
           <dl className="pr-message-meta">
@@ -86,6 +90,7 @@ export function MessagePrint({ fields }: { fields: MessagePrintFields }) {
           </section>
         )}
         <div className="pr-message-body" data-message-print-body="" ref={fillBody} />
+        {printTheme?.footer && <div className="pr-letterhead-footer" data-print-letterhead="footer" dir="auto">{printTheme.footer}</div>}
       </article>
     </PrintRoot>
   );

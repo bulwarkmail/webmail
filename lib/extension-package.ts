@@ -624,6 +624,9 @@ export function checkThemeManifest(manifest: Record<string, unknown>): { result:
   if (manifest.typography !== undefined && (typeof manifest.typography !== 'object' || manifest.typography === null)) {
     errors.push('"typography" must be an object');
   }
+  if (manifest.print !== undefined && (typeof manifest.print !== 'object' || manifest.print === null || Array.isArray(manifest.print))) {
+    errors.push('"print" must be an object');
+  }
 
   if (errors.length > 0) return { result: null, errors };
 

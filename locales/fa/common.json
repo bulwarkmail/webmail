@@ -6234,6 +6234,14 @@
     "date_label": "تاریخ",
     "subject_label": "موضوع"
   },
+  "print_styles": {
+    "title": "چاپ",
+    "description": "پیام‌ها، مخاطبان و تقویم‌های چاپ‌شده چه شکلی دارند.",
+    "style_label": "سبک چاپ",
+    "style_description": "افزونه‌ها می‌توانند سبک اضافه کنند، مثلاً سربرگی با نشانی شرکت شما.",
+    "standard": "استاندارد",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "نصب {appName}",
     "description": "برای دسترسی سریع برنامه را نصب کنید.",

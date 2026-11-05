@@ -6234,6 +6234,14 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "print_styles": {
+    "title": "Udskrivning",
+    "description": "Hvordan udskrevne beskeder, kontakter og kalendere ser ud.",
+    "style_label": "Udskriftsstil",
+    "style_description": "Tilføjelser kan tilføje stilarter, for eksempel et brevhoved med din virksomheds adresse.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installer vores app for hurtig adgang.",

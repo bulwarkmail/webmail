@@ -6234,6 +6234,14 @@
     "date_label": "Date",
     "subject_label": "Sujet"
   },
+  "print_styles": {
+    "title": "Impression",
+    "description": "L'apparence des messages, contacts et calendriers imprimés.",
+    "style_label": "Style d'impression",
+    "style_description": "Les modules complémentaires peuvent ajouter des styles, par exemple un en-tête avec l'adresse de votre entreprise.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installez notre application pour un accès rapide.",

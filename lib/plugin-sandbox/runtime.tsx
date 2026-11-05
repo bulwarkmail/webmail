@@ -871,6 +871,18 @@ function buildCoreApi(manifest: PluginManifest) {
       /** Short labels and dots on calendar days. Replaces this plugin's earlier labels. */
       setDayLabels: (labels: Array<{ date: string; text?: string; title?: string; dot?: boolean }>) =>
         callApi('ui.setDayLabels', [labels]) as Promise<void>,
+      /**
+       * A print style the user can pick under Settings > Appearance >
+       * Printing: CSS for printed messages, contacts and calendars, and a
+       * letterhead (plain text above and below a printed message). The CSS
+       * is scoped to the printout; url(), @import and other at-rules except
+       * @media, @supports and @page { margin } are removed, and the
+       * warnings say what. Same id again replaces it; at most 5 per plugin.
+       */
+      registerPrintTheme: (theme: { id: string; label: string; css?: string; header?: string; footer?: string }) =>
+        callApi('ui.registerPrintTheme', [theme]) as Promise<{ warnings: string[] }>,
+      /** Removes one of this plugin's print styles; printouts that used it go back to Standard. */
+      unregisterPrintTheme: (id: string) => callApi('ui.unregisterPrintTheme', [id]) as Promise<void>,
       /** Full pages with a button in the navigation bar; the `app-page` slot renders them. */
       setPages: (pages: Array<{ id: string; title: string; icon?: string }>) =>
         callApi('ui.setPages', [pages]) as Promise<void>,

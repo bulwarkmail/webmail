@@ -6234,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Temat"
   },
+  "print_styles": {
+    "title": "Drukowanie",
+    "description": "Jak wyglądają wydrukowane wiadomości, kontakty i kalendarze.",
+    "style_label": "Styl wydruku",
+    "style_description": "Dodatki mogą dodawać style, na przykład papier firmowy z adresem Twojej firmy.",
+    "standard": "Standardowy",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Zainstaluj {appName}",
     "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp.",

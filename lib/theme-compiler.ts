@@ -8,6 +8,7 @@ import type {
   ThemeRadii,
   ThemeTokenSet,
   ThemeTypography,
+  ThemePrintTokens,
 } from './plugin-types';
 import { getLuminance, parseColor } from './color-transform';
 
@@ -141,6 +142,25 @@ function emitTypography(typography: ThemeTypography): string[] {
   return out;
 }
 
+const PRINT_VARS: Record<keyof ThemePrintTokens, string> = {
+  fontFamily: '--print-font-family',
+  headingFontFamily: '--print-heading-font-family',
+  textColor: '--print-text-color',
+  headingColor: '--print-heading-color',
+  ruleColor: '--print-rule-color',
+  pageMargin: '--print-page-margin',
+};
+
+/** The manifest's `print` tokens as the --print-* variables printouts read. */
+function emitPrint(print: ThemePrintTokens): string[] {
+  const out: string[] = [];
+  for (const [key, name] of Object.entries(PRINT_VARS) as Array<[keyof ThemePrintTokens, string]>) {
+    const value = print[key];
+    if (typeof value === 'string' && value.trim() && isSafeTokenValue(value)) out.push(`  ${name}: ${value.trim()};`);
+  }
+  return out;
+}
+
 const DENSITY_VARS: Record<ThemeDensity, Record<string, string>> = {
   compact: {
     '--density-row-height': '28px',
@@ -241,6 +261,7 @@ export function compileAdvancedTheme(
   }
   if (manifest.radii) rootLines.push(...emitRadii(manifest.radii));
   if (manifest.typography) rootLines.push(...emitTypography(manifest.typography));
+  if (manifest.print && typeof manifest.print === 'object') rootLines.push(...emitPrint(manifest.print));
   if (manifest.density) rootLines.push(...emitDensity(manifest.density));
 
   if (rootLines.length > 0) {
@@ -293,6 +314,7 @@ export function isAdvancedManifest(manifest: ThemeManifest): boolean {
     !!manifest.derive ||
     !!manifest.density ||
     !!manifest.radii ||
-    !!manifest.typography
+    !!manifest.typography ||
+    !!manifest.print
   );
 }

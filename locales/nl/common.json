@@ -6234,6 +6234,14 @@
     "date_label": "Datum",
     "subject_label": "Onderwerp"
   },
+  "print_styles": {
+    "title": "Afdrukken",
+    "description": "Hoe afgedrukte berichten, contacten en agenda's eruitzien.",
+    "style_label": "Afdrukstijl",
+    "style_description": "Add-ons kunnen stijlen toevoegen, bijvoorbeeld briefpapier met het adres van je bedrijf.",
+    "standard": "Standaard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} installeren",
     "description": "Installeer onze app voor snelle toegang.",

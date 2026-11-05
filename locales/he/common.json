@@ -6235,6 +6235,14 @@
     "date_label": "תאריך",
     "subject_label": "נושא"
   },
+  "print_styles": {
+    "title": "הדפסה",
+    "description": "איך נראים הודעות, אנשי קשר ולוחות שנה מודפסים.",
+    "style_label": "סגנון הדפסה",
+    "style_description": "תוספים יכולים להוסיף סגנונות, למשל נייר מכתבים עם כתובת החברה שלך.",
+    "standard": "רגיל",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "התקן {appName}",
     "description": "התקן את היישום שלנו לגישה מהירה.",

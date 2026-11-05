@@ -54,6 +54,12 @@ import {
 } from "@/components/icons";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { useTranslations } from "next-intl";
+import { useInvitationPrint } from "@/lib/print/invitation-print";
+import { buildMessagePrintFields } from "./message-print-fields";
+import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversationMessageId, printConversationMessage, printLabels, useConversationPrintSource } from "./conversation-print";
+import { ConversationMessageMenu } from "./conversation-message-menu";
+import { MessagePrint } from "./message-print";
+import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { FilePen } from "@/components/icons";
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -269,6 +275,16 @@ export function ThreadConversationView({
     return () => cancelAnimationFrame(frame);
   }, [ordered, newestId]);
 
+  // Ctrl+P while a message has the focus (a click in it) prints that
+  // message alone, as its ⋮ > Print does. Otherwise the page prints as before.
+  usePrintListener();
+  const printing = usePrinting();
+  const focusedPrintId = useMemo(
+    () => (printing ? focusedConversationMessageId(cardsRef.current) : null),
+    [printing],
+  );
+  const focusedPrint = focusedPrintId ? conversationPrintSource(focusedPrintId) : null;
+
   const toggleExpanded = (emailId: string) => {
     const target = ordered.find((e) => e.id === emailId);
     if (target) emitThreadExpand(target.threadId, [target], !expandedIds.has(emailId));
@@ -345,6 +361,7 @@ export function ThreadConversationView({
           })}
         </div>
       </div>
+      {focusedPrint && !focusedPrint.noPrint && <MessagePrint fields={focusedPrint.fields} />}
     </div>
   );
 }
@@ -439,10 +456,17 @@ function EmailCard({
 
   // Mark as read when email is expanded
   useMarkReadWhenShown(email, isExpanded, onMarkAsRead);
+  // Print in its own ⋮: this message alone.
+  const devices = useDevicePolicy(email);
+  const onPrint = devices.noPrint
+    ? undefined
+    : () => { printConversationMessage(email.id, printLabels((key) => t(`email_viewer.${key}`))); };
 
   return (
-    <div className={cn(
-      "rounded-lg border border-border overflow-hidden transition-all duration-200",
+    // Unfolded, focusable by a click (tabIndex -1), so Ctrl+P knows which
+    // message the user is in.
+    <div {...(isExpanded ? { [CONVERSATION_MESSAGE_ATTR]: email.id, tabIndex: -1 } : {})} className={cn(
+      "rounded-lg border border-border overflow-hidden transition-all duration-200 outline-none",
       isExpanded ? "bg-background shadow-sm" : "bg-muted/30",
       isUnread && !isExpanded && "start-bar border-s-transparent [--start-bar-width:2px] [--start-bar:var(--color-primary)]"
     )}>
@@ -626,6 +650,11 @@ function EmailCard({
               mailboxRole={mailboxRole ?? null}
               overflow
               className="flex-shrink-0 rounded-md border border-border"
+            />
+            <ConversationMessageMenu
+              onPrint={onPrint}
+              className="w-auto h-8 px-2 flex-shrink-0 rounded-md border border-border"
+              iconClassName="w-4 h-4"
             />
           </div>
         </div>
@@ -1041,6 +1070,26 @@ export function ConversationEmailBody({
       // contentDocument may be inaccessible under stricter sandboxes; ignore.
     }
   }, [t, isDark, allowExternal, email.id, selectionMenu.openRef, reading.textFactor, reading.minFontSize, reading.overrideStyles, reading.fitWidth, reading.pauseImages]);
+
+  // Print in the message's ⋮, and Ctrl+P while it has the focus, print this
+  // message alone, as it shows here, in the reader's single-message layout.
+  const printTimeFormat = useSettingsStore((state) => state.timeFormat);
+  const invitationPrint = useInvitationPrint(email.id);
+  useConversationPrintSource(email.id, () => ({
+    fields: buildMessagePrintFields({
+      email,
+      html: emailContent.html,
+      isHtml: emailContent.isHtml,
+      attachments: visibleAttachments,
+      invitation: invitationPrint,
+      timeFormat: printTimeFormat,
+      noSubject: t('email_viewer.no_subject'),
+      unknownSender: t('email_viewer.unknown_sender'),
+    }),
+    externalBlocked: !allowExternal,
+    watermark,
+    noPrint: devices.noPrint,
+  }));
 
   return (
     <div className={className}>
