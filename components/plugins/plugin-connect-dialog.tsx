@@ -13,6 +13,7 @@ import {
   saveCredential,
   subscribeConnect,
 } from '@/lib/plugin-sandbox/connect-dialog';
+import { ModalWindow } from '@/components/ui/dialog-surface';
 
 /**
  * The host's own "Connect account" dialog (see lib/plugin-sandbox/connect-dialog.ts).
@@ -97,74 +98,83 @@ export function PluginConnectDialog() {
       : t('intro_password_any', { name: pluginName, label: spec.label, appName });
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 p-4"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) request.resolve({ connected: false });
-      }}
-    >
-      <div ref={panelRef} className="flex w-full max-w-[440px] flex-col rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
-        <form className="p-5" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-          <div className="mb-3 flex items-center gap-2">
-            <KeyRound className="h-5 w-5 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
-            <h2 id={titleId} className="text-lg font-semibold text-foreground">{t('title', { label: spec.label })}</h2>
-          </div>
-          <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{intro}</p>
-          <div className="mb-4 flex flex-col gap-3">
-            {!fixedOrigin && (
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium">{t('server')}</span>
-                {/* Not type="url": the browser would refuse "cloud.example.com"
-                    without https://, which originFromInput adds. */}
-                <input
-                  type="text"
-                  inputMode="url"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  value={server}
-                  placeholder={t('server_hint')}
-                  onChange={(e) => setServer(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
-                />
-              </label>
-            )}
-            {needsUsername && (
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium">{t('username')}</span>
-                <input
-                  type="text"
-                  value={username}
-                  autoComplete="username"
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
-                />
-              </label>
-            )}
-            {needsSecret && (
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium">{t('secret')}</span>
-                <input
-                  type="password"
-                  value={secret}
-                  autoComplete="off"
-                  onChange={(e) => setSecret(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
-                />
-              </label>
-            )}
-            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
-            <Button type="submit" disabled={!canSubmit}>
-              {saving ? t('saving') : mode === 'signin' ? t('continue') : t('connect')}
-            </Button>
-          </div>
-        </form>
+    <ModalWindow title={t('title', { label: spec.label })} onClose={() => request.resolve({ connected: false })}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        data-modal-backdrop="" className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 p-4"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) request.resolve({ connected: false });
+        }}
+        // Escape in the dialog, also in a window of its own, where the listener above
+        // hears nothing. Stopped here, so it isn't answered twice over the page.
+        onKeyDown={(e) => {
+          if (e.key !== 'Escape') return;
+          e.stopPropagation();
+          request.resolve({ connected: false });
+        }}
+      >
+        <div ref={panelRef} className="flex w-full max-w-[440px] flex-col rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
+          <form className="p-5" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+            <div className="mb-3 flex items-center gap-2">
+              <KeyRound className="h-5 w-5 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
+              <h2 id={titleId} className="text-lg font-semibold text-foreground">{t('title', { label: spec.label })}</h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{intro}</p>
+            <div className="mb-4 flex flex-col gap-3">
+              {!fixedOrigin && (
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium">{t('server')}</span>
+                  {/* Not type="url": the browser would refuse "cloud.example.com"
+                      without https://, which originFromInput adds. */}
+                  <input
+                    type="text"
+                    inputMode="url"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    value={server}
+                    placeholder={t('server_hint')}
+                    onChange={(e) => setServer(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
+                  />
+                </label>
+              )}
+              {needsUsername && (
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium">{t('username')}</span>
+                  <input
+                    type="text"
+                    value={username}
+                    autoComplete="username"
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
+                  />
+                </label>
+              )}
+              {needsSecret && (
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium">{t('secret')}</span>
+                  <input
+                    type="password"
+                    value={secret}
+                    autoComplete="off"
+                    onChange={(e) => setSecret(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none"
+                  />
+                </label>
+              )}
+              {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => request.resolve({ connected: false })}>{t('cancel')}</Button>
+              <Button type="submit" disabled={!canSubmit}>
+                {saving ? t('saving') : mode === 'signin' ? t('continue') : t('connect')}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </ModalWindow>
   );
 }

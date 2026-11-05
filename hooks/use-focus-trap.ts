@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefCallback } from 'react';
 
 // The traps that are active, the one opened last at the end. Only that one
 // answers Escape, so a dialog over a dialog closes alone.
@@ -26,6 +26,24 @@ export function useFocusTrap({
   openerDocument,
 }: UseFocusTrapOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // A trap that turned active before its element was there (a dialog drawn into a window
+  // of its own, dialog-surface.tsx, mounts a moment after it opens) waits for it, and
+  // starts when it comes. One whose element was there from the start isn't started
+  // again. The returned ref works as a callback ref and as `.current`.
+  const waitingRef = useRef(false);
+  const [arrived, setArrived] = useState(0);
+  const ref = useMemo(() => {
+    const attach = (element: HTMLDivElement | null) => {
+      containerRef.current = element;
+      if (element && waitingRef.current) {
+        waitingRef.current = false;
+        setArrived((n) => n + 1);
+      }
+    };
+    const callback = attach as RefCallback<HTMLDivElement> & { current: HTMLDivElement | null };
+    Object.defineProperty(callback, 'current', { get: () => containerRef.current, set: attach });
+    return callback;
+  }, []);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   // Callers pass a new onEscape on every render. The trap reads the latest
   // one from here instead of starting over for it: each new start moved the
@@ -44,7 +62,12 @@ export function useFocusTrap({
   });
 
   useEffect(() => {
-    if (!isActive || !containerRef.current) return;
+    waitingRef.current = false;
+    if (!isActive) return;
+    if (!containerRef.current) {
+      waitingRef.current = true;
+      return;
+    }
 
     const container = containerRef.current;
     // The dialog's own document: the page's, or its window's when it has one.
@@ -159,7 +182,7 @@ export function useFocusTrap({
         previousActiveElement.current.focus();
       }
     };
-  }, [isActive, restoreFocus]);
+  }, [isActive, restoreFocus, arrived]);
 
-  return containerRef;
+  return ref;
 }

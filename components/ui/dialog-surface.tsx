@@ -58,7 +58,13 @@ export function useDialogSurface(isOpen: boolean, { title, onClose, inPage = fal
     const opener = parent?.win ?? window;
     const opened = openDialogSurface(opener, {
       title: latest.current.title,
-      onUserClose: () => latest.current.onClose(),
+      onUserClose: () => {
+        latest.current.onClose();
+        // A modal that stays open after that (one that can't be closed just now, such as
+        // the end of a session) comes back over the page rather than vanishing.
+        setSurface(null);
+        setFailed(true);
+      },
       onFailed: () => {
         setSurface(null);
         setFailed(true);
@@ -91,4 +97,18 @@ export function useDialogSurface(isOpen: boolean, { title, onClose, inPage = fal
 /** Draws `children` into the dialog window, with the context for what's inside. */
 export function DialogSurfacePortal({ surface, children }: { surface: DialogSurface; children: ReactNode }) {
   return createPortal(<DialogSurfaceContext.Provider value={surface}>{children}</DialogSurfaceContext.Provider>, surface.root);
+}
+
+/**
+ * For a modal that draws its own overlay instead of using Dialog: in the desktop app the
+ * whole overlay goes into a window of its own, where the element marked
+ * `data-modal-backdrop` turns transparent (the window behind is disabled instead of
+ * dimmed). The overlay keeps its markup, its handlers and its focus trap. Mount it only
+ * while the modal is open, or pass `open`.
+ */
+export function ModalWindow({ open = true, title, onClose, children }: { open?: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const surface = useDialogSurface(open, { title, onClose });
+  if (!open || surface.mode === "pending") return null;
+  if (surface.mode === "window") return <DialogSurfacePortal surface={surface.surface}>{children}</DialogSurfacePortal>;
+  return <>{children}</>;
 }
