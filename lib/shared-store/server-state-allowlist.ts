@@ -31,6 +31,8 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'app/api/dev-jmap/[...path]/route.ts#stateCounter', class: 'per-process', why: 'dev mock JMAP server' },
   { site: 'app/api/dev-jmap/[...path]/route.ts#samplePhotos', class: 'per-process', why: 'dev mock JMAP server' },
   { site: 'app/api/dev-jmap/[...path]/route.ts#uploadedBlobs', class: 'per-process', why: 'dev mock JMAP server' },
+  { site: 'lib/oauth/slot-renewal.ts#redemptions', class: 'per-process', why: 'refresh token redemptions in flight or just done, 60 s, so a retry of this process gets the same tokens' },
+  { site: 'lib/oauth/slot-renewal.ts#signedOut', class: 'per-process', why: 'refresh tokens this process signed out, 10 min, so its own renewing push preview does not write them back' },
   { site: 'app/api/favicon/route.ts#upstreamInFlight', class: 'per-process', why: 'caps this process\'s concurrent upstream fetches' },
   { site: 'app/api/favicon/route.ts#cache', class: 'cache', why: 'sender icons from a public service, 14 days' },
   { site: 'app/api/favicon/route.ts#negativeCache', class: 'cache', why: 'sender icons that failed, 1 day' },
