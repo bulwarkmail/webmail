@@ -7,11 +7,13 @@ import { act, render, screen } from '@testing-library/react';
 const loaded = vi.hoisted(() => [] as string[]);
 vi.mock('@/components/desktop/desktop-host', () => { loaded.push('desktop'); return { DesktopHost: () => <p>desktop host</p> }; });
 vi.mock('@/components/mail-transfer/mail-transfer-host', () => { loaded.push('transfer'); return { MailTransferHost: () => <p>transfer host</p> }; });
+vi.mock('@/components/offline/offline-host', () => { loaded.push('offline'); return { OfflineHost: () => <p>offline host</p> }; });
 
 const idle: (() => void)[] = [];
 vi.stubGlobal('requestIdleCallback', (callback: () => void) => { idle.push(callback); return idle.length; });
 
-const { DeferredDesktopHost, DeferredMailTransferHost } = await import('../deferred-hosts');
+const { DeferredDesktopHost, DeferredMailTransferHost, DeferredOfflineHost } = await import('../deferred-hosts');
+const { useOfflineStore } = await import('@/lib/offline/state');
 
 afterEach(() => {
   delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop;
@@ -39,5 +41,18 @@ describe('deferred hosts', () => {
     expect(screen.queryByText('transfer host')).toBeNull();
     act(() => { for (const callback of idle.splice(0)) callback(); });
     expect(await screen.findByText('transfer host')).toBeTruthy();
+  });
+
+  it('loads offline mode only once it is in use here', async () => {
+    vi.stubGlobal('indexedDB', { databases: async () => [] });
+    useOfflineStore.setState({ enabled: [], choices: {}, health: {} });
+    render(<DeferredOfflineHost />);
+    act(() => { for (const callback of idle.splice(0)) callback(); });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+    expect(loaded).not.toContain('offline');
+    // Turned on for an account, in this tab or another.
+    act(() => { useOfflineStore.setState({ enabled: ['acc'] }); });
+    expect(await screen.findByText('offline host')).toBeTruthy();
+    expect(loaded).toContain('offline');
   });
 });

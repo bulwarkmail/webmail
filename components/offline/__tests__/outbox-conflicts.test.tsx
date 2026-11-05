@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setStoreBackend, type StoreBackend } from '@/lib/store/client/api';
 import { useOfflineStore } from '@/lib/offline/state';
@@ -54,15 +54,16 @@ describe('changes that did not go through', () => {
       fireEvent.click(screen.getByRole('button', { name: 'dismiss_label' }));
     });
     expect(area).toHaveBeenCalledWith('acc', 'outbox.dismissConflict', { id: 7 });
-    expect(area).toHaveBeenCalledWith('acc', 'outbox.read');
-    expect(useOfflineStore.getState().conflicts).toEqual([]);
+    // Offline mode loads with the click.
+    await waitFor(() => expect(area).toHaveBeenCalledWith('acc', 'outbox.read'));
+    await waitFor(() => expect(useOfflineStore.getState().conflicts).toEqual([]));
   });
 
-  it('the banner points to them while online, with nothing else to say', () => {
+  it('the banner points to them while online, with nothing else to say', async () => {
     useOfflineStore.setState({ conflicts: [conflict(1, 'changed')] });
     render(<OfflineBanner />);
     expect(screen.getByTestId('offline-banner-conflicts')).toBeTruthy();
     fireEvent.click(screen.getByTestId('offline-banner-conflicts'));
-    expect(screen.getByTestId('offline-conflict-row')).toBeTruthy();
+    expect(await screen.findByTestId('offline-conflict-row')).toBeTruthy();
   });
 });

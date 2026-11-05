@@ -11,8 +11,8 @@ import { useAuthStore } from '@/stores/auth-store';
 const editorKeyDown = vi.hoisted(() => vi.fn());
 const toastError = vi.hoisted(() => vi.fn());
 
-vi.mock('@/lib/offline/offline-mode', async (original) => ({
-  ...(await original<typeof import('@/lib/offline/offline-mode')>()),
+vi.mock('@/lib/offline/availability', async (original) => ({
+  ...(await original<typeof import('@/lib/offline/availability')>()),
   scopeDecided: () => true,
 }));
 

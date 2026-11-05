@@ -26,7 +26,7 @@ import { onStoreKeyMissing, storeKeyLayers } from '@/lib/app-lock/controller';
 import { IS_LITE } from '@/lib/lite';
 import { desktopJmapBase } from '@/lib/desktop/jmap-route';
 import { devicesForAccount, devicesForNoOne, signedInAccountIds } from '@/lib/device-policy';
-import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-subjects';
+import { useAccountSubjects } from '@/lib/org/account-subjects';
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { emitPushStateChange } from '@/lib/push-events';
@@ -87,8 +87,9 @@ import {
   type OutboxRow,
   type UserChoice,
 } from './state';
-import { desktopOfflinePolicy } from '@/lib/desktop/policy';
 import { effectiveScope, offlineDefaultOn, olderThanCap, platformDefault, userChoiceFor, type EffectiveScope } from './scope';
+export { offlineActive, offlineAllowed, offlineSupported, scopeDecided } from './availability';
+import { hasIndexedDb, offlineActive, offlineAllowed, offlineSupported, policyDecided, scopeDecided } from './availability';
 import { isStandaloneDisplayMode } from '@/lib/standalone-display';
 import { readPersistence, requestPersistence, safariMayDelete } from './storage-health';
 import { nextProgress } from './sync-progress';
@@ -146,30 +147,6 @@ export function offlineNotify(notice: OfflineNotice): void {
 
 // ---- Who may use it ----
 
-function hasIndexedDb(): boolean {
-  try {
-    return typeof indexedDB !== 'undefined' && indexedDB !== null;
-  } catch {
-    return false;
-  }
-}
-
-/** Offline mode is possible here at all: not in Lite, with what the store needs. */
-export function offlineSupported(): boolean {
-  if (IS_LITE || !hasIndexedDb()) return false;
-  if (useOfflineStore.getState().storageBlocked) return false;
-  try {
-    return typeof crypto !== 'undefined' && !!crypto.subtle && getStore().supported();
-  } catch {
-    return false;
-  }
-}
-
-/** The organisation allows this account to keep mail on the device. */
-export function offlineAllowed(account: string | null | undefined): boolean {
-  return offlineSupported() && !devicesForAccount(account ?? null).noOffline && !desktopOfflinePolicy().invalid;
-}
-
 /** A dropped account's data isn't judged by the groups of whoever is signed in now. */
 function policyOfKept(account: string) {
   return isEvicted(account) ? devicesForNoOne() : devicesForAccount(account);
@@ -178,11 +155,6 @@ function policyOfKept(account: string) {
 /** What this account keeps here: the organisation's policy over the user's choice over the platform's default. */
 export function scopeForAccount(account: string): EffectiveScope {
   return effectiveScope(account, userChoiceFor(account), policyOfKept(account), platformDefault());
-}
-
-/** "Keep mail on this device" is on for this account here, and allowed. */
-export function offlineActive(account: string | null | undefined): boolean {
-  return !!account && useOfflineStore.getState().enabled.includes(account) && offlineAllowed(account);
 }
 
 /** The local account a JMAP client belongs to. */
@@ -1174,31 +1146,6 @@ export async function wipeEverything(): Promise<void> {
   confirmed.clear();
   named.clear();
   useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], localDrafts: [], usageBytes: 0, syncing: [], lastSyncedAt: {} });
-}
-
-/** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
-export function scopeDecided(account: string): boolean {
-  const { loaded, source, partial } = usePolicyStore.getState();
-  // The public part a page gets before it's signed in has no caps and no scopes in it.
-  return loaded && !partial && (source === 'server' || source === 'cache') && policyDecided(account);
-}
-
-/** Whether the policy of an account is known well enough to decide on it. */
-function policyDecided(account: string): boolean {
-  // Dropped, with no groups to wait for: what applies to everyone reaches it.
-  if (isEvicted(account)) return true;
-  const auth = useAuthStore.getState();
-  if (account === auth.activeAccountId || !auth.activeAccountId) {
-    const { subject, subjectPending } = usePolicyStore.getState();
-    if (subjectPending) return false;
-    // The active account's id is kept across a reload and its subject isn't: until
-    // it's there only Everyone's values show, and a group scope may say otherwise.
-    return !auth.activeAccountId || subject !== null || !(auth.isLoading || auth.client);
-  }
-  // Another signed-in account: its groups have to be known first (a group
-  // scope may forbid it); a signed-out one is wiped with its sign-out.
-  if (!auth.getClientForAccount?.(account)) return false;
-  return !accountSubjectPending(account);
 }
 
 /** The organisation forbids it for an account that has it on: wipe that account. */

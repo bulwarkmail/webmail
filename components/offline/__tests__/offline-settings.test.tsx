@@ -147,7 +147,8 @@ describe('the offline banner', () => {
     render(<OfflineBanner />);
     expect(screen.getByTestId('offline-banner').textContent).toContain('banner.offline');
     fireEvent.click(screen.getByTestId('offline-banner-outbox'));
-    expect(screen.getByTestId('offline-outbox-row').textContent).toContain('Quarterly');
+    // The outbox is its own chunk, loaded when the dialog opens.
+    expect((await screen.findByTestId('offline-outbox-row')).textContent).toContain('Quarterly');
   });
 
   it('can be hidden, and comes back when what it says changes', async () => {

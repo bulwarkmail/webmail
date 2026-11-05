@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { serverKey, useOfflineStore } from "@/lib/offline/state";
-import { offlineAllowed } from "@/lib/offline/offline-mode";
+import { offlineAllowed } from "@/lib/offline/availability";
 import { useAuthStore } from "@/stores/auth-store";
 
 function subscribeOnline(callback: () => void): () => void {

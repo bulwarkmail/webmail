@@ -90,7 +90,9 @@ import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { onCredentialsRejected, type ForcedSignOutKind } from './credentials-rejected';
 import { forgetEvictedSecrets } from './evicted-secrets';
-import { confirmLoss, registerOfflineHooks, unsentForWipe, wipeAccount, wipeEverything } from './offline-mode';
+// Offline mode itself only when a wipe runs: the check that runs on every start
+// (startDeviceWipe) doesn't need it, and it's a big module.
+const offlineMode = () => import('./offline-mode');
 import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, serverKey, useOfflineStore } from './state';
 import { runWipeCleaners } from './wipe-registry';
 import { forgetLocalImportOf } from '@/lib/desktop/local-import';
@@ -447,10 +449,10 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
     return;
   }
   tellOtherWindows(account, 'start');
-  registerOfflineHooks();
+  (await offlineMode()).registerOfflineHooks();
 
   const ownOnly = reason === 'rejected' || reason === 'session';
-  const unsent = await unsentForWipe(account);
+  const unsent = await (await offlineMode()).unsentForWipe(account);
   if (record && !readWipeConfirmations().some((entry) => entry.id === record.id)) {
     queueWipeConfirmation({ account, id: record.id, secret: record.secret, reason, unsent });
     if (reason === 'admin') addWipeNote(unsent);
@@ -458,11 +460,11 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
 
   const shown = useOfflineStore.getState();
   const keepsMail = shown.enabled.includes(account) || shown.outbox.some((row) => row.account === account) || shown.localDrafts.some((row) => row.account === account);
-  if (!ownOnly) confirmLoss(account);
+  if (!ownOnly) (await offlineMode()).confirmLoss(account);
   let deleted = true;
   if (!ownOnly || keepsMail) {
     // Tried again at the next start: the row keeps waiting until then.
-    await wipeAccount(account, { justSignedOut: options.justSignedOut }).catch(() => { deleted = false; });
+    await (await offlineMode()).wipeAccount(account, { justSignedOut: options.justSignedOut }).catch(() => { deleted = false; });
   }
   clearEvicted(account);
   dropRefusedLogin(account);
@@ -529,10 +531,10 @@ export function wipeWholeDevice(reason: WipeReason): Promise<void> {
 async function eraseDevice(reason: WipeReason): Promise<void> {
   if (!(WHOLE_DEVICE in readPendingWipes())) return;
   tellOtherWindows(null, 'start');
-  registerOfflineHooks();
+  (await offlineMode()).registerOfflineHooks();
   const records = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
   const accounts = [...new Set([...useOfflineStore.getState().enabled, ...records.map((record) => record.account)])];
-  const counts = new Map(await Promise.all(accounts.map(async (account) => [account, await unsentForWipe(account)] as const)));
+  const counts = new Map(await Promise.all(accounts.map(async (account) => [account, await (await offlineMode()).unsentForWipe(account)] as const)));
   const queued = readWipeConfirmations();
   for (const record of records) {
     if (queued.some((entry) => entry.id === record.id)) continue;
@@ -543,13 +545,13 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
     addWipeNote(each.includes(null) ? null : (each as number[]).reduce((sum, count) => sum + count, 0));
   }
 
-  confirmLoss('all');
+  (await offlineMode()).confirmLoss('all');
   const cleaned = await runWipeCleaners(null);
   await forgetPluginAccounts(null).catch(() => {});
   clearAllPluginStorage();
   await scrubShared().catch(() => {});
   let deleted = cleaned;
-  await wipeEverything().catch(() => { deleted = false; });
+  await (await offlineMode()).wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);
   if (!(await wipeInMain(reason, null))) deleted = false;
@@ -710,8 +712,8 @@ function policyKnown(): boolean {
 /** A number, for the sign-in page. Unknown stays unknown, and is asked again at the next look. */
 async function countRefused(account: string): Promise<void> {
   if (!(account in readRefusedLogins())) return;
-  registerOfflineHooks();
-  setRefusedCount(account, await unsentForWipe(account));
+  (await offlineMode()).registerOfflineHooks();
+  setRefusedCount(account, await (await offlineMode()).unsentForWipe(account));
 }
 
 const wipeReasonFor = (kind: ForcedSignOutKind | undefined): WipeReason => (kind === 'session' ? 'session' : 'rejected');

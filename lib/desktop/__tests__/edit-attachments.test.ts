@@ -6,7 +6,7 @@ vi.mock('@/lib/device-policy', () => ({
   canDownload: () => policy.download,
   canExport: () => policy.export,
 }));
-vi.mock('@/lib/offline/offline-mode', () => ({
+vi.mock('@/lib/offline/availability', () => ({
   scopeDecided: () => policy.decided,
 }));
 

@@ -3,6 +3,9 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { isDesktopApp } from "@/lib/desktop/bridge";
+import { LEGACY_DB_NAME } from "@/lib/offline/legacy-db-name";
+import { OFFLINE_EVICTED_KEY, useOfflineStore } from "@/lib/offline/state";
+import { STORE_DB_NAME, STORE_OPENED_KEY } from "@/lib/store/client/keys";
 
 /**
  * The page-wide hosts the first screen doesn't need, out of the first script.
@@ -77,7 +80,46 @@ export function DeferredWindowMenuBar() { return <DesktopOnly><WindowMenuBar /><
 export function DeferredDesktopHost() { return <DesktopOnly><DesktopHost /></DesktopOnly>; }
 
 export function DeferredMailTransferHost() { return <AfterBoot><MailTransferHost /></AfterBoot>; }
-export function DeferredOfflineHost() { return <AfterBoot><OfflineHost /></AfterBoot>; }
+/** Something stored says offline mode has been used here (or the desktop app, where it's on by default). */
+function offlineUsedHere(): boolean {
+  if (isDesktopApp()) return true;
+  const s = useOfflineStore.getState();
+  if (s.enabled.length > 0 || Object.keys(s.choices).length > 0 || Object.keys(s.health).length > 0) return true;
+  try {
+    return localStorage.getItem(STORE_OPENED_KEY) !== null || localStorage.getItem(OFFLINE_EVICTED_KEY) !== null;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Whether offline mode is in use in this browser: turned on for an account, or
+ * data kept from it (the store, or an outbox from before the store). Turning it
+ * on, here or in another tab, starts it.
+ */
+function useOfflineInUse(): boolean {
+  const [inUse, setInUse] = useState(false);
+  useEffect(() => {
+    if (offlineUsedHere()) { setInUse(true); return; }
+    let done = false;
+    const now = () => { if (!done) { done = true; setInUse(true); } };
+    const off = useOfflineStore.subscribe(() => { if (offlineUsedHere()) now(); });
+    const onStorage = () => { if (offlineUsedHere()) now(); };
+    window.addEventListener("storage", onStorage);
+    // A database left from an earlier start; a browser that can't list them may have one.
+    const listing = typeof indexedDB !== "undefined" && typeof indexedDB.databases === "function" ? indexedDB.databases() : null;
+    if (listing) listing.then((dbs) => { if (dbs.some((db) => db.name === STORE_DB_NAME || db.name === LEGACY_DB_NAME)) now(); }, now);
+    else if (typeof indexedDB !== "undefined") now();
+    return () => { done = true; off(); window.removeEventListener("storage", onStorage); };
+  }, []);
+  return inUse;
+}
+
+function OfflineWhenUsed() {
+  return useOfflineInUse() ? <OfflineHost /> : null;
+}
+
+export function DeferredOfflineHost() { return <AfterBoot><OfflineWhenUsed /></AfterBoot>; }
 export function DeferredPopoutHost() { return <AfterBoot><PopoutHost /></AfterBoot>; }
 export function DeferredFileDropHost() { return <AfterBoot><FileDropHost /></AfterBoot>; }
 export function DeferredNotificationActionsHost() { return <AfterBoot><NotificationActionsHost /></AfterBoot>; }

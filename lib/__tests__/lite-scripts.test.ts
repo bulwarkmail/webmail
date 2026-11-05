@@ -364,7 +364,8 @@ describe('the local store in an export', () => {
 
   it('removes what a dev checkout holds before a build, and offline mode never starts in Lite', () => {
     expect(LITE_REMOVED_PATHS).toEqual(expect.arrayContaining(['public/store-worker.js', 'public/sqlite3mc']));
-    const offlineMode = readFileSync(join(process.cwd(), 'lib/offline/offline-mode.ts'), 'utf8');
+    // The check moved out of offline-mode.ts with the other ones the first page load asks.
+    const offlineMode = readFileSync(join(process.cwd(), 'lib/offline/availability.ts'), 'utf8');
     expect(offlineMode).toMatch(/if \(IS_LITE \|\| !hasIndexedDb\(\)\) return false;/);
     const build = readFileSync(join(process.cwd(), 'scripts/lite/build.mjs'), 'utf8');
     expect(build).not.toMatch(/build-store-worker/);
