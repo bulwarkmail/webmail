@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEmailStore } from '../email-store';
 import { useAuthStore } from '../auth-store';
+import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import type { Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { UnifiedAccountClient } from '@/lib/unified-mailbox';
@@ -56,7 +57,10 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
       accountMailboxes: {},
     });
     useAuthStore.setState({ activeAccountId: 'account-a' } as never);
+    clearAllHooks();
   });
+
+  afterEach(() => clearAllHooks());
 
   it('empties every account’s trash through its own client and own mailbox id', async () => {
     const clientA = makeClient(vi.fn().mockResolvedValue(2));
@@ -241,5 +245,46 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
     const s = useEmailStore.getState();
     expect(s.emails).toEqual([]);
     expect(s.selectedEmail).toBeNull();
+  });
+
+  // Emptying one folder asks plugins first and tells them afterwards; the
+  // all-accounts empty has to do the same for each account's Trash.
+  it('asks plugins per account and skips an account whose Trash a plugin keeps', async () => {
+    const clientA = makeClient(vi.fn().mockResolvedValue(2));
+    const clientB = makeClient(vi.fn().mockResolvedValue(5));
+    const before = vi.fn(({ mailboxId }: { mailboxId: string }) => mailboxId !== 'a-trash');
+    const after = vi.fn();
+    emailHooks.onBeforeMailboxEmpty.register('t', before);
+    emailHooks.onMailboxEmpty.register('t', after);
+
+    const accounts: UnifiedAccountClient[] = [
+      {
+        accountId: 'account-a',
+        accountLabel: 'A',
+        client: clientA,
+        mailboxes: [makeMailbox({ id: 'a-trash', totalEmails: 2 })],
+        clientAccountId: 'account-a',
+        jmapAccountId: 'account-a',
+      },
+      {
+        accountId: 'account-b',
+        accountLabel: 'B',
+        client: clientB,
+        mailboxes: [makeMailbox({ id: 'b-trash', totalEmails: 5 })],
+        clientAccountId: 'account-b',
+        jmapAccountId: 'account-b',
+      },
+    ];
+
+    const { total, errors } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+
+    expect(before).toHaveBeenCalledWith({ mailboxId: 'a-trash', role: 'trash' });
+    expect(before).toHaveBeenCalledWith({ mailboxId: 'b-trash', role: 'trash' });
+    expect(clientA.emptyMailbox).not.toHaveBeenCalled();
+    expect(clientB.emptyMailbox).toHaveBeenCalledWith('b-trash', undefined);
+    expect(total).toBe(5);
+    expect(errors.size).toBe(0);
+    expect(after).toHaveBeenCalledTimes(1);
+    expect(after).toHaveBeenCalledWith({ mailboxId: 'b-trash', role: 'trash', count: 5 });
   });
 });

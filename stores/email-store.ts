@@ -8214,20 +8214,33 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const errors = new Map<string, string>();
     const activeId = useAuthStore.getState().activeAccountId;
 
+    // Only the user's own logins. With "include group accounts" the unified
+    // scope also holds group and delegated owners (isShared entries), and
+    // their Trash belongs to someone else.
+    const targets: { account: UnifiedAccountClient; mailbox: Mailbox }[] = [];
+    for (const account of accounts) {
+      if (account.isShared) continue;
+      const mailbox = account.mailboxes.find((m) => m.role === role && !m.isShared);
+      if (!mailbox) continue;
+      // The same plugin gate as emptying one folder: a plugin can keep this
+      // account's folder as it is. Asked one account at a time, so a plugin
+      // that asks the user doesn't stack its prompts.
+      if (emailHooks.onBeforeMailboxEmpty.size > 0
+        && !(await emailHooks.onBeforeMailboxEmpty.intercept({ mailboxId: mailbox.id, role: mailbox.role ?? null }))) {
+        continue;
+      }
+      targets.push({ account, mailbox });
+    }
+
     // Each account's count is collected into `counts` rather than accumulated
     // into a shared `total` inline: `total += await x` reads `total` BEFORE
     // awaiting, so concurrent iterations racing on the same closure variable
     // clobber each other's contribution instead of adding to it.
-    // Only the user's own logins. With "include group accounts" the unified
-    // scope also holds group and delegated owners (isShared entries), and
-    // their Trash belongs to someone else.
-    const own = accounts.filter((account) => !account.isShared);
-    const counts = await Promise.all(own.map(async (account): Promise<number> => {
-      const mailbox = account.mailboxes.find((m) => m.role === role && !m.isShared);
-      if (!mailbox) return 0;
+    const counts = await Promise.all(targets.map(async ({ account, mailbox }): Promise<number> => {
       try {
         const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
         const count = await account.client.emptyMailbox(jmapMailboxId, jmapAccountId);
+        void emailHooks.onMailboxEmpty.emit({ mailboxId: mailbox.id, role: mailbox.role ?? null, count: mailbox.totalEmails });
         // Same live-list routing as liveListForAccount/applyMailboxCounterUpdate:
         // the active client's folders live in `mailboxes`, every other logged-in
         // account's in `accountMailboxes[clientAccountId]`.
