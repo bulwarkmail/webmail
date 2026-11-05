@@ -712,6 +712,17 @@ describe('a refused login (lib/offline/credentials-rejected.ts)', () => {
       await vi.waitFor(() => expect(sent.find((call) => call.url.endsWith('/wiped'))?.body).toMatchObject({ reason: 'rejected', unsent: 1 }));
     });
 
+    it('names the unsent messages it deleted to the one just signed out', async () => {
+      await queue.queueSend(ALICE, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+      const lost = await import('../lost');
+      lost.consumeLost();
+      wipe.registerDeviceWipe();
+      refuse();
+      await vi.waitFor(() => expect(wipeState.readPendingWipes()).toEqual({}));
+      await vi.waitFor(() => expect(state.useOfflineStore.getState().enabled).toEqual([]));
+      expect(lost.consumeLost()).toEqual(['Unsent']);
+    });
+
     it('doesn\'t delete on a refusal that hasn\'t lasted: one bad answer at a start only hides', async () => {
       wipe.registerDeviceWipe();
       refuse(ALICE, false);
@@ -1508,6 +1519,19 @@ describe('the session timers', () => {
     await vi.waitFor(() => expect(wipeState.readPendingWipes()).toEqual({}));
     expect(state.useOfflineStore.getState().enabled).toEqual([]);
     expect(await databases()).toContain('smime-plugin-store');
+  });
+
+  it('with the organisation asking for deletion, the sign-in page names the unsent messages that went', async () => {
+    await policyAsksForDeletion();
+    respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : noWipe());
+    await queue.queueSend(ALICE, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+    const lost = await import('../lost');
+    lost.consumeLost();
+    wipe.registerDeviceWipe();
+    await timerSignOut();
+    await vi.waitFor(() => expect(wipeState.readPendingWipes()).toEqual({}));
+    await vi.waitFor(() => expect(state.useOfflineStore.getState().enabled).toEqual([]));
+    expect(lost.consumeLost()).toEqual(['Unsent']);
   });
 
   it('a sign-out the user asks for still deletes', async () => {

@@ -1116,14 +1116,16 @@ async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
   if (stillSignedIn) notify({ kind: 'lost', subjects });
 }
 
-export async function wipeAccount(account: string): Promise<void> {
+export async function wipeAccount(account: string, options: { justSignedOut?: boolean } = {}): Promise<void> {
   clearDesktopSurfaces();
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
-  // Waited for a sign-in that never came: whoever is here now mustn't read its subjects.
+  // Waited for a sign-in that never came: whoever is here now mustn't read its
+  // subjects. Hidden a moment ago by a sign-out in this tab, it's still the
+  // same person, who needs to know what to write again.
   if (isEvicted(account)) {
-    named.add(account);
+    if (!options.justSignedOut) named.add(account);
     void forgetEvictedSecrets(account).catch(() => {});
   }
   const before = useOfflineStore.getState();
