@@ -162,7 +162,8 @@ import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { isPhishingMarked } from "@/lib/phishing-links";
 import { phishingMarkedNow } from "@/hooks/use-phishing-report";
 import { automaticLabel, classifyOutgoing, labelSourceHeaders, reopenedLabelChoice } from "@/lib/outgoing/classification";
-import enMessages from "@/locales/en/common.json";
+import { loadEnglishMessages } from "@/i18n/english-catalog";
+import type { PlaceholderWords } from "@/lib/placeholder-check";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
@@ -4968,6 +4969,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       references: selectedEmail.references,
     });
     const replySubject = buildReplySubject(selectedEmail.subject || t('email_viewer.no_subject'), t('email_composer.prefix.reply'));
+    // English fill-in words besides the UI language's, as the composer: AI
+    // drafts and templates are often English. Without the English catalog
+    // (offline, never loaded) the UI language's words still count.
+    const englishPlaceholderWords = settings.placeholderWarningEnabled
+      ? await loadEnglishMessages()
+        .then((en) => (en as { email_composer: { placeholder_words: PlaceholderWords } }).email_composer.placeholder_words)
+        .catch(() => null)
+      : null;
     const prepared = await prepareQuickReply({
       body,
       signatureIdentity,
@@ -4989,7 +4998,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       questions: {
         // The fill-in words of the UI language and of English, as the composer.
         placeholderWords: settings.placeholderWarningEnabled
-          ? [enMessages.email_composer.placeholder_words, t.raw('email_composer.placeholder_words')]
+          ? [...(englishPlaceholderWords ? [englishPlaceholderWords] : []), t.raw('email_composer.placeholder_words')]
           : null,
         attachmentKeywords: settings.attachmentReminderEnabled ? settings.attachmentReminderKeywords : null,
         confirmSend: settings.sendConfirmation,

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppLockGate } from "@/components/app-lock/app-lock-gate";
 import { IntlProvider } from "@/components/providers/intl-provider";
-import { addPlainLanguage } from "@/i18n/plain-language";
+import { loadCatalog } from "@/i18n/catalog";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
 import { PushBindingsHost } from "@/components/providers/push-bindings-host";
@@ -77,11 +77,10 @@ export default async function LocaleLayout({
   let messages;
   if (!IS_LITE) {
     try {
-      messages = (await import(`@/locales/${locale}/common.json`)).default;
+      messages = await loadCatalog(locale);
     } catch {
       notFound();
     }
-    messages = await addPlainLanguage(locale, messages);
   }
 
   return (
