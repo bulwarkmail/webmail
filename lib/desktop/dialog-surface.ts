@@ -49,6 +49,7 @@ html, body { background: transparent !important; margin: 0 !important; height: 1
 #bulwark-dialog-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 1rem; padding-top: calc(1rem + var(--titlebar-row-height, 0px)); }
 [data-dialog-drag] { -webkit-app-region: drag; }
 [data-dialog-drag] :is(a, button, input, select, textarea, label, summary, [role="button"], [contenteditable], [tabindex]) { -webkit-app-region: no-drag; }
+[data-modal-backdrop] { background: transparent !important; backdrop-filter: none !important; animation: none !important; }
 `;
 
 /** The page's stylesheets in the window, in their order, kept in step with the page's head. */
