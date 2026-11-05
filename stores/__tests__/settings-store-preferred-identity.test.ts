@@ -62,8 +62,14 @@ describe('settings-store per-account preferredIdentityIds (issue #507)', () => {
   describe('importSettings per-account merge (multi-account login order)', () => {
     beforeEach(() => useSettingsStore.setState({ preferredIdentityIds: {}, allMailFolderIds: {} }));
 
+    /** State earlier server loads left, not a change made on this device. */
+    const loaded = (patch: Parameters<typeof useSettingsStore.setState>[0]) => {
+      useSettingsStore.setState(patch);
+      localStorage.removeItem('settings-sync-stamps');
+    };
+
     it('a per-account server load updates only its own entry, preserving others', () => {
-      useSettingsStore.setState({ preferredIdentityIds: { 'a@h': 'idA', 'b@h': 'idB' } });
+      loaded({ preferredIdentityIds: { 'a@h': 'idA', 'b@h': 'idB' } });
       // Account B's server blob carries a STALE entry for A plus B's own value.
       useSettingsStore.getState().importSettings(
         JSON.stringify({ preferredIdentityIds: { 'a@h': 'STALE', 'b@h': 'idB2' } }),
@@ -93,7 +99,7 @@ describe('settings-store per-account preferredIdentityIds (issue #507)', () => {
     });
 
     it('applies the same per-account merge to allMailFolderIds', () => {
-      useSettingsStore.setState({ allMailFolderIds: { 'a@h': ['x'], 'b@h': ['y'] } });
+      loaded({ allMailFolderIds: { 'a@h': ['x'], 'b@h': ['y'] } });
       useSettingsStore.getState().importSettings(
         JSON.stringify({ allMailFolderIds: { 'a@h': ['STALE'], 'b@h': ['y2'] } }),
         { serverAccountId: 'b@h' },
