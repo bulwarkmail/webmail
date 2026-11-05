@@ -47,6 +47,7 @@ export {
   IconBox as Box,
   IconBraces as Braces,
   IconBrain as Brain,
+  IconBrush as FormatPainter,
   IconBriefcase as Briefcase,
   IconBug as Bug,
   IconBuilding as Building,

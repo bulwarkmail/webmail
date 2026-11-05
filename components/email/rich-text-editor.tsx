@@ -63,6 +63,7 @@ import {
   Quote,
   Code,
   RemoveFormatting,
+  FormatPainter,
   Heading1,
   Heading2,
   Table as TableIcon,
@@ -81,7 +82,7 @@ import {
  * buttons and the separators that go with it.
  */
 const FOLDABLE_GROUPS = [
-  { id: "history", buttons: 3, separators: 2 },
+  { id: "history", buttons: 4, separators: 2 },
   { id: "align", buttons: 3, separators: 1 },
   { id: "headings", buttons: 2, separators: 1 },
   { id: "table", buttons: 1, separators: 0 },
@@ -237,16 +238,19 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
   popup?: "menu" | "dialog";
   expanded?: boolean;
   onClick: () => void;
+  /** A double click keeps the button armed after each use (format painter). */
+  onDoubleClick?: () => void;
   children: React.ReactNode;
   title: string;
   disabled?: boolean;
-}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, children, title, disabled }, ref) {
+}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, onDoubleClick, children, title, disabled }, ref) {
   return (
     <button
       ref={ref}
       type="button"
       data-toolbar-item={item}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       disabled={disabled}
       title={title}
       aria-label={title}
@@ -265,6 +269,27 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
     </button>
   );
 });
+
+/**
+ * What the format painter copies: the four marks the toolbar toggles, the
+ * three textStyle attributes, and the heading level (only ever applied —
+ * flattening the target's headings would take its lists and code with them).
+ */
+type PaintedFormat = {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strike: boolean;
+  color: string | null;
+  backgroundColor: string | null;
+  fontSize: string | null;
+  heading: 1 | 2 | null;
+};
+
+/** The painter while armed: the copied format, the selection it came from
+ *  (so re-selecting that same range doesn't apply to itself), and whether a
+ *  double click keeps it armed after each use. */
+type PainterState = { format: PaintedFormat; from: number; to: number; sticky: boolean };
 
 /**
  * A toolbar popover (font size, colours, table) that works from the
@@ -821,6 +846,75 @@ export function RichTextEditor({
   const colorButtonRef = useRef<HTMLButtonElement>(null);
   const bgColorButtonRef = useRef<HTMLButtonElement>(null);
   const tableButtonRef = useRef<HTMLButtonElement>(null);
+
+  // The format painter: one click copies the formatting at the selection and
+  // applies it to the next selection, a double click keeps it armed for every
+  // selection after that (a word processor's behaviour). Escape, or another
+  // click on the button, puts it down.
+  const [painter, setPainter] = useState<PainterState | null>(null);
+  const armPainter = useCallback(() => {
+    if (!editor) return;
+    if (painter) { setPainter(null); return; }
+    const style = editor.getAttributes("textStyle");
+    setPainter({
+      format: {
+        bold: editor.isActive("bold"),
+        italic: editor.isActive("italic"),
+        underline: editor.isActive("underline"),
+        strike: editor.isActive("strike"),
+        color: style.color ?? null,
+        backgroundColor: style.backgroundColor ?? null,
+        fontSize: style.fontSize ?? null,
+        heading: editor.isActive("heading", { level: 1 }) ? 1
+          : editor.isActive("heading", { level: 2 }) ? 2 : null,
+      },
+      from: editor.state.selection.from,
+      to: editor.state.selection.to,
+      sticky: false,
+    });
+    // The click took the focus off the editor: put it back so the next
+    // selection is made in the same document.
+    editor.commands.focus();
+  }, [editor, painter]);
+  // A double click arrives after the click that armed it: just make it sticky.
+  const makePainterSticky = useCallback(() => {
+    setPainter((current) => (current ? { ...current, sticky: true } : current));
+  }, []);
+  // Applying is replace semantics, as in a word processor: the marks the
+  // source didn't have come off the target too.
+  useEffect(() => {
+    if (!editor || !painter) return;
+    const apply = () => {
+      const { from, to, empty } = editor.state.selection;
+      // Still the selection it was armed with, or just a caret: keep waiting.
+      if (empty || (from === painter.from && to === painter.to)) return;
+      const { format } = painter;
+      let chain = editor.chain().focus();
+      const toggles: [name: string, on: boolean][] = [
+        ["bold", format.bold], ["italic", format.italic],
+        ["underline", format.underline], ["strike", format.strike],
+      ];
+      for (const [name, on] of toggles) chain = on ? chain.setMark(name) : chain.unsetMark(name);
+      const { color, backgroundColor, fontSize } = format;
+      if (color ?? backgroundColor ?? fontSize) {
+        // A null attribute clears just that one (how the extensions unsets work).
+        chain = chain.setMark("textStyle", { color, backgroundColor, fontSize }).removeEmptyTextStyle();
+      } else {
+        chain = chain.unsetMark("textStyle");
+      }
+      if (format.heading) chain = chain.setHeading({ level: format.heading });
+      chain.run();
+      if (!painter.sticky) setPainter(null);
+    };
+    editor.on("selectionUpdate", apply);
+    return () => { editor.off("selectionUpdate", apply); };
+  }, [editor, painter]);
+  useEffect(() => {
+    if (!painter) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setPainter(null); };
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); };
+  }, [painter]);
 
   // The toolbar is one Tab stop (roving tabindex): the button that had the
   // focus last keeps it, the arrows, Home and End move inside.
@@ -1435,6 +1529,16 @@ export function RichTextEditor({
 
         {place("history", <>
         <ToolbarSeparator />
+
+        <ToolbarButton
+          item="format-painter"
+          pressed={painter !== null}
+          onClick={armPainter}
+          onDoubleClick={makePainterSticky}
+          title={tToolbar("format_painter")}
+        >
+          <FormatPainter className="w-4 h-4" />
+        </ToolbarButton>
 
         <ToolbarButton
           item="clear-formatting"
