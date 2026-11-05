@@ -109,6 +109,33 @@
     "code_label": "验证码",
     "verify": "验证"
   },
+  "ux_p3_words": {
+    "appearance_description": "更改 {appName} 的外观。",
+    "text_size_app": "缩放应用中的所有文字。100% 为正常大小。",
+    "scrollbars_app": "使用系统自带的滚动条，更宽，也更容易拖动。",
+    "voice_app": "朗读邮件的语音。列表显示这台电脑上适用于界面语言的语音。",
+    "voice_default_app": "系统语音",
+    "visual_alerts_app": "收到新邮件或提醒时，窗口标题会缓慢闪烁，提醒会一直留在屏幕上，直到您关闭。",
+    "sounds_link_app": "通知声音和任务栏图标上的未读数，在“通知”页面设置。",
+    "writing_language_app": "您平时写作使用的语言。校对和拼写检查会使用它。",
+    "badge_all_app": "任务栏图标和托盘上的数字会合计所有已登录账户的收件箱。",
+    "badge_all_browser": "标签页和应用图标上的数字会合计所有已登录账户的收件箱。",
+    "dnd_title": "勿扰",
+    "pause_label": "暂停通知",
+    "pause_description": "新邮件不发出声音、不弹出窗口、不语音播报，直到您再次关闭此项。",
+    "dnd_link_app": "在“通知”页面暂停通知并设置免打扰时段。",
+    "dnd_link_browser": "在“通知”页面暂停通知。",
+    "backup_app": "将设置导出到文件，然后在其他设备上导入。",
+    "sync_app": "登录此账户的其他设备会获得相同的设置。",
+    "progress_attachments": "正在下载附件",
+    "progress_events": "正在下载日程",
+    "progress_contacts": "正在下载联系人",
+    "progress_files_list": "正在列出文件",
+    "progress_other": "正在下载",
+    "keep_description": "在此设备上加密保留你的邮件、日历、联系人以及你在“文件”中设为离线可用的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",
+    "filter_value_placeholder": "值",
+    "filter_values_hint": "要匹配多个值，请用逗号分隔。"
+  },
   "sidebar": {
     "close": "关闭",
     "compose": "撰写邮件",
@@ -926,6 +953,13 @@
     "restore_to": "移回 {folder}",
     "delete_forever": "永久删除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "移到收件箱",
+    "delete_forever_title": "要永久删除这封邮件吗？",
+    "delete_forever_batch_title": "{count, plural, one {要永久删除这封邮件吗？} other {要永久删除这 # 封邮件吗？}}",
+    "delete_forever_message": "删除后无法恢复。",
+    "delete_forever_batch_message": "{count, plural, one {删除后无法恢复。} other {删除后无法恢复。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "来自 {domain}，位于您的组织之外",
@@ -985,7 +1019,7 @@
     "cc": "抄送",
     "bcc": "密送",
     "subject": "主题",
-    "body_placeholder": "写邮件内容...",
+    "body_placeholder": "写邮件内容…",
     "send": "发送",
     "cancel": "取消",
     "attach": "附件",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "如果您的服务器不接受此地址作为信封发件人，将改用 {identity}，收件人可以在 Return-Path 标头中看到它。"
     },
-    "save_as_template": "保存为模板",
+    "save_as_template": "保存为模板…",
     "attach_from_device": "从此设备上传",
     "templates_menu": "模板",
-    "insert_template": "插入模板",
+    "insert_template": "插入模板…",
     "options": "选项",
     "option_plain_text": "纯文本",
     "option_plain_text_hint": "不带格式发送",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、所有账户共 {total})",
     "title_all_accounts_only": "{name} (所有账户共 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {未找到结果} other {找到 # 个会话}}",
+    "name_unread_sub": "{name}，{count} 封未读，子文件夹中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子文件夹中有 {sub} 封未读",
+    "sub_unread": "子文件夹中有 {sub} 封未读"
+  },
   "uxs_folders": {
     "manage_accounts": "管理账户…",
     "apply_to_existing": "{count, plural, other {应用于{folder}中的 # 封已有邮件}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“撰写邮件”。关闭后，“撰写邮件”会显示在账户切换器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "显示邮件",
@@ -5272,6 +5315,12 @@
     "declined_many": "您已拒绝此系列中的 {count} 次会议。",
     "answers_series": "您的回复适用于此系列的所有会议。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "至 {time}",
+    "week_all_days": "显示整周",
+    "week_days_short": "{count, plural, other {#天}}",
+    "print": "打印…"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",
@@ -5583,6 +5632,12 @@
     "import_to_mail_failed": "无法导入 {name}。",
     "import_contacts": "导入到联系人…",
     "add_to_calendar": "添加到日历…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "已编辑的文件",
+    "hide": "隐藏",
+    "discard_detail_file": "你对此副本的编辑将被删除。文件中的文件不会改变。",
+    "saved_auto": "{name} 已保存到文件。以后从其程序保存时会自动保存到那里。"
   },
   "smime": {
     "your_certificates": "您的证书",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "你的邮件服务器需要允许从这个网站登录。如果登录失败，请让管理邮件服务器的人允许。",
     "provider_unsupported": "{provider} 不支持 JMAP（Bulwark 与邮件服务器通信的方式），所以 Bulwark 暂时无法直接连接它。"
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "要更改 Bulwark 的连接方式吗？",
+      "message": "Bulwark 会重新启动并询问连接方式：使用你的电子邮件地址，或通过你所在组织的 Bulwark。此计算机上的账户会保持登录。",
+      "confirm": "更改",
+      "org_link": "改用我所在组织的 Bulwark",
+      "add_account": "添加账户…"
+    },
+    "picture": {
+      "button": "图片",
+      "title": "插入图片",
+      "address": "图片的网址",
+      "address_hint": "图片保留在网上，并从那里显示。",
+      "description": "说明",
+      "invalid": "请输入以 https:// 开头的网址。",
+      "insert": "插入"
+    },
+    "sign_in_page": {
+      "open_app": "打开 Bulwark",
+      "done_as": "已以 {address} 登录。你可以关闭此标签页。"
+    }
+  },
   "desktop_updates": {
     "title": "更新",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "照片",
     "merge_kept": "保留",
     "import_show": "显示"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {已选择 # 位联系人}}",
+    "selection_more": "以及另外 {count} 位",
+    "no_addresses": "所选联系人都没有电子邮件地址。",
+    "task_open": "打开",
+    "due_next_week": "下周",
+    "due_none": "无截止日期",
+    "due_pick": "选择日期…",
+    "move_to_list": "移到列表",
+    "dupes_legend": "{count, plural, other {# 位已在联系人中：}}",
+    "dupes_skip": "跳过",
+    "dupes_update": "更新现有联系人",
+    "dupes_updates": "更新联系人",
+    "upload_cancelled": "已取消上传",
+    "upload_cancelled_partial": "取消前已上传 {count, plural, other {# 个文件}}",
+    "download_cancelled": "已取消下载"
   },
   "desktopEdit": {
     "edit": "编辑",
@@ -7774,6 +7868,77 @@
     "state_offline": "离线",
     "state_error": "已停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "正在上传更改，然后关闭驱动器",
+      "title_sign_out": "正在上传更改，然后退出登录",
+      "title_stop_folder": "正在上传更改，然后停止同步文件夹",
+      "cannot_title": "部分更改现在无法上传",
+      "waiting": "待上传：{names}",
+      "progress": "已上传 {done}/{total}",
+      "cannot_offline": "无法连接服务器。尚未上传：{names}",
+      "cannot_other": "无法上传：{names}。原因见设置中的最近活动。",
+      "go_note_drive": "如果现在继续，未上传的内容会复制到 文档\\Bulwark – not uploaded，不会丢失。",
+      "go_note_folder": "如果现在继续，未上传的内容会留在此电脑上的文件夹中。",
+      "keep_turn_off": "保留驱动器",
+      "keep_sign_out": "保持登录",
+      "keep_stop_folder": "继续同步",
+      "go_turn_off": "立即关闭",
+      "go_sign_out": "立即退出登录",
+      "go_stop_folder": "立即停止同步"
+    },
+    "drive": {
+      "off_note": "关闭后，驱动器会从文件资源管理器中移除。你的文件仍在文件中。",
+      "rescued": "未上传的文件（{count}）现在位于 {folder}。",
+      "rescued_open": "打开文件夹",
+      "rescued_dismiss": "关闭",
+      "start_at_login": "登录 Windows 时启动 Bulwark",
+      "start_at_login_why": "和 OneDrive 一样，驱动器需要 Bulwark 在运行。",
+      "closed_warning": "Bulwark 关闭时，无法打开驱动器中的文件。",
+      "where": "在文件资源管理器中显示为 Bulwark Files",
+      "where_letter": "在文件资源管理器中显示为 Bulwark Files ({letter}:)",
+      "open": "打开",
+      "letter_note": "通过驱动器号访问时，文件资源管理器不显示同步状态和“始终保留在此设备上”。它们显示在文件资源管理器的 Bulwark Files 下。",
+      "letter_failed": "无法设置驱动器号。请重试。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 已是最新",
+      "syncing": "Bulwark Files: 正在同步。剩余：{count}",
+      "paused": "Bulwark Files: 已暂停",
+      "offline": "Bulwark Files: 离线。等待中：{count}",
+      "question": "Bulwark Files: 需要你的回答",
+      "error": "Bulwark Files: 错误"
+    },
+    "notify": {
+      "conflict_title": "一个文件在两处被更改",
+      "problem_title": "有文件无法同步"
+    },
+    "activity": {
+      "waiting_count": "等待服务器的更改：{count}",
+      "disk_name": "文件中的 {path} 在此电脑上名为 {detail}，因为其中一些字符在这里不允许使用",
+      "disk_case": "文件中的 {path} 在此电脑上名为 {detail}，因为这里已有一个仅大小写不同的名称",
+      "disk_group": "此电脑不允许的文件名称：{count}。它们在这里的名称略有不同。",
+      "show": "显示",
+      "hide": "隐藏"
+    },
+    "cant_sync": {
+      "title": "无法同步"
+    },
+    "folders": {
+      "stop": "停止同步…",
+      "pick_title_known": "要让 {name} 与文件中的哪个文件夹保持一致？",
+      "pick_confirm_known": "保持一致"
+    },
+    "pin": {
+      "keep": "始终保留在此设备上",
+      "free": "释放空间",
+      "failed": "操作未成功。请在文件资源管理器中重试。"
+    },
+    "account": {
+      "of": "{address} 的文件",
+      "choose": "文件："
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰写",
     "menu": "快速撰写",
@@ -7796,6 +7961,10 @@
     "missing": "“{name}”已不存在。",
     "too_large": "“{name}”超过 {max}，无法添加为附件。",
     "failed": "无法将“{name}”添加为附件。请重试。"
+  },
+  "composeRecentLimit": {
+    "too_large": "太大",
+    "too_large_hint": "超过服务器允许的大小（{max}）"
   },
   "compose_windows": {
     "more_formatting": "更多格式",
@@ -7863,6 +8032,17 @@
     "join_host": "加入 ({host})",
     "join_named": "加入: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "开发者工具",
+    "updates_label": "检查更新",
+    "search": {
+      "quick_compose": "快速撰写 随处新建邮件 全局快捷键",
+      "files_drive": "释放空间 OneDrive Dropbox 文件资源管理器 Finder 驱动器号 按需文件",
+      "offline_space": "释放空间 磁盘空间 存储空间",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指纹 人脸 通行密钥 passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "您的组织不允许在此设备上使用此服务器。",
     "plugin_refused": "您的组织不允许在此设备上使用此插件，因此它不会运行。其设置和数据会保留。",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "按 {keys} 查找任何命令"
   },
   "uxp3_desktop": {
-    "appearance_description": "更改应用的外观",
-    "badge_all_accounts_description": "任务栏图标和托盘上的数字会合计所有已登录账户的收件箱。",
     "web_address": "网址"
   },
   "selectionView": {

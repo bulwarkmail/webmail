@@ -10,6 +10,8 @@ import { ChevronRight, Keyboard } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { openKeyboardShortcuts } from '@/lib/app-commands';
 import { voicesForLocale } from '@/lib/read-aloud';
+import { wordingFor } from '@/lib/desktop/wording';
+import { percentLabel } from '@/lib/percent-label';
 import { useSpeechVoices } from '@/hooks/use-read-aloud';
 import {
   ACCESSIBILITY_KEYS,
@@ -34,7 +36,8 @@ import { FONT_SIZES as COMPOSE_FONT_SIZES } from '@/components/email/font-size';
 type SettingKey = Parameters<ReturnType<typeof useSettingsStore.getState>['updateSetting']>[0];
 
 /** What Reset gives back: the settings only this page has. */
-const RESET_KEYS: SettingKey[] = [...ACCESSIBILITY_KEYS, 'fontSize', 'plainTextFont', 'sendConfirmation'];
+// Do not disturb lives on Notifications now (settings-p3-6): this page's Reset leaves it.
+const RESET_KEYS: SettingKey[] = [...ACCESSIBILITY_KEYS.filter((key) => key !== 'doNotDisturb'), 'fontSize', 'plainTextFont', 'sendConfirmation'];
 
 /** Opens another settings page (and section) the way deep links do. */
 function goToSettings(tab: string, section?: string) {
@@ -60,6 +63,7 @@ export function AccessibilitySettings() {
   const t = useTranslations('settings.accessibility');
   const tRoot = useTranslations();
   const tLinks = useTranslations('uxs_structure.a11y_links');
+  const tWords = useTranslations('ux_p3_words');
   const settings = useSettingsStore();
   const { updateSetting, resetSettings } = settings;
   const { isSettingLocked, isSettingHidden, getRestriction, isFeatureEnabled } = usePolicyStore();
@@ -112,7 +116,7 @@ export function AccessibilitySettings() {
   // this browser doesn't have it (another device may).
   const localeVoices = voicesForLocale(speechVoices, locale);
   const readAloudVoiceOptions = [
-    { value: '', label: t('read_aloud_voice.default') },
+    { value: '', label: wordingFor({ app: tWords('voice_default_app'), browser: t('read_aloud_voice.default') }) },
     ...localeVoices.map((voice) => ({ value: voice.voiceURI, label: voice.name })),
     ...(settings.readAloudVoice && !localeVoices.some((voice) => voice.voiceURI === settings.readAloudVoice)
       ? [{ value: settings.readAloudVoice, label: speechVoices.find((voice) => voice.voiceURI === settings.readAloudVoice)?.name ?? settings.readAloudVoice }]
@@ -179,7 +183,7 @@ export function AccessibilitySettings() {
       </SettingsSection>
 
       <SettingsSection id="text" title={t('sections.text')}>
-        <SettingItem label={t('text_size.label')} description={t('text_size.description')}>
+        <SettingItem label={t('text_size.label')} description={wordingFor({ app: tWords('text_size_app'), browser: t('text_size.description') })}>
           <Select
             value={settings.fontSize}
             onChange={(value) => set('fontSize', value as FontSize)}
@@ -350,7 +354,7 @@ export function AccessibilitySettings() {
         <SettingItem label={t('row_action_button.label')} description={t('row_action_button.description')}>
           <ToggleSwitch checked={settings.showRowActionButton} onChange={(checked) => set('showRowActionButton', checked)} />
         </SettingItem>
-        <SettingItem label={t('native_scrollbars.label')} description={t('native_scrollbars.description')}>
+        <SettingItem label={t('native_scrollbars.label')} description={wordingFor({ app: tWords('scrollbars_app'), browser: t('native_scrollbars.description') })}>
           <ToggleSwitch checked={settings.nativeScrollbars} onChange={(checked) => set('nativeScrollbars', checked)} />
         </SettingItem>
         <SettingItem label={t('row_actions_link.label')} description={t('row_actions_link.description')}>
@@ -380,7 +384,7 @@ export function AccessibilitySettings() {
             onChange={(value) => set('mailTextScale', Number(value))}
             options={MAIL_TEXT_SCALES.map((scale) => ({
               value: String(scale),
-              label: scale === 0 ? t('mail_text_size.follow') : `${Math.round(scale * 100)} %`,
+              label: scale === 0 ? t('mail_text_size.follow') : percentLabel(scale, locale),
             }))}
           />
         </SettingItem>
@@ -415,7 +419,7 @@ export function AccessibilitySettings() {
             options={READ_ALOUD_RATES.map((rate) => ({ value: String(rate), label: `${rate}×` }))}
           />
         </SettingItem>
-        <SettingItem label={t('read_aloud_voice.label')} description={t('read_aloud_voice.description')}>
+        <SettingItem label={t('read_aloud_voice.label')} description={wordingFor({ app: tWords('voice_app'), browser: t('read_aloud_voice.description') })}>
           <Select
             value={settings.readAloudVoice}
             onChange={(value) => set('readAloudVoice', value)}
@@ -440,7 +444,8 @@ export function AccessibilitySettings() {
             onChange={(value) => set('composeFontSize', value)}
             options={[
               { value: '', label: t('compose_size.default') },
-              ...COMPOSE_FONT_SIZES.map((size) => ({ value: size, label: size })),
+              // "14 px", as the smallest-text list above writes it, not "14px".
+              ...COMPOSE_FONT_SIZES.map((size) => ({ value: size, label: t('mail_min_font_size.px', { size: parseInt(size, 10) }) })),
             ]}
           />
         </SettingItem>
@@ -480,7 +485,7 @@ export function AccessibilitySettings() {
       </SettingsSection>
 
       <SettingsSection id="alerts" title={t('sections.alerts')}>
-        <SettingItem label={t('visual_alerts.label')} description={t('visual_alerts.description')}>
+        <SettingItem label={t('visual_alerts.label')} description={wordingFor({ app: tWords('visual_alerts_app'), browser: t('visual_alerts.description') })}>
           <ToggleSwitch checked={settings.visualAlerts} onChange={(checked) => set('visualAlerts', checked)} />
         </SettingItem>
         <SettingItem label={t('unread_counts.label')} description={t('unread_counts.description')}>
@@ -494,10 +499,11 @@ export function AccessibilitySettings() {
             ]}
           />
         </SettingItem>
-        <SettingItem label={t('do_not_disturb.label')} description={t('do_not_disturb.description')}>
-          <ToggleSwitch checked={settings.doNotDisturb} onChange={(checked) => set('doNotDisturb', checked)} />
+        {/* The switch is on Notifications, next to quiet hours (settings-p3-6). */}
+        <SettingItem label={tWords('dnd_title')} description={wordingFor({ app: tWords('dnd_link_app'), browser: tWords('dnd_link_browser') })}>
+          <LinkButton label={tRoot('settings.tabs.notifications')} onClick={() => goToSettings('notifications', 'pause')} />
         </SettingItem>
-        <SettingItem label={tLinks('sounds.label')} description={tLinks('sounds.description')}>
+        <SettingItem label={tLinks('sounds.label')} description={wordingFor({ app: tWords('sounds_link_app'), browser: tLinks('sounds.description') })}>
           <LinkButton label={tRoot('settings.tabs.notifications')} onClick={() => goToSettings('notifications', 'sound')} />
         </SettingItem>
       </SettingsSection>

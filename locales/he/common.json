@@ -108,6 +108,33 @@
     "code_label": "קוד אימות",
     "verify": "אימות"
   },
+  "ux_p3_words": {
+    "appearance_description": "שינוי המראה של {appName}.",
+    "text_size_app": "משנה את הגודל של כל הטקסט באפליקציה. ‏100% הוא הגודל הרגיל.",
+    "scrollbars_app": "משתמש בפסי הגלילה של המערכת, שהם רחבים יותר וקל יותר לתפוס אותם.",
+    "voice_app": "הקול שמקריא הודעות. הרשימה מציגה את הקולות שיש במחשב הזה לשפת הממשק.",
+    "voice_default_app": "קול המערכת",
+    "visual_alerts_app": "מהבהב לאט בכותרת החלון כשמגיע דואר חדש או תזכורת, ומשאיר תזכורות על המסך עד שסוגרים אותן.",
+    "sounds_link_app": "צלילי ההתראות ומספר הלא נקראו על הסמל בשורת המשימות נקבעים בדף התראות.",
+    "writing_language_app": "השפה שבה כותבים בדרך כלל. ההגהה ובדיקת האיות משתמשות בה.",
+    "badge_all_app": "המספר על הסמל בשורת המשימות ובמגש המערכת מחבר את תיבות הדואר הנכנס של כל החשבונות המחוברים.",
+    "badge_all_browser": "המספר בכרטיסייה ובסמל האפליקציה מחבר את תיבות הדואר הנכנס של כל החשבונות המחוברים.",
+    "dnd_title": "לא להפריע",
+    "pause_label": "השהיית התראות",
+    "pause_description": "בלי צלילים, חלונות קופצים או הכרזות קוליות על דואר חדש, עד שמכבים את האפשרות שוב.",
+    "dnd_link_app": "השהיית ההתראות והגדרת שעות השקט נמצאות בדף התראות.",
+    "dnd_link_browser": "השהיית ההתראות נמצאת בדף התראות.",
+    "backup_app": "ייצוא ההגדרות לקובץ וייבוא שלהן במכשירים האחרים שלך.",
+    "sync_app": "מכשירים אחרים שמחוברים לחשבון הזה מקבלים את אותן הגדרות.",
+    "progress_attachments": "מוריד קבצים מצורפים",
+    "progress_events": "מוריד אירועים",
+    "progress_contacts": "מוריד אנשי קשר",
+    "progress_files_list": "מציג את רשימת הקבצים",
+    "progress_other": "מוריד",
+    "keep_description": "שומר את הדואר, היומן, אנשי הקשר והקבצים שאתם שומרים לשימוש לא מקוון בקבצים, מוצפנים במכשיר הזה. במצב לא מקוון אפשר לקרוא, לסמן ולהעביר דואר, ומה שכותבים ממתין בתיבת הדואר היוצא. התנתקות מוחקת הכול.",
+    "filter_value_placeholder": "ערך",
+    "filter_values_hint": "כדי להתאים לכמה ערכים, מפרידים ביניהם בפסיקים."
+  },
   "sidebar": {
     "unified_mailbox": "תיבת דואר מאוחדת",
     "close": "סגור",
@@ -870,6 +897,13 @@
     "restore_to": "החזרה אל {folder}",
     "delete_forever": "מחיקה לצמיתות"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "העברה לדואר הנכנס",
+    "delete_forever_title": "למחוק את ההודעה הזו לצמיתות?",
+    "delete_forever_batch_title": "{count, plural, one {למחוק את ההודעה הזו לצמיתות?} other {למחוק את # ההודעות האלה לצמיתות?}}",
+    "delete_forever_message": "לא תהיה דרך לשחזר אותה.",
+    "delete_forever_batch_message": "{count, plural, one {לא תהיה דרך לשחזר אותה.} other {לא תהיה דרך לשחזר אותן.}}"
+  },
   "external_mail": {
     "sender_label": "חיצוני",
     "sender_tooltip": "מ־{domain}, מחוץ לארגון שלך",
@@ -929,7 +963,7 @@
     "cc": "עותק",
     "bcc": "עותק מוסתר",
     "subject": "נושא",
-    "body_placeholder": "כתוב את הודעתך...",
+    "body_placeholder": "כתוב את הודעתך…",
     "send": "שלח",
     "cancel": "ביטול",
     "attach": "צרף",
@@ -965,10 +999,10 @@
       "to": "אל:{recipients}"
     },
     "remove_sub_address": "הסר כתובת משנה",
-    "save_as_template": "שמור כתבנית",
+    "save_as_template": "שמור כתבנית…",
     "attach_from_device": "העלאה מהמכשיר הזה",
     "templates_menu": "תבניות",
-    "insert_template": "הוספת תבנית",
+    "insert_template": "הוספת תבנית…",
     "options": "אפשרויות",
     "option_plain_text": "טקסט פשוט",
     "option_plain_text_hint": "שליחה ללא עיצוב",
@@ -3871,6 +3905,9 @@
     "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
     "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "מציג את מחליף החשבונות מעל התיקיות ואת כפתור הכתיבה מתחתיו. כבו את האפשרות כדי להציב את כפתור הכתיבה במקומו."
+  },
   "mail_p2_conv": {
     "show_message": "הצגת ההודעה",
     "back_to_reply": "חזרה לתשובה שלך"
@@ -5157,6 +5194,12 @@
     "declined_many": "דחית {count} פגישות בסדרה הזו.",
     "answers_series": "התשובה שלך חלה על כל הפגישות בסדרה."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "עד {time}",
+    "week_all_days": "הצגת השבוע כולו",
+    "week_days_short": "{count, plural, one {יום אחד} two {יומיים} other {# ימים}}",
+    "print": "הדפסה…"
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",
@@ -5469,6 +5512,12 @@
     "import_contacts": "ייבוא לאנשי הקשר…",
     "add_to_calendar": "הוספה ללוח השנה…"
   },
+  "ux_p3_pim_files": {
+    "offers_label": "קבצים שנערכו",
+    "hide": "הסתרה",
+    "discard_detail_file": "העריכות שלך בעותק הזה יימחקו. הקובץ ב'קבצים' לא משתנה.",
+    "saved_auto": "{name} נשמר ב'קבצים'. שמירות נוספות מהתוכנה שלו יגיעו לשם מעצמן."
+  },
   "smime": {
     "your_certificates": "התעודות שלך",
     "your_certificates_desc": "ייבא ונהל את אישורי ה-S/MIME שלך עבור חתימה והצפנה של הודעות דוא\"ל",
@@ -5712,6 +5761,12 @@
     "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה.",
     "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
     "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {לא נמצאו תוצאות} one {נמצאה שיחה אחת} two {נמצאו שתי שיחות} other {נמצאו # שיחות}}",
+    "name_unread_sub": "{name}, {count} שלא נקראו, עוד {sub} בתיקיות משנה",
+    "name_unread_only_sub": "{name}, {sub} שלא נקראו בתיקיות משנה",
+    "sub_unread": "{sub} שלא נקראו בתיקיות משנה"
   },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",
@@ -7506,6 +7561,28 @@
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "לשנות את אופן החיבור של Bulwark?",
+      "message": "Bulwark יופעל מחדש וישאל איך להתחבר: עם כתובת הדוא״ל שלך או דרך ה-Bulwark של הארגון שלך. החשבונות שלך במחשב הזה יישארו מחוברים.",
+      "confirm": "שינוי",
+      "org_link": "להשתמש ב-Bulwark של הארגון שלי במקום",
+      "add_account": "הוספת חשבון…"
+    },
+    "picture": {
+      "button": "תמונה",
+      "title": "הוספת תמונה",
+      "address": "כתובת האינטרנט של התמונה",
+      "address_hint": "התמונה נשארת ברשת ומוצגת משם.",
+      "description": "תיאור",
+      "invalid": "יש להזין כתובת אינטרנט שמתחילה ב-https://.",
+      "insert": "הוספה"
+    },
+    "sign_in_page": {
+      "open_app": "פתיחת Bulwark",
+      "done_as": "התחברת בתור {address}. אפשר לסגור את הכרטיסייה הזו."
+    }
+  },
   "desktop_updates": {
     "title": "עדכונים",
     "version_label": "Bulwark {version}",
@@ -7610,6 +7687,23 @@
     "merge_photo": "תמונה",
     "merge_kept": "נשמר",
     "import_show": "הצגה"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {איש קשר אחד נבחר} other {# אנשי קשר נבחרו}}",
+    "selection_more": "ועוד {count}",
+    "no_addresses": "לאף אחד מאנשי הקשר שנבחרו אין כתובת דוא״ל.",
+    "task_open": "פתיחה",
+    "due_next_week": "בשבוע הבא",
+    "due_none": "ללא תאריך יעד",
+    "due_pick": "בחירת תאריך…",
+    "move_to_list": "העברה לרשימה",
+    "dupes_legend": "{count, plural, one {אחד כבר נמצא באנשי הקשר:} other {# כבר נמצאים באנשי הקשר:}}",
+    "dupes_skip": "לדלג עליהם",
+    "dupes_update": "לעדכן את אנשי הקשר הקיימים",
+    "dupes_updates": "מעדכן את איש הקשר",
+    "upload_cancelled": "ההעלאה בוטלה",
+    "upload_cancelled_partial": "{count, plural, one {קובץ אחד הועלה} two {שני קבצים הועלו} other {# קבצים הועלו}} לפני הביטול",
+    "download_cancelled": "ההורדה בוטלה"
   },
   "desktopEdit": {
     "edit": "עריכה",
@@ -7775,6 +7869,77 @@
     "state_offline": "לא מקוון",
     "state_error": "נעצר"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "מעלה שינויים לפני כיבוי הכונן",
+      "title_sign_out": "מעלה שינויים לפני היציאה מהחשבון",
+      "title_stop_folder": "מעלה שינויים לפני הפסקת הסנכרון של התיקייה",
+      "cannot_title": "לא ניתן להעלות כרגע חלק מהשינויים",
+      "waiting": "נותר להעלות: {names}",
+      "progress": "הועלו {done} מתוך {total}",
+      "cannot_offline": "אין חיבור לשרת. עדיין לא הועלו: {names}",
+      "cannot_other": "לא ניתן להעלות: {names}. הסיבה מופיעה בפעילות האחרונה בהגדרות.",
+      "go_note_drive": "אם ממשיכים עכשיו, מה שלא הועלה מועתק אל מסמכים\\Bulwark – not uploaded. שום דבר לא הולך לאיבוד.",
+      "go_note_folder": "אם ממשיכים עכשיו, מה שלא הועלה נשאר בתיקייה במחשב הזה.",
+      "keep_turn_off": "להשאיר את הכונן",
+      "keep_sign_out": "להישאר מחובר",
+      "keep_stop_folder": "להמשיך לסנכרן",
+      "go_turn_off": "לכבות עכשיו",
+      "go_sign_out": "לצאת עכשיו",
+      "go_stop_folder": "להפסיק לסנכרן עכשיו"
+    },
+    "drive": {
+      "off_note": "כיבוי מסיר את הכונן מסייר הקבצים. הקבצים שלך נשארים בקבצים.",
+      "rescued": "קבצים שלא הועלו ({count}) נמצאים עכשיו ב-{folder}.",
+      "rescued_open": "פתיחת התיקייה",
+      "rescued_dismiss": "סגירה",
+      "start_at_login": "להפעיל את Bulwark בכניסה ל-Windows",
+      "start_at_login_why": "הכונן צריך ש-Bulwark יפעל, כמו OneDrive.",
+      "closed_warning": "קבצים בכונן לא נפתחים כש-Bulwark סגור.",
+      "where": "בסייר הקבצים בשם Bulwark Files",
+      "where_letter": "בסייר הקבצים בשם Bulwark Files ({letter}:)",
+      "open": "פתיחה",
+      "letter_note": "דרך אות הכונן סייר הקבצים לא מציג מצב סנכרון ולא „שמור תמיד במכשיר זה”. הם מופיעים תחת Bulwark Files בסייר.",
+      "letter_failed": "לא ניתן היה להגדיר את אות הכונן. כדאי לנסות שוב."
+    },
+    "tray": {
+      "idle": "Bulwark Files: מעודכן",
+      "syncing": "Bulwark Files: מסנכרן. נותרו: {count}",
+      "paused": "Bulwark Files: מושהה",
+      "offline": "Bulwark Files: לא מחובר. ממתינים: {count}",
+      "question": "Bulwark Files: ממתין לתשובה שלך",
+      "error": "Bulwark Files: שגיאה"
+    },
+    "notify": {
+      "conflict_title": "קובץ השתנה בשני מקומות",
+      "problem_title": "לא ניתן לסנכרן קובץ"
+    },
+    "activity": {
+      "waiting_count": "שינויים שממתינים לשרת: {count}",
+      "disk_name": "{path} בקבצים נקרא במחשב הזה {detail}, כי חלק מהתווים בו אסורים כאן",
+      "disk_case": "{path} בקבצים נקרא במחשב הזה {detail}, כי כבר יש כאן שם שנבדל רק באותיות גדולות וקטנות",
+      "disk_group": "שמות בקבצים שהמחשב הזה לא מתיר: {count}. כאן יש להם שמות קצת שונים.",
+      "show": "הצגה",
+      "hide": "הסתרה"
+    },
+    "cant_sync": {
+      "title": "לא ניתן לסנכרן"
+    },
+    "folders": {
+      "stop": "הפסקת הסנכרון…",
+      "pick_title_known": "עם איזו תיקייה בקבצים לשמור על {name} זהה?",
+      "pick_confirm_known": "לשמור זהות"
+    },
+    "pin": {
+      "keep": "שמור תמיד במכשיר זה",
+      "free": "פנה מקום",
+      "failed": "זה לא הצליח. כדאי לנסות שוב בסייר הקבצים."
+    },
+    "account": {
+      "of": "הקבצים של {address}",
+      "choose": "הקבצים של"
+    }
+  },
   "desktopQuickCompose": {
     "label": "כתיבה מהירה",
     "menu": "כתיבה מהירה",
@@ -7797,6 +7962,10 @@
     "missing": "\"{name}\" כבר לא קיים.",
     "too_large": "\"{name}\" גדול מ־{max} ולא ניתן לצרף אותו.",
     "failed": "לא ניתן היה לצרף את \"{name}\". נסו שוב."
+  },
+  "composeRecentLimit": {
+    "too_large": "גדול מדי",
+    "too_large_hint": "גדול ממה שהשרת מקבל ({max})"
   },
   "compose_windows": {
     "more_formatting": "עוד עיצוב",
@@ -7864,6 +8033,17 @@
     "join_host": "הצטרפות ({host})",
     "join_named": "הצטרפות: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "כלי מפתחים",
+    "updates_label": "בדיקת עדכונים",
+    "search": {
+      "quick_compose": "כתיבה מהירה הודעה חדשה מכל מקום קיצור מקשים כללי",
+      "files_drive": "פינוי מקום OneDrive Dropbox סייר הקבצים Finder אות כונן קבצים לפי דרישה",
+      "offline_space": "פינוי מקום שטח דיסק אחסון",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID טביעת אצבע פנים מפתח גישה passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "הארגון שלך לא מאפשר את השרת הזה במכשיר הזה.",
     "plugin_refused": "הארגון שלך לא מאפשר את התוסף הזה במכשיר הזה, ולכן הוא לא פועל. ההגדרות והנתונים שלו נשמרים.",
@@ -7905,8 +8085,6 @@
     "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
   },
   "uxp3_desktop": {
-    "appearance_description": "שינוי המראה של האפליקציה",
-    "badge_all_accounts_description": "המספר על הסמל בשורת המשימות ובמגש המערכת מחבר את תיבות הדואר הנכנס של כל החשבונות המחוברים.",
     "web_address": "כתובת אינטרנט"
   },
   "selectionView": {

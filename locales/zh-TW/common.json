@@ -109,6 +109,33 @@
     "code_label": "驗證碼",
     "verify": "驗證"
   },
+  "ux_p3_words": {
+    "appearance_description": "變更 {appName} 的外觀。",
+    "text_size_app": "縮放應用程式中的所有文字。100% 為正常大小。",
+    "scrollbars_app": "使用系統內建的捲軸，較寬，也較容易拖曳。",
+    "voice_app": "朗讀郵件的語音。清單會顯示這台電腦上適用於介面語言的語音。",
+    "voice_default_app": "系統語音",
+    "visual_alerts_app": "收到新郵件或提醒時，視窗標題會緩慢閃爍，提醒會一直留在畫面上，直到您關閉。",
+    "sounds_link_app": "通知音效和工作列圖示上的未讀數，在「通知」頁面設定。",
+    "writing_language_app": "您平常寫作使用的語言。校對和拼字檢查會使用它。",
+    "badge_all_app": "工作列圖示和系統匣上的數字會合計所有已登入帳號的收件匣。",
+    "badge_all_browser": "分頁和應用程式圖示上的數字會合計所有已登入帳號的收件匣。",
+    "dnd_title": "勿擾",
+    "pause_label": "暫停通知",
+    "pause_description": "新郵件不發出聲音、不跳出視窗、不語音播報，直到您再次關閉此項。",
+    "dnd_link_app": "在「通知」頁面暫停通知並設定勿擾時段。",
+    "dnd_link_browser": "在「通知」頁面暫停通知。",
+    "backup_app": "將設定匯出成檔案，再在其他裝置上匯入。",
+    "sync_app": "登入此帳號的其他裝置會取得相同的設定。",
+    "progress_attachments": "正在下載附件",
+    "progress_events": "正在下載活動",
+    "progress_contacts": "正在下載聯絡人",
+    "progress_files_list": "正在列出檔案",
+    "progress_other": "正在下載",
+    "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人，以及你在「檔案」中設為離線可用的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",
+    "filter_value_placeholder": "值",
+    "filter_values_hint": "若要比對多個值，請以逗號分隔。"
+  },
   "sidebar": {
     "close": "關閉",
     "compose": "撰寫郵件",
@@ -926,6 +953,13 @@
     "restore_to": "移回 {folder}",
     "delete_forever": "永久刪除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "移到收件匣",
+    "delete_forever_title": "要永久刪除這封郵件嗎？",
+    "delete_forever_batch_title": "{count, plural, one {要永久刪除這封郵件嗎？} other {要永久刪除這 # 封郵件嗎？}}",
+    "delete_forever_message": "刪除後無法復原。",
+    "delete_forever_batch_message": "{count, plural, one {刪除後無法復原。} other {刪除後無法復原。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "來自 {domain}，位於您的組織之外",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "如果您的伺服器不接受此地址作為信封寄件者，將改用 {identity}，收件者可以在 Return-Path 標頭中看到它。"
     },
-    "save_as_template": "儲存為範本",
+    "save_as_template": "儲存為範本…",
     "attach_from_device": "從此裝置上傳",
     "templates_menu": "範本",
-    "insert_template": "插入範本",
+    "insert_template": "插入範本…",
     "options": "選項",
     "option_plain_text": "純文字",
     "option_plain_text_hint": "不帶格式傳送",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、所有帳號共 {total})",
     "title_all_accounts_only": "{name} (所有帳號共 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {找不到結果} other {找到 # 個對話串}}",
+    "name_unread_sub": "{name}，{count} 封未讀，子資料夾中另有 {sub} 封",
+    "name_unread_only_sub": "{name}，子資料夾中有 {sub} 封未讀",
+    "sub_unread": "子資料夾中有 {sub} 封未讀"
+  },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",
     "apply_to_existing": "{count, plural, other {套用到{folder}中的 # 封既有郵件}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {顯示 # 封較早的郵件}}",
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「撰寫郵件」。關閉後，「撰寫郵件」會顯示在帳號切換器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "顯示郵件",
@@ -5272,6 +5315,12 @@
     "declined_many": "您已拒絕此系列中的 {count} 場會議。",
     "answers_series": "您的回覆適用於此系列的所有會議。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "至 {time}",
+    "week_all_days": "顯示整週",
+    "week_days_short": "{count, plural, other {#天}}",
+    "print": "列印…"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "無法匯入 {name}。",
     "import_contacts": "匯入到聯絡人…",
     "add_to_calendar": "加入行事曆…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "已編輯的檔案",
+    "hide": "隱藏",
+    "discard_detail_file": "你對此副本的編輯將被刪除。檔案中的檔案不會改變。",
+    "saved_auto": "{name} 已儲存到檔案。之後從其程式儲存時會自動存到那裡。"
   },
   "smime": {
     "your_certificates": "您的憑證",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "要變更 Bulwark 的連線方式嗎？",
+      "message": "Bulwark 會重新啟動並詢問連線方式：使用你的電子郵件地址，或透過你所屬組織的 Bulwark。這台電腦上的帳戶會保持登入。",
+      "confirm": "變更",
+      "org_link": "改用我所屬組織的 Bulwark",
+      "add_account": "新增帳戶…"
+    },
+    "picture": {
+      "button": "圖片",
+      "title": "插入圖片",
+      "address": "圖片的網址",
+      "address_hint": "圖片會留在網路上，並從那裡顯示。",
+      "description": "說明",
+      "invalid": "請輸入以 https:// 開頭的網址。",
+      "insert": "插入"
+    },
+    "sign_in_page": {
+      "open_app": "開啟 Bulwark",
+      "done_as": "已以 {address} 登入。你可以關閉此分頁。"
+    }
+  },
   "desktop_updates": {
     "title": "更新",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "相片",
     "merge_kept": "保留",
     "import_show": "顯示"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {已選取 # 位聯絡人}}",
+    "selection_more": "以及另外 {count} 位",
+    "no_addresses": "所選聯絡人都沒有電子郵件地址。",
+    "task_open": "開啟",
+    "due_next_week": "下週",
+    "due_none": "無截止日期",
+    "due_pick": "選擇日期…",
+    "move_to_list": "移到清單",
+    "dupes_legend": "{count, plural, other {# 位已在聯絡人中：}}",
+    "dupes_skip": "略過",
+    "dupes_update": "更新現有聯絡人",
+    "dupes_updates": "更新聯絡人",
+    "upload_cancelled": "已取消上傳",
+    "upload_cancelled_partial": "取消前已上傳 {count, plural, other {# 個檔案}}",
+    "download_cancelled": "已取消下載"
   },
   "desktopEdit": {
     "edit": "編輯",
@@ -7774,6 +7868,77 @@
     "state_offline": "離線",
     "state_error": "已停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "正在上傳變更，然後關閉磁碟機",
+      "title_sign_out": "正在上傳變更，然後登出",
+      "title_stop_folder": "正在上傳變更，然後停止同步資料夾",
+      "cannot_title": "部分變更現在無法上傳",
+      "waiting": "待上傳：{names}",
+      "progress": "已上傳 {done}/{total}",
+      "cannot_offline": "無法連線到伺服器。尚未上傳：{names}",
+      "cannot_other": "無法上傳：{names}。原因請見設定中的最近活動。",
+      "go_note_drive": "如果現在繼續，未上傳的內容會複製到 文件\\Bulwark – not uploaded，不會遺失。",
+      "go_note_folder": "如果現在繼續，未上傳的內容會留在這部電腦上的資料夾中。",
+      "keep_turn_off": "保留磁碟機",
+      "keep_sign_out": "保持登入",
+      "keep_stop_folder": "繼續同步",
+      "go_turn_off": "立即關閉",
+      "go_sign_out": "立即登出",
+      "go_stop_folder": "立即停止同步"
+    },
+    "drive": {
+      "off_note": "關閉後，磁碟機會從檔案總管中移除。你的檔案仍在檔案中。",
+      "rescued": "未上傳的檔案（{count}）現在位於 {folder}。",
+      "rescued_open": "開啟資料夾",
+      "rescued_dismiss": "關閉",
+      "start_at_login": "登入 Windows 時啟動 Bulwark",
+      "start_at_login_why": "和 OneDrive 一樣，磁碟機需要 Bulwark 在執行。",
+      "closed_warning": "Bulwark 關閉時，無法開啟磁碟機中的檔案。",
+      "where": "在檔案總管中顯示為 Bulwark Files",
+      "where_letter": "在檔案總管中顯示為 Bulwark Files ({letter}:)",
+      "open": "開啟",
+      "letter_note": "透過磁碟機代號存取時，檔案總管不會顯示同步狀態和「永遠保留在此裝置上」。它們會顯示在檔案總管的 Bulwark Files 下。",
+      "letter_failed": "無法設定磁碟機代號。請再試一次。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 已是最新",
+      "syncing": "Bulwark Files: 正在同步。剩餘：{count}",
+      "paused": "Bulwark Files: 已暫停",
+      "offline": "Bulwark Files: 離線。等待中：{count}",
+      "question": "Bulwark Files: 需要你的回答",
+      "error": "Bulwark Files: 錯誤"
+    },
+    "notify": {
+      "conflict_title": "一個檔案在兩處被變更",
+      "problem_title": "有檔案無法同步"
+    },
+    "activity": {
+      "waiting_count": "等待伺服器的變更：{count}",
+      "disk_name": "檔案中的 {path} 在這部電腦上名為 {detail}，因為其中一些字元在這裡不允許使用",
+      "disk_case": "檔案中的 {path} 在這部電腦上名為 {detail}，因為這裡已有一個僅大小寫不同的名稱",
+      "disk_group": "這部電腦不允許的檔案名稱：{count}。它們在這裡的名稱略有不同。",
+      "show": "顯示",
+      "hide": "隱藏"
+    },
+    "cant_sync": {
+      "title": "無法同步"
+    },
+    "folders": {
+      "stop": "停止同步…",
+      "pick_title_known": "要讓 {name} 與檔案中的哪個資料夾保持一致？",
+      "pick_confirm_known": "保持一致"
+    },
+    "pin": {
+      "keep": "永遠保留在此裝置上",
+      "free": "釋放空間",
+      "failed": "操作未成功。請在檔案總管中再試一次。"
+    },
+    "account": {
+      "of": "{address} 的檔案",
+      "choose": "檔案："
+    }
+  },
   "desktopQuickCompose": {
     "label": "快速撰寫",
     "menu": "快速撰寫",
@@ -7796,6 +7961,10 @@
     "missing": "「{name}」已不存在。",
     "too_large": "「{name}」超過 {max}，無法附加。",
     "failed": "無法附加「{name}」。請再試一次。"
+  },
+  "composeRecentLimit": {
+    "too_large": "太大",
+    "too_large_hint": "超過伺服器允許的大小（{max}）"
   },
   "compose_windows": {
     "more_formatting": "更多格式",
@@ -7863,6 +8032,17 @@
     "join_host": "加入 ({host})",
     "join_named": "加入: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "開發人員工具",
+    "updates_label": "檢查更新",
+    "search": {
+      "quick_compose": "快速撰寫 隨處新增郵件 全域快速鍵",
+      "files_drive": "釋放空間 OneDrive Dropbox 檔案總管 Finder 磁碟機代號 隨選檔案",
+      "offline_space": "釋放空間 磁碟空間 儲存空間",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指紋 臉部 密碼金鑰 passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "您的組織不允許在此裝置上使用此伺服器。",
     "plugin_refused": "您的組織不允許在此裝置上使用此外掛程式，因此不會執行。其設定和資料會保留。",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "按 {keys} 尋找任何指令"
   },
   "uxp3_desktop": {
-    "appearance_description": "變更應用程式的外觀",
-    "badge_all_accounts_description": "工作列圖示和系統匣上的數字會合計所有已登入帳號的收件匣。",
     "web_address": "網址"
   },
   "selectionView": {

@@ -3,7 +3,7 @@
 import { MoveButtons } from "@/components/ui/move-buttons";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { SettingsSection, ToggleSwitch } from "./settings-section";
+import { SettingsSection, ToggleSwitch, useAdvancedVisibility } from "./settings-section";
 import { Button } from "@/components/ui/button";
 import { TermInfo } from "@/components/ui/term";
 import { IconButton } from "@/components/ui/icon-button";
@@ -215,8 +215,8 @@ export function FilterSettings() {
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
   // The raw script editor is for people who asked for the advanced settings,
-  // unless the script is one only it can edit.
-  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
+  // unless the script is one only it can edit. A search result shows it once.
+  const rawEditor = useAdvancedVisibility(true);
   const { client } = useAuthStore();
   const storeMailboxes = useEmailStore((s) => s.mailboxes);
   const fetchMailboxes = useEmailStore((s) => s.fetchMailboxes);
@@ -787,11 +787,12 @@ export function FilterSettings() {
               {t("add_rule")}
             </Button>
           )}
-          {(showAdvanced || isOpaque) && (
+          {(rawEditor.visible || isOpaque) && (
             <>
               <Button
                 variant="outline"
                 size="sm"
+                {...rawEditor.marker}
                 data-search-label={t("raw_editor")}
                 onClick={() => setShowSieveEditor(true)}
               >

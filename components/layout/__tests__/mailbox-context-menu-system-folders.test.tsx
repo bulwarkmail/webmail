@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
@@ -72,5 +72,33 @@ describe('folder menu of Trash and Spam', () => {
     expect(items).toContain('rename');
     expect(items[items.length - 1]).toBe('delete_folder');
     for (const gone of ['empty_folder', 'empty_folder_generic', 'empty_trash', 'empty_spam']) expect(items).not.toContain(gone);
+  });
+});
+
+// mail-p3-12: Sent offered Rules and Mute notifications, though nothing
+// arrives there; Trash and Spam offered New subfolder… and Import mail….
+describe('folder menus offer only what applies', () => {
+  it('Sent and Drafts: no rules, no mute', () => {
+    for (const role of ['sent', 'drafts']) {
+      const items = labels(box(role, role));
+      expect(items).not.toContain('rules');
+      expect(items).not.toContain('mute_notifications');
+      expect(items).toContain('new_subfolder');
+      cleanup();
+    }
+  });
+
+  it('Trash and Spam: no New subfolder, no Import', () => {
+    for (const role of ['trash', 'junk']) {
+      const items = labels(box(role, role));
+      expect(items).not.toContain('new_subfolder');
+      expect(items).not.toContain('menu_import');
+      cleanup();
+    }
+  });
+
+  it('a folder of your own keeps all of them', () => {
+    const items = labels(box('family', null));
+    for (const kept of ['new_subfolder', 'menu_import', 'rules', 'mute_notifications']) expect(items).toContain(kept);
   });
 });

@@ -19,6 +19,7 @@ export function TimeZonePicker({
   label,
   className = 'w-64 max-w-full',
   defaultOpen,
+  fullWidthMenu = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -28,6 +29,8 @@ export function TimeZonePicker({
   label?: string;
   className?: string;
   defaultOpen?: boolean;
+  /** The list as wide as the field and under its start, for a field that fills its row (pim-p3-14). */
+  fullWidthMenu?: boolean;
 }) {
   const t = useTranslations('settings.language_region');
   const tz = useTranslations('uxs_general');
@@ -73,7 +76,7 @@ export function TimeZonePicker({
     <SearchableSelect
       className={className}
       defaultOpen={defaultOpen}
-      menuClassName="w-72"
+      menuClassName={fullWidthMenu ? "start-0 w-auto max-w-none" : "w-72"}
       value={value}
       options={options}
       onSelect={onChange}

@@ -25,13 +25,13 @@ function contactFields(contact: ContactCard): string[] {
   return fields;
 }
 
-function bookName(contact: ContactCard, books: AddressBook[]): string {
+function bookOf(contact: ContactCard, books: AddressBook[]): AddressBook | undefined {
   const ids = Object.keys(contact.addressBookIds ?? {});
   for (const id of ids) {
     const book = books.find((b) => b.id === id || b.originalId === id);
-    if (book?.name) return book.name;
+    if (book?.name) return book;
   }
-  return '';
+  return undefined;
 }
 
 function toHit(
@@ -43,7 +43,8 @@ function toHit(
 ): ContactHit {
   const title = getContactDisplayName(contact) || getContactPrimaryEmail(contact) || contact.originalId || contact.id;
   const email = getContactPrimaryEmail(contact);
-  const book = bookName(contact, books);
+  const book = bookOf(contact, books);
+  const shownEmail = email && email !== title ? email : '';
   return {
     kind: 'contacts',
     serverUrl: account.serverUrl,
@@ -52,7 +53,8 @@ function toHit(
     id: contact.originalId ?? contact.id,
     accountLabel: account.label,
     title,
-    subtitle: [book, email && email !== title ? email : ''].filter(Boolean).join(' · '),
+    subtitle: [book?.name ?? '', shownEmail].filter(Boolean).join(' · '),
+    ...(book ? { collection: { kind: 'addressBook' as const, name: book.name, isShared: book.isShared, rest: shownEmail } } : {}),
     date: contact.updated ?? null,
     source,
     contact,

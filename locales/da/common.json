@@ -109,6 +109,33 @@
     "code_label": "Godkendelseskode",
     "verify": "Bekræft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Skift udseendet af {appName}.",
+    "text_size_app": "Skalerer al tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruger systemets egne rullepaneler, som er bredere og lettere at gribe fat i.",
+    "voice_app": "Stemmen, der læser beskeder højt. Listen viser de stemmer, denne computer har til sproget i brugerfladen.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vinduets titel til at blinke langsomt, når der kommer ny mail eller en påmindelse, og holder påmindelser på skærmen, indtil du lukker dem.",
+    "sounds_link_app": "Notifikationslyde og antallet af ulæste på ikonet på proceslinjen indstilles på siden Notifikationer.",
+    "writing_language_app": "Det sprog, du normalt skriver på. Korrektur og stavekontrol bruger det.",
+    "badge_all_app": "Tallet på ikonet på proceslinjen og i meddelelsesområdet lægger indbakkerne for alle loggede-ind konti sammen.",
+    "badge_all_browser": "Tallet på fanen og appikonet lægger indbakkerne for alle loggede-ind konti sammen.",
+    "dnd_title": "Forstyr ikke",
+    "pause_label": "Sæt notifikationer på pause",
+    "pause_description": "Ingen lyde, pop op-vinduer eller oplæste beskeder om nye mails, indtil du slår det fra igen.",
+    "dnd_link_app": "Sæt notifikationer på pause, og indstil stille timer på siden Notifikationer.",
+    "dnd_link_browser": "Sæt notifikationer på pause på siden Notifikationer.",
+    "backup_app": "Eksportér dine indstillinger til en fil, og importér dem på dine andre enheder.",
+    "sync_app": "Andre enheder, der er logget ind på denne konto, får de samme indstillinger.",
+    "progress_attachments": "Henter vedhæftede filer",
+    "progress_events": "Henter begivenheder",
+    "progress_contacts": "Henter kontakter",
+    "progress_files_list": "Viser filer",
+    "progress_other": "Henter",
+    "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du holder offline i Filer, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
+    "filter_value_placeholder": "Værdi",
+    "filter_values_hint": "Adskil flere værdier med kommaer."
+  },
   "sidebar": {
     "close": "Luk",
     "compose": "Ny besked",
@@ -926,6 +953,13 @@
     "restore_to": "Flyt tilbage til {folder}",
     "delete_forever": "Slet permanent"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flyt til Indbakke",
+    "delete_forever_title": "Slet denne besked permanent?",
+    "delete_forever_batch_title": "{count, plural, one {Slet denne besked permanent?} other {Slet disse # beskeder permanent?}}",
+    "delete_forever_message": "Du kan ikke få den tilbage.",
+    "delete_forever_batch_message": "{count, plural, one {Du kan ikke få den tilbage.} other {Du kan ikke få dem tilbage.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, uden for din organisation",
@@ -982,10 +1016,10 @@
     "forward_message": "Videresend",
     "from": "Fra",
     "to": "Til",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Emne",
-    "body_placeholder": "Skriv din besked...",
+    "body_placeholder": "Skriv din besked…",
     "send": "Send",
     "cancel": "Annuller",
     "attach": "Vedhæft",
@@ -1041,10 +1075,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis din server ikke accepterer denne adresse som konvolutafsender, bruges {identity} i stedet, og modtagerne kan se den i Return-Path-headeren."
     },
-    "save_as_template": "Gem som skabelon",
+    "save_as_template": "Gem som skabelon…",
     "attach_from_device": "Upload fra denne enhed",
     "templates_menu": "Skabeloner",
-    "insert_template": "Indsæt skabelon",
+    "insert_template": "Indsæt skabelon…",
     "options": "Indstillinger",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uden formatering",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} i alle konti)",
     "title_all_accounts_only": "{name} ({total} i alle konti)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ingen resultater fundet} one {# samtale fundet} other {# samtaler fundet}}",
+    "name_unread_sub": "{name}, {count} ulæste, {sub} mere i undermapper",
+    "name_unread_only_sub": "{name}, {sub} ulæste i undermapper",
+    "sub_unread": "{sub} ulæste i undermapper"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer konti…",
     "apply_to_existing": "{count, plural, one {Anvend på # eksisterende besked i {folder}} other {Anvend på # eksisterende beskeder i {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Vis # ældre besked} other {Vis # ældre beskeder}}",
     "return_to_list_follows_layout": "Indtil du ændrer det, følger det layoutet: fra, når listen og beskeden står side om side, ellers til."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontoskifteren over mapperne med Ny besked under den. Slå det fra for at sætte Ny besked i stedet for den."
   },
   "mail_p2_conv": {
     "show_message": "Vis beskeden",
@@ -5272,6 +5315,12 @@
     "declined_many": "Du afslog {count} møder i denne serie.",
     "answers_series": "Dit svar gælder alle møder i serien."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele ugen",
+    "week_days_short": "{count, plural, one {# dag} other {# dage}}",
+    "print": "Udskriv…"
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "{name} kunne ikke importeres.",
     "import_contacts": "Importér til kontakter…",
     "add_to_calendar": "Føj til kalender…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerede filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Dine ændringer i denne kopi slettes. Filen i Filer ændres ikke.",
+    "saved_auto": "{name} er gemt i Filer. Senere gemninger fra programmet havner der af sig selv."
   },
   "smime": {
     "your_certificates": "Dine certifikater",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "Din mailserver skal tillade login fra dette websted. Hvis login mislykkes, så bed den, der driver din mailserver, om at tillade det.",
     "provider_unsupported": "{provider} tilbyder ikke JMAP, den måde Bulwark taler med mailservere på, så Bulwark kan endnu ikke forbinde direkte til det."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Vil du ændre, hvordan Bulwark forbinder?",
+      "message": "Bulwark genstarter og spørger, hvordan der skal forbindes: med din e-mailadresse eller via din organisations Bulwark. Dine konti på denne computer forbliver logget ind.",
+      "confirm": "Skift",
+      "org_link": "Brug min organisations Bulwark i stedet",
+      "add_account": "Tilføj konto…"
+    },
+    "picture": {
+      "button": "Billede",
+      "title": "Indsæt billede",
+      "address": "Billedets webadresse",
+      "address_hint": "Billedet bliver på nettet og vises derfra.",
+      "description": "Beskrivelse",
+      "invalid": "Indtast en webadresse, der begynder med https://.",
+      "insert": "Indsæt"
+    },
+    "sign_in_page": {
+      "open_app": "Åbn Bulwark",
+      "done_as": "Logget ind som {address}. Du kan lukke denne fane."
+    }
+  },
   "desktop_updates": {
     "title": "Opdateringer",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Beholdes",
     "import_show": "Vis"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} mere",
+    "no_addresses": "Ingen af de valgte kontakter har en e-mailadresse.",
+    "task_open": "Åbn",
+    "due_next_week": "Næste uge",
+    "due_none": "Ingen forfaldsdato",
+    "due_pick": "Vælg en dato…",
+    "move_to_list": "Flyt til liste",
+    "dupes_legend": "{count, plural, one {1 findes allerede i Kontakter:} other {# findes allerede i Kontakter:}}",
+    "dupes_skip": "Spring dem over",
+    "dupes_update": "Opdater de eksisterende kontakter",
+    "dupes_updates": "Opdaterer kontakten",
+    "upload_cancelled": "Upload annulleret",
+    "upload_cancelled_partial": "{count, plural, one {1 fil blev} other {# filer blev}} uploadet, før du annullerede",
+    "download_cancelled": "Download annulleret"
   },
   "desktopEdit": {
     "edit": "Rediger",
@@ -7774,6 +7868,77 @@
     "state_offline": "Offline",
     "state_error": "Stoppet"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Uploader ændringer, før drevet slås fra",
+      "title_sign_out": "Uploader ændringer, før du logger ud",
+      "title_stop_folder": "Uploader ændringer, før mappen stopper med at synkronisere",
+      "cannot_title": "Nogle ændringer kan ikke uploades lige nu",
+      "waiting": "Mangler at uploade: {names}",
+      "progress": "{done} af {total} uploadet",
+      "cannot_offline": "Serveren kan ikke nås. Ikke uploadet endnu: {names}",
+      "cannot_other": "Kan ikke uploades: {names}. Seneste aktivitet i Indstillinger fortæller hvorfor.",
+      "go_note_drive": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, kopieret til Dokumenter\\Bulwark – not uploaded. Intet går tabt.",
+      "go_note_folder": "Hvis du fortsætter nu, bliver det, der ikke er uploadet, i mappen på denne computer.",
+      "keep_turn_off": "Behold drevet",
+      "keep_sign_out": "Forbliv logget ind",
+      "keep_stop_folder": "Fortsæt synkronisering",
+      "go_turn_off": "Slå fra nu",
+      "go_sign_out": "Log ud nu",
+      "go_stop_folder": "Stop synkronisering nu"
+    },
+    "drive": {
+      "off_note": "Når du slår dette fra, forsvinder drevet fra Stifinder. Dine filer bliver i Filer.",
+      "rescued": "Filer, der ikke blev uploadet ({count}), ligger nu i {folder}.",
+      "rescued_open": "Åbn mappe",
+      "rescued_dismiss": "Luk",
+      "start_at_login": "Start Bulwark, når du logger på Windows",
+      "start_at_login_why": "Drevet kræver, at Bulwark kører, ligesom OneDrive.",
+      "closed_warning": "Filer på drevet kan ikke åbnes, mens Bulwark er lukket.",
+      "where": "I Stifinder som Bulwark Files",
+      "where_letter": "I Stifinder som Bulwark Files ({letter}:)",
+      "open": "Åbn",
+      "letter_note": "Via drevbogstavet viser Stifinder hverken synkroniseringsstatus eller “Behold altid på denne enhed”. De vises under Bulwark Files i Stifinder.",
+      "letter_failed": "Drevbogstavet kunne ikke angives. Prøv igen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Opdateret",
+      "syncing": "Bulwark Files: Synkroniserer. Mangler: {count}",
+      "paused": "Bulwark Files: Sat på pause",
+      "offline": "Bulwark Files: Offline. Venter: {count}",
+      "question": "Bulwark Files: Venter på dit svar",
+      "error": "Bulwark Files: Fejl"
+    },
+    "notify": {
+      "conflict_title": "En fil blev ændret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Ændringer, der venter på serveren: {count}",
+      "disk_name": "{path} i Filer hedder {detail} på denne computer, fordi nogle af tegnene ikke er tilladt her",
+      "disk_case": "{path} i Filer hedder {detail} på denne computer, fordi der allerede er et navn her, der kun adskiller sig i store og små bogstaver",
+      "disk_group": "Navne i Filer, som denne computer ikke tillader: {count}. De har lidt andre navne her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stop synkronisering…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes ens med?",
+      "pick_confirm_known": "Hold dem ens"
+    },
+    "pin": {
+      "keep": "Behold altid på denne enhed",
+      "free": "Frigør plads",
+      "failed": "Det lykkedes ikke. Prøv igen i Stifinder."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Hurtig skrivning",
     "menu": "Hurtig skrivning",
@@ -7796,6 +7961,10 @@
     "missing": "\"{name}\" findes ikke længere.",
     "too_large": "\"{name}\" er større end {max} og kan ikke vedhæftes.",
     "failed": "\"{name}\" kunne ikke vedhæftes. Prøv igen."
+  },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større end serveren tager imod ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mere formatering",
@@ -7863,6 +8032,17 @@
     "join_host": "Deltag ({host})",
     "join_named": "Deltag: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Udviklerværktøjer",
+    "updates_label": "Søg efter opdateringer",
+    "search": {
+      "quick_compose": "hurtig skrivning ny besked hvor som helst global genvej",
+      "files_drive": "frigør plads OneDrive Dropbox Stifinder Finder drevbogstav filer efter behov",
+      "offline_space": "frigør plads diskplads lagerplads",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeraftryk ansigt adgangsnøgle passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Din organisation tillader ikke denne server på denne enhed.",
     "plugin_refused": "Din organisation tillader ikke dette plugin på denne enhed, så det kører ikke. Dets indstillinger og data bevares.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "Tryk på {keys} for at finde en kommando"
   },
   "uxp3_desktop": {
-    "appearance_description": "Skift, hvordan appen ser ud",
-    "badge_all_accounts_description": "Tallet på ikonet på proceslinjen og i meddelelsesområdet lægger indbakkerne for alle loggede-ind konti sammen.",
     "web_address": "Webadresse"
   },
   "selectionView": {

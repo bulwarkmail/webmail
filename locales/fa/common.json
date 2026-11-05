@@ -109,6 +109,33 @@
     "code_label": "کد احراز هویت",
     "verify": "تأیید"
   },
+  "ux_p3_words": {
+    "appearance_description": "ظاهر {appName} را تغییر دهید.",
+    "text_size_app": "اندازهٔ همهٔ متن‌های برنامه را تغییر می‌دهد. ۱۰۰٪ اندازهٔ عادی است.",
+    "scrollbars_app": "از نوارهای پیمایش خود سیستم استفاده می‌کند که پهن‌تر هستند و راحت‌تر گرفته می‌شوند.",
+    "voice_app": "صدایی که پیام‌ها را بلند می‌خواند. فهرست، صداهایی را نشان می‌دهد که این رایانه برای زبان رابط دارد.",
+    "voice_default_app": "صدای سیستم",
+    "visual_alerts_app": "وقتی ایمیل جدید یا یادآوری می‌رسد، عنوان پنجره را آهسته چشمک‌زن می‌کند و یادآوری‌ها را تا وقتی ببندید روی صفحه نگه می‌دارد.",
+    "sounds_link_app": "صداهای اعلان و تعداد خوانده‌نشده‌ها روی نماد نوار وظیفه در صفحه اعلان‌ها تنظیم می‌شود.",
+    "writing_language_app": "زبانی که معمولاً با آن می‌نویسید. ویرایش متن و بررسی املا از آن استفاده می‌کنند.",
+    "badge_all_app": "عدد روی نماد نوار وظیفه و در سینی سیستم، صندوق‌های ورودی همه حساب‌های واردشده را با هم جمع می‌کند.",
+    "badge_all_browser": "عدد روی زبانه و نماد برنامه، صندوق‌های ورودی همه حساب‌های واردشده را با هم جمع می‌کند.",
+    "dnd_title": "مزاحم نشوید",
+    "pause_label": "توقف موقت اعلان‌ها",
+    "pause_description": "تا زمانی که دوباره این گزینه را خاموش کنید، برای ایمیل‌های جدید صدا، پنجرهٔ بازشو یا اعلام صوتی نخواهید داشت.",
+    "dnd_link_app": "توقف موقت اعلان‌ها و تنظیم ساعات سکوت در صفحه اعلان‌ها انجام می‌شود.",
+    "dnd_link_browser": "توقف موقت اعلان‌ها در صفحه اعلان‌ها انجام می‌شود.",
+    "backup_app": "تنظیمات خود را در یک فایل صادر کنید و در دستگاه‌های دیگرتان وارد کنید.",
+    "sync_app": "دستگاه‌های دیگری که با این حساب وارد شده‌اند همین تنظیمات را دریافت می‌کنند.",
+    "progress_attachments": "در حال دانلود پیوست‌ها",
+    "progress_events": "در حال دانلود رویدادها",
+    "progress_contacts": "در حال دانلود مخاطبان",
+    "progress_files_list": "در حال فهرست کردن فایل‌ها",
+    "progress_other": "در حال دانلود",
+    "keep_description": "ایمیل‌ها، تقویم، مخاطبان و فایل‌هایی را که در «فایل‌ها» به‌صورت آفلاین نگه می‌دارید، به‌صورت رمزگذاری‌شده در این دستگاه نگه می‌دارد. در حالت آفلاین می‌توانید ایمیل‌ها را بخوانید، پرچم بزنید و جابه‌جا کنید، و آنچه می‌نویسید در صندوق خروجی منتظر می‌ماند. با خروج از حساب همه پاک می‌شود.",
+    "filter_value_placeholder": "مقدار",
+    "filter_values_hint": "برای چند مقدار، آن‌ها را با ویرگول جدا کنید."
+  },
   "sidebar": {
     "close": "بستن",
     "compose": "ایمیل جدید",
@@ -926,6 +953,13 @@
     "restore_to": "انتقال دوباره به {folder}",
     "delete_forever": "حذف برای همیشه"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "انتقال به صندوق ورودی",
+    "delete_forever_title": "این پیام برای همیشه حذف شود؟",
+    "delete_forever_batch_title": "{count, plural, one {این پیام برای همیشه حذف شود؟} other {این # پیام برای همیشه حذف شوند؟}}",
+    "delete_forever_message": "دیگر نمی‌توانید آن را برگردانید.",
+    "delete_forever_batch_message": "{count, plural, one {دیگر نمی‌توانید آن را برگردانید.} other {دیگر نمی‌توانید آن‌ها را برگردانید.}}"
+  },
   "external_mail": {
     "sender_label": "خارجی",
     "sender_tooltip": "از {domain}، خارج از سازمان شما",
@@ -985,7 +1019,7 @@
     "cc": "رونوشت",
     "bcc": "رونوشت مخفی",
     "subject": "موضوع",
-    "body_placeholder": "پیام خود را بنویسید...",
+    "body_placeholder": "پیام خود را بنویسید…",
     "send": "ارسال",
     "cancel": "انصراف",
     "attach": "پیوست",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "اگر سرور شما این آدرس را به‌عنوان فرستندهٔ پاکت نپذیرد، به‌جای آن {identity} استفاده می‌شود و گیرندگان می‌توانند آن را در سرآیند Return-Path ببینند."
     },
-    "save_as_template": "ذخیره به عنوان قالب",
+    "save_as_template": "ذخیره به عنوان قالب…",
     "attach_from_device": "بارگذاری از این دستگاه",
     "templates_menu": "قالب‌ها",
-    "insert_template": "درج قالب",
+    "insert_template": "درج قالب…",
     "options": "گزینه‌ها",
     "option_plain_text": "متن ساده",
     "option_plain_text_hint": "ارسال بدون قالب‌بندی",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
     "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {نتیجه‌ای یافت نشد} one {# مکالمه یافت شد} other {# مکالمه یافت شد}}",
+    "name_unread_sub": "{name}، خوانده‌نشده: {count}، در زیرپوشه‌ها: {sub}",
+    "name_unread_only_sub": "{name}، خوانده‌نشده در زیرپوشه‌ها: {sub}",
+    "sub_unread": "خوانده‌نشده در زیرپوشه‌ها: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",
     "apply_to_existing": "{count, plural, one {اعمال روی # پیام موجود در {folder}} other {اعمال روی # پیام موجود در {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}",
     "return_to_list_follows_layout": "تا وقتی آن را تغییر ندهید، از چیدمان پیروی می‌کند: وقتی فهرست و پیام کنار هم هستند خاموش، در غیر این صورت روشن."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "تعویض حساب را بالای پوشه‌ها و «ایمیل جدید» را زیر آن نشان می‌دهد. با خاموش کردن آن، «ایمیل جدید» جای آن قرار می‌گیرد."
   },
   "mail_p2_conv": {
     "show_message": "نمایش پیام",
@@ -5272,6 +5315,12 @@
     "declined_many": "{count} جلسه از این سری را رد کردید.",
     "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "تا {time}",
+    "week_all_days": "نمایش کل هفته",
+    "week_days_short": "{count, plural, one {# روز} other {# روز}}",
+    "print": "چاپ…"
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "وارد کردن {name} ممکن نشد.",
     "import_contacts": "وارد کردن به مخاطبان…",
     "add_to_calendar": "افزودن به تقویم…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "پرونده‌های ویرایش‌شده",
+    "hide": "پنهان کردن",
+    "discard_detail_file": "ویرایش‌های شما در این نسخه حذف می‌شود. پرونده در «پرونده‌ها» تغییر نمی‌کند.",
+    "saved_auto": "{name} در «پرونده‌ها» ذخیره شد. ذخیره‌های بعدی از برنامه‌اش خودکار به آنجا می‌رود."
   },
   "smime": {
     "your_certificates": "گواهی‌های شما",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "سرور ایمیل شما باید ورود از این وب‌سایت را مجاز کند. اگر ورود انجام نشد، از مسئول سرور ایمیل بخواهید آن را مجاز کند.",
     "provider_unsupported": "{provider} از JMAP، روشی که Bulwark با سرورهای ایمیل صحبت می‌کند، پشتیبانی نمی‌کند؛ پس Bulwark هنوز نمی‌تواند مستقیم به آن وصل شود."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "نحوهٔ اتصال Bulwark تغییر کند؟",
+      "message": "Bulwark دوباره راه‌اندازی می‌شود و می‌پرسد چگونه وصل شود: با نشانی ایمیل شما یا از طریق Bulwark سازمانتان. حساب‌های شما در این رایانه وارد شده باقی می‌مانند.",
+      "confirm": "تغییر",
+      "org_link": "به‌جای آن از Bulwark سازمانم استفاده کن",
+      "add_account": "افزودن حساب…"
+    },
+    "picture": {
+      "button": "تصویر",
+      "title": "درج تصویر",
+      "address": "نشانی وب تصویر",
+      "address_hint": "تصویر روی وب می‌ماند و از همان‌جا نمایش داده می‌شود.",
+      "description": "توضیح",
+      "invalid": "نشانی وبی وارد کنید که با https:// شروع شود.",
+      "insert": "درج"
+    },
+    "sign_in_page": {
+      "open_app": "باز کردن Bulwark",
+      "done_as": "با {address} وارد شدید. می‌توانید این زبانه را ببندید."
+    }
+  },
   "desktop_updates": {
     "title": "به‌روزرسانی‌ها",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "عکس",
     "merge_kept": "حفظ می‌شود",
     "import_show": "نمایش"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# مخاطب انتخاب شد} other {# مخاطب انتخاب شد}}",
+    "selection_more": "و {count} مورد دیگر",
+    "no_addresses": "هیچ‌کدام از مخاطبان انتخاب‌شده نشانی ایمیل ندارند.",
+    "task_open": "باز کردن",
+    "due_next_week": "هفتهٔ بعد",
+    "due_none": "بدون موعد",
+    "due_pick": "انتخاب تاریخ…",
+    "move_to_list": "انتقال به فهرست",
+    "dupes_legend": "{count, plural, one {۱ مورد از قبل در مخاطبان است:} other {# مورد از قبل در مخاطبان است:}}",
+    "dupes_skip": "رد کردن",
+    "dupes_update": "به‌روزرسانی مخاطبان موجود",
+    "dupes_updates": "مخاطب را به‌روز می‌کند",
+    "upload_cancelled": "بارگذاری لغو شد",
+    "upload_cancelled_partial": "{count, plural, one {۱ فایل} other {# فایل}} پیش از لغو بارگذاری شد",
+    "download_cancelled": "دانلود لغو شد"
   },
   "desktopEdit": {
     "edit": "ویرایش",
@@ -7774,6 +7868,77 @@
     "state_offline": "آفلاین",
     "state_error": "متوقف شد"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "در حال بارگذاری تغییرات پیش از خاموش شدن درایو",
+      "title_sign_out": "در حال بارگذاری تغییرات پیش از خروج",
+      "title_stop_folder": "در حال بارگذاری تغییرات پیش از توقف همگام‌سازی پوشه",
+      "cannot_title": "برخی تغییرات اکنون بارگذاری نمی‌شوند",
+      "waiting": "مانده برای بارگذاری: {names}",
+      "progress": "{done} از {total} بارگذاری شد",
+      "cannot_offline": "سرور در دسترس نیست. هنوز بارگذاری نشده: {names}",
+      "cannot_other": "بارگذاری نمی‌شوند: {names}. دلیل آن در فعالیت اخیر در تنظیمات آمده است.",
+      "go_note_drive": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در اسناد\\Bulwark – not uploaded کپی می‌شود. چیزی از دست نمی‌رود.",
+      "go_note_folder": "اگر اکنون ادامه دهید، آنچه بارگذاری نشده در پوشهٔ این رایانه می‌ماند.",
+      "keep_turn_off": "درایو بماند",
+      "keep_sign_out": "وارد بمانید",
+      "keep_stop_folder": "ادامهٔ همگام‌سازی",
+      "go_turn_off": "اکنون خاموش شود",
+      "go_sign_out": "اکنون خارج شوید",
+      "go_stop_folder": "اکنون همگام‌سازی متوقف شود"
+    },
+    "drive": {
+      "off_note": "با خاموش کردن، درایو از کاوشگر فایل حذف می‌شود. فایل‌های شما در فایل‌ها می‌مانند.",
+      "rescued": "فایل‌های بارگذاری‌نشده ({count}) اکنون در {folder} هستند.",
+      "rescued_open": "باز کردن پوشه",
+      "rescued_dismiss": "بستن",
+      "start_at_login": "اجرای Bulwark هنگام ورود به Windows",
+      "start_at_login_why": "درایو مانند OneDrive به اجرای Bulwark نیاز دارد.",
+      "closed_warning": "تا وقتی Bulwark بسته است، فایل‌های درایو باز نمی‌شوند.",
+      "where": "در کاوشگر فایل با نام Bulwark Files",
+      "where_letter": "در کاوشگر فایل با نام Bulwark Files ({letter}:)",
+      "open": "باز کردن",
+      "letter_note": "از راه حرف درایو، کاوشگر فایل وضعیت همگام‌سازی و «همیشه در این دستگاه نگه دار» را نشان نمی‌دهد. این‌ها زیر Bulwark Files در کاوشگر دیده می‌شوند.",
+      "letter_failed": "حرف درایو تنظیم نشد. دوباره امتحان کنید."
+    },
+    "tray": {
+      "idle": "Bulwark Files: به‌روز",
+      "syncing": "Bulwark Files: در حال همگام‌سازی. مانده: {count}",
+      "paused": "Bulwark Files: متوقف شده",
+      "offline": "Bulwark Files: آفلاین. در انتظار: {count}",
+      "question": "Bulwark Files: منتظر پاسخ شما",
+      "error": "Bulwark Files: خطا"
+    },
+    "notify": {
+      "conflict_title": "فایلی در دو جا تغییر کرد",
+      "problem_title": "یک فایل همگام نمی‌شود"
+    },
+    "activity": {
+      "waiting_count": "تغییرهای در انتظار سرور: {count}",
+      "disk_name": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون برخی نویسه‌هایش اینجا مجاز نیستند",
+      "disk_case": "{path} در فایل‌ها روی این رایانه {detail} نام دارد، چون نامی که فقط در حروف بزرگ و کوچک فرق دارد اینجا هست",
+      "disk_group": "نام‌هایی در فایل‌ها که این رایانه اجازه نمی‌دهد: {count}. اینجا نامشان کمی فرق دارد.",
+      "show": "نمایش",
+      "hide": "پنهان کردن"
+    },
+    "cant_sync": {
+      "title": "همگام‌سازی ممکن نیست"
+    },
+    "folders": {
+      "stop": "توقف همگام‌سازی…",
+      "pick_title_known": "{name} با کدام پوشه در فایل‌ها یکسان بماند؟",
+      "pick_confirm_known": "یکسان نگه دار"
+    },
+    "pin": {
+      "keep": "همیشه در این دستگاه نگه دار",
+      "free": "آزاد کردن فضا",
+      "failed": "انجام نشد. در کاوشگر فایل دوباره امتحان کنید."
+    },
+    "account": {
+      "of": "فایل‌های {address}",
+      "choose": "فایل‌های"
+    }
+  },
   "desktopQuickCompose": {
     "label": "نوشتن سریع",
     "menu": "نوشتن سریع",
@@ -7796,6 +7961,10 @@
     "missing": "«{name}» دیگر وجود ندارد.",
     "too_large": "«{name}» بزرگ‌تر از {max} است و نمی‌توان آن را پیوست کرد.",
     "failed": "پیوست «{name}» ممکن نشد. دوباره امتحان کنید."
+  },
+  "composeRecentLimit": {
+    "too_large": "خیلی بزرگ",
+    "too_large_hint": "بزرگ‌تر از حدی که سرور می‌پذیرد ({max})"
   },
   "compose_windows": {
     "more_formatting": "قالب‌بندی بیشتر",
@@ -7863,6 +8032,17 @@
     "join_host": "پیوستن ({host})",
     "join_named": "پیوستن: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "ابزارهای توسعه‌دهنده",
+    "updates_label": "بررسی به‌روزرسانی‌ها",
+    "search": {
+      "quick_compose": "نوشتن سریع پیام تازه از هر جا میان‌بر سراسری",
+      "files_drive": "آزاد کردن فضا OneDrive Dropbox File Explorer Finder حرف درایو فایل‌ها هنگام نیاز",
+      "offline_space": "آزاد کردن فضا فضای دیسک فضای ذخیره‌سازی",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID اثر انگشت چهره کلید عبور passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "سازمان شما این سرور را در این دستگاه مجاز نمی‌داند.",
     "plugin_refused": "سازمان شما این افزونه را در این دستگاه مجاز نمی‌داند، بنابراین اجرا نمی‌شود. تنظیمات و داده‌های آن حفظ می‌شوند.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "برای یافتن هر فرمانی {keys} را فشار دهید"
   },
   "uxp3_desktop": {
-    "appearance_description": "ظاهر برنامه را تغییر دهید",
-    "badge_all_accounts_description": "عدد روی نماد نوار وظیفه و در سینی سیستم، صندوق‌های ورودی همه حساب‌های واردشده را با هم جمع می‌کند.",
     "web_address": "نشانی وب"
   },
   "selectionView": {

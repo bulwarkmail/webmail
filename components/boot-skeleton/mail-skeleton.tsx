@@ -142,8 +142,12 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
             {/* Compose in place of the account switcher (sidebarAccountSwitcher off). */}
             <Block className="hidden desk:boot-sidebar-compose:block desk:max-lg:hidden flex-1 min-w-0 h-9 rounded-md" />
           </div>
-          {/* The folded sidebar's Compose button (sidebarAccountSwitcher off). */}
-          <div className="hidden desk:max-lg:boot-sidebar-compose:flex justify-center pb-2">
+          {/* Compose under the account switcher on a desktop (mail-p3-11). */}
+          <div className="hidden desk:block desk:max-lg:hidden desk:boot-sidebar-compose:hidden px-2 pb-2">
+            <Block className="w-full h-9 rounded-md" />
+          </div>
+          {/* The folded sidebar's Compose button. */}
+          <div className="hidden desk:max-lg:flex justify-center pb-2">
             <Block className="w-10 h-10 rounded-md" />
           </div>
         </div>
@@ -658,7 +662,7 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
             {!embedded && <MobileHeaderSkeleton />}
             <ListToolbarSkeleton embedded={embedded} />
             <div className="flex-1 min-h-0 flex flex-col">
-              <div className={cn("flex-1 overflow-hidden bg-background relative pb-20", !embedded && "desk:mv:pb-0")}>
+              <div className={cn("flex-1 overflow-hidden bg-background relative pb-20", !embedded && "desk:pb-0")}>
                 <MailListRowsSkeleton />
               </div>
             </div>
@@ -667,8 +671,8 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
               className={cn(
                 "absolute z-40 shadow-lg bottom-4 end-4 h-12 w-12 max-desk:h-14 max-desk:w-14",
                 "max-desk:mv:w-36 max-desk:mv:rounded-2xl",
-                // A desktop can have Compose in the folder sidebar instead; a Pro pane keeps the round one.
-                !embedded && "desk:mv:hidden desk:boot-sidebar-compose:hidden",
+                // A desktop has Compose in the folder sidebar instead; a Pro pane keeps the round one.
+                !embedded && "desk:hidden",
               )}
             />
           </div>

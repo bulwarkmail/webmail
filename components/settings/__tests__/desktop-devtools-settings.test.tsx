@@ -46,7 +46,9 @@ describe('the developer tools setting', () => {
     render(<DesktopDevToolsSettings />);
     const toggle = await screen.findByTestId('desktop-devtools-toggle');
     expect(toggle.getAttribute('aria-checked')).toBe('false');
-    expect(screen.getByText('label:{"shortcut":"Ctrl+Shift+I"}')).toBeTruthy();
+    // The row is named plainly, as settings search lists it (settings-p3-7); the keys are in its description.
+    expect(screen.getByText('devtools_label')).toBeTruthy();
+    expect(screen.getByText('description:{"shortcut":"Ctrl+Shift+I"}')).toBeTruthy();
     fireEvent.click(toggle);
     expect(set).toHaveBeenCalledWith(true);
   });
@@ -54,7 +56,7 @@ describe('the developer tools setting', () => {
   it('a Mac names its own keys', async () => {
     setBridge({ on: false, forcedOff: false, locked: false }, 'darwin');
     render(<DesktopDevToolsSettings />);
-    expect(await screen.findByText('label:{"shortcut":"Cmd+Option+I"}')).toBeTruthy();
+    expect(await screen.findByText('description:{"shortcut":"Cmd+Option+I"}')).toBeTruthy();
   });
 
   it('a policy locks it off, and the app lock stops changes', async () => {

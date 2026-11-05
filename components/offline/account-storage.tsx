@@ -21,14 +21,35 @@ import { KeptFiles } from './kept-files';
 const MB = 1024 * 1024;
 const ALL = 'all';
 
+/**
+ * What is being fetched, named by its area: the count after it ("13 so far") has to say
+ * 13 of what. Calendar, contacts and files list too, and that isn't "Listing messages"
+ * (settings-p3-20).
+ */
+function useProgressPhase(progress: SyncProgress): string {
+  const t = useTranslations('offlineStorage');
+  const tWords = useTranslations('ux_p3_words');
+  switch (progress.area) {
+    case 'mail':
+      if (progress.phase === 'list') return t('progress_list');
+      if (progress.phase === 'threads') return t('progress_threads');
+      if (progress.phase === 'bodies') return t('progress_bodies');
+      if (progress.phase === 'attachments') return tWords('progress_attachments');
+      break;
+    case 'calendar':
+      return tWords('progress_events');
+    case 'contacts':
+      return tWords('progress_contacts');
+    case 'files':
+      return progress.phase === 'list' ? tWords('progress_files_list') : t('progress_files');
+  }
+  return tWords('progress_other');
+}
+
 function ProgressLine({ progress }: { progress: SyncProgress }) {
   const t = useTranslations('offlineStorage');
   const format = useFormatter();
-  const phase = progress.phase === 'list' ? t('progress_list')
-    : progress.phase === 'bodies' ? t('progress_bodies')
-      : progress.phase === 'threads' ? t('progress_threads')
-        : progress.area === 'files' ? t('progress_files')
-          : t('progress_other');
+  const phase = useProgressPhase(progress);
   const left = minutesLeft(progress);
   const count = progress.total === null
     ? t('progress_count_open', { done: format.number(progress.done) })
@@ -67,6 +88,7 @@ function useUnsent(account: string) {
 export function AccountStorage({ account, primary, heading }: { account: string; primary: boolean; heading: string | null }) {
   const t = useTranslations('offline.settings');
   const tStorage = useTranslations('offlineStorage');
+  const tWords = useTranslations('ux_p3_words');
   const tExport = useTranslations('offlineExport');
   const format = useFormatter();
   const enabled = useOfflineStore((s) => s.enabled.includes(account));
@@ -136,7 +158,9 @@ export function AccountStorage({ account, primary, heading }: { account: string;
       data-testid={testId('offline-account')}
     >
       {heading && <p className="pt-3 text-sm font-semibold text-foreground [overflow-wrap:anywhere]">{heading}</p>}
-      <SettingItem label={t('keep_label')} description={tStorage('keep_description')} locked={locked.forced}>
+      {/* "the files you keep offline in Files", not "chosen files": Files on this computer
+          has copies of its own (settings-p3-20). */}
+      <SettingItem label={t('keep_label')} description={tWords('keep_description')} locked={locked.forced}>
         <ToggleSwitch
           checked={enabled}
           testId={testId('offline-switch')}

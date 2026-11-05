@@ -362,7 +362,8 @@ describe('ContactsApp', () => {
       renderContacts([anna1, anna2, bob, club]);
       fireEvent.click(screen.getAllByText('Anna Example')[0]);
       fireEvent.click(screen.getAllByText('Anna Example')[1], { ctrlKey: true });
-      fireEvent.click(screen.getByRole('button', { name: 'merge_selected' }));
+      // The list's selection bar (the selection pane on the right has the same button).
+      fireEvent.click(screen.getAllByRole('button', { name: 'merge_selected' })[0]);
       const preview = await screen.findByTestId('merge-preview');
       expect(within(preview).getByText('anna@example.net')).toBeInTheDocument();
       expect(within(preview).getByText('anna@home.example.net')).toBeInTheDocument();

@@ -109,6 +109,33 @@
     "code_label": "Authentication code",
     "verify": "Verify"
   },
+  "ux_p3_words": {
+    "appearance_description": "Change how {appName} looks.",
+    "text_size_app": "Scales all text in the app. 100% is the normal size.",
+    "scrollbars_app": "Uses the system's own scrollbars, which are wider and easier to grab.",
+    "voice_app": "The voice that reads messages aloud. The list shows the voices this computer has for the interface language.",
+    "voice_default_app": "System voice",
+    "visual_alerts_app": "Flashes the window title slowly when new mail or a reminder arrives, and keeps reminders on screen until you close them.",
+    "sounds_link_app": "Notification sounds and the unread count on the taskbar icon are set on the Notifications page.",
+    "writing_language_app": "The language you usually write in. Proofreading and spell check use it.",
+    "badge_all_app": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
+    "badge_all_browser": "The number on the tab and the app icon adds up the inboxes of every signed-in account.",
+    "dnd_title": "Do not disturb",
+    "pause_label": "Pause notifications",
+    "pause_description": "No sounds, pop-ups or spoken announcements for new mail until you turn this off again.",
+    "dnd_link_app": "Pause notifications and set quiet hours on the Notifications page.",
+    "dnd_link_browser": "Pause notifications on the Notifications page.",
+    "backup_app": "Export your settings to a file and import them on your other devices.",
+    "sync_app": "Other devices signed in to this account get the same settings.",
+    "progress_attachments": "Downloading attachments",
+    "progress_events": "Downloading events",
+    "progress_contacts": "Downloading contacts",
+    "progress_files_list": "Listing files",
+    "progress_other": "Downloading",
+    "keep_description": "Keeps your mail, calendar, contacts and the files you keep offline in Files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
+    "filter_value_placeholder": "Value",
+    "filter_values_hint": "To match several values, separate them with commas."
+  },
   "sidebar": {
     "close": "Close",
     "compose": "Compose",
@@ -389,7 +416,7 @@
     "no_scheduled_emails": "No scheduled emails",
     "no_scheduled_emails_description": "Messages scheduled for later will appear here.",
     "scheduled_count": "{count, plural, one {1 scheduled email} other {# scheduled emails}}",
-    "scheduled_actions_hint": "Scheduled messages can be canceled, rescheduled, or edited from their scheduled actions.",
+    "scheduled_actions_hint": "Scheduled messages can be cancelled, rescheduled, or edited from their scheduled actions.",
     "cancel_scheduled_send": "Cancel send",
     "reschedule_send": "Reschedule",
     "cancel_and_edit": "Cancel and edit",
@@ -926,6 +953,13 @@
     "restore_to": "Move back to {folder}",
     "delete_forever": "Delete forever"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Move to Inbox",
+    "delete_forever_title": "Delete this message forever?",
+    "delete_forever_batch_title": "{count, plural, one {Delete this message forever?} other {Delete these # messages forever?}}",
+    "delete_forever_message": "You can't get it back.",
+    "delete_forever_batch_message": "{count, plural, one {You can't get it back.} other {You can't get them back.}}"
+  },
   "external_mail": {
     "sender_label": "External",
     "sender_tooltip": "From {domain}, outside your organisation",
@@ -982,10 +1016,10 @@
     "forward_message": "Forward",
     "from": "From",
     "to": "To",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Subject",
-    "body_placeholder": "Write your message...",
+    "body_placeholder": "Write your message…",
     "formatting": "Formatting",
     "send": "Send",
     "cancel": "Cancel",
@@ -1043,10 +1077,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "If your server doesn't accept this address as the envelope sender, {identity} is used there instead, and recipients can see it in the Return-Path header."
     },
-    "save_as_template": "Save as template",
+    "save_as_template": "Save as template…",
     "attach_from_device": "Upload from this device",
     "templates_menu": "Templates",
-    "insert_template": "Insert template",
+    "insert_template": "Insert template…",
     "options": "Options",
     "option_plain_text": "Plain text",
     "option_plain_text_hint": "Send without formatting",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} in all accounts)",
     "title_all_accounts_only": "{name} ({total} in all accounts)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No results found} one {# conversation found} other {# conversations found}}",
+    "name_unread_sub": "{name}, {count} unread, {sub} more in subfolders",
+    "name_unread_only_sub": "{name}, {sub} unread in subfolders",
+    "sub_unread": "{sub} unread in subfolders"
+  },
   "uxs_folders": {
     "manage_accounts": "Manage accounts…",
     "apply_to_existing": "{count, plural, one {Apply to # existing message in {folder}} other {Apply to # existing messages in {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
     "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Show the account switcher above the folders, with Compose under it. Turn this off to put Compose in its place."
   },
   "mail_p2_conv": {
     "show_message": "Show the message",
@@ -5272,6 +5315,12 @@
     "declined_many": "You declined {count} meetings of this series.",
     "answers_series": "Your answer counts for every meeting in the series."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "until {time}",
+    "week_all_days": "Show the whole week",
+    "week_days_short": "{count, plural, one {# day} other {# days}}",
+    "print": "Print…"
+  },
   "calendar_event_notifications": {
     "someone": "Someone",
     "invited": "{name} invited you to \"{title}\"",
@@ -5649,8 +5698,8 @@
     "no_accounts": "No connected accounts.",
     "uploading": "Uploading...",
     "upload_success": "{count, plural, one {1 file uploaded} other {# files uploaded}}",
-    "upload_canceled": "Upload canceled",
-    "upload_canceled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you canceled",
+    "upload_canceled": "Upload cancelled",
+    "upload_canceled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you cancelled",
     "upload_error": "Couldn't upload the file",
     "upload_failed": "{count, plural, one {1 file could not be uploaded} other {# files could not be uploaded}}",
     "error_over_quota": "You have reached the limit on files or folders. Delete some and try again.",
@@ -5705,7 +5754,7 @@
     "download_error": "Couldn't download",
     "download_zip": "Download as zip",
     "zipping": "Preparing {name}",
-    "download_canceled": "Download canceled",
+    "download_canceled": "Download cancelled",
     "zip_error": "Couldn't download {name}",
     "not_available": "File storage is not available on this server",
     "cancel": "Cancel",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "{name} could not be imported.",
     "import_contacts": "Import into contacts…",
     "add_to_calendar": "Add to calendar…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Edited files",
+    "hide": "Hide",
+    "discard_detail_file": "Your edits to this copy are deleted. The file in Files doesn't change.",
+    "saved_auto": "{name} saved to Files. Later saves from its program go there on their own."
   },
   "smime": {
     "your_certificates": "Your Certificates",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Change how Bulwark connects?",
+      "message": "Bulwark restarts and asks how to connect: with your email address, or through your organisation's Bulwark. Your accounts on this computer stay signed in.",
+      "confirm": "Change",
+      "org_link": "Use my organisation's Bulwark instead",
+      "add_account": "Add account…"
+    },
+    "picture": {
+      "button": "Picture",
+      "title": "Insert picture",
+      "address": "Web address of the picture",
+      "address_hint": "The picture stays on the web and is shown from there.",
+      "description": "Description",
+      "invalid": "Enter a web address that starts with https://.",
+      "insert": "Insert"
+    },
+    "sign_in_page": {
+      "open_app": "Open Bulwark",
+      "done_as": "Signed in as {address}. You can close this tab."
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "Photo",
     "merge_kept": "Kept",
     "import_show": "Show"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selected} other {# contacts selected}}",
+    "selection_more": "and {count} more",
+    "no_addresses": "None of the selected contacts has an email address.",
+    "task_open": "Open",
+    "due_next_week": "Next week",
+    "due_none": "No due date",
+    "due_pick": "Pick a date…",
+    "move_to_list": "Move to list",
+    "dupes_legend": "{count, plural, one {1 is already in Contacts:} other {# are already in Contacts:}}",
+    "dupes_skip": "Skip them",
+    "dupes_update": "Update the existing contacts",
+    "dupes_updates": "Updates the contact",
+    "upload_cancelled": "Upload cancelled",
+    "upload_cancelled_partial": "{count, plural, one {1 file was} other {# files were}} uploaded before you cancelled",
+    "download_cancelled": "Download cancelled"
   },
   "desktopEdit": {
     "edit": "Edit",
@@ -7774,6 +7868,77 @@
     "state_offline": "Offline",
     "state_error": "Stopped"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Uploading changes before the drive turns off",
+      "title_sign_out": "Uploading changes before you sign out",
+      "title_stop_folder": "Uploading changes before the folder stops syncing",
+      "cannot_title": "Some changes can't be uploaded now",
+      "waiting": "Still to upload: {names}",
+      "progress": "{done} of {total} uploaded",
+      "cannot_offline": "The server can't be reached. Not uploaded yet: {names}",
+      "cannot_other": "These can't be uploaded: {names}. Recent activity in Settings says why.",
+      "go_note_drive": "If you go on now, what isn't uploaded is copied to Documents\\Bulwark – not uploaded. Nothing is lost.",
+      "go_note_folder": "If you go on now, what isn't uploaded stays in the folder on this computer.",
+      "keep_turn_off": "Keep the drive on",
+      "keep_sign_out": "Stay signed in",
+      "keep_stop_folder": "Keep syncing",
+      "go_turn_off": "Turn off now",
+      "go_sign_out": "Sign out now",
+      "go_stop_folder": "Stop syncing now"
+    },
+    "drive": {
+      "off_note": "Turning this off removes the drive from File Explorer. Your files stay in Files.",
+      "rescued": "Files that weren't uploaded ({count}) are in {folder} now.",
+      "rescued_open": "Open folder",
+      "rescued_dismiss": "Dismiss",
+      "start_at_login": "Start Bulwark when you sign in to Windows",
+      "start_at_login_why": "The drive needs Bulwark running, as OneDrive does.",
+      "closed_warning": "Files in the drive can't open while Bulwark is closed.",
+      "where": "In File Explorer as Bulwark Files",
+      "where_letter": "In File Explorer as Bulwark Files ({letter}:)",
+      "open": "Open",
+      "letter_note": "Through the letter, File Explorer shows no sync status and no “Always keep on this device”. They show under Bulwark Files in Explorer.",
+      "letter_failed": "The drive letter couldn't be set. Try again."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Up to date",
+      "syncing": "Bulwark Files: Syncing. To go: {count}",
+      "paused": "Bulwark Files: Paused",
+      "offline": "Bulwark Files: Offline. Waiting: {count}",
+      "question": "Bulwark Files: Needs your answer",
+      "error": "Bulwark Files: Error"
+    },
+    "notify": {
+      "conflict_title": "A file was changed in two places",
+      "problem_title": "A file can't be synced"
+    },
+    "activity": {
+      "waiting_count": "Changes waiting for the server: {count}",
+      "disk_name": "{path} in Files is called {detail} on this computer, because some of its characters aren't allowed here",
+      "disk_case": "{path} in Files is called {detail} on this computer, because a name that differs only in upper and lower case is already here",
+      "disk_group": "Names in Files that this computer doesn't allow: {count}. They have slightly different names here.",
+      "show": "Show",
+      "hide": "Hide"
+    },
+    "cant_sync": {
+      "title": "Can't sync"
+    },
+    "folders": {
+      "stop": "Stop syncing…",
+      "pick_title_known": "Which folder in Files should {name} be kept the same as?",
+      "pick_confirm_known": "Keep them the same"
+    },
+    "pin": {
+      "keep": "Always keep on this device",
+      "free": "Free up space",
+      "failed": "That didn't work. Try again in File Explorer."
+    },
+    "account": {
+      "of": "Files of {address}",
+      "choose": "Files of"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Quick compose",
     "menu": "Quick compose",
@@ -7796,6 +7961,10 @@
     "missing": "\"{name}\" isn't there any more.",
     "too_large": "\"{name}\" is larger than {max} and can't be attached.",
     "failed": "\"{name}\" couldn't be attached. Try again."
+  },
+  "composeRecentLimit": {
+    "too_large": "Too large",
+    "too_large_hint": "Larger than the server takes ({max})"
   },
   "compose_windows": {
     "more_formatting": "More formatting",
@@ -7863,6 +8032,17 @@
     "join_host": "Join ({host})",
     "join_named": "Join: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Developer tools",
+    "updates_label": "Check for updates",
+    "search": {
+      "quick_compose": "quick compose new message from anywhere global shortcut hotkey",
+      "files_drive": "free up space OneDrive Dropbox File Explorer Finder drive letter files on demand",
+      "offline_space": "free up space disk space storage room",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingerprint face passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",
     "plugin_refused": "Your organisation doesn't allow this plugin on this device, so it doesn't run. Its settings and data are kept.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "Press {keys} to find any command"
   },
   "uxp3_desktop": {
-    "appearance_description": "Change how the app looks",
-    "badge_all_accounts_description": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
     "web_address": "Web address"
   },
   "selectionView": {

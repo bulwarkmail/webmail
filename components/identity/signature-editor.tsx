@@ -46,8 +46,8 @@ export interface SignatureChange {
 }
 
 /**
- * One signature field. With formatting it is the composer's editor (bold,
- * links, lists, tables); the plain-text version is generated from it on every
+ * One signature field. With formatting it has a short toolbar (bold, italic,
+ * underline, lists, link, a picture by web address); the plain-text version is generated from it on every
  * change, so the two can't drift apart. "Edit as HTML" (shown with advanced
  * settings on) swaps in the HTML source. Someone who writes plain text only
  * (Composing) gets a plain text box, which leaves a stored HTML version alone.
@@ -142,6 +142,9 @@ export function SignatureEditor({ html, text, plainOnly, disabled, onChange, not
           <RichTextEditor
             content={html || textToParagraphHtml(text)}
             onChange={editHtml}
+            // A few lines and a logo: the out-of-office toolbar plus a picture by web address.
+            toolbar="short"
+            pictureFromWeb
             ariaLabel={t('signature_label')}
             ariaInvalid={tooLong}
             ariaDescribedBy={sizeShown ? sizeId : undefined}

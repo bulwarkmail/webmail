@@ -138,6 +138,7 @@ import { wantsSignatureSeparator } from "@/lib/signature-delimiter";
 import { finalizeOutgoing, runPreSendChecks, type OutgoingContext } from "@/lib/outgoing/send-pipeline";
 import { classifyOutgoing, isLabelRequiredError, labelMissing, labelsPolicyFor, resolveLabel, type OriginalMessage } from "@/lib/outgoing/classification";
 import { beginLabelTakeover, endLabelTakeover } from "@/lib/outgoing/classification-raw";
+import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { beginComposeTakeover, endComposeTakeover } from "@/lib/outgoing/compose-takeover";
 import { recipientsChanged, runPluginSendCheck, sendGuardMessageKey } from "@/lib/outgoing/plugin-send-check";
 import { externalRecipientsFor, inspectAttachments, sniffFile } from "@/lib/outgoing/send-check-payload";
@@ -282,6 +283,12 @@ export interface ComposerDraftData {
   selectedIdentityId: string | null;
   subAddressTag: string;
   mode: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * What a re-opened draft is, for its title: it re-opens in "compose" mode
+   * (see inReplyTo below), and was titled "New message" even when it was a
+   * reply (compose-p3-6). Absent, In-Reply-To makes it a reply.
+   */
+  kind?: 'reply' | 'replyAll' | 'forward';
   replyTo?: EmailComposerProps['replyTo'];
   draftId: string | null;
   /**
@@ -427,6 +434,12 @@ interface EmailComposerProps {
    * draft on the server is still there then.
    */
   onRestoreDiscarded?: (data: ComposerDraftData) => void;
+  /**
+   * The bin took the draft `draftId` off screen; it is deleted once Undo
+   * is over (onDiscardDraft) or comes back (onRestoreDiscarded). Until then
+   * the host shows it nowhere else, such as the reply-draft card.
+   */
+  onDiscardStarted?: (draftId: string) => void;
   /**
    * Offers "Open in new window". Called in the click, since a browser only
    * opens a window for a user action: the host opens it and answers with what
@@ -634,6 +647,7 @@ export function EmailComposer({
   onDiscardDraft,
   onSaveState,
   onRestoreDiscarded,
+  onDiscardStarted,
   popOut,
   popOutToMainLabel,
   docked = false,
@@ -1342,6 +1356,11 @@ export function EmailComposer({
   // scopes decide the organisation signature and disclaimer: the identity's
   // own account, else the one the composer was opened in.
   const composingAccountId = currentIdentityParts.localAccountId ?? composerAccountIdRef.current;
+  // What the header calls it. A re-opened draft is in "compose" mode; a reply
+  // draft is still a reply (compose-p3-6).
+  const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = mode !== 'compose'
+    ? mode
+    : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose');
   // Classification label (enterprise pack): the labels of the account and
   // identity the message goes out from; replies and forwards start with
   // the original's label, re-opened drafts with theirs.
@@ -2182,7 +2201,10 @@ export function EmailComposer({
     if (!target) return false;
     const root = target.closest('[data-testid="email-composer"]');
     const active = document.activeElement;
-    if (root && active && active !== document.body && active !== target && root.contains(active)) return false;
+    if (active && active !== document.body && active !== target) {
+      // A menu this composer opened (Attach, a picker) is drawn outside it, in a portal.
+      if ((root && root.contains(active)) || active.closest('[role="menu"], [role="listbox"]')) return false;
+    }
     target.focus();
     return true;
   };
@@ -2813,6 +2835,12 @@ export function EmailComposer({
   // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
   // shell reads the file; from there it's a file like one from the file dialog.
   const recentOffered = useRecentFilesOffered();
+  // The largest recent file worth offering: what the server takes per file,
+  // and what the app reads (compose-p3-18).
+  const recentFileLimit = () => {
+    const serverMax = (composerClientRef.current ?? client)?.getMaxSizeUpload?.() ?? 0;
+    return serverMax > 0 ? Math.min(serverMax, RECENT_FILE_MAX_BYTES) : RECENT_FILE_MAX_BYTES;
+  };
   const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
     const result = await readRecentFile(file.id);
     if (result.ok) {
@@ -3673,10 +3701,10 @@ export function EmailComposer({
   // The plugin panels in the header row: a folded one's Show button, and an
   // open one's head with its Hide button (see composer-plugin-sidebars.tsx).
   const leftPanelToggle = pluginSidebars.modes.left === 'folded'
-    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} onToggle={() => pluginSidebars.toggle('left')} />
+    ? <ComposerPanelToggle side="left" mode="folded" name={pluginSidebars.names.left} shortcut={pluginSidebars.shortcuts.left} onToggle={() => pluginSidebars.toggle('left')} />
     : null;
   const rightPanelToggle = pluginSidebars.modes.right === 'folded'
-    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} onToggle={() => pluginSidebars.toggle('right')} />
+    ? <ComposerPanelToggle side="right" mode="folded" name={pluginSidebars.names.right} shortcut={pluginSidebars.shortcuts.right} onToggle={() => pluginSidebars.toggle('right')} />
     : null;
   const rightPanelOpen = isPanelOpen(pluginSidebars.modes.right);
   const panelHead = (side: 'left' | 'right', className: string, children?: React.ReactNode, childrenClassName?: string) => (
@@ -3685,6 +3713,7 @@ export function EmailComposer({
       mode={pluginSidebars.modes[side]}
       width={pluginSidebars.widths[side]}
       name={pluginSidebars.names[side]}
+      shortcut={pluginSidebars.shortcuts[side]}
       onToggle={() => pluginSidebars.toggle(side)}
       className={className}
       childrenClassName={childrenClassName}
@@ -3802,15 +3831,23 @@ export function EmailComposer({
     return undefined;
   };
 
-  const resolveDelayedUntil = async (requestedDelayedUntil?: string): Promise<string | undefined> => {
-    if (requestedDelayedUntil) return requestedDelayedUntil;
-    if (sendDelaySeconds === 0) return undefined;
+  /**
+   * Whether the send waits, asking "send without a delay?" when the server
+   * can't. Returns what gives the time to send at: called only once every
+   * question is answered, right before the message is handed on, so the
+   * Undo time is never spent on reading a question (compose-p3-1). A time
+   * picked in the schedule dialog stays as it is.
+   */
+  const decideSendDelay = async (requestedDelayedUntil?: string): Promise<() => string | undefined> => {
+    if (requestedDelayedUntil) return () => requestedDelayedUntil;
+    if (sendDelaySeconds === 0) return () => undefined;
     if (composerClient?.hasDelayedSend()) {
-      return new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
+      const seconds = sendDelaySeconds;
+      return () => undoDelayUntil(seconds);
     }
     // Undo send is on by default; a server without delayed sending just
     // sends. Only a delay the user picked is worth a question.
-    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return undefined;
+    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return () => undefined;
     const confirmed = await confirmNoDelay({
       title: t('send_delay_unsupported_title'),
       message: t('send_delay_unsupported_confirm'),
@@ -3819,7 +3856,7 @@ export function EmailComposer({
     if (!confirmed) {
       throw new Error(t('send_delay_unsupported'));
     }
-    return undefined;
+    return () => undefined;
   };
 
   // The cids of the inline images (tagged with data-cid) the body still shows.
@@ -4263,7 +4300,9 @@ export function EmailComposer({
     let handedToHost: ComposerDraftData | null = null;
 
     try {
-      const effectiveDelayedUntil = await resolveDelayedUntil(delayedUntil);
+      // Whether it waits is asked now; when it goes is worked out once
+      // every question below is answered.
+      const sendDelayTime = await decideSendDelay(delayedUntil);
       // Let plugins veto the send (external-mail warning, mistyped-domain
       // guards, send checks). Returning false from any handler aborts before
       // either the S/MIME or standard JMAP path runs. What a send check needs
@@ -4330,6 +4369,9 @@ export function EmailComposer({
       // draft, and never fall back to sending it unsigned (#1207). It signs
       // or encrypts the message with the `last` finalisers' additions.
       const sealed = lastStage(finalHtmlBody, finalBody);
+      // The plugins' checks are answered: the Undo time starts here. Taken
+      // again below for the standard send, after the plugins' changes.
+      let effectiveDelayedUntil = sendDelayTime();
       // The label as it stands now, from the policy of the sending account.
       const labelPolicy = labelsPolicyFor({ email: currentIdentity?.email, accountId: composingAccountId });
       const sendLabel = resolveLabel(labelPolicy, classificationRef.current.choice, labelOriginal);
@@ -4467,6 +4509,8 @@ export function EmailComposer({
           draftAccountId: draftAccountIdRef.current,
           draftLocalAccountId: draftLocalAccountIdRef.current,
         };
+        // A second check may have asked again: the Undo time starts now.
+        effectiveDelayedUntil = sendDelayTime();
         const outcome = await onSend?.({
           to: outgoing.to,
           cc: outgoing.cc,
@@ -4980,6 +5024,7 @@ export function EmailComposer({
     const discard = onDiscardDraft;
     const restore = onRestoreDiscarded;
     const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
+    if (draftId && !windowDiscarded) onDiscardStarted?.(draftId);
     handleDiscardAndClose({ keepDraft: true });
     // Also before the first save: the text must not go without an Undo (desktop-p3-1).
     if (windowDiscarded) {
@@ -5196,7 +5241,10 @@ export function EmailComposer({
         className,
         // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
         // At the folder sidebar's z-50 and after it in the page, so over it (compose-p2-5).
-        maximized && "fixed inset-0 z-50 h-auto pt-[var(--titlebar-row-height)]",
+        // Its header is the window's top row, beside the controls, as the inline composer's
+        // is: an empty band for the controls stood above it (compose-p3-16). Below the
+        // desktop app's menu bar when that shows.
+        maximized && "fixed inset-0 top-[var(--titlebar-inset)] z-50 h-auto",
       )}
       data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
@@ -5217,13 +5265,13 @@ export function EmailComposer({
         <div className="flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
           {panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
-            {mode === 'replyAll'
+            {titleMode === 'replyAll'
               ? <ReplyAll className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              : mode === 'forward'
+              : titleMode === 'forward'
                 ? <Forward className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 : <Reply className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
             <h3 className="flex-1 min-w-0 truncate text-sm" data-testid="composer-save-status" data-status={saveStatus}>
-              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
             {leftPanelToggle}
@@ -5245,7 +5293,7 @@ export function EmailComposer({
           {mvWindow.state !== "minimized" && panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-1 ps-4 pe-1.5">
             <h3 className="flex-1 min-w-0 truncate text-sm font-medium" data-testid="composer-save-status" data-status={saveStatus}>
-              {mode === 'reply' || mode === 'replyAll' || mode === 'forward'
+              {titleMode !== 'compose'
                 ? (subject || t('new_message'))
                 : t('new_message')}
             </h3>
@@ -5266,7 +5314,7 @@ export function EmailComposer({
         <div className="flex-1 min-w-0 flex items-center gap-3">
           <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
             <h3 className="font-semibold text-base">
-              {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
+              {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -6021,7 +6069,10 @@ export function EmailComposer({
                 {(close) => <>
                   {/* As Outlook's: the recent files first, one click attaches one and closes. */}
                   {recentOffered && (
-                    <RecentFilesMenuSection onPick={(file) => { close(); void attachRecentFile(file); }} />
+                    <RecentFilesMenuSection
+                      onPick={(file) => { close(); void attachRecentFile(file); }}
+                      maxBytes={recentFileLimit()}
+                    />
                   )}
                   <ComposerToolbarMenuItem
                     icon={Upload}

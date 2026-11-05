@@ -109,6 +109,33 @@
     "code_label": "رمز المصادقة",
     "verify": "تحقّق"
   },
+  "ux_p3_words": {
+    "appearance_description": "غيّر مظهر {appName}.",
+    "text_size_app": "يغيّر حجم كل النصوص في التطبيق. ‏100% هو الحجم العادي.",
+    "scrollbars_app": "يستخدم أشرطة التمرير الخاصة بالنظام، وهي أعرض وأسهل في الإمساك بها.",
+    "voice_app": "الصوت الذي يقرأ الرسائل بصوت عالٍ. تعرض القائمة الأصوات الموجودة على هذا الحاسوب للغة الواجهة.",
+    "voice_default_app": "صوت النظام",
+    "visual_alerts_app": "يجعل عنوان النافذة يومض ببطء عند وصول بريد جديد أو تذكير، ويُبقي التذكيرات على الشاشة حتى تغلقها.",
+    "sounds_link_app": "تضبط أصوات الإشعارات وعدد غير المقروء على أيقونة شريط المهام في صفحة الإشعارات.",
+    "writing_language_app": "اللغة التي تكتب بها عادةً. يستخدمها التدقيق اللغوي والتدقيق الإملائي.",
+    "badge_all_app": "الرقم على أيقونة شريط المهام وفي شريط النظام يجمع صناديق الوارد لكل الحسابات المسجّل دخولها.",
+    "badge_all_browser": "الرقم على علامة التبويب وأيقونة التطبيق يجمع صناديق الوارد لكل الحسابات المسجّل دخولها.",
+    "dnd_title": "عدم الإزعاج",
+    "pause_label": "إيقاف الإشعارات مؤقتًا",
+    "pause_description": "بلا أصوات أو نوافذ منبثقة أو إعلانات صوتية للبريد الجديد حتى توقف هذا الخيار مرة أخرى.",
+    "dnd_link_app": "يمكنك إيقاف الإشعارات مؤقتًا وضبط ساعات الهدوء في صفحة الإشعارات.",
+    "dnd_link_browser": "يمكنك إيقاف الإشعارات مؤقتًا في صفحة الإشعارات.",
+    "backup_app": "صدّر إعداداتك إلى ملف واستوردها على أجهزتك الأخرى.",
+    "sync_app": "تحصل الأجهزة الأخرى المسجّل دخولها بهذا الحساب على الإعدادات نفسها.",
+    "progress_attachments": "جارٍ تنزيل المرفقات",
+    "progress_events": "جارٍ تنزيل الأحداث",
+    "progress_contacts": "جارٍ تنزيل جهات الاتصال",
+    "progress_files_list": "جارٍ سرد الملفات",
+    "progress_other": "جارٍ التنزيل",
+    "keep_description": "يحتفظ ببريدك وتقويمك وجهات اتصالك والملفات التي تحتفظ بها دون اتصال في الملفات، مشفّرة على هذا الجهاز. دون اتصال يمكنك قراءة البريد ووضع علامات عليه ونقله، وما تكتبه ينتظر في صندوق الصادر. يؤدي تسجيل الخروج إلى إزالة كل ذلك.",
+    "filter_value_placeholder": "القيمة",
+    "filter_values_hint": "لمطابقة عدة قيم، افصل بينها بفواصل."
+  },
   "sidebar": {
     "close": "إغلاق",
     "compose": "إنشاء رسالة",
@@ -926,6 +953,13 @@
     "restore_to": "إعادة النقل إلى {folder}",
     "delete_forever": "حذف نهائي"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "نقل إلى البريد الوارد",
+    "delete_forever_title": "حذف هذه الرسالة نهائيًا؟",
+    "delete_forever_batch_title": "{count, plural, one {حذف هذه الرسالة نهائيًا؟} other {حذف هذه الرسائل (#) نهائيًا؟}}",
+    "delete_forever_message": "لا يمكنك استعادتها.",
+    "delete_forever_batch_message": "{count, plural, one {لا يمكنك استعادتها.} other {لا يمكنك استعادتها.}}"
+  },
   "external_mail": {
     "sender_label": "خارجي",
     "sender_tooltip": "من {domain}، من خارج مؤسستك",
@@ -985,7 +1019,7 @@
     "cc": "نسخة",
     "bcc": "نسخة مخفية",
     "subject": "الموضوع",
-    "body_placeholder": "اكتب رسالتك...",
+    "body_placeholder": "اكتب رسالتك…",
     "send": "إرسال",
     "cancel": "إلغاء",
     "attach": "إرفاق",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "إذا لم يقبل خادمك هذا العنوان كمرسل للمغلف، فسيُستخدم {identity} بدلاً منه، ويمكن للمستلمين رؤيته في ترويسة Return-Path."
     },
-    "save_as_template": "حفظ كقالب",
+    "save_as_template": "حفظ كقالب…",
     "attach_from_device": "رفع من هذا الجهاز",
     "templates_menu": "القوالب",
-    "insert_template": "إدراج قالب",
+    "insert_template": "إدراج قالب…",
     "options": "الخيارات",
     "option_plain_text": "نص عادي",
     "option_plain_text_hint": "إرسال بدون تنسيق",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
     "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {لم يتم العثور على نتائج} one {تم العثور على محادثة واحدة} two {تم العثور على محادثتين} few {تم العثور على # محادثات} many {تم العثور على # محادثة} other {تم العثور على # محادثة}}",
+    "name_unread_sub": "{name}، غير مقروءة: {count}، وفي المجلدات الفرعية: {sub}",
+    "name_unread_only_sub": "{name}، غير مقروءة في المجلدات الفرعية: {sub}",
+    "sub_unread": "غير مقروءة في المجلدات الفرعية: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",
     "apply_to_existing": "{count, plural, one {تطبيق على رسالة موجودة واحدة في {folder}} other {تطبيق على # رسائل موجودة في {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}",
     "return_to_list_follows_layout": "ما لم تغيّره، يتبع هذا التخطيط: متوقف عندما تكون القائمة والرسالة جنبًا إلى جنب، ومفعّل في غير ذلك."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "يعرض مبدّل الحسابات فوق المجلدات وزر «إنشاء رسالة» تحته. أوقف هذا الخيار لوضع «إنشاء رسالة» في مكانه."
   },
   "mail_p2_conv": {
     "show_message": "عرض الرسالة",
@@ -5272,6 +5315,12 @@
     "declined_many": "رفضت {count} من مواعيد هذه السلسلة.",
     "answers_series": "ينطبق ردك على كل مواعيد السلسلة."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "حتى {time}",
+    "week_all_days": "عرض الأسبوع كاملًا",
+    "week_days_short": "{count, plural, zero {# أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",
+    "print": "طباعة…"
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "تعذّر استيراد {name}.",
     "import_contacts": "استيراد إلى جهات الاتصال…",
     "add_to_calendar": "إضافة إلى التقويم…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "الملفات المعدلة",
+    "hide": "إخفاء",
+    "discard_detail_file": "تُحذف تعديلاتك على هذه النسخة. لا يتغير الملف في الملفات.",
+    "saved_auto": "تم حفظ {name} في الملفات. ما تحفظه لاحقًا من برنامجه يذهب إلى هناك تلقائيًا."
   },
   "smime": {
     "your_certificates": "شهاداتك",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "يجب أن يسمح خادم بريدك بتسجيل الدخول من هذا الموقع. إذا فشل تسجيل الدخول، فاطلب من مسؤول خادم بريدك السماح بذلك.",
     "provider_unsupported": "لا يوفّر {provider} بروتوكول JMAP الذي يتواصل به Bulwark مع خوادم البريد، لذلك لا يستطيع Bulwark الاتصال به مباشرة بعد."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "تغيير طريقة اتصال Bulwark؟",
+      "message": "يُعاد تشغيل Bulwark ويسأل عن طريقة الاتصال: بعنوان بريدك الإلكتروني أو عبر Bulwark الخاص بمؤسستك. تبقى حساباتك على هذا الكمبيوتر مسجّلة الدخول.",
+      "confirm": "تغيير",
+      "org_link": "استخدام Bulwark الخاص بمؤسستي بدلاً من ذلك",
+      "add_account": "إضافة حساب…"
+    },
+    "picture": {
+      "button": "صورة",
+      "title": "إدراج صورة",
+      "address": "عنوان الصورة على الويب",
+      "address_hint": "تبقى الصورة على الويب وتُعرض من هناك.",
+      "description": "الوصف",
+      "invalid": "أدخل عنوان ويب يبدأ بـ https://.",
+      "insert": "إدراج"
+    },
+    "sign_in_page": {
+      "open_app": "فتح Bulwark",
+      "done_as": "تم تسجيل الدخول باسم {address}. يمكنك إغلاق علامة التبويب هذه."
+    }
+  },
   "desktop_updates": {
     "title": "التحديثات",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "صورة",
     "merge_kept": "محفوظ",
     "import_show": "عرض"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {تم تحديد جهة اتصال واحدة} other {تم تحديد # جهة اتصال}}",
+    "selection_more": "و{count} غيرهم",
+    "no_addresses": "لا تملك أي من جهات الاتصال المحددة عنوان بريد إلكتروني.",
+    "task_open": "فتح",
+    "due_next_week": "الأسبوع القادم",
+    "due_none": "بلا تاريخ استحقاق",
+    "due_pick": "اختيار تاريخ…",
+    "move_to_list": "نقل إلى قائمة",
+    "dupes_legend": "{count, plural, one {واحدة موجودة في جهات الاتصال:} other {# موجودة في جهات الاتصال:}}",
+    "dupes_skip": "تخطيها",
+    "dupes_update": "تحديث جهات الاتصال الموجودة",
+    "dupes_updates": "يحدّث جهة الاتصال",
+    "upload_cancelled": "تم إلغاء الرفع",
+    "upload_cancelled_partial": "{count, plural, zero {لم يُرفع أي ملف} one {تم رفع ملف واحد} two {تم رفع ملفين} few {تم رفع # ملفات} many {تم رفع # ملفًا} other {تم رفع # ملف}} قبل الإلغاء",
+    "download_cancelled": "أُلغي التنزيل"
   },
   "desktopEdit": {
     "edit": "تعديل",
@@ -7774,6 +7868,77 @@
     "state_offline": "غير متصل",
     "state_error": "متوقف"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "جارٍ رفع التغييرات قبل إيقاف محرك الأقراص",
+      "title_sign_out": "جارٍ رفع التغييرات قبل تسجيل الخروج",
+      "title_stop_folder": "جارٍ رفع التغييرات قبل إيقاف مزامنة المجلد",
+      "cannot_title": "تعذّر رفع بعض التغييرات الآن",
+      "waiting": "متبقٍّ للرفع: {names}",
+      "progress": "تم رفع {done} من {total}",
+      "cannot_offline": "تعذّر الوصول إلى الخادم. لم يُرفع بعد: {names}",
+      "cannot_other": "تعذّر رفع: {names}. يوضح النشاط الأخير في الإعدادات السبب.",
+      "go_note_drive": "إذا تابعت الآن، يُنسخ ما لم يُرفع إلى المستندات\\Bulwark – not uploaded. لن يضيع شيء.",
+      "go_note_folder": "إذا تابعت الآن، يبقى ما لم يُرفع في المجلد على هذا الحاسوب.",
+      "keep_turn_off": "إبقاء محرك الأقراص",
+      "keep_sign_out": "البقاء مسجّلًا",
+      "keep_stop_folder": "متابعة المزامنة",
+      "go_turn_off": "إيقاف الآن",
+      "go_sign_out": "تسجيل الخروج الآن",
+      "go_stop_folder": "إيقاف المزامنة الآن"
+    },
+    "drive": {
+      "off_note": "إيقاف هذا يزيل محرك الأقراص من مستكشف الملفات. تبقى ملفاتك في الملفات.",
+      "rescued": "الملفات التي لم تُرفع ({count}) موجودة الآن في {folder}.",
+      "rescued_open": "فتح المجلد",
+      "rescued_dismiss": "تجاهل",
+      "start_at_login": "تشغيل Bulwark عند تسجيل الدخول إلى Windows",
+      "start_at_login_why": "يحتاج محرك الأقراص إلى تشغيل Bulwark، كما في OneDrive.",
+      "closed_warning": "لا تُفتح ملفات محرك الأقراص ما دام Bulwark مغلقًا.",
+      "where": "في مستكشف الملفات باسم Bulwark Files",
+      "where_letter": "في مستكشف الملفات باسم Bulwark Files ({letter}:)",
+      "open": "فتح",
+      "letter_note": "عبر حرف محرك الأقراص لا يعرض مستكشف الملفات حالة المزامنة ولا «الاحتفاظ دائماً على هذا الجهاز». تظهر تحت Bulwark Files في المستكشف.",
+      "letter_failed": "تعذّر تعيين حرف محرك الأقراص. حاول مرة أخرى."
+    },
+    "tray": {
+      "idle": "Bulwark Files: محدَّث",
+      "syncing": "Bulwark Files: جارٍ المزامنة. المتبقي: {count}",
+      "paused": "Bulwark Files: متوقف مؤقتًا",
+      "offline": "Bulwark Files: غير متصل. بانتظار: {count}",
+      "question": "Bulwark Files: يحتاج إلى ردك",
+      "error": "Bulwark Files: خطأ"
+    },
+    "notify": {
+      "conflict_title": "تغيّر ملف في مكانين",
+      "problem_title": "تعذّرت مزامنة ملف"
+    },
+    "activity": {
+      "waiting_count": "تغييرات بانتظار الخادم: {count}",
+      "disk_name": "{path} في الملفات اسمه {detail} على هذا الحاسوب، لأن بعض أحرفه غير مسموح بها هنا",
+      "disk_case": "{path} في الملفات اسمه {detail} على هذا الحاسوب، لأن هنا اسمًا لا يختلف إلا في حالة الأحرف",
+      "disk_group": "أسماء في الملفات لا يسمح بها هذا الحاسوب: {count}. لها هنا أسماء مختلفة قليلًا.",
+      "show": "إظهار",
+      "hide": "إخفاء"
+    },
+    "cant_sync": {
+      "title": "تتعذّر المزامنة"
+    },
+    "folders": {
+      "stop": "إيقاف المزامنة…",
+      "pick_title_known": "مع أي مجلد في الملفات يبقى {name} متطابقًا؟",
+      "pick_confirm_known": "إبقاؤهما متطابقين"
+    },
+    "pin": {
+      "keep": "الاحتفاظ دائماً على هذا الجهاز",
+      "free": "تحرير مساحة",
+      "failed": "لم ينجح ذلك. حاول مرة أخرى في مستكشف الملفات."
+    },
+    "account": {
+      "of": "ملفات {address}",
+      "choose": "ملفات"
+    }
+  },
   "desktopQuickCompose": {
     "label": "كتابة سريعة",
     "menu": "كتابة سريعة",
@@ -7796,6 +7961,10 @@
     "missing": "\"{name}\" لم يعد موجودًا.",
     "too_large": "\"{name}\" أكبر من {max} ولا يمكن إرفاقه.",
     "failed": "تعذّر إرفاق \"{name}\". حاول مرة أخرى."
+  },
+  "composeRecentLimit": {
+    "too_large": "كبير جدًا",
+    "too_large_hint": "أكبر مما يقبله الخادم ({max})"
   },
   "compose_windows": {
     "more_formatting": "مزيد من التنسيق",
@@ -7863,6 +8032,17 @@
     "join_host": "انضمام ({host})",
     "join_named": "انضمام: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "أدوات المطوّر",
+    "updates_label": "التحقق من وجود تحديثات",
+    "search": {
+      "quick_compose": "كتابة سريعة رسالة جديدة من أي مكان اختصار عام",
+      "files_drive": "تحرير مساحة OneDrive Dropbox مستكشف الملفات Finder حرف محرك الأقراص ملفات عند الطلب",
+      "offline_space": "تحرير مساحة مساحة القرص التخزين",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID بصمة الإصبع الوجه مفتاح المرور passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "لا تسمح مؤسستك بهذا الخادم على هذا الجهاز.",
     "plugin_refused": "لا تسمح مؤسستك بهذه الإضافة على هذا الجهاز، لذلك لا تعمل. تبقى إعداداتها وبياناتها محفوظة.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "اضغط {keys} للعثور على أي أمر"
   },
   "uxp3_desktop": {
-    "appearance_description": "غيّر مظهر التطبيق",
-    "badge_all_accounts_description": "الرقم على أيقونة شريط المهام وفي شريط النظام يجمع صناديق الوارد لكل الحسابات المسجّل دخولها.",
     "web_address": "عنوان الويب"
   },
   "selectionView": {

@@ -95,13 +95,13 @@ import {
   ARCHIVE_ACTION_SEARCH_PATHS,
 } from '@/lib/settings-search';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { useDesktopCommands } from '@/lib/desktop/commands';
 import { menuBarAvailable } from '@/lib/desktop/menu-bar';
 import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useDesktopWindowName } from '@/lib/desktop/window-name';
-import { useDesktopCommands } from '@/lib/desktop/commands';
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { scrollBehavior } from '@/lib/reduced-motion';
@@ -246,8 +246,24 @@ export interface SettingsAppProps {
   linkSegments?: string[];
 }
 
+/** A field, editor or list that takes typed characters itself. */
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+}
+
 /** Settings pages that share their name with an app in the palette's Go to group. */
 const APP_SETTINGS_TABS = new Set(['calendar', 'contacts', 'files']);
+
+/** A search result for a row the page shows only with Advanced on: opening it shows the row anyway. */
+function SearchResultAdvancedBadge({ label }: { label: string }) {
+  return (
+    <span data-testid="settings-result-advanced" className="shrink-0 text-[0.625rem] px-1.5 py-0.5 rounded bg-accent text-accent-foreground font-medium">
+      {label}
+    </span>
+  );
+}
 
 export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
@@ -488,8 +504,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Scroll to the section a link or event asked for once the page has it.
   // Pages fetch and render their sections after a loading state, so retry;
   // an advanced section stays hidden until the switch is on, so after a
-  // short wait turn it on rather than give up.
-  const updateSetting = useSettingsStore((s) => s.updateSetting);
+  // short wait the page shows that section alone, once, and the switch stays
+  // as it is (settings-p3-7).
   // The page itself rather than its skeleton (see the gate below).
   const pageShown = isAuthenticated && !!client;
   useEffect(() => {
@@ -500,12 +516,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const started = Date.now();
-    const deadline = started + 2000;
+    const deadline = started + 2400;
+    let asked = false;
     const attempt = () => {
       if (cancelled) return;
       if (scrollToSettingsSection(pendingSection.id)) { setPendingSection(null); return; }
-      if (Date.now() - started > 400 && !useSettingsStore.getState().showAdvancedSettings) {
-        updateSetting('showAdvancedSettings', true);
+      if (!asked && Date.now() - started > 400) {
+        asked = true;
+        window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { section: pendingSection.id, advanced: true } }));
       }
       if (Date.now() < deadline) timer = setTimeout(attempt, 80);
       else setPendingSection(null);
@@ -516,7 +534,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       window.cancelAnimationFrame(raf);
       if (timer) clearTimeout(timer);
     };
-  }, [pendingSection, activeTab, updateSetting, pageShown]);
+  }, [pendingSection, activeTab, pageShown]);
 
   // Leaving the settings panel drops any shared-account scope so it never
   // leaks into the next visit or another session.
@@ -582,8 +600,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         new CustomEvent('settings-plugin-expand', { detail: { pluginId: pendingHighlight.pluginId } })
       );
     }
-    // Collapsed lists (the theme gallery) open when the result is inside them.
-    window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { label: pendingHighlight.label } }));
+    // Collapsed lists (the theme gallery) open when the result is inside them,
+    // and an advanced row shows by itself, the Advanced switch left as it is
+    // (settings-p3-7). Only a row known to be advanced: any other stays as it is.
+    window.dispatchEvent(new CustomEvent('settings-reveal', { detail: { label: pendingHighlight.label, advanced: pendingHighlight.advanced } }));
 
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -592,17 +612,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
     const escaped = pendingHighlight.label.replace(/"/g, '\\"');
     const selector = `[data-search-label="${escaped}"]`;
-    const deadline = Date.now() + 2000;
+    const deadline = Date.now() + 2400;
 
     const tryHighlight = () => {
       if (cancelled) return;
       const el = document.querySelector<HTMLElement>(selector);
       if (!el) {
-        // An advanced row the switch hides: reveal it, then keep looking.
-        // Only for a row known to be advanced; any other stays as it is.
-        if (pendingHighlight.advanced && !useSettingsStore.getState().showAdvancedSettings) {
-          useSettingsStore.getState().updateSetting('showAdvancedSettings', true);
-        }
         if (Date.now() < deadline) {
           retryTimer = setTimeout(tryHighlight, 80);
         }
@@ -650,6 +665,38 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         : proInterfaceActive ? null : settingsLinkPath,
   );
 
+  // "/" (the mail search's key) and Ctrl+F (Cmd+F) go to "Search settings" on any
+  // settings page (settings-p3-18). "/" waits while someone types in a field; a
+  // second Ctrl+F in the search field is the browser's own find. In the desktop
+  // app the menu's Search and its Ctrl+F (edit.search) land here too.
+  const searchFieldRef = useRef<HTMLInputElement>(null);
+  const focusSettingsSearch = useCallback(() => {
+    const field = searchFieldRef.current;
+    if (!field) return false;
+    field.focus();
+    field.select();
+    return true;
+  }, []);
+  const searchKeysActive = isAuthenticated && (!isEmbedded || isFocusedProTab);
+  useEffect(() => {
+    if (!searchKeysActive) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return;
+      const slash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey;
+      const find = (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'f';
+      if (!slash && !find) return;
+      const field = searchFieldRef.current;
+      if (!field || document.activeElement === field) return;
+      if (slash && isTypingTarget(event.target)) return;
+      // A dialog on top keeps its keys.
+      if (document.querySelector('[role="dialog"][aria-modal="true"], [role="alertdialog"]')) return;
+      if (focusSettingsSearch()) event.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [searchKeysActive, focusSettingsSearch]);
+  useDesktopCommands({ 'edit.search': () => { focusSettingsSearch(); } }, { 'edit.search': true }, searchKeysActive);
+
   // Park the content-pane scroll offset when the Pro toggle flips (the flip
   // remounts this component - see parkedContentScroll above). The ref only
   // exists in the desktop layout, which is also the only place the remount
@@ -690,7 +737,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const supportsSieve = client?.supportsSieve() ?? false;
   const supportsFiles = client?.supportsFiles() ?? false;
   // Files on this computer: the desktop app's sync engine runs in this window.
-  const filesSyncAvailable = useFilesSyncStore((s) => s.available);
+  // Nothing to set when the organisation turned off both the drive and synced folders and none is left (files-p3-18).
+  const filesSyncAvailable = useFilesSyncStore((s) => s.available && !(s.folderSyncForcedOff && (!s.drive || s.drive.forcedOff || !s.drive.supported) && s.roots.length === 0));
   // Delegates (Settings > Sharing) needs someone to share with and something to share.
   const supportsSharing = !delegationHidden && !!client?.getShareTargets && (client?.supportsPrincipals() ?? false)
     && ((client?.supportsMailboxSharing?.() ?? false)
@@ -834,16 +882,6 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       : tSidebar('settings'),
   );
   useDesktopWindowName(tSidebar('settings'), { withAccount: true });
-  // Edit > Search (Ctrl+E) in the desktop app: the settings search here, as Calendar's
-  // goes to its events, not the mail search (desktop-p3-16).
-  useDesktopCommands({
-    'edit.search': () => {
-      const fields = Array.from(document.querySelectorAll<HTMLInputElement>('[data-settings-search]'));
-      const shown = fields.find((field) => field.getClientRects().length > 0) ?? fields[0];
-      shown?.focus();
-      shown?.select();
-    },
-  }, { 'edit.search': true });
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);
@@ -1038,13 +1076,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         >
           <div className="px-4 pt-3 pb-1">
             <ToolbarSearch
+              ref={searchFieldRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
-              data-settings-search=""
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
+              aria-keyshortcuts="/ Control+F"
               autoComplete="off"
             />
           </div>
@@ -1087,9 +1126,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         <button
                           key={`${tab.id}:${sub.label}`}
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full flex items-center ps-12 pe-5 py-2 pointer-coarse:min-h-11 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
+                          className="w-full flex items-center gap-2 ps-12 pe-5 py-2 pointer-coarse:min-h-11 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
                         >
                           <span className="truncate" title={sub.label}>{sub.label}</span>
+                          {sub.advanced && <SearchResultAdvancedBadge label={t('advanced_switch.badge')} />}
                         </button>
                       ))}
                     </div>
@@ -1203,13 +1243,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         <nav aria-label={t('title')} className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
           <div className="px-3 pt-1 pb-1">
             <ToolbarSearch
+              ref={searchFieldRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
-              data-settings-search=""
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
+              aria-keyshortcuts="/ Control+F"
               autoComplete="off"
             />
           </div>
@@ -1256,9 +1297,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         <button
                           key={`${tab.id}:${sub.label}`}
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 flex items-center gap-2"
                         >
                           <span className="truncate block" title={sub.label}>{sub.label}</span>
+                          {sub.advanced && <SearchResultAdvancedBadge label={t('advanced_switch.badge')} />}
                         </button>
                       ))}
                     </div>

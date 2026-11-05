@@ -1390,4 +1390,24 @@ describe('CalendarInvitationBanner', () => {
       expect(screen.queryByText('remove_from_calendar')).not.toBeInTheDocument();
     });
   });
+
+  // pim-p3-17: "Organized by Ben Second" and two lines down "Sent by Ben Second."
+  it('names the organizer once, without "Sent by" the same person', async () => {
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([
+      {
+        uid: 'uid-sent-by',
+        title: 'Planning',
+        start: '2026-03-25T11:00:00Z',
+        organizerCalendarAddress: 'mailto:ben@example.org',
+        participants: {
+          ben: { '@type': 'Participant', email: 'ben@example.org', name: 'Ben Second', roles: { owner: true }, participationStatus: 'accepted' },
+          me: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
+        },
+      },
+    ]);
+    render(<CalendarInvitationBanner email={makeEmail({ id: 'email-sent-by' })} />);
+    await waitFor(() => expect(screen.getByText('Planning')).toBeInTheDocument());
+    expect(screen.getAllByText(/Ben Second/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Sent by Ben Second.')).toBeNull();
+  });
 });

@@ -64,7 +64,7 @@ async function clickDelete(surface: string) {
     fireEvent.click(surface === 'mountain' ? screen.getByLabelText('delete') : screen.getByTitle('batch_actions.delete'));
   }
   // A permanent delete asks first, from every place it is offered.
-  fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'permanent_delete' }));
+  fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /delete_forever$/ }));
 }
 
 for (const surface of ['mountain', 'default', 'context']) describe(surface + ' permanent bulk-delete feedback', () => {

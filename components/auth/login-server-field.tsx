@@ -59,7 +59,8 @@ export const LoginServerField = forwardRef<HTMLInputElement, LoginServerFieldPro
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   // After Change the lookup's result no longer matters: the user picks another server.
-  const notFound = lookup === "failed" && !provider && !changing;
+  // Once a server is typed, "we couldn't find it" is old news.
+  const notFound = lookup === "failed" && !provider && !changing && !value.trim();
 
   const providerNote = provider && (
     <div role="status" data-testid="login-provider-unsupported" className="p-3 rounded-xl border border-warning/30 bg-warning/5 flex items-start gap-2.5 text-sm text-foreground leading-relaxed">

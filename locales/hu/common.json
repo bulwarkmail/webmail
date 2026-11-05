@@ -109,6 +109,33 @@
     "code_label": "Hitelesítő kód",
     "verify": "Ellenőrzés"
   },
+  "ux_p3_words": {
+    "appearance_description": "A(z) {appName} megjelenésének módosítása.",
+    "text_size_app": "Az alkalmazás összes szövegét méretezi. A 100% a normál méret.",
+    "scrollbars_app": "A rendszer saját görgetősávjait használja, amelyek szélesebbek és könnyebben megfoghatók.",
+    "voice_app": "A hang, amely felolvassa a leveleket. A lista a számítógépen elérhető hangokat mutatja a felület nyelvén.",
+    "voice_default_app": "Rendszerhang",
+    "visual_alerts_app": "Új levél vagy emlékeztető érkezésekor lassan villogtatja az ablak címét, és az emlékeztetőket a képernyőn tartja, amíg be nem zárja őket.",
+    "sounds_link_app": "Az értesítési hangokat és a tálca ikonján látható olvasatlan számot az Értesítések oldalon állíthatja be.",
+    "writing_language_app": "A nyelv, amelyen általában ír. A nyelvi ellenőrzés és a helyesírás-ellenőrzés ezt használja.",
+    "badge_all_app": "A tálca ikonján és az értesítési területen látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
+    "badge_all_browser": "A lapon és az alkalmazásikonon látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
+    "dnd_title": "Ne zavarjanak",
+    "pause_label": "Értesítések szüneteltetése",
+    "pause_description": "Nincsenek hangok, felugró ablakok vagy felolvasott közlemények az új levelekről, amíg újra ki nem kapcsolja.",
+    "dnd_link_app": "Az értesítéseket szüneteltetheti és a csendes órákat beállíthatja az Értesítések oldalon.",
+    "dnd_link_browser": "Az értesítéseket szüneteltetheti az Értesítések oldalon.",
+    "backup_app": "Exportálja a beállításait egy fájlba, és importálja őket a többi eszközén.",
+    "sync_app": "Az ezzel a fiókkal bejelentkezett többi eszköz ugyanezeket a beállításokat kapja.",
+    "progress_attachments": "Mellékletek letöltése",
+    "progress_events": "Események letöltése",
+    "progress_contacts": "Névjegyek letöltése",
+    "progress_files_list": "Fájlok listázása",
+    "progress_other": "Letöltés",
+    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a Fájlokban offline tartott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
+    "filter_value_placeholder": "Érték",
+    "filter_values_hint": "Több értéket vesszővel válasszon el."
+  },
   "sidebar": {
     "close": "Bezárás",
     "compose": "Új levél",
@@ -926,6 +953,13 @@
     "restore_to": "Visszahelyezés ide: {folder}",
     "delete_forever": "Végleges törlés"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Áthelyezés a Beérkező levelekbe",
+    "delete_forever_title": "Véglegesen törlöd ezt az üzenetet?",
+    "delete_forever_batch_title": "{count, plural, one {Véglegesen törlöd ezt az üzenetet?} other {Véglegesen törlöd ezt a(z) # üzenetet?}}",
+    "delete_forever_message": "Nem tudod visszahozni.",
+    "delete_forever_batch_message": "{count, plural, one {Nem tudod visszahozni.} other {Nem tudod visszahozni őket.}}"
+  },
   "external_mail": {
     "sender_label": "Külső",
     "sender_tooltip": "Innen: {domain}, a szervezeteden kívülről",
@@ -985,7 +1019,7 @@
     "cc": "Másolat",
     "bcc": "Titkos másolat",
     "subject": "Tárgy",
-    "body_placeholder": "Üzenet írása...",
+    "body_placeholder": "Üzenet írása…",
     "send": "Küldés",
     "cancel": "Mégse",
     "attach": "Csatolás",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ha a szervered nem fogadja el ezt a címet borítékfeladóként, helyette a(z) {identity} cím kerül oda, és a címzettek láthatják a Return-Path fejlécben."
     },
-    "save_as_template": "Mentés sablonként",
+    "save_as_template": "Mentés sablonként…",
     "attach_from_device": "Feltöltés erről az eszközről",
     "templates_menu": "Sablonok",
-    "insert_template": "Sablon beszúrása",
+    "insert_template": "Sablon beszúrása…",
     "options": "Beállítások",
     "option_plain_text": "Egyszerű szöveg",
     "option_plain_text_hint": "Küldés formázás nélkül",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} az összes fiókban)",
     "title_all_accounts_only": "{name} ({total} az összes fiókban)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nincs találat} one {# beszélgetés található} other {# beszélgetés található}}",
+    "name_unread_sub": "{name}, {count} olvasatlan, további {sub} az almappákban",
+    "name_unread_only_sub": "{name}, {sub} olvasatlan az almappákban",
+    "sub_unread": "{sub} olvasatlan az almappákban"
+  },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",
     "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
     "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "A fiókváltó a mappák fölött jelenik meg, alatta az Új levél gombbal. Kikapcsolva az Új levél gomb kerül a helyére."
   },
   "mail_p2_conv": {
     "show_message": "Üzenet megjelenítése",
@@ -5272,6 +5315,12 @@
     "declined_many": "A sorozat {count} alkalmát utasította el.",
     "answers_series": "A válasza a sorozat minden alkalmára vonatkozik."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "eddig: {time}",
+    "week_all_days": "Az egész hét megjelenítése",
+    "week_days_short": "{count, plural, one {# nap} other {# nap}}",
+    "print": "Nyomtatás…"
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "{name} nem importálható.",
     "import_contacts": "Importálás a névjegyekbe…",
     "add_to_calendar": "Hozzáadás a naptárhoz…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Szerkesztett fájlok",
+    "hide": "Elrejtés",
+    "discard_detail_file": "A másolaton végzett módosításai törlődnek. A Fájlokban lévő fájl nem változik.",
+    "saved_auto": "{name} mentve a Fájlokba. A programjából későbbi mentések maguktól oda kerülnek."
   },
   "smime": {
     "your_certificates": "Tanúsítványaid",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Módosítja, hogyan csatlakozik a Bulwark?",
+      "message": "A Bulwark újraindul, és megkérdezi, hogyan csatlakozzon: az e-mail-címével vagy a szervezete Bulwarkján keresztül. A fiókjai ezen a számítógépen bejelentkezve maradnak.",
+      "confirm": "Módosítás",
+      "org_link": "Inkább a szervezetem Bulwarkját használom",
+      "add_account": "Fiók hozzáadása…"
+    },
+    "picture": {
+      "button": "Kép",
+      "title": "Kép beszúrása",
+      "address": "A kép webcíme",
+      "address_hint": "A kép a weben marad, és onnan jelenik meg.",
+      "description": "Leírás",
+      "invalid": "Adjon meg egy https:// kezdetű webcímet.",
+      "insert": "Beszúrás"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark megnyitása",
+      "done_as": "Bejelentkezve mint {address}. Ezt a lapot bezárhatja."
+    }
+  },
   "desktop_updates": {
     "title": "Frissítések",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "Fénykép",
     "merge_kept": "Megmarad",
     "import_show": "Megjelenítés"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# névjegy kijelölve} other {# névjegy kijelölve}}",
+    "selection_more": "és még {count}",
+    "no_addresses": "A kijelölt névjegyek egyikének sincs e-mail-címe.",
+    "task_open": "Megnyitás",
+    "due_next_week": "Jövő héten",
+    "due_none": "Nincs határidő",
+    "due_pick": "Dátum választása…",
+    "move_to_list": "Áthelyezés listába",
+    "dupes_legend": "{count, plural, one {1 már szerepel a Névjegyekben:} other {# már szerepel a Névjegyekben:}}",
+    "dupes_skip": "Kihagyás",
+    "dupes_update": "A meglévő névjegyek frissítése",
+    "dupes_updates": "Frissíti a névjegyet",
+    "upload_cancelled": "Feltöltés megszakítva",
+    "upload_cancelled_partial": "{count, plural, one {1 fájl} other {# fájl}} feltöltődött a megszakítás előtt",
+    "download_cancelled": "Letöltés megszakítva"
   },
   "desktopEdit": {
     "edit": "Szerkesztés",
@@ -7774,6 +7868,77 @@
     "state_offline": "Offline",
     "state_error": "Leállítva"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Változások feltöltése a meghajtó kikapcsolása előtt",
+      "title_sign_out": "Változások feltöltése kijelentkezés előtt",
+      "title_stop_folder": "Változások feltöltése a mappa szinkronizálásának leállítása előtt",
+      "cannot_title": "Néhány változás most nem tölthető fel",
+      "waiting": "Még feltöltendő: {names}",
+      "progress": "{done}/{total} feltöltve",
+      "cannot_offline": "A kiszolgáló nem érhető el. Még nincs feltöltve: {names}",
+      "cannot_other": "Nem tölthető fel: {names}. Az ok a beállítások legutóbbi tevékenységei között látható.",
+      "go_note_drive": "Ha most folytatja, ami nincs feltöltve, a(z) Dokumentumok\\Bulwark – not uploaded mappába kerül. Semmi sem vész el.",
+      "go_note_folder": "Ha most folytatja, ami nincs feltöltve, a mappában marad ezen a számítógépen.",
+      "keep_turn_off": "Meghajtó megtartása",
+      "keep_sign_out": "Bejelentkezve maradok",
+      "keep_stop_folder": "Szinkronizálás folytatása",
+      "go_turn_off": "Kikapcsolás most",
+      "go_sign_out": "Kijelentkezés most",
+      "go_stop_folder": "Szinkronizálás leállítása most"
+    },
+    "drive": {
+      "off_note": "Kikapcsoláskor a meghajtó eltűnik a Fájlkezelőből. A fájljai a Fájlokban maradnak.",
+      "rescued": "A fel nem töltött fájlok ({count}) most itt vannak: {folder}.",
+      "rescued_open": "Mappa megnyitása",
+      "rescued_dismiss": "Elrejtés",
+      "start_at_login": "A Bulwark indítása a Windowsba való bejelentkezéskor",
+      "start_at_login_why": "A meghajtóhoz futnia kell a Bulwarknak, ahogy a OneDrive-nál is.",
+      "closed_warning": "A meghajtón lévő fájlok nem nyílnak meg, amíg a Bulwark be van zárva.",
+      "where": "A Fájlkezelőben Bulwark Files néven",
+      "where_letter": "A Fájlkezelőben Bulwark Files ({letter}:) néven",
+      "open": "Megnyitás",
+      "letter_note": "A meghajtóbetűjelen át a Fájlkezelő nem mutatja a szinkronizálás állapotát és a „Mindig maradjon ezen az eszközön” lehetőséget. Ezek a Fájlkezelőben a Bulwark Files alatt látszanak.",
+      "letter_failed": "A meghajtóbetűjelet nem sikerült beállítani. Próbálja újra."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Naprakész",
+      "syncing": "Bulwark Files: Szinkronizálás. Hátravan: {count}",
+      "paused": "Bulwark Files: Szüneteltetve",
+      "offline": "Bulwark Files: Offline. Várakozik: {count}",
+      "question": "Bulwark Files: Válaszra vár",
+      "error": "Bulwark Files: Hiba"
+    },
+    "notify": {
+      "conflict_title": "Egy fájl két helyen módosult",
+      "problem_title": "Egy fájl nem szinkronizálható"
+    },
+    "activity": {
+      "waiting_count": "A kiszolgálóra váró változások: {count}",
+      "disk_name": "A Fájlokban lévő {path} ezen a számítógépen {detail} nevet kapott, mert egyes karakterei itt nem engedélyezettek",
+      "disk_case": "A Fájlokban lévő {path} ezen a számítógépen {detail} nevet kapott, mert itt már van egy csak kis- és nagybetűben eltérő név",
+      "disk_group": "A Fájlokban lévő, ezen a számítógépen nem engedélyezett nevek: {count}. Itt kissé más nevük van.",
+      "show": "Megjelenítés",
+      "hide": "Elrejtés"
+    },
+    "cant_sync": {
+      "title": "Nem szinkronizálható"
+    },
+    "folders": {
+      "stop": "Szinkronizálás leállítása…",
+      "pick_title_known": "A Fájlok melyik mappájával legyen azonos ez: {name}?",
+      "pick_confirm_known": "Maradjanak azonosak"
+    },
+    "pin": {
+      "keep": "Mindig maradjon ezen az eszközön",
+      "free": "Hely felszabadítása",
+      "failed": "Nem sikerült. Próbálja újra a Fájlkezelőben."
+    },
+    "account": {
+      "of": "{address} fájljai",
+      "choose": "Fájlok:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Gyors levélírás",
     "menu": "Gyors levélírás",
@@ -7796,6 +7961,10 @@
     "missing": "A(z) „{name}” már nem létezik.",
     "too_large": "A(z) „{name}” nagyobb, mint {max}, ezért nem csatolható.",
     "failed": "A(z) „{name}” csatolása nem sikerült. Próbálja újra."
+  },
+  "composeRecentLimit": {
+    "too_large": "Túl nagy",
+    "too_large_hint": "Nagyobb, mint amit a szerver elfogad ({max})"
   },
   "compose_windows": {
     "more_formatting": "További formázás",
@@ -7863,6 +8032,17 @@
     "join_host": "Csatlakozás ({host})",
     "join_named": "Csatlakozás: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Fejlesztői eszközök",
+    "updates_label": "Frissítések keresése",
+    "search": {
+      "quick_compose": "gyors írás új üzenet bárhonnan globális billentyűparancs",
+      "files_drive": "hely felszabadítása OneDrive Dropbox Fájlkezelő Finder meghajtóbetűjel igény szerinti fájlok",
+      "offline_space": "hely felszabadítása lemezterület tárhely",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID ujjlenyomat arc jelkulcs passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",
     "plugin_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt, ezért nem fut. A beállításai és adatai megmaradnak.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "Bármely parancs kereséséhez nyomja meg: {keys}"
   },
   "uxp3_desktop": {
-    "appearance_description": "Az alkalmazás megjelenésének módosítása",
-    "badge_all_accounts_description": "A tálca ikonján és az értesítési területen látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
     "web_address": "Webcím"
   },
   "selectionView": {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-import { isDesktopApp } from '@/lib/desktop/bridge';
 import { useThemeStore } from '@/stores/theme-store';
 import { useSettingsStore, type Density } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup } from './settings-section';
@@ -11,6 +10,8 @@ import { ThemesSettings } from './themes-settings';
 import { LayoutSection, SidebarSection, ExperimentalSection } from './layout-settings';
 import { cn } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
+import { useConfig } from '@/hooks/use-config';
+import { productName } from '@/lib/product-name';
 
 const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: boolean; showPreview: boolean }> = {
   'extra-compact': { py: 'py-0.5', gap: 'gap-1.5', showAvatar: false, showPreview: false },
@@ -74,15 +75,16 @@ function DensityPreview({ density }: { density: Density }) {
  */
 export function AppearanceSettings() {
   const t = useTranslations('settings.appearance');
-  const tDesktop = useTranslations('uxp3_desktop');
+  const tWords = useTranslations('ux_p3_words');
+  const appName = productName(useConfig().appName);
   const { theme, setTheme } = useThemeStore();
   const { density, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, getColorModePolicy, isFeatureEnabled } = usePolicyStore();
 
   return (
     <div className="space-y-8">
-      {/* The desktop app is no webmail to the person using it (desktop-p3-16). */}
-      <SettingsSection id="theme" title={t('title')} description={isDesktopApp() ? tDesktop('appearance_description') : t('description')}>
+      {/* The product's name, not "your webmail" (desktop-p3-16). */}
+      <SettingsSection id="theme" title={t('title')} description={tWords('appearance_description', { appName })}>
         <SettingItem label={t('theme.label')} description={t('theme.description')} locked={getColorModePolicy().locked}>
           <RadioGroup
             value={theme}

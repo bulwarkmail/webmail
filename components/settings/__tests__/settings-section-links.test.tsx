@@ -137,7 +137,9 @@ describe('settings section links', () => {
     await waitFor(() => expect(scrolled).toContain('addresses'));
   });
 
-  it('turns the Advanced switch on when a link names a section it hides', async () => {
+  // settings-p3-7: it used to turn the Advanced switch on for every page; now the
+  // page shows that section alone, once, and the switch stays off.
+  it('shows a section a link names by itself, with the Advanced switch left off', async () => {
     function AdvancedPage() {
       return (
         <SettingsSection id="downloads" title="Downloads" advanced>
@@ -149,8 +151,9 @@ describe('settings section links', () => {
     const { SettingsApp: App } = await import('../settings-app');
     render(<App linkSegments={['downloads']} />);
     expect(screen.getByTestId('settings-tab-reading')).toHaveAttribute('aria-current', 'page');
-    await waitFor(() => expect(useSettingsStore.getState().showAdvancedSettings).toBe(true), { timeout: 3000 });
-    await waitFor(() => expect(scrolled).toContain('downloads'));
+    await waitFor(() => expect(scrolled).toContain('downloads'), { timeout: 3000 });
+    expect(document.querySelector('[data-settings-section="downloads"]')).not.toBeNull();
+    expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
   });
 
   // settings-32 (2026-11-04): the version card in the sidebar's footer took

@@ -377,6 +377,38 @@ describe('a toast\'s buttons', () => {
   });
 });
 
+describe('a Files on this computer notification (files-p3-5)', () => {
+  it("answers the mass-delete question from its buttons, and a click opens the settings page", async () => {
+    const { useFilesSyncStore } = await import('@/stores/files-sync-store');
+    const confirmMassDelete = vi.fn(async () => {});
+    useFilesSyncStore.setState({ controller: { confirmMassDelete } as never });
+    const context = JSON.stringify({ filesSync: 'r1' });
+    await run({ type: 'notification', action: 'files-delete', context });
+    expect(confirmMassDelete).toHaveBeenLastCalledWith('r1', true);
+    await run({ type: 'notification', action: 'files-restore', context });
+    expect(confirmMassDelete).toHaveBeenLastCalledWith('r1', false);
+    expect(leaveFor).not.toHaveBeenCalled();
+    await run({ type: 'notification', action: 'open', context });
+    expect(focus).toHaveBeenCalled();
+    expect(leaveFor).toHaveBeenCalledWith('/settings/files_sync');
+    expect(confirmMassDelete).toHaveBeenCalledTimes(2);
+    useFilesSyncStore.getState().reset();
+  });
+});
+
+describe("the tray's Pause syncing (files-p3-14)", () => {
+  it('pauses and resumes every root', async () => {
+    const { useFilesSyncStore } = await import('@/stores/files-sync-store');
+    const setAllPaused = vi.fn(async () => {});
+    useFilesSyncStore.setState({ controller: { setAllPaused } as never });
+    await run({ type: 'files-sync', action: 'pause-all' });
+    expect(setAllPaused).toHaveBeenLastCalledWith(true);
+    await run({ type: 'files-sync', action: 'resume-all' });
+    expect(setAllPaused).toHaveBeenLastCalledWith(false);
+    useFilesSyncStore.getState().reset();
+  });
+});
+
 describe('listening', () => {
   it('does nothing in a browser', async () => {
     window.bulwarkDesktop = undefined;

@@ -309,7 +309,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('unreadBadgeAllAccounts', 'notifications', 'account_unread.badge_all_accounts.label'),
   bool('calendarNotificationsEnabled', 'notifications', `${NO}calendar.enabled`),
   bool('calendarNotificationSound', 'notifications', `${NO}calendar.sound`),
-  bool('doNotDisturb', 'accessibility', `${A}do_not_disturb.label`),
+  // On Notifications since settings-p3-6, as "Pause notifications"; the key stays.
+  bool('doNotDisturb', 'notifications', 'ux_p3_words.pause_label'),
   bool('visualAlerts', 'accessibility', `${A}visual_alerts.label`),
   // Seconds read "{seconds} seconds": formatted. The admin minimum is checked at run time.
   choice('toastDuration', 'accessibility', `${A}toast_duration.label`,
@@ -453,7 +454,7 @@ export const DENIED_SETTINGS: readonly string[] = [
  */
 export const NOT_YET_SETTINGS: readonly string[] = [
   'messageListOrder', 'filesSettings', 'activeThemeId', 'birthdayCalendarColor', 'vacationBlockCalendar',
-  'writingLanguage',
+  'writingLanguage', 'calendarNarrowWeekAllDays',
 ];
 
 /** Line breaks, tabs and other control characters. */

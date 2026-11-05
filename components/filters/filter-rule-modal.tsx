@@ -20,15 +20,15 @@ import type {
 import type { Mailbox } from "@/lib/jmap/types";
 import { isValidSieveHeaderName } from "@/lib/sieve/generator";
 import { REGEX_FIELDS, isValidSieveRegex, usesRegex } from "@/lib/sieve/regex";
-import { buildMailboxTree, flattenMailboxTree, type MailboxNode, generateUUID, cn } from "@/lib/utils";
-import type { RuleSuggestion } from "@/lib/filters/quick-rules";
+import { buildMailboxTree, type MailboxNode, generateUUID, cn } from "@/lib/utils";
+import { sameCondition, type RuleSuggestion } from "@/lib/filters/quick-rules";
+import { RuleFolderPicker } from "./rule-folder-picker";
 import { retroactiveSupport } from "@/lib/filters/retroactive";
 import { ruleForwards, ruleStops } from "@/lib/filters/forward-limit";
 import { hasPeriod, isPeriodBoundary } from "@/lib/sieve/period";
 import { fromWallClock, getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
-import { localizeMailboxName } from "@/lib/mailbox-label";
 
 interface FilterRuleModalProps {
   rule?: FilterRule;
@@ -107,10 +107,6 @@ function comparatorsFor(field: FilterConditionField, regex: boolean): FilterComp
 const ALL_ACTION_TYPES: FilterActionType[] = [
   "move", "copy", "forward", "mark_read", "star", "add_label", "discard", "reject", "keep",
 ];
-
-// Mail never needs filing into these: Drafts and Sent hold what the user
-// writes, Scheduled what waits to be sent.
-const NON_TARGET_ROLES = new Set(["drafts", "sent", "scheduled"]);
 
 /**
  * A rule saved with the old "Stop processing" action opens with that action
@@ -220,7 +216,7 @@ export function FilterRuleModal({
   onClose,
 }: FilterRuleModalProps) {
   const t = useTranslations("settings.filters");
-  const tSidebar = useTranslations("sidebar");
+  const tWords = useTranslations("ux_p3_words");
   const isEdit = !!rule;
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   // Regular expressions are for people who asked for the advanced settings;
@@ -241,7 +237,6 @@ export function FilterRuleModal({
   );
   const [stopProcessing, setStopProcessing] = useState(folded.stopProcessing);
   const [includeSpam, setIncludeSpam] = useState(start?.includeSpam ?? false);
-  const [usedSuggestions, setUsedSuggestions] = useState<ReadonlySet<string>>(new Set());
   const [applyToExisting, setApplyToExisting] = useState(false);
   const hadPeriod = !!start && hasPeriod(start);
   const [periodOn, setPeriodOn] = useState(hadPeriod);
@@ -263,9 +258,9 @@ export function FilterRuleModal({
   }, [confirmDiscard, dirty, onClose]);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // The folder list in the order every Move list has (lib/move-menu.ts).
+  // Each folder's Sieve path; the picker itself is the Move list (rule-folder-picker.tsx).
   const locale = useLocale();
-  const { hierarchicalMailboxes, mailboxPathMap } = useMemo(() => {
+  const { mailboxPathMap } = useMemo(() => {
     const tree = sortFolderTree(buildMailboxTree(mailboxes.filter((mb) => !mb.isShared)), locale);
     const pathMap = new Map<string, string>();
     const buildPaths = (nodes: MailboxNode[], parentPath = "") => {
@@ -279,7 +274,7 @@ export function FilterRuleModal({
       }
     };
     buildPaths(tree);
-    return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
+    return { mailboxPathMap: pathMap };
   }, [mailboxes, locale]);
 
   // Rules saved before folder ids were stored only carry the path; resolve it
@@ -466,7 +461,9 @@ export function FilterRuleModal({
     }, { applyToExisting: applyToExisting && canTickApply });
   }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, activeFrom, activeUntil, hasErrors, start, onSave, applyToExisting, canTickApply]);
 
-  const visibleSuggestions = suggestions.filter((s) => !usedSuggestions.has(s.id));
+  // A chip goes once the rule has its condition, and comes back when that
+  // row goes: the sender chip shows again after the domain took its place.
+  const visibleSuggestions = suggestions.filter((s) => !conditions.some((c) => sameCondition(c, s.condition)));
 
   const applySuggestion = (suggestion: RuleSuggestion) => {
     setConditions((prev) => {
@@ -476,7 +473,6 @@ export function FilterRuleModal({
       if (replaceAt === -1) return [...kept, suggestion.condition];
       return kept.map((c, i) => (i === replaceAt ? suggestion.condition : c));
     });
-    setUsedSuggestions((prev) => new Set(prev).add(suggestion.id));
   };
 
   const updateCondition = (index: number, updates: Partial<FilterCondition>) => {
@@ -554,6 +550,40 @@ export function FilterRuleModal({
       initialFocus={nameRef}
       footer={
         <>
+          {/* Next to Save, where it is always in view: in the body it and the note
+              saying why it is greyed sat below the dialog's fold (settings-p3-20). */}
+          {offerApplyToExisting && (
+            <div className="basis-full" data-testid="rule-apply-existing">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="applyToExisting"
+                  checked={applyToExisting && canTickApply}
+                  disabled={!canTickApply}
+                  onChange={(e) => setApplyToExisting(e.target.checked)}
+                  className="rounded border-input disabled:opacity-50"
+                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
+                />
+                <label
+                  htmlFor="applyToExisting"
+                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
+                >
+                  {applyExistingFolder === undefined
+                    ? t("apply_existing")
+                    : existingCount && canApplyToExisting
+                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
+                      : t("apply_existing_in", { folder: applyExistingFolder })}
+                </label>
+              </div>
+              {!canTickApply && (
+                <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
+                  {!canApplyToExisting
+                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
+                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
+                </p>
+              )}
+            </div>
+          )}
           <Button variant="outline" onClick={() => void requestClose()}>
             {t("cancel")}
           </Button>
@@ -724,7 +754,9 @@ export function FilterRuleModal({
                             ? t("attachment_type_placeholder")
                             : usesRegex(condition)
                               ? t("regex_placeholder")
-                              : t("value_placeholder_multi")
+                              // Short: the long one was cut in a narrow field. The note
+                              // under the conditions says commas give several values.
+                              : tWords("filter_value_placeholder")
                       }
                       aria-label={t("condition_value")}
                       aria-invalid={valueMissing(condition) || regexInvalidShown(condition)}
@@ -754,6 +786,7 @@ export function FilterRuleModal({
               <Plus className="w-3.5 h-3.5" />
               {t("add_condition")}
             </button>
+            <p className="mt-1 text-xs text-muted-foreground">{tWords("filter_values_hint")}</p>
             <FieldError id="rule-conditions-error" text={shown(errors.conditions)} />
           </div>
 
@@ -791,32 +824,15 @@ export function FilterRuleModal({
                     const invalid = actionInvalid(index);
                     const missing = !!selectedId && !mailboxPathMap.has(selectedId);
                     return (
-                      <select
+                      <RuleFolderPicker
+                        mailboxes={mailboxes}
                         value={selectedId}
-                        onChange={(e) => {
-                          const id = e.target.value;
-                          updateAction(index, {
-                            mailboxId: id || undefined,
-                            value: id ? (mailboxPathMap.get(id) ?? "") : "",
-                          });
-                        }}
-                        className={cn(selectClass, "flex-1 min-w-[140px]", invalid && "border-destructive")}
-                        aria-label={t("move_to_folder")}
-                        aria-invalid={invalid}
-                        aria-describedby={invalid ? "rule-actions-error" : undefined}
-                        data-rule-error={invalid}
-                      >
-                        <option value="">{t("move_to_folder")}</option>
-                        {missing && <option value={selectedId}>{action.value}</option>}
-                        {hierarchicalMailboxes
-                          .filter((mb) => !NON_TARGET_ROLES.has(mb.role ?? "") || mb.id === selectedId)
-                          .map((mb) => (
-                            <option key={mb.id} value={mb.id}>
-                              {"\u00A0".repeat(mb.depth * 3)}
-                              {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
-                            </option>
-                          ))}
-                      </select>
+                        missingLabel={missing ? action.value : undefined}
+                        onPick={(id) => updateAction(index, { mailboxId: id, value: mailboxPathMap.get(id) ?? "" })}
+                        invalid={invalid}
+                        describedBy={invalid ? "rule-actions-error" : undefined}
+                        className="flex-1 min-w-[140px] max-w-full"
+                      />
                     );
                   })()}
 
@@ -980,39 +996,6 @@ export function FilterRuleModal({
                   <p className="text-xs text-muted-foreground">{t("period_hint")}</p>
                   <FieldError text={shown(errors.period)} />
                 </div>
-              )}
-            </div>
-          )}
-
-          {offerApplyToExisting && (
-            <div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="applyToExisting"
-                  checked={applyToExisting && canTickApply}
-                  disabled={!canTickApply}
-                  onChange={(e) => setApplyToExisting(e.target.checked)}
-                  className="rounded border-input disabled:opacity-50"
-                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
-                />
-                <label
-                  htmlFor="applyToExisting"
-                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
-                >
-                  {applyExistingFolder === undefined
-                    ? t("apply_existing")
-                    : existingCount && canApplyToExisting
-                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
-                      : t("apply_existing_in", { folder: applyExistingFolder })}
-                </label>
-              </div>
-              {!canTickApply && (
-                <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
-                  {!canApplyToExisting
-                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
-                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
-                </p>
               )}
             </div>
           )}

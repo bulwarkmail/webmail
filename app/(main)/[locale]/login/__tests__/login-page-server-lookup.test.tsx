@@ -38,6 +38,7 @@ vi.mock('@/hooks/use-config', () => ({
 
 const { default: LoginPage } = await import('../page');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useAccountStore } = await import('@/stores/account-store');
 
 let found: Record<string, string | null>;
 let lookups: string[];
@@ -76,6 +77,27 @@ async function typeAddress(address: string) {
   fireEvent.change(document.getElementById('password')!, { target: { value: 'secret' } });
 }
 
+describe('a second address on a domain already signed in here', () => {
+  afterEach(() => useAccountStore.setState({ accounts: [] }));
+
+  it('goes to that account\'s server without a lookup, and Change still offers another', async () => {
+    useAccountStore.setState({
+      accounts: [{ id: 'a', label: 'sam@example.net', serverUrl: 'https://stalwart.example.net', username: 'sam@example.net', email: 'sam@example.net', authMode: 'basic', cookieSlot: 0, rememberMe: true, displayName: 'Sam', avatarColor: '#000', lastLoginAt: 0, isConnected: true, hasError: false, isDefault: true }] as never,
+    });
+    render(<LoginPage />);
+    await typeAddress('kim@example.net');
+    expect(await screen.findByTestId('login-server-found', {}, { timeout: 5000 })).toHaveTextContent('server_found');
+    expect(serverField()).toBeNull();
+    fireEvent.click(screen.getByTestId('login-server-change'));
+    expect(serverField()!.value).toBe('stalwart.example.net');
+    fireEvent.change(serverField()!, { target: { value: 'other.example.net' } });
+    fireEvent.submit(form());
+    await waitFor(() => expect(login).toHaveBeenCalled());
+    expect(login.mock.calls[0][0]).toBe('https://other.example.net');
+    expect(lookups).toEqual([]);
+  }, 30_000);
+});
+
 describe('sign-in to a server of one\'s own', () => {
   it('asks for the email address first, with no server field and no CORS line', async () => {
     render(<LoginPage />);
@@ -109,6 +131,17 @@ describe('sign-in to a server of one\'s own', () => {
     fireEvent.submit(form());
     await waitFor(() => expect(login).toHaveBeenCalled());
     expect(login.mock.calls[0][0]).toBe('https://mail.example.net');
+  }, 30_000);
+
+  it('drops the not-found hint once a server is typed, and brings it back when the field is emptied', async () => {
+    render(<LoginPage />);
+    await typeAddress('sam@example.net');
+    await waitFor(() => expect(serverField()).not.toBeNull(), { timeout: 5000 });
+    expect(screen.getByTestId('login-server-not-found')).toBeInTheDocument();
+    fireEvent.change(serverField()!, { target: { value: 'mail.example.net' } });
+    expect(screen.queryByTestId('login-server-not-found')).toBeNull();
+    fireEvent.change(serverField()!, { target: { value: '' } });
+    expect(screen.getByTestId('login-server-not-found')).toBeInTheDocument();
   }, 30_000);
 
   it('signing in before the lookup ends waits for it', async () => {

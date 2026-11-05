@@ -42,6 +42,7 @@ import {
   Code,
   Fish,
   Undo,
+  Inbox,
 } from "@/components/icons";
 
 type Icon = ComponentType<{ className?: string }>;
@@ -129,6 +130,8 @@ export interface MessageActionOptions {
   onViewSource?: () => void;
   /** In Trash: back to the folder it came from, or the Inbox (lib/trash-origin.ts). */
   onRestore?: () => void;
+  /** In Archive: "Move to Inbox" takes Archive's place (lib/archive-inbox.ts, mail-p3-4). */
+  onMoveToInbox?: () => void;
   /** Entries the host already shows elsewhere (the reader's toolbar). */
   omit?: ReadonlySet<MessageActionKey>;
   /** How the host shows the message (the reader's view toggles): a group before Export, Print and View source. */
@@ -164,6 +167,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tWindows = useTranslations("pwaWindows");
   const tRecover = useTranslations("recover_deleted");
   const tActions = useTranslations("reader_actions");
+  const tP3 = useTranslations("mail_p3_actions");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -248,7 +252,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     const restore = o.onRestore && o.currentMailboxRole === "trash"
       ? [item("restore", Undo, tRecover("restore"), o.onRestore, { testId: "ctx-restore" }), SEPARATOR]
       : [];
-    const archive = archiveEnabled ? [item("archive", Archive, t("archive"), o.onArchive)] : [];
+    // In Archive the same place (and key E) brings it back to the Inbox.
+    const archive = o.onMoveToInbox
+      ? [item("archive", Inbox, tP3("move_to_inbox"), o.onMoveToInbox, { testId: "ctx-move-to-inbox" })]
+      : archiveEnabled ? [item("archive", Archive, t("archive"), o.onArchive)] : [];
     const del = item("delete", Trash2, deleteForever ? tActions("delete_forever") : t("delete"), o.onDelete, { destructive: !mountainView, testId: "ctx-delete" });
     const read = item("read", isUnread ? MailOpen : Mail, isUnread ? t("mark_read") : t("mark_unread"), () => o.onMarkAsRead?.(isUnread), {
       disabled: false,

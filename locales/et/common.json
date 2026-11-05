@@ -109,6 +109,33 @@
     "code_label": "Autentimiskood",
     "verify": "Kinnita"
   },
+  "ux_p3_words": {
+    "appearance_description": "Muuda rakenduse {appName} välimust.",
+    "text_size_app": "Muudab kogu rakenduse teksti suurust. 100% on tavaline suurus.",
+    "scrollbars_app": "Kasutab süsteemi enda kerimisribasid, mis on laiemad ja kergemini haaratavad.",
+    "voice_app": "Hääl, mis loeb kirju ette. Loend näitab hääli, mis sellel arvutil on liidese keele jaoks.",
+    "voice_default_app": "Süsteemi hääl",
+    "visual_alerts_app": "Paneb akna pealkirja aeglaselt vilkuma, kui saabub uus kiri või meeldetuletus, ja hoiab meeldetuletusi ekraanil, kuni need sulged.",
+    "sounds_link_app": "Teavitushelid ja lugemata kirjade arvu tegumiriba ikoonil seadistad lehel Teavitused.",
+    "writing_language_app": "Keel, milles tavaliselt kirjutad. Seda kasutavad keelekontroll ja õigekirjakontroll.",
+    "badge_all_app": "Tegumiriba ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid.",
+    "badge_all_browser": "Vahekaardi ja rakenduse ikooni arv liidab kokku kõigi sisselogitud kontode postkastid.",
+    "dnd_title": "Ära sega",
+    "pause_label": "Peata teavitused",
+    "pause_description": "Uute kirjade kohta ei anta helisid, hüpikaknaid ega häälteateid, kuni selle uuesti välja lülitad.",
+    "dnd_link_app": "Teavitused saad peatada ja vaikse aja määrata lehel Teavitused.",
+    "dnd_link_browser": "Teavitused saad peatada lehel Teavitused.",
+    "backup_app": "Ekspordi oma seaded faili ja impordi need oma teistes seadmetes.",
+    "sync_app": "Teised selle kontoga sisse logitud seadmed saavad samad seaded.",
+    "progress_attachments": "Manuste allalaadimine",
+    "progress_events": "Sündmuste allalaadimine",
+    "progress_contacts": "Kontaktide allalaadimine",
+    "progress_files_list": "Failide loetlemine",
+    "progress_other": "Allalaadimine",
+    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja faile, mida hoiad rakenduses Failid võrguta kasutamiseks, krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
+    "filter_value_placeholder": "Väärtus",
+    "filter_values_hint": "Mitme väärtuse jaoks eralda need komadega."
+  },
   "sidebar": {
     "close": "Sulge",
     "compose": "Koosta",
@@ -926,6 +953,13 @@
     "restore_to": "Teisalda tagasi kausta {folder}",
     "delete_forever": "Kustuta jäädavalt"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Teisalda saabunutesse",
+    "delete_forever_title": "Kas kustutada see kiri jäädavalt?",
+    "delete_forever_batch_title": "{count, plural, one {Kas kustutada see kiri jäädavalt?} other {Kas kustutada need # kirja jäädavalt?}}",
+    "delete_forever_message": "Seda ei saa tagasi.",
+    "delete_forever_batch_message": "{count, plural, one {Seda ei saa tagasi.} other {Neid ei saa tagasi.}}"
+  },
   "external_mail": {
     "sender_label": "Väline",
     "sender_tooltip": "Domeenilt {domain}, väljastpoolt sinu organisatsiooni",
@@ -982,10 +1016,10 @@
     "forward_message": "Saada edasi",
     "from": "Saatja",
     "to": "Saajale",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Teema",
-    "body_placeholder": "Kirjuta oma sõnum...",
+    "body_placeholder": "Kirjuta oma sõnum…",
     "formatting": "Vormindus",
     "send": "Saada",
     "cancel": "Tühista",
@@ -1043,10 +1077,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Kui sinu server ei võta seda aadressi ümbriku saatjaks vastu, kasutatakse selle asemel {identity} ja adressaadid näevad seda päisest Return-Path."
     },
-    "save_as_template": "Salvesta mallina",
+    "save_as_template": "Salvesta mallina…",
     "attach_from_device": "Laadi üles sellest seadmest",
     "templates_menu": "Mallid",
-    "insert_template": "Lisa mall",
+    "insert_template": "Lisa mall…",
     "options": "Valikud",
     "option_plain_text": "Lihttekst",
     "option_plain_text_hint": "Saada ilma vormindusteta",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} kõigil kontodel)",
     "title_all_accounts_only": "{name} ({total} kõigil kontodel)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Tulemusi ei leitud} one {# vestlus leitud} other {# vestlust leitud}}",
+    "name_unread_sub": "{name}, lugemata: {count}, alamkaustades veel {sub}",
+    "name_unread_only_sub": "{name}, alamkaustades lugemata: {sub}",
+    "sub_unread": "Alamkaustades lugemata: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Halda kontosid…",
     "apply_to_existing": "{count, plural, one {Rakenda # olemasolevale kirjale kaustas {folder}} other {Rakenda # olemasolevale kirjale kaustas {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
     "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Näita kontovahetajat kaustade kohal ja selle all nuppu Koosta. Lülita see välja, et nupp Koosta oleks selle asemel."
   },
   "mail_p2_conv": {
     "show_message": "Näita kirja",
@@ -5272,6 +5315,12 @@
     "declined_many": "Lükkasite tagasi {count} selle sarja kohtumist.",
     "answers_series": "Teie vastus kehtib sarja kõigile kohtumistele."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "kuni {time}",
+    "week_all_days": "Näita kogu nädalat",
+    "week_days_short": "{count, plural, one {# päev} other {# päeva}}",
+    "print": "Prindi…"
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "Faili {name} ei saanud importida.",
     "import_contacts": "Impordi kontaktidesse…",
     "add_to_calendar": "Lisa kalendrisse…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Muudetud failid",
+    "hide": "Peida",
+    "discard_detail_file": "Selle koopia muudatused kustutatakse. Fail jaotises Failid ei muutu.",
+    "saved_auto": "{name} salvestati jaotisesse Failid. Hilisemad salvestused selle programmist lähevad sinna ise."
   },
   "smime": {
     "your_certificates": "Sinu sertifikaadid",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "Sinu meiliserver peab lubama sisselogimist sellelt veebisaidilt. Kui sisselogimine ei õnnestu, palu meiliserveri haldajal see lubada.",
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Kas muuta, kuidas Bulwark ühendub?",
+      "message": "Bulwark taaskäivitub ja küsib, kuidas ühenduda: teie e-posti aadressiga või teie organisatsiooni Bulwarki kaudu. Teie kontod selles arvutis jäävad sisselogituks.",
+      "confirm": "Muuda",
+      "org_link": "Kasuta hoopis minu organisatsiooni Bulwarki",
+      "add_account": "Lisa konto…"
+    },
+    "picture": {
+      "button": "Pilt",
+      "title": "Lisa pilt",
+      "address": "Pildi veebiaadress",
+      "address_hint": "Pilt jääb veebi ja seda näidatakse sealt.",
+      "description": "Kirjeldus",
+      "invalid": "Sisestage veebiaadress, mis algab https://.",
+      "insert": "Lisa"
+    },
+    "sign_in_page": {
+      "open_app": "Ava Bulwark",
+      "done_as": "Sisse logitud kui {address}. Võite selle vahekaardi sulgeda."
+    }
+  },
   "desktop_updates": {
     "title": "Uuendused",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Jääb alles",
     "import_show": "Näita"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valitud} other {# kontakti valitud}}",
+    "selection_more": "ja veel {count}",
+    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi.",
+    "task_open": "Ava",
+    "due_next_week": "Järgmisel nädalal",
+    "due_none": "Tähtajata",
+    "due_pick": "Vali kuupäev…",
+    "move_to_list": "Teisalda loendisse",
+    "dupes_legend": "{count, plural, one {1 on juba kontaktides:} other {# on juba kontaktides:}}",
+    "dupes_skip": "Jäta vahele",
+    "dupes_update": "Uuenda olemasolevaid kontakte",
+    "dupes_updates": "Uuendab kontakti",
+    "upload_cancelled": "Üleslaadimine tühistatud",
+    "upload_cancelled_partial": "{count, plural, one {1 fail} other {# faili}} laaditi üles enne tühistamist",
+    "download_cancelled": "Allalaadimine tühistati"
   },
   "desktopEdit": {
     "edit": "Muuda",
@@ -7774,6 +7868,77 @@
     "state_offline": "Võrguühenduseta",
     "state_error": "Seisatud"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Muudatuste üleslaadimine enne draivi väljalülitamist",
+      "title_sign_out": "Muudatuste üleslaadimine enne väljalogimist",
+      "title_stop_folder": "Muudatuste üleslaadimine enne kausta sünkroonimise lõpetamist",
+      "cannot_title": "Mõnda muudatust ei saa praegu üles laadida",
+      "waiting": "Veel üles laadida: {names}",
+      "progress": "{done}/{total} üles laaditud",
+      "cannot_offline": "Server pole kättesaadav. Veel üles laadimata: {names}",
+      "cannot_other": "Ei saa üles laadida: {names}. Põhjus on seadete viimases tegevuses.",
+      "go_note_drive": "Kui jätkate kohe, kopeeritakse üles laadimata osa kausta Dokumendid\\Bulwark – not uploaded. Midagi ei lähe kaotsi.",
+      "go_note_folder": "Kui jätkate kohe, jääb üles laadimata osa selle arvuti kausta.",
+      "keep_turn_off": "Jäta draiv sisse",
+      "keep_sign_out": "Jää sisselogituks",
+      "keep_stop_folder": "Jätka sünkroonimist",
+      "go_turn_off": "Lülita kohe välja",
+      "go_sign_out": "Logi kohe välja",
+      "go_stop_folder": "Lõpeta sünkroonimine kohe"
+    },
+    "drive": {
+      "off_note": "Väljalülitamisel kaob draiv Failihaldurist. Teie failid jäävad Failidesse.",
+      "rescued": "Üles laadimata failid ({count}) on nüüd kaustas {folder}.",
+      "rescued_open": "Ava kaust",
+      "rescued_dismiss": "Peida",
+      "start_at_login": "Käivita Bulwark Windowsi sisselogimisel",
+      "start_at_login_why": "Draiv vajab töötavat Bulwarki, nagu OneDrive.",
+      "closed_warning": "Draivi faile ei saa avada, kui Bulwark on suletud.",
+      "where": "Failihalduris nimega Bulwark Files",
+      "where_letter": "Failihalduris nimega Bulwark Files ({letter}:)",
+      "open": "Ava",
+      "letter_note": "Draivitähe kaudu ei näita Failihaldur sünkroonimise olekut ega valikut „Hoia alati selles seadmes“. Need on näha Failihalduris Bulwark Files all.",
+      "letter_failed": "Draivitähte ei õnnestunud määrata. Proovige uuesti."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Ajakohane",
+      "syncing": "Bulwark Files: Sünkroonimine. Jäänud: {count}",
+      "paused": "Bulwark Files: Peatatud",
+      "offline": "Bulwark Files: Võrguühenduseta. Ootel: {count}",
+      "question": "Bulwark Files: Ootab teie vastust",
+      "error": "Bulwark Files: Viga"
+    },
+    "notify": {
+      "conflict_title": "Faili muudeti kahes kohas",
+      "problem_title": "Faili ei saa sünkroonida"
+    },
+    "activity": {
+      "waiting_count": "Serverit ootavad muudatused: {count}",
+      "disk_name": "Failides olev {path} on selles arvutis nimega {detail}, sest mõni selle märk pole siin lubatud",
+      "disk_case": "Failides olev {path} on selles arvutis nimega {detail}, sest siin on juba nimi, mis erineb vaid suur- ja väiketähtede poolest",
+      "disk_group": "Failide nimed, mida see arvuti ei luba: {count}. Siin on neil veidi teised nimed.",
+      "show": "Näita",
+      "hide": "Peida"
+    },
+    "cant_sync": {
+      "title": "Ei saa sünkroonida"
+    },
+    "folders": {
+      "stop": "Lõpeta sünkroonimine…",
+      "pick_title_known": "Millise Failide kaustaga hoida {name} ühesugusena?",
+      "pick_confirm_known": "Hoia ühesugusena"
+    },
+    "pin": {
+      "keep": "Hoia alati selles seadmes",
+      "free": "Vabasta ruumi",
+      "failed": "See ei õnnestunud. Proovige uuesti Failihalduris."
+    },
+    "account": {
+      "of": "Konto {address} failid",
+      "choose": "Failid:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Kiirkiri",
     "menu": "Kiirkiri",
@@ -7796,6 +7961,10 @@
     "missing": "„{name}” pole enam olemas.",
     "too_large": "„{name}” on suurem kui {max} ja seda ei saa lisada.",
     "failed": "Faili „{name}” ei saanud lisada. Proovi uuesti."
+  },
+  "composeRecentLimit": {
+    "too_large": "Liiga suur",
+    "too_large_hint": "Suurem, kui server vastu võtab ({max})"
   },
   "compose_windows": {
     "more_formatting": "Rohkem vormindust",
@@ -7863,6 +8032,17 @@
     "join_host": "Liitu ({host})",
     "join_named": "Liitu: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Arendaja tööriistad",
+    "updates_label": "Otsi uuendusi",
+    "search": {
+      "quick_compose": "kiirkirjutamine uus kiri kõikjalt kiirklahv",
+      "files_drive": "vabasta ruumi OneDrive Dropbox Explorer Finder kettatäht failid nõudmisel",
+      "offline_space": "vabasta ruumi kettaruum salvestusruum",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID sõrmejälg nägu pääsuvõti passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",
     "plugin_refused": "Sinu organisatsioon ei luba seda pistikprogrammi selles seadmes, seega see ei tööta. Selle seaded ja andmed säilivad.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "Mis tahes käsu leidmiseks vajutage {keys}"
   },
   "uxp3_desktop": {
-    "appearance_description": "Muutke rakenduse välimust",
-    "badge_all_accounts_description": "Tegumiriba ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid.",
     "web_address": "Veebiaadress"
   },
   "selectionView": {

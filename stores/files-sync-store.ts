@@ -18,13 +18,16 @@ interface FilesSyncStore extends FilesSyncSnapshot {
 const EMPTY: FilesSyncSnapshot = {
   available: false,
   account: null,
+  accounts: [],
   roots: [],
   status: {},
   activity: [],
   drive: null,
   folderSyncForcedOff: false,
   items: {},
+  keptOnDevice: {},
   quota: null,
+  rescued: null,
 };
 
 export const useFilesSyncStore = create<FilesSyncStore>((set) => ({

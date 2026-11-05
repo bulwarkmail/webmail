@@ -255,6 +255,33 @@
     "code_label": "รหัสยืนยันตัวตน",
     "verify": "ยืนยัน"
   },
+  "ux_p3_words": {
+    "appearance_description": "เปลี่ยนรูปลักษณ์ของ {appName}",
+    "text_size_app": "ปรับขนาดข้อความทั้งหมดในแอป 100% คือขนาดปกติ",
+    "scrollbars_app": "ใช้แถบเลื่อนของระบบเอง ซึ่งกว้างกว่าและจับได้ง่ายกว่า",
+    "voice_app": "เสียงที่อ่านข้อความออกเสียง รายการแสดงเสียงที่คอมพิวเตอร์เครื่องนี้มีสำหรับภาษาของอินเทอร์เฟซ",
+    "voice_default_app": "เสียงของระบบ",
+    "visual_alerts_app": "ทำให้ชื่อหน้าต่างกะพริบช้าๆ เมื่อมีอีเมลใหม่หรือการเตือน และแสดงการเตือนบนหน้าจอจนกว่าคุณจะปิด",
+    "sounds_link_app": "เสียงแจ้งเตือนและจำนวนที่ยังไม่อ่านบนไอคอนในแถบงาน ตั้งค่าได้ในหน้าการแจ้งเตือน",
+    "writing_language_app": "ภาษาที่คุณใช้เขียนเป็นประจำ การพิสูจน์อักษรและการตรวจตัวสะกดจะใช้ภาษานี้",
+    "badge_all_app": "ตัวเลขบนไอคอนในแถบงานและในถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
+    "badge_all_browser": "ตัวเลขบนแท็บและไอคอนแอป จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
+    "dnd_title": "ห้ามรบกวน",
+    "pause_label": "หยุดการแจ้งเตือนชั่วคราว",
+    "pause_description": "ไม่มีเสียง ป๊อปอัป หรือประกาศด้วยเสียงสำหรับอีเมลใหม่ จนกว่าคุณจะปิดตัวเลือกนี้อีกครั้ง",
+    "dnd_link_app": "หยุดการแจ้งเตือนชั่วคราวและตั้งช่วงเวลาเงียบได้ในหน้าการแจ้งเตือน",
+    "dnd_link_browser": "หยุดการแจ้งเตือนชั่วคราวได้ในหน้าการแจ้งเตือน",
+    "backup_app": "ส่งออกการตั้งค่าเป็นไฟล์ แล้วนำเข้าบนอุปกรณ์อื่นของคุณ",
+    "sync_app": "อุปกรณ์อื่นที่ลงชื่อเข้าใช้บัญชีนี้จะได้รับการตั้งค่าเดียวกัน",
+    "progress_attachments": "กำลังดาวน์โหลดไฟล์แนบ",
+    "progress_events": "กำลังดาวน์โหลดกิจกรรม",
+    "progress_contacts": "กำลังดาวน์โหลดรายชื่อติดต่อ",
+    "progress_files_list": "กำลังแสดงรายการไฟล์",
+    "progress_other": "กำลังดาวน์โหลด",
+    "keep_description": "เก็บอีเมล ปฏิทิน รายชื่อติดต่อ และไฟล์ที่คุณเก็บไว้ใช้แบบออฟไลน์ในไฟล์ ไว้ในอุปกรณ์นี้แบบเข้ารหัส เมื่อออฟไลน์คุณอ่าน ติดธง และย้ายอีเมลได้ และสิ่งที่คุณเขียนจะรออยู่ในกล่องขาออก เมื่อออกจากระบบทุกอย่างจะถูกลบ",
+    "filter_value_placeholder": "ค่า",
+    "filter_values_hint": "หากต้องการหลายค่า ให้คั่นด้วยเครื่องหมายจุลภาค"
+  },
   "sidebar": {
     "close": "ปิดแถบด้านข้าง",
     "compose": "เขียนจดหมาย",
@@ -638,6 +665,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
     "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "แสดงตัวสลับบัญชีเหนือโฟลเดอร์ และปุ่มเขียนจดหมายอยู่ด้านล่าง ปิดตัวเลือกนี้เพื่อให้ปุ่มเขียนจดหมายอยู่แทนที่ตัวสลับบัญชี"
   },
   "mail_p2_conv": {
     "show_message": "แสดงข้อความ",
@@ -1057,6 +1087,12 @@
     "title_all_accounts": "{name} ({count}, {total} ในทุกบัญชี)",
     "title_all_accounts_only": "{name} ({total} ในทุกบัญชี)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {ไม่พบผลการค้นหา} other {พบ # การสนทนา}}",
+    "name_unread_sub": "{name}, ยังไม่อ่าน {count}, ในโฟลเดอร์ย่อยอีก {sub}",
+    "name_unread_only_sub": "{name}, ยังไม่อ่านในโฟลเดอร์ย่อย {sub}",
+    "sub_unread": "ยังไม่อ่านในโฟลเดอร์ย่อย {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
     "apply_to_existing": "{count, plural, other {นำไปใช้กับข้อความเดิม # ฉบับใน {folder}}}"
@@ -1441,10 +1477,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "หากเซิร์ฟเวอร์ไม่ยอมรับที่อยู่นี้เป็น envelope sender ระบบจะใช้ {identity} แทน และผู้รับสามารถดูได้ในส่วนหัว Return-Path"
     },
-    "save_as_template": "บันทึกเป็นแม่แบบข้อความ",
+    "save_as_template": "บันทึกเป็นแม่แบบข้อความ…",
     "attach_from_device": "อัปโหลดจากอุปกรณ์นี้",
     "templates_menu": "แม่แบบข้อความ",
-    "insert_template": "แทรกแม่แบบ",
+    "insert_template": "แทรกแม่แบบ…",
     "options": "ตัวเลือก",
     "option_plain_text": "ข้อความธรรมดา (Plain text)",
     "option_plain_text_hint": "ส่งโดยไม่มีการจัดรูปแบบ",
@@ -1628,7 +1664,7 @@
     "attach": "แนบไฟล์",
     "attach_files": "ไฟล์",
     "attach_photos": "รูปภาพและวิดีโอ",
-    "body_placeholder": "เขียนข้อความของคุณที่นี่...",
+    "body_placeholder": "เขียนข้อความของคุณที่นี่…",
     "cancel": "ยกเลิก",
     "formatting": "การจัดรูปแบบ",
     "forward_message": "ส่งต่อ",
@@ -2136,6 +2172,13 @@
     "restore": "กู้คืน",
     "restore_to": "ย้ายกลับไปที่ {folder}",
     "delete_forever": "ลบถาวร"
+  },
+  "mail_p3_actions": {
+    "move_to_inbox": "ย้ายไปที่กล่องข้อความ",
+    "delete_forever_title": "ลบข้อความนี้อย่างถาวรหรือไม่",
+    "delete_forever_batch_title": "{count, plural, one {ลบข้อความนี้อย่างถาวรหรือไม่} other {ลบข้อความ # ฉบับนี้อย่างถาวรหรือไม่}}",
+    "delete_forever_message": "คุณจะกู้คืนไม่ได้",
+    "delete_forever_batch_message": "{count, plural, one {คุณจะกู้คืนไม่ได้} other {คุณจะกู้คืนไม่ได้}}"
   },
   "external_mail": {
     "sender_label": "ภายนอก",
@@ -2742,6 +2785,12 @@
     "import_to_mail_failed": "นำเข้า {name} ไม่ได้",
     "import_contacts": "นำเข้าไปยังรายชื่อติดต่อ…",
     "add_to_calendar": "เพิ่มในปฏิทิน…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "ไฟล์ที่แก้ไข",
+    "hide": "ซ่อน",
+    "discard_detail_file": "การแก้ไขในสำเนานี้จะถูกลบ ไฟล์ในไฟล์จะไม่เปลี่ยน",
+    "saved_auto": "บันทึก {name} ลงในไฟล์แล้ว การบันทึกครั้งต่อไปจากโปรแกรมจะไปที่นั่นเอง"
   },
   "protocol_handlers": {
     "title": "แอปพลิเคชันเริ่มต้น",
@@ -4704,6 +4753,12 @@
     "declined_dates": "คุณปฏิเสธวันที่ {dates}",
     "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
     "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "จนถึง {time}",
+    "week_all_days": "แสดงทั้งสัปดาห์",
+    "week_days_short": "{count, plural, other {# วัน}}",
+    "print": "พิมพ์…"
   },
   "settings": {
     "title": "การตั้งค่า",
@@ -7513,6 +7568,28 @@
     "trouble_cors": "เซิร์ฟเวอร์อีเมลของคุณต้องอนุญาตให้ลงชื่อเข้าใช้จากเว็บไซต์นี้ หากลงชื่อเข้าใช้ไม่ได้ ให้ขอผู้ดูแลเซิร์ฟเวอร์อีเมลอนุญาต",
     "provider_unsupported": "{provider} ไม่รองรับ JMAP ซึ่งเป็นวิธีที่ Bulwark ใช้คุยกับเซิร์ฟเวอร์อีเมล Bulwark จึงยังเชื่อมต่อโดยตรงไม่ได้"
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "เปลี่ยนวิธีที่ Bulwark เชื่อมต่อไหม",
+      "message": "Bulwark จะเริ่มใหม่และถามวิธีเชื่อมต่อ: ด้วยที่อยู่อีเมลของคุณ หรือผ่าน Bulwark ขององค์กรของคุณ บัญชีของคุณบนคอมพิวเตอร์เครื่องนี้ยังคงลงชื่อเข้าใช้อยู่",
+      "confirm": "เปลี่ยน",
+      "org_link": "ใช้ Bulwark ขององค์กรของฉันแทน",
+      "add_account": "เพิ่มบัญชี…"
+    },
+    "picture": {
+      "button": "รูปภาพ",
+      "title": "แทรกรูปภาพ",
+      "address": "ที่อยู่เว็บของรูปภาพ",
+      "address_hint": "รูปภาพจะอยู่บนเว็บและแสดงจากที่นั่น",
+      "description": "คำอธิบาย",
+      "invalid": "ป้อนที่อยู่เว็บที่ขึ้นต้นด้วย https://",
+      "insert": "แทรก"
+    },
+    "sign_in_page": {
+      "open_app": "เปิด Bulwark",
+      "done_as": "ลงชื่อเข้าใช้เป็น {address} แล้ว คุณปิดแท็บนี้ได้"
+    }
+  },
   "desktop_updates": {
     "title": "การอัปเดต",
     "version_label": "Bulwark {version}",
@@ -7617,6 +7694,23 @@
     "merge_photo": "รูปภาพ",
     "merge_kept": "เก็บไว้",
     "import_show": "แสดง"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
+    "selection_more": "และอีก {count} รายการ",
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล",
+    "task_open": "เปิด",
+    "due_next_week": "สัปดาห์หน้า",
+    "due_none": "ไม่มีวันครบกำหนด",
+    "due_pick": "เลือกวันที่…",
+    "move_to_list": "ย้ายไปยังรายการ",
+    "dupes_legend": "{count, plural, other {# รายการมีอยู่ในรายชื่อติดต่อแล้ว:}}",
+    "dupes_skip": "ข้าม",
+    "dupes_update": "อัปเดตผู้ติดต่อที่มีอยู่",
+    "dupes_updates": "อัปเดตผู้ติดต่อ",
+    "upload_cancelled": "ยกเลิกการอัปโหลดแล้ว",
+    "upload_cancelled_partial": "อัปโหลดแล้ว {count, plural, other {# ไฟล์}} ก่อนที่คุณจะยกเลิก",
+    "download_cancelled": "ยกเลิกการดาวน์โหลดแล้ว"
   },
   "desktopEdit": {
     "edit": "แก้ไข",
@@ -7782,6 +7876,77 @@
     "state_offline": "ออฟไลน์",
     "state_error": "หยุดแล้ว"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนปิดไดรฟ์",
+      "title_sign_out": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนออกจากระบบ",
+      "title_stop_folder": "กำลังอัปโหลดการเปลี่ยนแปลงก่อนหยุดซิงค์โฟลเดอร์",
+      "cannot_title": "อัปโหลดการเปลี่ยนแปลงบางรายการไม่ได้ในตอนนี้",
+      "waiting": "รออัปโหลด: {names}",
+      "progress": "อัปโหลดแล้ว {done} จาก {total}",
+      "cannot_offline": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ยังไม่ได้อัปโหลด: {names}",
+      "cannot_other": "อัปโหลดไม่ได้: {names} ดูเหตุผลได้ในกิจกรรมล่าสุดในการตั้งค่า",
+      "go_note_drive": "หากดำเนินการต่อตอนนี้ สิ่งที่ยังไม่ได้อัปโหลดจะถูกคัดลอกไปที่ เอกสาร\\Bulwark – not uploaded จึงไม่มีอะไรสูญหาย",
+      "go_note_folder": "หากดำเนินการต่อตอนนี้ สิ่งที่ยังไม่ได้อัปโหลดจะยังอยู่ในโฟลเดอร์บนคอมพิวเตอร์เครื่องนี้",
+      "keep_turn_off": "เปิดไดรฟ์ไว้",
+      "keep_sign_out": "อยู่ในระบบต่อ",
+      "keep_stop_folder": "ซิงค์ต่อ",
+      "go_turn_off": "ปิดเลย",
+      "go_sign_out": "ออกจากระบบเลย",
+      "go_stop_folder": "หยุดซิงค์เลย"
+    },
+    "drive": {
+      "off_note": "การปิดจะนำไดรฟ์ออกจากตัวสำรวจไฟล์ ไฟล์ของคุณยังอยู่ในไฟล์",
+      "rescued": "ไฟล์ที่ยังไม่ได้อัปโหลด ({count}) อยู่ใน {folder} แล้ว",
+      "rescued_open": "เปิดโฟลเดอร์",
+      "rescued_dismiss": "ปิด",
+      "start_at_login": "เริ่ม Bulwark เมื่อลงชื่อเข้าใช้ Windows",
+      "start_at_login_why": "ไดรฟ์ต้องให้ Bulwark ทำงานอยู่ เช่นเดียวกับ OneDrive",
+      "closed_warning": "เปิดไฟล์ในไดรฟ์ไม่ได้ขณะที่ Bulwark ปิดอยู่",
+      "where": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files",
+      "where_letter": "ในตัวสำรวจไฟล์ชื่อ Bulwark Files ({letter}:)",
+      "open": "เปิด",
+      "letter_note": "เมื่อเปิดผ่านอักษรไดรฟ์ ตัวสำรวจไฟล์จะไม่แสดงสถานะการซิงค์และ “เก็บไว้บนอุปกรณ์นี้เสมอ” ดูได้ที่ Bulwark Files ในตัวสำรวจ",
+      "letter_failed": "ตั้งอักษรไดรฟ์ไม่ได้ ลองอีกครั้ง"
+    },
+    "tray": {
+      "idle": "Bulwark Files: เป็นปัจจุบัน",
+      "syncing": "Bulwark Files: กำลังซิงค์ เหลือ: {count}",
+      "paused": "Bulwark Files: หยุดชั่วคราว",
+      "offline": "Bulwark Files: ออฟไลน์ รออยู่: {count}",
+      "question": "Bulwark Files: รอคำตอบของคุณ",
+      "error": "Bulwark Files: ข้อผิดพลาด"
+    },
+    "notify": {
+      "conflict_title": "มีไฟล์ถูกแก้ไขในสองที่",
+      "problem_title": "ซิงค์ไฟล์ไม่ได้"
+    },
+    "activity": {
+      "waiting_count": "การเปลี่ยนแปลงที่รอเซิร์ฟเวอร์: {count}",
+      "disk_name": "{path} ในไฟล์มีชื่อ {detail} บนคอมพิวเตอร์เครื่องนี้ เพราะมีอักขระบางตัวที่ใช้ที่นี่ไม่ได้",
+      "disk_case": "{path} ในไฟล์มีชื่อ {detail} บนคอมพิวเตอร์เครื่องนี้ เพราะมีชื่อที่ต่างกันแค่ตัวพิมพ์ใหญ่และเล็กอยู่แล้ว",
+      "disk_group": "ชื่อในไฟล์ที่คอมพิวเตอร์เครื่องนี้ไม่อนุญาต: {count} ที่นี่จึงมีชื่อต่างไปเล็กน้อย",
+      "show": "แสดง",
+      "hide": "ซ่อน"
+    },
+    "cant_sync": {
+      "title": "ซิงค์ไม่ได้"
+    },
+    "folders": {
+      "stop": "หยุดซิงค์…",
+      "pick_title_known": "จะให้ {name} ตรงกับโฟลเดอร์ใดในไฟล์",
+      "pick_confirm_known": "ให้ตรงกัน"
+    },
+    "pin": {
+      "keep": "เก็บไว้บนอุปกรณ์นี้เสมอ",
+      "free": "เพิ่มพื้นที่ว่าง",
+      "failed": "ไม่สำเร็จ ลองอีกครั้งในตัวสำรวจไฟล์"
+    },
+    "account": {
+      "of": "ไฟล์ของ {address}",
+      "choose": "ไฟล์ของ"
+    }
+  },
   "desktopQuickCompose": {
     "label": "เขียนด่วน",
     "menu": "เขียนด่วน",
@@ -7804,6 +7969,10 @@
     "missing": "“{name}” ไม่มีอยู่แล้ว",
     "too_large": "“{name}” มีขนาดใหญ่กว่า {max} จึงแนบไม่ได้",
     "failed": "แนบ “{name}” ไม่สำเร็จ ลองอีกครั้ง"
+  },
+  "composeRecentLimit": {
+    "too_large": "ใหญ่เกินไป",
+    "too_large_hint": "ใหญ่กว่าที่เซิร์ฟเวอร์รับได้ ({max})"
   },
   "compose_windows": {
     "more_formatting": "การจัดรูปแบบเพิ่มเติม",
@@ -7871,6 +8040,17 @@
     "join_host": "เข้าร่วม ({host})",
     "join_named": "เข้าร่วม: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "เครื่องมือนักพัฒนา",
+    "updates_label": "ตรวจหาอัปเดต",
+    "search": {
+      "quick_compose": "เขียนด่วน ข้อความใหม่จากทุกที่ ทางลัดทั่วระบบ",
+      "files_drive": "เพิ่มพื้นที่ว่าง OneDrive Dropbox File Explorer Finder อักษรไดรฟ์ ไฟล์ตามต้องการ",
+      "offline_space": "เพิ่มพื้นที่ว่าง พื้นที่ดิสก์ ที่เก็บข้อมูล",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID ลายนิ้วมือ ใบหน้า พาสคีย์ passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "องค์กรของคุณไม่อนุญาตให้ใช้เซิร์ฟเวอร์นี้บนอุปกรณ์นี้",
     "plugin_refused": "องค์กรของคุณไม่อนุญาตให้ใช้ปลั๊กอินนี้บนอุปกรณ์นี้ จึงไม่ทำงาน แต่การตั้งค่าและข้อมูลของปลั๊กอินยังคงอยู่",
@@ -7912,8 +8092,6 @@
     "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
   },
   "uxp3_desktop": {
-    "appearance_description": "เปลี่ยนรูปลักษณ์ของแอป",
-    "badge_all_accounts_description": "ตัวเลขบนไอคอนในแถบงานและในถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
     "web_address": "ที่อยู่เว็บ"
   },
   "selectionView": {

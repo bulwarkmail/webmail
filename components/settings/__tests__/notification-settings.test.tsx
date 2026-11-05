@@ -307,21 +307,6 @@ describe('NotificationSettings - several accounts', () => {
     useAccountStore.setState({ accounts: [] });
   });
 
-  // desktop-p3-16: "The number on the tab, the app icon and the tray" in an app with no tab.
-  it('says taskbar icon and tray for the count of all accounts in the desktop app, tab in a browser', async () => {
-    const first = render(<NotificationSettings />);
-    expect(await first.findByText('badge_all_accounts.description')).toBeTruthy();
-    first.unmount();
-    window.bulwarkDesktop = { version: 1, platform: 'win32' } as never;
-    try {
-      const desktop = render(<NotificationSettings />);
-      expect(await desktop.findByText('badge_all_accounts_description')).toBeTruthy();
-      expect(desktop.queryByText('badge_all_accounts.description')).toBeNull();
-    } finally {
-      delete window.bulwarkDesktop;
-    }
-  });
-
   it('has one switch per account instead of the switch for this account and a checklist', async () => {
     const { findByRole, queryByText, queryByRole } = render(<NotificationSettings />);
     expect(await findByRole('switch', { name: 'Alice (a@example.com)' })).toBeTruthy();

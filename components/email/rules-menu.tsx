@@ -49,7 +49,7 @@ import {
   type RulesMenuAvailability,
 } from "@/lib/filters/quick-rules";
 import {
-  getOwnAddresses,
+  getRuleAccountAddresses,
   knownListId,
   loadListIds,
   resolveMailboxRuleTarget,
@@ -153,7 +153,10 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
   const emailKeywords = useSettingsStore((s) => s.emailKeywords);
   const status = useFiltersStatus(target);
 
-  const own = useMemo(() => getOwnAddresses(), []);
+  // Only this account's own addresses: mail from another account the user
+  // is signed in to is someone else's here (mail-p3-9).
+  const addresses = useMemo(() => getRuleAccountAddresses(target), [target]);
+  const own = addresses.own;
   const senders = useMemo(() => collectSenders(senderEmails, own), [senderEmails, own]);
 
   // Rows carry no headers, so the List-Id is asked for when the menu opens.
@@ -209,7 +212,7 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
       mode: "prefill",
       target,
       rule: buildPrefillRule(subject, text.filters, generateUUID()),
-      suggestions: buildSuggestions(source, subject, own, text.filters),
+      suggestions: buildSuggestions(source, subject, own, addresses.main, text.filters),
       sourceMailboxId,
     });
   };
@@ -436,6 +439,20 @@ export function RulesContextSubMenu({
       {target && <ContextRulesContent anchor={anchor} senderEmails={senderEmails} target={target} onDone={onClose} />}
     </ContextMenuSubMenu>
   );
+}
+
+/**
+ * RulesContextSubMenu's entries without the submenu around them: the menu a
+ * selection view's Rules button opens (mail-p3-8).
+ */
+export function RulesContextList({ anchor, senderEmails, onClose }: { anchor: Email; senderEmails: Email[]; onClose: () => void }) {
+  const accountEmails = useMemo(
+    () => (senderEmails.some((e) => e.id === anchor.id) ? senderEmails : [anchor, ...senderEmails]),
+    [anchor, senderEmails],
+  );
+  const { availability, target } = useRulesAvailability(accountEmails);
+  if (availability === "hidden" || availability === "cross_account" || !target) return null;
+  return <ContextRulesContent anchor={anchor} senderEmails={senderEmails} target={target} onDone={onClose} />;
 }
 
 // ── Reading pane ⋮ menu ──────────────────────────────────────────────────

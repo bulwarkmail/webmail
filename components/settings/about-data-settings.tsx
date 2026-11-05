@@ -159,7 +159,9 @@ export function AboutDataSettings() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
   const tP2 = useTranslations('uxp2_settings');
-  // The app has no "other browsers" (settings-p2-4).
+  const tWords = useTranslations('ux_p3_words');
+  // The app has no "other browsers" (settings-p2-4), and its Backup says only what it
+  // does: a settings file to export and import (settings-p3-9).
   const [inApp, setInApp] = useState(false);
   useEffect(() => setInApp(isDesktopApp()), []);
   // A reset keeps the sync choice, so the other devices change only when sync is on (settings-p2-18).
@@ -209,9 +211,9 @@ export function AboutDataSettings() {
 
   return (
     <div className="space-y-8">
-      <SettingsSection id="backup" title={t('sections.backup')} description={inApp ? tP2('backup_description_app') : t('sections.backup_description')}>
+      <SettingsSection id="backup" title={t('sections.backup')} description={inApp ? tWords('backup_app') : t('sections.backup_description')}>
         {settingsSyncEnabled && (
-          <SettingItem label={t('settings_sync.label')} description={t('settings_sync.description')} term="sync">
+          <SettingItem label={t('settings_sync.label')} description={inApp ? tWords('sync_app') : t('settings_sync.description')} term="sync">
             <ToggleSwitch checked={!settingsSyncDisabled} onChange={(checked) => updateSetting('settingsSyncDisabled', !checked)} />
           </SettingItem>
         )}

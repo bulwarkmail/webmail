@@ -60,6 +60,9 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useIdentityStore } from "@/stores/identity-store";
+import { useAccountStore } from "@/stores/account-store";
+import { isSelfSent, ownReplyAddresses } from "@/lib/reply-recipients";
 import { isFilePreviewable, toInertBlob } from "@/lib/file-preview";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
@@ -216,6 +219,14 @@ export function ThreadConversationView({
   const ordered = useMemo(() => oldestFirst(emails), [emails]);
   const newestId = newestReadable(ordered)?.id ?? null;
   const emailIdList = ordered.map((email) => email.id).join(',');
+  // Your own messages say "me" while folded, as Gmail and Apple Mail do (mail-p3-15).
+  const identities = useIdentityStore((s) => s.identities);
+  const activeAccountId = useAuthStore((s) => s.activeAccountId);
+  const account = useAccountStore((s) => (activeAccountId ? s.getAccountById(activeAccountId) : undefined));
+  const ownEmails = useMemo(
+    () => ownReplyAddresses(identities.map((i) => i.email), [account?.email, account?.username]),
+    [identities, account?.email, account?.username],
+  );
   const { isMobile: summaryOnPhone, isCompact: summaryOnTablet } = useDeviceDetection();
   const threadSummaryProps = useMemo(
     () => ({ threadId: thread.latestEmail.threadId ?? null, emailIds: emailIdList ? emailIdList.split(',') : [], deviceType: summaryOnPhone ? 'mobile' : summaryOnTablet ? 'tablet' : 'desktop' }),
@@ -312,6 +323,7 @@ export function ThreadConversationView({
               email={email}
               isExpanded={expandedIds.has(email.id)}
               isLatest={email.id === newestId}
+              isOwn={isSelfSent(email, ownEmails)}
               allowExternal={externalContent.isAllowed(email)}
               onToggleExpanded={() => toggleExpanded(email.id)}
               onAllowExternal={() => externalContent.allow(email.id)}
@@ -355,6 +367,8 @@ interface EmailCardProps {
   email: Email;
   isExpanded: boolean;
   isLatest: boolean;
+  /** Sent by the user: "me" on the folded card. */
+  isOwn?: boolean;
   allowExternal: boolean;
   onToggleExpanded: () => void;
   onAllowExternal: () => void;
@@ -396,6 +410,7 @@ function EmailCard({
   email,
   isExpanded,
   isLatest: _isLatest,
+  isOwn = false,
   allowExternal,
   onToggleExpanded,
   onAllowExternal,
@@ -453,11 +468,13 @@ function EmailCard({
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span dir="auto" className={cn(
+            <span dir="auto" data-conversation-sender="" className={cn(
               "font-medium truncate",
               isUnread ? "text-foreground" : "text-muted-foreground"
-            )}>
-              {sender?.name || (sender?.email && formatAddress(sender.email)) || t('email_viewer.unknown_sender')}
+            )} title={isOwn && !isExpanded ? (sender?.name || sender?.email) : undefined}>
+              {isOwn && !isExpanded
+                ? t('email_viewer.recipient_me')
+                : sender?.name || (sender?.email && formatAddress(sender.email)) || t('email_viewer.unknown_sender')}
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
             <ReceivedLabelChip email={email} />

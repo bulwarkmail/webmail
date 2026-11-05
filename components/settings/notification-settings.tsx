@@ -17,6 +17,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AccountPushSwitches, usePushAccounts } from './multi-account-push';
 import { isDesktopApp } from '@/lib/desktop/bridge';
+import { wordingFor } from '@/lib/desktop/wording';
 import { productName } from '@/lib/product-name';
 import { useConfig } from '@/hooks/use-config';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
@@ -63,8 +64,9 @@ export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
   const tAppearance = useTranslations('settings.appearance');
   const tDesktopP2 = useTranslations('uxp2_desktop');
-  const tDesktopP3 = useTranslations('uxp3_desktop');
   const tUnread = useTranslations('account_unread');
+  const tWords = useTranslations('ux_p3_words');
+  const doNotDisturb = useSettingsStore((s) => s.doNotDisturb);
   const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
   const tP2 = useTranslations('uxp2_settings');
@@ -334,6 +336,20 @@ export function NotificationSettings() {
 
   return (
     <div className="space-y-8">
+      {/* Pausing everything and quiet hours (app only) in one place, at the top, where
+          people look when mail should stop pinging (settings-p3-6). Accessibility links here. */}
+      {!isSettingHidden('doNotDisturb') && (
+        <SettingsSection id="pause" title={tWords('dnd_title')}>
+          <SettingItem label={tWords('pause_label')} description={tWords('pause_description')}>
+            <ToggleSwitch
+              checked={doNotDisturb}
+              onChange={(checked) => updateSetting('doNotDisturb', checked)}
+            />
+          </SettingItem>
+          <DesktopOsSettings part="quietHours" />
+        </SettingsSection>
+      )}
+
       <SettingsSection id="mail" title={t('email.title')} description={t('email.description')}>
         {!isSettingHidden('emailNotificationsEnabled') && (
         <SettingItem
@@ -375,8 +391,8 @@ export function NotificationSettings() {
 
         {/* The tab/app icon badge is a new-mail signal too; people look for it here. The desktop app has no tab: the taskbar icon. */}
         <SettingItem
-          label={isDesktopApp() ? tDesktopP2('unread_badge_label') : tAppearance('favicon_unread_badge.label')}
-          description={isDesktopApp() ? tDesktopP2('unread_badge_description') : tAppearance('favicon_unread_badge.description')}
+          label={wordingFor({ app: tDesktopP2('unread_badge_label'), browser: tAppearance('favicon_unread_badge.label') })}
+          description={wordingFor({ app: tDesktopP2('unread_badge_description'), browser: tAppearance('favicon_unread_badge.description') })}
         >
           <ToggleSwitch
             checked={faviconUnreadBadge}
@@ -386,11 +402,7 @@ export function NotificationSettings() {
 
         {/* Only means something with a second account. */}
         {severalAccounts && (
-        <SettingItem
-          label={tUnread('badge_all_accounts.label')}
-          // The desktop app has no tab: the taskbar icon and the tray (desktop-p3-16).
-          description={isDesktopApp() ? tDesktopP3('badge_all_accounts_description') : tUnread('badge_all_accounts.description')}
-        >
+        <SettingItem label={tUnread('badge_all_accounts.label')} description={wordingFor({ app: tWords('badge_all_app'), browser: tWords('badge_all_browser') })}>
           <ToggleSwitch
             checked={unreadBadgeAllAccounts}
             onChange={(checked) => updateSetting('unreadBadgeAllAccounts', checked)}

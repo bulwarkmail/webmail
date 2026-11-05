@@ -109,6 +109,33 @@
     "code_label": "Cod de autentificare",
     "verify": "Verifică"
   },
+  "ux_p3_words": {
+    "appearance_description": "Schimbați aspectul {appName}.",
+    "text_size_app": "Scalează tot textul din aplicație. 100% este dimensiunea normală.",
+    "scrollbars_app": "Folosește barele de derulare ale sistemului, care sunt mai late și mai ușor de prins.",
+    "voice_app": "Vocea care citește mesajele cu voce tare. Lista arată vocile pe care le are acest computer pentru limba interfeței.",
+    "voice_default_app": "Vocea sistemului",
+    "visual_alerts_app": "Face să clipească încet titlul ferestrei când sosesc e-mailuri noi sau un memento și păstrează mementourile pe ecran până le închideți.",
+    "sounds_link_app": "Sunetele notificărilor și numărul de necitite de pe pictograma din bara de activități se setează pe pagina Notificări.",
+    "writing_language_app": "Limba în care scrieți de obicei. Corectura și verificarea ortografică o folosesc.",
+    "badge_all_app": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
+    "badge_all_browser": "Numărul de pe filă și de pe pictograma aplicației adună căsuțele de primire ale tuturor conturilor conectate.",
+    "dnd_title": "Nu deranjați",
+    "pause_label": "Întrerupeți notificările",
+    "pause_description": "Fără sunete, ferestre pop-up sau anunțuri vocale pentru e-mailurile noi, până când opriți din nou această opțiune.",
+    "dnd_link_app": "Întrerupeți notificările și setați orele de liniște pe pagina Notificări.",
+    "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări.",
+    "backup_app": "Exportați setările într-un fișier și importați-le pe celelalte dispozitive.",
+    "sync_app": "Celelalte dispozitive conectate la acest cont primesc aceleași setări.",
+    "progress_attachments": "Se descarcă atașamentele",
+    "progress_events": "Se descarcă evenimentele",
+    "progress_contacts": "Se descarcă contactele",
+    "progress_files_list": "Se listează fișierele",
+    "progress_other": "Se descarcă",
+    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele pe care le păstrați offline în Fișiere, criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+    "filter_value_placeholder": "Valoare",
+    "filter_values_hint": "Separați mai multe valori prin virgule."
+  },
   "sidebar": {
     "close": "Închide",
     "compose": "Compune",
@@ -926,6 +953,13 @@
     "restore_to": "Mută înapoi în {folder}",
     "delete_forever": "Șterge definitiv"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mută în Primite",
+    "delete_forever_title": "Ștergi definitiv acest mesaj?",
+    "delete_forever_batch_title": "{count, plural, one {Ștergi definitiv acest mesaj?} other {Ștergi definitiv aceste # mesaje?}}",
+    "delete_forever_message": "Nu îl mai poți recupera.",
+    "delete_forever_batch_message": "{count, plural, one {Nu îl mai poți recupera.} other {Nu le mai poți recupera.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De la {domain}, din afara organizației dvs.",
@@ -982,10 +1016,10 @@
     "forward_message": "Redirecționează",
     "from": "De la",
     "to": "Către",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Subiect",
-    "body_placeholder": "Scrieți mesajul...",
+    "body_placeholder": "Scrieți mesajul…",
     "send": "Trimite",
     "cancel": "Anulează",
     "attach": "Atașați",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Dacă serverul dvs. nu acceptă această adresă ca expeditor al plicului, se folosește în schimb {identity}, iar destinatarii o pot vedea în antetul Return-Path."
     },
-    "save_as_template": "Salvează ca șablon",
+    "save_as_template": "Salvează ca șablon…",
     "attach_from_device": "Încarcă de pe acest dispozitiv",
     "templates_menu": "Șabloane",
-    "insert_template": "Inserează șablon",
+    "insert_template": "Inserează șablon…",
     "options": "Opțiuni",
     "option_plain_text": "Text simplu",
     "option_plain_text_hint": "Trimite fără formatare",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
     "title_all_accounts_only": "{name} ({total} în toate conturile)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nu s-au găsit rezultate} one {# conversație găsită} few {# conversații găsite} other {# de conversații găsite}}",
+    "name_unread_sub": "{name}, necitite: {count}, încă {sub} în subdosare",
+    "name_unread_only_sub": "{name}, necitite în subdosare: {sub}",
+    "sub_unread": "Necitite în subdosare: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionați conturile…",
     "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra folderelor, cu Compune sub el. Dezactivați pentru a pune Compune în locul lui."
   },
   "mail_p2_conv": {
     "show_message": "Afișează mesajul",
@@ -5272,6 +5315,12 @@
     "declined_many": "Ați refuzat {count} întâlniri din această serie.",
     "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "până la {time}",
+    "week_all_days": "Afișează toată săptămâna",
+    "week_days_short": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "print": "Imprimare…"
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",
@@ -5850,6 +5899,12 @@
     "import_to_mail_failed": "{name} nu a putut fi importat.",
     "import_contacts": "Importați în contacte…",
     "add_to_calendar": "Adăugați în calendar…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Fișiere editate",
+    "hide": "Ascunde",
+    "discard_detail_file": "Modificările din această copie se șterg. Fișierul din Fișiere nu se schimbă.",
+    "saved_auto": "{name} a fost salvat în Fișiere. Salvările următoare din programul lui ajung acolo singure."
   },
   "smime": {
     "your_certificates": "Certificatele dvs.",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Schimbați modul în care se conectează Bulwark?",
+      "message": "Bulwark repornește și întreabă cum să se conecteze: cu adresa dvs. de e-mail sau prin Bulwark-ul organizației dvs. Conturile dvs. de pe acest computer rămân conectate.",
+      "confirm": "Schimbă",
+      "org_link": "Folosește în schimb Bulwark-ul organizației mele",
+      "add_account": "Adaugă cont…"
+    },
+    "picture": {
+      "button": "Imagine",
+      "title": "Inserează imagine",
+      "address": "Adresa web a imaginii",
+      "address_hint": "Imaginea rămâne pe web și este afișată de acolo.",
+      "description": "Descriere",
+      "invalid": "Introduceți o adresă web care începe cu https://.",
+      "insert": "Inserează"
+    },
+    "sign_in_page": {
+      "open_app": "Deschide Bulwark",
+      "done_as": "Conectat ca {address}. Puteți închide această filă."
+    }
+  },
   "desktop_updates": {
     "title": "Actualizări",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "Fotografie",
     "merge_kept": "Se păstrează",
     "import_show": "Afișează"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact selectat} few {# contacte selectate} other {# de contacte selectate}}",
+    "selection_more": "și încă {count}",
+    "no_addresses": "Niciunul dintre contactele selectate nu are adresă de e-mail.",
+    "task_open": "Deschide",
+    "due_next_week": "Săptămâna viitoare",
+    "due_none": "Fără termen",
+    "due_pick": "Alege o dată…",
+    "move_to_list": "Mută în listă",
+    "dupes_legend": "{count, plural, one {1 este deja în Contacte:} few {# sunt deja în Contacte:} other {# sunt deja în Contacte:}}",
+    "dupes_skip": "Omite-le",
+    "dupes_update": "Actualizează contactele existente",
+    "dupes_updates": "Actualizează contactul",
+    "upload_cancelled": "Încărcare anulată",
+    "upload_cancelled_partial": "{count, plural, one {1 fișier a fost încărcat} few {# fișiere au fost încărcate} other {# de fișiere au fost încărcate}} înainte de anulare",
+    "download_cancelled": "Descărcare anulată"
   },
   "desktopEdit": {
     "edit": "Editează",
@@ -7774,6 +7868,77 @@
     "state_offline": "Offline",
     "state_error": "Oprit"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Se încarcă modificările înainte de oprirea unității",
+      "title_sign_out": "Se încarcă modificările înainte de deconectare",
+      "title_stop_folder": "Se încarcă modificările înainte de oprirea sincronizării folderului",
+      "cannot_title": "Unele modificări nu pot fi încărcate acum",
+      "waiting": "De încărcat: {names}",
+      "progress": "{done} din {total} încărcate",
+      "cannot_offline": "Serverul nu poate fi accesat. Încă neîncărcate: {names}",
+      "cannot_other": "Nu pot fi încărcate: {names}. Activitatea recentă din Setări arată motivul.",
+      "go_note_drive": "Dacă continuați acum, ce nu s-a încărcat se copiază în Documente\\Bulwark – not uploaded. Nu se pierde nimic.",
+      "go_note_folder": "Dacă continuați acum, ce nu s-a încărcat rămâne în folderul de pe acest computer.",
+      "keep_turn_off": "Păstrează unitatea",
+      "keep_sign_out": "Rămâi conectat",
+      "keep_stop_folder": "Continuă sincronizarea",
+      "go_turn_off": "Oprește acum",
+      "go_sign_out": "Deconectează-te acum",
+      "go_stop_folder": "Oprește sincronizarea acum"
+    },
+    "drive": {
+      "off_note": "Dacă dezactivați, unitatea dispare din Explorer. Fișierele rămân în Fișiere.",
+      "rescued": "Fișierele neîncărcate ({count}) sunt acum în {folder}.",
+      "rescued_open": "Deschide folderul",
+      "rescued_dismiss": "Ascunde",
+      "start_at_login": "Pornește Bulwark la conectarea în Windows",
+      "start_at_login_why": "Unitatea are nevoie ca Bulwark să ruleze, ca OneDrive.",
+      "closed_warning": "Fișierele din unitate nu se deschid cât timp Bulwark este închis.",
+      "where": "În Explorer ca Bulwark Files",
+      "where_letter": "În Explorer ca Bulwark Files ({letter}:)",
+      "open": "Deschide",
+      "letter_note": "Prin literă, Explorer nu arată starea sincronizării și nici „Păstrați întotdeauna pe acest dispozitiv”. Le găsiți sub Bulwark Files în Explorer.",
+      "letter_failed": "Litera unității nu a putut fi setată. Încercați din nou."
+    },
+    "tray": {
+      "idle": "Bulwark Files: La zi",
+      "syncing": "Bulwark Files: Se sincronizează. Rămase: {count}",
+      "paused": "Bulwark Files: Întrerupt",
+      "offline": "Bulwark Files: Offline. În așteptare: {count}",
+      "question": "Bulwark Files: Așteaptă răspunsul dvs.",
+      "error": "Bulwark Files: Eroare"
+    },
+    "notify": {
+      "conflict_title": "Un fișier a fost modificat în două locuri",
+      "problem_title": "Un fișier nu poate fi sincronizat"
+    },
+    "activity": {
+      "waiting_count": "Modificări care așteaptă serverul: {count}",
+      "disk_name": "{path} din Fișiere se numește {detail} pe acest computer, pentru că unele caractere nu sunt permise aici",
+      "disk_case": "{path} din Fișiere se numește {detail} pe acest computer, pentru că aici există deja un nume care diferă doar prin majuscule",
+      "disk_group": "Nume din Fișiere pe care acest computer nu le permite: {count}. Aici au nume puțin diferite.",
+      "show": "Afișează",
+      "hide": "Ascunde"
+    },
+    "cant_sync": {
+      "title": "Nu se poate sincroniza"
+    },
+    "folders": {
+      "stop": "Oprește sincronizarea…",
+      "pick_title_known": "Cu ce folder din Fișiere să rămână la fel {name}?",
+      "pick_confirm_known": "Păstrează-le la fel"
+    },
+    "pin": {
+      "keep": "Păstrați întotdeauna pe acest dispozitiv",
+      "free": "Eliberați spațiu",
+      "failed": "Nu a funcționat. Încercați din nou în Explorer."
+    },
+    "account": {
+      "of": "Fișierele lui {address}",
+      "choose": "Fișierele lui"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scriere rapidă",
     "menu": "Scriere rapidă",
@@ -7796,6 +7961,10 @@
     "missing": "„{name}” nu mai există.",
     "too_large": "„{name}” depășește {max} și nu poate fi atașat.",
     "failed": "„{name}” nu a putut fi atașat. Încearcă din nou."
+  },
+  "composeRecentLimit": {
+    "too_large": "Prea mare",
+    "too_large_hint": "Mai mare decât acceptă serverul ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mai multe opțiuni de formatare",
@@ -7863,6 +8032,17 @@
     "join_host": "Participă ({host})",
     "join_named": "Participă: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Instrumente pentru dezvoltatori",
+    "updates_label": "Caută actualizări",
+    "search": {
+      "quick_compose": "scriere rapidă mesaj nou de oriunde comandă rapidă globală",
+      "files_drive": "eliberează spațiu OneDrive Dropbox Explorer Finder literă de unitate fișiere la cerere",
+      "offline_space": "eliberează spațiu spațiu pe disc stocare",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID amprentă față cheie de acces passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
     "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
   },
   "uxp3_desktop": {
-    "appearance_description": "Schimbați aspectul aplicației",
-    "badge_all_accounts_description": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
     "web_address": "Adresă web"
   },
   "selectionView": {

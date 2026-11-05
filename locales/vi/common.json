@@ -109,6 +109,33 @@
     "code_label": "Mã xác thực",
     "verify": "Xác minh"
   },
+  "ux_p3_words": {
+    "appearance_description": "Thay đổi giao diện của {appName}.",
+    "text_size_app": "Thay đổi cỡ toàn bộ chữ trong ứng dụng. 100% là cỡ bình thường.",
+    "scrollbars_app": "Dùng thanh cuộn của chính hệ thống, rộng hơn và dễ kéo hơn.",
+    "voice_app": "Giọng đọc to thư. Danh sách hiển thị các giọng mà máy tính này có cho ngôn ngữ giao diện.",
+    "voice_default_app": "Giọng hệ thống",
+    "visual_alerts_app": "Làm tiêu đề cửa sổ nhấp nháy chậm khi có thư mới hoặc lời nhắc, và giữ lời nhắc trên màn hình cho đến khi bạn đóng.",
+    "sounds_link_app": "Âm thanh thông báo và số thư chưa đọc trên biểu tượng thanh tác vụ được đặt trên trang Thông báo.",
+    "writing_language_app": "Ngôn ngữ bạn thường viết. Hiệu đính và kiểm tra chính tả dùng ngôn ngữ này.",
+    "badge_all_app": "Con số trên biểu tượng thanh tác vụ và trong khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
+    "badge_all_browser": "Con số trên tab và biểu tượng ứng dụng cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
+    "dnd_title": "Không làm phiền",
+    "pause_label": "Tạm dừng thông báo",
+    "pause_description": "Không có âm thanh, cửa sổ bật lên hoặc thông báo bằng giọng nói cho thư mới cho đến khi bạn tắt lại.",
+    "dnd_link_app": "Tạm dừng thông báo và đặt giờ yên tĩnh trên trang Thông báo.",
+    "dnd_link_browser": "Tạm dừng thông báo trên trang Thông báo.",
+    "backup_app": "Xuất cài đặt ra tệp và nhập chúng trên các thiết bị khác của bạn.",
+    "sync_app": "Các thiết bị khác đã đăng nhập tài khoản này sẽ nhận cùng cài đặt.",
+    "progress_attachments": "Đang tải tệp đính kèm xuống",
+    "progress_events": "Đang tải sự kiện xuống",
+    "progress_contacts": "Đang tải danh bạ xuống",
+    "progress_files_list": "Đang liệt kê tệp",
+    "progress_other": "Đang tải xuống",
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn giữ ngoại tuyến trong Tệp, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+    "filter_value_placeholder": "Giá trị",
+    "filter_values_hint": "Để khớp nhiều giá trị, hãy phân tách bằng dấu phẩy."
+  },
   "sidebar": {
     "close": "Đóng",
     "compose": "Soạn thư",
@@ -926,6 +953,13 @@
     "restore_to": "Chuyển lại vào {folder}",
     "delete_forever": "Xóa vĩnh viễn"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Chuyển vào Hộp thư đến",
+    "delete_forever_title": "Xóa vĩnh viễn thư này?",
+    "delete_forever_batch_title": "{count, plural, one {Xóa vĩnh viễn thư này?} other {Xóa vĩnh viễn # thư này?}}",
+    "delete_forever_message": "Bạn sẽ không lấy lại được.",
+    "delete_forever_batch_message": "{count, plural, one {Bạn sẽ không lấy lại được.} other {Bạn sẽ không lấy lại được.}}"
+  },
   "external_mail": {
     "sender_label": "Bên ngoài",
     "sender_tooltip": "Từ {domain}, bên ngoài tổ chức của bạn",
@@ -982,10 +1016,10 @@
     "forward_message": "Chuyển tiếp",
     "from": "Người gửi",
     "to": "Người nhận",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Tiêu đề",
-    "body_placeholder": "Viết nội dung thư...",
+    "body_placeholder": "Viết nội dung thư…",
     "formatting": "Định dạng",
     "send": "Gửi",
     "cancel": "Hủy",
@@ -1043,10 +1077,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Nếu máy chủ không chấp nhận địa chỉ này làm địa chỉ người gửi trong phong bì SMTP, địa chỉ {identity} sẽ được dùng thay thế; người nhận có thể thấy địa chỉ đó trong tiêu đề Return-Path."
     },
-    "save_as_template": "Lưu làm mẫu",
+    "save_as_template": "Lưu làm mẫu…",
     "attach_from_device": "Tải lên từ thiết bị này",
     "templates_menu": "Mẫu",
-    "insert_template": "Chèn mẫu",
+    "insert_template": "Chèn mẫu…",
     "options": "Tùy chọn",
     "option_plain_text": "Văn bản thuần",
     "option_plain_text_hint": "Gửi không kèm định dạng",
@@ -3919,6 +3953,12 @@
     "title_all_accounts": "{name} ({count}, {total} trong mọi tài khoản)",
     "title_all_accounts_only": "{name} ({total} trong mọi tài khoản)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Không tìm thấy kết quả nào} other {Tìm thấy # cuộc trò chuyện}}",
+    "name_unread_sub": "{name}, {count} chưa đọc, thêm {sub} trong thư mục con",
+    "name_unread_only_sub": "{name}, {sub} chưa đọc trong thư mục con",
+    "sub_unread": "{sub} chưa đọc trong thư mục con"
+  },
   "uxs_folders": {
     "manage_accounts": "Quản lý tài khoản…",
     "apply_to_existing": "{count, plural, one {Áp dụng cho # thư hiện có trong {folder}} other {Áp dụng cho # thư hiện có trong {folder}}}"
@@ -3997,6 +4037,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
     "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Hiện bộ chuyển tài khoản phía trên các thư mục, với Soạn thư bên dưới. Tắt tùy chọn này để đặt Soạn thư vào chỗ của nó."
   },
   "mail_p2_conv": {
     "show_message": "Hiện thư",
@@ -5284,6 +5327,12 @@
     "declined_many": "Bạn đã từ chối {count} cuộc họp trong chuỗi này.",
     "answers_series": "Câu trả lời của bạn áp dụng cho mọi cuộc họp trong chuỗi."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "đến {time}",
+    "week_all_days": "Hiện cả tuần",
+    "week_days_short": "{count, plural, other {# ngày}}",
+    "print": "In…"
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
@@ -5862,6 +5911,12 @@
     "import_to_mail_failed": "Không thể nhập {name}.",
     "import_contacts": "Nhập vào danh bạ…",
     "add_to_calendar": "Thêm vào lịch…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Tệp đã chỉnh sửa",
+    "hide": "Ẩn",
+    "discard_detail_file": "Các chỉnh sửa của bạn trên bản sao này sẽ bị xóa. Tệp trong Tệp không thay đổi.",
+    "saved_auto": "Đã lưu {name} vào Tệp. Những lần lưu sau từ chương trình của nó sẽ tự vào đó."
   },
   "smime": {
     "your_certificates": "Chứng chỉ của bạn",
@@ -7517,6 +7572,28 @@
     "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Thay đổi cách Bulwark kết nối?",
+      "message": "Bulwark khởi động lại và hỏi cách kết nối: bằng địa chỉ email của bạn hoặc qua Bulwark của tổ chức bạn. Các tài khoản của bạn trên máy tính này vẫn được đăng nhập.",
+      "confirm": "Thay đổi",
+      "org_link": "Dùng Bulwark của tổ chức tôi thay thế",
+      "add_account": "Thêm tài khoản…"
+    },
+    "picture": {
+      "button": "Hình ảnh",
+      "title": "Chèn hình ảnh",
+      "address": "Địa chỉ web của hình ảnh",
+      "address_hint": "Hình ảnh vẫn ở trên web và được hiển thị từ đó.",
+      "description": "Mô tả",
+      "invalid": "Nhập địa chỉ web bắt đầu bằng https://.",
+      "insert": "Chèn"
+    },
+    "sign_in_page": {
+      "open_app": "Mở Bulwark",
+      "done_as": "Đã đăng nhập với {address}. Bạn có thể đóng thẻ này."
+    }
+  },
   "desktop_updates": {
     "title": "Cập nhật",
     "version_label": "Bulwark {version}",
@@ -7621,6 +7698,23 @@
     "merge_photo": "Ảnh",
     "merge_kept": "Được giữ lại",
     "import_show": "Hiển thị"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {Đã chọn # liên hệ}}",
+    "selection_more": "và {count} người khác",
+    "no_addresses": "Không liên hệ nào được chọn có địa chỉ email.",
+    "task_open": "Mở",
+    "due_next_week": "Tuần sau",
+    "due_none": "Không có hạn",
+    "due_pick": "Chọn ngày…",
+    "move_to_list": "Chuyển sang danh sách",
+    "dupes_legend": "{count, plural, other {# mục đã có trong Danh bạ:}}",
+    "dupes_skip": "Bỏ qua",
+    "dupes_update": "Cập nhật các liên hệ hiện có",
+    "dupes_updates": "Cập nhật liên hệ",
+    "upload_cancelled": "Đã hủy tải lên",
+    "upload_cancelled_partial": "{count, plural, one {Đã tải lên 1 tệp} other {Đã tải lên # tệp}} trước khi bạn hủy",
+    "download_cancelled": "Đã hủy tải xuống"
   },
   "desktopEdit": {
     "edit": "Chỉnh sửa",
@@ -7786,6 +7880,77 @@
     "state_offline": "Ngoại tuyến",
     "state_error": "Đã dừng"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Đang tải lên thay đổi trước khi tắt ổ đĩa",
+      "title_sign_out": "Đang tải lên thay đổi trước khi đăng xuất",
+      "title_stop_folder": "Đang tải lên thay đổi trước khi ngừng đồng bộ thư mục",
+      "cannot_title": "Hiện không thể tải lên một số thay đổi",
+      "waiting": "Còn phải tải lên: {names}",
+      "progress": "Đã tải lên {done}/{total}",
+      "cannot_offline": "Không thể kết nối máy chủ. Chưa tải lên: {names}",
+      "cannot_other": "Không thể tải lên: {names}. Hoạt động gần đây trong Cài đặt cho biết lý do.",
+      "go_note_drive": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ được sao chép vào Tài liệu\\Bulwark – not uploaded. Không mất gì cả.",
+      "go_note_folder": "Nếu tiếp tục bây giờ, những gì chưa tải lên sẽ vẫn ở trong thư mục trên máy tính này.",
+      "keep_turn_off": "Giữ ổ đĩa",
+      "keep_sign_out": "Tiếp tục đăng nhập",
+      "keep_stop_folder": "Tiếp tục đồng bộ",
+      "go_turn_off": "Tắt ngay",
+      "go_sign_out": "Đăng xuất ngay",
+      "go_stop_folder": "Ngừng đồng bộ ngay"
+    },
+    "drive": {
+      "off_note": "Tắt sẽ gỡ ổ đĩa khỏi Trình khám phá Tệp. Tệp của bạn vẫn ở trong Tệp.",
+      "rescued": "Các tệp chưa tải lên ({count}) hiện nằm trong {folder}.",
+      "rescued_open": "Mở thư mục",
+      "rescued_dismiss": "Bỏ qua",
+      "start_at_login": "Khởi động Bulwark khi đăng nhập Windows",
+      "start_at_login_why": "Ổ đĩa cần Bulwark đang chạy, giống như OneDrive.",
+      "closed_warning": "Không thể mở tệp trong ổ đĩa khi Bulwark đang đóng.",
+      "where": "Trong Trình khám phá Tệp với tên Bulwark Files",
+      "where_letter": "Trong Trình khám phá Tệp với tên Bulwark Files ({letter}:)",
+      "open": "Mở",
+      "letter_note": "Qua ký tự ổ đĩa, Trình khám phá Tệp không hiện trạng thái đồng bộ và “Luôn giữ trên thiết bị này”. Chúng hiện dưới Bulwark Files trong Trình khám phá.",
+      "letter_failed": "Không thể đặt ký tự ổ đĩa. Hãy thử lại."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Đã cập nhật",
+      "syncing": "Bulwark Files: Đang đồng bộ. Còn lại: {count}",
+      "paused": "Bulwark Files: Đã tạm dừng",
+      "offline": "Bulwark Files: Ngoại tuyến. Đang chờ: {count}",
+      "question": "Bulwark Files: Cần bạn trả lời",
+      "error": "Bulwark Files: Lỗi"
+    },
+    "notify": {
+      "conflict_title": "Một tệp đã bị thay đổi ở hai nơi",
+      "problem_title": "Không thể đồng bộ một tệp"
+    },
+    "activity": {
+      "waiting_count": "Thay đổi đang chờ máy chủ: {count}",
+      "disk_name": "{path} trong Tệp có tên {detail} trên máy tính này vì một số ký tự không được phép ở đây",
+      "disk_case": "{path} trong Tệp có tên {detail} trên máy tính này vì ở đây đã có tên chỉ khác chữ hoa và chữ thường",
+      "disk_group": "Tên trong Tệp mà máy tính này không cho phép: {count}. Ở đây chúng có tên hơi khác.",
+      "show": "Hiện",
+      "hide": "Ẩn"
+    },
+    "cant_sync": {
+      "title": "Không thể đồng bộ"
+    },
+    "folders": {
+      "stop": "Ngừng đồng bộ…",
+      "pick_title_known": "Giữ {name} giống với thư mục nào trong Tệp?",
+      "pick_confirm_known": "Giữ giống nhau"
+    },
+    "pin": {
+      "keep": "Luôn giữ trên thiết bị này",
+      "free": "Giải phóng dung lượng",
+      "failed": "Không thành công. Hãy thử lại trong Trình khám phá Tệp."
+    },
+    "account": {
+      "of": "Tệp của {address}",
+      "choose": "Tệp của"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Soạn nhanh",
     "menu": "Soạn nhanh",
@@ -7808,6 +7973,10 @@
     "missing": "\"{name}\" không còn nữa.",
     "too_large": "\"{name}\" lớn hơn {max} nên không thể đính kèm.",
     "failed": "Không thể đính kèm \"{name}\". Hãy thử lại."
+  },
+  "composeRecentLimit": {
+    "too_large": "Quá lớn",
+    "too_large_hint": "Lớn hơn mức máy chủ nhận ({max})"
   },
   "compose_windows": {
     "more_formatting": "Thêm định dạng",
@@ -7875,6 +8044,17 @@
     "join_host": "Tham gia ({host})",
     "join_named": "Tham gia: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "Công cụ nhà phát triển",
+    "updates_label": "Kiểm tra bản cập nhật",
+    "search": {
+      "quick_compose": "soạn nhanh thư mới từ mọi nơi phím tắt toàn cục",
+      "files_drive": "giải phóng dung lượng OneDrive Dropbox File Explorer Finder ký tự ổ đĩa tệp theo yêu cầu",
+      "offline_space": "giải phóng dung lượng dung lượng đĩa bộ nhớ",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID vân tay khuôn mặt khóa truy cập passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",
     "plugin_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này nên tiện ích không chạy. Cài đặt và dữ liệu của tiện ích vẫn được giữ lại.",
@@ -7916,8 +8096,6 @@
     "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
   },
   "uxp3_desktop": {
-    "appearance_description": "Thay đổi giao diện của ứng dụng",
-    "badge_all_accounts_description": "Con số trên biểu tượng thanh tác vụ và trong khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
     "web_address": "Địa chỉ web"
   },
   "selectionView": {

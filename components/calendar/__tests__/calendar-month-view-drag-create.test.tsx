@@ -142,7 +142,7 @@ describe('Month view: dragging over days', () => {
     const { props } = renderMonth({ events: [standup, ...busy] });
     const bar = screen.getByRole('button', { name: /Standup/ });
     const dateNumber = cell('2026-11-12').querySelector<HTMLElement>('[data-day-button]')!;
-    const more = screen.getByText('events.more');
+    const more = screen.getByRole('button', { name: 'events.more' });
     for (const target of [bar, dateNumber, more]) {
       fireEvent.pointerDown(target, { ...mouse, ...pointOf('2026-11-05') });
       fireEvent.pointerMove(target, { ...mouse, ...pointOf('2026-11-06') });

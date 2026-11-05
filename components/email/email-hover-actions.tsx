@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { Email } from "@/lib/jmap/types";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
-import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { Trash2, Star, Mail, MailOpen, Archive, Inbox, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { useEmailStore } from "@/stores/email-store";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate";
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
@@ -102,6 +104,41 @@ const CORNER_CLASSES = {
 
 /** Roughly the picker's height; used to flip it above the row near the viewport bottom. */
 
+/** How far the inline strip keeps off the row's edges: the width of the row's outline. */
+const STRIP_INSET = "var(--focus-ring-width, 2px)";
+
+/**
+ * Tells the row how wide the shown strip is: `--row-actions-w` and
+ * `data-hover-actions-shown` on the row (the `[data-menu-row]` around it),
+ * while the strip is on screen. In a right-to-left list the row's text keeps
+ * clear of it by that much (globals.css), so a left-aligned English subject
+ * isn't hidden under the buttons (mail-p3-10).
+ */
+function useReserveRowRoom(actions: HTMLElement | null) {
+  useLayoutEffect(() => {
+    const row = actions?.closest<HTMLElement>("[data-menu-row]");
+    if (!actions || !row) return;
+    const apply = () => {
+      const width = actions.offsetWidth;
+      if (width > 0) {
+        row.style.setProperty("--row-actions-w", `${width}px`);
+        row.setAttribute("data-hover-actions-shown", "");
+      } else {
+        row.removeAttribute("data-hover-actions-shown");
+      }
+    };
+    apply();
+    if (typeof ResizeObserver === "undefined") return () => row.removeAttribute("data-hover-actions-shown");
+    // Shown and hidden by CSS (hover, keyboard focus): its size says which.
+    const observer = new ResizeObserver(apply);
+    observer.observe(actions);
+    return () => {
+      observer.disconnect();
+      row.removeAttribute("data-hover-actions-shown");
+    };
+  }, [actions]);
+}
+
 export function EmailHoverActions({
   email,
   backgroundClassName = "bg-muted",
@@ -129,6 +166,10 @@ export function EmailHoverActions({
   const hoverActionsCorner = useSettingsStore((state) => state.hoverActionsCorner);
   // The words the row's menu uses for the same actions (R10).
   const t = useTranslations("context_menu");
+  const tP3 = useTranslations("mail_p3_actions");
+  // In Archive the archive button brings mail back to the Inbox, as the row
+  // menu's entry in its place does (mail-p3-4).
+  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(state.mailboxes, state.selectedMailbox));
   const isMobile = useIsMobile();
   // Buttons plugins add to the row (message-row-actions), after the app's own.
   const pluginTarget = useMessageActionTarget(email);
@@ -149,6 +190,8 @@ export function EmailHoverActions({
   const isStarred = email.keywords?.$flagged;
   const currentTagIds = getEmailTagIds(email.keywords);
   const hoverBackgroundClassName = backgroundClassName;
+  const [inlineActions, setInlineActions] = useState<HTMLDivElement | null>(null);
+  useReserveRowRoom(inlineActions);
 
   if (isMobile) return null;
   if (hoverActions.length === 0 && pluginActionCount === 0) return null;
@@ -198,11 +241,14 @@ export function EmailHoverActions({
         ? Star
         : isNotSpam
           ? ShieldCheck
-          : Icon;
+          : actionId === "archive" && archiveMovesToInbox
+            ? Inbox
+            : Icon;
     const title = isNotSpam ? t("not_spam")
       : actionId === "markRead" ? t(isUnread ? "mark_read" : "mark_unread")
       : actionId === "star" ? t(isStarred ? "unstar" : "star")
       : actionId === "spam" ? t("mark_as_spam")
+      : actionId === "archive" && archiveMovesToInbox ? tP3("move_to_inbox")
       : t(config.titleKey);
     const className = isNotSpam
       ? "hover:text-foreground"
@@ -299,8 +345,14 @@ export function EmailHoverActions({
   }
 
   return (
+    // Inset by the focus ring's width: the row's own outline (keyboard focus,
+    // menu open) stays drawn around the strip instead of fading out under its
+    // edge, which in dark mode read as a lighter strip on the blue (mail-p3-14).
     <div
-      className={cn("absolute end-0 top-0 z-10 items-center", pinToFirstLine ? "h-10" : "bottom-0", visibilityClass)}
+      className={cn("absolute z-10 items-center", pinToFirstLine && "h-10", visibilityClass)}
+      style={{ insetInlineEnd: STRIP_INSET, top: STRIP_INSET, bottom: pinToFirstLine ? undefined : STRIP_INSET }}
+      data-hover-strip=""
+      ref={setInlineActions}
     >
       <div
         className={cn(

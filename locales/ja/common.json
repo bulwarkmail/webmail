@@ -109,6 +109,33 @@
     "code_label": "認証コード",
     "verify": "確認"
   },
+  "ux_p3_words": {
+    "appearance_description": "{appName} の見た目を変更します。",
+    "text_size_app": "アプリのすべての文字の大きさを変えます。100% が標準の大きさです。",
+    "scrollbars_app": "システムのスクロールバーを使います。幅が広く、つかみやすくなります。",
+    "voice_app": "メッセージを読み上げる音声です。一覧には、このコンピューターにある表示言語の音声が表示されます。",
+    "voice_default_app": "システムの音声",
+    "visual_alerts_app": "新着メールやリマインダーが届くとウィンドウのタイトルをゆっくり点滅させ、閉じるまでリマインダーを画面に表示します。",
+    "sounds_link_app": "通知音とタスクバーのアイコンの未読数は、通知ページで設定します。",
+    "writing_language_app": "ふだん書く言語です。校正とスペルチェックで使われます。",
+    "badge_all_app": "タスクバーのアイコンと通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
+    "badge_all_browser": "タブとアプリのアイコンの数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
+    "dnd_title": "おやすみモード",
+    "pause_label": "通知を一時停止",
+    "pause_description": "もう一度オフにするまで、新着メールの音、ポップアップ、音声での案内を出しません。",
+    "dnd_link_app": "通知の一時停止とおやすみ時間は、通知ページで設定します。",
+    "dnd_link_browser": "通知の一時停止は、通知ページで設定します。",
+    "backup_app": "設定をファイルに書き出し、ほかのデバイスで読み込みます。",
+    "sync_app": "このアカウントでサインインしているほかのデバイスにも同じ設定が使われます。",
+    "progress_attachments": "添付ファイルをダウンロードしています",
+    "progress_events": "予定をダウンロードしています",
+    "progress_contacts": "連絡先をダウンロードしています",
+    "progress_files_list": "ファイルの一覧を取得しています",
+    "progress_other": "ダウンロードしています",
+    "keep_description": "メール、カレンダー、連絡先、ファイルでオフライン用に保存しているファイルを暗号化してこのデバイスに保存します。オフラインでもメールを読む、フラグを付ける、移動することができ、書いたメールは送信トレイで待機します。サインアウトするとすべて削除されます。",
+    "filter_value_placeholder": "値",
+    "filter_values_hint": "複数の値はカンマで区切ります。"
+  },
   "sidebar": {
     "close": "閉じる",
     "compose": "作成",
@@ -926,6 +953,13 @@
     "restore_to": "{folder} に戻す",
     "delete_forever": "完全に削除"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "受信トレイに移動",
+    "delete_forever_title": "このメッセージを完全に削除しますか？",
+    "delete_forever_batch_title": "{count, plural, one {このメッセージを完全に削除しますか？} other {これら # 件のメッセージを完全に削除しますか？}}",
+    "delete_forever_message": "元に戻すことはできません。",
+    "delete_forever_batch_message": "{count, plural, one {元に戻すことはできません。} other {元に戻すことはできません。}}"
+  },
   "external_mail": {
     "sender_label": "外部",
     "sender_tooltip": "{domain} から（組織外）",
@@ -982,10 +1016,10 @@
     "forward_message": "転送",
     "from": "送信元",
     "to": "宛先",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "件名",
-    "body_placeholder": "メッセージを入力...",
+    "body_placeholder": "メッセージを入力…",
     "send": "送信",
     "cancel": "キャンセル",
     "attach": "添付",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "サーバーがこのアドレスをエンベロープ送信者として受け付けない場合は、代わりに {identity} が使われ、受信者は Return-Path ヘッダーでそのアドレスを確認できます。"
     },
-    "save_as_template": "テンプレートとして保存",
+    "save_as_template": "テンプレートとして保存…",
     "attach_from_device": "このデバイスからアップロード",
     "templates_menu": "テンプレート",
-    "insert_template": "テンプレートを挿入",
+    "insert_template": "テンプレートを挿入…",
     "options": "オプション",
     "option_plain_text": "プレーンテキスト",
     "option_plain_text_hint": "書式なしで送信",
@@ -3907,6 +3941,12 @@
     "title_all_accounts": "{name} ({count}、すべてのアカウントで {total})",
     "title_all_accounts_only": "{name} (すべてのアカウントで {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {結果が見つかりません} other {#件の会話が見つかりました}}",
+    "name_unread_sub": "{name}、未読 {count} 件、サブフォルダーにさらに {sub} 件",
+    "name_unread_only_sub": "{name}、サブフォルダーに未読 {sub} 件",
+    "sub_unread": "サブフォルダーに未読 {sub} 件"
+  },
   "uxs_folders": {
     "manage_accounts": "アカウントを管理…",
     "apply_to_existing": "{count, plural, other {{folder} の既存の # 件に適用}}"
@@ -3985,6 +4025,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
     "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "フォルダの上にアカウント切替を表示し、その下に「作成」を表示します。オフにすると、アカウント切替の代わりに「作成」が表示されます。"
   },
   "mail_p2_conv": {
     "show_message": "メッセージを表示",
@@ -5272,6 +5315,12 @@
     "declined_many": "このシリーズの {count} 件を辞退しました。",
     "answers_series": "回答はシリーズのすべての会議に適用されます。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time}まで",
+    "week_all_days": "1週間すべてを表示",
+    "week_days_short": "{count, plural, other {#日}}",
+    "print": "印刷…"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",
@@ -5583,6 +5632,12 @@
     "import_to_mail_failed": "{name} をインポートできませんでした。",
     "import_contacts": "連絡先にインポート…",
     "add_to_calendar": "カレンダーに追加…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "編集したファイル",
+    "hide": "非表示",
+    "discard_detail_file": "このコピーへの編集は削除されます。ファイル内のファイルは変わりません。",
+    "saved_auto": "{name} をファイルに保存しました。今後このプログラムで保存すると自動でそこに保存されます。"
   },
   "smime": {
     "your_certificates": "あなたの証明書",
@@ -7505,6 +7560,28 @@
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Bulwark の接続方法を変更しますか？",
+      "message": "Bulwark が再起動し、接続方法を尋ねます。メールアドレスで接続するか、組織の Bulwark 経由で接続するかを選べます。このコンピューター上のアカウントはサインインしたままです。",
+      "confirm": "変更",
+      "org_link": "代わりに組織の Bulwark を使う",
+      "add_account": "アカウントを追加…"
+    },
+    "picture": {
+      "button": "画像",
+      "title": "画像を挿入",
+      "address": "画像のウェブアドレス",
+      "address_hint": "画像はウェブ上に置かれたまま、そこから表示されます。",
+      "description": "説明",
+      "invalid": "https:// で始まるウェブアドレスを入力してください。",
+      "insert": "挿入"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark を開く",
+      "done_as": "{address} としてサインインしました。このタブは閉じてかまいません。"
+    }
+  },
   "desktop_updates": {
     "title": "アップデート",
     "version_label": "Bulwark {version}",
@@ -7609,6 +7686,23 @@
     "merge_photo": "写真",
     "merge_kept": "残ります",
     "import_show": "表示"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {#件の連絡先を選択中}}",
+    "selection_more": "ほか{count}件",
+    "no_addresses": "選択した連絡先にはメールアドレスがありません。",
+    "task_open": "開く",
+    "due_next_week": "来週",
+    "due_none": "期限なし",
+    "due_pick": "日付を選択…",
+    "move_to_list": "リストへ移動",
+    "dupes_legend": "{count, plural, other {#件は連絡先に登録済み:}}",
+    "dupes_skip": "スキップ",
+    "dupes_update": "既存の連絡先を更新",
+    "dupes_updates": "連絡先を更新",
+    "upload_cancelled": "アップロードをキャンセルしました",
+    "upload_cancelled_partial": "キャンセル前に{count, plural, other {#件のファイル}}がアップロードされました",
+    "download_cancelled": "ダウンロードをキャンセルしました"
   },
   "desktopEdit": {
     "edit": "編集",
@@ -7774,6 +7868,77 @@
     "state_offline": "オフライン",
     "state_error": "停止"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "ドライブをオフにする前に変更をアップロードしています",
+      "title_sign_out": "サインアウトする前に変更をアップロードしています",
+      "title_stop_folder": "フォルダーの同期を止める前に変更をアップロードしています",
+      "cannot_title": "一部の変更は今アップロードできません",
+      "waiting": "アップロード待ち: {names}",
+      "progress": "{total} 件中 {done} 件をアップロード済み",
+      "cannot_offline": "サーバーに接続できません。未アップロード: {names}",
+      "cannot_other": "アップロードできません: {names}。理由は設定の最近のアクティビティにあります。",
+      "go_note_drive": "今続けると、アップロードされていないものは ドキュメント\\Bulwark – not uploaded にコピーされます。何も失われません。",
+      "go_note_folder": "今続けると、アップロードされていないものはこのパソコンのフォルダーに残ります。",
+      "keep_turn_off": "ドライブをオンのままにする",
+      "keep_sign_out": "サインインしたままにする",
+      "keep_stop_folder": "同期を続ける",
+      "go_turn_off": "今すぐオフにする",
+      "go_sign_out": "今すぐサインアウト",
+      "go_stop_folder": "今すぐ同期を止める"
+    },
+    "drive": {
+      "off_note": "オフにすると、ドライブはエクスプローラーから消えます。ファイルはファイルに残ります。",
+      "rescued": "アップロードされなかったファイル ({count}) は {folder} にあります。",
+      "rescued_open": "フォルダーを開く",
+      "rescued_dismiss": "閉じる",
+      "start_at_login": "Windows にサインインしたら Bulwark を起動する",
+      "start_at_login_why": "OneDrive と同じく、ドライブには Bulwark の実行が必要です。",
+      "closed_warning": "Bulwark を閉じている間は、ドライブのファイルを開けません。",
+      "where": "エクスプローラーでは Bulwark Files",
+      "where_letter": "エクスプローラーでは Bulwark Files ({letter}:)",
+      "open": "開く",
+      "letter_note": "ドライブ文字からは、エクスプローラーに同期の状態や「このデバイス上で常に保持する」が表示されません。エクスプローラーの Bulwark Files に表示されます。",
+      "letter_failed": "ドライブ文字を設定できませんでした。もう一度お試しください。"
+    },
+    "tray": {
+      "idle": "Bulwark Files: 最新の状態",
+      "syncing": "Bulwark Files: 同期中。残り: {count}",
+      "paused": "Bulwark Files: 一時停止中",
+      "offline": "Bulwark Files: オフライン。待機中: {count}",
+      "question": "Bulwark Files: 回答が必要です",
+      "error": "Bulwark Files: エラー"
+    },
+    "notify": {
+      "conflict_title": "ファイルが 2 か所で変更されました",
+      "problem_title": "ファイルを同期できません"
+    },
+    "activity": {
+      "waiting_count": "サーバーを待っている変更: {count}",
+      "disk_name": "ファイルの {path} は、このパソコンでは {detail} という名前です。一部の文字がここでは使えないためです",
+      "disk_case": "ファイルの {path} は、このパソコンでは {detail} という名前です。大文字と小文字だけが違う名前がすでにあるためです",
+      "disk_group": "このパソコンで使えないファイルの名前: {count}。ここでは少し違う名前になっています。",
+      "show": "表示",
+      "hide": "非表示"
+    },
+    "cant_sync": {
+      "title": "同期できません"
+    },
+    "folders": {
+      "stop": "同期を止める…",
+      "pick_title_known": "{name} をファイルのどのフォルダーと同じにしますか?",
+      "pick_confirm_known": "同じに保つ"
+    },
+    "pin": {
+      "keep": "このデバイス上で常に保持する",
+      "free": "空き容量を増やす",
+      "failed": "うまくいきませんでした。エクスプローラーでもう一度お試しください。"
+    },
+    "account": {
+      "of": "{address} のファイル",
+      "choose": "ファイル:"
+    }
+  },
   "desktopQuickCompose": {
     "label": "クイック作成",
     "menu": "クイック作成",
@@ -7796,6 +7961,10 @@
     "missing": "「{name}」はもうありません。",
     "too_large": "「{name}」は {max} を超えているため添付できません。",
     "failed": "「{name}」を添付できませんでした。もう一度お試しください。"
+  },
+  "composeRecentLimit": {
+    "too_large": "大きすぎます",
+    "too_large_hint": "サーバーが受け付けるサイズ（{max}）を超えています"
   },
   "compose_windows": {
     "more_formatting": "その他の書式",
@@ -7863,6 +8032,17 @@
     "join_host": "参加 ({host})",
     "join_named": "参加: {title}"
   },
+  "ux_p3_search": {
+    "devtools_label": "開発者ツール",
+    "updates_label": "アップデートを確認",
+    "search": {
+      "quick_compose": "クイック作成 どこからでも新規メッセージ グローバルショートカット",
+      "files_drive": "空き容量を増やす OneDrive Dropbox エクスプローラー Finder ドライブ文字 ファイルオンデマンド",
+      "offline_space": "空き容量を増やす ディスク容量 ストレージ",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指紋 顔認証 パスキー passkey"
+    }
+  },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",
     "plugin_refused": "組織はこのデバイスでこのプラグインを許可していないため、実行されません。設定とデータは保持されます。",
@@ -7904,8 +8084,6 @@
     "tip_palette_keys": "{keys} を押してコマンドを検索"
   },
   "uxp3_desktop": {
-    "appearance_description": "アプリの見た目を変更します",
-    "badge_all_accounts_description": "タスクバーのアイコンと通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
     "web_address": "Web アドレス"
   },
   "selectionView": {
