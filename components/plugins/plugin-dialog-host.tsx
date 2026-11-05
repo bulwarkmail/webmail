@@ -17,8 +17,10 @@
 //
 // In the desktop app a confirm or alert is a window of its own instead
 // (lib/desktop/dialog-window.ts), with the same parts: the title, the
-// "From the plugin" line, the ⋮ menu and the buttons. Prompts and custom
-// dialogs stay here: they hold fields and the plugin's own frame.
+// "From the plugin" line, the ⋮ menu and the buttons. A prompt is the page's
+// own card in a window of its own (dialog-surface.tsx). Custom dialogs stay
+// over the page: the plugin's frame talks to the page's window, and in
+// another window its messages would go to that window instead.
 
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
@@ -35,6 +37,7 @@ import { useContextMenu } from '@/hooks/use-context-menu';
 import { iconForName, Loader2, MoreVertical, Power, Puzzle, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { askInWindow, dialogWindowsAvailable } from '@/lib/desktop/dialog-window';
+import { DialogSurfacePortal, useDialogSurface } from '@/components/ui/dialog-surface';
 import { PluginIframeSlot } from './plugin-iframe-slot';
 import type { SlotName } from '@/lib/plugin-types';
 
@@ -228,6 +231,10 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
     disablePlugin(id);
   };
 
+  // A prompt in the desktop app: a window of its own.
+  const surface = useDialogSurface(current?.kind === 'prompt' && layer !== 'below', { title: current?.title ?? '', onClose: () => cancel() });
+  const surfaceDoc = surface.mode === 'window' ? surface.surface.doc : null;
+
   useEffect(() => {
     if (!current || layer === 'below') return;
     function onKey(e: KeyboardEvent) {
@@ -249,10 +256,11 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
         resolveThis(true);
       }
     }
-    document.addEventListener('keydown', onKey, true);
-    return () => document.removeEventListener('keydown', onKey, true);
+    const doc = surfaceDoc ?? document;
+    doc.addEventListener('keydown', onKey, true);
+    return () => doc.removeEventListener('keydown', onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, canSubmit, values]);
+  }, [current, canSubmit, values, surfaceDoc]);
 
   // Tab stays in the dialog and the focus goes back to what opened it. The
   // first field of a prompt takes the focus, a confirm's safe button (Cancel
@@ -261,7 +269,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useFocusTrap({
-    isActive: !!current && layer !== 'below',
+    isActive: !!current && layer !== 'below' && surface.mode !== 'pending',
     restoreFocus: true,
     initialFocus: () => {
       if (current?.kind === 'prompt') return panelRef.current?.querySelector<HTMLElement>('input');
@@ -274,7 +282,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   const anchor = current?.kind === 'custom' ? current.anchor : undefined;
   const place = usePopoverPlace(anchor, panelRef);
 
-  if (!current) return null;
+  if (!current || surface.mode === 'pending') return null;
+  const inWindow = surface.mode === 'window';
 
   const name = pluginName ?? current.pluginId;
   const confirmLabel = current.confirmLabel ?? (current.kind === 'alert' ? t('ok') : current.kind === 'prompt' ? t('submit') : t('confirm'));
@@ -374,16 +383,19 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
     );
   }
 
-  return (
+  const tree = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       aria-hidden={layer === 'below' ? true : undefined}
-      className={layer === 'above'
-        ? 'fixed inset-0 z-[100001] flex items-center justify-center bg-black/30 p-4'
-        : 'fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-[1px] p-4 animate-in fade-in duration-150'}
-      onMouseDown={(e) => {
+      // In its own window there is no backdrop: the window behind can't be used meanwhile.
+      className={inWindow
+        ? 'flex max-h-full w-full items-center justify-center'
+        : layer === 'above'
+          ? 'fixed inset-0 z-[100001] flex items-center justify-center bg-black/30 p-4'
+          : 'fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-[1px] p-4 animate-in fade-in duration-150'}
+      onMouseDown={inWindow ? undefined : (e) => {
         if (e.target === e.currentTarget) cancel();
       }}
     >
@@ -420,7 +432,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           </>
         ) : (
           <>
-            <div className="flex shrink-0 items-start gap-1 px-6 pt-6">
+            <div className="flex shrink-0 items-start gap-1 px-6 pt-6" data-dialog-drag="">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
@@ -483,6 +495,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       </div>
     </div>
   );
+  return surface.mode === 'window' ? <DialogSurfacePortal surface={surface.surface}>{tree}</DialogSurfacePortal> : tree;
 }
 
 /**

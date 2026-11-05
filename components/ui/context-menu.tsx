@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronRight } from "@/components/icons";
 import { placeMenu, placeSubmenu, windowTopEdge } from "@/lib/menu-placement";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
+import { useDialogSurfaceContext } from "@/components/ui/dialog-surface";
 
 interface Position {
   x: number;
@@ -229,29 +230,31 @@ function listMaxHeight(maxHeight: number | undefined): string {
  * up when the focus goes somewhere else meanwhile. Returns a cancel.
  */
 function focusFirstItem(level: HTMLElement): () => void {
-  const from = document.activeElement;
+  const doc = level.ownerDocument;
+  const win = doc.defaultView ?? window;
+  const from = doc.activeElement;
   let frame = 0;
   let tries = 0;
   let done = false;
   const attempt = () => {
     if (done) return;
-    const active = document.activeElement;
+    const active = doc.activeElement;
     if ((active && level.contains(active)) || active !== from) {
       done = true;
       return;
     }
     const first = menuLevelItems(level)[0];
     focusEl(first);
-    if (first && document.activeElement === first) {
+    if (first && doc.activeElement === first) {
       done = true;
       return;
     }
-    if (++tries < 30) frame = requestAnimationFrame(attempt);
+    if (++tries < 30) frame = win.requestAnimationFrame(attempt);
   };
   attempt();
   return () => {
     done = true;
-    cancelAnimationFrame(frame);
+    win.cancelAnimationFrame(frame);
   };
 }
 
@@ -259,8 +262,13 @@ function focusFirstItem(level: HTMLElement): () => void {
 const SUBMENU_OPEN = "contextmenu:submenu-open";
 const SUBMENU_CLOSE = "contextmenu:submenu-close";
 
+/** An element, from this window or a dialog window (whose elements aren't this window's HTMLElement). */
+function isElement(node: unknown): node is HTMLElement {
+  return !!node && typeof (node as HTMLElement).nodeType === "number" && (node as HTMLElement).nodeType === 1 && "dataset" in (node as HTMLElement);
+}
+
 function submenuTriggerOf(el: Element | null): HTMLElement | null {
-  return el instanceof HTMLElement && el.dataset.submenuTrigger !== undefined ? el : null;
+  return isElement(el) && el.dataset.submenuTrigger !== undefined ? el : null;
 }
 
 /** Close the submenu whose panel this is and put the focus on its entry. */
@@ -298,7 +306,7 @@ function useMenuLevel(recentTouch: () => boolean): MenuLevel {
       // A field in the open submenu has the focus, e.g. a color input whose
       // system dialog is up: closing would drop its answer (#1366).
       const active = document.activeElement;
-      if (active instanceof HTMLInputElement && active.closest("[data-submenu-panel]")) return;
+      if (active?.tagName === "INPUT" && active.closest("[data-submenu-panel]")) return;
       setOpenId(id);
     }, delay);
   }, []);
@@ -322,6 +330,10 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     // the first render for a menu mounted later, so a closed menu that comes
     // with a row or a toolbar costs no second render pass.
     const mounted = useSyncExternalStore(subscribeNothing, clientSnapshot, serverSnapshot);
+    // Drawn in the window it was opened in: a dialog window has its own (dialog-surface.tsx).
+    const surface = useDialogSurfaceContext();
+    const ownerWin: Window = surface?.win ?? (typeof window === "undefined" ? (undefined as unknown as Window) : window);
+    const ownerDoc: Document = surface?.doc ?? (typeof document === "undefined" ? (undefined as unknown as Document) : document);
     const [adjustedPosition, setAdjustedPosition] = useState<(Position & { maxHeight?: number }) | null>(null);
     const localRef = useRef<HTMLDivElement | null>(null);
     const onCloseRef = useRef(onClose);
@@ -366,11 +378,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           point: { x: position.x, y: position.y },
           anchor,
           size: { width: rect.width, height: uncappedHeight(node, rect) },
-          viewport: { width: window.innerWidth, height: window.innerHeight },
+          viewport: { width: ownerWin.innerWidth, height: ownerWin.innerHeight },
           rtl: getComputedStyle(node).direction === "rtl",
           margin: VIEWPORT_MARGIN,
           gap: ANCHOR_GAP,
-          topEdge: windowTopEdge(),
+          topEdge: windowTopEdge(ownerDoc),
         });
 
         setAdjustedPosition((prev) =>
@@ -379,11 +391,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
       };
       clamp();
       // A window made smaller (or zoomed) while the menu is open.
-      window.addEventListener("resize", clamp);
+      ownerWin.addEventListener("resize", clamp);
       const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(clamp);
       observer?.observe(node);
       return () => {
-        window.removeEventListener("resize", clamp);
+        ownerWin.removeEventListener("resize", clamp);
         observer?.disconnect();
       };
       // anchorKey stands for anchor, which callers build anew on each render.
@@ -408,15 +420,15 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
       const onMove = (e: PointerEvent) => {
         if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > POINTER_SLOP) arm();
       };
-      document.addEventListener("pointermove", onMove, true);
-      document.addEventListener("pointerdown", arm, true);
-      document.addEventListener("keydown", arm, true);
+      ownerDoc.addEventListener("pointermove", onMove, true);
+      ownerDoc.addEventListener("pointerdown", arm, true);
+      ownerDoc.addEventListener("keydown", arm, true);
       return () => {
-        document.removeEventListener("pointermove", onMove, true);
-        document.removeEventListener("pointerdown", arm, true);
-        document.removeEventListener("keydown", arm, true);
+        ownerDoc.removeEventListener("pointermove", onMove, true);
+        ownerDoc.removeEventListener("pointerdown", arm, true);
+        ownerDoc.removeEventListener("keydown", arm, true);
       };
-    }, [fromPointer, position.x, position.y]);
+    }, [fromPointer, position.x, position.y, ownerDoc]);
 
     // The row the menu is for stays marked while it's open (app/globals.css).
     const opener = isOpen ? position.opener ?? null : null;
@@ -433,10 +445,10 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const trigger = position.trigger;
     useLayoutEffect(() => {
       if (!isOpen) return;
-      const active = document.activeElement;
+      const active = ownerDoc.activeElement;
       returnFocusTo.current =
-        trigger ?? (active instanceof HTMLElement && active !== document.body ? active : null);
-    }, [isOpen, trigger]);
+        trigger ?? (isElement(active) && active !== ownerDoc.body ? active : null);
+    }, [isOpen, trigger, ownerDoc]);
 
     // Register as the open menu; give the focus back when it closes.
     useEffect(() => {
@@ -450,8 +462,8 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         if (openMenus[openMenus.length - 1] !== token) return;
         const root = localRef.current;
         if (!root) return;
-        const active = document.activeElement;
-        const inside = active instanceof HTMLElement && root.contains(active);
+        const active = ownerDoc.activeElement;
+        const inside = isElement(active) && root.contains(active);
         const current = ((inside ? active.closest('[role="menu"]') : null) as HTMLElement | null) ?? root;
         const consume = (preventDefault = true) => {
           e.stopImmediatePropagation();
@@ -551,29 +563,29 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         }
       };
 
-      window.addEventListener("keydown", onKeyDown, true);
+      ownerWin.addEventListener("keydown", onKeyDown, true);
       return () => {
-        window.removeEventListener("keydown", onKeyDown, true);
+        ownerWin.removeEventListener("keydown", onKeyDown, true);
         const index = openMenus.indexOf(token);
         if (index !== -1) openMenus.splice(index, 1);
         syncOpenFlag();
         requestLevel(null);
         const target = returnFocusTo.current;
         returnFocusTo.current = null;
-        const active = document.activeElement;
-        const focusLeftWithMenu = !active || active === document.body || (menuNode?.contains(active) ?? false);
+        const active = ownerDoc.activeElement;
+        const focusLeftWithMenu = !active || active === ownerDoc.body || (menuNode?.contains(active) ?? false);
         if (target && target.isConnected && focusLeftWithMenu) focusEl(target);
       };
-    }, [isOpen, requestLevel]);
+    }, [isOpen, requestLevel, ownerDoc, ownerWin]);
 
     // Once placed (it is invisible, and can't take the focus, before), the
     // first item gets the focus.
     useEffect(() => {
       if (!isOpen || !isPositioned) return;
       const root = localRef.current;
-      if (!root || root.contains(document.activeElement)) return;
+      if (!root || root.contains(ownerDoc.activeElement)) return;
       return focusFirstItem(root);
-    }, [isOpen, isPositioned]);
+    }, [isOpen, isPositioned, ownerDoc]);
 
     const setRefs = (node: HTMLDivElement | null) => {
       localRef.current = node;
@@ -626,7 +638,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           </div>
         </div>
       </MenuLevelContext.Provider>,
-      document.body
+      ownerDoc.body
     );
   }
 );
@@ -990,6 +1002,9 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
   ref
 ) {
   const [pos, setPos] = useState<(Position & { maxHeight?: number }) | null>(null);
+  const surface = useDialogSurfaceContext();
+  const ownerWin: Window = surface?.win ?? (typeof window === "undefined" ? (undefined as unknown as Window) : window);
+  const ownerDoc: Document = surface?.doc ?? (typeof document === "undefined" ? (undefined as unknown as Document) : document);
   const subMenuRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -1003,12 +1018,12 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
       const placed = placeSubmenu({
         item: itemRect,
         size: { width: subRect.width, height: uncappedHeight(subEl, subRect) },
-        viewport: { width: window.innerWidth, height: window.innerHeight },
+        viewport: { width: ownerWin.innerWidth, height: ownerWin.innerHeight },
         rtl: getComputedStyle(itemEl).direction === "rtl",
         side,
         margin: VIEWPORT_MARGIN,
         gap: ANCHOR_GAP,
-        topEdge: windowTopEdge(),
+        topEdge: windowTopEdge(ownerDoc),
       });
       // Where left/top 0 would put the panel: the origin `position: fixed`
       // resolves against. That is the viewport, unless a theme gives the
@@ -1024,7 +1039,7 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
     };
     place();
 
-    window.addEventListener("resize", place);
+    ownerWin.addEventListener("resize", place);
     // The menu the entry is in scrolls: the entry moves, and the panel with it.
     const parentList = itemEl.closest<HTMLElement>(`[${SCROLL_ATTRIBUTE}]`);
     parentList?.addEventListener("scroll", place);
@@ -1034,18 +1049,18 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
     const parentMenu = itemEl.closest<HTMLElement>('[role="menu"]');
     if (parentMenu) observer?.observe(parentMenu);
     return () => {
-      window.removeEventListener("resize", place);
+      ownerWin.removeEventListener("resize", place);
       parentList?.removeEventListener("scroll", place);
       observer?.disconnect();
     };
-  }, [side]);
+  }, [side, ownerDoc, ownerWin]);
 
   // Placed anew (its rows loaded, the window changed): the row that has the
   // focus stays in view.
   useLayoutEffect(() => {
-    const active = document.activeElement;
-    if (pos && active instanceof HTMLElement && subMenuRef.current?.contains(active)) revealInMenu(active);
-  }, [pos]);
+    const active = ownerDoc.activeElement;
+    if (pos && isElement(active) && subMenuRef.current?.contains(active)) revealInMenu(active);
+  }, [pos, ownerDoc]);
 
   const placed = pos !== null;
   const onPlacedRef = useRef(onPlaced);
