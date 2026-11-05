@@ -96,6 +96,17 @@ describe('what a cold start imports', () => {
     for (const engine of ['lib/files-sync/engine.ts', 'lib/files-sync/host.ts', 'lib/files-sync/root-sync.ts']) expect(modules.has(engine), engine).toBe(false);
   });
 
+  it('leaves the plugin runtime to the first plugin that starts', () => {
+    for (const runtime of ['lib/plugin-loader.ts', 'lib/plugin-sandbox/host-bridge.ts', 'lib/plugin-sandbox/loader.ts', 'lib/plugin-sandbox/host-api.ts']) {
+      expect(modules.has(runtime), runtime).toBe(false);
+    }
+  });
+
+  it('leaves offline mode to a browser that uses it; the wipe check stays', () => {
+    expect(modules.has('lib/offline/offline-mode.ts')).toBe(false);
+    expect(modules.has('lib/offline/device-wipe.ts')).toBe(true);
+  });
+
   it('loads the hosts of background work after the first screen', () => {
     for (const host of [
       'components/mail-transfer/mail-transfer-host.tsx',

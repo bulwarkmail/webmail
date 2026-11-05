@@ -150,7 +150,8 @@ describe('tightening the policy destroys nothing', () => {
     deregisterActive('refused-one');
 
     setPolicy({});
-    expect(loadPlugin).toHaveBeenCalledWith(expect.objectContaining({ id: 'refused-one' }));
+    // The plugin runtime is a chunk: starting it again waits for that.
+    await vi.waitFor(() => expect(loadPlugin).toHaveBeenCalledWith(expect.objectContaining({ id: 'refused-one' })));
     expect(usePluginStore.getState().plugins[0].error).toBeUndefined();
   });
 });
