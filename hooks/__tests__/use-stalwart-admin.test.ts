@@ -37,7 +37,7 @@ function account(id: string, cookieSlot: number, isConnected: boolean) {
 }
 
 const slotsAsked = () => apiFetch.mock.calls
-  .filter(([, init]) => init.method !== 'POST')
+  .filter(([, init]) => init.method === undefined)
   .map(([, init]) => init.headers['X-JMAP-Cookie-Slot']);
 
 describe('useStalwartAdmin', () => {
@@ -100,6 +100,36 @@ describe('useStalwartAdmin', () => {
     act(() => { authStore.current.setState({ connectedAccountsRevision: 1 }); });
 
     await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it('hides the button and ends the auto session when the admin login signs out, and asks again when it is back', async () => {
+    const both = [account('user@example.com', 0, true), account('admin@example.com', 1, true)];
+    useAccountStore.setState({ accounts: both });
+    serve({ 1: adminAuto });
+    const { result } = renderHook(() => useStalwartAdmin());
+    await waitFor(() => expect(result.current).toBe(true));
+
+    act(() => { useAccountStore.setState({ accounts: [both[0]] }); });
+
+    await waitFor(() => expect(result.current).toBe(false));
+    expect(apiFetch).toHaveBeenCalledWith('/api/admin/auth', { method: 'DELETE' });
+
+    act(() => { useAccountStore.setState({ accounts: both }); });
+    await waitFor(() => expect(result.current).toBe(true));
+    expect(slotsAsked().filter((s) => s === '1')).toHaveLength(2);
+  });
+
+  it('keeps a password-mode console session when the admin login signs out', async () => {
+    const both = [account('user@example.com', 0, true), account('admin@example.com', 1, true)];
+    useAccountStore.setState({ accounts: both });
+    serve({ 1: { stalwartAdmin: true, authenticated: true, stalwartAutoLogin: false } });
+    const { result } = renderHook(() => useStalwartAdmin());
+    await waitFor(() => expect(result.current).toBe(true));
+
+    act(() => { useAccountStore.setState({ accounts: [both[0]] }); });
+
+    await waitFor(() => expect(result.current).toBe(false));
+    expect(apiFetch).not.toHaveBeenCalledWith('/api/admin/auth', { method: 'DELETE' });
   });
 
   it('does not mint a session in password mode', async () => {
