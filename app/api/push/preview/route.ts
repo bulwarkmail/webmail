@@ -4,6 +4,8 @@ import { logger } from '@/lib/logger';
 import { cleanPreview } from '@/lib/utils';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { readPushAuthContext } from '@/lib/stalwart/push-auth-context';
+import { renewPushAuthHeader } from '@/lib/stalwart/push-token-renewal';
+import type { StalwartAuthContext } from '@/lib/stalwart/auth-context';
 import {
   getStalwartCredentials,
   type StalwartCredentials,
@@ -37,6 +39,33 @@ interface ResolvedTarget {
   slot?: number;
 }
 
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+/**
+ * The login's JMAP session, and the Authorization header that opened it. A
+ * token sign-in's access token expires within the hour, and with no tab open
+ * nothing renews it: the mail server turns it away and the push gets the
+ * worker's generic notification (#1509). Renewed here then, once.
+ */
+async function openSession(
+  cookieStore: CookieStore,
+  slot: number,
+  ctx: StalwartAuthContext,
+  serverUrl: string,
+  trusted: boolean,
+  forwarded: Record<string, string>,
+  basePath: string | undefined,
+): Promise<{ res: Response; authHeader: string }> {
+  const get = (authHeader: string) => fetchJmapServer(`${serverUrl}/.well-known/jmap`, {
+    headers: { Authorization: authHeader, ...forwarded },
+  }, trusted);
+  const res = await get(ctx.authHeader);
+  if (res.status !== 401) return { res, authHeader: ctx.authHeader };
+  const renewed = await renewPushAuthHeader(cookieStore, slot, ctx, basePath);
+  if (!renewed) return { res, authHeader: ctx.authHeader };
+  return { res: await get(renewed), authHeader: renewed };
+}
+
 // When the SW passes ?accountId=, we need the slot whose JMAP session owns
 // that account - not just "the first signed-in slot", which is what
 // getStalwartCredentials() defaults to. Probe each candidate's session in
@@ -52,7 +81,7 @@ interface ResolvedTarget {
 // keys it by account id), so the label is only whoever registered last. Whatever
 // doesn't fit answers 'ambiguous' rather than guess: a wrong guess previews another
 // login's mail and opens it there.
-async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
+async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
   const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
@@ -63,9 +92,7 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
       (async () => {
         try {
           const trusted = await isTrustedJmapServerUrl(serverUrl);
-          const res = await fetchJmapServer(`${serverUrl}/.well-known/jmap`, {
-            headers: { Authorization: ctx.authHeader, ...forwarded },
-          }, trusted);
+          const { res, authHeader } = await openSession(cookieStore, slot, ctx, serverUrl, trusted, forwarded, basePath);
           if (!res.ok) return null;
           const session = (await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as {
             apiUrl?: string;
@@ -84,7 +111,7 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
             Object.prototype.hasOwnProperty.call(session.accounts ?? {}, accountId);
           if (mailAccountId !== accountId && !isSharedAccount) return null;
           return {
-            target: { authHeader: ctx.authHeader, apiUrl, accountId, trusted, slot, serverUrl, username: ctx.username, accountName: ctx.accountName },
+            target: { authHeader, apiUrl, accountId, trusted, slot, serverUrl, username: ctx.username, accountName: ctx.accountName },
             own: mailAccountId === accountId,
           };
         } catch {
@@ -107,10 +134,8 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
   return results.length > 1 ? 'ambiguous' : null;
 }
 
-async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Record<string, string>): Promise<ResolvedTarget | null> {
-  const sessionRes = await fetchJmapServer(`${creds.serverUrl}/.well-known/jmap`, {
-    headers: { Authorization: creds.authHeader, ...forwarded },
-  }, creds.trusted);
+async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | null> {
+  const { res: sessionRes, authHeader } = await openSession(await cookies(), creds.slot, creds, creds.serverUrl, creds.trusted, forwarded, basePath);
   if (!sessionRes.ok) return null;
   const session = (await readJsonCapped(sessionRes, UPSTREAM_JSON_MAX_BYTES)) as {
     apiUrl?: string;
@@ -119,7 +144,7 @@ async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Recor
   const apiUrl = rebaseApiUrl(session, creds.serverUrl);
   const accountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
   if (!apiUrl || !accountId) return null;
-  return { authHeader: creds.authHeader, apiUrl, accountId, trusted: creds.trusted, serverUrl: creds.serverUrl, username: creds.username, accountName: creds.accountName };
+  return { authHeader, apiUrl, accountId, trusted: creds.trusted, serverUrl: creds.serverUrl, username: creds.username, accountName: creds.accountName };
 }
 
 /**
@@ -147,11 +172,12 @@ export async function GET(request: NextRequest) {
     // which is wrong whenever Sieve filed the new message into a folder.
     const requestedEmailId = request.nextUrl.searchParams.get('emailId');
     const forwarded = forwardedClientHeaders(loginClientAddress(request));
+    const basePath = request.nextUrl.basePath;
 
     let target: ResolvedTarget | null = null;
     let authHeader: string;
     if (requestedAccountId) {
-      const resolved = await resolveTargetForAccount(requestedAccountId, request.nextUrl.searchParams.get('login'), forwarded);
+      const resolved = await resolveTargetForAccount(requestedAccountId, request.nextUrl.searchParams.get('login'), forwarded, basePath);
       if (!resolved) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }
@@ -167,11 +193,11 @@ export async function GET(request: NextRequest) {
       if (!creds) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }
-      target = await resolveDefaultTarget(creds, forwarded);
+      target = await resolveDefaultTarget(creds, forwarded, basePath);
       if (!target) {
         return NextResponse.json({ error: 'JMAP session failed' }, { status: 502 });
       }
-      authHeader = creds.authHeader;
+      authHeader = target.authHeader;
     }
 
     const { apiUrl, accountId, trusted } = target;

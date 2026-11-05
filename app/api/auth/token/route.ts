@@ -6,7 +6,6 @@ import {
   refreshTokenCookieName,
   refreshTokenServerCookieName,
   accessTokenCookieName,
-  encodeCachedAccessToken,
   decodeCachedAccessToken,
 } from '@/lib/oauth/tokens';
 import {
@@ -14,13 +13,11 @@ import {
   buildOAuthParams,
   getMetadata,
   getRequiredConfig,
-  getTokenEndpoint,
   defaultClientOptions,
   DEFAULT_CLIENT_ID,
 } from '@/lib/oauth/token-exchange';
 import type { OAuthMetadata } from '@/lib/oauth/discovery';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
-import { fitsSetCookieBudget } from '@/lib/oauth/set-cookie-budget';
 import {
   buildEndSessionUrl,
   clearIdToken,
@@ -30,6 +27,7 @@ import {
   isRevokeOnSignOutEnabled,
   storeIdToken,
 } from '@/lib/oauth/end-session';
+import { cacheAccessToken, redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import {
@@ -119,35 +117,6 @@ function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | nul
 }
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
-
-/**
- * Cache the access token for the slot so a page reload can resume with it.
- *
- * Scoped to the token's own lifetime - once it expires the cookie is worthless
- * and should not linger. A token too large to store, or one that would push
- * the response past a proxy's header buffer beside `otherCookieValues`, is
- * simply not cached: a reload then refreshes instead (#1237).
- * Returns the cookie value written, or null.
- */
-function cacheAccessToken(
-  cookieStore: CookieStore,
-  slot: number,
-  accessToken: string,
-  expiresIn: number,
-  otherCookieValues: ReadonlyArray<string | null | undefined>,
-  remember: boolean,
-): string | null {
-  const name = accessTokenCookieName(slot);
-  const value = encodeCachedAccessToken(accessToken, expiresIn);
-  if (!value || !fitsSetCookieBudget([...otherCookieValues, value])) {
-    // Drop any stale entry rather than leaving a mismatch.
-    if (cookieStore.get(name)) cookieStore.delete(name);
-    return null;
-  }
-  // The value carries its own expiry, so a session cookie needs no maxAge.
-  cookieStore.set(name, value, remember ? { ...getCookieOptions(), maxAge: expiresIn } : getSignInCookieOptions(false));
-  return value;
-}
 
 export async function POST(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
@@ -246,8 +215,9 @@ export async function PUT(request: NextRequest) {
         clearStalwartAuthContextInStore(cookieStore, slot);
         return NextResponse.json({ error: SESSION_TOO_OLD, maxHours }, { status: 401 });
       }
-      // Bind the time to this token from now on.
-      if (!age.stamp) writeSignInStamp(cookieStore, slot, { signedInAt: age.signedInAt, refreshToken, ...(account ? { account } : {}) }, getSignInCookieOptions(remember));
+      // Bind the time to this token from now on, and record whether the
+      // sign-in is remembered where a stamp from before doesn't say (#1509).
+      if (!age.stamp || age.stamp.remember === undefined) writeSignInStamp(cookieStore, slot, { signedInAt: age.signedInAt, refreshToken, ...(account ? { account } : {}) }, getSignInCookieOptions(remember));
     }
     const signedIn = age ? { signed_in_at: age.signedInAt } : {};
 
@@ -271,44 +241,25 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // The refresh token may have been minted by the password+TOTP login route,
-    // which works without a configured OAuth client by falling back to the
-    // default client id - refreshing must fall back the same way (#873).
     // Discovery or the token endpoint out of reach is an outage: the client
     // waits it out. A 500 here would count toward signing the user out.
-    let tokenResponse: Response;
     const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
     // The device's OS policy refuses this server for now. The cookies stay, so the
     // account comes back with no sign-in if the policy does.
     const refusedByDevice = upstream ? devicePolicyServerRefusal(upstream.serverUrl) : null;
     if (refusedByDevice) return refusedByDevice;
-    try {
-      const tokenEndpoint = await getTokenEndpoint(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID });
-
-      const params = buildOAuthParams({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      }, serverId, await defaultClientOptions(serverId, upstream));
-
-      tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
-        // See revokeRefreshToken: the body holds the refresh token.
-        redirect: 'error',
-      }));
-    } catch (error) {
-      logger.warn('Token refresh: provider unreachable', { error: error instanceof Error ? error.message : 'Unknown error' });
+    const redemption = await redeemRefreshToken(refreshToken, serverId, upstream);
+    if (redemption.kind === 'unreachable') {
+      logger.warn('Token refresh: provider unreachable', { error: redemption.message });
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      logger.error('Token refresh failed', { status: tokenResponse.status, error: errorText });
+    if (redemption.kind === 'refused') {
+      const { status, errorText } = redemption;
+      logger.error('Token refresh failed', { status, error: errorText });
       // Drop the refresh token only when the server definitively rejected it
       // (invalid/expired/revoked grant). A 5xx or 429 is an outage - keeping
       // the cookie lets the session resume once the server is back.
-      const status = tokenResponse.status;
       if (status === 400 || status === 401 || status === 403) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
@@ -323,33 +274,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
 
-    const tokens = await tokenResponse.json();
-
+    const { tokens } = redemption;
     if (!tokens.access_token) {
       logger.error('Refresh response missing access_token', { response: JSON.stringify(tokens).substring(0, 500) });
       return NextResponse.json({ error: 'Invalid token response' }, { status: 502 });
     }
 
-    if (tokens.refresh_token) {
-      const options = getSignInCookieOptions(remember);
-      cookieStore.set(cookieName, tokens.refresh_token, options);
-      // The stamp follows the rotated token, with the same sign-in time and lifetime.
-      if (age) {
-        writeSignInStamp(cookieStore, slot, {
-          signedInAt: age.signedInAt,
-          refreshToken: tokens.refresh_token,
-          ...(age.stamp?.account ? { account: age.stamp.account } : {}),
-        }, options);
-      }
-    }
-
-    const expiresIn = tokens.expires_in || 3600;
-    const cachedAccessToken = cacheAccessToken(cookieStore, slot, tokens.access_token, expiresIn, [tokens.refresh_token], remember);
-    // Providers may reissue the id token on refresh. Only a slot signed in
-    // through the provider keeps one; a password login's slot gains none here.
-    if (typeof tokens.id_token === 'string' && cookieStore.get(idTokenCookieName(slot))) {
-      storeIdToken(cookieStore, slot, tokens.id_token, request.nextUrl.basePath, [tokens.refresh_token, cachedAccessToken], remember);
-    }
+    const { expiresIn } = storeRenewedTokens(cookieStore, slot, { ...tokens, access_token: tokens.access_token }, {
+      remember,
+      age,
+      basePath: request.nextUrl.basePath,
+    });
 
     return NextResponse.json({
       access_token: tokens.access_token,

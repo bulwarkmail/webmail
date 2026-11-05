@@ -8,7 +8,8 @@ import { readStalwartAuthContextFromStore, type StalwartAuthContext } from '@/li
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
-async function limitsOnlyAPageEnforces(): Promise<boolean> {
+/** An idle timeout, or a maximum session length by group: limits only a page can apply. */
+export async function limitsOnlyAPageEnforces(): Promise<boolean> {
   await configManager.ensureLoaded?.();
   const policy = configManager.getPolicy();
   if ((policy.organisation?.session?.idleMinutes ?? 0) > 0) return true;

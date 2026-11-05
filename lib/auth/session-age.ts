@@ -183,6 +183,13 @@ export interface SignInStamp {
   signedInAt: number;
   tokenHash: string;
   account?: string;
+  /**
+   * Whether the sign-in was remembered, so the refresh token cookie outlives
+   * the browser session. A route that renews without a page to ask (the push
+   * preview) keeps a rotated token for as long as this says. Unknown in
+   * stamps written before it was recorded.
+   */
+  remember?: boolean;
 }
 
 export function refreshTokenHash(refreshToken: string): string {
@@ -203,7 +210,13 @@ export function readSignInStamp(cookieStore: CookieStore, slot: number, refreshT
     if (typeof signedInAt !== 'number' || !Number.isFinite(signedInAt)) return null;
     if (payload?.tokenHash !== refreshTokenHash(refreshToken)) return null;
     const account = typeof payload.account === 'string' ? payload.account : undefined;
-    return { signedInAt, tokenHash: payload.tokenHash, ...(account ? { account } : {}) };
+    const remember = typeof payload.remember === 'boolean' ? payload.remember : undefined;
+    return {
+      signedInAt,
+      tokenHash: payload.tokenHash,
+      ...(account ? { account } : {}),
+      ...(remember !== undefined ? { remember } : {}),
+    };
   } catch {
     return null;
   }
@@ -214,12 +227,15 @@ let missingSecretLogged = false;
 /**
  * Written whenever the refresh token cookie is, with that cookie's options.
  * Without a session secret nothing can be sealed; the client's timer still applies.
+ *
+ * Given the options, the stamp records whether they keep the cookie past the
+ * browser session (a maxAge), unless `remember` says it outright.
  */
 export function writeSignInStamp(
   cookieStore: CookieStore,
   slot: number,
-  stamp: { signedInAt: number; refreshToken: string; account?: string },
-  options: Record<string, unknown> = getCookieOptions(),
+  stamp: { signedInAt: number; refreshToken: string; account?: string; remember?: boolean },
+  options?: Record<string, unknown>,
 ): void {
   if (!hasSessionSecret()) {
     if (!missingSecretLogged) {
@@ -231,7 +247,9 @@ export function writeSignInStamp(
   try {
     const payload: Record<string, unknown> = { signedInAt: stamp.signedInAt, tokenHash: refreshTokenHash(stamp.refreshToken) };
     if (stamp.account) payload.account = stamp.account;
-    cookieStore.set(signInStampCookieName(slot), encryptPayload(payload, 'session-age'), options);
+    const remember = stamp.remember ?? (options ? options.maxAge !== undefined : undefined);
+    if (remember !== undefined) payload.remember = remember;
+    cookieStore.set(signInStampCookieName(slot), encryptPayload(payload, 'session-age'), options ?? getCookieOptions());
   } catch (error) {
     logger.warn('Could not record the sign-in time', { error: error instanceof Error ? error.message : 'Unknown error' });
   }

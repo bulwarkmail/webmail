@@ -651,6 +651,9 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
   // a generic "New mail" so the user still sees something.
   let preview = null;
   let previewOk = false;
+  // No login in this browser could read the account, not even after the route
+  // renewed its token: signed out, or the sign-in can't be renewed from here.
+  let previewSignedOut = false;
   // Locked: not a word about the message, so it isn't even looked up.
   const lockHidesContent = await appLockHidesContent();
   if (!lockHidesContent) try {
@@ -675,6 +678,8 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
       if (res.ok) {
         preview = await res.json();
         previewOk = true;
+      } else if (res.status === 401) {
+        previewSignedOut = true;
       }
     } finally {
       if (timer) clearTimeout(timer);
@@ -754,8 +759,14 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
     body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
   }
 
+  // Signed out, a push the server sent without message ids may be about mail
+  // that came or about some other change, and pushes come for other changes
+  // too: ringing for each would ring for nothing, hour after hour (#1509). The
+  // generic notification still shows, without a sound. Ids from the server
+  // say mail came, and that still rings.
+  const unsure = previewSignedOut && freshIds.length === 0;
   // With the sound setting off, nothing rings and no quiet window starts.
-  const audible = (await soundPreference()) && !(await withinQuietWindow(accountId));
+  const audible = !unsure && (await soundPreference()) && !(await withinQuietWindow(accountId));
   await showWithActions(title, {
     body,
     // Shared per-account tag: each new push replaces the account's single
