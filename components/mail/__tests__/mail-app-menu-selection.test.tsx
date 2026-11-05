@@ -140,15 +140,31 @@ afterEach(() => {
 });
 
 describe('the Message menu with three messages selected', () => {
-  it('offers no Reply, Reply all, Forward or Star, which would act on one of them', async () => {
+  it('offers no Reply, Reply all or Forward, which would act on one of them', async () => {
     render(<MailApp />);
     await waitFor(() => expect(reported['message.archive']).toBe(true));
     expect(reported['message.reply']).toBe(false);
     expect(reported['message.replyAll']).toBe(false);
     expect(reported['message.forward']).toBe(false);
-    expect(reported['message.star']).toBe(false);
     expect(reported['message.openWindow']).toBe(false);
     expect(reported['message.move']).toBe(true);
+  });
+
+  // desktop-p3-14: Star was greyed for a selection while the selection view beside it offered Star.
+  it('Star stars all three, as the selection view does, and says Remove star once all have one', async () => {
+    const batchSetStarred = vi.fn().mockResolvedValue(true);
+    useEmailStore.setState({ batchSetStarred } as never);
+    render(<MailApp />);
+    await waitFor(() => expect(reported['message.star']).toEqual({ enabled: true, checked: false }));
+    act(() => { runDesktopCommand('message.star'); });
+    await waitFor(() => expect(batchSetStarred).toHaveBeenCalledWith(expect.anything(), true));
+    cleanup();
+    const starred = (email: Email) => ({ ...email, keywords: { ...email.keywords, $flagged: true } }) as Email;
+    useEmailStore.setState({ emails: [starred(a), starred(b), starred(c)] } as never);
+    render(<MailApp />);
+    await waitFor(() => expect(reported['message.star']).toEqual({ enabled: true, checked: true }));
+    act(() => { runDesktopCommand('message.star'); });
+    await waitFor(() => expect(batchSetStarred).toHaveBeenCalledWith(expect.anything(), false));
   });
 
   it('Move to… moves all three, and the toast says how many', async () => {
@@ -166,6 +182,8 @@ describe('the Message menu with three messages selected', () => {
     useEmailStore.setState({ selectedEmailKeys: new Set() } as never);
     render(<MailApp />);
     await waitFor(() => expect(reported['message.reply']).toBe(true));
+    // Star says whether that one has a star (desktop-p3-14).
+    expect(reported['message.star']).toEqual({ enabled: true, checked: false });
     expect(reported['message.move']).toBe(true);
     act(() => { runDesktopCommand('message.move'); });
     expect(useMoveDialogStore.getState().request).toBeNull();

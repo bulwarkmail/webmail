@@ -63,7 +63,7 @@ import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS } from "@/
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
-import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
+import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, setSelectionStarredWithUndo, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { MailboxShareDialog } from "@/components/layout/mailbox-share-dialog";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
@@ -1436,6 +1436,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // of seven, or Move for the open one only, would act on mail nobody picked.
   const desktopMulti = selectedEmailKeys.size > 1;
   const desktopSingle = !showComposer && !!selectedEmail && !desktopMulti;
+  // Message > Star on a selection does what the selection view's Star does: stars all of
+  // them, or takes the star off when every one has it, and says which (desktop-p3-14).
+  const tSelectionView = useTranslations('selectionView');
+  const starSelection = desktopMulti ? resolveSelectedEmails(useEmailStore.getState()) : [];
+  const selectionAllStarred = starSelection.length > 0 && starSelection.every((email) => !!email.keywords?.$flagged);
+  const starSelectionFromMenu = () => {
+    if (!client || isScheduledView) return;
+    const starred = !selectionAllStarred;
+    void setSelectionStarredWithUndo(client, starred, {
+      success: tSelectionView(starred ? 'starred' : 'unstarred'),
+      error: tNotifications('error_updating'),
+      labels: undo,
+    });
+  };
   const tListExtra = useTranslations('mail_list_extra');
   /** Message > Move to… on the selection, as the selection bar's Move does: one toast with the count. */
   const moveSelectionTo = async (mailboxId: string) => {
@@ -1468,7 +1482,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.forward': keyboardHandlers.onForward,
     'message.markRead': () => void keyboardHandlers.onMarkAsRead?.(),
     'message.markUnread': () => void keyboardHandlers.onMarkAsUnread?.(),
-    'message.star': () => void keyboardHandlers.onToggleStar?.(),
+    'message.star': () => (desktopMulti ? starSelectionFromMenu() : void keyboardHandlers.onToggleStar?.()),
     'message.move': () => {
       if (shortcutsTargetSelection) {
         const state = useEmailStore.getState();
@@ -1500,7 +1514,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.forward': desktopSingle,
     'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
     'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
-    'message.star': desktopSingle,
+    // Checked: the shell says "Remove star".
+    'message.star': desktopMulti
+      ? { enabled: desktopTarget && !isScheduledView, checked: selectionAllStarred }
+      : { enabled: desktopSingle, checked: desktopSingle && !!selectedEmail?.keywords?.$flagged },
     'message.move': desktopTarget && desktopMayRemove,
     'message.archive': desktopTarget && archiveActionEnabled && desktopMayRemove,
     'message.spam': desktopTarget && desktopMayRemove,
