@@ -8090,6 +8090,20 @@
       "app_lock_hello": "Windows Hello Touch ID vân tay khuôn mặt khóa truy cập passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Quyền riêng tư và bảo mật",
+      "security": "Mật khẩu và đăng nhập",
+      "about_updates": "Giới thiệu và cập nhật",
+      "backup": "Sao lưu và nhập"
+    },
+    "sections": {
+      "start": "Khởi động và đóng",
+      "shortcuts": "Phím tắt từ ứng dụng khác",
+      "mail_links": "Liên kết và tệp thư"
+    },
+    "privacy_link_description": "Các cài đặt này nằm trên trang Quyền riêng tư và bảo mật."
+  },
   "desktop_policy": {
     "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",
     "plugin_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này nên tiện ích không chạy. Cài đặt và dữ liệu của tiện ích vẫn được giữ lại.",

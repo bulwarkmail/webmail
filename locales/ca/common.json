@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID empremta digital cara clau d'accés passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privadesa i seguretat",
+      "security": "Contrasenya i inici de sessió",
+      "about_updates": "Quant a i actualitzacions",
+      "backup": "Còpia de seguretat i importació"
+    },
+    "sections": {
+      "start": "Inici i tancament",
+      "shortcuts": "Dreceres des d'altres aplicacions",
+      "mail_links": "Enllaços i fitxers de correu"
+    },
+    "privacy_link_description": "Aquests paràmetres són a la pàgina Privadesa i seguretat."
+  },
   "desktop_policy": {
     "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",
     "plugin_refused": "La teva organització no permet aquest connector en aquest dispositiu, per tant no s'executa. Se'n conserven la configuració i les dades.",

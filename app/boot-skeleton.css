@@ -228,6 +228,8 @@
   [data-boot-settings-tab="offline"] [data-sk-settings-tab="offline"],
   [data-boot-settings-tab="privacy"] [data-sk-settings-tab="privacy"],
   [data-boot-settings-tab="backup"] [data-sk-settings-tab="backup"],
+  [data-boot-settings-tab="desktop"] [data-sk-settings-tab="desktop"],
+  [data-boot-settings-tab="troubleshooting"] [data-sk-settings-tab="troubleshooting"],
   [data-boot-settings-tab="about"] [data-sk-settings-tab="about"]
 ));
 
@@ -244,6 +246,9 @@
 @custom-variant boot-no-settings-offline (&:where([data-boot-settings-tabs]:not([data-boot-settings-tabs~="offline"]) *));
 @custom-variant boot-settings-recovery (&:where([data-boot-settings-tabs~="recovery"] *));
 @custom-variant boot-settings-files-sync (&:where([data-boot-settings-tabs~="files_sync"] *));
+/* The desktop app's own page; Troubleshooting, listed with advanced settings on or while open. */
+@custom-variant boot-settings-desktop (&:where([data-boot-settings-tabs~="desktop"] *));
+@custom-variant boot-settings-troubleshooting (&:where([data-boot-settings-tabs~="troubleshooting"] *, [data-boot-settings-tab="troubleshooting"] *));
 
 /* Settings pages with one section have no section jump row (SectionNav). */
 @custom-variant boot-settings-one-section (&:where([data-boot-settings-tab="security"] *, [data-boot-settings-tab="filters"] *, [data-boot-settings-tab="vacation"] *, [data-boot-settings-tab="recovery"] *, [data-boot-settings-tab="addons"] *));

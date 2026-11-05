@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID sõrmejälg nägu pääsuvõti passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privaatsus ja turvalisus",
+      "security": "Parool ja sisselogimine",
+      "about_updates": "Teave ja uuendused",
+      "backup": "Varundus ja import"
+    },
+    "sections": {
+      "start": "Käivitamine ja sulgemine",
+      "shortcuts": "Kiirklahvid teistest rakendustest",
+      "mail_links": "E-posti lingid ja failid"
+    },
+    "privacy_link_description": "Need seaded on lehel Privaatsus ja turvalisus."
+  },
   "desktop_policy": {
     "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",
     "plugin_refused": "Sinu organisatsioon ei luba seda pistikprogrammi selles seadmes, seega see ei tööta. Selle seaded ja andmed säilivad.",

@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID fingeraftryk ansigt adgangsnøgle passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privatliv og sikkerhed",
+      "security": "Adgangskode og login",
+      "about_updates": "Om og opdateringer",
+      "backup": "Sikkerhedskopi og import"
+    },
+    "sections": {
+      "start": "Start og lukning",
+      "shortcuts": "Genveje fra andre apps",
+      "mail_links": "Mail-links og -filer"
+    },
+    "privacy_link_description": "Disse indstillinger findes på siden Privatliv og sikkerhed."
+  },
   "desktop_policy": {
     "server_refused": "Din organisation tillader ikke denne server på denne enhed.",
     "plugin_refused": "Din organisation tillader ikke dette plugin på denne enhed, så det kører ikke. Dets indstillinger og data bevares.",

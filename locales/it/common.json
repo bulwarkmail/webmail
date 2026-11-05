@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID impronta digitale volto passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy e sicurezza",
+      "security": "Password e accesso",
+      "about_updates": "Informazioni e aggiornamenti",
+      "backup": "Backup e importazione"
+    },
+    "sections": {
+      "start": "Avvio e chiusura",
+      "shortcuts": "Scorciatoie da altre app",
+      "mail_links": "Link e file di posta"
+    },
+    "privacy_link_description": "Queste impostazioni sono nella pagina Privacy e sicurezza."
+  },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",
     "plugin_refused": "La tua organizzazione non consente questo plugin su questo dispositivo, quindi non viene eseguito. Le sue impostazioni e i suoi dati restano conservati.",

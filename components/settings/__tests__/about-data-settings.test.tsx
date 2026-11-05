@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSettingsStore } from '@/stores/settings-store';
-import { AboutDataSettings } from '../about-data-settings';
+import { AboutDataSettings, TroubleshootingSettings } from '../about-data-settings';
 
 // Backup & reset: Reset asks in a ConfirmDialog (no button that turns into
 // a red "Yes"), and every result is a toast, never a browser alert().
@@ -27,10 +27,11 @@ afterEach(() => {
 });
 
 describe('Backup & reset', () => {
+  // Reset moved to Troubleshooting in the settings reorg (2026-11-05).
   it('resets only after the dialog is confirmed, then says so in a toast', () => {
     const resetToDefaults = vi.fn();
     useSettingsStore.setState({ resetToDefaults });
-    render(<AboutDataSettings />);
+    render(<TroubleshootingSettings />);
 
     fireEvent.click(screen.getByRole('button', { name: 'reset_settings.button' }));
     expect(resetToDefaults).not.toHaveBeenCalled();

@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID ujjlenyomat arc jelkulcs passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Adatvédelem és biztonság",
+      "security": "Jelszó és bejelentkezés",
+      "about_updates": "Névjegy és frissítések",
+      "backup": "Biztonsági mentés és importálás"
+    },
+    "sections": {
+      "start": "Indítás és bezárás",
+      "shortcuts": "Billentyűparancsok más alkalmazásokból",
+      "mail_links": "Levelezési hivatkozások és fájlok"
+    },
+    "privacy_link_description": "Ezek a beállítások az Adatvédelem és biztonság oldalon vannak."
+  },
   "desktop_policy": {
     "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",
     "plugin_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt, ezért nem fut. A beállításai és adatai megmaradnak.",

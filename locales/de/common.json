@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID Fingerabdruck Gesicht Passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Datenschutz & Sicherheit",
+      "security": "Passwort & Anmeldung",
+      "about_updates": "Über & Updates",
+      "backup": "Sicherung & Import"
+    },
+    "sections": {
+      "start": "Starten und Schließen",
+      "shortcuts": "Tastenkürzel aus anderen Apps",
+      "mail_links": "E-Mail-Links und -Dateien"
+    },
+    "privacy_link_description": "Diese Einstellungen finden Sie auf der Seite Datenschutz & Sicherheit."
+  },
   "desktop_policy": {
     "server_refused": "Ihre Organisation erlaubt diesen Server auf diesem Gerät nicht.",
     "plugin_refused": "Ihre Organisation erlaubt dieses Plugin auf diesem Gerät nicht, daher läuft es nicht. Seine Einstellungen und Daten bleiben erhalten.",

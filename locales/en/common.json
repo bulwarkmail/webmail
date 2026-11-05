@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID fingerprint face passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy & security",
+      "security": "Password & sign-in",
+      "about_updates": "About & updates",
+      "backup": "Backup & import"
+    },
+    "sections": {
+      "start": "Starting and closing",
+      "shortcuts": "Shortcuts from other apps",
+      "mail_links": "Mail links and files"
+    },
+    "privacy_link_description": "These settings are on the Privacy & security page."
+  },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",
     "plugin_refused": "Your organisation doesn't allow this plugin on this device, so it doesn't run. Its settings and data are kept.",

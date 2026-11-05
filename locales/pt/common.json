@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID impressão digital rosto chave de acesso passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacidade e segurança",
+      "security": "Senha e início de sessão",
+      "about_updates": "Sobre e atualizações",
+      "backup": "Cópia de segurança e importação"
+    },
+    "sections": {
+      "start": "Iniciar e fechar",
+      "shortcuts": "Atalhos a partir de outras aplicações",
+      "mail_links": "Ligações e ficheiros de correio"
+    },
+    "privacy_link_description": "Estas configurações estão na página Privacidade e segurança."
+  },
   "desktop_policy": {
     "server_refused": "A sua organização não permite este servidor neste dispositivo.",
     "plugin_refused": "A sua organização não permite este plugin neste dispositivo, por isso não é executado. As suas definições e dados são mantidos.",

@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, RefreshCw } from '@/components/icons';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
+import { AppLockSettings } from './app-lock-settings';
+import { DesktopKeystoreSettings } from './desktop-keystore-settings';
 import { isDesktopApp } from '@/lib/desktop/bridge';
 import { productName } from '@/lib/product-name';
 import { useConfig } from '@/hooks/use-config';
@@ -42,11 +44,12 @@ export function SettingsLinkRow({ label, description, button, onClick }: { label
 /** The link to Privacy on the pages these settings came from. */
 export function PrivacyLinkRow({ topic }: { topic: 'images' | 'receipts' | 'senders' }) {
   const t = useTranslations('uxs_structure.privacy_links');
+  const tReorg = useTranslations('settings_reorg');
   return (
     <SettingsLinkRow
       label={t(`${topic}_label`)}
-      description={t('description')}
-      button={t('button')}
+      description={tReorg('privacy_link_description')}
+      button={tReorg('tabs.privacy')}
       onClick={() => goToSettings('privacy', topic)}
     />
   );
@@ -222,10 +225,12 @@ function SenderPicturesSection() {
 }
 
 /**
- * Settings > Privacy: what tells others about you or fetches from outside.
- * Remote content and trusted senders, read receipts, sender pictures from
- * the web, and in the desktop app usage info and crash reports. Background
- * notifications through the push relay stay on Notifications, with a link.
+ * Settings > Privacy & security: who can open the app on this device (the
+ * app lock, Windows Hello, certificates on this computer), then what tells
+ * others about you or fetches from outside. Remote content and trusted
+ * senders, read receipts, sender pictures from the web, and in the desktop
+ * app usage info and crash reports. Background notifications through the
+ * push relay stay on Notifications, with a link.
  */
 export function PrivacySettings() {
   const t = useTranslations('uxs_structure.privacy');
@@ -237,6 +242,10 @@ export function PrivacySettings() {
   useEffect(() => setInApp(isDesktopApp()), []);
   return (
     <div className="space-y-8">
+      {/* The app lock and this server's use of certificates on this computer were on
+          General until the settings reorg of 2026-11-05. */}
+      <AppLockSettings />
+      <DesktopKeystoreSettings />
       <RemoteContentSection />
       <ReadReceiptsSection />
       <SenderPicturesSection />

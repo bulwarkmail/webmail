@@ -8079,6 +8079,20 @@
       "app_lock_hello": "Windows Hello Touch ID טביעת אצבע פנים מפתח גישה passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "פרטיות ואבטחה",
+      "security": "סיסמה וכניסה",
+      "about_updates": "אודות ועדכונים",
+      "backup": "גיבוי וייבוא"
+    },
+    "sections": {
+      "start": "הפעלה וסגירה",
+      "shortcuts": "קיצורים מיישומים אחרים",
+      "mail_links": "קישורי דואר וקבצים"
+    },
+    "privacy_link_description": "ההגדרות האלה נמצאות בדף פרטיות ואבטחה."
+  },
   "desktop_policy": {
     "server_refused": "הארגון שלך לא מאפשר את השרת הזה במכשיר הזה.",
     "plugin_refused": "הארגון שלך לא מאפשר את התוסף הזה במכשיר הזה, ולכן הוא לא פועל. ההגדרות והנתונים שלו נשמרים.",

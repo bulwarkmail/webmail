@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID otisk prstu obličej přístupový klíč passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Soukromí a zabezpečení",
+      "security": "Heslo a přihlášení",
+      "about_updates": "O aplikaci a aktualizace",
+      "backup": "Záloha a import"
+    },
+    "sections": {
+      "start": "Spuštění a zavření",
+      "shortcuts": "Zkratky z jiných aplikací",
+      "mail_links": "Poštovní odkazy a soubory"
+    },
+    "privacy_link_description": "Tato nastavení najdete na stránce Soukromí a zabezpečení."
+  },
   "desktop_policy": {
     "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",
     "plugin_refused": "Vaše organizace tento plugin na tomto zařízení nepovoluje, proto neběží. Jeho nastavení a data zůstávají zachována.",

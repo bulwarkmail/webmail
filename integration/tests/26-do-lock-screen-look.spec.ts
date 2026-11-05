@@ -63,7 +63,7 @@ const softGoto = (page: Page, target: string) =>
 
 /** Lock with the mail loaded in this document, the delivered message among it. */
 async function lockOverMail(page: Page): Promise<void> {
-  await softGoto(page, '/settings/general');
+  await softGoto(page, '/settings/privacy');
   const toggle = page.getByTestId('app-lock-switch');
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   await toggle.click();
@@ -74,7 +74,7 @@ async function lockOverMail(page: Page): Promise<void> {
   // No reload in between: a reload would ask for the PIN.
   await softGoto(page, '/');
   await expect(page.getByText(SUBJECT).first()).toBeVisible({ timeout: 60_000 });
-  await softGoto(page, '/settings/general');
+  await softGoto(page, '/settings/privacy');
   await page.getByTestId('app-lock-now').click();
   await expect(page.getByTestId('app-lock-form')).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(500);
