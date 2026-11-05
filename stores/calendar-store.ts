@@ -47,7 +47,7 @@ import {
 } from '@/lib/calendar-subscription-sync';
 import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
-import { isCalendarEventArray, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
+import { isCalendarEventArray, isFetchRange, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
 
 /**
@@ -986,6 +986,19 @@ function getSafeCalendarViewMode(value: unknown): CalendarViewMode {
   return isCalendarViewMode(value) ? value : 'month';
 }
 
+/**
+ * The range to ask the server for, after onBeforeFetchEvents. A plugin that
+ * returns something other than two dates gets the user's range, so a broken
+ * plugin can't make the calendar load every event there is.
+ */
+async function pluginFetchRange(start: string, end: string): Promise<{ start: string; end: string }> {
+  if (calendarHooks.onBeforeFetchEvents.size === 0) return { start, end };
+  const range = await calendarHooks.onBeforeFetchEvents.transform({ start, end });
+  if (isFetchRange(range)) return { start: range.start, end: range.end };
+  debug.error('onBeforeFetchEvents returned an invalid range', range);
+  return { start, end };
+}
+
 export const useCalendarStore = create<CalendarStore>()(
   persist(
     (set, get) => ({
@@ -1075,7 +1088,7 @@ export const useCalendarStore = create<CalendarStore>()(
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
 
         try {
-          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
+          const serverRange = await pluginFetchRange(start, end);
           let rawEvents = await client.queryAllCalendarEvents({
             after: serverRange.start,
             before: serverRange.end,
@@ -1181,7 +1194,7 @@ export const useCalendarStore = create<CalendarStore>()(
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
         try {
-          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
+          const serverRange = await pluginFetchRange(start, end);
           let failed = false;
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
@@ -1269,7 +1282,8 @@ export const useCalendarStore = create<CalendarStore>()(
           // so plugins can transform either or both.
           // we add the id to the local event to get a complete event.
 
-          let { localEvent, serverEvent } = await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent});
+          let { localEvent, serverEvent } = (await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent}))
+            ?? { localEvent: cleanEvent, serverEvent: cleanEvent };
           if (calendarHooks.onCreatingEvent.size > 0){
             if(!isPartialCalendarEvent(localEvent) || !isPartialCalendarEvent(serverEvent)){
               debug.error('returned events by a plugin are not a valid event', {localEvent, serverEvent});
@@ -1383,7 +1397,8 @@ export const useCalendarStore = create<CalendarStore>()(
           const inTwoSteps = !!storeEvent && (target.isOccurrence || !!target.isBrowserOccurrence)
             && reachesOnlyUnanswered(storeEvent, cleanUpdates, sendSchedulingMessages, options);
 
-          let {localUpdates, serverUpdates} = await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id})
+          let {localUpdates, serverUpdates} = (await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id}))
+            ?? { localUpdates: cleanUpdates, serverUpdates: cleanUpdates };
           if(calendarHooks.onUpdatingEvent.size > 0){
             if(!isPartialCalendarEvent(localUpdates) || !isPartialCalendarEvent(serverUpdates)){
               debug.error('returned updates by a plugin are not a valid CalendarEvent partial', {localUpdates, serverUpdates});

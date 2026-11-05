@@ -377,3 +377,38 @@ describe('onCreatingEvent and onUpdatingEvent hooks', () => {
     expect(firstCallArgs[1]).toMatchObject({ title: 'Modified by update plugin' });
   });
 });
+
+describe('broken calendar plugins fall back to the unmodified data', () => {
+  it.each([
+    ['nothing usable', () => ({})],
+    ['dates that do not parse', () => ({ start: 'soon', end: 'later' })],
+  ])('keeps the user range when onBeforeFetchEvents returns %s', async (_name, hook) => {
+    const client = fakeClient({ queryAllCalendarEvents: vi.fn().mockResolvedValue([]) });
+    calendarHooks.onBeforeFetchEvents.register('t', hook as never);
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(client.queryAllCalendarEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ after: '2026-09-01', before: '2026-09-30' })
+    );
+  });
+
+  it('creates the event as typed when onCreatingEvent returns null', async () => {
+    const client = fakeClient();
+    calendarHooks.onCreatingEvent.register('t', () => null as never);
+
+    await useCalendarStore.getState().createEvent(client, { title: 'Typed', start: '2026-09-08T10:00:00' });
+
+    expect(vi.mocked(client.createCalendarEvent).mock.calls[0][0]).toMatchObject({ title: 'Typed' });
+  });
+
+  it('updates the event as typed when onUpdatingEvent returns null', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [event()] });
+    calendarHooks.onUpdatingEvent.register('t', () => null as never);
+
+    await useCalendarStore.getState().updateEvent(client, 'e1', { title: 'Typed patch' });
+
+    expect(vi.mocked(client.updateCalendarEvent).mock.calls[0][1]).toMatchObject({ title: 'Typed patch' });
+  });
+});

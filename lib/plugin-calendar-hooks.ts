@@ -50,3 +50,11 @@ export function isPartialCalendarEvent(object: unknown): object is Partial<Calen
     }
     return true;
 }
+
+/** A { start, end } pair of dates, as onBeforeFetchEvents must return. */
+export function isFetchRange(object: unknown): object is { start: string; end: string } {
+    if (!object || typeof object !== 'object') return false;
+    const { start, end } = object as Record<string, unknown>;
+    return typeof start === 'string' && typeof end === 'string'
+        && !Number.isNaN(Date.parse(start)) && !Number.isNaN(Date.parse(end));
+}
