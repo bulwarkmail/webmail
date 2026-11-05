@@ -115,7 +115,7 @@ async function handleNotification(action: string, rawContext: string, reply: str
   // "Draft discarded": Undo opens quick compose again with what was thrown away.
   // A click on the toast itself has brought the main window up already.
   if (context.discardedDraft) {
-    if (action === 'undo' && !reopenDiscarded(context.discardedDraft)) showWindow();
+    if (action === 'undo' && !(await reopenDiscarded(context.discardedDraft))) showWindow();
     return;
   }
   if (action === 'reply') {
