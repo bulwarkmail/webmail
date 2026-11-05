@@ -42,7 +42,8 @@ export function printMessageInWindow(fields: MessagePrintFields, options: Messag
   const printTheme = activePrintTheme();
   const pageMargin = printTheme?.pageMargin || printPageMargin(themeVars["--print-page-margin"]);
   const themeCss = [
-    varsCss ? `${varsCss}
+    // A plugin style may set the variables in its own CSS (scoped to the body).
+    varsCss || printTheme ? `${varsCss}
   body { font-family: var(--print-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif); color: var(--print-text-color, #000); }
   .header { border-bottom-color: var(--print-rule-color, #ccc); }
   .subject { font-family: var(--print-heading-font-family, var(--print-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)); color: var(--print-heading-color, var(--print-text-color, #000)); }` : '',

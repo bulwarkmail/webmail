@@ -111,7 +111,7 @@ describe("a plugin's print style", () => {
     registerPrintTheme('letterhead', 'Letterhead', {
       id: 'company',
       label: 'Company letterhead',
-      css: '@import "https://evil.example/a.css"; .pr-title { color: #003366; background: url(https://evil.example/p.png) } @page { margin: 25mm }',
+      css: '@import "https://evil.example/a.css"; :root { --print-font-family: Georgia, serif } .pr-title { color: #003366; background: url(https://evil.example/p.png) } @page { margin: 25mm }',
       header: 'Example GmbH <script>alert(1)</script>',
       footer: 'Main Street 1, Berlin',
     });
@@ -148,6 +148,9 @@ describe("a plugin's print style", () => {
     const page = printWindow();
     expect(page).toContain('data-print-theme="letterhead/company"');
     expect(page).toContain('[data-print-theme] .pr-title { color: #003366;');
+    // Its own --print-* variables reach the window's text too.
+    expect(page).toContain('[data-print-theme] { --print-font-family: Georgia, serif }');
+    expect(page).toContain('font-family: var(--print-font-family');
     expect(page).toContain('Example GmbH &lt;script&gt;alert(1)&lt;/script&gt;');
     expect(page).not.toContain('<script>');
     expect(page).not.toContain('evil.example');
