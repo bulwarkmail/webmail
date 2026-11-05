@@ -1044,9 +1044,12 @@ export function ConversationEmailBody({
 
   return (
     <div className={className}>
-      {/* Attachments: right under the message's header, above every banner
-          and the body, on one line; the rest behind "Show N more". Inline
-          images stay in the body, so a message with only those has none. */}
+      {/* A security warning first, so it is read before a file is opened. */}
+      {phishingMarked && <PhishingMarkBanner className="px-4" />}
+      {/* Attachments: right under the message's header and its security
+          warning, above the other notices and the body, on one line; the
+          rest behind "Show N more". Inline images stay in the body, so a
+          message with only those has none. */}
       {visibleAttachments.length > 0 && (
         <div
           data-conversation-attachments=""
@@ -1134,7 +1137,6 @@ export function ConversationEmailBody({
           </div>
         </div>
       )}
-      {phishingMarked && <PhishingMarkBanner className="px-4" />}
       {/* External content warning */}
       {hasBlockedContent && !allowExternal && !pluginBody.blockExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">

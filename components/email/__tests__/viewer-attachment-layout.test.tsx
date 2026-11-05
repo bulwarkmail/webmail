@@ -3,8 +3,10 @@ import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
-// Attachments always sit right under the message header: above the
-// "External content" banner and above the body, in every reader surface
+// Attachments always sit right under the message header and its security
+// warnings (forged sender, reported phishing, the plugins' S/MIME and PGP
+// banners), above the "External content" banner and the body, in every
+// reader surface
 // (reading pane, pop-outs, Pro tabs, the phone and Mountain View
 // conversations, an attached .eml and the printout). There is no setting
 // for it any more. Inline images stay in the body, and a message with only
@@ -36,6 +38,8 @@ const { useAuthStore } = await import('@/stores/auth-store');
 const { useSettingsStore } = await import('@/stores/settings-store');
 const { usePrintRequestStore } = await import('@/hooks/use-message-file-actions');
 const { emailKeyFor } = await import('@/lib/thread-utils');
+const { PHISHING_KEYWORD } = await import('@/lib/phishing-report');
+const { parseAuthenticationResults } = await import('@/lib/email-headers');
 
 const mailboxes = [{ id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, myRights: { mayAddItems: true } }] as unknown as Mailbox[];
 
@@ -73,6 +77,13 @@ const inlineOnly = () => mail({
     { partId: '2', blobId: 'blob-logo', name: 'logo.png', type: 'image/png', size: 900, disposition: 'inline', cid: 'logo@example.com' },
   ] as Email['attachments'],
 });
+
+// Reported as phishing, from a sender whose domain failed DMARC.
+const dangerous = () => mail({
+  keywords: { $seen: true, [PHISHING_KEYWORD]: true },
+  authenticationResults: parseAuthenticationResults(['mx.example.org; spf=fail smtp.mailfrom=bank.example; dkim=fail header.d=bank.example; dmarc=fail header.from=example.com']),
+  authenticationResultsOnReceipt: true,
+} as Partial<Email>);
 
 const client = new Proxy({ getAccountId: () => 'me' } as Record<string, unknown>, {
   get: (target, prop) => (prop in target ? target[prop as string] : prop === 'then' ? undefined : vi.fn().mockResolvedValue(null)),
@@ -112,6 +123,17 @@ describe('the reader (reading pane, pop-outs, Pro tabs)', () => {
     expect(screen.queryByTestId('attachments-jump')).toBeNull();
   });
 
+  it('shows security warnings before the attachments, and other notices after them', async () => {
+    const { container } = render(<EmailViewer email={dangerous()} mailboxes={mailboxes} selectedMailbox="inbox" />);
+    const notice = await screen.findByTestId('external-content-notice');
+    const strip = container.querySelector('[data-testid="reader-attachments"]')!;
+    const phishing = screen.getByTestId('phishing-mark-banner');
+    const forged = screen.getByTestId('sender-check-warning');
+    expect(follows(strip, phishing)).toBe(true);
+    expect(follows(strip, forged)).toBe(true);
+    expect(follows(notice, strip)).toBe(true);
+  });
+
   it('keeps them on top whatever an older build stored as their position', async () => {
     useSettingsStore.setState({ attachmentPosition: 'below-message' } as never);
     const { container } = render(<EmailViewer email={mail()} mailboxes={mailboxes} selectedMailbox="inbox" />);
@@ -136,6 +158,12 @@ describe('a conversation message (phone thread, Mountain View)', () => {
     const file = screen.getByText('Invoice-2026-089.pdf');
     expect(follows(notice, file)).toBe(true);
     expect(follows(container.querySelector('iframe')!, file)).toBe(true);
+  });
+
+  it('shows the phishing warning before the attachments', async () => {
+    render(<ConversationEmailBody email={dangerous()} allowExternal={false} onAllowExternal={() => {}} />);
+    await screen.findByTestId('external-content-notice');
+    expect(follows(screen.getByText('Invoice-2026-089.pdf'), screen.getByTestId('phishing-mark-banner'))).toBe(true);
   });
 
   it('draws no strip for a message whose only attachments are inline images', async () => {

@@ -6121,9 +6121,44 @@ ${printWatermark ? printWatermark.html : ''}
           );
         })()}
 
-        {/* === ATTACHMENTS: always right under the header (and its details),
-            above every banner and the body, in every layout. Inline images
-            stay in the body; a message with only those draws no strip. === */}
+        {/* === SECURITY WARNINGS: right under the header, before the
+            attachments, so the warning is read before a file is opened: a
+            sender the server's checks don't back, a message reported as
+            phishing, and the plugins' banners (S/MIME and PGP verdicts). === */}
+        {senderVerification && (
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="">
+            <div className="px-6 py-1.5">
+              <div className="flex items-start gap-3 py-1" data-testid="sender-check-warning">
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
+                  senderVerification.status === 'failed' ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning",
+                )}>
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[0.6875rem] font-semibold text-muted-foreground">
+                    {senderVerificationLabel}
+                  </div>
+                  <div className="text-sm font-medium text-foreground break-words">
+                    {senderVerificationMessage}
+                  </div>
+                  <div className="text-sm text-muted-foreground break-words">
+                    {t('sender_check.caution')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {phishingMarked && <PhishingMarkBanner />}
+
+        <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
+
+        {/* === ATTACHMENTS: under the header and its security warnings,
+            above the other notices (remote content, invitations, drafts)
+            and the body, in every layout. Inline images stay in the body;
+            a message with only those draws no strip. === */}
         {effectiveAttachments.length > 0 && (
           <div className={cn("bg-background border-b border-border px-4 lg:px-6 py-3", mvViewer && "lg:ps-[80px]")} data-reader-attachments-strip="">
             <ReaderAttachments {...readerAttachmentProps} />
@@ -6172,8 +6207,6 @@ ${printWatermark ? printWatermark.html : ''}
           </div>
         )}
 
-        {phishingMarked && <PhishingMarkBanner />}
-
         {/* Draft Banner: a scheduled message has its own. */}
         {isDraft && !isScheduled && (
           <div className="border-b border-border bg-warning/10">
@@ -6187,37 +6220,13 @@ ${printWatermark ? printWatermark.html : ''}
         )}
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
-        {(senderVerification ||
-          (!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
+        {((!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
           (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
           <div className="border-b border-border bg-muted/30 isolate">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
-                {/* Sender the server's checks don't back */}
-                {senderVerification && (
-                  <div className="flex items-start gap-3 py-1">
-                    <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
-                      senderVerification.status === 'failed' ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning",
-                    )}>
-                      <ShieldAlert className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[0.6875rem] font-semibold text-muted-foreground">
-                        {senderVerificationLabel}
-                      </div>
-                      <div className="text-sm font-medium text-foreground break-words">
-                        {senderVerificationMessage}
-                      </div>
-                      <div className="text-sm text-muted-foreground break-words">
-                        {t('sender_check.caution')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* External Content Controls */}
                 {/* shouldBlockExternal: gone once trust applies (e.g. the
                     policy finished loading after the first paint). */}
@@ -6310,8 +6319,6 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
           </div>
         )}
-
-        <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
 
       </>)}
 
