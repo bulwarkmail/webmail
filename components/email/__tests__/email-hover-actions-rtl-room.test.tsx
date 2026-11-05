@@ -10,6 +10,7 @@ vi.mock('@/components/plugins/plugin-actions', () => ({
   PluginActions: () => null,
   usePluginActions: () => [],
   useMessageActionTarget: () => ({ accountKind: 'personal', keywords: [] }),
+  useRowActionTarget: (target: unknown) => target,
 }));
 
 // mail-p3-10: in Arabic the row's hover actions sit at its left end, which is
