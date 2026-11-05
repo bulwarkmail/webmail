@@ -138,8 +138,8 @@
   },
   "sidebar": {
     "close": "關閉",
-    "compose": "撰寫郵件",
-    "compose_hint": "撰寫郵件 (c)",
+    "compose": "寫郵件",
+    "compose_hint": "寫郵件 (c)",
     "search_placeholder": "搜尋郵件…",
     "search_placeholder_hint": "搜尋郵件…（按 /）",
     "storage": "儲存空間",
@@ -195,7 +195,7 @@
     "collapse_tooltip": "收合",
     "mobile": {
       "search": "搜尋",
-      "compose": "撰寫郵件",
+      "compose": "寫郵件",
       "go_back": "返回",
       "toggle_menu": "切換選單"
     },
@@ -508,8 +508,8 @@
     "no_email_description": "請從清單選取一封郵件，即可在這裡檢視",
     "no_conversation_selected": "未選取對話串",
     "no_conversation_description": "請從清單選取一個對話串，即可在這裡閱讀",
-    "compose": "撰寫郵件",
-    "compose_hint": "撰寫新郵件",
+    "compose": "寫郵件",
+    "compose_hint": "寫新郵件",
     "no_subject": "（無主題）",
     "no_body_content": "（無內文內容）",
     "no_preview_available": "無可用預覽",
@@ -699,7 +699,7 @@
       "delete": "刪除 (# 或 Del)",
       "star": "加上星號 (s)",
       "unstar": "移除星號 (s)",
-      "compose": "撰寫郵件 (c)",
+      "compose": "寫郵件 (c)",
       "previous": "上一封郵件",
       "next": "下一封郵件",
       "edit_draft": "編輯草稿"
@@ -3990,7 +3990,7 @@
       "undo": "復原上一個動作"
     },
     "global": {
-      "compose": "撰寫新郵件",
+      "compose": "寫新郵件",
       "search": "將焦點移至搜尋框",
       "help": "顯示快速鍵",
       "refresh": "重新整理郵件",
@@ -5651,7 +5651,7 @@
   },
   "welcome": {
     "title": "歡迎使用您的信件匣",
-    "tip_compose": "按 c 撰寫新郵件",
+    "tip_compose": "按 c 寫新郵件",
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
     "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
@@ -6993,7 +6993,7 @@
     "no_results": "沒有相符的命令",
     "go_to": "前往{name}",
     "go_to_settings_page": "前往{name}設定",
-    "compose": "撰寫郵件",
+    "compose": "寫郵件",
     "search": "搜尋郵件",
     "theme_dark": "切換為深色主題",
     "theme_light": "切換為淺色主題",
