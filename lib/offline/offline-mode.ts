@@ -174,8 +174,13 @@ export function accountForClient(client: OfflineClientRef): string | null {
 
 function onlineClientFor(account: string) {
   const client = useAuthStore.getState().getClientForAccount(account);
-  if (!client || client.isOfflineOnly()) return null;
+  if (!client || withoutSession(client) || client.isOfflineOnly()) return null;
   return client;
+}
+
+/** The demo's client: no JMAP session behind it, so nothing to keep a copy of. */
+function withoutSession(client: object): boolean {
+  return typeof (client as { getSessionSnapshot?: unknown }).getSessionSnapshot !== 'function';
 }
 
 // ---- The store's way to this tab ----
@@ -963,6 +968,8 @@ function applyDefaultOn(): void {
   if (!offlineDefaultOn() || !offlineSupported()) return;
   for (const account of signedInAccountIds()) {
     if (useOfflineStore.getState().enabled.includes(account) || disabling.has(account) || !scopeDecided(account)) continue;
+    const client = useAuthStore.getState().getClientForAccount(account);
+    if (client && withoutSession(client)) continue;
     if (!scopeForAccount(account).enabled) continue;
     void enableOffline(account);
     try {
