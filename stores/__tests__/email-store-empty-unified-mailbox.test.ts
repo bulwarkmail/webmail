@@ -220,11 +220,12 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
 
   it('clears the visible email list when currently viewing the unified role that was emptied', async () => {
     const client = makeClient(vi.fn().mockResolvedValue(1));
+    const e1 = { id: 'e1', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' };
     useEmailStore.setState({
       isUnifiedView: true,
       unifiedRole: 'trash',
-      emails: [{ id: 'e1' } as never],
-      selectedEmail: { id: 'e1' } as never,
+      emails: [e1 as never],
+      selectedEmail: e1 as never,
       totalEmails: 1,
       hasMoreEmails: true,
     });
@@ -245,6 +246,68 @@ describe('emptyUnifiedMailbox ("All Trash" empty-across-accounts)', () => {
     const s = useEmailStore.getState();
     expect(s.emails).toEqual([]);
     expect(s.selectedEmail).toBeNull();
+    expect(s.hasMoreEmails).toBe(false);
+  });
+
+  it('keeps the messages of an account that failed in the open list', async () => {
+    const clientA = makeClient(vi.fn().mockRejectedValue(new Error('boom')));
+    const clientB = makeClient(vi.fn().mockResolvedValue(1));
+    const fromA = { id: 'a1', sourceClientAccountId: 'account-a', sourceAccountId: 'account-a' };
+    const fromB = { id: 'b1', sourceClientAccountId: 'account-b', sourceAccountId: 'account-b' };
+    useEmailStore.setState({
+      isUnifiedView: true,
+      unifiedRole: 'trash',
+      emails: [fromA, fromB] as never,
+      selectedEmail: fromA as never,
+      totalEmails: 3,
+      hasMoreEmails: true,
+    });
+
+    const accounts: UnifiedAccountClient[] = [
+      {
+        accountId: 'account-a',
+        accountLabel: 'A',
+        client: clientA,
+        mailboxes: [makeMailbox({ id: 'a-trash' })],
+        clientAccountId: 'account-a',
+        jmapAccountId: 'account-a',
+      },
+      {
+        accountId: 'account-b',
+        accountLabel: 'B',
+        client: clientB,
+        mailboxes: [makeMailbox({ id: 'b-trash' })],
+        clientAccountId: 'account-b',
+        jmapAccountId: 'account-b',
+      },
+    ];
+
+    const { emptied } = await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+
+    const s = useEmailStore.getState();
+    expect(emptied).toEqual(['account-b']);
+    expect(s.emails.map((e) => e.id)).toEqual(['a1']);
+    expect(s.selectedEmail?.id).toBe('a1');
+    expect(s.totalEmails).toBe(2);
+    expect(s.hasMoreEmails).toBe(true);
+  });
+
+  it('does not invent a folder list for a login that had none', async () => {
+    const client = makeClient(vi.fn().mockResolvedValue(1));
+    const accounts: UnifiedAccountClient[] = [
+      {
+        accountId: 'account-b',
+        accountLabel: 'B',
+        client,
+        mailboxes: [makeMailbox({ id: 'b-trash' })],
+        clientAccountId: 'account-b',
+        jmapAccountId: 'account-b',
+      },
+    ];
+
+    await useEmailStore.getState().emptyUnifiedMailbox(accounts, 'trash');
+
+    expect('account-b' in useEmailStore.getState().accountMailboxes).toBe(false);
   });
 
   // Emptying one folder asks plugins first and tells them afterwards; the

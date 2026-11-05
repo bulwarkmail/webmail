@@ -4464,6 +4464,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   const handleEmptyUnifiedMailboxFromContextMenu = async (role: UnifiedMailboxRole) => {
+    let accounts: UnifiedAccountClient[];
+    try {
+      accounts = await buildPopulatedUnifiedAccounts();
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));
+      return;
+    }
+    // The user's own logins only: with group accounts in the unified view the
+    // list also holds group and delegated owners, whose Trash isn't theirs.
+    const own = accounts.filter((a) => !a.isShared);
+
     const confirmed = await confirmDialog({
       title: tCtxMenu('mailbox_context_menu.empty_all_confirm_title'),
       message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message'),
@@ -4473,12 +4484,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!confirmed) return;
 
     try {
-      const accounts = await buildPopulatedUnifiedAccounts();
-      const { errors } = await emptyUnifiedMailbox(accounts, role);
+      const { errors, emptied } = await emptyUnifiedMailbox(own, role);
       if (errors.size > 0) {
-        toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all_partial'));
-      } else {
+        toast.error(tCtxMenu(emptied.length > 0
+          ? 'mailbox_context_menu.toast_error_empty_all_partial'
+          : 'mailbox_context_menu.toast_error_empty_all'));
+      } else if (emptied.length > 0) {
         toast.success(tCtxMenu('mailbox_context_menu.toast_emptied_all'));
+      }
+      // The badge on All Trash comes from the cached folder lists, which
+      // still hold the old totals.
+      if (emptied.length > 0) {
+        invalidateUnifiedMailboxes();
+        void buildPopulatedUnifiedAccounts().then(refreshUnifiedCounts).catch(() => {});
       }
     } catch {
       toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));

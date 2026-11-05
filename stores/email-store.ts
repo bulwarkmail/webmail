@@ -705,11 +705,12 @@ interface EmailStore {
   // Empties the given role's mailbox (Trash) in every one of the user's own
   // accounts that has one - the "All Trash" sidebar row's empty-folder action.
   // Shared/group owners are left alone. Per-account failures are collected
-  // rather than aborting the whole batch.
+  // rather than aborting the whole batch. `emptied` lists the accounts whose
+  // folder was emptied; one a plugin kept is in neither it nor `errors`.
   emptyUnifiedMailbox: (
     accounts: UnifiedAccountClient[],
     role: UnifiedMailboxRole,
-  ) => Promise<{ total: number; errors: Map<string, string> }>;
+  ) => Promise<{ total: number; errors: Map<string, string>; emptied: string[] }>;
   exitUnifiedView: () => void;
   // Cross-account view operations (unread / starred / all)
   fetchCrossView: (accounts: UnifiedAccountClient[], view: CrossView) => Promise<void>;
@@ -8236,6 +8237,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // into a shared `total` inline: `total += await x` reads `total` BEFORE
     // awaiting, so concurrent iterations racing on the same closure variable
     // clobber each other's contribution instead of adding to it.
+    const emptied: UnifiedAccountClient[] = [];
     const counts = await Promise.all(targets.map(async ({ account, mailbox }): Promise<number> => {
       try {
         const { jmapMailboxId, jmapAccountId } = resolveJmapTarget(account, mailbox);
@@ -8252,26 +8254,45 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           if (account.clientAccountId === activeId) {
             return { mailboxes: state.mailboxes.map(zeroed) };
           }
+          // A login with no published list keeps having none.
+          const list = state.accountMailboxes[account.clientAccountId];
+          if (!list) return {};
           return {
             accountMailboxes: {
               ...state.accountMailboxes,
-              [account.clientAccountId]: (state.accountMailboxes[account.clientAccountId] ?? []).map(zeroed),
+              [account.clientAccountId]: list.map(zeroed),
             },
           };
         });
+        emptied.push(account);
         return count;
       } catch (err) {
         errors.set(account.accountId, err instanceof Error ? err.message : String(err));
         return 0;
       }
     }));
+    const total = counts.reduce((sum, n) => sum + n, 0);
 
+    // Take out of the open list only what was deleted. A failed or vetoed
+    // account's messages, and a shared owner's, are still on the server.
     const { isUnifiedView, unifiedRole } = get();
-    if (isUnifiedView && unifiedRole === role) {
-      set({ emails: [], selectedEmail: null, totalEmails: 0, hasMoreEmails: false });
+    if (isUnifiedView && unifiedRole === role && emptied.length > 0) {
+      const sourceKey = (clientAccountId?: string, jmapAccountId?: string) => `${clientAccountId}\u0000${jmapAccountId}`;
+      const gone = new Set(emptied.map((a) => sourceKey(a.clientAccountId, a.jmapAccountId)));
+      const isGone = (email: Email) => gone.has(sourceKey(email.sourceClientAccountId, email.sourceAccountId));
+      set((state) => {
+        const emails = state.emails.filter((email) => !isGone(email));
+        const totalEmails = Math.max(0, state.totalEmails - total);
+        return {
+          emails,
+          selectedEmail: state.selectedEmail && isGone(state.selectedEmail) ? null : state.selectedEmail,
+          totalEmails,
+          hasMoreEmails: totalEmails > 0 && state.hasMoreEmails,
+        };
+      });
     }
 
-    return { total: counts.reduce((sum, n) => sum + n, 0), errors };
+    return { total, errors, emptied: emptied.map((a) => a.accountId) };
   },
 
   fetchCrossView: async (accounts, view) => {
