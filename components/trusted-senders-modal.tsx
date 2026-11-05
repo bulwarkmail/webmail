@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { IconButton } from "@/components/ui/icon-button";
 import { PaneSpinner, Spinner } from "@/components/ui/spinner";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useContactStore } from "@/stores/contact-store";
+import { useContactStore, useTrustedSendersInBook } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { UNDO_TOAST_DURATION } from "@/lib/email-action-toast";
@@ -42,6 +42,7 @@ export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: Trust
     addToTrustedSendersBook,
     removeFromTrustedSendersBook,
   } = useContactStore();
+  const inBook = useTrustedSendersInBook();
   const { client } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,9 +58,13 @@ export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: Trust
     }
   }, [isOpen, trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
-  // The active list depends on mode
-  const activeSenders = trustedSendersAddressBook ? trustedSenderEmails : trustedSenders;
-  const isLoading = trustedSendersAddressBook && (!trustedSendersLoaded || trustedSendersLoading);
+  // The book, plus any sender still kept on the device (not filed yet), or
+  // only the device's list where the account can't keep the book.
+  const activeSenders = useMemo(
+    () => (inBook ? Array.from(new Set([...trustedSenderEmails, ...trustedSenders])) : trustedSenders),
+    [inBook, trustedSenderEmails, trustedSenders],
+  );
+  const isLoading = inBook && (!trustedSendersLoaded || trustedSendersLoading);
 
   // Filter senders based on search query
   const filteredSenders = useMemo(() => {
@@ -94,7 +99,7 @@ export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: Trust
   };
 
   const addSender = async (email: string) => {
-    if (trustedSendersAddressBook && client) {
+    if (inBook && client) {
       await addToTrustedSendersBook(client, email);
     } else {
       addTrustedSender(email);
@@ -136,7 +141,7 @@ export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: Trust
   // with Undo that adds the address back.
   const handleRemoveSender = async (email: string) => {
     try {
-      if (trustedSendersAddressBook && client) {
+      if (inBook && client) {
         await removeFromTrustedSendersBook(client, email);
       } else {
         removeTrustedSender(email);

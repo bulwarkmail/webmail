@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Votre organisation bloque le contenu distant dans tous les e-mails : il ne se charge pas non plus pour les expéditeurs de confiance."
   },
+  "trusted_senders_book": {
+    "unavailable": "Indisponible : ce compte ne peut pas garder de carnets d'adresses sur le serveur. La liste reste sur cet appareil."
+  },
   "date": {
     "today": "Aujourd'hui",
     "yesterday": "Hier",

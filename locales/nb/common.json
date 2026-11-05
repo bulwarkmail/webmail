@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Organisasjonen din blokkerer eksternt innhold i all e-post, så det lastes heller ikke fra pålitelige avsendere."
   },
+  "trusted_senders_book": {
+    "unavailable": "Ikke tilgjengelig: denne kontoen kan ikke lagre adressebøker på serveren. Listen blir på denne enheten."
+  },
   "date": {
     "today": "I dag",
     "yesterday": "I går",

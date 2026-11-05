@@ -1486,6 +1486,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Tổ chức của bạn chặn nội dung từ xa trong mọi thư, nên nội dung đó cũng không tải từ người gửi tin cậy."
   },
+  "trusted_senders_book": {
+    "unavailable": "Không khả dụng: tài khoản này không thể lưu sổ địa chỉ trên máy chủ. Danh sách vẫn ở trên thiết bị này."
+  },
   "date": {
     "today": "Hôm nay",
     "yesterday": "Hôm qua",
