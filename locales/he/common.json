@@ -5728,7 +5728,7 @@
     "mark_all_confirm_title": "סמן את כל התיקיות כקרויות",
     "mark_all_confirm_message": "סמן כל הודעה שלא קרויה בחשבון האישי שלך כקרויה?",
     "empty_all_confirm_title": "רוקן את האשפה בכל החשבונות",
-    "empty_all_confirm_message": "למחוק לצמיתות את כל ההודעות באשפה בכל החשבונות המחוברים? לא ניתן לבטל פעולה זו.",
+    "empty_all_confirm_message": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} באשפה בכל החשבונות שלך? אי אפשר לבטל את זה.",
     "toast_emptied_all": "האשפה רוקנה בכל החשבונות",
     "toast_error_empty_all_partial": "האשפה רוקנה, אך חלק מהחשבונות נכשלו",
     "toast_error_empty_all": "ריקון האשפה נכשל",

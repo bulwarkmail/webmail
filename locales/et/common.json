@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Märgi kõik kaustad loetuks",
     "mark_all_confirm_message": "Kas märkida kõik lugemata sõnumid sinu isiklikus kontos loetuks?",
     "empty_all_confirm_title": "Tühjenda kõigi kontode prügikast",
-    "empty_all_confirm_message": "Kas kustutada jäädavalt kõik kirjad kõigi ühendatud kontode prügikastist? Seda toimingut ei saa tagasi võtta.",
+    "empty_all_confirm_message": "Kas kustutada kõigi sinu kontode prügikastist {count, plural, one {kiri} other {kõik # kirja}} jäädavalt? Seda ei saa tagasi võtta.",
     "toast_emptied_all": "Prügikast tühjendati kõigil kontodel",
     "toast_error_empty_all_partial": "Prügikast tühjendati, kuid mõne konto puhul see ebaõnnestus",
     "toast_error_empty_all": "Prügikasti tühjendamine ebaõnnestus",

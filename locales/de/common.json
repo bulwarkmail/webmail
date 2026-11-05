@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Alle Ordner als gelesen markieren",
     "mark_all_confirm_message": "Jede ungelesene Nachricht in Ihrem persönlichen Konto als gelesen markieren?",
     "empty_all_confirm_title": "Papierkorb für alle Konten leeren",
-    "empty_all_confirm_message": "Jede Nachricht im Papierkorb aller verbundenen Konten dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "empty_all_confirm_message": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb aller Ihrer Konten endgültig löschen? Das lässt sich nicht rückgängig machen.",
     "toast_emptied_all": "Papierkorb in allen Konten geleert",
     "toast_error_empty_all_partial": "Papierkorb geleert, aber bei einigen Konten fehlgeschlagen",
     "toast_error_empty_all": "Papierkorb konnte nicht geleert werden",

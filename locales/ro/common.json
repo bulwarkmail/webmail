@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Marcați toate folderele ca citite",
     "mark_all_confirm_message": "Doriți să marcați toate mesajele necitite din contul dvs. personal ca fiind citite?",
     "empty_all_confirm_title": "Golește coșul de gunoi pentru toate conturile",
-    "empty_all_confirm_message": "Ștergeți definitiv fiecare mesaj din Coșul de gunoi de pe toate conturile conectate? Această acțiune nu poate fi anulată.",
+    "empty_all_confirm_message": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi al tuturor conturilor dvs.? Nu se poate anula.",
     "toast_emptied_all": "Coșul de gunoi a fost golit pe toate conturile",
     "toast_error_empty_all_partial": "Coșul de gunoi a fost golit, dar unele conturi au eșuat",
     "toast_error_empty_all": "Golirea coșului de gunoi a eșuat",

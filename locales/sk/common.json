@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Označiť všetky priečinky ako prečítané",
     "mark_all_confirm_message": "Označiť každú neprečítanú správu vo vašom osobnom účte ako prečítanú?",
     "empty_all_confirm_title": "Vyprázdniť kôš pre všetky účty",
-    "empty_all_confirm_message": "Natrvalo odstrániť každú správu z koša vo všetkých pripojených účtoch? Túto akciu nemožno vrátiť späť.",
+    "empty_all_confirm_message": "Natrvalo odstrániť {count, plural, one {správu} few {všetky # správy} many {všetkých # správy} other {všetkých # správ}} v koši všetkých vašich účtov? Nedá sa to vrátiť späť.",
     "toast_emptied_all": "Kôš bol vyprázdnený vo všetkých účtoch",
     "toast_error_empty_all_partial": "Kôš bol vyprázdnený, no pri niektorých účtoch to zlyhalo",
     "toast_error_empty_all": "Vyprázdnenie koša zlyhalo",

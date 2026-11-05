@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Mark all folders as read",
     "mark_all_confirm_message": "Mark every unread message in your personal account as read?",
     "empty_all_confirm_title": "Empty trash for all accounts",
-    "empty_all_confirm_message": "Permanently delete every message in Trash across all connected accounts? This action cannot be undone.",
+    "empty_all_confirm_message": "Delete {count, plural, one {the message} other {all # messages}} in the Trash of all your accounts forever? You can't undo this.",
     "toast_emptied_all": "Trash emptied across all accounts",
     "toast_error_empty_all_partial": "Trash emptied, but some accounts failed",
     "toast_error_empty_all": "Failed to empty trash",

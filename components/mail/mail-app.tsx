@@ -4474,10 +4474,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // The user's own logins only: with group accounts in the unified view the
     // list also holds group and delegated owners, whose Trash isn't theirs.
     const own = accounts.filter((a) => !a.isShared);
+    const count = own.reduce(
+      (sum, a) => sum + (a.mailboxes.find((m) => m.role === role && !m.isShared)?.totalEmails ?? 0),
+      0,
+    );
 
     const confirmed = await confirmDialog({
       title: tCtxMenu('mailbox_context_menu.empty_all_confirm_title'),
-      message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message'),
+      message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message', { count }),
       confirmText: tCtxMenu('mailbox_context_menu.empty_folder_all_accounts'),
       variant: "destructive",
     });

@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "모든 폴더를 읽음으로 표시",
     "mark_all_confirm_message": "개인 계정의 모든 읽지 않은 메시지를 읽음으로 표시하시겠습니까?",
     "empty_all_confirm_title": "모든 계정의 휴지통 비우기",
-    "empty_all_confirm_message": "연결된 모든 계정의 휴지통에 있는 모든 메시지를 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "empty_all_confirm_message": "모든 계정 휴지통의 {count, plural, other {메시지 #개}}를 모두 영구 삭제할까요? 되돌릴 수 없어요.",
     "toast_emptied_all": "모든 계정에서 휴지통을 비웠습니다",
     "toast_error_empty_all_partial": "휴지통을 비웠지만 일부 계정에서 실패했습니다",
     "toast_error_empty_all": "휴지통을 비우지 못했습니다",

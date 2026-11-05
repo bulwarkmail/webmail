@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "将所有文件夹标记为已读",
     "mark_all_confirm_message": "将您个人账户中的所有未读邮件标记为已读？",
     "empty_all_confirm_title": "清空所有账户的垃圾箱",
-    "empty_all_confirm_message": "要永久删除所有已连接账户垃圾箱中的每一封邮件吗？此操作无法撤销。",
+    "empty_all_confirm_message": "要永久删除你所有账户垃圾箱中的{count, plural, other {全部 # 封邮件}}吗？此操作无法撤销。",
     "toast_emptied_all": "已清空所有账户的垃圾箱",
     "toast_error_empty_all_partial": "垃圾箱已清空，但部分账户失败",
     "toast_error_empty_all": "清空垃圾箱失败",

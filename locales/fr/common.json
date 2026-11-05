@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Marquer tous les dossiers comme lus",
     "mark_all_confirm_message": "Marquer tous les messages non lus de votre compte personnel comme lus ?",
     "empty_all_confirm_title": "Vider la corbeille de tous les comptes",
-    "empty_all_confirm_message": "Supprimer définitivement tous les messages de la Corbeille sur tous les comptes connectés ? Cette action est irréversible.",
+    "empty_all_confirm_message": "Supprimer définitivement {count, plural, one {le message} other {les # messages}} de la corbeille de tous vos comptes ? Impossible de revenir en arrière.",
     "toast_emptied_all": "Corbeille vidée sur tous les comptes",
     "toast_error_empty_all_partial": "Corbeille vidée, mais certains comptes ont échoué",
     "toast_error_empty_all": "Échec du vidage de la corbeille",

@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Marca totes les carpetes com a llegides",
     "mark_all_confirm_message": "Voleu marcar tots els missatges no llegits del vostre compte personal com a llegits?",
     "empty_all_confirm_title": "Buida la paperera de tots els comptes",
-    "empty_all_confirm_message": "Voleu suprimir permanentment tots els missatges de la Paperera de tots els comptes connectats? Aquesta acció no es pot desfer.",
+    "empty_all_confirm_message": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera de tots els teus comptes? No es pot desfer.",
     "toast_emptied_all": "S’ha buidat la paperera de tots els comptes",
     "toast_error_empty_all_partial": "S’ha buidat la paperera, però alguns comptes han fallat",
     "toast_error_empty_all": "No s’ha pogut buidar la paperera",

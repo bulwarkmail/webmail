@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Marcar todas las carpetas como leídas",
     "mark_all_confirm_message": "¿Marcar todos los mensajes no leídos de su cuenta personal como leídos?",
     "empty_all_confirm_title": "Vaciar la papelera de todas las cuentas",
-    "empty_all_confirm_message": "¿Eliminar permanentemente todos los mensajes de la papelera en todas las cuentas conectadas? Esta acción no se puede deshacer.",
+    "empty_all_confirm_message": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de la papelera de todas tus cuentas? No se puede deshacer.",
     "toast_emptied_all": "Papelera vaciada en todas las cuentas",
     "toast_error_empty_all_partial": "Papelera vaciada, pero algunas cuentas fallaron",
     "toast_error_empty_all": "No se pudo vaciar la papelera",

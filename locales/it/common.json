@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Segna tutte le cartelle come lette",
     "mark_all_confirm_message": "Segnare tutti i messaggi non letti del tuo account personale come letti?",
     "empty_all_confirm_title": "Svuota il cestino di tutti gli account",
-    "empty_all_confirm_message": "Eliminare definitivamente ogni messaggio nel Cestino su tutti gli account connessi? Questa azione non può essere annullata.",
+    "empty_all_confirm_message": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino di tutti i tuoi account? Non si può annullare.",
     "toast_emptied_all": "Cestino svuotato su tutti gli account",
     "toast_error_empty_all_partial": "Cestino svuotato, ma alcuni account non sono riusciti",
     "toast_error_empty_all": "Impossibile svuotare il cestino",

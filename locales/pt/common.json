@@ -3907,7 +3907,7 @@
     "mark_all_confirm_title": "Marcar todas as pastas como lidas",
     "mark_all_confirm_message": "Marcar todas as mensagens não lidas da sua conta pessoal como lidas?",
     "empty_all_confirm_title": "Esvaziar a lixeira de todas as contas",
-    "empty_all_confirm_message": "Excluir permanentemente todas as mensagens da Lixeira em todas as contas conectadas? Esta ação não pode ser desfeita.",
+    "empty_all_confirm_message": "Excluir para sempre {count, plural, one {a mensagem} other {as # mensagens}} da lixeira de todas as suas contas? Não é possível desfazer.",
     "toast_emptied_all": "Lixeira esvaziada em todas as contas",
     "toast_error_empty_all_partial": "Lixeira esvaziada, mas algumas contas falharam",
     "toast_error_empty_all": "Falha ao esvaziar a lixeira",

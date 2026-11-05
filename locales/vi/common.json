@@ -3919,7 +3919,7 @@
     "mark_all_confirm_title": "Đánh dấu tất cả các thư mục là đã đọc",
     "mark_all_confirm_message": "Đánh dấu mọi thư chưa đọc trong tài khoản cá nhân của bạn là đã đọc?",
     "empty_all_confirm_title": "Dọn sạch Thùng rác của tất cả tài khoản",
-    "empty_all_confirm_message": "Xóa vĩnh viễn mọi thư trong Thùng rác trên tất cả tài khoản đã kết nối? Không thể hoàn tác.",
+    "empty_all_confirm_message": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác của mọi tài khoản của bạn? Không thể hoàn tác.",
     "toast_emptied_all": "Đã dọn sạch Thùng rác trên tất cả tài khoản",
     "toast_error_empty_all_partial": "Đã dọn Thùng rác, nhưng một số tài khoản bị lỗi",
     "toast_error_empty_all": "Không thể dọn sạch Thùng rác",
