@@ -8,8 +8,10 @@
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
 import type { DesktopOsSummary, DesktopOsTrayMessage } from '@/lib/desktop/types';
-import type { CalendarEvent, Email } from '@/lib/jmap/types';
+import type { CalendarEvent, Email, Mailbox, StateChange } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { addStoreEventListener } from '@/lib/offline/store-events';
+import { subscribePushStateChanges } from '@/lib/push-events';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -54,7 +56,9 @@ export async function readSummary(locale: string | undefined, now = Date.now()):
   const entry = useAccountStore.getState().accounts.find((account) => account.id === auth.activeAccountId);
   if (!auth.isAuthenticated || !client || !entry || contentHiddenFor(entry.id)) return EMPTY_SUMMARY;
 
-  const inbox = useEmailStore.getState().mailboxes.find((mailbox) => mailbox.role === 'inbox' && !mailbox.isShared);
+  const ownInbox = (mailboxes: readonly Mailbox[]) => mailboxes.find((mailbox) => mailbox.role === 'inbox' && !mailbox.isShared);
+  // Only the mail view fills the email store: a window that started on Calendar has no folders there.
+  const inbox = ownInbox(useEmailStore.getState().mailboxes) ?? ownInbox(await client.getAllMailboxes().catch(() => []));
   let unread: DesktopOsTrayMessage[] = [];
   let recent: DesktopOsTrayMessage[] = [];
   if (inbox) {
@@ -89,8 +93,26 @@ export async function readSummary(locale: string | undefined, now = Date.now()):
   return { unread, recent, nextEvent, ...(several && entry.username ? { account: entry.username } : {}) };
 }
 
-/** Keeps main's copy current: when the unread count moves, and now and then for the next event. */
-export function startOsSummary(locale: () => string | undefined): { refresh: () => void; stop: () => void } {
+export interface OsSummaryHandle {
+  /** Soon, after a short wait that gathers a burst of changes. `now`: at once, e.g. for a new language. */
+  refresh: (now?: boolean) => void;
+  stop: () => void;
+}
+
+/** Whether a push touches what the summary lists: the mail of the login in front. */
+function touchesActiveMail(change: StateChange, client: IJMAPClient): boolean {
+  if (client !== useAuthStore.getState().client) return false;
+  const own = change.changed[client.getAccountId()];
+  return !!(own?.Email || own?.Mailbox);
+}
+
+/**
+ * Keeps main's copy current: on new or changed mail of the login in front, when the
+ * unread count moves, and now and then for the next event. Push and the local store are
+ * listened to here, not only the email store: that one follows push only while the mail
+ * view is mounted, and the main window can sit in the tray on Calendar for hours.
+ */
+export function startOsSummary(locale: () => string | undefined): OsSummaryHandle {
   const os = getDesktopBridge()?.os;
   if (!os) return { refresh: () => {}, stop: () => {} };
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -106,7 +128,12 @@ export function startOsSummary(locale: () => string | undefined): { refresh: () 
       console.warn('Could not read the tray summary:', error);
     });
   };
-  const refresh = () => {
+  const refresh = (now = false) => {
+    if (now) {
+      if (timer) clearTimeout(timer);
+      run();
+      return;
+    }
     timer ??= setTimeout(run, REFRESH_DELAY_MS);
   };
   const inboxUnread = () => useEmailStore.getState().mailboxes.find((mailbox) => mailbox.role === 'inbox' && !mailbox.isShared)?.unreadEmails ?? -1;
@@ -127,7 +154,15 @@ export function startOsSummary(locale: () => string | undefined): { refresh: () 
   const stopPolicy = usePolicyStore.subscribe((state, previous) => {
     if (state.loaded !== previous.loaded || state.policy !== previous.policy) refresh();
   });
-  const interval = setInterval(refresh, REFRESH_EVERY_MS);
+  const stopPush = subscribePushStateChanges((change, client) => {
+    if (touchesActiveMail(change, client)) refresh();
+  });
+  // With the local store the list is read from it, and it can get the new mail a moment
+  // after the push: its own word that mail came or changed reads the list again.
+  const stopStore = addStoreEventListener((event) => {
+    if ((event.type === 'created' && event.collection === 'Email') || (event.type === 'changed' && event.collections.includes('Email'))) refresh();
+  });
+  const interval = setInterval(() => refresh(), REFRESH_EVERY_MS);
   refresh();
   return {
     refresh,
@@ -136,6 +171,8 @@ export function startOsSummary(locale: () => string | undefined): { refresh: () 
       stopEmail();
       stopAuth();
       stopPolicy();
+      stopPush();
+      stopStore();
       clearInterval(interval);
       if (timer) clearTimeout(timer);
     },

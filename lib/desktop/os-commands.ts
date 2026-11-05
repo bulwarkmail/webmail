@@ -11,9 +11,11 @@ import type { DesktopOsCommand } from '@/lib/desktop/types';
 import { openMailLink } from '@/lib/desktop/mail-links';
 import { requestFileChoice } from '@/lib/file-drop/choice';
 import { handleReminderCommand } from '@/lib/desktop/reminder-notifications';
+import { reopenDiscarded } from '@/lib/popout/discarded-undo';
 import type { MailNotificationContext } from '@/lib/desktop/mail-notifications';
 import { handOffDraft, handOffFiles, handOffNewMessage, kindForFile } from '@/lib/launch-handoff';
 import { parseMailto } from '@/lib/protocol-handlers/mailto';
+import { openSavedMessageWindow } from '@/lib/popout/open';
 import { notifyPendingMailto, notifyPendingWebcal, savePendingMailto, savePendingWebcal } from '@/lib/protocol-handlers/session';
 import { parseWebcal } from '@/lib/protocol-handlers/webcal';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
@@ -110,6 +112,12 @@ async function handleNotification(action: string, rawContext: string, reply: str
     showWindow();
     return;
   }
+  // "Draft discarded": Undo opens quick compose again with what was thrown away.
+  // A click on the toast itself has brought the main window up already.
+  if (context.discardedDraft) {
+    if (action === 'undo' && !(await reopenDiscarded(context.discardedDraft))) showWindow();
+    return;
+  }
   if (action === 'reply') {
     await openFromNotification(context, env, { text: reply ?? '' });
     return;
@@ -169,11 +177,42 @@ function handleFiles(command: Extract<DesktopOsCommand, { type: 'files' }>, env:
   } else {
     for (const file of made) {
       const kind = kindForFile(file);
-      if (kind) handOffFiles([file], kind);
+      if (kind === 'eml') void openMessageFile(file);
+      else if (kind) handOffFiles([file], kind);
       else failed.push(file.name);
     }
   }
   if (failed.length > 0) env.notifyFailed(failed);
+}
+
+/** The page tells main it opens .eml files in windows of their own, so main leaves the main window be. */
+export const OS_COMMAND_OPTIONS = { messageFileWindows: true } as const;
+
+/**
+ * A saved message (.eml) from Explorer: a message window of its own, as Outlook opens
+ * one, with the main window left where it is. The server reads it (Email/parse), so it
+ * is uploaded first. Locked, signed out, offline or without the windows bridge, it
+ * shows over the main window as before, which parses it here.
+ */
+async function openMessageFile(file: File): Promise<void> {
+  const fallback = () => {
+    showWindow();
+    handOffFiles([file], 'eml');
+  };
+  const auth = useAuthStore.getState();
+  const client = auth.client;
+  if (isAppLocked() || !auth.isAuthenticated || !client || typeof client.parseEmailBlob !== 'function' || !getDesktopBridge()?.windows?.open) {
+    fallback();
+    return;
+  }
+  try {
+    // noHold: offline, the upload would wait on this device under a stand-in id.
+    const { blobId } = await client.uploadBlob(file, { noHold: true });
+    if (!openSavedMessageWindow({ blobId, name: file.name, localAccountId: auth.activeAccountId })) fallback();
+  } catch (error) {
+    console.error('Uploading a message file to read it failed:', error);
+    fallback();
+  }
 }
 
 export function handleOsCommand(command: DesktopOsCommand, env: OsCommandEnv): void | Promise<void> {
@@ -231,5 +270,5 @@ export function startOsCommands(env: OsCommandEnv): () => void {
     void Promise.resolve(handleOsCommand(command, env)).catch((error) => {
       console.error('An OS command failed:', error);
     });
-  });
+  }, OS_COMMAND_OPTIONS);
 }

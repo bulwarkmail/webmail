@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "Drücken Sie {keys}, um eine neue Nachricht zu schreiben",
     "tip_palette_keys": "Drücken Sie {keys}, um jeden Befehl zu finden"
   },
+  "uxp3_desktop": {
+    "web_address": "Webadresse"
+  },
   "selectionView": {
     "starred": "Mit Stern markiert",
     "unstarred": "Stern entfernt"

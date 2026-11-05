@@ -116,6 +116,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuMarkRead: t('context_menu.mark_read'),
     menuMarkUnread: t('context_menu.mark_unread'),
     menuStar: t('context_menu.star'),
+    menuUnstar: t('context_menu.unstar'),
     menuMove: t('context_menu.move_to_dialog'),
     menuArchive: t('context_menu.archive'),
     menuSpam: t('context_menu.mark_as_spam'),
