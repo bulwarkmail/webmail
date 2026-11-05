@@ -70,6 +70,12 @@ vi.mock('next/headers', () => ({
   cookies: async () => cookieStore,
 }));
 
+// A renewal is kept a minute for requests still carrying the spent token
+// (lib/oauth/slot-renewal.ts); these tests reuse one token on purpose.
+beforeEach(async () => {
+  (await import('@/lib/oauth/slot-renewal')).resetRedemptionsForTests();
+});
+
 function mockRequest(params: Record<string, string> = {}, method = 'PUT', body?: unknown): unknown {
   return {
     method,
