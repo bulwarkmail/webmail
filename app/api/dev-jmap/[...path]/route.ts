@@ -100,9 +100,19 @@ function hoursAgo(n: number): string {
   return d.toISOString();
 }
 
+/**
+ * The day the calendar fixtures count from: today, or DEV_MOCK_JMAP_TODAY
+ * (YYYY-MM-DD). The boot skeleton guard opens fixed dates, so it pins the day:
+ * otherwise which events fall in its week changed from one day to the next.
+ */
+function fixturesToday(): Date {
+  const pinned = /^(\d{4})-(\d{2})-(\d{2})$/.exec(process.env.DEV_MOCK_JMAP_TODAY ?? '');
+  return pinned ? new Date(Number(pinned[1]), Number(pinned[2]) - 1, Number(pinned[3]), 12) : new Date();
+}
+
 /** Return an ISO date-time string for a day offset (0 = today) at a given hour:minute. */
 function localDateTime(dayOffset: number, hour: number, minute: number): string {
-  const d = new Date();
+  const d = fixturesToday();
   d.setDate(d.getDate() + dayOffset);
   d.setHours(hour, minute, 0, 0);
   return d.toISOString().replace(/Z$/, '');
