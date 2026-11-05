@@ -253,7 +253,7 @@
     "description": "選擇是否在 {appName} 中開啟郵件和行事曆連結。",
     "unsupported": "此瀏覽器或連線不支援手動註冊通訊協定處理常式。您仍可嘗試透過瀏覽器或作業系統設定，使用已安裝的 PWA。",
     "mailto_label": "在 {appName} 中開啟郵件連結",
-    "mailto_description": "點選網站上的電子郵件地址會在 {appName} 中撰寫新郵件。",
+    "mailto_description": "點選網站上的電子郵件地址會在 {appName} 中寫新郵件。",
     "protocol_open_mode_label": "連結的開啟方式",
     "protocol_open_mode_description": "選擇 {appName} 要在新分頁開啟 mailto: 與 webcal: 連結，或使用現有的工作階段。現有工作階段選項需要通知權限；若瀏覽器阻止視窗取得焦點，您可以點擊備用通知，將 {appName} 移到最上層。",
     "protocol_open_mode_active_session": "盡可能在現有工作階段開啟",
@@ -291,12 +291,12 @@
     "share_files_lost": "無法保留分享的檔案。請將它們重新加入郵件。",
     "ics_needs_server": "匯入行事曆檔案需要連線到伺服器。您恢復連線後將開始匯入。",
     "contacts_need_server": "匯入聯絡人需要連線到伺服器。請在恢復連線後再試一次。",
-    "share_confirm_title": "要開始撰寫新郵件嗎?",
-    "share_confirm_message": "另一個網站或應用程式想要開始撰寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
+    "share_confirm_title": "要開始寫新郵件嗎?",
+    "share_confirm_message": "另一個網站或應用程式想要開始寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
     "share_confirm_subject": "主旨:",
     "share_confirm_text": "內文:",
     "share_confirm_files": "{count, plural, other {檔案:}}",
-    "share_confirm_accept": "開始撰寫郵件",
+    "share_confirm_accept": "開始寫郵件",
     "share_confirm_decline": "不要開始",
     "share_cut": "分享的文字太長,已被縮短。",
     "handoff_expired": "您開啟或分享的內容等待太久,已不存在。請重新開啟或分享。",
@@ -1019,7 +1019,7 @@
     "cc": "副本",
     "bcc": "密件副本",
     "subject": "主題",
-    "body_placeholder": "撰寫郵件內容…",
+    "body_placeholder": "寫郵件內容…",
     "send": "傳送",
     "cancel": "取消",
     "attach": "附加",
@@ -1697,7 +1697,7 @@
       },
       "sidebar_account_switcher": {
         "label": "側邊欄頂端的帳號切換器",
-        "description": "在信件匣上方顯示帳號切換器，並在郵件列表上顯示圓形的「撰寫郵件」按鈕。關閉後，「撰寫郵件」會改為顯示在信件匣上方。"
+        "description": "在信件匣上方顯示帳號切換器，並在郵件列表上顯示圓形的「寫郵件」按鈕。關閉後，「寫郵件」會改為顯示在信件匣上方。"
       },
       "show_rail_account_list": {
         "label": "在導覽列顯示帳號頭像",
@@ -1989,7 +1989,7 @@
       },
       "request_read_receipt": {
         "label": "預設請求已讀回執",
-        "description": "撰寫新郵件時預先啟用已讀回執請求。"
+        "description": "寫新郵件時預先啟用已讀回執請求。"
       },
       "read_receipt_response": {
         "label": "回應已讀回執請求",
@@ -2096,7 +2096,7 @@
       },
       "signature_new_mail": {
         "label": "新郵件簽名",
-        "description": "撰寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
+        "description": "寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
       },
       "signature_reply_forward": {
         "label": "回覆轉寄簽名",
@@ -4033,7 +4033,7 @@
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「撰寫郵件」。關閉後，「撰寫郵件」會顯示在帳號切換器的位置。"
+    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「寫郵件」。關閉後，「寫郵件」會顯示在帳號切換器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "顯示郵件",
@@ -5655,7 +5655,7 @@
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
     "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
-    "tip_compose_touch": "點按鉛筆按鈕撰寫新郵件",
+    "tip_compose_touch": "點按鉛筆按鈕寫新郵件",
     "tip_sidebar_touch": "行事曆、聯絡人和設定位於底部列",
     "got_it": "了解",
     "settings": "設定",
@@ -6004,8 +6004,8 @@
     "show_on_new_devices_desc": "首次在新裝置登入時，重新顯示歡迎橫幅與功能導覽，即使您已在其他裝置完成",
     "sidebar_title": "您的信件匣",
     "sidebar_desc": "這裡是信件匣側邊欄。點擊任一信件匣即可檢視其中的郵件。您可以建立信件匣、在信件匣之間拖曳郵件，並快速查看未讀數量。",
-    "compose_title": "撰寫郵件",
-    "compose_desc": "點擊這裡即可撰寫新郵件。您可以新增收件者、附件，並使用富文字格式。",
+    "compose_title": "寫郵件",
+    "compose_desc": "點擊這裡即可寫新郵件。您可以新增收件者、附件，並使用富文字格式。",
     "search_title": "搜尋郵件",
     "search_desc": "依寄件者、主題或內容搜尋。點擊篩選圖示，可使用日期範圍、附件與已加星號等進階選項。",
     "email_list_title": "郵件清單",
@@ -8086,7 +8086,7 @@
   "uxp2_desktop": {
     "unread_badge_label": "在工作列圖示上顯示未讀數",
     "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
-    "tip_compose_keys": "按 {keys} 撰寫新郵件",
+    "tip_compose_keys": "按 {keys} 寫新郵件",
     "tip_palette_keys": "按 {keys} 尋找任何指令"
   },
   "uxp3_desktop": {
