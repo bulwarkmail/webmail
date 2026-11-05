@@ -66,6 +66,7 @@ import { MAX_PLUGIN_FETCH_BYTES, readFileName, readMediaType, sessionClient } fr
 import { doComposeOpen, doComposeReply, doDraftsCreate } from './host-api-compose';
 import { doEmailForward } from './host-api-forward';
 import { doUiPrint } from './host-api-print';
+import { doUiOpenFile } from './host-api-file-viewer';
 import { doNotificationsShow } from './host-api-notify';
 import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAccounts, doUserGetSelf } from './host-api-account';
 import { setSectionTitle } from './section-titles';
@@ -215,8 +216,13 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.rerenderEmail': null,
   'ui.rerenderFetchedEmails': null,
   'ui.openExternalUrl': null,
-  // Print a page the plugin made (sanitised, no scripts, no network); 3 a minute.
+  // Print a page the plugin made (sanitised, no scripts, no network), or a
+  // PDF through the file preview; 3 a minute.
   'ui.print': null,
+  // Show a PDF or an image the plugin made in the app's file preview (no
+  // HTML or SVG, checked by its bytes); 5 a minute. The user decides whether
+  // to download or print it there.
+  'ui.openFile': null,
   'ui.downloadFile': 'ui:download-file',
   // email keyword mutations
   'email.setKeyword': 'email:write',
@@ -2291,6 +2297,7 @@ export async function dispatchApiCall(
       return undefined;
     }
     case 'ui.print': return doUiPrint(plugin, args[0]);
+    case 'ui.openFile': return doUiOpenFile(plugin, args[0]);
     case 'ui.downloadFile': {
       const opts = args[0] as { content: string | ArrayBuffer | Uint8Array; filename: string; contentType?: string };
       return downloadFile(opts ?? { content: '', filename: '' });

@@ -32,6 +32,7 @@ import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
 import { clearSectionTitle } from './section-titles';
 import { clearSidePanel } from './side-panels';
+import { closePluginFilesOf } from './file-viewer';
 import { cancelPluginProxyRequests } from './proxy-client';
 import { cancelConnectFor } from './connect-dialog';
 import { isHookHandedOver } from './host-features';
@@ -477,6 +478,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   clearPluginPages(pluginId);
   clearSectionTitle(pluginId);
   clearSidePanel(pluginId);
+  closePluginFilesOf(pluginId);
   cancelPluginProxyRequests(pluginId);
   cancelConnectFor(pluginId);
   try { entry.background.destroy(); } catch { /* ignore */ }
