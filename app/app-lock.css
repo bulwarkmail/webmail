@@ -7,3 +7,32 @@
 html[data-app-locked] body > *:not([data-app-lock-overlay]):not(.window-title-bar) {
   visibility: hidden !important;
 }
+
+/*
+ * The app's skeleton behind the lock card (components/app-lock/lock-backdrop.tsx):
+ * faint and out of focus, so the card is what reads. It stands still: a lock screen
+ * can stay up for hours, and a pulse behind a blur is work for nothing.
+ */
+[data-app-lock-backdrop] {
+  filter: blur(3px);
+  opacity: 0.6;
+}
+
+[data-app-lock-backdrop] .sk-shape {
+  animation: none;
+}
+
+/* More contrast and forced colours: the plain background, nothing to read the card against. */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) [data-app-lock-backdrop] {
+    display: none;
+  }
+}
+:root[data-contrast="more"] [data-app-lock-backdrop] {
+  display: none;
+}
+@media (forced-colors: active) {
+  [data-app-lock-backdrop] {
+    display: none;
+  }
+}

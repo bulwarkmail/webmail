@@ -826,6 +826,27 @@ html[data-window-controls] :is(.fixed, [role="dialog"]) [data-window-row] {
   -webkit-app-region: drag;
 }
 
+/*
+ * A screen that fills the window and has no row of its own (the app lock, the
+ * page for a crash) draws the controls' band itself, first inside it: being
+ * fixed, it cuts body::before out. What's clickable comes later and cuts itself
+ * out of this one. No [data-window-controls] needed: the crash page has no JS
+ * to set it, and without an overlay the height is 0. While the desktop menu bar
+ * is there, that is the row the controls sit in, and it drags.
+ */
+[data-window-drag-band] {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--titlebar-row-height);
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+html:has([data-window-menu-bar]) [data-window-drag-band] {
+  display: none;
+}
+
 /* macOS: the traffic lights sit at the top of the rail, with room there only. */
 html[data-window-controls-left] [data-window-rail] {
   padding-top: var(--titlebar-row-height);

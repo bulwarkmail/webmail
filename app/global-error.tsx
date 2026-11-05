@@ -36,6 +36,8 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body className="bg-gray-50 dark:bg-gray-900">
+        {/* The desktop app's window is dragged by its top row: this page has no host to mark one. */}
+        <div aria-hidden="true" data-window-drag-band="" />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-md px-4">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
