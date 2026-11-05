@@ -41,8 +41,9 @@ test.describe('phone layout', () => {
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await expectOnScreen(page.locator('[data-mobile-mail-header]'), width);
-    // The account button is the header's last control.
-    await expectOnScreen(page.locator('[data-testid="account-switcher"]').first(), width);
+    // The account button is the header's last control. The closed drawer has
+    // its own, off screen to the left, so look in the header.
+    await expectOnScreen(page.locator('[data-mobile-mail-header] [data-testid="account-switcher"]').first(), width);
     await expectOnScreen(emailItem(page, subject).first(), width);
 
     // The full-screen search panel is outside the app shell's safe-area

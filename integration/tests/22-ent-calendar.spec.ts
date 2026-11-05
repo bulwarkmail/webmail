@@ -494,7 +494,19 @@ test('the out-of-office busy event appears, moves with the dates and goes away w
   const page = await userPage(browser, ENT.alice);
   try {
     await page.goto('/settings/vacation');
-    const dates = page.locator('input[type="datetime-local"]');
+    // The date fields are text with a placeholder until they're clicked.
+    const fromField = page.getByPlaceholder('Right away');
+    const toField = page.getByPlaceholder('Until you turn it off');
+    const dates = {
+      nth: (i: number) => ({
+        fill: async (value: string) => {
+          const field = i === 0 ? fromField : toField;
+          await field.click();
+          await field.fill(value);
+          await field.press('Tab');
+        },
+      }),
+    };
     await dates.nth(0).fill(datetimeLocal(from));
     await dates.nth(1).fill(datetimeLocal(to));
     const block = page.getByTestId('vacation-block-calendar');

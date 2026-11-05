@@ -242,7 +242,8 @@ test('item 1: under the lock the trusted senders list offers no Add (fails on ma
   await policy({ restrictions: LOCK }, browser);
   const alice = await userPage(browser, ENT.alice);
   await alice.locator('a[href$="/settings"]').first().click();
-  await alice.locator('[data-testid="settings-tab-reading"]').first().click();
+  // Trusted senders are on the Privacy page since the settings reorganisation.
+  await alice.locator('[data-testid="settings-tab-privacy"]').first().click();
   await expect(alice.getByText('Trusted senders').first()).toBeVisible();
   await alice.getByRole('button', { name: /^\d+ senders?$|None/ }).first().click();
   await expect(alice.getByText('Add sender manually')).toHaveCount(0);
@@ -257,12 +258,8 @@ test('item 1: a reply draft from before the lock loads no remote image when reop
   await folderRow(alice, { role: 'drafts' }).first().click();
   const row = alice.locator('[data-testid="email-list-item"], [data-thread-keys]', { hasText: `Trust list ${RUN}` }).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
+  // A draft opens straight in the composer (e7cef5ba1), with no reader step.
   await row.click();
-  await alice.getByTestId('edit-draft').waitFor({ state: 'visible' });
-  await alice.waitForTimeout(2000);
-  // Viewing the draft loads nothing either.
-  expect(pixel.count(), 'requests while the draft is shown in the reader').toBe(0);
-  await alice.getByTestId('edit-draft').click();
   await alice.locator('[data-testid="email-composer"]').waitFor({ state: 'visible', timeout: 20_000 });
   await alice.waitForTimeout(3000);
   expect(pixel.count()).toBe(0);
