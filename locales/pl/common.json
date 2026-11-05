@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Twoja organizacja blokuje treści zdalne we wszystkich wiadomościach, więc nie wczytują się one także od zaufanych nadawców."
   },
+  "trusted_senders_book": {
+    "unavailable": "Niedostępne: to konto nie może przechowywać książek adresowych na serwerze. Lista zostaje na tym urządzeniu."
+  },
   "date": {
     "today": "Dzisiaj",
     "yesterday": "Wczoraj",

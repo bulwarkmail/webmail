@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Din organisation blokerer fjernindhold i al mail, så det indlæses heller ikke fra betroede afsendere."
   },
+  "trusted_senders_book": {
+    "unavailable": "Ikke tilgængelig: denne konto kan ikke gemme adressebøger på serveren. Listen bliver på denne enhed."
+  },
   "date": {
     "today": "I dag",
     "yesterday": "I går",
