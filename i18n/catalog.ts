@@ -1,6 +1,6 @@
 import { mergeMessages } from './merge-messages';
 import { addPlainLanguage } from './plain-language';
-import { FIRST_SCREEN_MESSAGES, pickMessages } from './first-screen';
+import { firstScreenPaths, pickMessages } from './first-screen';
 
 type Messages = Record<string, unknown>;
 
@@ -19,9 +19,10 @@ export async function loadCatalog(locale: string): Promise<Messages> {
 }
 
 /**
- * The first screen's part of the catalog (i18n/first-screen.ts), for the pages
- * whose surface draws only that before IntlProvider fetches the rest.
+ * The first screen's part of the catalog (i18n/first-screen.ts) for the page at
+ * `pathname`, for the pages whose surface draws only that before IntlProvider
+ * fetches the rest. A message deep link gets the reader's part as well.
  */
-export async function loadFirstScreenCatalog(locale: string): Promise<Messages> {
-  return pickMessages(await loadCatalog(locale), FIRST_SCREEN_MESSAGES);
+export async function loadFirstScreenCatalog(locale: string, pathname = '/'): Promise<Messages> {
+  return pickMessages(await loadCatalog(locale), firstScreenPaths(pathname));
 }

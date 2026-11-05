@@ -85,10 +85,11 @@ export default async function LocaleLayout({
   // (i18n/first-screen.ts). Other pages get all of it.
   let partial = false;
   if (!IS_LITE) {
-    const surface = surfaceFromPath((await headers()).get("x-pathname") || "/", locales);
+    const pathname = (await headers()).get("x-pathname") || "/";
+    const surface = surfaceFromPath(pathname, locales);
     partial = surface !== null && FIRST_SCREEN_SURFACES.has(surface);
     try {
-      messages = partial ? await loadFirstScreenCatalog(locale) : await loadCatalog(locale);
+      messages = partial ? await loadFirstScreenCatalog(locale, pathname) : await loadCatalog(locale);
     } catch {
       notFound();
     }

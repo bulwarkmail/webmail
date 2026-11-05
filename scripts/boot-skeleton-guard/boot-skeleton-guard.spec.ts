@@ -211,12 +211,24 @@ test("the first screen's catalog has every key the sign-in page and the mail vie
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   await signIn(page);
+  // A message from the mock mailbox, to open by its link.
+  await page.locator('[data-tour="email-list"] [role="row"]').first().click();
+  await page.waitForURL(/\/mail\/(message|thread)\//, { timeout: 30_000 });
+  const messagePath = new URL(page.url()).pathname;
   await context.addInitScript(() => { (window as unknown as { __holdCatalogRest: boolean }).__holdCatalogRest = true; });
   for (const path of ["/en", "/en/mail/folder/inbox"]) {
     await page.goto(path);
     await page.locator('[data-tour="email-list"] [data-index]').first().waitFor({ timeout: 60_000 });
     await page.waitForTimeout(2000);
     expect(await misses(page), path).toEqual([]);
+  }
+  // A message opened from a link draws the reader on its first screen: no label of it may come late.
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto(messagePath);
+    await page.locator('[data-tour="email-viewer"]').first().waitFor({ timeout: 60_000 });
+    await page.waitForTimeout(2000);
+    expect(await misses(page), `${messagePath} @${viewport.width}`).toEqual([]);
   }
   await context.close();
   for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {

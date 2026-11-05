@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadCatalog, loadFirstScreenCatalog } from '@/i18n/catalog';
-import { FIRST_SCREEN_MESSAGES, fillIn, pickMessages } from '@/i18n/first-screen';
+import { FIRST_SCREEN_MESSAGES, READER_FIRST_SCREEN_MESSAGES, fillIn, opensReader, pickMessages } from '@/i18n/first-screen';
 
 // The sign-in page and the mail view get only the first screen's part of the
 // catalog (i18n/first-screen.ts). The whole catalog in the page was over 400 KB
@@ -22,10 +22,25 @@ describe('the first screen catalog', () => {
     }
   });
 
+  it('adds the reader for a message or conversation opened from a link, and only there', async () => {
+    expect(opensReader('/en/mail/message/m1')).toBe(true);
+    expect(opensReader('/mail/thread/t1')).toBe(true);
+    expect(opensReader('/en/mail/folder/inbox')).toBe(false);
+    expect(opensReader('/en')).toBe(false);
+    for (const locale of ['en', 'de']) {
+      const list = size(await loadFirstScreenCatalog(locale, '/en/mail/folder/inbox'));
+      const reader = await loadFirstScreenCatalog(locale, '/en/mail/message/m1');
+      expect(size(reader), locale).toBeGreaterThan(list);
+      expect(size(reader), locale).toBeLessThan(75_000);
+      // Every string of the reader's buttons and header, not just the ones the list draws.
+      expect(reader.email_viewer, locale).toEqual((await loadCatalog(locale)).email_viewer);
+    }
+  });
+
   it('names only paths the catalog has', async () => {
     const en = await loadCatalog('en');
     const all = new Set(leaves(en));
-    for (const path of FIRST_SCREEN_MESSAGES) {
+    for (const path of [...FIRST_SCREEN_MESSAGES, ...READER_FIRST_SCREEN_MESSAGES]) {
       expect([...all].some((leaf) => leaf === path || leaf.startsWith(`${path}.`)), path).toBe(true);
     }
   });

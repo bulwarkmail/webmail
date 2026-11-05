@@ -31,6 +31,26 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'tour.take_a_tour',
 ];
 
+/**
+ * What a message or conversation opened from a link draws as well: the reader
+ * is on its first screen (/mail/message/..., /mail/thread/...). Pop-out and
+ * desktop message windows aren't on a first-screen surface and get the whole
+ * catalog.
+ */
+export const READER_FIRST_SCREEN_MESSAGES: readonly string[] = [
+  'compose_words', 'deep_link', 'email_viewer', 'mail_p2_conv', 'mail_p3_actions', 'reader_actions',
+];
+
+/** Whether `pathname` opens a message or conversation in the mail view. */
+export function opensReader(pathname: string): boolean {
+  return /\/mail\/(message|thread)\/[^/]/.test(pathname);
+}
+
+/** The catalog paths the first screen of `pathname` draws. */
+export function firstScreenPaths(pathname: string): readonly string[] {
+  return opensReader(pathname) ? [...FIRST_SCREEN_MESSAGES, ...READER_FIRST_SCREEN_MESSAGES] : FIRST_SCREEN_MESSAGES;
+}
+
 /** The surfaces whose server catalog is only the first screen's. */
 export const FIRST_SCREEN_SURFACES: ReadonlySet<string> = new Set(['mail', 'login']);
 
