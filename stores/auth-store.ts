@@ -835,6 +835,8 @@ export function pickEndSessionSlot(accounts: AccountEntry[], activeAccountId: st
 
 /** Accounts the server refused during a connect that hasn't reported back yet. */
 const refusedAtConnect = new Set<string>();
+/** errorMessage of an account the server refused as a whole (AccountUnavailableError). */
+const ACCOUNT_REFUSED = 'account_refused';
 const endingRefused = new Set<string>();
 
 /** A client that's connected: what the server said on the way there is over. */
@@ -907,6 +909,13 @@ function bindClientStatusHandlers(
       return;
     }
     if (refusedForMs >= CREDENTIALS_REFUSED_CONFIRM_MS) void endRefusedLogin(accountId, get);
+  });
+
+  // Refused as a whole, e.g. deleted on the server (#1539): the client has stopped,
+  // and the account list shows it in trouble. Switching to it asks for a sign-in.
+  client.onAccessRefused?.(() => {
+    if (!accountId) return;
+    useAccountStore.getState().updateAccount(accountId, { isConnected: false, hasError: true, errorMessage: ACCOUNT_REFUSED });
   });
 
   client.onConnectionChange((connected) => {
@@ -3044,6 +3053,14 @@ export const useAuthStore = create<AuthState>()(
         // else's mail.
         const connectedCandidates = await connectedAccountCandidates(targetClient, targetAccount.serverUrl);
         if (superseded()) return;
+        // The server refused the login as a whole, now or before (#1539): it would
+        // refuse every load the switch starts. Ask for a sign-in instead, the way
+        // an account restored from the backup does.
+        if (targetClient.isAccessRefused?.()) {
+          accountStore.updateAccount(accountId, { isConnected: false, hasError: true, errorMessage: ACCOUNT_REFUSED });
+          replaceWindowLocation(`${getLocaleLoginPath()}?mode=add-account&username=${encodeURIComponent(targetAccount.username)}`);
+          return;
+        }
         const verdict = classifySessionMatch(connectedCandidates, accountId, targetAccount.serverIdentifiers);
         if (verdict === 'reject') {
           debug.error(`switchAccount: slot ${targetAccount.cookieSlot} for ${accountId} resolved to [${connectedCandidates.join(", ")}] — forcing re-auth`);
