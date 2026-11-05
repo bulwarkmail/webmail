@@ -15,6 +15,8 @@ describe('printPdfUrl', () => {
       HTMLElement.prototype.appendChild.call(this, node);
       if (node instanceof HTMLIFrameElement) {
         node.contentWindow!.print = () => { printed += 1; };
+        // As in a browser: focusing the frame's window moves the page's focus to the frame.
+        node.contentWindow!.focus = () => { node.focus(); };
         queueMicrotask(() => node.dispatchEvent(new Event('load')));
       }
       return node;
@@ -28,6 +30,9 @@ describe('printPdfUrl', () => {
   });
 
   it('prints the PDF from a frame of its own, laid out off screen, and cleans up', async () => {
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
     const done = printPdfUrl('blob:https://mail.example/pdf-1');
     const frame = document.querySelector('iframe')!;
     expect(frame.getAttribute('src')).toBe('blob:https://mail.example/pdf-1');
@@ -35,6 +40,9 @@ describe('printPdfUrl', () => {
     expect(frame.style.left).toBe('-10000px');
     expect(await done).toBe(true);
     expect(printed).toBe(1);
+    // The page keeps the keyboard (Escape still closes the preview).
+    expect(document.activeElement).toBe(button);
+    button.remove();
     vi.advanceTimersByTime(60_000);
     expect(document.querySelector('iframe')).toBeNull();
   });

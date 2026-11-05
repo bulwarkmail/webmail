@@ -44,7 +44,8 @@ export function printPdfUrl(url: string): Promise<boolean> {
       }
       setTimeout(remove, CLEANUP_MS);
       try {
-        view.focus();
+        // No focus() first: the frame would keep the keyboard, and Escape
+        // would no longer close the preview behind the dialog.
         view.print();
         finish(true);
       } catch {
