@@ -53,7 +53,9 @@ export function useFirstRowLimit<T extends HTMLElement = HTMLDivElement>(count: 
     if (!measured) {
       // Everything is drawn: count what the first line holds.
       const fits = items.filter(onFirstRow).length;
-      setFit({ key, limit: fits >= count ? null : Math.max(1, fits - 1) });
+      const shown = Math.max(1, fits - 1);
+      // "Show 1 more" would take the room of the one item it hides.
+      setFit({ key, limit: fits >= count || count - shown <= 1 ? null : shown });
       return;
     }
     // "+N more" went to the next line: give it one more item's room.

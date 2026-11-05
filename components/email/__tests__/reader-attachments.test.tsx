@@ -180,6 +180,13 @@ describe('ReaderAttachments bar', () => {
       expect(screen.getByRole('button', { name: /attachments_show_more/ })).toBeTruthy();
     });
 
+    it('shows the last file itself rather than "Show 1 more" in its place', () => {
+      columns = 1;
+      renderBar([file('a', 'one.pdf'), file('b', 'two.pdf')]);
+      expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: /attachments_show_more/ })).toBeNull();
+    });
+
     it('starts collapsed again for the next message', () => {
       const first = Array.from({ length: 5 }, (_, i) => file(`a${i}`, `a-${i}.pdf`));
       const props = { thumbUrls: {}, opensPreview: () => false, onOpen: vi.fn(), onDownload: vi.fn(), onDownloadAll: vi.fn(), downloadingAll: false };
