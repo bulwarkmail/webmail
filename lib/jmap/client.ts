@@ -241,6 +241,18 @@ async function isProblemStatus(response: Response, status: number): Promise<bool
 }
 
 /**
+ * A 403 that refuses this login for good: Stalwart's problem document for a
+ * deleted account or a removed credential. Its IP block answers with the bare
+ * reason phrase as the detail and lifts again, and a gateway's JSON 403 isn't
+ * a problem document, so neither stops the client.
+ */
+async function isLoginRefusal(response: Response): Promise<boolean> {
+  if (!(response.headers.get('content-type') ?? '').toLowerCase().includes('problem+json')) return false;
+  const body = await response.clone().json().catch(() => null) as { status?: unknown; detail?: unknown } | null;
+  return body?.status === 403 && typeof body.detail === 'string' && body.detail !== 'Forbidden';
+}
+
+/**
  * The mail server refused this login as a whole, with a 403 for the session or
  * the API itself (Stalwart does that for an account deleted while signed in, a
  * credential that was removed, or an address it blocks). Every further request
@@ -1951,7 +1963,7 @@ export class JMAPClient implements IJMAPClient {
 
     // Only the session and the API URL: an upload or a download may be refused
     // for one account or blob the login can't reach.
-    if (response.status === 403 && (url === this.apiUrl || url === this.discoveryUrl()) && await isProblemStatus(response, 403)) {
+    if (response.status === 403 && (url === this.apiUrl || url === this.discoveryUrl()) && await isLoginRefusal(response)) {
       this.refuseAccess();
       return response;
     }

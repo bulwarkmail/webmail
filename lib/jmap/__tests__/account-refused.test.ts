@@ -7,7 +7,8 @@ import { AccountUnavailableError, JMAPClient } from '../client';
 
 const SERVER = 'https://mail.example.test';
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
-const refused = () => json({ type: 'about:blank', status: 403, title: 'Forbidden', detail: 'You do not have enough permissions to access this resource.' }, 403);
+const problem = (body: unknown, status: number) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/problem+json' } });
+const refused = () => problem({ type: 'about:blank', status: 403, title: 'Forbidden', detail: 'You do not have enough permissions to access this resource.' }, 403);
 const session = () => json({
   apiUrl: `${SERVER}/jmap`, downloadUrl: `${SERVER}/d/{accountId}/{blobId}/{name}`, uploadUrl: `${SERVER}/u/{accountId}`, eventSourceUrl: '', username: 'alice',
   capabilities: { 'urn:ietf:params:jmap:core': {} }, accounts: { a: { name: 'alice', isPersonal: true, accountCapabilities: {} } }, primaryAccounts: { 'urn:ietf:params:jmap:mail': 'a' },
@@ -77,6 +78,28 @@ describe('what is not a refusal of the whole login', () => {
     expect(refusals).toEqual([]);
     answers = { api: echo, session };
     await client.ping();
+    client.disconnect();
+  });
+
+  it("Stalwart's IP block, which lifts again", async () => {
+    const { client, refusals } = await connected();
+    answers = { api: () => problem({ type: 'about:blank', status: 403, title: 'Forbidden', detail: 'Forbidden' }, 403), session };
+    await expect(client.ping()).rejects.toThrow('403');
+    expect(client.isAccessRefused()).toBe(false);
+    answers = { api: echo, session };
+    await client.ping();
+    expect(refusals).toEqual([]);
+    client.disconnect();
+  });
+
+  it("a gateway's JSON 403", async () => {
+    const { client, refusals } = await connected();
+    answers = { api: () => json({ status: 403, error: 'Forbidden', message: 'denied by policy' }, 403), session };
+    await expect(client.ping()).rejects.toThrow('403');
+    expect(client.isAccessRefused()).toBe(false);
+    answers = { api: echo, session };
+    await client.ping();
+    expect(refusals).toEqual([]);
     client.disconnect();
   });
 
