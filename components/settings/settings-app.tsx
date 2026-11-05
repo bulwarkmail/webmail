@@ -101,6 +101,7 @@ import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { useDesktopWindowName } from '@/lib/desktop/window-name';
+import { useDesktopCommands } from '@/lib/desktop/commands';
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { scrollBehavior } from '@/lib/reduced-motion';
@@ -833,6 +834,16 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       : tSidebar('settings'),
   );
   useDesktopWindowName(tSidebar('settings'), { withAccount: true });
+  // Edit > Search (Ctrl+E) in the desktop app: the settings search here, as Calendar's
+  // goes to its events, not the mail search (desktop-p3-16).
+  useDesktopCommands({
+    'edit.search': () => {
+      const fields = Array.from(document.querySelectorAll<HTMLInputElement>('[data-settings-search]'));
+      const shown = fields.find((field) => field.getClientRects().length > 0) ?? fields[0];
+      shown?.focus();
+      shown?.select();
+    },
+  }, { 'edit.search': true });
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);
@@ -1031,6 +1042,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
+              data-settings-search=""
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
               autoComplete="off"
@@ -1195,6 +1207,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               clearLabel={t('search_clear')}
+              data-settings-search=""
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
               autoComplete="off"
