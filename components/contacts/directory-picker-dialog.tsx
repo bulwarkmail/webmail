@@ -10,6 +10,7 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { ContactCard } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, type DirectoryEntry } from "@/stores/contact-store";
 import { DirectoryBrowser, directoryKey } from "./directory-browser";
+import { ModalWindow } from "@/components/ui/dialog-surface";
 
 export type RecipientField = "to" | "cc" | "bcc";
 
@@ -90,74 +91,76 @@ export function DirectoryPickerDialog({ client, onClose, onAdd }: DirectoryPicke
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="directory-picker-title"
-        className="bg-background border border-border rounded-lg shadow-xl w-full max-w-lg h-[80vh] max-h-[640px] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
-        data-testid="directory-picker-dialog"
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h2 id="directory-picker-title" className="text-sm font-semibold text-foreground">
-            {tSend("picker_title")}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("cancel")}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {hasDirectory && (
-          <div role="tablist" className="flex gap-1 px-3 border-b border-border">
-            {tabButton("contacts", tSend("tab_contacts"))}
-            {tabButton("directory", tSend("tab_directory"))}
-          </div>
-        )}
-
+    <ModalWindow title={tSend("picker_title")} onClose={onClose}>
+      <div data-modal-backdrop="" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
         <div
-          id="recipient-picker-panel"
-          role={hasDirectory ? "tabpanel" : undefined}
-          aria-labelledby={hasDirectory ? `recipient-picker-tab-${tab}` : undefined}
-          className="flex-1 min-h-0 flex flex-col"
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="directory-picker-title"
+          className="bg-background border border-border rounded-lg shadow-xl w-full max-w-lg h-[80vh] max-h-[640px] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+          data-testid="directory-picker-dialog"
         >
-          <DirectoryBrowser
-            // A fresh search and first page on each tab.
-            key={tab}
-            client={client}
-            selected={selected}
-            onSelectedChange={setSelected}
-            autoFocusSearch
-            className="flex-1"
-            {...(tab === "contacts"
-              ? {
-                  entries: ownEntries,
-                  labels: {
-                    list: tSend("tab_contacts"),
-                    emptyTitle: tSend("contacts_empty_title"),
-                    emptyHint: tSend("contacts_empty_hint"),
-                    noMatch: tSend("contacts_no_match"),
-                  },
-                }
-              : {})}
-          />
-        </div>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h2 id="directory-picker-title" className="text-sm font-semibold text-foreground">
+              {tSend("picker_title")}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("cancel")}
+              className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
-          <span className="text-xs text-muted-foreground me-auto tabular-nums">
-            {t("selected_count", { count: selected.size })}
-          </span>
-          <Button size="sm" variant="ghost" onClick={onClose}>{t("cancel")}</Button>
-          <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={() => add("bcc")}>{t("add_bcc")}</Button>
-          <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={() => add("cc")}>{t("add_cc")}</Button>
-          <Button size="sm" disabled={selected.size === 0} onClick={() => add("to")}>{t("add_to")}</Button>
+          {hasDirectory && (
+            <div role="tablist" className="flex gap-1 px-3 border-b border-border">
+              {tabButton("contacts", tSend("tab_contacts"))}
+              {tabButton("directory", tSend("tab_directory"))}
+            </div>
+          )}
+
+          <div
+            id="recipient-picker-panel"
+            role={hasDirectory ? "tabpanel" : undefined}
+            aria-labelledby={hasDirectory ? `recipient-picker-tab-${tab}` : undefined}
+            className="flex-1 min-h-0 flex flex-col"
+          >
+            <DirectoryBrowser
+              // A fresh search and first page on each tab.
+              key={tab}
+              client={client}
+              selected={selected}
+              onSelectedChange={setSelected}
+              autoFocusSearch
+              className="flex-1"
+              {...(tab === "contacts"
+                ? {
+                    entries: ownEntries,
+                    labels: {
+                      list: tSend("tab_contacts"),
+                      emptyTitle: tSend("contacts_empty_title"),
+                      emptyHint: tSend("contacts_empty_hint"),
+                      noMatch: tSend("contacts_no_match"),
+                    },
+                  }
+                : {})}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
+            <span className="text-xs text-muted-foreground me-auto tabular-nums">
+              {t("selected_count", { count: selected.size })}
+            </span>
+            <Button size="sm" variant="ghost" onClick={onClose}>{t("cancel")}</Button>
+            <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={() => add("bcc")}>{t("add_bcc")}</Button>
+            <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={() => add("cc")}>{t("add_cc")}</Button>
+            <Button size="sm" disabled={selected.size === 0} onClick={() => add("to")}>{t("add_to")}</Button>
+          </div>
         </div>
       </div>
-    </div>
+    </ModalWindow>
   );
 }

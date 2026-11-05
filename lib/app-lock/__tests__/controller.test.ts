@@ -18,6 +18,7 @@ import {
   getAppLockPhase,
   helloState,
   lockEverywhere,
+  onStoreKeyMissing,
   resetAppLockForTests,
   setReloadForTests,
   startAppLock,
@@ -420,6 +421,72 @@ describe('locking', () => {
   });
 });
 
+describe('an unlock stays an unlock', () => {
+  /** The page a lock reloads into: new module state, a new store, and offline mode not loaded yet. */
+  async function lockedNewDocument(): Promise<void> {
+    await runningLockedStore();
+    await lockedAndReloaded();
+    asNewDocument();
+    setStoreBackend(null);
+    configureStore(null);
+    reloads = 0;
+  }
+
+  it('the store opens under the lock when the app asks before offline mode has loaded, and nothing locks again', async () => {
+    await lockedNewDocument();
+    await unlockWithPin(PIN);
+    const opening = getStore().ensureOpen('acc', { apiUrl: 'x' } as never).catch(() => {});
+    // Offline mode loads after the app starts, while the key is being read.
+    configureStore({ ...hooks, onKeyLocked: onStoreKeyMissing });
+    await opening;
+    await vi.waitFor(() => expect(lastWorker().posted.some((m) => m.kind === 'open')).toBe(true));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(readAppLockFile().locked).toBe(false);
+    expect(getAppLockPhase()).toBe('open');
+    expect(reloads).toBe(0);
+  });
+
+  it('nothing automatic locks again before the timeout has run, and a lock that soon is an error', async () => {
+    await lockedNewDocument();
+    configureStore(hooks);
+    await unlockWithPin(PIN);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      // The tab with the key told it had none: a bug, and it must not lock the user out.
+      onStoreKeyMissing();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(readAppLockFile().locked).toBe(false);
+      expect(reloads).toBe(0);
+      expect(errors).toHaveBeenCalledWith(expect.stringContaining('[app-lock]'));
+
+      // The user's own lock goes through at once, and says it came quickly.
+      errors.mockClear();
+      lockEverywhere();
+      await vi.waitFor(() => expect(reloads).toBe(1));
+      expect(readAppLockFile().locked).toBe(true);
+      expect(errors).toHaveBeenCalledWith(expect.stringContaining('[app-lock]'));
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
+  it('past the timeout the automatic locks work again', async () => {
+    await lockedNewDocument();
+    configureStore(hooks);
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now);
+    try {
+      await unlockWithPin(PIN);
+      clock.mockReturnValue(now + effectiveTimeout(undefined).minutes * 60_000 + 1);
+      onStoreKeyMissing();
+      await vi.waitFor(() => expect(reloads).toBe(1));
+      expect(readAppLockFile().locked).toBe(true);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+});
+
 describe('the store when a tab inherits it without the key', () => {
   it('asks for the lock instead of opening, or writing a key outside the layer', async () => {
     await enableAppLock(PIN);
@@ -429,13 +496,12 @@ describe('the store when a tab inherits it without the key', () => {
     (window.navigator.locks.request as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}));
     bootAppLock();
     await vi.waitFor(() => expect(getAppLockPhase()).toBe('open'));
+    // The lock answers for itself: offline mode's hooks aren't asked about the key.
     const onKeyLocked = vi.fn();
     configureStore({ ...hooks, onKeyLocked });
-    await expect(getStore().ensureOpen('new-account', { apiUrl: 'x' } as never).then(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      await getStore().ensureOpen('new-account');
-    })).rejects.toMatchObject({ name: 'StoreKeyLayerMissingError' });
-    expect(onKeyLocked).toHaveBeenCalled();
+    await getStore().ensureOpen('new-account', { apiUrl: 'x' } as never).catch(() => {});
+    await vi.waitFor(() => expect(readAppLockFile().locked).toBe(true));
+    expect(onKeyLocked).not.toHaveBeenCalled();
     expect(await getAccountRecord('new-account')).toBeNull();
     expect(lastWorker().posted.some((m) => m.kind === 'open')).toBe(false);
   });
