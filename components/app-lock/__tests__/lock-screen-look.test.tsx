@@ -84,6 +84,9 @@ describe('the lock screen in a window with no title bar', () => {
     const overlay = screen.getByRole('dialog');
     const bandEl = overlay.querySelector('[data-window-drag-band]')!;
     expect(bandEl.matches('.fixed, [role="dialog"]')).toBe(false);
+    // app-region is inherited: the card's box after the band takes none, not the overlay's no-drag.
+    expect(ruleBody(CSS, '[data-window-drag-band] ~ *')).toMatch(/-webkit-app-region: initial;/);
+    expect(screen.getByTestId('app-lock-pin').closest('[data-window-drag-band] ~ *')).not.toBeNull();
     const noDrag = `:is(${noDragSelector()})`;
     expect(bandEl.matches(noDrag)).toBe(false);
     for (const el of Array.from(overlay.querySelectorAll('input, button'))) {

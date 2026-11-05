@@ -843,6 +843,17 @@ html[data-window-controls] :is(.fixed, [role="dialog"]) [data-window-row] {
   -webkit-app-region: drag;
 }
 
+/*
+ * The region is inherited: what comes after the band, inside a fixed screen, would
+ * take the screen's no-drag and cover the band with it. It takes the initial value,
+ * none, instead (Chromium doesn't parse the keyword) and leaves the band alone;
+ * what's clickable in it still says no-drag for itself.
+ */
+[data-window-drag-band] ~ * {
+  app-region: initial;
+  -webkit-app-region: initial;
+}
+
 html:has([data-window-menu-bar]) [data-window-drag-band] {
   display: none;
 }
