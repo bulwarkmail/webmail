@@ -9,6 +9,12 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { locales as ALL_LOCALES } from '@/i18n/routing';
+import {
+  STALWART_SCOPE_FULL,
+  STALWART_SCOPE_SECURITY,
+  STALWART_SCOPE_SETTINGS,
+  withStalwartScopes,
+} from '@/lib/oauth/scopes';
 
 const CLIENT_ID = 'bulwark-webmail';
 const CLIENT_DESCRIPTION = 'Bulwark Webmail (auto-configured)';
@@ -96,27 +102,80 @@ interface SetError {
   properties?: unknown[];
 }
 
-/** A Stalwart that doesn't know the firstParty field (0.16) refused the set. */
-function refusedFirstParty(res: JmapMethodResponse): boolean {
+/**
+ * Stalwart refused the set over `property`: 0.16 answers a field it doesn't
+ * know (firstParty) with invalidPatch, 1.0.3 a scope the account may not
+ * allow (full) with invalidProperties.
+ */
+function refusedProperty(res: JmapMethodResponse, property: string): boolean {
   const body = res.methodResponses?.[0]?.[1] as
     | { notCreated?: Record<string, SetError>; notUpdated?: Record<string, SetError> }
     | undefined;
   return Object.values({ ...body?.notCreated, ...body?.notUpdated }).some((error) =>
-    error?.type === 'invalidPatch'
+    (error?.type === 'invalidPatch' || error?.type === 'invalidProperties')
     && Array.isArray(error.properties)
-    && error.properties.some((p) => String(p).replace(/^\//, '') === 'firstParty'));
+    && error.properties.some((p) => {
+      const path = String(p).replace(/^\//, '');
+      return path === property || path.startsWith(`${property}/`);
+    }));
 }
 
 /**
- * A public first-party client for Bulwark Mobile, so the app's own sign-in
- * on Stalwart 1.0 reaches the account's Stalwart settings too. The client
- * the app registers for itself otherwise gets the data scopes only. An
- * existing one is taken over as the webmail's is, its secret dropped.
+ * How the clients get at the account beyond mail, contacts, calendars and
+ * files, and the Stalwart scopes the webmail then has to ask for.
+ * - Stalwart 1.0.3 dropped firstParty (#1527): a token is unrestricted only
+ *   with the `full` scope, which the client must allow and the sign-in must
+ *   request. Only a superuser may allow it, so an admin who isn't one gets
+ *   `security` and `settings` (Settings > Security works, the admin panel
+ *   doesn't). The data scopes are allowed explicitly too: the webmail asks
+ *   for them, and a scope the client doesn't allow fails the sign-in.
+ * - Stalwart 1.0.0 to 1.0.2 give a first-party client everything.
+ * - 0.16 has neither and gives every client everything.
+ */
+interface ClientAccess {
+  fields: Record<string, unknown>;
+  request: string[];
+}
+const DATA_SCOPES = { mail: true, contacts: true, calendars: true, files: true };
+const FULL_SCOPES: ClientAccess = {
+  fields: { scopes: { ...DATA_SCOPES, full: true } },
+  request: [STALWART_SCOPE_FULL],
+};
+const ACCOUNT_SCOPES: ClientAccess = {
+  fields: { scopes: { ...DATA_SCOPES, security: true, settings: true } },
+  request: [STALWART_SCOPE_SECURITY, STALWART_SCOPE_SETTINGS],
+};
+const FIRST_PARTY: ClientAccess = { fields: { firstParty: true }, request: [] };
+const NO_EXTRA_ACCESS: ClientAccess = { fields: {}, request: [] };
+
+/**
+ * Whether the server has Stalwart 1.0.3's scopes. Stalwart publishes no
+ * version, but it lists the scopes in its discovery document from 1.0.3 on.
+ */
+async function hasStalwartScopes(creds: ServerCreds): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(`${creds.serverUrl}/.well-known/oauth-authorization-server`, {
+      method: 'GET',
+    }, creds.trusted);
+    if (!res.ok) return false;
+    const metadata = await res.json() as { scopes_supported?: unknown };
+    return Array.isArray(metadata.scopes_supported) && metadata.scopes_supported.includes(STALWART_SCOPE_FULL);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A public client for Bulwark Mobile with the webmail's access, so the app's
+ * own sign-in reaches the account's Stalwart settings too. The client the
+ * app registers for itself otherwise gets the data scopes only. An existing
+ * one is taken over as the webmail's is, its secret dropped.
  */
 async function setUpMobileClient(
   creds: ServerCreds,
   accountId: string,
   contact: string,
+  access: ClientAccess,
 ): Promise<'created' | 'updated' | 'failed'> {
   try {
     const queryRes = await jmapCall(creds, {
@@ -130,7 +189,7 @@ async function setUpMobileClient(
     const fields = {
       description: MOBILE_CLIENT_DESCRIPTION,
       redirectUris: { [MOBILE_REDIRECT_URI]: true },
-      firstParty: true,
+      ...access.fields,
     };
     const setRes = await jmapCall(creds, {
       using: STALWART_USING,
@@ -248,13 +307,11 @@ export async function POST(request: NextRequest) {
     const redirectUris = buildRedirectUris(origin, localeList);
 
     const action: 'created' | 'updated' = existingIds.length > 0 ? 'updated' : 'created';
-    // Stalwart 1.0 gives a client full access to the account (its Stalwart
-    // settings too: password, TOTP, app passwords) only when it is first-party;
-    // any other client gets just the data scopes it was granted. 0.16 has no
-    // such field and refuses it as an invalid patch, so the setup retries
-    // without it there.
-    const buildSetArgs = (firstParty: boolean): Record<string, unknown> => {
-      const extra = firstParty ? { firstParty: true } : {};
+    // See ClientAccess. 0.16 refuses firstParty as an invalid patch, and a
+    // 1.0.3 admin who isn't a superuser the full scope, so the setup retries
+    // with less there.
+    const buildSetArgs = (access: ClientAccess): Record<string, unknown> => {
+      const extra = access.fields;
       return action === 'updated'
         ? {
           accountId,
@@ -281,16 +338,19 @@ export async function POST(request: NextRequest) {
           },
         };
     };
-    const callSet = (firstParty: boolean) => jmapCall(creds, {
+    const callSet = (access: ClientAccess) => jmapCall(creds, {
       using: STALWART_USING,
-      methodCalls: [['x:OAuthClient/set', buildSetArgs(firstParty), '0']],
+      methodCalls: [['x:OAuthClient/set', buildSetArgs(access), '0']],
     });
 
-    let firstParty = true;
-    let setRes = await callSet(true);
-    if (refusedFirstParty(setRes)) {
-      firstParty = false;
-      setRes = await callSet(false);
+    const [preferred, fallback, refusable]: [ClientAccess, ClientAccess, string] = await hasStalwartScopes(creds)
+      ? [FULL_SCOPES, ACCOUNT_SCOPES, 'scopes']
+      : [FIRST_PARTY, NO_EXTRA_ACCESS, 'firstParty'];
+    let access = preferred;
+    let setRes = await callSet(access);
+    if (refusedProperty(setRes, refusable)) {
+      access = fallback;
+      setRes = await callSet(access);
     }
 
     const setEntry = setRes.methodResponses?.[0];
@@ -326,6 +386,16 @@ export async function POST(request: NextRequest) {
       oauthIssuerUrl: issuerUrl,
     };
     if (oauthOnly) updates.oauthOnly = true;
+    // Ask for the Stalwart scopes the client now allows, and none it doesn't.
+    // An explicit scope list replaces the extra scopes, so they go there.
+    if (access.request.length > 0) {
+      const explicit = configManager.get<string>('oauthScopes', '');
+      if (explicit) {
+        updates.oauthScopes = withStalwartScopes(explicit, access.request);
+      } else {
+        updates.oauthExtraScopes = withStalwartScopes(configManager.get<string>('oauthExtraScopes', ''), access.request);
+      }
+    }
     try {
       await configManager.setAdminConfig(updates);
     } catch (error) {
@@ -348,10 +418,11 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    // Only Stalwart 1.0 has first-party clients. The webmail is set up by
-    // now, so a refused mobile client is reported, not an error.
-    const mobileClient = firstParty
-      ? await setUpMobileClient(creds, accountId, creds.username)
+    // Only Stalwart 1.0 restricts clients, so 0.16 needs no mobile client. The
+    // webmail is set up by now, so a refused mobile client is reported, not
+    // an error.
+    const mobileClient = access !== NO_EXTRA_ACCESS
+      ? await setUpMobileClient(creds, accountId, creds.username, access)
       : 'skipped';
 
     await auditLog('admin.oauth_setup', {
@@ -362,6 +433,7 @@ export async function POST(request: NextRequest) {
       redirectUriCount: localeList.length,
       oauthOnly,
       mobileClient,
+      stalwartScopes: access.request,
     }, ip);
 
     logger.info('Admin OAuth setup', {
@@ -371,6 +443,7 @@ export async function POST(request: NextRequest) {
       issuer: issuerUrl,
       locales: localeList.length,
       mobileClient,
+      stalwartScopes: access.request,
     });
 
     return NextResponse.json({
@@ -383,6 +456,7 @@ export async function POST(request: NextRequest) {
       mobileClient,
       mobileClientId: MOBILE_CLIENT_ID,
       mobileRedirectUri: MOBILE_REDIRECT_URI,
+      stalwartScopes: access.request,
     });
   } catch (error) {
     const refused = configWriteErrorResponse(error);
