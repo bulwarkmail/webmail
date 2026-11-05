@@ -95,12 +95,18 @@ test.describe('Tasks (pim-1, pim-8, pim-24)', () => {
     expect(todo, 'seeded To-do list').toBeTruthy();
     expect(home).toBeTruthy();
 
-    // A task in the event calendar, to move into To-do and back.
+    // A task in the event calendar, to move into To-do and back. A second one
+    // stays there: an event calendar is offered as a task's list only while it
+    // holds tasks (taskTargets), and on some servers nothing else is in it.
     const made = await a.request([['CalendarEvent/set', {
       accountId: a.accountId,
-      create: { t: { '@type': 'Task', title: `${prefix} move`, calendarIds: { [home!.id]: true }, uid: `uxfix-cal-${RUN}`, progress: 'needs-action' } },
+      create: {
+        t: { '@type': 'Task', title: `${prefix} move`, calendarIds: { [home!.id]: true }, uid: `uxfix-cal-${RUN}`, progress: 'needs-action' },
+        s: { '@type': 'Task', title: `${prefix} stays`, calendarIds: { [home!.id]: true }, uid: `uxfix-cal-stays-${RUN}`, progress: 'needs-action' },
+      },
     }, '0']], [CORE, CAL]);
     expect(made.methodResponses[0][1].created?.t?.id).toBeTruthy();
+    expect(made.methodResponses[0][1].created?.s?.id).toBeTruthy();
 
     const context = await browser.newContext({ ...contextOptions(), timezoneId: TZ });
     const page = await context.newPage();
@@ -142,7 +148,11 @@ test.describe('Tasks (pim-1, pim-8, pim-24)', () => {
       const form = page.getByRole('dialog', { name: 'Edit task' });
       // pim-19: plain status words.
       await expect(form.getByLabel('Status').locator('option:checked')).toHaveText('Not started');
-      await form.getByLabel('Calendar').selectOption({ label: calendarName });
+      // The field is "List" since 109866dd4 (tasks live in task lists).
+      // By id (the options' values): the default calendar's name on the server
+      // isn't always the one shown.
+      await form.getByLabel('List', { exact: true }).selectOption(calendarId);
+      await expect(form.getByLabel('List', { exact: true }).locator('option:checked')).toHaveText(calendarName === 'To-do' ? 'To-do' : /\S/);
       await form.getByRole('button', { name: 'Save' }).click();
       await expect(form).toBeHidden({ timeout: 30000 });
       await expect(moveRow).toBeVisible();

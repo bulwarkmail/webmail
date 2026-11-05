@@ -84,7 +84,9 @@ test.describe('Sent copy of a group identity lands in the group’s Sent (#1090)
       accountId: teamId,
       create: { m: {
         mailboxIds: { [inboxId]: true },
-        from: [{ email: 'someone@external.test' }],
+        // A local sender: a reply to an outside address needs the server to
+        // relay, which a test server may refuse ("550 5.1.2 Relay not allowed").
+        from: [{ email: bob.email }],
         to: [{ email: team.email }],
         subject,
         receivedAt: new Date().toISOString(),
@@ -120,7 +122,8 @@ test.describe('Sent copy of a group identity lands in the group’s Sent (#1090)
   test('compose as the group with a sub-addressed From', async ({ page }) => {
     const s = subj('grp-subaddr');
     await composeAsTeam(page, s);
-    await page.getByTitle('Use sub-address').first().click();
+    // "Use a sub-address…" is the end of the From list (b509ce067).
+    await page.locator('[data-testid="composer-from"]').first().selectOption({ label: 'Use a sub-address…' });
     const tag = page.getByPlaceholder('Enter tag (e.g., shopping)');
     await tag.fill('news');
     await tag.press('Enter');
@@ -174,13 +177,14 @@ test.describe('Sent copy of a group identity lands in the group’s Sent (#1090)
       await waitDraftSaved(page);
       await expect.poll(() => draftsHave(teamId, s), { timeout: 20000, message: 'draft in team Drafts' }).toBe(true);
 
-      // "Discard" opens the close dialog (dirty composer); its own "Discard"
-      // button discards the draft.
-      const discard = page.getByRole('button', { name: 'Discard', exact: true });
-      await discard.first().click();
-      await expect(discard).toHaveCount(2, { timeout: 5000 });
-      await discard.last().click();
-      await expect.poll(() => draftsHave(teamId, s), { timeout: 20000, message: 'draft discarded' }).toBe(false);
+      // The bin asks nothing: it closes with "Draft discarded · Undo" and
+      // deletes the draft when the Undo is over (decisions: "The bin asks
+      // nothing", e7098110a).
+      await page.locator('[data-testid="composer-discard"]').first().click();
+      await page.locator('[data-testid="email-composer"]').first().waitFor({ state: 'hidden', timeout: 10000 });
+      await expect(page.getByText('Draft discarded').first()).toBeVisible();
+      await expect.poll(() => draftsHave(teamId, s), { timeout: 30000, message: 'draft discarded' }).toBe(false);
+      expect(await draftsHave(jc.accountId, s), 'no draft in carol’s Drafts').toBe(false);
     });
   });
 });

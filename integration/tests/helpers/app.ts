@@ -310,6 +310,10 @@ export async function folderMailboxId(page: Page, sel: FolderSelector): Promise<
 /**
  * Move an email to `destMailboxId` (a UI mailbox id, e.g. from
  * {@link folderMailboxId}) via the list context menu's "Move to" submenu.
+ * The message's own account lists its folders there; every other account a
+ * move can reach is a submenu under its name (`move-account:<accountId>`,
+ * 4d404929e). Submenus are opened by click: a menu opened by a right-click
+ * ignores the pointer until it has moved, and a hover is one move.
  */
 export async function moveEmailTo(page: Page, subject: string, destMailboxId: string): Promise<void> {
   const row = emailItem(page, subject).first();
@@ -319,8 +323,18 @@ export async function moveEmailTo(page: Page, subject: string, destMailboxId: st
     await row.click({ button: 'right' });
     await submenu.waitFor({ state: 'visible', timeout: 2000 });
   }).toPass({ timeout: 15000 });
-  await submenu.hover();
-  const target = page.locator(`[data-testid="move-to:${destMailboxId}"]`);
+  await submenu.click();
+  const target = page.locator(`[data-testid="move-to:${destMailboxId}"]`).first();
+  const accounts = page.locator('[data-testid^="move-account:"]');
+  await expect(target.or(accounts).first()).toBeVisible({ timeout: 5000 });
+  if (!(await target.isVisible())) {
+    const ids = await accounts.evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')!));
+    for (const id of ids) {
+      await page.locator(`[data-testid="${id}"]`).click();
+      await target.waitFor({ state: 'visible', timeout: 1500 }).catch(() => {});
+      if (await target.isVisible()) break;
+    }
+  }
   await target.waitFor({ state: 'visible', timeout: 5000 });
   await target.click();
 }

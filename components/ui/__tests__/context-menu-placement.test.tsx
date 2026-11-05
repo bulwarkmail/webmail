@@ -196,6 +196,19 @@ describe('a menu from a right-click on a row', () => {
     fireEvent.mouseEnter(screen.getByTestId('sub').parentElement!);
     expect(screen.getByRole('menu', { name: 'Move to' })).toBeTruthy();
   });
+
+  it('opens the submenu once the pointer moves on its entry, when it came there before it counted', () => {
+    // A browser sends mouseenter before the pointermove that arms the menu,
+    // so a pointer that jumps onto the entry doesn't enter it again.
+    render(<Row />);
+    fireEvent.contextMenu(screen.getByTestId('row'), { clientX: 300, clientY: 200 });
+    const entry = screen.getByTestId('sub').parentElement!;
+    fireEvent.mouseEnter(entry);
+    fireEvent.pointerMove(document, { clientX: 310, clientY: 240 });
+    expect(screen.queryByRole('menu', { name: 'Move to' })).toBeNull();
+    fireEvent.mouseMove(screen.getByTestId('sub'), { clientX: 311, clientY: 241 });
+    expect(screen.getByRole('menu', { name: 'Move to' })).toBeTruthy();
+  });
 });
 
 describe('placeMenu near the bottom', () => {
