@@ -143,7 +143,12 @@ describe('placeMenu', () => {
   });
 
   it('taller than the window: inside it, from the top margin, and the menu scrolls', () => {
-    expect(placeMenu({ point: { x: 600, y: 100 }, size: { width: 220, height: 900 }, viewport })).toEqual({ x: 600, y: 10 });
+    expect(placeMenu({ point: { x: 600, y: 100 }, size: { width: 220, height: 900 }, viewport })).toEqual({ x: 600, y: 10, maxHeight: 700 });
+  });
+
+  it('below the desktop app\'s title row: a tall menu starts under it and is capped to the room left', () => {
+    expect(placeMenu({ point: { x: 600, y: 100 }, size: { width: 220, height: 900 }, viewport, topEdge: 32 }))
+      .toEqual({ x: 600, y: 36, maxHeight: 720 - 10 - 36 });
   });
 
   it('wider than the room on both sides of a button: clamped inside the window', () => {

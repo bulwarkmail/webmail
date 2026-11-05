@@ -17,7 +17,7 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight } from "@/components/icons";
-import { placeMenu } from "@/lib/menu-placement";
+import { placeMenu, placeSubmenu, windowTopEdge } from "@/lib/menu-placement";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
 interface Position {
@@ -176,8 +176,50 @@ function needsKeys(el: Element): boolean {
   return el instanceof HTMLInputElement && !isSingleLineText(el) && !/^(button|submit|reset|checkbox|radio|color|file|image)$/.test(el.type);
 }
 
+/** Marks the part of a menu or submenu that scrolls when it is taller than the window. */
+const SCROLL_ATTRIBUTE = "data-menu-scroll";
+
 function focusEl(el: HTMLElement | undefined | null) {
-  el?.focus({ preventScroll: true });
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  revealInMenu(el);
+}
+
+/**
+ * A menu that scrolls brings the row the keys moved to into view. Only its own
+ * list scrolls: the page behind and the parent menu stay where they are.
+ */
+function revealInMenu(el: HTMLElement) {
+  const list = el.closest<HTMLElement>(`[${SCROLL_ATTRIBUTE}]`);
+  if (!list || list.scrollHeight <= list.clientHeight) return;
+  // The first and last rows bring the list's padding along.
+  const level = el.closest<HTMLElement>('[role="menu"]');
+  const rows = level ? menuLevelItems(level) : [];
+  if (rows[0] === el) {
+    list.scrollTop = 0;
+    return;
+  }
+  if (rows[rows.length - 1] === el) {
+    list.scrollTop = list.scrollHeight - list.clientHeight;
+    return;
+  }
+  const row = el.getBoundingClientRect();
+  const box = list.getBoundingClientRect();
+  if (row.top < box.top) list.scrollTop -= box.top - row.top;
+  else if (row.bottom > box.bottom) list.scrollTop += row.bottom - box.bottom;
+}
+
+/** The height a menu panel would have uncapped: a cap set last time mustn't decide the next. */
+function uncappedHeight(panel: HTMLElement, rect: DOMRect): number {
+  const list = panel.firstElementChild as HTMLElement | null;
+  return list && list.scrollHeight > list.clientHeight ? rect.height + list.scrollHeight - list.clientHeight : rect.height;
+}
+
+/** The scrolling list's cap for a panel capped at `maxHeight` (its border is 1px each side). */
+function listMaxHeight(maxHeight: number | undefined): string {
+  return maxHeight !== undefined
+    ? `${Math.max(0, maxHeight - 2)}px`
+    : `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)`;
 }
 
 /**
@@ -319,20 +361,16 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
       const clamp = () => {
         const rect = node.getBoundingClientRect();
-        // The height it would have uncapped: a cap set last time mustn't decide the next.
-        const list = node.firstElementChild as HTMLElement | null;
-        const height = list && list.scrollHeight > list.clientHeight
-          ? rect.height + list.scrollHeight - list.clientHeight
-          : rect.height;
         // Next to the button it opened from, or at the pointer (lib/menu-placement.ts).
         const { x, y, maxHeight } = placeMenu({
           point: { x: position.x, y: position.y },
           anchor,
-          size: { width: rect.width, height },
+          size: { width: rect.width, height: uncappedHeight(node, rect) },
           viewport: { width: window.innerWidth, height: window.innerHeight },
           rtl: getComputedStyle(node).direction === "rtl",
           margin: VIEWPORT_MARGIN,
           gap: ANCHOR_GAP,
+          topEdge: windowTopEdge(),
         });
 
         setAdjustedPosition((prev) =>
@@ -340,10 +378,14 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         );
       };
       clamp();
-      if (typeof ResizeObserver === "undefined") return;
-      const observer = new ResizeObserver(clamp);
-      observer.observe(node);
-      return () => observer.disconnect();
+      // A window made smaller (or zoomed) while the menu is open.
+      window.addEventListener("resize", clamp);
+      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(clamp);
+      observer?.observe(node);
+      return () => {
+        window.removeEventListener("resize", clamp);
+        observer?.disconnect();
+      };
       // anchorKey stands for anchor, which callers build anew on each render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, mounted, position.x, position.y, anchorKey]);
@@ -577,11 +619,8 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
           {/* Taller than the window: scroll inside the menu. */}
           <div
             className="py-1 overflow-y-auto"
-            style={{
-              maxHeight: adjustedPosition?.maxHeight !== undefined
-                ? `${Math.max(0, adjustedPosition.maxHeight - 2)}px`
-                : `calc(100vh - ${2 * VIEWPORT_MARGIN + 2}px)`,
-            }}
+            data-menu-scroll=""
+            style={{ maxHeight: listMaxHeight(adjustedPosition?.maxHeight) }}
           >
             {children}
           </div>
@@ -913,10 +952,7 @@ export function ContextMenuSubMenu({
             style={{ maxWidth: MENU_MAX_WIDTH }}
             role="menu"
           >
-            {/* As tall as the window allows (it's moved up to fit), then it scrolls. */}
-            <div className="py-1 max-h-[calc(100vh-22px)] overflow-y-auto">
-              {children}
-            </div>
+            {children}
           </SubMenuPanel>
         </MenuLevelContext.Provider>
       )}
@@ -934,15 +970,19 @@ interface SubMenuPanelProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /**
  * A submenu's panel, placed beside the entry it is rendered in (its parent
- * element): on `side` when it fits in the window, else on the other side,
- * else clamped inside the window. It is `position: fixed`, so a pane that
- * clips its overflow can't cut it off.
+ * element) by placeSubmenu (lib/menu-placement.ts): on `side` when it fits in
+ * the window, else on the other side; moved up so it ends inside the window;
+ * capped and scrolling when it's taller than the window. It is `position:
+ * fixed`, so a pane that clips its overflow can't cut it off.
+ *
+ * Placed again when it changes size (a rules list that loads after it opened),
+ * when the window does, and when its entry moves (the menu it's in scrolls).
  */
 export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(function SubMenuPanel(
-  { side = "end", onPlaced, className, style, ...rest },
+  { side = "end", onPlaced, className, style, children, ...rest },
   ref
 ) {
-  const [pos, setPos] = useState<Position | null>(null);
+  const [pos, setPos] = useState<(Position & { maxHeight?: number }) | null>(null);
   const subMenuRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -950,32 +990,55 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
     const itemEl = subEl?.parentElement;
     if (!subEl || !itemEl) return;
 
-    const itemRect = itemEl.getBoundingClientRect();
-    const subRect = subEl.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const place = () => {
+      const itemRect = itemEl.getBoundingClientRect();
+      const subRect = subEl.getBoundingClientRect();
+      const placed = placeSubmenu({
+        item: itemRect,
+        size: { width: subRect.width, height: uncappedHeight(subEl, subRect) },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        rtl: getComputedStyle(itemEl).direction === "rtl",
+        side,
+        margin: VIEWPORT_MARGIN,
+        gap: ANCHOR_GAP,
+        topEdge: windowTopEdge(),
+      });
+      // Where left/top 0 would put the panel: the origin `position: fixed`
+      // resolves against. That is the viewport, unless a theme gives the
+      // parent menu a backdrop-filter, filter or transform: then the parent is
+      // the containing block and viewport coordinates land offset by the
+      // parent's own position, far from the entry (#1149).
+      const originX = subRect.left - (parseFloat(subEl.style.left) || 0);
+      const originY = subRect.top - (parseFloat(subEl.style.top) || 0);
+      const next = { x: placed.x - originX, y: placed.y - originY, maxHeight: placed.maxHeight };
+      setPos((prev) =>
+        prev && prev.x === next.x && prev.y === next.y && prev.maxHeight === next.maxHeight ? prev : next
+      );
+    };
+    place();
 
-    // Where the panel's left edge goes on either side, if it fits there.
-    const onRight = itemRect.right + subRect.width <= vw - VIEWPORT_MARGIN ? itemRect.right : null;
-    const onLeft = itemRect.left - subRect.width >= VIEWPORT_MARGIN ? itemRect.left - subRect.width : null;
-    const rightFirst = (side === "end") !== (getComputedStyle(itemEl).direction === "rtl");
-    const x = (rightFirst ? (onRight ?? onLeft) : (onLeft ?? onRight))
-      ?? Math.max(VIEWPORT_MARGIN, vw - subRect.width - VIEWPORT_MARGIN);
-
-    let top = itemRect.top;
-    if (top + subRect.height > vh - VIEWPORT_MARGIN) {
-      top = vh - subRect.height - VIEWPORT_MARGIN;
-    }
-    top = Math.max(VIEWPORT_MARGIN, top);
-
-    // The submenu is measured while it still sits at left/top 0, so its rect
-    // is the origin `position: fixed` resolves against. That is the viewport,
-    // unless a theme gives the parent menu a backdrop-filter, filter or
-    // transform: then the parent is the containing block and viewport
-    // coordinates land offset by the parent's own position, far from the
-    // entry (#1149).
-    setPos({ x: x - subRect.left, y: top - subRect.top });
+    window.addEventListener("resize", place);
+    // The menu the entry is in scrolls: the entry moves, and the panel with it.
+    const parentList = itemEl.closest<HTMLElement>(`[${SCROLL_ATTRIBUTE}]`);
+    parentList?.addEventListener("scroll", place);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(place);
+    observer?.observe(subEl);
+    // The parent menu moves when it changes size (it's placed again).
+    const parentMenu = itemEl.closest<HTMLElement>('[role="menu"]');
+    if (parentMenu) observer?.observe(parentMenu);
+    return () => {
+      window.removeEventListener("resize", place);
+      parentList?.removeEventListener("scroll", place);
+      observer?.disconnect();
+    };
   }, [side]);
+
+  // Placed anew (its rows loaded, the window changed): the row that has the
+  // focus stays in view.
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    if (pos && active instanceof HTMLElement && subMenuRef.current?.contains(active)) revealInMenu(active);
+  }, [pos]);
 
   const placed = pos !== null;
   const onPlacedRef = useRef(onPlaced);
@@ -992,18 +1055,26 @@ export const SubMenuPanel = forwardRef<HTMLDivElement, SubMenuPanelProps>(functi
     else if (ref) ref.current = node;
   };
 
+  // w-max: as wide as its labels (up to its max width) wherever it sits, so
+  // moving it to the window's edge doesn't wrap them onto more lines and make
+  // it taller than it was measured.
   return (
     <div
       {...rest}
       ref={setRefs}
-      className={cn("fixed z-50", className)}
+      className={cn("fixed z-50 w-max", className)}
       style={{
         ...style,
         left: pos?.x ?? 0,
         top: pos?.y ?? 0,
         visibility: pos ? "visible" : "hidden",
       }}
-    />
+    >
+      {/* Taller than the window: it scrolls inside, as a long menu does. */}
+      <div className="py-1 overflow-y-auto" data-menu-scroll="" style={{ maxHeight: listMaxHeight(pos?.maxHeight) }}>
+        {children}
+      </div>
+    </div>
   );
 });
 
