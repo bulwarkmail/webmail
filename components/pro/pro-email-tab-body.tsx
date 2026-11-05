@@ -132,7 +132,7 @@ function replyLogin(email: Email, source: EmailWriteSource): string | undefined 
   return email.sourceClientAccountId ?? source.clientAccountId;
 }
 
-function buildReplyContext(email: Email, source: EmailWriteSource): ProReplyContext {
+export function buildReplyContext(email: Email, source: EmailWriteSource): ProReplyContext {
   return {
     phishingMarked: phishingMarkedNow(email),
     from: email.from,

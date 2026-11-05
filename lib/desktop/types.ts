@@ -731,12 +731,17 @@ export interface DesktopOsDefaultAppStatus {
   webcal: boolean;
 }
 
+export interface DesktopOsCommandOptions {
+  messageFileWindows?: boolean;
+}
+
 export interface DesktopOsBridge {
   /**
    * What the OS asks for. Main holds these until the main window's page subscribes,
-   * so a cold start loses nothing.
+   * so a cold start loses nothing. `messageFileWindows`: the page opens an .eml in a
+   * window of its own, so main leaves the main window where it is (older shells ignore it).
    */
-  onCommand: (listener: (command: DesktopOsCommand) => void) => () => void;
+  onCommand: (listener: (command: DesktopOsCommand) => void, options?: DesktopOsCommandOptions) => () => void;
   getStatus: () => Promise<DesktopOsStatus>;
   setSettings: (patch: Partial<DesktopOsSettings>) => Promise<DesktopOsStatus>;
   /** Pause notifications until this time, or null to end the pause. */

@@ -34,6 +34,14 @@ vi.mock('../popout-shell', () => ({
   PopoutSkeleton: () => <div data-testid="skeleton" />,
 }));
 vi.mock('@/hooks/use-document-title', () => ({ useDocumentTitle: vi.fn() }));
+type SavedProps = { blobId: string; name?: string; accountId?: string; onImported: (target: { emailId: string; ownerAccountId?: string }) => void };
+let saved: SavedProps | null = null;
+vi.mock('../popout-saved-message', () => ({
+  PopoutSavedMessage: (props: SavedProps) => {
+    saved = props;
+    return <div data-testid="saved-message" />;
+  },
+}));
 
 const { PopoutMessageApp } = await import('../popout-message-app');
 
@@ -221,5 +229,33 @@ describe('PopoutMessageApp', () => {
     act(() => view.onClose());
     expect(close).toHaveBeenCalledTimes(1);
     close.mockRestore();
+  });
+});
+
+describe('a message from a file (desktop-p3-5)', () => {
+  beforeEach(() => {
+    saved = null;
+    window.history.replaceState(null, '', '/en/popout/message/_?blob=blob-1&name=letter.eml&account=login-b');
+  });
+
+  it('shows the uploaded file, not a stored message', async () => {
+    render(<PopoutMessageApp id="_" />);
+    await settle();
+    expect(screen.getByTestId('saved-message')).toBeTruthy();
+    expect(screen.queryByTestId('message-view')).toBeNull();
+    expect(saved).toMatchObject({ blobId: 'blob-1', name: 'letter.eml', accountId: 'login-b' });
+    expect(client.getSomeEmails).not.toHaveBeenCalled();
+  });
+
+  it('once imported, the window is that message\'s, and a reload opens it there', async () => {
+    render(<PopoutMessageApp id="_" />);
+    await settle();
+    act(() => saved?.onImported({ emailId: 'new-1', ownerAccountId: 'group' }));
+    await settle();
+    expect(screen.queryByTestId('saved-message')).toBeNull();
+    expect(view.emailId).toBe('new-1');
+    expect(view.clientAccountId).toBe('login-b');
+    expect(view.accountId).toBe('group');
+    expect(window.location.pathname + window.location.search).toBe('/popout/message/new-1?account=login-b&owner=group');
   });
 });
