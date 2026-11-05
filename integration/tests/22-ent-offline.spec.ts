@@ -468,8 +468,8 @@ test('emptying the Trash offline shows at once and reaches the server once back 
 
   await page.getByText('Trash', { exact: true }).first().click();
   await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Empty folder' }).first().click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Empty folder' }).click();
+  await page.getByRole('button', { name: 'Empty Trash' }).first().click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Empty Trash' }).click();
   await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject })).toHaveCount(0, { timeout: 15_000 });
   // Nothing reached the server yet.
   expect((await messages(ENT.alice, RUN)).some((m) => m.subject === subject)).toBe(true);
