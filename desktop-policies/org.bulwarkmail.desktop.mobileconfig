@@ -43,6 +43,8 @@
       <true/>
       <key>AppLockTimeoutMinutes</key>
       <integer>10</integer>
+      <key>AppLockHelloAllowed</key>
+      <true/>
       <key>TelemetryAllowed</key>
       <false/>
       <key>CrashReportsAllowed</key>
