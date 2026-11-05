@@ -5612,8 +5612,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       // Mountain View shows the message inside its conversation: fetch that
       // alongside the message, so the two appear together. (#1223)
+      // A thread the list counts as one message has no conversation to fetch
+      // (the counts come with the page, across folders, drafts included): the
+      // open is one request instead of two.
       const conversationPrefetch = readerConversationView && listEmail?.id && listEmail.threadId
-        ? loadMvConversation(listEmail as Email, client)
+        ? (useEmailStore.getState().threadEmailCounts.get(threadKeyFor(listEmail as Email)) === 1
+          ? Promise.resolve(null)
+          : loadMvConversation(listEmail as Email, client))
         : null;
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);
