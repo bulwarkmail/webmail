@@ -94,29 +94,32 @@ const previewRoute = await import('@/app/api/push/preview/route');
 const tokenRoute = await import('@/app/api/auth/token/route');
 
 /** The provider: rotates the refresh token on each renewal. */
-const tokenEndpoint = vi.fn(async () => Response.json({ access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600 }));
+const tokenEndpoint = vi.fn(async (_url: string, _init?: RequestInit) => Response.json({ access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600 }));
 
 /**
  * A browser signed in with a provider an hour ago, its tab closed since: the
  * auth context still holds the first access token.
  */
-async function signedInAnHourAgo(remember: boolean | 'not recorded') {
+async function signedInAnHourAgo(remember: boolean | 'not recorded', slot = 0, username = 'bob@example.org', refreshToken = 'refresh-1') {
   const store = await cookies();
-  jar.set('jmap_rt', 'refresh-1');
+  jar.set(slot === 0 ? 'jmap_rt' : `jmap_rt_${slot}`, refreshToken);
   writeSignInStamp(
     store,
-    0,
-    { signedInAt: Date.now() - 60 * 60 * 1000, refreshToken: 'refresh-1', account: 'bob@example.org' },
+    slot,
+    { signedInAt: Date.now() - 60 * 60 * 1000, refreshToken, account: username },
     // A stamp written before it recorded the choice.
     remember === 'not recorded' ? undefined : { path: '/', ...(remember ? { maxAge: 2592000 } : {}) },
   );
-  setStalwartAuthContextInStore(store, 0, { serverUrl: SERVER, username: 'bob@example.org', authHeader: 'Bearer access-1' });
+  setStalwartAuthContextInStore(store, slot, { serverUrl: SERVER, username, authHeader: `Bearer old-${slot}` });
 }
 
-async function preview() {
-  const res = await previewRoute.GET(new NextRequest('https://webmail.example/api/push/preview?accountId=a'));
+async function preview(query = 'accountId=a', headers: Record<string, string> = {}) {
+  const res = await previewRoute.GET(new NextRequest(`https://webmail.example/api/push/preview?${query}`, { headers }));
   return { status: res.status, body: await res.json() as Record<string, unknown> };
 }
+
+/** The refresh tokens the provider was asked to redeem. */
+const redeemed = () => tokenEndpoint.mock.calls.map(([, init]) => new URLSearchParams(String(init?.body)).get('refresh_token'));
 
 describe('push preview after the access token expired (#1509)', () => {
   beforeEach(() => {
@@ -191,9 +194,43 @@ describe('push preview after the access token expired (#1509)', () => {
     expect((await preview()).status).toBe(401);
   });
 
+  it('renews only the login the push names', async () => {
+    await signedInAnHourAgo(true);
+    await signedInAnHourAgo(true, 1, 'carol@example.org', 'carol-refresh');
+
+    const { status } = await preview('accountId=a&login=bob@example.org');
+
+    expect(status).toBe(200);
+    expect(redeemed()).toEqual(['refresh-1']);
+    expect(jar.get('jmap_rt_1')).toBe('carol-refresh');
+  });
+
+  it('renews nothing for a push without a login when several are signed in', async () => {
+    await signedInAnHourAgo(true);
+    await signedInAnHourAgo(true, 1, 'carol@example.org', 'carol-refresh');
+
+    expect((await preview()).status).toBe(401);
+    expect(tokenEndpoint).not.toHaveBeenCalled();
+  });
+
+  it('turns away a request from another site, which could spend the refresh token', async () => {
+    await signedInAnHourAgo(true);
+
+    const { status } = await preview('accountId=a', { 'sec-fetch-site': 'cross-site' });
+
+    expect(status).toBe(403);
+    expect(tokenEndpoint).not.toHaveBeenCalled();
+    expect(jar.get('jmap_rt')).toBe('refresh-1');
+  });
+
+  it('answers the service worker, whose fetch is same-origin', async () => {
+    await signedInAnHourAgo(true);
+    expect((await preview('accountId=a', { 'sec-fetch-site': 'same-origin' })).status).toBe(200);
+  });
+
   it('has the page record the choice in a stamp from before', async () => {
     await signedInAnHourAgo('not recorded');
-    jar.set('jmap_at', `${Math.floor(Date.now() / 1000) + 600}.access-1`);
+    jar.set('jmap_at', `${Math.floor(Date.now() / 1000) + 600}.old-0`);
 
     const res = await tokenRoute.PUT(new NextRequest('https://webmail.example/api/auth/token?slot=0&remember=false', {
       method: 'PUT',

@@ -45,7 +45,8 @@ type CookieStore = Awaited<ReturnType<typeof cookies>>;
  * The login's JMAP session, and the Authorization header that opened it. A
  * token sign-in's access token expires within the hour, and with no tab open
  * nothing renews it: the mail server turns it away and the push gets the
- * worker's generic notification (#1509). Renewed here then, once.
+ * worker's generic notification (#1509). Renewed here then, once, when
+ * `mayRenew` says this is the login the push is for.
  */
 async function openSession(
   cookieStore: CookieStore,
@@ -55,12 +56,13 @@ async function openSession(
   trusted: boolean,
   forwarded: Record<string, string>,
   basePath: string | undefined,
+  mayRenew: boolean,
 ): Promise<{ res: Response; authHeader: string }> {
   const get = (authHeader: string) => fetchJmapServer(`${serverUrl}/.well-known/jmap`, {
     headers: { Authorization: authHeader, ...forwarded },
   }, trusted);
   const res = await get(ctx.authHeader);
-  if (res.status !== 401) return { res, authHeader: ctx.authHeader };
+  if (res.status !== 401 || !mayRenew) return { res, authHeader: ctx.authHeader };
   const renewed = await renewPushAuthHeader(cookieStore, slot, ctx, basePath);
   if (!renewed) return { res, authHeader: ctx.authHeader };
   return { res: await get(renewed), authHeader: renewed };
@@ -83,16 +85,27 @@ async function openSession(
 // login's mail and opens it there.
 async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
-  const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
+  const contexts: { slot: number; ctx: StalwartAuthContext }[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
     const ctx = await readPushAuthContext(cookieStore, slot);
-    if (!ctx) continue;
+    if (ctx) contexts.push({ slot, ctx });
+  }
+  // Renewing writes a slot's rotated tokens into this answer. Every expired
+  // login at once could outgrow a proxy's header buffer, and an answer lost
+  // after the providers rotated leaves the browser with spent refresh tokens.
+  // So only the login the push names, or the only one there is (#1509).
+  const named = login?.toLowerCase();
+  const mayRenew = (ctx: StalwartAuthContext) => (named
+    ? ctx.username.toLowerCase() === named || ctx.accountName?.toLowerCase() === named
+    : contexts.length === 1);
+  const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
+  for (const { slot, ctx } of contexts) {
     const serverUrl = ctx.serverUrl.replace(/\/+$/, '');
     probes.push(
       (async () => {
         try {
           const trusted = await isTrustedJmapServerUrl(serverUrl);
-          const { res, authHeader } = await openSession(cookieStore, slot, ctx, serverUrl, trusted, forwarded, basePath);
+          const { res, authHeader } = await openSession(cookieStore, slot, ctx, serverUrl, trusted, forwarded, basePath, mayRenew(ctx));
           if (!res.ok) return null;
           const session = (await readJsonCapped(res, UPSTREAM_JSON_MAX_BYTES)) as {
             apiUrl?: string;
@@ -135,7 +148,7 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
 }
 
 async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Record<string, string>, basePath: string | undefined): Promise<ResolvedTarget | null> {
-  const { res: sessionRes, authHeader } = await openSession(await cookies(), creds.slot, creds, creds.serverUrl, creds.trusted, forwarded, basePath);
+  const { res: sessionRes, authHeader } = await openSession(await cookies(), creds.slot, creds, creds.serverUrl, creds.trusted, forwarded, basePath, true);
   if (!sessionRes.ok) return null;
   const session = (await readJsonCapped(sessionRes, UPSTREAM_JSON_MAX_BYTES)) as {
     apiUrl?: string;
@@ -160,6 +173,14 @@ async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Recor
  * a generic "New mail" string.
  */
 export async function GET(request: NextRequest) {
+  // The preview may renew a login's token (#1509), which spends its refresh
+  // token at the provider. GET passes the same-origin gate of the other auth
+  // routes, so a page elsewhere could make the browser do that with a link.
+  // The service worker's own fetch is same-origin.
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite && fetchSite !== 'same-origin') {
+    return NextResponse.json({ error: 'Cross-origin request' }, { status: 403 });
+  }
   try {
     // SW passes ?accountId=<jmap-account-id> derived from the push payload's
     // StateChange so multi-account browsers fetch from the right slot. Older
