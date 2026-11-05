@@ -6186,7 +6186,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {(!isMobile || mobileSearchOpen) && (
             <div className={cn(
               "border-b border-border bg-background",
-              isMobile && mobileSearchOpen && "fixed inset-0 z-50 overflow-y-auto pt-[var(--titlebar-inset)]"
+              isMobile && mobileSearchOpen && "fixed inset-0 z-50 overflow-y-auto pt-[var(--app-top-inset)]"
             )}>
               {isMobile && mobileSearchOpen && (
                 <div className="h-14 px-2 flex items-center border-b border-border">
