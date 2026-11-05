@@ -132,6 +132,13 @@
       <decimal id="AppLockTimeoutMinutes_Recommended_Value" valueName="AppLockTimeoutMinutes" required="true" minValue="1" maxValue="1440"/>
     </elements>
   </policy>
+  <policy name="AppLockPinMinLength" class="Both" displayName="$(string.AppLockPinMinLength)" explainText="$(string.AppLockPinMinLength_Explain)" presentation="$(presentation.AppLockPinMinLength)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <decimal id="AppLockPinMinLength_Value" valueName="AppLockPinMinLength" required="true" minValue="5" maxValue="64"/>
+    </elements>
+  </policy>
   <policy name="AppLockHelloAllowed" class="Both" displayName="$(string.AppLockHelloAllowed)" explainText="$(string.AppLockHelloAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AppLockHelloAllowed">
     <parentCategory ref="Bulwark_Desktop_security"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
