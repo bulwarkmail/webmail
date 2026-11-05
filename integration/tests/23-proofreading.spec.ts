@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { ENT, ENT_PASSWORD, adminContext, contextOptions, getPolicy, putPolicy, requireEntEnv, shot, userPage } from './helpers/ent';
+import { accountSwitcher } from './helpers/app';
 
 /**
  * Proofreading (#1397) through the real UI, with a checker plugin that
@@ -212,6 +213,8 @@ test('required by the organisation: no switch, a notice in its words, and still 
   const page = await userPage(browser, ENT.carol);
   await setPolicy(browser, { restrictions: { ...(base.restrictions as object), proofreading: { locked: true, value: true } } });
   await page.reload();
+  // The c shortcut does nothing until the app is back, as after userPage().
+  await accountSwitcher(page).waitFor({ state: 'visible', timeout: 60_000 });
   await openComposer(page, GERMAN);
   await expect(page.getByTestId('proofreading-notice')).toContainText('Your organisation turned on proofreading');
   await expect(underline(page, 'dem')).toBeVisible({ timeout: 15_000 });

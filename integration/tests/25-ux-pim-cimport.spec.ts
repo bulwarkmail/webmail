@@ -236,8 +236,10 @@ test.describe('Contacts import and merge (pim-11, pim-14)', () => {
     await page.getByRole('button', { name: 'Merge…' }).first().click();
     const preview = page.getByTestId('merge-preview');
     await expect(preview).toBeVisible();
-    await expect(preview.getByText(`merge-a-${RUN}@example.org`)).toBeVisible();
-    await expect(preview.getByText(`merge-b-${RUN}@example.org`)).toBeVisible();
+    // Exact: the line naming the card that goes ("Merged in, then deleted: …")
+    // shows its address too.
+    await expect(preview.getByText(`merge-a-${RUN}@example.org`, { exact: true })).toBeVisible();
+    await expect(preview.getByText(`merge-b-${RUN}@example.org`, { exact: true })).toBeVisible();
     // pim-p2-14: laid out on its own lines as the card shows it, not one line of parts.
     const addressCell = preview.locator('dd').filter({ hasText: 'Hauptstraße' });
     await expect(addressCell).toContainText('Berlin');

@@ -377,8 +377,13 @@ test('with attachments off it says offline why it can\'t; a connection lost duri
 
 test('at 390 px the dialog fits, and works by keyboard', async () => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByTestId('local-export-open').scrollIntoViewIfNeeded();
-  await page.getByTestId('local-export-open').focus();
+  // The page swaps to its phone layout and draws the button again; one caught
+  // in between is no longer in the page.
+  await expect(async () => {
+    await page.getByTestId('local-export-open').scrollIntoViewIfNeeded({ timeout: 2000 });
+    await page.getByTestId('local-export-open').focus({ timeout: 2000 });
+    await expect(page.getByTestId('local-export-open')).toBeFocused({ timeout: 1000 });
+  }).toPass({ timeout: 30_000 });
   await page.keyboard.press('Enter');
   const dialog = page.getByTestId('local-export-dialog');
   await expect(dialog).toBeVisible();

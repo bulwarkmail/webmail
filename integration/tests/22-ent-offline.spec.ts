@@ -1024,9 +1024,16 @@ test('a cap from the organisation prunes kept mail at the next policy fetch, and
   await statusSettled(page);
   await expect(async () => {
     await page.getByTestId('offline-status').waitFor();
+    // The device keeps the login's shared and group accounts too, so their
+    // mail counts with hers (ent-team has some on one of the servers).
     const client = await jmapAs(ENT.alice);
-    const total = await client.request([['Email/query', { accountId: client.accountId, calculateTotal: true, limit: 0 }, '0']]);
-    expect(await keptMessages(page)).toBe(total.methodResponses[0][1].total);
+    let total = 0;
+    for (const accountId of Object.keys(client.accounts)) {
+      if (!(await client.sessionAccountCapabilities(accountId))['urn:ietf:params:jmap:mail']) continue;
+      const res = await client.request([['Email/query', { accountId, calculateTotal: true, limit: 0 }, '0']]);
+      total += res.methodResponses[0][1].total ?? 0;
+    }
+    expect(await keptMessages(page)).toBe(total);
   }).toPass({ timeout: 180_000, intervals: [2000] });
   const before = await keptMessages(page);
 

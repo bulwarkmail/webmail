@@ -579,7 +579,7 @@ test('item 5: a quick reply is checked too', async ({ browser }) => {
   const alice = await userPage(browser, ENT.alice);
   await pluginsReady(alice);
   await openMessage(alice, subject);
-  const box = alice.getByPlaceholder('Write a quick reply...');
+  const box = alice.getByPlaceholder(/^Reply to /);
   await box.fill(`To ${IBAN} please`);
   await box.press('Control+Enter');
   const dialog = sendDialog(alice);

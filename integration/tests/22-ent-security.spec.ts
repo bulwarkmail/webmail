@@ -500,10 +500,11 @@ test('item 3: Undo send brings the message back with its label', async ({ browse
   const subject = `Undo label ${RUN}`;
   await policy({ organisation: { labels: { list: GENERIC_LABELS, defaultId: 'internal', required: true, extraHeader: '' } } }, browser);
   const alice = await userPage(browser, ENT.alice);
-  // Undo send on, through Settings (a synced setting).
+  // Undo send on, through Settings (a synced setting). The row is "Undo send"
+  // under Sending now.
   await alice.locator('a[href$="/settings"]').first().click();
   await alice.locator('[data-testid="settings-tab-composing"]').first().click();
-  const delay = alice.locator('[data-search-label="Undo send / send delay"] select').first();
+  const delay = alice.locator('[data-search-label="Undo send"] select').first();
   await delay.selectOption('30');
   await alice.getByText('Back to mail').first().click();
   await folderRow(alice, { role: 'inbox' }).first().waitFor({ state: 'visible', timeout: 30_000 });
@@ -523,7 +524,7 @@ test('item 3: Undo send brings the message back with its label', async ({ browse
   // Undo send off again, for the other tests.
   await alice.locator('a[href$="/settings"]').first().click();
   await alice.locator('[data-testid="settings-tab-composing"]').first().click();
-  await alice.locator('[data-search-label="Undo send / send delay"] select').first().selectOption('0');
+  await alice.locator('[data-search-label="Undo send"] select').first().selectOption('0');
   await alice.waitForTimeout(1500);
   await alice.context().close();
 });
@@ -533,7 +534,7 @@ test('item 3: a quick reply keeps the original’s label', async ({ browser }) =
   await policy({ organisation: { labels: { list: GENERIC_LABELS, defaultId: '', required: true, extraHeader: '' } } }, browser);
   const bob = await userPage(browser, ENT.bob);
   await openMessage(bob, subject);
-  const box = bob.getByPlaceholder('Write a quick reply...');
+  const box = bob.getByPlaceholder(/^Reply to /);
   await box.fill(`Quick reply ${RUN}`);
   await box.press('Control+Enter');
   await expect(box).toHaveValue('', { timeout: 30_000 });
@@ -548,7 +549,7 @@ test('item 3: a quick reply with no label to keep opens the composer to pick one
   await deliverAndWait({ from: ENT.carol, to: [ENT.bob], subject, text: 'No label' });
   const bob = await userPage(browser, ENT.bob);
   await openMessage(bob, subject);
-  const box = bob.getByPlaceholder('Write a quick reply...');
+  const box = bob.getByPlaceholder(/^Reply to /);
   await box.fill(`Needs a label ${RUN}`);
   await box.press('Control+Enter');
   await expect(bob.locator('[data-testid="email-composer"]')).toBeVisible({ timeout: 20_000 });

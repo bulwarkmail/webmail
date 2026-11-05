@@ -905,6 +905,13 @@ export function ContextMenuSubMenu({
         if (e.currentTarget.closest("[data-pointer-unarmed]")) return;
         if (!disabled && hoverOpens()) setOpen(true);
       }}
+      onMouseMove={(e) => {
+        // The browser sends mouseenter before the pointermove that arms the
+        // menu: a pointer that jumped onto the entry opens it once it moves.
+        if (isOpen || disabled || !triggerRef.current?.contains(e.target as Node)) return;
+        if (e.currentTarget.closest("[data-pointer-unarmed]")) return;
+        if (hoverOpens()) setOpen(true);
+      }}
     >
       <div
         ref={triggerRef}
