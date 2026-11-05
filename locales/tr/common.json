@@ -1675,7 +1675,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Arama üstte, uygulamalar solda"
+        "mountain_view": "Arama üstte"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -3593,6 +3593,10 @@
       "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
       "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
+  },
+  "layout_preview": {
+    "default_description": "Uygulamalar ve klasörler solda, arama listenin üstünde",
+    "mountain_view_description": "Arama en üstte, iletiler tam genişlikte açılır"
   },
   "setup": {
     "title": "Bulwark Webmail kurulumu",

@@ -1675,7 +1675,7 @@
         "label": "界面布局",
         "description": "搜索、导航和工具栏的位置",
         "default": "默认",
-        "mountain_view": "搜索栏在上，应用在左"
+        "mountain_view": "搜索栏在上"
       },
       "animations": {
         "label": "启用动画",
@@ -3593,6 +3593,10 @@
       "sync_on": "你的其他设备使用相同的设置，因此也会一起改变。",
       "sync_off": "你的其他设备保留各自的设置。"
     }
+  },
+  "layout_preview": {
+    "default_description": "应用和文件夹在左侧，搜索在列表上方",
+    "mountain_view_description": "搜索栏横跨顶部，邮件以全宽打开"
   },
   "setup": {
     "title": "Bulwark Webmail 设置",

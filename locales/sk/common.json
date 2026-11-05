@@ -1678,7 +1678,7 @@
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
         "default": "Predvolené",
-        "mountain_view": "Vyhľadávanie hore, aplikácie vľavo"
+        "mountain_view": "Vyhľadávanie hore"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -3593,6 +3593,10 @@
       "sync_on": "Vaše ďalšie zariadenia používajú rovnaké nastavenia, takže sa zmenia tiež.",
       "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikácie a priečinky vľavo, hľadanie nad zoznamom",
+    "mountain_view_description": "Hľadanie hore, správy sa otvárajú na celú šírku"
   },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",

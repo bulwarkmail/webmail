@@ -1678,7 +1678,7 @@
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
         "default": "Alapértelmezett",
-        "mountain_view": "Keresősáv felül, alkalmazások balra"
+        "mountain_view": "Keresősáv felül"
       },
       "animations": {
         "label": "Animációk engedélyezése",
@@ -3593,6 +3593,10 @@
       "sync_on": "A többi eszköze ugyanazokat a beállításokat használja, ezért azok is megváltoznak.",
       "sync_off": "A többi eszköze megtartja a beállításait."
     }
+  },
+  "layout_preview": {
+    "default_description": "Alkalmazások és mappák bal oldalt, keresés a lista felett",
+    "mountain_view_description": "Keresés felül, az üzenetek teljes szélességben nyílnak meg"
   },
   "setup": {
     "title": "A Bulwark Webmail beállítása",

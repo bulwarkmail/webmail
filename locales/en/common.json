@@ -1678,7 +1678,7 @@
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
         "default": "Default",
-        "mountain_view": "Search bar on top, apps on the left"
+        "mountain_view": "Search bar on top"
       },
       "animations": {
         "label": "Enable animations",
@@ -3593,6 +3593,10 @@
       "sync_on": "Your other devices use the same settings, so they change too.",
       "sync_off": "Your other devices keep their settings."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps and folders on the left, search above the list",
+    "mountain_view_description": "Search across the top, messages open full width"
   },
   "setup": {
     "title": "Bulwark Webmail setup",

@@ -1678,7 +1678,7 @@
         "label": "Grænsefladelayout",
         "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
         "default": "Standard",
-        "mountain_view": "Søgefelt øverst, apps til venstre"
+        "mountain_view": "Søgefelt øverst"
       },
       "animations": {
         "label": "Aktivér animationer",
@@ -3593,6 +3593,10 @@
       "sync_on": "Dine andre enheder bruger de samme indstillinger, så de ændres også.",
       "sync_off": "Dine andre enheder beholder deres indstillinger."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps og mapper til venstre, søgning over listen",
+    "mountain_view_description": "Søgning hen over toppen, beskeder åbner i fuld bredde"
   },
   "setup": {
     "title": "Opsætning af Bulwark Webmail",

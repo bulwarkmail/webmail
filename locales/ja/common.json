@@ -1675,7 +1675,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "検索バーを上、アプリを左に配置"
+        "mountain_view": "検索バーを上に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -3593,6 +3593,10 @@
       "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
       "sync_off": "ほかのデバイスの設定はそのままです。"
     }
+  },
+  "layout_preview": {
+    "default_description": "アプリとフォルダーは左、検索はリストの上",
+    "mountain_view_description": "検索は上部に表示、メッセージは全幅で開きます"
   },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",

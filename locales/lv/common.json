@@ -1675,7 +1675,7 @@
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
         "default": "Noklusējuma",
-        "mountain_view": "Meklēšana augšā, lietotnes pa kreisi"
+        "mountain_view": "Meklēšana augšā"
       },
       "animations": {
         "label": "Iespējot animācijas",
@@ -3593,6 +3593,10 @@
       "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
       "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
+  },
+  "layout_preview": {
+    "default_description": "Lietotnes un mapes pa kreisi, meklēšana virs saraksta",
+    "mountain_view_description": "Meklēšana augšā visā platumā, ziņojumi atveras pilnā platumā"
   },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",

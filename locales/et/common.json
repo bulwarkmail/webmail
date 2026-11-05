@@ -1678,7 +1678,7 @@
         "label": "Liidese paigutus",
         "description": "Kus asuvad otsing, navigeerimine ja tööriistaribad",
         "default": "Vaikimisi",
-        "mountain_view": "Otsinguriba üleval, rakendused vasakul"
+        "mountain_view": "Otsinguriba üleval"
       },
       "animations": {
         "label": "Luba animatsioonid",
@@ -3593,6 +3593,10 @@
       "sync_on": "Sinu teised seadmed kasutavad samu seadeid, seega muutuvad ka need.",
       "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
     }
+  },
+  "layout_preview": {
+    "default_description": "Rakendused ja kaustad vasakul, otsing loendi kohal",
+    "mountain_view_description": "Otsing üleval üle kogu laiuse, kirjad avanevad täislaiuses"
   },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",

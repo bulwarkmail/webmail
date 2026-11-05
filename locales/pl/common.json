@@ -1675,7 +1675,7 @@
         "label": "Układ interfejsu",
         "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
         "default": "Domyślny",
-        "mountain_view": "Wyszukiwanie u góry, aplikacje po lewej"
+        "mountain_view": "Wyszukiwanie u góry"
       },
       "animations": {
         "label": "Włącz animacje",
@@ -3593,6 +3593,10 @@
       "sync_on": "Twoje inne urządzenia używają tych samych ustawień, więc też się zmienią.",
       "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikacje i foldery po lewej, wyszukiwanie nad listą",
+    "mountain_view_description": "Wyszukiwanie u góry, wiadomości otwierają się na całą szerokość"
   },
   "setup": {
     "title": "Konfiguracja Bulwark Webmail",

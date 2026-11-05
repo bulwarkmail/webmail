@@ -1678,7 +1678,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Barra de cerca a dalt, aplicacions a l'esquerra"
+        "mountain_view": "Barra de cerca a dalt"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -3593,6 +3593,10 @@
       "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
       "sync_off": "Els altres dispositius mantenen la seva configuració."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicacions i carpetes a l'esquerra, cerca sobre la llista",
+    "mountain_view_description": "Cerca a dalt de tot, els missatges s'obren a tota l'amplada"
   },
   "setup": {
     "title": "Configuració de Bulwark Webmail",

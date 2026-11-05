@@ -1675,7 +1675,7 @@
         "label": "Disposition de l'interface",
         "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
         "default": "Par défaut",
-        "mountain_view": "Recherche en haut, applications à gauche"
+        "mountain_view": "Recherche en haut"
       },
       "animations": {
         "label": "Activer les animations",
@@ -3593,6 +3593,10 @@
       "sync_on": "Vos autres appareils utilisent les mêmes paramètres, ils changent donc aussi.",
       "sync_off": "Vos autres appareils gardent leurs paramètres."
     }
+  },
+  "layout_preview": {
+    "default_description": "Applications et dossiers à gauche, recherche au-dessus de la liste",
+    "mountain_view_description": "Recherche en haut, les messages s'ouvrent en pleine largeur"
   },
   "setup": {
     "title": "Configuration de Bulwark Webmail",
