@@ -6230,6 +6230,14 @@
     "date_label": "Datum",
     "subject_label": "Betreff"
   },
+  "print_styles": {
+    "title": "Drucken",
+    "description": "Wie gedruckte Nachrichten, Kontakte und Kalender aussehen.",
+    "style_label": "Druckstil",
+    "style_description": "Add-ons können Stile hinzufügen, zum Beispiel einen Briefkopf mit der Adresse Ihrer Firma.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} installieren",
     "description": "Installiere unsere App für schnellen Zugriff.",

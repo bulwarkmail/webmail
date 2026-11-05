@@ -6230,6 +6230,14 @@
     "date_label": "Fecha",
     "subject_label": "Asunto"
   },
+  "print_styles": {
+    "title": "Impresión",
+    "description": "Cómo se ven los mensajes, contactos y calendarios impresos.",
+    "style_label": "Estilo de impresión",
+    "style_description": "Los complementos pueden añadir estilos, por ejemplo un membrete con la dirección de su empresa.",
+    "standard": "Estándar",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalar {appName}",
     "description": "Instala nuestra app para un acceso rápido.",

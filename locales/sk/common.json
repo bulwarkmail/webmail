@@ -6230,6 +6230,14 @@
     "date_label": "Dátum",
     "subject_label": "Predmet"
   },
+  "print_styles": {
+    "title": "Tlač",
+    "description": "Ako vyzerajú vytlačené správy, kontakty a kalendáre.",
+    "style_label": "Štýl tlače",
+    "style_description": "Doplnky môžu pridať štýly, napríklad hlavičkový papier s adresou vašej firmy.",
+    "standard": "Štandardný",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Nainštalovať {appName}",
     "description": "Nainštalujte si našu aplikáciu pre rýchly prístup.",

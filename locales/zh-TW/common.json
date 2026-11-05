@@ -6230,6 +6230,14 @@
     "date_label": "日期",
     "subject_label": "主題"
   },
+  "print_styles": {
+    "title": "列印",
+    "description": "列印的郵件、聯絡人和行事曆的樣式。",
+    "style_label": "列印樣式",
+    "style_description": "附加元件可以新增樣式，例如附有公司地址的信頭。",
+    "standard": "標準",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "安裝 {appName}",
     "description": "安裝我們的應用程式，以便快速存取。",

@@ -4,7 +4,7 @@ import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCal
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
-import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
 import { htmlToReadableText } from "@/lib/html-to-readable-text";
@@ -17,6 +17,8 @@ import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachment
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
+import { buildMessagePrintFields } from "./message-print-fields";
+import { printMessageInWindow } from "./message-print-window";
 import { useInvitationPrint } from "@/lib/print/invitation-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { ReadingMask } from "./reading-mask";
@@ -176,7 +178,6 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { canPickFolder, createUniqueNamer, isPickerCancelled, pickFolder, saveFilesToFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
-import { watermarkForPrint } from "@/lib/watermark";
 import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
@@ -4069,33 +4070,16 @@ export function EmailViewer({
   // for the page's print copy (Ctrl+P). Text fields are unescaped.
   const messagePrintFields = (): MessagePrintFields | null => {
     if (!email) return null;
-    const printSender = email.from?.[0];
-    const formatRecipient = (r: { name?: string | null; email: string }) =>
-      r.name ? `${r.name} <${r.email}>` : r.email;
-    // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
-    // <style>. A printout has no iframe isolation, so re-sanitize with the
-    // stricter config that forbids <style> before injecting into the DOM.
-    // A plain-text body is escaped text with its own newlines: it prints its
-    // trailing quote opened instead of behind the collapsed toggle.
-    const plain = !effectiveEmailContent.isHtml;
-    return {
-      subject: email.subject || t('no_subject'),
-      sender: printSender?.name
-        ? `${printSender.name} <${printSender.email}>`
-        : printSender?.email || t('unknown_sender'),
-      to: email.to?.map(formatRecipient).join(', ') || '',
-      cc: email.cc?.map(formatRecipient).join(', ') || '',
-      date: formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-      // The reader's list: inline images stay in the body, not here.
-      attachments: effectiveAttachments
-        .map((a) => `${getAttachmentDisplayName(a.name, a.type)} (${formatFileSize(a.size)})`)
-        .join(', '),
-      bodyHtml: plain
-        ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
-        : sanitizeEmailHtml(effectiveEmailContent.html),
-      plain,
+    return buildMessagePrintFields({
+      email,
+      html: effectiveEmailContent.html,
+      isHtml: effectiveEmailContent.isHtml,
+      attachments: effectiveAttachments,
       invitation: invitationPrint,
-    };
+      timeFormat,
+      noSubject: t('no_subject'),
+      unknownSender: t('unknown_sender'),
+    });
   };
 
   // Print only the email content in a new window. A print asked for from
@@ -4108,69 +4092,12 @@ export function EmailViewer({
     }
     const fields = messagePrintFields();
     if (!fields) return;
-    const printWatermark = watermark ? watermarkForPrint(watermark) : null;
-    const date = fields.date;
-    const toList = escapeHtml(fields.to);
-    const ccList = escapeHtml(fields.cc);
-    const attachmentList = escapeHtml(fields.attachments);
-    const subjectText = fields.subject;
-    const senderText = fields.sender;
-    const plainBody = fields.plain;
-    const printableBody = fields.bodyHtml;
-
-    const printWindow = openedWindow ?? window.open('', '_blank');
-    if (!printWindow) return;
-    // A link in the message that navigates the popup itself (no target, a
-    // non-web scheme) would hand the sender's page an opener to redirect
-    // the webmail tab with. We write the document through our own handle.
-    printWindow.opener = null;
-
-    // The popup is an about:blank document of the app, so it carries the
-    // app's CSP (img-src https:), not the message iframe's strict one. Add
-    // the iframe's policy while remote content is blocked; it narrows the
-    // inherited one.
-    printWindow.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(effectiveEmailContent.externalBlocked)}">
-<meta name="referrer" content="no-referrer">
-<title>${escapeHtml(subjectText)}</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #000; }
-  .header { border-bottom: 1px solid #ccc; padding-bottom: 16px; margin-bottom: 16px; }
-  .subject { font-size: 20px; font-weight: bold; margin-bottom: 12px; }
-  .meta { font-size: 13px; color: #555; line-height: 1.6; }
-  .meta strong { color: #000; }
-  .body { font-size: 14px; line-height: 1.6; }
-  /* Plain text keeps its line breaks, as in the reader. */
-  .body.plain { white-space: pre-wrap; word-break: break-word; }
-  .body.plain summary { display: none !important; }
-  /* Only force the cap on images that set no width of their own: an
-     !important 100% also overrides a sender's inline max-width, and an
-     image sized by max-width + max-height + width:100% then grows to
-     the pane width while its max-height still clamps the height - the
-     picture renders stretched. Matches the viewer's own image rule.
-     height stays !important so a fixed inline height cannot squash it. */
-  .body img:not([style*="max-width"]) { max-width: 100% !important; }
-  .body img[style*="max-width"] { max-width: 100%; }
-  .body img { height: auto !important; }
-  @media print { body { margin: 20px; } }
-</style>${printWatermark ? printWatermark.style : ''}</head><body dir="auto">
-${printWatermark ? printWatermark.html : ''}
-<div class="header">
-  <div class="subject">${escapeHtml(subjectText)}</div>
-  <div class="meta">
-    <div><strong>${escapeHtml(t('from'))}:</strong> ${escapeHtml(senderText)}</div>
-    ${toList ? `<div><strong>${escapeHtml(t('to'))}:</strong> ${toList}</div>` : ''}
-    ${ccList ? `<div><strong>${escapeHtml(t('cc'))}:</strong> ${ccList}</div>` : ''}
-    ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
-    ${attachmentList ? `<div data-print-attachments><strong>${escapeHtml(t('attachments'))}:</strong> ${attachmentList}</div>` : ''}
-  </div>
-</div>
-<div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
-</body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    printMessageInWindow(fields, {
+      externalBlocked: effectiveEmailContent.externalBlocked,
+      watermark,
+      openedWindow,
+      labels: { from: t('from'), to: t('to'), cc: t('cc'), date: t('date'), attachments: t('attachments') },
+    });
   };
 
   // Print from the list's row menu: the window waits for this message's body.

@@ -6230,6 +6230,14 @@
     "date_label": "التاريخ",
     "subject_label": "الموضوع"
   },
+  "print_styles": {
+    "title": "الطباعة",
+    "description": "شكل الرسائل وجهات الاتصال والتقويمات عند طباعتها.",
+    "style_label": "نمط الطباعة",
+    "style_description": "يمكن للإضافات أن تضيف أنماطًا، مثل ترويسة بعنوان شركتك.",
+    "standard": "قياسي",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "تثبيت {appName}",
     "description": "ثبّت تطبيقنا للوصول السريع.",

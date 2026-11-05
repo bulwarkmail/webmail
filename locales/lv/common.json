@@ -6230,6 +6230,14 @@
     "date_label": "Datums",
     "subject_label": "Tēma"
   },
+  "print_styles": {
+    "title": "Drukāšana",
+    "description": "Kā izskatās izdrukātās vēstules, kontakti un kalendāri.",
+    "style_label": "Drukas stils",
+    "style_description": "Papildinājumi var pievienot stilus, piemēram, veidlapu ar jūsu uzņēmuma adresi.",
+    "standard": "Standarta",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalēt {appName}",
     "description": "Instalējiet mūsu lietotni ātrai piekļuvei.",

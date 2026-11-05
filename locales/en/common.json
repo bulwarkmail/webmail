@@ -6230,6 +6230,14 @@
     "date_label": "Date",
     "subject_label": "Subject"
   },
+  "print_styles": {
+    "title": "Printing",
+    "description": "How printed messages, contacts and calendars look.",
+    "style_label": "Print style",
+    "style_description": "Add-ons can add styles, for example a letterhead with your company's address.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Install {appName}",
     "description": "Install our app for quick access.",

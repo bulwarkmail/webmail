@@ -6230,6 +6230,14 @@
     "date_label": "Data",
     "subject_label": "Assumpte"
   },
+  "print_styles": {
+    "title": "Impressió",
+    "description": "Com es veuen els missatges, els contactes i els calendaris impresos.",
+    "style_label": "Estil d'impressió",
+    "style_description": "Els complements poden afegir estils, per exemple un capçal amb l'adreça de la vostra empresa.",
+    "standard": "Estàndard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instal·la {appName}",
     "description": "Instal·leu la nostra aplicació per a un accés ràpid.",

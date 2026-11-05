@@ -6230,6 +6230,14 @@
     "date_label": "Data",
     "subject_label": "Oggetto"
   },
+  "print_styles": {
+    "title": "Stampa",
+    "description": "L'aspetto di messaggi, contatti e calendari stampati.",
+    "style_label": "Stile di stampa",
+    "style_description": "I componenti aggiuntivi possono aggiungere stili, ad esempio una carta intestata con l'indirizzo della tua azienda.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installa {appName}",
     "description": "Installa la nostra app per un accesso rapido.",

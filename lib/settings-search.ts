@@ -162,6 +162,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.sections.sidebar' },
     { label: 'settings.appearance.colorful_sidebar_icons.label' },
     { label: 'settings.appearance.show_folder_total_count.label' },
+    { label: 'print_styles.title' },
+    { label: 'print_styles.style_label' },
     { label: 'settings.appearance.sections.experimental', advanced: true },
     { label: 'settings.appearance.pro_interface.label', advanced: true },
     { label: 'settings.appearance.sidebar_account_switcher.label' },

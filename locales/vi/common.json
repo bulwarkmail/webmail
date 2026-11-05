@@ -6242,6 +6242,14 @@
     "date_label": "Ngày",
     "subject_label": "Tiêu đề"
   },
+  "print_styles": {
+    "title": "In",
+    "description": "Cách thư, danh bạ và lịch trông như thế nào khi in.",
+    "style_label": "Kiểu in",
+    "style_description": "Tiện ích bổ sung có thể thêm kiểu, ví dụ giấy tiêu đề có địa chỉ công ty của bạn.",
+    "standard": "Tiêu chuẩn",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Cài đặt {appName}",
     "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh.",

@@ -6230,6 +6230,14 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "print_styles": {
+    "title": "Utskrift",
+    "description": "Hvordan utskrevne meldinger, kontakter og kalendere ser ut.",
+    "style_label": "Utskriftsstil",
+    "style_description": "Tillegg kan legge til stiler, for eksempel et brevhode med firmaets adresse.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installer appen for rask tilgang.",

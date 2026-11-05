@@ -63,6 +63,23 @@ export interface ThemeTypography {
   baseFontSize?: string;
 }
 
+/**
+ * How printouts look under the theme, emitted as the `--print-*` variables
+ * (lib/print/print-theme.ts). Unset keys keep the standard printout.
+ */
+export interface ThemePrintTokens {
+  /** Font stack of the printout's text. */
+  fontFamily?: string;
+  /** Font stack of the subject line. */
+  headingFontFamily?: string;
+  textColor?: string;
+  headingColor?: string;
+  /** The rule under the header. */
+  ruleColor?: string;
+  /** Page margins of a printed message: 1 to 4 lengths in mm, cm, in, pt or px. */
+  pageMargin?: string;
+}
+
 export interface ThemeManifest {
   id: string;
   name: string;
@@ -105,6 +122,8 @@ export interface ThemeManifest {
   radii?: ThemeRadii;
   /** Font stacks + base size, emitted as `--font-*` vars. */
   typography?: ThemeTypography;
+  /** Fonts, colours and margins of printouts, emitted as `--print-*` vars. */
+  print?: ThemePrintTokens;
 }
 
 export interface PluginManifest {
