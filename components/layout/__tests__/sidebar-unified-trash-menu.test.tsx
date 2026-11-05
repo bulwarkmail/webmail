@@ -93,4 +93,24 @@ describe('Sidebar unified "All Trash" context menu', () => {
     const item = screen.getByText('empty_folder_all_accounts');
     expect(item.closest('button')).toBeDisabled();
   });
+
+  // The item, its dialog and its toasts all say Trash, and the handler is
+  // only meant for Trash, so All Junk must not offer it.
+  it('does not offer the all-accounts empty on All Junk', () => {
+    useEmailStore.setState({
+      unifiedCounts: [{ role: 'junk', unreadEmails: 0, totalEmails: 5 }],
+    } as never);
+    render(
+      <Sidebar
+        mailboxes={mailboxes}
+        selectedMailbox="inbox"
+        crossAccountActive
+        onEmptyUnifiedMailbox={vi.fn()}
+      />
+    );
+
+    fireEvent.contextMenu(screen.getByText('unified_junk'));
+    expect(screen.getByText('refresh')).toBeInTheDocument();
+    expect(screen.queryByText('empty_folder_all_accounts')).toBeNull();
+  });
 });

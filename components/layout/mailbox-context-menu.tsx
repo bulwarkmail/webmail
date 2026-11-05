@@ -259,11 +259,12 @@ export function MailboxContextMenu({
   }
 
   if (target.kind === "unified-mailbox") {
-    const isTrashOrJunk = target.role === "trash" || target.role === "junk";
+    // Only Trash: the item, its dialog and its toasts all talk about Trash.
+    const canEmpty = target.role === "trash";
     return (
       <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
         <ContextMenuHeader>{target.label}</ContextMenuHeader>
-        {isTrashOrJunk && (
+        {canEmpty && (
           <ContextMenuItem
             icon={FolderX}
             label={t("empty_folder_all_accounts")}
