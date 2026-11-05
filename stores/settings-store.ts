@@ -605,6 +605,7 @@ interface SettingsState extends AccessibilitySettings {
   externalContentPolicy: ExternalContentPolicy;
   messageSpacing: MessageSpacing; // Gutter around the message body in the reader
   plainTextFont: PlainTextFont; // Font for text/plain email bodies in the reader
+  printTheme: string; // A plugin print style ('<pluginId>/<id>') or 'standard' (Settings > Appearance > Printing)
   mailAttachmentAction: MailAttachmentAction;
   emailAlwaysLightMode: boolean; // Always render email content in light mode
   archiveMode: ArchiveMode; // How to organize archived emails: single folder, by year, or by year+month
@@ -966,6 +967,7 @@ const DEFAULT_SETTINGS = {
   externalContentPolicy: 'ask' as ExternalContentPolicy,
   messageSpacing: 'auto' as MessageSpacing,
   plainTextFont: 'sans' as PlainTextFont,
+  printTheme: 'standard',
   mailAttachmentAction: 'preview' as MailAttachmentAction,
   emailAlwaysLightMode: false,
   archiveMode: 'single' as ArchiveMode,
@@ -1423,6 +1425,7 @@ export const useSettingsStore = create<SettingsState>()(
           externalContentPolicy: state.externalContentPolicy,
           messageSpacing: state.messageSpacing,
           plainTextFont: state.plainTextFont,
+          printTheme: state.printTheme,
           mailAttachmentAction: state.mailAttachmentAction,
           archiveMode: state.archiveMode,
           hoverActions: state.hoverActions,

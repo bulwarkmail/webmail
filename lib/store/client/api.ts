@@ -177,14 +177,23 @@ class PageStore implements StoreBackend {
     this.broken = false;
   }
 
+  /** The app lock's layers when it has said, else offline mode's hooks (tests, and pages with no lock). */
+  private async keyLayers(): Promise<readonly WrapLayer[]> {
+    if (keyHooks) return keyHooks.keyLayers();
+    return await this.hooks()?.keyLayers?.() ?? [];
+  }
+
   private async readKey(account: string): ReturnType<typeof openAccountKey> {
+    const keys = keyHooks;
     try {
-      const opened = await openAccountKey(account, await this.hooks()?.keyLayers?.() ?? []);
+      const opened = await openAccountKey(account, await this.keyLayers());
       if (opened.wrapFailed) this.hooks()?.onKeyWrapFailed?.(account);
       return opened;
     } catch (error) {
-      if ((error as Error)?.name === 'StoreKeyLayerMissingError' && (error as StoreKeyLayerMissingError).layer === 'applock') this.hooks()?.onKeyLocked?.();
-      else if ((error as Error)?.name === 'StoreKeyLayerMissingError') this.hooks()?.onKeyWrapFailed?.(account);
+      if ((error as Error)?.name === 'StoreKeyLayerMissingError' && (error as StoreKeyLayerMissingError).layer === 'applock') {
+        if (keys) keys.onKeyLocked();
+        else this.hooks()?.onKeyLocked?.();
+      } else if ((error as Error)?.name === 'StoreKeyLayerMissingError') this.hooks()?.onKeyWrapFailed?.(account);
       throw error;
     }
   }
@@ -252,7 +261,7 @@ class PageStore implements StoreBackend {
       await client.pruneFiles(await knownStoreFiles());
       await client.rekeyAccount(account, file, keyHex);
       copied = true;
-      await replaceAccountKey(account, keyHex, file, await this.hooks()?.keyLayers?.() ?? []);
+      await replaceAccountKey(account, keyHex, file, await this.keyLayers());
       await this.deleteLeftover(client, account);
     } catch (error) {
       // A lock stopped it: the next unlock goes on from the start.
@@ -387,9 +396,26 @@ class PageStore implements StoreBackend {
 let hooks: StorePageHooks | null = null;
 let backend: StoreBackend | null = null;
 
+/** The app lock's part: the layers around every account's key, and what this tab does when it has no lock key. */
+export interface StoreKeyHooks {
+  keyLayers(): readonly WrapLayer[] | Promise<readonly WrapLayer[]>;
+  onKeyLocked(): void;
+}
+
+let keyHooks: StoreKeyHooks | null = null;
+
 /** Registers what the store needs from the app. */
 export function configureStore(next: StorePageHooks | null): void {
   hooks = next;
+}
+
+/**
+ * The app lock says this at the start of every page (lib/app-lock/controller.ts), before anything
+ * can open the store. Offline mode's hooks come later, once it has loaded: a key read before then
+ * without the lock's layer looked like a lock nobody had opened, and every unlock locked again.
+ */
+export function configureStoreKeys(next: StoreKeyHooks | null): void {
+  keyHooks = next;
 }
 
 export function getStore(): StoreBackend {

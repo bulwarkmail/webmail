@@ -1675,7 +1675,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "検索バーを上、アプリを左に配置"
+        "mountain_view": "検索バーを上に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -3593,6 +3593,10 @@
       "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
       "sync_off": "ほかのデバイスの設定はそのままです。"
     }
+  },
+  "layout_preview": {
+    "default_description": "アプリとフォルダーは左、検索はリストの上",
+    "mountain_view_description": "検索は上部に表示、メッセージは全幅で開きます"
   },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",
@@ -6230,6 +6234,14 @@
     "date_label": "日付",
     "subject_label": "件名"
   },
+  "print_styles": {
+    "title": "印刷",
+    "description": "印刷したメッセージ、連絡先、カレンダーの見た目です。",
+    "style_label": "印刷スタイル",
+    "style_description": "アドオンでスタイルを追加できます。たとえば会社の住所入りのレターヘッドなどです。",
+    "standard": "標準",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} をインストール",
     "description": "素早くアクセスできるよう、アプリをインストールしましょう。",
@@ -7411,7 +7423,8 @@
     "pin_current": "現在の PIN",
     "pin_new": "新しい PIN",
     "pin_repeat": "PIN をもう一度",
-    "pin_hint": "6 文字以上。文字も使えます。長い PIN ほど推測されにくくなります。",
+    "pin_hint": "5 文字以上。文字も使えます。長い PIN ほど推測されにくくなります。",
+    "pin_hint_policy": "組織が {count, plural, other {# 文字}}以上を必須にしています。英字も使えます。",
     "pin_obvious": "この PIN は推測されやすすぎます。繰り返し、連番、よくある組み合わせは避けてください。",
     "pin_mismatch": "2 つの PIN が一致しません。",
     "pin_recovery": "忘れた場合は、このデバイスのデータを削除してサインインし直すしかありません。サーバー上のメールは残ります。このデバイスで送信待ちのメッセージは失われます。",

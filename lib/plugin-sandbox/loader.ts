@@ -28,6 +28,7 @@ import { mayOfferSlot, mayReceiveHookCall, mayRegisterHook, pluginHasPermission,
 import { clearPluginActions, setActionDispatcher } from './actions';
 import { clearPluginCheckers, setCheckerDispatcher } from './checkers';
 import { clearDayLabels } from './day-labels';
+import { clearPrintThemes } from './print-themes';
 import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
 import { clearSectionTitle } from './section-titles';
@@ -475,6 +476,7 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   clearPluginCheckers(pluginId);
   clearPluginListFilters(pluginId);
   clearDayLabels(pluginId);
+  clearPrintThemes(pluginId);
   clearPluginPages(pluginId);
   clearSectionTitle(pluginId);
   clearSidePanel(pluginId);

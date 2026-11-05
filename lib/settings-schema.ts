@@ -453,6 +453,8 @@ export const DENIED_SETTINGS: readonly string[] = [
 export const NOT_YET_SETTINGS: readonly string[] = [
   'messageListOrder', 'filesSettings', 'activeThemeId', 'birthdayCalendarColor', 'vacationBlockCalendar',
   'writingLanguage', 'calendarNarrowWeekAllDays',
+  // A plugin's print style: offered only while that plugin runs.
+  'printTheme',
 ];
 
 /** Line breaks, tabs and other control characters. */

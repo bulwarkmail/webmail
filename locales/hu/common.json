@@ -1678,7 +1678,7 @@
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
         "default": "Alapértelmezett",
-        "mountain_view": "Keresősáv felül, alkalmazások balra"
+        "mountain_view": "Keresősáv felül"
       },
       "animations": {
         "label": "Animációk engedélyezése",
@@ -3593,6 +3593,10 @@
       "sync_on": "A többi eszköze ugyanazokat a beállításokat használja, ezért azok is megváltoznak.",
       "sync_off": "A többi eszköze megtartja a beállításait."
     }
+  },
+  "layout_preview": {
+    "default_description": "Alkalmazások és mappák bal oldalt, keresés a lista felett",
+    "mountain_view_description": "Keresés felül, az üzenetek teljes szélességben nyílnak meg"
   },
   "setup": {
     "title": "A Bulwark Webmail beállítása",
@@ -6230,6 +6234,14 @@
     "date_label": "Dátum",
     "subject_label": "Tárgy"
   },
+  "print_styles": {
+    "title": "Nyomtatás",
+    "description": "Hogyan néznek ki a kinyomtatott üzenetek, névjegyek és naptárak.",
+    "style_label": "Nyomtatási stílus",
+    "style_description": "A bővítmények stílusokat adhatnak hozzá, például fejlécet a cége címével.",
+    "standard": "Szabványos",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} telepítése",
     "description": "Telepítsd az alkalmazásunkat a gyors eléréshez.",
@@ -7411,7 +7423,8 @@
     "pin_current": "Jelenlegi PIN-kód",
     "pin_new": "Új PIN-kód",
     "pin_repeat": "PIN-kód ismét",
-    "pin_hint": "Legalább 6 karakter. Betűk is jók, és a hosszabb PIN-kódot nehezebb kitalálni.",
+    "pin_hint": "Legalább 5 karakter. Betűk is jók, és a hosszabb PIN-kódot nehezebb kitalálni.",
+    "pin_hint_policy": "A szervezete legalább {count, plural, one {# karaktert} other {# karaktert}} követel meg. Betűk is jók.",
     "pin_obvious": "Ezt a PIN-kódot túl könnyű kitalálni. Kerülje az ismétlést, a sorozatokat és a gyakori választásokat.",
     "pin_mismatch": "A két PIN-kód nem egyezik.",
     "pin_recovery": "Ha elfelejti, az egyetlen megoldás az eszközön lévő adatok eltávolítása és az újbóli bejelentkezés. A szerveren lévő levelei megmaradnak. Az ezen az eszközön küldésre váró üzenetek elvesznek.",

@@ -1675,7 +1675,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Arama üstte, uygulamalar solda"
+        "mountain_view": "Arama üstte"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -3593,6 +3593,10 @@
       "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
       "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
+  },
+  "layout_preview": {
+    "default_description": "Uygulamalar ve klasörler solda, arama listenin üstünde",
+    "mountain_view_description": "Arama en üstte, iletiler tam genişlikte açılır"
   },
   "setup": {
     "title": "Bulwark Webmail kurulumu",
@@ -6230,6 +6234,14 @@
     "date_label": "Tarih",
     "subject_label": "Konu"
   },
+  "print_styles": {
+    "title": "Yazdırma",
+    "description": "Yazdırılan iletilerin, kişilerin ve takvimlerin görünümü.",
+    "style_label": "Yazdırma stili",
+    "style_description": "Eklentiler stil ekleyebilir, örneğin şirketinizin adresini içeren antetli bir sayfa.",
+    "standard": "Standart",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} uygulamasını yükle",
     "description": "Hızlı erişim için uygulamamızı yükleyin.",
@@ -7411,7 +7423,8 @@
     "pin_current": "Geçerli PIN",
     "pin_new": "Yeni PIN",
     "pin_repeat": "PIN'i tekrarlayın",
-    "pin_hint": "En az 6 karakter. Harfler de olur ve daha uzun bir PIN'i tahmin etmek daha zordur.",
+    "pin_hint": "En az 5 karakter. Harfler de olur ve daha uzun bir PIN'i tahmin etmek daha zordur.",
+    "pin_hint_policy": "Kuruluşunuz en az {count, plural, one {# karakter} other {# karakter}} istiyor. Harfler de olur.",
     "pin_obvious": "Bu PIN'i tahmin etmek çok kolay. Tekrarlardan, sıralı dizilerden ve yaygın seçimlerden kaçının.",
     "pin_mismatch": "İki PIN aynı değil.",
     "pin_recovery": "Unutursanız tek çözüm bu cihazdaki verileri kaldırıp yeniden oturum açmaktır. Sunucudaki e-postalarınız kalır. Bu cihazda hâlâ gönderilmeyi bekleyen iletiler kaybolur.",

@@ -1675,7 +1675,7 @@
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
         "default": "Noklusējuma",
-        "mountain_view": "Meklēšana augšā, lietotnes pa kreisi"
+        "mountain_view": "Meklēšana augšā"
       },
       "animations": {
         "label": "Iespējot animācijas",
@@ -3593,6 +3593,10 @@
       "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
       "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
+  },
+  "layout_preview": {
+    "default_description": "Lietotnes un mapes pa kreisi, meklēšana virs saraksta",
+    "mountain_view_description": "Meklēšana augšā visā platumā, ziņojumi atveras pilnā platumā"
   },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",
@@ -6230,6 +6234,14 @@
     "date_label": "Datums",
     "subject_label": "Tēma"
   },
+  "print_styles": {
+    "title": "Drukāšana",
+    "description": "Kā izskatās izdrukātās vēstules, kontakti un kalendāri.",
+    "style_label": "Drukas stils",
+    "style_description": "Papildinājumi var pievienot stilus, piemēram, veidlapu ar jūsu uzņēmuma adresi.",
+    "standard": "Standarta",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalēt {appName}",
     "description": "Instalējiet mūsu lietotni ātrai piekļuvei.",
@@ -7411,7 +7423,8 @@
     "pin_current": "Pašreizējais PIN kods",
     "pin_new": "Jauns PIN kods",
     "pin_repeat": "Atkārtojiet PIN kodu",
-    "pin_hint": "Vismaz 6 rakstzīmes. Der arī burti, un garāku PIN kodu ir grūtāk uzminēt.",
+    "pin_hint": "Vismaz 5 rakstzīmes. Der arī burti, un garāku PIN kodu ir grūtāk uzminēt.",
+    "pin_hint_policy": "Jūsu organizācija pieprasa vismaz {count, plural, zero {# rakstzīmes} one {# rakstzīmi} other {# rakstzīmes}}. Der arī burti.",
     "pin_obvious": "Šo PIN ir pārāk viegli uzminēt. Izvairieties no atkārtojumiem, secībām un biežām izvēlēm.",
     "pin_mismatch": "Abi PIN kodi nesakrīt.",
     "pin_recovery": "Ja to aizmirsīsit, vienīgā iespēja ir noņemt datus šajā ierīcē un pieteikties vēlreiz. Jūsu e-pasts serverī paliek. Ziņojumi, kas šajā ierīcē vēl gaida sūtīšanu, tiek zaudēti.",

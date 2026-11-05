@@ -429,6 +429,8 @@ export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
           key={option.value}
           type="button"
           aria-pressed={value === option.value}
+          // Read by useOptionPreview, which draws the option under the pointer.
+          data-option-value={option.value}
           onClick={() => onChange(option.value)}
           className={cn(
             'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',

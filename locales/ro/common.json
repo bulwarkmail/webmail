@@ -1678,7 +1678,7 @@
         "label": "Aspectul interfeței",
         "description": "Unde se află căutarea, navigarea și barele de instrumente",
         "default": "Implicit",
-        "mountain_view": "Căutarea sus, aplicațiile în stânga"
+        "mountain_view": "Căutarea sus"
       },
       "animations": {
         "label": "Activați animațiile",
@@ -3593,6 +3593,10 @@
       "sync_on": "Celelalte dispozitive folosesc aceleași setări, așa că se schimbă și ele.",
       "sync_off": "Celelalte dispozitive își păstrează setările."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicații și dosare în stânga, căutare deasupra listei",
+    "mountain_view_description": "Căutare sus, mesajele se deschid pe toată lățimea"
   },
   "setup": {
     "title": "Configurarea Bulwark Webmail",
@@ -6230,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Subiect"
   },
+  "print_styles": {
+    "title": "Imprimare",
+    "description": "Cum arată mesajele, contactele și calendarele imprimate.",
+    "style_label": "Stil de imprimare",
+    "style_description": "Suplimentele pot adăuga stiluri, de exemplu un antet cu adresa firmei dvs.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalați {appName}",
     "description": "Instalați aplicația noastră pentru acces rapid.",
@@ -7411,7 +7423,8 @@
     "pin_current": "PIN-ul actual",
     "pin_new": "PIN nou",
     "pin_repeat": "Repetați PIN-ul",
-    "pin_hint": "Cel puțin 6 caractere. Merg și literele, iar un PIN mai lung e mai greu de ghicit.",
+    "pin_hint": "Cel puțin 5 caractere. Merg și literele, iar un PIN mai lung e mai greu de ghicit.",
+    "pin_hint_policy": "Organizația dvs. cere cel puțin {count, plural, one {# caracter} few {# caractere} other {# de caractere}}. Merg și literele.",
     "pin_obvious": "Acest PIN este prea ușor de ghicit. Evitați repetițiile, secvențele și alegerile obișnuite.",
     "pin_mismatch": "Cele două PIN-uri nu sunt la fel.",
     "pin_recovery": "Dacă îl uitați, singura soluție este să eliminați datele de pe acest dispozitiv și să vă conectați din nou. E-mailurile de pe server rămân. Mesajele care încă așteaptă trimiterea pe acest dispozitiv se pierd.",

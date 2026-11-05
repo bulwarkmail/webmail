@@ -1690,7 +1690,7 @@
         "label": "Bố cục giao diện",
         "description": "Vị trí của tìm kiếm, điều hướng và thanh công cụ",
         "default": "Mặc định",
-        "mountain_view": "Thanh tìm kiếm ở trên, ứng dụng bên trái"
+        "mountain_view": "Thanh tìm kiếm ở trên"
       },
       "animations": {
         "label": "Bật hiệu ứng chuyển động",
@@ -3605,6 +3605,10 @@
       "sync_on": "Các thiết bị khác của bạn dùng cùng cài đặt, nên cũng thay đổi theo.",
       "sync_off": "Các thiết bị khác của bạn giữ nguyên cài đặt."
     }
+  },
+  "layout_preview": {
+    "default_description": "Ứng dụng và thư mục ở bên trái, tìm kiếm phía trên danh sách",
+    "mountain_view_description": "Tìm kiếm ở trên cùng, thư mở rộng toàn màn hình"
   },
   "setup": {
     "title": "Thiết lập webmail Bulwark",
@@ -6242,6 +6246,14 @@
     "date_label": "Ngày",
     "subject_label": "Tiêu đề"
   },
+  "print_styles": {
+    "title": "In",
+    "description": "Cách thư, danh bạ và lịch trông như thế nào khi in.",
+    "style_label": "Kiểu in",
+    "style_description": "Tiện ích bổ sung có thể thêm kiểu, ví dụ giấy tiêu đề có địa chỉ công ty của bạn.",
+    "standard": "Tiêu chuẩn",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Cài đặt {appName}",
     "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh.",
@@ -7423,7 +7435,8 @@
     "pin_current": "Mã PIN hiện tại",
     "pin_new": "Mã PIN mới",
     "pin_repeat": "Nhập lại mã PIN",
-    "pin_hint": "Ít nhất 6 ký tự. Có thể dùng cả chữ cái, và mã dài hơn sẽ khó đoán hơn.",
+    "pin_hint": "Ít nhất 5 ký tự. Có thể dùng cả chữ cái, và mã dài hơn sẽ khó đoán hơn.",
+    "pin_hint_policy": "Tổ chức của bạn yêu cầu ít nhất {count, plural, other {# ký tự}}. Có thể dùng cả chữ cái.",
     "pin_obvious": "Mã PIN này quá dễ đoán. Hãy tránh lặp lại, dãy số và các lựa chọn phổ biến.",
     "pin_mismatch": "Hai mã PIN không giống nhau.",
     "pin_recovery": "Nếu quên, cách duy nhất là xóa dữ liệu trên thiết bị này và đăng nhập lại. Thư của bạn trên máy chủ vẫn còn. Các thư đang chờ gửi trên thiết bị này sẽ bị mất.",

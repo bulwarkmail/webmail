@@ -1678,7 +1678,7 @@
         "label": "Liidese paigutus",
         "description": "Kus asuvad otsing, navigeerimine ja tööriistaribad",
         "default": "Vaikimisi",
-        "mountain_view": "Otsinguriba üleval, rakendused vasakul"
+        "mountain_view": "Otsinguriba üleval"
       },
       "animations": {
         "label": "Luba animatsioonid",
@@ -3593,6 +3593,10 @@
       "sync_on": "Sinu teised seadmed kasutavad samu seadeid, seega muutuvad ka need.",
       "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
     }
+  },
+  "layout_preview": {
+    "default_description": "Rakendused ja kaustad vasakul, otsing loendi kohal",
+    "mountain_view_description": "Otsing üleval üle kogu laiuse, kirjad avanevad täislaiuses"
   },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",
@@ -6230,6 +6234,14 @@
     "date_label": "Kuupäev",
     "subject_label": "Teema"
   },
+  "print_styles": {
+    "title": "Printimine",
+    "description": "Kuidas prinditud kirjad, kontaktid ja kalendrid välja näevad.",
+    "style_label": "Prindistiil",
+    "style_description": "Lisandmoodulid võivad lisada stiile, näiteks kirjapäise teie ettevõtte aadressiga.",
+    "standard": "Tavaline",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Paigalda {appName}",
     "description": "Paigalda meie rakendus kiireks ligipääsuks.",
@@ -7411,7 +7423,8 @@
     "pin_current": "Praegune PIN-kood",
     "pin_new": "Uus PIN-kood",
     "pin_repeat": "Korrake PIN-koodi",
-    "pin_hint": "Vähemalt 6 märki. Sobivad ka tähed ja pikemat PIN-koodi on raskem ära arvata.",
+    "pin_hint": "Vähemalt 5 märki. Sobivad ka tähed ja pikemat PIN-koodi on raskem ära arvata.",
+    "pin_hint_policy": "Teie organisatsioon nõuab vähemalt {count, plural, one {# märk} other {# märki}}. Sobivad ka tähed.",
     "pin_obvious": "Seda PIN-koodi on liiga lihtne ära arvata. Väldi kordusi, järjestusi ja tavalisi valikuid.",
     "pin_mismatch": "Need kaks PIN-koodi ei ole samad.",
     "pin_recovery": "Kui selle unustate, on ainus võimalus kustutada selle seadme andmed ja uuesti sisse logida. Teie e-post serveris jääb alles. Selles seadmes saatmist ootavad kirjad lähevad kaotsi.",

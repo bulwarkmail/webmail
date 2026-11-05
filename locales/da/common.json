@@ -1678,7 +1678,7 @@
         "label": "Grænsefladelayout",
         "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
         "default": "Standard",
-        "mountain_view": "Søgefelt øverst, apps til venstre"
+        "mountain_view": "Søgefelt øverst"
       },
       "animations": {
         "label": "Aktivér animationer",
@@ -3593,6 +3593,10 @@
       "sync_on": "Dine andre enheder bruger de samme indstillinger, så de ændres også.",
       "sync_off": "Dine andre enheder beholder deres indstillinger."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps og mapper til venstre, søgning over listen",
+    "mountain_view_description": "Søgning hen over toppen, beskeder åbner i fuld bredde"
   },
   "setup": {
     "title": "Opsætning af Bulwark Webmail",
@@ -6230,6 +6234,14 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "print_styles": {
+    "title": "Udskrivning",
+    "description": "Hvordan udskrevne beskeder, kontakter og kalendere ser ud.",
+    "style_label": "Udskriftsstil",
+    "style_description": "Tilføjelser kan tilføje stilarter, for eksempel et brevhoved med din virksomheds adresse.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installer vores app for hurtig adgang.",
@@ -7411,7 +7423,8 @@
     "pin_current": "Nuværende pinkode",
     "pin_new": "Ny pinkode",
     "pin_repeat": "Gentag pinkoden",
-    "pin_hint": "Mindst 6 tegn. Bogstaver virker også, og en længere pinkode er sværere at gætte.",
+    "pin_hint": "Mindst 5 tegn. Bogstaver virker også, og en længere pinkode er sværere at gætte.",
+    "pin_hint_policy": "Din organisation kræver mindst {count, plural, one {# tegn} other {# tegn}}. Bogstaver virker også.",
     "pin_obvious": "Den pinkode er for nem at gætte. Undgå gentagelser, rækkefølger og almindelige valg.",
     "pin_mismatch": "De to pinkoder er ikke ens.",
     "pin_recovery": "Hvis du glemmer den, er eneste udvej at fjerne dataene på denne enhed og logge ind igen. Din mail på serveren bliver. Beskeder, der stadig venter på at blive sendt fra denne enhed, går tabt.",

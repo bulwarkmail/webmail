@@ -209,6 +209,13 @@ export interface DesktopDialogsBridge {
   show?: (request: DesktopDialogWindowRequest) => Promise<DesktopDialogWindowAnswer>;
   /** Takes back a question asked with `show`, showing or waiting. */
   cancel?: (id: string) => void;
+  /**
+   * Shows the window this page opened with `window.open('', name)`, a name starting
+   * `bulwark-dialog-`: main made it a frameless, transparent modal child the size of this
+   * page, and the page has drawn one of its dialogs into it (lib/desktop/dialog-surface.ts).
+   * False when there is no such window. Absent on older shells.
+   */
+  showWindow?: (name: string) => Promise<boolean>;
 }
 
 /** Plain text throughout: the shell sets textContent only. */

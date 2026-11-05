@@ -16,6 +16,7 @@ import { doGetCheckText, doRecheck, doRegisterChecker, doSetAnnotations, doUnreg
 import { proxyAccounts, proxyCancel, proxyConnect, proxyDisconnect, proxyFetch, type StreamSink } from './proxy-client';
 import { checkActions, isActionSurface, setPluginActions } from './actions';
 import { checkDayLabels, setDayLabels } from './day-labels';
+import { registerPrintTheme, unregisterPrintTheme } from './print-themes';
 import { refreshRowBadges } from './row-badges';
 import { checkListFilters, setPluginListFilters } from './list-filters';
 import { checkPages, setPluginPages } from './pages';
@@ -269,6 +270,10 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.refreshRowBadges': null,
   'ui.setListFilters': 'ui:message-list',
   'ui.setDayLabels': 'ui:calendar-action',
+  // A print style the user may pick for printouts: sanitised CSS and a
+  // plain-text letterhead, applied only to printouts and only when picked.
+  'ui.registerPrintTheme': null,
+  'ui.unregisterPrintTheme': null,
   'ui.setPages': 'ui:app-page',
   // Move the tab to one of the plugin's own pages (never anywhere else).
   'ui.openPage': 'ui:app-page',
@@ -2084,6 +2089,8 @@ export async function dispatchApiCall(
     case 'ui.refreshRowBadges': refreshRowBadges(); return undefined;
     case 'ui.setListFilters': setPluginListFilters(plugin.id, plugin.name, checkListFilters(args[0])); return undefined;
     case 'ui.setDayLabels': setDayLabels(plugin.id, plugin.name, checkDayLabels(args[0])); return undefined;
+    case 'ui.registerPrintTheme': return registerPrintTheme(plugin.id, plugin.name, args[0]);
+    case 'ui.unregisterPrintTheme': unregisterPrintTheme(plugin.id, args[0]); return undefined;
     case 'ui.setPages': setPluginPages(plugin.id, plugin.name, checkPages(args[0])); return undefined;
     case 'ui.openPage': return requestPageNavigation(plugin.id, args[0], args[1]);
     case 'ui.openCalendar': return requestCalendarView(plugin, args[0]);

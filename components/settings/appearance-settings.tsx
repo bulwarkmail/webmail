@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight } from '@/components/icons';
 import { ThemesSettings } from './themes-settings';
 import { LayoutSection, SidebarSection, ExperimentalSection } from './layout-settings';
+import { PrintingSection } from './printing-settings';
 import { cn } from '@/lib/utils';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useConfig } from '@/hooks/use-config';
@@ -71,7 +72,8 @@ function DensityPreview({ density }: { density: Density }) {
 /**
  * The Appearance page: theme, text and motion, layout, sidebar, how several
  * accounts show together, and the experimental Pro interface. The former
- * Layout and Themes tabs live here as sections.
+ * Layout and Themes tabs live here as sections, and Printing (the print
+ * style add-ons can offer).
  */
 export function AppearanceSettings() {
   const t = useTranslations('settings.appearance');
@@ -133,6 +135,8 @@ export function AppearanceSettings() {
 
       <LayoutSection />
       <SidebarSection />
+
+      <PrintingSection />
 
       <ExperimentalSection />
     </div>
