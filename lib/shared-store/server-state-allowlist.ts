@@ -75,5 +75,6 @@ export const SERVER_STATE_ALLOWLIST: AllowedState[] = [
   { site: 'lib/timezone.ts#canonicalCache', class: 'cache', why: 'canonical time zone names, immutable' },
   { site: 'lib/timezone.ts#wallClockFormatterCache', class: 'cache', why: 'Intl formatters' },
   { site: 'lib/utils.ts#dateFormatters', class: 'cache', why: 'Intl formatters' },
+  { site: 'lib/utils.ts#formattedDates', class: 'cache', why: 'list dates by message time, settings and minute; capped at 2000' },
   { site: 'lib/wopi/files.ts#blobUrlCache', class: 'cache', why: 'JMAP blob URL templates per server, 5 min' },
 ];

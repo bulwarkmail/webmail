@@ -126,16 +126,44 @@ export function formatDate(
   const now = new Date();
 
   const locale = getEffectiveLocale();
+  // Three fields, not a copy of the whole settings store per call: every
+  // message row asks on every render.
+  const settings = useSettingsStore.getState();
+  const dateFormat = overrides && "dateFormat" in overrides ? overrides.dateFormat : settings.dateFormat;
+  const dateLocale = overrides && "dateLocale" in overrides ? overrides.dateLocale : settings.dateLocale;
+  const timeFormat = settings.timeFormat;
+  const timeZone = getEffectiveTimeZone();
+  // The same message, settings and minute give the same text.
+  const memoKey = `${d.getTime()}|${Math.floor(now.getTime() / 60000)}|${locale}|${dateFormat}|${dateLocale}|${timeFormat}|${timeZone}|${overrides?.listStyle ?? ""}`;
+  const memo = formattedDates.get(memoKey);
+  if (memo !== undefined) return memo;
+  if (formattedDates.size >= FORMATTED_DATES_MAX) formattedDates.clear();
+  const text = formatDateUncached(d, now, locale, dateFormat, dateLocale, timeFormat, timeZone, overrides?.listStyle);
+  formattedDates.set(memoKey, text);
+  return text;
+}
+
+const formattedDates = new Map<string, string>();
+const FORMATTED_DATES_MAX = 2_000;
+
+function formatDateUncached(
+  d: Date,
+  now: Date,
+  locale: string,
+  dateFormat: DateFormat | undefined,
+  dateLocale: DateLocale | undefined,
+  timeFormat: string | undefined,
+  timeZone: string,
+  listStyle: 'mountain-view' | undefined,
+): string {
   // Names (weekday, month) follow the UI language: `en` alone resolves to
   // en-US in Intl; everything else uses the language subtag as-is and lets
   // the runtime pick a sensible default region.
   const uiLocale = locale === "en" ? "en-US" : locale;
-  const { dateFormat, dateLocale, timeFormat } = { ...useSettingsStore.getState(), ...overrides };
   // Numeric dates additionally honour the regional `dateLocale` override
   // (defaults to `auto` = the UI language, preserving prior behaviour). (#456)
   const numericLocale = resolveDateLocale(dateLocale, uiLocale);
   const hour12 = timeFormat === "12h";
-  const timeZone = getEffectiveTimeZone();
 
   if (dateFormat === "relative") {
     const diff = now.getTime() - d.getTime();
@@ -186,7 +214,7 @@ export function formatDate(
     dWall.day === nowWall.day;
   if (isSameDay) return timeStr;
 
-  if (overrides?.listStyle === 'mountain-view') {
+  if (listStyle === 'mountain-view') {
     if (dWall.year === nowWall.year) {
       return cachedDateFormat(uiLocale, { timeZone, month: "short", day: "numeric" }).format(d);
     }

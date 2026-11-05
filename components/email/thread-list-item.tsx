@@ -41,7 +41,7 @@ import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { brandIndicatorDomain } from "@/lib/email-headers";
-import { useTranslations } from "next-intl";
+import { RowTranslatorsProvider, useRowTranslators } from "@/components/email/row-translators";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 
 /**
@@ -116,7 +116,7 @@ function useArmOnPointerOver(): [boolean, () => void] {
 }
 
 function UnreadDot({ besideAvatar }: { besideAvatar: boolean }) {
-  const t = useTranslations('email_viewer');
+  const t = useRowTranslators()!.viewer;
   return (
     <div
       className={cn('absolute -translate-y-1/2', besideAvatar ? '-start-2.5 top-1/2' : 'start-0.5')}
@@ -326,7 +326,7 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
  */
 function SourceFolderTag({ name: serverName, role, tight }: { name: string; role?: string; tight?: boolean }) {
   // The sidebar's name for the folder: "Sent", not the server's "Sent Items".
-  const tSidebar = useTranslations("sidebar");
+  const tSidebar = useRowTranslators()!.sidebar;
   const name = localizeMailboxName(role, serverName, (key) => tSidebar(`mailboxes.${key}`));
   return (
     <span
@@ -435,10 +435,7 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; b
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
-    const t = useTranslations('email_viewer');
-    const tBatch = useTranslations('email_list.batch_actions');
-    const tHover = useTranslations('settings.email_behavior.hover_actions');
-    const tStatus = useTranslations('email_list');
+    const { viewer: t, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tUnknown = t('unknown_sender');
     const tNoSubject = t('no_subject');
     const isUnread = !email.keywords?.$seen;
@@ -1045,8 +1042,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   }
 );
 
-export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
-  function ThreadListItem({
+const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ThreadListItemRow({
     onOpenAttachment,
     loadAttachments,
     thread,
@@ -1070,11 +1067,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onMarkAsSpam,
     onUndoSpam,
   }, ref) {
-    const t = useTranslations('threads');
-    const tEmailViewer = useTranslations('email_viewer');
-    const tBatch = useTranslations('email_list.batch_actions');
-    const tHover = useTranslations('settings.email_behavior.hover_actions');
-    const tStatus = useTranslations('email_list');
+    const { threads: t, viewer: tEmailViewer, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tNoSubject = tEmailViewer('no_subject');
     const showPreview = useSettingsStore((state) => state.showPreview);
     const density = useSettingsStore((state) => state.density);
@@ -1868,6 +1861,20 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
   }
 );
 
+ThreadListItemRow.displayName = "ThreadListItemRow";
+
+/**
+ * A message or conversation row. In a list the words come from the list's
+ * RowTranslatorsProvider; a row drawn on its own makes its own.
+ */
+export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ThreadListItem(props, ref) {
+    return useRowTranslators()
+      ? <ThreadListItemRow {...props} ref={ref} />
+      : <RowTranslatorsProvider><ThreadListItemRow {...props} ref={ref} /></RowTranslatorsProvider>;
+  }
+);
+
 ThreadListItem.displayName = "ThreadListItem";
 
 /**
@@ -1921,6 +1928,7 @@ export function areThreadRowPropsEqual(prev: ThreadListItemProps, next: ThreadLi
  * ThreadListItem for the message list. Opening a message, switching folder or
  * a late thread count re-rendered every row on screen; this one re-renders
  * only when something it draws has changed. Handlers are compared by
- * identity, so the list passes stable ones (see useStableHandlers).
+ * identity, so the list passes stable ones (see useStableHandlers). The list
+ * holds the RowTranslatorsProvider, so its rows skip ThreadListItem's check.
  */
-export const MemoizedThreadListItem = React.memo(ThreadListItem, areThreadRowPropsEqual);
+export const MemoizedThreadListItem = React.memo(ThreadListItemRow, areThreadRowPropsEqual);

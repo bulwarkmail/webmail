@@ -55,6 +55,7 @@ import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEm
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
+import { RowTranslatorsProvider } from "./row-translators";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
@@ -1213,6 +1214,7 @@ export function EmailList({
   const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
 
   return (
+    <RowTranslatorsProvider>
     <TagDisplayContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
       {/* Batch Actions Toolbar */}
@@ -1683,5 +1685,6 @@ export function EmailList({
       })()}
     </div>
     </TagDisplayContext.Provider>
+    </RowTranslatorsProvider>
   );
 }
