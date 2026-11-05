@@ -138,7 +138,6 @@ const days = (from: Date, to: Date) => {
 const nextMonday = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
 const thursday = addDays(nextMonday, 3);
 const tuesday = addDays(nextMonday, 8);
-const thisThursday = addDays(nextMonday, -4);
 
 test.describe('Creating by dragging over the calendar', () => {
   test.describe.configure({ mode: 'serial' });
@@ -314,16 +313,22 @@ test.describe('Creating by dragging over the calendar', () => {
 
   test('week: the event created is the range the selection showed, beside the event it overlaps', async ({ browser }) => {
     test.setTimeout(180_000);
-    const day = format(thisThursday, 'yyyy-MM-dd');
+    // A Thursday weeks away: the account's sample events are around today, and on a
+    // Thursday the drag below began on one of them (a resize handle at 11:15).
+    const day = format(addDays(thursday, 35), 'yyyy-MM-dd');
     await create(c, `${prefix} Lernblock`, `${day}T12:30:00`, 'PT1H');
     for (const dark of [false, true]) {
       const page = await signIn(browser, { dark });
       await view(page, 'w');
+      await page.goto(`/calendar/week/${day}`);
       const slot = page.locator(`[data-slot="${day}T11"]`);
+      await slot.waitFor({ timeout: 60000 });
       await slot.scrollIntoViewIfNeeded();
       const box = (await slot.boundingBox())!;
       const y = (minutes: number) => box.y + ((minutes - 660) / 60) * box.height;
       const x = box.x + box.width / 2;
+      // Nothing else where the drag begins.
+      expect(await page.evaluate(([px, py]) => !document.elementFromPoint(px, py)?.closest('[data-calendar-event]'), [x, y(675)])).toBe(true);
       await page.mouse.move(x, y(675));
       await page.mouse.down();
       for (let m = 690; m <= 975; m += 15) await page.mouse.move(x, y(m));
@@ -351,7 +356,8 @@ test.describe('Creating by dragging over the calendar', () => {
       if (!dark) {
         // Save without a title.
         await editor.getByRole('button', { name: 'Save' }).click();
-        const saved = await serverEvent(c, (o) => o.start === `${day}T11:15:00` && o.title === '(No title)');
+        // Untitled, not the words "(No title)" (0050c54b4).
+        const saved = await serverEvent(c, (o) => o.start === `${day}T11:15:00` && !o.title);
         untitled.push(saved.id);
         expect(saved.duration).toBe('PT5H');
         await page.waitForTimeout(1000);
