@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID huella dactilar cara llave de acceso passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacidad y seguridad",
+      "security": "Contraseña e inicio de sesión",
+      "about_updates": "Acerca de y actualizaciones",
+      "backup": "Copia de seguridad e importación"
+    },
+    "sections": {
+      "start": "Inicio y cierre",
+      "shortcuts": "Atajos desde otras aplicaciones",
+      "mail_links": "Enlaces y archivos de correo"
+    },
+    "privacy_link_description": "Estos ajustes están en la página Privacidad y seguridad."
+  },
   "desktop_policy": {
     "server_refused": "Tu organización no permite este servidor en este dispositivo.",
     "plugin_refused": "Tu organización no permite este complemento en este dispositivo, por lo que no se ejecuta. Se conservan sus ajustes y datos.",

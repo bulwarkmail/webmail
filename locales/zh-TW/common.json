@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID 指紋 臉部 密碼金鑰 passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "隱私與安全",
+      "security": "密碼與登入",
+      "about_updates": "關於與更新",
+      "backup": "備份與匯入"
+    },
+    "sections": {
+      "start": "啟動與關閉",
+      "shortcuts": "在其他應用程式中使用的快速鍵",
+      "mail_links": "郵件連結與檔案"
+    },
+    "privacy_link_description": "這些設定在「隱私與安全」頁面。"
+  },
   "desktop_policy": {
     "server_refused": "您的組織不允許在此裝置上使用此伺服器。",
     "plugin_refused": "您的組織不允許在此裝置上使用此外掛程式，因此不會執行。其設定和資料會保留。",

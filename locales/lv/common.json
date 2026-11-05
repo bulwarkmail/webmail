@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID pirkstu nospiedums seja piekļuves atslēga passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privātums un drošība",
+      "security": "Parole un pierakstīšanās",
+      "about_updates": "Par un atjauninājumi",
+      "backup": "Dublēšana un importēšana"
+    },
+    "sections": {
+      "start": "Palaišana un aizvēršana",
+      "shortcuts": "Īsinājumtaustiņi no citām lietotnēm",
+      "mail_links": "Pasta saites un faili"
+    },
+    "privacy_link_description": "Šie iestatījumi ir lapā Privātums un drošība."
+  },
   "desktop_policy": {
     "server_refused": "Jūsu organizācija šajā ierīcē neatļauj šo serveri.",
     "plugin_refused": "Jūsu organizācija šajā ierīcē neatļauj šo spraudni, tāpēc tas nedarbojas. Tā iestatījumi un dati tiek saglabāti.",

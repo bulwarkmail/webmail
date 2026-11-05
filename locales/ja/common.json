@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID 指紋 顔認証 パスキー passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "プライバシーとセキュリティ",
+      "security": "パスワードとサインイン",
+      "about_updates": "情報とアップデート",
+      "backup": "バックアップとインポート"
+    },
+    "sections": {
+      "start": "起動と終了",
+      "shortcuts": "他のアプリからのショートカット",
+      "mail_links": "メールのリンクとファイル"
+    },
+    "privacy_link_description": "これらの設定は「プライバシーとセキュリティ」ページにあります。"
+  },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",
     "plugin_refused": "組織はこのデバイスでこのプラグインを許可していないため、実行されません。設定とデータは保持されます。",

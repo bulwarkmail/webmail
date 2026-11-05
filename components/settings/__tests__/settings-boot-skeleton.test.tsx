@@ -93,8 +93,10 @@ describe('Settings while the session restores', () => {
     const shown = [...document.querySelectorAll('[data-testid^="settings-tab-"]')]
       .map((el) => el.getAttribute('data-testid')!.slice('settings-tab-'.length));
     // Recovery waits for a server probe this test doesn't answer; Files on
-    // this computer for the desktop app's sync engine.
-    const drawn = SETTINGS_NAV_GROUPS.flatMap((g) => g.tabs).filter((tab) => tab !== 'recovery' && tab !== 'files_sync');
+    // this computer for the desktop app's sync engine. Desktop app is the
+    // desktop app's, and Troubleshooting waits for advanced settings.
+    const drawn = SETTINGS_NAV_GROUPS.flatMap((g) => g.tabs)
+      .filter((tab) => !['recovery', 'files_sync', 'desktop', 'troubleshooting'].includes(tab));
     expect(shown).toEqual(drawn);
   });
 

@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID amprentă față cheie de acces passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Confidențialitate și securitate",
+      "security": "Parolă și conectare",
+      "about_updates": "Despre și actualizări",
+      "backup": "Copie de rezervă și import"
+    },
+    "sections": {
+      "start": "Pornire și închidere",
+      "shortcuts": "Comenzi rapide din alte aplicații",
+      "mail_links": "Linkuri și fișiere de e-mail"
+    },
+    "privacy_link_description": "Aceste setări sunt pe pagina Confidențialitate și securitate."
+  },
   "desktop_policy": {
     "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
     "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",

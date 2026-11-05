@@ -48,7 +48,7 @@ async function enableOffline(page: Page, go = hardGoto): Promise<void> {
 }
 
 async function enableLock(page: Page, pin = PIN, go = hardGoto): Promise<void> {
-  await go(page, '/settings/general');
+  await go(page, '/settings/privacy');
   const toggle = page.getByTestId('app-lock-switch');
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
@@ -60,7 +60,7 @@ async function enableLock(page: Page, pin = PIN, go = hardGoto): Promise<void> {
 }
 
 async function lockNow(page: Page): Promise<void> {
-  if (!page.url().includes('/settings/general')) await gotoUnlocked(page, '/settings/general');
+  if (!page.url().includes('/settings/privacy')) await gotoUnlocked(page, '/settings/privacy');
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
 }
@@ -149,7 +149,7 @@ async function fresh(browser: Browser): Promise<{ page: Page; context: BrowserCo
 
 test('off by default: nothing changes and no record is wrapped', async ({ browser }) => {
   const { page, context } = await fresh(browser);
-  await page.goto('/settings/general');
+  await page.goto('/settings/privacy');
   await expect(page.getByTestId('app-lock-switch')).toHaveAttribute('aria-checked', 'false', { timeout: 30_000 });
   expect(await page.evaluate(() => document.documentElement.hasAttribute('data-app-locked'))).toBe(false);
   expect(await heldLocks(page)).not.toContain('bulwark-app-lock-holder');
@@ -172,7 +172,7 @@ test('locked: no mail in the page, its memory gone, the store closed with no key
   expect(await heldLocks(page)).toContain('bulwark-store-owner');
   expect(await heldLocks(page)).toContain('bulwark-app-lock-holder');
 
-  await gotoUnlocked(page, '/settings/general');
+  await gotoUnlocked(page, '/settings/privacy');
   await page.evaluate(() => { (window as unknown as { __before: string }).__before = 'still here'; });
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
@@ -558,7 +558,7 @@ test('locked offline, with the shell kept: the page still reloads, so nothing st
   await enableOffline(page);
   await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration()) ? (await caches.keys()).filter((key) => key.startsWith('bulwark-shell-')).length : 0), { timeout: 60_000 }).toBeGreaterThan(0);
   await enableLock(page);
-  await page.goto('/settings/general');
+  await page.goto('/settings/privacy');
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
   await unlock(page);
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)), { timeout: 30_000 }).toBe(true);
@@ -574,12 +574,12 @@ test('a server answering 5xx: the lock holds on the page, and the reload comes w
   const { page, context } = await fresh(browser);
   await enableLock(page);
   await page.evaluate(() => { (window as unknown as { __before: string }).__before = 'still here'; });
-  await context.route('**/settings/general*', (route) => route.fulfill({ status: 503, body: 'down' }));
+  await context.route('**/settings/privacy*', (route) => route.fulfill({ status: 503, body: 'down' }));
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 60_000 });
   expect(await page.evaluate(() => (window as unknown as { __before?: string }).__before), 'stayed').toBe('still here');
   await expect(page.locator('body')).not.toContainText('Lock now');
-  await context.unroute('**/settings/general*');
+  await context.unroute('**/settings/privacy*');
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   // The reload can come in the middle of a look.
   await expect.poll(() => page.evaluate(() => (window as unknown as { __before?: string }).__before).catch(() => 'reloading'), { timeout: 30_000 }).toBeUndefined();

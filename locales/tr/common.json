@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID parmak izi yüz geçiş anahtarı passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Gizlilik ve güvenlik",
+      "security": "Parola ve oturum açma",
+      "about_updates": "Hakkında ve güncellemeler",
+      "backup": "Yedekleme ve içe aktarma"
+    },
+    "sections": {
+      "start": "Başlatma ve kapatma",
+      "shortcuts": "Diğer uygulamalardan kısayollar",
+      "mail_links": "E-posta bağlantıları ve dosyaları"
+    },
+    "privacy_link_description": "Bu ayarlar Gizlilik ve güvenlik sayfasındadır."
+  },
   "desktop_policy": {
     "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",
     "plugin_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor, bu yüzden çalışmıyor. Ayarları ve verileri korunur.",

@@ -68,6 +68,8 @@ const pages = {
   offline: (await import('@/components/offline/offline-settings')).OfflineSettings,
   privacy: (await import('../privacy-settings')).PrivacySettings,
   about: (await import('../about-data-settings')).AboutSettings,
+  desktop: (await import('../desktop-app-settings')).DesktopAppSettings,
+  troubleshooting: (await import('../about-data-settings')).TroubleshootingSettings,
 };
 
 const OVERRIDES: Record<string, () => unknown> = {
@@ -79,7 +81,7 @@ const OVERRIDES: Record<string, () => unknown> = {
   getPrincipals: async () => [], listArchivedEmails: async () => ({ items: [], nextPosition: null }),
 };
 /** Pages with rows of the desktop app's own, or browser rows it hides. */
-const DESKTOP_PAGES = new Set(['general', 'notifications', 'privacy', 'backup', 'files_sync']);
+const DESKTOP_PAGES = new Set(['general', 'notifications', 'privacy', 'backup', 'files_sync', 'desktop', 'troubleshooting', 'about']);
 
 /** The desktop app's bridge, answering as Windows does, with every switch off. */
 const DESKTOP_BRIDGE = {
@@ -126,7 +128,7 @@ const TAB_PAGES: Record<string, string[]> = {
   message_list: ['message_list'], reading: ['reading'], composing: ['composing'], vacation: ['vacation'],
   filters: ['filters'], organize: ['organize'], security: ['security'], sharing: ['sharing'], recovery: ['recovery'], calendar: ['calendar', 'calendar2'],
   contacts: ['contacts', 'contacts2'], files: ['files'], files_sync: ['files_sync'], addons: ['addons'], backup: ['backup'],
-  offline: ['offline'], privacy: ['privacy'], about: ['about'],
+  offline: ['offline'], privacy: ['privacy'], about: ['about'], desktop: ['desktop'], troubleshooting: ['troubleshooting'],
 };
 
 /** The stores every page reads, answering as a signed-in account with every feature. */
@@ -315,6 +317,10 @@ describe('settings search results for advanced rows', () => {
           await act(async () => { await new Promise((resolve) => setTimeout(resolve, 80)); });
           found = document.querySelector(selector);
         }
+        // A row the page loads first (the desktop app's developer tools) can turn up while every
+        // advanced block still draws to look for it: give the page one more look to settle.
+        await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
+        found = document.querySelector(selector);
         if (before) problems.push(`${tab}: ${entry.label} shows with Advanced off`);
         if (!found) problems.push(`${tab}: ${entry.label} ("${text}") does not show after its result is opened`);
         if (useSettingsStore.getState().showAdvancedSettings) problems.push(`${tab}: ${entry.label} turned the Advanced switch on`);

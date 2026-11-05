@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID vingerafdruk gezicht passkey toegangssleutel"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy en beveiliging",
+      "security": "Wachtwoord en inloggen",
+      "about_updates": "Over en updates",
+      "backup": "Back-up en importeren"
+    },
+    "sections": {
+      "start": "Starten en sluiten",
+      "shortcuts": "Sneltoetsen vanuit andere apps",
+      "mail_links": "Maillinks en -bestanden"
+    },
+    "privacy_link_description": "Deze instellingen staan op de pagina Privacy en beveiliging."
+  },
   "desktop_policy": {
     "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",
     "plugin_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat, dus hij draait niet. De instellingen en gegevens blijven bewaard.",

@@ -272,6 +272,7 @@ export {
   IconVideo as Video,
   IconVolume2 as Volume2,
   IconVolumeOff as VolumeOff,
+  IconTool as Wrench,
   IconX as X,
   IconCircleX as XCircle,
   IconBolt as Zap,

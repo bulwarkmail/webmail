@@ -8078,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID odcisk palca twarz klucz dostępu passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Prywatność i bezpieczeństwo",
+      "security": "Hasło i logowanie",
+      "about_updates": "Informacje i aktualizacje",
+      "backup": "Kopia zapasowa i import"
+    },
+    "sections": {
+      "start": "Uruchamianie i zamykanie",
+      "shortcuts": "Skróty z innych aplikacji",
+      "mail_links": "Linki i pliki poczty"
+    },
+    "privacy_link_description": "Te ustawienia są na stronie Prywatność i bezpieczeństwo."
+  },
   "desktop_policy": {
     "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",
     "plugin_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu, więc nie działa. Jej ustawienia i dane zostają zachowane.",
