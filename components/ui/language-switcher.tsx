@@ -27,6 +27,7 @@ const LANGUAGES = [
   { value: 'lv', label: 'Latviešu' },
   { value: 'nl', label: 'Nederlands' },
   { value: 'nb', label: 'Norsk bokmål' },
+  { value: 'nn', label: 'Norsk nynorsk' },
   { value: 'pl', label: 'Polski' },
   { value: 'pt', label: 'Português' },
   { value: 'ro', label: 'Română' },

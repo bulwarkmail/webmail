@@ -81,6 +81,7 @@ describe('findUnfilledPlaceholders', () => {
     ['lv', '[Jūsu vārds]'],
     ['mn', '[Таны нэр]'],
     ['nb', '[Ditt navn]'],
+    ['nn', '[Ditt namn]'],
     ['nl', '[Uw naam]'],
     ['nl', '[Datum invullen]'],
     ['pl', '[Twoje imię]'],

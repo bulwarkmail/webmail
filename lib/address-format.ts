@@ -93,7 +93,7 @@ export function countryCodeFromName(country: string | undefined | null): string 
 
 // The country a UI language most likely means, for addresses without one.
 const LANGUAGE_COUNTRY: Record<string, string> = {
-  de: "DE", nl: "NL", it: "IT", es: "ES", ca: "ES", pt: "PT", da: "DK", nb: "NO", sv: "SE", fi: "FI",
+  de: "DE", nl: "NL", it: "IT", es: "ES", ca: "ES", pt: "PT", da: "DK", nb: "NO", nn: "NO", sv: "SE", fi: "FI",
   pl: "PL", cs: "CZ", sk: "SK", hu: "HU", ro: "RO", tr: "TR", et: "EE", lv: "LV", lt: "LT", ru: "RU",
   uk: "UA", el: "GR", fr: "FR", en: "US",
 };

@@ -175,6 +175,7 @@ export const flagComponents: Record<string, (props: FlagProps) => ReactElement> 
   lv: FlagLV,
   nl: FlagNL,
   nb: FlagNO,
+  nn: FlagNO,
   pl: FlagPL,
   pt: FlagBR,
   ro: FlagRO,
