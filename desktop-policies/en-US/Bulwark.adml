@@ -43,6 +43,8 @@
       <string id="AppLockRequired_Explain">When enabled, people must set up the app lock and cannot turn it off.</string>
       <string id="AppLockTimeoutMinutes">Lock the app after</string>
       <string id="AppLockTimeoutMinutes_Explain">How many minutes without use the app stays unlocked. From 1 to 1440.</string>
+      <string id="AppLockHelloAllowed">Allow unlocking the app with Windows Hello</string>
+      <string id="AppLockHelloAllowed_Explain">When enabled or not configured, people can unlock the app lock with Windows Hello as well as with its PIN. When disabled, the option is hidden, and Windows Hello no longer unlocks the app where it was set up: the PIN is needed. Windows only.</string>
       <string id="TelemetryAllowed">Allow usage statistics</string>
       <string id="TelemetryAllowed_Explain">When disabled, the app sends no usage statistics and does not ask. When enabled or not configured, it still asks the user first.</string>
       <string id="CrashReportsAllowed">Allow crash reports</string>

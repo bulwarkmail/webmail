@@ -10,10 +10,20 @@ vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Bulwark' })
 
 const unlockWithPin = vi.hoisted(() => vi.fn());
 const forgetEverything = vi.hoisted(() => vi.fn());
+const helloState = vi.hoisted(() => vi.fn());
+const unlockWithHello = vi.hoisted(() => vi.fn());
+const cancelHello = vi.hoisted(() => vi.fn());
+const enableHello = vi.hoisted(() => vi.fn());
+const disableHello = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/app-lock/controller', async (original) => ({
   ...(await original<typeof import('@/lib/app-lock/controller')>()),
   unlockWithPin,
   forgetEverything,
+  helloState,
+  unlockWithHello,
+  cancelHello,
+  enableHello,
+  disableHello,
 }));
 
 function setPolicy(required: boolean, minutes: number | null, locked: boolean): void {
@@ -35,6 +45,10 @@ beforeEach(async () => {
   localStorage.clear();
   unlockWithPin.mockReset();
   forgetEverything.mockReset();
+  for (const mock of [unlockWithHello, cancelHello, enableHello, disableHello]) mock.mockReset();
+  helloState.mockReset();
+  // A browser, or a shell without Hello: what the tests above expect.
+  helloState.mockResolvedValue({ shown: false, on: false });
 });
 
 afterEach(() => {
@@ -213,5 +227,128 @@ describe('the settings', () => {
     const select = screen.getByTestId('app-lock-timeout');
     expect(select).toHaveValue('30');
     expect(select.closest('[inert]')).toBeNull();
+  });
+});
+
+describe('Windows Hello on the lock screen', () => {
+  beforeEach(async () => {
+    (await createVault('correct-pin')).fill(0);
+    helloState.mockResolvedValue({ shown: true, on: true });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('asks Hello first when the window has the focus, with the PIN a click away', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    unlockWithHello.mockReturnValue(new Promise(() => {}));
+    render(<LockScreen phase="locked" />);
+    await waitFor(() => expect(unlockWithHello).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('dialog')).toHaveTextContent('waiting');
+    expect(screen.queryByTestId('app-lock-pin')).toBeNull();
+    fireEvent.click(screen.getByTestId('app-lock-use-pin'));
+    expect(cancelHello).toHaveBeenCalledTimes(1);
+    expect(await screen.findByTestId('app-lock-pin')).toBeInTheDocument();
+    expect(screen.getByTestId('app-lock-hello-button')).toBeInTheDocument();
+  });
+
+  it('waits for the focus before it asks: a prompt nobody sees only times out', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    unlockWithHello.mockReturnValue(new Promise(() => {}));
+    render(<LockScreen phase="locked" />);
+    expect(await screen.findByTestId('app-lock-hello')).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(unlockWithHello).not.toHaveBeenCalled();
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    await waitFor(() => expect(unlockWithHello).toHaveBeenCalledTimes(1));
+    act(() => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(unlockWithHello).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the PIN when Hello fails, and says so; a cancel says nothing', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    unlockWithHello.mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'HelloError', reason: 'failed' }));
+    render(<LockScreen phase="locked" />);
+    // The PIN form shows until the lock screen knows Hello is on.
+    await waitFor(() => expect(unlockWithHello).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByTestId('app-lock-message')).toHaveTextContent('failed'));
+    expect(screen.getByTestId('app-lock-pin')).toBeInTheDocument();
+    unlockWithHello.mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'HelloError', reason: 'cancelled' }));
+    fireEvent.click(screen.getByTestId('app-lock-hello-button'));
+    await waitFor(() => expect(unlockWithHello).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByTestId('app-lock-pin')).toBeInTheDocument());
+    expect(screen.getByTestId('app-lock-message')).toHaveTextContent(/^$/);
+  });
+
+  it('a key credential that is gone takes the Hello button with it', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    unlockWithHello.mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'HelloError', reason: 'missing' }));
+    render(<LockScreen phase="locked" />);
+    await waitFor(() => expect(screen.getByTestId('app-lock-message')).toHaveTextContent('gone'));
+    expect(screen.getByTestId('app-lock-pin')).toBeInTheDocument();
+    expect(screen.queryByTestId('app-lock-hello-button')).toBeNull();
+  });
+
+  it('with Hello off it is the PIN, as before', async () => {
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+    helloState.mockResolvedValue({ shown: true, on: false });
+    render(<LockScreen phase="locked" />);
+    expect(await screen.findByTestId('app-lock-pin')).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(unlockWithHello).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('app-lock-hello-button')).toBeNull();
+  });
+});
+
+describe('Windows Hello in the settings', () => {
+  beforeEach(() => {
+    writeAppLockFile({ on: true, locked: false });
+  });
+
+  it('shows a switch under the PIN where Hello can unlock, and turns it on with the PIN', async () => {
+    helloState.mockResolvedValue({ shown: true, on: false });
+    enableHello.mockResolvedValue(undefined);
+    render(<AppLockSettings />);
+    const toggle = await screen.findByTestId('app-lock-hello-switch');
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByText('protects')).toBeInTheDocument();
+    fireEvent.click(toggle);
+    fireEvent.change(await screen.findByTestId('app-lock-current-pin'), { target: { value: 'correct-pin' } });
+    fireEvent.click(screen.getByTestId('app-lock-dialog-save'));
+    await waitFor(() => expect(enableHello).toHaveBeenCalledWith('correct-pin'));
+  });
+
+  it('says why Hello couldn\'t be turned on', async () => {
+    helloState.mockResolvedValue({ shown: true, on: false });
+    enableHello.mockRejectedValue(Object.assign(new Error('x'), { name: 'HelloError', reason: 'unsupported' }));
+    render(<AppLockSettings />);
+    fireEvent.click(await screen.findByTestId('app-lock-hello-switch'));
+    fireEvent.change(await screen.findByTestId('app-lock-current-pin'), { target: { value: 'correct-pin' } });
+    fireEvent.click(screen.getByTestId('app-lock-dialog-save'));
+    expect(await screen.findByText('unsupported')).toBeInTheDocument();
+  });
+
+  it('turns it off without the PIN: that only narrows', async () => {
+    helloState.mockResolvedValue({ shown: true, on: true });
+    disableHello.mockResolvedValue(undefined);
+    render(<AppLockSettings />);
+    const toggle = await screen.findByTestId('app-lock-hello-switch');
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'));
+    fireEvent.click(toggle);
+    await waitFor(() => expect(disableHello).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('app-lock-current-pin')).toBeNull();
+  });
+
+  it('shows no switch and no Hello text where Hello can\'t unlock', async () => {
+    helloState.mockResolvedValue({ shown: false, on: false });
+    render(<AppLockSettings />);
+    await waitFor(() => expect(helloState).toHaveBeenCalled());
+    expect(screen.queryByTestId('app-lock-hello-switch')).toBeNull();
+    expect(screen.queryByText('protects')).toBeNull();
   });
 });

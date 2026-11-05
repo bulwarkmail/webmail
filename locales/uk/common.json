@@ -7471,6 +7471,25 @@
     "blocked_seconds": "Забагато спроб. Повторіть через {count, plural, one {# секунду} few {# секунди} many {# секунд} other {# секунди}}.",
     "blocked_minutes": "Забагато спроб. Повторіть через {count, plural, one {# хвилину} few {# хвилини} many {# хвилин} other {# хвилини}}."
   },
+  "appLockHello": {
+    "switch_label": "Розблоковувати за допомогою Windows Hello",
+    "switch_desc": "Обличчя, відбиток пальця або PIN-код Windows. PIN-код застосунку й далі працює.",
+    "protects": "Коли Windows Hello увімкнено, Windows зберігає для цього застосунку ключ, який працює лише після того, як Windows Hello перевірить, що це ви. Ключ застосунку також замкнено цим ключем, тож для розблокування потрібні ваше обличчя, відбиток пальця або PIN-код Windows, і інша програма на цьому комп'ютері не може скористатися ключем, поки Windows спершу не запитає вас. PIN-код застосунку й далі працює, і він знадобиться, якщо Windows Hello скинуть або вимкнуть.",
+    "enable_title": "Увімкнути Windows Hello",
+    "enable_body": "Введіть PIN-код застосунку. Потім Windows попросить підтвердити за допомогою Windows Hello.",
+    "enable_failed": "Не вдалося увімкнути Windows Hello. Спробуйте ще раз.",
+    "cancelled": "Windows Hello скасовано.",
+    "unsupported": "Windows Hello на цьому комп'ютері не може захистити ключ. Ваш PIN-код і далі працює.",
+    "unavailable": "Windows Hello недоступний на цьому комп'ютері.",
+    "busy": "Windows Hello зайнятий або заблокований. Спробуйте пізніше.",
+    "off_after_pin_change": "Windows Hello тепер вимкнено, бо він не підтвердив після зміни PIN-коду. Увімкніть його знову, якщо користуєтеся ним.",
+    "prompt": "Підтвердьте за допомогою Windows Hello, що це ви.",
+    "waiting": "Очікування Windows Hello…",
+    "use_hello": "Розблокувати за допомогою Windows Hello",
+    "use_pin": "Ввести PIN-код",
+    "failed": "Windows Hello не розблокував застосунок. Введіть PIN-код.",
+    "gone": "Windows Hello більше не розблоковує застосунок на цьому комп'ютері. Введіть PIN-код."
+  },
   "uxs_general": {
     "time_zone_common": "Поширені часові пояси",
     "time_zone_all": "Усі часові пояси",

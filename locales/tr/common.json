@@ -7471,6 +7471,25 @@
     "blocked_seconds": "Çok fazla deneme. {count, plural, one {# saniye} other {# saniye}} sonra yeniden deneyin.",
     "blocked_minutes": "Çok fazla deneme. {count, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin."
   },
+  "appLockHello": {
+    "switch_label": "Windows Hello ile kilidi aç",
+    "switch_desc": "Yüzünüzü, parmak izinizi veya Windows PIN'inizi kullanın. Uygulamanın PIN'i çalışmaya devam eder.",
+    "protects": "Windows Hello açıkken Windows bu uygulama için yalnızca Windows Hello sizin olduğunuzu doğruladıktan sonra çalışan bir anahtar saklar. Uygulamanın anahtarı da bununla kilitlenir; bu yüzden kilidi açmak için yüzünüz, parmak iziniz veya Windows PIN'iniz gerekir ve bu bilgisayardaki başka bir program, Windows önce size sormadan bu anahtarı kullanamaz. Uygulamanın PIN'i çalışmaya devam eder ve Windows Hello sıfırlanır veya kapatılırsa ona ihtiyacınız olur.",
+    "enable_title": "Windows Hello'yu aç",
+    "enable_body": "Uygulamanın PIN'ini girin. Ardından Windows, Windows Hello ile onaylamanızı ister.",
+    "enable_failed": "Windows Hello açılamadı. Yeniden deneyin.",
+    "cancelled": "Windows Hello iptal edildi.",
+    "unsupported": "Bu bilgisayardaki Windows Hello anahtarı koruyamıyor. PIN'iniz çalışmaya devam eder.",
+    "unavailable": "Windows Hello bu bilgisayarda kullanılamıyor.",
+    "busy": "Windows Hello meşgul veya kilitli. Daha sonra yeniden deneyin.",
+    "off_after_pin_change": "Windows Hello şimdi kapalı, çünkü PIN değişikliğinden sonra onay vermedi. Kullanıyorsanız yeniden açın.",
+    "prompt": "Windows Hello ile siz olduğunuzu onaylayın.",
+    "waiting": "Windows Hello bekleniyor…",
+    "use_hello": "Windows Hello ile kilidi aç",
+    "use_pin": "Bunun yerine PIN kullan",
+    "failed": "Windows Hello uygulamanın kilidini açmadı. PIN'inizi girin.",
+    "gone": "Windows Hello artık bu bilgisayarda uygulamanın kilidini açmıyor. PIN'inizi girin."
+  },
   "uxs_general": {
     "time_zone_common": "Sık kullanılan saat dilimleri",
     "time_zone_all": "Tüm saat dilimleri",

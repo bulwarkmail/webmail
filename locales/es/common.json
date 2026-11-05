@@ -7471,6 +7471,25 @@
     "blocked_seconds": "Demasiados intentos. Inténtelo de nuevo en {count, plural, one {# segundo} other {# segundos}}.",
     "blocked_minutes": "Demasiados intentos. Inténtelo de nuevo en {count, plural, one {# minuto} other {# minutos}}."
   },
+  "appLockHello": {
+    "switch_label": "Desbloquear con Windows Hello",
+    "switch_desc": "Use su cara, su huella o su PIN de Windows. El PIN de la app sigue funcionando.",
+    "protects": "Con Windows Hello activado, Windows guarda para esta app una clave que solo funciona después de que Windows Hello compruebe que es usted. La clave de la app también queda bloqueada con ella, así que para desbloquear hace falta su cara, su huella o su PIN de Windows, y otro programa de este ordenador no puede usar esa clave sin que Windows se lo pregunte antes. El PIN de la app sigue funcionando, y lo necesitará si Windows Hello se restablece o se desactiva.",
+    "enable_title": "Activar Windows Hello",
+    "enable_body": "Escriba el PIN de la app. Después, Windows le pedirá que confirme con Windows Hello.",
+    "enable_failed": "No se ha podido activar Windows Hello. Inténtelo de nuevo.",
+    "cancelled": "Se ha cancelado Windows Hello.",
+    "unsupported": "Windows Hello no puede proteger la clave en este ordenador. Su PIN sigue funcionando.",
+    "unavailable": "Windows Hello no está disponible en este ordenador.",
+    "busy": "Windows Hello está ocupado o bloqueado. Inténtelo más tarde.",
+    "off_after_pin_change": "Windows Hello se ha desactivado porque no confirmó después del cambio de PIN. Vuelva a activarlo si lo usa.",
+    "prompt": "Confirme que es usted con Windows Hello.",
+    "waiting": "Esperando a Windows Hello…",
+    "use_hello": "Desbloquear con Windows Hello",
+    "use_pin": "Usar el PIN",
+    "failed": "Windows Hello no ha desbloqueado la app. Escriba su PIN.",
+    "gone": "Windows Hello ya no desbloquea la app en este ordenador. Escriba su PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Zonas horarias habituales",
     "time_zone_all": "Todas las zonas horarias",

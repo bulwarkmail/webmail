@@ -132,6 +132,12 @@
       <decimal id="AppLockTimeoutMinutes_Recommended_Value" valueName="AppLockTimeoutMinutes" required="true" minValue="1" maxValue="1440"/>
     </elements>
   </policy>
+  <policy name="AppLockHelloAllowed" class="Both" displayName="$(string.AppLockHelloAllowed)" explainText="$(string.AppLockHelloAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AppLockHelloAllowed">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
   <policy name="TelemetryAllowed" class="Both" displayName="$(string.TelemetryAllowed)" explainText="$(string.TelemetryAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="TelemetryAllowed">
     <parentCategory ref="Bulwark_Desktop_privacy"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>

@@ -43,6 +43,8 @@
       <string id="AppLockRequired_Explain">Wenn aktiviert, müssen Benutzer die App-Sperre einrichten und können sie nicht ausschalten.</string>
       <string id="AppLockTimeoutMinutes">App sperren nach</string>
       <string id="AppLockTimeoutMinutes_Explain">Wie viele Minuten ohne Nutzung die App entsperrt bleibt. Von 1 bis 1440.</string>
+      <string id="AppLockHelloAllowed">Entsperren der App mit Windows Hello erlauben</string>
+      <string id="AppLockHelloAllowed_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer die App-Sperre außer mit ihrer PIN auch mit Windows Hello aufheben. Wenn deaktiviert, wird die Option ausgeblendet, und Windows Hello entsperrt die App auch dort nicht mehr, wo es eingerichtet war: Dann ist die PIN nötig. Nur unter Windows.</string>
       <string id="TelemetryAllowed">Nutzungsstatistiken zulassen</string>
       <string id="TelemetryAllowed_Explain">Wenn deaktiviert, sendet die App keine Nutzungsstatistiken und fragt nicht danach. Wenn aktiviert oder nicht konfiguriert, fragt sie den Benutzer trotzdem zuerst.</string>
       <string id="CrashReportsAllowed">Absturzberichte zulassen</string>

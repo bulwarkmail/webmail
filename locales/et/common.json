@@ -7471,6 +7471,25 @@
     "blocked_seconds": "Liiga palju katseid. Proovige uuesti {count, plural, one {# sekundi} other {# sekundi}} pärast.",
     "blocked_minutes": "Liiga palju katseid. Proovige uuesti {count, plural, one {# minuti} other {# minuti}} pärast."
   },
+  "appLockHello": {
+    "switch_label": "Ava Windows Helloga",
+    "switch_desc": "Kasutage nägu, sõrmejälge või Windowsi PIN-koodi. Rakenduse PIN-kood töötab edasi.",
+    "protects": "Kui Windows Hello on sees, hoiab Windows selle rakenduse jaoks võtit, mis töötab alles siis, kui Windows Hello on kontrollinud, et see olete teie. Ka rakenduse võti on sellega lukustatud, nii et avamiseks on vaja teie nägu, sõrmejälge või Windowsi PIN-koodi, ja muu programm selles arvutis ei saa seda võtit kasutada, ilma et Windows teilt enne küsiks. Rakenduse PIN-kood töötab edasi ja seda on vaja, kui Windows Hello lähtestatakse või välja lülitatakse.",
+    "enable_title": "Lülita Windows Hello sisse",
+    "enable_body": "Sisestage rakenduse PIN-kood. Seejärel palub Windows teil kinnitada Windows Helloga.",
+    "enable_failed": "Windows Hellot ei õnnestunud sisse lülitada. Proovige uuesti.",
+    "cancelled": "Windows Hello tühistati.",
+    "unsupported": "Windows Hello ei saa selles arvutis võtit kaitsta. Teie PIN-kood töötab edasi.",
+    "unavailable": "Windows Hello pole selles arvutis saadaval.",
+    "busy": "Windows Hello on hõivatud või lukus. Proovige hiljem uuesti.",
+    "off_after_pin_change": "Windows Hello on nüüd väljas, sest see ei kinnitanud pärast PIN-koodi muutmist. Lülitage see uuesti sisse, kui seda kasutate.",
+    "prompt": "Kinnitage Windows Helloga, et see olete teie.",
+    "waiting": "Windows Hello ootamine…",
+    "use_hello": "Ava Windows Helloga",
+    "use_pin": "Kasuta hoopis PIN-koodi",
+    "failed": "Windows Hello ei avanud rakendust. Sisestage PIN-kood.",
+    "gone": "Windows Hello ei ava selles arvutis enam rakendust. Sisestage PIN-kood."
+  },
   "uxs_general": {
     "time_zone_common": "Levinud ajavööndid",
     "time_zone_all": "Kõik ajavööndid",

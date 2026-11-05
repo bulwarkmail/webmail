@@ -7471,6 +7471,25 @@
     "blocked_seconds": "Te veel pogingen. Probeer het over {count, plural, one {# seconde} other {# seconden}} opnieuw.",
     "blocked_minutes": "Te veel pogingen. Probeer het over {count, plural, one {# minuut} other {# minuten}} opnieuw."
   },
+  "appLockHello": {
+    "switch_label": "Ontgrendelen met Windows Hello",
+    "switch_desc": "Met uw gezicht, vingerafdruk of Windows-pincode. De pincode van de app blijft werken.",
+    "protects": "Met Windows Hello aan bewaart Windows voor deze app een sleutel die pas werkt nadat Windows Hello heeft gecontroleerd dat u het bent. De sleutel van de app wordt daar ook mee vergrendeld. Ontgrendelen vraagt dan om uw gezicht, vingerafdruk of Windows-pincode, en een ander programma op deze computer kan die sleutel niet gebruiken zonder dat Windows het u eerst vraagt. De pincode van de app blijft werken, en die hebt u nodig als Windows Hello wordt hersteld of uitgezet.",
+    "enable_title": "Windows Hello aanzetten",
+    "enable_body": "Voer de pincode van de app in. Daarna vraagt Windows u te bevestigen met Windows Hello.",
+    "enable_failed": "Windows Hello kon niet worden aangezet. Probeer het opnieuw.",
+    "cancelled": "Windows Hello is geannuleerd.",
+    "unsupported": "Windows Hello kan de sleutel op deze computer niet beschermen. Uw pincode blijft werken.",
+    "unavailable": "Windows Hello is niet beschikbaar op deze computer.",
+    "busy": "Windows Hello is bezet of geblokkeerd. Probeer het later opnieuw.",
+    "off_after_pin_change": "Windows Hello staat nu uit, omdat het na het wijzigen van de pincode niet heeft bevestigd. Zet het weer aan als u het gebruikt.",
+    "prompt": "Bevestig met Windows Hello dat u het bent.",
+    "waiting": "Wachten op Windows Hello…",
+    "use_hello": "Ontgrendelen met Windows Hello",
+    "use_pin": "Pincode gebruiken",
+    "failed": "Windows Hello heeft de app niet ontgrendeld. Voer uw pincode in.",
+    "gone": "Windows Hello ontgrendelt de app op deze computer niet meer. Voer uw pincode in."
+  },
   "uxs_general": {
     "time_zone_common": "Veelgebruikte tijdzones",
     "time_zone_all": "Alle tijdzones",

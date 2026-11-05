@@ -7471,6 +7471,25 @@
     "blocked_seconds": "試行回数が多すぎます。{count, plural, other {# 秒}}後にもう一度お試しください。",
     "blocked_minutes": "試行回数が多すぎます。{count, plural, other {# 分}}後にもう一度お試しください。"
   },
+  "appLockHello": {
+    "switch_label": "Windows Hello でロックを解除",
+    "switch_desc": "顔、指紋、または Windows の PIN を使います。アプリの PIN も引き続き使えます。",
+    "protects": "Windows Hello をオンにすると、Windows はこのアプリ用の鍵を保管します。この鍵は、Windows Hello で本人確認ができたときにだけ使えます。アプリの鍵はこの鍵でもロックされるため、ロックの解除には顔、指紋、または Windows の PIN が必要になり、このコンピューター上の別のプログラムが Windows の確認なしにこの鍵を使うことはできません。アプリの PIN も引き続き使えます。Windows Hello がリセットまたはオフにされたときは、アプリの PIN が必要です。",
+    "enable_title": "Windows Hello をオンにする",
+    "enable_body": "アプリの PIN を入力してください。そのあと Windows が Windows Hello での確認を求めます。",
+    "enable_failed": "Windows Hello をオンにできませんでした。もう一度お試しください。",
+    "cancelled": "Windows Hello がキャンセルされました。",
+    "unsupported": "このコンピューターの Windows Hello では鍵を保護できません。PIN は引き続き使えます。",
+    "unavailable": "このコンピューターでは Windows Hello を使用できません。",
+    "busy": "Windows Hello が使用中か、ロックされています。しばらくしてからお試しください。",
+    "off_after_pin_change": "PIN の変更後に Windows Hello で確認されなかったため、Windows Hello はオフになりました。使う場合はもう一度オンにしてください。",
+    "prompt": "Windows Hello で本人確認をしてください。",
+    "waiting": "Windows Hello を待っています…",
+    "use_hello": "Windows Hello でロックを解除",
+    "use_pin": "PIN を使う",
+    "failed": "Windows Hello でアプリのロックを解除できませんでした。PIN を入力してください。",
+    "gone": "このコンピューターでは Windows Hello でアプリのロックを解除できなくなりました。PIN を入力してください。"
+  },
   "uxs_general": {
     "time_zone_common": "よく使うタイムゾーン",
     "time_zone_all": "すべてのタイムゾーン",
