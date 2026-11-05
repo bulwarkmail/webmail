@@ -138,8 +138,8 @@
   },
   "sidebar": {
     "close": "关闭",
-    "compose": "撰写邮件",
-    "compose_hint": "撰写邮件 (c)",
+    "compose": "写邮件",
+    "compose_hint": "写邮件 (c)",
     "search_placeholder": "搜索邮件...",
     "search_placeholder_hint": "搜索邮件...（按 /）",
     "storage": "存储空间",
@@ -195,7 +195,7 @@
     "collapse_tooltip": "收起",
     "mobile": {
       "search": "搜索",
-      "compose": "撰写邮件",
+      "compose": "写邮件",
       "go_back": "返回",
       "toggle_menu": "切换菜单"
     },
@@ -508,8 +508,8 @@
     "no_email_description": "从列表中选择一封邮件以在此查看",
     "no_conversation_selected": "未选择会话",
     "no_conversation_description": "从列表中选择会话以在此阅读",
-    "compose": "撰写邮件",
-    "compose_hint": "撰写新邮件",
+    "compose": "写邮件",
+    "compose_hint": "写新邮件",
     "no_subject": "（无主题）",
     "no_body_content": "（无正文内容）",
     "no_preview_available": "无可用预览",
@@ -674,7 +674,7 @@
       "delete": "删除 (# 或 Del)",
       "star": "加星标 (s)",
       "unstar": "取消星标 (s)",
-      "compose": "撰写邮件 (c)",
+      "compose": "写邮件 (c)",
       "previous": "上一封邮件",
       "next": "下一封邮件",
       "edit_draft": "编辑草稿"
@@ -1697,7 +1697,7 @@
       },
       "sidebar_account_switcher": {
         "label": "侧边栏顶部的账户切换器",
-        "description": "在文件夹上方显示账户切换器，并在邮件列表上显示圆形的“撰写邮件”按钮。关闭后，“撰写邮件”会改为显示在文件夹上方。"
+        "description": "在文件夹上方显示账户切换器，并在邮件列表上显示圆形的“写邮件”按钮。关闭后，“写邮件”会改为显示在文件夹上方。"
       },
       "show_rail_account_list": {
         "label": "在导航导轨上显示账户头像",
@@ -3987,7 +3987,7 @@
       "undo": "撤销上一个操作"
     },
     "global": {
-      "compose": "撰写新邮件",
+      "compose": "写新邮件",
       "search": "聚焦搜索框",
       "help": "显示快捷方式",
       "refresh": "刷新邮件",
@@ -4030,7 +4030,7 @@
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“撰写邮件”。关闭后，“撰写邮件”会显示在账户切换器的位置。"
+    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“写邮件”。关闭后，“写邮件”会显示在账户切换器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "显示邮件",
@@ -5381,7 +5381,7 @@
   },
   "welcome": {
     "title": "欢迎使用邮箱",
-    "tip_compose": "按 c 撰写新邮件",
+    "tip_compose": "按 c 写新邮件",
     "tip_shortcuts": "按？查看所有键盘快捷键",
     "tip_sidebar": "日历、联系人和设置在左侧栏中",
     "tip_settings": "在\"设置\"中自定义您的体验",
@@ -6990,7 +6990,7 @@
     "no_results": "没有匹配的命令",
     "go_to": "前往{name}",
     "go_to_settings_page": "前往{name}设置",
-    "compose": "撰写邮件",
+    "compose": "写邮件",
     "search": "搜索邮件",
     "theme_dark": "切换到深色主题",
     "theme_light": "切换到浅色主题",
