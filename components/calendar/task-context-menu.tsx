@@ -9,7 +9,7 @@ import {
   ContextMenuSeparator,
   ContextMenuSubMenu,
 } from "@/components/ui/context-menu";
-import { CalendarDays, Check, Eye, FolderInput, RotateCcw, Trash2 } from "@/components/icons";
+import { Briefcase, Calendar as CalendarIcon, CalendarDays, CalendarEvent, CalendarX, Check, Eye, FolderInput, RotateCcw, Sun, Trash2 } from "@/components/icons";
 import { displayNow } from "@/lib/timezone";
 import type { Calendar, CalendarTask } from "@/lib/jmap/types";
 import { useCollectionNames } from "@/hooks/use-collection-names";
@@ -65,12 +65,12 @@ export function TaskContextMenu({ task, position, isOpen, onClose, menuRef, onOp
       <ContextMenuItem icon={done ? RotateCcw : Check} label={done ? t("tasks.mark_incomplete") : t("tasks.mark_complete")} onClick={handle(onToggleComplete)} testId="task-menu-toggle" />
       {onSetDue && (
         <ContextMenuSubMenu icon={CalendarDays} label={t("tasks.due_date")} testId="task-menu-due">
-          <ContextMenuItem label={t("tasks.due_today")} onClick={handle(() => onSetDue("today"))} />
-          <ContextMenuItem label={t("tasks.due_tomorrow")} onClick={handle(() => onSetDue("tomorrow"))} />
-          <ContextMenuItem label={tPc("due_next_week")} onClick={handle(() => onSetDue("next-week"))} />
-          {task.due && <ContextMenuItem label={tPc("due_none")} onClick={handle(() => onSetDue("none"))} />}
+          <ContextMenuItem icon={CalendarEvent} label={t("tasks.due_today")} onClick={handle(() => onSetDue("today"))} />
+          <ContextMenuItem icon={Sun} label={t("tasks.due_tomorrow")} onClick={handle(() => onSetDue("tomorrow"))} />
+          <ContextMenuItem icon={Briefcase} label={tPc("due_next_week")} onClick={handle(() => onSetDue("next-week"))} />
+          {task.due && <ContextMenuItem icon={CalendarX} label={tPc("due_none")} onClick={handle(() => onSetDue("none"))} />}
           <ContextMenuSeparator />
-          <ContextMenuItem label={tPc("due_pick")} onClick={handle(onOpen)} />
+          <ContextMenuItem icon={CalendarIcon} label={tPc("due_pick")} onClick={handle(onOpen)} />
         </ContextMenuSubMenu>
       )}
       {onMoveTo && moveTargets.length > 1 && (

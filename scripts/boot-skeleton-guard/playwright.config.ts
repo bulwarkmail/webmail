@@ -40,6 +40,9 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       DEV_MOCK_JMAP: "true",
+      // The spec opens fixed calendar dates; the mock's events count from this
+      // day instead of today, so the same events are in view every day.
+      DEV_MOCK_JMAP_TODAY: "2026-11-04",
       JMAP_SERVER_URL: `http://localhost:${port}/api/dev-jmap`,
       SESSION_SECRET: "boot-guard-session-secret-0123456789abcdef",
       ADMIN_CONFIG_DIR: join(adminDir, "config"),
