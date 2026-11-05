@@ -226,10 +226,9 @@ async function renderComposer(draft: Partial<typeof DRAFT> = {}) {
     return el!;
   });
   const editor = dom.editor!;
-  // A new message focuses the To field 100ms after opening. Let that happen
-  // first: arriving later, it would blur the editor and close the list.
-  const to = within(screen.getByTestId('composer-to')).getByRole('combobox');
-  await waitFor(() => expect(document.activeElement).toBe(to));
+  // A draft that arrives addressed puts the caret in the body when the editor is ready
+  // (desktop-p3-12). Let that first focus happen before the test clicks in.
+  await waitFor(() => expect(document.activeElement).toBe(editor.view.dom));
   // The user clicks into the body to place the caret. Without that, the
   // first focus counts as arriving by keyboard and moves it to the start.
   fireEvent.mouseDown(editor.view.dom);

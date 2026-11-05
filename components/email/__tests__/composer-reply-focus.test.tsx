@@ -232,9 +232,15 @@ describe('composer initial focus', () => {
     expect(editorFocus).toHaveBeenCalledWith('start');
   });
 
-  it('leaves a new message to focus the To field', () => {
-    render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} mode="compose" />);
+  it('leaves a new, unaddressed message to focus the To field', () => {
+    render(<EmailComposer initialData={{ ...DATA, to: '', mode: 'compose' }} mode="compose" />);
     expect(editorFocus).not.toHaveBeenCalled();
+  });
+
+  // desktop-p3-12: a new message that arrives addressed (a mail link) starts in the body, as in Outlook.
+  it('puts the caret in the body of a new message that arrives addressed', () => {
+    render(<EmailComposer initialData={{ ...DATA, mode: 'compose' }} mode="compose" />);
+    expect(editorFocus).toHaveBeenCalledWith('start');
   });
 
   it('focuses the plain text body of a reply', async () => {

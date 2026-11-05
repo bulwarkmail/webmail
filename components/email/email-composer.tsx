@@ -3625,7 +3625,9 @@ export function EmailComposer({
       ed.commands.focus('start');
     } else if (!replyFocusedRef.current && mode === 'compose' && addressedAtStartRef.current) {
       replyFocusedRef.current = true;
-      if (focusUnlessMoved(ed.view.dom as HTMLElement)) ed.commands.focus('start');
+      // Without a view yet there's nothing to check the user's own focus against.
+      const dom = ed.view?.dom as HTMLElement | undefined;
+      if (!dom || focusUnlessMoved(dom)) ed.commands.focus('start');
     }
   }, [mode]);
   useEffect(() => {
