@@ -242,7 +242,8 @@ test('item 1: under the lock the trusted senders list offers no Add (fails on ma
   await policy({ restrictions: LOCK }, browser);
   const alice = await userPage(browser, ENT.alice);
   await alice.locator('a[href$="/settings"]').first().click();
-  await alice.locator('[data-testid="settings-tab-reading"]').first().click();
+  // Trusted senders are on the Privacy page since the settings reorganisation.
+  await alice.locator('[data-testid="settings-tab-privacy"]').first().click();
   await expect(alice.getByText('Trusted senders').first()).toBeVisible();
   await alice.getByRole('button', { name: /^\d+ senders?$|None/ }).first().click();
   await expect(alice.getByText('Add sender manually')).toHaveCount(0);
