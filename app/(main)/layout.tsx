@@ -165,11 +165,6 @@ async function liteMetadata(): Promise<Metadata> {
     applicationName: appName,
     robots: { index: false, follow: false },
     manifest: withBasePath("/manifest.webmanifest"),
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: "black-translucent",
-      title: appName,
-    },
     formatDetection: {
       telephone: false,
     },
@@ -235,11 +230,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: [withBasePath("/api/og-image")],
     },
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: "black-translucent",
-      title: appName,
-    },
     formatDetection: {
       telephone: false,
     },
@@ -303,7 +293,6 @@ export default async function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content={appName} />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {parentOrigin && (
           <meta name="parent-origin" content={parentOrigin} />
         )}
