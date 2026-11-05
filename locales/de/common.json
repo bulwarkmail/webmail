@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Zu viele Versuche. Versuchen Sie es in {count, plural, one {# Sekunde} other {# Sekunden}} noch einmal.",
     "blocked_minutes": "Zu viele Versuche. Versuchen Sie es in {count, plural, one {# Minute} other {# Minuten}} noch einmal."
   },
+  "appLockHello": {
+    "switch_label": "Mit Windows Hello entsperren",
+    "switch_desc": "Mit Gesicht, Fingerabdruck oder Windows-PIN. Die PIN der App funktioniert weiterhin.",
+    "protects": "Wenn Windows Hello an ist, verwahrt Windows für diese App einen Schlüssel, der erst funktioniert, nachdem Windows Hello geprüft hat, dass Sie es sind. Der Schlüssel der App wird zusätzlich damit gesperrt. Zum Entsperren brauchen Sie dann Ihr Gesicht, Ihren Fingerabdruck oder Ihre Windows-PIN, und ein anderes Programm auf diesem Computer kann den Schlüssel nicht nutzen, ohne dass Windows Sie vorher fragt. Die PIN der App funktioniert weiterhin. Sie brauchen sie, wenn Windows Hello zurückgesetzt oder ausgeschaltet wird.",
+    "enable_title": "Windows Hello einschalten",
+    "enable_body": "Geben Sie die PIN der App ein. Danach bittet Windows Sie, mit Windows Hello zu bestätigen.",
+    "enable_failed": "Windows Hello konnte nicht eingeschaltet werden. Versuchen Sie es noch einmal.",
+    "cancelled": "Windows Hello wurde abgebrochen.",
+    "unsupported": "Windows Hello kann auf diesem Computer den Schlüssel nicht schützen. Ihre PIN funktioniert weiterhin.",
+    "unavailable": "Windows Hello ist auf diesem Computer nicht verfügbar.",
+    "busy": "Windows Hello ist gerade belegt oder gesperrt. Versuchen Sie es später noch einmal.",
+    "off_after_pin_change": "Windows Hello ist jetzt aus, weil es nach der Änderung der PIN nicht bestätigt wurde. Schalten Sie es wieder ein, wenn Sie es nutzen.",
+    "prompt": "Bestätigen Sie mit Windows Hello, dass Sie es sind.",
+    "waiting": "Warten auf Windows Hello…",
+    "use_hello": "Mit Windows Hello entsperren",
+    "use_pin": "Stattdessen PIN verwenden",
+    "failed": "Windows Hello hat die App nicht entsperrt. Geben Sie Ihre PIN ein.",
+    "gone": "Windows Hello entsperrt die App auf diesem Computer nicht mehr. Geben Sie Ihre PIN ein."
+  },
   "uxs_general": {
     "time_zone_common": "Häufige Zeitzonen",
     "time_zone_all": "Alle Zeitzonen",

@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# másodperc} other {# másodperc}} múlva.",
     "blocked_minutes": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# perc} other {# perc}} múlva."
   },
+  "appLockHello": {
+    "switch_label": "Feloldás Windows Hellóval",
+    "switch_desc": "Az arcával, ujjlenyomatával vagy a Windows PIN-kódjával. Az alkalmazás PIN-kódja továbbra is működik.",
+    "protects": "Ha a Windows Hello be van kapcsolva, a Windows őriz ennek az alkalmazásnak egy kulcsot, amely csak akkor működik, ha a Windows Hello ellenőrizte, hogy Ön az. Az alkalmazás kulcsa ezzel is le van zárva, így a feloldáshoz az arca, az ujjlenyomata vagy a Windows PIN-kódja kell, és a számítógép más programja nem használhatja ezt a kulcsot anélkül, hogy a Windows előbb megkérdezné Önt. Az alkalmazás PIN-kódja továbbra is működik, és szüksége lesz rá, ha a Windows Hellót visszaállítják vagy kikapcsolják.",
+    "enable_title": "Windows Hello bekapcsolása",
+    "enable_body": "Írja be az alkalmazás PIN-kódját. Ezután a Windows megkéri, hogy erősítse meg Windows Hellóval.",
+    "enable_failed": "Nem sikerült bekapcsolni a Windows Hellót. Próbálja újra.",
+    "cancelled": "A Windows Hello meg lett szakítva.",
+    "unsupported": "A Windows Hello ezen a számítógépen nem tudja védeni a kulcsot. A PIN-kódja továbbra is működik.",
+    "unavailable": "A Windows Hello nem érhető el ezen a számítógépen.",
+    "busy": "A Windows Hello foglalt vagy zárolva van. Próbálja később.",
+    "off_after_pin_change": "A Windows Hello most ki van kapcsolva, mert a PIN-kód módosítása után nem erősítette meg. Kapcsolja be újra, ha használja.",
+    "prompt": "Erősítse meg Windows Hellóval, hogy Ön az.",
+    "waiting": "Várakozás a Windows Hellóra…",
+    "use_hello": "Feloldás Windows Hellóval",
+    "use_pin": "PIN-kód használata",
+    "failed": "A Windows Hello nem oldotta fel az alkalmazást. Írja be a PIN-kódját.",
+    "gone": "A Windows Hello ezen a számítógépen már nem oldja fel az alkalmazást. Írja be a PIN-kódját."
+  },
   "uxs_general": {
     "time_zone_common": "Gyakori időzónák",
     "time_zone_all": "Minden időzóna",

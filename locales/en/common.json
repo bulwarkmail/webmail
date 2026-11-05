@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Too many tries. Try again in {count, plural, one {# second} other {# seconds}}.",
     "blocked_minutes": "Too many tries. Try again in {count, plural, one {# minute} other {# minutes}}."
   },
+  "appLockHello": {
+    "switch_label": "Unlock with Windows Hello",
+    "switch_desc": "Use your face, fingerprint or Windows PIN. The app's PIN keeps working.",
+    "protects": "With Windows Hello on, Windows keeps a key for this app that only works after Windows Hello has checked it's you. The app's key is also locked with it, so unlocking takes your face, fingerprint or Windows PIN, and another program on this computer can't use that key without Windows asking you first. The app's PIN keeps working, and you need it if Windows Hello is reset or turned off.",
+    "enable_title": "Turn on Windows Hello",
+    "enable_body": "Enter the app's PIN. Windows then asks you to confirm with Windows Hello.",
+    "enable_failed": "Windows Hello could not be turned on. Try again.",
+    "cancelled": "Windows Hello was cancelled.",
+    "unsupported": "Windows Hello on this computer can't protect the key. Your PIN keeps working.",
+    "unavailable": "Windows Hello isn't available on this computer.",
+    "busy": "Windows Hello is busy or locked. Try again later.",
+    "off_after_pin_change": "Windows Hello is off now, because it didn't confirm after the PIN change. Turn it on again if you use it.",
+    "prompt": "Confirm it's you with Windows Hello.",
+    "waiting": "Waiting for Windows Hello…",
+    "use_hello": "Unlock with Windows Hello",
+    "use_pin": "Use PIN instead",
+    "failed": "Windows Hello didn't unlock the app. Enter your PIN.",
+    "gone": "Windows Hello no longer unlocks the app on this computer. Enter your PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Common time zones",
     "time_zone_all": "All time zones",

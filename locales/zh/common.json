@@ -7465,6 +7465,25 @@
     "blocked_seconds": "尝试次数过多。请在 {count, plural, other {# 秒}}后重试。",
     "blocked_minutes": "尝试次数过多。请在 {count, plural, other {# 分钟}}后重试。"
   },
+  "appLockHello": {
+    "switch_label": "使用 Windows Hello 解锁",
+    "switch_desc": "使用面部、指纹或 Windows PIN。应用的 PIN 仍然可用。",
+    "protects": "开启 Windows Hello 后，Windows 会为此应用保管一个密钥，只有在 Windows Hello 确认是你本人之后才能使用。应用的密钥也会用它锁住，所以解锁需要你的面部、指纹或 Windows PIN，这台电脑上的其他程序不经 Windows 先询问你就无法使用这个密钥。应用的 PIN 仍然可用，如果 Windows Hello 被重置或关闭，你需要用它解锁。",
+    "enable_title": "开启 Windows Hello",
+    "enable_body": "输入应用的 PIN。之后 Windows 会请你用 Windows Hello 确认。",
+    "enable_failed": "无法开启 Windows Hello。请重试。",
+    "cancelled": "Windows Hello 已取消。",
+    "unsupported": "这台电脑上的 Windows Hello 无法保护密钥。你的 PIN 仍然可用。",
+    "unavailable": "这台电脑上没有可用的 Windows Hello。",
+    "busy": "Windows Hello 正忙或已被锁定。请稍后再试。",
+    "off_after_pin_change": "更改 PIN 后 Windows Hello 没有确认，所以它现在已关闭。如果你使用它，请重新开启。",
+    "prompt": "请用 Windows Hello 确认是你本人。",
+    "waiting": "正在等待 Windows Hello…",
+    "use_hello": "使用 Windows Hello 解锁",
+    "use_pin": "改用 PIN",
+    "failed": "Windows Hello 没有解锁应用。请输入 PIN。",
+    "gone": "Windows Hello 在这台电脑上已无法解锁应用。请输入 PIN。"
+  },
   "uxs_general": {
     "time_zone_common": "常用时区",
     "time_zone_all": "所有时区",

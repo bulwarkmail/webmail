@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# segundo} other {# segundos}}.",
     "blocked_minutes": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# minuto} other {# minutos}}."
   },
+  "appLockHello": {
+    "switch_label": "Desbloquear com o Windows Hello",
+    "switch_desc": "Use o rosto, a impressão digital ou o PIN do Windows. O PIN da app continua a funcionar.",
+    "protects": "Com o Windows Hello ligado, o Windows guarda para esta app uma chave que só funciona depois de o Windows Hello confirmar que é você. A chave da app também fica bloqueada com ela, por isso desbloquear exige o seu rosto, impressão digital ou PIN do Windows, e outro programa neste computador não pode usar essa chave sem o Windows lhe perguntar primeiro. O PIN da app continua a funcionar, e vai precisar dele se o Windows Hello for reposto ou desligado.",
+    "enable_title": "Ligar o Windows Hello",
+    "enable_body": "Introduza o PIN da app. Depois, o Windows pede-lhe que confirme com o Windows Hello.",
+    "enable_failed": "Não foi possível ligar o Windows Hello. Tente novamente.",
+    "cancelled": "O Windows Hello foi cancelado.",
+    "unsupported": "O Windows Hello neste computador não consegue proteger a chave. O seu PIN continua a funcionar.",
+    "unavailable": "O Windows Hello não está disponível neste computador.",
+    "busy": "O Windows Hello está ocupado ou bloqueado. Tente mais tarde.",
+    "off_after_pin_change": "O Windows Hello está desligado, porque não confirmou depois da mudança de PIN. Volte a ligá-lo se o usar.",
+    "prompt": "Confirme que é você com o Windows Hello.",
+    "waiting": "A aguardar o Windows Hello…",
+    "use_hello": "Desbloquear com o Windows Hello",
+    "use_pin": "Usar o PIN",
+    "failed": "O Windows Hello não desbloqueou a app. Introduza o seu PIN.",
+    "gone": "O Windows Hello já não desbloqueia a app neste computador. Introduza o seu PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Fusos horários comuns",
     "time_zone_all": "Todos os fusos horários",

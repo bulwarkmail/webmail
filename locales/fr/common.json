@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Trop d'essais. Réessayez dans {count, plural, one {# seconde} other {# secondes}}.",
     "blocked_minutes": "Trop d'essais. Réessayez dans {count, plural, one {# minute} other {# minutes}}."
   },
+  "appLockHello": {
+    "switch_label": "Déverrouiller avec Windows Hello",
+    "switch_desc": "Avec votre visage, votre empreinte ou votre code PIN Windows. Le code PIN de l'app continue de fonctionner.",
+    "protects": "Quand Windows Hello est activé, Windows garde pour cette app une clé qui ne fonctionne qu'après que Windows Hello a vérifié que c'est bien vous. La clé de l'app est aussi verrouillée avec elle : pour déverrouiller, il faut votre visage, votre empreinte ou votre code PIN Windows, et un autre programme sur cet ordinateur ne peut pas utiliser cette clé sans que Windows vous le demande d'abord. Le code PIN de l'app continue de fonctionner, et il vous le faut si Windows Hello est réinitialisé ou désactivé.",
+    "enable_title": "Activer Windows Hello",
+    "enable_body": "Saisissez le code PIN de l'app. Windows vous demande ensuite de confirmer avec Windows Hello.",
+    "enable_failed": "Windows Hello n'a pas pu être activé. Réessayez.",
+    "cancelled": "Windows Hello a été annulé.",
+    "unsupported": "Windows Hello ne peut pas protéger la clé sur cet ordinateur. Votre code PIN continue de fonctionner.",
+    "unavailable": "Windows Hello n'est pas disponible sur cet ordinateur.",
+    "busy": "Windows Hello est occupé ou bloqué. Réessayez plus tard.",
+    "off_after_pin_change": "Windows Hello est désactivé, car il n'a pas confirmé après le changement de code PIN. Réactivez-le si vous l'utilisez.",
+    "prompt": "Confirmez que c'est vous avec Windows Hello.",
+    "waiting": "En attente de Windows Hello…",
+    "use_hello": "Déverrouiller avec Windows Hello",
+    "use_pin": "Utiliser plutôt le code PIN",
+    "failed": "Windows Hello n'a pas déverrouillé l'app. Saisissez votre code PIN.",
+    "gone": "Windows Hello ne déverrouille plus l'app sur cet ordinateur. Saisissez votre code PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Fuseaux horaires courants",
     "time_zone_all": "Tous les fuseaux horaires",

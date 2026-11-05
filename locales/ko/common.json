@@ -7465,6 +7465,25 @@
     "blocked_seconds": "시도 횟수가 너무 많습니다. {count, plural, other {#초}} 후에 다시 시도하세요.",
     "blocked_minutes": "시도 횟수가 너무 많습니다. {count, plural, other {#분}} 후에 다시 시도하세요."
   },
+  "appLockHello": {
+    "switch_label": "Windows Hello로 잠금 해제",
+    "switch_desc": "얼굴, 지문 또는 Windows PIN을 사용합니다. 앱의 PIN도 계속 사용할 수 있습니다.",
+    "protects": "Windows Hello를 켜면 Windows가 이 앱을 위한 키를 보관합니다. 이 키는 Windows Hello가 본인임을 확인한 뒤에만 작동합니다. 앱의 키도 이 키로 잠기므로 잠금을 해제하려면 얼굴, 지문 또는 Windows PIN이 필요하며, 이 컴퓨터의 다른 프로그램은 Windows가 먼저 묻지 않고는 이 키를 사용할 수 없습니다. 앱의 PIN도 계속 사용할 수 있으며, Windows Hello가 재설정되거나 꺼지면 앱의 PIN이 필요합니다.",
+    "enable_title": "Windows Hello 켜기",
+    "enable_body": "앱의 PIN을 입력하세요. 그런 다음 Windows가 Windows Hello로 확인하라고 요청합니다.",
+    "enable_failed": "Windows Hello를 켜지 못했습니다. 다시 시도하세요.",
+    "cancelled": "Windows Hello가 취소되었습니다.",
+    "unsupported": "이 컴퓨터의 Windows Hello로는 키를 보호할 수 없습니다. PIN은 계속 사용할 수 있습니다.",
+    "unavailable": "이 컴퓨터에서는 Windows Hello를 사용할 수 없습니다.",
+    "busy": "Windows Hello가 사용 중이거나 잠겨 있습니다. 나중에 다시 시도하세요.",
+    "off_after_pin_change": "PIN을 변경한 뒤 Windows Hello로 확인하지 않아 Windows Hello가 꺼졌습니다. 사용하려면 다시 켜세요.",
+    "prompt": "Windows Hello로 본인임을 확인하세요.",
+    "waiting": "Windows Hello를 기다리는 중…",
+    "use_hello": "Windows Hello로 잠금 해제",
+    "use_pin": "PIN 사용",
+    "failed": "Windows Hello로 앱 잠금을 해제하지 못했습니다. PIN을 입력하세요.",
+    "gone": "이 컴퓨터에서 더 이상 Windows Hello로 앱 잠금을 해제할 수 없습니다. PIN을 입력하세요."
+  },
   "uxs_general": {
     "time_zone_common": "자주 쓰는 시간대",
     "time_zone_all": "모든 시간대",

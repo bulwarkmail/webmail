@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# segon} other {# segons}}.",
     "blocked_minutes": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# minut} other {# minuts}}."
   },
+  "appLockHello": {
+    "switch_label": "Desbloqueja amb Windows Hello",
+    "switch_desc": "Feu servir la cara, l'empremta o el PIN de Windows. El PIN de l'aplicació continua funcionant.",
+    "protects": "Amb Windows Hello activat, Windows guarda per a aquesta aplicació una clau que només funciona després que Windows Hello comprovi que sou vós. La clau de l'aplicació també queda blocada amb ella, de manera que per desblocar cal la cara, l'empremta o el PIN de Windows, i un altre programa d'aquest ordinador no pot fer servir aquesta clau sense que Windows us ho demani abans. El PIN de l'aplicació continua funcionant, i el necessitareu si Windows Hello es restableix o es desactiva.",
+    "enable_title": "Activa Windows Hello",
+    "enable_body": "Escriviu el PIN de l'aplicació. Després Windows us demanarà que ho confirmeu amb Windows Hello.",
+    "enable_failed": "No s'ha pogut activar Windows Hello. Torneu-ho a provar.",
+    "cancelled": "S'ha cancel·lat Windows Hello.",
+    "unsupported": "Windows Hello no pot protegir la clau en aquest ordinador. El vostre PIN continua funcionant.",
+    "unavailable": "Windows Hello no està disponible en aquest ordinador.",
+    "busy": "Windows Hello està ocupat o blocat. Torneu-ho a provar més tard.",
+    "off_after_pin_change": "Windows Hello ara està desactivat, perquè no ha confirmat després del canvi de PIN. Torneu-lo a activar si el feu servir.",
+    "prompt": "Confirmeu amb Windows Hello que sou vós.",
+    "waiting": "S'està esperant Windows Hello…",
+    "use_hello": "Desbloqueja amb Windows Hello",
+    "use_pin": "Utilitza el PIN",
+    "failed": "Windows Hello no ha desblocat l'aplicació. Escriviu el PIN.",
+    "gone": "Windows Hello ja no desbloca l'aplicació en aquest ordinador. Escriviu el PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Zones horàries habituals",
     "time_zone_all": "Totes les zones horàries",

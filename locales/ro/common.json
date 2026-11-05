@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Prea multe încercări. Încercați din nou peste {count, plural, one {# secundă} few {# secunde} other {# de secunde}}.",
     "blocked_minutes": "Prea multe încercări. Încercați din nou peste {count, plural, one {# minut} few {# minute} other {# de minute}}."
   },
+  "appLockHello": {
+    "switch_label": "Deblocați cu Windows Hello",
+    "switch_desc": "Folosiți fața, amprenta sau PIN-ul Windows. PIN-ul aplicației funcționează în continuare.",
+    "protects": "Cu Windows Hello pornit, Windows păstrează pentru această aplicație o cheie care funcționează doar după ce Windows Hello a verificat că sunteți dvs. Cheia aplicației este blocată și cu ea, așa că pentru deblocare e nevoie de fața, amprenta sau PIN-ul Windows, iar alt program de pe acest computer nu poate folosi cheia fără ca Windows să vă întrebe mai întâi. PIN-ul aplicației funcționează în continuare și aveți nevoie de el dacă Windows Hello este resetat sau oprit.",
+    "enable_title": "Porniți Windows Hello",
+    "enable_body": "Introduceți PIN-ul aplicației. Apoi Windows vă cere să confirmați cu Windows Hello.",
+    "enable_failed": "Windows Hello nu a putut fi pornit. Încercați din nou.",
+    "cancelled": "Windows Hello a fost anulat.",
+    "unsupported": "Windows Hello de pe acest computer nu poate proteja cheia. PIN-ul dvs. funcționează în continuare.",
+    "unavailable": "Windows Hello nu este disponibil pe acest computer.",
+    "busy": "Windows Hello este ocupat sau blocat. Încercați mai târziu.",
+    "off_after_pin_change": "Windows Hello este oprit acum, pentru că nu a confirmat după schimbarea PIN-ului. Porniți-l din nou dacă îl folosiți.",
+    "prompt": "Confirmați cu Windows Hello că sunteți dvs.",
+    "waiting": "Se așteaptă Windows Hello…",
+    "use_hello": "Deblocați cu Windows Hello",
+    "use_pin": "Folosiți PIN-ul",
+    "failed": "Windows Hello nu a deblocat aplicația. Introduceți PIN-ul.",
+    "gone": "Windows Hello nu mai deblochează aplicația pe acest computer. Introduceți PIN-ul."
+  },
   "uxs_general": {
     "time_zone_common": "Fusuri orare uzuale",
     "time_zone_all": "Toate fusurile orare",

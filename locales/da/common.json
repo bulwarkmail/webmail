@@ -7465,6 +7465,25 @@
     "blocked_seconds": "For mange forsøg. Prøv igen om {count, plural, one {# sekund} other {# sekunder}}.",
     "blocked_minutes": "For mange forsøg. Prøv igen om {count, plural, one {# minut} other {# minutter}}."
   },
+  "appLockHello": {
+    "switch_label": "Lås op med Windows Hello",
+    "switch_desc": "Brug dit ansigt, fingeraftryk eller din Windows-pinkode. Appens pinkode virker stadig.",
+    "protects": "Når Windows Hello er slået til, gemmer Windows en nøgle til denne app, som først virker, når Windows Hello har tjekket, at det er dig. Appens nøgle er også låst med den, så det kræver dit ansigt, fingeraftryk eller din Windows-pinkode at låse op, og et andet program på denne computer kan ikke bruge nøglen, uden at Windows spørger dig først. Appens pinkode virker stadig, og du skal bruge den, hvis Windows Hello nulstilles eller slås fra.",
+    "enable_title": "Slå Windows Hello til",
+    "enable_body": "Indtast appens pinkode. Derefter beder Windows dig bekræfte med Windows Hello.",
+    "enable_failed": "Windows Hello kunne ikke slås til. Prøv igen.",
+    "cancelled": "Windows Hello blev annulleret.",
+    "unsupported": "Windows Hello på denne computer kan ikke beskytte nøglen. Din pinkode virker stadig.",
+    "unavailable": "Windows Hello er ikke tilgængelig på denne computer.",
+    "busy": "Windows Hello er optaget eller låst. Prøv igen senere.",
+    "off_after_pin_change": "Windows Hello er slået fra nu, fordi det ikke bekræftede efter ændringen af pinkoden. Slå det til igen, hvis du bruger det.",
+    "prompt": "Bekræft med Windows Hello, at det er dig.",
+    "waiting": "Venter på Windows Hello…",
+    "use_hello": "Lås op med Windows Hello",
+    "use_pin": "Brug pinkode i stedet",
+    "failed": "Windows Hello låste ikke appen op. Indtast din pinkode.",
+    "gone": "Windows Hello låser ikke længere appen op på denne computer. Indtast din pinkode."
+  },
   "uxs_general": {
     "time_zone_common": "Almindelige tidszoner",
     "time_zone_all": "Alle tidszoner",

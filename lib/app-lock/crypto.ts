@@ -3,8 +3,8 @@
  *
  * One random lock key wraps every account's database key (a layer in
  * lib/store/client/keys.ts). The lock key itself is only ever stored wrapped: once
- * under the PIN, and once for each other way in (a passkey's PRF, the desktop app's
- * OS storage). So a new account needs no PIN, and a changed PIN touches one record.
+ * under the PIN, and once for each other way in (a passkey's PRF, Windows Hello's
+ * signature, the desktop app's OS storage for Touch ID). So a new account needs no PIN, and a changed PIN touches one record.
  */
 
 import type { WrapLayer } from '@/lib/store/client/keys';
@@ -19,6 +19,9 @@ const AES = { name: 'AES-GCM', length: 256 } as const;
 const PRF_INFO = new TextEncoder().encode('bulwark-app-lock-prf-v1');
 const PROOF_INFO = new TextEncoder().encode('bulwark-app-lock-main-proof-v1');
 const PIN_STEP_INFO = new TextEncoder().encode('bulwark-app-lock-pin-step-v1');
+const HELLO_INFO = new TextEncoder().encode('bulwark-app-lock-hello-v1');
+/** What main's Hello challenge takes from the page: a new one with every wrap. */
+export const HELLO_SALT_BYTES = 32;
 
 export interface WrappedBytes {
   iv: Uint8Array;
@@ -114,6 +117,22 @@ export async function keyFromPrf(output: ArrayBuffer | Uint8Array): Promise<Cryp
   const base = await crypto.subtle.importKey('raw', buffer(bytes), 'HKDF', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt: new ArrayBuffer(0), info: PRF_INFO },
+    base,
+    AES,
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+/**
+ * A key from Windows Hello's signature over main's challenge for this salt. The signature is the
+ * same each time (RSA PKCS#1 v1.5, which main checked when the key credential was made), and only
+ * a Hello prompt the user answers gives it.
+ */
+export async function keyFromHello(signature: Uint8Array, salt: Uint8Array): Promise<CryptoKey> {
+  const base = await crypto.subtle.importKey('raw', buffer(signature), 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'HKDF', hash: 'SHA-256', salt: buffer(salt), info: HELLO_INFO },
     base,
     AES,
     false,

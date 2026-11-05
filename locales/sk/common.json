@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Príliš veľa pokusov. Skúste to o {count, plural, one {# sekundu} few {# sekundy} many {# sekundy} other {# sekúnd}}.",
     "blocked_minutes": "Príliš veľa pokusov. Skúste to o {count, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}."
   },
+  "appLockHello": {
+    "switch_label": "Odomykať pomocou Windows Hello",
+    "switch_desc": "Tvárou, odtlačkom prsta alebo PIN kódom Windows. PIN aplikácie naďalej funguje.",
+    "protects": "Keď je Windows Hello zapnuté, Windows pre túto aplikáciu uchováva kľúč, ktorý funguje až potom, čo Windows Hello overí, že ste to vy. Kľúč aplikácie je zamknutý aj týmto kľúčom, takže na odomknutie treba vašu tvár, odtlačok prsta alebo PIN Windows, a iný program v tomto počítači nemôže kľúč použiť bez toho, aby sa vás Windows najprv opýtal. PIN aplikácie naďalej funguje a budete ho potrebovať, ak sa Windows Hello obnoví alebo vypne.",
+    "enable_title": "Zapnúť Windows Hello",
+    "enable_body": "Zadajte PIN aplikácie. Windows vás potom požiada o potvrdenie pomocou Windows Hello.",
+    "enable_failed": "Windows Hello sa nepodarilo zapnúť. Skúste to znova.",
+    "cancelled": "Windows Hello sa zrušilo.",
+    "unsupported": "Windows Hello v tomto počítači nemôže kľúč chrániť. Váš PIN naďalej funguje.",
+    "unavailable": "Windows Hello v tomto počítači nie je k dispozícii.",
+    "busy": "Windows Hello je zaneprázdnené alebo zablokované. Skúste to neskôr.",
+    "off_after_pin_change": "Windows Hello je teraz vypnuté, pretože po zmene PIN kódu nepotvrdilo. Ak ho používate, zapnite ho znova.",
+    "prompt": "Potvrďte pomocou Windows Hello, že ste to vy.",
+    "waiting": "Čaká sa na Windows Hello…",
+    "use_hello": "Odomknúť pomocou Windows Hello",
+    "use_pin": "Použiť PIN",
+    "failed": "Windows Hello aplikáciu neodomklo. Zadajte PIN.",
+    "gone": "Windows Hello už v tomto počítači aplikáciu neodomyká. Zadajte PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Bežné časové pásma",
     "time_zone_all": "Všetky časové pásma",

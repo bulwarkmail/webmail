@@ -7465,6 +7465,25 @@
     "blocked_seconds": "تلاش‌های زیاد. {count, plural, one {# ثانیه} other {# ثانیه}} دیگر دوباره تلاش کنید.",
     "blocked_minutes": "تلاش‌های زیاد. {count, plural, one {# دقیقه} other {# دقیقه}} دیگر دوباره تلاش کنید."
   },
+  "appLockHello": {
+    "switch_label": "باز کردن قفل با Windows Hello",
+    "switch_desc": "با چهره، اثر انگشت یا پین Windows. پین برنامه همچنان کار می‌کند.",
+    "protects": "وقتی Windows Hello روشن است، Windows برای این برنامه کلیدی نگه می‌دارد که فقط پس از اینکه Windows Hello بررسی کند خودتان هستید کار می‌کند. کلید برنامه هم با آن قفل می‌شود، پس برای باز کردن قفل به چهره، اثر انگشت یا پین Windows نیاز است، و برنامهٔ دیگری روی این رایانه نمی‌تواند بدون اینکه Windows اول از شما بپرسد از آن کلید استفاده کند. پین برنامه همچنان کار می‌کند و اگر Windows Hello بازنشانی یا خاموش شود به آن نیاز دارید.",
+    "enable_title": "روشن کردن Windows Hello",
+    "enable_body": "پین برنامه را وارد کنید. سپس Windows از شما می‌خواهد با Windows Hello تأیید کنید.",
+    "enable_failed": "Windows Hello روشن نشد. دوباره امتحان کنید.",
+    "cancelled": "Windows Hello لغو شد.",
+    "unsupported": "Windows Hello روی این رایانه نمی‌تواند از کلید محافظت کند. پین شما همچنان کار می‌کند.",
+    "unavailable": "Windows Hello روی این رایانه در دسترس نیست.",
+    "busy": "Windows Hello مشغول یا قفل است. بعداً دوباره امتحان کنید.",
+    "off_after_pin_change": "Windows Hello اکنون خاموش است، چون پس از تغییر پین تأیید نکرد. اگر از آن استفاده می‌کنید دوباره روشنش کنید.",
+    "prompt": "با Windows Hello تأیید کنید که خودتان هستید.",
+    "waiting": "در انتظار Windows Hello…",
+    "use_hello": "باز کردن قفل با Windows Hello",
+    "use_pin": "استفاده از پین",
+    "failed": "Windows Hello قفل برنامه را باز نکرد. پین خود را وارد کنید.",
+    "gone": "Windows Hello دیگر قفل برنامه را روی این رایانه باز نمی‌کند. پین خود را وارد کنید."
+  },
   "uxs_general": {
     "time_zone_common": "منطقه‌های زمانی رایج",
     "time_zone_all": "همه منطقه‌های زمانی",

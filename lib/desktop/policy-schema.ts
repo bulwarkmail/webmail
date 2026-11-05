@@ -70,6 +70,7 @@ export interface PolicyValues {
   OfflineEnabled: boolean;
   AppLockRequired: boolean;
   AppLockTimeoutMinutes: number | null;
+  AppLockHelloAllowed: boolean;
   TelemetryAllowed: boolean;
   CrashReportsAllowed: boolean;
   QuickComposeShortcut: string | null;
@@ -300,6 +301,19 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     description: {
       en: 'How many minutes without use the app stays unlocked. From 1 to 1440.',
       de: 'Wie viele Minuten ohne Nutzung die App entsperrt bleibt. Von 1 bis 1440.',
+    },
+  },
+  AppLockHelloAllowed: {
+    category: 'security',
+    forcedOnly: true,
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    sample: true,
+    title: { en: 'Allow unlocking the app with Windows Hello', de: 'Entsperren der App mit Windows Hello erlauben' },
+    description: {
+      en: 'When enabled or not configured, people can unlock the app lock with Windows Hello as well as with its PIN. When disabled, the option is hidden, and Windows Hello no longer unlocks the app where it was set up: the PIN is needed. Windows only.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, können Benutzer die App-Sperre außer mit ihrer PIN auch mit Windows Hello aufheben. Wenn deaktiviert, wird die Option ausgeblendet, und Windows Hello entsperrt die App auch dort nicht mehr, wo es eingerichtet war: Dann ist die PIN nötig. Nur unter Windows.',
     },
   },
   TelemetryAllowed: {
@@ -987,6 +1001,7 @@ const PAGE_POLICY_KEYS: readonly PolicyKey[] = [
   'OfflineEnabled',
   'AppLockRequired',
   'AppLockTimeoutMinutes',
+  'AppLockHelloAllowed',
   'CrashReportsAllowed',
   'RecentFilesInAttach',
   'FilesDriveEnabled',
@@ -1031,6 +1046,8 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   UpdateChannel: { repo: 'shell', file: 'src/main/update-rules.ts' },
   AppLockRequired: { repo: 'webmail', file: 'lib/app-lock/policy.ts' },
   AppLockTimeoutMinutes: { repo: 'webmail', file: 'lib/app-lock/policy.ts' },
+  // The page hides the switch and drops its wrap; main refuses and deletes the key credential.
+  AppLockHelloAllowed: { repo: 'shell', file: 'src/main/features/app-lock.ts' },
   TelemetryAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   CrashReportsAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   QuickComposeShortcut: { repo: 'shell', file: 'src/main/features/os-quick-compose.ts' },

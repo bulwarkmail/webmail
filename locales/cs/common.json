@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Příliš mnoho pokusů. Zkuste to za {count, plural, one {# sekundu} few {# sekundy} many {# sekundy} other {# sekund}}.",
     "blocked_minutes": "Příliš mnoho pokusů. Zkuste to za {count, plural, one {# minutu} few {# minuty} many {# minuty} other {# minut}}."
   },
+  "appLockHello": {
+    "switch_label": "Odemykat pomocí Windows Hello",
+    "switch_desc": "Obličejem, otiskem prstu nebo PINem Windows. PIN aplikace dál funguje.",
+    "protects": "Když je Windows Hello zapnuté, Windows pro tuto aplikaci uchovává klíč, který funguje jen poté, co Windows Hello ověří, že jste to vy. Klíč aplikace je zamčený i tímto klíčem, takže k odemčení je potřeba váš obličej, otisk prstu nebo PIN Windows, a jiný program v tomto počítači nemůže klíč použít, aniž by se vás Windows nejdřív zeptal. PIN aplikace dál funguje a budete ho potřebovat, pokud se Windows Hello obnoví nebo vypne.",
+    "enable_title": "Zapnout Windows Hello",
+    "enable_body": "Zadejte PIN aplikace. Windows vás pak požádá o potvrzení pomocí Windows Hello.",
+    "enable_failed": "Windows Hello se nepodařilo zapnout. Zkuste to znovu.",
+    "cancelled": "Windows Hello bylo zrušeno.",
+    "unsupported": "Windows Hello v tomto počítači nemůže klíč chránit. Váš PIN dál funguje.",
+    "unavailable": "Windows Hello v tomto počítači není k dispozici.",
+    "busy": "Windows Hello je zaneprázdněné nebo zablokované. Zkuste to později.",
+    "off_after_pin_change": "Windows Hello je teď vypnuté, protože po změně PINu nepotvrdilo. Pokud ho používáte, zapněte ho znovu.",
+    "prompt": "Potvrďte pomocí Windows Hello, že jste to vy.",
+    "waiting": "Čeká se na Windows Hello…",
+    "use_hello": "Odemknout pomocí Windows Hello",
+    "use_pin": "Použít PIN",
+    "failed": "Windows Hello aplikaci neodemklo. Zadejte PIN.",
+    "gone": "Windows Hello už v tomto počítači aplikaci neodemyká. Zadejte PIN."
+  },
   "uxs_general": {
     "time_zone_common": "Běžná časová pásma",
     "time_zone_all": "Všechna časová pásma",

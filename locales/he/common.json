@@ -7466,6 +7466,25 @@
     "blocked_seconds": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {שנייה אחת} two {שתי שניות} other {# שניות}}.",
     "blocked_minutes": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}."
   },
+  "appLockHello": {
+    "switch_label": "ביטול נעילה עם Windows Hello",
+    "switch_desc": "באמצעות הפנים, טביעת האצבע או קוד ה-PIN של Windows. קוד ה-PIN של האפליקציה ממשיך לעבוד.",
+    "protects": "כש-Windows Hello מופעל, Windows שומר עבור האפליקציה הזו מפתח שעובד רק אחרי ש-Windows Hello בדק שזה אתם. גם המפתח של האפליקציה נעול בו, כך שביטול הנעילה דורש את הפנים, טביעת האצבע או קוד ה-PIN של Windows, ותוכנה אחרת במחשב הזה לא יכולה להשתמש במפתח בלי ש-Windows ישאל אתכם קודם. קוד ה-PIN של האפליקציה ממשיך לעבוד, ותצטרכו אותו אם Windows Hello יאופס או יכובה.",
+    "enable_title": "הפעלת Windows Hello",
+    "enable_body": "הזינו את קוד ה-PIN של האפליקציה. אחר כך Windows יבקש לאשר עם Windows Hello.",
+    "enable_failed": "לא ניתן היה להפעיל את Windows Hello. נסו שוב.",
+    "cancelled": "Windows Hello בוטל.",
+    "unsupported": "Windows Hello במחשב הזה לא יכול להגן על המפתח. קוד ה-PIN ממשיך לעבוד.",
+    "unavailable": "Windows Hello לא זמין במחשב הזה.",
+    "busy": "Windows Hello תפוס או נעול. נסו שוב מאוחר יותר.",
+    "off_after_pin_change": "Windows Hello כבוי עכשיו, כי הוא לא אישר אחרי שינוי קוד ה-PIN. הפעילו אותו שוב אם אתם משתמשים בו.",
+    "prompt": "אשרו עם Windows Hello שזה אתם.",
+    "waiting": "ממתין ל-Windows Hello…",
+    "use_hello": "ביטול נעילה עם Windows Hello",
+    "use_pin": "שימוש בקוד PIN במקום",
+    "failed": "Windows Hello לא ביטל את נעילת האפליקציה. הזינו את קוד ה-PIN.",
+    "gone": "Windows Hello כבר לא מבטל את נעילת האפליקציה במחשב הזה. הזינו את קוד ה-PIN."
+  },
   "uxs_general": {
     "time_zone_common": "אזורי זמן נפוצים",
     "time_zone_all": "כל אזורי הזמן",

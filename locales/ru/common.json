@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Слишком много попыток. Повторите через {count, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}}.",
     "blocked_minutes": "Слишком много попыток. Повторите через {count, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}."
   },
+  "appLockHello": {
+    "switch_label": "Разблокировка с Windows Hello",
+    "switch_desc": "Лицо, отпечаток пальца или PIN-код Windows. PIN-код приложения продолжает работать.",
+    "protects": "Когда Windows Hello включён, Windows хранит для этого приложения ключ, который работает только после того, как Windows Hello проверит, что это вы. Ключ приложения тоже заперт этим ключом, поэтому для разблокировки нужно ваше лицо, отпечаток пальца или PIN-код Windows, и другая программа на этом компьютере не может воспользоваться ключом, не спросив вас через Windows. PIN-код приложения продолжает работать, и он понадобится, если Windows Hello сбросят или отключат.",
+    "enable_title": "Включить Windows Hello",
+    "enable_body": "Введите PIN-код приложения. Затем Windows попросит подтвердить вход через Windows Hello.",
+    "enable_failed": "Не удалось включить Windows Hello. Попробуйте ещё раз.",
+    "cancelled": "Windows Hello отменён.",
+    "unsupported": "Windows Hello на этом компьютере не может защитить ключ. Ваш PIN-код продолжает работать.",
+    "unavailable": "Windows Hello недоступен на этом компьютере.",
+    "busy": "Windows Hello занят или заблокирован. Попробуйте позже.",
+    "off_after_pin_change": "Windows Hello теперь выключен, потому что не подтвердил вход после смены PIN-кода. Включите его снова, если пользуетесь им.",
+    "prompt": "Подтвердите через Windows Hello, что это вы.",
+    "waiting": "Ожидание Windows Hello…",
+    "use_hello": "Разблокировать с Windows Hello",
+    "use_pin": "Ввести PIN-код",
+    "failed": "Windows Hello не разблокировал приложение. Введите PIN-код.",
+    "gone": "Windows Hello больше не разблокирует приложение на этом компьютере. Введите PIN-код."
+  },
   "uxs_general": {
     "time_zone_common": "Частые часовые пояса",
     "time_zone_all": "Все часовые пояса",

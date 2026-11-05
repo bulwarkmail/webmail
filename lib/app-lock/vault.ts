@@ -21,7 +21,7 @@ import { VAULT_DB } from './state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { shellControls, shellHasWrap, shellUnwrapCall, shellWrapCall } from './shell';
 import { sealFor, createSessionOpener, type SealedAnswer } from '@/lib/popout/sealed';
-import { bitsFromPin, keyFromPin, keyFromPinStep, keyFromPrf, mainProof, ObviousPinError, open, PBKDF2_ITERATIONS, pinIsObvious, randomBytes, seal, type WrappedBytes } from './crypto';
+import { bitsFromPin, keyFromHello, keyFromPin, keyFromPinStep, keyFromPrf, mainProof, ObviousPinError, open, PBKDF2_ITERATIONS, pinIsObvious, randomBytes, seal, type WrappedBytes } from './crypto';
 
 export { VAULT_DB };
 const DB_VERSION = 1;
@@ -45,10 +45,19 @@ export interface PrfWrap extends WrappedBytes {
   salt: Uint8Array;
 }
 
+/** Windows Hello's way in: under a key from the key credential's signature over main's challenge. */
+export interface HelloWrap extends WrappedBytes {
+  /** What main's challenge takes from here. New with every wrap. */
+  salt: Uint8Array;
+  /** `data` is wrapped once more by the desktop app's main process, as the PIN's is. */
+  shell?: true;
+}
+
 export interface VaultRecord {
   id: typeof VAULT_ID;
   pin: PinWrap;
   prf?: PrfWrap;
+  hello?: HelloWrap;
   /** For sealing drafts in tabs with no key: anyone may seal, only the lock key opens. */
   sealing: { publicKey: JsonWebKey; privateKey: WrappedBytes };
   /**
@@ -163,7 +172,7 @@ async function keyThroughMain(pin: string, salt: Uint8Array, iterations: number)
   throw new VaultShellError();
 }
 
-async function outOfShell(pin: PinWrap): Promise<Uint8Array> {
+async function outOfShell(pin: { data: Uint8Array; shell?: true }): Promise<Uint8Array> {
   if (!pin.shell) return pin.data;
   const data = await shellUnwrapCall()?.(pin.data).catch(() => null);
   if (!data) throw new VaultShellError();
@@ -270,7 +279,8 @@ async function peppered(vault: VaultRecord, pin: string, raw: Uint8Array): Promi
  * A new PIN takes a new lock key. The record under the old PIN can stay in the browser's own files
  * long after it was overwritten, and with the same key under it the old PIN would go on opening
  * everything. A passkey's wrap is under the old key and only its authenticator could make a new
- * one, so it goes. The old key waits under the new one for the store keys to move over.
+ * one, so it goes. So does Windows Hello's: the caller asks Hello for a new one. The old key waits
+ * under the new one for the store keys to move over.
  */
 export async function rotateVaultKey(newPin: string, oldRaw: Uint8Array, newRaw: Uint8Array = randomBytes(32)): Promise<Uint8Array> {
   if (pinIsObvious(newPin)) throw new ObviousPinError();
@@ -279,7 +289,7 @@ export async function rotateVaultKey(newPin: string, oldRaw: Uint8Array, newRaw:
   const importAes = (raw: Uint8Array) => crypto.subtle.importKey('raw', raw.slice().buffer as ArrayBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
   const oldKey = await importAes(oldRaw);
   const newKey = await importAes(newRaw);
-  const { prf: _gone, ...rest } = vault;
+  const { prf: _gone, hello: _helloGone, ...rest } = vault;
   await writeRecord({
     ...rest,
     pin: await pinWrapOf(newPin, newRaw),
@@ -320,6 +330,32 @@ export async function openVaultWithPrf(prfOutput: ArrayBuffer | Uint8Array): Pro
   const vault = await readVault();
   if (!vault?.prf) throw new WrongPinError();
   return open(await keyFromPrf(prfOutput), vault.prf);
+}
+
+/**
+ * Windows Hello's way in. `signature` is what the key credential gave for main's challenge with
+ * this salt. The lock key goes under a key from it, and through main's safeStorage as the PIN's does.
+ */
+export async function addVaultHello(raw: Uint8Array, salt: Uint8Array, signature: Uint8Array): Promise<void> {
+  const vault = await readVault();
+  if (!vault) throw new Error('The app lock is not set up');
+  const sealed = await seal(await keyFromHello(signature, salt), raw);
+  await writeRecord({ ...vault, hello: { salt, iv: sealed.iv, ...(await throughShell(sealed.data)) } });
+}
+
+export async function removeVaultHello(): Promise<void> {
+  const vault = await readVault();
+  if (!vault?.hello) return;
+  const { hello: _gone, ...rest } = vault;
+  await writeRecord(rest);
+}
+
+/** Throws when the signature isn't the one the wrap was made with. Costs no PIN try. */
+export async function openVaultWithHello(signature: Uint8Array): Promise<Uint8Array> {
+  const vault = await readVault();
+  if (!vault?.hello) throw new WrongPinError();
+  const data = await outOfShell(vault.hello);
+  return open(await keyFromHello(signature, vault.hello.salt), { iv: vault.hello.iv, data });
 }
 
 /** Deleted at sign-out and when the lock goes off. The store's keys can't depend on it then. */

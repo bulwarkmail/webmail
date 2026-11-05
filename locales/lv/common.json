@@ -7465,6 +7465,25 @@
     "blocked_seconds": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# sekundēm} one {# sekundes} other {# sekundēm}}.",
     "blocked_minutes": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# minūtēm} one {# minūtes} other {# minūtēm}}."
   },
+  "appLockHello": {
+    "switch_label": "Atbloķēt ar Windows Hello",
+    "switch_desc": "Izmantojiet seju, pirksta nospiedumu vai Windows PIN kodu. Lietotnes PIN kods joprojām darbojas.",
+    "protects": "Kad Windows Hello ir ieslēgts, Windows glabā šai lietotnei atslēgu, kas darbojas tikai pēc tam, kad Windows Hello ir pārbaudījis, ka tas esat jūs. Ar to ir bloķēta arī lietotnes atslēga, tāpēc atbloķēšanai vajag jūsu seju, pirksta nospiedumu vai Windows PIN kodu, un cita programma šajā datorā nevar izmantot šo atslēgu, Windows vispirms nepajautājot jums. Lietotnes PIN kods joprojām darbojas, un tas būs vajadzīgs, ja Windows Hello tiek atiestatīts vai izslēgts.",
+    "enable_title": "Ieslēgt Windows Hello",
+    "enable_body": "Ievadiet lietotnes PIN kodu. Pēc tam Windows lūgs apstiprināt ar Windows Hello.",
+    "enable_failed": "Windows Hello neizdevās ieslēgt. Mēģiniet vēlreiz.",
+    "cancelled": "Windows Hello tika atcelts.",
+    "unsupported": "Windows Hello šajā datorā nevar aizsargāt atslēgu. Jūsu PIN kods joprojām darbojas.",
+    "unavailable": "Windows Hello šajā datorā nav pieejams.",
+    "busy": "Windows Hello ir aizņemts vai bloķēts. Mēģiniet vēlāk.",
+    "off_after_pin_change": "Windows Hello tagad ir izslēgts, jo pēc PIN koda maiņas tas neapstiprināja. Ieslēdziet to atkal, ja to izmantojat.",
+    "prompt": "Apstipriniet ar Windows Hello, ka tas esat jūs.",
+    "waiting": "Gaida Windows Hello…",
+    "use_hello": "Atbloķēt ar Windows Hello",
+    "use_pin": "Izmantot PIN kodu",
+    "failed": "Windows Hello neatbloķēja lietotni. Ievadiet PIN kodu.",
+    "gone": "Windows Hello šajā datorā vairs neatbloķē lietotni. Ievadiet PIN kodu."
+  },
   "uxs_general": {
     "time_zone_common": "Bieži izmantotās laika joslas",
     "time_zone_all": "Visas laika joslas",
