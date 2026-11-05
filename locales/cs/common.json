@@ -6234,6 +6234,14 @@
     "date_label": "Datum",
     "subject_label": "Předmět"
   },
+  "print_styles": {
+    "title": "Tisk",
+    "description": "Jak vypadají vytištěné zprávy, kontakty a kalendáře.",
+    "style_label": "Styl tisku",
+    "style_description": "Doplňky mohou přidat styly, například hlavičkový papír s adresou vaší firmy.",
+    "standard": "Standardní",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Nainstalovat {appName}",
     "description": "Nainstalujte si naši aplikaci pro rychlý přístup.",

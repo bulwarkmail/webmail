@@ -6234,6 +6234,14 @@
     "date_label": "Tarih",
     "subject_label": "Konu"
   },
+  "print_styles": {
+    "title": "Yazdırma",
+    "description": "Yazdırılan iletilerin, kişilerin ve takvimlerin görünümü.",
+    "style_label": "Yazdırma stili",
+    "style_description": "Eklentiler stil ekleyebilir, örneğin şirketinizin adresini içeren antetli bir sayfa.",
+    "standard": "Standart",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} uygulamasını yükle",
     "description": "Hızlı erişim için uygulamamızı yükleyin.",

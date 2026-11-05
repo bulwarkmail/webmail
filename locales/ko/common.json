@@ -6234,6 +6234,14 @@
     "date_label": "날짜",
     "subject_label": "제목"
   },
+  "print_styles": {
+    "title": "인쇄",
+    "description": "인쇄한 메시지, 연락처, 캘린더의 모양입니다.",
+    "style_label": "인쇄 스타일",
+    "style_description": "부가 기능으로 스타일을 추가할 수 있습니다. 예를 들어 회사 주소가 들어간 레터헤드가 있습니다.",
+    "standard": "표준",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} 설치",
     "description": "빠르게 액세스하려면 앱을 설치하세요.",

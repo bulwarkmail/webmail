@@ -6234,6 +6234,14 @@
     "date_label": "Kuupäev",
     "subject_label": "Teema"
   },
+  "print_styles": {
+    "title": "Printimine",
+    "description": "Kuidas prinditud kirjad, kontaktid ja kalendrid välja näevad.",
+    "style_label": "Prindistiil",
+    "style_description": "Lisandmoodulid võivad lisada stiile, näiteks kirjapäise teie ettevõtte aadressiga.",
+    "standard": "Tavaline",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Paigalda {appName}",
     "description": "Paigalda meie rakendus kiireks ligipääsuks.",
