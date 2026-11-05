@@ -24,7 +24,7 @@ import { IS_LITE } from '@/lib/lite';
 import { useOfflineStore } from '@/lib/offline/state';
 import { keepRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { closePopoutWindow, isPopoutWindow } from '@/lib/popout/window-role';
-import { getStore, type StoreBackend } from '@/lib/store/client/api';
+import { configureStoreKeys, getStore, type StoreBackend } from '@/lib/store/client/api';
 import { forgetAccountKey, listAccountRecords, rewrapAccountKey, StoreKeyLayerMissingError, type AccountRecord, type WrapLayer } from '@/lib/store/client/keys';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
@@ -173,6 +173,8 @@ export function bootAppLock(): void {
   if (booted || typeof window === 'undefined' || IS_LITE) return;
   booted = true;
   setAppLockCheck(isAppLockedNow);
+  // Before anything can open the store: the app may ask for it before offline mode has loaded.
+  configureStoreKeys({ keyLayers: storeKeyLayers, onKeyLocked: onStoreKeyMissing });
   desktopControls();
   const file = readAppLockFile();
   if (file.on) {
@@ -330,9 +332,13 @@ function startIdle(): void {
     return;
   }
   stopIdle = watchIdle({
-    timeoutMs: () => effectiveTimeout(readAppLockFile().timeoutMinutes).minutes * 60_000,
-    onIdle: () => lockEverywhere(),
+    timeoutMs: timeoutMsNow,
+    onIdle: () => lockOnItsOwn('idle'),
   });
+}
+
+function timeoutMsNow(): number {
+  return effectiveTimeout(readAppLockFile().timeoutMinutes).minutes * 60_000;
 }
 
 /**
@@ -347,7 +353,7 @@ function watchHolder(): void {
   holderWatch = watch;
   void navigator.locks.request(APP_LOCK_HOLDER, { signal: watch.signal }, () => {
     if (heldKey) return keepHolder();
-    if (readAppLockFile().on && !readAppLockFile().locked) lockEverywhere();
+    if (readAppLockFile().on && !readAppLockFile().locked) lockOnItsOwn('the tab with the key went');
     return undefined;
   }).catch(() => {});
 }
@@ -392,6 +398,31 @@ function openUp(): void {
 }
 
 // ---- Locking ----
+
+/** When this tab last saw an unlock, its own or another window's. 0: none since it started. */
+let unlockedAt = 0;
+/** A lock this soon after an unlock is a bug somewhere, whoever asked for it. */
+const RELOCK_ERROR_MS = 1_000;
+
+function noteUnlocked(): void {
+  unlockedAt = Date.now();
+}
+
+/**
+ * A lock the app decides on by itself: the idle timeout, the tab with the key gone, a store key
+ * this tab can't open. Within the timeout after an unlock none of them can be right: the user was
+ * just here. A bug in one would lock again after every unlock, and nobody could get back in. So
+ * they wait out the timeout; the user's own lock (the menu, the tray, settings, the screen
+ * locking) always goes through.
+ */
+function lockOnItsOwn(cause: string): void {
+  const since = Date.now() - unlockedAt;
+  if (unlockedAt > 0 && since < timeoutMsNow()) {
+    console.error(`[app-lock] Not locking again ${since} ms after an unlock: ${cause}`);
+    return;
+  }
+  lockEverywhere();
+}
 
 /** Every window and tab. Safe to call at any time; it only ever makes things more locked. */
 export function lockEverywhere(): void {
@@ -512,6 +543,8 @@ function stayUntilReachable(): void {
 
 async function applyLockHere(): Promise<void> {
   if (phase === 'locking' || phase === 'locked' || phase === 'locked-stay') return;
+  const sinceUnlock = Date.now() - unlockedAt;
+  if (unlockedAt > 0 && sinceUnlock < RELOCK_ERROR_MS) console.error(`[app-lock] Locked again ${sinceUnlock} ms after an unlock`);
   const wasRunning = phase === 'open';
   setLockedHere(true);
   markDocument(true);
@@ -602,6 +635,7 @@ async function holdAndOpen(raw: Uint8Array): Promise<void> {
     await reloadSealedStores();
   }
   writeAppLockFile({ ...readAppLockFile(), on: true, locked: false });
+  noteUnlocked();
   postAppLockMessage({ type: 'unlocked' });
   tellServiceWorker('unlocked');
   openUp();
@@ -851,7 +885,7 @@ export async function storeKeyLayers(): Promise<readonly WrapLayer[]> {
 
 /** This tab inherited the store and has no key for it. */
 export function onStoreKeyMissing(): void {
-  lockEverywhere();
+  lockOnItsOwn(heldKey ? 'the store asked for the key this tab holds' : 'this tab has the store and no key');
 }
 
 async function ownerIsElsewhere(): Promise<boolean> {
@@ -897,6 +931,7 @@ async function enable(pin: string): Promise<void> {
   } catch {
     // Storage blocked: there's no snapshot either.
   }
+  noteUnlocked();
   postAppLockMessage({ type: 'enabled' });
   tellServiceWorker('unlocked');
   openUp();
@@ -1122,6 +1157,7 @@ function onMessage(message: AppLockMessage): void {
         void desktopSaysLocked().then(async (locked) => {
           if (locked) return;
           await reloadSealedStores();
+          noteUnlocked();
           openUp();
         });
       }
@@ -1202,6 +1238,8 @@ export function resetAppLockForTests(): void {
   stopIdle = null;
   stopStay?.();
   resetShellForTests();
+  configureStoreKeys(null);
+  unlockedAt = 0;
   enabling = false;
   shellWraps = false;
   shellAsked = false;
