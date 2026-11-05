@@ -2122,12 +2122,6 @@
         "preview": "Forhåndsvis når det er mulig",
         "download": "Last ned umiddelbart"
       },
-      "attachment_position": {
-        "label": "Plassering av vedlegg",
-        "description": "Velg hvor vedlegg skal vises i e-postoverskriften",
-        "below-header": "Under overskriften",
-        "below-message": "Kort under meldingen"
-      },
       "emails_per_page": {
         "10": "10 e-poster",
         "25": "25 e-poster",

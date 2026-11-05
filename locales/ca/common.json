@@ -2122,12 +2122,6 @@
         "preview": "Previsualitza quan sigui possible",
         "download": "Baixa immediatament"
       },
-      "attachment_position": {
-        "label": "Posició dels fitxers adjunts",
-        "description": "On mostrar els fitxers adjunts a la capçalera del correu",
-        "below-header": "Sota la capçalera",
-        "below-message": "Targetes sota el missatge"
-      },
       "emails_per_page": {
         "10": "10 correus",
         "25": "25 correus",

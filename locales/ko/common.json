@@ -2119,12 +2119,6 @@
         "preview": "가능하면 미리보기",
         "download": "즉시 다운로드"
       },
-      "attachment_position": {
-        "label": "첨부파일 위치",
-        "description": "메일 상단에서 첨부파일을 어디에 표시할지 설정해요",
-        "below-header": "제목 아래",
-        "below-message": "메시지 아래 카드"
-      },
       "emails_per_page": {
         "10": "10개",
         "25": "25개",

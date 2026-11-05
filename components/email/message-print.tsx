@@ -11,6 +11,8 @@ export interface MessagePrintFields {
   to: string;
   cc: string;
   date: string;
+  /** The attachments' names and sizes, printed in the header above the body as the reader shows them. */
+  attachments: string;
   /** Sanitized body HTML without <style>: a re-sanitized HTML body, or the escaped plain-text one. */
   bodyHtml: string;
   plain: boolean;
@@ -47,6 +49,7 @@ export function MessagePrint({ fields }: { fields: MessagePrintFields }) {
     [t("to"), fields.to],
     [t("cc"), fields.cc],
     [t("date"), fields.date],
+    [t("attachments"), fields.attachments],
   ];
   const { bodyHtml, plain } = fields;
   const fillBody = useCallback((host: HTMLDivElement | null) => {

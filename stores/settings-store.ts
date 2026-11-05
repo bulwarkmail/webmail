@@ -316,8 +316,6 @@ export type FirstDayOfWeek = 0 | 1 | 6; // 0 = Sunday, 1 = Monday, 6 = Saturday
 export type TimeZoneSetting = 'auto' | (string & {});
 export type ExternalContentPolicy = 'ask' | 'block' | 'allow';
 export type MailAttachmentAction = 'preview' | 'download';
-/** 'below-header': a bar of tiles under the header. 'below-message': preview cards after the body. */
-export type AttachmentPosition = 'below-header' | 'below-message';
 export type ToolbarPosition = 'top' | 'below-subject';
 export type ArchiveMode = 'single' | 'year' | 'month';
 export type MailLayout = 'split' | 'focus' | 'horizontal';
@@ -608,7 +606,6 @@ interface SettingsState extends AccessibilitySettings {
   messageSpacing: MessageSpacing; // Gutter around the message body in the reader
   plainTextFont: PlainTextFont; // Font for text/plain email bodies in the reader
   mailAttachmentAction: MailAttachmentAction;
-  attachmentPosition: AttachmentPosition;
   emailAlwaysLightMode: boolean; // Always render email content in light mode
   archiveMode: ArchiveMode; // How to organize archived emails: single folder, by year, or by year+month
   hoverActions: HoverAction[]; // Quick actions shown on hover in mail list
@@ -970,7 +967,6 @@ const DEFAULT_SETTINGS = {
   messageSpacing: 'auto' as MessageSpacing,
   plainTextFont: 'sans' as PlainTextFont,
   mailAttachmentAction: 'preview' as MailAttachmentAction,
-  attachmentPosition: 'below-header' as AttachmentPosition,
   emailAlwaysLightMode: false,
   archiveMode: 'single' as ArchiveMode,
   hoverActions: ['delete', 'star', 'markRead', 'archive'] as HoverAction[],
@@ -1428,7 +1424,6 @@ export const useSettingsStore = create<SettingsState>()(
           messageSpacing: state.messageSpacing,
           plainTextFont: state.plainTextFont,
           mailAttachmentAction: state.mailAttachmentAction,
-          attachmentPosition: state.attachmentPosition,
           archiveMode: state.archiveMode,
           hoverActions: state.hoverActions,
           hoverActionsMode: state.hoverActionsMode,
@@ -1662,7 +1657,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateTrustedSendersBookDefault(settings);
-          migrateAttachmentPosition(settings);
+          dropAttachmentPosition(settings);
 
           // Apply settings, noting which keys were taken over for the
           // onSettingsImport hook.
@@ -2078,7 +2073,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 14,
+      version: 15,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2196,8 +2191,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         migrateTrustedSendersBookDefault(state);
-        // The old default must not be taken as chosen below either.
-        migrateAttachmentPosition(state);
+        // v15: attachments always sit under the header; the setting is gone.
+        dropAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
         // Earlier builds did not record that, so a setting that differs from
         // the build default is taken as chosen.
@@ -2209,14 +2204,16 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
 }
 
 /**
- * v12: the attachments next to the sender ('beside-sender', the old default)
- * gave way to the bar under the header. Imports and server copies from older
- * builds still carry the old value and go through this too.
+ * v15: attachments always show under the message header, so the Attachment
+ * position setting is gone. A stored value ('below-message', or the older
+ * 'beside-sender') and its "chosen" mark are dropped, so nothing keeps it
+ * around and writes it back. Imports and server copies from older builds
+ * still carry it and go through this too.
  */
-export function migrateAttachmentPosition(state: Record<string, unknown>): void {
-  if (state.attachmentPosition === undefined) return;
-  if (state.attachmentPosition !== 'below-header' && state.attachmentPosition !== 'below-message') {
-    state.attachmentPosition = 'below-header';
+export function dropAttachmentPosition(state: Record<string, unknown>): void {
+  delete state.attachmentPosition;
+  if (Array.isArray(state.explicitSettings)) {
+    state.explicitSettings = (state.explicitSettings as unknown[]).filter((key) => key !== 'attachmentPosition');
   }
 }
 

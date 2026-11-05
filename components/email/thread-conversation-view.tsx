@@ -78,6 +78,7 @@ import { AttachmentPluginMenu, ReaderAboveQuoteSlot } from "./reader-plugin-surf
 import { useRemoteContentBlockedByOrg, useRemoteContentChecks } from "@/hooks/use-third-party-mode";
 import { ConversationHeaderActions, type ConversationActions } from "./conversation-header-actions";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
+import { ROW_ITEM_ATTR, ROW_MORE_ATTR, useFirstRowLimit } from "@/hooks/use-first-row-limit";
 import { turnOffLinks } from "@/lib/phishing-links";
 import { usePhishingMarked } from "@/hooks/use-phishing-report";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
@@ -898,6 +899,11 @@ export function ConversationEmailBody({
     const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
     return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
   }, [email, hideInlineImageAttachments]);
+  const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
+  const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
+  const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;
+  const shownAttachments = attachmentLimit === null ? visibleAttachments : visibleAttachments.slice(0, attachmentLimit);
+  const hiddenAttachments = attachmentLimit === null ? [] : visibleAttachments.slice(attachmentLimit);
 
   // Render the sanitized HTML body inside a sandboxed iframe so a malicious
   // (or accidentally-bypassed) email cannot inject styles/scripts/forms into
@@ -1038,7 +1044,99 @@ export function ConversationEmailBody({
 
   return (
     <div className={className}>
+      {/* A security warning first, so it is read before a file is opened. */}
       {phishingMarked && <PhishingMarkBanner className="px-4" />}
+      {/* Attachments: right under the message's header and its security
+          warning, above the other notices and the body, on one line; the
+          rest behind "Show N more". Inline images stay in the body, so a
+          message with only those has none. */}
+      {visibleAttachments.length > 0 && (
+        <div
+          data-conversation-attachments=""
+          style={bodyStyle ? { paddingTop: '0.25rem', paddingBottom: '0.25rem' } : { paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}
+        >
+          <div ref={attachmentRow.ref} className="flex flex-wrap items-center gap-2">
+            {shownAttachments.map((attachment, idx) => {
+              const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
+              const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
+                || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
+              // Without downloads, whatever can be previewed is, and nothing else opens.
+              const opensPreview = isPreviewable && (mailAttachmentAction === 'preview' || devices.noDownloads);
+              const locked = devices.noDownloads && !opensPreview;
+              return (
+                <span key={idx} {...{ [ROW_ITEM_ATTR]: "" }} className="inline-flex min-w-0 max-w-full items-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (locked) return;
+                    onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type, source);
+                  }}
+                  aria-disabled={locked || undefined}
+                  title={locked ? t('device_policy.downloads_off') : opensPreview ? t('files.preview') : t('email_viewer.download')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
+                >
+                  <Icon className={cn("w-4 h-4", iconClass)} />
+                  {/* The action, for screen readers: the visible name alone
+                      doesn't say whether the button previews or downloads. */}
+                  <span className="sr-only">{opensPreview ? t('files.preview') : t('email_viewer.download')}</span>{' '}
+                  <span className="truncate max-w-[150px]">{attachment.name ? stripBidiControls(attachment.name) : 'Attachment'}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {formatFileSize(attachment.size)}
+                  </span>
+                  {opensPreview ? (
+                    <Eye className="w-4 h-4 text-muted-foreground" />
+                  ) : locked ? null : (
+                    <Download className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
+                  <button
+                    type="button"
+                    title={t('desktopEdit.edit')}
+                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
+                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const { blobId } = attachment;
+                      void editAttachment({
+                        key: `mail:${editAccount}:${email.id}:${blobId}`,
+                        name: attachment.name ?? 'attachment',
+                        type: attachment.type,
+                        account: editAccount,
+                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
+                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
+                      });
+                    }}
+                  >
+                    <FilePen className="h-4 w-4" />
+                  </button>
+                )}
+                <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
+                </span>
+              );
+            })}
+            {hiddenAttachments.length > 0 && (
+              <button
+                type="button"
+                {...{ [ROW_MORE_ATTR]: "" }}
+                onClick={(e) => { e.stopPropagation(); setAttachmentsExpanded(true); }}
+                className="px-3 py-2 rounded-lg text-sm text-primary hover:bg-muted transition-colors"
+              >
+                {t('email_viewer.attachments_show_more', { count: hiddenAttachments.length })}
+              </button>
+            )}
+            {attachmentsExpanded && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setAttachmentsExpanded(false); }}
+                className="px-3 py-2 rounded-lg text-sm text-primary hover:bg-muted transition-colors"
+              >
+                {t('email_viewer.attachments_show_fewer')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* External content warning */}
       {hasBlockedContent && !allowExternal && !pluginBody.blockExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">
@@ -1143,72 +1241,6 @@ export function ConversationEmailBody({
         />
       </div>
 
-      {/* Attachments */}
-      {visibleAttachments.length > 0 && (
-        <div className="px-4 pb-4">
-          <div className="flex flex-wrap gap-2">
-            {visibleAttachments.map((attachment, idx) => {
-              const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
-              const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
-                || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
-              // Without downloads, whatever can be previewed is, and nothing else opens.
-              const opensPreview = isPreviewable && (mailAttachmentAction === 'preview' || devices.noDownloads);
-              const locked = devices.noDownloads && !opensPreview;
-              return (
-                <React.Fragment key={idx}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (locked) return;
-                    onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type, source);
-                  }}
-                  aria-disabled={locked || undefined}
-                  title={locked ? t('device_policy.downloads_off') : opensPreview ? t('files.preview') : t('email_viewer.download')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
-                >
-                  <Icon className={cn("w-4 h-4", iconClass)} />
-                  {/* The action, for screen readers: the visible name alone
-                      doesn't say whether the button previews or downloads. */}
-                  <span className="sr-only">{opensPreview ? t('files.preview') : t('email_viewer.download')}</span>{' '}
-                  <span className="truncate max-w-[150px]">{attachment.name ? stripBidiControls(attachment.name) : 'Attachment'}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatFileSize(attachment.size)}
-                  </span>
-                  {opensPreview ? (
-                    <Eye className="w-4 h-4 text-muted-foreground" />
-                  ) : locked ? null : (
-                    <Download className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
-                  <button
-                    type="button"
-                    title={t('desktopEdit.edit')}
-                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
-                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const { blobId } = attachment;
-                      void editAttachment({
-                        key: `mail:${editAccount}:${email.id}:${blobId}`,
-                        name: attachment.name ?? 'attachment',
-                        type: attachment.type,
-                        account: editAccount,
-                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
-                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
-                      });
-                    }}
-                  >
-                    <FilePen className="h-4 w-4" />
-                  </button>
-                )}
-                <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

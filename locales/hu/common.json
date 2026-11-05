@@ -2122,12 +2122,6 @@
         "preview": "Előnézet, ha lehetséges",
         "download": "Azonnali letöltés"
       },
-      "attachment_position": {
-        "label": "Csatolmány pozíciója",
-        "description": "Hol jelenjenek meg a csatolmányok az e-mail fejlécben",
-        "below-header": "Fejléc alatt",
-        "below-message": "Kártyák az üzenet alatt"
-      },
       "emails_per_page": {
         "10": "10 e-mail",
         "25": "25 e-mail",

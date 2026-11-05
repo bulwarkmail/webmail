@@ -2122,12 +2122,6 @@
         "preview": "Preview when possible",
         "download": "Download immediately"
       },
-      "attachment_position": {
-        "label": "Attachment position",
-        "description": "Where to display the attachments of an open email",
-        "below-header": "Bar below the header",
-        "below-message": "Cards below the message"
-      },
       "emails_per_page": {
         "10": "10 emails",
         "25": "25 emails",

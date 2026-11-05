@@ -2122,12 +2122,6 @@
         "preview": "Náhľad, ak je to možné",
         "download": "Okamžite stiahnuť"
       },
-      "attachment_position": {
-        "label": "Pozícia príloh",
-        "description": "Kde zobrazovať prílohy v hlavičke e-mailu",
-        "below-header": "Pod hlavičkou",
-        "below-message": "Karty pod správou"
-      },
       "emails_per_page": {
         "10": "10 e-mailov",
         "25": "25 e-mailov",
