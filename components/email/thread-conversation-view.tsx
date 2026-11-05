@@ -75,7 +75,7 @@ import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection } from "./reader-selection-menu";
-import { PluginActions, useMessageActionTarget } from "@/components/plugins/plugin-actions";
+import { PluginActions, targetFilter, useMessageActionTarget, usePluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePluginRenderedBody } from "@/hooks/use-plugin-rendered-body";
@@ -448,6 +448,8 @@ function EmailCard({
   const density = useSettingsStore((state) => state.density);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plugin = useConversationPluginProps(email);
+  // The same filter PluginActions uses, so the ⋮ shows only when its menu has a plugin item.
+  const readerActions = usePluginActions("reader-actions", { mailboxRole: mailboxRole ?? null, ...targetFilter(plugin.actionTarget, undefined) });
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
   const formatAddress = useOwnDomainAddress();
@@ -643,19 +645,21 @@ function EmailCard({
                 {t("email_viewer.forward")}
               </Button>
             )}
-            <PluginActions
-              surface="reader-actions"
-              context={plugin.idProps}
-              target={plugin.actionTarget}
-              mailboxRole={mailboxRole ?? null}
-              overflow
-              className="flex-shrink-0 rounded-md border border-border"
-            />
+            {/* One ⋮ per message: Print and the plugins' reader actions share it. */}
             <ConversationMessageMenu
               onPrint={onPrint}
+              hasExtra={readerActions.length > 0}
               className="w-auto h-8 px-2 flex-shrink-0 rounded-md border border-border"
               iconClassName="w-4 h-4"
-            />
+            >
+              <PluginActions
+                surface="reader-actions"
+                variant="menu"
+                context={plugin.idProps}
+                target={plugin.actionTarget}
+                mailboxRole={mailboxRole ?? null}
+              />
+            </ConversationMessageMenu>
           </div>
         </div>
       )}

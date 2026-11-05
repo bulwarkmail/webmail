@@ -420,9 +420,12 @@ describe('reader surfaces in the phone conversation view', () => {
     expect(dispatch).toHaveBeenCalledWith('p', 'reader-actions', 'translate', { emailId: 'm2' });
     unmount();
 
-    // Kept to the folder roles the plugin asked for.
+    // Kept to the folder roles the plugin asked for: in Junk the message's ⋮ still has Print,
+    // and nothing from the plugin.
     render(<ThreadConversationView thread={thread} emails={conversation} onBack={() => {}} mailboxRole="junk" />);
-    expect(screen.queryByRole('button', { name: 'more_actions' })).toBeNull();
+    const more = screen.queryAllByRole('button', { name: 'more_actions' });
+    for (const button of more) fireEvent.click(button);
+    expect(screen.queryByRole('menuitem', { name: 'Translate' })).toBeNull();
   });
 });
 
