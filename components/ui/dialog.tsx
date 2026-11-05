@@ -202,8 +202,27 @@ export function Dialog({
   );
 
   // No backdrop: the window behind can't be used while this one is open.
+  // In a window of its own: around the card the room for its shadow, transparent, where a
+  // click does what a click on the dimmed backdrop does over the page.
   if (surface.mode === "window") {
-    return <DialogSurfacePortal surface={surface.surface}>{panel}</DialogSurfacePortal>;
+    return (
+      <DialogSurfacePortal surface={surface.surface}>
+        <div
+          className="fixed inset-0 flex items-center justify-center p-[var(--bulwark-dialog-margin,2.5rem)] pt-[calc(var(--bulwark-dialog-margin,2.5rem)+var(--titlebar-row-height,0px))]"
+          data-dialog-margin=""
+          onMouseDown={(e) => {
+            pressedOnBackdrop.current = e.target === e.currentTarget;
+          }}
+          onClick={(e) => {
+            const outside = pressedOnBackdrop.current && e.target === e.currentTarget;
+            pressedOnBackdrop.current = false;
+            if (outside && !blockOutside) onClose();
+          }}
+        >
+          {panel}
+        </div>
+      </DialogSurfacePortal>
+    );
   }
 
   return createPortal(
