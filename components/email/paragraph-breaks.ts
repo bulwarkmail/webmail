@@ -1,4 +1,4 @@
-import { SIGNATURE_BLOCK_MARKER, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-block";
+import { SIGNATURE_BLOCK_MARKER, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-markers";
 import { QUOTED_HTML_MARKER } from "@/components/email/quoted-html";
 import { REPLY_QUOTE_START_ATTRIBUTE } from "@/components/email/reply-quote-collapse";
 

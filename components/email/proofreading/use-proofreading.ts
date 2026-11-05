@@ -16,7 +16,7 @@ import { plainSegments, richSegments } from "@/lib/proofreading/segments";
 import { allCheckers, dispatchCheck, dispatchCheckerAction, registerCheckTarget, subscribeCheckers } from "@/lib/plugin-sandbox/checkers";
 import { actionsFor, subscribeActions } from "@/lib/plugin-sandbox/actions";
 import { all as allActivePlugins, subscribe as subscribeActivePlugins } from "@/lib/plugin-sandbox/registry";
-import { replaceTextareaRange, type PlainOwnOptions } from "@/lib/plugin-sandbox/composer-edit";
+import { replaceTextareaRange, type PlainOwnOptions } from "@/lib/plugin-sandbox/composer-own-text";
 import { usePolicyStore } from "@/stores/policy-store";
 import { knownPlugins, subscribeKnownPlugins } from "@/lib/plugin-sandbox/known-plugins";
 import type { InstalledPlugin } from "@/lib/plugin-types";

@@ -6,7 +6,7 @@ import { NodeSelection, Plugin, PluginKey, Selection, TextSelection } from "@tip
 import type { Editor } from "@tiptap/react";
 
 import { addParagraphSpacing, addTrailingParagraphBreaks } from "@/components/email/paragraph-breaks";
-import { buildSignatureBlock } from "@/components/email/signature-block";
+import { buildSignatureBlock } from "@/components/email/signature-markers";
 import { parkRemoteResources, restoreRemoteResources, sanitizeComposerIslandHtml } from "@/lib/email-sanitization";
 import { useSettingsStore } from "@/stores/settings-store";
 import { remoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";

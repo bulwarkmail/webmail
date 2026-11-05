@@ -19,7 +19,7 @@ import type { ComposerAttachmentData, ComposerSnapshot, InstalledPlugin } from '
 import { sanitizePluginBodyHtml } from '../email-sanitization';
 import { htmlToPlainText } from '../html-to-text';
 import { captureComposer, composerHandle, type ComposerHandle } from './composer-registry';
-import { textToEditorHtml } from './composer-edit';
+import { textToEditorHtml } from './editor-html';
 import { MAX_PLUGIN_FETCH_BYTES, readBoolean, readId, readObject, readString, withinRate } from './host-api-input';
 
 const MAX_CONTENT = 512 * 1024;

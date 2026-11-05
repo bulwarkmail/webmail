@@ -7,7 +7,7 @@ import {
   plainTextBodyWithoutSignature,
 } from "@/lib/signature-utils";
 import { wantsSignatureSeparator } from "@/lib/signature-delimiter";
-import { buildSignatureBlock, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-block";
+import { buildSignatureBlock, SIGNATURE_RANGE_MARKER } from "@/components/email/signature-markers";
 
 /**
  * Helpers for the composer's per-message HTML <-> plain-text switch (#1022).
