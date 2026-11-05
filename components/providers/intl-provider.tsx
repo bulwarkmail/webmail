@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { NextIntlClientProvider } from 'next-intl';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { IntlErrorCode, NextIntlClientProvider, type IntlError } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { surfaceFromPath } from '@/lib/boot-skeleton/surfaces';
 import { locales } from '@/i18n/routing';
@@ -13,6 +13,7 @@ import { detectBrowserLocale } from '@/i18n/detect-locale';
 import { addPlainLanguage } from '@/i18n/plain-language';
 import { loadEnglishMessages, withEnglishFallback } from '@/i18n/english-catalog';
 import { LITE_ENGLISH, LiteRouteSkeleton } from './lite-intl-assets';
+import { fillIn } from '@/i18n/first-screen';
 
 type Messages = Record<string, unknown>;
 
@@ -59,10 +60,26 @@ interface IntlProviderProps {
   locale: string;
   /** Omitted by the Lite export: the catalog is then loaded on the client. */
   messages?: Messages;
+  /**
+   * `messages` is only the first screen's part (i18n/first-screen.ts): the
+   * rest is fetched after the first paint. Until then a key it lacks draws
+   * nothing, never its raw name, and the page draws again once it's there.
+   */
+  partial?: boolean;
   children: React.ReactNode;
 }
 
-export function IntlProvider({ locale: initialLocale, messages: initialMessages, children }: IntlProviderProps) {
+/** How long after the first paint the rest of a first-screen catalog is fetched, at the latest. */
+const REST_OF_CATALOG_MS = 1_500;
+
+/** Keys the page asked for before the rest of its catalog came; the boot guard reads this. */
+function noteEarlyMiss(path: string): void {
+  if (typeof window === 'undefined') return;
+  const w = window as Window & { __bulwarkCatalogMisses?: string[] };
+  (w.__bulwarkCatalogMisses ??= []).push(path);
+}
+
+export function IntlProvider({ locale: initialLocale, messages: initialMessages, partial = false, children }: IntlProviderProps) {
   const currentLocale = useLocaleStore((state) => state.locale);
   // Browser zone is detected on mount (SSR has no browser, so it renders UTC
   // until then); the user's `timeZone` setting overrides it (#755).
@@ -86,6 +103,58 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
     ...(LITE_ENGLISH ? { en: LITE_ENGLISH } : {}),
     ...(seed ? { [initialLocale]: seed } : {}),
   });
+
+  // A first-screen catalog: the rest comes once the page has drawn, laid into
+  // the same objects. Translators made before then for a namespace it lacked
+  // hold the gap, so only when one was asked for does the page draw again.
+  const restPending = useRef(partial && !!seed);
+  const missedEarly = useRef(false);
+  useEffect(() => {
+    if (!restPending.current || !seed) return;
+    let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const fetchRest = () => {
+      // The boot guard holds the rest back to see what the first screen asks for.
+      if ((window as unknown as { __holdCatalogRest?: boolean }).__holdCatalogRest) return;
+      const load = LOCALE_LOADERS[initialLocale] ?? loadEnglishMessages;
+      load().then((full) => {
+        if (cancelled) return;
+        fillIn(seed, full);
+        restPending.current = false;
+        if (missedEarly.current) {
+          setCatalog((prev) => (prev && prev.messages === seed ? { locale: prev.locale, messages: { ...seed } } : prev));
+        }
+      }, () => {
+        // Offline or a failed chunk: try again in a while; keys stay blank until then.
+        if (!cancelled) retry = setTimeout(fetchRest, 5_000);
+      });
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    const idle = w.requestIdleCallback ? w.requestIdleCallback(fetchRest, { timeout: REST_OF_CATALOG_MS }) : undefined;
+    const timer = idle === undefined ? setTimeout(fetchRest, 200) : undefined;
+    return () => {
+      cancelled = true;
+      if (idle !== undefined) w.cancelIdleCallback?.(idle);
+      clearTimeout(timer);
+      clearTimeout(retry);
+    };
+    // Once, for the catalog the server sent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onError = useCallback((error: IntlError) => {
+    if (restPending.current && error.code === IntlErrorCode.MISSING_MESSAGE) return;
+    console.error(error);
+  }, []);
+  const getMessageFallback = useCallback(({ namespace, key, error }: { namespace?: string; key: string; error: IntlError }) => {
+    const path = [namespace, key].filter(Boolean).join('.');
+    if (restPending.current && error.code === IntlErrorCode.MISSING_MESSAGE) {
+      missedEarly.current = true;
+      noteEarlyMiss(path);
+      return '';
+    }
+    return path;
+  }, []);
 
   // Detect the browser's timezone on mount (falls back to UTC internally)
   useEffect(() => {
@@ -148,6 +217,8 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
       locale={catalog.locale}
       messages={catalog.messages}
       timeZone={timeZone}
+      onError={onError}
+      getMessageFallback={getMessageFallback}
     >
       {children}
     </NextIntlClientProvider>

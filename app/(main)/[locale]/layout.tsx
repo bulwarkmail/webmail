@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import { AppLockGate } from "@/components/app-lock/app-lock-gate";
 import { IntlProvider } from "@/components/providers/intl-provider";
-import { loadCatalog } from "@/i18n/catalog";
+import { loadCatalog, loadFirstScreenCatalog } from "@/i18n/catalog";
+import { FIRST_SCREEN_SURFACES } from "@/i18n/first-screen";
+import { surfaceFromPath } from "@/lib/boot-skeleton/surfaces";
+import { headers } from "next/headers";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
 import { PushBindingsHost } from "@/components/providers/push-bindings-host";
@@ -77,16 +80,22 @@ export default async function LocaleLayout({
   // (the HTML and three RSC payloads per route and locale), which pushed the
   // Stalwart zip past its size limit. IntlProvider loads it as a chunk instead.
   let messages;
+  // The sign-in page and the mail view get the first screen's part of the
+  // catalog; IntlProvider fetches the rest after the first paint
+  // (i18n/first-screen.ts). Other pages get all of it.
+  let partial = false;
   if (!IS_LITE) {
+    const surface = surfaceFromPath((await headers()).get("x-pathname") || "/", locales);
+    partial = surface !== null && FIRST_SCREEN_SURFACES.has(surface);
     try {
-      messages = await loadCatalog(locale);
+      messages = partial ? await loadFirstScreenCatalog(locale) : await loadCatalog(locale);
     } catch {
       notFound();
     }
   }
 
   return (
-    <IntlProvider locale={locale} messages={messages}>
+    <IntlProvider locale={locale} messages={messages} partial={partial}>
       <AppLockGate>
       <ThemeProvider>
         <CalendarAlertProvider>

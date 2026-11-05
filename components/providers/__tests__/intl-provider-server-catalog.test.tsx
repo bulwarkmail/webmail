@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { useTranslations } from 'next-intl';
 import { useLocaleStore } from '@/stores/locale-store';
 import { loadCatalog } from '@/i18n/catalog';
@@ -67,5 +67,26 @@ describe('IntlProvider with a server catalog', () => {
   it('draws nothing without a catalog, rather than keys', () => {
     const { container } = render(<IntlProvider locale="de"><Strings /></IntlProvider>);
     expect(container.textContent).toBe('');
+  });
+});
+
+describe('IntlProvider with the first screen catalog', () => {
+  function Both() {
+    const login = useTranslations('login');
+    const hover = useTranslations('settings.email_behavior.hover_actions');
+    return <><p data-testid="first">{login('error.invalid_credentials')}</p><p data-testid="rest">{hover('archive')}</p></>;
+  }
+
+  it('draws a key outside it as nothing, never its name, and the string once the rest has come', async () => {
+    const { loadFirstScreenCatalog } = await import('@/i18n/catalog');
+    const first = await loadFirstScreenCatalog('en');
+    const full = await loadCatalog('en') as { settings: { email_behavior: { hover_actions: { archive: string } } } };
+    vi.stubGlobal('requestIdleCallback', undefined);
+    render(<IntlProvider locale="en" messages={first} partial><Both /></IntlProvider>);
+    expect(screen.getByTestId('first').textContent).toBe(enPlain.login.error.invalid_credentials);
+    expect(screen.getByTestId('rest').textContent).toBe('');
+    expect((window as { __bulwarkCatalogMisses?: string[] }).__bulwarkCatalogMisses).toContain('settings.email_behavior.hover_actions.archive');
+    await waitFor(() => expect(screen.getByTestId('rest').textContent).toBe(full.settings.email_behavior.hover_actions.archive), { timeout: 8000 });
+    vi.unstubAllGlobals();
   });
 });

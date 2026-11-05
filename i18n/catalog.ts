@@ -1,5 +1,6 @@
 import { mergeMessages } from './merge-messages';
 import { addPlainLanguage } from './plain-language';
+import { FIRST_SCREEN_MESSAGES, pickMessages } from './first-screen';
 
 type Messages = Record<string, unknown>;
 
@@ -15,4 +16,12 @@ export async function loadCatalog(locale: string): Promise<Messages> {
   if (locale === 'en') return own;
   const english = await addPlainLanguage('en', (await import('@/locales/en/common.json')).default as Messages);
   return mergeMessages(english, own);
+}
+
+/**
+ * The first screen's part of the catalog (i18n/first-screen.ts), for the pages
+ * whose surface draws only that before IntlProvider fetches the rest.
+ */
+export async function loadFirstScreenCatalog(locale: string): Promise<Messages> {
+  return pickMessages(await loadCatalog(locale), FIRST_SCREEN_MESSAGES);
 }

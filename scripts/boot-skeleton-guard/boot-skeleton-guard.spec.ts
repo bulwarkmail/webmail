@@ -203,6 +203,36 @@ test("the login page hydrates what the server sent", async ({ browser }) => {
   expect(errors).toEqual([]);
 });
 
+// The sign-in page and the mail view get only the first screen's part of the
+// catalog (i18n/first-screen.ts); the rest comes after the first paint. With the
+// rest held back, nothing they draw may be missing from that part.
+test("the first screen's catalog has every key the sign-in page and the mail view draw", async ({ browser }) => {
+  const misses = (p: Page) => p.evaluate(() => (window as unknown as { __bulwarkCatalogMisses?: string[] }).__bulwarkCatalogMisses ?? []);
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  await signIn(page);
+  await context.addInitScript(() => { (window as unknown as { __holdCatalogRest: boolean }).__holdCatalogRest = true; });
+  for (const path of ["/en", "/en/mail/folder/inbox"]) {
+    await page.goto(path);
+    await page.locator('[data-tour="email-list"] [data-index]').first().waitFor({ timeout: 60_000 });
+    await page.waitForTimeout(2000);
+    expect(await misses(page), path).toEqual([]);
+  }
+  await context.close();
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const signedOut = await browser.newContext({ viewport });
+    await signedOut.addInitScript(() => { (window as unknown as { __holdCatalogRest: boolean }).__holdCatalogRest = true; });
+    const login = await signedOut.newPage();
+    for (const path of ["/en", "/en/login"]) {
+      await login.goto(path);
+      await login.getByRole("button", { name: /^sign in$/i }).first().waitFor({ timeout: 60_000 });
+      await login.waitForTimeout(1500);
+      expect(await misses(login), `${path} @${viewport.width}`).toEqual([]);
+    }
+    await signedOut.close();
+  }
+});
+
 test("layout shift from navigation to the loaded page stays at or under 0.01", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await recordShifts(context);
