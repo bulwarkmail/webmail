@@ -19,17 +19,52 @@ import { AccountGroupedOptions } from "@/components/calendar/calendar-select";
 
 // Each row of a list field keeps the `key` of the card's entry it was read
 // from, so Save can send an entry the user didn't touch back unchanged.
+//
+// `context` is "work", "private", "" or a context the form has no option
+// for, as the card has it: a vCard TYPE such as "car" from an Android
+// phone (#1515). The select then offers it as stored.
 interface EmailEntry {
   key?: string;
   address: string;
-  context: "work" | "private" | "";
+  context: string;
 }
 
+// `feature` is one of PHONE_FEATURES, "", PHONE_LABEL for a phone with its
+// own label (X-ABLabel), or a feature the form has no option for.
 interface PhoneEntry {
   key?: string;
   number: string;
-  context: "work" | "private" | "";
-  feature: "voice" | "mobile" | "fax" | "pager" | "video" | "text" | "";
+  context: string;
+  feature: string;
+}
+
+const CONTEXTS = ["work", "private"];
+const PHONE_FEATURES = ["voice", "mobile", "fax", "pager", "video", "text"];
+/** The phone type select's value for a phone's own label. No feature starts with "#". */
+const PHONE_LABEL = "#label";
+
+/** The context a row shows: work or private, else the card's own as stored. */
+function contextOf(contexts: Record<string, boolean> | undefined): string {
+  if (contexts?.work) return "work";
+  if (contexts?.private) return "private";
+  return Object.keys(contexts ?? {}).find(k => contexts![k]) ?? "";
+}
+
+/** The type a phone row shows: its label when it has one, else its feature. */
+function phoneTypeOf(phone: NonNullable<ContactCard["phones"]>[string]): string {
+  if (phone.label?.trim()) return PHONE_LABEL;
+  const features = phone.features ?? {};
+  // RFC 9553 calls it "mobile"; cards saved by older versions of this form say "cell".
+  if (features.mobile || features.cell) return "mobile";
+  return ["fax", "pager", "video", "text", "voice"].find(k => features[k])
+    ?? Object.keys(features).find(k => features[k])
+    ?? "";
+}
+
+/** An option for a value the card had that the select doesn't offer, so it shows as stored. */
+function storedOption(value: string | undefined, offered: string[], text?: string) {
+  if (!value || offered.includes(value)) return null;
+  return <option value={value}>{text ?? value}</option>;
 }
 
 interface OnlineServiceEntry {
@@ -59,7 +94,7 @@ interface AddressEntry {
   region: string;
   postcode: string;
   country: string;
-  context: "work" | "private" | "";
+  context: string;
 }
 
 interface ContactFormProps {
@@ -365,7 +400,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     return {
       key,
       ...addressToParts(a, locale),
-      context: a.contexts?.work ? 'work' : a.contexts?.private ? 'private' : '',
+      context: contextOf(a.contexts),
     };
   }
 
@@ -384,7 +419,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       return Object.entries(contact.emails).map(([key, e]) => ({
         key,
         address: e.address,
-        context: e.contexts?.work ? "work" : e.contexts?.private ? "private" : "",
+        context: contextOf(e.contexts),
       }));
     }
     return [{ address: prefill?.email || "", context: "" }];
@@ -395,9 +430,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       return Object.entries(contact.phones).map(([key, p]) => ({
         key,
         number: p.number,
-        context: p.contexts?.work ? "work" : p.contexts?.private ? "private" : "",
-        // RFC 9553 calls it "mobile"; cards saved by older versions of this form say "cell".
-        feature: p.features?.mobile || p.features?.cell ? "mobile" : p.features?.fax ? "fax" : p.features?.pager ? "pager" : p.features?.video ? "video" : p.features?.text ? "text" : p.features?.voice ? "voice" : "",
+        context: contextOf(p.contexts),
+        feature: phoneTypeOf(p),
       }));
     }
     return [];
@@ -650,12 +684,17 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     }));
 
     const validPhones = phones.filter(p => p.number.trim());
-    const phonesMap = entriesToSave<PhoneEntry, PhoneValue>(validPhones, initialRows.phones, contact?.phones, "p", (row, previous, before) => compact({
-      ...previous,
-      number: row.number.trim(),
-      contexts: contextsToSave(row.context, previous?.contexts, before),
-      features: before && before.feature === row.feature ? previous?.features : row.feature ? { [row.feature]: true } : undefined,
-    }));
+    // The phone's features and label stay as stored until another type is picked.
+    const phonesMap = entriesToSave<PhoneEntry, PhoneValue>(validPhones, initialRows.phones, contact?.phones, "p", (row, previous, before) => {
+      const typeKept = !!before && before.feature === row.feature;
+      return compact({
+        ...previous,
+        number: row.number.trim(),
+        contexts: contextsToSave(row.context, previous?.contexts, before),
+        features: typeKept ? previous?.features : row.feature && row.feature !== PHONE_LABEL ? { [row.feature]: true } : undefined,
+        label: typeKept ? previous?.label : undefined,
+      });
+    });
 
     // Emit JSContact-standard kinds (RFC 9553) so the JMAP server stores them losslessly.
     const nameComponents = [];
@@ -1033,6 +1072,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
                       <option value="private">{tx("context_private")}</option>
+                      {storedOption(entry.key ? initialRows.emails.find(r => r.key === entry.key)?.context : undefined, CONTEXTS)}
                     </Select>
                     {emails.length > 1 && (
                       <IconButton label={t("remove_entry")} onClick={() => setEmails(emails.filter((_, j) => j !== i))} className="shrink-0">
@@ -1056,7 +1096,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
           <FormSection icon={Phone} title={t("phone")}>
             <div className="space-y-2 @container">
               {/* In a narrow pane the number takes a line of its own: beside the two selects it was cut to two digits. */}
-              {phones.map((entry, i) => (
+              {phones.map((entry, i) => {
+                // A type or context the card had that the selects don't offer stays offered, as stored.
+                const initialPhone = entry.key ? initialRows.phones.find(r => r.key === entry.key) : undefined;
+                return (
                 <div key={i} className="flex flex-wrap @md:flex-nowrap items-center gap-2">
                   <Input
                     type="tel"
@@ -1088,6 +1131,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     <option value="pager">{t("phone_pager")}</option>
                     <option value="video">{t("phone_video")}</option>
                     <option value="text">{t("phone_text")}</option>
+                    {storedOption(initialPhone?.feature, PHONE_FEATURES, initialPhone?.feature === PHONE_LABEL ? contact?.phones?.[initialPhone.key!]?.label : undefined)}
                   </Select>
                   <Select
                     value={entry.context}
@@ -1101,12 +1145,14 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     <option value="">-</option>
                     <option value="work">{t("context_work")}</option>
                     <option value="private">{tx("context_private")}</option>
+                    {storedOption(initialPhone?.context, CONTEXTS)}
                   </Select>
                   <IconButton label={t("remove_entry")} onClick={() => setPhones(phones.filter((_, j) => j !== i))} className="shrink-0">
                     <X />
                   </IconButton>
                 </div>
-              ))}
+                );
+              })}
               <Button type="button" variant="ghost" size="sm" onClick={() => setPhones([...phones, { number: "", context: "", feature: "" }])} className="text-xs">
                 <Plus className="w-3 h-3 me-1" />
                 {t("add_phone")}
@@ -1160,6 +1206,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     <option value="">-</option>
                     <option value="work">{t("context_work")}</option>
                     <option value="private">{tx("context_private")}</option>
+                    {storedOption(addr.key ? initialRows.addresses.find(a => a.key === addr.key)?.context : undefined, CONTEXTS)}
                   </Select>
                 );
                 return (
