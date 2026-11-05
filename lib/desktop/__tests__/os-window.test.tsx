@@ -465,11 +465,18 @@ describe('the settings section', () => {
     expect(screen.queryByText('attention_label')).toBeNull();
     expect(screen.queryByText('quiet_hours_label')).toBeNull();
     general.unmount();
-    render(<DesktopOsSettings part="notifications" />);
-    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
-    expect(screen.getByText('attention_label')).toBeInTheDocument();
+    // The flash is in the Notifications page's desktop section; quiet hours are rows
+    // under its Pause notifications section (settings-p3-6).
+    const notifications = render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('attention_label')).toBeInTheDocument();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
     expect(screen.queryByText('close_to_tray_label')).toBeNull();
-    fireEvent.click(screen.getAllByRole('switch')[1]);
+    notifications.unmount();
+    render(<DesktopOsSettings part="quietHours" />);
+    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    fireEvent.click(screen.getAllByRole('switch')[0]);
     await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ quietHoursEnabled: true }));
   });
 });
