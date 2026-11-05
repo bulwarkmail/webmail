@@ -7,6 +7,7 @@ import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAccountStore } from "@/stores/account-store";
+import { mailLinkAccountId } from "@/lib/protocol-handlers/session";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
@@ -162,6 +163,18 @@ function readLaunch(): { handoffId: string | null; accountId?: string; draftId?:
     draftId: search.get("draft") ?? undefined,
     ownerAccountId: search.get("owner") ?? undefined,
   };
+}
+
+/**
+ * The login a new message from outside the main window writes from, in the desktop app:
+ * quick compose (the tray, the shortcut, the jump list) goes out from the default
+ * account, as a mail link does (desktop-p2-8), not from whichever account is in front
+ * (desktop-p3-12). A browser keeps the account in use.
+ */
+function newMessageLogin(): string | undefined {
+  if (!getDesktopBridge()?.windows) return undefined;
+  const { accounts, defaultAccountId } = useAccountStore.getState();
+  return mailLinkAccountId(accounts.filter((account) => account.isConnected), defaultAccountId, useAuthStore.getState().activeAccountId) ?? undefined;
 }
 
 /** How long a restored draft waits for the identity that wrote it to load. */
@@ -591,7 +604,8 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
 /** `/popout/compose`: a draft handed over by another window, or a new message. */
 export function PopoutComposeApp() {
   const t = useTranslations("pwaWindows");
-  const [{ handoffId: named, accountId, draftId, ownerAccountId }] = useState(readLaunch);
+  const [{ handoffId: named, accountId: given, draftId, ownerAccountId }] = useState(readLaunch);
+  const [accountId] = useState(() => given ?? (!named && !draftId ? newMessageLogin() : undefined));
   // Saved on the server and nothing remembered: this page crashed or was killed, and the
   // draft is the newest there is. An ordinary reload remembers as it unloads.
   const [handoffId] = useState(() => (named && draftId && !rememberedComposePayload(named) ? null : named));

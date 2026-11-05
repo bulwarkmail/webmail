@@ -399,6 +399,21 @@ describe('recent files in the Attach menu', () => {
     expect(popup).not.toHaveBeenCalled();
   }, 15_000);
 
+  // desktop-p3-12: a mail link with To filled put the caret in an empty To field.
+  it('puts the caret in the body when a new message comes addressed, and in To when it does not', async () => {
+    useAuthStore.setState({ client: client() as never });
+    const addressed = { to: 'sam@example.org', cc: '', bcc: '', subject: 'Hello', body: 'Hi Sam', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', mode: 'compose' as const, draftId: null, plainTextMode: true };
+    const first = render(<EmailComposer onClose={vi.fn()} initialData={addressed} />);
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 250)); });
+    expect((document.activeElement as HTMLElement | null)?.tagName).toBe('TEXTAREA');
+    expect((document.activeElement as HTMLTextAreaElement).selectionStart).toBe(0);
+    first.unmount();
+
+    render(<EmailComposer onClose={vi.fn()} initialData={{ ...addressed, to: '' }} />);
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 250)); });
+    expect((document.activeElement as HTMLElement | null)?.tagName).toBe('INPUT');
+  });
+
   // The To field takes the focus a moment after a new message opens; a click the user made
   // in the composer before that (Subject, Attach) keeps it.
   it('leaves the focus where the user put it before the first focus runs', async () => {

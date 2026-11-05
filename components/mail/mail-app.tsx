@@ -1803,7 +1803,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!prefill) return true;
     }
     // The account the link goes out from, in its own window: the main window keeps the one it shows.
-    const opened = openComposerWindow(accountId ?? useAuthStore.getState().activeAccountId);
+    // Quick compose's size and place: every new message from outside is that window (desktop-p3-12).
+    const opened = openComposerWindow(accountId ?? useAuthStore.getState().activeAccountId, { quick: true });
     if (!opened) return false;
     void opened.handOver({
       mode: 'compose',

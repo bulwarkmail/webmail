@@ -2187,8 +2187,21 @@ export function EmailComposer({
     return true;
   };
 
+  // A new message that comes addressed (a mail link, a draft): the caret goes to the body,
+  // as in Outlook and Thunderbird. Only the first render's To counts (desktop-p3-12).
+  const addressedAtStartRef = useRef<boolean | null>(null);
+  if (addressedAtStartRef.current === null) addressedAtStartRef.current = mode === 'compose' && to.length > 0;
+
   // Auto-focus the To field when composing a new email or forwarding
   useEffect(() => {
+    if (mode === 'compose' && addressedAtStartRef.current) {
+      // The rich text editor focuses itself once it is ready (onEditorReady below).
+      if (!plainTextMode) return;
+      const timer = setTimeout(() => {
+        if (focusUnlessMoved(bodyRef.current)) bodyRef.current?.setSelectionRange(0, 0);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
     if (mode === 'forward' || mode === 'compose') {
       // Small delay to ensure the input is rendered
       const timer = setTimeout(() => focusUnlessMoved(toInputRef.current), 100);
@@ -3582,7 +3595,11 @@ export function EmailComposer({
     if (!replyFocusedRef.current && (mode === 'reply' || mode === 'replyAll')) {
       replyFocusedRef.current = true;
       ed.commands.focus('start');
+    } else if (!replyFocusedRef.current && mode === 'compose' && addressedAtStartRef.current) {
+      replyFocusedRef.current = true;
+      if (focusUnlessMoved(ed.view.dom as HTMLElement)) ed.commands.focus('start');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- focusUnlessMoved reads the DOM when called
   }, [mode]);
   useEffect(() => {
     if (!wantsPluginSelection) return;
