@@ -1678,7 +1678,7 @@
         "label": "介面版面配置",
         "description": "搜尋、導覽與工具列的位置",
         "default": "預設",
-        "mountain_view": "搜尋列在上方，應用程式在左側"
+        "mountain_view": "搜尋列在上方"
       },
       "animations": {
         "label": "啟用動畫",

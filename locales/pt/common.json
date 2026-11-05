@@ -1675,7 +1675,7 @@
         "label": "Esquema da interface",
         "description": "Onde ficam a pesquisa, a navegação e as barras de ferramentas",
         "default": "Predefinido",
-        "mountain_view": "Pesquisa em cima, aplicações à esquerda"
+        "mountain_view": "Pesquisa em cima"
       },
       "animations": {
         "label": "Habilitar Animações",

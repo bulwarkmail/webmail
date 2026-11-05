@@ -1675,7 +1675,7 @@
         "label": "界面布局",
         "description": "搜索、导航和工具栏的位置",
         "default": "默认",
-        "mountain_view": "搜索栏在上，应用在左"
+        "mountain_view": "搜索栏在上"
       },
       "animations": {
         "label": "启用动画",

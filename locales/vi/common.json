@@ -1690,7 +1690,7 @@
         "label": "Bố cục giao diện",
         "description": "Vị trí của tìm kiếm, điều hướng và thanh công cụ",
         "default": "Mặc định",
-        "mountain_view": "Thanh tìm kiếm ở trên, ứng dụng bên trái"
+        "mountain_view": "Thanh tìm kiếm ở trên"
       },
       "animations": {
         "label": "Bật hiệu ứng chuyển động",

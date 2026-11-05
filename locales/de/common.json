@@ -1675,7 +1675,7 @@
         "label": "Oberflächen-Layout",
         "description": "Wo Suche, Navigation und Symbolleisten liegen",
         "default": "Standard",
-        "mountain_view": "Suchleiste oben, Apps links"
+        "mountain_view": "Suchleiste oben"
       },
       "animations": {
         "label": "Animationen aktivieren",

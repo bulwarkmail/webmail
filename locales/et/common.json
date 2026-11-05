@@ -1678,7 +1678,7 @@
         "label": "Liidese paigutus",
         "description": "Kus asuvad otsing, navigeerimine ja tööriistaribad",
         "default": "Vaikimisi",
-        "mountain_view": "Otsinguriba üleval, rakendused vasakul"
+        "mountain_view": "Otsinguriba üleval"
       },
       "animations": {
         "label": "Luba animatsioonid",

@@ -1675,7 +1675,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Arama üstte, uygulamalar solda"
+        "mountain_view": "Arama üstte"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",

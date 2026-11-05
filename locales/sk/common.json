@@ -1678,7 +1678,7 @@
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
         "default": "Predvolené",
-        "mountain_view": "Vyhľadávanie hore, aplikácie vľavo"
+        "mountain_view": "Vyhľadávanie hore"
       },
       "animations": {
         "label": "Povoliť animácie",

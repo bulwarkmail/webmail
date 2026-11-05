@@ -1675,7 +1675,7 @@
         "label": "Układ interfejsu",
         "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
         "default": "Domyślny",
-        "mountain_view": "Wyszukiwanie u góry, aplikacje po lewej"
+        "mountain_view": "Wyszukiwanie u góry"
       },
       "animations": {
         "label": "Włącz animacje",

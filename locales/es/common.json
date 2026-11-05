@@ -1675,7 +1675,7 @@
         "label": "Diseño de la interfaz",
         "description": "Dónde se sitúan la búsqueda, la navegación y las barras de herramientas",
         "default": "Predeterminado",
-        "mountain_view": "Barra de búsqueda arriba, aplicaciones a la izquierda"
+        "mountain_view": "Barra de búsqueda arriba"
       },
       "animations": {
         "label": "Habilitar Animaciones",

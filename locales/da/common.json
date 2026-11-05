@@ -1678,7 +1678,7 @@
         "label": "Grænsefladelayout",
         "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
         "default": "Standard",
-        "mountain_view": "Søgefelt øverst, apps til venstre"
+        "mountain_view": "Søgefelt øverst"
       },
       "animations": {
         "label": "Aktivér animationer",

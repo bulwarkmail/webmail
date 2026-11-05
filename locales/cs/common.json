@@ -1675,7 +1675,7 @@
         "label": "Rozvržení rozhraní",
         "description": "Kde se nachází hledání, navigace a panely nástrojů",
         "default": "Výchozí",
-        "mountain_view": "Vyhledávání nahoře, aplikace vlevo"
+        "mountain_view": "Vyhledávání nahoře"
       },
       "animations": {
         "label": "Povolit animace",

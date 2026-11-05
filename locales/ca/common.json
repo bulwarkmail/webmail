@@ -1678,7 +1678,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Barra de cerca a dalt, aplicacions a l'esquerra"
+        "mountain_view": "Barra de cerca a dalt"
       },
       "animations": {
         "label": "Activa les animacions",

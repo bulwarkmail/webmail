@@ -1678,7 +1678,7 @@
         "label": "Grensesnittoppsett",
         "description": "Hvor søk, navigasjon og verktøylinjer ligger",
         "default": "Standard",
-        "mountain_view": "Søkefelt øverst, apper til venstre"
+        "mountain_view": "Søkefelt øverst"
       },
       "animations": {
         "label": "Aktiver animasjoner",

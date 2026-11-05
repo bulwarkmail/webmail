@@ -1675,7 +1675,7 @@
         "label": "Disposition de l'interface",
         "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
         "default": "Par défaut",
-        "mountain_view": "Recherche en haut, applications à gauche"
+        "mountain_view": "Recherche en haut"
       },
       "animations": {
         "label": "Activer les animations",

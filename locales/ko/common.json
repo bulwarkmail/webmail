@@ -1675,7 +1675,7 @@
         "label": "인터페이스 레이아웃",
         "description": "검색, 탐색, 도구 모음의 위치",
         "default": "기본",
-        "mountain_view": "검색창은 위, 앱은 왼쪽"
+        "mountain_view": "검색창은 위"
       },
       "animations": {
         "label": "애니메이션 켜기",

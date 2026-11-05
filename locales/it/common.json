@@ -1675,7 +1675,7 @@
         "label": "Layout dell'interfaccia",
         "description": "Dove si trovano ricerca, navigazione e barre degli strumenti",
         "default": "Predefinito",
-        "mountain_view": "Ricerca in alto, app a sinistra"
+        "mountain_view": "Ricerca in alto"
       },
       "animations": {
         "label": "Abilita animazioni",

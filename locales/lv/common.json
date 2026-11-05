@@ -1675,7 +1675,7 @@
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
         "default": "Noklusējuma",
-        "mountain_view": "Meklēšana augšā, lietotnes pa kreisi"
+        "mountain_view": "Meklēšana augšā"
       },
       "animations": {
         "label": "Iespējot animācijas",

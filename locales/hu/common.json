@@ -1678,7 +1678,7 @@
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
         "default": "Alapértelmezett",
-        "mountain_view": "Keresősáv felül, alkalmazások balra"
+        "mountain_view": "Keresősáv felül"
       },
       "animations": {
         "label": "Animációk engedélyezése",

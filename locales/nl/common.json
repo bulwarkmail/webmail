@@ -1675,7 +1675,7 @@
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
         "default": "Standaard",
-        "mountain_view": "Zoekbalk boven, apps links"
+        "mountain_view": "Zoekbalk boven"
       },
       "animations": {
         "label": "Animaties inschakelen",

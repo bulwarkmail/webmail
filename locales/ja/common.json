@@ -1675,7 +1675,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "検索バーを上、アプリを左に配置"
+        "mountain_view": "検索バーを上に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
