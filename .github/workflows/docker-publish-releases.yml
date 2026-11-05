@@ -59,6 +59,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
+            BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.platform }}
@@ -77,6 +78,7 @@ jobs:
           target: sourcemaps
           build-args: |
             GIT_COMMIT=${{ github.sha }}
+            BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps
           cache-from: type=gha,scope=${{ matrix.platform }}
@@ -207,6 +209,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
+            BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             NEXT_PUBLIC_LOCALE_PREFIX=always
             BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
@@ -226,6 +229,7 @@ jobs:
           target: sourcemaps
           build-args: |
             GIT_COMMIT=${{ github.sha }}
+            BULWARK_BUILD_SEED=${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
             NEXT_PUBLIC_LOCALE_PREFIX=always
             BULWARK_SOURCE_MAPS=1
           outputs: type=local,dest=sourcemaps

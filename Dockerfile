@@ -25,6 +25,12 @@ ENV GIT_COMMIT=$GIT_COMMIT
 # none (next.config.ts reads it). They never reach the image, see below.
 ARG BULWARK_SOURCE_MAPS=0
 ENV BULWARK_SOURCE_MAPS=$BULWARK_SOURCE_MAPS
+# One build id for every platform of a release (#1531). CI passes the same
+# seed to the amd64 and arm64 builds; without one each build makes its own id
+# (next.config.ts), and a load balancer mixing the two would tell open tabs a
+# new version is out on every check.
+ARG BULWARK_BUILD_SEED=
+ENV BULWARK_BUILD_SEED=$BULWARK_BUILD_SEED
 # The mock JMAP server (DEV_MOCK_JMAP) accepts any password and is for
 # `npm run dev` only; images ship without it.
 # `next build` type-checks every .ts file, and some unit tests import the

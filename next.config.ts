@@ -36,9 +36,13 @@ try {
 // anyone which commit runs. The config is read again by every process the
 // build starts; the first one sets the variable and the others inherit it,
 // so all of them use the same id.
+// BULWARK_BUILD_SEED gives builds of one release on several platforms the
+// same id (#1531): they run the same code, and a load balancer may send a
+// tab's check to either.
+const buildSeed = process.env.BULWARK_BUILD_SEED?.trim();
 if (!process.env.BULWARK_BUILD_ID) {
   process.env.BULWARK_BUILD_ID = createHash("sha256")
-    .update(`${gitCommitHash}:${appVersion}:${Date.now()}:${Math.random()}`)
+    .update(buildSeed ? `seed:${buildSeed}` : `${gitCommitHash}:${appVersion}:${Date.now()}:${Math.random()}`)
     .digest("base64url")
     .slice(0, 16);
 }
