@@ -266,7 +266,7 @@ function LoginPageContent() {
   usePrefetchMailView(!isMobileHandoff);
   const { login, loginWithToken, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthPasswordFallbackEnabled, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
   // The device's OS policy narrows what the server offers. A forced Bulwark server hides
   // the field for a server of one's own, unless that field is the only way to sign in there.
   const allowCustomJmapEndpoint = configAllowsCustomEndpoint && (customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl);
@@ -356,6 +356,11 @@ function LoginPageContent() {
   );
   /** The server a sign-in goes to right now, in custom-server mode; null when there is none yet. */
   const customServer = serverFieldOpen ? normalizeServerInput(jmapEndpoint) : autoServer;
+  // With OAUTH_ONLY, a configured password fallback swaps the SSO-only card
+  // for the regular password form, which carries its own "or" + SSO button
+  // back. Off (the default) keeps the SSO-only card exactly as before.
+  const [passwordFallbackMode, setPasswordFallbackMode] = useState(false);
+  const passwordFallbackAvailable = oauthOnly && oauthPasswordFallbackEnabled;
   const [rememberMe, setRememberMe] = useState(false);
   // Lite (no server session): "remember me" needs Stalwart's token login on the
   // target server. Probe it once per URL and hide the box when it is missing;
@@ -877,6 +882,7 @@ function LoginPageContent() {
     if (signedOutOnPurpose.current === null) signedOutOnPurpose.current = consumeSignedOut();
     if (signedOutOnPurpose.current) return;
     if (!autoSsoEnabled || !oauthOnly || !oauthDiscoveryDone || !oauthMetadata) return;
+    if (passwordFallbackMode) return;
     if (ssoError || isAddAccountMode || isAuthenticated) return;
     if (autoSsoTriggered.current) return;
     // With a multi-server list the target isn't implied - auto-redirecting
@@ -894,7 +900,7 @@ function LoginPageContent() {
 
     autoSsoTriggered.current = true;
     startServerSideSso();
-  }, [autoSsoEnabled, oauthOnly, oauthDiscoveryDone, oauthMetadata, ssoError, isAddAccountMode, isAuthenticated, jmapServers.length, startServerSideSso]);
+  }, [autoSsoEnabled, oauthOnly, oauthDiscoveryDone, oauthMetadata, passwordFallbackMode, ssoError, isAddAccountMode, isAuthenticated, jmapServers.length, startServerSideSso]);
 
   const handleThemeSelect = useCallback((newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
@@ -1936,7 +1942,7 @@ function LoginPageContent() {
                   Dev mode - logging in as dev@localhost
                 </p>
               </div>
-            ) : oauthOnly ? (
+            ) : oauthOnly && !passwordFallbackMode ? (
               /* OAuth-only mode: server picker (if any) plus the SSO button */
               <div className="space-y-4">
                 {serverPicker}
@@ -1984,6 +1990,20 @@ function LoginPageContent() {
                   <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
                     {desktopNotice}
                   </p>
+                )}
+                {passwordFallbackAvailable && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearError();
+                      setPasswordFallbackMode(true);
+                      setTimeout(() => inputRef.current?.focus(), 50);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    {t("password_toggle")}
+                  </button>
                 )}
               </div>
             ) : (

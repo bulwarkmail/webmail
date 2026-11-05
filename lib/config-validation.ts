@@ -31,6 +31,7 @@ const configValidators = {
   jmapServerUrl: isString,
   oauthEnabled: isBoolean,
   oauthOnly: isBoolean,
+  oauthPasswordFallbackEnabled: isBoolean,
   oauthClientId: isString,
   oauthIssuerUrl: isString,
   oauthScopes: isString,

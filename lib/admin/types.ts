@@ -313,6 +313,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   loginShowVersion: { envVar: 'LOGIN_SHOW_VERSION', type: 'boolean', defaultValue: true },
   oauthEnabled: { envVar: 'OAUTH_ENABLED', type: 'boolean', defaultValue: false },
   oauthOnly: { envVar: 'OAUTH_ONLY', type: 'boolean', defaultValue: false },
+  // With OAUTH_ONLY, keep a demoted "Sign in with a password" link on the
+  // SSO-only login card and allow password sign-in at the API, for
+  // deployments whose provider accounts also have local passwords.
+  oauthPasswordFallbackEnabled: { envVar: 'OAUTH_PASSWORD_FALLBACK_ENABLED', type: 'boolean', defaultValue: false },
   oauthClientId: { envVar: 'OAUTH_CLIENT_ID', type: 'string', defaultValue: '' },
   oauthClientSecret: { envVar: 'OAUTH_CLIENT_SECRET', fileEnvVar: 'OAUTH_CLIENT_SECRET_FILE', fileKey: "oauthClientSecretFile", type: 'string', defaultValue: '' },
   oauthIssuerUrl: { envVar: 'OAUTH_ISSUER_URL', type: 'url', defaultValue: '' },
