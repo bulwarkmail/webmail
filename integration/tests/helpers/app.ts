@@ -163,7 +163,8 @@ export async function openFiles(page: Page): Promise<void> {
  * (and the switcher) pins the layout first.
  */
 export async function openMailView(page: Page): Promise<void> {
-  await navRail(page).getByRole('link', { name: 'Mail', exact: true }).click();
+  // "Mail", or "Mail, 3 unread" while there is unread mail.
+  await navRail(page).getByRole('link', { name: /^Mail(, \d+ unread)?$/ }).click();
   await accountSwitcher(page).waitFor({ state: 'visible', timeout: 30000 });
   await folderRow(page, { role: 'inbox' }).first().waitFor({ state: 'visible', timeout: 30000 });
 }
@@ -430,10 +431,12 @@ export async function emailContextAction(page: Page, subject: string, testId: st
  */
 export async function openCalendar(page: Page): Promise<void> {
   await page.locator('a[href$="/calendar"]').first().click();
+  // On a phone the calendar list is in the closed drawer: there, loaded is enough.
+  const phone = (page.viewportSize()?.width ?? 1280) < 768;
   await page
     .locator('[data-testid="calendar-item"]')
     .first()
-    .waitFor({ state: 'visible', timeout: 30000 });
+    .waitFor({ state: phone ? 'attached' : 'visible', timeout: 30000 });
 }
 
 /** A sidebar calendar row by its (exact) name. */
