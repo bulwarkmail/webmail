@@ -47,6 +47,7 @@ import {
 } from '@/lib/calendar-subscription-sync';
 import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
+import { isCalendarEventArray, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 import { sentByPatchValue } from '@/lib/calendar-delegate';
 
 /**
@@ -1072,11 +1073,21 @@ export const useCalendarStore = create<CalendarStore>()(
         refetchVisibleRange = () => get().fetchEvents(client, start, end, { silent: true });
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
+
         try {
-          const rawEvents = await client.queryAllCalendarEvents({
-            after: start,
-            before: end,
-          });
+          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
+          let rawEvents = await client.queryAllCalendarEvents({
+            after: serverRange.start,
+            before: serverRange.end,
+          })
+          const editedEvents = await calendarHooks.onFetchingEvents.transform(rawEvents);
+          if(calendarHooks.onFetchingEvents.size > 0){
+            if(!isCalendarEventArray(editedEvents)){
+              debug.error('returned events by a plugin are not a valid CalendarEvent array', rawEvents);
+            }else{
+              rawEvents = editedEvents;
+            }
+          }
           if (seq !== rangeLoadSeq || currentStoreEpoch() !== epoch) return;
           // Filter out malformed events missing required 'start' field, or
           // whose start string fails to parse (would otherwise crash format()
@@ -1170,11 +1181,20 @@ export const useCalendarStore = create<CalendarStore>()(
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
         try {
+          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
           let failed = false;
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
-                const raw = await client.queryAllCalendarEvents({ after: start, before: end });
+                let raw = await client.queryAllCalendarEvents({ after: serverRange.start, before: serverRange.end })
+                const edited = await calendarHooks.onFetchingEvents.transform(raw);
+                if(calendarHooks.onFetchingEvents.size > 0){
+                  if(!isCalendarEventArray(edited)){
+                    debug.error('returned events by a plugin are not a valid CalendarEvent array', raw);
+                  }else{
+                    raw = edited;
+                  }
+                }
                 const valid = raw.filter(e =>
                   typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())
                 );
@@ -1244,10 +1264,28 @@ export const useCalendarStore = create<CalendarStore>()(
             currentDateRange: get().dateRange,
             selectedCalendarIds: get().selectedCalendarIds,
           });
-          const created = await client.createCalendarEvent(cleanEvent, sendSchedulingMessages, targetAccountId);
+          // we separate the local event (for the store) from the server event (for the JMAP call) 
+          // this can be used by plugin to e2e encrypt for server and keep the local event unencrypted.
+          // so plugins can transform either or both.
+          // we add the id to the local event to get a complete event.
+
+          let { localEvent, serverEvent } = await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent});
+          if (calendarHooks.onCreatingEvent.size > 0){
+            if(!isPartialCalendarEvent(localEvent) || !isPartialCalendarEvent(serverEvent)){
+              debug.error('returned events by a plugin are not a valid event', {localEvent, serverEvent});
+              localEvent = cleanEvent;
+              serverEvent = cleanEvent;
+            }
+          }
+
+          let created = await client.createCalendarEvent(serverEvent, sendSchedulingMessages, targetAccountId);
+          if (calendarHooks.onCreatingEvent.size > 0){
+            created = { ...created, ...localEvent };
+          }
           // Raw calendar ids repeat across logins: map onto the login's own (pim-12).
           const loginCalendars = localAccountId ? get().calendars.filter((c) => c.localAccountId === localAccountId) : get().calendars;
           const mappedCreated = mapServerEventToStoreEvent(created, loginCalendars, targetAccountId);
+          
           const selectedCalendarIds = get().selectedCalendarIds;
           const createdCalendarIds = Object.keys(mappedCreated.calendarIds || {});
           const isVisible = createdCalendarIds.some((calendarId) => selectedCalendarIds.includes(calendarId));
@@ -1344,29 +1382,39 @@ export const useCalendarStore = create<CalendarStore>()(
           const stopsDefaultAlerts = cleanUpdates.useDefaultAlerts === false && 'alerts' in cleanUpdates;
           const inTwoSteps = !!storeEvent && (target.isOccurrence || !!target.isBrowserOccurrence)
             && reachesOnlyUnanswered(storeEvent, cleanUpdates, sendSchedulingMessages, options);
+
+          let {localUpdates, serverUpdates} = await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id})
+          if(calendarHooks.onUpdatingEvent.size > 0){
+            if(!isPartialCalendarEvent(localUpdates) || !isPartialCalendarEvent(serverUpdates)){
+              debug.error('returned updates by a plugin are not a valid CalendarEvent partial', {localUpdates, serverUpdates});
+              localUpdates = cleanUpdates;
+              serverUpdates = cleanUpdates;
+            }
+          }
+          
           if (target.isOccurrence && storeEvent) {
             if (stopsDefaultAlerts && storeEvent.baseEventId) {
               await stopSeriesDefaultAlerts(client, storeEvent.baseEventId, targetAccountId);
             }
             if (inTwoSteps) {
-              await updateNewOverrideForEveryone(client, target, cleanUpdates, sendSchedulingMessages);
+              await updateNewOverrideForEveryone(client, target, serverUpdates, sendSchedulingMessages);
             } else {
               await updateOccurrence(
                 client, storeEvent, realId,
-                (overrideOptions) => withNewOverrideDetails(storeEvent, cleanUpdates, overrideOptions),
+                (overrideOptions) => withNewOverrideDetails(storeEvent, serverUpdates, overrideOptions),
                 sendSchedulingMessages, targetAccountId,
               );
             }
           } else if (target.isBrowserOccurrence) {
             if (stopsDefaultAlerts) await stopSeriesDefaultAlerts(client, realId, targetAccountId);
             if (inTwoSteps) {
-              await updateNewOverrideForEveryone(client, target, cleanUpdates, sendSchedulingMessages);
+              await updateNewOverrideForEveryone(client, target, serverUpdates, sendSchedulingMessages);
             } else {
-              await updateBrowserOccurrence(client, target, cleanUpdates, sendSchedulingMessages);
+              await updateBrowserOccurrence(client, target, serverUpdates, sendSchedulingMessages);
             }
           } else {
             await updateBaseEvent(
-              client, realId, cleanUpdates, sendSchedulingMessages, targetAccountId,
+              client, realId, serverUpdates, sendSchedulingMessages, targetAccountId,
               options?.keepSequence ? { keepSequence: true } : undefined,
             );
           }
@@ -1376,12 +1424,12 @@ export const useCalendarStore = create<CalendarStore>()(
           set((state) => ({
             events: state.events.map(e => {
               if (e.id !== id) return e;
-              const merged = { ...e, ...cleanUpdates };
+              const merged = { ...e, ...localUpdates };
               // When start changes, shift utcStart/utcEnd by the same delta so the
               // event renders at the new position immediately (optimistic update).
-              if (cleanUpdates.start && e.start && e.utcStart) {
+              if (localUpdates.start && e.start && e.utcStart) {
                 const oldStart = new Date(e.start).getTime();
-                const newStart = new Date(cleanUpdates.start).getTime();
+                const newStart = new Date(localUpdates.start).getTime();
                 const delta = newStart - oldStart;
                 if (delta !== 0) {
                   merged.utcStart = new Date(new Date(e.utcStart).getTime() + delta).toISOString();
@@ -1392,8 +1440,8 @@ export const useCalendarStore = create<CalendarStore>()(
               }
               // When duration changes (e.g. resize), recompute utcEnd so the event
               // renders with the new length immediately without waiting for refresh.
-              if (cleanUpdates.duration !== undefined && merged.utcStart) {
-                const durationMinutes = parseDuration(cleanUpdates.duration);
+              if (localUpdates.duration !== undefined && merged.utcStart) {
+                const durationMinutes = parseDuration(localUpdates.duration);
                 merged.utcEnd = new Date(
                   new Date(merged.utcStart).getTime() + durationMinutes * 60000,
                 ).toISOString();

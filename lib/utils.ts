@@ -1,4 +1,4 @@
-import { Mailbox } from "./jmap/types";
+import { CalendarEvent, Mailbox } from "./jmap/types";
 import { debug } from "./debug";
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { useSettingsStore } from "@/stores/settings-store";
