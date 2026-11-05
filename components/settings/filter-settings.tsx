@@ -216,7 +216,10 @@ export function FilterSettings() {
   const tSidebar = useTranslations("sidebar");
   // The raw script editor is for people who asked for the advanced settings,
   // unless the script is one only it can edit. A search result shows it once.
+  // It follows the switch itself too, so it stays hidden outside a settings page.
+  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
   const rawEditor = useAdvancedVisibility(true);
+  const showRawEditor = rawEditor.visible && (showAdvanced || rawEditor.revealed);
   const { client } = useAuthStore();
   const storeMailboxes = useEmailStore((s) => s.mailboxes);
   const fetchMailboxes = useEmailStore((s) => s.fetchMailboxes);
@@ -787,7 +790,7 @@ export function FilterSettings() {
               {t("add_rule")}
             </Button>
           )}
-          {(rawEditor.visible || isOpaque) && (
+          {(showRawEditor || isOpaque) && (
             <>
               <Button
                 variant="outline"

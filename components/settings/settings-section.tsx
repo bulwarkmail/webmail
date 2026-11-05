@@ -119,9 +119,10 @@ export function AdvancedSettingsProvider({ children }: { children: ReactNode }) 
 /**
  * Whether an advanced block draws, and the attribute that marks it (so a
  * one-off reveal can tell which blocks hold its target). Registers it as
- * hidden while it doesn't draw.
+ * hidden while it doesn't draw. `revealed` is true while a search result
+ * shows it as a one-off (or looks for its target).
  */
-export function useAdvancedVisibility(advanced: boolean | undefined): { visible: boolean; marker: { 'data-advanced-id'?: string } } {
+export function useAdvancedVisibility(advanced: boolean | undefined): { visible: boolean; revealed: boolean; marker: { 'data-advanced-id'?: string } } {
   const ctx = useContext(AdvancedSettingsContext);
   const id = useId();
   const revealedHere = ctx !== null && (ctx.revealed === 'probe' || (ctx.revealed !== null && ctx.revealed.has(id)));
@@ -132,7 +133,7 @@ export function useAdvancedVisibility(advanced: boolean | undefined): { visible:
     register(id, hidden);
     return () => register(id, false);
   }, [register, id, hidden]);
-  return { visible: !hidden, marker: advanced ? { 'data-advanced-id': id } : {} };
+  return { visible: !hidden, revealed: revealedHere, marker: advanced ? { 'data-advanced-id': id } : {} };
 }
 
 function HiddenAdvancedNotice({ count }: { count: number }) {
