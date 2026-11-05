@@ -40,6 +40,14 @@ describe('withProviderDataScopes', () => {
     expect(withProviderDataScopes('openid email profile', undefined)).toBe('openid email profile');
   });
 
+  // The configured scopes are shared by every server; Auto-configure on a
+  // 1.0.3 server writes `full` there, and a second server's own provider must
+  // not be asked for it.
+  it("drops Stalwart's own scopes for a provider that doesn't list them", () => {
+    expect(withProviderDataScopes(`openid ${FULL} email`, KEYCLOAK)).toBe('openid email');
+    expect(withProviderDataScopes(`openid ${SECURITY}`, undefined)).toBe('openid');
+  });
+
   // 1.0.3 lists its own scopes for every client and fails the request with
   // invalid_scope when it names one the client isn't allowed (#1527).
   const STALWART_1_0_3 = [...STALWART_1_0, FULL, SECURITY, SETTINGS];

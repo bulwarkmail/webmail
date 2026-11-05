@@ -42,6 +42,11 @@ export function withStalwartScopes(list: string, granted: readonly string[]): st
  * when configured and listed, never added (see {@link STALWART_SCOPE_FULL}).
  */
 export function withProviderDataScopes(scopes: string, supported: unknown): string {
+  // Stalwart's own scopes go only to a provider that lists them: the configured
+  // list is shared by every server, and another provider may refuse a scope it
+  // doesn't know.
+  const listed: unknown[] = Array.isArray(supported) ? supported : [];
+  scopes = scopes.split(/\s+/).filter((s) => s && (!STALWART_SCOPES.includes(s) || listed.includes(s))).join(' ');
   if (!Array.isArray(supported)) return scopes;
   const data = supported.filter((s): s is string => typeof s === 'string' && s.startsWith(DATA_SCOPE_PREFIX));
   if (data.length === 0) return scopes;
