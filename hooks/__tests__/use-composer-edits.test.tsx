@@ -16,7 +16,7 @@ vi.mock('@/lib/device-policy', () => ({
   canExport: () => true,
   deviceSubjectOf: () => null,
 }));
-vi.mock('@/lib/offline/offline-mode', () => ({ scopeDecided: () => true }));
+vi.mock('@/lib/offline/availability', () => ({ scopeDecided: () => true }));
 vi.mock('@/stores/auth-store', () => ({ useAuthStore: { getState: () => ({ activeAccountId: 'acct' }) } }));
 
 import { useComposerEdits, type EditableAttachment } from '../use-composer-edits';

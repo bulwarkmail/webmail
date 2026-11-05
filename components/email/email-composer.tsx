@@ -78,7 +78,7 @@ import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
 import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
-import { containsEmbeddedSignature } from "@/components/email/signature-block";
+import { containsEmbeddedSignature } from "@/components/email/signature-markers";
 import {
   buildEmbeddedSignatureHtml,
   htmlComposeBodyToPlainText,

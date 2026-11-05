@@ -36,6 +36,7 @@ import {
   Users,
 } from "@/components/icons";
 import { cn } from "@/lib/cn";
+import { ServerMarkup } from "./server-markup";
 import type { Density } from "@/lib/density";
 import { Bar, Block, Circle, SkeletonRegion, repeat, textWidth } from "./kit";
 import { AppShellSkeleton, type RailLabels } from "./shell";
@@ -706,9 +707,11 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
 export function MailSkeleton({ label, labels, embedded = false }: MailSkeletonProps & { embedded?: boolean }) {
   if (embedded) {
     return (
-      <SkeletonRegion surface="mail" label={label} className="flex h-full overflow-hidden bg-background">
-        <MailSkeletonBody embedded />
-      </SkeletonRegion>
+      <ServerMarkup>
+        <SkeletonRegion surface="mail" label={label} className="flex h-full overflow-hidden bg-background">
+          <MailSkeletonBody embedded />
+        </SkeletonRegion>
+      </ServerMarkup>
     );
   }
   return (

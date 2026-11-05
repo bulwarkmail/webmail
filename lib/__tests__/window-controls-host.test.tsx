@@ -305,7 +305,9 @@ describe('the window controls over the app', () => {
     expect(read('components/layout/window-controls-host.tsx')).not.toContain('next-intl');
     expect(read('app/(main)/layout.tsx')).toContain('<WindowControlsHost />');
     expect(read('app/(main)/layout.tsx')).not.toContain('<WindowMenuBar');
-    for (const layout of ['app/(main)/[locale]/layout.tsx', 'app/(main)/admin/layout.tsx']) expect(read(layout)).toContain('<WindowMenuBar />');
+    // The app's layout loads it only in the desktop app (components/providers/deferred-hosts.tsx).
+    expect(read('app/(main)/[locale]/layout.tsx')).toContain('<DeferredWindowMenuBar />');
+    expect(read('app/(main)/admin/layout.tsx')).toContain('<WindowMenuBar />');
   });
 
   it('does nothing without the API', () => {

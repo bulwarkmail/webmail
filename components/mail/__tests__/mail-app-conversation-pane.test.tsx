@@ -177,6 +177,24 @@ describe('The reading pane in the default layout', () => {
     expect(readerDraws.filter((draw) => draw.startsWith('m1 '))).toEqual(['m1 m0,m1']);
   });
 
+  it('opens a message the list counts as alone in its thread with one request', async () => {
+    // The page's thread counts (Thread/get rides on the list query) say m2 is
+    // alone, so there is no conversation to ask for; m3's thread is unknown.
+    useEmailStore.setState({ threadEmailCounts: new Map([['t-m2', 1]]) } as never);
+    client.getEmail = vi.fn(async (id: string) => ({ ...inbox().find((e) => e.id === id)!, bodyValues: {} }));
+    render(<MailApp />);
+    const reader = await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await waitFor(() => expect(reader).toHaveTextContent('m0,m1'));
+    await press('j');
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+    await waitFor(() => expect(reader).toHaveTextContent('no conversation'));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    expect((client.getThread as ReturnType<typeof vi.fn>).mock.calls.map(([id]) => id)).not.toContain('t-m2');
+    await press('j');
+    await waitFor(() => expect(selectedId()).toBe('m3'));
+    await waitFor(() => expect((client.getThread as ReturnType<typeof vi.fn>).mock.calls.map(([id]) => id)).toContain('t-m3'));
+  });
+
   it('shows a linked message with its conversation, not alone first', async () => {
     useEmailStore.setState({ selectedEmail: null } as never);
     fetchEmailContent.mockImplementation(async (_client: unknown, id: string, _owner?: string, options?: { select?: boolean }) => {

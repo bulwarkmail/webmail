@@ -26,7 +26,7 @@ import {
 } from '@/lib/desktop/reminder-notifications';
 import { addWakeHandler } from '@/lib/desktop/system-events';
 import { playNotificationSound } from '@/lib/notification-sound';
-import { offlineActive } from '@/lib/offline/offline-mode';
+import { offlineActive } from '@/lib/offline/availability';
 import { visibleAccounts, useOfflineStore } from '@/lib/offline/state';
 import { addStoreEventListener } from '@/lib/offline/store-events';
 import { calendarHooks } from '@/lib/plugin-hooks';

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { CloudOff, X } from '@/components/icons';
 import { Dialog } from '@/components/ui/dialog';
@@ -10,7 +11,8 @@ import { useConnectionState } from '@/hooks/use-connection-state';
 import { IS_LITE } from '@/lib/lite';
 import { serverKey, useOfflineStore } from '@/lib/offline/state';
 import { useAuthStore } from '@/stores/auth-store';
-import { OutboxList } from './outbox-list';
+// The outbox (and offline mode behind it) loads when the dialog opens.
+const OutboxList = dynamic(() => import('./outbox-list').then((m) => m.OutboxList), { ssr: false });
 
 /**
  * A strip across the top of the apps while offline mode (#523) answers from

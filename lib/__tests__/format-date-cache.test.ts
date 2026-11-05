@@ -63,4 +63,18 @@ describe('formatDate formatters', () => {
       }
     }
   });
+
+  it("works out a row's date once, not on every render, and again when a setting changes", () => {
+    useSettingsStore.setState({ dateFormat: 'smart', timeFormat: '24h', dateLocale: 'auto', timeZone: 'Europe/Berlin' });
+    const date = new Date(Date.now() - 3 * 86_400_000);
+    const parts = vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts');
+    const first = formatDate(date);
+    const worked = parts.mock.calls.length;
+    expect(worked).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) expect(formatDate(date)).toBe(first);
+    expect(parts.mock.calls.length).toBe(worked);
+    useSettingsStore.setState({ timeFormat: '12h' });
+    formatDate(date);
+    expect(parts.mock.calls.length).toBeGreaterThan(worked);
+  });
 });

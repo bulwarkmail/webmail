@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { registerComposer, type ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
-import { replaceTextareaRange, textToEditorHtml } from "@/lib/plugin-sandbox/composer-edit";
+import { replaceTextareaRange } from "@/lib/plugin-sandbox/composer-own-text";
+import { textToEditorHtml } from "@/lib/plugin-sandbox/editor-html";
 import { generateUUID } from "@/lib/utils";
 import { ComposerPluginToolbarButtons } from "./composer-toolbar-menu";
 

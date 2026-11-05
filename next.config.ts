@@ -6,6 +6,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { pruneTraces } from "./scripts/standalone-guard.mjs";
 import { desktopBuildFlag } from "./scripts/desktop-build-flag.mjs";
+import { LITE_INTL_ASSETS_OFF, LITE_INTL_ASSETS_REQUEST } from "./scripts/lite-intl-assets.mjs";
 
 // Prefer an explicit build arg (passed in by CI / Docker, where .git is
 // excluded from the build context) and fall back to `git rev-parse` for
@@ -191,6 +192,21 @@ const nextConfig: NextConfig = {
           runAfterProductionCompile: async ({ distDir, projectDir }) => {
             pruneTraces({ distDir, projectDir });
           },
+        },
+      }),
+  // Only Lite draws a page before it has a catalog: everywhere else
+  // IntlProvider's Lite-only English and skeletons (half a megabyte of
+  // script) are swapped for an empty module. Webpack builds only (the Docker
+  // image, the desktop app); a Turbopack build keeps them, which costs size,
+  // not behaviour.
+  ...(isLite
+    ? {}
+    : {
+        webpack: (config, { webpack }) => {
+          config.plugins.push(new webpack.NormalModuleReplacementPlugin(LITE_INTL_ASSETS_REQUEST, (resource: { request: string }) => {
+            resource.request = LITE_INTL_ASSETS_OFF;
+          }));
+          return config;
         },
       }),
   turbopack: {

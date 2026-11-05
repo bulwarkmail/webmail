@@ -12,7 +12,7 @@ vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/stores/toast-store', () => ({ toast }));
 vi.mock('@/lib/device-policy', () => ({ canDownload: () => true, canExport: () => true }));
-vi.mock('@/lib/offline/offline-mode', () => ({ scopeDecided: () => true }));
+vi.mock('@/lib/offline/availability', () => ({ scopeDecided: () => true }));
 vi.mock('@/lib/desktop/mail-links', () => ({ openMailLink: vi.fn() }));
 vi.mock('@/lib/desktop/mail-notifications', () => ({ contentHiddenFor: () => false }));
 vi.mock('@/lib/launch-handoff', () => ({ handOffDraft: vi.fn() }));

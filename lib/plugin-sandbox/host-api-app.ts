@@ -3,9 +3,8 @@
 // preferences. Used by the AI assistant to answer "how do I ...?" and "why
 // does the app ...?" with the app's own names and the user's own values.
 
-import enMessages from '@/locales/en/common.json';
+import { loadEnglishMessages } from '@/i18n/english-catalog';
 import { LOCALE_LOADERS } from '@/components/providers/intl-provider';
-import { mergeMessages } from '@/i18n/merge-messages';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -27,13 +26,14 @@ type Messages = Record<string, unknown>;
 const MAX_QUERY = 200;
 const MAX_RESULTS = 20;
 
+/** The locale's catalog, English under it (the loaders merge it); English for an unknown one. */
 export async function messagesFor(locale: string): Promise<Messages> {
   const loader = LOCALE_LOADERS[locale];
-  if (locale === 'en' || !loader) return enMessages as Messages;
+  if (locale === 'en' || !loader) return loadEnglishMessages();
   try {
-    return mergeMessages(enMessages as never, (await loader()) as never) as Messages;
+    return await loader();
   } catch {
-    return enMessages as Messages;
+    return loadEnglishMessages();
   }
 }
 
@@ -76,7 +76,7 @@ export async function doAppSearchSettings(query: unknown, options?: unknown): Pr
 
   const locale = useLocaleStore.getState().locale || detectBrowserLocale('en');
   const local = await messagesFor(locale);
-  const english = enMessages as Messages;
+  const english = await loadEnglishMessages();
   // One config read for both: an unreachable /api/config keeps the defaults.
   const config = await fetchConfig().catch(() => null);
   const pages = availablePages(config);

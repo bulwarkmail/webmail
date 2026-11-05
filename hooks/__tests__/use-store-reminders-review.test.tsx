@@ -27,7 +27,7 @@ vi.mock('@/lib/notification-sound', () => ({ playNotificationSound: sounds.play 
 vi.mock('@/lib/title-alert', () => ({ startTitleAlert: vi.fn() }));
 // Real crypto takes real time, and fake time would run ahead of it.
 vi.mock('@/lib/pwa-notify/login-fingerprint', () => ({ loginFingerprint: async () => 'fingerprint' }));
-vi.mock('@/lib/offline/offline-mode', () => ({ offlineActive: () => true }));
+vi.mock('@/lib/offline/availability', () => ({ offlineActive: () => true }));
 const policy = vi.hoisted(() => ({ pushWithoutContent: false }));
 vi.mock('@/lib/device-policy', async (original) => ({
   ...await original<typeof import('@/lib/device-policy')>(),
