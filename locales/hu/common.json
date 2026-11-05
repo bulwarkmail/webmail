@@ -3594,6 +3594,10 @@
       "sync_off": "A többi eszköze megtartja a beállításait."
     }
   },
+  "layout_preview": {
+    "default_description": "Alkalmazások és mappák bal oldalt, keresés a lista felett",
+    "mountain_view_description": "Keresés felül, az üzenetek teljes szélességben nyílnak meg"
+  },
   "setup": {
     "title": "A Bulwark Webmail beállítása",
     "subtitle": "Állítsa be a webmail-példányát a böngészőből.",

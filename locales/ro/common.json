@@ -3594,6 +3594,10 @@
       "sync_off": "Celelalte dispozitive își păstrează setările."
     }
   },
+  "layout_preview": {
+    "default_description": "Aplicații și dosare în stânga, căutare deasupra listei",
+    "mountain_view_description": "Căutare sus, mesajele se deschid pe toată lățimea"
+  },
   "setup": {
     "title": "Configurarea Bulwark Webmail",
     "subtitle": "Configurați instanța de webmail din browser.",

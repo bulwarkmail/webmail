@@ -3594,6 +3594,10 @@
       "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
     }
   },
+  "layout_preview": {
+    "default_description": "Aplikacje i foldery po lewej, wyszukiwanie nad listą",
+    "mountain_view_description": "Wyszukiwanie u góry, wiadomości otwierają się na całą szerokość"
+  },
   "setup": {
     "title": "Konfiguracja Bulwark Webmail",
     "subtitle": "Skonfiguruj swoją instancję poczty w przeglądarce.",

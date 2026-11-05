@@ -3594,6 +3594,10 @@
       "sync_off": "Dine andre enheder beholder deres indstillinger."
     }
   },
+  "layout_preview": {
+    "default_description": "Apps og mapper til venstre, søgning over listen",
+    "mountain_view_description": "Søgning hen over toppen, beskeder åbner i fuld bredde"
+  },
   "setup": {
     "title": "Opsætning af Bulwark Webmail",
     "subtitle": "Opsæt din webmailinstans i browseren.",

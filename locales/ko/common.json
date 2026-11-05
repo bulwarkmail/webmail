@@ -3594,6 +3594,10 @@
       "sync_off": "다른 기기의 설정은 그대로예요."
     }
   },
+  "layout_preview": {
+    "default_description": "앱과 폴더는 왼쪽, 검색은 목록 위",
+    "mountain_view_description": "검색은 맨 위에, 메시지는 전체 너비로 열림"
+  },
   "setup": {
     "title": "Bulwark Webmail 설정",
     "subtitle": "브라우저에서 웹메일 인스턴스를 설정하세요.",

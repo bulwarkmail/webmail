@@ -3594,6 +3594,10 @@
       "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
   },
+  "layout_preview": {
+    "default_description": "Uygulamalar ve klasörler solda, arama listenin üstünde",
+    "mountain_view_description": "Arama en üstte, iletiler tam genişlikte açılır"
+  },
   "setup": {
     "title": "Bulwark Webmail kurulumu",
     "subtitle": "Webmail örneğinizi tarayıcıdan yapılandırın.",

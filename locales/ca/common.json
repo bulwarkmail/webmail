@@ -3594,6 +3594,10 @@
       "sync_off": "Els altres dispositius mantenen la seva configuració."
     }
   },
+  "layout_preview": {
+    "default_description": "Aplicacions i carpetes a l'esquerra, cerca sobre la llista",
+    "mountain_view_description": "Cerca a dalt de tot, els missatges s'obren a tota l'amplada"
+  },
   "setup": {
     "title": "Configuració de Bulwark Webmail",
     "subtitle": "Configureu la vostra instància de correu web des del navegador.",

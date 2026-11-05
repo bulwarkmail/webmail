@@ -3594,6 +3594,10 @@
       "sync_off": "Os seus outros dispositivos mantêm as definições deles."
     }
   },
+  "layout_preview": {
+    "default_description": "Apps e pastas à esquerda, pesquisa acima da lista",
+    "mountain_view_description": "Pesquisa no topo, as mensagens abrem em largura total"
+  },
   "setup": {
     "title": "Configuração do Bulwark Webmail",
     "subtitle": "Configure a sua instância de webmail a partir do navegador.",

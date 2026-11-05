@@ -3594,6 +3594,10 @@
       "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
     }
   },
+  "layout_preview": {
+    "default_description": "Rakendused ja kaustad vasakul, otsing loendi kohal",
+    "mountain_view_description": "Otsing üleval üle kogu laiuse, kirjad avanevad täislaiuses"
+  },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",
     "subtitle": "Seadista oma veebipostiteenus brauseris.",

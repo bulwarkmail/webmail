@@ -3594,6 +3594,10 @@
       "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
   },
+  "layout_preview": {
+    "default_description": "Lietotnes un mapes pa kreisi, meklēšana virs saraksta",
+    "mountain_view_description": "Meklēšana augšā visā platumā, ziņojumi atveras pilnā platumā"
+  },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",
     "subtitle": "Iestatiet savu tīmekļa pasta instanci pārlūkā.",

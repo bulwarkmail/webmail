@@ -3594,6 +3594,10 @@
       "sync_off": "ほかのデバイスの設定はそのままです。"
     }
   },
+  "layout_preview": {
+    "default_description": "アプリとフォルダーは左、検索はリストの上",
+    "mountain_view_description": "検索は上部に表示、メッセージは全幅で開きます"
+  },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",
     "subtitle": "ブラウザーから Web メールのインスタンスを設定します。",

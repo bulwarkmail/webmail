@@ -3594,6 +3594,10 @@
       "sync_off": "Ihre anderen Geräte behalten ihre Einstellungen."
     }
   },
+  "layout_preview": {
+    "default_description": "Apps und Ordner links, Suche über der Liste",
+    "mountain_view_description": "Suche oben über die ganze Breite, Nachrichten öffnen in voller Breite"
+  },
   "setup": {
     "title": "Einrichtung von Bulwark Webmail",
     "subtitle": "Richten Sie Ihre Webmail-Instanz im Browser ein.",
