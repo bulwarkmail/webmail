@@ -3599,7 +3599,6 @@ export function EmailComposer({
       replyFocusedRef.current = true;
       if (focusUnlessMoved(ed.view.dom as HTMLElement)) ed.commands.focus('start');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- focusUnlessMoved reads the DOM when called
   }, [mode]);
   useEffect(() => {
     if (!wantsPluginSelection) return;
