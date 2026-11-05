@@ -32,8 +32,9 @@ import { JMAP_URL } from './helpers/config';
  *   is on the server once after reconnecting, with the file, and can be sent;
  * - a kept message shows its inline image and gives its attachment offline;
  * - a sign-out the user starts asks first when unsent mail would be lost,
- *   then wipes the device; the idle sign-out wipes it and the login page
- *   names the lost message;
+ *   then wipes the device; the idle sign-out hides the mail, the login page
+ *   says how many messages wait, and signing in again sends them; with the
+ *   organisation's immediate deletion it wipes and names the lost message;
  * - the admin forbids offline mode (Organisation > Devices, and a group
  *   scope by API): the next policy fetch wipes the device and hides the
  *   switch, only for accounts in the scope;
@@ -820,26 +821,71 @@ test('signing out asks first when unsent mail would be lost, then wipes the devi
   await page.context().close();
 });
 
-test('the idle sign-out wipes the device and the login page names the lost message', async ({ browser }) => {
-  test.setTimeout(360_000);
-  const subject = `Unsent at idle ${RUN}`;
-  await setPolicy(browser, { organisation: { session: { idleMinutes: 1, maxHours: 0, warnSeconds: 30 } } });
+/** Signed in, offline mode on, a message to bob waiting in the outbox with the mail server gone. */
+async function unsentWithServerGone(browser: Browser, subject: string): Promise<Page> {
   const page = await userPage(browser, ENT.alice);
   await enableOffline(page);
   await toMail(page);
   await blockMailServer(page.context());
   await waitUntilOffline(page);
-  await compose(page, ENT.bob, subject, 'Lost at idle');
+  await compose(page, ENT.bob, subject, 'Waiting at idle');
   await send(page);
   await expect(page.getByTestId('offline-banner-outbox')).toHaveText('1 message in the outbox', { timeout: 30_000 });
+  return page;
+}
+
+const IDLE = { idleMinutes: 1, maxHours: 0, warnSeconds: 30 };
+
+test('the idle sign-out keeps unsent mail for the next sign-in, which sends it', async ({ browser }) => {
+  test.setTimeout(420_000);
+  const subject = `Unsent at idle ${RUN}`;
+  await setPolicy(browser, { organisation: { session: IDLE } });
+  const page = await unsentWithServerGone(browser, subject);
+
+  // Left alone for the minute: signed out, the mail hidden but kept. The
+  // sign-in page gives a count and a date only, since whoever reads it may
+  // not be the one who wrote it.
+  const waiting = page.getByTestId('login-refused-waiting');
+  await expect(waiting).toContainText('1 unsent message waits for you to sign in again', { timeout: 150_000 });
+  await shot(page, 'f-idle-waiting');
+  await expect(waiting).not.toContainText(subject);
+  await expect(page.getByTestId('session-outbox-lost')).toHaveCount(0);
+  expect(await offlineDatabaseExists(page)).toBe(true);
+  expect((await messages(ENT.bob, RUN)).filter((m) => m.subject === subject)).toHaveLength(0);
+
+  // Signing in again brings it back, and with the server there it goes out, once.
+  await setPolicy(browser, {});
+  await page.context().unroute(`${new URL(JMAP_URL).origin}/**`);
+  await page.fill('#username', ENT.alice);
+  await page.fill('#password', process.env.IT_ENT_PASSWORD ?? '');
+  await page.click('button[type="submit"]');
+  await expect(accountSwitcher(page)).toBeVisible({ timeout: 60_000 });
+  await waitForMessage(ENT.bob, (m) => m.subject === subject, 120_000);
+  await page.waitForTimeout(5_000);
+  expect((await messages(ENT.bob, RUN)).filter((m) => m.subject === subject)).toHaveLength(1);
+  await page.context().close();
+});
+
+test('with immediate deletion the idle sign-out wipes the device and the login page names the lost message', async ({ browser }) => {
+  test.setTimeout(360_000);
+  const subject = `Lost at idle ${RUN}`;
+  const devices = ((original.organisation as { devices?: object } | undefined)?.devices) ?? {};
+  await setPolicy(browser, { organisation: { session: IDLE, devices: { ...devices, wipeOnForcedSignOut: true } } });
+  const page = await unsentWithServerGone(browser, subject);
+  expect((await offlineDatabase(page)).accounts).toBeGreaterThan(0);
 
   // Left alone for the minute.
   await expect(page.getByTestId('session-outbox-lost')).toContainText(subject, { timeout: 150_000 });
   await shot(page, 'f-idle-lost');
-  await expect.poll(() => offlineDatabaseExists(page), { timeout: 20_000 }).toBe(false);
+  // The account's own data goes, its key with it, so nothing kept can be read.
+  // Shared databases stay, as for any deletion after a forced sign-out.
+  await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 20_000 }).toBe(0);
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-offline-accounts') ?? '[]')).not.toContain('ent-alice');
   await expect.poll(() => shellCaches(page), { timeout: 20_000 }).toEqual([]);
+  await expect(page.getByTestId('login-refused-waiting')).toHaveCount(0);
   await page.context().close();
   await setPolicy(browser, {});
+  expect((await messages(ENT.bob, RUN)).filter((m) => m.subject === subject)).toHaveLength(0);
 });
 
 test('the admin forbids offline mode on Organisation > Devices', async ({ browser }) => {
