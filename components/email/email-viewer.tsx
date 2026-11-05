@@ -127,7 +127,6 @@ import {
   BookOpen,
   ArrowLeft,
   Pencil,
-  Paperclip,
   Inbox,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
@@ -1557,7 +1556,6 @@ export function EmailViewer({
   );
   const mailAttachmentActionRef = useRef(mailAttachmentAction);
   mailAttachmentActionRef.current = mailAttachmentAction;
-  const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
   const isSenderTrusted = useSettingsStore((state) => state.isSenderTrusted);
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
@@ -3444,7 +3442,6 @@ export function EmailViewer({
   }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
 
   // What the attachment bar and the attachment cards share.
-  const attachmentCardsRef = useRef<HTMLDivElement>(null);
   const desktopClipboard = getDesktopBridge()?.clipboard;
   const tDesktopUi = useTranslations('desktopUi.attachment');
   const editAccount = editAccountOf(email);
@@ -4089,6 +4086,10 @@ export function EmailViewer({
       to: email.to?.map(formatRecipient).join(', ') || '',
       cc: email.cc?.map(formatRecipient).join(', ') || '',
       date: formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+      // The reader's list: inline images stay in the body, not here.
+      attachments: effectiveAttachments
+        .map((a) => `${getAttachmentDisplayName(a.name, a.type)} (${formatFileSize(a.size)})`)
+        .join(', '),
       bodyHtml: plain
         ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
         : sanitizeEmailHtml(effectiveEmailContent.html),
@@ -4111,6 +4112,7 @@ export function EmailViewer({
     const date = fields.date;
     const toList = escapeHtml(fields.to);
     const ccList = escapeHtml(fields.cc);
+    const attachmentList = escapeHtml(fields.attachments);
     const subjectText = fields.subject;
     const senderText = fields.sender;
     const plainBody = fields.plain;
@@ -4161,6 +4163,7 @@ ${printWatermark ? printWatermark.html : ''}
     ${toList ? `<div><strong>${escapeHtml(t('to'))}:</strong> ${toList}</div>` : ''}
     ${ccList ? `<div><strong>${escapeHtml(t('cc'))}:</strong> ${ccList}</div>` : ''}
     ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
+    ${attachmentList ? `<div data-print-attachments><strong>${escapeHtml(t('attachments'))}:</strong> ${attachmentList}</div>` : ''}
   </div>
 </div>
 <div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
@@ -5590,20 +5593,6 @@ ${printWatermark ? printWatermark.html : ''}
 
 
               </div>
-              {/* Cards mode: a paperclip with the count jumps down to the cards. */}
-              {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => attachmentCardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  title={t('attachments')}
-                  aria-label={t('attachments_count', { count: effectiveAttachments.length })}
-                  className="self-start flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                  data-testid="attachments-jump"
-                >
-                  <Paperclip className="w-4 h-4" />
-                  <bdi>{effectiveAttachments.length}</bdi>
-                </button>
-              )}
             </div>
           </div>
       </div>
@@ -6132,6 +6121,15 @@ ${printWatermark ? printWatermark.html : ''}
           );
         })()}
 
+        {/* === ATTACHMENTS: always right under the header (and its details),
+            above every banner and the body, in every layout. Inline images
+            stay in the body; a message with only those draws no strip. === */}
+        {effectiveAttachments.length > 0 && (
+          <div className={cn("bg-background border-b border-border px-4 lg:px-6 py-3", mvViewer && "lg:ps-[80px]")} data-reader-attachments-strip="">
+            <ReaderAttachments {...readerAttachmentProps} />
+          </div>
+        )}
+
         {/* Scheduled Banner */}
         {isScheduled && (
           <div className="border-b border-border bg-primary/10">
@@ -6315,14 +6313,6 @@ ${printWatermark ? printWatermark.html : ''}
 
         <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
 
-      {/* === ATTACHMENTS: a bar of tiles under the header, unless cards
-          mode draws them after the body. === */}
-      {attachmentPosition !== 'below-message' && effectiveAttachments.length > 0 && (
-        <div className="bg-background border-b border-border px-4 lg:px-6 py-3">
-          <ReaderAttachments {...readerAttachmentProps} layout="bar" />
-        </div>
-      )}
-
       </>)}
 
         <div className="grow shrink-0 flex flex-col">
@@ -6419,13 +6409,6 @@ ${printWatermark ? printWatermark.html : ''}
               />
             )}
           </div>
-
-          {/* === ATTACHMENTS as cards after the body (below-message mode) === */}
-          {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && !mvOpenFolded && !mvAwaitingConversation && (
-            <div ref={attachmentCardsRef} className={cn("bg-background border-t border-border px-4 lg:px-6 py-4 scroll-mt-4", mvViewer && "lg:ps-[60px]")}>
-              <ReaderAttachments {...readerAttachmentProps} layout="cards" />
-            </div>
-          )}
 
           <PluginSlot name="email-footer" extraProps={pluginFooterProps} />
 

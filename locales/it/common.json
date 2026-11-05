@@ -2116,12 +2116,6 @@
         "preview": "Anteprima quando possibile",
         "download": "Scarica immediatamente"
       },
-      "attachment_position": {
-        "label": "Posizione degli allegati",
-        "description": "Dove visualizzare gli allegati nell'intestazione dell'email",
-        "below-header": "Sotto l'intestazione",
-        "below-message": "Schede sotto il messaggio"
-      },
       "emails_per_page": {
         "10": "10 messaggi",
         "25": "25 messaggi",

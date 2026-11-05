@@ -2131,12 +2131,6 @@
         "preview": "Xem trước nếu có thể",
         "download": "Tải xuống ngay"
       },
-      "attachment_position": {
-        "label": "Vị trí tệp đính kèm",
-        "description": "Vị trí hiển thị tệp đính kèm trong phần đầu thư",
-        "below-header": "Bên dưới phần đầu thư",
-        "below-message": "Thẻ bên dưới thư"
-      },
       "emails_per_page": {
         "10": "10 thư",
         "25": "25 thư",

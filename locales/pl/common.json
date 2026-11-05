@@ -2116,12 +2116,6 @@
         "preview": "Podgląd, gdy to możliwe",
         "download": "Pobierz natychmiast"
       },
-      "attachment_position": {
-        "label": "Pozycja załączników",
-        "description": "Gdzie wyświetlać załączniki w nagłówku wiadomości e-mail",
-        "below-header": "Pod nagłówkiem",
-        "below-message": "Karty pod wiadomością"
-      },
       "emails_per_page": {
         "10": "10 wiadomości",
         "25": "25 wiadomości",

@@ -2116,12 +2116,6 @@
         "preview": "Náhled, pokud je to možné",
         "download": "Okamžitě stáhnout"
       },
-      "attachment_position": {
-        "label": "Pozice příloh",
-        "description": "Kde zobrazovat přílohy v hlavičce e-mailu",
-        "below-header": "Pod hlavičkou",
-        "below-message": "Karty pod zprávou"
-      },
       "emails_per_page": {
         "10": "10 zpráv",
         "25": "25 zpráv",

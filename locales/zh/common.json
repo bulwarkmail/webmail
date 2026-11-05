@@ -2116,12 +2116,6 @@
         "preview": "尽可能预览",
         "download": "立即下载"
       },
-      "attachment_position": {
-        "label": "附件位置",
-        "description": "在邮件标题中的何处显示附件",
-        "below-header": "标题下方",
-        "below-message": "邮件下方的卡片"
-      },
       "emails_per_page": {
         "10": "10 封邮件",
         "25": "25 封邮件",

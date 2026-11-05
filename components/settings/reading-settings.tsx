@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-import { useSettingsStore, type AttachmentPosition } from '@/stores/settings-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DownloadsSettings } from './downloads-settings';
 import { PrivacyLinkRow } from './privacy-settings';
@@ -26,7 +26,6 @@ export function ReadingSettings() {
   const {
     markAsReadDelay,
     mailAttachmentAction,
-    attachmentPosition,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
     messageSpacing,
@@ -103,17 +102,6 @@ export function ReadingSettings() {
       </SettingsSection>
 
       <SettingsSection id="attachments" title={tPage('sections.attachments')}>
-        <SettingItem label={t('attachment_position.label')} description={t('attachment_position.description')}>
-          <Select
-            value={attachmentPosition === 'below-message' ? 'below-message' : 'below-header'}
-            onChange={(value) => updateSetting('attachmentPosition', value as AttachmentPosition)}
-            options={[
-              { value: 'below-header', label: t('attachment_position.below-header') },
-              { value: 'below-message', label: t('attachment_position.below-message') },
-            ]}
-          />
-        </SettingItem>
-
         <SettingItem label={t('attachment_click_action.label')} description={t('attachment_click_action.description')}>
           <Select
             value={mailAttachmentAction}

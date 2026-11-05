@@ -2116,12 +2116,6 @@
         "preview": "Priekšskatīt, ja iespējams",
         "download": "Lejupielādēt nekavējoties"
       },
-      "attachment_position": {
-        "label": "Pielikumu novietojums",
-        "description": "Kur rādīt pielikumus vēstules galvenē",
-        "below-header": "Zem galvenes",
-        "below-message": "Kartītes zem ziņojuma"
-      },
       "emails_per_page": {
         "10": "10 vēstules",
         "25": "25 vēstules",

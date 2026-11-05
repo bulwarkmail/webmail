@@ -2116,12 +2116,6 @@
         "preview": "Wenn möglich in Vorschau öffnen",
         "download": "Sofort herunterladen"
       },
-      "attachment_position": {
-        "label": "Anhangsposition",
-        "description": "Wo die Anhänge einer geöffneten E-Mail angezeigt werden",
-        "below-header": "Als Leiste unter dem Header",
-        "below-message": "Als Karten unter der Nachricht"
-      },
       "emails_per_page": {
         "10": "10 E-Mails",
         "25": "25 E-Mails",

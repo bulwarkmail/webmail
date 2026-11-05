@@ -257,7 +257,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.reading_page.plain_text_font_link.label' },
     { label: 'settings.email_behavior.always_light_mode.label' },
     { label: 'settings.reading_page.sections.attachments' },
-    { label: 'settings.email_behavior.attachment_position.label' },
     { label: 'settings.email_behavior.attachment_click_action.label' },
     { label: 'settings.email_behavior.attachment_image_previews.label' },
     { label: 'settings.email_behavior.hide_inline_image_attachments.label' },

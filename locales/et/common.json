@@ -2119,12 +2119,6 @@
         "preview": "Kuva eelvaade, kui võimalik",
         "download": "Laadi kohe alla"
       },
-      "attachment_position": {
-        "label": "Manuse asukoht",
-        "description": "Kuhu kuvada manused kirja päises",
-        "below-header": "Päise all",
-        "below-message": "Kaardid kirja all"
-      },
       "emails_per_page": {
         "10": "10 kirja",
         "25": "25 kirja",
