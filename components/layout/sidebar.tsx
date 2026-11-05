@@ -1366,6 +1366,52 @@ function SidebarImpl({
     setRailOpen(false);
   }, []);
   useEffect(() => () => { if (railHoverTimer.current) clearTimeout(railHoverTimer.current); }, []);
+  const {
+    contextMenu: mailboxContextMenu,
+    openContextMenu: openMailboxContextMenu,
+    closeContextMenu: closeMailboxContextMenu,
+    menuRef: mailboxMenuRef,
+  } = useContextMenu<MailboxContextTarget>();
+  // A folder's menu opened from the folded column or the tree floated out of
+  // it holds the column as it is until the menu closes. The pointer crossing
+  // the page on its way into the menu or a submenu (Rules ›) closed the tree,
+  // and the scroll that put the column back closed the menu with it; a hover
+  // that floated the tree out under a menu opened on the column did the same.
+  const menuOpen = mailboxContextMenu.isOpen;
+  const menuOpenRef = useRef(false);
+  useLayoutEffect(() => { menuOpenRef.current = menuOpen; }, [menuOpen]);
+  // A subfolder's item to give the focus back to once the tree has folded.
+  const refocusAfterFold = useRef<string | null>(null);
+  // Floated out by the hover alone: it folds when the pointer has gone.
+  const foldsOnLeave = useRef(false);
+  useLayoutEffect(() => { foldsOnLeave.current = railHovered && !railOpen; }, [railHovered, railOpen]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
+    railHoverTimer.current = null;
+    // Where the pointer went meanwhile: off the sidebar, a hovered tree folds
+    // away once the menu has closed, as it would have when the pointer left.
+    let pointerOutside = false;
+    const root = rootRef.current;
+    const onMove = (e: PointerEvent) => {
+      const box = root?.getBoundingClientRect();
+      pointerOutside = !box || e.clientX < box.left || e.clientX >= box.right || e.clientY < box.top || e.clientY >= box.bottom;
+    };
+    document.addEventListener('pointermove', onMove, true);
+    return () => {
+      document.removeEventListener('pointermove', onMove, true);
+      if (!pointerOutside) return;
+      // The menu has given the focus back to its folder (its cleanup ran
+      // first). A subfolder isn't in the column: the focus then goes to the
+      // item it sits under once the tree has folded.
+      const active = document.activeElement;
+      const row = foldsOnLeave.current && active instanceof HTMLElement && root?.contains(active)
+        ? active.closest<HTMLElement>('[data-rail-key]')
+        : null;
+      refocusAfterFold.current = row?.dataset.railKey ?? null;
+      setRailHovered(false);
+    };
+  }, [menuOpen]);
   // Unfolded or turned into the phone drawer meanwhile: nothing floats any more.
   useEffect(() => {
     if (!sidebarCollapsed || isDrawer) closeRailPeek();
@@ -1411,7 +1457,7 @@ function SidebarImpl({
       : null;
   }, []);
   const armRailHover = useCallback((e: React.MouseEvent) => {
-    if (!hoverOpens()) return;
+    if (!hoverOpens() || menuOpenRef.current) return;
     const target = e.target;
     lastPointer.current = { x: e.clientX, y: e.clientY, target };
     if (mvShell) { noteHoveredRailItem(); setRailHovered(true); return; }
@@ -1476,6 +1522,27 @@ function SidebarImpl({
     e.stopPropagation();
     items[next].focus();
   }, []);
+  const mailboxesRef = useRef(mailboxes);
+  useEffect(() => { mailboxesRef.current = mailboxes; });
+  useEffect(() => {
+    const key = refocusAfterFold.current;
+    if (!key || !isCollapsed) return;
+    refocusAfterFold.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    const nav = navRef.current;
+    if (!nav) return;
+    const items = Array.from(nav.querySelectorAll<HTMLElement>('[data-rail-key]'));
+    for (let id: string | undefined = key, hops = 0; id && hops < 50; hops++) {
+      const button = items.find((el) => el.dataset.railKey === id)?.querySelector<HTMLElement>(':scope > button');
+      if (button) {
+        button.focus();
+        return;
+      }
+      id = mailboxesRef.current.find((m) => m.id === id)?.parentId ?? undefined;
+    }
+    nav.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+  }, [isCollapsed]);
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
@@ -1601,6 +1668,8 @@ function SidebarImpl({
       // The scrim behind the drawer closes it on its own click: gone at the
       // press, it would let that click through to the message under it.
       if (e.target instanceof Element && e.target.closest('[data-drawer-scrim]')) return;
+      // A folder's menu is open: the press closes the menu, not the drawer.
+      if (menuOpenRef.current) return;
       if (root && !root.contains(e.target as Node)) closeRailPeek();
     };
     document.addEventListener('pointerdown', onPointerDown, true);
@@ -2179,13 +2248,6 @@ function SidebarImpl({
   const openFolderSettings = () => { router.push(buildSettingsPath('organize', 'folders')); };
   const openKeywordSettings = () => { router.push(buildSettingsPath('organize', 'tags')); };
 
-  const {
-    contextMenu: mailboxContextMenu,
-    openContextMenu: openMailboxContextMenu,
-    closeContextMenu: closeMailboxContextMenu,
-    menuRef: mailboxMenuRef,
-  } = useContextMenu<MailboxContextTarget>();
-
   const handleMailboxContextMenu = (e: React.MouseEvent, node: MailboxNode) => {
     const mailbox = mailboxes.find(mb => mb.id === node.id);
     if (!mailbox) return;
@@ -2266,7 +2328,8 @@ function SidebarImpl({
       onMouseLeave={sidebarCollapsed && !isDrawer ? () => {
         if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
         railHoverTimer.current = null;
-        setRailHovered(false);
+        // On the way into its open menu or a submenu: it stays.
+        if (!menuOpenRef.current) setRailHovered(false);
       } : undefined}
       onKeyDown={railOpen || railHovered ? (e) => {
         // Opened from All folders, the drawer keeps the focus until it closes.
@@ -2282,7 +2345,8 @@ function SidebarImpl({
       } : undefined}
       onBlur={railOpen ? (e) => {
         const next = e.relatedTarget as Node | null;
-        if (next && !e.currentTarget.contains(next)) closeRailPeek();
+        // Into a folder's menu, which sits outside in a portal: it stays.
+        if (next && !e.currentTarget.contains(next) && !menuOpenRef.current) closeRailPeek();
       } : undefined}
       data-mv-rail-peek={hoverExpanded && mvShell ? "" : undefined}
       data-folder-peek={isFolderDrawer ? "" : undefined}
