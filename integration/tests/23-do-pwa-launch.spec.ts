@@ -651,13 +651,16 @@ test.describe('in the Pro shell', () => {
     const page = await context.newPage();
     await page.goto('/');
     await signIn(page, ENT.alice);
-    await page.waitForURL(/\/pro/);
+    // The Pro shell, by its tab bar: the address is the tab's own (/mail/…),
+    // written over /pro, so a wait for /pro raced it.
+    const proTabs = page.locator('[role="tablist"]', { has: page.getByRole('tab', { name: /Mail/ }) });
+    await expect(proTabs.first()).toBeVisible({ timeout: 60_000 });
     await workerReady(page);
 
     await postShare(page, { url: 'https://example.org/pro' }, [{ name: `pro-${RUN}.txt`, type: 'text/plain', body: 'x' }]);
     await startMessage(page).click({ timeout: 60_000 });
     await signInIfAsked(page, ENT.alice);
-    await page.waitForURL(/\/pro/);
+    await expect(proTabs.first()).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText(`pro-${RUN}.txt`).first()).toBeVisible({ timeout: 30_000 });
 
     await launch(page, { target: '/calendar', files: [ICS] });
