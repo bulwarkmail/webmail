@@ -99,10 +99,15 @@ const card = (page: Page, title: string) => page.locator(`button[aria-label^="${
 async function cardOnScreen(page: Page, title: string) {
   const cards = page.locator(`button[aria-label^="${title},"]`);
   await cards.first().waitFor({ state: 'attached', timeout: 60000 });
-  const width = page.viewportSize()!.width;
+  // Seen, not only inside the window: the week before can sit at x >= 0,
+  // clipped under the sidebar, and a click scrolls it into view.
   for (let i = 0; i < await cards.count(); i++) {
-    const box = await cards.nth(i).boundingBox();
-    if (box && box.x >= 0 && box.x + box.width <= width) return cards.nth(i);
+    const seen = await cards.nth(i).evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 8));
+      return !!hit && el.contains(hit);
+    });
+    if (seen) return cards.nth(i);
   }
   throw new Error(`no chip of ${title} on screen`);
 }
