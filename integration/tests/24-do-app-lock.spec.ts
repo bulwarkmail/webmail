@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type Browser, type BrowserContext, type Page, type Route } from '@playwright/test';
 import { ENT, ENT_PASSWORD, contextOptions, deliver, jmapAs, requireEntEnv, shot } from './helpers/ent';
 import { accountSwitcher } from './helpers/app';
 
@@ -516,6 +516,12 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
   const sessionCookies = (await context.cookies()).filter((cookie) => SESSION_COOKIE.test(cookie.name));
   expect(sessionCookies.length).toBeGreaterThan(0);
   await context.setOffline(true);
+  // Chromium's emulated outage lets a keepalive request through when the page leaves right
+  // after it. Sometimes its answer reached the page in time, which then dropped its mark, and
+  // the check below failed. A real outage answers nothing: these DELETEs fail here too.
+  const CLEAR = /\/api\/auth\/(session|token)\?all=true/;
+  const outage = (route: Route) => route.abort('internetdisconnected');
+  await context.route(CLEAR, outage);
   await forgetPin(page);
   // No network, so no way to delete an HttpOnly cookie, and the shell went with the rest:
   // the way to the login page ends at the browser's own error until the network is back.
@@ -523,8 +529,7 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
     .catch((error: Error) => expect(error.message).toContain('ERR_INTERNET_DISCONNECTED'));
   // The old page is gone only once the error page is up: until then it could still reach the network.
   await expect.poll(() => page.url(), { timeout: 30_000 }).toContain('chrome-error');
-  // What a real outage leaves. Chromium's emulated one lets a keepalive request through when
-  // the page leaves right after it: the page hears it failed, and the server clears the cookies.
+  // What a real outage leaves: the cookies too (held back above, so this changes nothing).
   await context.addCookies(sessionCookies);
   const stored = (await context.storageState()).origins.flatMap((origin) => origin.localStorage).map((entry) => entry.name);
   expect(stored).toContain('bulwark-cookies-to-clear');
@@ -533,6 +538,7 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
   context.on('request', (request) => {
     if (/\/api\/auth\/session/.test(request.url())) asked.push(request.method());
   });
+  await context.unroute(CLEAR, outage);
   await context.setOffline(false);
   await page.goto('/');
   await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
