@@ -204,6 +204,18 @@ describe('runDesktopBrowserSignIn', () => {
     expect(sessionStorage.getItem('oauth_client_id')).toBeNull();
   });
 
+  it('passes the address typed in the app on as login_hint, and nothing when there is none', async () => {
+    const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
+    const opened: URL[] = [];
+    authBridge((url: string) => {
+      opened.push(new URL(url));
+      return { ok: false, error: 'cancelled' };
+    });
+    await runDesktopBrowserSignIn({ ...options, loginHint: 'sam@example.org' });
+    await runDesktopBrowserSignIn(options);
+    expect(opened.map((url) => url.searchParams.get('login_hint'))).toEqual(['sam@example.org', null]);
+  });
+
   it('refuses an answer another issuer signed', async () => {
     const { runDesktopBrowserSignIn } = await import('../browser-sign-in');
     authBridge({ ok: true, code: 'c', state: 'main-state', iss: 'https://evil.example' });
@@ -312,6 +324,17 @@ describe('runInstanceBrowserSignIn', () => {
     expect(opened.toString()).not.toContain(outcome.verifier);
     const challenge = Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(outcome.verifier))).toString('base64url');
     expect(opened.searchParams.get('mobile_code_challenge')).toBe(challenge);
+  });
+
+  it('hands the address typed in the app to the instance\'s login page', async () => {
+    const { runInstanceBrowserSignIn } = await import('../browser-sign-in');
+    let opened = new URL('https://x');
+    bridgeWith((_flow, url) => {
+      opened = new URL(url);
+      return { ok: false, error: 'cancelled' };
+    });
+    await runInstanceBrowserSignIn({ base: 'https://b.example', locale: 'en', fresh: false, loginHint: 'sam@example.org' });
+    expect(opened.searchParams.get('login_hint')).toBe('sam@example.org');
   });
 
   it('passes on that a new login is due, and takes a timeout as a timeout', async () => {

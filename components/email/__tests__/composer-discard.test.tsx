@@ -249,6 +249,18 @@ describe('composer Discard button', () => {
     expect(onDiscardDraft).not.toHaveBeenCalled();
   });
 
+  // compose-p3-2: the host hides the draft (its reply card) while Undo is offered.
+  it('tells the host which draft it is discarding before it closes', () => {
+    const calls: string[] = [];
+    const onDiscardStarted = vi.fn(() => calls.push('started'));
+    render(<EmailComposer initialData={REOPENED_DRAFT} onDiscardStarted={onDiscardStarted} onClose={() => calls.push('closed')} />);
+
+    fireEvent.click(screen.getByText('discard'));
+
+    expect(onDiscardStarted).toHaveBeenCalledWith('draft-1');
+    expect(calls).toEqual(['started', 'closed']);
+  });
+
   it('has the main window say it for a composer in its own window', () => {
     const onDraftDiscarded = vi.fn();
     const onDiscardDraft = vi.fn();

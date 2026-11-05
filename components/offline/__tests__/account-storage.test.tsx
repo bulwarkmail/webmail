@@ -178,6 +178,22 @@ describe('what it takes', () => {
     expect(document.body.textContent).not.toContain('syncing');
   });
 
+  // settings-p3-20 (2026-11-04): "Bringing data to this device: 13 so far", 13 of what?
+  // And calendar, contacts and files listing read "Listing messages".
+  it.each([
+    ['mail', 'attachments', 'progress_attachments'],
+    ['calendar', 'list', 'progress_events'],
+    ['contacts', 'list', 'progress_contacts'],
+    ['files', 'list', 'progress_files_list'],
+    ['files', 'contents', 'progress_files'],
+    ['mail', 'list', 'progress_list'],
+  ])('names what %s %s fetches', (area, phase, key) => {
+    const now = Date.now();
+    useOfflineStore.setState({ syncing: ['acc'], progress: { acc: { area, phase, done: 500, total: null, startedAt: now, startedDone: 0, at: now } } });
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-progress-phase').textContent).toBe(key);
+  });
+
   it('keeps a small catch-up quiet', () => {
     const now = Date.now();
     useOfflineStore.setState({ syncing: ['acc'], progress: { acc: { area: 'mail', phase: 'bodies', done: 1, total: 3, startedAt: now, startedDone: 0, at: now } } });

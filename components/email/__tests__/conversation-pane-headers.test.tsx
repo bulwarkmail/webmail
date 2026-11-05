@@ -74,6 +74,57 @@ describe('conversation headers in the default layout', () => {
     expect(container.querySelector('.sm\\:block .whitespace-nowrap')).toBeNull();
   });
 
+  it('gives a conversation of one message the same header (pass 3)', () => {
+    const open = withBody(mail(3), 'Only message');
+    const onForward = vi.fn();
+    // No thread of two or more came back: no mvConversation at all.
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        conversationPane onReply={vi.fn()} onReplyAll={vi.fn()} onForward={onForward} />,
+    );
+    const actions = container.querySelector('[data-mv-sender-actions]') as HTMLElement;
+    expect(actions).not.toBeNull();
+    fireEvent.click(within(actions).getByRole('button', { name: 'forward' }));
+    expect(onForward).toHaveBeenCalled();
+    const date = actions.querySelector('time[data-conversation-date]') as HTMLElement;
+    expect(date.getAttribute('title')!.length).toBeGreaterThan(date.textContent!.length);
+    // Not the long date beside the subject.
+    expect(container.querySelector('.sm\\:block .whitespace-nowrap')).toBeNull();
+  });
+
+  it('never cuts a sender address: it shows whole beside the name or not at all (mail-p3-13)', () => {
+    const open = withBody(mail(3, { from: [{ name: 'DSO usability audit mail (throwaway)', email: 'dso-ux-mail@example.org' }] }), 'Newest');
+    const older = withBody(mail(2, { keywords: {}, from: [{ name: 'Sam Ortega', email: 'sam.ortega@example.com' }] }), 'Older');
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        mvConversation={[mail(1), older, open]} conversationPane onReplyConversationEmail={vi.fn()} />,
+    );
+    const lines = [...container.querySelectorAll<HTMLElement>('[data-sender-line]')];
+    // The unfolded older message and the open one.
+    expect(lines.length).toBe(2);
+    for (const line of lines) {
+      const address = line.querySelector<HTMLElement>('[data-sender-address]')!;
+      expect(address).not.toBeNull();
+      // Whole or wrapped onto the clipped second line, never "example.or…".
+      expect(address.className).not.toMatch(/truncate|text-ellipsis/);
+      expect(address.className).toMatch(/whitespace-nowrap/);
+      expect(line.className).toMatch(/flex-wrap/);
+      expect(line.className).toMatch(/overflow-hidden/);
+      expect(line.className).toMatch(/\bh-5\b/);
+      expect(line.getAttribute('title')).toMatch(/<.+@.+>/);
+    }
+    expect(lines[0].textContent).toContain('<sam.ortega@example.com>');
+  });
+
+  it('keeps the plain reader header with "Show emails as individual messages"', () => {
+    const open = withBody(mail(3), 'Only message');
+    const { container } = render(
+      <EmailViewer email={open} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
+        onReply={vi.fn()} onReplyAll={vi.fn()} onForward={vi.fn()} />,
+    );
+    expect(container.querySelector('[data-mv-sender-actions]')).toBeNull();
+  });
+
   it('gives an unfolded older message Forward too, in the same short date style', () => {
     const open = withBody(mail(3), 'Newest body');
     const onForward = vi.fn();

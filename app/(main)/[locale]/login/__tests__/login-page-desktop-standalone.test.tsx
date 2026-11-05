@@ -42,6 +42,12 @@ vi.mock('@/lib/desktop/browser-sign-in', () => ({
   runInstanceBrowserSignIn: vi.fn(),
 }));
 
+const changeConnection = vi.hoisted(() => ({ available: true, ask: vi.fn(async (_text: object) => false) }));
+vi.mock('@/lib/desktop/change-connection', () => ({
+  changeConnectionAvailable: () => changeConnection.available,
+  askAndChangeConnection: changeConnection.ask,
+}));
+
 const { default: LoginPage } = await import('../page');
 
 let found: Record<string, string | null>;
@@ -124,5 +130,28 @@ describe('the desktop app, with a server of one\'s own', () => {
     fireEvent.click(button);
     await waitFor(() => expect(runDesktopBrowserSignIn).toHaveBeenCalled());
     expect(runDesktopBrowserSignIn.mock.calls[0][0].serverUrl).toBe('https://mail.example.net:8443');
+  }, 30_000);
+});
+
+// settings-p3-1: the way back to "My organisation gave me a Bulwark web address".
+describe('the organisation link', () => {
+  afterEach(() => {
+    changeConnection.available = true;
+    changeConnection.ask.mockClear();
+  });
+
+  it('asks before the app restarts on its first screen', async () => {
+    render(<LoginPage />);
+    const link = await screen.findByTestId('login-use-organisation', {}, { timeout: 10000 });
+    expect(link).toHaveTextContent('connection.org_link');
+    fireEvent.click(link);
+    expect(changeConnection.ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'connection.title', confirm: 'connection.confirm' }));
+  }, 30_000);
+
+  it('is not there when the shell cannot change the connection (a policy forces it, an older shell)', async () => {
+    changeConnection.available = false;
+    render(<LoginPage />);
+    await waitFor(() => expect(document.getElementById('username')).not.toBeNull(), { timeout: 10000 });
+    expect(screen.queryByTestId('login-use-organisation')).toBeNull();
   }, 30_000);
 });

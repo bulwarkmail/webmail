@@ -8,7 +8,9 @@
  * Uses the throwaway accounts dso-fs and dso-fs-b (VM 106 ~/desktop-offline/dso_fs_provision.py,
  * which also seeds dso-fs's "Seed" folder; dso_fs_dav_seed.py adds names Windows can't hold over
  * WebDAV). It signs in once per account and stops there if that's refused: nothing polls as a
- * missing user.
+ * missing user. FILES_SYNC_REAL_USERS=<writer>,<other> names other throwaway accounts (the writer
+ * seeded the same way, e.g. dso-fs-c with dso_fs_c_provision.py), so a drive someone has open
+ * as dso-fs isn't written to.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
@@ -20,6 +22,7 @@ import { FakeDisk, str, text } from './helpers/fake-disk';
 const URL_BASE = process.env.FILES_SYNC_REAL_URL ?? '';
 const LABEL = process.env.FILES_SYNC_REAL_LABEL ?? '';
 const PASSWORD = process.env.FILES_SYNC_REAL_PASSWORD ?? '';
+const [WRITER, SECOND] = (process.env.FILES_SYNC_REAL_USERS ?? 'dso-fs,dso-fs-b').split(',').map((user) => user.trim());
 const run = !!URL_BASE && !!PASSWORD;
 const FAST: Partial<EngineTiming> = { localDelayMs: 0, remoteDelayMs: 0, pollMs: 1e9, rescanMs: 1e9, retryMs: [1e9], soonMs: 50, fetchWaitMs: 30_000 };
 
@@ -80,10 +83,10 @@ describe.runIf(run)(`files sync against Stalwart ${LABEL}`, () => {
   };
 
   beforeAll(async () => {
-    a = await signIn('dso-fs');
-    b = await signIn('dso-fs-b');
-    // "Another device" of dso-fs: its own session and transport.
-    other = await signIn('dso-fs');
+    a = await signIn(WRITER);
+    b = await signIn(SECOND);
+    // "Another device" of the same account: its own session and transport.
+    other = await signIn(WRITER);
     const nodes = await tree(a);
     // What an earlier run left.
     const old = [...nodes.values()].filter((node) => node.parentId === null && node.name.startsWith('Sync test '));

@@ -122,3 +122,71 @@ describe('folded folder column (default layout)', () => {
     expect(peek()).toBeNull();
   });
 });
+
+// Pass 3 (p2-9 left over): unread mail in a subfolder showed nowhere folded,
+// and the letters in the folder glyphs were about 6 px tall.
+describe('unread mail in subfolders', () => {
+  const nested: Mailbox[] = [
+    box('inbox', 'Inbox', 'inbox', { totalEmails: 120, unreadEmails: 9 }),
+    box('clients', 'Clients', null, { parentId: 'inbox', totalEmails: 200, unreadEmails: 132 }),
+    box('news', 'Newsletters', null, { parentId: 'inbox', totalEmails: 400, unreadEmails: 310 }),
+    box('work', 'Work', null, { totalEmails: 10 }),
+    box('contoso', 'Contoso', null, { parentId: 'work', totalEmails: 5, unreadEmails: 3 }),
+    box('family', 'Family', null, { totalEmails: 4 }),
+  ];
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.setState({ activeAccountId: 'login-a', client: { getAccountId: () => 'me', getCapabilities: () => ({}) } } as never);
+    useSettingsStore.setState({ hideAccountSwitcher: true, interfaceLayout: 'default', openOnHover: true, unreadCountStyle: 'count' } as never);
+    useUIStore.setState({ sidebarCollapsed: true } as never);
+  });
+  afterEach(() => {
+    cleanup();
+    useUIStore.setState({ sidebarCollapsed: false } as never);
+  });
+
+  it('folded, a folder counts what its subfolders hold, and says so in its name', () => {
+    render(<Sidebar mailboxes={nested} selectedMailbox="family" />);
+    const work = document.querySelector('[data-mailbox-id="work"]')!;
+    expect(work.querySelector('[data-testid="folded-unread"]')?.textContent).toBe('3');
+    expect(work.querySelector('button')?.getAttribute('aria-label')).toBe('name_unread_only_sub');
+    const inbox = document.querySelector('[data-mailbox-id="inbox"]')!;
+    expect(inbox.querySelector('[data-testid="folded-unread"]')?.textContent).toBe('99+');
+    expect(inbox.querySelector('button')?.getAttribute('aria-label')).toBe('name_unread_sub');
+    const family = document.querySelector('[data-mailbox-id="family"]')!;
+    expect(family.querySelector('[data-testid="folded-unread"]')).toBeNull();
+  });
+
+  it('a dot when counts are dots, nothing when they are hidden', () => {
+    useSettingsStore.setState({ unreadCountStyle: 'dot' } as never);
+    const { unmount } = render(<Sidebar mailboxes={nested} selectedMailbox="family" />);
+    expect(document.querySelector('[data-mailbox-id="work"] [data-testid="folded-unread"]')).not.toBeNull();
+    unmount();
+    useSettingsStore.setState({ unreadCountStyle: 'hidden' } as never);
+    render(<Sidebar mailboxes={nested} selectedMailbox="family" />);
+    expect(document.querySelector('[data-mailbox-id="work"] [data-testid="folded-unread"]')).toBeNull();
+  });
+
+  it('unfolded, an open folder leaves the count to its subfolders, a closed one marks them', () => {
+    useUIStore.setState({ sidebarCollapsed: false } as never);
+    render(<Sidebar mailboxes={nested} selectedMailbox="family" />);
+    // Folders start open, each subfolder with its own count.
+    expect(document.querySelector('[data-mailbox-id="contoso"]')).not.toBeNull();
+    expect(document.querySelector('[data-mailbox-id="work"] [data-testid="subfolder-unread"]')).toBeNull();
+    fireEvent.click(document.querySelector('[data-mailbox-id="work"] [data-testid="folder-expand-toggle"]')!);
+    expect(document.querySelector('[data-mailbox-id="contoso"]')).toBeNull();
+    const work = document.querySelector('[data-mailbox-id="work"]')!;
+    expect(work.querySelector('[data-testid="subfolder-unread"]')?.getAttribute('title')).toBe('sub_unread');
+    expect(work.querySelector('button[aria-current], button:not([data-testid])')?.getAttribute('aria-label') ?? '').toMatch(/name_unread_only_sub/);
+  });
+
+  it('draws the folder letters at 9 px or more', () => {
+    render(<Sidebar mailboxes={nested} selectedMailbox="family" />);
+    const letters = screen.getAllByTestId('folder-initial');
+    expect(letters.length).toBeGreaterThan(0);
+    for (const letter of letters) {
+      // 24 units are 16 px: 13.5 units are 9 px.
+      expect(Number(letter.getAttribute('font-size')) * 16 / 24).toBeGreaterThanOrEqual(9);
+    }
+  });
+});

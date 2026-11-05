@@ -109,6 +109,33 @@
     "code_label": "Overovací kód",
     "verify": "Overiť"
   },
+  "ux_p3_words": {
+    "appearance_description": "Zmeňte vzhľad aplikácie {appName}.",
+    "text_size_app": "Mení veľkosť celého textu v aplikácii. 100 % je bežná veľkosť.",
+    "scrollbars_app": "Používa posúvače systému, ktoré sú širšie a ľahšie sa chytajú.",
+    "voice_app": "Hlas, ktorý číta správy nahlas. Zoznam ukazuje hlasy, ktoré má tento počítač pre jazyk rozhrania.",
+    "voice_default_app": "Hlas systému",
+    "visual_alerts_app": "Pri novej pošte alebo pripomienke pomaly bliká titulkom okna a necháva pripomienky na obrazovke, kým ich nezavriete.",
+    "sounds_link_app": "Zvuky upozornení a počet neprečítaných na ikone na paneli úloh nastavíte na stránke Upozornenia.",
+    "writing_language_app": "Jazyk, v ktorom zvyčajne píšete. Používa ho korektúra aj kontrola pravopisu.",
+    "badge_all_app": "Číslo na ikone na paneli úloh a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov.",
+    "badge_all_browser": "Číslo na karte a na ikone aplikácie sčítava doručenú poštu všetkých prihlásených účtov.",
+    "dnd_title": "Nerušiť",
+    "pause_label": "Pozastaviť upozornenia",
+    "pause_description": "Bez zvukov, vyskakovacích okien a hlasových hlásení o nových e-mailoch, kým to znova nevypnete.",
+    "dnd_link_app": "Upozornenia pozastavíte a čas pokoja nastavíte na stránke Upozornenia.",
+    "dnd_link_browser": "Upozornenia pozastavíte na stránke Upozornenia.",
+    "backup_app": "Exportujte nastavenia do súboru a importujte ich na ďalších zariadeniach.",
+    "sync_app": "Ostatné zariadenia prihlásené do tohto účtu dostanú rovnaké nastavenia.",
+    "progress_attachments": "Sťahujú sa prílohy",
+    "progress_events": "Sťahujú sa udalosti",
+    "progress_contacts": "Sťahujú sa kontakty",
+    "progress_files_list": "Načítava sa zoznam súborov",
+    "progress_other": "Sťahuje sa",
+    "keep_description": "Uchováva vašu poštu, kalendár, kontakty a súbory, ktoré máte v Súboroch dostupné offline, zašifrované v tomto zariadení. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni.",
+    "filter_value_placeholder": "Hodnota",
+    "filter_values_hint": "Viac hodnôt oddeľte čiarkami."
+  },
   "sidebar": {
     "unified_mailbox": "Zjednotená schránka",
     "close": "Zavrieť",
@@ -926,6 +953,13 @@
     "restore_to": "Presunúť späť do priečinka {folder}",
     "delete_forever": "Odstrániť natrvalo"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Presunúť do Doručených",
+    "delete_forever_title": "Odstrániť túto správu natrvalo?",
+    "delete_forever_batch_title": "{count, plural, one {Odstrániť túto správu natrvalo?} other {Odstrániť tieto správy (#) natrvalo?}}",
+    "delete_forever_message": "Nebude ju možné obnoviť.",
+    "delete_forever_batch_message": "{count, plural, one {Nebude ju možné obnoviť.} other {Nebude ich možné obnoviť.}}"
+  },
   "external_mail": {
     "sender_label": "Externé",
     "sender_tooltip": "Z {domain}, mimo vašej organizácie",
@@ -985,7 +1019,7 @@
     "cc": "Kópia",
     "bcc": "Skrytá kópia",
     "subject": "Predmet",
-    "body_placeholder": "Napíšte správu...",
+    "body_placeholder": "Napíšte správu…",
     "send": "Odoslať",
     "cancel": "Zrušiť",
     "attach": "Priložiť",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ak váš server túto adresu neprijme ako odosielateľa obálky, použije sa namiesto nej {identity} a príjemcovia ju uvidia v hlavičke Return-Path."
     },
-    "save_as_template": "Uložiť ako šablónu",
+    "save_as_template": "Uložiť ako šablónu…",
     "attach_from_device": "Nahrať z tohto zariadenia",
     "templates_menu": "Šablóny",
-    "insert_template": "Vložiť šablónu",
+    "insert_template": "Vložiť šablónu…",
     "options": "Možnosti",
     "option_plain_text": "Obyčajný text",
     "option_plain_text_hint": "Odoslať bez formátovania",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
     "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Neboli nájdené žiadne výsledky} one {Nájdená # konverzácia} few {Nájdené # konverzácie} many {Nájdených # konverzácií} other {Nájdených # konverzácií}}",
+    "name_unread_sub": "{name}, neprečítané: {count}, v podpriečinkoch ďalších {sub}",
+    "name_unread_only_sub": "{name}, neprečítané v podpriečinkoch: {sub}",
+    "sub_unread": "Neprečítané v podpriečinkoch: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",
     "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami a pod ním tlačidlo Napísať. Po vypnutí bude na jeho mieste tlačidlo Napísať."
   },
   "mail_p2_conv": {
     "show_message": "Zobraziť správu",
@@ -5278,6 +5321,12 @@
     "declined_many": "Odmietli ste {count} stretnutí tejto série.",
     "answers_series": "Vaša odpoveď platí pre všetky stretnutia série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobraziť celý týždeň",
+    "week_days_short": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
+    "print": "Tlačiť…"
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",
@@ -5856,6 +5905,12 @@
     "import_to_mail_failed": "{name} sa nepodarilo importovať.",
     "import_contacts": "Importovať do kontaktov…",
     "add_to_calendar": "Pridať do kalendára…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené súbory",
+    "hide": "Skryť",
+    "discard_detail_file": "Vaše úpravy tejto kópie sa odstránia. Súbor v Súboroch sa nezmení.",
+    "saved_auto": "{name} uložený do Súborov. Ďalšie uloženia z jeho programu tam pôjdu samy."
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Váš poštový server musí povoliť prihlasovanie z tejto webovej stránky. Ak prihlásenie zlyhá, požiadajte správcu poštového servera, aby to povolil.",
     "provider_unsupported": "{provider} neponúka JMAP, spôsob, akým Bulwark komunikuje s poštovými servermi, takže sa k nemu Bulwark zatiaľ nemôže pripojiť priamo."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Zmeniť, ako sa Bulwark pripája?",
+      "message": "Bulwark sa reštartuje a opýta sa, ako sa pripojiť: pomocou vašej e-mailovej adresy alebo cez Bulwark vašej organizácie. Vaše účty na tomto počítači zostanú prihlásené.",
+      "confirm": "Zmeniť",
+      "org_link": "Namiesto toho použiť Bulwark mojej organizácie",
+      "add_account": "Pridať účet…"
+    },
+    "picture": {
+      "button": "Obrázok",
+      "title": "Vložiť obrázok",
+      "address": "Webová adresa obrázka",
+      "address_hint": "Obrázok zostane na webe a zobrazí sa odtiaľ.",
+      "description": "Popis",
+      "invalid": "Zadajte webovú adresu, ktorá začína https://.",
+      "insert": "Vložiť"
+    },
+    "sign_in_page": {
+      "open_app": "Otvoriť Bulwark",
+      "done_as": "Prihlásené ako {address}. Túto kartu môžete zavrieť."
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizácie",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Fotka",
     "merge_kept": "Zostane",
     "import_show": "Zobraziť"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybraný # kontakt} few {Vybrané # kontakty} other {Vybraných # kontaktov}}",
+    "selection_more": "a ďalšie {count}",
+    "no_addresses": "Žiadny z vybraných kontaktov nemá e-mailovú adresu.",
+    "task_open": "Otvoriť",
+    "due_next_week": "Budúci týždeň",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrať dátum…",
+    "move_to_list": "Presunúť do zoznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktoch:} few {# už sú v Kontaktoch:} other {# už je v Kontaktoch:}}",
+    "dupes_skip": "Preskočiť",
+    "dupes_update": "Aktualizovať existujúce kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávanie zrušené",
+    "upload_cancelled_partial": "Pred zrušením {count, plural, one {sa nahral 1 súbor} few {sa nahrali # súbory} many {sa nahralo # súboru} other {sa nahralo # súborov}}",
+    "download_cancelled": "Sťahovanie zrušené"
   },
   "desktopEdit": {
     "edit": "Upraviť",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Zastavené"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Nahrávanie zmien pred vypnutím jednotky",
+      "title_sign_out": "Nahrávanie zmien pred odhlásením",
+      "title_stop_folder": "Nahrávanie zmien pred zastavením synchronizácie priečinka",
+      "cannot_title": "Niektoré zmeny teraz nemožno nahrať",
+      "waiting": "Zostáva nahrať: {names}",
+      "progress": "Nahraté {done} z {total}",
+      "cannot_offline": "Server nie je dostupný. Zatiaľ nenahraté: {names}",
+      "cannot_other": "Nemožno nahrať: {names}. Dôvod nájdete v nedávnej aktivite v nastaveniach.",
+      "go_note_drive": "Ak teraz budete pokračovať, čo nie je nahraté, sa skopíruje do Dokumenty\\Bulwark – not uploaded. Nič sa nestratí.",
+      "go_note_folder": "Ak teraz budete pokračovať, čo nie je nahraté, zostane v priečinku v tomto počítači.",
+      "keep_turn_off": "Ponechať jednotku",
+      "keep_sign_out": "Zostať prihlásený",
+      "keep_stop_folder": "Pokračovať v synchronizácii",
+      "go_turn_off": "Vypnúť hneď",
+      "go_sign_out": "Odhlásiť hneď",
+      "go_stop_folder": "Zastaviť synchronizáciu hneď"
+    },
+    "drive": {
+      "off_note": "Vypnutím jednotka zmizne z Prieskumníka. Vaše súbory zostanú v Súboroch.",
+      "rescued": "Nenahraté súbory ({count}) sú teraz v {folder}.",
+      "rescued_open": "Otvoriť priečinok",
+      "rescued_dismiss": "Skryť",
+      "start_at_login": "Spúšťať Bulwark po prihlásení do Windows",
+      "start_at_login_why": "Jednotka potrebuje spustený Bulwark, rovnako ako OneDrive.",
+      "closed_warning": "Súbory na jednotke sa neotvoria, keď je Bulwark zatvorený.",
+      "where": "V Prieskumníkovi ako Bulwark Files",
+      "where_letter": "V Prieskumníkovi ako Bulwark Files ({letter}:)",
+      "open": "Otvoriť",
+      "letter_note": "Cez písmeno jednotky Prieskumník neukazuje stav synchronizácie ani „Vždy ponechať v tomto zariadení“. Nájdete ich pod Bulwark Files v Prieskumníkovi.",
+      "letter_failed": "Písmeno jednotky sa nepodarilo nastaviť. Skúste to znova."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktuálne",
+      "syncing": "Bulwark Files: Synchronizácia. Zostáva: {count}",
+      "paused": "Bulwark Files: Pozastavené",
+      "offline": "Bulwark Files: Offline. Čaká: {count}",
+      "question": "Bulwark Files: Čaká na vašu odpoveď",
+      "error": "Bulwark Files: Chyba"
+    },
+    "notify": {
+      "conflict_title": "Súbor sa zmenil na dvoch miestach",
+      "problem_title": "Súbor nemožno synchronizovať"
+    },
+    "activity": {
+      "waiting_count": "Zmeny čakajúce na server: {count}",
+      "disk_name": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo niektoré jeho znaky tu nie sú povolené",
+      "disk_case": "{path} v Súboroch sa v tomto počítači volá {detail}, lebo tu už je názov, ktorý sa líši len veľkosťou písmen",
+      "disk_group": "Názvy v Súboroch, ktoré tento počítač nepovoľuje: {count}. Tu majú trochu iné názvy.",
+      "show": "Zobraziť",
+      "hide": "Skryť"
+    },
+    "cant_sync": {
+      "title": "Nemožno synchronizovať"
+    },
+    "folders": {
+      "stop": "Zastaviť synchronizáciu…",
+      "pick_title_known": "S ktorým priečinkom v Súboroch má byť {name} rovnaký?",
+      "pick_confirm_known": "Udržiavať rovnaké"
+    },
+    "pin": {
+      "keep": "Vždy ponechať v tomto zariadení",
+      "free": "Uvoľniť miesto",
+      "failed": "Nepodarilo sa. Skúste to znova v Prieskumníkovi."
+    },
+    "account": {
+      "of": "Súbory účtu {address}",
+      "choose": "Súbory účtu"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rýchla správa",
     "menu": "Rýchla správa",
@@ -7802,6 +7967,10 @@
     "missing": "„{name}“ už neexistuje.",
     "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
     "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
+  },
+  "composeRecentLimit": {
+    "too_large": "Príliš veľký",
+    "too_large_hint": "Väčší, než server prijme ({max})"
   },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",
@@ -7868,6 +8037,17 @@
     "done": "Hotovo",
     "join_host": "Pripojiť sa ({host})",
     "join_named": "Pripojiť sa: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Vývojárske nástroje",
+    "updates_label": "Skontrolovať aktualizácie",
+    "search": {
+      "quick_compose": "rýchle písanie nová správa odkiaľkoľvek globálna skratka",
+      "files_drive": "uvoľniť miesto OneDrive Dropbox Prieskumník Finder písmeno jednotky súbory na požiadanie",
+      "offline_space": "uvoľniť miesto miesto na disku úložisko",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID odtlačok prsta tvár prístupový kľúč passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Vaša organizácia tento server na tomto zariadení nepovoľuje.",

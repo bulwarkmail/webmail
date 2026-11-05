@@ -8,6 +8,7 @@ const targets = new Map<string, QuickRuleTarget | null>();
 vi.mock('@/lib/filters/quick-rule-target', () => ({
   resolveQuickRuleTarget: (email: Email) => targets.get(email.id) ?? null,
   getOwnAddresses: () => new Set(['me@example.org']),
+  getRuleAccountAddresses: () => ({ own: new Set(['me@example.org']), main: new Set(['me@example.org']) }),
   knownListId: () => null,
   loadListIds: async () => {},
   sourceMailboxOf: () => ({ id: 'inbox' }),
@@ -25,6 +26,7 @@ const { ContextMenu } = await import('@/components/ui/context-menu');
 const { useAuthStore } = await import('@/stores/auth-store');
 const { useFilterStore } = await import('@/stores/filter-store');
 const { useSettingsStore } = await import('@/stores/settings-store');
+const { useQuickRuleStore } = await import('@/stores/quick-rule-store');
 
 const client = { name: 'client-a' };
 const mailboxes = [
@@ -159,5 +161,19 @@ describe('Rules entry of the message menu', () => {
     expect(screen.queryByTestId('rules:block')).toBeNull();
     expect(screen.getByTestId('rules:create')).not.toBeDisabled();
     expect(screen.getByTestId('rules:manage')).toBeInTheDocument();
+  });
+
+  // mail-p3-9: Create rule… opened with a blank From and a "To me" chip.
+  it('starts Create rule… with From set to the sender, and offers sender and domain before the subject', () => {
+    targets.set('e1', target());
+    const message = { ...email('e1'), subject: 'Re: Invoice 42', to: [{ email: 'me@example.org' }] } as Email;
+    renderMenu(message);
+    openRules();
+    fireEvent.click(screen.getByTestId('rules:create'));
+    const editor = useQuickRuleStore.getState().editor!;
+    expect(editor.rule.conditions).toEqual([{ field: 'from', comparator: 'address_is', value: 'anna@acme.com' }]);
+    // Mail to the account's own address is all its mail: no To chip.
+    expect(editor.suggestions.map((s) => s.id)).toEqual(['sender', 'domain', 'subject']);
+    useQuickRuleStore.getState().closeEditor();
   });
 });

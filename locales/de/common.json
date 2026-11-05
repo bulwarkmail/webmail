@@ -109,6 +109,33 @@
     "code_label": "Authentifizierungscode",
     "verify": "Bestätigen"
   },
+  "ux_p3_words": {
+    "appearance_description": "Ändern Sie, wie {appName} aussieht.",
+    "text_size_app": "Skaliert den gesamten Text der App. 100 % ist die normale Größe.",
+    "scrollbars_app": "Verwendet die Bildlaufleisten des Systems, die breiter und leichter zu greifen sind.",
+    "voice_app": "Die Stimme, die Nachrichten vorliest. Die Liste zeigt die Stimmen dieses Computers für die Sprache der Oberfläche.",
+    "voice_default_app": "Systemstimme",
+    "visual_alerts_app": "Lässt den Fenstertitel langsam blinken, wenn neue E-Mails oder eine Erinnerung eintreffen, und lässt Erinnerungen sichtbar, bis Sie sie schließen.",
+    "sounds_link_app": "Benachrichtigungstöne und die Zahl ungelesener E-Mails am Taskleistensymbol stellen Sie auf der Seite Benachrichtigungen ein.",
+    "writing_language_app": "Die Sprache, in der Sie meistens schreiben. Korrekturlesen und Rechtschreibprüfung verwenden sie.",
+    "badge_all_app": "Die Zahl am Taskleistensymbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen.",
+    "badge_all_browser": "Die Zahl am Tab und am App-Symbol zählt die Posteingänge aller angemeldeten Konten zusammen.",
+    "dnd_title": "Nicht stören",
+    "pause_label": "Benachrichtigungen pausieren",
+    "pause_description": "Keine Töne, Pop-ups oder Ansagen für neue E-Mails, bis Sie das wieder ausschalten.",
+    "dnd_link_app": "Benachrichtigungen pausieren und Ruhezeiten festlegen können Sie auf der Seite Benachrichtigungen.",
+    "dnd_link_browser": "Benachrichtigungen pausieren können Sie auf der Seite Benachrichtigungen.",
+    "backup_app": "Exportieren Sie Ihre Einstellungen in eine Datei und importieren Sie sie auf Ihren anderen Geräten.",
+    "sync_app": "Andere Geräte, die mit diesem Konto angemeldet sind, erhalten dieselben Einstellungen.",
+    "progress_attachments": "Anhänge werden geladen",
+    "progress_events": "Termine werden geladen",
+    "progress_contacts": "Kontakte werden geladen",
+    "progress_files_list": "Dateien werden aufgelistet",
+    "progress_other": "Wird geladen",
+    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und die Dateien, die Sie in Dateien offline halten, verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
+    "filter_value_placeholder": "Wert",
+    "filter_values_hint": "Mehrere Werte trennen Sie durch Kommas."
+  },
   "sidebar": {
     "close": "Schließen",
     "compose": "Verfassen",
@@ -926,6 +953,13 @@
     "restore_to": "Zurück nach {folder} verschieben",
     "delete_forever": "Endgültig löschen"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "In den Posteingang verschieben",
+    "delete_forever_title": "Diese Nachricht endgültig löschen?",
+    "delete_forever_batch_title": "{count, plural, one {Diese Nachricht endgültig löschen?} other {Diese # Nachrichten endgültig löschen?}}",
+    "delete_forever_message": "Sie können sie nicht zurückholen.",
+    "delete_forever_batch_message": "{count, plural, one {Sie können sie nicht zurückholen.} other {Sie können sie nicht zurückholen.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Von {domain}, außerhalb Ihrer Organisation",
@@ -982,10 +1016,10 @@
     "forward_message": "Weiterleiten",
     "from": "Von",
     "to": "An",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Betreff",
-    "body_placeholder": "Schreiben Sie Ihre Nachricht...",
+    "body_placeholder": "Schreiben Sie Ihre Nachricht…",
     "send": "Senden",
     "cancel": "Abbrechen",
     "attach": "Anhängen",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Akzeptiert Ihr Server diese Adresse nicht als Umschlag-Absender, wird dort {identity} verwendet, und Empfänger können sie in der Kopfzeile Return-Path sehen."
     },
-    "save_as_template": "Als Vorlage speichern",
+    "save_as_template": "Als Vorlage speichern…",
     "attach_from_device": "Von diesem Gerät hochladen",
     "templates_menu": "Vorlagen",
-    "insert_template": "Vorlage einfügen",
+    "insert_template": "Vorlage einfügen…",
     "options": "Optionen",
     "option_plain_text": "Nur Text",
     "option_plain_text_hint": "Ohne Formatierung senden",
@@ -1057,7 +1091,7 @@
     "option_priority_normal": "Normal",
     "option_priority_low": "Niedrig",
     "validation": {
-      "recipient_required": "Empfänger hinzufügen zum Senden",
+      "recipient_required": "Fügen Sie einen Empfänger hinzu, um zu senden",
       "body_required": "Nachricht schreiben oder Datei anhängen",
       "invalid_recipients": "Nicht gesendet - prüfen Sie diese Adressen: {addresses}",
       "attachments_uploading": "Anhänge werden noch hochgeladen – wird gesendet, sobald sie fertig sind",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} in allen Konten)",
     "title_all_accounts_only": "{name} ({total} in allen Konten)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Keine Ergebnisse gefunden} one {# Unterhaltung gefunden} other {# Unterhaltungen gefunden}}",
+    "name_unread_sub": "{name}, {count} ungelesen, {sub} weitere in Unterordnern",
+    "name_unread_only_sub": "{name}, {sub} ungelesen in Unterordnern",
+    "sub_unread": "{sub} ungelesen in Unterordnern"
+  },
   "uxs_folders": {
     "manage_accounts": "Konten verwalten…",
     "apply_to_existing": "{count, plural, one {Auf # vorhandene Nachricht in {folder} anwenden} other {Auf # vorhandene Nachrichten in {folder} anwenden}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
     "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zeigt den Kontoumschalter über den Ordnern, darunter „Verfassen“. Ausgeschaltet steht „Verfassen“ an seiner Stelle."
   },
   "mail_p2_conv": {
     "show_message": "Nachricht anzeigen",
@@ -4445,7 +4488,7 @@
       "categories_hint": "Tippen zum Suchen oder Hinzufügen",
       "category_add": "Hinzufügen",
       "note": "Notizen",
-      "note_placeholder": "Notiz hinzufügen...",
+      "note_placeholder": "Notiz hinzufügen…",
       "gender": "Geschlecht",
       "gender_sex": "Geschlecht",
       "gender_male": "Männlich",
@@ -4707,7 +4750,7 @@
       "new_task": "Neue Aufgabe"
     },
     "detail": {
-      "add_note": "Notiz hinzufügen...",
+      "add_note": "Notiz hinzufügen…",
       "save_note": "Speichern",
       "note_saved": "Notiz hinzugefügt",
       "open_link": "Link öffnen",
@@ -4977,8 +5020,8 @@
       "title_alert": "Erinnerung: {title}"
     },
     "status": {
-      "loading_calendars": "Kalender werden geladen...",
-      "loading_events": "Termine werden geladen...",
+      "loading_calendars": "Kalender werden geladen…",
+      "loading_events": "Termine werden geladen…",
       "events_load_failed": "Termine konnten nicht geladen werden. Der Kalender ist möglicherweise nicht aktuell.",
       "tasks_load_failed": "Aufgaben konnten nicht geladen werden. Die Liste ist möglicherweise nicht aktuell.",
       "retry": "Erneut versuchen"
@@ -5004,14 +5047,14 @@
       "fetch": "Abrufen",
       "invalid_url": "Bitte geben Sie eine gültige URL ein",
       "url_fetch_failed": "Kalender konnte nicht von der URL abgerufen werden",
-      "parsing": "Kalenderdatei wird analysiert...",
+      "parsing": "Kalenderdatei wird analysiert…",
       "parsed_events": "{count, plural, one {# Termin gefunden} other {# Termine gefunden}}",
       "no_events": "Keine Termine in der Datei gefunden",
       "select_all": "Alle auswählen",
       "deselect_all": "Alle abwählen",
       "target_calendar": "In Kalender importieren",
       "import_button": "Auswahl importieren",
-      "importing": "Termine werden importiert...",
+      "importing": "Termine werden importiert…",
       "success": "{count, plural, one {# Termin importiert} other {# Termine importiert}}",
       "error": "Kalender konnte nicht importiert werden",
       "file_too_large": "Datei überschreitet das 10-MB-Limit",
@@ -5096,9 +5139,9 @@
       "interval_360": "Alle 6 Stunden",
       "interval_1440": "Jeden Tag",
       "subscribe": "Abonnieren",
-      "subscribing": "Abonniere...",
+      "subscribing": "Abonniere…",
       "save": "Änderungen speichern",
-      "saving": "Speichert...",
+      "saving": "Speichert…",
       "edit": "Bearbeiten",
       "edit_title": "Abonnement bearbeiten",
       "updated": "\"{name}\" aktualisiert",
@@ -5128,7 +5171,7 @@
       "create": "Neue Aufgabe",
       "edit": "Aufgabe bearbeiten",
       "title_placeholder": "Aufgabentitel",
-      "description_placeholder": "Beschreibung hinzufügen...",
+      "description_placeholder": "Beschreibung hinzufügen…",
       "due_date": "Fälligkeitsdatum",
       "include_time": "Uhrzeit einbeziehen",
       "priority": "Priorität",
@@ -5153,7 +5196,7 @@
       "delete": "Löschen",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "quick_add_placeholder": "Aufgabe hinzufügen...",
+      "quick_add_placeholder": "Aufgabe hinzufügen…",
       "due_today": "Heute fällig",
       "due_tomorrow": "Morgen fällig",
       "overdue": "Überfällig"
@@ -5277,6 +5320,12 @@
     "declined_dates": "Sie haben am {dates} abgesagt.",
     "declined_many": "Sie haben {count} Termine dieser Serie abgesagt.",
     "answers_series": "Ihre Antwort gilt für alle Termine der Serie."
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "bis {time}",
+    "week_all_days": "Ganze Woche anzeigen",
+    "week_days_short": "{count, plural, one {# Tag} other {# Tage}}",
+    "print": "Drucken…"
   },
   "advanced_search": {
     "title": "Erweiterte Suche",
@@ -5589,6 +5638,12 @@
     "import_to_mail_failed": "{name} konnte nicht importiert werden.",
     "import_contacts": "In Kontakte importieren…",
     "add_to_calendar": "Zum Kalender hinzufügen…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Bearbeitete Dateien",
+    "hide": "Ausblenden",
+    "discard_detail_file": "Ihre Änderungen an dieser Kopie werden gelöscht. Die Datei in Dateien bleibt, wie sie ist.",
+    "saved_auto": "{name} in Dateien gespeichert. Spätere Speicherungen aus dem Programm landen von selbst dort."
   },
   "smime": {
     "your_certificates": "Ihre Zertifikate",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Ändern, wie Bulwark sich verbindet?",
+      "message": "Bulwark startet neu und fragt, wie es sich verbinden soll: mit Ihrer E-Mail-Adresse oder über das Bulwark Ihrer Organisation. Ihre Konten auf diesem Computer bleiben angemeldet.",
+      "confirm": "Ändern",
+      "org_link": "Stattdessen das Bulwark meiner Organisation verwenden",
+      "add_account": "Konto hinzufügen…"
+    },
+    "picture": {
+      "button": "Bild",
+      "title": "Bild einfügen",
+      "address": "Webadresse des Bildes",
+      "address_hint": "Das Bild bleibt im Web und wird von dort angezeigt.",
+      "description": "Beschreibung",
+      "invalid": "Geben Sie eine Webadresse ein, die mit https:// beginnt.",
+      "insert": "Einfügen"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark öffnen",
+      "done_as": "Angemeldet als {address}. Sie können diesen Tab schließen."
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Bleibt erhalten",
     "import_show": "Anzeigen"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# Kontakt ausgewählt} other {# Kontakte ausgewählt}}",
+    "selection_more": "und {count} weitere",
+    "no_addresses": "Keiner der ausgewählten Kontakte hat eine E-Mail-Adresse.",
+    "task_open": "Öffnen",
+    "due_next_week": "Nächste Woche",
+    "due_none": "Kein Fälligkeitsdatum",
+    "due_pick": "Datum wählen…",
+    "move_to_list": "In Liste verschieben",
+    "dupes_legend": "{count, plural, one {1 ist schon in Kontakte:} other {# sind schon in Kontakte:}}",
+    "dupes_skip": "Überspringen",
+    "dupes_update": "Vorhandene Kontakte aktualisieren",
+    "dupes_updates": "Aktualisiert den Kontakt",
+    "upload_cancelled": "Hochladen abgebrochen",
+    "upload_cancelled_partial": "{count, plural, one {1 Datei wurde} other {# Dateien wurden}} vor dem Abbrechen hochgeladen",
+    "download_cancelled": "Download abgebrochen"
   },
   "desktopEdit": {
     "edit": "Bearbeiten",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Gestoppt"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Änderungen werden hochgeladen, bevor das Laufwerk ausgeschaltet wird",
+      "title_sign_out": "Änderungen werden hochgeladen, bevor Sie sich abmelden",
+      "title_stop_folder": "Änderungen werden hochgeladen, bevor der Ordner nicht mehr synchronisiert wird",
+      "cannot_title": "Einige Änderungen können gerade nicht hochgeladen werden",
+      "waiting": "Noch hochzuladen: {names}",
+      "progress": "{done} von {total} hochgeladen",
+      "cannot_offline": "Der Server ist nicht erreichbar. Noch nicht hochgeladen: {names}",
+      "cannot_other": "Diese können nicht hochgeladen werden: {names}. Unter „Letzte Aktivität“ in den Einstellungen steht, warum.",
+      "go_note_drive": "Wenn Sie jetzt fortfahren, wird alles, was nicht hochgeladen ist, nach Dokumente\\Bulwark – not uploaded kopiert. Es geht nichts verloren.",
+      "go_note_folder": "Wenn Sie jetzt fortfahren, bleibt alles, was nicht hochgeladen ist, im Ordner auf diesem Computer.",
+      "keep_turn_off": "Laufwerk eingeschaltet lassen",
+      "keep_sign_out": "Angemeldet bleiben",
+      "keep_stop_folder": "Weiter synchronisieren",
+      "go_turn_off": "Jetzt ausschalten",
+      "go_sign_out": "Jetzt abmelden",
+      "go_stop_folder": "Synchronisierung jetzt beenden"
+    },
+    "drive": {
+      "off_note": "Wenn Sie dies ausschalten, verschwindet das Laufwerk aus dem Explorer. Ihre Dateien bleiben in Dateien.",
+      "rescued": "Nicht hochgeladene Dateien ({count}) liegen jetzt in {folder}.",
+      "rescued_open": "Ordner öffnen",
+      "rescued_dismiss": "Ausblenden",
+      "start_at_login": "Bulwark bei der Anmeldung an Windows starten",
+      "start_at_login_why": "Das Laufwerk braucht Bulwark im Hintergrund, wie OneDrive.",
+      "closed_warning": "Dateien im Laufwerk lassen sich nicht öffnen, solange Bulwark geschlossen ist.",
+      "where": "Im Explorer als Bulwark Files",
+      "where_letter": "Im Explorer als Bulwark Files ({letter}:)",
+      "open": "Öffnen",
+      "letter_note": "Über den Laufwerksbuchstaben zeigt der Explorer keinen Synchronisierungsstatus und kein „Immer auf diesem Gerät beibehalten“. Beides sehen Sie unter Bulwark Files im Explorer.",
+      "letter_failed": "Der Laufwerksbuchstabe konnte nicht festgelegt werden. Versuchen Sie es noch einmal."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Auf dem neuesten Stand",
+      "syncing": "Bulwark Files: Wird synchronisiert. Ausstehend: {count}",
+      "paused": "Bulwark Files: Angehalten",
+      "offline": "Bulwark Files: Offline. Wartend: {count}",
+      "question": "Bulwark Files: Wartet auf Ihre Antwort",
+      "error": "Bulwark Files: Fehler"
+    },
+    "notify": {
+      "conflict_title": "Eine Datei wurde an zwei Stellen geändert",
+      "problem_title": "Eine Datei kann nicht synchronisiert werden"
+    },
+    "activity": {
+      "waiting_count": "Änderungen, die auf den Server warten: {count}",
+      "disk_name": "{path} in Dateien heißt auf diesem Computer {detail}, weil einige Zeichen darin hier nicht erlaubt sind",
+      "disk_case": "{path} in Dateien heißt auf diesem Computer {detail}, weil hier schon ein Name liegt, der sich nur in Groß- und Kleinschreibung unterscheidet",
+      "disk_group": "Namen in Dateien, die dieser Computer nicht erlaubt: {count}. Sie heißen hier etwas anders.",
+      "show": "Anzeigen",
+      "hide": "Ausblenden"
+    },
+    "cant_sync": {
+      "title": "Synchronisierung nicht möglich"
+    },
+    "folders": {
+      "stop": "Synchronisierung beenden…",
+      "pick_title_known": "Mit welchem Ordner in Dateien soll {name} gleich bleiben?",
+      "pick_confirm_known": "Gleich halten"
+    },
+    "pin": {
+      "keep": "Immer auf diesem Gerät beibehalten",
+      "free": "Speicherplatz freigeben",
+      "failed": "Das hat nicht geklappt. Versuchen Sie es im Explorer noch einmal."
+    },
+    "account": {
+      "of": "Dateien von {address}",
+      "choose": "Dateien von"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Schnell schreiben",
     "menu": "Schnell schreiben",
@@ -7802,6 +7967,10 @@
     "missing": "\"{name}\" ist nicht mehr vorhanden.",
     "too_large": "\"{name}\" ist größer als {max} und kann nicht angehängt werden.",
     "failed": "\"{name}\" konnte nicht angehängt werden. Versuchen Sie es erneut."
+  },
+  "composeRecentLimit": {
+    "too_large": "Zu groß",
+    "too_large_hint": "Größer, als der Server annimmt ({max})"
   },
   "compose_windows": {
     "more_formatting": "Weitere Formatierung",
@@ -7868,6 +8037,17 @@
     "done": "Fertig",
     "join_host": "Teilnehmen ({host})",
     "join_named": "Teilnehmen: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Entwicklertools",
+    "updates_label": "Nach Updates suchen",
+    "search": {
+      "quick_compose": "Schnell schreiben neue Nachricht von überall Tastenkürzel Hotkey",
+      "files_drive": "Speicher freigeben Speicherplatz freigeben OneDrive Dropbox Explorer Finder Laufwerksbuchstabe Dateien bei Bedarf",
+      "offline_space": "Speicher freigeben Speicherplatz Platz",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID Fingerabdruck Gesicht Passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Ihre Organisation erlaubt diesen Server auf diesem Gerät nicht.",

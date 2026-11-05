@@ -24,6 +24,8 @@ import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor } from "@/lib/thread-utils";
+import { emailInMailbox } from "@/lib/move-targets";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { cn } from "@/lib/utils";
 import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { messagePriorityFromHeaders } from '@/lib/message-priority';
@@ -164,6 +166,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
+  const tP3 = useTranslations('mail_p3_actions');
+  const tActions = useTranslations('reader_actions');
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const archiveActionEnabled = useArchiveActionEnabled();
 
@@ -410,13 +414,31 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
 
   const handleDelete = useCallback(async () => {
     if (!client || !email) return;
-    if (!(await confirmMailRemoval('delete', 1, confirmDialog, tRemove))) return;
-    // Where it was, for Undo; a delete for good has none.
+    // The folder the message is in: the one browsed when it is there, else
+    // its own (a message window has no list, mail-p3-1).
     const { selectedMailbox } = useEmailStore.getState();
-    const restore = bulkDeleteIsPermanent(mailboxes.find((m) => m.id === selectedMailbox)) ? null : restoreBatchesFor([email], client);
+    const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
+      ?? mailboxes.find((m) => emailInMailbox(email, m));
+    // In Trash (and wherever deleting destroys mail) this is a delete for
+    // good: ask the main window's question first, and tell the store so, or
+    // it "moves" the message to the Trash it is already in.
+    const permanent = bulkDeleteIsPermanent(current);
+    if (permanent) {
+      const confirmed = await confirmDialog({
+        title: tP3('delete_forever_title'),
+        message: tP3('delete_forever_message'),
+        confirmText: tActions('delete_forever'),
+        variant: 'destructive',
+      });
+      if (!confirmed) return;
+    } else if (!(await confirmMailRemoval('delete', 1, confirmDialog, tRemove))) {
+      return;
+    }
+    // Where it was, for Undo; a delete for good has none.
+    const restore = permanent ? null : restoreBatchesFor([email], client);
     try {
       // false: not deleted (a plugin stopped it), so the tab stays open.
-      if (await deleteEmail(client, email.id)) {
+      if (await deleteEmail(client, email.id, permanent, emailKeyFor(email))) {
         await offerMoveUndo('delete', client, restore, t, isPopoutWindow());
         onClose();
       }
@@ -424,10 +446,26 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
+    // In Archive the same action brings it back to the Inbox (mail-p3-4).
+    const { selectedMailbox } = useEmailStore.getState();
+    const current = mailboxes.find((m) => m.id === selectedMailbox && emailInMailbox(email, m))
+      ?? mailboxes.find((m) => emailInMailbox(email, m));
+    const archiveInbox = archiveInboxTarget(mailboxes, current?.id);
+    if (archiveInbox) {
+      const restore = restoreBatchesFor([email], client);
+      try {
+        if (!(await moveToMailbox(client, email.id, archiveInbox.id, emailKeyFor(email)))) return;
+        await offerMoveUndo('move', client, restore, t, isPopoutWindow());
+        onClose();
+      } catch (err) {
+        console.error('Move to Inbox failed:', err);
+      }
+      return;
+    }
     const archiveMb = mailboxes.find((m) => m.role === 'archive');
     if (!archiveMb) return;
     if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;

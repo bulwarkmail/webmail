@@ -7,11 +7,13 @@ import { getPathPrefix } from "@/lib/browser-navigation";
 import { reminderTimeZone, useMissedReminders } from "@/lib/calendar-reminders/state";
 import { dismissReminders, joinLabel, joinMeeting } from "@/lib/desktop/reminder-notifications";
 import { useSettingsStore } from "@/stores/settings-store";
+import { collectionDisplayName } from "@/lib/default-collection-name";
 
 /** What came due while the app was closed, the machine slept or notifications were paused. */
 export function MissedRemindersDialog() {
   const t = useTranslations("desktopReminders");
   const tAlert = useTranslations("calendar.notifications");
+  const tWording = useTranslations("uxs_wording");
   const locale = useLocale();
   const timeZone = useSettingsStore((s) => s.timeZone);
   const account = useMissedReminders((s) => s.account);
@@ -55,7 +57,7 @@ export function MissedRemindersDialog() {
               <p className="truncate text-sm font-medium text-foreground">{alert.title || tAlert("alert_title")}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {format.format(new Date(alert.startMs ?? alert.fireTimeMs))}
-                {alert.calendarName ? ` · ${alert.calendarName}` : ""}
+                {alert.calendarName ? ` · ${collectionDisplayName(alert.calendarName, "calendar", tWording("default_calendar"))}` : ""}
               </p>
             </div>
             {alert.joinUrl && (

@@ -11,6 +11,10 @@ import { cn } from "@/lib/utils";
  * lines to type in and none of the message (compose-p2-4).
  */
 export const DOCK_SHARE_MIN_PANE = 700;
+/** Lines of the message's text, at least, above a docked reply (about five). */
+export const DOCK_MIN_BODY_SHOWN = 100;
+/** The compact composer's own height: To, three lines, the bottom bar. A dock can't be lower. */
+export const DOCK_MIN_HEIGHT = 240;
 
 /**
  * How the reply docked under its message takes the reading pane
@@ -22,9 +26,21 @@ export const DOCK_SHARE_MIN_PANE = 700;
  * - A short pane: the reply takes the pane, with "Show the message" to fold it
  *   to a bar and read the message, and back.
  */
-export function dockLayout(paneHeight: number): { mode: 'share' | 'takeover'; maxHeight?: number } {
+export function dockLayout(
+  paneHeight: number,
+  /** Above the message's text: the reader's toolbar and subject, the sender, the attachment cards. */
+  aboveBody = 0,
+): { mode: 'share' | 'takeover'; maxHeight?: number } {
   if (paneHeight > 0 && paneHeight < DOCK_SHARE_MIN_PANE) return { mode: 'takeover' };
-  return { mode: 'share', maxHeight: paneHeight > 0 ? Math.round(paneHeight / 2) : undefined };
+  if (paneHeight <= 0) return { mode: 'share' };
+  const half = Math.round(paneHeight / 2);
+  // Some of the text stays above the reply: attachment cards took all of
+  // what half the pane left at 1366×768 and 125 % (compose-p3-7).
+  const room = paneHeight - aboveBody - DOCK_MIN_BODY_SHOWN;
+  if (aboveBody > 0 && room < half) {
+    return room >= DOCK_MIN_HEIGHT ? { mode: 'share', maxHeight: room } : { mode: 'takeover' };
+  }
+  return { mode: 'share', maxHeight: half };
 }
 
 export function ReplyDock({ children }: { children: ReactNode }) {
@@ -33,25 +49,32 @@ export function ReplyDock({ children }: { children: ReactNode }) {
   const [paneHeight, setPaneHeight] = useState(0);
   // The reader's toolbar and subject above its scrolling part: they stay.
   const [readerChrome, setReaderChrome] = useState(0);
+  // What comes before the message's text in the scrolling part: the sender, the attachment cards.
+  const [beforeBody, setBeforeBody] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
 
   useLayoutEffect(() => {
     const pane = ref.current?.parentElement;
     if (!pane) return;
+    const scroll = pane.querySelector<HTMLElement>("[data-reader-scroll]");
+    const body = scroll?.querySelector<HTMLElement>("[data-reader-body]") ?? null;
     const measure = () => {
       const paneBox = pane.getBoundingClientRect();
       setPaneHeight(Math.round(paneBox.height));
-      const scroll = pane.querySelector<HTMLElement>("[data-reader-scroll]");
-      setReaderChrome(scroll ? Math.max(0, Math.round(scroll.getBoundingClientRect().top - paneBox.top)) : 0);
+      const scrollTop = scroll ? scroll.getBoundingClientRect().top : paneBox.top;
+      setReaderChrome(scroll ? Math.max(0, Math.round(scrollTop - paneBox.top)) : 0);
+      setBeforeBody(scroll && body ? Math.max(0, Math.round(body.getBoundingClientRect().top - scrollTop + scroll.scrollTop)) : 0);
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
     ro.observe(pane);
+    // The attachment cards and the sender load after the dock opens.
+    if (scroll?.firstElementChild) ro.observe(scroll.firstElementChild);
     return () => ro.disconnect();
   }, []);
 
-  const layout = dockLayout(paneHeight);
+  const layout = dockLayout(paneHeight, beforeBody > 0 ? readerChrome + beforeBody : 0);
   const takeover = layout.mode === "takeover";
   const folded = takeover && showMessage;
 

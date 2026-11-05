@@ -121,8 +121,9 @@ describe('the folded folder column with many folders', () => {
       expect(title, button.outerHTML.slice(0, 120)).toBeTruthy();
       expect(title).toBe(button.getAttribute('aria-label'));
     }
-    // With unread mail the name carries the count.
-    expect(row('inbox').querySelector('button')!.getAttribute('title')).toBe('name_unread');
+    // With unread mail the name carries the count, here with its subfolder's (mail-p3, p2-9).
+    expect(row('inbox').querySelector('button')!.getAttribute('title')).toBe('name_unread_sub');
+    expect(row('news').querySelector('button')!.getAttribute('title')).toBe('name_unread');
   });
 
   it('draws one folder of one\'s own as a plain folder, several with their first letter inside the folder', () => {

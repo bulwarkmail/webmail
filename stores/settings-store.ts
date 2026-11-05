@@ -675,6 +675,11 @@ interface SettingsState extends AccessibilitySettings {
   calendarDayEndHour: number;
   /** Leave the days missing from calendarWorkingDays out of the week view (#1164). */
   calendarHideNonWorkingDays: boolean;
+  /**
+   * Week view in a pane under 1000px wide shows all its days; else three
+   * at a time, as Google Calendar does (pim-p3-13).
+   */
+  calendarNarrowWeekAllDays: boolean;
   /** Weekdays as `Date.getDay` numbers (0 = Sunday). */
   calendarWorkingDays: number[];
   /** An out-of-office reply with dates puts a busy event in the calendar (lib/vacation-calendar.ts). */
@@ -1019,6 +1024,7 @@ const DEFAULT_SETTINGS = {
   calendarDayStartHour: 8,
   calendarDayEndHour: 20,
   calendarHideNonWorkingDays: false,
+  calendarNarrowWeekAllDays: false,
   calendarWorkingDays: [1, 2, 3, 4, 5] as number[],
   vacationBlockCalendar: true,
   vacationCalendarBlocks: {} as Record<string, { start: string; end: string }>,
@@ -1483,6 +1489,7 @@ export const useSettingsStore = create<SettingsState>()(
           calendarDayStartHour: state.calendarDayStartHour,
           calendarDayEndHour: state.calendarDayEndHour,
           calendarHideNonWorkingDays: state.calendarHideNonWorkingDays,
+          calendarNarrowWeekAllDays: state.calendarNarrowWeekAllDays,
           calendarWorkingDays: state.calendarWorkingDays,
           vacationBlockCalendar: state.vacationBlockCalendar,
           vacationCalendarBlocks: state.vacationCalendarBlocks,

@@ -13,6 +13,7 @@ import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
  */
 export function DesktopDevToolsSettings() {
   const t = useTranslations("desktopDevTools");
+  const tSearch = useTranslations("ux_p3_search");
   const bridge = getDesktopBridge();
   const devTools = bridge?.devTools;
   const [state, setState] = useState<DesktopDevToolsState | null>(null);
@@ -39,7 +40,8 @@ export function DesktopDevToolsSettings() {
   return (
     // Only with "Show advanced settings" on: nobody needs it to read mail (settings-p2-9).
     <SettingsSection id="desktop-troubleshooting" advanced title={t("section_title")}>
-      <SettingItem label={t("label", { shortcut })} description={description} locked={state.forcedOff}>
+      {/* Named plainly, as settings search lists it; the keys are in the description. */}
+      <SettingItem label={tSearch("devtools_label")} description={description} locked={state.forcedOff}>
         <ToggleSwitch
           checked={state.on}
           disabled={state.forcedOff || state.locked}

@@ -55,9 +55,9 @@ import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
 import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
-import { itemsToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
+import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { emailInMailbox, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { buildMoveMenu, type MoveMenuModel } from "@/lib/move-menu";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
@@ -128,6 +128,7 @@ import {
   ArrowLeft,
   Pencil,
   Paperclip,
+  Inbox,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useLocale, useTranslations } from "next-intl";
@@ -163,6 +164,7 @@ import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { findCalendarAttachment, isCalendarMimeType } from "@/lib/calendar-invitation";
 import { RecipientPopover, RecipientCardPopover, type CardAnchor } from "./recipient-popover";
+import { SenderNameLine } from "./sender-name-line";
 import { AddressText } from "./address-context-menu";
 import { BreakableAddress } from "@/components/ui/breakable-address";
 import { mentionFromLink } from "@/lib/recipient-mentions";
@@ -202,6 +204,7 @@ import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
@@ -320,10 +323,9 @@ interface EmailViewerProps {
   /** Stop a scheduled message from going out; it goes back to Drafts. */
   onCancelScheduledSend?: () => void;
   onRescheduleScheduled?: (delayedUntil: string) => void | Promise<void>;
-  onCompose?: () => void;
   /** Shown in the empty reading pane in place of "No conversation selected" (a selection's actions, mail-10). */
   emptyPaneContent?: React.ReactNode;
-  /** Shown under the empty reading pane's text and Compose button (the first-run tips, mail-15). */
+  /** Shown under the empty reading pane's text (the first-run tips, mail-15). */
   emptyPaneFooter?: React.ReactNode;
   /**
    * Fullscreen reading toggle (standard interface only - Pro email tabs are
@@ -1013,15 +1015,16 @@ export function MvExpandedConversationCard({
         <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
-            <span dir="auto" className="text-sm font-semibold truncate">{sender?.name || sender?.email || ''}</span>
+            <SenderNameLine
+              className="text-sm font-semibold"
+              name={sender?.name || sender?.email || ''}
+              address={compact ? null : sender?.email}
+            />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6875rem] font-medium bg-primary/10 text-primary shrink-0">
                 <CalendarClock className="w-3 h-3" />
                 {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
               </span>
-            )}
-            {!compact && sender?.name && sender.email && (
-              <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
             )}
             <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
@@ -1270,6 +1273,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       onForwardAsAttachment={options.onForwardAsAttachment}
       onEditDraft={options.onEditDraft}
       onArchive={options.onArchive}
+      onMoveToInbox={options.onMoveToInbox}
       onDelete={options.onDelete}
       onMarkAsRead={options.onMarkAsRead}
       onToggleStar={options.onToggleStar}
@@ -1478,7 +1482,6 @@ export function EmailViewer({
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
-  onCompose,
   emptyPaneContent,
   emptyPaneFooter,
   onToggleFullscreen,
@@ -1590,6 +1593,7 @@ export function EmailViewer({
   // destroys the mail, Delete says "Delete forever".
   const isInTrashFolder = currentMailboxRole === 'trash';
   const tActions = useTranslations('reader_actions');
+  const tP3 = useTranslations('mail_p3_actions');
   // Read for the re-render: bulkDeleteIsPermanent reads them from the store.
   useSettingsStore((state) => state.deleteAction);
   useSettingsStore((state) => state.permanentlyDeleteJunk);
@@ -1690,8 +1694,10 @@ export function EmailViewer({
   const mvOpenFolded = mvOpenIndex >= 0 && mvOpenCollapsed;
   // The default layout's conversation (not Mountain View): the open message
   // gets the same header as the others, with its date and its reply actions
-  // on the sender's line, and the subject line no date (mail-p2-4).
-  const inConversation = mvOpenIndex >= 0 && !mvViewer;
+  // on the sender's line, and the subject line no date (mail-p2-4). A
+  // conversation of one message (no thread came back) looks the same
+  // (pass 3: p2-4 had left it the old header).
+  const inConversation = !mvViewer && (mvOpenIndex >= 0 || (!!conversationPane && !isMobile));
   // Folding or unfolding the open message of a conversation, told to plugins
   // like any other conversation message (onThreadExpand).
   const setMvOpenFolded = (folded: boolean) => {
@@ -2190,6 +2196,11 @@ export function EmailViewer({
   const restoreTarget = isInTrashFolder && email
     ? rememberedTrashOrigin(email, mailboxes) ?? trashRestoreTarget(email, mailboxes, identities, moveOwnerAccountId)
     : undefined;
+  // In Archive "Move to Inbox" takes Archive's place (mail-p3-4). A message
+  // window browses no folder: there the message's own folder decides.
+  const archiveInbox = onMoveToMailbox && email
+    ? archiveInboxTarget(mailboxes, selectedMailbox || mailboxes.find((m) => emailInMailbox(email, m))?.id)
+    : undefined;
 
   // Close dropdown menus on click outside
   useEffect(() => {
@@ -2283,36 +2294,54 @@ export function EmailViewer({
       const containerWidth = el.clientWidth;
       const overflowNow = () => leftGroup.scrollWidth + rightGroup.scrollWidth + mainGap - (containerWidth + 1);
       let overflow = overflowNow();
-      // The labels go before any button does (icons keep their tooltips):
-      // first all but Reply, Archive, Delete and Move, then those too.
+      // Labels and buttons give way in this order (mail-p2-15): the labels
+      // of the optional buttons; then those buttons, into the More menu; then
+      // the names of Reply, Reply all, Forward, Archive, Delete and Move
+      // (icons keep their tooltips); then, in a reader too narrow even for
+      // their icons, the main buttons too.
       let compact: ToolbarCompact = false;
-      for (const step of ['secondary', 'all'] as const) {
-        if (overflow <= 0) break;
-        compact = step;
-        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, step);
+      const hidden = new Set<number>();
+      const priorities = items.map((item) => Number(item.dataset.overflowPriority || 0));
+      const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
+      const groupOf = (item: HTMLElement) => {
+        const parent = item.parentElement;
+        if (!parent) return '';
+        if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
+        return groupIds.get(parent)!;
+      };
+      const gapOf = () => ({
+        left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
+        right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
+      });
+      // Measure every width in one pass and decide from the numbers (see
+      // planToHide) rather than hiding items one by one and re-reading.
+      // fits false: hiding all of `order` still wouldn't make it fit.
+      const planHide = (order: number[]) => {
+        const ordered = order.map((i) => items[i]);
+        const measured = ordered.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
+        const plan = planToHide(measured, overflow, gapOf());
+        return { ordered, plan };
+      };
+      if (overflow > 0) {
+        compact = 'secondary';
+        el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, compact);
         overflow = overflowNow();
       }
-      const hidden = new Set<number>();
       if (overflow > 0) {
-        // Measure every width in one pass and decide from the numbers (see
-        // itemsToHide) rather than hiding items one by one and re-reading.
-        const order = toolbarHideOrder(items.map((item) => Number(item.dataset.overflowPriority || 0)), REQUIRED_TOOLBAR_PRIORITIES);
-        const ordered = order.map((i) => items[i]);
-        const groupIds = new Map<Element, string>([[leftGroup, 'left'], [rightGroup, 'right']]);
-        const groupOf = (item: HTMLElement) => {
-          const parent = item.parentElement;
-          if (!parent) return '';
-          if (!groupIds.has(parent)) groupIds.set(parent, String(groupIds.size));
-          return groupIds.get(parent)!;
-        };
-        const measured = ordered.map((item) => ({ width: item.offsetWidth, group: groupOf(item) }));
-        const gapOf = {
-          left: parseFloat(getComputedStyle(leftGroup).gap) || 0,
-          right: parseFloat(getComputedStyle(rightGroup).gap) || 0,
-        };
-        for (const i of itemsToHide(measured, overflow, gapOf)) {
-          ordered[i].style.display = 'none';
-          hidden.add(Number(ordered[i].dataset.overflowPriority));
+        const order = toolbarHideOrder(priorities, REQUIRED_TOOLBAR_PRIORITIES);
+        const optional = order.filter((i) => !(REQUIRED_TOOLBAR_PRIORITIES as readonly number[]).includes(priorities[i]));
+        let { ordered, plan } = planHide(optional);
+        if (!plan.fits) {
+          compact = 'all';
+          el.setAttribute(TOOLBAR_COMPACT_ATTRIBUTE, compact);
+          overflow = overflowNow();
+          ({ ordered, plan } = planHide(order));
+        }
+        if (overflow > 0) {
+          for (const i of plan.hide) {
+            ordered[i].style.display = 'none';
+            hidden.add(Number(ordered[i].dataset.overflowPriority));
+          }
         }
       }
       // Restore layout
@@ -4451,12 +4480,7 @@ ${printWatermark ? printWatermark.html : ''}
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">{t('no_conversation_selected')}</h2>
           <p className="text-muted-foreground">{t('no_conversation_description')}</p>
-          {onCompose && (
-            <Button onClick={onCompose} className="mt-6" title={t('compose_hint')}>
-              <PenSquare className="w-4 h-4 me-2" />
-              {t('compose')}
-            </Button>
-          )}
+          {/* No Compose here: the sidebar's or the round button is right there (settings-p3-19). */}
           {emptyPaneFooter}
         </div>
         )}
@@ -4561,6 +4585,7 @@ ${printWatermark ? printWatermark.html : ''}
     onRestore: currentMailboxRole === 'trash' && onMoveToMailbox
       ? () => { if (restoreTarget) onMoveToMailbox(restoreTarget.id); }
       : undefined,
+    onMoveToInbox: archiveInbox && onMoveToMailbox ? () => onMoveToMailbox(archiveInbox.id) : undefined,
     omit: readerMenuOmit,
     views: readerViews,
   };
@@ -4672,26 +4697,26 @@ ${printWatermark ? printWatermark.html : ''}
         <Button
           variant="ghost"
           size="sm"
-          onClick={onReplyAll}
+          onClick={() => onReplyAll?.()}
           data-overflow-item
           data-overflow-priority="2"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0 sm:px-3"
           title={withShortcut(t('reply_all'), 'reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={onForward}
+          onClick={() => onForward?.()}
           data-overflow-item
           data-overflow-priority="3"
           className="hidden sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
           title={withShortcut(t('forward'), 'forward')}
         >
           <Forward className="w-4 h-4" />
-          {showToolbarLabels && <span data-toolbar-label="" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
+          {showToolbarLabels && <span data-toolbar-label="primary" className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
@@ -4745,7 +4770,22 @@ ${printWatermark ? printWatermark.html : ''}
             {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
-        {archiveActionEnabled && !isInJunkFolder && !isInTrashFolder && (
+        {archiveInbox && onMoveToMailbox && !isInJunkFolder && !isInTrashFolder && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMoveToMailbox(archiveInbox.id)}
+            data-overflow-item
+            data-overflow-priority="4"
+            data-testid="reader-move-to-inbox"
+            className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+            title={withShortcut(tP3('move_to_inbox'), 'archive')}
+          >
+            <Inbox className="w-4 h-4" />
+            {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tP3('move_to_inbox')}</span>}
+          </Button>
+        )}
+        {archiveActionEnabled && !archiveInbox && !isInJunkFolder && !isInTrashFolder && (
           <Button
             variant="ghost"
             size="sm"
@@ -5370,8 +5410,27 @@ ${printWatermark ? printWatermark.html : ''}
               {/* Row 1: Sender name + badges */}
               <div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {sender?.email ? (
+                  {/* In a conversation one line, as the other messages'
+                      headers: the address shows only when it fits whole
+                      (mail-p3-13), and the date and actions stay at its end. */}
+                  <div className={cn("flex items-center gap-2", mvViewer || inConversation ? "min-w-0 [&>*:not([data-sender-line])]:shrink-0" : "flex-wrap")}>
+                    {sender?.email && (mvViewer || inConversation) ? (
+                      <SenderNameLine
+                        name={sender.name || sender.email}
+                        address={sender.name ? sender.email : null}
+                        nameNode={(
+                          <RecipientPopover
+                            name={sender.name}
+                            email={sender.email}
+                            onViewContact={handleViewContactSidebar}
+                            className="font-semibold text-start block max-w-full truncate"
+                          />
+                        )}
+                        addressNode={inConversation && sender.name
+                          ? <AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />
+                          : undefined}
+                      />
+                    ) : sender?.email ? (
                       <RecipientPopover
                         name={sender?.name}
                         email={sender.email}
@@ -5380,12 +5439,6 @@ ${printWatermark ? printWatermark.html : ''}
                       />
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
-                    )}
-                    {mvViewer && sender?.email && sender?.name && (
-                      <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
-                    )}
-                    {inConversation && sender?.email && sender?.name && (
-                      <span className="text-xs text-muted-foreground truncate min-w-0">&lt;<AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />&gt;</span>
                     )}
                     <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
@@ -5433,7 +5486,7 @@ ${printWatermark ? printWatermark.html : ''}
                         {!isDraft && !isScheduled && onReplyAll && (
                           <button
                             type="button"
-                            onClick={onReplyAll}
+                            onClick={() => onReplyAll?.()}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                             title={withShortcut(t('reply_all'), 'reply_all')}
                             aria-label={t('reply_all')}
@@ -5675,7 +5728,7 @@ ${printWatermark ? printWatermark.html : ''}
                 {onReplyAll && (
                   <button
                     type="button"
-                    onClick={onReplyAll}
+                    onClick={() => onReplyAll?.()}
                     className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     title={withShortcut(t('reply_all'), 'reply_all')}
                     aria-label={t('reply_all')}
@@ -6260,8 +6313,8 @@ ${printWatermark ? printWatermark.html : ''}
 
         <div className="grow shrink-0 flex flex-col">
 
-          {/* Email Body */}
-          <div ref={bodyWrapRef} className={cn(
+          {/* Email Body. data-reader-body: a reply dock keeps some of it in view (compose-p3-7). */}
+          <div ref={bodyWrapRef} data-reader-body="" className={cn(
             "email-content-wrapper overflow-x-auto relative",
             // Folded, the body stays mounted so unfolding does not reload it.
             (mvOpenFolded || mvAwaitingConversation) && "hidden",
@@ -6389,11 +6442,11 @@ ${printWatermark ? printWatermark.html : ''}
                 <Reply className="w-4 h-4" />
                 {t('reply')}
               </Button>
-              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReplyAll?.()}>
                 <ReplyAll className="w-4 h-4" />
                 {t('reply_all')}
               </Button>
-              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onForward?.()}>
                 <Forward className="w-4 h-4" />
                 {t('forward')}
               </Button>
@@ -6592,14 +6645,14 @@ ${printWatermark ? printWatermark.html : ''}
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
           </button>
           <button
-            onClick={onReplyAll}
+            onClick={() => onReplyAll?.()}
             className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <ReplyAll className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
           </button>
           <button
-            onClick={onForward}
+            onClick={() => onForward?.()}
             className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Forward className="w-5 h-5" />

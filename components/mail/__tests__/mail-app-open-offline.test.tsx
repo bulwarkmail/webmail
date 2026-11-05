@@ -133,7 +133,7 @@ const setOnline = (online: boolean) => {
 describe('a message that cannot be fetched', () => {
   afterEach(() => setOnline(true));
 
-  it('says offline that it needs a connection, and Retry opens it once back online', async () => {
+  it('says offline that it needs a connection, and opens it by itself once back online', async () => {
     failing = true;
     render(<MailApp />);
     await screen.findByText('message list', {}, { timeout: 5000 });
@@ -144,9 +144,9 @@ describe('a message that cannot be fetched', () => {
     expect(await screen.findByText('reader_offline')).toBeTruthy();
 
     failing = false;
-    act(() => setOnline(true));
+    // No Retry click: the connection coming back is enough (mail-p3-2).
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'retry' }));
+      setOnline(true);
       await new Promise((r) => setTimeout(r, 20));
     });
     expect(await screen.findByText('reader')).toBeTruthy();

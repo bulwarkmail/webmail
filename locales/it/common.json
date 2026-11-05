@@ -109,6 +109,33 @@
     "code_label": "Codice di autenticazione",
     "verify": "Verifica"
   },
+  "ux_p3_words": {
+    "appearance_description": "Cambia l'aspetto di {appName}.",
+    "text_size_app": "Ridimensiona tutto il testo dell'app. 100% è la dimensione normale.",
+    "scrollbars_app": "Usa le barre di scorrimento del sistema, più larghe e facili da afferrare.",
+    "voice_app": "La voce che legge i messaggi ad alta voce. L'elenco mostra le voci di questo computer per la lingua dell'interfaccia.",
+    "voice_default_app": "Voce di sistema",
+    "visual_alerts_app": "Fa lampeggiare lentamente il titolo della finestra quando arriva nuova posta o un promemoria, e tiene i promemoria sullo schermo finché non li chiudi.",
+    "sounds_link_app": "I suoni delle notifiche e il numero di non letti sull'icona della barra delle applicazioni si impostano nella pagina Notifiche.",
+    "writing_language_app": "La lingua in cui scrivi di solito. La revisione e il controllo ortografico la usano.",
+    "badge_all_app": "Il numero sull'icona della barra delle applicazioni e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "badge_all_browser": "Il numero sulla scheda e sull'icona dell'app somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "dnd_title": "Non disturbare",
+    "pause_label": "Sospendi le notifiche",
+    "pause_description": "Nessun suono, finestra a comparsa o annuncio vocale per la nuova posta finché non lo disattivi di nuovo.",
+    "dnd_link_app": "Sospendi le notifiche e imposta le ore di silenzio nella pagina Notifiche.",
+    "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche.",
+    "backup_app": "Esporta le impostazioni in un file e importale sugli altri dispositivi.",
+    "sync_app": "Gli altri dispositivi collegati a questo account ricevono le stesse impostazioni.",
+    "progress_attachments": "Download degli allegati",
+    "progress_events": "Download degli eventi",
+    "progress_contacts": "Download dei contatti",
+    "progress_files_list": "Elenco dei file",
+    "progress_other": "Download in corso",
+    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che tieni offline in File, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto.",
+    "filter_value_placeholder": "Valore",
+    "filter_values_hint": "Per più valori, separali con virgole."
+  },
   "sidebar": {
     "close": "Chiudi",
     "compose": "Scrivi",
@@ -926,6 +953,13 @@
     "restore_to": "Riporta in {folder}",
     "delete_forever": "Elimina definitivamente"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Sposta in Posta in arrivo",
+    "delete_forever_title": "Eliminare per sempre questo messaggio?",
+    "delete_forever_batch_title": "{count, plural, one {Eliminare per sempre questo messaggio?} other {Eliminare per sempre questi # messaggi?}}",
+    "delete_forever_message": "Non potrai recuperarlo.",
+    "delete_forever_batch_message": "{count, plural, one {Non potrai recuperarlo.} other {Non potrai recuperarli.}}"
+  },
   "external_mail": {
     "sender_label": "Esterno",
     "sender_tooltip": "Da {domain}, fuori dalla tua organizzazione",
@@ -982,10 +1016,10 @@
     "forward_message": "Inoltra",
     "from": "Da",
     "to": "A",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCN",
     "subject": "Oggetto",
-    "body_placeholder": "Scrivi il tuo messaggio...",
+    "body_placeholder": "Scrivi il tuo messaggio…",
     "send": "Invia",
     "cancel": "Annulla",
     "attach": "Allega",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Se il tuo server non accetta questo indirizzo come mittente della busta, viene usato {identity} al suo posto, e i destinatari possono vederlo nell'intestazione Return-Path."
     },
-    "save_as_template": "Salva come modello",
+    "save_as_template": "Salva come modello…",
     "attach_from_device": "Carica da questo dispositivo",
     "templates_menu": "Modelli",
-    "insert_template": "Inserisci modello",
+    "insert_template": "Inserisci modello…",
     "options": "Opzioni",
     "option_plain_text": "Testo semplice",
     "option_plain_text_hint": "Invia senza formattazione",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} in tutti gli account)",
     "title_all_accounts_only": "{name} ({total} in tutti gli account)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nessun risultato trovato} one {# conversazione trovata} other {# conversazioni trovate}}",
+    "name_unread_sub": "{name}, {count} da leggere, altri {sub} nelle sottocartelle",
+    "name_unread_only_sub": "{name}, {sub} da leggere nelle sottocartelle",
+    "sub_unread": "{sub} da leggere nelle sottocartelle"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestisci account…",
     "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
     "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra il selettore account sopra le cartelle, con Scrivi sotto. Disattivalo per mettere Scrivi al suo posto."
   },
   "mail_p2_conv": {
     "show_message": "Mostra il messaggio",
@@ -5278,6 +5321,12 @@
     "declined_many": "Hai rifiutato {count} riunioni di questa serie.",
     "answers_series": "La tua risposta vale per tutte le riunioni della serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "fino alle {time}",
+    "week_all_days": "Mostra tutta la settimana",
+    "week_days_short": "{count, plural, one {# giorno} other {# giorni}}",
+    "print": "Stampa…"
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",
@@ -5589,6 +5638,12 @@
     "import_to_mail_failed": "Impossibile importare {name}.",
     "import_contacts": "Importa nei contatti…",
     "add_to_calendar": "Aggiungi al calendario…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "File modificati",
+    "hide": "Nascondi",
+    "discard_detail_file": "Le modifiche a questa copia vengono eliminate. Il file in File non cambia.",
+    "saved_auto": "{name} salvato in File. I salvataggi successivi dal suo programma ci finiscono da soli."
   },
   "smime": {
     "your_certificates": "I tuoi certificati",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Il tuo server di posta deve consentire l'accesso da questo sito. Se l'accesso non riesce, chiedi a chi gestisce il server di posta di consentirlo.",
     "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Cambiare il modo in cui Bulwark si connette?",
+      "message": "Bulwark si riavvia e chiede come connettersi: con il tuo indirizzo email o tramite il Bulwark della tua organizzazione. I tuoi account su questo computer restano connessi.",
+      "confirm": "Cambia",
+      "org_link": "Usa invece il Bulwark della mia organizzazione",
+      "add_account": "Aggiungi account…"
+    },
+    "picture": {
+      "button": "Immagine",
+      "title": "Inserisci immagine",
+      "address": "Indirizzo web dell'immagine",
+      "address_hint": "L'immagine resta sul web e viene mostrata da lì.",
+      "description": "Descrizione",
+      "invalid": "Inserisci un indirizzo web che inizi con https://.",
+      "insert": "Inserisci"
+    },
+    "sign_in_page": {
+      "open_app": "Apri Bulwark",
+      "done_as": "Accesso eseguito come {address}. Puoi chiudere questa scheda."
+    }
+  },
   "desktop_updates": {
     "title": "Aggiornamenti",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Mantenuto",
     "import_show": "Mostra"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contatto selezionato} other {# contatti selezionati}}",
+    "selection_more": "e altri {count}",
+    "no_addresses": "Nessuno dei contatti selezionati ha un indirizzo email.",
+    "task_open": "Apri",
+    "due_next_week": "La prossima settimana",
+    "due_none": "Nessuna scadenza",
+    "due_pick": "Scegli una data…",
+    "move_to_list": "Sposta nell’elenco",
+    "dupes_legend": "{count, plural, one {1 è già in Contatti:} other {# sono già in Contatti:}}",
+    "dupes_skip": "Saltali",
+    "dupes_update": "Aggiorna i contatti esistenti",
+    "dupes_updates": "Aggiorna il contatto",
+    "upload_cancelled": "Caricamento annullato",
+    "upload_cancelled_partial": "{count, plural, one {1 file era già stato caricato} other {# file erano già stati caricati}} prima dell'annullamento",
+    "download_cancelled": "Download annullato"
   },
   "desktopEdit": {
     "edit": "Modifica",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Interrotto"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Caricamento delle modifiche prima di disattivare l'unità",
+      "title_sign_out": "Caricamento delle modifiche prima di uscire",
+      "title_stop_folder": "Caricamento delle modifiche prima di interrompere la sincronizzazione della cartella",
+      "cannot_title": "Alcune modifiche non possono essere caricate ora",
+      "waiting": "Ancora da caricare: {names}",
+      "progress": "{done} di {total} caricati",
+      "cannot_offline": "Il server non è raggiungibile. Non ancora caricati: {names}",
+      "cannot_other": "Non è possibile caricare: {names}. L'attività recente nelle impostazioni spiega il motivo.",
+      "go_note_drive": "Se continui ora, ciò che non è stato caricato viene copiato in Documenti\\Bulwark – not uploaded. Non si perde nulla.",
+      "go_note_folder": "Se continui ora, ciò che non è stato caricato resta nella cartella su questo computer.",
+      "keep_turn_off": "Mantieni l'unità",
+      "keep_sign_out": "Resta connesso",
+      "keep_stop_folder": "Continua a sincronizzare",
+      "go_turn_off": "Disattiva ora",
+      "go_sign_out": "Esci ora",
+      "go_stop_folder": "Interrompi ora la sincronizzazione"
+    },
+    "drive": {
+      "off_note": "Disattivandolo, l'unità sparisce da Esplora file. I tuoi file restano in File.",
+      "rescued": "I file non caricati ({count}) ora si trovano in {folder}.",
+      "rescued_open": "Apri cartella",
+      "rescued_dismiss": "Ignora",
+      "start_at_login": "Avvia Bulwark all'accesso a Windows",
+      "start_at_login_why": "L'unità ha bisogno che Bulwark sia in esecuzione, come OneDrive.",
+      "closed_warning": "I file dell'unità non si aprono quando Bulwark è chiuso.",
+      "where": "In Esplora file come Bulwark Files",
+      "where_letter": "In Esplora file come Bulwark Files ({letter}:)",
+      "open": "Apri",
+      "letter_note": "Tramite la lettera, Esplora file non mostra lo stato di sincronizzazione né «Mantieni sempre su questo dispositivo». Li trovi sotto Bulwark Files in Esplora file.",
+      "letter_failed": "Non è stato possibile impostare la lettera di unità. Riprova."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aggiornato",
+      "syncing": "Bulwark Files: Sincronizzazione. Restanti: {count}",
+      "paused": "Bulwark Files: In pausa",
+      "offline": "Bulwark Files: Offline. In attesa: {count}",
+      "question": "Bulwark Files: Serve una tua risposta",
+      "error": "Bulwark Files: Errore"
+    },
+    "notify": {
+      "conflict_title": "Un file è stato modificato in due punti",
+      "problem_title": "Un file non può essere sincronizzato"
+    },
+    "activity": {
+      "waiting_count": "Modifiche in attesa del server: {count}",
+      "disk_name": "{path} in File si chiama {detail} su questo computer, perché alcuni suoi caratteri qui non sono consentiti",
+      "disk_case": "{path} in File si chiama {detail} su questo computer, perché qui c'è già un nome che differisce solo per maiuscole e minuscole",
+      "disk_group": "Nomi in File non consentiti su questo computer: {count}. Qui hanno nomi leggermente diversi.",
+      "show": "Mostra",
+      "hide": "Nascondi"
+    },
+    "cant_sync": {
+      "title": "Impossibile sincronizzare"
+    },
+    "folders": {
+      "stop": "Interrompi la sincronizzazione…",
+      "pick_title_known": "Con quale cartella di File tenere uguale {name}?",
+      "pick_confirm_known": "Tienile uguali"
+    },
+    "pin": {
+      "keep": "Mantieni sempre su questo dispositivo",
+      "free": "Libera spazio",
+      "failed": "Non ha funzionato. Riprova in Esplora file."
+    },
+    "account": {
+      "of": "File di {address}",
+      "choose": "File di"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Scrittura rapida",
     "menu": "Scrittura rapida",
@@ -7802,6 +7967,10 @@
     "missing": "\"{name}\" non esiste più.",
     "too_large": "\"{name}\" supera {max} e non può essere allegato.",
     "failed": "Impossibile allegare \"{name}\". Riprova."
+  },
+  "composeRecentLimit": {
+    "too_large": "Troppo grande",
+    "too_large_hint": "Più grande di quanto accetta il server ({max})"
   },
   "compose_windows": {
     "more_formatting": "Altre opzioni di formattazione",
@@ -7868,6 +8037,17 @@
     "done": "Fatto",
     "join_host": "Partecipa ({host})",
     "join_named": "Partecipa: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Strumenti per sviluppatori",
+    "updates_label": "Cerca aggiornamenti",
+    "search": {
+      "quick_compose": "scrittura rapida nuovo messaggio da ovunque scorciatoia globale",
+      "files_drive": "libera spazio OneDrive Dropbox Esplora file Finder lettera di unità file su richiesta",
+      "offline_space": "libera spazio spazio su disco archiviazione",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID impronta digitale volto passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",

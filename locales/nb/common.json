@@ -109,6 +109,33 @@
     "code_label": "Autentiseringskode",
     "verify": "Bekreft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Endre hvordan {appName} ser ut.",
+    "text_size_app": "Skalerer all tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruker systemets egne rullefelt, som er bredere og lettere å ta tak i.",
+    "voice_app": "Stemmen som leser opp meldinger. Listen viser stemmene denne datamaskinen har for språket i grensesnittet.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vindustittelen til å blinke sakte når det kommer ny e-post eller en påminnelse, og holder påminnelser på skjermen til du lukker dem.",
+    "sounds_link_app": "Varsellyder og antall uleste på ikonet på oppgavelinjen stiller du inn på siden Varsler.",
+    "writing_language_app": "Språket du vanligvis skriver på. Korrektur og stavekontroll bruker det.",
+    "badge_all_app": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
+    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer.",
+    "dnd_title": "Ikke forstyrr",
+    "pause_label": "Sett varsler på pause",
+    "pause_description": "Ingen lyder, hurtigvinduer eller opplest informasjon om ny e-post før du slår dette av igjen.",
+    "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
+    "dnd_link_browser": "Sett varsler på pause på siden Varsler.",
+    "backup_app": "Eksporter innstillingene dine til en fil, og importer dem på de andre enhetene dine.",
+    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene.",
+    "progress_attachments": "Laster ned vedlegg",
+    "progress_events": "Laster ned hendelser",
+    "progress_contacts": "Laster ned kontakter",
+    "progress_files_list": "Henter fillisten",
+    "progress_other": "Laster ned",
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "filter_value_placeholder": "Verdi",
+    "filter_values_hint": "Skill flere verdier med komma."
+  },
   "sidebar": {
     "close": "Lukk",
     "compose": "Skriv",
@@ -926,6 +953,13 @@
     "restore_to": "Flytt tilbake til {folder}",
     "delete_forever": "Slett for godt"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Flytt til innboksen",
+    "delete_forever_title": "Slette denne meldingen for godt?",
+    "delete_forever_batch_title": "{count, plural, one {Slette denne meldingen for godt?} other {Slette disse # meldingene for godt?}}",
+    "delete_forever_message": "Du får den ikke tilbake.",
+    "delete_forever_batch_message": "{count, plural, one {Du får den ikke tilbake.} other {Du får dem ikke tilbake.}}"
+  },
   "external_mail": {
     "sender_label": "Ekstern",
     "sender_tooltip": "Fra {domain}, utenfor organisasjonen din",
@@ -982,10 +1016,10 @@
     "forward_message": "Videresend",
     "from": "Fra",
     "to": "Til",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Emne",
-    "body_placeholder": "Skriv meldingen din...",
+    "body_placeholder": "Skriv meldingen din…",
     "send": "Send",
     "cancel": "Avbryt",
     "attach": "Legg ved",
@@ -1042,10 +1076,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis serveren din ikke godtar denne adressen som konvoluttavsender, brukes {identity} i stedet, og mottakerne kan se den i Return-Path-overskriften."
     },
-    "save_as_template": "Lagre som mal",
+    "save_as_template": "Lagre som mal…",
     "attach_from_device": "Last opp fra denne enheten",
     "templates_menu": "Maler",
-    "insert_template": "Sett inn mal",
+    "insert_template": "Sett inn mal…",
     "options": "Alternativer",
     "option_plain_text": "Ren tekst",
     "option_plain_text_hint": "Send uten formatering",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} i alle kontoer)",
     "title_all_accounts_only": "{name} ({total} i alle kontoer)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ingen treff} one {# samtale funnet} other {# samtaler funnet}}",
+    "name_unread_sub": "{name}, {count} uleste, {sub} til i undermapper",
+    "name_unread_only_sub": "{name}, {sub} uleste i undermapper",
+    "sub_unread": "{sub} uleste i undermapper"
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer kontoer…",
     "apply_to_existing": "{count, plural, one {Bruk på # eksisterende melding i {folder}} other {Bruk på # eksisterende meldinger i {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
     "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Vis kontobytteren over mappene, med Skriv under den. Slå av for å sette Skriv i stedet for den."
   },
   "mail_p2_conv": {
     "show_message": "Vis meldingen",
@@ -5278,6 +5321,12 @@
     "declined_many": "Du avslo {count} møter i denne serien.",
     "answers_series": "Svaret ditt gjelder alle møtene i serien."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "til {time}",
+    "week_all_days": "Vis hele uken",
+    "week_days_short": "{count, plural, one {# dag} other {# dager}}",
+    "print": "Skriv ut…"
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",
@@ -5856,6 +5905,12 @@
     "import_to_mail_failed": "Kunne ikke importere {name}.",
     "import_contacts": "Importer til kontakter…",
     "add_to_calendar": "Legg til i kalenderen…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Redigerte filer",
+    "hide": "Skjul",
+    "discard_detail_file": "Endringene dine i denne kopien slettes. Filen i Filer endres ikke.",
+    "saved_auto": "{name} er lagret i Filer. Senere lagringer fra programmet havner der av seg selv."
   },
   "smime": {
     "your_certificates": "Dine sertifikater",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Vil du endre hvordan Bulwark kobler til?",
+      "message": "Bulwark starter på nytt og spør hvordan det skal koble til: med e-postadressen din eller via organisasjonens Bulwark. Kontoene dine på denne datamaskinen forblir pålogget.",
+      "confirm": "Endre",
+      "org_link": "Bruk organisasjonens Bulwark i stedet",
+      "add_account": "Legg til konto…"
+    },
+    "picture": {
+      "button": "Bilde",
+      "title": "Sett inn bilde",
+      "address": "Nettadressen til bildet",
+      "address_hint": "Bildet blir liggende på nettet og vises derfra.",
+      "description": "Beskrivelse",
+      "invalid": "Skriv inn en nettadresse som begynner med https://.",
+      "insert": "Sett inn"
+    },
+    "sign_in_page": {
+      "open_app": "Åpne Bulwark",
+      "done_as": "Logget på som {address}. Du kan lukke denne fanen."
+    }
+  },
   "desktop_updates": {
     "title": "Oppdateringer",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Bilde",
     "merge_kept": "Beholdes",
     "import_show": "Vis"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} til",
+    "no_addresses": "Ingen av de valgte kontaktene har en e-postadresse.",
+    "task_open": "Åpne",
+    "due_next_week": "Neste uke",
+    "due_none": "Ingen forfallsdato",
+    "due_pick": "Velg en dato…",
+    "move_to_list": "Flytt til liste",
+    "dupes_legend": "{count, plural, one {1 finnes allerede i Kontakter:} other {# finnes allerede i Kontakter:}}",
+    "dupes_skip": "Hopp over",
+    "dupes_update": "Oppdater de eksisterende kontaktene",
+    "dupes_updates": "Oppdaterer kontakten",
+    "upload_cancelled": "Opplastingen ble avbrutt",
+    "upload_cancelled_partial": "{count, plural, one {1 fil ble} other {# filer ble}} lastet opp før du avbrøt",
+    "download_cancelled": "Nedlasting avbrutt"
   },
   "desktopEdit": {
     "edit": "Rediger",
@@ -7780,6 +7874,77 @@
     "state_offline": "Frakoblet",
     "state_error": "Stoppet"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Laster opp endringer før stasjonen slås av",
+      "title_sign_out": "Laster opp endringer før du logger av",
+      "title_stop_folder": "Laster opp endringer før mappen slutter å synkronisere",
+      "cannot_title": "Noen endringer kan ikke lastes opp nå",
+      "waiting": "Gjenstår å laste opp: {names}",
+      "progress": "{done} av {total} lastet opp",
+      "cannot_offline": "Serveren kan ikke nås. Ikke lastet opp ennå: {names}",
+      "cannot_other": "Kan ikke lastes opp: {names}. Nylig aktivitet i Innstillinger forteller hvorfor.",
+      "go_note_drive": "Hvis du fortsetter nå, blir det som ikke er lastet opp, kopiert til Dokumenter\\Bulwark – not uploaded. Ingenting går tapt.",
+      "go_note_folder": "Hvis du fortsetter nå, blir det som ikke er lastet opp, i mappen på denne datamaskinen.",
+      "keep_turn_off": "Behold stasjonen",
+      "keep_sign_out": "Forbli pålogget",
+      "keep_stop_folder": "Fortsett synkroniseringen",
+      "go_turn_off": "Slå av nå",
+      "go_sign_out": "Logg av nå",
+      "go_stop_folder": "Stopp synkroniseringen nå"
+    },
+    "drive": {
+      "off_note": "Når du slår av dette, forsvinner stasjonen fra Filutforsker. Filene dine blir i Filer.",
+      "rescued": "Filer som ikke ble lastet opp ({count}), ligger nå i {folder}.",
+      "rescued_open": "Åpne mappe",
+      "rescued_dismiss": "Lukk",
+      "start_at_login": "Start Bulwark når du logger på Windows",
+      "start_at_login_why": "Stasjonen trenger at Bulwark kjører, slik som OneDrive.",
+      "closed_warning": "Filer på stasjonen kan ikke åpnes mens Bulwark er lukket.",
+      "where": "I Filutforsker som Bulwark Files",
+      "where_letter": "I Filutforsker som Bulwark Files ({letter}:)",
+      "open": "Åpne",
+      "letter_note": "Via stasjonsbokstaven viser Filutforsker verken synkroniseringsstatus eller «Behold alltid på denne enheten». De vises under Bulwark Files i Filutforsker.",
+      "letter_failed": "Stasjonsbokstaven kunne ikke angis. Prøv igjen."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Oppdatert",
+      "syncing": "Bulwark Files: Synkroniserer. Gjenstår: {count}",
+      "paused": "Bulwark Files: Satt på pause",
+      "offline": "Bulwark Files: Frakoblet. Venter: {count}",
+      "question": "Bulwark Files: Venter på svaret ditt",
+      "error": "Bulwark Files: Feil"
+    },
+    "notify": {
+      "conflict_title": "En fil ble endret to steder",
+      "problem_title": "En fil kan ikke synkroniseres"
+    },
+    "activity": {
+      "waiting_count": "Endringer som venter på serveren: {count}",
+      "disk_name": "{path} i Filer heter {detail} på denne datamaskinen, fordi noen av tegnene ikke er tillatt her",
+      "disk_case": "{path} i Filer heter {detail} på denne datamaskinen, fordi det allerede finnes et navn her som bare skiller seg i store og små bokstaver",
+      "disk_group": "Navn i Filer som denne datamaskinen ikke tillater: {count}. De har litt andre navn her.",
+      "show": "Vis",
+      "hide": "Skjul"
+    },
+    "cant_sync": {
+      "title": "Kan ikke synkronisere"
+    },
+    "folders": {
+      "stop": "Stopp synkroniseringen…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes lik?",
+      "pick_confirm_known": "Hold dem like"
+    },
+    "pin": {
+      "keep": "Behold alltid på denne enheten",
+      "free": "Frigjør plass",
+      "failed": "Det fungerte ikke. Prøv igjen i Filutforsker."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rask skriving",
     "menu": "Rask skriving",
@@ -7802,6 +7967,10 @@
     "missing": "«{name}» finnes ikke lenger.",
     "too_large": "«{name}» er større enn {max} og kan ikke legges ved.",
     "failed": "Kunne ikke legge ved «{name}». Prøv igjen."
+  },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større enn serveren tar imot ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mer formatering",
@@ -7868,6 +8037,17 @@
     "done": "Ferdig",
     "join_host": "Bli med ({host})",
     "join_named": "Bli med: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Utviklerverktøy",
+    "updates_label": "Se etter oppdateringer",
+    "search": {
+      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei",
+      "files_drive": "frigjør plass OneDrive Dropbox Filutforsker Finder stasjonsbokstav filer ved behov",
+      "offline_space": "frigjør plass diskplass lagringsplass",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeravtrykk ansikt tilgangsnøkkel passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",

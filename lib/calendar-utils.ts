@@ -48,8 +48,14 @@ export function getEventStartDate(
   return parseISO(event.start);
 }
 
-export function packWeekSegments(rawSegments: CalendarWeekSegment[]): CalendarWeekSegment[] {
+/**
+ * Rows for a week's bars, first come first placed. `firstId`: an event that
+ * takes the top row before the others (a just-created one, so a full day
+ * can't hide it).
+ */
+export function packWeekSegments(rawSegments: CalendarWeekSegment[], firstId?: string | null): CalendarWeekSegment[] {
   rawSegments.sort((left, right) => {
+    if (firstId && (left.event.id === firstId) !== (right.event.id === firstId)) return left.event.id === firstId ? -1 : 1;
     if (left.startIndex !== right.startIndex) return left.startIndex - right.startIndex;
     if (left.span !== right.span) return right.span - left.span;
     if (left.event.showWithoutTime !== right.event.showWithoutTime) {
@@ -184,8 +190,8 @@ export function buildWeekSegmentsRaw(events: CalendarEvent[], weekDays: Date[]):
   return rawSegments;
 }
 
-export function buildWeekSegments(events: CalendarEvent[], weekDays: Date[]): CalendarWeekSegment[] {
-  return packWeekSegments(buildWeekSegmentsRaw(events, weekDays));
+export function buildWeekSegments(events: CalendarEvent[], weekDays: Date[], firstId?: string | null): CalendarWeekSegment[] {
+  return packWeekSegments(buildWeekSegmentsRaw(events, weekDays), firstId);
 }
 
 /**

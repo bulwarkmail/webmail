@@ -12,7 +12,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { isDesktopApp } from "@/lib/desktop/bridge";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
-const ONBOARDING_KEY = "onboarding_completed";
+import { ONBOARDING_KEY } from "@/lib/welcome-tips";
 
 /** Whether the welcome tips are due on this device. Read after mount: localStorage. */
 export function useWelcomeBannerDue(): boolean {

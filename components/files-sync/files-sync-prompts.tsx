@@ -8,7 +8,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { useFilesSyncStore } from "@/stores/files-sync-store";
 import type { FilesRoot } from "@/lib/desktop/types";
 import type { FilesSyncRootStatus } from "@/lib/files-sync/types";
-import { rootName } from "./files-sync-text";
+import { massDeleteText } from "./files-sync-text";
+import { FilesFlushDialog } from "./files-sync-flush";
 
 /*
  * The mass-delete question (FILES-SYNC-BRIEF: more than 50 items or more than half a
@@ -37,13 +38,14 @@ export function useInlineMassDeleteQuestions(): void {
   }, []);
 }
 
-/** The question's text, for a root in `confirm-delete`. */
+/**
+ * The question's text, for a root in `confirm-delete`. `deletedOn` is where the items were
+ * deleted (MassDeleteOrigin); the question is about the other side. The drive is "Files drive"
+ * on both sides, never the address it's registered with.
+ */
 export function useMassDeleteText(root: FilesRoot, massDelete: NonNullable<FilesSyncRootStatus["massDelete"]>): string {
   const t = useTranslations("files_sync");
-  // The side the items went from: this computer's folder, or the Files folder.
-  return massDelete.side === "local"
-    ? t("mass_delete.local", { count: massDelete.count, folder: rootName(root, t("drive.root_name")) })
-    : t("mass_delete.remote", { count: massDelete.count, folder: root.remoteLabel || t("drive.root_name") });
+  return massDeleteText(t, root, massDelete);
 }
 
 interface AnswerButtonsProps {
@@ -80,7 +82,7 @@ export function MassDeleteAnswers({ rootId, count, onAnswered }: AnswerButtonsPr
 
 /** The question inside a folder's row on the settings page. */
 export function MassDeleteQuestion({ root, status }: { root: FilesRoot; status: FilesSyncRootStatus }) {
-  const massDelete = status.massDelete ?? { count: 0, side: "local" as const };
+  const massDelete = status.massDelete ?? { count: 0, deletedOn: "this-computer" as const };
   const text = useMassDeleteText(root, massDelete);
   return (
     <div role="group" aria-label={text} className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 space-y-3" data-files-sync-question={root.id}>
@@ -125,11 +127,23 @@ function PromptDialog({ root, status, onLater }: { root: FilesRoot; status: File
 }
 
 /**
- * App-wide: asks about a mass delete wherever the user is, one root at a time.
+ * App-wide: the questions Files on this computer asks wherever the user is. Uploading what
+ * waits before a root stops (FilesFlushDialog), and a mass delete, one root at a time.
+ */
+export function FilesSyncPrompts() {
+  return (
+    <>
+      <FilesFlushDialog />
+      <MassDeletePrompt />
+    </>
+  );
+}
+
+/**
  * "Decide later" hides it for this question; the folder's row on the settings page
  * still asks, and the pair stays paused until then.
  */
-export function FilesSyncPrompts() {
+function MassDeletePrompt() {
   const available = useFilesSyncStore((s) => s.available);
   const roots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);
@@ -138,7 +152,7 @@ export function FilesSyncPrompts() {
   const [later, setLater] = useState<ReadonlySet<string>>(() => new Set());
 
   if (!available || !controller || pageAsks) return null;
-  const keyOf = (s: FilesSyncRootStatus) => `${s.rootId}:${s.massDelete?.side}:${s.massDelete?.count}`;
+  const keyOf = (s: FilesSyncRootStatus) => `${s.rootId}:${s.massDelete?.deletedOn}:${s.massDelete?.count}`;
   const root = roots.find((r) => {
     const s = status[r.id];
     return s?.state === "confirm-delete" && !!s.massDelete && !later.has(keyOf(s));

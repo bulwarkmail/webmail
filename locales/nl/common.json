@@ -109,6 +109,33 @@
     "code_label": "Verificatiecode",
     "verify": "Bevestigen"
   },
+  "ux_p3_words": {
+    "appearance_description": "Wijzig hoe {appName} eruitziet.",
+    "text_size_app": "Schaalt alle tekst in de app. 100% is de normale grootte.",
+    "scrollbars_app": "Gebruikt de eigen schuifbalken van het systeem, die breder zijn en makkelijker vast te pakken.",
+    "voice_app": "De stem die berichten voorleest. De lijst toont de stemmen die deze computer heeft voor de taal van de interface.",
+    "voice_default_app": "Systeemstem",
+    "visual_alerts_app": "Laat de venstertitel langzaam knipperen als er nieuwe e-mail of een herinnering binnenkomt, en houdt herinneringen in beeld tot u ze sluit.",
+    "sounds_link_app": "Meldingsgeluiden en het aantal ongelezen op het taakbalkpictogram stelt u in op de pagina Meldingen.",
+    "writing_language_app": "De taal waarin u meestal schrijft. Proeflezen en spellingcontrole gebruiken die.",
+    "badge_all_app": "Het getal op het taakbalkpictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op.",
+    "badge_all_browser": "Het getal op het tabblad en het app-pictogram telt de inboxen van alle aangemelde accounts bij elkaar op.",
+    "dnd_title": "Niet storen",
+    "pause_label": "Meldingen pauzeren",
+    "pause_description": "Geen geluiden, pop-ups of gesproken aankondigingen voor nieuwe e-mail totdat u dit weer uitzet.",
+    "dnd_link_app": "Meldingen pauzeren en stille uren instellen doet u op de pagina Meldingen.",
+    "dnd_link_browser": "Meldingen pauzeren doet u op de pagina Meldingen.",
+    "backup_app": "Exporteer uw instellingen naar een bestand en importeer ze op uw andere apparaten.",
+    "sync_app": "Andere apparaten die met dit account zijn aangemeld, krijgen dezelfde instellingen.",
+    "progress_attachments": "Bijlagen worden gedownload",
+    "progress_events": "Afspraken worden gedownload",
+    "progress_contacts": "Contacten worden gedownload",
+    "progress_files_list": "Bestanden worden opgesomd",
+    "progress_other": "Bezig met downloaden",
+    "keep_description": "Bewaart uw e-mail, agenda, contacten en de bestanden die u offline houdt in Bestanden versleuteld op dit apparaat. Offline kunt u e-mail lezen, markeren en verplaatsen, en wat u schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
+    "filter_value_placeholder": "Waarde",
+    "filter_values_hint": "Scheid meerdere waarden met komma's."
+  },
   "sidebar": {
     "close": "Sluiten",
     "compose": "Nieuw bericht",
@@ -926,6 +953,13 @@
     "restore_to": "Terugzetten naar {folder}",
     "delete_forever": "Definitief verwijderen"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Naar Postvak IN",
+    "delete_forever_title": "Dit bericht definitief verwijderen?",
+    "delete_forever_batch_title": "{count, plural, one {Dit bericht definitief verwijderen?} other {Deze # berichten definitief verwijderen?}}",
+    "delete_forever_message": "Je kunt het niet terughalen.",
+    "delete_forever_batch_message": "{count, plural, one {Je kunt het niet terughalen.} other {Je kunt ze niet terughalen.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "Van {domain}, buiten je organisatie",
@@ -982,10 +1016,10 @@
     "forward_message": "Doorsturen",
     "from": "Van",
     "to": "Aan",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Onderwerp",
-    "body_placeholder": "Schrijf je bericht...",
+    "body_placeholder": "Schrijf je bericht…",
     "send": "Verzenden",
     "cancel": "Annuleren",
     "attach": "Bijlage toevoegen",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Als je server dit adres niet accepteert als envelopafzender, wordt daar {identity} gebruikt, en ontvangers kunnen dat zien in de Return-Path-header."
     },
-    "save_as_template": "Opslaan als sjabloon",
+    "save_as_template": "Opslaan als sjabloon…",
     "attach_from_device": "Uploaden vanaf dit apparaat",
     "templates_menu": "Sjablonen",
-    "insert_template": "Sjabloon invoegen",
+    "insert_template": "Sjabloon invoegen…",
     "options": "Opties",
     "option_plain_text": "Platte tekst",
     "option_plain_text_hint": "Verzenden zonder opmaak",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} in alle accounts)",
     "title_all_accounts_only": "{name} ({total} in alle accounts)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Geen resultaten gevonden} one {# gesprek gevonden} other {# gesprekken gevonden}}",
+    "name_unread_sub": "{name}, {count} ongelezen, nog {sub} in submappen",
+    "name_unread_only_sub": "{name}, {sub} ongelezen in submappen",
+    "sub_unread": "{sub} ongelezen in submappen"
+  },
   "uxs_folders": {
     "manage_accounts": "Accounts beheren…",
     "apply_to_existing": "{count, plural, one {Toepassen op # bestaand bericht in {folder}} other {Toepassen op # bestaande berichten in {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
     "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Toont de accountwisselaar boven de mappen, met Nieuw bericht eronder. Zet dit uit om Nieuw bericht op die plek te zetten."
   },
   "mail_p2_conv": {
     "show_message": "Bericht tonen",
@@ -5278,6 +5321,12 @@
     "declined_many": "U hebt {count} afspraken van deze reeks afgeslagen.",
     "answers_series": "Uw antwoord geldt voor alle afspraken in de reeks."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "tot {time}",
+    "week_all_days": "Hele week tonen",
+    "week_days_short": "{count, plural, one {# dag} other {# dagen}}",
+    "print": "Afdrukken…"
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",
@@ -5589,6 +5638,12 @@
     "import_to_mail_failed": "{name} kon niet worden geïmporteerd.",
     "import_contacts": "Importeren in contacten…",
     "add_to_calendar": "Aan agenda toevoegen…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Bewerkte bestanden",
+    "hide": "Verbergen",
+    "discard_detail_file": "Je wijzigingen in deze kopie worden verwijderd. Het bestand in Bestanden verandert niet.",
+    "saved_auto": "{name} opgeslagen in Bestanden. Latere opslagen vanuit het programma gaan er vanzelf heen."
   },
   "smime": {
     "your_certificates": "Uw certificaten",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Wijzigen hoe Bulwark verbinding maakt?",
+      "message": "Bulwark start opnieuw en vraagt hoe het verbinding moet maken: met je e-mailadres of via de Bulwark van je organisatie. Je accounts op deze computer blijven aangemeld.",
+      "confirm": "Wijzigen",
+      "org_link": "In plaats daarvan de Bulwark van mijn organisatie gebruiken",
+      "add_account": "Account toevoegen…"
+    },
+    "picture": {
+      "button": "Afbeelding",
+      "title": "Afbeelding invoegen",
+      "address": "Webadres van de afbeelding",
+      "address_hint": "De afbeelding blijft op het web en wordt van daar getoond.",
+      "description": "Beschrijving",
+      "invalid": "Voer een webadres in dat begint met https://.",
+      "insert": "Invoegen"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark openen",
+      "done_as": "Aangemeld als {address}. Je kunt dit tabblad sluiten."
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Foto",
     "merge_kept": "Blijft bewaard",
     "import_show": "Tonen"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contact geselecteerd} other {# contacten geselecteerd}}",
+    "selection_more": "en nog {count}",
+    "no_addresses": "Geen van de geselecteerde contacten heeft een e-mailadres.",
+    "task_open": "Openen",
+    "due_next_week": "Volgende week",
+    "due_none": "Geen vervaldatum",
+    "due_pick": "Datum kiezen…",
+    "move_to_list": "Naar lijst verplaatsen",
+    "dupes_legend": "{count, plural, one {1 staat al in Contacten:} other {# staan al in Contacten:}}",
+    "dupes_skip": "Overslaan",
+    "dupes_update": "Bestaande contacten bijwerken",
+    "dupes_updates": "Werkt het contact bij",
+    "upload_cancelled": "Uploaden geannuleerd",
+    "upload_cancelled_partial": "{count, plural, one {1 bestand was} other {# bestanden waren}} al geüpload voordat u annuleerde",
+    "download_cancelled": "Download geannuleerd"
   },
   "desktopEdit": {
     "edit": "Bewerken",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Gestopt"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wijzigingen uploaden voordat het station uitgaat",
+      "title_sign_out": "Wijzigingen uploaden voordat u zich afmeldt",
+      "title_stop_folder": "Wijzigingen uploaden voordat de map stopt met synchroniseren",
+      "cannot_title": "Sommige wijzigingen kunnen nu niet worden geüpload",
+      "waiting": "Nog te uploaden: {names}",
+      "progress": "{done} van {total} geüpload",
+      "cannot_offline": "De server is niet bereikbaar. Nog niet geüpload: {names}",
+      "cannot_other": "Deze kunnen niet worden geüpload: {names}. Recente activiteit in Instellingen vertelt waarom.",
+      "go_note_drive": "Als u nu doorgaat, wordt wat niet is geüpload gekopieerd naar Documenten\\Bulwark – not uploaded. Er gaat niets verloren.",
+      "go_note_folder": "Als u nu doorgaat, blijft wat niet is geüpload in de map op deze computer.",
+      "keep_turn_off": "Station aan laten",
+      "keep_sign_out": "Aangemeld blijven",
+      "keep_stop_folder": "Blijven synchroniseren",
+      "go_turn_off": "Nu uitzetten",
+      "go_sign_out": "Nu afmelden",
+      "go_stop_folder": "Nu stoppen met synchroniseren"
+    },
+    "drive": {
+      "off_note": "Als u dit uitzet, verdwijnt het station uit Verkenner. Uw bestanden blijven in Bestanden.",
+      "rescued": "Niet-geüploade bestanden ({count}) staan nu in {folder}.",
+      "rescued_open": "Map openen",
+      "rescued_dismiss": "Sluiten",
+      "start_at_login": "Bulwark starten bij aanmelden bij Windows",
+      "start_at_login_why": "Het station heeft Bulwark nodig, net als OneDrive.",
+      "closed_warning": "Bestanden op het station gaan niet open zolang Bulwark gesloten is.",
+      "where": "In Verkenner als Bulwark Files",
+      "where_letter": "In Verkenner als Bulwark Files ({letter}:)",
+      "open": "Openen",
+      "letter_note": "Via de letter toont Verkenner geen synchronisatiestatus en geen ‘Altijd op dit apparaat bewaren’. Die ziet u onder Bulwark Files in Verkenner.",
+      "letter_failed": "De stationsletter kon niet worden ingesteld. Probeer het opnieuw."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Bijgewerkt",
+      "syncing": "Bulwark Files: Synchroniseren. Nog: {count}",
+      "paused": "Bulwark Files: Gepauzeerd",
+      "offline": "Bulwark Files: Offline. Wachtend: {count}",
+      "question": "Bulwark Files: Wacht op uw antwoord",
+      "error": "Bulwark Files: Fout"
+    },
+    "notify": {
+      "conflict_title": "Een bestand is op twee plekken gewijzigd",
+      "problem_title": "Een bestand kan niet worden gesynchroniseerd"
+    },
+    "activity": {
+      "waiting_count": "Wijzigingen die op de server wachten: {count}",
+      "disk_name": "{path} in Bestanden heet op deze computer {detail}, omdat sommige tekens hier niet zijn toegestaan",
+      "disk_case": "{path} in Bestanden heet op deze computer {detail}, omdat hier al een naam staat die alleen in hoofdletters en kleine letters verschilt",
+      "disk_group": "Namen in Bestanden die deze computer niet toestaat: {count}. Ze hebben hier een iets andere naam.",
+      "show": "Weergeven",
+      "hide": "Verbergen"
+    },
+    "cant_sync": {
+      "title": "Kan niet synchroniseren"
+    },
+    "folders": {
+      "stop": "Stoppen met synchroniseren…",
+      "pick_title_known": "Met welke map in Bestanden moet {name} gelijk blijven?",
+      "pick_confirm_known": "Gelijk houden"
+    },
+    "pin": {
+      "keep": "Altijd op dit apparaat bewaren",
+      "free": "Ruimte vrijmaken",
+      "failed": "Dat is niet gelukt. Probeer het opnieuw in Verkenner."
+    },
+    "account": {
+      "of": "Bestanden van {address}",
+      "choose": "Bestanden van"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Snel opstellen",
     "menu": "Snel opstellen",
@@ -7802,6 +7967,10 @@
     "missing": "\"{name}\" bestaat niet meer.",
     "too_large": "\"{name}\" is groter dan {max} en kan niet worden bijgevoegd.",
     "failed": "\"{name}\" kon niet worden bijgevoegd. Probeer het opnieuw."
+  },
+  "composeRecentLimit": {
+    "too_large": "Te groot",
+    "too_large_hint": "Groter dan de server aanneemt ({max})"
   },
   "compose_windows": {
     "more_formatting": "Meer opmaak",
@@ -7868,6 +8037,17 @@
     "done": "Klaar",
     "join_host": "Deelnemen ({host})",
     "join_named": "Deelnemen: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Ontwikkelaarstools",
+    "updates_label": "Naar updates zoeken",
+    "search": {
+      "quick_compose": "snel opstellen nieuw bericht overal sneltoets",
+      "files_drive": "ruimte vrijmaken OneDrive Dropbox Verkenner Finder stationsletter bestanden op aanvraag",
+      "offline_space": "ruimte vrijmaken schijfruimte opslag",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID vingerafdruk gezicht passkey toegangssleutel"
+    }
   },
   "desktop_policy": {
     "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",

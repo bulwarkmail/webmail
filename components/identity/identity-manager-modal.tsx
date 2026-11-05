@@ -331,8 +331,9 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                         >
                           <Pencil />
                         </IconButton>
-                        {/* Read-only identities show no Delete (R11); the line below says why. */}
-                        {identity.mayDelete && (
+                        {/* Read-only identities show no Delete (R11); the line below says why.
+                            Nor the primary address: mail goes out from it (settings-p3-20). */}
+                        {identity.mayDelete && identities[0]?.id !== identity.id && (
                           <IconButton
                             label={t('delete_button')}
                             onClick={() => handleDelete(identity)}

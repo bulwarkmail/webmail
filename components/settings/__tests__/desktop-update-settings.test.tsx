@@ -106,7 +106,7 @@ describe('updates in the settings', () => {
   it('on an MSI it says a version exists and offers no download to a user who cannot install it', async () => {
     bridge({ status: 'available', target: '1.1.0', ability: 'notify', perMachine: true });
     render(<DesktopUpdateSettings />);
-    await screen.findByText('status_available_per_machine');
+    await screen.findByText(/status_available_per_machine$/);
     expect(screen.queryByRole('button', { name: 'download' })).toBeNull();
   });
 
@@ -120,6 +120,7 @@ describe('updates in the settings', () => {
   it('says the organisation turned updates off', async () => {
     bridge({ status: 'off', allowed: false });
     render(<DesktopUpdateSettings />);
-    await screen.findByText('status_off');
+    // The version leads the description now; the row is named "Check for updates" (settings-p3-7).
+    await screen.findByText(/status_off$/);
   });
 });

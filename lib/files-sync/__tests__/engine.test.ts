@@ -241,7 +241,7 @@ describe('deletes', () => {
     const s = await setup({ seed: many });
     s.disk.deleteUser('r1', 'bulk');
     await s.sync();
-    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, side: 'remote' } });
+    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, deletedOn: 'this-computer' } });
     expect(remoteUnder(s.server)).toContain('bulk/f0.txt');
     expect(s.kinds()).toContain('mass-delete  (61)');
     s.engine.confirmMassDelete('r1', false);
@@ -264,7 +264,7 @@ describe('deletes', () => {
     const s = await setup({ seed: many });
     s.server.destroyTree(s.server.find('Sync/bulk')!.id);
     await s.sync();
-    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, side: 'local' } });
+    expect(s.engine.status().r1).toMatchObject({ state: 'confirm-delete', massDelete: { count: 61, deletedOn: 'files' } });
     expect(s.disk.trashed).toEqual([]);
     s.engine.confirmMassDelete('r1', false);
     await s.engine.settled();
@@ -302,7 +302,10 @@ describe('names the disk cannot hold', () => {
       },
     });
     expect(s.disk.listing('r1')).toEqual(['CON_.txt', 'Report.txt', 'a：b？.txt', 'report (2).txt', 'trail._']);
-    expect(s.kinds()).toEqual(expect.arrayContaining(['renamed-for-disk a：b？.txt (a：b？.txt)', 'renamed-for-disk report (2).txt (report (2).txt)']));
+    // The line names the file as Files has it and as it is here, and why (files-p3-12).
+    expect(s.kinds()).toEqual(expect.arrayContaining(['renamed-for-disk a:b?.txt (a：b？.txt)', 'renamed-for-disk report.txt (report (2).txt)']));
+    const why = Object.fromEntries(s.engine.activity.filter((entry) => entry.kind === 'renamed-for-disk').map((entry) => [entry.path, entry.messageKey]));
+    expect(why).toMatchObject({ 'a:b?.txt': 'disk_name', 'report.txt': 'disk_case', 'CON.txt': 'disk_name' });
     const id = s.server.find('Sync/a:b?.txt')!.id;
     // An edit here goes to the same node, under the name it has in Files.
     s.disk.write('r1', 'a：b？.txt', 'edited');
@@ -367,10 +370,23 @@ describe('reading and uploading', () => {
     await s.sync();
     await s.sync();
     expect(s.server.uploads).toEqual([]);
+    // Listed as can't sync until it fits or goes (files-p3-13).
+    expect(s.engine.status().r1.cantSync).toEqual([{ path: 'huge.bin', limit: 10 }]);
     expect(s.engine.activity.filter((entry) => entry.kind === 'too-large')).toEqual([expect.objectContaining({ path: 'huge.bin', detail: '10', messageKey: 'errors.too_large' })]);
     s.disk.write('r1', 'huge.bin', 'small');
     await s.sync();
     expect(s.server.content(s.server.find('Sync/huge.bin')!.id)).toBe('small');
+    expect(s.engine.status().r1.cantSync).toEqual([]);
+  });
+
+  it("forgets a file it couldn't upload once it's gone from here", async () => {
+    const s = await setup({ server: { maxSizeUpload: 10 } });
+    s.disk.write('r1', 'huge.bin', 'x'.repeat(20));
+    await s.sync();
+    expect(s.engine.status().r1.cantSync).toHaveLength(1);
+    s.disk.deleteUser('r1', 'huge.bin');
+    await s.sync();
+    expect(s.engine.status().r1.cantSync).toEqual([]);
   });
 
   it('writes a downloaded file in pieces and leaves nothing half written', async () => {
@@ -390,8 +406,9 @@ describe('offline', () => {
     s.disk.write('r1', 'a.txt', 'v2');
     s.disk.write('r1', 'b.txt', 'new');
     await s.sync();
-    expect(s.engine.status().r1.state).toBe('offline');
-    expect(s.engine.activity[0]).toMatchObject({ kind: 'waiting', messageKey: 'errors.offline' });
+    expect(s.engine.status().r1).toMatchObject({ state: 'offline', pending: 2 });
+    // One line for the root, with how many wait (files-p3-6).
+    expect(s.engine.activity[0]).toMatchObject({ kind: 'waiting', path: '', detail: '2', messageKey: 'errors.offline', account: 'a1' });
     await s.sync();
     expect(s.engine.activity.filter((entry) => entry.kind === 'waiting')).toHaveLength(1);
     s.server.offline = false;
@@ -411,6 +428,47 @@ describe('offline', () => {
     s.engine.retryNow();
     await s.engine.settled();
     expect(remoteUnder(s.server)).toEqual(['u.txt']);
+  });
+});
+
+describe('before a root stops (files-p3-2)', () => {
+  it('names what waits here, uploads it, and says done once nothing waits', async () => {
+    const s = await setup({ seed: (server, disk, rootId) => disk.write(rootId, 'a.txt', 'v1') });
+    s.server.offline = true;
+    s.disk.write('r1', 'a.txt', 'v2');
+    s.disk.write('r1', 'Docs/b.txt', 'new');
+    s.disk.write('r1', 'desktop.ini', '[x]');
+    expect((await s.engine.pendingHere('r1'))?.sort()).toEqual(['Docs/b.txt', 'a.txt']);
+    const seen: number[] = [];
+    expect(await s.engine.flushRoot('r1', { onProgress: (waiting) => seen.push(waiting.length) })).toBe('offline');
+    expect(seen).toEqual([2, 2]);
+    s.server.offline = false;
+    expect(await s.engine.flushRoot('r1')).toBe('done');
+    expect(s.server.content(s.server.find('Sync/a.txt')!.id)).toBe('v2');
+    expect(s.server.content(s.server.find('Sync/Docs/b.txt')!.id)).toBe('new');
+    expect(await s.engine.pendingHere('r1')).toEqual([]);
+  });
+
+  it('gives up on a file the server will never take, and stops when asked', async () => {
+    const s = await setup({ server: { maxSizeUpload: 10 } });
+    s.disk.write('r1', 'huge.bin', 'x'.repeat(20));
+    expect(await s.engine.flushRoot('r1')).toBe('stuck');
+    expect(await s.engine.pendingHere('r1')).toEqual(['huge.bin']);
+    const abort = new AbortController();
+    abort.abort();
+    expect(await s.engine.flushRoot('r1', { signal: abort.signal })).toBe('cancelled');
+    expect(await s.engine.flushRoot('nope')).toBe('gone');
+  });
+
+  it("the drive: only what was written here waits, not placeholders or files opened", async () => {
+    const s = await setup({ drive: true, seed: (server) => { server.file('online.txt', null, 'online'); server.file('opened.txt', null, 'opened'); server.file('edited.txt', null, 'v1'); } });
+    const request = s.disk.requestFetch('r1', 'opened.txt');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(s.disk.fetchFailed.has(request.fetchId)).toBe(false);
+    s.server.offline = true;
+    s.disk.write('r1', 'edited.txt', 'v2');
+    s.disk.write('r1', 'made here.txt', 'new');
+    expect((await s.engine.pendingHere('r1'))?.sort()).toEqual(['edited.txt', 'made here.txt']);
   });
 });
 
@@ -543,6 +601,20 @@ describe('the drive', () => {
     expect(s.disk.fetchFailed.get(third.fetchId)).toBe('missing');
     s.server.offline = true;
     s.disk.supplied.clear();
+  });
+
+  it('knows what "Always keep on this device" covers: its own pin, or a folder\'s above unless it has its own (files-p3-8)', async () => {
+    const s = await drive((server) => {
+      const docs = server.folder('Docs');
+      server.file('a.txt', docs.id, 'a');
+      server.file('b.txt', docs.id, 'b');
+      server.file('c.txt', null, 'c');
+    });
+    s.disk.node('r1', 'Docs').placeholder!.pin = 'pinned';
+    s.disk.node('r1', 'Docs/b.txt').placeholder!.pin = 'unpinned';
+    await s.sync();
+    const kept = Object.keys(s.engine.keptOnDevice('a1')).sort();
+    expect(kept).toEqual([s.server.find('Docs')!.id, s.server.find('Docs/a.txt')!.id].sort());
   });
 
   it('updates a placeholder when the file changed in Files', async () => {

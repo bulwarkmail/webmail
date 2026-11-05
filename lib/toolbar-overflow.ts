@@ -41,6 +41,19 @@ export function itemsToHide(
   overflow: number,
   gapOf: Record<string, number>,
 ): number[] {
+  return planToHide(items, overflow, gapOf).hide;
+}
+
+/**
+ * itemsToHide, and whether hiding them is enough: `fits` is false when even
+ * all of `items` gone leave the toolbar too wide, so the caller can drop the
+ * main buttons' labels first instead (mail-p2-15).
+ */
+export function planToHide(
+  items: MeasuredToolbarItem[],
+  overflow: number,
+  gapOf: Record<string, number>,
+): { hide: number[]; fits: boolean } {
   const visible: Record<string, number> = {};
   for (const item of items) if (item.width > 0) visible[item.group] = (visible[item.group] ?? 0) + 1;
   const hide: number[] = [];
@@ -52,5 +65,5 @@ export function itemsToHide(
     visible[item.group] = left - 1;
     hide.push(i);
   });
-  return hide;
+  return { hide, fits: remaining <= 0 };
 }

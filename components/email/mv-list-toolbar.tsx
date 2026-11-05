@@ -126,6 +126,8 @@ export function MvListToolbar({
   const tSpam = useTranslations("email_viewer.spam");
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations("email_list.confirm_remove");
+  const tP3 = useTranslations("mail_p3_actions");
+  const tActions = useTranslations("reader_actions");
 
   const client = useAuthStore((s) => s.client);
   const {
@@ -259,11 +261,12 @@ export function MvListToolbar({
       const permanent = bulkDeleteIsPermanent(target);
       if (shouldConfirmBulkDelete(target)) {
         const confirmed = await confirmDialog({
-          title: permanent ? t("permanent_delete_confirm_batch_title") : tBatch("delete_confirm_title"),
+          // One wording for a delete for good (mail-p3-5).
+          title: permanent ? tP3("delete_forever_batch_title", { count: selectionCount }) : tBatch("delete_confirm_title"),
           message: permanent
-            ? t("permanent_delete_confirm_batch_message", { count: selectionCount })
+            ? tP3("delete_forever_batch_message", { count: selectionCount })
             : tBatch("delete_confirm_message", { count: selectionCount }),
-          confirmText: permanent ? t("permanent_delete") : tBatch("delete"),
+          confirmText: permanent ? tActions("delete_forever") : tBatch("delete"),
           variant: "destructive",
         });
         if (!confirmed) return;

@@ -27,6 +27,11 @@ export const TOAST_PHONE_EDGE = 12;
 export const TOAST_GAP = 12;
 /** The stack's width when it can't be measured (w-[360px] in toast.tsx). */
 const STACK_WIDTH = 360;
+/** What of a composer's text area must stay free above the stack: three lines (px). */
+export const TOAST_EDITOR_FREE = 72;
+const COMPOSER_FOOTER = '[data-composer-footer]';
+const COMPOSER_ROOT = '[data-testid="email-composer"]';
+const COMPOSER_EDITOR = '.ProseMirror, textarea';
 
 export interface ToastPlacement {
   /** From the window's bottom edge to the stack's bottom (px). */
@@ -70,22 +75,50 @@ export function computeToastPlacement(stack: HTMLElement, opts: { phone: boolean
     }
   }
 
-  // The columns the stack covers.
-  const left = end === null ? TOAST_PHONE_EDGE : opts.rtl ? end : vw - end - width;
-  const right = end === null ? vw - TOAST_PHONE_EDGE : left + width;
+  // Above what is docked at the bottom under the stack's columns. Only what
+  // is on screen and sits in the lower half counts: a box scrolled out of
+  // view, or one standing in the middle, would put the toasts over the content.
+  const bottomAt = (atEnd: number | null): { bottom: number; lifter: Element | null } => {
+    const left = atEnd === null ? TOAST_PHONE_EDGE : opts.rtl ? atEnd : vw - atEnd - width;
+    const right = atEnd === null ? vw - TOAST_PHONE_EDGE : left + width;
+    let bottom = opts.phone ? TOAST_PHONE_EDGE : TOAST_EDGE;
+    let lifter: Element | null = null;
+    for (const el of document.querySelectorAll(TOAST_AVOID_BOTTOM)) {
+      if (stack.contains(el)) continue;
+      const r = shownRect(el);
+      if (!r) continue;
+      if (r.right <= left || r.left >= right) continue;
+      if (r.top >= vh || r.bottom <= 0) continue;
+      if (r.top < vh / 2) continue;
+      const above = vh - r.top + TOAST_GAP;
+      if (above > bottom) {
+        bottom = above;
+        lifter = el;
+      }
+    }
+    return { bottom, lifter };
+  };
 
-  // Above what is docked at the bottom under those columns. Only what is on
-  // screen and sits in the lower half counts: a box scrolled out of view, or
-  // one standing in the middle, would put the toasts over the content.
-  let bottom = opts.phone ? TOAST_PHONE_EDGE : TOAST_EDGE;
-  for (const el of document.querySelectorAll(TOAST_AVOID_BOTTOM)) {
-    if (stack.contains(el)) continue;
-    const r = shownRect(el);
-    if (!r) continue;
-    if (r.right <= left || r.left >= right) continue;
-    if (r.top >= vh || r.bottom <= 0) continue;
-    if (r.top < vh / 2) continue;
-    bottom = Math.max(bottom, vh - r.top + TOAST_GAP);
+  const { bottom, lifter } = bottomAt(end);
+  // Above a composer's bottom bar the stack may cover what is being written:
+  // "Draft saved" lay over the docked reply's text for its whole time at
+  // 1366×768 (compose-p3-14). With less than three lines left free above it,
+  // it goes beside the composer, over the list, where there is room.
+  if (end !== null && lifter?.matches(COMPOSER_FOOTER)) {
+    const root = lifter.closest(COMPOSER_ROOT);
+    const editor = root?.querySelector(COMPOSER_EDITOR);
+    const rootBox = root ? shownRect(root) : null;
+    const editorBox = editor ? shownRect(editor) : null;
+    const height = stack.offsetHeight;
+    if (rootBox && editorBox && height > 0) {
+      const stackTop = vh - bottom - height;
+      const free = stackTop - Math.max(editorBox.top, rootBox.top);
+      const beside = opts.rtl ? vw - rootBox.right : rootBox.left;
+      if (free < TOAST_EDITOR_FREE && beside >= width + 2 * TOAST_EDGE) {
+        const besideEnd = opts.rtl ? rootBox.right + TOAST_EDGE : vw - rootBox.left + TOAST_EDGE;
+        return { bottom: Math.round(bottomAt(besideEnd).bottom), end: Math.round(besideEnd) };
+      }
+    }
   }
   return { bottom: Math.round(bottom), end };
 }

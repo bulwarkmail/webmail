@@ -184,11 +184,36 @@ describe('other sources', () => {
 });
 
 describe('discarding', () => {
-  it('goes to main, which asks natively about edits', async () => {
+  // pim-p3-6: the app's own question (the Bulwark window in the desktop app), not the OS's message box.
+  it('asks with the app\'s own question, then main deletes without asking again', async () => {
     show(session());
     fireEvent.click(screen.getByRole('button', { name: 'discard a.docx' }));
-    await waitFor(() => expect(bridge.edit.discard).toHaveBeenCalledWith('s1'));
+    expect(await screen.findByText('discard_title')).toBeTruthy();
+    expect(screen.getByText('discard_detail outside_note')).toBeTruthy();
+    expect(bridge.edit.forceDiscard).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'discard_confirm' }));
+    await waitFor(() => expect(bridge.edit.forceDiscard).toHaveBeenCalledWith('s1'));
+    expect(bridge.edit.discard).not.toHaveBeenCalled();
     expect(bridge.dialogs.confirm).not.toHaveBeenCalled();
+  });
+
+  it('keeps the file when the question is cancelled', async () => {
+    show(session());
+    fireEvent.click(screen.getByRole('button', { name: 'discard a.docx' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'cancel' }));
+    await waitFor(() => expect(screen.queryByText('discard_title')).toBeNull());
+    expect(bridge.edit.forceDiscard).not.toHaveBeenCalled();
+    expect(bridge.edit.discard).not.toHaveBeenCalled();
+  });
+
+  it('the X only hides the card until the next save', () => {
+    const view = show(session());
+    fireEvent.click(screen.getByRole('button', { name: 'hide a.docx' }));
+    expect(screen.queryByTestId('edited-file')).toBeNull();
+    expect(bridge.edit.discard).not.toHaveBeenCalled();
+    act(() => useEditSessions.setState({ sessions: [session({ version: 2 })] }));
+    view.rerender(<EditedFilesHost />);
+    expect(screen.getByTestId('edited-file')).toBeTruthy();
   });
 });
 

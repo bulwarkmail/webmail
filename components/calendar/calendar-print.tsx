@@ -574,6 +574,7 @@ function AgendaPrint({
   const t = useTranslations("calendar");
   const intlFormatter = useDisplayDateFormatter();
   const formatTime = useTimeFormatter(timeFormat);
+  const shownName = useCollectionNames();
 
   if (days.length === 0) return <p className="pr-empty">{t("events.no_events")}</p>;
 
@@ -590,7 +591,7 @@ function AgendaPrint({
     const calendar = calendarMap.get(getPrimaryCalendarId(event) ?? "");
     const cancelled = event.status === "cancelled";
     const inactive = cancelled || isDeclinedByUser(event, currentUserEmails);
-    const meta = [primaryLocationName(event), calendar?.name].filter(Boolean).join(" · ");
+    const meta = [primaryLocationName(event), calendar ? shownName.calendar(calendar) : null].filter(Boolean).join(" · ");
     return (
       <div
         key={event.id}

@@ -109,6 +109,33 @@
     "code_label": "Kod uwierzytelniający",
     "verify": "Zweryfikuj"
   },
+  "ux_p3_words": {
+    "appearance_description": "Zmień wygląd aplikacji {appName}.",
+    "text_size_app": "Skaluje cały tekst w aplikacji. 100% to normalny rozmiar.",
+    "scrollbars_app": "Używa pasków przewijania systemu, które są szersze i łatwiej je chwycić.",
+    "voice_app": "Głos, który czyta wiadomości na głos. Lista pokazuje głosy, które ten komputer ma dla języka interfejsu.",
+    "voice_default_app": "Głos systemowy",
+    "visual_alerts_app": "Powoli miga tytułem okna, gdy przychodzi nowa poczta lub przypomnienie, i zostawia przypomnienia na ekranie, dopóki ich nie zamkniesz.",
+    "sounds_link_app": "Dźwięki powiadomień i liczbę nieprzeczytanych na ikonie na pasku zadań ustawisz na stronie Powiadomienia.",
+    "writing_language_app": "Język, w którym zwykle piszesz. Korzystają z niego korekta i sprawdzanie pisowni.",
+    "badge_all_app": "Liczba na ikonie na pasku zadań i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "badge_all_browser": "Liczba na karcie i ikonie aplikacji sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "dnd_title": "Nie przeszkadzać",
+    "pause_label": "Wstrzymaj powiadomienia",
+    "pause_description": "Bez dźwięków, wyskakujących okien i komunikatów głosowych o nowej poczcie, dopóki znów tego nie wyłączysz.",
+    "dnd_link_app": "Powiadomienia wstrzymasz i godziny ciszy ustawisz na stronie Powiadomienia.",
+    "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia.",
+    "backup_app": "Wyeksportuj ustawienia do pliku i zaimportuj je na innych urządzeniach.",
+    "sync_app": "Inne urządzenia zalogowane na to konto dostają te same ustawienia.",
+    "progress_attachments": "Pobieranie załączników",
+    "progress_events": "Pobieranie wydarzeń",
+    "progress_contacts": "Pobieranie kontaktów",
+    "progress_files_list": "Pobieranie listy plików",
+    "progress_other": "Pobieranie",
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i pliki, które trzymasz offline w Plikach, zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
+    "filter_value_placeholder": "Wartość",
+    "filter_values_hint": "Kilka wartości oddziel przecinkami."
+  },
   "sidebar": {
     "close": "Zamknij",
     "compose": "Napisz",
@@ -926,6 +953,13 @@
     "restore_to": "Przenieś z powrotem do folderu {folder}",
     "delete_forever": "Usuń na zawsze"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Przenieś do Odebranych",
+    "delete_forever_title": "Usunąć tę wiadomość na zawsze?",
+    "delete_forever_batch_title": "{count, plural, one {Usunąć tę wiadomość na zawsze?} other {Usunąć te wiadomości (#) na zawsze?}}",
+    "delete_forever_message": "Nie da się jej odzyskać.",
+    "delete_forever_batch_message": "{count, plural, one {Nie da się jej odzyskać.} other {Nie da się ich odzyskać.}}"
+  },
   "external_mail": {
     "sender_label": "Zewnętrzny",
     "sender_tooltip": "Z domeny {domain}, spoza Twojej organizacji",
@@ -985,7 +1019,7 @@
     "cc": "DW",
     "bcc": "UDW",
     "subject": "Temat",
-    "body_placeholder": "Napisz wiadomość...",
+    "body_placeholder": "Napisz wiadomość…",
     "send": "Wyślij",
     "cancel": "Anuluj",
     "attach": "Załącz",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Jeśli twój serwer nie akceptuje tego adresu jako nadawcy koperty, zostanie użyty {identity}, a odbiorcy zobaczą go w nagłówku Return-Path."
     },
-    "save_as_template": "Zapisz jako szablon",
+    "save_as_template": "Zapisz jako szablon…",
     "attach_from_device": "Prześlij z tego urządzenia",
     "templates_menu": "Szablony",
-    "insert_template": "Wstaw szablon",
+    "insert_template": "Wstaw szablon…",
     "options": "Opcje",
     "option_plain_text": "Zwykły tekst",
     "option_plain_text_hint": "Wyślij bez formatowania",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} we wszystkich kontach)",
     "title_all_accounts_only": "{name} ({total} we wszystkich kontach)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nie znaleziono wyników} one {Znaleziono # konwersację} few {Znaleziono # konwersacje} many {Znaleziono # konwersacji} other {Znaleziono # konwersacji}}",
+    "name_unread_sub": "{name}, nieprzeczytane: {count}, w podfolderach jeszcze {sub}",
+    "name_unread_only_sub": "{name}, nieprzeczytane w podfolderach: {sub}",
+    "sub_unread": "Nieprzeczytane w podfolderach: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Zarządzaj kontami…",
     "apply_to_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości w folderze {folder}} few {Zastosuj do # istniejących wiadomości w folderze {folder}} many {Zastosuj do # istniejących wiadomości w folderze {folder}} other {Zastosuj do # istniejącej wiadomości w folderze {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Pokaż # starszą wiadomość} few {Pokaż # starsze wiadomości} many {Pokaż # starszych wiadomości} other {Pokaż # starszej wiadomości}}",
     "return_to_list_follows_layout": "Dopóki tego nie zmienisz, ustawienie zależy od układu: wyłączone, gdy lista i wiadomość są obok siebie, w innych przypadkach włączone."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Pokazuje przełącznik kont nad folderami, a pod nim przycisk Napisz. Po wyłączeniu przycisk Napisz będzie w jego miejscu."
   },
   "mail_p2_conv": {
     "show_message": "Pokaż wiadomość",
@@ -5278,6 +5321,12 @@
     "declined_many": "Odrzucono {count} spotkań z tej serii.",
     "answers_series": "Twoja odpowiedź dotyczy wszystkich spotkań z serii."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Pokaż cały tydzień",
+    "week_days_short": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+    "print": "Drukuj…"
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",
@@ -5589,6 +5638,12 @@
     "import_to_mail_failed": "Nie udało się zaimportować {name}.",
     "import_contacts": "Importuj do kontaktów…",
     "add_to_calendar": "Dodaj do kalendarza…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Edytowane pliki",
+    "hide": "Ukryj",
+    "discard_detail_file": "Twoje zmiany w tej kopii zostaną usunięte. Plik w Plikach się nie zmieni.",
+    "saved_auto": "Zapisano {name} w Plikach. Kolejne zapisy z jego programu trafią tam same."
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Zmienić sposób łączenia Bulwark?",
+      "message": "Bulwark uruchomi się ponownie i zapyta, jak się połączyć: za pomocą Twojego adresu e-mail lub przez Bulwark Twojej organizacji. Twoje konta na tym komputerze pozostaną zalogowane.",
+      "confirm": "Zmień",
+      "org_link": "Użyj zamiast tego Bulwark mojej organizacji",
+      "add_account": "Dodaj konto…"
+    },
+    "picture": {
+      "button": "Obraz",
+      "title": "Wstaw obraz",
+      "address": "Adres internetowy obrazu",
+      "address_hint": "Obraz zostaje w sieci i jest wyświetlany stamtąd.",
+      "description": "Opis",
+      "invalid": "Wpisz adres internetowy zaczynający się od https://.",
+      "insert": "Wstaw"
+    },
+    "sign_in_page": {
+      "open_app": "Otwórz Bulwark",
+      "done_as": "Zalogowano jako {address}. Możesz zamknąć tę kartę."
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizacje",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Zdjęcie",
     "merge_kept": "Zostaje",
     "import_show": "Pokaż"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Wybrano # kontakt} few {Wybrano # kontakty} other {Wybrano # kontaktów}}",
+    "selection_more": "i {count} więcej",
+    "no_addresses": "Żaden z wybranych kontaktów nie ma adresu e-mail.",
+    "task_open": "Otwórz",
+    "due_next_week": "W przyszłym tygodniu",
+    "due_none": "Bez terminu",
+    "due_pick": "Wybierz datę…",
+    "move_to_list": "Przenieś do listy",
+    "dupes_legend": "{count, plural, one {1 jest już w Kontaktach:} few {# są już w Kontaktach:} other {# jest już w Kontaktach:}}",
+    "dupes_skip": "Pomiń je",
+    "dupes_update": "Zaktualizuj istniejące kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Anulowano przesyłanie",
+    "upload_cancelled_partial": "{count, plural, one {Przed anulowaniem przesłano 1 plik} few {Przed anulowaniem przesłano # pliki} many {Przed anulowaniem przesłano # plików} other {Przed anulowaniem przesłano # pliku}}",
+    "download_cancelled": "Anulowano pobieranie"
   },
   "desktopEdit": {
     "edit": "Edytuj",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Zatrzymano"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Wysyłanie zmian przed wyłączeniem dysku",
+      "title_sign_out": "Wysyłanie zmian przed wylogowaniem",
+      "title_stop_folder": "Wysyłanie zmian przed zatrzymaniem synchronizacji folderu",
+      "cannot_title": "Niektórych zmian nie można teraz wysłać",
+      "waiting": "Pozostało do wysłania: {names}",
+      "progress": "Wysłano {done} z {total}",
+      "cannot_offline": "Nie można połączyć się z serwerem. Jeszcze niewysłane: {names}",
+      "cannot_other": "Nie można wysłać: {names}. Ostatnia aktywność w ustawieniach podaje powód.",
+      "go_note_drive": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie skopiowane do Dokumenty\\Bulwark – not uploaded. Nic nie zginie.",
+      "go_note_folder": "Jeśli przejdziesz dalej teraz, to, czego nie wysłano, zostanie w folderze na tym komputerze.",
+      "keep_turn_off": "Zostaw dysk włączony",
+      "keep_sign_out": "Pozostań zalogowany",
+      "keep_stop_folder": "Synchronizuj dalej",
+      "go_turn_off": "Wyłącz teraz",
+      "go_sign_out": "Wyloguj teraz",
+      "go_stop_folder": "Zatrzymaj synchronizację teraz"
+    },
+    "drive": {
+      "off_note": "Wyłączenie usuwa dysk z Eksploratora plików. Twoje pliki zostają w Plikach.",
+      "rescued": "Niewysłane pliki ({count}) są teraz w {folder}.",
+      "rescued_open": "Otwórz folder",
+      "rescued_dismiss": "Ukryj",
+      "start_at_login": "Uruchamiaj Bulwark po zalogowaniu do Windows",
+      "start_at_login_why": "Dysk potrzebuje działającego Bulwark, tak jak OneDrive.",
+      "closed_warning": "Pliki na dysku nie otworzą się, gdy Bulwark jest zamknięty.",
+      "where": "W Eksploratorze plików jako Bulwark Files",
+      "where_letter": "W Eksploratorze plików jako Bulwark Files ({letter}:)",
+      "open": "Otwórz",
+      "letter_note": "Przez literę Eksplorator plików nie pokazuje stanu synchronizacji ani „Zawsze zachowuj na tym urządzeniu”. Widać je pod Bulwark Files w Eksploratorze.",
+      "letter_failed": "Nie udało się ustawić litery dysku. Spróbuj ponownie."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktualne",
+      "syncing": "Bulwark Files: Synchronizacja. Pozostało: {count}",
+      "paused": "Bulwark Files: Wstrzymano",
+      "offline": "Bulwark Files: Offline. Czeka: {count}",
+      "question": "Bulwark Files: Czeka na Twoją odpowiedź",
+      "error": "Bulwark Files: Błąd"
+    },
+    "notify": {
+      "conflict_title": "Plik zmieniono w dwóch miejscach",
+      "problem_title": "Nie można zsynchronizować pliku"
+    },
+    "activity": {
+      "waiting_count": "Zmiany czekające na serwer: {count}",
+      "disk_name": "{path} w Plikach nazywa się na tym komputerze {detail}, bo niektóre znaki nie są tu dozwolone",
+      "disk_case": "{path} w Plikach nazywa się na tym komputerze {detail}, bo jest tu już nazwa różniąca się tylko wielkością liter",
+      "disk_group": "Nazwy w Plikach niedozwolone na tym komputerze: {count}. Mają tu nieco inne nazwy.",
+      "show": "Pokaż",
+      "hide": "Ukryj"
+    },
+    "cant_sync": {
+      "title": "Nie można zsynchronizować"
+    },
+    "folders": {
+      "stop": "Zatrzymaj synchronizację…",
+      "pick_title_known": "Z którym folderem w Plikach ma być zgodny {name}?",
+      "pick_confirm_known": "Utrzymuj je zgodne"
+    },
+    "pin": {
+      "keep": "Zawsze zachowuj na tym urządzeniu",
+      "free": "Zwolnij miejsce",
+      "failed": "Nie udało się. Spróbuj ponownie w Eksploratorze plików."
+    },
+    "account": {
+      "of": "Pliki konta {address}",
+      "choose": "Pliki konta"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Szybka wiadomość",
     "menu": "Szybka wiadomość",
@@ -7802,6 +7967,10 @@
     "missing": "„{name}” już nie istnieje.",
     "too_large": "„{name}” jest większy niż {max} i nie można go dołączyć.",
     "failed": "Nie udało się dołączyć „{name}”. Spróbuj ponownie."
+  },
+  "composeRecentLimit": {
+    "too_large": "Za duży",
+    "too_large_hint": "Większy, niż przyjmuje serwer ({max})"
   },
   "compose_windows": {
     "more_formatting": "Więcej formatowania",
@@ -7868,6 +8037,17 @@
     "done": "Gotowe",
     "join_host": "Dołącz ({host})",
     "join_named": "Dołącz: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Narzędzia deweloperskie",
+    "updates_label": "Sprawdź aktualizacje",
+    "search": {
+      "quick_compose": "szybkie pisanie nowa wiadomość z dowolnego miejsca skrót globalny",
+      "files_drive": "zwolnij miejsce OneDrive Dropbox Eksplorator Finder litera dysku pliki na żądanie",
+      "offline_space": "zwolnij miejsce miejsce na dysku pamięć",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID odcisk palca twarz klucz dostępu passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",

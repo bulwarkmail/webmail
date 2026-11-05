@@ -29,17 +29,12 @@ vi.mock('@/components/email/email-composer', () => ({
     return <p>stub composer</p>;
   },
 }));
-// With sidebarAccountSwitcher off, Compose sits at the head of the folder
-// sidebar on a desktop (mail-13); by default it is the round button.
-vi.mock('@/components/layout/sidebar', async () => {
-  const { useSettingsStore: settings } = await import('@/stores/settings-store');
-  return {
-    Sidebar: ({ onCompose }: { onCompose?: () => void }) => {
-      const switcherOnTop = settings((s) => s.sidebarAccountSwitcher);
-      return device.isMobile || switcherOnTop ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>;
-    },
-  };
-});
+// A desktop has Compose in the folder sidebar, in place of the account
+// switcher or under it (mail-13, mail-p3-11); a phone the round button.
+vi.mock('@/components/layout/sidebar', () => ({
+  Sidebar: ({ onCompose }: { onCompose?: () => void }) =>
+    device.isMobile ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>,
+}));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
@@ -134,16 +129,18 @@ describe('Mail after the tour on a phone', () => {
     expect(listHidden()).toBe(false);
   });
 
-  // Usability test 2026-11-04, mail-13: on a desktop the round button sat on
-  // the list's rows. It stays by default, with the account switcher at the
-  // head of the folder sidebar; turned off, Compose is there instead.
-  it('draws the round Compose button on a phone, and on a desktop unless Compose is in the sidebar', () => {
+  // Usability test 2026-11-04, mail-13 and mail-p3-11: on a desktop the round
+  // button sat on the list's rows and covered the one under it while
+  // scrolling. A desktop has Compose in the folder sidebar, with the account
+  // switcher there or not; the round button is a phone's.
+  it('draws the round Compose button on a phone only', () => {
     const view = render(<MailApp />);
     expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
 
     device.isMobile = false;
     view.rerender(<MailApp />);
-    expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
+    expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'sidebar.compose' })).toBeTruthy();
 
     act(() => { useSettingsStore.setState({ sidebarAccountSwitcher: false } as never); });
     expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();

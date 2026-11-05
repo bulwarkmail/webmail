@@ -109,6 +109,33 @@
     "code_label": "Ověřovací kód",
     "verify": "Ověřit"
   },
+  "ux_p3_words": {
+    "appearance_description": "Změňte vzhled aplikace {appName}.",
+    "text_size_app": "Mění velikost veškerého textu v aplikaci. 100 % je běžná velikost.",
+    "scrollbars_app": "Používá posuvníky systému, které jsou širší a snáz se uchopí.",
+    "voice_app": "Hlas, který čte zprávy nahlas. Seznam ukazuje hlasy, které má tento počítač pro jazyk rozhraní.",
+    "voice_default_app": "Hlas systému",
+    "visual_alerts_app": "Při nové poště nebo připomínce pomalu bliká titulkem okna a nechává připomínky na obrazovce, dokud je nezavřete.",
+    "sounds_link_app": "Zvuky oznámení a počet nepřečtených na ikoně na hlavním panelu nastavíte na stránce Oznámení.",
+    "writing_language_app": "Jazyk, ve kterém obvykle píšete. Používá ho korektura i kontrola pravopisu.",
+    "badge_all_app": "Číslo na ikoně na hlavním panelu a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů.",
+    "badge_all_browser": "Číslo na kartě a na ikoně aplikace sčítá doručené složky všech přihlášených účtů.",
+    "dnd_title": "Nerušit",
+    "pause_label": "Pozastavit oznámení",
+    "pause_description": "Žádné zvuky, vyskakovací okna ani hlasová hlášení o nové poště, dokud to znovu nevypnete.",
+    "dnd_link_app": "Oznámení pozastavíte a dobu klidu nastavíte na stránce Oznámení.",
+    "dnd_link_browser": "Oznámení pozastavíte na stránce Oznámení.",
+    "backup_app": "Exportujte nastavení do souboru a importujte je na svých dalších zařízeních.",
+    "sync_app": "Ostatní zařízení přihlášená k tomuto účtu dostanou stejná nastavení.",
+    "progress_attachments": "Stahují se přílohy",
+    "progress_events": "Stahují se události",
+    "progress_contacts": "Stahují se kontakty",
+    "progress_files_list": "Načítá se seznam souborů",
+    "progress_other": "Stahuje se",
+    "keep_description": "Uchovává vaši poštu, kalendář, kontakty a soubory, které máte v Souborech k dispozici offline, zašifrované v tomto zařízení. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v odesílané poště. Odhlášení vše odstraní.",
+    "filter_value_placeholder": "Hodnota",
+    "filter_values_hint": "Více hodnot oddělte čárkami."
+  },
   "sidebar": {
     "close": "Zavřít",
     "compose": "Napsat",
@@ -926,6 +953,13 @@
     "restore_to": "Přesunout zpět do složky {folder}",
     "delete_forever": "Smazat natrvalo"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Přesunout do Doručených",
+    "delete_forever_title": "Smazat tuto zprávu natrvalo?",
+    "delete_forever_batch_title": "{count, plural, one {Smazat tuto zprávu natrvalo?} other {Smazat tyto zprávy (#) natrvalo?}}",
+    "delete_forever_message": "Nepůjde ji obnovit.",
+    "delete_forever_batch_message": "{count, plural, one {Nepůjde ji obnovit.} other {Nepůjde je obnovit.}}"
+  },
   "external_mail": {
     "sender_label": "Externí",
     "sender_tooltip": "Z {domain}, mimo vaši organizaci",
@@ -985,7 +1019,7 @@
     "cc": "Kopie",
     "bcc": "Skrytá kopie",
     "subject": "Předmět",
-    "body_placeholder": "Napište zprávu...",
+    "body_placeholder": "Napište zprávu…",
     "send": "Odeslat",
     "cancel": "Zrušit",
     "attach": "Připojit",
@@ -1039,10 +1073,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Pokud váš server tuto adresu jako odesílatele obálky nepřijme, použije se místo ní {identity} a příjemci ji uvidí v záhlaví Return-Path."
     },
-    "save_as_template": "Uložit jako šablonu",
+    "save_as_template": "Uložit jako šablonu…",
     "attach_from_device": "Nahrát z tohoto zařízení",
     "templates_menu": "Šablony",
-    "insert_template": "Vložit šablonu",
+    "insert_template": "Vložit šablonu…",
     "options": "Možnosti",
     "option_plain_text": "Prostý text",
     "option_plain_text_hint": "Odeslat bez formátování",
@@ -3913,6 +3947,12 @@
     "title_all_accounts": "{name} ({count}, {total} ve všech účtech)",
     "title_all_accounts_only": "{name} ({total} ve všech účtech)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nenalezeny žádné výsledky} one {Nalezena # konverzace} few {Nalezeny # konverzace} many {Nalezeno # konverzace} other {Nalezeno # konverzací}}",
+    "name_unread_sub": "{name}, nepřečtené: {count}, v podsložkách dalších {sub}",
+    "name_unread_only_sub": "{name}, nepřečtené v podsložkách: {sub}",
+    "sub_unread": "Nepřečtené v podsložkách: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovat účty…",
     "apply_to_existing": "{count, plural, one {Použít na # existující zprávu ve složce {folder}} few {Použít na # existující zprávy ve složce {folder}} many {Použít na # existující zprávy ve složce {folder}} other {Použít na # existujících zpráv ve složce {folder}}}"
@@ -3991,6 +4031,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobrazit # starší zprávu} few {Zobrazit # starší zprávy} many {Zobrazit # starší zprávy} other {Zobrazit # starších zpráv}}",
     "return_to_list_follows_layout": "Dokud to nezměníte, řídí se to rozvržením: vypnuto, když jsou seznam a zpráva vedle sebe, jinak zapnuto."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zobrazí přepínač účtů nad složkami a pod ním tlačítko Napsat. Po vypnutí bude na jeho místě tlačítko Napsat."
   },
   "mail_p2_conv": {
     "show_message": "Zobrazit zprávu",
@@ -5278,6 +5321,12 @@
     "declined_many": "Odmítli jste {count} schůzek této série.",
     "answers_series": "Vaše odpověď platí pro všechny schůzky série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobrazit celý týden",
+    "week_days_short": "{count, plural, one {# den} few {# dny} many {# dne} other {# dní}}",
+    "print": "Tisk…"
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",
@@ -5589,6 +5638,12 @@
     "import_to_mail_failed": "{name} se nepodařilo importovat.",
     "import_contacts": "Importovat do kontaktů…",
     "add_to_calendar": "Přidat do kalendáře…"
+  },
+  "ux_p3_pim_files": {
+    "offers_label": "Upravené soubory",
+    "hide": "Skrýt",
+    "discard_detail_file": "Vaše úpravy této kopie se smažou. Soubor v Souborech se nezmění.",
+    "saved_auto": "{name} uložen do Souborů. Další uložení z jeho programu tam půjdou sama."
   },
   "smime": {
     "your_certificates": "Vaše certifikáty",
@@ -7511,6 +7566,28 @@
     "trouble_cors": "Váš poštovní server musí povolit přihlašování z tohoto webu. Pokud přihlášení selže, požádejte správce poštovního serveru, aby to povolil.",
     "provider_unsupported": "{provider} nenabízí JMAP, způsob, jakým Bulwark komunikuje s poštovními servery, takže se k němu Bulwark zatím nemůže připojit přímo."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Změnit, jak se Bulwark připojuje?",
+      "message": "Bulwark se restartuje a zeptá se, jak se připojit: pomocí vaší e-mailové adresy, nebo přes Bulwark vaší organizace. Vaše účty na tomto počítači zůstanou přihlášené.",
+      "confirm": "Změnit",
+      "org_link": "Místo toho použít Bulwark mé organizace",
+      "add_account": "Přidat účet…"
+    },
+    "picture": {
+      "button": "Obrázek",
+      "title": "Vložit obrázek",
+      "address": "Webová adresa obrázku",
+      "address_hint": "Obrázek zůstane na webu a zobrazí se odtamtud.",
+      "description": "Popis",
+      "invalid": "Zadejte webovou adresu, která začíná https://.",
+      "insert": "Vložit"
+    },
+    "sign_in_page": {
+      "open_app": "Otevřít Bulwark",
+      "done_as": "Přihlášeno jako {address}. Tuto kartu můžete zavřít."
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizace",
     "version_label": "Bulwark {version}",
@@ -7615,6 +7692,23 @@
     "merge_photo": "Fotka",
     "merge_kept": "Zůstane",
     "import_show": "Zobrazit"
+  },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybrán # kontakt} few {Vybrány # kontakty} other {Vybráno # kontaktů}}",
+    "selection_more": "a {count} další",
+    "no_addresses": "Žádný z vybraných kontaktů nemá e-mailovou adresu.",
+    "task_open": "Otevřít",
+    "due_next_week": "Příští týden",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrat datum…",
+    "move_to_list": "Přesunout do seznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktech:} few {# už jsou v Kontaktech:} other {# už je v Kontaktech:}}",
+    "dupes_skip": "Přeskočit",
+    "dupes_update": "Aktualizovat existující kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávání zrušeno",
+    "upload_cancelled_partial": "Před zrušením {count, plural, one {byl nahrán 1 soubor} few {byly nahrány # soubory} many {bylo nahráno # souboru} other {bylo nahráno # souborů}}",
+    "download_cancelled": "Stahování zrušeno"
   },
   "desktopEdit": {
     "edit": "Upravit",
@@ -7780,6 +7874,77 @@
     "state_offline": "Offline",
     "state_error": "Zastaveno"
   },
+  "files_sync_extra": {
+    "flush": {
+      "title_turn_off": "Nahrávání změn před vypnutím jednotky",
+      "title_sign_out": "Nahrávání změn před odhlášením",
+      "title_stop_folder": "Nahrávání změn před zastavením synchronizace složky",
+      "cannot_title": "Některé změny teď nelze nahrát",
+      "waiting": "Zbývá nahrát: {names}",
+      "progress": "Nahráno {done} z {total}",
+      "cannot_offline": "Server není dostupný. Zatím nenahráno: {names}",
+      "cannot_other": "Nelze nahrát: {names}. Důvod najdete v nedávné aktivitě v nastavení.",
+      "go_note_drive": "Pokud teď budete pokračovat, co není nahrané, se zkopíruje do Dokumenty\\Bulwark – not uploaded. Nic se neztratí.",
+      "go_note_folder": "Pokud teď budete pokračovat, co není nahrané, zůstane ve složce v tomto počítači.",
+      "keep_turn_off": "Ponechat jednotku",
+      "keep_sign_out": "Zůstat přihlášen",
+      "keep_stop_folder": "Pokračovat v synchronizaci",
+      "go_turn_off": "Vypnout hned",
+      "go_sign_out": "Odhlásit hned",
+      "go_stop_folder": "Zastavit synchronizaci hned"
+    },
+    "drive": {
+      "off_note": "Vypnutím jednotka zmizí z Průzkumníka souborů. Vaše soubory zůstanou v Souborech.",
+      "rescued": "Nenahrané soubory ({count}) jsou teď v {folder}.",
+      "rescued_open": "Otevřít složku",
+      "rescued_dismiss": "Skrýt",
+      "start_at_login": "Spouštět Bulwark po přihlášení do Windows",
+      "start_at_login_why": "Jednotka potřebuje spuštěný Bulwark, stejně jako OneDrive.",
+      "closed_warning": "Soubory na jednotce nejdou otevřít, když je Bulwark zavřený.",
+      "where": "V Průzkumníkovi souborů jako Bulwark Files",
+      "where_letter": "V Průzkumníkovi souborů jako Bulwark Files ({letter}:)",
+      "open": "Otevřít",
+      "letter_note": "Přes písmeno jednotky Průzkumník souborů neukazuje stav synchronizace ani „Vždy zachovat na tomto zařízení“. Najdete je pod Bulwark Files v Průzkumníkovi.",
+      "letter_failed": "Písmeno jednotky se nepodařilo nastavit. Zkuste to znovu."
+    },
+    "tray": {
+      "idle": "Bulwark Files: Aktuální",
+      "syncing": "Bulwark Files: Synchronizace. Zbývá: {count}",
+      "paused": "Bulwark Files: Pozastaveno",
+      "offline": "Bulwark Files: Offline. Čeká: {count}",
+      "question": "Bulwark Files: Čeká na vaši odpověď",
+      "error": "Bulwark Files: Chyba"
+    },
+    "notify": {
+      "conflict_title": "Soubor se změnil na dvou místech",
+      "problem_title": "Soubor nelze synchronizovat"
+    },
+    "activity": {
+      "waiting_count": "Změny čekající na server: {count}",
+      "disk_name": "{path} v Souborech se v tomto počítači jmenuje {detail}, protože některé jeho znaky tu nejsou povolené",
+      "disk_case": "{path} v Souborech se v tomto počítači jmenuje {detail}, protože tu už je název lišící se jen velikostí písmen",
+      "disk_group": "Názvy v Souborech, které tento počítač nepovoluje: {count}. Tady mají trochu jiné názvy.",
+      "show": "Zobrazit",
+      "hide": "Skrýt"
+    },
+    "cant_sync": {
+      "title": "Nelze synchronizovat"
+    },
+    "folders": {
+      "stop": "Zastavit synchronizaci…",
+      "pick_title_known": "S kterou složkou v Souborech má být {name} stejná?",
+      "pick_confirm_known": "Udržovat stejné"
+    },
+    "pin": {
+      "keep": "Vždy zachovat na tomto zařízení",
+      "free": "Uvolnit místo",
+      "failed": "Nepovedlo se. Zkuste to znovu v Průzkumníkovi souborů."
+    },
+    "account": {
+      "of": "Soubory účtu {address}",
+      "choose": "Soubory účtu"
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rychlá zpráva",
     "menu": "Rychlá zpráva",
@@ -7802,6 +7967,10 @@
     "missing": "„{name}“ už neexistuje.",
     "too_large": "„{name}“ je větší než {max} a nelze ho připojit.",
     "failed": "„{name}“ se nepodařilo připojit. Zkuste to znovu."
+  },
+  "composeRecentLimit": {
+    "too_large": "Příliš velký",
+    "too_large_hint": "Větší, než server přijme ({max})"
   },
   "compose_windows": {
     "more_formatting": "Další formátování",
@@ -7868,6 +8037,17 @@
     "done": "Hotovo",
     "join_host": "Připojit se ({host})",
     "join_named": "Připojit se: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Vývojářské nástroje",
+    "updates_label": "Zkontrolovat aktualizace",
+    "search": {
+      "quick_compose": "rychlé psaní nová zpráva odkudkoli globální zkratka",
+      "files_drive": "uvolnit místo OneDrive Dropbox Průzkumník Finder písmeno jednotky soubory na vyžádání",
+      "offline_space": "uvolnit místo místo na disku úložiště",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID otisk prstu obličej přístupový klíč passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",

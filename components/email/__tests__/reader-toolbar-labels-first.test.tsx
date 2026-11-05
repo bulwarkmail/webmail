@@ -96,7 +96,7 @@ describe('reader toolbar overflow', () => {
     expect(labels).toEqual(expect.arrayContaining(['reply', 'reply_all', 'forward', 'archive', 'delete', 'move']));
   });
 
-  it('keeps the names of Reply, Archive, Delete and Move while only those fit (mail-p2-15)', () => {
+  it('keeps the names of Reply, Reply all, Forward, Archive, Delete and Move while only those fit (mail-p2-15)', () => {
     // 600 px: every label needs 400 per group, the main four's 280, none 250.
     const spies = [
       vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (this: HTMLElement) {
@@ -111,7 +111,27 @@ describe('reader toolbar overflow', () => {
     expect(toolbar(container).getAttribute('data-toolbar-compact')).toBe('secondary');
     expect(hiddenPriorities(container)).toEqual([]);
     const kept = Array.from(container.querySelectorAll('[data-toolbar-label="primary"]')).map((label) => label.textContent);
-    expect(kept.sort()).toEqual(['archive', 'delete', 'move', 'reply']);
+    expect(kept.sort()).toEqual(['archive', 'delete', 'forward', 'move', 'reply', 'reply_all']);
+  });
+
+  it('moves the optional buttons into More before the main names go (mail-p2-15, pass 3)', () => {
+    // 600 px: without the optional labels each group needs 330, so two
+    // optional buttons (40 each) must go; without any label 250 would fit.
+    const spies = [
+      vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (this: HTMLElement) {
+        const step = this.closest('[data-toolbar-compact]')?.getAttribute('data-toolbar-compact');
+        return step === 'all' ? 250 : step === 'secondary' ? 330 : 400;
+      }),
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(600),
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(40),
+    ];
+    restore = () => spies.forEach((spy) => spy.mockRestore());
+    const { container } = viewer({ onToggleFullscreen: vi.fn(), onOpenInWindow: vi.fn() });
+    expect(toolbar(container).getAttribute('data-toolbar-compact')).toBe('secondary');
+    const hidden = hiddenPriorities(container);
+    // Fullscreen and the dark-mode toggle first, nothing of the main six.
+    expect(hidden).toEqual(expect.arrayContaining(['12']));
+    expect(hidden.filter((p) => REQUIRED.includes(p))).toEqual([]);
   });
 
   it('then hides the optional buttons, never Reply, Reply all, Forward, Archive or Move', () => {

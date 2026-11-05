@@ -61,16 +61,18 @@ export interface SettingsSearchEntry {
   /** The page draws the row only then. */
   when?: SettingsSearchCondition;
   /**
-   * Translation key of other words people use for this setting (synonyms,
+   * Translation key(s) of other words people use for this setting (synonyms,
    * abbreviations), in the user's language. Searched like the label.
    */
-  synonyms?: string;
+  synonyms?: string | string[];
 }
 
 /** Key of a row's synonyms in the locale files. */
 const syn = (id: string) => `uxs_structure.search.${id}`;
 /** Synonyms added in the second settings pass. */
 const syn2 = (id: string) => `uxp2_settings.search.${id}`;
+/** Synonyms added in the third settings pass. */
+const syn3 = (id: string) => `ux_p3_search.search.${id}`;
 
 // The settings each page draws, as the search lists them. Only labels a page
 // renders belong here: settings-search-anchors.test.tsx renders every page
@@ -98,11 +100,14 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.language_region.time_zone.label', synonyms: syn2('timezone') },
     { label: 'settings.language_region.first_day.label', synonyms: syn2('week_start') },
     { label: 'appLock.section_title' },
-    { label: 'appLock.enable_label', synonyms: syn('app_lock') },
+    // Windows Hello and Touch ID are set up under the PIN lock, once it is on.
+    { label: 'appLock.enable_label', synonyms: [syn('app_lock'), syn3('app_lock_hello')] },
     { label: 'desktopOs.section_title', when: 'desktop' },
     { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
     { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
     { label: 'desktopOs.show_shortcut_label', when: 'desktop' },
+    // Its switch is here, not on Composing (settings-p3-7).
+    { label: 'desktopQuickCompose.label', when: 'desktop', synonyms: syn3('quick_compose') },
     { label: 'desktopOs.default_app_label', when: 'desktop', synonyms: syn2('default_app') },
     { label: 'protocol_handlers.title', when: 'browser' },
     { label: 'protocol_handlers.mailto_label', when: 'browser' },
@@ -115,11 +120,17 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'tour.settings_section' },
     { label: 'tour.restart_title' },
     { label: 'tour.show_on_new_devices_title', advanced: true },
-    { label: 'desktop_updates.title', when: 'desktop', synonyms: syn2('updates') },
+    // Results name the row, not its section (settings-p3-7).
+    { label: 'desktop_updates.title', when: 'desktop' },
+    { label: 'ux_p3_search.updates_label', when: 'desktop', synonyms: syn2('updates') },
     { label: 'desktop_updates.channel_label', when: 'desktop' },
-    { label: 'desktopDevTools.section_title', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
+    { label: 'desktopDevTools.section_title', when: 'desktop', advanced: true },
+    { label: 'ux_p3_search.devtools_label', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
   ],
   notifications: [
+    // Do not disturb with quiet hours, at the top of the page (settings-p3-6).
+    { label: 'ux_p3_words.dnd_title', synonyms: syn2('do_not_disturb') },
+    { label: 'ux_p3_words.pause_label', synonyms: syn2('quiet_hours') },
     { label: 'settings.notifications.email.title' },
     { label: 'settings.notifications.email.enabled' },
     { label: 'settings.notifications.email.sound' },
@@ -209,7 +220,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.accessibility.sections.alerts' },
     { label: 'settings.accessibility.visual_alerts.label' },
     { label: 'settings.accessibility.unread_counts.label' },
-    { label: 'settings.accessibility.do_not_disturb.label', synonyms: syn2('do_not_disturb') },
     { label: 'settings.accessibility.sections.screen_readers' },
     { label: 'settings.accessibility.announce_new_mail.label' },
     { label: 'settings.accessibility.announce_preview.label' },
@@ -375,7 +385,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   files_sync: [
     { label: 'files_storage.title', when: 'desktop' },
     { label: 'files_sync.drive.title', when: 'desktop' },
-    { label: 'files_sync.drive.label', when: 'desktop' },
+    { label: 'files_sync.drive.label', when: 'desktop', synonyms: syn3('files_drive') },
     { label: 'files_sync.folders.title', when: 'desktop' },
     { label: 'files_sync.activity.title', when: 'desktop' },
   ],
@@ -385,7 +395,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   offline: [
     { label: 'offline.settings.title' },
-    { label: 'offline.settings.keep_label', synonyms: syn('offline') },
+    { label: 'offline.settings.keep_label', synonyms: [syn('offline'), syn3('offline_space')] },
     { label: 'offlineWipe.settings_title', synonyms: syn('wipe') },
     { label: 'offline.outbox.title', synonyms: syn('outbox') },
   ],
@@ -412,7 +422,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.advanced.export_settings.label' },
     { label: 'settings.advanced.import_settings.label' },
     { label: 'mail_import.section_title' },
-    { label: 'mail_import.settings_label' },
+    { label: 'mail_import.settings_label', synonyms: syn3('mail_import') },
     { label: 'mail_export.settings_label' },
     { label: 'settings.advanced.sections.fix' },
     { label: 'settings.advanced.refresh_cache.label' },
@@ -450,7 +460,8 @@ export const tabKeywords: Record<Tab, string> = {
   accessibility: 'a11y accessible vision blind low vision screen reader contrast motion animation reduce zoom text size font dyslexia spacing keyboard shortcuts focus outline cursor pointer targets colour blind color sound visual alert hearing deaf simple plain language read aloud',
   message_list: 'inbox list preview thread conversation grouping sort order columns archive delete swipe hover favicon avatar tag color',
   reading: 'mark read attachment open monospace mono font plain text dark light download filename template eml save export',
-  composing: 'editor signature plain text reply forward draft compose template snippet quick reply mention undo send receipt attachment reminder',
+  // No "quick": Quick compose is on General, in the desktop app (settings-p3-7).
+  composing: 'editor signature plain text reply forward draft compose template snippet mention undo send receipt attachment reminder',
   vacation: 'auto reply away out of office holiday responder',
   filters: 'sieve rules add create new block junk forward',
   organize: 'folders mailbox subscribe roles tags labels keywords colors nested',
@@ -525,11 +536,14 @@ export function settingsSubResults(
     if (typeof label !== 'string') continue;
     const descriptionKey = descriptionKeyFor(entry.label, messages);
     const description = descriptionKey ? (getByPath(messages, descriptionKey) as string) : undefined;
-    const keywords = entry.synonyms ? getByPath(messages, entry.synonyms) : undefined;
+    const keywords = (entry.synonyms === undefined ? [] : [entry.synonyms].flat())
+      .map((key) => getByPath(messages, key))
+      .filter((text): text is string => typeof text === 'string' && text !== '')
+      .join(' ');
     list.push({
       label: withAppName(label, appName) as string,
       ...(description ? { description: withAppName(description, appName) as string } : {}),
-      ...(typeof keywords === 'string' && keywords ? { keywords } : {}),
+      ...(keywords ? { keywords } : {}),
       ...(entry.advanced ? { advanced: true } : {}),
     });
   }
