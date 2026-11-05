@@ -17,6 +17,8 @@ import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachment
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
+import { ConversationMessageMenu } from "./conversation-message-menu";
+import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversationMessageId, printConversationMessage, printLabels } from "./conversation-print";
 import { buildMessagePrintFields } from "./message-print-fields";
 import { printMessageInWindow } from "./message-print-window";
 import { useInvitationPrint } from "@/lib/print/invitation-print";
@@ -1002,9 +1004,17 @@ export function MvExpandedConversationCard({
   }, [hasBody, email, onLoadBody]);
   // Unfolding an unread message reads it, as opening it does.
   useMarkReadWhenShown(email, true, onMarkRead ? () => onMarkRead(email) : undefined);
+  // Print in its own ⋮: this message alone, once its body is here.
+  const devices = useDevicePolicy(email);
+  const onPrint = devices.noPrint || !hasBody
+    ? undefined
+    : () => { printConversationMessage(email.id, printLabels(t)); };
+  const showReplies = !!(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled;
 
   return (
-    <div className="border-t border-border" data-mv-conversation-expanded="" data-email-id={email.id}>
+    // Focusable by a click (tabIndex -1), so Ctrl+P and File > Print know
+    // which message of the conversation the user is in.
+    <div className="border-t border-border outline-none" data-mv-conversation-expanded="" data-email-id={email.id} {...{ [CONVERSATION_MESSAGE_ATTR]: email.id }} tabIndex={-1}>
       <div
         role="button"
         tabIndex={0}
@@ -1058,9 +1068,9 @@ export function MvExpandedConversationCard({
             {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
           </button>
         </span>
-        {(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled && (
+        {(showReplies || onPrint) && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
-            {onReply && (
+            {showReplies && onReply && (
               <button
                 type="button"
                 onClick={() => onReply(email)}
@@ -1071,7 +1081,7 @@ export function MvExpandedConversationCard({
                 <Reply className="w-5 h-5" />
               </button>
             )}
-            {onReplyAll && (
+            {showReplies && onReplyAll && (
               <button
                 type="button"
                 onClick={() => onReplyAll(email)}
@@ -1082,7 +1092,7 @@ export function MvExpandedConversationCard({
                 <ReplyAll className="w-5 h-5" />
               </button>
             )}
-            {onForward && (
+            {showReplies && onForward && (
               <button
                 type="button"
                 onClick={() => onForward(email)}
@@ -1093,6 +1103,7 @@ export function MvExpandedConversationCard({
                 <Forward className="w-5 h-5" />
               </button>
             )}
+            <ConversationMessageMenu onPrint={onPrint} />
           </span>
         )}
       </div>
@@ -4096,7 +4107,7 @@ export function EmailViewer({
       externalBlocked: effectiveEmailContent.externalBlocked,
       watermark,
       openedWindow,
-      labels: { from: t('from'), to: t('to'), cc: t('cc'), date: t('date'), attachments: t('attachments') },
+      labels: printLabels(t),
     });
   };
 
@@ -4123,9 +4134,18 @@ export function EmailViewer({
   );
   // An invitation's when and where, from its card.
   const invitationPrint = useInvitationPrint(email?.id);
-  const printCopyFields = printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
-    ? messagePrintFields()
-    : null;
+  // In a conversation, another message that has the focus (a click in it)
+  // when printing starts is printed alone instead, as its ⋮ > Print does.
+  const focusedPrintId = useMemo(
+    () => (printShown ? focusedConversationMessageId(viewerRootEl) : null),
+    [printShown, viewerRootEl],
+  );
+  const focusedPrint = focusedPrintId && focusedPrintId !== email?.id ? conversationPrintSource(focusedPrintId) : null;
+  const printCopyFields = focusedPrint
+    ? (focusedPrint.noPrint ? null : focusedPrint.fields)
+    : printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
+      ? messagePrintFields()
+      : null;
 
   // Detect List-Unsubscribe header for newsletter banners
   const listHeaders = useMemo(() => {
@@ -5448,6 +5468,10 @@ export function EmailViewer({
                           >
                             <Forward className="w-5 h-5" />
                           </button>
+                        )}
+                        {/* This message's own ⋮, as each message of the conversation has. */}
+                        {mvBefore.length + mvAfter.length > 0 && (
+                          <ConversationMessageMenu onPrint={devices.noPrint ? undefined : () => handlePrint()} />
                         )}
                       </span>
                     )}
