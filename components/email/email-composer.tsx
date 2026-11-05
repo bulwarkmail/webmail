@@ -173,7 +173,8 @@ import {
   plainTextToComposerBody,
 } from "@/lib/email-composer-utils";
 import type { ComposePrefill } from "@/lib/plugin-compose-gate";
-import { composerContextMode, composerMounted, composerUnmounted, draftSaved } from "@/lib/plugin-composer-hooks";
+import { composerContextMode, composerMounted, composerUnmounted, deliverLinkParams, draftSaved } from "@/lib/plugin-composer-hooks";
+import { whenPluginsStarted } from "@/stores/plugin-store";
 import { isValidEmail } from "@/lib/validation";
 import { composeTextStyle, composeTextStyleCss } from "@/components/email/font-size";
 import { buildMentionCandidates, type MentionCandidate } from "@/lib/recipient-mentions";
@@ -338,6 +339,12 @@ export interface ComposerDraftData {
   references?: string[];
   /** Priority of a re-opened draft, read back from its headers (#970). */
   priority?: MessagePriority;
+  /**
+   * The `x-<plugin id>-<name>` parameters of the link this message came
+   * from (lib/plugin-link-params.ts): each plugin hears its own once the
+   * composer is open. Not carried on to another window.
+   */
+  linkParams?: Record<string, string>;
   /**
    * Classification label of a re-opened draft (X-Bulwark-Label): an id,
    * null for "no label", absent when the draft says nothing.
@@ -3631,6 +3638,16 @@ export function EmailComposer({
     setPluginComposerId(id);
     return unregister;
   }, []);
+
+  // Parameters for plugins from the link this message came from, once per
+  // composer, when the plugins have started.
+  const linkParamsRef = useRef(initialData?.linkParams);
+  useEffect(() => {
+    const params = linkParamsRef.current;
+    if (!pluginComposerId || !params) return;
+    linkParamsRef.current = undefined;
+    void deliverLinkParams(pluginComposerId, params, whenPluginsStarted);
+  }, [pluginComposerId]);
 
   // The selected text of the message, for the plugin frames around it and
   // the panels beside it (an assistant works on what the user highlights).

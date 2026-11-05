@@ -1188,6 +1188,20 @@ export interface SieveScriptGenerateContext {
 }
 
 /**
+ * Passed to onComposeFromLink (Bulwark 1.21 and later): the composer opened
+ * from a link with parameters for this plugin, such as
+ * `mailto:a@b.de?subject=Mahnung&x-akte-case=01%2F2026` for the plugin
+ * `akte`. Only the plugin named in the parameters hears it. The link can
+ * come from anyone: treat the values as untrusted input.
+ */
+export interface ComposeLinkContext {
+  /** The composer, for api.composer.* (compose:read / compose:write). */
+  composerId: string;
+  /** This plugin's parameters, the `x-<plugin id>-` prefix gone; names in lower case. */
+  params: Record<string, string>;
+}
+
+/**
  * Passed to onMailtoIntercept handlers.
  * Return false to prevent the browser from opening the system mail client.
  */

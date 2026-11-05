@@ -1969,7 +1969,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!isAuthenticated || !client || proTakingOver) return;
 
     const open = async (handoff: Handoff) => {
-      if (!handoff.subject && !handoff.body && handoff.files.length === 0) {
+      if (!handoff.subject && !handoff.body && handoff.files.length === 0 && !handoff.linkParams) {
         await withComposeGate('compose', {}, () => {
           startFreshComposerSession();
           setComposerMode('compose');
@@ -1987,6 +1987,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialFiles: handoff.files,
         unedited: true,
         ...(handoff.fromOs ? { fromOs: true } : {}),
+        ...(handoff.linkParams ? { linkParams: handoff.linkParams } : {}),
       });
     };
 
