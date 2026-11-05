@@ -120,6 +120,11 @@ export interface ContactAccountClient {
   client: IJMAPClient;
 }
 
+// The newest list fetch of each kind, one login's or every login's; an older
+// answer is dropped.
+let contactsLoadSeq = 0;
+let addressBooksLoadSeq = 0;
+
 /**
  * Prefix used to namespace contact/address-book IDs when the Pro shell
  * aggregates across accounts. EVERY aggregated account is namespaced (including
@@ -468,6 +473,13 @@ interface ContactStore {
   fetchAddressBooks: (client: IJMAPClient) => Promise<void>;
   fetchAllAccountsContacts: (accounts: ContactAccountClient[]) => Promise<void>;
   fetchAllAccountsAddressBooks: (accounts: ContactAccountClient[]) => Promise<void>;
+  /**
+   * The logins the Pro shell lists together (hooks/use-pro-multi-account-contacts),
+   * or null with one login shown. Runtime only. While set, fetchContacts and
+   * fetchAddressBooks list every login, so a refresh keeps the others.
+   */
+  accountClients: ContactAccountClient[] | null;
+  setAccountClients: (accounts: ContactAccountClient[] | null) => void;
   // The contact actions resolve to false when a plugin stopped them
   // (onBeforeContactCreate / Update / Delete); nothing changed then.
   createContact: (client: IJMAPClient, contact: Partial<ContactCard>, options?: ContactSaveOptions) => Promise<boolean>;
@@ -644,16 +656,28 @@ export const useContactStore = create<ContactStore>()(
       // Every fetch below captures the store epoch before awaiting the server
       // and drops its result once the stores were cleared for another account
       // (lib/store-epoch.ts): a slow answer for account A must not become
-      // account B's address book, autocomplete and contact list.
+      // account B's address book, autocomplete and contact list. Within one
+      // account only the newest fetch lands: the one login's list asked for at
+      // a switch could otherwise answer after the Pro shell's list of every
+      // login and replace it.
+      accountClients: null,
+      setAccountClients: (accounts) => {
+        set({ accountClients: accounts && accounts.length > 0 ? accounts : null });
+      },
+
       fetchContacts: async (client) => {
+        // While the Pro shell lists every login, a refresh lists them all too.
+        const merged = get().accountClients;
+        if (merged) return get().fetchAllAccountsContacts(merged);
         const epoch = currentStoreEpoch();
+        const seq = ++contactsLoadSeq;
         set({ isLoading: true, error: null });
         try {
           const contacts = await client.getAllContacts();
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== contactsLoadSeq) return;
           set({ contacts, isLoading: false, contactsLoaded: true });
         } catch (error) {
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== contactsLoadSeq) return;
           console.error('Failed to fetch contacts:', error);
           // An account that couldn't answer keeps its cards; the others are fresh.
           const partial = partialAccounts<ContactCard>(error);
@@ -696,13 +720,16 @@ export const useContactStore = create<ContactStore>()(
       },
 
       fetchAddressBooks: async (client) => {
+        const merged = get().accountClients;
+        if (merged) return get().fetchAllAccountsAddressBooks(merged);
         const epoch = currentStoreEpoch();
+        const seq = ++addressBooksLoadSeq;
         try {
           const addressBooks = await client.getAllAddressBooks();
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== addressBooksLoadSeq) return;
           set({ addressBooks });
         } catch (error) {
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== addressBooksLoadSeq) return;
           console.error('Failed to fetch address books:', error);
           const partial = partialAccounts<AddressBook>(error);
           set((state) => ({
@@ -714,6 +741,7 @@ export const useContactStore = create<ContactStore>()(
 
       fetchAllAccountsContacts: async (accounts) => {
         const epoch = currentStoreEpoch();
+        const seq = ++contactsLoadSeq;
         set({ isLoading: true, error: null });
         try {
           const results = await Promise.all(
@@ -732,10 +760,10 @@ export const useContactStore = create<ContactStore>()(
               }
             }),
           );
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== contactsLoadSeq) return;
           set({ contacts: results.flat(), isLoading: false, contactsLoaded: true });
         } catch (error) {
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== contactsLoadSeq) return;
           console.error('Failed to fetch all-account contacts:', error);
           set({ error: 'Failed to fetch contacts', isLoading: false, contactsLoaded: true });
         }
@@ -743,6 +771,7 @@ export const useContactStore = create<ContactStore>()(
 
       fetchAllAccountsAddressBooks: async (accounts) => {
         const epoch = currentStoreEpoch();
+        const seq = ++addressBooksLoadSeq;
         try {
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
@@ -759,10 +788,10 @@ export const useContactStore = create<ContactStore>()(
               }
             }),
           );
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== addressBooksLoadSeq) return;
           set({ addressBooks: results.flat() });
         } catch (error) {
-          if (currentStoreEpoch() !== epoch) return;
+          if (currentStoreEpoch() !== epoch || seq !== addressBooksLoadSeq) return;
           console.error('Failed to fetch all-account address books:', error);
           set({ error: 'Failed to fetch address books' });
         }
