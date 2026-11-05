@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "La tua organizzazione blocca i contenuti remoti in tutte le email, quindi non vengono caricati nemmeno dai mittenti attendibili."
   },
+  "trusted_senders_book": {
+    "unavailable": "Non disponibile: questo account non può tenere rubriche sul server. L'elenco resta su questo dispositivo."
+  },
   "date": {
     "today": "Oggi",
     "yesterday": "Ieri",

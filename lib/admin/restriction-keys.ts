@@ -71,6 +71,15 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number', page: 'policy', defaultValue: 50 },
   { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'], page: 'policy', defaultValue: 'ask' },
   {
+    key: 'trustedSendersAddressBook',
+    label: 'Keep trusted senders in an address book',
+    description: 'On: the senders whose pictures users always load are kept in a "Trusted Senders" address book on the mail server, the same on every device. Off: each device keeps its own list. Servers without address books always keep the list on the device.',
+    category: 'Email',
+    type: 'boolean',
+    page: 'policy',
+    defaultValue: true,
+  },
+  {
     key: 'searchDefaultScope',
     label: 'Search in',
     description: 'Where a new search looks: in all folders, or only in the folder that is open. Users can still pick another folder in the search filters.',

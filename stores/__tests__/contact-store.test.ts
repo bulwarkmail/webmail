@@ -1078,6 +1078,7 @@ describe('contact-store', () => {
     const trustedBook = (id: string) => ({ id, name: TRUSTED_SENDERS_BOOK_NAME });
 
     const makeClient = (overrides: Record<string, unknown> = {}) => ({
+      supportsContacts: () => true,
       getAddressBooks: vi.fn().mockResolvedValue([]),
       createAddressBook: vi.fn(async (name: string) => ({ id: 'created-book', name })),
       getContacts: vi.fn().mockResolvedValue([]),

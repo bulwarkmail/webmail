@@ -435,6 +435,72 @@ export async function consolidateTrustedSenderBooks(
   return Array.from(emails);
 }
 
+/**
+ * Moves the trusted senders kept on this device into the trusted senders
+ * book: an address the book lacks becomes a card there. Runs on every load
+ * while the book is in use, so turning the book on (by the user, by
+ * default or by the v14 settings migration) files the device's list once
+ * and a later run finds nothing to do. Two devices filing the same list at
+ * the same moment can both create a card for one address; the next load
+ * deletes the copy with the later id, the same one on every device, unless
+ * that card is filed in another book too. `known` holds addresses already
+ * in the book that `contacts` doesn't list (moved there from a duplicate
+ * book). Returns the book's addresses and the device's addresses that could
+ * not be filed (kept on the device).
+ */
+export async function mergeLocalTrustedSenders(
+  client: IJMAPClient,
+  bookId: string,
+  contacts: ContactCard[],
+  known: string[],
+  local: string[],
+): Promise<{ emails: string[]; unfiled: string[] }> {
+  const emails = new Set<string>();
+  for (const contact of [...contacts].sort((a, b) => a.id.localeCompare(b.id))) {
+    const addresses = collectContactEmails([contact]);
+    const onlyHere = Object.keys(contact.addressBookIds || {}).every((id) => id === bookId);
+    if (addresses.length > 0 && onlyHere && addresses.every((address) => emails.has(address))) {
+      try {
+        await client.deleteContact(contact.id);
+        debug.log('contacts', 'Removed a second trusted sender card for', addresses.join(', '));
+      } catch (error) {
+        debug.error('Failed to remove a duplicate trusted sender card:', contact.id, error);
+      }
+      continue;
+    }
+    addresses.forEach((address) => emails.add(address));
+  }
+  known.forEach((address) => emails.add(address));
+
+  const unfiled: string[] = [];
+  for (const entry of local) {
+    const address = entry.toLowerCase().trim();
+    if (!address || emails.has(address)) continue;
+    try {
+      await client.createContact({
+        addressBookIds: { [bookId]: true },
+        emails: { email: { address } },
+      });
+      emails.add(address);
+    } catch (error) {
+      debug.error('Failed to file a trusted sender in the address book:', address, error);
+      unfiled.push(address);
+    }
+  }
+  return { emails: Array.from(emails), unfiled };
+}
+
+/**
+ * Whether trusted senders live in the address book right now: the setting
+ * is on and the account can keep the book. Otherwise the list on the
+ * device is the one to show and change.
+ */
+export function useTrustedSendersInBook(): boolean {
+  const setting = useSettingsStore((s) => s.trustedSendersAddressBook);
+  const unavailable = useContactStore((s) => s.trustedSendersBookUnavailable);
+  return !!setting && !unavailable;
+}
+
 interface ContactStore {
   contacts: ContactCard[];
   addressBooks: AddressBook[];
@@ -451,6 +517,13 @@ interface ContactStore {
   trustedSendersBookId: string | null;
   trustedSendersLoaded: boolean;
   trustedSendersLoading: boolean;
+  /**
+   * The account can't keep the trusted senders book: no address book
+   * capability, or the book couldn't be read or created (no rights, server
+   * error). The list then stays on the device, and Settings shows the
+   * switch as unavailable.
+   */
+  trustedSendersBookUnavailable: boolean;
 
   // Recent recipients (from the Sent folder) for compose autocomplete - runtime only
   recentRecipients: Array<{ name: string; email: string }>;
@@ -643,6 +716,7 @@ export const useContactStore = create<ContactStore>()(
       trustedSendersBookId: null,
       trustedSendersLoaded: false,
       trustedSendersLoading: false,
+      trustedSendersBookUnavailable: false,
       recentRecipients: [],
       recentRecipientsLoaded: false,
       sentMailboxId: null,
@@ -1605,6 +1679,12 @@ export const useContactStore = create<ContactStore>()(
         // Share the in-flight load so parallel callers (mail view, settings,
         // the modal, addToTrustedSendersBook) can never create the book twice.
         if (trustedSendersLoadPromise) return trustedSendersLoadPromise;
+        // No address books on this server: the list stays on the device,
+        // without asking the server or telling the user off.
+        if (!client.supportsContacts?.()) {
+          set({ trustedSendersLoaded: true, trustedSendersLoading: false, trustedSendersBookUnavailable: true });
+          return;
+        }
         set({ trustedSendersLoading: true });
 
         trustedSendersLoadPromise = (async () => {
@@ -1634,10 +1714,22 @@ export const useContactStore = create<ContactStore>()(
               emails = await consolidateTrustedSenderBooks(client, bookId, matches.slice(1), emails);
             }
 
-            set({ trustedSendersBookId: bookId, trustedSenderEmails: emails, trustedSendersLoaded: true, trustedSendersLoading: false });
+            // The list kept on this device goes into the book, and what the
+            // book now holds leaves the device's list (it syncs to the
+            // other devices, which then have nothing left to file).
+            if (useSettingsStore.getState().trustedSendersAddressBook) {
+              const merged = await mergeLocalTrustedSenders(client, bookId, contacts, emails, useSettingsStore.getState().trustedSenders);
+              emails = merged.emails;
+              const inBook = new Set(emails);
+              const local = useSettingsStore.getState().trustedSenders;
+              const remaining = local.filter((address) => !inBook.has(address.toLowerCase().trim()));
+              if (remaining.length !== local.length) useSettingsStore.setState({ trustedSenders: remaining });
+            }
+
+            set({ trustedSendersBookId: bookId, trustedSenderEmails: emails, trustedSendersLoaded: true, trustedSendersLoading: false, trustedSendersBookUnavailable: false });
           } catch (error) {
             debug.error('Failed to load trusted senders address book:', error);
-            set({ trustedSendersLoaded: true, trustedSendersLoading: false });
+            set({ trustedSendersLoaded: true, trustedSendersLoading: false, trustedSendersBookUnavailable: true });
           } finally {
             trustedSendersLoadPromise = null;
           }
@@ -1660,6 +1752,12 @@ export const useContactStore = create<ContactStore>()(
           await get().loadTrustedSendersBook(client);
           bookId = get().trustedSendersBookId;
         }
+        // The account can't keep the book: the sender stays trusted on this
+        // device and goes into the book once it can be had.
+        if (!bookId && get().trustedSendersBookUnavailable) {
+          useSettingsStore.getState().addTrustedSender(emailAddress);
+          return;
+        }
         if (!bookId) throw new Error('Could not find or create trusted senders address book');
 
         debug.log('contacts', 'Adding trusted sender:', emailAddress, 'to book:', bookId);
@@ -1679,20 +1777,30 @@ export const useContactStore = create<ContactStore>()(
         const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
         const normalizedEmail = (angleMatch ? angleMatch[2] : trimmed).toLowerCase().trim();
         const { trustedSendersBookId } = get();
-        if (!trustedSendersBookId) return;
+        // A sender kept on the device (no book here, or not filed yet) is
+        // taken off that list too, or it would stay trusted.
+        const settings = useSettingsStore.getState();
+        const wasLocal = settings.trustedSenders.includes(normalizedEmail);
+        if (!trustedSendersBookId) {
+          if (wasLocal) settings.removeTrustedSender(normalizedEmail);
+          return;
+        }
 
         debug.log('contacts', 'Removing trusted sender:', normalizedEmail);
         const contacts = await client.getContacts(trustedSendersBookId);
-        const match = contacts.find(c =>
+        const matches = contacts.filter(c =>
           c.emails && Object.values(c.emails).some(e => e.address.toLowerCase().trim() === normalizedEmail)
         );
-        if (match) {
+        for (const match of matches) {
           await client.deleteContact(match.id);
           debug.log('contacts', 'Trusted sender removed');
         }
         const wasTrusted = get().trustedSenderEmails.includes(normalizedEmail);
         set((state) => ({ trustedSenderEmails: state.trustedSenderEmails.filter(e => e !== normalizedEmail) }));
-        if (wasTrusted) void settingsHooks.onTrustedSenderChange.emit({ email: normalizedEmail, trusted: false });
+        if (wasLocal) {
+          useSettingsStore.setState({ trustedSenders: useSettingsStore.getState().trustedSenders.filter(e => e !== normalizedEmail) });
+        }
+        if (wasTrusted || wasLocal) void settingsHooks.onTrustedSenderChange.emit({ email: normalizedEmail, trusted: false });
       },
 
       isTrustedAddressBookSender: (email) => {

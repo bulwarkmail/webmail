@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "La vostra organització bloqueja el contingut remot a tots els correus, de manera que tampoc es carrega dels remitents de confiança."
   },
+  "trusted_senders_book": {
+    "unavailable": "No disponible: aquest compte no pot desar llibretes d'adreces al servidor. La llista es queda en aquest dispositiu."
+  },
   "date": {
     "today": "Avui",
     "yesterday": "Ahir",

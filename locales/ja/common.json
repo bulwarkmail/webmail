@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "組織がすべてのメールでリモートコンテンツをブロックしているため、信頼済みの送信者からも読み込まれません。"
   },
+  "trusted_senders_book": {
+    "unavailable": "利用できません: このアカウントはサーバーにアドレス帳を保存できません。リストはこのデバイスに残ります。"
+  },
   "date": {
     "today": "今日",
     "yesterday": "昨日",

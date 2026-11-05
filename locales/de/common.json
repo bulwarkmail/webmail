@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Ihre Organisation blockiert externe Inhalte in allen E-Mails, daher werden sie auch bei vertrauenswürdigen Absendern nicht geladen."
   },
+  "trusted_senders_book": {
+    "unavailable": "Nicht verfügbar: Dieses Konto kann auf dem Server keine Adressbücher anlegen. Die Liste bleibt auf diesem Gerät."
+  },
   "date": {
     "today": "Heute",
     "yesterday": "Gestern",

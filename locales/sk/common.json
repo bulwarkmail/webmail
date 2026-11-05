@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Vaša organizácia blokuje vzdialený obsah vo všetkých správach, takže sa nenačíta ani od dôveryhodných odosielateľov."
   },
+  "trusted_senders_book": {
+    "unavailable": "Nie je k dispozícii: tento účet nemôže ukladať adresáre na server. Zoznam zostane v tomto zariadení."
+  },
   "date": {
     "today": "Dnes",
     "yesterday": "Včera",

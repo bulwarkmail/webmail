@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "你的组织在所有邮件中屏蔽远程内容，因此受信任发件人的远程内容也不会加载。"
   },
+  "trusted_senders_book": {
+    "unavailable": "不可用：此账户无法在服务器上保存通讯录。列表保留在此设备上。"
+  },
   "date": {
     "today": "今天",
     "yesterday": "昨天",
