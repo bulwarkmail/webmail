@@ -27,6 +27,7 @@ import { Bar, Circle, SkeletonRegion, type SkeletonSurface } from "./kit";
 import { LoginSkeleton } from "./login-skeleton";
 import { ProFrameSkeleton } from "./pro-skeleton";
 import { PRO_SURFACES, type BootSurface } from "@/lib/boot-skeleton/surfaces";
+import { ServerMarkup } from "./server-markup";
 
 export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
 
@@ -276,7 +277,7 @@ export function AppShellSkeleton({
   children,
 }: AppShellSkeletonProps) {
   return (
-    <>
+    <ServerMarkup>
       <div className="hidden boot-out:block">
         <LoginSkeleton label={label} accessibilityButton />
       </div>
@@ -298,6 +299,6 @@ export function AppShellSkeleton({
         </div>
         <BottomBarSkeleton active={active} labels={labels} className={cn("flex desk:hidden", bottomBarClassName)} />
       </SkeletonRegion>
-    </>
+    </ServerMarkup>
   );
 }
