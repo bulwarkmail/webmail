@@ -41,7 +41,9 @@ const OVERLAY = `(() => {
 const BRIDGE = `window.bulwarkDesktop = { windows: {} };`;
 
 async function appPage(browser: Browser, ...initScripts: string[]): Promise<Page> {
-  const context = await browser.newContext(contextOptions());
+  // Wide enough that "Open in new window" fits the reader's toolbar instead of
+  // going into its More menu.
+  const context = await browser.newContext({ ...contextOptions(), viewport: { width: 1920, height: 1000 } });
   for (const script of initScripts) await context.addInitScript(script);
   const page = await context.newPage();
   await neutralizeDevOverlay(page);
@@ -211,7 +213,7 @@ test.describe('the manifest and the window controls', () => {
       return { region: style.appRegion ?? style.webkitAppRegion, padding: parseFloat(style.paddingRight), right: el.getBoundingClientRect().right };
     });
     expect(seen.region).toBe('drag');
-    expect(seen.right).toBe(1440);
+    expect(seen.right).toBe(page.viewportSize()!.width);
     expect(seen.padding).toBeGreaterThanOrEqual(140);
     await shot(page, 'pwa-windows-controls');
     await page.context().close();
@@ -289,7 +291,7 @@ test.describe('pop-out windows', () => {
     await context.close();
   });
 
-  test('a browser tab offers none of it', async ({ browser }) => {
+  test('a browser tab offers a window for a composer only', async ({ browser }) => {
     const subject = `Tab ${RUN}`;
     await deliverToAlice(subject);
     const page = await appPage(browser);
@@ -298,7 +300,8 @@ test.describe('pop-out windows', () => {
     await expect(page.locator('[data-testid="viewer-open-in-window"]')).toHaveCount(0);
     await page.keyboard.press('c');
     await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible' });
-    await expect(page.locator('[data-testid="composer-open-in-window"]')).toHaveCount(0);
+    // A composer moves to a window of its own from a tab too, as in Gmail (461a7daf4).
+    await expect(page.locator('[data-testid="composer-open-in-window"]').first()).toBeVisible();
     await page.context().close();
   });
 

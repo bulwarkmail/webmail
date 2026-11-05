@@ -16,7 +16,7 @@ import {
 
 /**
  * Draft handling. Focus areas reported as flaky by the user:
- *  - the "continue draft" (edit-draft) button in the message view,
+ *  - reopening a draft (a click opens it in the composer),
  *  - multiple recipients being persisted to the draft,
  *  - a changed sender identity being persisted to the draft.
  *
@@ -56,11 +56,10 @@ test.describe('Drafts', () => {
     const to = (draft.to ?? []).map((r: { email: string }) => r.email).sort();
     expect(to).toEqual([bob.email, carol.email].sort());
 
-    // UI: opening the draft shows the continue-draft button, which reopens the
-    // composer with both recipients intact.
+    // UI: a click on the draft reopens it in the composer (e7cef5ba1) with both
+    // recipients intact.
     await openFolder(page, { role: 'drafts' });
     await emailItem(page, subject).first().click();
-    await page.locator('[data-testid="edit-draft"]').click();
     await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible' });
     const recips = await composerRecipients(page);
     expect(recips).toContain(bob.email);
@@ -89,7 +88,7 @@ test.describe('Drafts', () => {
     expect(to).toEqual([bob.email, carol.email].sort());
   });
 
-  test('a server-created draft shows the continue-draft button when viewed', async ({ page }) => {
+  test('a server-created draft opens in the composer when clicked', async ({ page }) => {
     const subject = subj('draft-server');
     await jmap.createDraft(subject, bob.email);
 
@@ -97,9 +96,11 @@ test.describe('Drafts', () => {
     await openFolder(page, { role: 'drafts' });
     await emailItem(page, subject).first().click();
 
-    // The edit-draft ("continue draft") button must be present for any message
-    // carrying the $draft keyword, regardless of how the draft was created.
-    await expect(page.locator('[data-testid="edit-draft"]')).toBeVisible();
+    // Any message carrying the $draft keyword opens for editing, however the
+    // draft was created.
+    const composer = page.locator('[data-testid="email-composer"]');
+    await expect(composer).toBeVisible();
+    await expect(composer.getByPlaceholder(/subject/i)).toHaveValue(subject);
   });
 
   test('a changed sender identity is saved to the draft (server)', async ({ page }) => {
@@ -138,7 +139,7 @@ test.describe('Drafts', () => {
 
     await openFolder(page, { role: 'drafts' });
     await emailItem(page, subject).first().click();
-    await page.locator('[data-testid="edit-draft"]').click();
+    await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible' });
     await expect(page.locator('[data-testid="composer-from"]')).toHaveValue(altId);
   });
 });

@@ -6,7 +6,7 @@
  *
  * Not counted: text that's meant to be cut (text-overflow: ellipsis, line clamp),
  * text inside a box that scrolls only sideways, text that's wholly outside its box (a
- * closed drawer, a slide), text in a box 1-2px wide (visually hidden), screen-reader-only text, and anything marked
+ * closed drawer, a slide, a wrapped line below a one-line box that clips it), text in a box 1-2px wide (visually hidden), screen-reader-only text, and anything marked
  * data-layout-fit-ignore. Frames (a message body) aren't looked into. A field's
  * placeholder counts too, unless it ends in an ellipsis.
  */
@@ -50,9 +50,11 @@ export async function findCutOffText(page: Page): Promise<CutOff[]> {
       if (rects.length === 0) continue;
       const textLeft = Math.min(...rects.map((r) => r.left));
       const textRight = Math.max(...rects.map((r) => r.right));
+      const textTop = Math.min(...rects.map((r) => r.top));
+      const textBottom = Math.max(...rects.map((r) => r.bottom));
 
       let meant = false;
-      let box: { left: number; right: number } | null = null;
+      let box: { left: number; right: number; top?: number; bottom?: number } | null = null;
       for (let at: Element | null = el; at && at !== document.documentElement; at = at.parentElement) {
         const s = getComputedStyle(at);
         if (s.textOverflow === 'ellipsis' || (s.webkitLineClamp && s.webkitLineClamp !== 'none')) meant = true;
@@ -68,12 +70,20 @@ export async function findCutOffText(page: Page): Promise<CutOff[]> {
         const r = at.getBoundingClientRect();
         const left = r.left + at.clientLeft;
         box = { left, right: left + at.clientWidth };
+        if (s.overflowY !== 'visible') {
+          const top = r.top + at.clientTop;
+          box.top = top;
+          box.bottom = top + at.clientHeight;
+        }
         break;
       }
       if (meant) continue;
       const edge = box ?? viewport;
       // Wholly outside: not cut, put away.
       if (textRight <= edge.left || textLeft >= edge.right) continue;
+      // Or on a line the box clips away below or above it, such as a sender's
+      // address that wrapped out of a one-line box: hidden whole, not cut.
+      if (box?.top !== undefined && box.bottom !== undefined && (textTop >= box.bottom - 0.5 || textBottom <= box.top + 0.5)) continue;
       const px = Math.max(textRight - edge.right, edge.left - textLeft);
       if (px > 1.5) {
         seen.add(el);
