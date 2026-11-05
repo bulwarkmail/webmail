@@ -14,6 +14,7 @@ import { archiveIdentity, decryptArchive, type ArchiveOwner } from '@/lib/accoun
 import { fetchArchive, restoreArchive } from '@/lib/account-archive-client';
 import { toUnicodeEmail } from '@/lib/idn';
 import { archiveErrorText, restoreSummary } from '@/components/settings/account-archive-settings';
+import { ModalWindow } from '@/components/ui/dialog-surface';
 
 const promptKey = (owner: ArchiveOwner) => `account-archive-prompt:${archiveIdentity(owner)}`;
 
@@ -85,38 +86,40 @@ function RestoreDialog({ owner, close }: { owner: ArchiveOwner; close: () => voi
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
-      <div
-        ref={ref} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}
-        className="max-h-[90dvh] w-full max-w-md space-y-4 overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
-      >
-        <h2 id={`${id}-title`} className="text-lg font-semibold">{t('prompt_title')}</h2>
-        <p id={`${id}-description`} className="text-sm text-muted-foreground">
-          {t('prompt_description', { account: toUnicodeEmail(owner.username) })}
-        </p>
-        {done ? (
-          <>
-            <p role="status" className="text-sm text-foreground">{message?.text}</p>
-            <div className="flex justify-end">
-              <Button type="button" onClick={close}>{t('prompt_done')}</Button>
-            </div>
-          </>
-        ) : (
-          <form className="space-y-3" onSubmit={e => { e.preventDefault(); void restore(); }}>
-            <label className="block text-sm font-medium" htmlFor={`${id}-password`}>{t('password')}</label>
-            <Input
-              id={`${id}-password`} type="password" value={password} required autoFocus autoComplete="current-password"
-              aria-describedby={`${id}-hint`} onChange={e => setPassword(e.target.value)}
-            />
-            <p id={`${id}-hint`} className="text-xs text-muted-foreground">{t('restore_hint')}</p>
-            {message && <p role="alert" className="text-sm text-destructive">{message.text}</p>}
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button type="button" variant="ghost" disabled={busy} onClick={close}>{t('prompt_not_now')}</Button>
-              <Button type="submit" disabled={busy}>{t('restore')}</Button>
-            </div>
-          </form>
-        )}
+    <ModalWindow title={t('prompt_title')} onClose={() => { if (!busy) close(); }}>
+      <div data-modal-backdrop="" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
+        <div
+          ref={ref} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}
+          className="max-h-[90dvh] w-full max-w-md space-y-4 overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
+        >
+          <h2 id={`${id}-title`} className="text-lg font-semibold">{t('prompt_title')}</h2>
+          <p id={`${id}-description`} className="text-sm text-muted-foreground">
+            {t('prompt_description', { account: toUnicodeEmail(owner.username) })}
+          </p>
+          {done ? (
+            <>
+              <p role="status" className="text-sm text-foreground">{message?.text}</p>
+              <div className="flex justify-end">
+                <Button type="button" onClick={close}>{t('prompt_done')}</Button>
+              </div>
+            </>
+          ) : (
+            <form className="space-y-3" onSubmit={e => { e.preventDefault(); void restore(); }}>
+              <label className="block text-sm font-medium" htmlFor={`${id}-password`}>{t('password')}</label>
+              <Input
+                id={`${id}-password`} type="password" value={password} required autoFocus autoComplete="current-password"
+                aria-describedby={`${id}-hint`} onChange={e => setPassword(e.target.value)}
+              />
+              <p id={`${id}-hint`} className="text-xs text-muted-foreground">{t('restore_hint')}</p>
+              {message && <p role="alert" className="text-sm text-destructive">{message.text}</p>}
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="ghost" disabled={busy} onClick={close}>{t('prompt_not_now')}</Button>
+                <Button type="submit" disabled={busy}>{t('restore')}</Button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </ModalWindow>
   );
 }
