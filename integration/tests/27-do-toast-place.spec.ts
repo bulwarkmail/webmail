@@ -61,8 +61,11 @@ async function signIn(browser: Browser, opts: { width: number; height: number; p
 }
 
 const rows = (page: Page) => page.locator('[data-testid=email-list-item]');
-/** Rows already read: opening them changes nothing on the server. */
-const readRows = (page: Page) => page.locator('[data-testid=email-list-item][data-unread="false"]');
+/**
+ * Rows already read: opening them changes nothing on the server. With a
+ * subject, since the steps find the message again by it.
+ */
+const readRows = (page: Page) => page.locator('[data-testid=email-list-item][data-unread="false"][data-subject]:not([data-subject=""])');
 const folder = (page: Page, role: string) => page.locator(`[data-testid=folder-row][data-folder-role=${role}] button`).first();
 const undoButton = (page: Page) => page.locator('[data-toast-container] button', { hasText: /^Undo$/ }).first();
 
@@ -133,11 +136,16 @@ function problems(m: Measured): string[] {
   return out;
 }
 
+/** The toasts' enter (or exit) slide is over. */
+async function settled(page: Page): Promise<void> {
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-toast-container] .toast-item')]
+    .every((t) => t.getAnimations().every((a) => a.playState !== 'running')), undefined, { timeout: 5000 });
+}
+
 async function check(page: Page, step: string, found: string[], opts: { wantToast?: boolean } = {}): Promise<Measured> {
   // The enter animation slides in from the side; the place is what counts.
   await page.waitForTimeout(450);
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-toast-container] .toast-item')]
-    .every((t) => t.getAnimations().every((a) => a.playState !== 'running')), undefined, { timeout: 5000 }).catch(() => {});
+  await settled(page).catch(() => {});
   const m = await measure(page);
   if (SHOTS) {
     if (!existsSync(SHOTS)) mkdirSync(SHOTS, { recursive: true });
@@ -269,9 +277,11 @@ test('toasts keep their place on the desktop: folders, next message, reply box a
   }
   await undoLast(page);
 
-  // Moving the mouse to Undo: the toast holds still all the way.
+  // Moving the mouse to Undo: the toast holds still all the way. Once it has
+  // slid in: the slide itself is no move, and ran into the first steps.
   await openRow(page, 3);
   await archive(page);
+  await settled(page);
   const target = await undoButton(page).boundingBox();
   expect(target).not.toBeNull();
   const start = { x: 450, y: 300 };

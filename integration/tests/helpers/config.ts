@@ -20,6 +20,15 @@ export const JMAP_URL = process.env.IT_JMAP_URL ?? 'http://localhost:8025';
 export const SMTP_HOST = process.env.IT_SMTP_HOST ?? 'localhost';
 export const SMTP_PORT = Number(process.env.IT_SMTP_PORT ?? 1025);
 
+/**
+ * `jmap-import` = put each "sent" message straight into the recipients' Inboxes
+ * with JMAP Email/import instead of SMTP, for a server whose submission port
+ * can't be reached from the test machine, such as the shared test servers
+ * (inbound port 25 files unauthenticated mail from the local domain as junk).
+ * Only works for recipients among ACCOUNTS, which share ACCOUNT_PASSWORD.
+ */
+export const SMTP_MODE = process.env.IT_SMTP_MODE ?? 'smtp';
+
 /** Recovery admin — `user:password`, used for stalwart-cli style admin JMAP. */
 export const ADMIN_CREDENTIALS = process.env.IT_ADMIN ?? 'admin:bootstrap-secret';
 
@@ -56,6 +65,8 @@ export type AccountKey = keyof typeof ACCOUNTS;
  * Groups have no password of their own — access is via a member's session.
  * (carol, rather than alice/bob, keeps the sync specs' accounts unshared.)
  */
+/** Local part of the group: IT_GROUP_USER for a stack with other names. */
+const GROUP_USER = process.env.IT_GROUP_USER ?? 'team';
 export const GROUP = {
-  team: { user: 'team', email: `team@${DOMAIN}`, memberOf: 'carol' as AccountKey },
+  team: { user: GROUP_USER, email: `${GROUP_USER}@${DOMAIN}`, memberOf: 'carol' as AccountKey },
 } as const;
