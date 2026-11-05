@@ -7,6 +7,9 @@ import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import type { InlineAppState } from '@/hooks/use-sidebar-apps';
 import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
+import { useManagedSidebarApps } from '@/hooks/use-resolved-sidebar-apps';
+import { useStrictestDevices } from '@/hooks/use-device-policy';
+import { appFrameRights } from '@/lib/sidebar-apps';
 
 interface InlineAppViewProps {
   apps: InlineAppState[];
@@ -20,6 +23,8 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
   const activeApp = apps.find((a) => a.id === activeAppId);
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(header);
+  const managedApps = useManagedSidebarApps();
+  const downloadsOff = useStrictestDevices().noDownloads;
   // Until an app's first load its frame holds the initial about:blank. That
   // document's color scheme is "normal" while the frame element inherits the
   // theme's, and CSS Color Adjust gives such a mismatch an opaque canvas: in a
@@ -45,22 +50,26 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
       </div>
       {/* Iframes - active one visible, rest hidden but alive */}
       <div className="flex-1 relative">
-        {apps.map((app) => (
-          <iframe
-            key={app.id}
-            src={app.url}
-            title={app.name}
-            className={cn(
-              'absolute inset-0 w-full h-full border-0',
-              app.id !== activeAppId && 'hidden',
-              !loadedAppIds.has(app.id) && 'invisible'
-            )}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            onLoad={() => markLoaded(app.id)}
-          />
-        ))}
+        {apps.map((app) => {
+          const rights = appFrameRights(app, managedApps, { downloadsOff });
+          return (
+            <iframe
+              key={app.id}
+              src={app.url}
+              title={app.name}
+              className={cn(
+                'absolute inset-0 w-full h-full border-0',
+                app.id !== activeAppId && 'hidden',
+                !loadedAppIds.has(app.id) && 'invisible'
+              )}
+              sandbox={rights.sandbox}
+              allow={rights.allow}
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              onLoad={() => markLoaded(app.id)}
+            />
+          );
+        })}
       </div>
     </div>
   );
