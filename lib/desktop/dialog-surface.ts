@@ -43,13 +43,49 @@ export function dialogSurfacesAvailable(): boolean {
 
 let counter = 0;
 
+/** At least this much room on each side of the card, for its shadow. */
+const MIN_MARGIN = 32;
+/** What the app's dialog shadow (shadow-xl: 0 20px 25px -5px) reaches below the card. */
+const SHADOW_XL_REACH = 40;
+
+/**
+ * How far a box-shadow reaches past its box on the furthest side: offset, blur and spread
+ * of each layer. Unknown (no layout, as in tests): the app's shadow-xl.
+ */
+export function shadowReach(boxShadow: string): number {
+  let reach = 0;
+  for (const layer of boxShadow.split(/,(?![^(]*\))/)) {
+    if (!layer.trim() || layer.trim() === 'none' || /\binset\b/.test(layer)) continue;
+    const lengths = (layer.replace(/rgba?\([^)]*\)|#[0-9a-f]+|[a-z-]+\([^)]*\)/gi, '').match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+    const [x = 0, y = 0, blur = 0, spread = 0] = lengths;
+    reach = Math.max(reach, blur + spread + Math.abs(x), blur + spread + Math.abs(y));
+  }
+  return Math.max(MIN_MARGIN, Math.ceil(reach || SHADOW_XL_REACH));
+}
+
+/**
+ * The room the dialog window leaves around the card, from the theme's own dialog shadow as
+ * the window draws it, so no edge of the shadow is cut off.
+ */
+function dialogMargin(doc: Document): number {
+  const probe = doc.createElement('div');
+  probe.className = 'shadow-xl rounded-lg';
+  probe.style.cssText = 'position:fixed;left:-9999px;top:0;width:10px;height:10px;visibility:hidden';
+  doc.body.appendChild(probe);
+  try {
+    return shadowReach(doc.defaultView?.getComputedStyle(probe).boxShadow ?? '');
+  } finally {
+    probe.remove();
+  }
+}
+
 /** The rules the window needs on top of the app's: a transparent page, a draggable header. */
 const SURFACE_CSS = `
 html, body { background: transparent !important; margin: 0 !important; height: 100%; overflow: hidden; }
-#bulwark-dialog-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 1rem; padding-top: calc(1rem + var(--titlebar-row-height, 0px)); }
+#bulwark-dialog-root { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: var(--bulwark-dialog-margin, 2.5rem); padding-top: calc(var(--bulwark-dialog-margin, 2.5rem) + var(--titlebar-row-height, 0px)); }
 [data-dialog-drag] { -webkit-app-region: drag; }
 [data-dialog-drag] :is(a, button, input, select, textarea, label, summary, [role="button"], [contenteditable], [tabindex]) { -webkit-app-region: no-drag; }
-[data-modal-backdrop] { background: transparent !important; backdrop-filter: none !important; animation: none !important; }
+[data-modal-backdrop] { background: transparent !important; backdrop-filter: none !important; animation: none !important; padding: var(--bulwark-dialog-margin, 2.5rem) !important; padding-top: calc(var(--bulwark-dialog-margin, 2.5rem) + var(--titlebar-row-height, 0px)) !important; }
 `;
 
 /** The page's stylesheets in the window, in their order, kept in step with the page's head. */
@@ -185,9 +221,14 @@ export function openDialogSurface(opener: Window, options: DialogSurfaceOptions)
     options.onUserClose();
   });
 
+  // Room for the card's shadow; measured again once the theme's styles are in.
+  const setMargin = () => doc.body.style.setProperty('--bulwark-dialog-margin', `${dialogMargin(doc)}px`);
+  setMargin();
+
   // Shown once it looks like the app: the stylesheets in, the fonts there.
   void styles.loaded
     .then(() => Promise.race([doc.fonts?.ready, new Promise((resolve) => setTimeout(resolve, 1000))]))
+    .then(() => setMargin())
     .then(() => (closing ? true : bridge.showWindow!(name)))
     .then((shown) => {
       if (shown || closing) return;
