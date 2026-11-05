@@ -142,7 +142,8 @@ test.describe('Tasks (pim-1, pim-8, pim-24)', () => {
       const form = page.getByRole('dialog', { name: 'Edit task' });
       // pim-19: plain status words.
       await expect(form.getByLabel('Status').locator('option:checked')).toHaveText('Not started');
-      await form.getByLabel('Calendar').selectOption({ label: calendarName });
+      // The field is "List" since 109866dd4 (tasks live in task lists).
+      await form.getByLabel('List', { exact: true }).selectOption({ label: calendarName });
       await form.getByRole('button', { name: 'Save' }).click();
       await expect(form).toBeHidden({ timeout: 30000 });
       await expect(moveRow).toBeVisible();

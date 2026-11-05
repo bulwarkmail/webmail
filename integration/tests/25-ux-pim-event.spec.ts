@@ -165,7 +165,9 @@ test.describe('Events keep their time zone (pim-2)', () => {
     await page.getByLabel('End date', { exact: true }).fill(tokyoDay);
     await page.getByLabel('End time', { exact: true }).fill('11:00');
     await page.getByRole('button', { name: 'Time zone', exact: true }).click();
-    await page.getByLabel('Time zone', { exact: true }).selectOption('Asia/Tokyo');
+    // A city list with search (b588954ea), open as it shows.
+    await page.getByRole('combobox', { name: 'Search time zones' }).fill('Tokyo');
+    await page.getByRole('option', { name: /^Tokyo\b/ }).first().click();
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect.poll(async () => {
       const [e] = await objects(a, `${prefix} Tokyo sync`);
