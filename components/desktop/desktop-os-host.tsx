@@ -6,11 +6,12 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { isAppLocked } from "@/lib/desktop/app-lock-state";
 import { contentHiddenFor, startMailNotifications, type MailNotificationLabels, type MailNotifications } from "@/lib/desktop/mail-notifications";
-import { startOsSummary } from "@/lib/desktop/os-summary";
+import { startOsSummary, type OsSummaryHandle } from "@/lib/desktop/os-summary";
 import { startPowerWatch } from "@/lib/desktop/power";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSettingsStore } from "@/stores/settings-store";
 
 /**
  * The main window's end of the desktop app's OS integration: new mail as native
@@ -27,8 +28,11 @@ export function DesktopOsHost() {
   const archiveEnabled = useArchiveActionEnabled();
   const clientKey = useAccountStore((s) => s.accounts.map((a) => a.id).join("\n"));
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Logins restored after a restart connect after the window is up, and each needs a baseline.
+  const connectedRevision = useAuthStore((s) => s.connectedAccountsRevision);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const mailRef = useRef<MailNotifications | null>(null);
-  const summaryRef = useRef<{ refresh: () => void } | null>(null);
+  const summaryRef = useRef<OsSummaryHandle | null>(null);
   const localeRef = useRef(locale);
   localeRef.current = locale;
 
@@ -78,7 +82,17 @@ export function DesktopOsHost() {
     if (auth.client) clients.add(auth.client);
     for (const client of clients) mail.seed(client);
     summaryRef.current?.refresh();
-  }, [isAuthenticated, clientKey]);
+  }, [isAuthenticated, clientKey, connectedRevision]);
+
+  // The next event's day and time are written in the page's language and time format:
+  // say them again at once, as the tray's own words change with the language now.
+  const summaryWords = useRef({ locale, timeFormat });
+  useEffect(() => {
+    const before = summaryWords.current;
+    summaryWords.current = { locale, timeFormat };
+    if (before.locale === locale && before.timeFormat === timeFormat) return;
+    summaryRef.current?.refresh(true);
+  }, [locale, timeFormat]);
 
   return null;
 }

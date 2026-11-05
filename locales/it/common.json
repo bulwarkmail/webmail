@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "Premi {keys} per scrivere un nuovo messaggio",
     "tip_palette_keys": "Premi {keys} per trovare qualsiasi comando"
   },
+  "uxp3_desktop": {
+    "web_address": "Indirizzo web"
+  },
   "selectionView": {
     "starred": "Aggiunto a Speciali",
     "unstarred": "Stella rimossa"

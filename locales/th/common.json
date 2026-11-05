@@ -8091,6 +8091,9 @@
     "tip_compose_keys": "กด {keys} เพื่อเขียนข้อความใหม่",
     "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
   },
+  "uxp3_desktop": {
+    "web_address": "ที่อยู่เว็บ"
+  },
   "selectionView": {
     "starred": "ติดดาวแล้ว",
     "unstarred": "นำดาวออกแล้ว"

@@ -8095,6 +8095,9 @@
     "tip_compose_keys": "Nhấn {keys} để viết thư mới",
     "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
   },
+  "uxp3_desktop": {
+    "web_address": "Địa chỉ web"
+  },
   "selectionView": {
     "starred": "Đã gắn dấu sao",
     "unstarred": "Đã bỏ dấu sao"

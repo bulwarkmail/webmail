@@ -29,10 +29,10 @@ export function popoutFeatures(kind: PopoutKind): string {
 const openedWindows = new Map<string, Window>();
 
 /** Whether a window opened. False when a pop-up blocker said no: the caller stays as it is. */
-function openWindow(url: string, name: string, kind: PopoutKind): Window | boolean {
+function openWindow(url: string, name: string, kind: PopoutKind, quick = false): Window | boolean {
   const bridge = window.bulwarkDesktop?.windows;
   if (bridge?.open) {
-    bridge.open(url, { name, ...SIZES[kind] });
+    bridge.open(url, { name, ...SIZES[kind], ...(quick ? { quick: true } : {}) });
     return true;
   }
   const existing = openedWindows.get(name);
@@ -75,6 +75,20 @@ export function openMessageWindow(target: MessageWindowTarget): boolean {
   return focused(openWindow(messagePopoutUrl(target), `bulwark-message-${target.emailId.replace(/\W/g, '_')}`, 'message'));
 }
 
+/**
+ * A message from a file (an .eml opened from the OS), uploaded as `blobId`, in a
+ * message window of its own. It is in no folder until Move imports it.
+ */
+export function savedMessagePopoutUrl(target: { blobId: string; name?: string; localAccountId?: string | null }): string {
+  // `_`: the message window's page the offline shell keeps (lib/offline/shell.ts).
+  return appPath('/popout/message/_') + query({ blob: target.blobId, name: target.name, account: target.localAccountId });
+}
+
+/** The same file twice focuses the same window. */
+export function openSavedMessageWindow(target: { blobId: string; name?: string; localAccountId?: string | null }): boolean {
+  return focused(openWindow(savedMessagePopoutUrl(target), `bulwark-message-file-${target.blobId.replace(/\W/g, '_')}`, 'message'));
+}
+
 /** A new message in its own window, with nothing to hand over. */
 export function openNewComposerWindow(localAccountId?: string | null): boolean {
   const name = `bulwark-compose-new-${Date.now().toString(36)}`;
@@ -99,11 +113,12 @@ export interface ComposerWindow {
  * from the click: a browser only opens a window for a user action. Null when
  * no window opened.
  */
-export function openComposerWindow(localAccountId?: string | null): ComposerWindow | null {
+export function openComposerWindow(localAccountId?: string | null, { quick = false }: { quick?: boolean } = {}): ComposerWindow | null {
   const handoff: ComposeHandoff | null = createComposeHandoff();
   if (!handoff) return null;
   const url = appPath('/popout/compose') + query({ handoff: handoff.id, account: localAccountId });
-  const opened = openWindow(url, `bulwark-compose-${handoff.id}`, 'compose');
+  // `quick`: the desktop app's quick compose size, for a new message from outside the main window.
+  const opened = openWindow(url, `bulwark-compose-${handoff.id}`, 'compose', quick);
   if (!focused(opened)) {
     handoff.cancel();
     return null;

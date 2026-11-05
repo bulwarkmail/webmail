@@ -7,9 +7,11 @@ import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAccountStore } from "@/stores/account-store";
+import { mailLinkAccountId } from "@/lib/protocol-handlers/session";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
+import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { secondsUntilSend, undoEndsAt } from "@/lib/outgoing/send-progress-toast";
@@ -161,6 +163,18 @@ function readLaunch(): { handoffId: string | null; accountId?: string; draftId?:
     draftId: search.get("draft") ?? undefined,
     ownerAccountId: search.get("owner") ?? undefined,
   };
+}
+
+/**
+ * The login a new message from outside the main window writes from, in the desktop app:
+ * quick compose (the tray, the shortcut, the jump list) goes out from the default
+ * account, as a mail link does (desktop-p2-8), not from whichever account is in front
+ * (desktop-p3-12). A browser keeps the account in use.
+ */
+function newMessageLogin(): string | undefined {
+  if (!getDesktopBridge()?.windows) return undefined;
+  const { accounts, defaultAccountId } = useAccountStore.getState();
+  return mailLinkAccountId(accounts.filter((account) => account.isConnected), defaultAccountId, useAuthStore.getState().activeAccountId) ?? undefined;
 }
 
 /** How long a restored draft waits for the identity that wrote it to load. */
@@ -332,11 +346,18 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   // The Window menu names a composer by its subject, or "New message" before there is one.
   const [subject, setSubject] = useState(payload.initialData?.subject ?? "");
   useDesktopWindowName(subject.trim() || t("email_composer.new_message"));
+  const modeLabel = mode === "reply" ? t("email_composer.reply")
+    : mode === "replyAll" ? t("email_composer.reply_all")
+    : mode === "forward" ? t("email_composer.forward")
+    : t("email_composer.new_message");
+  // The desktop app's taskbar and Alt+Tab: "<subject or New message> - Bulwark", as its
+  // Window menu names it (desktop-p2-5). Where the organisation keeps subjects out of
+  // titles, the kind of message instead.
+  const inDesktopApp = !!getDesktopBridge()?.windows;
+  const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
   useDocumentTitle(
-    mode === "reply" ? t("email_composer.reply")
-      : mode === "replyAll" ? t("email_composer.reply_all")
-      : mode === "forward" ? t("email_composer.forward")
-      : t("email_composer.new_message"),
+    inDesktopApp && subjectInTitle ? subject.trim() || t("email_composer.new_message") : modeLabel,
+    { showAccount: !inDesktopApp },
   );
 
   // "Sending…" from the moment Send goes through, as the main window says it
@@ -522,8 +543,15 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     onDraftKept: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
       announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined });
     },
-    onDraftDiscarded: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
-      announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined, discarded: true });
+    onDraftDiscarded: (draftId: string | null, where: { accountId?: string; localAccountId?: string }, state?: ComposerDraftData) => {
+      announceDraftKept({
+        ...(draftId ? { draftId } : {}),
+        ...where,
+        localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined,
+        discarded: true,
+        // What Undo brings back in a new window, saved or not (desktop-p3-1).
+        ...(state ? { restore: { ...payload, mode: state.mode, replyTo: state.replyTo, initialData: state, initialDraftText: undefined, prefill: null, initialFiles: undefined } } : {}),
+      });
     },
     onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
       const active = useAuthStore.getState().activeAccountId;
@@ -577,7 +605,8 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
 /** `/popout/compose`: a draft handed over by another window, or a new message. */
 export function PopoutComposeApp() {
   const t = useTranslations("pwaWindows");
-  const [{ handoffId: named, accountId, draftId, ownerAccountId }] = useState(readLaunch);
+  const [{ handoffId: named, accountId: given, draftId, ownerAccountId }] = useState(readLaunch);
+  const [accountId] = useState(() => given ?? (!named && !draftId ? newMessageLogin() : undefined));
   // Saved on the server and nothing remembered: this page crashed or was killed, and the
   // draft is the newest there is. An ordinary reload remembers as it unloads.
   const [handoffId] = useState(() => (named && draftId && !rememberedComposePayload(named) ? null : named));

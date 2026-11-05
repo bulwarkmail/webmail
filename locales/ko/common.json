@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "{keys}를 눌러 새 메시지 쓰기",
     "tip_palette_keys": "{keys}를 눌러 명령 찾기"
   },
+  "uxp3_desktop": {
+    "web_address": "웹 주소"
+  },
   "selectionView": {
     "starred": "별표를 추가했습니다",
     "unstarred": "별표를 삭제했습니다"

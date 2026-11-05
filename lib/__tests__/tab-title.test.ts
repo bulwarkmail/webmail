@@ -26,6 +26,12 @@ describe('formatTabTitle', () => {
 describe('mailTitleContext', () => {
   const view = { composer: 'Reply', subject: 'Quarterly report', mailbox: 'Inbox (3)' };
 
+  // desktop-p2-5: the main window and a message window had the same title in the taskbar.
+  it('names the desktop app main window by its folder, whatever is open in it', () => {
+    expect(mailTitleContext(view, { desktopWindow: true })).toBe('Inbox (3)');
+    expect(mailTitleContext({ ...view, composer: null }, { desktopWindow: true })).toBe('Inbox (3)');
+  });
+
   it('names the composer while it is open', () => {
     expect(mailTitleContext(view)).toBe('Reply');
   });

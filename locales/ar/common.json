@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "اضغط {keys} لكتابة رسالة جديدة",
     "tip_palette_keys": "اضغط {keys} للعثور على أي أمر"
   },
+  "uxp3_desktop": {
+    "web_address": "عنوان الويب"
+  },
   "selectionView": {
     "starred": "تمت إضافة النجمة",
     "unstarred": "تمت إزالة النجمة"

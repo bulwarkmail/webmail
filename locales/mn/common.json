@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "Шинэ зурвас бичихийн тулд {keys} дарна уу",
     "tip_palette_keys": "Ямар ч тушаал олохын тулд {keys} дарна уу"
   },
+  "uxp3_desktop": {
+    "web_address": "Вэб хаяг"
+  },
   "selectionView": {
     "starred": "Одоор тэмдэглэсэн",
     "unstarred": "Од хассан"

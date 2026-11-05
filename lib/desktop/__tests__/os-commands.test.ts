@@ -9,10 +9,11 @@ vi.mock('@/lib/pwa-notify/page-actions', () => ({ runNotificationAction }));
 
 const accounts = [{ id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' }];
 let authenticated = true;
+let authClient: unknown = null;
 vi.mock('@/stores/account-store', () => ({ useAccountStore: { getState: () => ({ accounts }) } }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: {
-    getState: () => ({ isAuthenticated: authenticated }),
+    getState: () => ({ isAuthenticated: authenticated, client: authClient, activeAccountId: 'alice@one' }),
     subscribe: () => () => {},
   },
 }));
@@ -53,6 +54,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   vi.clearAllMocks();
   authenticated = true;
+  authClient = null;
   window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as unknown as BulwarkDesktopBridge;
   const { resetMailLinks } = await import('../mail-links');
   resetMailLinks();
@@ -153,6 +155,56 @@ describe('launches', () => {
     expect(asked).toHaveBeenCalledWith({ files: [expect.objectContaining({ name: 'report.pdf' })], preferred: 'new-message' });
     expect(takeHandoff('compose')).toBeNull();
     stop();
+  });
+
+  describe('a saved message (.eml) opened from Explorer', () => {
+    const open = vi.fn();
+    const uploadBlob = vi.fn();
+    const eml = (name: string) => ({ type: 'files' as const, reason: 'open' as const, failed: [], files: [{ name, data: text('Subject: x') }] });
+
+    beforeEach(() => {
+      let next = 0;
+      uploadBlob.mockImplementation(async () => ({ blobId: `blob-${++next}`, size: 10, type: 'message/rfc822' }));
+      authClient = { uploadBlob, parseEmailBlob: vi.fn() };
+      window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus, open } } as unknown as BulwarkDesktopBridge;
+    });
+
+    // desktop-p3-5: it showed over the main window, which came out of the tray for it.
+    it('opens in a message window of its own and leaves the main window where it is', async () => {
+      const { takeHandoff } = await import('@/lib/launch-handoff');
+      await run(eml('letter.eml'));
+      await vi.waitFor(() => expect(open).toHaveBeenCalledTimes(1));
+      expect(uploadBlob).toHaveBeenCalledWith(expect.objectContaining({ name: 'letter.eml' }), { noHold: true });
+      const [url, options] = open.mock.calls[0];
+      expect(url).toBe('/popout/message/_?blob=blob-1&name=letter.eml&account=alice%40one');
+      expect(options).toMatchObject({ name: 'bulwark-message-file-blob_1' });
+      expect(focus).not.toHaveBeenCalled();
+      expect(takeHandoff('eml')).toBeNull();
+    });
+
+    it('opens one window for each of several files', async () => {
+      await run({ ...eml('a.eml'), files: [{ name: 'a.eml', data: text('a') }, { name: 'b.eml', data: text('b') }] });
+      await vi.waitFor(() => expect(open).toHaveBeenCalledTimes(2));
+      expect(new Set(open.mock.calls.map(([, options]) => options.name)).size).toBe(2);
+    });
+
+    it('shows over the main window as before when the upload fails (offline)', async () => {
+      const { takeHandoff } = await import('@/lib/launch-handoff');
+      uploadBlob.mockRejectedValue(new Error('offline'));
+      await run(eml('letter.eml'));
+      await vi.waitFor(() => expect(focus).toHaveBeenCalled());
+      expect(open).not.toHaveBeenCalled();
+      expect(takeHandoff('eml')?.files[0].name).toBe('letter.eml');
+    });
+
+    it('signed out, the main window shows with the sign-in, and nothing is uploaded', async () => {
+      const { takeHandoff } = await import('@/lib/launch-handoff');
+      authenticated = false;
+      await run(eml('letter.eml'));
+      expect(focus).toHaveBeenCalled();
+      expect(uploadBlob).not.toHaveBeenCalled();
+      expect(takeHandoff('eml')?.files[0].name).toBe('letter.eml');
+    });
   });
 
   it('says so when a file could not be read', async () => {
@@ -280,6 +332,31 @@ describe('a toast\'s buttons', () => {
     stop();
   });
 
+  // desktop-p3-1: Undo on "Draft discarded" opens quick compose with the text, not the Inbox.
+  it('Undo on a discarded draft opens quick compose again with what was in it', async () => {
+    const { FakeBroadcastChannel } = await import('@/lib/__tests__/fixtures/fake-broadcast-channel');
+    vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
+    const open = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus, open } } as unknown as BulwarkDesktopBridge;
+    const { keepDiscarded } = await import('@/lib/popout/discarded-undo');
+    const token = keepDiscarded({ mode: 'compose', initialData: { subject: 'Budget' } as never }, 'alice@one');
+    const { setMailLinkOpener } = await import('../mail-links');
+    const opener = vi.fn();
+    const stop = setMailLinkOpener(opener);
+    await run({ type: 'notification', action: 'undo', context: JSON.stringify({ discardedDraft: token }) });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open.mock.calls[0][0]).toContain('/popout/compose?handoff=');
+    expect(open.mock.calls[0][0]).toContain('account=alice%40one');
+    expect(open.mock.calls[0][1]).toEqual(expect.objectContaining({ quick: true }));
+    expect(opener).not.toHaveBeenCalled();
+    // Once: a second Undo on the same toast has nothing left and brings the app up instead.
+    await run({ type: 'notification', action: 'undo', context: JSON.stringify({ discardedDraft: token }) });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(focus).toHaveBeenCalled();
+    stop();
+    vi.unstubAllGlobals();
+  });
+
   it('a click on a summary toast opens the Inbox of that login', async () => {
     const { setMailLinkOpener } = await import('../mail-links');
     const opener = vi.fn();
@@ -341,13 +418,16 @@ describe('listening', () => {
 
   it('subscribes, and carries out what arrives', async () => {
     let listener: ((command: DesktopOsCommand) => void) | null = null;
+    let subscribeOptions: unknown;
     window.bulwarkDesktop = {
       version: 1,
       platform: 'win32',
-      os: { onCommand: (l: (command: DesktopOsCommand) => void) => { listener = l; return () => { listener = null; }; } },
+      os: { onCommand: (l: (command: DesktopOsCommand) => void, options?: unknown) => { listener = l; subscribeOptions = options; return () => { listener = null; }; } },
     } as unknown as BulwarkDesktopBridge;
     const { startOsCommands } = await import('../os-commands');
     const stop = startOsCommands(env);
+    // Main leaves the main window in the tray for an .eml only for a page that says this.
+    expect(subscribeOptions).toEqual({ messageFileWindows: true });
     listener!({ type: 'navigate', target: 'contacts' });
     await Promise.resolve();
     expect(leaveFor).toHaveBeenCalledWith('/contacts');
