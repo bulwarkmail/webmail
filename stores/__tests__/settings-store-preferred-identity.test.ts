@@ -63,7 +63,7 @@ describe('settings-store per-account preferredIdentityIds (issue #507)', () => {
     beforeEach(() => useSettingsStore.setState({ preferredIdentityIds: {}, allMailFolderIds: {} }));
 
     /** State earlier server loads left, not a change made on this device. */
-    const loaded = (patch: Parameters<typeof useSettingsStore.setState>[0]) => {
+    const loaded = (patch: Partial<ReturnType<typeof useSettingsStore.getState>>) => {
       useSettingsStore.setState(patch);
       localStorage.removeItem('settings-sync-stamps');
     };
