@@ -33,6 +33,15 @@ import {
   DEFAULT_SUB_ADDRESS_DELIMITER,
   isValidSubAddressDelimiter,
 } from '@/lib/sub-addressing';
+import {
+  SETTINGS_STAMPS_FIELD,
+  emptyLocalStamps,
+  localChangeWins,
+  parseLocalStamps,
+  readStamps,
+  type LocalSettingStamps,
+} from '@/lib/settings-sync-stamps';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -53,9 +62,12 @@ let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingSync: SettingsSyncJob | null = null;
 let isLoadingFromServer = false;
 // Set by loadFromServer when this browser holds templates (or deletions) the
-// server blob lacks; enableSync then pushes once instead of waiting for the
-// next unrelated settings change.
-let pushTemplatesAfterLoad = false;
+// server blob lacks, or setting changes the server never got; enableSync then
+// pushes once instead of waiting for the next unrelated settings change.
+let pushAfterLoad = false;
+// Writes the user didn't make (an admin policy's defaults, a server copy
+// being applied): they get no change stamp.
+let unstampedWrites = 0;
 // Wired up in the window-only init block below; null during SSR.
 let requestSync: (() => void) | null = null;
 // Account whose settings could not be loaded while this browser still held
@@ -106,12 +118,108 @@ function writeSettingsOwner(accountId: string | null): void {
   }
 }
 
+// When each setting changed here, and which changes the server hasn't taken
+// yet (lib/settings-sync-stamps). Kept next to settings-storage, so a change
+// whose push a reload, a closed window or a lost connection cut off is kept
+// on the next load instead of being overwritten by the older server copy.
+// Read fresh each time: tabs of one browser share it, like settings-storage.
+const SETTINGS_STAMPS_KEY = 'settings-sync-stamps';
+
+function getLocalStamps(): LocalSettingStamps {
+  try {
+    if (typeof window === 'undefined') return emptyLocalStamps();
+    return parseLocalStamps(window.localStorage.getItem(SETTINGS_STAMPS_KEY));
+  } catch {
+    return emptyLocalStamps();
+  }
+}
+
+function saveLocalStamps(local: LocalSettingStamps): void {
+  try {
+    if (typeof window !== 'undefined') window.localStorage.setItem(SETTINGS_STAMPS_KEY, JSON.stringify(local));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function markLocalChange(keys: string[]): void {
+  const local = getLocalStamps();
+  const now = Date.now();
+  for (const key of keys) {
+    local.stamps[key] = now;
+    local.dirty[key] = now;
+  }
+  saveLocalStamps(local);
+}
+
+function hasUnsyncedChanges(): boolean {
+  return Object.keys(getLocalStamps().dirty).length > 0;
+}
+
+/** The server took a push: its changes are no longer only here. */
+function acknowledgeChanges(sent: Record<string, number>): void {
+  const local = getLocalStamps();
+  let changed = false;
+  for (const [key, at] of Object.entries(sent)) {
+    if (local.dirty[key] === at) {
+      delete local.dirty[key];
+      changed = true;
+    }
+  }
+  if (changed) saveLocalStamps(local);
+}
+
+function clearLocalStamps(): void {
+  try {
+    if (typeof window !== 'undefined') window.localStorage.removeItem(SETTINGS_STAMPS_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 const SYNC_DEBOUNCE_MS = 2000;
+// Browsers refuse a keepalive request body over 64 KiB.
+const KEEPALIVE_MAX_BYTES = 60 * 1024;
 
 interface SettingsSyncJob {
   username: string;
   serverUrl: string;
   settings: Record<string, unknown>;
+  /** The unsynced changes this push carries, to clear once the server has them. */
+  dirty: Record<string, number>;
+}
+
+// In the desktop app a closing window or quitting app waits for the pending
+// push, through the shell's lifecycle bridge; only while one is pending, so
+// a window with nothing to send closes at once.
+let stopDesktopFlush: (() => void) | null = null;
+
+function syncDesktopFlush(): void {
+  if (!pendingSync) {
+    stopDesktopFlush?.();
+    stopDesktopFlush = null;
+    return;
+  }
+  if (stopDesktopFlush) return;
+  const lifecycle = getDesktopBridge()?.lifecycle;
+  if (lifecycle) {
+    stopDesktopFlush = lifecycle.onFlushRequest(async () => {
+      await useSettingsStore.getState().flushSync();
+      return {};
+    });
+  }
+}
+
+/** Takes the pending push off the debounce timer. */
+function takePendingSync(): SettingsSyncJob | null {
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+    syncTimeout = null;
+  }
+  const job = pendingSync;
+  pendingSync = null;
+  syncDesktopFlush();
+  return job;
 }
 
 // --- Template sync bridge ---------------------------------------------------
@@ -205,13 +313,28 @@ export function registerCalendarSubscriptionSyncBridge(
   subscribe(() => onCalendarSubscriptionStoreChange?.());
 }
 
-async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void> {
+/**
+ * Pushes one snapshot. `keepalive` lets it finish after the page is gone
+ * (when it is small enough). A push that can't reach the server leaves its
+ * changes marked unsynced: they go out when the connection is back, and the
+ * next load keeps them.
+ */
+async function syncSettingsJob(job: SettingsSyncJob, retries = 1, opts?: { keepalive?: boolean }): Promise<void> {
   syncLog('Syncing settings to server for', job.username);
-  const res = await apiFetch('/api/settings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(job),
-  });
+  const body = JSON.stringify({ username: job.username, serverUrl: job.serverUrl, settings: job.settings });
+  const keepalive = opts?.keepalive === true && new TextEncoder().encode(body).length <= KEEPALIVE_MAX_BYTES;
+  let res: Response;
+  try {
+    res = await apiFetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      ...(keepalive ? { keepalive: true } : {}),
+    });
+  } catch (error) {
+    syncWarn('Settings sync could not reach the server; the changes stay marked to send:', error);
+    return;
+  }
   if (res.status === 404) {
     syncWarn('Settings sync endpoint returned 404, disabling sync');
     syncEnabled = false;
@@ -227,6 +350,7 @@ async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void>
     const body = await res.json().catch(() => ({}));
     syncError('Settings sync failed:', body.error || `status ${res.status}`);
   } else {
+    acknowledgeChanges(job.dirty);
     syncLog('Settings synced to server successfully');
     void settingsHooks.onSettingsSync.emit({ direction: 'pushed' });
   }
@@ -378,6 +502,12 @@ export type ProtocolOpenMode = 'active-session' | 'new-tab';
  * import.
  */
 const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
+
+/**
+ * Maps keyed by account id. Every account's server copy carries one, and a
+ * server load takes only the loading account's entry.
+ */
+const PER_ACCOUNT_MAP_KEYS = new Set<string>(['preferredIdentityIds', 'allMailFolderIds', 'hiddenSharedMailAccounts']);
 
 /** A map of plugin id → boolean, whatever came in (sync, import, storage). */
 function booleanRecord(value: unknown): Record<string, boolean> {
@@ -1342,6 +1472,8 @@ export const useSettingsStore = create<SettingsState>()(
         } finally {
           isLoadingFromServer = wasLoading;
         }
+        // The change times were this state's; the next one starts without any.
+        clearLocalStamps();
         applyVisualSettings();
       };
 
@@ -1359,7 +1491,12 @@ export const useSettingsStore = create<SettingsState>()(
           usePolicyStore.getState().policy,
         );
         if (Object.keys(patch).length === 0) return false;
-        set(patch as Partial<SettingsState>);
+        unstampedWrites++;
+        try {
+          set(patch as Partial<SettingsState>);
+        } finally {
+          unstampedWrites--;
+        }
         return true;
       };
 
@@ -1539,6 +1676,9 @@ export const useSettingsStore = create<SettingsState>()(
           debugCategories: state.debugCategories,
           settingsSyncDisabled: state.settingsSyncDisabled,
           explicitSettings: state.explicitSettings,
+          // When each setting last changed, so the server keeps whichever
+          // device changed it last (lib/settings-sync-stamps).
+          ...(opts?.forSync ? { [SETTINGS_STAMPS_FIELD]: { ...getLocalStamps().stamps } } : {}),
           emailAlwaysLightMode: state.emailAlwaysLightMode,
           showToolbarLabels: state.showToolbarLabels,
           ...Object.fromEntries(ACCESSIBILITY_KEYS.map((key) => [key, state[key]])),
@@ -1599,7 +1739,14 @@ export const useSettingsStore = create<SettingsState>()(
         const released = previous
           ? adminPolicyReleasePatch(get() as unknown as Record<string, unknown>, previous, usePolicyStore.getState().policy)
           : {};
-        if (Object.keys(released).length > 0) set(released as Partial<SettingsState>);
+        if (Object.keys(released).length > 0) {
+          unstampedWrites++;
+          try {
+            set(released as Partial<SettingsState>);
+          } finally {
+            unstampedWrites--;
+          }
+        }
         if (applyAdminPolicyPatch() || Object.keys(released).length > 0) applyVisualSettings();
       },
 
@@ -1643,6 +1790,9 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       importSettings: (json: string, opts?: { serverAccountId?: string; keepCrossAccountViews?: boolean; subscriptionOwner?: string }) => {
+        // A server copy is not a change made here: it gets no change stamp.
+        const fromServer = Boolean(opts?.serverAccountId);
+        if (fromServer) unstampedWrites++;
         try {
           const settings = JSON.parse(json);
 
@@ -1662,6 +1812,20 @@ export const useSettingsStore = create<SettingsState>()(
           migrateTrustedSendersBookDefault(settings);
           dropAttachmentPosition(settings);
 
+          // A server copy doesn't replace a setting changed here after that
+          // copy was written, whose push never got through (a reload inside
+          // the debounce, a closed window, no connection). A later change on
+          // another device still wins for that setting.
+          const serverStamps = fromServer ? readStamps(settings[SETTINGS_STAMPS_FIELD]) : null;
+          const local = serverStamps ? getLocalStamps() : null;
+          const keepsLocal = (key: string) => serverStamps !== null && local !== null && localChangeWins(local, serverStamps, key);
+          const takeOverStamp = (key: string) => {
+            if (!serverStamps || !local) return;
+            if (serverStamps[key]) local.stamps[key] = serverStamps[key];
+            else delete local.stamps[key];
+            delete local.dirty[key];
+          };
+
           // Apply settings, noting which keys were taken over for the
           // onSettingsImport hook.
           const imported: string[] = [];
@@ -1673,6 +1837,10 @@ export const useSettingsStore = create<SettingsState>()(
             if (key in DEFAULT_SETTINGS) {
               // Merged below, once it is known which settings were taken over.
               if (key === 'explicitSettings') {
+                return;
+              }
+              const perAccountMap = Boolean(opts?.serverAccountId) && PER_ACCOUNT_MAP_KEYS.has(key);
+              if (keepsLocal(key) && !perAccountMap) {
                 return;
               }
               if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(settings[key])) {
@@ -1756,14 +1924,19 @@ export const useSettingsStore = create<SettingsState>()(
               // the map and the composer picks another account's default sender
               // (login-order dependent). File imports (no serverAccountId)
               // still replace wholesale.
-              if (opts?.serverAccountId && (key === 'preferredIdentityIds' || key === 'allMailFolderIds' || key === 'hiddenSharedMailAccounts')) {
+              if (perAccountMap && opts?.serverAccountId) {
                 const existing = (get() as unknown as Record<string, unknown>)[key];
                 const merged: Record<string, unknown> = isPlainRecord(existing) ? { ...existing } : {};
                 const incoming = settings[key] as Record<string, unknown>;
-                if (Object.prototype.hasOwnProperty.call(incoming, opts.serverAccountId)) {
+                // A map changed here that the server never got keeps this
+                // device's entry, and only fills one it lacks.
+                const localWins = keepsLocal(key);
+                if (Object.prototype.hasOwnProperty.call(incoming, opts.serverAccountId) &&
+                    !(localWins && Object.prototype.hasOwnProperty.call(merged, opts.serverAccountId))) {
                   merged[opts.serverAccountId] = incoming[opts.serverAccountId];
                 }
-                put(key, { [key]: merged });
+                if (localWins) set({ [key]: merged } as Partial<SettingsState>);
+                else put(key, { [key]: merged });
                 return;
               }
               put(key, { [key]: settings[key] });
@@ -1775,6 +1948,7 @@ export const useSettingsStore = create<SettingsState>()(
           // device knew. A blob from before explicitSettings existed counts a
           // value that differs from the build default as chosen.
           const takenOver = new Set(imported);
+          for (const key of takenOver) takeOverStamp(key);
           const blobExplicit: string[] = Array.isArray(settings.explicitSettings)
             ? settings.explicitSettings.filter((key: unknown): key is string => typeof key === 'string')
             : legacyExplicitSettings(settings);
@@ -1793,16 +1967,20 @@ export const useSettingsStore = create<SettingsState>()(
           applyVisualSettings();
 
           // Apply cross-store settings
-          if (settings.theme) {
+          if (settings.theme && !keepsLocal('theme')) {
             // A mode the user never chose leaves room for the operator's
             // default (#1280). Blobs from before themeChosen count any mode
             // but the built-in default as chosen.
             const themeChosen = typeof settings.themeChosen === 'boolean' ? settings.themeChosen : settings.theme !== 'system';
             useThemeStore.getState().setTheme(settings.theme, { chosen: themeChosen });
+            takeOverStamp('theme');
+            takeOverStamp('themeChosen');
           }
-          if (settings.locale) {
+          if (settings.locale && !keepsLocal('locale')) {
             useLocaleStore.getState().setLocale(settings.locale);
+            takeOverStamp('locale');
           }
+          if (local) saveLocalStamps(local);
           // Templates live in their own store but ride along in the synced
           // settings blob (#825). Server loads merge, because every account's
           // blob carries the full (account-agnostic) template list and a stale
@@ -1833,6 +2011,8 @@ export const useSettingsStore = create<SettingsState>()(
         } catch (error) {
           console.error('Failed to import settings:', error);
           return false;
+        } finally {
+          if (fromServer) unstampedWrites--;
         }
       },
 
@@ -1958,19 +2138,14 @@ export const useSettingsStore = create<SettingsState>()(
         syncServerUrl = serverUrl;
         syncEnabled = true;
         syncLog('Settings sync enabled for', username);
-        if (pushTemplatesAfterLoad) {
-          pushTemplatesAfterLoad = false;
+        if (pushAfterLoad) {
+          pushAfterLoad = false;
           if (!get().settingsSyncDisabled) requestSync?.();
         }
       },
 
       flushSync: async () => {
-        if (syncTimeout) {
-          clearTimeout(syncTimeout);
-          syncTimeout = null;
-        }
-        const job = pendingSync;
-        pendingSync = null;
+        const job = takePendingSync();
         if (job) await syncSettingsJob(job);
       },
 
@@ -1978,11 +2153,7 @@ export const useSettingsStore = create<SettingsState>()(
         syncEnabled = false;
         syncUsername = null;
         syncServerUrl = null;
-        if (syncTimeout) {
-          clearTimeout(syncTimeout);
-          syncTimeout = null;
-        }
-        pendingSync = null;
+        takePendingSync();
         syncLog('Settings sync disabled');
       },
 
@@ -2004,7 +2175,7 @@ export const useSettingsStore = create<SettingsState>()(
         blockedSyncAccountId = null;
         try {
           syncLog('Loading settings from server for', username);
-          pushTemplatesAfterLoad = false;
+          pushAfterLoad = false;
           const res = await apiFetch('/api/settings', {
             headers: {
               'x-settings-username': username,
@@ -2027,7 +2198,7 @@ export const useSettingsStore = create<SettingsState>()(
             // previous account left in this browser (#1185).
             if (heldByOther) resetSyncedState({ keepCrossAccountViews });
             writeSettingsOwner(accountId);
-            pushTemplatesAfterLoad = localTemplatesAhead(null, accountId);
+            pushAfterLoad = localTemplatesAhead(null, accountId) || hasUnsyncedChanges();
             return false;
           }
           if (settings && typeof settings === 'object') {
@@ -2045,7 +2216,8 @@ export const useSettingsStore = create<SettingsState>()(
             });
             isLoadingFromServer = false;
             writeSettingsOwner(accountId);
-            pushTemplatesAfterLoad = localTemplatesAhead(settings, accountId);
+            // Changes kept over the server copy go up now.
+            pushAfterLoad = localTemplatesAhead(settings, accountId) || hasUnsyncedChanges();
             syncLog('Settings loaded from server successfully');
             void settingsHooks.onSettingsSync.emit({ direction: 'pulled' });
             // The per-account preferred sender identity (#507) is re-applied by
@@ -2376,6 +2548,28 @@ if (typeof window !== 'undefined') {
     useSettingsStore.getState().applyAdminPolicy(prev.policy);
   });
 
+  // Each change the user makes gets a change time, before the push below
+  // reads them. Server loads, policy defaults and the store's own hydration
+  // aren't changes made here.
+  const STAMPED_KEYS = Object.keys(DEFAULT_SETTINGS).filter(
+    (key) => key !== 'explicitSettings' && !DEVICE_LOCAL_SETTING_KEYS.has(key),
+  ) as (keyof SettingsState)[];
+  const stampsPaused = () => isLoadingFromServer || unstampedWrites > 0;
+  useSettingsStore.subscribe((state, prev) => {
+    if (stampsPaused() || !useSettingsStore.persist.hasHydrated()) return;
+    const changed = STAMPED_KEYS.filter((key) => state[key] !== prev[key]);
+    if (changed.length > 0) markLocalChange(changed as string[]);
+  });
+  // A mode the user didn't choose is the operator's default, not a change.
+  useThemeStore.subscribe((state, prev) => {
+    if (stampsPaused() || !state.themeChosen) return;
+    if (state.theme !== prev.theme || state.themeChosen !== prev.themeChosen) markLocalChange(['theme', 'themeChosen']);
+  });
+  useLocaleStore.subscribe((state, prev) => {
+    if (stampsPaused() || state.locale === prev.locale) return;
+    markLocalChange(['locale']);
+  });
+
   const triggerSync = () => {
     if (!syncEnabled || !syncUsername || !syncServerUrl || isLoadingFromServer) return;
     pendingSync = {
@@ -2385,12 +2579,13 @@ if (typeof window !== 'undefined') {
         forSync: true,
         subscriptionOwner: subscriptionOwnerFor(syncServerUrl, syncUsername),
       })),
+      dirty: { ...getLocalStamps().dirty },
     };
+    syncDesktopFlush();
     if (syncTimeout) clearTimeout(syncTimeout);
     syncTimeout = setTimeout(async () => {
       syncTimeout = null;
-      const job = pendingSync;
-      pendingSync = null;
+      const job = takePendingSync();
       if (!job) return;
       try {
         await syncSettingsJob(job);
@@ -2401,6 +2596,24 @@ if (typeof window !== 'undefined') {
   };
 
   requestSync = triggerSync;
+
+  // A reload, a closed tab or a tab sent to the background (where mobile
+  // browsers may end it) sends the pending push now instead of after the
+  // debounce. What still doesn't arrive stays marked and the next load keeps it.
+  const sendPendingNow = () => {
+    const job = takePendingSync();
+    if (job) void syncSettingsJob(job, 0, { keepalive: true });
+  };
+  window.addEventListener('pagehide', sendPendingNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') sendPendingNow();
+  });
+  // Changes made without a connection go up when it's back.
+  window.addEventListener('online', () => {
+    if (useSettingsStore.getState().settingsSyncDisabled || !hasUnsyncedChanges()) return;
+    triggerSync();
+    void useSettingsStore.getState().flushSync();
+  });
 
   // Auto-sync settings to server on any state change
   let prevSyncDisabled = useSettingsStore.getState().settingsSyncDisabled;

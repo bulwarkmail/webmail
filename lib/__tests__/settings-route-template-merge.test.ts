@@ -136,3 +136,34 @@ describe('settings route merges iCal subscriptions into the stored blob', () => 
     expect(saved.theme).toBe('dark');
   });
 });
+
+describe('settings route keeps the setting changed last (per-setting stamps)', () => {
+  it('keeps a setting another device changed after the pushing one', async () => {
+    store.set(KEY, {
+      theme: 'dark', density: 'compact', explicitSettings: ['density'],
+      settingsModifiedAt: { theme: 1_000, density: 3_000 },
+    });
+
+    // A tab that has been open since before the density change pushes its theme.
+    const saved = await push({
+      theme: 'light', density: 'regular', explicitSettings: [],
+      settingsModifiedAt: { theme: 2_000, density: 500 },
+    });
+
+    expect(saved.theme).toBe('light');
+    expect(saved.density).toBe('compact');
+    expect(saved.explicitSettings).toEqual(['density']);
+    expect(saved.settingsModifiedAt).toEqual({ theme: 2_000, density: 3_000 });
+  });
+
+  it('takes a push without stamps as before', async () => {
+    store.set(KEY, { theme: 'dark', density: 'compact', settingsModifiedAt: { theme: 1_000, density: 3_000 } });
+
+    const saved = await push({ theme: 'light', density: 'compact' });
+
+    expect(saved.theme).toBe('light');
+    expect(saved.density).toBe('compact');
+    // The changed setting's time is no longer known.
+    expect(saved.settingsModifiedAt).toEqual({ density: 3_000 });
+  });
+});
