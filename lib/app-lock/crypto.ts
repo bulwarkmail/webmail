@@ -13,7 +13,8 @@ export const LOCK_LAYER = 'applock';
 export const SHELL_LAYER = 'safeStorage';
 /** OWASP's floor for PBKDF2-HMAC-SHA256. A wrong guess costs this much, online or off. */
 export const PBKDF2_ITERATIONS = 600_000;
-export const MIN_PIN_LENGTH = 6;
+/** The app's own floor for a new PIN. An organisation's policy can raise it (lib/app-lock/policy.ts). */
+export const MIN_PIN_LENGTH = 5;
 
 const AES = { name: 'AES-GCM', length: 256 } as const;
 const PRF_INFO = new TextEncoder().encode('bulwark-app-lock-prf-v1');
@@ -41,12 +42,14 @@ export function pinBytes(pin: string): Uint8Array {
   return new TextEncoder().encode(pin.normalize('NFKC'));
 }
 
-export function pinLongEnough(pin: string): boolean {
-  return [...pin.normalize('NFKC')].length >= MIN_PIN_LENGTH;
+/** For a new PIN. `minimum` is what a policy asks for; nothing goes under the app's own floor. */
+export function pinLongEnough(pin: string, minimum = MIN_PIN_LENGTH): boolean {
+  return [...pin.normalize('NFKC')].length >= Math.max(MIN_PIN_LENGTH, minimum);
 }
 
 /** A few of what people pick most, as the check below reads them. Runs and repeats are found by rule. */
 const COMMON_PINS = new Set([
+  'qwert', 'asdfg', 'yxcvb', 'zxcvb', '1q2w3', 'abc12', '12321',
   'password', 'password1', 'password123', 'passwort', 'qwerty', 'qwertz', 'qwerty123', 'qwertyuiop', 'asdfgh', 'yxcvbn', 'zxcvbn',
   '1q2w3e', '1q2w3e4r', 'q1w2e3', 'abc123', 'a1b2c3', '123abc', 'letmein', 'iloveyou', 'admin123', 'welcome', 'welcome1', 'monkey', 'dragon',
   '147258', '159753', '258456', '789456', '102030', '101010', '696969', '111222', '121314', '131313', '123321', '112233',
@@ -78,6 +81,13 @@ export class ObviousPinError extends Error {
   constructor() {
     super('That PIN is too easy to guess');
     this.name = 'ObviousPinError';
+  }
+}
+
+export class ShortPinError extends Error {
+  constructor() {
+    super('That PIN is too short');
+    this.name = 'ShortPinError';
   }
 }
 
