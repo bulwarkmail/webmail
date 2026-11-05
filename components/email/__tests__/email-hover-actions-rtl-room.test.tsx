@@ -1,3 +1,4 @@
+import { Profiler } from 'react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { render } from '@testing-library/react';
@@ -55,6 +56,22 @@ describe('the room a row keeps for its hover actions', () => {
     unmount();
     again.unmount();
     expect(again.el.hasAttribute('data-hover-actions-shown')).toBe(false);
+  });
+
+  it('costs a mounting row no second render pass', () => {
+    // A search mounts a list of new rows: the strip used to keep its element
+    // in state, so each mount committed twice (perf guard, search).
+    width.value = 132;
+    const commits: string[] = [];
+    const view = render(
+      <Profiler id="row" onRender={(_id, phase) => commits.push(phase)}>
+        <div data-menu-row="">
+          <div role="gridcell"><EmailHoverActions email={email} onDelete={vi.fn()} onToggleStar={vi.fn()} /></div>
+        </div>
+      </Profiler>,
+    );
+    expect(commits).toEqual(['mount']);
+    expect(view.container.querySelector('[data-menu-row]')!.hasAttribute('data-hover-actions-shown')).toBe(true);
   });
 
   it('keeps right-to-left text clear of the strip', () => {
