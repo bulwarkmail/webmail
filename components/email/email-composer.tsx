@@ -51,6 +51,7 @@ import {
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
@@ -5307,7 +5308,7 @@ export function EmailComposer({
       {/* Header - mobile: clean bar with close/send, desktop: title bar.
           In Mountain View's window it is the window's title bar instead. */}
       {mvWindow?.variant === "inline" ? (
-        <div className="flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
+        <div className="@container/composer-head flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
           {panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
             {titleMode === 'replyAll'
@@ -5319,6 +5320,7 @@ export function EmailComposer({
               {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            <ComposerHeaderPluginActions composerId={pluginComposerId} />
             {leftPanelToggle}
             {rightPanelToggle}
             {!rightPanelOpen && mvInlineButtons}
@@ -5328,7 +5330,7 @@ export function EmailComposer({
       ) : mvWindow ? (
         <div
           className={cn(
-            "flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
+            "@container/composer-head flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
             mvWindow.state === "minimized" && "cursor-pointer",
           )}
           data-mv-compose-titlebar=""
@@ -5343,6 +5345,7 @@ export function EmailComposer({
                 : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            {mvWindow.state !== "minimized" && <ComposerHeaderPluginActions composerId={pluginComposerId} />}
             {mvWindow.state !== "minimized" && leftPanelToggle}
             {mvWindow.state !== "minimized" && rightPanelToggle}
             {(mvWindow.state === "minimized" || !rightPanelOpen) && mvWindowButtons}
@@ -5350,7 +5353,7 @@ export function EmailComposer({
           {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
         </div>
       ) : (
-      <div ref={setComposerHeader} className="flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
+      <div ref={setComposerHeader} className="@container/composer-head flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
         {panelHead('left', 'px-2')}
         <div className="flex-1 min-w-0 flex items-center gap-3 px-4 py-2 md:py-0">
         {closeBesideControls && composerCloseButton}
@@ -5423,6 +5426,7 @@ export function EmailComposer({
             {t('send')}
           </Button>
         ))}
+        <ComposerHeaderPluginActions composerId={pluginComposerId} />
         {rightPanelToggle}
         {!rightPanelOpen && windowButtons}
         </div>
