@@ -24,7 +24,7 @@ const DRAFT: RescuedDraft = {
 const original = { auth: useAuthStore.getState(), email: useEmailStore.getState(), accounts: useAccountStore.getState() };
 let heard: PopoutMessage[];
 let popout: NonNullable<ReturnType<typeof openPopoutChannel>>;
-let client: { createDraft: ReturnType<typeof vi.fn>; deleteEmail: ReturnType<typeof vi.fn>; getAuthHeader: () => string; isOfflineOnly: () => boolean };
+let client: { createDraft: ReturnType<typeof vi.fn>; deleteEmail: ReturnType<typeof vi.fn>; moveEmail: ReturnType<typeof vi.fn>; getAuthHeader: () => string; isOfflineOnly: () => boolean };
 let lockRequests: string[];
 
 // Rounds, not one long wait: a message and its answer are two hops, and a busy
@@ -63,7 +63,11 @@ beforeEach(() => {
   sessionStorage.clear();
   heard = [];
   popout = openPopoutChannel((message) => heard.push(message))!;
-  client = { createDraft: vi.fn(async () => 'new'), deleteEmail: vi.fn(async () => {}), getAuthHeader: () => 'Bearer main', isOfflineOnly: () => false };
+  client = {
+    createDraft: vi.fn(async () => 'new'), deleteEmail: vi.fn(async () => {}), getAuthHeader: () => 'Bearer main', isOfflineOnly: () => false,
+    moveEmail: vi.fn(async () => {}), getAccountId: () => 'acc',
+    getAllMailboxes: vi.fn(async () => [{ id: 'trash-box', role: 'trash' }, { id: 'drafts-box', role: 'drafts' }]),
+  } as never;
   useAccountStore.setState({
     accounts: [{ id: 'alice', serverUrl: 'https://mail.example.test', username: 'alice', authMode: 'oauth', cookieSlot: 0 } as never],
     activeAccountId: 'alice',
@@ -363,6 +367,116 @@ describe('PopoutHost', () => {
     expect(client.deleteEmail).not.toHaveBeenCalled();
     await act(async () => { window.dispatchEvent(new Event('pagehide')); });
     expect(client.deleteEmail).toHaveBeenCalledWith('d1', undefined);
+  });
+
+  // desktop-p3-1: quick compose is used with this window in the tray, where its toast goes unseen.
+  describe('in the desktop app, a composer window thrown away', () => {
+    const RESTORE = {
+      mode: 'compose' as const,
+      initialData: { to: 'sam@example.test', cc: '', bcc: '', subject: 'Budget', body: '<p>Numbers</p>', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', mode: 'compose' as const, draftId: 'd1', attachments: [{ blobId: 'b1', name: 'q3.pdf', size: 10 }] },
+    };
+    let notify: ReturnType<typeof vi.fn>;
+    let opened: { url: string; options: Record<string, unknown> }[];
+
+    beforeEach(() => {
+      opened = [];
+      notify = vi.fn(async () => ({ shown: true, playSound: false }));
+      window.bulwarkDesktop = {
+        version: 1,
+        platform: 'win32',
+        windows: { open: (url: string, options: Record<string, unknown>) => { opened.push({ url, options }); } },
+        os: { notify },
+      } as never;
+    });
+
+    it('moves the draft to Trash now and asks the OS for "Draft discarded" with Undo; the toast here has none', async () => {
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k3', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      expect(client.moveEmail).toHaveBeenCalledWith('d1', 'trash-box', undefined);
+      expect(client.deleteEmail).not.toHaveBeenCalled();
+      expect(notify).toHaveBeenCalledTimes(1);
+      const request = notify.mock.calls[0][0] as { title: string; body: string; kind: string; actions: { id: string; label: string }[]; context: string };
+      expect(request).toEqual(expect.objectContaining({ title: 'compose_ux.draft_discarded', body: 'Budget', kind: 'undo' }));
+      expect(request.actions).toEqual([{ id: 'undo', label: 'compose_ux.undo' }]);
+      expect(JSON.parse(request.context).discardedDraft).toEqual(expect.any(String));
+      const toasts = useToastStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].title).toBe('compose_ux.draft_discarded');
+      expect(toasts[0].action).toBeUndefined();
+    });
+
+    it('says it also for text never saved, and Undo opens quick compose with it, attachments included, as a new draft', async () => {
+      const { reopenDiscarded } = await import('@/lib/popout/discarded-undo');
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k4', notice: { localAccountId: 'alice', discarded: true, restore: { ...RESTORE, initialData: { ...RESTORE.initialData, draftId: null } } } });
+      await settle();
+      expect(client.deleteEmail).not.toHaveBeenCalled();
+      expect(notify).toHaveBeenCalledTimes(1);
+      const token = JSON.parse((notify.mock.calls[0][0] as { context: string }).context).discardedDraft as string;
+
+      await act(async () => { expect(await reopenDiscarded(token)).toBe(true); });
+      expect(opened).toHaveLength(1);
+      expect(opened[0].url).toContain('/popout/compose?handoff=');
+      expect(opened[0].options.quick).toBe(true);
+      // The new window asks for its draft, as a real one does.
+      const handoffId = new URL(opened[0].url, 'https://x.test').searchParams.get('handoff')!;
+      const got: PopoutMessage[] = [];
+      const window2 = openPopoutChannel((message) => got.push(message))!;
+      window2.post({ type: 'handoff-request', handoffId });
+      await settle();
+      const answer = got.find((message) => message.type === 'handoff-answer') as Extract<PopoutMessage, { type: 'handoff-answer' }>;
+      expect(answer.payload?.initialData).toEqual(expect.objectContaining({ subject: 'Budget', body: '<p>Numbers</p>', draftId: null, unsaved: true, attachments: [{ blobId: 'b1', name: 'q3.pdf', size: 10 }] }));
+      // On screen: the opening side lets go, as with a real window.
+      window2.post({ type: 'handoff-rendered', handoffId });
+      await settle();
+      window2.close();
+    });
+
+    it('Undo after a save moves the draft back to Drafts and opens it, attachments and all', async () => {
+      const { reopenDiscarded } = await import('@/lib/popout/discarded-undo');
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k6', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      const token = JSON.parse((notify.mock.calls[0][0] as { context: string }).context).discardedDraft as string;
+      await act(async () => { expect(await reopenDiscarded(token)).toBe(true); });
+      expect(client.moveEmail).toHaveBeenLastCalledWith('d1', 'drafts-box', undefined);
+      const handoffId = new URL(opened[0].url, 'https://x.test').searchParams.get('handoff')!;
+      const got: PopoutMessage[] = [];
+      const window2 = openPopoutChannel((message) => got.push(message))!;
+      window2.post({ type: 'handoff-request', handoffId });
+      await settle();
+      const answer = got.find((message) => message.type === 'handoff-answer') as Extract<PopoutMessage, { type: 'handoff-answer' }>;
+      expect(answer.payload?.initialData).toEqual(expect.objectContaining({ subject: 'Budget', draftId: 'd1', unsaved: true, attachments: [{ blobId: 'b1', name: 'q3.pdf', size: 10 }] }));
+      expect(client.deleteEmail).not.toHaveBeenCalled();
+      // On screen: the opening side lets go, as with a real window.
+      window2.post({ type: 'handoff-rendered', handoffId });
+      await settle();
+      window2.close();
+    });
+
+    it('destroys the draft in Trash when the page goes before an Undo', async () => {
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k7', notice: { draftId: 'd7', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+      expect(client.deleteEmail).toHaveBeenCalledWith('d7', undefined);
+    });
+
+    it('offers Undo here when the OS did not show it', async () => {
+      notify.mockResolvedValue({ shown: false, reason: 'failed', playSound: false });
+      render(<PopoutHost />);
+      await settle();
+      popout.post({ type: 'draft-kept', requestId: 'k5', notice: { draftId: 'd1', localAccountId: 'alice', discarded: true, restore: RESTORE } });
+      await settle();
+      const toasts = useToastStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].action?.label).toBe('compose_ux.undo');
+    });
   });
 
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {

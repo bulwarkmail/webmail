@@ -240,6 +240,12 @@ const TOOLBAR_COMPACT_ATTRIBUTE = 'data-toolbar-compact';
 type ToolbarCompact = false | 'secondary' | 'all';
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
 const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
+/** What a message from a file can't do: it is in no folder and has no address in the app. */
+const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
+  'edit_draft', 'forward_as_attachment', 'restore', 'archive', 'delete', 'remove_from_folder',
+  'read', 'star', 'pin', 'tag', 'spam', 'report_phishing', 'copy_message_link',
+  'copy_conversation_link', 'open_window', 'export',
+];
 
 /** Whatever a sub-view offers to act on, in the order it is read out. */
 const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
@@ -340,6 +346,12 @@ interface EmailViewerProps {
    * It shows the message and does nothing on its own: no mark as read, no read receipt.
    */
   noAutomaticActions?: boolean;
+  /**
+   * A message opened from a file (an .eml from the desktop): it is in no folder, so the
+   * reader offers what needs none (answer, print, view) and Move, which the host
+   * carries out as an import. No archive, delete, read state, star, tags, spam or links.
+   */
+  savedFile?: boolean;
   isFullscreen?: boolean;
   currentUserEmail?: string;
   currentUserName?: string;
@@ -1487,6 +1499,7 @@ export function EmailViewer({
   onToggleFullscreen,
   onOpenInWindow,
   noAutomaticActions = false,
+  savedFile = false,
   isFullscreen = false,
   currentUserEmail,
   currentUserName,
@@ -4585,8 +4598,9 @@ ${printWatermark ? printWatermark.html : ''}
     onRestore: currentMailboxRole === 'trash' && onMoveToMailbox
       ? () => { if (restoreTarget) onMoveToMailbox(restoreTarget.id); }
       : undefined,
-    onMoveToInbox: archiveInbox && onMoveToMailbox ? () => onMoveToMailbox(archiveInbox.id) : undefined,
-    omit: readerMenuOmit,
+    onMoveToInbox: !savedFile && archiveInbox && onMoveToMailbox ? () => onMoveToMailbox(archiveInbox.id) : undefined,
+    omit: savedFile ? new Set([...readerMenuOmit, ...SAVED_FILE_OMIT]) : readerMenuOmit,
+    ...(savedFile ? { rules: false } : {}),
     views: readerViews,
   };
 
@@ -4770,7 +4784,7 @@ ${printWatermark ? printWatermark.html : ''}
             {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tActions('restore')}</span>}
           </Button>
         )}
-        {archiveInbox && onMoveToMailbox && !isInJunkFolder && !isInTrashFolder && (
+        {!savedFile && archiveInbox && onMoveToMailbox && !isInJunkFolder && !isInTrashFolder && (
           <Button
             variant="ghost"
             size="sm"
@@ -4785,7 +4799,7 @@ ${printWatermark ? printWatermark.html : ''}
             {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{tP3('move_to_inbox')}</span>}
           </Button>
         )}
-        {archiveActionEnabled && !archiveInbox && !isInJunkFolder && !isInTrashFolder && (
+        {archiveActionEnabled && !savedFile && !archiveInbox && !isInJunkFolder && !isInTrashFolder && (
           <Button
             variant="ghost"
             size="sm"
@@ -4800,7 +4814,7 @@ ${printWatermark ? printWatermark.html : ''}
           </Button>
         )}
         {/* Delete */}
-        <Button
+        {!savedFile && (<Button
           variant="ghost"
           size="sm"
           onClick={onDelete}
@@ -4810,7 +4824,7 @@ ${printWatermark ? printWatermark.html : ''}
         >
           <Trash2 className="w-4 h-4" />
           {showToolbarLabels && <span data-toolbar-label="primary" className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{deleteIsPermanent ? tActions('delete_forever') : t('delete')}</span>}
-        </Button>
+        </Button>)}
         {/* Move to folder */}
         {canMoveAnywhere && onMoveToMailbox && (
           <div data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
@@ -4843,7 +4857,7 @@ ${printWatermark ? printWatermark.html : ''}
           </div>
         )}
         {/* Tag Picker - hidden on mobile, overflows to More menu */}
-        <div data-overflow-item data-overflow-priority="6" className={cn("hidden sm:flex items-center", mvViewer && "order-7")}>
+        {!savedFile && (<div data-overflow-item data-overflow-priority="6" className={cn("hidden sm:flex items-center", mvViewer && "order-7")}>
         {!mvViewer && <div className="w-px h-5 bg-border mx-0.5" />}
         <div className="relative">
           <Button
@@ -4873,10 +4887,10 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
           </ContextMenu>
         </div>
-        </div>
+        </div>)}
 
         {/* Spam */}
-        {spamApplicable && !isInJunkFolder && onMarkAsSpam && (
+        {spamApplicable && !savedFile && !isInJunkFolder && onMarkAsSpam && (
           <Button
             variant="ghost"
             size="sm"
@@ -4907,7 +4921,7 @@ ${printWatermark ? printWatermark.html : ''}
             the overflow calculation and the toolbar buttons jump around (#864). */}
         {/* Mountain View groups the actions as Gmail does, with a rule between groups. */}
         {mvViewer && <div className="order-4 w-px h-5 bg-border mx-1" aria-hidden />}
-        <Button
+        {!savedFile && (<Button
           variant="ghost"
           size="sm"
           onClick={() => onMarkAsRead?.(email.id, isUnread)}
@@ -4923,7 +4937,7 @@ ${printWatermark ? printWatermark.html : ''}
               <span className={cn("col-start-1 row-start-1", isUnread && "invisible")} aria-hidden={isUnread}>{t('unread')}</span>
             </span>
           )}
-        </Button>
+        </Button>)}
 
         {/* Print - hidden on mobile, overflows to More menu. Mountain View
             has it on the subject line. */}
@@ -5241,7 +5255,7 @@ ${printWatermark ? printWatermark.html : ''}
                 )}
                 {/* Star inline with subject (top toolbar mode). Mountain View
                     has it on the sender's line instead. */}
-                {toolbarPosition === 'top' && !mvViewer && (
+                {toolbarPosition === 'top' && !mvViewer && !savedFile && (
                   <IconButton
                     onClick={onToggleStar}
                     label={isStarred ? t('unstar') : t('star')}
@@ -5462,7 +5476,7 @@ ${printWatermark ? printWatermark.html : ''}
                         <span className="me-1" data-mv-sender-date="">
                           <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
                         </span>
-                        {mvViewer && (<button
+                        {mvViewer && !savedFile && (<button
                           type="button"
                           onClick={onToggleStar}
                           className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"

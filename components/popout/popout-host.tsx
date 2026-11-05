@@ -9,6 +9,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { keepDiscarded, notifyDiscarded, reopenDiscarded, trashDiscardedDraft } from "@/lib/popout/discarded-undo";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { takeOverMoved } from "@/lib/popout/moved-undo";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
@@ -208,10 +210,11 @@ export function PopoutHost() {
           break;
         case "draft-kept": {
           // Said here, as the pop-out closes with its Escape or X.
-          const { draftId, accountId, localAccountId, discarded } = message.notice;
+          const { draftId, accountId, localAccountId, discarded, restore } = message.notice;
           claimOnce(`bulwark-popout-kept:${message.requestId}`, () => {
             const tr = tRef.current;
             const discard = () => {
+              if (!draftId) return;
               const auth = useAuthStore.getState();
               const login = localAccountId ? auth.getClientForAccount(localAccountId) : auth.client;
               if (!login) {
@@ -226,9 +229,26 @@ export function PopoutHost() {
               discarded: tr("compose_ux.draft_discarded"),
               undo: tr("compose_ux.undo"),
             };
+            // The desktop app's window, quick compose above all, is used with this one in
+            // the tray: Undo comes from the OS, and opens that window again with what was
+            // in it, also before its first save. The draft goes now (desktop-p3-1).
+            if (discarded && restore && getDesktopBridge()?.os?.notify) {
+              const login = localAccountId ?? useAuthStore.getState().activeAccountId ?? null;
+              void (async () => {
+                // A saved draft goes to Trash, where its attachments stay for Undo (lib/popout/discarded-undo.ts).
+                const trashed = draftId && await trashDiscardedDraft(login, { draftId, accountId }) ? { draftId, accountId } : undefined;
+                const token = keepDiscarded(restore, login, trashed);
+                const shown = await notifyDiscarded(token, restore.initialData?.subject ?? "", labels);
+                // No word from the OS: the Undo has to be here, or the text is gone unsaid.
+                if (shown) toast.success(labels.discarded);
+                else toast.success(labels.discarded, { action: { label: labels.undo, onClick: () => { void reopenDiscarded(token); } } });
+              })();
+              return;
+            }
             // The window's bin: Undo leaves the draft in Drafts.
-            if (discarded) discardWithUndo(discard, labels);
-            else showDraftSavedToast(discard, labels);
+            if (discarded) {
+              if (draftId) discardWithUndo(discard, labels);
+            } else showDraftSavedToast(discard, labels);
           });
           break;
         }

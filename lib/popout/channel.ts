@@ -126,13 +126,19 @@ export type PopoutMessage =
 
 /** A pop-out closed and kept its draft: the main window says so, with Discard. */
 export interface DraftKeptNotice {
-  draftId: string;
+  /** Absent for a composer thrown away before its first save (`restore` has the text). */
+  draftId?: string;
   /** The account it lives in, when not the login's own. */
   accountId?: string;
   /** The login it was saved through. */
   localAccountId?: string;
   /** Thrown away with the bin: "Draft discarded" with Undo, deleted after. */
   discarded?: boolean;
+  /**
+   * The composer as it was when the bin was pressed, for Undo to open again: a
+   * window of its own has closed by then (desktop-p3-1).
+   */
+  restore?: ComposePopoutPayload;
 }
 
 export interface PopoutChannel {

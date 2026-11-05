@@ -479,8 +479,11 @@ interface EmailComposerProps {
      * this one is gone before a toast here could be read.
      */
     onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
-    /** The bin closed the window: another window says "Draft discarded" with Undo, and deletes it after. */
-    onDraftDiscarded?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
+    /**
+     * The bin closed the window: another window says "Draft discarded" with Undo. `draftId` is
+     * null before the first save; `state` is the composer as it was, for Undo to bring back.
+     */
+    onDraftDiscarded?: (draftId: string | null, where: { accountId?: string; localAccountId?: string }, state: ComposerDraftData) => void;
   };
   /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
   onSubjectChange?: (subject: string) => void;
@@ -2206,8 +2209,21 @@ export function EmailComposer({
     return true;
   };
 
+  // A new message that comes addressed (a mail link, a draft): the caret goes to the body,
+  // as in Outlook and Thunderbird. Only the first render's To counts (desktop-p3-12).
+  const addressedAtStartRef = useRef<boolean | null>(null);
+  if (addressedAtStartRef.current === null) addressedAtStartRef.current = mode === 'compose' && to.length > 0;
+
   // Auto-focus the To field when composing a new email or forwarding
   useEffect(() => {
+    if (mode === 'compose' && addressedAtStartRef.current) {
+      // The rich text editor focuses itself once it is ready (onEditorReady below).
+      if (!plainTextMode) return;
+      const timer = setTimeout(() => {
+        if (focusUnlessMoved(bodyRef.current)) bodyRef.current?.setSelectionRange(0, 0);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
     if (mode === 'forward' || mode === 'compose') {
       // Small delay to ensure the input is rendered
       const timer = setTimeout(() => focusUnlessMoved(toInputRef.current), 100);
@@ -3607,6 +3623,9 @@ export function EmailComposer({
     if (!replyFocusedRef.current && (mode === 'reply' || mode === 'replyAll')) {
       replyFocusedRef.current = true;
       ed.commands.focus('start');
+    } else if (!replyFocusedRef.current && mode === 'compose' && addressedAtStartRef.current) {
+      replyFocusedRef.current = true;
+      if (focusUnlessMoved(ed.view.dom as HTMLElement)) ed.commands.focus('start');
     }
   }, [mode]);
   useEffect(() => {
@@ -5007,8 +5026,9 @@ export function EmailComposer({
     const windowDiscarded = ownWindowRef.current?.onDraftDiscarded;
     if (draftId && !windowDiscarded) onDiscardStarted?.(draftId);
     handleDiscardAndClose({ keepDraft: true });
+    // Also before the first save: the text must not go without an Undo (desktop-p3-1).
     if (windowDiscarded) {
-      if (draftId) windowDiscarded(draftId, where);
+      windowDiscarded(draftId, where, snapshot);
       return;
     }
     discardWithUndo(

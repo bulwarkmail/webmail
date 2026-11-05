@@ -60,8 +60,8 @@ vi.mock('@/lib/popout/support', async (original) => ({
 }));
 vi.mock('@/lib/popout/open', async (original) => ({
   ...(await original<object>()),
-  openComposerWindow: (account?: string | null) => {
-    desktopWindows.open(account);
+  openComposerWindow: (account?: string | null, options?: { quick?: boolean }) => {
+    desktopWindows.open(account, options);
     return { handOver: desktopWindows.handOver, cancel: vi.fn() };
   },
 }));
@@ -212,6 +212,14 @@ describe('a mail link from another program in the desktop app', () => {
     expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
   });
 
+  // desktop-p3-12: a mail link opened the big composer, tray New message the small one.
+  it('opens at the size of quick compose, as every new message from outside does', async () => {
+    render(<MailApp />);
+    await fromOs();
+    await waitFor(() => expect(desktopWindows.open).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.open.mock.calls[0][1]).toEqual({ quick: true });
+  });
+
   it('files from Send to or Open with go to a compose window too, attached, and the main window shows no composer', async () => {
     const { handOffDraft } = await import('@/lib/launch-handoff');
     render(<MailApp />);
@@ -237,7 +245,7 @@ describe('a mail link from another program in the desktop app', () => {
       render(<MailApp />);
       await fromOs();
       await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
-      expect(desktopWindows.open).toHaveBeenCalledWith('second');
+      expect(desktopWindows.open).toHaveBeenCalledWith('second', { quick: true });
       expect(screen.queryByText('select_account_title')).not.toBeInTheDocument();
       // The main window keeps the account it shows.
       expect(useAuthStore.getState().activeAccountId).toBe('login');

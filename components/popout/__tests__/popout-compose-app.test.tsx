@@ -9,6 +9,9 @@ import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { emailHooks } from '@/lib/plugin-hooks';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { usePolicyStore } from '@/stores/policy-store';
+import { useAccountStore } from '@/stores/account-store';
 
 // The composer's window: when it tells the opening window to let go, and what
 // happens on a reload. The composer itself is stubbed; its own tests cover it.
@@ -26,8 +29,12 @@ vi.mock('@/components/email/email-composer', () => ({
   },
 }));
 vi.mock('@/components/error', () => ({ ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>, ComposerErrorFallback: () => null }));
+let shellAccount: string | undefined;
 vi.mock('../popout-shell', () => ({
-  PopoutShell: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PopoutShell: ({ children, accountId }: { children: React.ReactNode; accountId?: string }) => {
+    shellAccount = accountId;
+    return <>{children}</>;
+  },
   PopoutSkeleton: () => <div data-testid="skeleton" />,
   PopoutNotice: ({ title, children }: { title: string; children: React.ReactNode }) => <div><h1>{title}</h1>{children}</div>,
 }));
@@ -248,6 +255,69 @@ describe('PopoutComposeApp', () => {
 
     await expect(Promise.all([handoff.complete(PAYLOAD), settle()]).then(([shown]) => shown)).resolves.toBe(true);
     expect(screen.getByTestId('composer').textContent).toBe('Moving');
+  });
+
+  // desktop-p2-5: the taskbar and Alt+Tab named a composer "New message - <account> - Bulwark" whatever it held.
+  it('in the desktop app, takes the subject for its title, without the account', async () => {
+    const title = vi.mocked(useDocumentTitle);
+    const policyBefore = usePolicyStore.getState();
+    usePolicyStore.setState({ loaded: true, isFeatureEnabled: () => true } as never);
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} } as never;
+    try {
+      const handoff = createComposeHandoff()!;
+      openAt(handoff.id);
+      await settle();
+      await Promise.all([handoff.complete(PAYLOAD), settle()]);
+      expect(title.mock.calls.at(-1)).toEqual(['Moving', { showAccount: false }]);
+    } finally {
+      usePolicyStore.setState(policyBefore, true);
+      delete window.bulwarkDesktop;
+    }
+  });
+
+  // desktop-p3-12: quick compose wrote from the account in front, a mail link from the default one.
+  it('in the desktop app, a new message from outside writes from the default account; a browser keeps the one in use', async () => {
+    const accountsBefore = useAccountStore.getState();
+    useAccountStore.setState({
+      accounts: [{ id: 'alice', isConnected: true }, { id: 'work', isConnected: true }] as never,
+      defaultAccountId: 'work',
+    });
+    try {
+      window.history.replaceState(null, '', '/en/popout/compose');
+      render(<PopoutComposeApp />);
+      await settle();
+      expect(shellAccount).toBeUndefined();
+      cleanup();
+      window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} } as never;
+      render(<PopoutComposeApp />);
+      await settle();
+      expect(shellAccount).toBe('work');
+      cleanup();
+      // An address that names its account keeps it.
+      window.history.replaceState(null, '', '/en/popout/compose?account=alice');
+      render(<PopoutComposeApp />);
+      await settle();
+      expect(shellAccount).toBe('alice');
+    } finally {
+      delete window.bulwarkDesktop;
+      useAccountStore.setState(accountsBefore, true);
+    }
+  });
+
+  // desktop-p3-1: the bin in a window of its own hands the main window what Undo brings back.
+  it('the bin hands the main window the composer as it was, also before the first save', async () => {
+    const handoff = createComposeHandoff()!;
+    openAt(handoff.id);
+    await settle();
+    await Promise.all([handoff.complete(PAYLOAD), settle()]);
+    const own = (composer as unknown as { ownWindow: { onDraftDiscarded: (id: string | null, where: object, state: object) => void } }).ownWindow;
+    const state = { subject: 'Moving', body: '<p>Typed</p>', mode: 'compose', draftId: null };
+    act(() => own.onDraftDiscarded(null, {}, state));
+    await settle();
+    const kept = heard.find((message) => message.type === 'draft-kept') as Extract<PopoutMessage, { type: 'draft-kept' }>;
+    expect(kept.notice).toEqual(expect.objectContaining({ discarded: true, localAccountId: 'alice' }));
+    expect(kept.notice.draftId).toBeUndefined();
+    expect(kept.notice.restore).toEqual(expect.objectContaining({ mode: 'compose', initialData: state }));
   });
 
   it('does not while it has no session, so the opening window keeps its copy', async () => {

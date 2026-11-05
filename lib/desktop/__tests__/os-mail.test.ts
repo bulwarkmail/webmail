@@ -13,13 +13,15 @@ vi.mock('@/lib/device-policy', () => ({ devicesForAccount: () => ({ pushWithoutC
 
 const accounts = [{ id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org', label: 'Work', email: 'alice@example.org' }];
 let client: IJMAPClient;
+/** Logins other than the first, by account entry id. */
+const others = new Map<string, IJMAPClient>();
 vi.mock('@/stores/account-store', () => ({ useAccountStore: { getState: () => ({ accounts }) } }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: {
     getState: () => ({
       activeAccountId: 'alice@one',
       client,
-      getClientForAccount: () => client,
+      getClientForAccount: (id: string) => others.get(id) ?? client,
     }),
   },
 }));
@@ -285,6 +287,20 @@ describe('what the notification says', () => {
     expect(JSON.parse(notification.context).emailId).toBeUndefined();
   });
 
+  it('with two accounts of the same name, it names the account by its address', async () => {
+    const { buildMailNotification } = await import('../mail-notifications');
+    accounts.push({ id: 'bob@one', cookieSlot: 4, serverUrl: 'https://one.example', username: 'bob@example.org', label: 'work ', email: 'bob@example.org' });
+    try {
+      expect((await buildMailNotification([one()], labels)).title).toBe('Alice Sender (alice@example.org)');
+      expect((await buildMailNotification([one('a'), one('b')], labels)).title).toBe('count:2 (alice@example.org)');
+      // Names that differ stay names.
+      accounts[1].label = 'Home';
+      expect((await buildMailNotification([one()], labels)).title).toBe('Alice Sender (Work)');
+    } finally {
+      accounts.splice(1);
+    }
+  });
+
   it('several at once while locked say only how many', async () => {
     const { buildMailNotification } = await import('../mail-notifications');
     const { setAppLockCheck } = await import('../app-lock-state');
@@ -360,6 +376,31 @@ describe('from arrival to toast and sound', () => {
     await vi.advanceTimersByTimeAsync(MAIL_BATCH_MS + 10);
     await settle();
     expect(notify).toHaveBeenCalledTimes(1);
+  });
+
+  it('mail for two accounts in one go: a notification for each, and the sound once', async () => {
+    const { startMailNotifications, MAIL_BATCH_MS } = await import('../mail-notifications');
+    const { reportStoreCreatedMail: noteStoreCreated } = await import('../system-events');
+    const notify = vi.fn(async (_n: DesktopOsNotification) => ({ shown: true, playSound: true }));
+    setBridge({ version: 1, platform: 'win32', os: { notify } as never });
+    client = fakeClient({ a: email('a') });
+    const second = { ...fakeClient({ b: email('b', { subject: 'For the other one' }) }), getAccountId: () => 'acc2' } as unknown as IJMAPClient;
+    accounts.push({ id: 'bob@two', cookieSlot: 4, serverUrl: 'https://two.example', username: 'bob@example.org', label: 'Home', email: 'bob@example.org' });
+    others.set('bob@two', second);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const mail = startMailNotifications(labels);
+    noteStoreCreated(client, 'acc', ['a']);
+    noteStoreCreated(second, 'acc2', ['b']);
+    await vi.advanceTimersByTimeAsync(MAIL_BATCH_MS + 10);
+    await settle();
+    mail.stop();
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notify.mock.calls.map(([n]) => n.body).sort()).toEqual(['For the other one', 'Secret a']);
+    expect(notify.mock.calls.map(([n]) => n.group).sort()).toEqual(['mail:acc', 'mail:acc2']);
+    expect(notify.mock.calls.map(([n]) => n.title).sort()).toEqual(['Alice Sender (Home)', 'Alice Sender (Work)']);
+    expect(playNotificationSound).toHaveBeenCalledTimes(1);
+    accounts.splice(1);
+    others.clear();
   });
 
   it('tells main the sound is off when the user has it off', async () => {

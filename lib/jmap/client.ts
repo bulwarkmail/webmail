@@ -3384,6 +3384,44 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async parseEmailBlob(blobId: string, accountId?: string): Promise<Email | null> {
+    const response = await this.request([
+      ["Email/parse", {
+        accountId: accountId || this.accountId,
+        blobIds: [blobId],
+        // getEmail's, without what only a stored message has.
+        properties: [
+          "size", "sentAt", "from", "to", "cc", "bcc", "replyTo",
+          "subject", "preview", "textBody", "htmlBody", "bodyValues",
+          "hasAttachment", "attachments", "messageId", "inReplyTo",
+          "references", "headers", "bodyStructure", "blobId",
+        ],
+        fetchTextBodyValues: true,
+        fetchHTMLBodyValues: true,
+        fetchAllBodyValues: true,
+        maxBodyValueBytes: TRUNCATED_BODY_REFETCH_MAX_BYTES,
+      }, "0"],
+    ]);
+    const [name, result] = response.methodResponses?.[0] ?? [];
+    if (name !== "Email/parse") throw new Error(methodErrorMessage(response, 'Failed to parse the message'));
+    const parsed = (result?.parsed as Record<string, Partial<Email>> | undefined)?.[blobId];
+    if (!parsed) return null;
+    const email = {
+      ...parsed,
+      id: blobId,
+      blobId,
+      threadId: '',
+      mailboxIds: {},
+      keywords: { $seen: true },
+      receivedAt: parsed.sentAt || new Date().toISOString(),
+      hasAttachment: !!parsed.hasAttachment,
+      size: parsed.size ?? 0,
+    } as Email;
+    addBodyMediaToAttachments(email);
+    if (email.headers) await this.parseEmailHeaders(email);
+    return email;
+  }
+
   // ---- Offline mode (#523, lib/offline/sync.ts) ----
 
   /** Ids of a folder's messages received since `sinceIso`, newest first. */

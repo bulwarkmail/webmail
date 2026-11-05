@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
     "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
   },
+  "uxp3_desktop": {
+    "web_address": "Nettadresse"
+  },
   "selectionView": {
     "starred": "Stjernemerket",
     "unstarred": "Stjerne fjernet"

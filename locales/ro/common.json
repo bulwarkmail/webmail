@@ -8083,6 +8083,9 @@
     "tip_compose_keys": "Apăsați {keys} pentru a scrie un mesaj nou",
     "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
   },
+  "uxp3_desktop": {
+    "web_address": "Adresă web"
+  },
   "selectionView": {
     "starred": "Marcat cu stea",
     "unstarred": "Stea eliminată"

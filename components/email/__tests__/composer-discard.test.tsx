@@ -268,9 +268,22 @@ describe('composer Discard button', () => {
 
     fireEvent.click(screen.getByText('discard'));
 
-    expect(onDraftDiscarded).toHaveBeenCalledWith('draft-1', { accountId: undefined, localAccountId: undefined });
+    expect(onDraftDiscarded).toHaveBeenCalledWith('draft-1', { accountId: undefined, localAccountId: undefined }, expect.objectContaining({ subject: 'Lunch', draftId: 'draft-1' }));
     expect(discardWithUndo).not.toHaveBeenCalled();
     expect(onDiscardDraft).not.toHaveBeenCalled();
+  });
+
+  // desktop-p3-1: quick compose's bin before the first save closed the window and the text was gone.
+  it('hands text not saved yet to the main window too, so Undo can bring it back', () => {
+    const onDraftDiscarded = vi.fn();
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={{ ...REOPENED_DRAFT, draftId: null, unsaved: true }} ownWindow={{ onDraftDiscarded }} onClose={onClose} />);
+
+    fireEvent.click(screen.getByText('discard'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onDraftDiscarded).toHaveBeenCalledWith(null, { accountId: undefined, localAccountId: undefined }, expect.objectContaining({ subject: 'Lunch', to: 'bob@example.com', body: '<p>Hello there</p>' }));
+    expect(discardWithUndo).not.toHaveBeenCalled();
   });
 
   it('closes an empty, never saved composer without asking', () => {

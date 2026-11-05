@@ -20,6 +20,7 @@ interface ICalSubscriptionModalProps {
 
 export function ICalSubscriptionModal({ client, onClose, editSubscription, initialUrl, initialName }: ICalSubscriptionModalProps) {
   const t = useTranslations("calendar.subscription");
+  const tWords = useTranslations("uxp3_desktop");
   const tCommon = useTranslations("common");
   const addICalSubscription = useCalendarStore((s) => s.addICalSubscription);
   const updateICalSubscription = useCalendarStore((s) => s.updateICalSubscription);
@@ -126,7 +127,8 @@ export function ICalSubscriptionModal({ client, onClose, editSubscription, initi
       <div className="space-y-4 pt-4">
         <div>
           <label htmlFor={`${id}-url`} className="text-xs font-medium text-muted-foreground mb-1 block">
-            {t("url_label")}
+            {/* "Web address", not "Calendar URL" (desktop-p3-16). */}
+            {tWords("web_address")}
           </label>
           <input
             id={`${id}-url`}
