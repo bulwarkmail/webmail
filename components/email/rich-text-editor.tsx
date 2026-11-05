@@ -240,10 +240,12 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
   onClick: () => void;
   /** A double click keeps the button armed after each use (format painter). */
   onDoubleClick?: () => void;
+  /** Keep the editor's focus (and its selection) through the click (format painter). */
+  onMouseDown?: React.MouseEventHandler<HTMLButtonElement>;
   children: React.ReactNode;
   title: string;
   disabled?: boolean;
-}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, onDoubleClick, children, title, disabled }, ref) {
+}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, onDoubleClick, onMouseDown, children, title, disabled }, ref) {
   return (
     <button
       ref={ref}
@@ -251,6 +253,7 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
       data-toolbar-item={item}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onMouseDown={onMouseDown}
       disabled={disabled}
       title={title}
       aria-label={title}
@@ -872,24 +875,33 @@ export function RichTextEditor({
       to: editor.state.selection.to,
       sticky: false,
     });
-    // The click took the focus off the editor: put it back so the next
-    // selection is made in the same document.
-    editor.commands.focus();
+    // For the keyboard: the mouse never leaves the editor focused (the
+    // button suppresses the focus grab), but pressing the button with
+    // Enter/Space does, so put it back — without scrolling, the toolbar
+    // sits right beside the editor.
+    editor.commands.focus(null, { scrollIntoView: false });
   }, [editor, painter]);
   // A double click arrives after the click that armed it: just make it sticky.
   const makePainterSticky = useCallback(() => {
     setPainter((current) => (current ? { ...current, sticky: true } : current));
   }, []);
   // Applying is replace semantics, as in a word processor: the marks the
-  // source didn't have come off the target too.
+  // source didn't have come off the target too. A selection being dragged or
+  // extended with shift+arrows fires selectionUpdate at every step, so the
+  // apply waits for it to settle — 250ms of quiet, or the mouse button
+  // coming up, whichever comes first.
   useEffect(() => {
     if (!editor || !painter) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const apply = () => {
       const { from, to, empty } = editor.state.selection;
       // Still the selection it was armed with, or just a caret: keep waiting.
       if (empty || (from === painter.from && to === painter.to)) return;
       const { format } = painter;
-      let chain = editor.chain().focus();
+      // No focus() here: the selection that triggers an apply was just made
+      // in the editor, so it has the focus, and focus()'s rAF would clobber
+      // the selection in jsdom tests.
+      let chain = editor.chain();
       const toggles: [name: string, on: boolean][] = [
         ["bold", format.bold], ["italic", format.italic],
         ["underline", format.underline], ["strike", format.strike],
@@ -906,8 +918,21 @@ export function RichTextEditor({
       chain.run();
       if (!painter.sticky) setPainter(null);
     };
-    editor.on("selectionUpdate", apply);
-    return () => { editor.off("selectionUpdate", apply); };
+    const settle = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { timer = null; apply(); }, 250);
+    };
+    const onMouseUp = () => {
+      if (timer) { clearTimeout(timer); timer = null; }
+      apply();
+    };
+    editor.on("selectionUpdate", settle);
+    editor.view.dom.addEventListener("mouseup", onMouseUp);
+    return () => {
+      editor.off("selectionUpdate", settle);
+      editor.view.dom.removeEventListener("mouseup", onMouseUp);
+      if (timer) clearTimeout(timer);
+    };
   }, [editor, painter]);
   useEffect(() => {
     if (!painter) return;
@@ -1535,6 +1560,7 @@ export function RichTextEditor({
           pressed={painter !== null}
           onClick={armPainter}
           onDoubleClick={makePainterSticky}
+          onMouseDown={(event) => event.preventDefault()}
           title={tToolbar("format_painter")}
         >
           <FormatPainter className="w-4 h-4" />
