@@ -6,6 +6,7 @@ import { isDesktopApp } from "@/lib/desktop/bridge";
 import { LEGACY_DB_NAME } from "@/lib/offline/legacy-db-name";
 import { OFFLINE_EVICTED_KEY, useOfflineStore } from "@/lib/offline/state";
 import { STORE_DB_NAME, STORE_OPENED_KEY } from "@/lib/store/client/keys";
+import { HostBoundary } from "@/components/providers/host-boundary";
 
 /**
  * The page-wide hosts the first screen doesn't need, out of the first script.
@@ -17,6 +18,9 @@ import { STORE_DB_NAME, STORE_OPENED_KEY } from "@/lib/store/client/keys";
  * windows, dropped files, notification buttons) can't be asked for before
  * then, and on a cold start their code held up the sign-in form and the
  * first rows.
+ *
+ * Each sits in a boundary of its own: one that fails stops by itself, logs
+ * why and shows nothing, and the rest of the app goes on.
  */
 
 const DesktopOsHost = dynamic(() => import("@/components/desktop/desktop-os-host").then((m) => m.DesktopOsHost), { ssr: false });
@@ -33,10 +37,10 @@ const FileDropHost = dynamic(() => import("@/components/file-drop/file-drop-host
 const NotificationActionsHost = dynamic(() => import("@/components/providers/notification-actions-host").then((m) => m.NotificationActionsHost), { ssr: false });
 
 /** Renders its children only in the desktop app, after hydration. */
-function DesktopOnly({ children }: { children: React.ReactNode }) {
+function DesktopOnly({ name, children }: { name: string; children: React.ReactNode }) {
   const [desktop, setDesktop] = useState(false);
   useEffect(() => setDesktop(isDesktopApp()), []);
-  return desktop ? <>{children}</> : null;
+  return desktop ? <HostBoundary name={name}>{children}</HostBoundary> : null;
 }
 
 // One idle wait for every deferred host on the page.
@@ -68,18 +72,18 @@ export function useAfterBoot(): boolean {
 }
 
 /** Renders its children once the page has drawn and gone idle. */
-function AfterBoot({ children }: { children: React.ReactNode }) {
-  return useAfterBoot() ? <>{children}</> : null;
+function AfterBoot({ name, children }: { name: string; children: React.ReactNode }) {
+  return useAfterBoot() ? <HostBoundary name={name}>{children}</HostBoundary> : null;
 }
 
-export function DeferredDesktopOsHost() { return <DesktopOnly><DesktopOsHost /></DesktopOnly>; }
-export function DeferredEditedFilesHost() { return <DesktopOnly><EditedFilesHost /></DesktopOnly>; }
-export function DeferredFilesSyncHost() { return <DesktopOnly><FilesSyncHost /></DesktopOnly>; }
-export function DeferredFilesSyncPrompts() { return <DesktopOnly><FilesSyncPrompts /></DesktopOnly>; }
-export function DeferredWindowMenuBar() { return <DesktopOnly><WindowMenuBar /></DesktopOnly>; }
-export function DeferredDesktopHost() { return <DesktopOnly><DesktopHost /></DesktopOnly>; }
+export function DeferredDesktopOsHost() { return <DesktopOnly name="DesktopOsHost"><DesktopOsHost /></DesktopOnly>; }
+export function DeferredEditedFilesHost() { return <DesktopOnly name="EditedFilesHost"><EditedFilesHost /></DesktopOnly>; }
+export function DeferredFilesSyncHost() { return <DesktopOnly name="FilesSyncHost"><FilesSyncHost /></DesktopOnly>; }
+export function DeferredFilesSyncPrompts() { return <DesktopOnly name="FilesSyncPrompts"><FilesSyncPrompts /></DesktopOnly>; }
+export function DeferredWindowMenuBar() { return <DesktopOnly name="WindowMenuBar"><WindowMenuBar /></DesktopOnly>; }
+export function DeferredDesktopHost() { return <DesktopOnly name="DesktopHost"><DesktopHost /></DesktopOnly>; }
 
-export function DeferredMailTransferHost() { return <AfterBoot><MailTransferHost /></AfterBoot>; }
+export function DeferredMailTransferHost() { return <AfterBoot name="MailTransferHost"><MailTransferHost /></AfterBoot>; }
 /** Something stored says offline mode has been used here (or the desktop app, where it's on by default). */
 function offlineUsedHere(): boolean {
   if (isDesktopApp()) return true;
@@ -119,7 +123,7 @@ function OfflineWhenUsed() {
   return useOfflineInUse() ? <OfflineHost /> : null;
 }
 
-export function DeferredOfflineHost() { return <AfterBoot><OfflineWhenUsed /></AfterBoot>; }
-export function DeferredPopoutHost() { return <AfterBoot><PopoutHost /></AfterBoot>; }
-export function DeferredFileDropHost() { return <AfterBoot><FileDropHost /></AfterBoot>; }
-export function DeferredNotificationActionsHost() { return <AfterBoot><NotificationActionsHost /></AfterBoot>; }
+export function DeferredOfflineHost() { return <AfterBoot name="OfflineHost"><OfflineWhenUsed /></AfterBoot>; }
+export function DeferredPopoutHost() { return <AfterBoot name="PopoutHost"><PopoutHost /></AfterBoot>; }
+export function DeferredFileDropHost() { return <AfterBoot name="FileDropHost"><FileDropHost /></AfterBoot>; }
+export function DeferredNotificationActionsHost() { return <AfterBoot name="NotificationActionsHost"><NotificationActionsHost /></AfterBoot>; }
