@@ -1216,6 +1216,7 @@
       "link_text": "Testo",
       "link_invalid": "L'indirizzo non può contenere spazi",
       "table": "Tabella",
+      "format_painter": "Copia formattazione",
       "clear_formatting": "Cancella formattazione",
       "undo": "Annulla",
       "redo": "Ripeti",

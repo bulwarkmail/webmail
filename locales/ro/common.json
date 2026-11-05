@@ -1216,6 +1216,7 @@
       "link_text": "Text",
       "link_invalid": "Adresa nu poate conține spații",
       "table": "Tabel",
+      "format_painter": "Copiază formatarea",
       "clear_formatting": "Șterge formatarea",
       "undo": "Anulează",
       "redo": "Refă",

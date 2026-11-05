@@ -1216,6 +1216,7 @@
       "link_text": "文字",
       "link_invalid": "網址中不能包含空格",
       "table": "表格",
+      "format_painter": "格式刷",
       "clear_formatting": "清除格式",
       "undo": "撤銷",
       "redo": "重做",

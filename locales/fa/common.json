@@ -1216,6 +1216,7 @@
       "link_text": "متن",
       "link_invalid": "نشانی نباید فاصله داشته باشد",
       "table": "جدول",
+      "format_painter": "کپی قالب",
       "clear_formatting": "پاک کردن قالب‌بندی",
       "undo": "واگرد",
       "redo": "انجام دوباره",

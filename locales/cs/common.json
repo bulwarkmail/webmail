@@ -1216,6 +1216,7 @@
       "link_text": "Text",
       "link_invalid": "Adresa nesmí obsahovat mezery",
       "table": "Tabulka",
+      "format_painter": "Kopírovat formát",
       "clear_formatting": "Vymazat formátování",
       "undo": "Zpět",
       "redo": "Znovu",

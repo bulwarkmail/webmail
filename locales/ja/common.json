@@ -1216,6 +1216,7 @@
       "link_text": "テキスト",
       "link_invalid": "アドレスに空白は使えません",
       "table": "表",
+      "format_painter": "書式のコピー/貼り付け",
       "clear_formatting": "書式をクリア",
       "undo": "元に戻す",
       "redo": "やり直す",

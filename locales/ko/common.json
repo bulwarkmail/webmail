@@ -1216,6 +1216,7 @@
       "link_text": "텍스트",
       "link_invalid": "주소에 공백을 넣을 수 없어요",
       "table": "표",
+      "format_painter": "서식 복사",
       "clear_formatting": "서식 지우기",
       "undo": "실행 취소",
       "redo": "다시 실행",

@@ -1216,6 +1216,7 @@
       "link_text": "Tekst",
       "link_invalid": "Het adres mag geen spaties bevatten",
       "table": "Tabel",
+      "format_painter": "Opmaak overbrengen",
       "clear_formatting": "Opmaak wissen",
       "undo": "Ongedaan maken",
       "redo": "Opnieuw",
