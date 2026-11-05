@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Tu organización bloquea el contenido remoto en todos los correos, así que tampoco se carga de los remitentes de confianza."
   },
+  "trusted_senders_book": {
+    "unavailable": "No disponible: esta cuenta no puede guardar libretas de direcciones en el servidor. La lista se queda en este dispositivo."
+  },
   "date": {
     "today": "Hoy",
     "yesterday": "Ayer",

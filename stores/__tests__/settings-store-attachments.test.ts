@@ -37,13 +37,13 @@ describe('settings-store attachment action', () => {
   });
 
   it('bumps the stored version so settings saved by the last build migrate too', () => {
-    expect(useSettingsStore.persist.getOptions().version).toBeGreaterThanOrEqual(14);
+    expect(useSettingsStore.persist.getOptions().version).toBeGreaterThanOrEqual(15);
   });
 
   it('forgets a position saved in this browser by the last build when the page loads', async () => {
     localStorage.setItem('settings-storage', JSON.stringify({
       state: { attachmentPosition: 'below-message', mailAttachmentAction: 'download', explicitSettings: ['attachmentPosition', 'mailAttachmentAction'] },
-      version: 13,
+      version: 14,
     }));
     try {
       await useSettingsStore.persist.rehydrate();

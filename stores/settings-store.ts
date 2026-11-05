@@ -648,10 +648,9 @@ interface SettingsState extends AccessibilitySettings {
   sessionTimeout: number; // minutes (0 = never)
   trustedSenders: string[]; // Email addresses that can load external content
   // Store trusted senders in a dedicated JMAP address book so they sync across
-  // devices. `null` means "not yet decided": resolved on first connect to
-  // `true` when the server supports contacts, otherwise left off. Once the user
-  // toggles it, it holds a concrete boolean and is never auto-changed again.
-  trustedSendersAddressBook: boolean | null;
+  // devices. On by default; a server without address books keeps the list on
+  // the device (contact store: trustedSendersBookUnavailable).
+  trustedSendersAddressBook: boolean;
 
   // Filters
   expandedFilterView: boolean;
@@ -1004,7 +1003,7 @@ const DEFAULT_SETTINGS = {
   // Privacy & Security
   sessionTimeout: 0, // Never
   trustedSenders: [] as string[],
-  trustedSendersAddressBook: null as boolean | null,
+  trustedSendersAddressBook: true,
 
   // Filters
   expandedFilterView: false,
@@ -1657,6 +1656,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateTintListRowsDefault(settings);
           migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
+          migrateTrustedSendersBookDefault(settings);
           dropAttachmentPosition(settings);
 
           // Apply settings, noting which keys were taken over for the
@@ -2073,7 +2073,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 14,
+      version: 15,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2190,7 +2190,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateTintListRowsDefault(state);
         migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
-        // v14: attachments always sit under the header; the setting is gone.
+        migrateTrustedSendersBookDefault(state);
+        // v15: attachments always sit under the header; the setting is gone.
         dropAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
         // Earlier builds did not record that, so a setting that differs from
@@ -2203,7 +2204,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
 }
 
 /**
- * v14: attachments always show under the message header, so the Attachment
+ * v15: attachments always show under the message header, so the Attachment
  * position setting is gone. A stored value ('below-message', or the older
  * 'beside-sender') and its "chosen" mark are dropped, so nothing keeps it
  * around and writes it back. Imports and server copies from older builds
@@ -2278,6 +2279,21 @@ export function migrateCalendarTasksDefault(state: Record<string, unknown>): voi
   if (state.enableCalendarTasks !== false) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('enableCalendarTasks');
   if (!chosen) state.enableCalendarTasks = true;
+}
+
+/**
+ * v14: trusted senders are kept in their own address book by default. Off
+ * (false, the default before 2026-07) or "not decided yet" (null, the
+ * default since) that the user never picked turns on; off they picked
+ * stays. A choice made before explicitSettings existed (v8) was never
+ * recorded for this key, so it turns on too. Imports and server copies
+ * from older builds go through this as well, so an older device's copy
+ * doesn't switch it back off.
+ */
+export function migrateTrustedSendersBookDefault(state: Record<string, unknown>): void {
+  if (!('trustedSendersAddressBook' in state) || state.trustedSendersAddressBook === true) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('trustedSendersAddressBook');
+  if (!chosen || typeof state.trustedSendersAddressBook !== 'boolean') state.trustedSendersAddressBook = true;
 }
 
 // Helper functions to apply settings to DOM

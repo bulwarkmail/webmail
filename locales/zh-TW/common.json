@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "你的組織在所有郵件中封鎖遠端內容，因此受信任寄件者的遠端內容也不會載入。"
   },
+  "trusted_senders_book": {
+    "unavailable": "無法使用：此帳號無法在伺服器上保存通訊錄。清單會留在這部裝置上。"
+  },
   "date": {
     "today": "今天",
     "yesterday": "昨天",

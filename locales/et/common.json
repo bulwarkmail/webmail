@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Teie organisatsioon blokeerib kaugsisu kõigis kirjades, seega ei laadita seda ka usaldusväärsetelt saatjatelt."
   },
+  "trusted_senders_book": {
+    "unavailable": "Pole saadaval: see konto ei saa serverisse aadressiraamatuid salvestada. Loend jääb sellesse seadmesse."
+  },
   "date": {
     "today": "Täna",
     "yesterday": "Eile",

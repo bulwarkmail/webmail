@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Jūsu organizācija bloķē attālo saturu visās vēstulēs, tāpēc tas netiek ielādēts arī no uzticamiem sūtītājiem."
   },
+  "trusted_senders_book": {
+    "unavailable": "Nav pieejams: šis konts nevar glabāt adrešu grāmatas serverī. Saraksts paliek šajā ierīcē."
+  },
   "date": {
     "today": "Šodien",
     "yesterday": "Vakar",

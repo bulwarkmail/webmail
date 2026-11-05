@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "조직에서 모든 메일의 원격 콘텐츠를 차단하므로 신뢰할 수 있는 발신자의 메일에서도 불러오지 않습니다."
   },
+  "trusted_senders_book": {
+    "unavailable": "사용할 수 없음: 이 계정은 서버에 주소록을 저장할 수 없습니다. 목록은 이 기기에 남습니다."
+  },
   "date": {
     "today": "오늘",
     "yesterday": "어제",

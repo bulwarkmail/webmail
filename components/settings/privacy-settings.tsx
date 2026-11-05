@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { useContactStore } from '@/stores/contact-store';
+import { useContactStore, useTrustedSendersInBook } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFaviconRefreshStore } from '@/stores/favicon-refresh-store';
 import { toast } from '@/stores/toast-store';
@@ -64,8 +64,11 @@ function RemoteContentSection() {
   const [showTrustedModal, setShowTrustedModal] = useState(false);
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const { externalContentPolicy, trustedSenders, trustedSendersAddressBook, updateSetting } = useSettingsStore();
-  const { trustedSenderEmails, trustedSendersLoaded, loadTrustedSendersBook } = useContactStore();
+  const { trustedSenderEmails, trustedSendersLoaded, trustedSendersBookUnavailable, loadTrustedSendersBook } = useContactStore();
+  const inBook = useTrustedSendersInBook();
+  const tBook = useTranslations('trusted_senders_book');
   const client = useAuthStore((state) => state.client);
+  const bookUnavailable = trustedSendersBookUnavailable || (!!client && client.supportsContacts?.() === false);
 
   // Load the address book so the count reflects the synced senders, not 0.
   useEffect(() => {
@@ -74,8 +77,20 @@ function RemoteContentSection() {
     }
   }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
+  const toggleAddressBook = (checked: boolean) => {
+    if (checked) {
+      // Load again, which files the device's list into the book.
+      useContactStore.setState({ trustedSendersLoaded: false });
+    } else if (trustedSendersLoaded && !trustedSendersBookUnavailable) {
+      // The book's senders stay trusted on this device.
+      const local = useSettingsStore.getState().trustedSenders;
+      useSettingsStore.setState({ trustedSenders: Array.from(new Set([...local, ...trustedSenderEmails])) });
+    }
+    updateSetting('trustedSendersAddressBook', checked);
+  };
+
   const trustedCount = () => {
-    const count = trustedSendersAddressBook ? trustedSenderEmails.length : trustedSenders.length;
+    const count = inBook ? new Set([...trustedSenderEmails, ...trustedSenders]).size : trustedSenders.length;
     if (count === 0) return t('trusted_senders.count_zero');
     if (count === 1) return t('trusted_senders.count_one');
     return t('trusted_senders.count_other', { count });
@@ -110,12 +125,21 @@ function RemoteContentSection() {
         </button>
       </SettingItem>
 
-      <SettingItem nested label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')} locked={remoteBlockedByOrg}>
-        <ToggleSwitch
-          checked={!!trustedSendersAddressBook}
-          onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
-        />
-      </SettingItem>
+      {!isSettingHidden('trustedSendersAddressBook') && (
+        <SettingItem
+          nested
+          label={t('trusted_senders.use_address_book_label')}
+          description={bookUnavailable ? tBook('unavailable') : t('trusted_senders.use_address_book_description')}
+          locked={remoteBlockedByOrg || isSettingLocked('trustedSendersAddressBook')}
+        >
+          <ToggleSwitch
+            checked={inBook && !bookUnavailable}
+            disabled={bookUnavailable}
+            onChange={toggleAddressBook}
+            testId="trusted-senders-book-switch"
+          />
+        </SettingItem>
+      )}
 
       <TrustedSendersModal
         isOpen={showTrustedModal}
