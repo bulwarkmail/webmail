@@ -603,11 +603,13 @@ async function handlePush(event) {
   const withNewMail = emailIds.length > 0 || !changed
     ? []
     : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
+  // Previews still on their way after their notification was shown.
+  const lingering = [];
   // Side by side: each has its own preview deadline, and Safari wants the
   // notifications within 30 s of the push.
   await Promise.all((withNewMail.length > 0 ? withNewMail : [named]).map(async (accountId) => {
     try {
-      await notifyAccount(accountId, emailIds, accountLabel);
+      await notifyAccount(accountId, emailIds, accountLabel, lingering);
     } catch (_) {
       // Nothing above may cost the user the alert, or a browser its quota for
       // this site: see showWithoutAlert.
@@ -620,9 +622,11 @@ async function handlePush(event) {
       });
     }
   }));
+  // The push event lasts until they answer, so their cookies land.
+  await Promise.allSettled(lingering);
 }
 
-async function notifyAccount(accountId, emailIds, accountLabel) {
+async function notifyAccount(accountId, emailIds, accountLabel, lingering = []) {
   // Never notify twice for the same message. A push can be redelivered (relay
   // retry, browser replay after coming back online) and, on the older
   // state-change path, a junk delivery wakes us while an unread message we
@@ -667,22 +671,40 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
     // A notification shown more than 30 s after the push counts as a silent
     // push in Safari (#1322), so a slow preview gives way to the generic one.
+    // The request goes on: an answer that renewed the login's token carries the
+    // rotated refresh token in its cookies, and a browser that never sees them
+    // keeps one the provider has spent (#1509). It is called off only at a
+    // limit of its own.
     const controller = typeof AbortController === "function" ? new AbortController() : null;
-    const timer = controller ? setTimeout(() => controller.abort(), PREVIEW_DEADLINE_MS) : null;
+    const abandon = controller ? setTimeout(() => controller.abort(), PREVIEW_ABANDON_MS) : null;
+    let deadlineTimer = null;
+    const deadline = new Promise((resolve) => {
+      deadlineTimer = setTimeout(() => resolve(PREVIEW_LATE), PREVIEW_DEADLINE_MS);
+    });
+    const request = fetch(previewUrl, {
+      credentials: "include",
+      cache: "no-store",
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+    // Cookies are set with the headers, so the answer itself is all it waits for.
+    const answered = request.then(() => {}, () => {}).then(() => {
+      if (abandon) clearTimeout(abandon);
+    });
     try {
-      const res = await fetch(previewUrl, {
-        credentials: "include",
-        cache: "no-store",
-        ...(controller ? { signal: controller.signal } : {}),
-      });
-      if (res.ok) {
-        preview = await res.json();
-        previewOk = true;
+      const res = await Promise.race([request, deadline]);
+      if (res === PREVIEW_LATE) {
+        lingering.push(answered);
+      } else if (res.ok) {
+        const body = await Promise.race([res.json(), deadline]);
+        if (body !== PREVIEW_LATE) {
+          preview = body;
+          previewOk = true;
+        }
       } else if (res.status === 401) {
         previewSignedOut = true;
       }
     } finally {
-      if (timer) clearTimeout(timer);
+      clearTimeout(deadlineTimer);
     }
   } catch (_) {
     preview = null;
@@ -805,6 +827,9 @@ async function idsOnScreen(groupTag) {
 
 // How long the preview may take before the generic notification is shown.
 const PREVIEW_DEADLINE_MS = 10_000;
+// How long a preview that missed it may still run, for the cookies it sets.
+const PREVIEW_ABANDON_MS = 60_000;
+const PREVIEW_LATE = Symbol("preview late");
 
 /**
  * Every push has to end in showNotification. Safari counts a push without one
