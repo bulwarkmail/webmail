@@ -147,8 +147,10 @@ export function SearchableSelect({
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    // Its own document: in the desktop app a dialog has a window of its own.
+    const doc = containerRef.current?.ownerDocument ?? document;
+    doc.addEventListener("mousedown", handleClick);
+    return () => doc.removeEventListener("mousedown", handleClick);
   }, [open]);
 
   const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
