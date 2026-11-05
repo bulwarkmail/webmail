@@ -30,10 +30,10 @@ import { purgeStoreFiles } from '@/lib/store/client/purge';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
 import { OWNER_LOCK } from '@/lib/store/worker/protocol';
 import type { ComposerDraftData } from '@/components/email/email-composer';
-import { HELLO_SALT_BYTES, importLockKey, LOCK_LAYER, lockLayer, mainProof, ObviousPinError, pinIsObvious, randomBytes, SHELL_LAYER } from './crypto';
+import { HELLO_SALT_BYTES, importLockKey, LOCK_LAYER, lockLayer, mainProof, ObviousPinError, pinIsObvious, pinLongEnough, randomBytes, SHELL_LAYER, ShortPinError } from './crypto';
 import { watchIdle } from './idle';
 import { createPasskey, passkeyPrf, PasskeyNoPrfError } from './passkey';
-import { appLockHelloAllowed, appLockRequired, effectiveTimeout, onLockPolicyChange } from './policy';
+import { appLockHelloAllowed, appLockRequired, effectiveTimeout, onLockPolicyChange, pinMinLength } from './policy';
 import { reloadSealedStores, restoreSealedStorage, scrubBrowserStorage } from './scrub';
 import { shellControls, shellHasWrap, shellUnwrapCall, shellWrapCall, resetShellForTests } from './shell';
 import { clearPendingCookies, markCookiesToClear, rememberMainProof, requireFreshLogin } from './sign-out';
@@ -872,6 +872,7 @@ export async function enableAppLock(pin: string): Promise<void> {
 }
 
 async function enable(pin: string): Promise<void> {
+  if (!pinLongEnough(pin, pinMinLength())) throw new ShortPinError();
   const raw = await createVault(pin);
   const proof = await mainProof(raw);
   const member = getDesktopBridge()?.appLock;
@@ -957,6 +958,7 @@ function afterOff(): void {
  * `helloOff` says it said no and is off now.
  */
 export async function changeAppLockPin(currentPin: string, newPin: string): Promise<{ reenroll: boolean; helloOff: boolean }> {
+  if (!pinLongEnough(newPin, pinMinLength())) throw new ShortPinError();
   if (pinIsObvious(newPin)) throw new ObviousPinError();
   const member = getDesktopBridge()?.appLock;
   const before = await readVault();
