@@ -14,7 +14,8 @@ import {
   ContextMenuHeader,
 } from "@/components/ui/context-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
-import { PluginActions, useMessageActionTarget, usePluginActions } from "@/components/plugins/plugin-actions";
+import { PluginActions, useMessageActionTarget, usePluginActions, useRowActionTarget } from "@/components/plugins/plugin-actions";
+import { usePluginRowBadges } from "@/components/email/plugin-row-badges";
 import {
   MoreHorizontal,
 } from "@/components/icons";
@@ -336,11 +337,12 @@ export function EmailContextMenu({
   // opens this menu, so it is where those buttons live there. Below, the
   // selection's entries in the default layout's order or, under Mountain
   // View, in Gmail's.
-  const rowPluginTarget = useMessageActionTarget(email);
+  const rowPluginTarget = useRowActionTarget(useMessageActionTarget(email), usePluginRowBadges(email));
   const hasRowPluginActions = usePluginActions("message-row-actions", {
     mailboxRole: currentMailboxRole ?? null,
     accountKind: rowPluginTarget.accountKind,
     keywords: rowPluginTarget.keywords,
+    badges: rowPluginTarget.badges,
   }).length > 0;
   const rowPluginContext = useMemo(() => ({ emailId: email.id }), [email.id]);
   const rowPluginBlock = !showBatchActions && hasRowPluginActions ? (

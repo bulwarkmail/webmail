@@ -50,7 +50,9 @@ function cleanText(value: unknown, max: number): string {
   return typeof value === "string" ? value.replace(CONTROL_CHARS, "").trim().slice(0, max) : "";
 }
 
-/** Keep only well-formed badges, as plain text, capped at MAX_ROW_BADGES. */
+/** Keep only well-formed badges, as plain text, capped at MAX_ROW_BADGES. A
+ * badge needs a label, or an icon and a key (an icon-only badge, read out by
+ * its title). */
 export function normalizeBadges(raw: unknown): EmailListBadge[] {
   if (!Array.isArray(raw)) return [];
   const out: EmailListBadge[] = [];
@@ -60,8 +62,10 @@ export function normalizeBadges(raw: unknown): EmailListBadge[] {
     if (!item || typeof item !== "object") continue;
     const candidate = item as Record<string, unknown>;
     const label = cleanText(candidate.label, MAX_LABEL_LENGTH);
-    if (!label) continue;
+    const iconName = cleanText(candidate.icon, 40);
+    const icon = iconName && PLUGIN_ICON_RE.test(iconName) ? iconName : "";
     const key = cleanText(candidate.key, 100) || label;
+    if (!key || (!label && !icon)) continue;
     if (seen.has(key)) continue;
     seen.add(key);
     const badge: EmailListBadge = { key, label };
@@ -69,8 +73,7 @@ export function normalizeBadges(raw: unknown): EmailListBadge[] {
     if (color && SAFE_COLOR.test(color)) badge.color = color;
     const title = cleanText(candidate.title, MAX_TITLE_LENGTH);
     if (title) badge.title = title;
-    const icon = cleanText(candidate.icon, 40);
-    if (icon && PLUGIN_ICON_RE.test(icon)) badge.icon = icon;
+    if (icon) badge.icon = icon;
     out.push(badge);
   }
   return out;
@@ -147,10 +150,14 @@ export function PluginRowBadges({ email, className }: { email: Email; className?
     <span className={cn(TAG_GROUP_CLASS, className)} data-testid="plugin-row-badges">
       {badges.map((badge) => {
         const Icon = iconForName(badge.icon);
+        // An icon-only badge is read out by its title.
+        const iconOnly = !badge.label && !!Icon;
         return (
           <span
             key={badge.key}
             title={badge.title}
+            role={iconOnly ? "img" : undefined}
+            aria-label={iconOnly ? badge.title || badge.key : undefined}
             data-plugin-row-badge={badge.key}
             className={cn(
               TAG_LOZENGE_CLASS,
@@ -165,7 +172,7 @@ export function PluginRowBadges({ email, className }: { email: Email; className?
             } : undefined}
           >
             {Icon && <Icon className="w-3 h-3 flex-shrink-0" aria-hidden data-badge-icon={badge.icon} />}
-            {Icon ? <span className="truncate">{badge.label}</span> : badge.label}
+            {Icon ? (badge.label ? <span className="truncate">{badge.label}</span> : null) : badge.label}
           </span>
         );
       })}

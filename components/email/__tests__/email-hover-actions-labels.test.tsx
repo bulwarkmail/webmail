@@ -8,6 +8,7 @@ vi.mock('@/components/plugins/plugin-actions', () => ({
   PluginActions: () => null,
   usePluginActions: () => [],
   useMessageActionTarget: () => ({ accountKind: 'personal', keywords: [] }),
+  useRowActionTarget: (target: unknown) => target,
 }));
 
 // R10: one word per action. The row's quick actions say what the row's menu
