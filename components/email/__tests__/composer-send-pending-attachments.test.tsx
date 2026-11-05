@@ -156,7 +156,6 @@ async function openComposer(strict: boolean) {
     hide: async () => { act(() => hide()); await advance(); },
     discard: async () => {
       fireEvent.click(screen.getByTestId('composer-discard'));
-      fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: /^Discard$/ }));
       await advance();
     },
   };

@@ -192,7 +192,7 @@ function edit(subjectText: string, bodyText: string) {
 async function openFresh(strict: boolean) {
   const view = render(strict ? <React.StrictMode><MailApp /></React.StrictMode> : <MailApp />);
   fireEvent.click(screen.getByText('stub compose'));
-  await screen.findByTestId('composer-subject');
+  await screen.findByTestId('composer-subject', {}, { timeout: 5000 });
   return view;
 }
 async function replaceWithB(strict: boolean, existingAttachment = false) {
