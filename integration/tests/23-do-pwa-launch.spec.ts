@@ -416,7 +416,7 @@ test.describe('a share nobody asked for', () => {
 });
 
 test.describe('a handoff while a composer is open', () => {
-  test('one set aside by reading a message is not replaced by the next', async ({ browser }) => {
+  test('one closed by reading a message is kept as a draft, and the next opens fresh', async ({ browser }) => {
     const page = await signedIn(browser);
     await page.locator('[data-testid="email-list-item"]').first().waitFor({ timeout: 30_000 });
     const subject = `setaside${RUN}`;
@@ -424,14 +424,23 @@ test.describe('a handoff while a composer is open', () => {
     await expect(composer(page)).toBeVisible({ timeout: 30_000 });
     await composer(page).getByPlaceholder(/subject/i).fill(subject);
     await expect(composer(page).getByPlaceholder(/subject/i)).toHaveValue(subject);
-    // Reading a message suspends the composer before its autosave ran.
+    // Reading a message runs the composer's own close, which saves before its
+    // autosave would have: "Draft saved" (decisions: closing saves first; one
+    // composer at a time). Nothing unsaved is left to wait for.
     await page.locator('[data-testid="email-list-item"]').first().click();
     await expect(composer(page)).toHaveCount(0);
+    await expect(page.getByText('Draft saved').first()).toBeVisible({ timeout: 10_000 });
+    await expect.poll(async () => (await draftsWithSubject(subject)).length, { timeout: 20_000 }).toBe(1);
+    // Two new-message launches within 2 s count as one (a launch can arrive twice).
     await page.waitForTimeout(2100);
     await launch(page, { target: '/?compose=1' });
-    await expect(page.getByText('Close this message to start the next one.').first()).toBeVisible({ timeout: 10_000 });
-    await expect(composer(page)).toHaveCount(0);
-    await expect(page.getByText(subject).first()).toBeVisible();
+    await expect(composer(page)).toBeVisible({ timeout: 30_000 });
+    await expect(composer(page).getByPlaceholder(/subject/i)).toHaveValue('');
+    await expect(page.getByText('Close this message to start the next one.')).toHaveCount(0);
+    // The new composer replaced nothing: the first one's draft is still there.
+    expect(await draftsWithSubject(subject)).toHaveLength(1);
+    await page.locator('[data-testid="composer-close"]').first().click();
+    await deleteDrafts(await draftsWithSubject(subject));
     await page.context().close();
   });
 

@@ -500,10 +500,11 @@ test('item 3: Undo send brings the message back with its label', async ({ browse
   const subject = `Undo label ${RUN}`;
   await policy({ organisation: { labels: { list: GENERIC_LABELS, defaultId: 'internal', required: true, extraHeader: '' } } }, browser);
   const alice = await userPage(browser, ENT.alice);
-  // Undo send on, through Settings (a synced setting).
+  // Undo send on, through Settings (a synced setting). The row is "Undo send"
+  // under Sending now.
   await alice.locator('a[href$="/settings"]').first().click();
   await alice.locator('[data-testid="settings-tab-composing"]').first().click();
-  const delay = alice.locator('[data-search-label="Undo send / send delay"] select').first();
+  const delay = alice.locator('[data-search-label="Undo send"] select').first();
   await delay.selectOption('30');
   await alice.getByText('Back to mail').first().click();
   await folderRow(alice, { role: 'inbox' }).first().waitFor({ state: 'visible', timeout: 30_000 });
@@ -523,7 +524,7 @@ test('item 3: Undo send brings the message back with its label', async ({ browse
   // Undo send off again, for the other tests.
   await alice.locator('a[href$="/settings"]').first().click();
   await alice.locator('[data-testid="settings-tab-composing"]').first().click();
-  await alice.locator('[data-search-label="Undo send / send delay"] select').first().selectOption('0');
+  await alice.locator('[data-search-label="Undo send"] select').first().selectOption('0');
   await alice.waitForTimeout(1500);
   await alice.context().close();
 });
