@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 // The login page in another language: the subtitle, the theme menu and the
@@ -85,6 +85,35 @@ describe('login page translations', () => {
       render(<LoginPage />);
       expect(await screen.findByLabelText('username_label', {}, { timeout: 10000 }))
         .toHaveAttribute('placeholder', 'max.mustermann@acme.example');
+    } finally {
+      configOverrides.value = {};
+    }
+  }, 30_000);
+
+  it('swaps the OAuth-only card for the password form through the fallback link', async () => {
+    configOverrides.value = { oauthOnly: true, oauthPasswordFallbackEnabled: true };
+    try {
+      render(<LoginPage />);
+      // SSO-only card: no password fields, but the demoted toggle link.
+      expect(await screen.findByRole('button', { name: /password_toggle/ }, { timeout: 10000 }))
+        .toBeInTheDocument();
+      expect(screen.queryByLabelText('username_label')).toBeNull();
+
+      act(() => { fireEvent.click(screen.getByRole('button', { name: /password_toggle/ })); });
+      expect(await screen.findByLabelText('username_label', {}, { timeout: 10000 })).toBeInTheDocument();
+    } finally {
+      configOverrides.value = {};
+    }
+  }, 30_000);
+
+  it('keeps the OAuth-only card without the link when the fallback is off', async () => {
+    configOverrides.value = { oauthOnly: true };
+    try {
+      render(<LoginPage />);
+      await screen.findByRole('heading', { level: 1 }, { timeout: 10000 });
+      // The SSO-only card replaces the password form once the config is in.
+      await waitFor(() => expect(screen.queryByLabelText('username_label')).toBeNull(), { timeout: 10000 });
+      expect(screen.queryByRole('button', { name: /password_toggle/ })).toBeNull();
     } finally {
       configOverrides.value = {};
     }

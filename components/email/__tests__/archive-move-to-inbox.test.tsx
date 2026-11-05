@@ -18,6 +18,7 @@ vi.mock('@/components/plugins/plugin-actions', () => ({
   PluginActions: () => null,
   usePluginActions: () => [],
   useMessageActionTarget: () => ({ accountKind: 'personal', keywords: [] }),
+  useRowActionTarget: (target: unknown) => target,
 }));
 vi.mock('@/components/tour/tour-provider', () => ({
   useTour: () => ({ activeTour: null, startTour: vi.fn(), endTour: vi.fn(), registerStep: vi.fn() }),

@@ -8,6 +8,7 @@ vi.mock('@/components/plugins/plugin-actions', () => ({
   PluginActions: () => null,
   usePluginActions: () => [],
   useMessageActionTarget: () => ({ accountKind: 'personal', keywords: [] }),
+  useRowActionTarget: (target: unknown) => target,
 }));
 
 // Gmail keeps a row's actions on its first line when attachment chips make the

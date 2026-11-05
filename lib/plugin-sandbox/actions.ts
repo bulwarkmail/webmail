@@ -32,6 +32,15 @@ export interface PluginAction {
   hasKeyword?: string;
   /** Show only when the message lacks this keyword; `*` as in hasKeyword. */
   notKeyword?: string;
+  /**
+   * Show only when the message list row carries a plugin row badge
+   * (onEmailListItemRender) with this key: a state the plugin knows and the
+   * message's keywords don't, such as a follow-up of the user's own on a
+   * team mailbox's message. Hidden where the surface draws no row badges.
+   */
+  hasBadge?: string;
+  /** Show only when the row carries no badge with this key; as hasBadge. */
+  notBadge?: string;
   /** A danger action is drawn in red. */
   danger?: boolean;
   /**
@@ -74,6 +83,8 @@ const ROLE_RE = /^[a-z]{1,20}$/;
 const MIME_RE = /^[a-z0-9.+-]+\/[a-z0-9.+*-]*$/i;
 // A JMAP keyword as plugins may set one (host-api.ts), or its start and `*`.
 const KEYWORD_PATTERN_RE = /^[a-z0-9$][a-z0-9$_.:-]{0,127}\*?$/i;
+// A row badge's key (components/email/plugin-row-badges.tsx keeps up to 100 characters).
+const BADGE_KEY_RE = /^[a-z0-9][a-z0-9_.:-]{0,99}$/i;
 
 /** Surfaces that take actions, from the slot catalogue. */
 export function isActionSurface(surface: string): boolean {
@@ -125,6 +136,13 @@ export function checkActions(value: unknown): PluginAction[] {
         throw new Error(`actions[${i}].${field} must be a keyword, optionally ending in *`);
       }
       out[field] = (a[field] as string).toLowerCase();
+    }
+    for (const field of ['hasBadge', 'notBadge'] as const) {
+      if (a[field] === undefined) continue;
+      if (typeof a[field] !== 'string' || !BADGE_KEY_RE.test(a[field] as string)) {
+        throw new Error(`actions[${i}].${field} must be a row badge's key`);
+      }
+      out[field] = a[field] as string;
     }
     if (a.danger !== undefined) out.danger = a.danger === true;
     if (a.checked !== undefined) {
@@ -217,6 +235,8 @@ export interface ActionFilter {
   accountKind?: MailAccountKind | null;
   /** The message's keywords. */
   keywords?: readonly string[] | null;
+  /** The keys of the row's plugin badges; none where the surface draws no row. */
+  badges?: readonly string[] | null;
 }
 
 /** Whether `keywords` holds `pattern` (exact, or a prefix ending in `*`), case-insensitively. */
@@ -237,6 +257,11 @@ export function actionApplies(action: PluginAction, ctx: ActionFilter): boolean 
     if (!ctx.keywords) return false;
     if (action.hasKeyword && !keywordMatches(ctx.keywords, action.hasKeyword)) return false;
     if (action.notKeyword && keywordMatches(ctx.keywords, action.notKeyword)) return false;
+  }
+  if (action.hasBadge || action.notBadge) {
+    if (!ctx.badges) return false;
+    if (action.hasBadge && !ctx.badges.includes(action.hasBadge)) return false;
+    if (action.notBadge && ctx.badges.includes(action.notBadge)) return false;
   }
   if (action.mimeTypes && ctx.mimeType !== undefined) {
     const type = (ctx.mimeType ?? '').toLowerCase();

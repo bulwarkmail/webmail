@@ -687,6 +687,61 @@ describe('ContactForm keeps what was not edited', () => {
     expect(data.emails!.w).toEqual({ address: 'alice@new.example', contexts: { work: true } });
   });
 
+  // #1515: Android writes TEL;TYPE=car, which Stalwart turns into the context
+  // "car"; a custom label arrives as X-ABLabel, the phone's `label`.
+  describe('a phone type the form has no option for', () => {
+    const phoneSelects = (number: string) => {
+      const row = screen.getByDisplayValue(number).parentElement!;
+      const [type, context] = Array.from(row.querySelectorAll('select'));
+      return { type, context };
+    };
+
+    async function saveAfter(phones: ContactCard['phones'], change: () => void) {
+      const onSave = vi.fn().mockResolvedValue(undefined);
+      render(<ContactForm contact={{ ...card, phones }} onSave={onSave} onCancel={vi.fn()} />);
+      change();
+      fireEvent.submit(screen.getByText('save').closest('form')!);
+      await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+      return (onSave.mock.calls[0][0] as Partial<ContactCard>).phones!;
+    }
+
+    it('shows an Android "car" phone as car and keeps it when the number changes', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', contexts: { car: true } } }, () => {
+        const { context } = phoneSelects('+49 151 34');
+        expect(context.value).toBe('car');
+        expect(context.selectedOptions[0].textContent).toBe('car');
+        fireEvent.change(screen.getByDisplayValue('+49 151 34'), { target: { value: '+49 151 56' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 56', contexts: { car: true } } });
+    });
+
+    it('shows a custom label in the type select and keeps it when the number changes', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
+        expect(phoneSelects('+49 151 34').type.selectedOptions[0].textContent).toBe('Car');
+        fireEvent.change(screen.getByDisplayValue('+49 151 34'), { target: { value: '+49 151 56' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 56', label: 'Car', features: { voice: true } } });
+    });
+
+    it('drops the label once another type is picked', async () => {
+      const phones = await saveAfter({ p0: { number: '+49 151 34', label: 'Car', features: { voice: true } } }, () => {
+        fireEvent.change(phoneSelects('+49 151 34').type, { target: { value: 'mobile' } });
+      });
+      expect(phones).toEqual({ p0: { number: '+49 151 34', features: { mobile: true } } });
+    });
+
+    it('shows a feature the form does not offer as stored', () => {
+      render(<ContactForm contact={{ ...card, phones: { p0: { number: '+49 30 1', features: { textphone: true } } } }} onSave={vi.fn()} onCancel={vi.fn()} />);
+      expect(phoneSelects('+49 30 1').type.value).toBe('textphone');
+    });
+
+    it('shows an email context the form does not offer as stored', () => {
+      render(<ContactForm contact={{ ...card, emails: { e0: { address: 'alice@example.com', contexts: { school: true } } } }} onSave={vi.fn()} onCancel={vi.fn()} />);
+      const select = screen.getByDisplayValue('alice@example.com').parentElement!.querySelector('select')!;
+      expect(select.value).toBe('school');
+    });
+  });
+
   it('still sends every field of a new contact, its address in the order of the country typed', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<ContactForm onSave={onSave} onCancel={vi.fn()} />);

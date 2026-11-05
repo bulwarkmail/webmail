@@ -274,7 +274,7 @@ export async function advancedSearchUnifiedEmails(
  * namespaced (`${ownerId}:${origId}`) so we must use `originalId` and pass the
  * owner's accountId through the request.
  */
-function resolveJmapTarget(
+export function resolveJmapTarget(
   account: UnifiedAccountClient,
   mailbox: Mailbox,
 ): { jmapMailboxId: string; jmapAccountId: string | undefined } {

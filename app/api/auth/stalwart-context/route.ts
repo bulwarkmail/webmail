@@ -116,7 +116,12 @@ export async function POST(request: NextRequest) {
     const refreshToken = cookieStore.get(refreshTokenCookieName(slot))?.value;
     const stamp = refreshToken ? readSignInStamp(cookieStore, slot, refreshToken) : null;
     if (refreshToken && stamp && !stamp.account) {
-      writeSignInStamp(cookieStore, slot, { signedInAt: stamp.signedInAt, refreshToken, account: accountName });
+      writeSignInStamp(cookieStore, slot, {
+        signedInAt: stamp.signedInAt,
+        refreshToken,
+        account: accountName,
+        ...(stamp.remember !== undefined ? { remember: stamp.remember } : {}),
+      });
     }
 
     await setStalwartAuthContext(slot, {

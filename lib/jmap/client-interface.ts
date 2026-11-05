@@ -177,6 +177,12 @@ export interface IJMAPClient {
    * for an outage, a proxy's page or a token renewal that failed.
    */
   onCredentialsRefused?(callback: (refusedForMs: number) => void): void;
+  /**
+   * The mail server answered 403 for the session or the API itself, as Stalwart
+   * does for an account deleted while signed in. The client sends nothing more.
+   */
+  onAccessRefused?(callback: () => void): void;
+  isAccessRefused?(): boolean;
   isRateLimited(): boolean;
   getRateLimitRemainingMs(): number;
   onStateChange(callback: (change: StateChange) => void): void;

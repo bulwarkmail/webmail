@@ -16,7 +16,8 @@ import { ContextMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useEmailTagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds } from "@/lib/thread-utils";
-import { PluginActions, useMessageActionTarget, usePluginActions } from "@/components/plugins/plugin-actions";
+import { PluginActions, useMessageActionTarget, usePluginActions, useRowActionTarget } from "@/components/plugins/plugin-actions";
+import { usePluginRowBadges } from "@/components/email/plugin-row-badges";
 
 interface EmailHoverActionsProps {
   email: Email;
@@ -174,9 +175,10 @@ export function EmailHoverActions({
   const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(state.mailboxes, state.selectedMailbox));
   const isMobile = useIsMobile();
   // Buttons plugins add to the row (message-row-actions), after the app's own.
-  const pluginTarget = useMessageActionTarget(email);
+  // The row's badges too, for actions shown by a plugin's badge (hasBadge).
+  const pluginTarget = useRowActionTarget(useMessageActionTarget(email), usePluginRowBadges(email));
   const pluginActionCount = usePluginActions("message-row-actions", {
-    mailboxRole, accountKind: pluginTarget.accountKind, keywords: pluginTarget.keywords,
+    mailboxRole, accountKind: pluginTarget.accountKind, keywords: pluginTarget.keywords, badges: pluginTarget.badges,
   }).length;
   const pluginContext = useMemo(() => ({ emailId: email.id }), [email.id]);
 

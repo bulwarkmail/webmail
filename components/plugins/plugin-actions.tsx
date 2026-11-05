@@ -17,6 +17,7 @@ import {
 } from '@/lib/plugin-sandbox/actions';
 import { mailAccountKind, useConfirmedGroups, type MailAccountKind } from '@/lib/plugin-sandbox/account-kind';
 import type { Email } from '@/lib/jmap/types';
+import type { EmailListBadge } from '@/lib/plugin-types';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveEmailBlobContext, useEmailStore } from '@/stores/email-store';
 
@@ -34,6 +35,8 @@ export interface MessageActionTarget {
   accountId?: string;
   accountKind: MailAccountKind | null;
   keywords: string[] | null;
+  /** The keys of the message list row's plugin badges (usePluginRowBadges), for `hasBadge` / `notBadge`; only on the row's surfaces. */
+  badges?: string[] | null;
 }
 
 type ActionEmail = Pick<Email, 'id' | 'keywords' | 'sourceAccountId' | 'sourceClientAccountId'>;
@@ -89,8 +92,14 @@ function withTarget(context: Record<string, unknown>, target: MessageActionTarge
   return target?.accountId ? { ...context, accountId: target.accountId } : context;
 }
 
-function targetFilter(target: MessageActionTarget | undefined, accountKind: MailAccountKind | null | undefined): Pick<ActionFilter, 'accountKind' | 'keywords'> {
-  return { accountKind: target ? target.accountKind : accountKind ?? null, keywords: target?.keywords ?? null };
+function targetFilter(target: MessageActionTarget | undefined, accountKind: MailAccountKind | null | undefined): Pick<ActionFilter, 'accountKind' | 'keywords' | 'badges'> {
+  return { accountKind: target ? target.accountKind : accountKind ?? null, keywords: target?.keywords ?? null, badges: target?.badges ?? null };
+}
+
+/** `target` with the keys of the row's plugin badges, for the row's surfaces (message-row-actions). */
+export function useRowActionTarget(target: MessageActionTarget, badges: readonly EmailListBadge[]): MessageActionTarget {
+  const keys = badges.map((b) => b.key).join('\n');
+  return useMemo(() => ({ ...target, badges: keys ? keys.split('\n') : [] }), [target, keys]);
 }
 
 interface PluginActionsProps {

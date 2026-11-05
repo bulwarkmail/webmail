@@ -94,6 +94,14 @@ describe('ui.setActions', () => {
     expect(() => checkActions([{ id: 'x', label: 'X', icon: '<svg>' }])).toThrow(/icon/);
   });
 
+  it("takes a row badge's key as hasBadge and notBadge", () => {
+    expect(checkActions([{ id: 'x', label: 'X', hasBadge: 'follow-up', notBadge: 'done:1' }])[0])
+      .toMatchObject({ hasBadge: 'follow-up', notBadge: 'done:1' });
+    expect(() => checkActions([{ id: 'x', label: 'X', hasBadge: '' }])).toThrow(/hasBadge/);
+    expect(() => checkActions([{ id: 'x', label: 'X', notBadge: 'a b' }])).toThrow(/notBadge/);
+    expect(() => checkActions([{ id: 'x', label: 'X', hasBadge: 3 }])).toThrow(/hasBadge/);
+  });
+
   it('takes a badge as a whole number from 0, none for 0', () => {
     expect(checkActions([{ id: 'x', label: 'X', badge: 3 }])[0].badge).toBe(3);
     expect(checkActions([{ id: 'x', label: 'X', badge: 250 }])[0].badge).toBe(250);

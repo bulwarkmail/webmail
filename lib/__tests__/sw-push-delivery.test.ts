@@ -317,4 +317,29 @@ describe('a push naming several accounts, one server slow', () => {
   });
 });
 
+describe('when the preview is signed out (#1509)', () => {
+  const ping = { kind: 'jmap-state-change', accountLabel: 'me@example.org', accountId: 'a', changed: { a: { EmailDelivery: 's1' } } };
+
+  it('shows the generic notification without a sound for a push that names no message', async () => {
+    const { push, shade } = loadWorker(() => null);
+    await push(ping);
+    const shown = shade.get('bulwark-mail:a')!;
+    expect(shown.title).toBe('New mail (me@example.org)');
+    expect(shown.options).toMatchObject({ silent: true, renotify: false });
+  });
+
+  it('still rings when the server named the new message', async () => {
+    const { push, shade } = loadWorker(() => null);
+    await push(delivery('a', 'e1'));
+    expect(shade.get('bulwark-mail:a')!.options).toMatchObject({ silent: false, renotify: true });
+  });
+
+  it('still rings when the preview failed some other way', async () => {
+    const down = vi.fn(async () => ({ ok: false, status: 502, json: async () => ({}) }));
+    const { push, shade } = loadWorker(() => null, { globals: { fetch: down } });
+    await push(ping);
+    expect(shade.get('bulwark-mail:a')!.options).toMatchObject({ silent: false, renotify: true });
+  });
+});
+
 // -- end of cases --

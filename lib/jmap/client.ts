@@ -234,6 +234,40 @@ export class RateLimitError extends Error {
   }
 }
 
+/** The mail server's own answer: a JMAP problem document (RFC 8620 section 3.6.1) with this status. */
+async function isProblemStatus(response: Response, status: number): Promise<boolean> {
+  const body = await response.clone().json().catch(() => null) as { status?: unknown } | null;
+  return body?.status === status;
+}
+
+/**
+ * A 403 that refuses this login for good: Stalwart's problem document for a
+ * deleted account or a removed credential. Its IP block answers with the bare
+ * reason phrase as the detail and lifts again, and a gateway's JSON 403 isn't
+ * a problem document, so neither stops the client.
+ */
+async function isLoginRefusal(response: Response): Promise<boolean> {
+  if (!(response.headers.get('content-type') ?? '').toLowerCase().includes('problem+json')) return false;
+  const body = await response.clone().json().catch(() => null) as { status?: unknown; detail?: unknown } | null;
+  return body?.status === 403 && typeof body.detail === 'string' && body.detail !== 'Forbidden';
+}
+
+/**
+ * The mail server refused this login as a whole, with a 403 for the session or
+ * the API itself (Stalwart does that for an account deleted while signed in, a
+ * credential that was removed, or an address it blocks). Every further request
+ * would get the same answer, and a burst of them can get the address banned by
+ * a firewall in front of the server (#1539), so the client sends no more. A
+ * `forbidden` method error inside a 200 answer is something else: one call the
+ * login may not make.
+ */
+export class AccountUnavailableError extends Error {
+  constructor() {
+    super('The server refused this account');
+    this.name = 'AccountUnavailableError';
+  }
+}
+
 /**
  * A request produced no response headers within its deadline.
  *
@@ -1626,6 +1660,9 @@ export class JMAPClient implements IJMAPClient {
   private credentialsRefusedCallback: ((refusedForMs: number) => void) | null = null;
   /** When the server first refused us with no good answer since; 0 when it hasn't. */
   private refusedSince = 0;
+  /** The server answered 403 for the whole login: nothing more is sent (AccountUnavailableError). */
+  private accessRefused = false;
+  private accessRefusedCallback: (() => void) | null = null;
   private rateLimitedUntil: number = 0;
   private rateLimitCallback: ((rateLimited: boolean, retryAfterMs: number) => void) | null = null;
   private rateLimitTimeout: NodeJS.Timeout | null = null;
@@ -1887,6 +1924,7 @@ export class JMAPClient implements IJMAPClient {
     init?: Parameters<typeof fetch>[1],
     opts?: { timeoutMs?: number; transfer?: boolean },
   ): Promise<Response> {
+    if (this.accessRefused) throw new AccountUnavailableError();
     // Short-circuit: if rate-limited, reject immediately without sending a request
     if (!opts?.transfer && this.isRateLimited()) {
       const remaining = this.rateLimitedUntil - Date.now();
@@ -1921,6 +1959,13 @@ export class JMAPClient implements IJMAPClient {
       const retryAfterMs = JMAPClient.parseRetryAfter(response);
       if (!opts?.transfer) this.setRateLimited(retryAfterMs);
       throw new RateLimitError(retryAfterMs);
+    }
+
+    // Only the session and the API URL: an upload or a download may be refused
+    // for one account or blob the login can't reach.
+    if (response.status === 403 && (url === this.apiUrl || url === this.discoveryUrl()) && await isLoginRefusal(response)) {
+      this.refuseAccess();
+      return response;
     }
 
     let reauthRefused = false;
@@ -1983,6 +2028,23 @@ export class JMAPClient implements IJMAPClient {
 
   onCredentialsRefused(callback: (refusedForMs: number) => void): void {
     this.credentialsRefusedCallback = callback;
+  }
+
+  /** Called once, when the server refuses this login as a whole (AccountUnavailableError). */
+  onAccessRefused(callback: () => void): void {
+    this.accessRefusedCallback = callback;
+  }
+
+  isAccessRefused(): boolean {
+    return this.accessRefused;
+  }
+
+  private refuseAccess(): void {
+    if (this.accessRefused) return;
+    this.accessRefused = true;
+    this.stopKeepAlive();
+    this.closePushNotifications();
+    this.accessRefusedCallback?.();
   }
 
   /**

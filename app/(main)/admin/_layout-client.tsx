@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
+import { getAccountSlotsActiveFirst } from '@/lib/auth/active-account-slot';
 import { apiFetch } from '@/lib/browser-navigation';
 import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 import { AdminShell } from '@/components/admin/admin-shell';
@@ -43,10 +43,19 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
 
     async function checkAuth() {
       try {
-        const jmapHeaders = getActiveAccountSlotHeaders();
-        const res = await apiFetch('/api/admin/auth', { headers: jmapHeaders });
-        const data = await res.json();
-        if (cancelled) return;
+        // The sidebar shows the console when any login is a Stalwart admin,
+        // so ask each login, the open one first, until one may sign in here
+        // (#1532). The admin session itself belongs to no login.
+        const slots = getAccountSlotsActiveFirst();
+        let jmapHeaders: Record<string, string> = {};
+        let data: { enabled?: boolean; authenticated?: boolean; stalwartAutoLogin?: boolean } = {};
+        for (const slot of slots.length > 0 ? slots : [null]) {
+          jmapHeaders = slot === null ? {} : { 'X-JMAP-Cookie-Slot': String(slot) };
+          const res = await apiFetch('/api/admin/auth', { headers: jmapHeaders });
+          data = await res.json();
+          if (cancelled) return;
+          if (data.authenticated || data.stalwartAutoLogin === true) break;
+        }
 
         // `stalwartAutoLogin` is only true in "auto" mode; in "password" mode
         // a Stalwart admin still lands on the password form (#870).

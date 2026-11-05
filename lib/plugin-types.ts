@@ -1060,7 +1060,7 @@ export interface ComposeOptions {
 export interface EmailListBadge {
   /** Stable unique key within the plugin - used as React key */
   key: string;
-  /** Short label text displayed in the badge */
+  /** Short label text displayed in the badge; empty for an icon-only badge (needs `icon`, read out by `title`) */
   label: string;
   /** CSS color value for the badge background, e.g. "#e74c3c" or "var(--color-warning)" */
   color?: string;

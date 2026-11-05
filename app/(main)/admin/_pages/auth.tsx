@@ -5,7 +5,7 @@ import { Loader2, Sparkles } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { useAdminUnsavedChanges } from '@/stores/admin-unsaved-store';
-import { DEFAULT_OAUTH_SCOPES } from '@/lib/oauth/scopes';
+import { DEFAULT_OAUTH_SCOPES, STALWART_SCOPE_FULL } from '@/lib/oauth/scopes';
 import { SettingsSection, SettingItem, SectionNav } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -149,9 +149,13 @@ export function AuthPage() {
           : data.mobileClient === 'failed'
             ? ` Stalwart refused the Bulwark Mobile client (${data.mobileClientId}); the app registers its own instead, without access to account settings.`
             : '';
+        const scopes: string[] = Array.isArray(data.stalwartScopes) ? data.stalwartScopes : [];
+        const limited = scopes.length > 0 && !scopes.includes(STALWART_SCOPE_FULL)
+          ? ' Only a Stalwart superuser can allow full access, so the client got security and settings access; the admin panel stays out of reach through SSO.'
+          : '';
         setMessage({
           type: 'success',
-          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}`,
+          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}${limited}`,
         });
         setEdits({});
         setSetupOpen(false);
@@ -303,6 +307,7 @@ export function AuthPage() {
           </SettingItem>
           <ConfigToggleItem label="Enabled" configKey="oauthEnabled" value={currentValue('oauthEnabled') as boolean} source={config.oauthEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigToggleItem label="OAuth only" description="Hide password login form when enabled" configKey="oauthOnly" value={currentValue('oauthOnly') as boolean} source={config.oauthOnly?.source} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigToggleItem label="Password fallback" description={'With OAuth only: show a "Sign in with a password" link under the SSO button and allow password sign-in. For SSO deployments whose accounts also have local passwords.'} configKey="oauthPasswordFallbackEnabled" value={currentValue('oauthPasswordFallbackEnabled') as boolean} source={config.oauthPasswordFallbackEnabled?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Client ID" configKey="oauthClientId" value={currentValue('oauthClientId') as string} source={config.oauthClientId?.source} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Client secret" configKey="oauthClientSecret" value={currentValue('oauthClientSecret') as string} source={config.oauthClientSecret?.source} onChange={handleChange} onRevert={handleRevert} type="password" placeholder={config.oauthClientSecret?.hasValue ? '••••••••  (saved - type to replace)' : undefined} />
           <ConfigTextItem label="Issuer URL" configKey="oauthIssuerUrl" value={currentValue('oauthIssuerUrl') as string} source={config.oauthIssuerUrl?.source} onChange={handleChange} onRevert={handleRevert} placeholder="https://auth.example.com" wide />

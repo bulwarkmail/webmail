@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
   const jmapServerUrl = configManager.get<string>('jmapServerUrl') || process.env.NEXT_PUBLIC_JMAP_SERVER_URL || '';
   const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
   const oauthOnly = oauthEnabled && configManager.get<boolean>('oauthOnly', false);
+  const oauthPasswordFallbackEnabled =
+    oauthOnly && configManager.get<boolean>('oauthPasswordFallbackEnabled', false);
   const stalwartFeaturesEnabled = configManager.get<boolean>('stalwartFeaturesEnabled', true);
   const stalwartJmapPassthroughEnabled =
     stalwartFeaturesEnabled && configManager.get<boolean>('stalwartJmapPassthroughEnabled', true);
@@ -64,6 +66,7 @@ export async function GET(request: NextRequest) {
       jmapServerUrl,
       oauthEnabled,
       oauthOnly,
+      oauthPasswordFallbackEnabled,
       oauthClientId: configManager.get<string>('oauthClientId', ''),
       oauthIssuerUrl: configManager.get<string>('oauthIssuerUrl', ''),
       oauthScopes: getOauthScopes(),

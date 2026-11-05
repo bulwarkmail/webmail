@@ -3931,7 +3931,16 @@ export function EmailComposer({
     attachmentsRef.current = attachments;
   }, [attachments]);
   const [isWaitingForUploads, setIsWaitingForUploads] = useState(false);
-  const sendCancelledRef = useRef(false);
+  // Cancellation belongs to this attempt: resuming editing or starting a
+  // later Send must never revive an older wait. Teardown cancels only Send,
+  // leaving background uploads and the unmount recovery snapshot alone.
+  const sendUploadWaitRef = useRef<{ cancelled: boolean } | null>(null);
+  const cancelSendUploadWait = () => {
+    if (sendUploadWaitRef.current) sendUploadWaitRef.current.cancelled = true;
+  };
+  useEffect(() => () => {
+    if (sendUploadWaitRef.current) sendUploadWaitRef.current.cancelled = true;
+  }, []);
   const confirmingSendRef = useRef(false);
   // The user confirmed sending without a subject for this message.
   const emptySubjectConfirmedRef = useRef(false);
@@ -4004,17 +4013,22 @@ export function EmailComposer({
     }
 
     if (attachmentsRef.current.some(att => att.uploading)) {
+      const attempt = { cancelled: false };
+      sendUploadWaitRef.current = attempt;
       isSendingRef.current = true;
       setIsSending(true);
       setIsWaitingForUploads(true);
       const uploadResult = await waitForPendingUploads(
         () => attachmentsRef.current,
-        () => sendCancelledRef.current
+        () => attempt.cancelled
       );
       setIsWaitingForUploads(false);
       isSendingRef.current = false;
       setIsSending(false);
-      if (uploadResult === 'cancelled') return;
+      sendUploadWaitRef.current = null;
+      // Teardown or close may follow the helper's last poll but precede this
+      // continuation. Never submit the abandoned attempt in that gap.
+      if (attempt.cancelled || uploadResult === 'cancelled') return;
       if (uploadResult === 'failed') {
         // An upload broke while we were waiting - the user may not be
         // looking at the composer, so auto-sending would silently drop
@@ -4659,7 +4673,7 @@ export function EmailComposer({
   };
 
   const cleanClose = () => {
-    sendCancelledRef.current = true;
+    cancelSendUploadWait();
     explicitCloseRef.current = true;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -4673,7 +4687,6 @@ export function EmailComposer({
     if (!attempt || attempt.saving) return;
     attempt.cancelled = true;
     saveCloseAttemptRef.current = null;
-    sendCancelledRef.current = false;
     setIsWaitingToSave(false);
     setIsSavingAndClosing(false);
   };
@@ -4703,7 +4716,7 @@ export function EmailComposer({
     if (saveCloseAttemptRef.current) return;
     const attempt = { cancelled: false, saving: false };
     saveCloseAttemptRef.current = attempt;
-    sendCancelledRef.current = true;
+    cancelSendUploadWait();
     setIsSavingAndClosing(true);
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
@@ -4759,7 +4772,6 @@ export function EmailComposer({
     } finally {
       if (saveCloseAttemptRef.current === attempt) {
         saveCloseAttemptRef.current = null;
-        if (!explicitCloseRef.current) sendCancelledRef.current = false;
         setIsWaitingToSave(false);
         setIsSavingAndClosing(false);
       }
@@ -4809,7 +4821,7 @@ export function EmailComposer({
         return;
       }
       explicitCloseRef.current = true;
-      sendCancelledRef.current = true;
+      cancelSendUploadWait();
       emitClose();
     } finally {
       poppingOutRef.current = false;
@@ -4931,7 +4943,7 @@ export function EmailComposer({
   // over, not here.
   const handleDiscardAndClose = ({ keepDraft = false }: { keepDraft?: boolean } = {}) => {
     cancelSaveAndClose();
-    sendCancelledRef.current = true;
+    cancelSendUploadWait();
     explicitCloseRef.current = true;
     // Discard owns the whole pending batch. Abort queued controllers too so
     // the serial upload loop skips them after the active upload settles.

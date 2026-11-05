@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   plainTextToComposerBody,
   rewriteCidImagesForEditor,
@@ -489,6 +489,27 @@ describe("waitForPendingUploads", () => {
     size: 100,
     ...over,
   });
+
+  it.each(["success", "failure", "removal"] as const)(
+    "prefers cancellation when upload %s happens before the next poll",
+    async terminal => {
+      vi.useFakeTimers();
+      try {
+        let list = [att({ uploading: true })];
+        let cancelled = false;
+        const result = waitForPendingUploads(() => list, () => cancelled);
+        expect(vi.getTimerCount()).toBe(1);
+        cancelled = true;
+        list = terminal === "removal" ? [] : [att({ error: terminal === "failure" })];
+        await vi.advanceTimersByTimeAsync(150);
+        expect(await result).toBe("cancelled");
+        expect(vi.getTimerCount()).toBe(0);
+      } finally {
+        vi.clearAllTimers();
+        vi.useRealTimers();
+      }
+    }
+  );
 
   it("resolves 'completed' immediately when nothing is uploading", async () => {
     const result = await waitForPendingUploads(

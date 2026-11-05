@@ -71,6 +71,7 @@ describe('server configuration validation', () => {
     ['jmapServerUrl', null],
     ['oauthEnabled', 'false'],
     ['oauthOnly', 0],
+    ['oauthPasswordFallbackEnabled', 'true'],
     ['oauthClientId', false],
     ['loginLogoLightUrl', {}],
     ['loginShowHeading', null],

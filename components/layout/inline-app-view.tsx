@@ -20,6 +20,15 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
   const activeApp = apps.find((a) => a.id === activeAppId);
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(header);
+  // Until an app's first load its frame holds the initial about:blank. That
+  // document's color scheme is "normal" while the frame element inherits the
+  // theme's, and CSS Color Adjust gives such a mismatch an opaque canvas: in a
+  // dark theme WebKit paints the app area white until the app arrives (#1517).
+  // Each frame stays invisible until it has loaded, so this view's background
+  // shows meanwhile.
+  const [loadedAppIds, setLoadedAppIds] = useState<ReadonlySet<string>>(() => new Set());
+  const markLoaded = (appId: string) =>
+    setLoadedAppIds((prev) => (prev.has(appId) ? prev : new Set(prev).add(appId)));
   const close = (
     <IconButton label={tCommon("close")} onClick={onClose} className="shrink-0 text-muted-foreground">
       <X />
@@ -43,11 +52,13 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
             title={app.name}
             className={cn(
               'absolute inset-0 w-full h-full border-0',
-              app.id !== activeAppId && 'hidden'
+              app.id !== activeAppId && 'hidden',
+              !loadedAppIds.has(app.id) && 'invisible'
             )}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
             loading="lazy"
+            onLoad={() => markLoaded(app.id)}
           />
         ))}
       </div>

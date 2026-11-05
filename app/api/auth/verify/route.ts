@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     await configManager.ensureLoaded();
     const oauthEnabled = configManager.get<boolean>('oauthEnabled', false);
     const oauthOnly = configManager.get<boolean>('oauthOnly', false);
-    if (oauthEnabled && oauthOnly) {
+    if (oauthEnabled && oauthOnly && !configManager.get<boolean>('oauthPasswordFallbackEnabled', false)) {
       return respond('inconclusive');
     }
 

@@ -106,8 +106,33 @@ describe('service worker never ends a push without a notification (#1322)', () =
     }));
     const done = push(delivery('e1'));
     await vi.advanceTimersByTimeAsync(10_000);
-    await done;
     expect(calls).toHaveLength(1);
     expect(calls[0].title).toBe('New mail');
+    // A preview that never answers is called off in the end.
+    await vi.advanceTimersByTimeAsync(50_000);
+    await done;
+    expect(calls).toHaveLength(1);
+  });
+
+  it('lets a slow preview finish after the generic notification, for the cookies it sets (#1509)', async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    const { push, calls } = loadWorker((_url, init) => {
+      signal = init.signal;
+      return new Promise((resolve) => setTimeout(() => resolve({ unreadTotal: 1, email: mail('e1') }), 15_000));
+    });
+    let finished = false;
+    const done = push(delivery('e1')).then(() => { finished = true; });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].title).toBe('New mail');
+    // A renewed token's answer carries the rotated refresh token.
+    expect(signal?.aborted).toBe(false);
+    expect(finished).toBe(false);
+    await vi.advanceTimersByTimeAsync(5_000);
+    await done;
+    expect(signal?.aborted).toBe(false);
+    // Nothing more shows for an answer that came after its notification.
+    expect(calls).toHaveLength(1);
   });
 });

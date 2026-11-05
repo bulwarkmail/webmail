@@ -7,6 +7,7 @@ export function createConfig(overrides: Partial<ConfigData> = {}): ConfigData {
     jmapServerUrl: 'https://mail.example.com',
     oauthEnabled: false,
     oauthOnly: false,
+    oauthPasswordFallbackEnabled: false,
     oauthClientId: '',
     oauthIssuerUrl: '',
     oauthScopes: '',

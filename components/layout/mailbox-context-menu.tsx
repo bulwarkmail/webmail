@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Mailbox } from "@/lib/jmap/types";
+import { Mailbox, UnifiedMailboxRole } from "@/lib/jmap/types";
 import { getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
@@ -44,7 +44,11 @@ export type MailboxContextTarget =
    *  whole account (compact shared mailboxes, #1342), so the account's entries
    *  are added. */
   | { kind: "mailbox"; mailbox: Mailbox; hasChildren: boolean; sharedAccountId?: string }
-  | { kind: "folders-section"; accountId?: string };
+  | { kind: "folders-section"; accountId?: string }
+  // A unified/cross-account row ("All Trash", "All Inbox", ...) - a virtual
+  // aggregate, not a single mailbox, so only actions that make sense across
+  // every account's copy (empty, refresh) apply; rename/delete/share/etc. don't.
+  | { kind: "unified-mailbox"; role: UnifiedMailboxRole; label: string; totalEmails: number };
 
 const PATH_SEPARATOR = " › ";
 
@@ -123,6 +127,8 @@ interface MailboxContextMenuProps {
   onMarkFolderTreeRead?: (mailboxId: string) => void;
   onMarkAllFoldersRead?: () => void;
   onEmptyFolder?: (mailboxId: string) => void;
+  /** Empties a unified role's mailbox (e.g. trash/junk) across every account. */
+  onEmptyUnifiedMailbox?: (role: UnifiedMailboxRole) => void;
   onCreateSubfolder?: (parentId: string) => void;
   onCreateFolder?: (accountId?: string) => void;
   onRenameFolder?: (mailboxId: string) => void;
@@ -148,6 +154,7 @@ export function MailboxContextMenu({
   onMarkFolderTreeRead,
   onMarkAllFoldersRead,
   onEmptyFolder,
+  onEmptyUnifiedMailbox,
   onCreateSubfolder,
   onCreateFolder,
   onRenameFolder,
@@ -247,6 +254,31 @@ export function MailboxContextMenu({
           disabled={!onRefresh || offline}
         />
         {accountItems(target.accountId)}
+      </ContextMenu>
+    );
+  }
+
+  if (target.kind === "unified-mailbox") {
+    // Only Trash: the item, its dialog and its toasts all talk about Trash.
+    const canEmpty = target.role === "trash";
+    return (
+      <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+        <ContextMenuHeader>{target.label}</ContextMenuHeader>
+        {canEmpty && (
+          <ContextMenuItem
+            icon={FolderX}
+            label={t("empty_folder_all_accounts")}
+            onClick={() => handleAction(() => onEmptyUnifiedMailbox?.(target.role))}
+            disabled={!onEmptyUnifiedMailbox || target.totalEmails === 0}
+            destructive
+          />
+        )}
+        <ContextMenuItem
+          icon={RefreshCw}
+          label={t("refresh")}
+          onClick={() => handleAction(onRefresh!)}
+          disabled={!onRefresh}
+        />
       </ContextMenu>
     );
   }
