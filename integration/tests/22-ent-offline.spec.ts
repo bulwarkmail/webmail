@@ -587,7 +587,7 @@ test('a draft written offline with a file survives a reload, is on the server on
   const row = page.locator('[data-testid="email-list-item"], [data-thread-keys]', { hasText: subject }).first();
   await expect(row).toBeVisible({ timeout: 60_000 });
   await row.click();
-  await page.getByTestId('edit-draft').click();
+  // A draft opens straight in the composer (e7cef5ba1).
   await expect(composer).toBeVisible({ timeout: 20_000 });
   await expect(composer.locator('[contenteditable="true"]').first()).toContainText('last', { timeout: 20_000 });
   await expect(composer).toContainText('offline-note.txt');
@@ -612,7 +612,7 @@ test('a draft written offline with a file survives a reload, is on the server on
   const again = page.locator('[data-testid="email-list-item"], [data-thread-keys]', { hasText: subject }).first();
   await expect(again).toBeVisible({ timeout: 60_000 });
   await again.click();
-  await page.getByTestId('edit-draft').click();
+  // A draft opens straight in the composer (e7cef5ba1).
   await expect(composer).toContainText('offline-note.txt', { timeout: 20_000 });
   await send(page);
   await expect(composer).toBeHidden({ timeout: 30_000 });
