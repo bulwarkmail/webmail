@@ -128,7 +128,7 @@ import { SearchBox, type ContactSearchField } from "@/components/search/search-b
 import { FilterPanelHost } from "@/components/search/filter-panel-host";
 import { SearchFilterPanel, SELECT_CLASS } from "@/components/search/search-filter-panel";
 import type { ContactSuggestion } from "@/lib/search-suggestions";
-import type { Attachment, SendEmailResult } from "@/lib/jmap/types";
+import type { Attachment, SendEmailResult, UnifiedMailboxRole } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { peekListAttachments, requestListAttachments, type ListAttachmentSource, type LoadListAttachments } from "@/lib/list-attachments";
 import { useSearchHistoryStore } from "@/stores/search-history-store";
@@ -652,6 +652,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     crossUnreadCount,
     exitUnifiedView,
     emptyMailbox,
+    emptyUnifiedMailbox,
     markMailboxAsRead,
     createMailbox,
     renameMailbox,
@@ -740,6 +741,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     crossUnreadCount: state.crossUnreadCount,
     exitUnifiedView: state.exitUnifiedView,
     emptyMailbox: state.emptyMailbox,
+    emptyUnifiedMailbox: state.emptyUnifiedMailbox,
     markMailboxAsRead: state.markMailboxAsRead,
     createMailbox: state.createMailbox,
     renameMailbox: state.renameMailbox,
@@ -4463,6 +4465,50 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
+  const handleEmptyUnifiedMailboxFromContextMenu = async (role: UnifiedMailboxRole) => {
+    let accounts: UnifiedAccountClient[];
+    try {
+      accounts = await buildPopulatedUnifiedAccounts();
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));
+      return;
+    }
+    // The user's own logins only: with group accounts in the unified view the
+    // list also holds group and delegated owners, whose Trash isn't theirs.
+    const own = accounts.filter((a) => !a.isShared);
+    const count = own.reduce(
+      (sum, a) => sum + (a.mailboxes.find((m) => m.role === role && !m.isShared)?.totalEmails ?? 0),
+      0,
+    );
+
+    const confirmed = await confirmDialog({
+      title: tCtxMenu('mailbox_context_menu.empty_all_confirm_title'),
+      message: tCtxMenu('mailbox_context_menu.empty_all_confirm_message', { count }),
+      confirmText: tCtxMenu('mailbox_context_menu.empty_folder_all_accounts'),
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      const { errors, emptied } = await emptyUnifiedMailbox(own, role);
+      if (errors.size > 0) {
+        toast.error(tCtxMenu(emptied.length > 0
+          ? 'mailbox_context_menu.toast_error_empty_all_partial'
+          : 'mailbox_context_menu.toast_error_empty_all'));
+      } else if (emptied.length > 0) {
+        toast.success(tCtxMenu('mailbox_context_menu.toast_emptied_all'));
+      }
+      // The badge on All Trash comes from the cached folder lists, which
+      // still hold the old totals.
+      if (emptied.length > 0) {
+        invalidateUnifiedMailboxes();
+        void buildPopulatedUnifiedAccounts().then(refreshUnifiedCounts).catch(() => {});
+      }
+    } catch {
+      toast.error(tCtxMenu('mailbox_context_menu.toast_error_empty_all'));
+    }
+  };
+
   const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
     if (!client) return;
     const name = await promptDialog({
@@ -5306,6 +5352,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     onMarkFolderTreeRead: handleMarkFolderTreeRead,
     onMarkAllFoldersRead: handleMarkAllFoldersRead,
     onEmptyFolder: handleEmptyFolderFromContextMenu,
+    onEmptyUnifiedMailbox: handleEmptyUnifiedMailboxFromContextMenu,
     onCreateSubfolder: handleCreateSubfolderFromContextMenu,
     onCreateFolder: handleCreateFolderFromContextMenu,
     onRenameFolder: handleRenameFolderFromContextMenu,
