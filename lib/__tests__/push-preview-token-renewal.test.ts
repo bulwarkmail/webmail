@@ -92,6 +92,8 @@ const { setStalwartAuthContextInStore } = await import('@/lib/stalwart/auth-cont
 const { cookies } = await import('next/headers');
 const previewRoute = await import('@/app/api/push/preview/route');
 const tokenRoute = await import('@/app/api/auth/token/route');
+const { resetRedemptionsForTests } = await import('@/lib/oauth/slot-renewal');
+const SAME_ORIGIN = { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' };
 
 /** The provider: rotates the refresh token on each renewal. */
 const tokenEndpoint = vi.fn(async (_url: string, _init?: RequestInit) => Response.json({ access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600 }));
@@ -123,6 +125,7 @@ const redeemed = () => tokenEndpoint.mock.calls.map(([, init]) => new URLSearchP
 
 describe('push preview after the access token expired (#1509)', () => {
   beforeEach(() => {
+    resetRedemptionsForTests();
     jar.clear();
     jarOptions.clear();
     jmapCalls.length = 0;
@@ -234,10 +237,43 @@ describe('push preview after the access token expired (#1509)', () => {
 
     const res = await tokenRoute.PUT(new NextRequest('https://webmail.example/api/auth/token?slot=0&remember=false', {
       method: 'PUT',
-      headers: { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' },
+      headers: SAME_ORIGIN,
     }));
 
     expect(res.status).toBe(200);
     expect(readSignInStamp(await cookies(), 0, 'refresh-1')).toMatchObject({ remember: false });
+  });
+
+  it('hands the same tokens to a request that still carries the spent refresh token', async () => {
+    await signedInAnHourAgo(true);
+    const before = new Map(jar);
+    expect((await preview()).status).toBe(200);
+    // The answer never reached the browser (a proxy error, say): it still has
+    // the cookies it had before.
+    jar.clear();
+    for (const [name, value] of before) jar.set(name, value);
+
+    const { status } = await preview();
+
+    expect(status).toBe(200);
+    // Spending refresh-1 a second time could revoke the whole grant.
+    expect(redeemed()).toEqual(['refresh-1']);
+    expect(jar.get('jmap_rt')).toBe('refresh-2');
+  });
+
+  it('does not write the rotated token back after a sign-out that came while it renewed', async () => {
+    await signedInAnHourAgo(true);
+    let answer = (_res: Response) => {};
+    tokenEndpoint.mockImplementationOnce(() => new Promise<Response>((resolve) => { answer = resolve; }));
+
+    const renewing = preview();
+    await vi.waitFor(() => expect(tokenEndpoint).toHaveBeenCalledTimes(1));
+    const signOut = await tokenRoute.DELETE(new NextRequest('https://webmail.example/api/auth/token?slot=0', { method: 'DELETE', headers: SAME_ORIGIN }));
+    expect(signOut.status).toBe(200);
+    answer(Response.json({ access_token: 'access-2', refresh_token: 'refresh-2', expires_in: 3600 }));
+
+    expect((await renewing).status).toBe(401);
+    expect(jar.has('jmap_rt')).toBe(false);
+    expect(jar.has('jmap_signed_in')).toBe(false);
   });
 });

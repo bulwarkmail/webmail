@@ -27,7 +27,7 @@ import {
   isRevokeOnSignOutEnabled,
   storeIdToken,
 } from '@/lib/oauth/end-session';
-import { cacheAccessToken, redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
+import { cacheAccessToken, noteSignedOut, redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import {
@@ -323,8 +323,11 @@ async function signOutSlot(
 ): Promise<string | null> {
   const cookieName = refreshTokenCookieName(slot);
   const refreshToken = cookieStore.get(cookieName)?.value;
+  // A push preview renewing with this token right now must not write the
+  // rotated one back after this answer cleared it (#1509).
+  if (refreshToken) noteSignedOut(refreshToken);
   const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
-  const idToken = cookieStore.get(idTokenCookieName(slot))?.value;
+  const idToken =cookieStore.get(idTokenCookieName(slot))?.value;
   const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
 
   // With revocation off (#1388) the token is only dropped from the browser.

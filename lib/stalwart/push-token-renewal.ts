@@ -2,7 +2,7 @@ import type { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { isPastMaxAge, maxSessionHoursFor, tokenSignedInAt } from '@/lib/auth/session-age';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
-import { redeemRefreshToken, storeRenewedTokens } from '@/lib/oauth/slot-renewal';
+import { redeemRefreshToken, storeRenewedTokens, wasSignedOut } from '@/lib/oauth/slot-renewal';
 import {
   accessTokenCookieName,
   decodeCachedAccessToken,
@@ -66,6 +66,11 @@ export async function renewPushAuthHeader(
     });
     return null;
   }
+  // Signed out while the provider answered: writing the rotated token back
+  // would undo the sign-out. Per process, like the redemption it waited on.
+  // A sign-out that reaches another replica, or that the browser applies
+  // before an answer this route already sent, is not covered.
+  if (wasSignedOut(refreshToken)) return null;
   const { accessToken } = storeRenewedTokens(
     cookieStore,
     slot,

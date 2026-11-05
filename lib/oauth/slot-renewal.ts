@@ -90,7 +90,26 @@ async function redeem(refreshToken: string, serverId: string | null, upstream: C
   return { kind: 'issued', tokens: (await response.json()) as IssuedTokens };
 }
 
-const inFlight = new Map<string, Promise<Redemption>>();
+/** How long an issued redemption is kept for requests that still carry the token it spent. */
+export const REDEMPTION_KEPT_MS = 60_000;
+/** How long a signed-out refresh token is remembered, longer than any redemption takes. */
+const SIGNED_OUT_KEPT_MS = 10 * 60_000;
+
+interface KeptRedemption {
+  pending: Promise<Redemption>;
+  /** Hash of the refresh token it spent. */
+  spent: string;
+  /** Hash of the refresh token it issued, once it did. */
+  issued?: string;
+}
+
+const redemptions = new Map<string, KeptRedemption>();
+/** Refresh token hash -> when a sign-out dropped it. */
+const signedOut = new Map<string, number>();
+
+function drop(key: string, kept: KeptRedemption): void {
+  if (redemptions.get(key) === kept) redemptions.delete(key);
+}
 
 /**
  * Redeem a refresh token at the provider. Requests that hold the same token at
@@ -98,15 +117,55 @@ const inFlight = new Map<string, Promise<Redemption>>();
  * use of a superseded one can count as a replay that revokes the whole grant
  * (Stalwart 1.0). A page's renewals queue behind a Web Lock (lib/auth/token-lock.ts);
  * the service worker's push previews can't take it, so they meet here instead.
+ *
+ * What a redemption issued is kept for a minute after: an answer lost on its
+ * way (a proxy error, a worker that went away) leaves the browser with the
+ * spent token, and its next request gets the same tokens instead of spending
+ * it again. A failed one is forgotten at once. All of this is per process:
+ * replicas don't share it.
  */
 export function redeemRefreshToken(refreshToken: string, serverId: string | null, upstream: CustomUpstream | null): Promise<Redemption> {
-  const key = `${serverId ?? ''}\n${refreshTokenHash(refreshToken)}`;
-  let pending = inFlight.get(key);
-  if (!pending) {
-    pending = redeem(refreshToken, serverId, upstream).finally(() => inFlight.delete(key));
-    inFlight.set(key, pending);
+  const spent = refreshTokenHash(refreshToken);
+  const key = `${serverId ?? ''}\n${spent}`;
+  const found = redemptions.get(key);
+  if (found) return found.pending;
+  const kept: KeptRedemption = { pending: redeem(refreshToken, serverId, upstream), spent };
+  redemptions.set(key, kept);
+  kept.pending.then((result) => {
+    if (result.kind !== 'issued' || !result.tokens.access_token || wasSignedOut(refreshToken)) {
+      drop(key, kept);
+      return;
+    }
+    if (result.tokens.refresh_token) kept.issued = refreshTokenHash(result.tokens.refresh_token);
+    const timer = setTimeout(() => drop(key, kept), REDEMPTION_KEPT_MS);
+    (timer as { unref?: () => void }).unref?.();
+  }, () => drop(key, kept));
+  return kept.pending;
+}
+
+/**
+ * A sign-out dropped this refresh token (DELETE /api/auth/token). A renewal
+ * that spent it while the sign-out ran must not write its tokens back, and
+ * nothing kept from it, or issuing it, is handed out again.
+ */
+export function noteSignedOut(refreshToken: string): void {
+  const now = Date.now();
+  for (const [hash, at] of signedOut) if (now - at > SIGNED_OUT_KEPT_MS) signedOut.delete(hash);
+  const hash = refreshTokenHash(refreshToken);
+  signedOut.set(hash, now);
+  for (const [key, kept] of redemptions) {
+    if (kept.spent === hash || kept.issued === hash) redemptions.delete(key);
   }
-  return pending;
+}
+
+export function wasSignedOut(refreshToken: string): boolean {
+  const at = signedOut.get(refreshTokenHash(refreshToken));
+  return at !== undefined && Date.now() - at <= SIGNED_OUT_KEPT_MS;
+}
+
+export function resetRedemptionsForTests(): void {
+  redemptions.clear();
+  signedOut.clear();
 }
 
 /**
