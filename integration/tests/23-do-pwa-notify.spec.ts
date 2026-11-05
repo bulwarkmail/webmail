@@ -74,8 +74,15 @@ async function click(sw: Worker, action: string, data: Record<string, unknown>, 
   }, { action, data, reply });
 }
 
-async function pushed(sw: Worker, accountId: string, emailId: string): Promise<ShownNotification> {
-  return sw.evaluate(async ({ accountId: account, emailId: id }) => {
+/**
+ * `keepShown`: leave the account's notification on screen. By default the user
+ * has dealt with it first: one still showing keeps the messages it announced,
+ * and the next push adds "+N more" to them (7fb0242a7), a group with no buttons.
+ */
+async function pushed(sw: Worker, accountId: string, emailId: string, keepShown = false): Promise<ShownNotification> {
+  return sw.evaluate(async ({ accountId: account, emailId: id, keepShown: keep }) => {
+    const registration_ = (self as unknown as { registration: ServiceWorkerRegistration }).registration;
+    if (!keep) for (const old of await registration_.getNotifications({ tag: `bulwark-mail:${account}` })) old.close();
     const waits: Promise<unknown>[] = [];
     const event = new Event('push') as Event & Record<string, unknown>;
     Object.assign(event, {
@@ -87,7 +94,7 @@ async function pushed(sw: Worker, accountId: string, emailId: string): Promise<S
     const registration = (self as unknown as { registration: ServiceWorkerRegistration }).registration;
     const [shown] = await registration.getNotifications({ tag: `bulwark-mail:${account}` });
     return { title: shown.title, data: shown.data, actions: [...(shown as unknown as { actions: ShownNotification['actions'] }).actions] };
-  }, { accountId, emailId });
+  }, { accountId, emailId, keepShown });
 }
 
 async function opened(sw: Worker): Promise<string[]> {
@@ -175,7 +182,9 @@ test.describe('with the app open', () => {
     const subject = `Notify ${RUN} second`;
     await deliver({ from: ENT.bob, to: [USER], subject, text: 'Another.' });
     const second = await client.waitForEmail(subject, { timeoutMs: 30_000 });
-    const shown = await pushed(sw, first.accountId, second.id);
+    // The first one's notification is still on screen when the second comes.
+    await pushed(sw, first.accountId, first.id);
+    const shown = await pushed(sw, first.accountId, second.id, true);
     expect(shown.data.kind).toBe('mail-list');
     expect(shown.actions).toEqual([]);
   });
@@ -424,13 +433,16 @@ test.describe('with no tab open', () => {
     expect(Object.keys((await serverCopy(mail.id)).mailboxIds)).toEqual([trash!.id]);
   });
 
-  test('with the context cookie gone the message opens instead, and stays as it was', async () => {
+  test('with the context cookie and the remembered login gone the message opens instead, and stays as it was', async () => {
     const mail = await oneUnread();
     const shown = await pushed(sw, mail.accountId, mail.id);
     await closeTheApp();
     const jar = await context.cookies();
-    await context.clearCookies({ name: /^jmap_stalwart_ctx/ });
+    // Without the context cookie the route takes the remembered login, as a
+    // browser closed and woken by a push has only that (6ffa0a371).
+    await context.clearCookies({ name: /^(jmap_stalwart_ctx|jmap_session)/ });
     expect(jar.some((c) => c.name.startsWith('jmap_stalwart_ctx'))).toBe(true);
+    expect(jar.some((c) => c.name.startsWith('jmap_session'))).toBe(true);
     await routePosts(sw);
     await click(sw, 'mark-read', shown.data);
     expect((await routePosts(sw)).at(-1)).toContain('/api/push/action');
@@ -438,6 +450,8 @@ test.describe('with no tab open', () => {
     expect(urls).toHaveLength(1);
     expect(urls[0]).toContain(`/mail/message/${mail.id}`);
     expect((await serverCopy(mail.id)).keywords.$seen).toBeFalsy();
+    // The next tests open the app with the remembered login, as before.
+    await context.addCookies(jar.filter((c) => c.name.startsWith('jmap_session')));
   });
 
   test('a notification from a login no longer signed in acts on nothing', async () => {
@@ -558,7 +572,8 @@ test.describe('the route, as a page or another site would call it', () => {
     });
     expect((await post({ accountId: 'zzzzzz' })).status()).toBe(403);
     expect((await serverCopy(mail.id)).keywords.$seen).toBeFalsy();
-    await page.context().clearCookies({ name: /^jmap_stalwart_ctx/ });
+    // The remembered login counts too (6ffa0a371): without cookies is without both.
+    await page.context().clearCookies({ name: /^(jmap_stalwart_ctx|jmap_session)/ });
     expect((await post({})).status()).toBe(401);
     expect((await serverCopy(mail.id)).keywords.$seen).toBeFalsy();
     await page.context().close();
