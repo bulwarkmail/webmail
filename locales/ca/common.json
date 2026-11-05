@@ -1678,7 +1678,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Barra de cerca a dalt, aplicacions a l'esquerra"
+        "mountain_view": "Barra de cerca a dalt"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -3593,6 +3593,10 @@
       "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
       "sync_off": "Els altres dispositius mantenen la seva configuració."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicacions i carpetes a l'esquerra, cerca sobre la llista",
+    "mountain_view_description": "Cerca a dalt de tot, els missatges s'obren a tota l'amplada"
   },
   "setup": {
     "title": "Configuració de Bulwark Webmail",
@@ -7419,7 +7423,8 @@
     "pin_current": "PIN actual",
     "pin_new": "PIN nou",
     "pin_repeat": "Repetiu el PIN",
-    "pin_hint": "Almenys 6 caràcters. També serveixen lletres, i un PIN més llarg és més difícil d'endevinar.",
+    "pin_hint": "Almenys 5 caràcters. També serveixen lletres, i un PIN més llarg és més difícil d'endevinar.",
+    "pin_hint_policy": "La vostra organització exigeix almenys {count, plural, one {# caràcter} other {# caràcters}}. També serveixen lletres.",
     "pin_obvious": "Aquest PIN és massa fàcil d'endevinar. Eviteu repeticions, seqüències i opcions habituals.",
     "pin_mismatch": "Els dos PIN no coincideixen.",
     "pin_recovery": "Si l'oblideu, l'única sortida és eliminar les dades d'aquest dispositiu i tornar a iniciar la sessió. El correu al servidor es manté. Els missatges que encara esperen l'enviament en aquest dispositiu es perden.",

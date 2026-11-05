@@ -43,6 +43,8 @@
       <string id="AppLockRequired_Explain">When enabled, people must set up the app lock and cannot turn it off.</string>
       <string id="AppLockTimeoutMinutes">Lock the app after</string>
       <string id="AppLockTimeoutMinutes_Explain">How many minutes without use the app stays unlocked. From 1 to 1440.</string>
+      <string id="AppLockPinMinLength">Minimum length of the app lock PIN</string>
+      <string id="AppLockPinMinLength_Explain">How many characters a new app lock PIN needs at least. From 5 to 64. When not configured, it is 5. A PIN set before keeps working until it is changed.</string>
       <string id="AppLockHelloAllowed">Allow unlocking the app with Windows Hello</string>
       <string id="AppLockHelloAllowed_Explain">When enabled or not configured, people can unlock the app lock with Windows Hello as well as with its PIN. When disabled, the option is hidden, and Windows Hello no longer unlocks the app where it was set up: the PIN is needed. Windows only.</string>
       <string id="TelemetryAllowed">Allow usage statistics</string>
@@ -88,6 +90,7 @@
       <presentation id="PluginAllowlist"><listBox refId="PluginAllowlist_Value">Plugin ids</listBox></presentation>
       <presentation id="AppLockTimeoutMinutes"><decimalTextBox refId="AppLockTimeoutMinutes_Value" defaultValue="10">Minutes</decimalTextBox></presentation>
       <presentation id="AppLockTimeoutMinutes_Recommended"><decimalTextBox refId="AppLockTimeoutMinutes_Recommended_Value" defaultValue="10">Minutes</decimalTextBox></presentation>
+      <presentation id="AppLockPinMinLength"><decimalTextBox refId="AppLockPinMinLength_Value" defaultValue="8">Characters</decimalTextBox></presentation>
       <presentation id="QuickComposeShortcut"><textBox refId="QuickComposeShortcut_Value"><label>Shortcut</label></textBox></presentation>
       <presentation id="QuickComposeShortcut_Recommended"><textBox refId="QuickComposeShortcut_Recommended_Value"><label>Shortcut</label></textBox></presentation>
       <presentation id="AuthServerAllowlist"><textBox refId="AuthServerAllowlist_Value"><label>Servers</label></textBox></presentation>

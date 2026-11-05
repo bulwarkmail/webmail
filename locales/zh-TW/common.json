@@ -1678,7 +1678,7 @@
         "label": "介面版面配置",
         "description": "搜尋、導覽與工具列的位置",
         "default": "預設",
-        "mountain_view": "搜尋列在上方，應用程式在左側"
+        "mountain_view": "搜尋列在上方"
       },
       "animations": {
         "label": "啟用動畫",
@@ -3593,6 +3593,10 @@
       "sync_on": "你的其他裝置使用相同的設定，因此也會一起變更。",
       "sync_off": "你的其他裝置會保留各自的設定。"
     }
+  },
+  "layout_preview": {
+    "default_description": "應用程式和資料夾在左側，搜尋在清單上方",
+    "mountain_view_description": "搜尋列橫跨頂端，郵件以全寬開啟"
   },
   "setup": {
     "title": "Bulwark Webmail 設定",
@@ -7419,7 +7423,8 @@
     "pin_current": "目前的 PIN",
     "pin_new": "新 PIN",
     "pin_repeat": "重複 PIN",
-    "pin_hint": "至少 6 個字元。也可以使用字母,較長的 PIN 更難猜到。",
+    "pin_hint": "至少 5 個字元。也可以使用字母,較長的 PIN 更難猜到。",
+    "pin_hint_policy": "您的組織要求至少 {count, plural, other {# 個字元}}。也可以使用字母。",
     "pin_obvious": "這個 PIN 太容易被猜到。請避免重複、連續數字和常見組合。",
     "pin_mismatch": "兩個 PIN 不一致。",
     "pin_recovery": "如果忘記了,唯一的辦法是移除此裝置上的資料並重新登入。伺服器上的郵件會保留。此裝置上仍在等待傳送的郵件將遺失。",

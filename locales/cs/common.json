@@ -1675,7 +1675,7 @@
         "label": "Rozvržení rozhraní",
         "description": "Kde se nachází hledání, navigace a panely nástrojů",
         "default": "Výchozí",
-        "mountain_view": "Vyhledávání nahoře, aplikace vlevo"
+        "mountain_view": "Vyhledávání nahoře"
       },
       "animations": {
         "label": "Povolit animace",
@@ -3593,6 +3593,10 @@
       "sync_on": "Vaše další zařízení používají stejná nastavení, takže se změní také.",
       "sync_off": "Vaše další zařízení si nastavení ponechají."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikace a složky vlevo, hledání nad seznamem",
+    "mountain_view_description": "Hledání přes celou horní lištu, zprávy se otevírají na celou šířku"
   },
   "setup": {
     "title": "Nastavení Bulwark Webmail",
@@ -7419,7 +7423,8 @@
     "pin_current": "Současný PIN",
     "pin_new": "Nový PIN",
     "pin_repeat": "Zopakujte PIN",
-    "pin_hint": "Alespoň 6 znaků. Fungují i písmena a delší PIN se hůř uhodne.",
+    "pin_hint": "Alespoň 5 znaků. Fungují i písmena a delší PIN se hůř uhodne.",
+    "pin_hint_policy": "Vaše organizace vyžaduje alespoň {count, plural, one {# znak} few {# znaky} many {# znaku} other {# znaků}}. Fungují i písmena.",
     "pin_obvious": "Tento PIN se dá snadno uhodnout. Vyhněte se opakování, řadám a běžným volbám.",
     "pin_mismatch": "Oba kódy PIN nejsou stejné.",
     "pin_recovery": "Pokud ho zapomenete, jedinou cestou je odebrat data z tohoto zařízení a znovu se přihlásit. Vaše pošta na serveru zůstává. Zprávy čekající na odeslání na tomto zařízení se ztratí.",

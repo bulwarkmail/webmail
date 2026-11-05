@@ -1678,7 +1678,7 @@
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
         "default": "Default",
-        "mountain_view": "Search bar on top, apps on the left"
+        "mountain_view": "Search bar on top"
       },
       "animations": {
         "label": "Enable animations",
@@ -3593,6 +3593,10 @@
       "sync_on": "Your other devices use the same settings, so they change too.",
       "sync_off": "Your other devices keep their settings."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps and folders on the left, search above the list",
+    "mountain_view_description": "Search across the top, messages open full width"
   },
   "setup": {
     "title": "Bulwark Webmail setup",
@@ -7419,7 +7423,8 @@
     "pin_current": "Current PIN",
     "pin_new": "New PIN",
     "pin_repeat": "Repeat the PIN",
-    "pin_hint": "At least 6 characters. Letters work too, and a longer PIN is harder to guess.",
+    "pin_hint": "At least 5 characters. Letters work too, and a longer PIN is harder to guess.",
+    "pin_hint_policy": "Your organisation requires at least {count, plural, one {# character} other {# characters}}. Letters work too.",
     "pin_obvious": "That PIN is too easy to guess. Avoid repeats, runs and common choices.",
     "pin_mismatch": "The two PINs are not the same.",
     "pin_recovery": "If you forget it, the only way back is to remove the data on this device and sign in again. Your mail on the server stays. Messages still waiting to be sent on this device are lost.",
