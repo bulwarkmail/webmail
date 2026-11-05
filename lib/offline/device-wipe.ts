@@ -414,6 +414,12 @@ async function putRowsBack(rows: DeviceRecord[], wiped: string): Promise<void> {
 export interface WipeAccountOptions {
   /** Heard for this row: another window that got there first has removed it, and there's nothing to do. */
   ifRow?: string;
+  /**
+   * The account was signed out in this tab a moment ago, with nobody asking: it
+   * is hidden already, but whoever is here was signed in to it, so the sign-in
+   * page names the unsent messages that go.
+   */
+  justSignedOut?: boolean;
 }
 
 /**
@@ -456,7 +462,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   let deleted = true;
   if (!ownOnly || keepsMail) {
     // Tried again at the next start: the row keeps waiting until then.
-    await wipeAccount(account).catch(() => { deleted = false; });
+    await wipeAccount(account, { justSignedOut: options.justSignedOut }).catch(() => { deleted = false; });
   }
   clearEvicted(account);
   dropRefusedLogin(account);
@@ -717,7 +723,7 @@ const wipeReasonFor = (kind: ForcedSignOutKind | undefined): WipeReason => (kind
  */
 async function heardRefusal(account: string, certain: boolean, kind: ForcedSignOutKind): Promise<void> {
   if (certain && policyKnown() && devicesForAccount(account).wipeOnForcedSignOut) {
-    await wipeAccountFromDevice(account, wipeReasonFor(kind));
+    await wipeAccountFromDevice(account, wipeReasonFor(kind), { justSignedOut: true });
     return;
   }
   await countRefused(account);
