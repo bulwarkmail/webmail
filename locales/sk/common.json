@@ -3594,6 +3594,10 @@
       "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
     }
   },
+  "layout_preview": {
+    "default_description": "Aplikácie a priečinky vľavo, hľadanie nad zoznamom",
+    "mountain_view_description": "Hľadanie hore, správy sa otvárajú na celú šírku"
+  },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",
     "subtitle": "Nastavte svoju inštanciu webmailu v prehliadači.",

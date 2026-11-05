@@ -3594,6 +3594,10 @@
       "sync_off": "Uw andere apparaten houden hun instellingen."
     }
   },
+  "layout_preview": {
+    "default_description": "Apps en mappen links, zoeken boven de lijst",
+    "mountain_view_description": "Zoeken bovenaan, berichten openen over de volle breedte"
+  },
   "setup": {
     "title": "Bulwark Webmail instellen",
     "subtitle": "Stel je webmailinstantie in vanuit de browser.",

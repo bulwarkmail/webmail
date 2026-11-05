@@ -3594,6 +3594,10 @@
       "sync_off": "你的其他裝置會保留各自的設定。"
     }
   },
+  "layout_preview": {
+    "default_description": "應用程式和資料夾在左側，搜尋在清單上方",
+    "mountain_view_description": "搜尋列橫跨頂端，郵件以全寬開啟"
+  },
   "setup": {
     "title": "Bulwark Webmail 設定",
     "subtitle": "在瀏覽器中設定你的網頁郵件執行個體。",

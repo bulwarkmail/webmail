@@ -3594,6 +3594,10 @@
       "sync_off": "Your other devices keep their settings."
     }
   },
+  "layout_preview": {
+    "default_description": "Apps and folders on the left, search above the list",
+    "mountain_view_description": "Search across the top, messages open full width"
+  },
   "setup": {
     "title": "Bulwark Webmail setup",
     "subtitle": "Configure your webmail instance from the browser.",

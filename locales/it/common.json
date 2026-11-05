@@ -3594,6 +3594,10 @@
       "sync_off": "Gli altri dispositivi mantengono le loro impostazioni."
     }
   },
+  "layout_preview": {
+    "default_description": "App e cartelle a sinistra, ricerca sopra l'elenco",
+    "mountain_view_description": "Ricerca in alto, i messaggi si aprono a tutta larghezza"
+  },
   "setup": {
     "title": "Configurazione di Bulwark Webmail",
     "subtitle": "Configura la tua istanza webmail dal browser.",

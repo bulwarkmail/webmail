@@ -3594,6 +3594,10 @@
       "sync_off": "你的其他设备保留各自的设置。"
     }
   },
+  "layout_preview": {
+    "default_description": "应用和文件夹在左侧，搜索在列表上方",
+    "mountain_view_description": "搜索栏横跨顶部，邮件以全宽打开"
+  },
   "setup": {
     "title": "Bulwark Webmail 设置",
     "subtitle": "在浏览器中配置你的网页邮箱实例。",
