@@ -443,4 +443,19 @@ describe('recent files in the Attach menu', () => {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 250)); });
     expect(document.activeElement).toBe(subject);
   });
+
+  // A menu the composer opens (Attach, pickers) lives in a portal outside it; its focus counts too.
+  it('leaves the focus in a menu outside the composer before the first focus runs', async () => {
+    useAuthStore.setState({ client: client() as never });
+    render(<EmailComposer onClose={vi.fn()} />);
+    const menu = document.createElement('div');
+    menu.setAttribute('role', 'menu');
+    const item = document.createElement('button');
+    menu.appendChild(item);
+    document.body.appendChild(menu);
+    item.focus();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 250)); });
+    expect(document.activeElement).toBe(item);
+    menu.remove();
+  });
 });

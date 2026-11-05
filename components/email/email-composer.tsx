@@ -2198,7 +2198,10 @@ export function EmailComposer({
     if (!target) return false;
     const root = target.closest('[data-testid="email-composer"]');
     const active = document.activeElement;
-    if (root && active && active !== document.body && active !== target && root.contains(active)) return false;
+    if (active && active !== document.body && active !== target) {
+      // A menu this composer opened (Attach, a picker) is drawn outside it, in a portal.
+      if ((root && root.contains(active)) || active.closest('[role="menu"], [role="listbox"]')) return false;
+    }
     target.focus();
     return true;
   };
