@@ -170,13 +170,63 @@ describe('the lock screen', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent('setup_required_title');
     const save = screen.getByRole('button', { name: 'save' });
     expect(save).toBeDisabled();
-    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '12345' } });
-    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '12345' } });
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '4829' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '4829' } });
     expect(save).toBeDisabled();
-    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '482913' } });
+    expect(screen.getByTestId('app-lock-new-pin')).toHaveAttribute('aria-invalid', 'true');
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '48291' } });
     expect(save).toBeDisabled();
-    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '482913' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '48291' } });
     expect(save).toBeEnabled();
+  });
+
+  it('asks for the longer PIN a forced policy sets, and says so', () => {
+    setMinimum(8);
+    render(<LockScreen phase="setup" />);
+    const save = screen.getByRole('button', { name: 'save' });
+    expect(screen.getByText('pin_hint_policy')).toBeInTheDocument();
+    expect(screen.queryByText('pin_hint')).toBeNull();
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '5820374' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '5820374' } });
+    expect(save).toBeDisabled();
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '58203749' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '58203749' } });
+    expect(save).toBeEnabled();
+  });
+});
+
+function setMinimum(value: number, locked = true): void {
+  (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
+    version: 1,
+    platform: 'win32',
+    policy: { get: () => ({ AppLockPinMinLength: { value, locked, source: locked ? 'forced-machine' : 'default' } }), onChange: () => () => {} },
+  };
+}
+
+describe('the PIN hint', () => {
+  it('says 5 characters', async () => {
+    const en = (await import('@/locales/en/common.json')).default as { appLock: { pin_hint: string } };
+    expect(en.appLock.pin_hint).toBe('At least 5 characters. Letters work too, and a longer PIN is harder to guess.');
+  });
+
+  it('the settings\' change dialog takes 5 characters without a policy, and only 8 with one', async () => {
+    writeAppLockFile({ on: true, locked: false });
+    const { unmount } = render(<AppLockSettings />);
+    fireEvent.click(screen.getByRole('button', { name: 'change_pin' }));
+    fireEvent.change(await screen.findByTestId('app-lock-current-pin'), { target: { value: 'correct-pin' } });
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '48291' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '48291' } });
+    expect(screen.getByText('pin_hint')).toBeInTheDocument();
+    expect(screen.getByTestId('app-lock-dialog-save')).toBeEnabled();
+    unmount();
+    setMinimum(8);
+    render(<AppLockSettings />);
+    fireEvent.click(screen.getByRole('button', { name: 'change_pin' }));
+    fireEvent.change(await screen.findByTestId('app-lock-current-pin'), { target: { value: 'correct-pin' } });
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '48291' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '48291' } });
+    expect(screen.getByText('pin_hint_policy')).toBeInTheDocument();
+    expect(screen.getByTestId('app-lock-dialog-save')).toBeDisabled();
   });
 });
 

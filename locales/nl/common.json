@@ -1675,7 +1675,7 @@
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
         "default": "Standaard",
-        "mountain_view": "Zoekbalk boven, apps links"
+        "mountain_view": "Zoekbalk boven"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -3593,6 +3593,10 @@
       "sync_on": "Uw andere apparaten gebruiken dezelfde instellingen, dus die veranderen ook.",
       "sync_off": "Uw andere apparaten houden hun instellingen."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps en mappen links, zoeken boven de lijst",
+    "mountain_view_description": "Zoeken bovenaan, berichten openen over de volle breedte"
   },
   "setup": {
     "title": "Bulwark Webmail instellen",
@@ -7411,7 +7415,8 @@
     "pin_current": "Huidige pincode",
     "pin_new": "Nieuwe pincode",
     "pin_repeat": "Herhaal de pincode",
-    "pin_hint": "Minstens 6 tekens. Letters mogen ook, en een langere pincode is moeilijker te raden.",
+    "pin_hint": "Minstens 5 tekens. Letters mogen ook, en een langere pincode is moeilijker te raden.",
+    "pin_hint_policy": "Uw organisatie vereist minstens {count, plural, one {# teken} other {# tekens}}. Letters mogen ook.",
     "pin_obvious": "Deze pincode is te makkelijk te raden. Vermijd herhalingen, reeksen en veelgebruikte keuzes.",
     "pin_mismatch": "De twee pincodes zijn niet gelijk.",
     "pin_recovery": "Als u hem vergeet, kunt u alleen de gegevens op dit apparaat verwijderen en opnieuw inloggen. Uw mail op de server blijft. Berichten die op dit apparaat nog op verzending wachten, gaan verloren.",

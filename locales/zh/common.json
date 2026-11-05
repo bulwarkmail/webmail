@@ -1675,7 +1675,7 @@
         "label": "界面布局",
         "description": "搜索、导航和工具栏的位置",
         "default": "默认",
-        "mountain_view": "搜索栏在上，应用在左"
+        "mountain_view": "搜索栏在上"
       },
       "animations": {
         "label": "启用动画",
@@ -3593,6 +3593,10 @@
       "sync_on": "你的其他设备使用相同的设置，因此也会一起改变。",
       "sync_off": "你的其他设备保留各自的设置。"
     }
+  },
+  "layout_preview": {
+    "default_description": "应用和文件夹在左侧，搜索在列表上方",
+    "mountain_view_description": "搜索栏横跨顶部，邮件以全宽打开"
   },
   "setup": {
     "title": "Bulwark Webmail 设置",
@@ -7411,7 +7415,8 @@
     "pin_current": "当前 PIN",
     "pin_new": "新 PIN",
     "pin_repeat": "重复 PIN",
-    "pin_hint": "至少 6 个字符。也可以使用字母,较长的 PIN 更难猜到。",
+    "pin_hint": "至少 5 个字符。也可以使用字母,较长的 PIN 更难猜到。",
+    "pin_hint_policy": "您的组织要求至少 {count, plural, other {# 个字符}}。也可以使用字母。",
     "pin_obvious": "这个 PIN 太容易被猜到。请避免重复、连续数字和常见组合。",
     "pin_mismatch": "两个 PIN 不一致。",
     "pin_recovery": "如果忘记了,唯一的办法是删除此设备上的数据并重新登录。服务器上的邮件会保留。此设备上仍在等待发送的邮件将丢失。",

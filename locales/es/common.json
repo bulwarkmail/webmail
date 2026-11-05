@@ -1675,7 +1675,7 @@
         "label": "Diseño de la interfaz",
         "description": "Dónde se sitúan la búsqueda, la navegación y las barras de herramientas",
         "default": "Predeterminado",
-        "mountain_view": "Barra de búsqueda arriba, aplicaciones a la izquierda"
+        "mountain_view": "Barra de búsqueda arriba"
       },
       "animations": {
         "label": "Habilitar Animaciones",
@@ -3593,6 +3593,10 @@
       "sync_on": "Sus otros dispositivos usan los mismos ajustes, así que también cambian.",
       "sync_off": "Sus otros dispositivos conservan sus ajustes."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicaciones y carpetas a la izquierda, búsqueda sobre la lista",
+    "mountain_view_description": "Búsqueda en la parte superior, los mensajes se abren a todo el ancho"
   },
   "setup": {
     "title": "Configuración de Bulwark Webmail",
@@ -7411,7 +7415,8 @@
     "pin_current": "PIN actual",
     "pin_new": "PIN nuevo",
     "pin_repeat": "Repetir el PIN",
-    "pin_hint": "Al menos 6 caracteres. También valen letras, y un PIN más largo es más difícil de adivinar.",
+    "pin_hint": "Al menos 5 caracteres. También valen letras, y un PIN más largo es más difícil de adivinar.",
+    "pin_hint_policy": "Su organización exige al menos {count, plural, one {# carácter} other {# caracteres}}. También valen letras.",
     "pin_obvious": "Ese PIN es demasiado fácil de adivinar. Evita repeticiones, secuencias y opciones habituales.",
     "pin_mismatch": "Los dos PIN no coinciden.",
     "pin_recovery": "Si lo olvida, la única salida es eliminar los datos de este dispositivo y volver a iniciar sesión. Su correo en el servidor se mantiene. Los mensajes que aún esperan envío en este dispositivo se pierden.",

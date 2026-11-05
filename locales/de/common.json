@@ -1675,7 +1675,7 @@
         "label": "Oberflächen-Layout",
         "description": "Wo Suche, Navigation und Symbolleisten liegen",
         "default": "Standard",
-        "mountain_view": "Suchleiste oben, Apps links"
+        "mountain_view": "Suchleiste oben"
       },
       "animations": {
         "label": "Animationen aktivieren",
@@ -3593,6 +3593,10 @@
       "sync_on": "Ihre anderen Geräte nutzen dieselben Einstellungen, also ändern sie sich auch.",
       "sync_off": "Ihre anderen Geräte behalten ihre Einstellungen."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps und Ordner links, Suche über der Liste",
+    "mountain_view_description": "Suche oben über die ganze Breite, Nachrichten öffnen in voller Breite"
   },
   "setup": {
     "title": "Einrichtung von Bulwark Webmail",
@@ -7411,7 +7415,8 @@
     "pin_current": "Aktuelle PIN",
     "pin_new": "Neue PIN",
     "pin_repeat": "PIN wiederholen",
-    "pin_hint": "Mindestens 6 Zeichen. Buchstaben gehen auch, und eine längere PIN ist schwerer zu erraten.",
+    "pin_hint": "Mindestens 5 Zeichen. Buchstaben gehen auch, und eine längere PIN ist schwerer zu erraten.",
+    "pin_hint_policy": "Ihre Organisation verlangt mindestens {count, plural, one {# Zeichen} other {# Zeichen}}. Buchstaben gehen auch.",
     "pin_obvious": "Diese PIN ist zu leicht zu erraten. Vermeiden Sie Wiederholungen, Zahlenfolgen und gängige Kombinationen.",
     "pin_mismatch": "Die beiden PINs sind nicht gleich.",
     "pin_recovery": "Wenn Sie sie vergessen, müssen Sie die Daten auf diesem Gerät entfernen und sich neu anmelden. Ihre E-Mails auf dem Server bleiben. Nachrichten, die auf diesem Gerät noch auf den Versand warten, gehen verloren.",

@@ -52,8 +52,24 @@ describe('the PIN', () => {
   });
 
   it('must be long enough, counted in characters', () => {
-    expect(pinLongEnough('12345')).toBe(false);
-    expect(pinLongEnough('123456')).toBe(true);
+    expect(pinLongEnough('1234')).toBe(false);
+    expect(pinLongEnough('12345')).toBe(true);
+    expect(pinLongEnough('äöüß')).toBe(false);
+    expect(pinLongEnough('äöüßé')).toBe(true);
+  });
+
+  it('a minimum from a policy can raise the length, never lower it', () => {
+    expect(pinLongEnough('5820374', 8)).toBe(false);
+    expect(pinLongEnough('58203749', 8)).toBe(true);
+    expect(pinLongEnough('4829', 3)).toBe(false);
+  });
+
+  it.each(['12345', '54321', '11111', 'abcde', '12121', 'qwert', 'asdfg', '12321'])('refuses the 5-character %s as too easy to guess', (pin) => {
+    expect(pinIsObvious(pin)).toBe(true);
+  });
+
+  it.each(['48291', '73915', 'k8r2m'])('takes the 5-character %s', (pin) => {
+    expect(pinIsObvious(pin)).toBe(false);
   });
 });
 

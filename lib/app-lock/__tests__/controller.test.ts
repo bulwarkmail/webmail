@@ -960,6 +960,46 @@ describe('a PIN anyone would guess', () => {
   }
 });
 
+describe('the PIN\'s length', () => {
+  function minimumPolicy(value: number | null, locked = true): void {
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
+      version: 1,
+      platform: 'win32',
+      policy: { get: () => ({ AppLockPinMinLength: { value, locked, source: locked ? 'forced-machine' : 'default' } }), onChange: () => () => {} },
+    };
+  }
+
+  it('takes 5 characters and refuses 4', async () => {
+    await expect(enableAppLock('4829')).rejects.toMatchObject({ name: 'ShortPinError' });
+    expect(await readVault()).toBeNull();
+    await enableAppLock('48291');
+    await expect(changeAppLockPin('48291', '7302')).rejects.toMatchObject({ name: 'ShortPinError' });
+    await lockedAndReloaded();
+    await unlockWithPin('48291');
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('a forced policy asking for 8 wins, and a PIN set before it keeps working', async () => {
+    await enableAppLock('48291');
+    minimumPolicy(8);
+    await expect(changeAppLockPin('48291', '5820374')).rejects.toMatchObject({ name: 'ShortPinError' });
+    await lockedAndReloaded();
+    await unlockWithPin('48291');
+    expect(isAppLockedNow()).toBe(false);
+    await disableAppLock('48291');
+    await expect(enableAppLock('5820374')).rejects.toMatchObject({ name: 'ShortPinError' });
+    await enableAppLock('58203749');
+    expect(readAppLockFile().on).toBe(true);
+  });
+
+  it('a policy can\'t go under 5, and a recommended one asks for nothing', async () => {
+    minimumPolicy(3);
+    await expect(enableAppLock('4829')).rejects.toMatchObject({ name: 'ShortPinError' });
+    minimumPolicy(8, false);
+    await enableAppLock('48291');
+  });
+});
+
 describe('off', () => {
   it('is the default: nothing is shown as locked and no layer is asked for', async () => {
     bootAppLock();

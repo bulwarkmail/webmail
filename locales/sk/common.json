@@ -1678,7 +1678,7 @@
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
         "default": "Predvolené",
-        "mountain_view": "Vyhľadávanie hore, aplikácie vľavo"
+        "mountain_view": "Vyhľadávanie hore"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -3593,6 +3593,10 @@
       "sync_on": "Vaše ďalšie zariadenia používajú rovnaké nastavenia, takže sa zmenia tiež.",
       "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikácie a priečinky vľavo, hľadanie nad zoznamom",
+    "mountain_view_description": "Hľadanie hore, správy sa otvárajú na celú šírku"
   },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",
@@ -7411,7 +7415,8 @@
     "pin_current": "Súčasný PIN",
     "pin_new": "Nový PIN",
     "pin_repeat": "Zopakujte PIN",
-    "pin_hint": "Aspoň 6 znakov. Fungujú aj písmená a dlhší PIN sa ťažšie uhádne.",
+    "pin_hint": "Aspoň 5 znakov. Fungujú aj písmená a dlhší PIN sa ťažšie uhádne.",
+    "pin_hint_policy": "Vaša organizácia vyžaduje aspoň {count, plural, one {# znak} few {# znaky} many {# znaku} other {# znakov}}. Fungujú aj písmená.",
     "pin_obvious": "Tento PIN sa dá príliš ľahko uhádnuť. Vyhnite sa opakovaniu, radám a bežným voľbám.",
     "pin_mismatch": "Oba kódy PIN nie sú rovnaké.",
     "pin_recovery": "Ak ho zabudnete, jedinou cestou je odstrániť údaje z tohto zariadenia a znova sa prihlásiť. Vaša pošta na serveri zostáva. Správy čakajúce na odoslanie na tomto zariadení sa stratia.",

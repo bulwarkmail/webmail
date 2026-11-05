@@ -6,6 +6,7 @@ import { Lock } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfig } from "@/hooks/use-config";
+import { LockBackdrop } from "./lock-backdrop";
 import { NewPinFields, newPinReady } from "./pin-fields";
 import { cancelHello, enableAppLock, forgetEverything, helloState, unlockWithHello, unlockWithOs, unlockWithPasskey, unlockWithPin, type AppLockPhase } from "@/lib/app-lock/controller";
 import { passkeysPossible } from "@/lib/app-lock/passkey";
@@ -68,6 +69,13 @@ function useMainWindowThere(): boolean {
   return there;
 }
 
+/**
+ * The whole window: the app's skeleton behind (not in a pop-out, which isn't the mail
+ * page), the window's drag band over the top row, and the card. The band comes before
+ * the card, so the card's fields and buttons cut themselves out of it. It needs its own
+ * element: this overlay, fixed and a dialog, cuts the page's band (body::before) out
+ * everywhere. See app/globals.css.
+ */
 function Frame({ title, body, children }: { title: string; body?: string; children: React.ReactNode }) {
   const titleId = useId();
   return (
@@ -76,17 +84,21 @@ function Frame({ title, body, children }: { title: string; body?: string; childr
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-[100001] flex items-center justify-center overflow-y-auto bg-background p-6 pt-[calc(var(--titlebar-inset,0px)+1.5rem)]"
+      className="fixed inset-0 z-[100001] bg-background"
     >
-      <div className="w-full max-w-sm space-y-5">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground">
-            <Lock className="h-6 w-6" aria-hidden="true" />
-          </span>
-          <h1 id={titleId} className="text-lg font-semibold text-foreground">{title}</h1>
-          {body && <p className="text-sm text-muted-foreground">{body}</p>}
+      {!isPopoutWindow() && <LockBackdrop />}
+      <div aria-hidden="true" data-window-drag-band="" />
+      <div className="absolute inset-0 flex overflow-y-auto p-6 pt-[calc(var(--titlebar-inset,0px)+1.5rem)]">
+        <div data-app-lock-card="" className="relative m-auto w-full max-w-sm space-y-5 rounded-xl border border-border bg-background p-6 shadow-xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground">
+              <Lock className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <h1 id={titleId} className="text-lg font-semibold text-foreground">{title}</h1>
+            {body && <p className="text-sm text-muted-foreground">{body}</p>}
+          </div>
+          {children}
         </div>
-        {children}
       </div>
     </div>
   );
