@@ -67,7 +67,6 @@ describe('list-row tag suffix classes', () => {
     expect(suffix.children).toHaveLength(2);
     for (const tag of suffix.children) expect(tag).toHaveClass('shrink-0', 'max-w-[min(12rem,100%)]');
     const yieldingText = Array.from(container.querySelectorAll<HTMLElement>('.truncate')).filter(node => node.classList.contains('flex-1'));
-    expect(yieldingText.length).toBeGreaterThan(0);
     expect(yieldingText.every(node => node.classList.contains('min-w-0'))).toBe(true);
     expect(suffix.querySelector('.tabular-nums, svg, button, [data-expand-toggle]')).toBeNull();
     expect(container.querySelector('.tabular-nums')).not.toBeNull();
@@ -95,7 +94,7 @@ describe('list-row tag suffix classes', () => {
     for (const count of [1, 3]) for (const tagged of [false, true]) {
       const { container, unmount } = render(rows({ layout, count, tagged, placement: 'subject' }));
       const subject = Array.from(container.querySelectorAll('.truncate')).find(node => node.textContent === 'Synthetic subject');
-      expect(subject).toHaveClass('flex-1', 'min-w-0', 'truncate');
+      expect(subject).toHaveClass('min-w-0', 'truncate');
       expect(subject).not.toHaveClass('max-w-40');
       expect(subject).not.toHaveClass('shrink-[2]');
       const suffix = container.querySelector('.flex-wrap.overflow-hidden');
@@ -104,6 +103,21 @@ describe('list-row tag suffix classes', () => {
         expect(suffix).not.toHaveClass('grow');
         expect(suffix).not.toHaveClass('basis-12');
       } else expect(suffix).toBeNull();
+      unmount();
+    }
+  });
+
+  // A one-line row runs the preview on right after the subject: the subject
+  // keeps its own width and the preview gives way first. If both grew, a short
+  // subject would take half the row and push the preview to the middle.
+  it.each(['focus', 'mountain'])('keeps the preview right after the subject in %s', layout => {
+    for (const count of [1, 3]) for (const tagged of [false, true]) {
+      useSettingsStore.setState({ showPreview: true });
+      const { container, unmount } = render(rows({ layout, count, tagged, placement: 'subject' }));
+      const subject = Array.from(container.querySelectorAll('.truncate')).find(node => node.textContent === 'Synthetic subject');
+      const preview = Array.from(container.querySelectorAll('.truncate')).find(node => node.textContent?.includes('Synthetic preview'));
+      expect(subject).not.toHaveClass('flex-1');
+      expect(preview).toHaveClass('flex-1', 'shrink-[9999]', 'min-w-0');
       unmount();
     }
   });
