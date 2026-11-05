@@ -67,6 +67,35 @@ describe('sanitizeDefaultSidebarApps', () => {
     expect(sanitizeDefaultSidebarApps([app({ icon: 'tabler:../x' })])[0].icon).toBe('Globe');
   });
 
+  it("keeps an https image on the app's own origin as its icon", () => {
+    const iconUrl = 'https://intranet.example.com/static/favicon-24x24.png';
+    expect(sanitizeDefaultSidebarApps([app({ iconUrl: ` ${iconUrl} ` })])[0].iconUrl).toBe(iconUrl);
+    expect(sanitizeDefaultSidebarApps([app()])[0]).not.toHaveProperty('iconUrl');
+  });
+
+  it("drops an image that is not https or not on the app's origin, and keeps the app", () => {
+    for (const iconUrl of [
+      'https://cdn.example.com/logo.png',
+      'https://intranet.example.com:8443/logo.png',
+      'http://intranet.example.com/logo.png',
+      'https://user:pw@intranet.example.com/logo.png',
+      'data:image/svg+xml,<svg/>',
+      'javascript:alert(1)',
+      '/logo.png',
+      `https://intranet.example.com/${'a'.repeat(2100)}`,
+      42,
+    ]) {
+      const [kept] = sanitizeDefaultSidebarApps([app({ iconUrl })]);
+      expect(kept.name, String(iconUrl)).toBe('Intranet');
+      expect(kept, String(iconUrl)).not.toHaveProperty('iconUrl');
+    }
+    // An app served over http gets no image either: no https image shares its origin.
+    const [plain] = sanitizeDefaultSidebarApps([
+      app({ url: 'http://intranet.example.com', iconUrl: 'https://intranet.example.com/logo.png' }),
+    ]);
+    expect(plain).not.toHaveProperty('iconUrl');
+  });
+
   it('coerces openMode and showOnMobile', () => {
     const [tab, inline] = sanitizeDefaultSidebarApps([
       app({ id: 'a', openMode: 'popup', showOnMobile: 'yes' }),

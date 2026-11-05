@@ -54,6 +54,25 @@ function sanitizeUrl(raw: unknown): string | null {
 }
 
 /**
+ * An app's own image as its icon: https and on the app's own origin, so it
+ * names no host the app doesn't already (the page's CSP allows that origin in
+ * img-src: `https:`, or the app's origin with no third-party traffic).
+ */
+function sanitizeIconUrl(raw: unknown, appUrl: string): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const iconUrl = raw.trim();
+  if (!iconUrl || iconUrl.length > MAX_APP_URL_LENGTH) return undefined;
+  let icon: URL;
+  try {
+    icon = new URL(iconUrl);
+  } catch {
+    return undefined;
+  }
+  if (icon.protocol !== 'https:' || icon.username || icon.password) return undefined;
+  return icon.origin === new URL(appUrl).origin ? iconUrl : undefined;
+}
+
+/**
  * Validates the operator's app list. Bad entries are dropped individually so a
  * single typo never blanks out the rest, and ids are forced into the admin
  * namespace so a hand-written policy can't shadow a user's own app.
@@ -74,6 +93,7 @@ export function sanitizeDefaultSidebarApps(raw: unknown): AdminSidebarApp[] {
     if (!url) continue;
 
     const icon = typeof app.icon === 'string' && ICON_NAME_RE.test(app.icon) ? app.icon : 'Globe';
+    const iconUrl = sanitizeIconUrl(app.iconUrl, url);
 
     // Ids only have to be stable and unique; the shape is ours to impose.
     const rawId = typeof app.id === 'string' ? app.id.replace(ID_SUFFIX_RE, '') : '';
@@ -89,6 +109,7 @@ export function sanitizeDefaultSidebarApps(raw: unknown): AdminSidebarApp[] {
       name,
       url,
       icon,
+      ...(iconUrl ? { iconUrl } : {}),
       openMode: app.openMode === 'inline' ? 'inline' : 'tab',
       showOnMobile: app.showOnMobile === true,
     });

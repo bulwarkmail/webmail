@@ -164,6 +164,11 @@ export interface AdminSidebarApp {
   url: string;
   /** Lucide icon name (e.g. 'Globe'). */
   icon: string;
+  /**
+   * An image drawn in place of `icon` (an app's own logo): https, on the app's
+   * own origin. Only for apps of the policy; `icon` shows when it fails to load.
+   */
+  iconUrl?: string;
   /** Open in a new browser tab, or embedded in an iframe. */
   openMode: 'tab' | 'inline';
   showOnMobile: boolean;

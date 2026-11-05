@@ -6,6 +6,7 @@ import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, L
 import { openAccessibilityPanel } from "@/components/accessibility/accessibility-quick-panel";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
+import { SidebarAppIcon } from "@/components/layout/sidebar-app-icon";
 import { useConfig } from "@/hooks/use-config";
 import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
@@ -476,7 +477,6 @@ export function NavigationRail({
 
         {/* Custom sidebar apps (per-app mobile visibility) */}
         {visibleSidebarApps.filter((app) => app.showOnMobile).map((app) => {
-          const AppIcon = iconForName(app.icon);
           const isActive = activeAppId === app.id;
           return (
             <button
@@ -499,7 +499,7 @@ export function NavigationRail({
               )}
             >
               <div className="relative">
-                {AppIcon ? <AppIcon className="w-5 h-5" /> : null}
+                <SidebarAppIcon app={app} className="w-5 h-5" />
                 {isActive && (
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
                 )}
@@ -705,7 +705,6 @@ export function NavigationRail({
           />
         )}
         {visibleSidebarApps.map((app) => {
-          const AppIcon = iconForName(app.icon);
           const isActive = activeAppId === app.id;
           return (
             <button
@@ -732,7 +731,7 @@ export function NavigationRail({
               title={collapsed ? app.name : undefined}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
-              {AppIcon ? <AppIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} /> : null}
+              <SidebarAppIcon app={app} className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
               {!collapsed && <span className="truncate">{app.name}</span>}
             </button>
           );

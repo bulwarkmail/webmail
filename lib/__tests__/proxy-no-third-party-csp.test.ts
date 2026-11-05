@@ -61,6 +61,14 @@ describe('page CSP with no third-party traffic', () => {
     expect(d['img-src']).not.toMatch(/ https:( |$)/);
   });
 
+  it("lets an admin sidebar app's icon image load from the app's origin", async () => {
+    policy.defaultSidebarApps = [{ id: 'admin-app-chat', name: 'Chat', url: 'https://chat.corp.example/',
+      icon: 'tabler:messages', iconUrl: 'https://chat.corp.example/favicon.png', openMode: 'tab', showOnMobile: false }];
+    expect((await csp())['img-src']).toBe("'self' data: blob: https:");
+    config.noThirdPartyTraffic = true;
+    expect((await csp())['img-src']).toContain(' https://chat.corp.example');
+  });
+
   it('stays as before with the mode off', async () => {
     const d = await csp();
     expect(d['img-src']).toBe("'self' data: blob: https:");
