@@ -494,7 +494,10 @@ test('a forgotten PIN with a server that hangs: nothing waits for it, and nobody
   await context.route(/\/api\/(auth|settings|devices)/, () => { /* no answer */ });
   const started = Date.now();
   await forgetPin(page);
-  await page.waitForURL((url) => !url.pathname.includes('/settings'), { timeout: 60_000 });
+  // Polled: the way out may replace one navigation with the next, and
+  // waitForURL gives up on the aborted one (net::ERR_ABORTED).
+  await expect.poll(() => new URL(page.url()).pathname, { timeout: 60_000 }).not.toContain('/settings');
+  await page.waitForLoadState('load');
   expect(Date.now() - started, 'bounded, whatever the server does').toBeLessThan(45_000);
   await expectNothingLeft(page);
   // The session cookie stays, as the server never heard. The mark keeps it from signing anyone in.
