@@ -51,14 +51,15 @@
   --color-ring: #2563eb;
   --color-background: #ffffff;
   --color-foreground: #0f172a;
-  --color-primary: #185aea;
-  --color-primary-foreground: #ffffff;
+  /* --brand-* come from the host's DOMAIN_BRANDING palette, when it has one. */
+  --color-primary: var(--brand-primary, #185aea);
+  --color-primary-foreground: var(--brand-primary-foreground, #ffffff);
   --color-secondary: #f8fafc;
   --color-secondary-foreground: #0f172a;
   --color-muted: #f1f5f9;
   --color-muted-foreground: #59687c;
-  --color-accent: #dbeafe;
-  --color-accent-foreground: #1e40af;
+  --color-accent: var(--brand-accent, #dbeafe);
+  --color-accent-foreground: var(--brand-accent-foreground, #1e40af);
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
   --color-popover: #ffffff;
@@ -84,11 +85,11 @@
   --color-info-foreground: #ffffff;
 
   /* Selection states */
-  --color-selection: #dbeafe;
-  --color-selection-foreground: #1e40af;
+  --color-selection: var(--brand-accent, #dbeafe);
+  --color-selection-foreground: var(--brand-accent-foreground, #1e40af);
 
   /* Unread indicator */
-  --color-unread: #3b82f6;
+  --color-unread: var(--brand-primary, #3b82f6);
 
   /* Chart colors */
   --color-chart-1: #3b82f6;
@@ -129,14 +130,14 @@
   --color-ring: #d4d4d4;
   --color-background: #0a0a0a;
   --color-foreground: #fafafa;
-  --color-primary: #fafafa;
-  --color-primary-foreground: #171717;
+  --color-primary: var(--brand-dark-primary, #fafafa);
+  --color-primary-foreground: var(--brand-dark-primary-foreground, #171717);
   --color-secondary: #262626;
   --color-secondary-foreground: #fafafa;
   --color-muted: #262626;
   --color-muted-foreground: #adadad;
-  --color-accent: #1e3a8a;
-  --color-accent-foreground: #dbeafe;
+  --color-accent: var(--brand-dark-accent, #1e3a8a);
+  --color-accent-foreground: var(--brand-dark-accent-foreground, #dbeafe);
   --color-destructive: #ef4444;
   --color-destructive-foreground: #0a0a0a;
   --color-popover: #1c1c1c;
@@ -166,7 +167,7 @@
   --color-selection-foreground: #93c5fd;
 
   /* Unread indicator */
-  --color-unread: #60a5fa;
+  --color-unread: var(--brand-dark-primary, #60a5fa);
 
   /* Chart colors */
   --color-chart-1: #60a5fa;
