@@ -1593,7 +1593,7 @@ export const ALL_PERMISSIONS = [
   // Read the message being written (api.composer.getBody/getSelection/getSnapshot), in
   // a composer that handed the plugin its id.
   'compose:read',
-  // Change the message being written (api.composer.replaceSelection/replaceBody).
+  // Change the message being written (api.composer.replaceSelection/replaceBody/setSubject).
   'compose:write',
   // Check the text of every open composer while the user types
   // (api.composer.registerChecker): the host sends the plugin what the user

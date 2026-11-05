@@ -75,7 +75,7 @@ import { requestPageNavigation } from './page-navigation';
 import { requestCalendarView } from './calendar-navigation';
 import { requestOpenTask } from './open-task';
 import { requestOpenEmail } from './open-email';
-import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
+import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection, doComposerSetSubject } from './host-api-composer';
 import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
 import { openExternalLink } from '../plugin-hook-result';
@@ -343,6 +343,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'composer.getSelection': 'compose:read',
   'composer.replaceSelection': 'compose:write',
   'composer.replaceBody': 'compose:write',
+  // The subject, as plain text, like an edit of the body.
+  'composer.setSubject': 'compose:write',
   // Attach a file the plugin uploaded (jmap.uploadBlob).
   'composer.attach': 'email:blob-write',
   // Text checkers (checkers.ts): compose:check for one the host sends text
@@ -2409,6 +2411,7 @@ export async function dispatchApiCall(
     case 'composer.getSelection': return doComposerGetSelection(plugin, args[0]);
     case 'composer.replaceSelection': return doComposerReplaceSelection(plugin, args[0], args[1], args[2]);
     case 'composer.replaceBody': return doComposerReplaceBody(plugin, args[0], args[1], args[2]);
+    case 'composer.setSubject': return doComposerSetSubject(plugin, args[0], args[1]);
     case 'composer.attach': return doComposerAttach(plugin, args[0], args[1]);
     case 'composer.registerChecker': return doRegisterChecker(plugin, args[0], opts?.frame);
     case 'composer.updateChecker': return doUpdateChecker(plugin, args[0], args[1]);

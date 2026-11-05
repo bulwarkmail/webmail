@@ -721,6 +721,14 @@ function buildCoreApi(manifest: PluginManifest) {
       /** Replace own text, optionally only at expectedRevision; signature and quote stay. Needs compose:write. */
       replaceBody: (composerId: string, content: { text: string } | { html: string }, options?: { expectedRevision: string }) =>
         callApi('composer.replaceBody', [composerId, content, options]) as Promise<boolean>,
+      /**
+       * Replace the subject with plain text (Bulwark 1.21 and later). Line
+       * breaks and other control characters become spaces; at most 998
+       * characters. One Ctrl+Z undoes it, and the draft saves as after
+       * typing. Needs compose:write.
+       */
+      setSubject: (composerId: string, subject: string) =>
+        callApi('composer.setSubject', [composerId, subject]) as Promise<boolean>,
       /** Attach a blob from jmap.uploadBlob. Needs email:blob-write. */
       attach: (composerId: string, file: { blobId: string; name: string; type?: string; size: number }) =>
         callApi('composer.attach', [composerId, file]) as Promise<boolean>,

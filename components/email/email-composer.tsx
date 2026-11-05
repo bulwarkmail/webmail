@@ -55,7 +55,7 @@ import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolba
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
 import { MAX_PLUGIN_FETCH_BYTES } from "@/lib/plugin-sandbox/host-api-input";
-import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
+import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceInputText, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
@@ -3598,6 +3598,28 @@ export function EmailComposer({
         }
         const editor = editorRef.current;
         return !!editor && replaceEditorSelection(editor, html, { below });
+      },
+      setSubject: (text) => {
+        // Typed into the field, so Ctrl+Z there takes it back; the subject
+        // state follows through the field's input event, and the draft saves
+        // as after typing. The body keeps focus and caret when it had them.
+        const editor = editorRef.current;
+        const editorFocused = !plainTextModeRef.current && !!editor && !editor.isDestroyed && editor.isFocused;
+        const textarea = plainTextModeRef.current ? bodyRef.current : null;
+        const textareaFocused = !!textarea && document.activeElement === textarea;
+        const caret = textarea ? [textarea.selectionStart ?? 0, textarea.selectionEnd ?? 0] as const : null;
+        const input = subjectInputRef.current;
+        if (!input || !replaceInputText(input, text)) {
+          // No subject line on screen (a docked reply): the value only.
+          setSubject(text);
+          return true;
+        }
+        if (editorFocused) editor.commands.focus();
+        else if (textareaFocused && textarea && caret) {
+          textarea.focus({ preventScroll: true });
+          textarea.setSelectionRange(caret[0], caret[1]);
+        }
+        return true;
       },
       attach: (file) => pluginAttachRef.current(file as PluginAttachmentUpload),
       attachFile: ({ sourceAccountId, ...file }) => pluginAttachRef.current(file as PluginAttachmentUpload, sourceAccountId),
