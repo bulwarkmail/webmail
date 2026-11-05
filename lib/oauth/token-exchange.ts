@@ -187,8 +187,16 @@ export async function getMetadata(serverId?: string | null, options?: ClientConf
 }
 
 export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {
-  const { clientId } = getRequiredConfig(serverId, options);
+  const { clientId, resource } = getRequiredConfig(serverId, options);
   const params = new URLSearchParams({ ...base, client_id: clientId });
+  // RFC 8707 section 2.2: the resource indicator from the authorization request
+  // also goes on the token request. IdPs built on node-oidc-provider with
+  // useGrantedResource off (Logto, for one) only issue a JWT for the API when
+  // the token request names it, and otherwise return an opaque token that
+  // Stalwart rejects. Revocation (no grant_type) does not take a resource.
+  if (resource && (base.grant_type === 'authorization_code' || base.grant_type === 'refresh_token')) {
+    params.set('resource', resource);
+  }
   const secret = options?.upstream ? '' : getClientSecret(serverId);
   if (secret) {
     params.set('client_secret', secret);
