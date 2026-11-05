@@ -2434,7 +2434,9 @@ function SidebarImpl({
             {!isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
               <Button
                 onClick={onCompose}
-                className="flex-1 min-w-0 h-9 justify-start gap-2 px-3"
+                // Pill corners for the main action, friendlier than the
+                // app-wide 6px. The colour stays the primary token's.
+                className="flex-1 min-w-0 h-9 justify-start gap-2 px-3 rounded-full"
                 data-sidebar-compose=""
                 data-tour="compose-button"
                 title={t("compose_hint")}
@@ -2448,7 +2450,7 @@ function SidebarImpl({
             <div className="px-2 pb-2">
               <Button
                 onClick={onCompose}
-                className="w-full min-w-0 h-9 justify-start gap-2 px-3"
+                className="w-full min-w-0 h-9 justify-start gap-2 px-3 rounded-full"
                 data-sidebar-compose=""
                 data-tour="compose-button"
                 title={t("compose_hint")}
