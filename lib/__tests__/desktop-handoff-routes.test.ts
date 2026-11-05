@@ -196,6 +196,12 @@ describe('checking, before the question', () => {
     expect(verifyJmapAuth).not.toHaveBeenCalled();
   });
 
+  it('takes a password on an OAuth-only instance whose admin turned on the password fallback', async () => {
+    config.values = { jmapServerUrl: SERVER, oauthEnabled: true, oauthOnly: true, oauthPasswordFallbackEnabled: true };
+    await checkIt();
+    expect(verifyJmapAuth).toHaveBeenCalled();
+  });
+
   it('over the login budget, nothing reaches the mail server, and the answer says why', async () => {
     reserveLoginAttempt.mockResolvedValue(null);
     const answer = await checkIt();

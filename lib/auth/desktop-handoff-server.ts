@@ -34,7 +34,13 @@ export type DesktopHandoffServer =
 export async function resolveDesktopHandoffServer(serverUrl: string, serverId: unknown): Promise<DesktopHandoffServer> {
   await configManager.ensureLoaded();
   if (!desktopHandoffEnabled()) return { refusal: { error: 'disabled', status: 403 } };
-  if (configManager.get<boolean>('oauthEnabled', false) && configManager.get<boolean>('oauthOnly', false)) {
+  // Same gate as the session and verify routes: an admin who turned on the
+  // password fallback lets passwords through here too.
+  if (
+    configManager.get<boolean>('oauthEnabled', false)
+    && configManager.get<boolean>('oauthOnly', false)
+    && !configManager.get<boolean>('oauthPasswordFallbackEnabled', false)
+  ) {
     return { refusal: { error: 'oauth_only', status: 403 } };
   }
   const configured =
