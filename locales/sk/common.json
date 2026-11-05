@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Stlačte {keys} a napíšte novú správu",
     "tip_palette_keys": "Stlačte {keys} a nájdite akýkoľvek príkaz"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Zmeňte vzhľad aplikácie",
+    "badge_all_accounts_description": "Číslo na ikone na paneli úloh a v oblasti oznámení sčítava doručenú poštu všetkých prihlásených účtov.",
+    "web_address": "Webová adresa"
+  },
   "selectionView": {
     "starred": "Označené hviezdičkou",
     "unstarred": "Hviezdička odstránená"

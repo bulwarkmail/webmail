@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
     "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Canvieu l'aspecte de l'aplicació",
+    "badge_all_accounts_description": "El número de la icona de la barra de tasques i de la safata suma les safates d'entrada de tots els comptes amb la sessió iniciada.",
+    "web_address": "Adreça web"
+  },
   "selectionView": {
     "starred": "Marcat amb estrella",
     "unstarred": "Estrella eliminada"

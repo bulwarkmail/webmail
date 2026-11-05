@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Appuyez sur {keys} pour écrire un nouveau message",
     "tip_palette_keys": "Appuyez sur {keys} pour trouver n'importe quelle commande"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Modifiez l'apparence de l'application",
+    "badge_all_accounts_description": "Le nombre sur l'icône de la barre des tâches et dans la zone de notification additionne les boîtes de réception de tous les comptes connectés.",
+    "web_address": "Adresse web"
+  },
   "selectionView": {
     "starred": "Suivi",
     "unstarred": "Suivi retiré"

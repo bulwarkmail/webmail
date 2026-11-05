@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Press {keys} to write a new message",
     "tip_palette_keys": "Press {keys} to find any command"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Change how the app looks",
+    "badge_all_accounts_description": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
+    "web_address": "Web address"
+  },
   "selectionView": {
     "starred": "Starred",
     "unstarred": "Star removed"

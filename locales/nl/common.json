@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Druk op {keys} om een nieuw bericht te schrijven",
     "tip_palette_keys": "Druk op {keys} om elke opdracht te vinden"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Wijzig hoe de app eruitziet",
+    "badge_all_accounts_description": "Het getal op het taakbalkpictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op.",
+    "web_address": "Webadres"
+  },
   "selectionView": {
     "starred": "Met ster gemarkeerd",
     "unstarred": "Ster verwijderd"

@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Drücken Sie {keys}, um eine neue Nachricht zu schreiben",
     "tip_palette_keys": "Drücken Sie {keys}, um jeden Befehl zu finden"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Ändern Sie, wie die App aussieht",
+    "badge_all_accounts_description": "Die Zahl am Taskleistensymbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen.",
+    "web_address": "Webadresse"
+  },
   "selectionView": {
     "starred": "Mit Stern markiert",
     "unstarred": "Stern entfernt"

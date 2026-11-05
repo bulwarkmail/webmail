@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Prima {keys} para escrever uma nova mensagem",
     "tip_palette_keys": "Prima {keys} para encontrar qualquer comando"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Mude a aparência do app",
+    "badge_all_accounts_description": "O número no ícone da barra de tarefas e na bandeja do sistema soma as caixas de entrada de todas as contas conectadas.",
+    "web_address": "Endereço da web"
+  },
   "selectionView": {
     "starred": "Com estrela",
     "unstarred": "Estrela removida"

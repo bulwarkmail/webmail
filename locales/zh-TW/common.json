@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "按 {keys} 撰寫新郵件",
     "tip_palette_keys": "按 {keys} 尋找任何指令"
   },
+  "uxp3_desktop": {
+    "appearance_description": "變更應用程式的外觀",
+    "badge_all_accounts_description": "工作列圖示和系統匣上的數字會合計所有已登入帳號的收件匣。",
+    "web_address": "網址"
+  },
   "selectionView": {
     "starred": "已加星號",
     "unstarred": "已移除星號"

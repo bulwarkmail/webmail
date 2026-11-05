@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Tryk på {keys} for at skrive en ny besked",
     "tip_palette_keys": "Tryk på {keys} for at finde en kommando"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Skift, hvordan appen ser ud",
+    "badge_all_accounts_description": "Tallet på ikonet på proceslinjen og i meddelelsesområdet lægger indbakkerne for alle loggede-ind konti sammen.",
+    "web_address": "Webadresse"
+  },
   "selectionView": {
     "starred": "Stjernemarkeret",
     "unstarred": "Stjerne fjernet"

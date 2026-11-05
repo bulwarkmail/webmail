@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "برای نوشتن پیام جدید {keys} را فشار دهید",
     "tip_palette_keys": "برای یافتن هر فرمانی {keys} را فشار دهید"
   },
+  "uxp3_desktop": {
+    "appearance_description": "ظاهر برنامه را تغییر دهید",
+    "badge_all_accounts_description": "عدد روی نماد نوار وظیفه و در سینی سیستم، صندوق‌های ورودی همه حساب‌های واردشده را با هم جمع می‌کند.",
+    "web_address": "نشانی وب"
+  },
   "selectionView": {
     "starred": "ستاره‌دار شد",
     "unstarred": "ستاره برداشته شد"

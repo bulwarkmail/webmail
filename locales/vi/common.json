@@ -7915,6 +7915,11 @@
     "tip_compose_keys": "Nhấn {keys} để viết thư mới",
     "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Thay đổi giao diện của ứng dụng",
+    "badge_all_accounts_description": "Con số trên biểu tượng thanh tác vụ và trong khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập.",
+    "web_address": "Địa chỉ web"
+  },
   "selectionView": {
     "starred": "Đã gắn dấu sao",
     "unstarred": "Đã bỏ dấu sao"

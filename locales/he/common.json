@@ -7904,6 +7904,11 @@
     "tip_compose_keys": "הקישו {keys} כדי לכתוב הודעה חדשה",
     "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
   },
+  "uxp3_desktop": {
+    "appearance_description": "שינוי המראה של האפליקציה",
+    "badge_all_accounts_description": "המספר על הסמל בשורת המשימות ובמגש המערכת מחבר את תיבות הדואר הנכנס של כל החשבונות המחוברים.",
+    "web_address": "כתובת אינטרנט"
+  },
   "selectionView": {
     "starred": "סומן בכוכב",
     "unstarred": "הכוכב הוסר"

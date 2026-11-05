@@ -63,6 +63,7 @@ export function NotificationSettings() {
   const t = useTranslations('settings.notifications');
   const tAppearance = useTranslations('settings.appearance');
   const tDesktopP2 = useTranslations('uxp2_desktop');
+  const tDesktopP3 = useTranslations('uxp3_desktop');
   const tUnread = useTranslations('account_unread');
   const severalAccounts = useAccountStore((s) => s.accounts.length > 1);
   const tThirdParty = useTranslations('third_party');
@@ -385,7 +386,11 @@ export function NotificationSettings() {
 
         {/* Only means something with a second account. */}
         {severalAccounts && (
-        <SettingItem label={tUnread('badge_all_accounts.label')} description={tUnread('badge_all_accounts.description')}>
+        <SettingItem
+          label={tUnread('badge_all_accounts.label')}
+          // The desktop app has no tab: the taskbar icon and the tray (desktop-p3-16).
+          description={isDesktopApp() ? tDesktopP3('badge_all_accounts_description') : tUnread('badge_all_accounts.description')}
+        >
           <ToggleSwitch
             checked={unreadBadgeAllAccounts}
             onChange={(checked) => updateSetting('unreadBadgeAllAccounts', checked)}

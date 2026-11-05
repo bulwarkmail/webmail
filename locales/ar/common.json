@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "اضغط {keys} لكتابة رسالة جديدة",
     "tip_palette_keys": "اضغط {keys} للعثور على أي أمر"
   },
+  "uxp3_desktop": {
+    "appearance_description": "غيّر مظهر التطبيق",
+    "badge_all_accounts_description": "الرقم على أيقونة شريط المهام وفي شريط النظام يجمع صناديق الوارد لكل الحسابات المسجّل دخولها.",
+    "web_address": "عنوان الويب"
+  },
   "selectionView": {
     "starred": "تمت إضافة النجمة",
     "unstarred": "تمت إزالة النجمة"

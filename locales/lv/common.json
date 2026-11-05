@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Nospiediet {keys}, lai rakstītu jaunu ziņojumu",
     "tip_palette_keys": "Nospiediet {keys}, lai atrastu jebkuru komandu"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Mainiet lietotnes izskatu",
+    "badge_all_accounts_description": "Skaitlis uzdevumjoslas ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes.",
+    "web_address": "Tīmekļa adrese"
+  },
   "selectionView": {
     "starred": "Atzīmēts ar zvaigznīti",
     "unstarred": "Zvaigznīte noņemta"

@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
     "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Endre hvordan appen ser ut",
+    "badge_all_accounts_description": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
+    "web_address": "Nettadresse"
+  },
   "selectionView": {
     "starred": "Stjernemerket",
     "unstarred": "Stjerne fjernet"

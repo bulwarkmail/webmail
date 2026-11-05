@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "按 {keys} 写新邮件",
     "tip_palette_keys": "按 {keys} 查找任何命令"
   },
+  "uxp3_desktop": {
+    "appearance_description": "更改应用的外观",
+    "badge_all_accounts_description": "任务栏图标和托盘上的数字会合计所有已登录账户的收件箱。",
+    "web_address": "网址"
+  },
   "selectionView": {
     "starred": "已加星标",
     "unstarred": "已取消星标"

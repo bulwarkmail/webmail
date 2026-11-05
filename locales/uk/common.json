@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Натисніть {keys}, щоб написати новий лист",
     "tip_palette_keys": "Натисніть {keys}, щоб знайти будь-яку команду"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Змініть вигляд застосунку",
+    "badge_all_accounts_description": "Число на значку на панелі завдань і в треї підсумовує вхідні всіх облікових записів, у які виконано вхід.",
+    "web_address": "Вебадреса"
+  },
   "selectionView": {
     "starred": "Позначено зірочкою",
     "unstarred": "Зірочку знято"

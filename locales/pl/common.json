@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
     "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Zmień wygląd aplikacji",
+    "badge_all_accounts_description": "Liczba na ikonie na pasku zadań i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "web_address": "Adres internetowy"
+  },
   "selectionView": {
     "starred": "Oznaczono gwiazdką",
     "unstarred": "Usunięto gwiazdkę"

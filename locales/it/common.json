@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Premi {keys} per scrivere un nuovo messaggio",
     "tip_palette_keys": "Premi {keys} per trovare qualsiasi comando"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Cambia l'aspetto dell'app",
+    "badge_all_accounts_description": "Il numero sull'icona della barra delle applicazioni e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "web_address": "Indirizzo web"
+  },
   "selectionView": {
     "starred": "Aggiunto a Speciali",
     "unstarred": "Stella rimossa"

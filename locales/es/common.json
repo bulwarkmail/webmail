@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Pulse {keys} para escribir un mensaje nuevo",
     "tip_palette_keys": "Pulse {keys} para buscar cualquier comando"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Cambia el aspecto de la aplicación",
+    "badge_all_accounts_description": "El número del icono de la barra de tareas y de la bandeja del sistema suma las bandejas de entrada de todas las cuentas con sesión iniciada.",
+    "web_address": "Dirección web"
+  },
   "selectionView": {
     "starred": "Destacado",
     "unstarred": "Estrella quitada"

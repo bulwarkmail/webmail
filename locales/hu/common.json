@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Új üzenet írásához nyomja meg: {keys}",
     "tip_palette_keys": "Bármely parancs kereséséhez nyomja meg: {keys}"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Az alkalmazás megjelenésének módosítása",
+    "badge_all_accounts_description": "A tálca ikonján és az értesítési területen látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze.",
+    "web_address": "Webcím"
+  },
   "selectionView": {
     "starred": "Csillagozva",
     "unstarred": "Csillag eltávolítva"

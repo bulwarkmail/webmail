@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "{keys}를 눌러 새 메시지 쓰기",
     "tip_palette_keys": "{keys}를 눌러 명령 찾기"
   },
+  "uxp3_desktop": {
+    "appearance_description": "앱의 모양을 바꿔요",
+    "badge_all_accounts_description": "작업 표시줄 아이콘과 알림 영역의 숫자에 로그인한 모든 계정의 받은편지함을 합산해 표시해요.",
+    "web_address": "웹 주소"
+  },
   "selectionView": {
     "starred": "별표를 추가했습니다",
     "unstarred": "별표를 삭제했습니다"

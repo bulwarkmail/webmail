@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Шинэ зурвас бичихийн тулд {keys} дарна уу",
     "tip_palette_keys": "Ямар ч тушаал олохын тулд {keys} дарна уу"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Аппын харагдах байдлыг өөрчлөх",
+    "badge_all_accounts_description": "Ажлын самбарын дүрс болон мэдэгдлийн хэсэг дээрх тоо нь нэвтэрсэн бүх бүртгэлийн ирсэн захидлыг нэгтгэнэ.",
+    "web_address": "Вэб хаяг"
+  },
   "selectionView": {
     "starred": "Одоор тэмдэглэсэн",
     "unstarred": "Од хассан"

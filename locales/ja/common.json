@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "{keys} を押して新しいメッセージを作成",
     "tip_palette_keys": "{keys} を押してコマンドを検索"
   },
+  "uxp3_desktop": {
+    "appearance_description": "アプリの見た目を変更します",
+    "badge_all_accounts_description": "タスクバーのアイコンと通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
+    "web_address": "Web アドレス"
+  },
   "selectionView": {
     "starred": "スターを付けました",
     "unstarred": "スターを外しました"

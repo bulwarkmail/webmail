@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Stiskněte {keys} a napište novou zprávu",
     "tip_palette_keys": "Stiskněte {keys} a najděte jakýkoli příkaz"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Změňte vzhled aplikace",
+    "badge_all_accounts_description": "Číslo na ikoně na hlavním panelu a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů.",
+    "web_address": "Webová adresa"
+  },
   "selectionView": {
     "starred": "Označeno hvězdičkou",
     "unstarred": "Hvězdička odebrána"

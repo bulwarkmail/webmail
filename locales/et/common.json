@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Uue kirja kirjutamiseks vajutage {keys}",
     "tip_palette_keys": "Mis tahes käsu leidmiseks vajutage {keys}"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Muutke rakenduse välimust",
+    "badge_all_accounts_description": "Tegumiriba ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid.",
+    "web_address": "Veebiaadress"
+  },
   "selectionView": {
     "starred": "Tärniga märgitud",
     "unstarred": "Tärn eemaldatud"

@@ -7903,6 +7903,11 @@
     "tip_compose_keys": "Apăsați {keys} pentru a scrie un mesaj nou",
     "tip_palette_keys": "Apăsați {keys} pentru a găsi orice comandă"
   },
+  "uxp3_desktop": {
+    "appearance_description": "Schimbați aspectul aplicației",
+    "badge_all_accounts_description": "Numărul de pe pictograma din bara de activități și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate.",
+    "web_address": "Adresă web"
+  },
   "selectionView": {
     "starred": "Marcat cu stea",
     "unstarred": "Stea eliminată"

@@ -7911,6 +7911,11 @@
     "tip_compose_keys": "กด {keys} เพื่อเขียนข้อความใหม่",
     "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
   },
+  "uxp3_desktop": {
+    "appearance_description": "เปลี่ยนรูปลักษณ์ของแอป",
+    "badge_all_accounts_description": "ตัวเลขบนไอคอนในแถบงานและในถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้",
+    "web_address": "ที่อยู่เว็บ"
+  },
   "selectionView": {
     "starred": "ติดดาวแล้ว",
     "unstarred": "นำดาวออกแล้ว"

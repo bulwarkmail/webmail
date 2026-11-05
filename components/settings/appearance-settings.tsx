@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import { useThemeStore } from '@/stores/theme-store';
 import { useSettingsStore, type Density } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup } from './settings-section';
@@ -73,13 +74,15 @@ function DensityPreview({ density }: { density: Density }) {
  */
 export function AppearanceSettings() {
   const t = useTranslations('settings.appearance');
+  const tDesktop = useTranslations('uxp3_desktop');
   const { theme, setTheme } = useThemeStore();
   const { density, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden, getColorModePolicy, isFeatureEnabled } = usePolicyStore();
 
   return (
     <div className="space-y-8">
-      <SettingsSection id="theme" title={t('title')} description={t('description')}>
+      {/* The desktop app is no webmail to the person using it (desktop-p3-16). */}
+      <SettingsSection id="theme" title={t('title')} description={isDesktopApp() ? tDesktop('appearance_description') : t('description')}>
         <SettingItem label={t('theme.label')} description={t('theme.description')} locked={getColorModePolicy().locked}>
           <RadioGroup
             value={theme}
