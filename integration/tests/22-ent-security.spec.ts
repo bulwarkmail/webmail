@@ -258,12 +258,8 @@ test('item 1: a reply draft from before the lock loads no remote image when reop
   await folderRow(alice, { role: 'drafts' }).first().click();
   const row = alice.locator('[data-testid="email-list-item"], [data-thread-keys]', { hasText: `Trust list ${RUN}` }).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
+  // A draft opens straight in the composer (e7cef5ba1), with no reader step.
   await row.click();
-  await alice.getByTestId('edit-draft').waitFor({ state: 'visible' });
-  await alice.waitForTimeout(2000);
-  // Viewing the draft loads nothing either.
-  expect(pixel.count(), 'requests while the draft is shown in the reader').toBe(0);
-  await alice.getByTestId('edit-draft').click();
   await alice.locator('[data-testid="email-composer"]').waitFor({ state: 'visible', timeout: 20_000 });
   await alice.waitForTimeout(3000);
   expect(pixel.count()).toBe(0);
