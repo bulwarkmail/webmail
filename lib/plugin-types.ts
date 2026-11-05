@@ -1207,6 +1207,20 @@ export interface SieveScriptGenerateContext {
 }
 
 /**
+ * Passed to onComposeFromLink (Bulwark 1.21 and later): the composer opened
+ * from a link with parameters for this plugin, such as
+ * `mailto:a@b.de?subject=Mahnung&x-akte-case=01%2F2026` for the plugin
+ * `akte`. Only the plugin named in the parameters hears it. The link can
+ * come from anyone: treat the values as untrusted input.
+ */
+export interface ComposeLinkContext {
+  /** The composer, for api.composer.* (compose:read / compose:write). */
+  composerId: string;
+  /** This plugin's parameters, the `x-<plugin id>-` prefix gone; names in lower case. */
+  params: Record<string, string>;
+}
+
+/**
  * Passed to onMailtoIntercept handlers.
  * Return false to prevent the browser from opening the system mail client.
  */
@@ -1291,6 +1305,25 @@ export interface OutgoingEmail {
    * recipient warning is off. Empty when every recipient is internal.
    */
   externalRecipients?: string[];
+  /**
+   * Bulwark 1.21 and later: the id of the composer the message is sent from,
+   * the same id its actions and slots hand out (api.composer.*), so a plugin
+   * knows which of its drafts goes out. Set in the composer (docked, full,
+   * pop-out window, Pro tab, quick compose; also for a scheduled send or one
+   * with Undo) and in a quick reply (onBeforeEmailSend only); absent for a
+   * plugin's forward. A plugin can't change it.
+   */
+  composerId?: string;
+  /**
+   * Bulwark 1.21 and later, onTransformOutgoingEmail: keywords to set on the
+   * message, so its copy in Sent carries them from the start. Only from a
+   * plugin with `email:write`; others' changes to the list are dropped.
+   * Custom keywords in RFC 8621 syntax (printable ASCII without spaces and
+   * the characters ( ) { ] % * " and backslash), plus `$flagged` and
+   * Bulwark's tags (`$label:<id>`); other `$` keywords are the system's and
+   * are dropped, as are invalid ones. At most 10. Starts as an empty list.
+   */
+  keywords?: string[];
 }
 /**
  * Passed to onBeforeDraftAutoSave handlers as a transform value.
@@ -1612,7 +1645,7 @@ export const ALL_PERMISSIONS = [
   // Read the message being written (api.composer.getBody/getSelection/getSnapshot), in
   // a composer that handed the plugin its id.
   'compose:read',
-  // Change the message being written (api.composer.replaceSelection/replaceBody).
+  // Change the message being written (api.composer.replaceSelection/replaceBody/setSubject).
   'compose:write',
   // Check the text of every open composer while the user types
   // (api.composer.registerChecker): the host sends the plugin what the user

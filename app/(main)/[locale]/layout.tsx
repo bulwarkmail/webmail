@@ -15,6 +15,7 @@ import { ProtocolLaunchHandlerProvider } from "@/components/protocol/protocol-la
 import { ProInterfaceRedirect } from "@/components/pro/pro-interface-redirect";
 import { ImpersonationReconciler } from "@/components/impersonation/impersonation-reconciler";
 import { PluginDialogHost } from "@/components/plugins/plugin-dialog-host";
+import { PluginFileViewerHost } from "@/components/plugins/plugin-file-viewer-host";
 import { ExternalRecipientConfirmHost } from "@/components/email/external-recipient-confirm";
 import { PhishingReportHost } from "@/components/email/phishing-report-host";
 import { PluginPageNavigator } from "@/components/plugins/plugin-page-navigator";
@@ -123,6 +124,7 @@ export default async function LocaleLayout({
                   {children}
                   <DeferredFileDropHost />
                   <PluginDialogHost />
+                  {!IS_LITE && <PluginFileViewerHost />}
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />
                   <MainWindowOnly>

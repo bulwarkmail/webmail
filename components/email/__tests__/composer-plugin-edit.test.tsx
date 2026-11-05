@@ -9,6 +9,7 @@ import { buildQuotedHtmlBlock, serializeEditorContent } from '../quoted-html';
 import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
 import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePluginStore } from '@/stores/plugin-store';
 
 // The real composer around the real editor, worked on by a plugin through
 // the handle it registers for api.composer: what the plugin reads as the
@@ -143,6 +144,8 @@ vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
 }));
 
+const linkHook = vi.hoisted(() => ({ emitTo: vi.fn(async () => {}) }));
+
 vi.mock('@/lib/plugin-hooks', () => ({
   identityHooks: {
     onSignatureRender: { size: 0, transform: async (value: unknown) => value },
@@ -163,6 +166,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { takeOver: async () => 'default' },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
+    onComposeFromLink: { size: 1, pluginIds: () => ['akte'], emitTo: linkHook.emitTo },
   },
   contactHooks: {
     search: { call: async () => [] },
@@ -260,6 +264,47 @@ describe('plugins editing the message being written', () => {
     expect(handle.readMetadata?.()).toMatchObject({ subject: 'Re: Photo', to: ['Bob Builder <bob@example.com>'], cc: ['cc@example.com'], bcc: ['bcc@example.com'], attachments: [], pending: false });
     fireEvent.change(screen.getByDisplayValue('Re: Photo'), { target: { value: 'Updated subject' } });
     expect(handle.readMetadata?.().subject).toBe('Updated subject');
+  });
+
+  it('sets the subject as the user typing it would, and the draft changes with it', async () => {
+    const { handle } = await renderComposer();
+    const field = screen.getByDisplayValue('Re: Photo') as HTMLInputElement;
+    // jsdom lays nothing out: the field is on screen.
+    field.getClientRects = () => [{}] as unknown as DOMRectList;
+    const typed = vi.fn();
+    field.addEventListener('input', typed);
+    let ok = false;
+    act(() => { ok = handle.setSubject!('Akte 01/2026: Re: Photo'); });
+    expect(ok).toBe(true);
+    // Through the field, so the browser's undo has it, and React's state follows.
+    expect(typed).toHaveBeenCalled();
+    expect(field.value).toBe('Akte 01/2026: Re: Photo');
+    expect(handle.readMetadata?.().subject).toBe('Akte 01/2026: Re: Photo');
+  });
+
+  it('sets the subject also where the subject line is not on screen (a docked reply)', async () => {
+    const { handle } = await renderComposer();
+    // The hidden field has no box.
+    let ok = false;
+    act(() => { ok = handle.setSubject!('Akte 01/2026'); });
+    expect(ok).toBe(true);
+    expect(handle.readMetadata?.().subject).toBe('Akte 01/2026');
+  });
+
+  it("hands each plugin its link's parameters once, with the composer's id", async () => {
+    usePluginStore.setState({ initialized: true });
+    linkHook.emitTo.mockClear();
+    const { id } = await renderComposer(BODY, { linkParams: { 'x-akte-case': '01/2026', 'x-other-thing': 'x' } });
+    await waitFor(() => expect(linkHook.emitTo).toHaveBeenCalledTimes(1));
+    expect(linkHook.emitTo).toHaveBeenCalledWith('akte', { composerId: id, params: { case: '01/2026' } });
+  });
+
+  it('tells no plugin anything without link parameters', async () => {
+    usePluginStore.setState({ initialized: true });
+    linkHook.emitTo.mockClear();
+    await renderComposer();
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+    expect(linkHook.emitTo).not.toHaveBeenCalled();
   });
 
   it('distinguishes equal blob ids from two logins and reads through the attachment owner', async () => {

@@ -20,6 +20,12 @@ describe("mailtoComposerDraft", () => {
     expect(draft.plainTextMode).toBe(false);
   });
 
+  it("carries the link's parameters for plugins, and none when it had none", () => {
+    const linkParams = { "x-akte-case": "01/2026" };
+    expect(mailtoComposerDraft({ ...base, linkParams }, false).linkParams).toEqual(linkParams);
+    expect(mailtoComposerDraft(base, false)).not.toHaveProperty("linkParams");
+  });
+
   it("carries a plugin's uploaded attachments", () => {
     const attachments = [{ blobId: "b1", name: "a.pdf", type: "application/pdf", size: 10 }];
     expect(mailtoComposerDraft({ ...base, attachments }, false).attachments).toEqual(attachments);

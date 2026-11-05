@@ -165,13 +165,15 @@ describe('Pro compose tab - a draft that lives in a group account', () => {
     render(<ProComposeTabBody tabId="tab-1" data={TAB_DATA} />);
     const onSend = composerProps.current?.onSend as (data: Record<string, unknown>) => Promise<void>;
 
-    await onSend({ to: ['bob@example.com'], cc: [], bcc: [], subject: 'Hi', body: 'Hi', draftId: 'eaaaaab', draftAccountId: 'c' });
+    await onSend({ to: ['bob@example.com'], cc: [], bcc: [], subject: 'Hi', body: 'Hi', draftId: 'eaaaaab', draftAccountId: 'c', keywords: ['akte-01/2026'] });
 
     // (client, to, subject, body, cc, bcc, identityId, fromEmail, draftId, ..., options)
     expect(sendEmail.mock.calls[0][8]).toBe('eaaaaab');
     // The options are composerSendOptions, the same object the mail page sends
     // (read receipt, DSN, priority, headers, outbox for offline mode #523).
     expect(sendEmail.mock.calls[0][16]).toMatchObject({ localAccountId: undefined, draftAccountId: 'c', outbox: true });
+    // Keywords plugins set for the Sent copy go along too.
+    expect(sendEmail.mock.calls[0][16].keywords).toEqual(['akte-01/2026']);
   });
 });
 

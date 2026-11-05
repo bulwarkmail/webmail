@@ -97,6 +97,7 @@ export const SLOT_CATALOG = {
   'composer-attach-menu': S('composer', 'action', ['ui:composer-toolbar'], { composerId: null }, 'entries in the Attach menu (for example "From Nextcloud"); the click\'s composerId lets api.composer.attach add files'),
   'composer-options-menu': S('composer', 'action', ['ui:composer-toolbar'], { composerId: null }, 'entries in the composer\'s Options menu'),
   'composer-toolbar-actions': S('composer', 'action', ['ui:composer-toolbar'], { composerId: null }, 'buttons in the composer\'s bottom bar, after Attach, Templates and Options; an action\'s shortcut works while the composer has focus', true),
+  'composer-header-actions': S('composer', 'action', ['ui:composer-toolbar'], { composerId: null }, 'icon buttons in the composer\'s top bar, before its own window buttons, in every form of the composer (docked under a message, full, a window of its own, a Pro tab, quick compose); where the bar is narrow they go behind one button that opens them as a menu; the click\'s composerId lets api.composer.* work on the draft (Bulwark 1.21 and later)', true),
   'composer-selection-menu': S('composer', 'action', ['ui:composer-toolbar'], { composerId: null, selection: 'compose:read' }, 'entries in the right-click menu on selected text in the message (without plugin entries the browser\'s own menu stays); the click\'s selection is { text }'),
 
   // ─── Calendar ──────────────────────────────────────────────

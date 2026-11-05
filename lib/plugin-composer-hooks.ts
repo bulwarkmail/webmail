@@ -12,6 +12,7 @@
 
 import type { ComposerContext } from './plugin-types';
 import { emailHooks } from './plugin-hooks';
+import { splitLinkParams, type LinkParams } from './plugin-link-params';
 
 const openSessions = new Set<string>();
 const pendingCloses = new Map<string, ReturnType<typeof setTimeout>>();
@@ -53,6 +54,20 @@ export function draftSaved(draftId: string, subject: string): void {
   try {
     if (emailHooks.onDraftAutoSave.size > 0) void emailHooks.onDraftAutoSave.emit({ draftId, subject });
   } catch { /* observers never break the composer */ }
+}
+
+/**
+ * Hand each plugin its parameters from the link the composer `composerId`
+ * opened from (lib/plugin-link-params.ts), once the plugins have started
+ * (`ready`): onComposeFromLink, to that plugin only.
+ */
+export async function deliverLinkParams(composerId: string, params: LinkParams, ready: () => Promise<void>): Promise<void> {
+  await ready();
+  const bus = emailHooks.onComposeFromLink;
+  if (!bus || bus.size === 0) return;
+  for (const [pluginId, own] of splitLinkParams(params, bus.pluginIds())) {
+    await emailHooks.onComposeFromLink.emitTo(pluginId, { composerId, params: own });
+  }
 }
 
 /** Forget every session (tests). */

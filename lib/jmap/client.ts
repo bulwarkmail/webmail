@@ -57,6 +57,7 @@ import { IS_LITE_STALWART } from "@/lib/lite";
 import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
 import { customHeaderProperties, withLabelHeaders } from "@/lib/outgoing/custom-headers";
+import { outgoingKeywordMap } from "@/lib/outgoing/outgoing-keywords";
 import { draftLabelProperty } from "@/lib/classification/labels";
 import { attachmentParts, HTML_PART_ID, relatedBodyStructure, repointAttachments, TEXT_PART_ID, type OutgoingBodyPart, type SavedPart } from "./outgoing-body";
 import { addBodyMediaToAttachments } from "./body-media-attachments";
@@ -1527,6 +1528,12 @@ export interface SubmissionSendOptions {
    * of the same name is dropped, so a plugin can't change the label.
    */
   labelHeaders?: Record<string, string>;
+  /**
+   * Custom keywords plugins set in onTransformOutgoingEmail, on the created
+   * message and so on its copy in Sent (lib/outgoing/outgoing-keywords.ts;
+   * checked again here).
+   */
+  keywords?: string[];
 }
 
 /** The MAIL FROM / RCPT TO parameters the options translate to. */
@@ -5576,7 +5583,8 @@ export class JMAPClient implements IJMAPClient {
       messageId: [options?.messageId ?? generateMessageId(senderEmail)],
       inReplyTo: normalizedInReplyTo?.length ? normalizedInReplyTo : undefined,
       references: normalizedReferences?.length ? normalizedReferences : undefined,
-      keywords: { "$seen": true, "$draft": true },
+      // Plugins' keywords first, so none can stand in for the host's own.
+      keywords: { ...outgoingKeywordMap(options?.keywords), "$seen": true, "$draft": true },
       mailboxIds: { [draftsMailbox.id]: true },
     };
 

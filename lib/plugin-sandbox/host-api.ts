@@ -67,6 +67,7 @@ import { MAX_PLUGIN_FETCH_BYTES, readFileName, readMediaType, sessionClient } fr
 import { doComposeOpen, doComposeReply, doDraftsCreate } from './host-api-compose';
 import { doEmailForward } from './host-api-forward';
 import { doUiPrint } from './host-api-print';
+import { doUiOpenFile } from './host-api-file-viewer';
 import { doNotificationsShow } from './host-api-notify';
 import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAccounts, doUserGetSelf } from './host-api-account';
 import { setSectionTitle } from './section-titles';
@@ -76,7 +77,7 @@ import { requestPageNavigation } from './page-navigation';
 import { requestCalendarView } from './calendar-navigation';
 import { requestOpenTask } from './open-task';
 import { requestOpenEmail } from './open-email';
-import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
+import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection, doComposerSetSubject } from './host-api-composer';
 import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
 import { openExternalLink } from '../plugin-hook-result';
@@ -216,8 +217,13 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.rerenderEmail': null,
   'ui.rerenderFetchedEmails': null,
   'ui.openExternalUrl': null,
-  // Print a page the plugin made (sanitised, no scripts, no network); 3 a minute.
+  // Print a page the plugin made (sanitised, no scripts, no network), or a
+  // PDF through the file preview; 3 a minute.
   'ui.print': null,
+  // Show a PDF or an image the plugin made in the app's file preview (no
+  // HTML or SVG, checked by its bytes); 5 a minute. The user decides whether
+  // to download or print it there.
+  'ui.openFile': null,
   'ui.downloadFile': 'ui:download-file',
   // email keyword mutations
   'email.setKeyword': 'email:write',
@@ -348,6 +354,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'composer.getSelection': 'compose:read',
   'composer.replaceSelection': 'compose:write',
   'composer.replaceBody': 'compose:write',
+  // The subject, as plain text, like an edit of the body.
+  'composer.setSubject': 'compose:write',
   // Attach a file the plugin uploaded (jmap.uploadBlob).
   'composer.attach': 'email:blob-write',
   // Text checkers (checkers.ts): compose:check for one the host sends text
@@ -2296,6 +2304,7 @@ export async function dispatchApiCall(
       return undefined;
     }
     case 'ui.print': return doUiPrint(plugin, args[0]);
+    case 'ui.openFile': return doUiOpenFile(plugin, args[0]);
     case 'ui.downloadFile': {
       const opts = args[0] as { content: string | ArrayBuffer | Uint8Array; filename: string; contentType?: string };
       return downloadFile(opts ?? { content: '', filename: '' });
@@ -2416,6 +2425,7 @@ export async function dispatchApiCall(
     case 'composer.getSelection': return doComposerGetSelection(plugin, args[0]);
     case 'composer.replaceSelection': return doComposerReplaceSelection(plugin, args[0], args[1], args[2]);
     case 'composer.replaceBody': return doComposerReplaceBody(plugin, args[0], args[1], args[2]);
+    case 'composer.setSubject': return doComposerSetSubject(plugin, args[0], args[1]);
     case 'composer.attach': return doComposerAttach(plugin, args[0], args[1]);
     case 'composer.registerChecker': return doRegisterChecker(plugin, args[0], opts?.frame);
     case 'composer.updateChecker': return doUpdateChecker(plugin, args[0], args[1]);

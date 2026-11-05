@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InstalledPlugin } from '../plugin-types';
 import { HIGH_RISK_PERMISSIONS } from '../plugin-sandbox/permission-text';
 import { registerComposer, resetComposers, type ComposerHandle } from '../plugin-sandbox/composer-registry';
-import { plainOwnRange, replaceTextareaRange } from '../plugin-sandbox/composer-edit';
+import { plainOwnRange, replaceInputText, replaceTextareaRange } from '../plugin-sandbox/composer-edit';
 import { resetPluginRateLimits } from '../plugin-sandbox/host-api-input';
 
 vi.mock('@/stores/toast-store', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() } }));
@@ -196,6 +196,45 @@ describe('api.composer', () => {
     await expect(call(WRITE, 'composer.replaceBody', id, { text: 'one more' })).rejects.toThrow(/at most 60 edits a minute/);
   });
 
+  it('sets the subject with compose:write only, as plain text', async () => {
+    const handle = fakeHandle();
+    const subjects: string[] = [];
+    handle.setSubject = (s) => { subjects.push(s); return true; };
+    const { id } = registerComposer(handle);
+    await expect(call(READ, 'composer.setSubject', id, 'Akte 01/2026')).rejects.toThrow(/lacks permission "compose:write"/);
+    await expect(call(plugin(['email:send', 'compose:open']), 'composer.setSubject', id, 'x')).rejects.toThrow(/lacks permission "compose:write"/);
+    expect(await call(WRITE, 'composer.setSubject', id, 'Akte 01/2026: Mahnung')).toBe(true);
+    // Line breaks and tabs become one space each run; direction marks that
+    // could hide or reorder text go; the ends are trimmed.
+    expect(await call(WRITE, 'composer.setSubject', id, '  Akte\r\n01/2026\t\u0007ok\u202e  ')).toBe(true);
+    // HTML stays text: the subject is never markup.
+    expect(await call(WRITE, 'composer.setSubject', id, '<b>Akte</b>')).toBe(true);
+    expect(await call(WRITE, 'composer.setSubject', id, '')).toBe(true);
+    expect(subjects).toEqual(['Akte 01/2026: Mahnung', 'Akte 01/2026 ok', '<b>Akte</b>', '']);
+  });
+
+  it('refuses a subject that is too long or not text, and a composer without a subject line', async () => {
+    const handle = fakeHandle();
+    handle.setSubject = vi.fn(() => true);
+    const { id } = registerComposer(handle);
+    await expect(call(WRITE, 'composer.setSubject', id, 'x'.repeat(999))).rejects.toThrow(/at most 998 characters/);
+    expect(await call(WRITE, 'composer.setSubject', id, 'x'.repeat(998))).toBe(true);
+    await expect(call(WRITE, 'composer.setSubject', id, 42)).rejects.toThrow(/subject must be a string/);
+    await expect(call(WRITE, 'composer.setSubject', 'not-a-composer', 'x')).rejects.toThrow(/not open any more/);
+    expect(handle.setSubject).toHaveBeenCalledTimes(1);
+    // A quick reply has no subject of its own.
+    const { id: quick } = registerComposer(fakeHandle());
+    await expect(call(WRITE, 'composer.setSubject', quick, 'x')).rejects.toThrow(/has no subject/);
+  });
+
+  it('counts a subject change against the 60 edits a minute', async () => {
+    const handle = fakeHandle();
+    handle.setSubject = () => true;
+    const { id } = registerComposer(handle);
+    for (let i = 0; i < 60; i++) await call(WRITE, 'composer.setSubject', id, `${i}`);
+    await expect(call(WRITE, 'composer.setSubject', id, 'one more')).rejects.toThrow(/at most 60 edits a minute/);
+  });
+
   it('counts reading the draft as ordinary, not high-risk; the plugin still needs a composer id', () => {
     expect(HIGH_RISK_PERMISSIONS.has('compose:read')).toBe(false);
     expect(HIGH_RISK_PERMISSIONS.has('compose:write')).toBe(false);
@@ -254,6 +293,77 @@ describe('plain-text composer', () => {
     } finally {
       doc.execCommand = original;
       textarea.remove();
+    }
+  });
+});
+
+describe('subject field', () => {
+  function field(value: string, onScreen = true): HTMLInputElement {
+    const input = document.createElement('input');
+    input.value = value;
+    document.body.appendChild(input);
+    // jsdom lays nothing out; a field on screen has a box.
+    input.getClientRects = () => (onScreen ? [{}] : []) as unknown as DOMRectList;
+    return input;
+  }
+
+  it('types over the whole subject through the editing command, so the field can undo it', () => {
+    const input = field('Old subject');
+    const exec = vi.fn((cmd: string, _ui: boolean, text: string) => {
+      expect([input.selectionStart, input.selectionEnd]).toEqual([0, 'Old subject'.length]);
+      input.setRangeText(cmd === 'delete' ? '' : text, input.selectionStart!, input.selectionEnd!, 'end');
+      return true;
+    });
+    const doc = document as unknown as { execCommand: unknown };
+    const original = doc.execCommand;
+    doc.execCommand = exec;
+    const typed = vi.fn();
+    input.addEventListener('input', typed);
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
+    try {
+      expect(replaceInputText(input, 'Akte 01/2026')).toBe(true);
+      expect(exec).toHaveBeenCalledWith('insertText', false, 'Akte 01/2026');
+      expect(input.value).toBe('Akte 01/2026');
+      // The command fires input itself; no second, synthetic one.
+      expect(typed).not.toHaveBeenCalled();
+      // The button the user pressed has focus again.
+      expect(document.activeElement).toBe(button);
+      expect(replaceInputText(input, '')).toBe(true);
+      expect(exec).toHaveBeenLastCalledWith('delete', false, '');
+      expect(input.value).toBe('');
+    } finally {
+      doc.execCommand = original;
+      input.remove();
+      button.remove();
+    }
+  });
+
+  it('falls back to setRangeText and an input event where the command is missing', () => {
+    const input = field('Old');
+    const typed = vi.fn();
+    input.addEventListener('input', typed);
+    const doc = document as unknown as { execCommand: unknown };
+    const original = doc.execCommand;
+    doc.execCommand = () => false;
+    try {
+      expect(replaceInputText(input, 'New')).toBe(true);
+      expect(input.value).toBe('New');
+      expect(typed).toHaveBeenCalledTimes(1);
+    } finally {
+      doc.execCommand = original;
+      input.remove();
+    }
+  });
+
+  it('leaves a field that is not on screen to the caller', () => {
+    const input = field('Old', false);
+    try {
+      expect(replaceInputText(input, 'New')).toBe(false);
+      expect(input.value).toBe('Old');
+    } finally {
+      input.remove();
     }
   });
 });

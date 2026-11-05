@@ -57,7 +57,7 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview } from "@/lib/utils";
+import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview, generateUUID } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
@@ -272,7 +272,8 @@ interface EmailViewerProps {
   onSetTag?: (emailId: string, tagId: string | null) => void;
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean, source?: EmailBlobContext) => void;
   /** Resolves false when nothing was sent (the user went back), so the text stays. */
-  onQuickReply?: (body: string) => Promise<boolean | void>;
+  /** `composerId`: the id plugins know the quick reply by, for its send checks. */
+  onQuickReply?: (body: string, extra?: { composerId?: string }) => Promise<boolean | void>;
   /** Keeps the typed quick reply as a draft before an automatic sign-out (lib/compose-flush-registry.ts). */
   onSaveQuickReplyDraft?: (body: string) => Promise<void>;
   onMarkAsSpam?: () => void;
@@ -1887,6 +1888,12 @@ export function EmailViewer({
       pending: isSendingQuickReply,
     };
   };
+  // The id plugins know the quick reply by: its actions' clicks and its send
+  // checks (OutgoingEmail.composerId) carry the same one. A new one per
+  // message and account, as the actions' key below.
+  const quickReplyKey = email ? JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId]) : '';
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- a new id per message and account
+  const quickReplyComposerId = useMemo(() => generateUUID(), [quickReplyKey]);
   // The quick reply's Send button shows once it is focused or has text.
   useComposingSurface(quickReplyEnabled && (isQuickReplyFocused || quickReplyText.length > 0));
   // An automatic sign-out keeps typed quick-reply text as a draft; text on
@@ -1913,7 +1920,7 @@ export function EmailViewer({
     if (!quickReplyText.trim() || !onQuickReply || isSendingQuickReply) return;
     setIsSendingQuickReply(true);
     try {
-      const sent = await onQuickReply(quickReplyText);
+      const sent = await onQuickReply(quickReplyText, { composerId: quickReplyComposerId });
       // Back on a pre-send question keeps what the user typed.
       if (sent !== false) {
         setQuickReplyText("");
@@ -6497,7 +6504,8 @@ export function EmailViewer({
                           {tWords('open_full_editor')}
                         </Button>
                         <QuickReplyPluginActions
-                          key={JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId])}
+                          key={quickReplyKey}
+                          composerId={quickReplyComposerId}
                           inputRef={quickReplyRef}
                           readMetadata={quickMetadata}
                           onChange={setQuickReplyText}

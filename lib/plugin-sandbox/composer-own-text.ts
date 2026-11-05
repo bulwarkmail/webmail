@@ -127,3 +127,43 @@ export function replaceTextareaRange(textarea: HTMLTextAreaElement, from: number
   }
   return true;
 }
+
+/** Text the user is writing in: focus there is put back by its owner, with its caret. */
+function isTextEntry(element: Element): boolean {
+  return element instanceof HTMLTextAreaElement
+    || element instanceof HTMLInputElement
+    || (element instanceof HTMLElement && element.isContentEditable);
+}
+
+/**
+ * Replace the whole value of a one-line field (the subject) as typing over
+ * it would: through the browser's editing command, so Ctrl+Z in the field
+ * takes it back and `input` fires as for typing. False when the field isn't
+ * on screen (a docked reply hides its subject line), so it can't take focus:
+ * the caller sets the value itself then, without an undo step. A button or
+ * a plugin frame that had focus gets it back; text fields are left to the
+ * caller, which knows their caret.
+ */
+export function replaceInputText(input: HTMLInputElement, text: string): boolean {
+  if (!input.isConnected || input.disabled || input.getClientRects().length === 0) return false;
+  if (input.value === text) return true;
+  const previous = document.activeElement;
+  input.focus({ preventScroll: true });
+  input.setSelectionRange(0, input.value.length);
+  let done = false;
+  try {
+    done = typeof document.execCommand === 'function'
+      // An empty insertText leaves the selection in some browsers.
+      && document.execCommand(text ? 'insertText' : 'delete', false, text);
+  } catch {
+    done = false;
+  }
+  if (!done || input.value !== text) {
+    input.setRangeText(text, 0, input.value.length, 'end');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (previous instanceof HTMLElement && previous !== input && previous !== document.body && previous.isConnected && !isTextEntry(previous)) {
+    previous.focus({ preventScroll: true });
+  }
+  return true;
+}
