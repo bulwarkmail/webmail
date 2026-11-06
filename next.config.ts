@@ -7,6 +7,7 @@ import { join } from "path";
 import { pruneTraces } from "./scripts/standalone-guard.mjs";
 import { desktopBuildFlag } from "./scripts/desktop-build-flag.mjs";
 import { LITE_INTL_ASSETS_OFF, LITE_INTL_ASSETS_REQUEST } from "./scripts/lite-intl-assets.mjs";
+import { CompileHintsPlugin } from "./scripts/compile-hints.mjs";
 
 // Prefer an explicit build arg (passed in by CI / Docker, where .git is
 // excluded from the build context) and fall back to `git rev-parse` for
@@ -196,19 +197,20 @@ const nextConfig: NextConfig = {
       }),
   // Only Lite draws a page before it has a catalog: everywhere else
   // IntlProvider's Lite-only English and skeletons (half a megabyte of
-  // script) are swapped for an empty module. Webpack builds only (the Docker
-  // image, the desktop app); a Turbopack build keeps them, which costs size,
-  // not behaviour.
-  ...(isLite
-    ? {}
-    : {
-        webpack: (config, { webpack }) => {
-          config.plugins.push(new webpack.NormalModuleReplacementPlugin(LITE_INTL_ASSETS_REQUEST, (resource: { request: string }) => {
-            resource.request = LITE_INTL_ASSETS_OFF;
-          }));
-          return config;
-        },
-      }),
+  // script) are swapped for an empty module. And the scripts a page starts
+  // with tell Chrome to compile them while they download (scripts/compile-hints.mjs).
+  // Webpack builds only (the Docker image, the desktop app); a Turbopack
+  // build keeps the Lite assets and has no hints, which costs size and start
+  // time, not behaviour.
+  webpack: (config, { webpack, isServer, dev }) => {
+    if (!isLite) {
+      config.plugins.push(new webpack.NormalModuleReplacementPlugin(LITE_INTL_ASSETS_REQUEST, (resource: { request: string }) => {
+        resource.request = LITE_INTL_ASSETS_OFF;
+      }));
+    }
+    if (!isServer && !dev) config.plugins.push(new CompileHintsPlugin(webpack));
+    return config;
+  },
   turbopack: {
     root: process.env.NEXT_TURBOPACK_ROOT || import.meta.dirname,
     ...(sourceMaps ? { debugIds: true } : {}),
