@@ -179,8 +179,21 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
 
 /* ---------- More contrast (WCAG 1.4.6 as a setting) ---------- */
 
+/* The blocks below pin some colours of a pair but not the other (primary but
+   not its light foreground, accent text but not the accent ground), so a
+   host palette (DOMAIN_BRANDING, the --brand-* variables) would be paired
+   with the stock colours. More contrast drops the palette: every --brand-*
+   is reset, and app/globals.css falls back to its own pairs. */
 @media (prefers-contrast: more) {
   :root:not([data-contrast="normal"]) {
+    --brand-primary: initial;
+    --brand-primary-foreground: initial;
+    --brand-accent: initial;
+    --brand-accent-foreground: initial;
+    --brand-dark-primary: initial;
+    --brand-dark-primary-foreground: initial;
+    --brand-dark-accent: initial;
+    --brand-dark-accent-foreground: initial;
     --color-foreground: #000000;
     --color-muted-foreground: #1f2937;
     --color-border: #4b5563;
@@ -220,6 +233,14 @@ nav:is([data-tour="sidebar"], [data-tour="settings-tabs"]) {
   }
 }
 :root[data-contrast="more"] {
+  --brand-primary: initial;
+  --brand-primary-foreground: initial;
+  --brand-accent: initial;
+  --brand-accent-foreground: initial;
+  --brand-dark-primary: initial;
+  --brand-dark-primary-foreground: initial;
+  --brand-dark-accent: initial;
+  --brand-dark-accent-foreground: initial;
   --color-foreground: #000000;
   --color-muted-foreground: #1f2937;
   --color-border: #4b5563;
