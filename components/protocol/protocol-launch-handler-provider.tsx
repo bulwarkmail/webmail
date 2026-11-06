@@ -19,6 +19,7 @@ import {
   handOffDraft,
   handOffLaunchFiles,
   handOffNewMessage,
+  launchLinkParams,
   parseLaunchLanding,
   peekStoredHandoff,
   pendingHandoffs,
@@ -145,7 +146,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
       window.history.replaceState(window.history.state, "", path + left.search + left.hash);
     }
     if (landing?.type === "new-message") {
-      handOffNewMessage();
+      handOffNewMessage(landing.linkParams);
     } else if (landing?.type === "inline") {
       void (async () => {
         const { subject, body } = landing;
@@ -251,7 +252,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
       const launch = getProtocolLaunch(launchParams.targetURL);
       if (!launch) {
         const shortcut = shortcutFromTargetUrl(launchParams.targetURL, window.location.origin);
-        if (shortcut === "new-message") handOffNewMessage();
+        if (shortcut === "new-message") handOffNewMessage(launchLinkParams(launchParams.targetURL, window.location.origin));
         else if (shortcut && matchSurface(pathname)?.surface !== shortcut) void leaveFor(`/${shortcut}`);
         return;
       }

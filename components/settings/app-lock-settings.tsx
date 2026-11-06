@@ -11,8 +11,12 @@ import {
   addPasskey,
   changeAppLockPin,
   disableAppLock,
+  disableHello,
   enableAppLock,
+  enableHello,
   hasPasskey,
+  helloState,
+  type HelloState,
   lockEverywhere,
   removePasskey,
   setAppLockTimeout,
@@ -28,7 +32,7 @@ import { toast } from "@/stores/toast-store";
 import { KeyProtectionNotes } from "@/components/offline/key-protection-notes";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
 
-type Pending = "enable" | "disable" | "change" | "passkey" | "os" | null;
+type Pending = "enable" | "disable" | "change" | "passkey" | "os" | "hello" | null;
 
 function useLockFacts() {
   const [, refresh] = useState(0);
@@ -44,6 +48,7 @@ export function AppLockSettings() {
   const tKey = useTranslations("keyProtection");
   const tEdit = useTranslations("desktopEdit");
   const tGeneral = useTranslations("uxs_general");
+  const tHello = useTranslations("appLockHello");
   // The desktop app has windows, no tabs.
   const desktop = useIsDesktopApp();
   const { appName } = useConfig();
@@ -56,14 +61,17 @@ export function AppLockSettings() {
   const [busy, setBusy] = useState(false);
   const [passkey, setPasskey] = useState(false);
   const [os, setOs] = useState<{ kind: DesktopOsUnlockKind; enrolled: boolean } | null>(null);
+  const [hello, setHello] = useState<HelloState>({ shown: false, on: false });
 
   const refreshMethods = useCallback(() => {
     void hasPasskey().then(setPasskey).catch(() => {});
+    void helloState().then(setHello).catch(() => {});
     void getDesktopBridge()?.appLock?.status()
       .then((status) => setOs(status.os ? { kind: status.os, enrolled: status.osEnrolled } : null))
       .catch(() => {});
   }, []);
   useEffect(refreshMethods, [refreshMethods, on]);
+  useEffect(() => onLockPolicyChange(refreshMethods), [refreshMethods]);
 
   const close = () => {
     setPending(null);
@@ -80,6 +88,14 @@ export function AppLockSettings() {
     if (name === "PinBlockedError") return t("blocked_later");
     if (name === "PasskeyNoPrfError") return t("passkey_no_prf");
     if (name === "ObviousPinError") return t("pin_obvious");
+    if (name === "HelloError") {
+      const reason = (failure as Error & { reason?: string }).reason;
+      if (reason === "cancelled") return tHello("cancelled");
+      if (reason === "unsupported") return tHello("unsupported");
+      if (reason === "unavailable" || reason === "policy") return tHello("unavailable");
+      if (reason === "busy") return tHello("busy");
+      return tHello("enable_failed");
+    }
     return t("save_failed");
   };
 
@@ -103,8 +119,9 @@ export function AppLockSettings() {
     if (pending === "enable" && newPinReady(pin, repeat)) void run(() => enableAppLock(pin));
     if (pending === "change" && current && newPinReady(pin, repeat)) {
       void run(async () => {
-        const { reenroll } = await changeAppLockPin(current, pin);
+        const { reenroll, helloOff } = await changeAppLockPin(current, pin);
         if (reenroll) toast.info(tKey("reenroll_note"), { duration: 0 });
+        if (helloOff) toast.info(tHello("off_after_pin_change"), { duration: 0 });
       });
     }
     if (pending === "disable" && current) void run(() => disableAppLock(current));
@@ -114,6 +131,7 @@ export function AppLockSettings() {
         toast.success(t("passkey_added"));
       });
     }
+    if (pending === "hello" && current) void run(() => enableHello(current));
     if (pending === "os" && current) {
       void run(async () => {
         if (!(await addOsUnlock(current))) throw new Error("Not set up");
@@ -125,7 +143,7 @@ export function AppLockSettings() {
 
   const osName = os?.kind === "touchid" ? t("use_touchid_name") : t("use_hello_name");
   const asksNew = pending === "enable" || pending === "change";
-  const asksCurrent = pending === "disable" || pending === "change" || pending === "passkey" || pending === "os";
+  const asksCurrent = pending === "disable" || pending === "change" || pending === "passkey" || pending === "os" || pending === "hello";
   const ready = (!asksNew || newPinReady(pin, repeat)) && (!asksCurrent || current.length > 0);
   const titles: Record<Exclude<Pending, null>, string> = {
     enable: t("set_pin_title"),
@@ -133,6 +151,7 @@ export function AppLockSettings() {
     disable: t("disable_title"),
     passkey: t("passkey_add_title"),
     os: t("os_add_title", { method: osName }),
+    hello: tHello("enable_title"),
   };
 
   return (
@@ -140,9 +159,22 @@ export function AppLockSettings() {
       <SettingItem label={t("enable_label")} description={t("enable_desc")} locked={required}>
         <ToggleSwitch checked={on || required} onChange={(next) => setPending(next ? "enable" : "disable")} testId="app-lock-switch" />
       </SettingItem>
+      {on && hello.shown && (
+        <SettingItem label={tHello("switch_label")} description={tHello("switch_desc")}>
+          <ToggleSwitch
+            checked={hello.on}
+            onChange={(next) => {
+              if (next) setPending("hello");
+              else void disableHello().catch(() => {}).then(refreshMethods);
+            }}
+            testId="app-lock-hello-switch"
+          />
+        </SettingItem>
+      )}
       <details className="text-xs text-muted-foreground">
         <summary className="cursor-pointer select-none text-foreground">{tGeneral("app_lock_protects_toggle")}</summary>
         <p className="mt-1" data-testid="app-lock-protects">{t("protects_desc")}</p>
+        {hello.shown && <p className="mt-1" data-testid="app-lock-protects-hello">{tHello("protects")}</p>}
       </details>
       <KeyProtectionNotes />
 
@@ -204,7 +236,7 @@ export function AppLockSettings() {
         isOpen={pending !== null}
         onClose={close}
         title={pending ? titles[pending] : ""}
-        description={pending === "disable" ? t("disable_body") : pending === "enable" ? t("enable_body") : undefined}
+        description={pending === "disable" ? t("disable_body") : pending === "enable" ? t("enable_body") : pending === "hello" ? tHello("enable_body") : undefined}
         onSubmit={submit}
         dirty={pin.length > 0 || current.length > 0}
         testId="app-lock-dialog"

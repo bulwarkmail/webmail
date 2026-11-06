@@ -7,6 +7,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { Button } from "@/components/ui/button";
 import { Clock, Loader2 } from "@/components/icons";
 import type { SessionEndKind } from "@/lib/session-policy/session-timer";
+import { ModalWindow } from "@/components/ui/dialog-surface";
 
 interface SessionTimeoutDialogProps {
   /** 'ending': the session is over, drafts are being saved. */
@@ -61,45 +62,47 @@ export function SessionTimeoutDialog({ mode, deadline, maxHours, onStay, onDismi
   // Portalled to the end of the body above everything else, the office
   // editor (z-100) and plugin dialogs (z-100000) included.
   return createPortal(
-    <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[1px]" data-testid="session-timeout-dialog">
-      <div
-        ref={dialogRef}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={`${id}-title`}
-        aria-describedby={mode !== "ending" ? `${id}-message` : undefined}
-        className="w-full max-w-md rounded-lg border border-border bg-background shadow-xl"
-      >
-        <div className="flex items-start gap-4 p-6">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            {mode === "ending" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Clock className="h-5 w-5" />}
+    <ModalWindow title={title} onClose={mode === "idle" ? onStay : mode === "max" ? onDismiss : () => {}}>
+      <div data-modal-backdrop="" className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[1px]" data-testid="session-timeout-dialog">
+        <div
+          ref={dialogRef}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby={`${id}-title`}
+          aria-describedby={mode !== "ending" ? `${id}-message` : undefined}
+          className="w-full max-w-md rounded-lg border border-border bg-background shadow-xl"
+        >
+          <div className="flex items-start gap-4 p-6">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {mode === "ending" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Clock className="h-5 w-5" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 id={`${id}-title`} className="text-lg font-semibold text-foreground">{title}</h2>
+              {mode !== "ending" && (
+                <p id={`${id}-message`} className="mt-2 text-sm text-muted-foreground">
+                  {mode === "max"
+                    ? t("max_message", { hours: maxHours ?? 0, seconds })
+                    : t("idle_message", { seconds })}
+                </p>
+              )}
+              <span className="sr-only" aria-live="polite">
+                {mode !== "ending" && announced !== null ? t("seconds_left", { seconds: announced }) : ""}
+              </span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 id={`${id}-title`} className="text-lg font-semibold text-foreground">{title}</h2>
-            {mode !== "ending" && (
-              <p id={`${id}-message`} className="mt-2 text-sm text-muted-foreground">
-                {mode === "max"
-                  ? t("max_message", { hours: maxHours ?? 0, seconds })
-                  : t("idle_message", { seconds })}
-              </p>
-            )}
-            <span className="sr-only" aria-live="polite">
-              {mode !== "ending" && announced !== null ? t("seconds_left", { seconds: announced }) : ""}
-            </span>
-          </div>
+          {mode !== "ending" && (
+            // The safe answer comes first, so the focus trap starts on it and
+            // Enter keeps the user signed in; row-reverse shows it on the right.
+            <div className="flex flex-row-reverse flex-wrap items-center justify-start gap-3 px-6 pb-6">
+              {mode === "idle"
+                ? <Button onClick={onStay}>{t("stay")}</Button>
+                : <Button onClick={onDismiss}>{t("dismiss")}</Button>}
+              <Button variant="outline" onClick={onSignOut}>{t("sign_out_now")}</Button>
+            </div>
+          )}
         </div>
-        {mode !== "ending" && (
-          // The safe answer comes first, so the focus trap starts on it and
-          // Enter keeps the user signed in; row-reverse shows it on the right.
-          <div className="flex flex-row-reverse flex-wrap items-center justify-start gap-3 px-6 pb-6">
-            {mode === "idle"
-              ? <Button onClick={onStay}>{t("stay")}</Button>
-              : <Button onClick={onDismiss}>{t("dismiss")}</Button>}
-            <Button variant="outline" onClick={onSignOut}>{t("sign_out_now")}</Button>
-          </div>
-        )}
       </div>
-    </div>,
+    </ModalWindow>,
     document.body,
   );
 }

@@ -6,7 +6,7 @@ import type { Mailbox } from '@/lib/jmap/types';
 // for what needs the server.
 
 vi.mock('@/components/email/rules-menu', () => ({ FolderRulesSubMenu: () => null }));
-vi.mock('@/lib/offline/offline-mode', () => ({ offlineAllowed: () => true }));
+vi.mock('@/lib/offline/availability', () => ({ offlineAllowed: () => true }));
 
 const { MailboxContextMenu, unreadInTree } = await import('../mailbox-context-menu');
 const { useOfflineStore } = await import('@/lib/offline/state');

@@ -227,6 +227,11 @@ export class HookBus<T extends (...args: any[]) => any> {
     return this.handlers.length;
   }
 
+  /** The plugins with a handler here, each once, in handler order. */
+  pluginIds(): string[] {
+    return [...new Set(this.handlers.map((h) => h.pluginId))];
+  }
+
   /** Whether a plugin other than `pluginId` has a handler here. */
   hasHandlersBesides(pluginId: string | undefined): boolean {
     return this.handlers.some((h) => h.pluginId !== pluginId);
@@ -499,6 +504,9 @@ export const emailHooks = {
   // Intercept hook - fired when a mailto: link is clicked.
   // Return false to prevent the browser from opening the system mail client.
   onMailtoIntercept: new HookBus(),
+  // Observer, one plugin at a time (emitTo): the composer opened from a link
+  // with x-<plugin id>-<name> parameters for that plugin (lib/plugin-link-params.ts).
+  onComposeFromLink: new HookBus(),
   // Transform hook - fires after onBeforeEmailSend has not cancelled,
   // immediately before the message is handed to the JMAP submission. Handlers
   // receive an OutgoingEmail and return a modified copy (or undefined to pass

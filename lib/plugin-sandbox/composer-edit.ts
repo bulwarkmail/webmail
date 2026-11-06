@@ -24,77 +24,16 @@ import type { Editor } from '@tiptap/core';
 import { DOMParser as PMDOMParser, DOMSerializer, Fragment, type Node as PMNode } from '@tiptap/pm/model';
 import { TextSelection, type Transaction } from '@tiptap/pm/state';
 import { closeHistory } from '@tiptap/pm/history';
+import { textToEditorHtml } from './editor-html';
+import { ATOM_BOUNDARIES, SIGNATURE_MARKER_ATTR, ownRange, type OwnTextOptions } from './composer-own-text';
 
-const ATOM_BOUNDARIES = new Set(['signatureBlock', 'quotedHtml']);
+export { textToEditorHtml };
+export { ownRange, plainOwnRange, replaceInputText, replaceTextareaRange, type OwnRange, type OwnTextOptions, type PlainOwnOptions } from './composer-own-text';
 
 // The editor's history merges changes made within half a second of each
 // other into one undo step. A plugin's edit always starts a step of its own,
 // so Ctrl+Z never takes back what the user typed just before with it.
 const ownStep = (tr: Transaction) => closeHistory(tr);
-const QUOTE_NODES = new Set(['quotedHtml', 'blockquote']);
-const SIGNATURE_MARKER_ATTR = 'data-signature-block';
-
-export interface OwnTextOptions {
-  /** Reply or forward: the line above the quote is the quote's header. */
-  replyLike?: boolean;
-  /** The localised "---------- Forwarded message ----------" line. */
-  forwardedSeparator?: string;
-}
-
-export interface OwnRange {
-  /** Start and end of the user's own text in the document. */
-  from: number;
-  to: number;
-  /** Whether a signature or quote follows. */
-  bounded: boolean;
-}
-
-function isEmptyBlock(node: PMNode): boolean {
-  if (node.textContent.trim()) return false;
-  let hasLeaf = false;
-  node.descendants((child) => {
-    if (child.type.name === 'image' || child.type.name === 'table') hasLeaf = true;
-    return !hasLeaf;
-  });
-  return !hasLeaf;
-}
-
-function isBoundary(node: PMNode, opts: OwnTextOptions): boolean {
-  if (ATOM_BOUNDARIES.has(node.type.name) || node.type.name === 'blockquote') return true;
-  const marker = node.attrs?.[SIGNATURE_MARKER_ATTR];
-  if (marker === 'separator' || marker === 'start') return true;
-  if (opts.forwardedSeparator && node.textContent.trim().startsWith(opts.forwardedSeparator.trim())) return true;
-  return false;
-}
-
-/** Where the user's own text is in a document. */
-export function ownRange(doc: PMNode, opts: OwnTextOptions = {}): OwnRange {
-  const children: { node: PMNode; pos: number }[] = [];
-  doc.forEach((node, offset) => { children.push({ node, pos: offset }); });
-  let boundary = children.findIndex((c) => isBoundary(c.node, opts));
-  const bounded = boundary !== -1;
-  if (!bounded) boundary = children.length;
-  // A reply's quote header sits right above the quote.
-  if (bounded && opts.replyLike && QUOTE_NODES.has(children[boundary].node.type.name)
-    && boundary > 0 && !isEmptyBlock(children[boundary - 1].node)) {
-    boundary -= 1;
-  }
-  // Blank lines between the text and what follows stay where they are.
-  let last = boundary - 1;
-  while (last >= 0 && isEmptyBlock(children[last].node)) last--;
-  if (last < 0) {
-    // Nothing written yet: the first empty paragraph, if there is one, is
-    // where the text goes.
-    if (boundary > 0) {
-      const first = children[0];
-      return { from: first.pos, to: first.pos + first.node.nodeSize, bounded };
-    }
-    const at = children[boundary]?.pos ?? 0;
-    return { from: at, to: at, bounded };
-  }
-  const end = children[last];
-  return { from: 0, to: end.pos + end.node.nodeSize, bounded };
-}
 
 function fragmentHtml(editor: Editor, fragment: Fragment): string {
   const serializer = DOMSerializer.fromSchema(editor.schema);
@@ -123,12 +62,6 @@ export function readSelection(editor: Editor): { html: string; text: string; emp
     text: textOf(doc, selection.from, selection.to),
     empty: false,
   };
-}
-
-/** Plain text a plugin sent, as editor HTML: one paragraph per line. */
-export function textToEditorHtml(text: string): string {
-  const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return text.replace(/\r\n?/g, '\n').split('\n').map((line) => `<p>${escape(line)}</p>`).join('');
 }
 
 function imagesIn(doc: PMNode, from: number, to: number): PMNode[] {
@@ -205,61 +138,4 @@ export function replaceSelection(editor: Editor, html: string, { below = false }
     else tr.insert(at, editor.schema.nodes.paragraph.create(null, images.map((img) => img.copy(img.content))));
     return true;
   }).run();
-}
-
-// ─── Plain text (the textarea composer) ───────────────────────
-
-export interface PlainOwnOptions extends OwnTextOptions {
-  /** The identity's signature as plain text. */
-  signature?: string;
-}
-
-/** Where the user's own text is in a plain-text body. */
-export function plainOwnRange(body: string, opts: PlainOwnOptions = {}): { from: number; to: number } {
-  const cut: number[] = [body.length];
-  const sepMatch = /(^|\n)-- ?\n/.exec(body);
-  if (sepMatch) cut.push(sepMatch.index + (sepMatch[1] ? 1 : 0));
-  if (opts.signature?.trim()) {
-    const at = body.indexOf(opts.signature.trim());
-    if (at !== -1) cut.push(at);
-  }
-  if (opts.forwardedSeparator) {
-    const at = body.indexOf(opts.forwardedSeparator.trim());
-    if (at !== -1) cut.push(at);
-  }
-  const quote = /(^|\n)>/.exec(body);
-  if (quote) {
-    let at = quote.index + (quote[1] ? 1 : 0);
-    if (opts.replyLike) {
-      // The non-empty line above the quote is its header.
-      const before = body.slice(0, Math.max(0, at - 1));
-      const lineStart = before.lastIndexOf('\n') + 1;
-      if (before.slice(lineStart).trim()) at = lineStart;
-    }
-    cut.push(at);
-  }
-  const boundary = Math.min(...cut);
-  const own = body.slice(0, boundary).replace(/\s+$/, '');
-  return { from: 0, to: own.length };
-}
-
-/**
- * Replace a range of a textarea through the browser's editing command, so
- * it lands in the textarea's undo history and fires `input` like typing
- * does. Falls back to setRangeText (no undo) where the command is missing.
- */
-export function replaceTextareaRange(textarea: HTMLTextAreaElement, from: number, to: number, text: string): boolean {
-  textarea.focus();
-  textarea.setSelectionRange(from, to);
-  let done = false;
-  try {
-    done = typeof document.execCommand === 'function' && document.execCommand('insertText', false, text);
-  } catch {
-    done = false;
-  }
-  if (!done) {
-    textarea.setRangeText(text, from, to, 'end');
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-  return true;
 }

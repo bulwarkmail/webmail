@@ -138,8 +138,8 @@
   },
   "sidebar": {
     "close": "關閉",
-    "compose": "撰寫郵件",
-    "compose_hint": "撰寫郵件 (c)",
+    "compose": "寫郵件",
+    "compose_hint": "寫郵件 (c)",
     "search_placeholder": "搜尋郵件…",
     "search_placeholder_hint": "搜尋郵件…（按 /）",
     "storage": "儲存空間",
@@ -195,7 +195,7 @@
     "collapse_tooltip": "收合",
     "mobile": {
       "search": "搜尋",
-      "compose": "撰寫郵件",
+      "compose": "寫郵件",
       "go_back": "返回",
       "toggle_menu": "切換選單"
     },
@@ -253,7 +253,7 @@
     "description": "選擇是否在 {appName} 中開啟郵件和行事曆連結。",
     "unsupported": "此瀏覽器或連線不支援手動註冊通訊協定處理常式。您仍可嘗試透過瀏覽器或作業系統設定，使用已安裝的 PWA。",
     "mailto_label": "在 {appName} 中開啟郵件連結",
-    "mailto_description": "點選網站上的電子郵件地址會在 {appName} 中撰寫新郵件。",
+    "mailto_description": "點選網站上的電子郵件地址會在 {appName} 中寫新郵件。",
     "protocol_open_mode_label": "連結的開啟方式",
     "protocol_open_mode_description": "選擇 {appName} 要在新分頁開啟 mailto: 與 webcal: 連結，或使用現有的工作階段。現有工作階段選項需要通知權限；若瀏覽器阻止視窗取得焦點，您可以點擊備用通知，將 {appName} 移到最上層。",
     "protocol_open_mode_active_session": "盡可能在現有工作階段開啟",
@@ -291,12 +291,12 @@
     "share_files_lost": "無法保留分享的檔案。請將它們重新加入郵件。",
     "ics_needs_server": "匯入行事曆檔案需要連線到伺服器。您恢復連線後將開始匯入。",
     "contacts_need_server": "匯入聯絡人需要連線到伺服器。請在恢復連線後再試一次。",
-    "share_confirm_title": "要開始撰寫新郵件嗎?",
-    "share_confirm_message": "另一個網站或應用程式想要開始撰寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
+    "share_confirm_title": "要開始寫新郵件嗎?",
+    "share_confirm_message": "另一個網站或應用程式想要開始寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
     "share_confirm_subject": "主旨:",
     "share_confirm_text": "內文:",
     "share_confirm_files": "{count, plural, other {檔案:}}",
-    "share_confirm_accept": "開始撰寫郵件",
+    "share_confirm_accept": "開始寫郵件",
     "share_confirm_decline": "不要開始",
     "share_cut": "分享的文字太長,已被縮短。",
     "handoff_expired": "您開啟或分享的內容等待太久,已不存在。請重新開啟或分享。",
@@ -508,8 +508,8 @@
     "no_email_description": "請從清單選取一封郵件，即可在這裡檢視",
     "no_conversation_selected": "未選取對話串",
     "no_conversation_description": "請從清單選取一個對話串，即可在這裡閱讀",
-    "compose": "撰寫郵件",
-    "compose_hint": "撰寫新郵件",
+    "compose": "寫郵件",
+    "compose_hint": "寫新郵件",
     "no_subject": "（無主題）",
     "no_body_content": "（無內文內容）",
     "no_preview_available": "無可用預覽",
@@ -699,7 +699,7 @@
       "delete": "刪除 (# 或 Del)",
       "star": "加上星號 (s)",
       "unstar": "移除星號 (s)",
-      "compose": "撰寫郵件 (c)",
+      "compose": "寫郵件 (c)",
       "previous": "上一封郵件",
       "next": "下一封郵件",
       "edit_draft": "編輯草稿"
@@ -1019,7 +1019,7 @@
     "cc": "副本",
     "bcc": "密件副本",
     "subject": "主題",
-    "body_placeholder": "撰寫郵件內容…",
+    "body_placeholder": "寫郵件內容…",
     "send": "傳送",
     "cancel": "取消",
     "attach": "附加",
@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "你的組織在所有郵件中封鎖遠端內容，因此受信任寄件者的遠端內容也不會載入。"
   },
+  "trusted_senders_book": {
+    "unavailable": "無法使用：此帳號無法在伺服器上保存通訊錄。清單會留在這部裝置上。"
+  },
   "date": {
     "today": "今天",
     "yesterday": "昨天",
@@ -1675,7 +1678,7 @@
         "label": "介面版面配置",
         "description": "搜尋、導覽與工具列的位置",
         "default": "預設",
-        "mountain_view": "搜尋列在上方，應用程式在左側"
+        "mountain_view": "搜尋列在上方"
       },
       "animations": {
         "label": "啟用動畫",
@@ -1697,7 +1700,7 @@
       },
       "sidebar_account_switcher": {
         "label": "側邊欄頂端的帳號切換器",
-        "description": "在信件匣上方顯示帳號切換器，並在郵件列表上顯示圓形的「撰寫郵件」按鈕。關閉後，「撰寫郵件」會改為顯示在信件匣上方。"
+        "description": "在信件匣上方顯示帳號切換器，並在郵件列表上顯示圓形的「寫郵件」按鈕。關閉後，「寫郵件」會改為顯示在信件匣上方。"
       },
       "show_rail_account_list": {
         "label": "在導覽列顯示帳號頭像",
@@ -1989,7 +1992,7 @@
       },
       "request_read_receipt": {
         "label": "預設請求已讀回執",
-        "description": "撰寫新郵件時預先啟用已讀回執請求。"
+        "description": "寫新郵件時預先啟用已讀回執請求。"
       },
       "read_receipt_response": {
         "label": "回應已讀回執請求",
@@ -2096,7 +2099,7 @@
       },
       "signature_new_mail": {
         "label": "新郵件簽名",
-        "description": "撰寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
+        "description": "寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
       },
       "signature_reply_forward": {
         "label": "回覆轉寄簽名",
@@ -2118,12 +2121,6 @@
         "description": "選擇點選附件時是預覽還是直接下載",
         "preview": "儘可能預覽",
         "download": "立即下載"
-      },
-      "attachment_position": {
-        "label": "附件位置",
-        "description": "選擇在郵件標頭的哪個位置顯示附件",
-        "below-header": "標頭下方",
-        "below-message": "訊息下方的卡片"
       },
       "emails_per_page": {
         "10": "10 封郵件",
@@ -3597,6 +3594,10 @@
       "sync_off": "你的其他裝置會保留各自的設定。"
     }
   },
+  "layout_preview": {
+    "default_description": "應用程式和資料夾在左側，搜尋在清單上方",
+    "mountain_view_description": "搜尋列橫跨頂端，郵件以全寬開啟"
+  },
   "setup": {
     "title": "Bulwark Webmail 設定",
     "subtitle": "在瀏覽器中設定你的網頁郵件執行個體。",
@@ -3990,7 +3991,7 @@
       "undo": "復原上一個動作"
     },
     "global": {
-      "compose": "撰寫新郵件",
+      "compose": "寫新郵件",
       "search": "將焦點移至搜尋框",
       "help": "顯示快速鍵",
       "refresh": "重新整理郵件",
@@ -4033,7 +4034,7 @@
     "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「撰寫郵件」。關閉後，「撰寫郵件」會顯示在帳號切換器的位置。"
+    "sidebar_account_switcher_description": "在信件匣上方顯示帳號切換器，下方是「寫郵件」。關閉後，「寫郵件」會顯示在帳號切換器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "顯示郵件",
@@ -5651,11 +5652,11 @@
   },
   "welcome": {
     "title": "歡迎使用您的信件匣",
-    "tip_compose": "按 c 撰寫新郵件",
+    "tip_compose": "按 c 寫新郵件",
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
     "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
-    "tip_compose_touch": "點按鉛筆按鈕撰寫新郵件",
+    "tip_compose_touch": "點按鉛筆按鈕寫新郵件",
     "tip_sidebar_touch": "行事曆、聯絡人和設定位於底部列",
     "got_it": "了解",
     "settings": "設定",
@@ -6004,8 +6005,8 @@
     "show_on_new_devices_desc": "首次在新裝置登入時，重新顯示歡迎橫幅與功能導覽，即使您已在其他裝置完成",
     "sidebar_title": "您的信件匣",
     "sidebar_desc": "這裡是信件匣側邊欄。點擊任一信件匣即可檢視其中的郵件。您可以建立信件匣、在信件匣之間拖曳郵件，並快速查看未讀數量。",
-    "compose_title": "撰寫郵件",
-    "compose_desc": "點擊這裡即可撰寫新郵件。您可以新增收件者、附件，並使用富文字格式。",
+    "compose_title": "寫郵件",
+    "compose_desc": "點擊這裡即可寫新郵件。您可以新增收件者、附件，並使用富文字格式。",
     "search_title": "搜尋郵件",
     "search_desc": "依寄件者、主題或內容搜尋。點擊篩選圖示，可使用日期範圍、附件與已加星號等進階選項。",
     "email_list_title": "郵件清單",
@@ -6232,6 +6233,14 @@
     "from_label": "寄件者",
     "date_label": "日期",
     "subject_label": "主題"
+  },
+  "print_styles": {
+    "title": "列印",
+    "description": "列印的郵件、聯絡人和行事曆的樣式。",
+    "style_label": "列印樣式",
+    "style_description": "附加元件可以新增樣式，例如附有公司地址的信頭。",
+    "standard": "標準",
+    "from_plugin": "{name} ({plugin})"
   },
   "pwa_install": {
     "title": "安裝 {appName}",
@@ -6993,7 +7002,7 @@
     "no_results": "沒有相符的命令",
     "go_to": "前往{name}",
     "go_to_settings_page": "前往{name}設定",
-    "compose": "撰寫郵件",
+    "compose": "寫郵件",
     "search": "搜尋郵件",
     "theme_dark": "切換為深色主題",
     "theme_light": "切換為淺色主題",
@@ -7414,7 +7423,8 @@
     "pin_current": "目前的 PIN",
     "pin_new": "新 PIN",
     "pin_repeat": "重複 PIN",
-    "pin_hint": "至少 6 個字元。也可以使用字母,較長的 PIN 更難猜到。",
+    "pin_hint": "至少 5 個字元。也可以使用字母,較長的 PIN 更難猜到。",
+    "pin_hint_policy": "您的組織要求至少 {count, plural, other {# 個字元}}。也可以使用字母。",
     "pin_obvious": "這個 PIN 太容易被猜到。請避免重複、連續數字和常見組合。",
     "pin_mismatch": "兩個 PIN 不一致。",
     "pin_recovery": "如果忘記了,唯一的辦法是移除此裝置上的資料並重新登入。伺服器上的郵件會保留。此裝置上仍在等待傳送的郵件將遺失。",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, other {# 分鐘}}",
     "blocked_seconds": "嘗試次數過多。請在 {count, plural, other {# 秒}}後再試。",
     "blocked_minutes": "嘗試次數過多。請在 {count, plural, other {# 分鐘}}後再試。"
+  },
+  "appLockHello": {
+    "switch_label": "使用 Windows Hello 解鎖",
+    "switch_desc": "使用臉部、指紋或 Windows PIN。應用程式的 PIN 仍可使用。",
+    "protects": "開啟 Windows Hello 後，Windows 會為此應用程式保管一把金鑰，只有在 Windows Hello 確認是你本人之後才能使用。應用程式的金鑰也會用它鎖住，因此解鎖需要你的臉部、指紋或 Windows PIN，這台電腦上的其他程式不經 Windows 先詢問你就無法使用這把金鑰。應用程式的 PIN 仍可使用，若 Windows Hello 被重設或關閉，你需要用它解鎖。",
+    "enable_title": "開啟 Windows Hello",
+    "enable_body": "輸入應用程式的 PIN。之後 Windows 會請你用 Windows Hello 確認。",
+    "enable_failed": "無法開啟 Windows Hello。請再試一次。",
+    "cancelled": "Windows Hello 已取消。",
+    "unsupported": "這台電腦上的 Windows Hello 無法保護金鑰。你的 PIN 仍可使用。",
+    "unavailable": "這台電腦上沒有可用的 Windows Hello。",
+    "busy": "Windows Hello 忙碌中或已被鎖定。請稍後再試。",
+    "off_after_pin_change": "變更 PIN 後 Windows Hello 沒有確認，所以它現在已關閉。如果你使用它，請重新開啟。",
+    "prompt": "請用 Windows Hello 確認是你本人。",
+    "waiting": "正在等待 Windows Hello…",
+    "use_hello": "使用 Windows Hello 解鎖",
+    "use_pin": "改用 PIN",
+    "failed": "Windows Hello 沒有解鎖應用程式。請輸入 PIN。",
+    "gone": "Windows Hello 在這台電腦上已無法解鎖應用程式。請輸入 PIN。"
   },
   "uxs_general": {
     "time_zone_common": "常用時區",
@@ -8049,6 +8078,20 @@
       "app_lock_hello": "Windows Hello Touch ID 指紋 臉部 密碼金鑰 passkey"
     }
   },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "隱私與安全",
+      "security": "密碼與登入",
+      "about_updates": "關於與更新",
+      "backup": "備份與匯入"
+    },
+    "sections": {
+      "start": "啟動與關閉",
+      "shortcuts": "在其他應用程式中使用的快速鍵",
+      "mail_links": "郵件連結與檔案"
+    },
+    "privacy_link_description": "這些設定在「隱私與安全」頁面。"
+  },
   "desktop_policy": {
     "server_refused": "您的組織不允許在此裝置上使用此伺服器。",
     "plugin_refused": "您的組織不允許在此裝置上使用此外掛程式，因此不會執行。其設定和資料會保留。",
@@ -8086,7 +8129,7 @@
   "uxp2_desktop": {
     "unread_badge_label": "在工作列圖示上顯示未讀數",
     "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
-    "tip_compose_keys": "按 {keys} 撰寫新郵件",
+    "tip_compose_keys": "按 {keys} 寫新郵件",
     "tip_palette_keys": "按 {keys} 尋找任何指令"
   },
   "uxp3_desktop": {

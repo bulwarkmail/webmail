@@ -6,7 +6,8 @@ import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { deleteOutboxEntry, retryOutboxEntry } from '@/lib/offline/flush';
-import { dismissAreaConflict, refreshQueueState, scheduleFlushAll } from '@/lib/offline/offline-mode';
+// Offline mode loads with its first use here, not with the banner.
+const offlineMode = () => import('@/lib/offline/offline-mode');
 import { dismissConflict, retryLocalDraft, type ConflictEntry, type LocalDraftRow } from '@/lib/offline/queue';
 import { isOfflineNow, useOfflineStore, type AreaConflict, type OutboxRow } from '@/lib/offline/state';
 import { useAccountStore } from '@/stores/account-store';
@@ -51,8 +52,8 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
 
   const retry = async (row: OutboxRow) => {
     await retryOutboxEntry(row.account, row.id);
-    await refreshQueueState();
-    if (!isOfflineNow()) scheduleFlushAll(0);
+    await (await offlineMode()).refreshQueueState();
+    if (!isOfflineNow()) (await offlineMode()).scheduleFlushAll(0);
   };
 
   const draftStatus = (draft: LocalDraftRow) => {
@@ -72,8 +73,8 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
 
   const retryDraft = async (draft: LocalDraftRow) => {
     await retryLocalDraft(draft.account, draft.localId);
-    await refreshQueueState();
-    if (!isOfflineNow()) scheduleFlushAll(0);
+    await (await offlineMode()).refreshQueueState();
+    if (!isOfflineNow()) (await offlineMode()).scheduleFlushAll(0);
   };
 
   const conflictText = (conflict: ConflictEntry) => {
@@ -91,7 +92,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
 
   const dismiss = async (conflict: ConflictEntry) => {
     await dismissConflict(conflict.account, conflict.id);
-    await refreshQueueState();
+    await (await offlineMode()).refreshQueueState();
   };
 
   return (
@@ -180,7 +181,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <Button variant="outline" size="sm" aria-label={tConflicts('dismiss_label', { subject: conflict.title || t('no_subject') })} onClick={() => void dismissAreaConflict(conflict)}>{tConflicts('dismiss')}</Button>
+                  <Button variant="outline" size="sm" aria-label={tConflicts('dismiss_label', { subject: conflict.title || t('no_subject') })} onClick={() => void offlineMode().then((m) => m.dismissAreaConflict(conflict))}>{tConflicts('dismiss')}</Button>
                 </div>
               </li>
             ))}
@@ -193,7 +194,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
         onConfirm={() => {
           const row = deleting;
           setDeleting(null);
-          if (row) void deleteOutboxEntry(row.account, row.id).then(refreshQueueState);
+          if (row) void deleteOutboxEntry(row.account, row.id).then(() => offlineMode()).then((m) => m.refreshQueueState());
         }}
         title={t('delete_confirm_title')}
         message={t('delete_confirm_message')}

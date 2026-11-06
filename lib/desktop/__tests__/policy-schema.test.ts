@@ -30,7 +30,7 @@ describe('the schema', () => {
   it('has every key the build asked for, with text in both languages', () => {
     expect(POLICY_KEYS).toEqual([
       'InstanceUrl', 'AllowStandalone', 'AllowedJmapServers', 'AllowInsecureInstance', 'UpdateChannel', 'AutoUpdate',
-      'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
+      'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'AppLockPinMinLength', 'AppLockHelloAllowed', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
       'OpenWithEnabled', 'DeveloperToolsAvailability', 'RecentFilesInAttach', 'FilesDriveEnabled', 'FilesFolderSyncEnabled', 'FilesDriveLetter',
@@ -40,6 +40,19 @@ describe('the schema', () => {
       expect(title.en && title.de && description.en && description.de, key).toBeTruthy();
       expect(description.en, key).not.toBe(description.de);
     }
+  });
+});
+
+describe('Windows Hello for the app lock', () => {
+  it('is allowed unless forced off, a value nobody can read turns it off, and the page sees it', () => {
+    expect(resolvePolicies(layers({})).AppLockHelloAllowed).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ recommendedMachine: { AppLockHelloAllowed: 0 } })).AppLockHelloAllowed).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ forcedUser: { AppLockHelloAllowed: 0 } })).AppLockHelloAllowed).toMatchObject({ value: false, locked: true });
+    expect(resolvePolicies(layers({ forcedMachine: { AppLockHelloAllowed: 'perhaps' } })).AppLockHelloAllowed).toMatchObject({ value: false, locked: true });
+    const page = pagePolicySnapshot(resolvePolicies(layers({ forcedMachine: { AppLockHelloAllowed: 0 } })));
+    expect(page.AppLockHelloAllowed).toMatchObject({ value: false, locked: true });
+    // Main enforces it too: it refuses and deletes the key credential.
+    expect(POLICY_CONSUMERS.AppLockHelloAllowed).toEqual({ repo: 'shell', file: 'src/main/features/app-lock.ts' });
   });
 });
 
@@ -390,6 +403,15 @@ describe('what a recommendation can do', () => {
 describe('values that fail open', () => {
   it('a lock timeout nobody can read is the shortest there is', () => {
     expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { AppLockTimeoutMinutes: '99999' } }).AppLockTimeoutMinutes).toMatchObject({ value: 1, locked: true, invalid: 'out_of_range' });
+  });
+
+  it('a PIN minimum under 5 is refused and stays at 5; 8 is taken; a recommendation is ignored', () => {
+    const pinMinimum = (partial: Partial<PolicyLayers>) => resolvePolicies(layers(partial)).AppLockPinMinLength;
+    expect(pinMinimum({ forcedMachine: { AppLockPinMinLength: 3 } })).toMatchObject({ value: 5, locked: true, invalid: 'out_of_range' });
+    expect(pinMinimum({ forcedMachine: { AppLockPinMinLength: 'long' } })).toMatchObject({ value: 5, locked: true });
+    expect(pinMinimum({ forcedUser: { AppLockPinMinLength: 8 } })).toMatchObject({ value: 8, locked: true });
+    expect(pinMinimum({ recommendedMachine: { AppLockPinMinLength: 8 } })).toMatchObject({ value: null, locked: false });
+    expect(pagePolicySnapshot(resolvePolicies(layers({ forcedMachine: { AppLockPinMinLength: 8 } }))).AppLockPinMinLength).toMatchObject({ value: 8, locked: true });
   });
 
   it('a wipe code too long to use is named as invalid', () => {

@@ -8,7 +8,6 @@ import { persist, type PersistStorage, type StorageValue } from 'zustand/middlew
 import type { InstalledPlugin, PluginStatus, PluginTier } from '@/lib/plugin-types';
 import { pluginStorage } from '@/lib/plugin-storage';
 import { extractPlugin } from '@/lib/plugin-validator';
-import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable, setSandboxLocale, forgetSlotOffers } from '@/lib/plugin-loader';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
@@ -19,13 +18,13 @@ import { packageHash, type ValidatedPluginManifest } from '@/lib/extension-packa
 import JSZip from 'jszip';
 import { sha256Hex } from '@/lib/plugin-sandbox/bundle-integrity';
 import { downloadManagedBundle } from '@/lib/plugin-sandbox/bundle-fetch';
-import { forEachInstance } from '@/lib/plugin-sandbox/host-bridge';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { coerceSetting, effectiveSettings } from '@/lib/plugin-settings';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
 import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
+import type * as PluginRuntimeModule from '@/lib/plugin-runtime';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
 import { PLUGIN_POLICY_REFUSED_ERROR, onDesktopPolicyChange, pluginAllowedByDesktopPolicy, pluginMayRunByDesktopPolicy, pluginUploadsAllowedByDesktopPolicy } from '@/lib/desktop/policy';
@@ -135,6 +134,51 @@ function batchedLocalStorage<S>(): PersistStorage<S> {
 }
 
 // ─── Store ───────────────────────────────────────────────────
+
+// ─── The sandbox runtime ───────────────────────────────────────
+
+type PluginRuntime = typeof PluginRuntimeModule;
+
+/** Loaded with the first plugin to start; null until then, when no plugin runs. */
+let runtime: PluginRuntime | null = null;
+let runtimeLoading: Promise<PluginRuntime> | null = null;
+
+/**
+ * The plugin loader and the sandbox bridge, as one chunk. Most people run no
+ * plugin, and they were a few hundred kilobytes of the first page load.
+ */
+function pluginRuntime(): Promise<PluginRuntime> {
+  runtimeLoading ??= import('@/lib/plugin-runtime').then((loaded) => {
+    loaded.setPluginStoreAccessor({
+      setPluginStatus: (...args) => usePluginStore.getState().setPluginStatus(...args),
+      markAutoDisabled: (id) => usePluginStore.setState(state => ({
+        plugins: state.plugins.map(p => (p.id === id
+          // enabled: false is persisted, so a reload doesn't start the
+          // failing plugin again behind the user's back.
+          // chosen: the admin's default must not start it again either.
+          ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled', chosen: true, autoEnabled: false }
+          : p)),
+      })),
+    });
+    loaded.setupAutoDisable();
+    loaded.setSandboxLocale(getEffectiveLocale());
+    runtime = loaded;
+    return loaded;
+  }, (error) => {
+    runtimeLoading = null;
+    throw error;
+  });
+  return runtimeLoading;
+}
+
+async function loadPlugin(plugin: InstalledPlugin): Promise<void> {
+  await (await pluginRuntime()).loadPlugin(plugin);
+}
+
+/** Without the runtime no plugin is running, so there is nothing to stop. */
+function deactivatePlugin(id: string): void {
+  runtime?.deactivatePlugin(id);
+}
 
 export const usePluginStore = create<PluginStoreState>()(
   persist(
@@ -273,9 +317,6 @@ export const usePluginStore = create<PluginStoreState>()(
           }));
         }
 
-        // Ensure bridge is wired before loading (may not have run initializePlugins yet)
-        wireLoader(get, set);
-
         set(state => ({
           plugins: state.plugins.map(p =>
             p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
@@ -352,9 +393,7 @@ export const usePluginStore = create<PluginStoreState>()(
             set({ plugins: deduped });
           }
 
-          // Wire up bridges
-          wireLoader(get, set);
-          setupAutoDisable();
+          // The bridges are wired when the runtime loads (pluginRuntime).
           // Keep the sandbox locale in step with the app locale. Set it
           // synchronously *before* activation so background instances get the
           // right locale in their init payload (the bug: the only wiring lived
@@ -371,17 +410,17 @@ export const usePluginStore = create<PluginStoreState>()(
           // back to English) even when the app itself is fully localized to
           // the visitor's browser language. Found via a plugin dev report:
           // native UI in Hungarian, plugin's own i18n stuck on English.
-          setSandboxLocale(getEffectiveLocale());
+          runtime?.setSandboxLocale(getEffectiveLocale());
           if (!regionalSubscribed) {
             regionalSubscribed = true;
-            useLocaleStore.subscribe(() => setSandboxLocale(getEffectiveLocale()));
+            useLocaleStore.subscribe(() => runtime?.setSandboxLocale(getEffectiveLocale()));
 
             let lastKey = `${useSettingsStore.getState().dateLocale}|${useSettingsStore.getState().timeFormat}|${useSettingsStore.getState().timeZone}|${useSettingsStore.getState().firstDayOfWeek}`;
             useSettingsStore.subscribe((state) => {
               const key = `${state.dateLocale}|${state.timeFormat}|${state.timeZone}|${state.firstDayOfWeek}`;
               if (key !== lastKey) {
                 lastKey = key;
-                setSandboxLocale(getEffectiveLocale());
+                runtime?.setSandboxLocale(getEffectiveLocale());
               }
             });
           }
@@ -456,7 +495,7 @@ export const usePluginStore = create<PluginStoreState>()(
 function removePluginData(id: string): void {
   deactivatePlugin(id);
   removeAllPluginHooks(id);
-  forgetSlotOffers(id);
+  runtime?.forgetSlotOffers(id);
   forgetDeclaredHooks(id);
   void pluginStorage.deleteCode(id).catch(() => {});
   void pluginStorage.deletePreview(id).catch(() => {});
@@ -474,7 +513,6 @@ function removePluginData(id: string): void {
   }
 }
 
-/** Give the loader its way back into the store. */
 /**
  * An admin's install doesn't cover the certificates on this person's computer, so they're
  * asked for that alone, also when an update adds it. Runs with or without it, as with any
@@ -494,22 +532,6 @@ async function askManagedKeystore(
   return accepted;
 }
 
-function wireLoader(
-  get: () => PluginStoreState,
-  set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
-): void {
-  setPluginStoreAccessor({
-    setPluginStatus: get().setPluginStatus,
-    markAutoDisabled: (id) => set(state => ({
-      plugins: state.plugins.map(p => (p.id === id
-        // enabled: false is persisted, so a reload doesn't start the
-        // failing plugin again behind the user's back.
-        // chosen: the admin's default must not start it again either.
-        ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled', chosen: true, autoEnabled: false }
-        : p)),
-    })),
-  });
-}
 
 // ─── Server Plugin Sync ──────────────────────────────────────
 
@@ -911,7 +933,7 @@ usePluginStore.subscribe((state, prev) => {
     const active = getActivePlugin(plugin.id);
     if (active) active.plugin = { ...active.plugin, settings: plugin.settings };
     const next = effectiveSettings(plugin);
-    forEachInstance(plugin.id, (instance) => instance.setSettings(next));
+    runtime?.forEachInstance(plugin.id, (instance) => instance.setSettings(next));
   }
 });
 
@@ -958,6 +980,24 @@ if (!IS_LITE) {
       const offPolicy = usePolicyStore.subscribe(listener);
       return () => { offPlugins(); offPolicy(); };
     },
+  });
+}
+
+/**
+ * Resolves once this page started its plugins (initializePlugins ran, so
+ * their hooks are registered), or after `timeoutMs`: whatever waits for
+ * them never waits for ever, also where plugins are off.
+ */
+export function whenPluginsStarted(timeoutMs = 20_000): Promise<void> {
+  if (usePluginStore.getState().initialized) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      off();
+      resolve();
+    };
+    const timer = setTimeout(done, timeoutMs);
+    const off = usePluginStore.subscribe((state) => { if (state.initialized) done(); });
   });
 }
 

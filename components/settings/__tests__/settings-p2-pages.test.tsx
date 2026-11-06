@@ -28,7 +28,7 @@ vi.mock('@/lib/web-push', () => ({
 
 const { NotificationSettings } = await import('../notification-settings');
 const { PrivacySettings } = await import('../privacy-settings');
-const { AboutDataSettings } = await import('../about-data-settings');
+const { AboutDataSettings, TroubleshootingSettings } = await import('../about-data-settings');
 const { DesktopDevToolsSettings } = await import('../desktop-devtools-settings');
 const { AdvancedSettingsProvider } = await import('../settings-section');
 
@@ -153,15 +153,16 @@ describe('Backup & reset', () => {
     expect(screen.queryByText('settings_sync.description')).toBeNull();
   });
 
+  // Reset moved to Troubleshooting in the settings reorg (2026-11-05).
   it('says what a reset keeps, and whether other devices change', async () => {
-    render(<AboutDataSettings />);
+    render(<TroubleshootingSettings />);
     await settle();
     fireEvent.click(screen.getByText('reset_settings.button'));
     expect(screen.getByText('reset.message reset.sync_on')).toBeTruthy();
     cleanup();
 
     useSettingsStore.setState({ settingsSyncDisabled: true });
-    render(<AboutDataSettings />);
+    render(<TroubleshootingSettings />);
     await settle();
     fireEvent.click(screen.getByText('reset_settings.button'));
     expect(screen.getByText('reset.message reset.sync_off')).toBeTruthy();

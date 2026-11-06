@@ -175,7 +175,8 @@ describe('Lite', () => {
       vi.doUnmock('@/lib/lite');
       vi.resetModules();
     }
-  });
+    // A fresh import of offline-mode compiles a good part of the app, slow next to other files.
+  }, 60_000);
 });
 
 describe('olderThanCap', () => {

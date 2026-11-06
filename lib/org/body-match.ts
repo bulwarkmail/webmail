@@ -11,7 +11,7 @@ import { extractUserAuthoredText } from '@/lib/email-composer-utils';
 import { sanitizeSignatureHtml } from '@/lib/email-sanitization';
 import { htmlToPlainText } from '@/lib/html-to-text';
 import { getPlainTextSignature } from '@/lib/signature-utils';
-import { SIGNATURE_BLOCK_MARKER } from '@/components/email/signature-block';
+import { SIGNATURE_BLOCK_MARKER } from '@/components/email/signature-markers';
 import type { FilledSignature } from '@/lib/org-signature';
 
 /** The disclaimer's wrapper in the HTML part (lib/org/outgoing.ts). */

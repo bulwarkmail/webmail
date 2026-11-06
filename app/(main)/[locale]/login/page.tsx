@@ -24,6 +24,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useShallow } from "zustand/react/shallow";
 import { useConfig } from "@/hooks/use-config";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
 import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy, KeyRound } from "@/components/icons";
@@ -490,12 +491,9 @@ function LoginPageContent() {
   const liteSsoOffered = LITE_OAUTH_AVAILABLE && !liteSsoRequired && getLiteInjectedClientId() !== "";
 
   // The tab says what the page is for, not only whose it is (WCAG 2.4.2).
-  const pageTitle = `${isAddAccountMode ? t("add_account_title") : t("sign_in")} - ${appName}`;
-  useEffect(() => {
-    if (serverUrl) {
-      document.title = pageTitle;
-    }
-  }, [pageTitle, serverUrl]);
+  // With or without a server set up: a page that came here from the mail view
+  // would otherwise keep that view's title ("Mail - Bulwark").
+  useDocumentTitle(isAddAccountMode ? t("add_account_title") : t("sign_in"), { showAccount: false });
 
   useEffect(() => {
     if (customServerMode) return;

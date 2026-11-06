@@ -3,7 +3,7 @@ import { IntlProvider } from '@/components/providers/intl-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { TourProvider } from '@/components/tour/tour-provider';
 import { defaultLocale } from '@/i18n/routing';
-import { addPlainLanguage } from '@/i18n/plain-language';
+import { loadCatalog } from '@/i18n/catalog';
 import { AdminLayoutClient } from './_layout-client';
 import { WindowMenuBar } from '@/components/layout/window-menu-bar';
 
@@ -19,9 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const locale = await getLocale();
   let messages;
   try {
-    messages = await addPlainLanguage(locale, (await import(`@/locales/${locale}/common.json`)).default);
+    messages = await loadCatalog(locale);
   } catch {
-    messages = await addPlainLanguage(defaultLocale, (await import(`@/locales/${defaultLocale}/common.json`)).default);
+    messages = await loadCatalog(defaultLocale);
   }
   return (
     <IntlProvider locale={locale} messages={messages}>

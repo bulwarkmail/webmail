@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "La vostra organització bloqueja el contingut remot a tots els correus, de manera que tampoc es carrega dels remitents de confiança."
   },
+  "trusted_senders_book": {
+    "unavailable": "No disponible: aquest compte no pot desar llibretes d'adreces al servidor. La llista es queda en aquest dispositiu."
+  },
   "date": {
     "today": "Avui",
     "yesterday": "Ahir",
@@ -1675,7 +1678,7 @@
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
         "default": "Predeterminat",
-        "mountain_view": "Barra de cerca a dalt, aplicacions a l'esquerra"
+        "mountain_view": "Barra de cerca a dalt"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -2118,12 +2121,6 @@
         "description": "Trieu si en clicar un fitxer adjunt es previsualitza o es baixa immediatament",
         "preview": "Previsualitza quan sigui possible",
         "download": "Baixa immediatament"
-      },
-      "attachment_position": {
-        "label": "Posició dels fitxers adjunts",
-        "description": "On mostrar els fitxers adjunts a la capçalera del correu",
-        "below-header": "Sota la capçalera",
-        "below-message": "Targetes sota el missatge"
       },
       "emails_per_page": {
         "10": "10 correus",
@@ -3596,6 +3593,10 @@
       "sync_on": "Els altres dispositius fan servir la mateixa configuració, així que també canvien.",
       "sync_off": "Els altres dispositius mantenen la seva configuració."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicacions i carpetes a l'esquerra, cerca sobre la llista",
+    "mountain_view_description": "Cerca a dalt de tot, els missatges s'obren a tota l'amplada"
   },
   "setup": {
     "title": "Configuració de Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Assumpte"
   },
+  "print_styles": {
+    "title": "Impressió",
+    "description": "Com es veuen els missatges, els contactes i els calendaris impresos.",
+    "style_label": "Estil d'impressió",
+    "style_description": "Els complements poden afegir estils, per exemple un capçal amb l'adreça de la vostra empresa.",
+    "standard": "Estàndard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instal·la {appName}",
     "description": "Instal·leu la nostra aplicació per a un accés ràpid.",
@@ -7414,7 +7423,8 @@
     "pin_current": "PIN actual",
     "pin_new": "PIN nou",
     "pin_repeat": "Repetiu el PIN",
-    "pin_hint": "Almenys 6 caràcters. També serveixen lletres, i un PIN més llarg és més difícil d'endevinar.",
+    "pin_hint": "Almenys 5 caràcters. També serveixen lletres, i un PIN més llarg és més difícil d'endevinar.",
+    "pin_hint_policy": "La vostra organització exigeix almenys {count, plural, one {# caràcter} other {# caràcters}}. També serveixen lletres.",
     "pin_obvious": "Aquest PIN és massa fàcil d'endevinar. Eviteu repeticions, seqüències i opcions habituals.",
     "pin_mismatch": "Els dos PIN no coincideixen.",
     "pin_recovery": "Si l'oblideu, l'única sortida és eliminar les dades d'aquest dispositiu i tornar a iniciar la sessió. El correu al servidor es manté. Els missatges que encara esperen l'enviament en aquest dispositiu es perden.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minut} other {# minuts}}",
     "blocked_seconds": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# segon} other {# segons}}.",
     "blocked_minutes": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# minut} other {# minuts}}."
+  },
+  "appLockHello": {
+    "switch_label": "Desbloqueja amb Windows Hello",
+    "switch_desc": "Feu servir la cara, l'empremta o el PIN de Windows. El PIN de l'aplicació continua funcionant.",
+    "protects": "Amb Windows Hello activat, Windows guarda per a aquesta aplicació una clau que només funciona després que Windows Hello comprovi que sou vós. La clau de l'aplicació també queda blocada amb ella, de manera que per desblocar cal la cara, l'empremta o el PIN de Windows, i un altre programa d'aquest ordinador no pot fer servir aquesta clau sense que Windows us ho demani abans. El PIN de l'aplicació continua funcionant, i el necessitareu si Windows Hello es restableix o es desactiva.",
+    "enable_title": "Activa Windows Hello",
+    "enable_body": "Escriviu el PIN de l'aplicació. Després Windows us demanarà que ho confirmeu amb Windows Hello.",
+    "enable_failed": "No s'ha pogut activar Windows Hello. Torneu-ho a provar.",
+    "cancelled": "S'ha cancel·lat Windows Hello.",
+    "unsupported": "Windows Hello no pot protegir la clau en aquest ordinador. El vostre PIN continua funcionant.",
+    "unavailable": "Windows Hello no està disponible en aquest ordinador.",
+    "busy": "Windows Hello està ocupat o blocat. Torneu-ho a provar més tard.",
+    "off_after_pin_change": "Windows Hello ara està desactivat, perquè no ha confirmat després del canvi de PIN. Torneu-lo a activar si el feu servir.",
+    "prompt": "Confirmeu amb Windows Hello que sou vós.",
+    "waiting": "S'està esperant Windows Hello…",
+    "use_hello": "Desbloqueja amb Windows Hello",
+    "use_pin": "Utilitza el PIN",
+    "failed": "Windows Hello no ha desblocat l'aplicació. Escriviu el PIN.",
+    "gone": "Windows Hello ja no desbloca l'aplicació en aquest ordinador. Escriviu el PIN."
   },
   "uxs_general": {
     "time_zone_common": "Zones horàries habituals",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID empremta digital cara clau d'accés passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privadesa i seguretat",
+      "security": "Contrasenya i inici de sessió",
+      "about_updates": "Quant a i actualitzacions",
+      "backup": "Còpia de seguretat i importació"
+    },
+    "sections": {
+      "start": "Inici i tancament",
+      "shortcuts": "Dreceres des d'altres aplicacions",
+      "mail_links": "Enllaços i fitxers de correu"
+    },
+    "privacy_link_description": "Aquests paràmetres són a la pàgina Privadesa i seguretat."
   },
   "desktop_policy": {
     "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",

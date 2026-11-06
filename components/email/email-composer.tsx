@@ -51,11 +51,12 @@ import {
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
 import { MAX_PLUGIN_FETCH_BYTES } from "@/lib/plugin-sandbox/host-api-input";
-import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
+import { plainOwnRange, readOwnContent, readSelection as readEditorSelection, replaceOwnContent, replaceSelection as replaceEditorSelection, replaceInputText, replaceTextareaRange, textToEditorHtml, type OwnTextOptions } from "@/lib/plugin-sandbox/composer-edit";
 import { actionsFor, runAction } from "@/lib/plugin-sandbox/actions";
 import { matchesCombo } from "@/lib/plugin-sandbox/shortcuts";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
@@ -78,7 +79,7 @@ import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
 import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
-import { containsEmbeddedSignature } from "@/components/email/signature-block";
+import { containsEmbeddedSignature } from "@/components/email/signature-markers";
 import {
   buildEmbeddedSignatureHtml,
   htmlComposeBodyToPlainText,
@@ -140,6 +141,7 @@ import { classifyOutgoing, isLabelRequiredError, labelMissing, labelsPolicyFor, 
 import { beginLabelTakeover, endLabelTakeover } from "@/lib/outgoing/classification-raw";
 import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { beginComposeTakeover, endComposeTakeover } from "@/lib/outgoing/compose-takeover";
+import { cleanOutgoingKeywords } from "@/lib/outgoing/outgoing-keywords";
 import { recipientsChanged, runPluginSendCheck, sendGuardMessageKey } from "@/lib/outgoing/plugin-send-check";
 import { externalRecipientsFor, inspectAttachments, sniffFile } from "@/lib/outgoing/send-check-payload";
 import { whenPolicySettled } from "@/stores/policy-store";
@@ -171,7 +173,8 @@ import {
   plainTextToComposerBody,
 } from "@/lib/email-composer-utils";
 import type { ComposePrefill } from "@/lib/plugin-compose-gate";
-import { composerContextMode, composerMounted, composerUnmounted, draftSaved } from "@/lib/plugin-composer-hooks";
+import { composerContextMode, composerMounted, composerUnmounted, deliverLinkParams, draftSaved } from "@/lib/plugin-composer-hooks";
+import { whenPluginsStarted } from "@/stores/plugin-store";
 import { isValidEmail } from "@/lib/validation";
 import { composeTextStyle, composeTextStyleCss } from "@/components/email/font-size";
 import { buildMentionCandidates, type MentionCandidate } from "@/lib/recipient-mentions";
@@ -337,6 +340,12 @@ export interface ComposerDraftData {
   /** Priority of a re-opened draft, read back from its headers (#970). */
   priority?: MessagePriority;
   /**
+   * The `x-<plugin id>-<name>` parameters of the link this message came
+   * from (lib/plugin-link-params.ts): each plugin hears its own once the
+   * composer is open. Not carried on to another window.
+   */
+  linkParams?: Record<string, string>;
+  /**
    * Classification label of a re-opened draft (X-Bulwark-Label): an id,
    * null for "no label", absent when the draft says nothing.
    */
@@ -400,6 +409,8 @@ interface EmailComposerProps {
     labelHeaders?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
+    /** Keywords plugins set for the Sent copy (lib/outgoing/outgoing-keywords.ts). */
+    keywords?: string[];
   },
   /** The composer as it was at Send, to bring it back as it was after Undo send (mail-p2-8). */
   state?: ComposerDraftData,
@@ -3599,12 +3610,44 @@ export function EmailComposer({
         const editor = editorRef.current;
         return !!editor && replaceEditorSelection(editor, html, { below });
       },
+      setSubject: (text) => {
+        // Typed into the field, so Ctrl+Z there takes it back; the subject
+        // state follows through the field's input event, and the draft saves
+        // as after typing. The body keeps focus and caret when it had them.
+        const editor = editorRef.current;
+        const editorFocused = !plainTextModeRef.current && !!editor && !editor.isDestroyed && editor.isFocused;
+        const textarea = plainTextModeRef.current ? bodyRef.current : null;
+        const textareaFocused = !!textarea && document.activeElement === textarea;
+        const caret = textarea ? [textarea.selectionStart ?? 0, textarea.selectionEnd ?? 0] as const : null;
+        const input = subjectInputRef.current;
+        if (!input || !replaceInputText(input, text)) {
+          // No subject line on screen (a docked reply): the value only.
+          setSubject(text);
+          return true;
+        }
+        if (editorFocused) editor.commands.focus();
+        else if (textareaFocused && textarea && caret) {
+          textarea.focus({ preventScroll: true });
+          textarea.setSelectionRange(caret[0], caret[1]);
+        }
+        return true;
+      },
       attach: (file) => pluginAttachRef.current(file as PluginAttachmentUpload),
       attachFile: ({ sourceAccountId, ...file }) => pluginAttachRef.current(file as PluginAttachmentUpload, sourceAccountId),
     });
     setPluginComposerId(id);
     return unregister;
   }, []);
+
+  // Parameters for plugins from the link this message came from, once per
+  // composer, when the plugins have started.
+  const linkParamsRef = useRef(initialData?.linkParams);
+  useEffect(() => {
+    const params = linkParamsRef.current;
+    if (!pluginComposerId || !params) return;
+    linkParamsRef.current = undefined;
+    void deliverLinkParams(pluginComposerId, params, whenPluginsStarted);
+  }, [pluginComposerId]);
 
   // The selected text of the message, for the plugin frames around it and
   // the panels beside it (an assistant works on what the user highlights).
@@ -4362,6 +4405,7 @@ export function EmailComposer({
           { plainTextMode, forwardedSeparator: tQuote('forwarded_separator') },
         ),
         externalRecipients: await externalRecipientsFor({ ...outgoingContext, ...recipients }),
+        ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
       });
       const sendCheck = await runPluginSendCheck(() => buildCheck(recipientsAtCheck));
       if (sendCheck !== 'allowed') {
@@ -4471,8 +4515,12 @@ export function EmailComposer({
           fromEmail,
           attachments: uploadedAttachments.map(a => ({ name: a.name, type: a.type, size: a.size })),
           inReplyTo: threadingHeaders?.inReplyTo?.[0],
+          ...(pluginComposerIdRef.current ? { composerId: pluginComposerIdRef.current } : {}),
+          // Plugins with email:write add keywords for the Sent copy here.
+          keywords: [],
         };
         const outgoing = await emailHooks.onTransformOutgoingEmail.transform(transformInput);
+        const outgoingKeywords = cleanOutgoingKeywords(outgoing.keywords);
         // A plugin that adds or changes recipients after the send checks
         // (an automatic Bcc) could take the message outside after an
         // "only outside the organisation" rule passed: check it again for
@@ -4552,6 +4600,7 @@ export function EmailComposer({
           labelHeaders: labelled.labelHeaders,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
+          ...(outgoingKeywords.length > 0 ? { keywords: outgoingKeywords } : {}),
         }, handedToHost);
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
@@ -5276,7 +5325,7 @@ export function EmailComposer({
       {/* Header - mobile: clean bar with close/send, desktop: title bar.
           In Mountain View's window it is the window's title bar instead. */}
       {mvWindow?.variant === "inline" ? (
-        <div className="flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
+        <div className="@container/composer-head flex items-stretch h-10 shrink-0 border-b border-border/50" data-mv-compose-inline-bar="" {...headerDropProps}>
           {panelHead('left', 'px-1.5')}
           <div className="flex-1 min-w-0 flex items-center gap-2 ps-4 pe-1.5">
             {titleMode === 'replyAll'
@@ -5288,6 +5337,7 @@ export function EmailComposer({
               {titleMode === 'reply' ? t('reply') : titleMode === 'replyAll' ? t('reply_all') : titleMode === 'forward' ? t('forward') : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            <ComposerHeaderPluginActions composerId={pluginComposerId} />
             {leftPanelToggle}
             {rightPanelToggle}
             {!rightPanelOpen && mvInlineButtons}
@@ -5297,7 +5347,7 @@ export function EmailComposer({
       ) : mvWindow ? (
         <div
           className={cn(
-            "flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
+            "@container/composer-head flex items-stretch h-10 shrink-0 bg-[var(--mv-search-bg)]",
             mvWindow.state === "minimized" && "cursor-pointer",
           )}
           data-mv-compose-titlebar=""
@@ -5312,6 +5362,7 @@ export function EmailComposer({
                 : t('new_message')}
             </h3>
             {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+            {mvWindow.state !== "minimized" && <ComposerHeaderPluginActions composerId={pluginComposerId} />}
             {mvWindow.state !== "minimized" && leftPanelToggle}
             {mvWindow.state !== "minimized" && rightPanelToggle}
             {(mvWindow.state === "minimized" || !rightPanelOpen) && mvWindowButtons}
@@ -5319,7 +5370,7 @@ export function EmailComposer({
           {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
         </div>
       ) : (
-      <div ref={setComposerHeader} className="flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
+      <div ref={setComposerHeader} className="@container/composer-head flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
         {panelHead('left', 'px-2')}
         <div className="flex-1 min-w-0 flex items-center gap-3 px-4 py-2 md:py-0">
         {closeBesideControls && composerCloseButton}
@@ -5392,6 +5443,7 @@ export function EmailComposer({
             {t('send')}
           </Button>
         ))}
+        <ComposerHeaderPluginActions composerId={pluginComposerId} />
         {rightPanelToggle}
         {!rightPanelOpen && windowButtons}
         </div>

@@ -12,6 +12,7 @@ import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { mergeStoredTemplates } from '@/lib/template-merge';
 import { mergeStoredSubscriptions } from '@/lib/calendar-subscription-sync';
+import { mergeStoredSettingStamps } from '@/lib/settings-sync-stamps';
 import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
 
 /** Largest settings blob a client may store (templates and signatures included). */
@@ -213,12 +214,16 @@ export async function POST(request: NextRequest) {
 
     // Templates and iCal subscriptions are merged into the stored blob rather
     // than replaced, so a stale tab or device cannot drop ones another added.
-    // In one step against what is stored now: two saves at once (two tabs,
-    // two replicas) each keep the other's additions.
+    // A setting changed later on another device keeps that value (per-setting
+    // stamps). In one step against what is stored now: two saves at once (two
+    // tabs, two replicas) each keep the other's additions.
     await updateUserSettings(
       accountName,
       storageServerUrl(serverUrl),
-      (stored) => mergeStoredSubscriptions(stored, mergeStoredTemplates(stored, filteredSettings)),
+      (stored) => mergeStoredSubscriptions(
+        stored,
+        mergeStoredTemplates(stored, mergeStoredSettingStamps(stored, filteredSettings)),
+      ),
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

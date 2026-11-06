@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setStoreBackend, type StoreBackend } from '@/lib/store/client/api';
 import { useOfflineStore } from '@/lib/offline/state';
@@ -95,8 +95,9 @@ describe('drafts that are only on this device', () => {
       fireEvent.click(screen.getByRole('button', { name: 'retry_label' }));
     });
     expect(area).toHaveBeenCalledWith('acc', 'drafts.retry', { localId: 'local-1' });
-    expect(area).toHaveBeenCalledWith('acc', 'drafts.list');
-    expect(useOfflineStore.getState().localDrafts).toEqual([]);
+    // Offline mode loads with the click.
+    await waitFor(() => expect(area).toHaveBeenCalledWith('acc', 'drafts.list'));
+    await waitFor(() => expect(useOfflineStore.getState().localDrafts).toEqual([]));
   });
 
   it('says both versions are kept for a draft changed elsewhere', () => {

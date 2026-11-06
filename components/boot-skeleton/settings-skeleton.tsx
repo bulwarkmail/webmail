@@ -32,6 +32,10 @@ const OPTIONAL: Partial<Record<SettingsSearchTab, string>> = {
   addons: "boot-no-settings-addons:hidden",
   // Not in the static Lite build.
   offline: "boot-no-settings-offline:hidden",
+  // The desktop app only, and Troubleshooting only with advanced settings on:
+  // drawn when the last nav listed them.
+  desktop: "hidden boot-settings-desktop:flex",
+  troubleshooting: "hidden boot-settings-troubleshooting:flex",
 };
 
 /** A line of text as tall as its line box, so rows keep the real height. */

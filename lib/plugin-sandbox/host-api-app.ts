@@ -3,9 +3,8 @@
 // preferences. Used by the AI assistant to answer "how do I ...?" and "why
 // does the app ...?" with the app's own names and the user's own values.
 
-import enMessages from '@/locales/en/common.json';
+import { loadEnglishMessages } from '@/i18n/english-catalog';
 import { LOCALE_LOADERS } from '@/components/providers/intl-provider';
-import { mergeMessages } from '@/i18n/merge-messages';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -16,6 +15,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { fetchConfig, type ConfigData } from '@/hooks/use-config';
 import { productName } from '@/lib/product-name';
 import { IS_LITE } from '@/lib/lite';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import {
   getByPath, settingsSubResults, settingsTabLabelKey, tabKeywords, tabSearchEntries, type SettingsSearchTab,
 } from '@/lib/settings-search';
@@ -27,13 +27,14 @@ type Messages = Record<string, unknown>;
 const MAX_QUERY = 200;
 const MAX_RESULTS = 20;
 
+/** The locale's catalog, English under it (the loaders merge it); English for an unknown one. */
 export async function messagesFor(locale: string): Promise<Messages> {
   const loader = LOCALE_LOADERS[locale];
-  if (locale === 'en' || !loader) return enMessages as Messages;
+  if (locale === 'en' || !loader) return loadEnglishMessages();
   try {
-    return mergeMessages(enMessages as never, (await loader()) as never) as Messages;
+    return await loader();
   } catch {
-    return enMessages as Messages;
+    return loadEnglishMessages();
   }
 }
 
@@ -45,7 +46,8 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
     try { return policy.isFeatureEnabled(feature); } catch { return true; }
   };
   const stalwart = config?.stalwartFeaturesEnabled ?? true;
-  const pages = new Set<SettingsSearchTab>(['account', 'privacy', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup', 'about']);
+  const pages = new Set<SettingsSearchTab>(['account', 'privacy', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup', 'troubleshooting', 'about']);
+  if (isDesktopApp()) pages.add('desktop');
   if (!IS_LITE) pages.add('offline');
   if (stalwart) pages.add('security');
   if (client?.supportsSieve?.()) pages.add('filters');
@@ -58,7 +60,7 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
 }
 
 function pageName(messages: Messages, tab: SettingsSearchTab): string {
-  const name = getByPath(messages, settingsTabLabelKey(tab));
+  const name = getByPath(messages, settingsTabLabelKey(tab, isDesktopApp()));
   return typeof name === 'string' ? name : tab;
 }
 
@@ -76,7 +78,7 @@ export async function doAppSearchSettings(query: unknown, options?: unknown): Pr
 
   const locale = useLocaleStore.getState().locale || detectBrowserLocale('en');
   const local = await messagesFor(locale);
-  const english = enMessages as Messages;
+  const english = await loadEnglishMessages();
   // One config read for both: an unreachable /api/config keeps the defaults.
   const config = await fetchConfig().catch(() => null);
   const pages = availablePages(config);
@@ -128,7 +130,7 @@ export const SHARED_SETTINGS = [
   'contrast', 'underlineLinks', 'appFont', 'focusRing', 'largeTargets', 'singleKeyShortcuts', 'toastDuration',
   'dateFormat', 'timeFormat', 'firstDayOfWeek', 'timeZone',
   'disableThreading', 'showPreview', 'listColumns', 'emailsPerPage', 'showVerificationCodes',
-  'markAsReadDelay', 'externalContentPolicy', 'attachmentPosition', 'mailAttachmentAction', 'emailAlwaysLightMode', 'returnToListAfterAction', 'plainTextFont',
+  'markAsReadDelay', 'externalContentPolicy', 'mailAttachmentAction', 'emailAlwaysLightMode', 'returnToListAfterAction', 'plainTextFont',
   'deleteAction', 'archiveMode', 'permanentlyDeleteJunk', 'confirmBulkDelete',
   'sendDelaySeconds', 'sendConfirmation', 'defaultReplyMode', 'plainTextMode', 'signaturePosition', 'signatureSeparatorEnabled',
   'signatureNewMailEnabled', 'signatureReplyForwardEnabled',

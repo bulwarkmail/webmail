@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { registerComposer, type ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
-import { replaceTextareaRange, textToEditorHtml } from "@/lib/plugin-sandbox/composer-edit";
-import { generateUUID } from "@/lib/utils";
+import { replaceTextareaRange } from "@/lib/plugin-sandbox/composer-own-text";
+import { textToEditorHtml } from "@/lib/plugin-sandbox/editor-html";
 import { ComposerPluginToolbarButtons } from "./composer-toolbar-menu";
 
 type Props = {
+  /** The id plugins know this quick reply by; the viewer passes it to the send too (OutgoingEmail.composerId). */
+  composerId: string;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   readMetadata: () => ComposerMetadata;
   onChange: (text: string) => void;
 };
 
 /** Own the quick-reply capability without an extra reading-pane render. */
-export function QuickReplyPluginActions({ inputRef, readMetadata, onChange }: Props) {
-  const [composerId] = useState(generateUUID);
+export function QuickReplyPluginActions({ composerId, inputRef, readMetadata, onChange }: Props) {
   const metadataRef = useRef(readMetadata);
   metadataRef.current = readMetadata;
   useEffect(() => {

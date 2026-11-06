@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefCallback } from 'react';
 
 // The traps that are active, the one opened last at the end. Only that one
 // answers Escape, so a dialog over a dialog closes alone.
@@ -10,6 +10,12 @@ interface UseFocusTrapOptions {
   restoreFocus?: boolean;
   /** Where the focus goes on open, instead of the first focusable element. */
   initialFocus?: () => HTMLElement | null | undefined;
+  /**
+   * The document the dialog was opened from, whose focused element gets the focus back.
+   * Defaults to the page's. A dialog drawn in a window of its own has a document of its
+   * own, which is not where the opener is.
+   */
+  openerDocument?: Document | null;
 }
 
 export function useFocusTrap({
@@ -17,8 +23,27 @@ export function useFocusTrap({
   onEscape,
   restoreFocus = true,
   initialFocus,
+  openerDocument,
 }: UseFocusTrapOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // A trap that turned active before its element was there (a dialog drawn into a window
+  // of its own, dialog-surface.tsx, mounts a moment after it opens) waits for it, and
+  // starts when it comes. One whose element was there from the start isn't started
+  // again. The returned ref works as a callback ref and as `.current`.
+  const waitingRef = useRef(false);
+  const [arrived, setArrived] = useState(0);
+  const ref = useMemo(() => {
+    const attach = (element: HTMLDivElement | null) => {
+      containerRef.current = element;
+      if (element && waitingRef.current) {
+        waitingRef.current = false;
+        setArrived((n) => n + 1);
+      }
+    };
+    const callback = attach as RefCallback<HTMLDivElement> & { current: HTMLDivElement | null };
+    Object.defineProperty(callback, 'current', { get: () => containerRef.current, set: attach });
+    return callback;
+  }, []);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   // Callers pass a new onEscape on every render. The trap reads the latest
   // one from here instead of starting over for it: each new start moved the
@@ -29,18 +54,28 @@ export function useFocusTrap({
   // before (a form that just closed would ask about its input again).
   const onEscapeRef = useRef(onEscape);
   const initialFocusRef = useRef(initialFocus);
+  const openerDocumentRef = useRef(openerDocument);
   useLayoutEffect(() => {
     onEscapeRef.current = onEscape;
     initialFocusRef.current = initialFocus;
+    openerDocumentRef.current = openerDocument;
   });
 
   useEffect(() => {
-    if (!isActive || !containerRef.current) return;
-
-    // Store the element that had focus before modal opened
-    previousActiveElement.current = document.activeElement as HTMLElement;
+    waitingRef.current = false;
+    if (!isActive) return;
+    if (!containerRef.current) {
+      waitingRef.current = true;
+      return;
+    }
 
     const container = containerRef.current;
+    // The dialog's own document: the page's, or its window's when it has one.
+    const doc = container.ownerDocument;
+
+    // Store the element that had focus before modal opened
+    previousActiveElement.current = (openerDocumentRef.current ?? document).activeElement as HTMLElement;
+
     const token = {};
     activeTraps.push(token);
     const isTopmost = () => activeTraps[activeTraps.length - 1] === token;
@@ -90,13 +125,13 @@ export function useFocusTrap({
         if (e.shiftKey) {
           // Shift+Tab; from the container itself too, which has the focus
           // after a click on text and sits before the first element.
-          if (document.activeElement === firstElement || document.activeElement === container) {
+          if (doc.activeElement === firstElement || doc.activeElement === container) {
             lastElement?.focus();
             e.preventDefault();
           }
         } else {
           // Tab
-          if (document.activeElement === lastElement) {
+          if (doc.activeElement === lastElement) {
             firstElement?.focus();
             e.preventDefault();
           }
@@ -112,19 +147,21 @@ export function useFocusTrap({
     // portalled dropdown closing) marks it handled.
     const handleDocumentKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented || !onEscapeRef.current) return;
-      if (e.target instanceof Node && container.contains(e.target)) return;
+      // Not instanceof Node: a dialog window's nodes come from that window's realm.
+      const target = e.target as Node | null;
+      if (target && typeof target.nodeType === 'number' && container.contains(target)) return;
       if (!isTopmost()) return;
       onEscapeRef.current();
     };
-    document.addEventListener('keydown', handleDocumentKeyDown);
+    doc.addEventListener('keydown', handleDocumentKeyDown);
 
     // A view change in the dialog (a list giving way to a form) can remove
     // the element that had the focus, which then drops to the page behind,
     // out of the trap. Bring it back to the first element - only then, so a
     // focus the user moved on purpose stays where it is.
     const observer = new MutationObserver(() => {
-      const active = document.activeElement;
-      if (lastFocused && !lastFocused.isConnected && (!active || active === document.body)) {
+      const active = doc.activeElement;
+      if (lastFocused && !lastFocused.isConnected && (!active || active === doc.body)) {
         getFocusableElements()[0]?.focus();
       }
     });
@@ -135,7 +172,7 @@ export function useFocusTrap({
       observer.disconnect();
       container.removeEventListener('focusin', handleFocusIn);
       container.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keydown', handleDocumentKeyDown);
+      doc.removeEventListener('keydown', handleDocumentKeyDown);
       const index = activeTraps.indexOf(token);
       if (index !== -1) activeTraps.splice(index, 1);
       if (addedTabIndex) container.removeAttribute('tabindex');
@@ -145,7 +182,7 @@ export function useFocusTrap({
         previousActiveElement.current.focus();
       }
     };
-  }, [isActive, restoreFocus]);
+  }, [isActive, restoreFocus, arrived]);
 
-  return containerRef;
+  return ref;
 }

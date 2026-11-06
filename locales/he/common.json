@@ -1418,6 +1418,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "הארגון שלך חוסם תוכן מרוחק בכל הדואר, ולכן הוא לא נטען גם משולחים מהימנים."
   },
+  "trusted_senders_book": {
+    "unavailable": "לא זמין: החשבון הזה לא יכול לשמור פנקסי כתובות בשרת. הרשימה נשארת במכשיר הזה."
+  },
   "date": {
     "today": "היום",
     "yesterday": "אתמול",
@@ -1616,7 +1619,7 @@
         "label": "פריסת הממשק",
         "description": "היכן ממוקמים החיפוש, הניווט וסרגלי הכלים",
         "default": "ברירת מחדל",
-        "mountain_view": "שורת חיפוש למעלה, אפליקציות משמאל"
+        "mountain_view": "שורת חיפוש למעלה"
       },
       "animations": {
         "label": "הפעל אנימציות",
@@ -2023,12 +2026,6 @@
         "description": "בחר אם לחיצה על קובץ מצורף תציג אותו בתצוגה מקדימה או תוריד אותו מיד",
         "preview": "תצוגה מקדימה כשאפשר",
         "download": "הורד מיד"
-      },
-      "attachment_position": {
-        "label": "עמדת התקשרות",
-        "description": "היכן להציג קבצים מצורפים בכותרת הדוא\"ל",
-        "below-header": "מתחת לכותרת",
-        "below-message": "כרטיסים מתחת להודעה"
       },
       "emails_per_page": {
         "10": "10 מיילים",
@@ -3541,6 +3538,10 @@
       "sync_on": "המכשירים האחרים שלך משתמשים באותן הגדרות, ולכן גם הם ישתנו.",
       "sync_off": "המכשירים האחרים שלך ישמרו על ההגדרות שלהם."
     }
+  },
+  "layout_preview": {
+    "default_description": "אפליקציות ותיקיות בצד, חיפוש מעל הרשימה",
+    "mountain_view_description": "חיפוש לאורך החלק העליון, הודעות נפתחות ברוחב מלא"
   },
   "setup": {
     "title": "הגדרת Bulwark Webmail",
@@ -6234,6 +6235,14 @@
     "date_label": "תאריך",
     "subject_label": "נושא"
   },
+  "print_styles": {
+    "title": "הדפסה",
+    "description": "איך נראים הודעות, אנשי קשר ולוחות שנה מודפסים.",
+    "style_label": "סגנון הדפסה",
+    "style_description": "תוספים יכולים להוסיף סגנונות, למשל נייר מכתבים עם כתובת החברה שלך.",
+    "standard": "רגיל",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "התקן {appName}",
     "description": "התקן את היישום שלנו לגישה מהירה.",
@@ -7415,7 +7424,8 @@
     "pin_current": "קוד PIN נוכחי",
     "pin_new": "קוד PIN חדש",
     "pin_repeat": "חזרה על קוד PIN",
-    "pin_hint": "לפחות 6 תווים. אפשר גם אותיות, וקוד ארוך יותר קשה יותר לניחוש.",
+    "pin_hint": "לפחות 5 תווים. אפשר גם אותיות, וקוד ארוך יותר קשה יותר לניחוש.",
+    "pin_hint_policy": "הארגון שלכם דורש לפחות {count, plural, one {תו אחד} two {שני תווים} other {# תווים}}. אפשר גם אותיות.",
     "pin_obvious": "קל מדי לנחש את קוד ה-PIN הזה. הימנעו מחזרות, רצפים ובחירות נפוצות.",
     "pin_mismatch": "שני הקודים אינם זהים.",
     "pin_recovery": "אם תשכחו אותו, הדרך היחידה היא להסיר את הנתונים מהמכשיר הזה ולהיכנס שוב. הדואר שלכם בשרת נשאר. הודעות שעדיין ממתינות לשליחה במכשיר הזה יאבדו.",
@@ -7468,6 +7478,25 @@
     "timeout_option": "{count, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}",
     "blocked_seconds": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {שנייה אחת} two {שתי שניות} other {# שניות}}.",
     "blocked_minutes": "יותר מדי ניסיונות. נסו שוב בעוד {count, plural, one {דקה אחת} two {שתי דקות} other {# דקות}}."
+  },
+  "appLockHello": {
+    "switch_label": "ביטול נעילה עם Windows Hello",
+    "switch_desc": "באמצעות הפנים, טביעת האצבע או קוד ה-PIN של Windows. קוד ה-PIN של האפליקציה ממשיך לעבוד.",
+    "protects": "כש-Windows Hello מופעל, Windows שומר עבור האפליקציה הזו מפתח שעובד רק אחרי ש-Windows Hello בדק שזה אתם. גם המפתח של האפליקציה נעול בו, כך שביטול הנעילה דורש את הפנים, טביעת האצבע או קוד ה-PIN של Windows, ותוכנה אחרת במחשב הזה לא יכולה להשתמש במפתח בלי ש-Windows ישאל אתכם קודם. קוד ה-PIN של האפליקציה ממשיך לעבוד, ותצטרכו אותו אם Windows Hello יאופס או יכובה.",
+    "enable_title": "הפעלת Windows Hello",
+    "enable_body": "הזינו את קוד ה-PIN של האפליקציה. אחר כך Windows יבקש לאשר עם Windows Hello.",
+    "enable_failed": "לא ניתן היה להפעיל את Windows Hello. נסו שוב.",
+    "cancelled": "Windows Hello בוטל.",
+    "unsupported": "Windows Hello במחשב הזה לא יכול להגן על המפתח. קוד ה-PIN ממשיך לעבוד.",
+    "unavailable": "Windows Hello לא זמין במחשב הזה.",
+    "busy": "Windows Hello תפוס או נעול. נסו שוב מאוחר יותר.",
+    "off_after_pin_change": "Windows Hello כבוי עכשיו, כי הוא לא אישר אחרי שינוי קוד ה-PIN. הפעילו אותו שוב אם אתם משתמשים בו.",
+    "prompt": "אשרו עם Windows Hello שזה אתם.",
+    "waiting": "ממתין ל-Windows Hello…",
+    "use_hello": "ביטול נעילה עם Windows Hello",
+    "use_pin": "שימוש בקוד PIN במקום",
+    "failed": "Windows Hello לא ביטל את נעילת האפליקציה. הזינו את קוד ה-PIN.",
+    "gone": "Windows Hello כבר לא מבטל את נעילת האפליקציה במחשב הזה. הזינו את קוד ה-PIN."
   },
   "uxs_general": {
     "time_zone_common": "אזורי זמן נפוצים",
@@ -8049,6 +8078,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID טביעת אצבע פנים מפתח גישה passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "פרטיות ואבטחה",
+      "security": "סיסמה וכניסה",
+      "about_updates": "אודות ועדכונים",
+      "backup": "גיבוי וייבוא"
+    },
+    "sections": {
+      "start": "הפעלה וסגירה",
+      "shortcuts": "קיצורים מיישומים אחרים",
+      "mail_links": "קישורי דואר וקבצים"
+    },
+    "privacy_link_description": "ההגדרות האלה נמצאות בדף פרטיות ואבטחה."
   },
   "desktop_policy": {
     "server_refused": "הארגון שלך לא מאפשר את השרת הזה במכשיר הזה.",

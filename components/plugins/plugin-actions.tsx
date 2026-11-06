@@ -92,7 +92,7 @@ function withTarget(context: Record<string, unknown>, target: MessageActionTarge
   return target?.accountId ? { ...context, accountId: target.accountId } : context;
 }
 
-function targetFilter(target: MessageActionTarget | undefined, accountKind: MailAccountKind | null | undefined): Pick<ActionFilter, 'accountKind' | 'keywords' | 'badges'> {
+export function targetFilter(target: MessageActionTarget | undefined, accountKind: MailAccountKind | null | undefined): Pick<ActionFilter, 'accountKind' | 'keywords' | 'badges'> {
   return { accountKind: target ? target.accountKind : accountKind ?? null, keywords: target?.keywords ?? null, badges: target?.badges ?? null };
 }
 

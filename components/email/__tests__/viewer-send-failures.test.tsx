@@ -108,7 +108,7 @@ describe('viewer send failures', () => {
     fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
 
     await waitFor(() => expect(toastError).toHaveBeenCalledWith('submission_quota'));
-    expect(onQuickReply).toHaveBeenCalledWith('Thanks!');
+    expect(onQuickReply).toHaveBeenCalledWith('Thanks!', { composerId: expect.any(String) });
     expect((box as HTMLTextAreaElement).value).toBe('Thanks!');
   });
 

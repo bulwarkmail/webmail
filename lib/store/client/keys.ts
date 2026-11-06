@@ -21,7 +21,9 @@
  */
 export const STORE_OPENED_KEY = 'bulwark-store-opened';
 
-const DB_NAME = 'bulwark-store';
+/** The IndexedDB database of the store's keys; there is one once a store was opened here. */
+export const STORE_DB_NAME = 'bulwark-store';
+const DB_NAME = STORE_DB_NAME;
 const DB_VERSION = 1;
 const KEYS = 'keys';
 const ACCOUNTS = 'accounts';

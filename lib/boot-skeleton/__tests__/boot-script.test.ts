@@ -368,6 +368,20 @@ describe('boot script: settings', () => {
     expect(attr('settings-tab')).toBe('filters');
   });
 
+  // Settings reorg 2026-11-05: an old link to a section that moved marks the page that has it now.
+  it('opens the page a moved section is on now', () => {
+    boot('/en/settings/general/desktop-updates');
+    expect(attr('settings-tab')).toBe('about');
+    boot('/en/settings/general/app-lock');
+    expect(attr('settings-tab')).toBe('privacy');
+    boot('/en/settings/backup/debug');
+    expect(attr('settings-tab')).toBe('troubleshooting');
+    boot('/en/settings/debug');
+    expect(attr('settings-tab')).toBe('troubleshooting');
+    boot('/en/settings/general/language');
+    expect(attr('settings-tab')).toBe('general');
+  });
+
   it('falls back to the stored tab for an unknown or missing URL tab', () => {
     localStorage.setItem('settings-active-tab', 'keywords');
     boot('/en/settings/no-such-tab');

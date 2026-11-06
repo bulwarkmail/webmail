@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "La tua organizzazione blocca i contenuti remoti in tutte le email, quindi non vengono caricati nemmeno dai mittenti attendibili."
   },
+  "trusted_senders_book": {
+    "unavailable": "Non disponibile: questo account non può tenere rubriche sul server. L'elenco resta su questo dispositivo."
+  },
   "date": {
     "today": "Oggi",
     "yesterday": "Ieri",
@@ -1672,7 +1675,7 @@
         "label": "Layout dell'interfaccia",
         "description": "Dove si trovano ricerca, navigazione e barre degli strumenti",
         "default": "Predefinito",
-        "mountain_view": "Ricerca in alto, app a sinistra"
+        "mountain_view": "Ricerca in alto"
       },
       "animations": {
         "label": "Abilita animazioni",
@@ -2115,12 +2118,6 @@
         "description": "Scegli se facendo clic su un allegato si apre un'anteprima o si avvia subito il download",
         "preview": "Anteprima quando possibile",
         "download": "Scarica immediatamente"
-      },
-      "attachment_position": {
-        "label": "Posizione degli allegati",
-        "description": "Dove visualizzare gli allegati nell'intestazione dell'email",
-        "below-header": "Sotto l'intestazione",
-        "below-message": "Schede sotto il messaggio"
       },
       "emails_per_page": {
         "10": "10 messaggi",
@@ -3596,6 +3593,10 @@
       "sync_on": "Gli altri dispositivi usano le stesse impostazioni, quindi cambiano anche loro.",
       "sync_off": "Gli altri dispositivi mantengono le loro impostazioni."
     }
+  },
+  "layout_preview": {
+    "default_description": "App e cartelle a sinistra, ricerca sopra l'elenco",
+    "mountain_view_description": "Ricerca in alto, i messaggi si aprono a tutta larghezza"
   },
   "setup": {
     "title": "Configurazione di Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Oggetto"
   },
+  "print_styles": {
+    "title": "Stampa",
+    "description": "L'aspetto di messaggi, contatti e calendari stampati.",
+    "style_label": "Stile di stampa",
+    "style_description": "I componenti aggiuntivi possono aggiungere stili, ad esempio una carta intestata con l'indirizzo della tua azienda.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installa {appName}",
     "description": "Installa la nostra app per un accesso rapido.",
@@ -7414,7 +7423,8 @@
     "pin_current": "PIN attuale",
     "pin_new": "Nuovo PIN",
     "pin_repeat": "Ripeti il PIN",
-    "pin_hint": "Almeno 6 caratteri. Vanno bene anche le lettere, e un PIN più lungo è più difficile da indovinare.",
+    "pin_hint": "Almeno 5 caratteri. Vanno bene anche le lettere, e un PIN più lungo è più difficile da indovinare.",
+    "pin_hint_policy": "La tua organizzazione richiede almeno {count, plural, one {# carattere} other {# caratteri}}. Vanno bene anche le lettere.",
     "pin_obvious": "Questo PIN è troppo facile da indovinare. Evita ripetizioni, sequenze e scelte comuni.",
     "pin_mismatch": "I due PIN non coincidono.",
     "pin_recovery": "Se lo dimentichi, l'unica strada è rimuovere i dati da questo dispositivo e accedere di nuovo. La tua posta sul server resta. I messaggi ancora in attesa di invio su questo dispositivo vanno persi.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minuto} other {# minuti}}",
     "blocked_seconds": "Troppi tentativi. Riprova tra {count, plural, one {# secondo} other {# secondi}}.",
     "blocked_minutes": "Troppi tentativi. Riprova tra {count, plural, one {# minuto} other {# minuti}}."
+  },
+  "appLockHello": {
+    "switch_label": "Sblocca con Windows Hello",
+    "switch_desc": "Usa il volto, l'impronta o il PIN di Windows. Il PIN dell'app continua a funzionare.",
+    "protects": "Con Windows Hello attivo, Windows conserva per questa app una chiave che funziona solo dopo che Windows Hello ha verificato che sei tu. Anche la chiave dell'app viene bloccata con essa, quindi per sbloccare servono il volto, l'impronta o il PIN di Windows, e un altro programma su questo computer non può usare quella chiave senza che Windows te lo chieda prima. Il PIN dell'app continua a funzionare e ti serve se Windows Hello viene reimpostato o disattivato.",
+    "enable_title": "Attiva Windows Hello",
+    "enable_body": "Inserisci il PIN dell'app. Poi Windows ti chiede di confermare con Windows Hello.",
+    "enable_failed": "Non è stato possibile attivare Windows Hello. Riprova.",
+    "cancelled": "Windows Hello è stato annullato.",
+    "unsupported": "Windows Hello su questo computer non può proteggere la chiave. Il tuo PIN continua a funzionare.",
+    "unavailable": "Windows Hello non è disponibile su questo computer.",
+    "busy": "Windows Hello è occupato o bloccato. Riprova più tardi.",
+    "off_after_pin_change": "Windows Hello ora è disattivato, perché non ha confermato dopo il cambio del PIN. Riattivalo se lo usi.",
+    "prompt": "Conferma che sei tu con Windows Hello.",
+    "waiting": "In attesa di Windows Hello…",
+    "use_hello": "Sblocca con Windows Hello",
+    "use_pin": "Usa il PIN",
+    "failed": "Windows Hello non ha sbloccato l'app. Inserisci il PIN.",
+    "gone": "Windows Hello non sblocca più l'app su questo computer. Inserisci il PIN."
   },
   "uxs_general": {
     "time_zone_common": "Fusi orari comuni",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID impronta digitale volto passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy e sicurezza",
+      "security": "Password e accesso",
+      "about_updates": "Informazioni e aggiornamenti",
+      "backup": "Backup e importazione"
+    },
+    "sections": {
+      "start": "Avvio e chiusura",
+      "shortcuts": "Scorciatoie da altre app",
+      "mail_links": "Link e file di posta"
+    },
+    "privacy_link_description": "Queste impostazioni sono nella pagina Privacy e sicurezza."
   },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",

@@ -1,0 +1,11 @@
+{
+  "id": "it-plugin-api-probe",
+  "name": "API probe",
+  "version": "1.0.0",
+  "author": "Bulwark integration tests",
+  "description": "Uses the plugin API of Bulwark 1.21 (subject, file preview, PDF print, composer id and keywords in the send hooks, link parameters, top-bar and reader buttons) and records what it got. For integration/tests/30-plugin-api-additions.spec.ts only.",
+  "type": "ui-extension",
+  "permissions": ["compose:read", "compose:write", "email:send", "email:write", "email:read", "ui:composer-toolbar", "ui:toolbar"],
+  "entrypoint": "index.js",
+  "minAppVersion": "1.15.0"
+}

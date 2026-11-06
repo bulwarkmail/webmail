@@ -43,7 +43,7 @@ const SETTINGS_TABS: readonly (SettingsSearchTab | typeof LEGACY_SETTINGS_TABS[n
   'account', 'general', 'notifications', 'appearance', 'message_list', 'reading',
   'composing', 'vacation', 'filters',
   'organize', 'security', 'calendar', 'contacts',
-  'files', 'addons', 'offline', 'privacy', 'backup', 'about',
+  'files', 'addons', 'offline', 'privacy', 'backup', 'desktop', 'troubleshooting', 'about',
   ...LEGACY_SETTINGS_TABS,
 ];
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { useContactStore } from '@/stores/contact-store';
+import { useContactStore, useTrustedSendersInBook } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFaviconRefreshStore } from '@/stores/favicon-refresh-store';
 import { toast } from '@/stores/toast-store';
@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, RefreshCw } from '@/components/icons';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
+import { AppLockSettings } from './app-lock-settings';
+import { DesktopKeystoreSettings } from './desktop-keystore-settings';
 import { isDesktopApp } from '@/lib/desktop/bridge';
 import { productName } from '@/lib/product-name';
 import { useConfig } from '@/hooks/use-config';
@@ -42,11 +44,12 @@ export function SettingsLinkRow({ label, description, button, onClick }: { label
 /** The link to Privacy on the pages these settings came from. */
 export function PrivacyLinkRow({ topic }: { topic: 'images' | 'receipts' | 'senders' }) {
   const t = useTranslations('uxs_structure.privacy_links');
+  const tReorg = useTranslations('settings_reorg');
   return (
     <SettingsLinkRow
       label={t(`${topic}_label`)}
-      description={t('description')}
-      button={t('button')}
+      description={tReorg('privacy_link_description')}
+      button={tReorg('tabs.privacy')}
       onClick={() => goToSettings('privacy', topic)}
     />
   );
@@ -64,8 +67,11 @@ function RemoteContentSection() {
   const [showTrustedModal, setShowTrustedModal] = useState(false);
   const { isSettingLocked, isSettingHidden, isFeatureEnabled } = usePolicyStore();
   const { externalContentPolicy, trustedSenders, trustedSendersAddressBook, updateSetting } = useSettingsStore();
-  const { trustedSenderEmails, trustedSendersLoaded, loadTrustedSendersBook } = useContactStore();
+  const { trustedSenderEmails, trustedSendersLoaded, trustedSendersBookUnavailable, loadTrustedSendersBook } = useContactStore();
+  const inBook = useTrustedSendersInBook();
+  const tBook = useTranslations('trusted_senders_book');
   const client = useAuthStore((state) => state.client);
+  const bookUnavailable = trustedSendersBookUnavailable || (!!client && client.supportsContacts?.() === false);
 
   // Load the address book so the count reflects the synced senders, not 0.
   useEffect(() => {
@@ -74,8 +80,20 @@ function RemoteContentSection() {
     }
   }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
+  const toggleAddressBook = (checked: boolean) => {
+    if (checked) {
+      // Load again, which files the device's list into the book.
+      useContactStore.setState({ trustedSendersLoaded: false });
+    } else if (trustedSendersLoaded && !trustedSendersBookUnavailable) {
+      // The book's senders stay trusted on this device.
+      const local = useSettingsStore.getState().trustedSenders;
+      useSettingsStore.setState({ trustedSenders: Array.from(new Set([...local, ...trustedSenderEmails])) });
+    }
+    updateSetting('trustedSendersAddressBook', checked);
+  };
+
   const trustedCount = () => {
-    const count = trustedSendersAddressBook ? trustedSenderEmails.length : trustedSenders.length;
+    const count = inBook ? new Set([...trustedSenderEmails, ...trustedSenders]).size : trustedSenders.length;
     if (count === 0) return t('trusted_senders.count_zero');
     if (count === 1) return t('trusted_senders.count_one');
     return t('trusted_senders.count_other', { count });
@@ -110,12 +128,21 @@ function RemoteContentSection() {
         </button>
       </SettingItem>
 
-      <SettingItem nested label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')} locked={remoteBlockedByOrg}>
-        <ToggleSwitch
-          checked={!!trustedSendersAddressBook}
-          onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
-        />
-      </SettingItem>
+      {!isSettingHidden('trustedSendersAddressBook') && (
+        <SettingItem
+          nested
+          label={t('trusted_senders.use_address_book_label')}
+          description={bookUnavailable ? tBook('unavailable') : t('trusted_senders.use_address_book_description')}
+          locked={remoteBlockedByOrg || isSettingLocked('trustedSendersAddressBook')}
+        >
+          <ToggleSwitch
+            checked={inBook && !bookUnavailable}
+            disabled={bookUnavailable}
+            onChange={toggleAddressBook}
+            testId="trusted-senders-book-switch"
+          />
+        </SettingItem>
+      )}
 
       <TrustedSendersModal
         isOpen={showTrustedModal}
@@ -198,10 +225,12 @@ function SenderPicturesSection() {
 }
 
 /**
- * Settings > Privacy: what tells others about you or fetches from outside.
- * Remote content and trusted senders, read receipts, sender pictures from
- * the web, and in the desktop app usage info and crash reports. Background
- * notifications through the push relay stay on Notifications, with a link.
+ * Settings > Privacy & security: who can open the app on this device (the
+ * app lock, Windows Hello, certificates on this computer), then what tells
+ * others about you or fetches from outside. Remote content and trusted
+ * senders, read receipts, sender pictures from the web, and in the desktop
+ * app usage info and crash reports. Background notifications through the
+ * push relay stay on Notifications, with a link.
  */
 export function PrivacySettings() {
   const t = useTranslations('uxs_structure.privacy');
@@ -213,6 +242,10 @@ export function PrivacySettings() {
   useEffect(() => setInApp(isDesktopApp()), []);
   return (
     <div className="space-y-8">
+      {/* The app lock and this server's use of certificates on this computer were on
+          General until the settings reorg of 2026-11-05. */}
+      <AppLockSettings />
+      <DesktopKeystoreSettings />
       <RemoteContentSection />
       <ReadReceiptsSection />
       <SenderPicturesSection />

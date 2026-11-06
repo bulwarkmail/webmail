@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "A sua organização bloqueia conteúdo remoto em todos os e-mails, por isso também não é carregado de remetentes de confiança."
   },
+  "trusted_senders_book": {
+    "unavailable": "Indisponível: esta conta não pode guardar livros de endereços no servidor. A lista fica neste dispositivo."
+  },
   "date": {
     "today": "Hoje",
     "yesterday": "Ontem",
@@ -1672,7 +1675,7 @@
         "label": "Esquema da interface",
         "description": "Onde ficam a pesquisa, a navegação e as barras de ferramentas",
         "default": "Predefinido",
-        "mountain_view": "Pesquisa em cima, aplicações à esquerda"
+        "mountain_view": "Pesquisa em cima"
       },
       "animations": {
         "label": "Habilitar Animações",
@@ -2115,12 +2118,6 @@
         "description": "Escolha se clicar em um anexo abre uma pré-visualização ou inicia o download imediatamente",
         "preview": "Visualizar quando possível",
         "download": "Baixar imediatamente"
-      },
-      "attachment_position": {
-        "label": "Posição dos anexos",
-        "description": "Onde exibir os anexos no cabeçalho do e-mail",
-        "below-header": "Abaixo do cabeçalho",
-        "below-message": "Cartões abaixo da mensagem"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3596,6 +3593,10 @@
       "sync_on": "Os seus outros dispositivos usam as mesmas definições, por isso também mudam.",
       "sync_off": "Os seus outros dispositivos mantêm as definições deles."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps e pastas à esquerda, pesquisa acima da lista",
+    "mountain_view_description": "Pesquisa no topo, as mensagens abrem em largura total"
   },
   "setup": {
     "title": "Configuração do Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Assunto"
   },
+  "print_styles": {
+    "title": "Impressão",
+    "description": "A aparência das mensagens, contactos e calendários impressos.",
+    "style_label": "Estilo de impressão",
+    "style_description": "Os suplementos podem adicionar estilos, por exemplo um papel timbrado com o endereço da sua empresa.",
+    "standard": "Padrão",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalar {appName}",
     "description": "Instale o nosso app para acesso rápido.",
@@ -7414,7 +7423,8 @@
     "pin_current": "PIN atual",
     "pin_new": "Novo PIN",
     "pin_repeat": "Repetir o PIN",
-    "pin_hint": "Pelo menos 6 caracteres. Também pode usar letras, e um PIN mais longo é mais difícil de adivinhar.",
+    "pin_hint": "Pelo menos 5 caracteres. Também pode usar letras, e um PIN mais longo é mais difícil de adivinhar.",
+    "pin_hint_policy": "A sua organização exige pelo menos {count, plural, one {# carácter} other {# caracteres}}. Também pode usar letras.",
     "pin_obvious": "Esse PIN é muito fácil de adivinhar. Evite repetições, sequências e escolhas comuns.",
     "pin_mismatch": "Os dois PIN não são iguais.",
     "pin_recovery": "Se o esquecer, a única saída é remover os dados deste dispositivo e voltar a iniciar sessão. O seu correio no servidor mantém-se. As mensagens ainda à espera de envio neste dispositivo perdem-se.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minuto} other {# minutos}}",
     "blocked_seconds": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# segundo} other {# segundos}}.",
     "blocked_minutes": "Demasiadas tentativas. Tente novamente daqui a {count, plural, one {# minuto} other {# minutos}}."
+  },
+  "appLockHello": {
+    "switch_label": "Desbloquear com o Windows Hello",
+    "switch_desc": "Use o rosto, a impressão digital ou o PIN do Windows. O PIN da app continua a funcionar.",
+    "protects": "Com o Windows Hello ligado, o Windows guarda para esta app uma chave que só funciona depois de o Windows Hello confirmar que é você. A chave da app também fica bloqueada com ela, por isso desbloquear exige o seu rosto, impressão digital ou PIN do Windows, e outro programa neste computador não pode usar essa chave sem o Windows lhe perguntar primeiro. O PIN da app continua a funcionar, e vai precisar dele se o Windows Hello for reposto ou desligado.",
+    "enable_title": "Ligar o Windows Hello",
+    "enable_body": "Introduza o PIN da app. Depois, o Windows pede-lhe que confirme com o Windows Hello.",
+    "enable_failed": "Não foi possível ligar o Windows Hello. Tente novamente.",
+    "cancelled": "O Windows Hello foi cancelado.",
+    "unsupported": "O Windows Hello neste computador não consegue proteger a chave. O seu PIN continua a funcionar.",
+    "unavailable": "O Windows Hello não está disponível neste computador.",
+    "busy": "O Windows Hello está ocupado ou bloqueado. Tente mais tarde.",
+    "off_after_pin_change": "O Windows Hello está desligado, porque não confirmou depois da mudança de PIN. Volte a ligá-lo se o usar.",
+    "prompt": "Confirme que é você com o Windows Hello.",
+    "waiting": "A aguardar o Windows Hello…",
+    "use_hello": "Desbloquear com o Windows Hello",
+    "use_pin": "Usar o PIN",
+    "failed": "O Windows Hello não desbloqueou a app. Introduza o seu PIN.",
+    "gone": "O Windows Hello já não desbloqueia a app neste computador. Introduza o seu PIN."
   },
   "uxs_general": {
     "time_zone_common": "Fusos horários comuns",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID impressão digital rosto chave de acesso passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacidade e segurança",
+      "security": "Senha e início de sessão",
+      "about_updates": "Sobre e atualizações",
+      "backup": "Cópia de segurança e importação"
+    },
+    "sections": {
+      "start": "Iniciar e fechar",
+      "shortcuts": "Atalhos a partir de outras aplicações",
+      "mail_links": "Ligações e ficheiros de correio"
+    },
+    "privacy_link_description": "Estas configurações estão na página Privacidade e segurança."
   },
   "desktop_policy": {
     "server_refused": "A sua organização não permite este servidor neste dispositivo.",

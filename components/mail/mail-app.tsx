@@ -162,7 +162,8 @@ import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { isPhishingMarked } from "@/lib/phishing-links";
 import { phishingMarkedNow } from "@/hooks/use-phishing-report";
 import { automaticLabel, classifyOutgoing, labelSourceHeaders, reopenedLabelChoice } from "@/lib/outgoing/classification";
-import enMessages from "@/locales/en/common.json";
+import { loadEnglishMessages } from "@/i18n/english-catalog";
+import type { PlaceholderWords } from "@/lib/placeholder-check";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
@@ -1968,7 +1969,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!isAuthenticated || !client || proTakingOver) return;
 
     const open = async (handoff: Handoff) => {
-      if (!handoff.subject && !handoff.body && handoff.files.length === 0) {
+      if (!handoff.subject && !handoff.body && handoff.files.length === 0 && !handoff.linkParams) {
         await withComposeGate('compose', {}, () => {
           startFreshComposerSession();
           setComposerMode('compose');
@@ -1986,6 +1987,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialFiles: handoff.files,
         unedited: true,
         ...(handoff.fromOs ? { fromOs: true } : {}),
+        ...(handoff.linkParams ? { linkParams: handoff.linkParams } : {}),
       });
     };
 
@@ -2770,6 +2772,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     headers?: Record<string, string>;
     labelHeaders?: Record<string, string>;
     composerId?: string;
+    keywords?: string[];
   }, composerState?: ComposerDraftData) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
@@ -4901,7 +4904,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Resolves true once the reply went out (or was scheduled), false when it
   // stopped before sending, so the quick-reply box keeps the text.
-  const handleQuickReply = async (body: string): Promise<boolean> => {
+  const handleQuickReply = async (body: string, extra?: { composerId?: string }): Promise<boolean> => {
     if (!client || !selectedEmail) return false;
 
     // Quick reply follows the composer's addressing rules and sends from the
@@ -4968,6 +4971,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       references: selectedEmail.references,
     });
     const replySubject = buildReplySubject(selectedEmail.subject || t('email_viewer.no_subject'), t('email_composer.prefix.reply'));
+    // English fill-in words besides the UI language's, as the composer: AI
+    // drafts and templates are often English. Without the English catalog
+    // (offline, never loaded) the UI language's words still count.
+    const englishPlaceholderWords = settings.placeholderWarningEnabled
+      ? await loadEnglishMessages()
+        .then((en) => (en as { email_composer: { placeholder_words: PlaceholderWords } }).email_composer.placeholder_words)
+        .catch(() => null)
+      : null;
     const prepared = await prepareQuickReply({
       body,
       signatureIdentity,
@@ -4980,6 +4991,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       identityId: sendingIdentity?.id,
       subject: replySubject,
       inReplyTo: threading?.inReplyTo?.[0],
+      composerId: extra?.composerId,
       // A plugin that said no told the user; one that crashed didn't.
       onSendCheckStopped: (outcome) => {
         if (outcome === 'failed') toast.error(t('email_composer.send_guard_failed'));
@@ -4989,7 +5001,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       questions: {
         // The fill-in words of the UI language and of English, as the composer.
         placeholderWords: settings.placeholderWarningEnabled
-          ? [enMessages.email_composer.placeholder_words, t.raw('email_composer.placeholder_words')]
+          ? [...(englishPlaceholderWords ? [englishPlaceholderWords] : []), t.raw('email_composer.placeholder_words')]
           : null,
         attachmentKeywords: settings.attachmentReminderEnabled ? settings.attachmentReminderKeywords : null,
         confirmSend: settings.sendConfirmation,
@@ -5603,8 +5615,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       // Mountain View shows the message inside its conversation: fetch that
       // alongside the message, so the two appear together. (#1223)
+      // A thread the list counts as one message has no conversation to fetch
+      // (the counts come with the page, across folders, drafts included): the
+      // open is one request instead of two.
       const conversationPrefetch = readerConversationView && listEmail?.id && listEmail.threadId
-        ? loadMvConversation(listEmail as Email, client)
+        ? (useEmailStore.getState().threadEmailCounts.get(threadKeyFor(listEmail as Email)) === 1
+          ? Promise.resolve(null)
+          : loadMvConversation(listEmail as Email, client))
         : null;
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);

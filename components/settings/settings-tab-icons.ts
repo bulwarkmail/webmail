@@ -20,8 +20,10 @@ import {
   Users,
   RotateCcw,
   CloudOff,
-  EyeOff,
   Info,
+  Key,
+  Monitor,
+  Wrench,
   type AppIcon,
 } from '@/components/icons';
 import type { SettingsSearchTab } from '@/lib/settings-search';
@@ -43,7 +45,7 @@ export const SETTINGS_TAB_ICONS: Record<SettingsSearchTab, AppIcon> = {
   vacation: PalmtreeIcon,
   filters: Filter,
   organize: FolderOpen,
-  security: Shield,
+  security: Key,
   sharing: Users,
   recovery: RotateCcw,
   calendar: Calendar,
@@ -52,8 +54,10 @@ export const SETTINGS_TAB_ICONS: Record<SettingsSearchTab, AppIcon> = {
   files_sync: FolderSync,
   addons: Puzzle,
   offline: CloudOff,
-  privacy: EyeOff,
+  privacy: Shield,
   backup: Database,
+  desktop: Monitor,
+  troubleshooting: Wrench,
   about: Info,
 };
 
@@ -66,8 +70,8 @@ export type SettingsTabGroup = 'top' | 'mail' | 'apps' | 'bottom';
  * from the last session's hints.
  */
 export const SETTINGS_NAV_GROUPS: readonly { group: SettingsTabGroup; tabs: readonly SettingsSearchTab[] }[] = [
-  { group: 'top', tabs: ['account', 'security', 'privacy', 'sharing', 'notifications', 'general', 'offline', 'appearance', 'accessibility'] },
+  { group: 'top', tabs: ['account', 'security', 'privacy', 'sharing', 'notifications', 'general', 'desktop', 'offline', 'appearance', 'accessibility'] },
   { group: 'mail', tabs: ['message_list', 'reading', 'composing', 'organize', 'filters', 'vacation', 'recovery'] },
   { group: 'apps', tabs: ['calendar', 'contacts', 'files', 'files_sync', 'addons'] },
-  { group: 'bottom', tabs: ['backup', 'about'] },
+  { group: 'bottom', tabs: ['backup', 'troubleshooting', 'about'] },
 ];

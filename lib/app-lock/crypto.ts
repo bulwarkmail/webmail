@@ -3,8 +3,8 @@
  *
  * One random lock key wraps every account's database key (a layer in
  * lib/store/client/keys.ts). The lock key itself is only ever stored wrapped: once
- * under the PIN, and once for each other way in (a passkey's PRF, the desktop app's
- * OS storage). So a new account needs no PIN, and a changed PIN touches one record.
+ * under the PIN, and once for each other way in (a passkey's PRF, Windows Hello's
+ * signature, the desktop app's OS storage for Touch ID). So a new account needs no PIN, and a changed PIN touches one record.
  */
 
 import type { WrapLayer } from '@/lib/store/client/keys';
@@ -13,12 +13,16 @@ export const LOCK_LAYER = 'applock';
 export const SHELL_LAYER = 'safeStorage';
 /** OWASP's floor for PBKDF2-HMAC-SHA256. A wrong guess costs this much, online or off. */
 export const PBKDF2_ITERATIONS = 600_000;
-export const MIN_PIN_LENGTH = 6;
+/** The app's own floor for a new PIN. An organisation's policy can raise it (lib/app-lock/policy.ts). */
+export const MIN_PIN_LENGTH = 5;
 
 const AES = { name: 'AES-GCM', length: 256 } as const;
 const PRF_INFO = new TextEncoder().encode('bulwark-app-lock-prf-v1');
 const PROOF_INFO = new TextEncoder().encode('bulwark-app-lock-main-proof-v1');
 const PIN_STEP_INFO = new TextEncoder().encode('bulwark-app-lock-pin-step-v1');
+const HELLO_INFO = new TextEncoder().encode('bulwark-app-lock-hello-v1');
+/** What main's Hello challenge takes from the page: a new one with every wrap. */
+export const HELLO_SALT_BYTES = 32;
 
 export interface WrappedBytes {
   iv: Uint8Array;
@@ -38,12 +42,14 @@ export function pinBytes(pin: string): Uint8Array {
   return new TextEncoder().encode(pin.normalize('NFKC'));
 }
 
-export function pinLongEnough(pin: string): boolean {
-  return [...pin.normalize('NFKC')].length >= MIN_PIN_LENGTH;
+/** For a new PIN. `minimum` is what a policy asks for; nothing goes under the app's own floor. */
+export function pinLongEnough(pin: string, minimum = MIN_PIN_LENGTH): boolean {
+  return [...pin.normalize('NFKC')].length >= Math.max(MIN_PIN_LENGTH, minimum);
 }
 
 /** A few of what people pick most, as the check below reads them. Runs and repeats are found by rule. */
 const COMMON_PINS = new Set([
+  'qwert', 'asdfg', 'yxcvb', 'zxcvb', '1q2w3', 'abc12', '12321',
   'password', 'password1', 'password123', 'passwort', 'qwerty', 'qwertz', 'qwerty123', 'qwertyuiop', 'asdfgh', 'yxcvbn', 'zxcvbn',
   '1q2w3e', '1q2w3e4r', 'q1w2e3', 'abc123', 'a1b2c3', '123abc', 'letmein', 'iloveyou', 'admin123', 'welcome', 'welcome1', 'monkey', 'dragon',
   '147258', '159753', '258456', '789456', '102030', '101010', '696969', '111222', '121314', '131313', '123321', '112233',
@@ -75,6 +81,13 @@ export class ObviousPinError extends Error {
   constructor() {
     super('That PIN is too easy to guess');
     this.name = 'ObviousPinError';
+  }
+}
+
+export class ShortPinError extends Error {
+  constructor() {
+    super('That PIN is too short');
+    this.name = 'ShortPinError';
   }
 }
 
@@ -114,6 +127,22 @@ export async function keyFromPrf(output: ArrayBuffer | Uint8Array): Promise<Cryp
   const base = await crypto.subtle.importKey('raw', buffer(bytes), 'HKDF', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt: new ArrayBuffer(0), info: PRF_INFO },
+    base,
+    AES,
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+/**
+ * A key from Windows Hello's signature over main's challenge for this salt. The signature is the
+ * same each time (RSA PKCS#1 v1.5, which main checked when the key credential was made), and only
+ * a Hello prompt the user answers gives it.
+ */
+export async function keyFromHello(signature: Uint8Array, salt: Uint8Array): Promise<CryptoKey> {
+  const base = await crypto.subtle.importKey('raw', buffer(signature), 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'HKDF', hash: 'SHA-256', salt: buffer(salt), info: HELLO_INFO },
     base,
     AES,
     false,

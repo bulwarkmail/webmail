@@ -487,7 +487,7 @@ interface EmailStore {
    * `options.outbox`: a send from the composer or quick reply, which offline
    * mode may keep in its outbox while the server can't be reached (#523).
    */
-  sendEmail: (client: IJMAPClient, to: string[], subject: string, body: string, cc?: string[], bcc?: string[], identityId?: string, fromEmail?: string, draftId?: string, fromName?: string, htmlBody?: string, attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>, inReplyTo?: string[], references?: string[], delayedUntil?: string, envelopeMailFrom?: string, options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; labelHeaders?: Record<string, string>; localAccountId?: string; draftAccountId?: string; outbox?: boolean }) => Promise<SendEmailResult>;
+  sendEmail: (client: IJMAPClient, to: string[], subject: string, body: string, cc?: string[], bcc?: string[], identityId?: string, fromEmail?: string, draftId?: string, fromName?: string, htmlBody?: string, attachments?: Array<{ blobId: string; name: string; type: string; size: number; disposition?: 'attachment' | 'inline'; cid?: string }>, inReplyTo?: string[], references?: string[], delayedUntil?: string, envelopeMailFrom?: string, options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; labelHeaders?: Record<string, string>; localAccountId?: string; draftAccountId?: string; outbox?: boolean; keywords?: string[] }) => Promise<SendEmailResult>;
   sendRawEmail: (client: IJMAPClient, rawMimeBlob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], options?: { outbox?: boolean }) => Promise<SendEmailResult>;
   /** `emailKey` (emailKeyFor of the row) picks the right row when the id repeats across accounts. */
   deleteEmail: (client: IJMAPClient, emailId: string, forceDelete?: boolean, emailKey?: string) => Promise<boolean>;
@@ -4773,9 +4773,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   markAsRead: async (client, emailId, read, emailKey): Promise<boolean> => {
     const isTarget = singleEmailMatcher(emailId, emailKey);
+    const processingKey = `${emailKey ?? emailId}-${read}`;
     try {
       // Check if this email is already being processed
-      const processingKey = `${emailKey ?? emailId}-${read}`;
       const currentProcessing = get().processingReadStatus;
       if (currentProcessing.has(processingKey)) {
         return true; // Already being processed
@@ -4786,7 +4786,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (!email) return false;
 
       // Check if already in the desired state
-      const isCurrentlyRead = email.keywords?.$seen;
+      const isCurrentlyRead = email.keywords?.$seen ?? false;
       if (isCurrentlyRead === read) {
         return true; // Already in desired state
       }
@@ -4822,7 +4822,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const emailInState = state.emails.find(isTarget);
         if (!emailInState) return { processingReadStatus: newProcessingSet };
 
-        const wasRead = emailInState.keywords?.$seen;
+        const wasRead = emailInState.keywords?.$seen ?? false;
         if (wasRead === read) {
           return { processingReadStatus: newProcessingSet }; // State unchanged, skip counter update
         }
@@ -4889,7 +4889,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Remove from processing set on error
       set((state) => {
         const newProcessingSet = new Set(state.processingReadStatus);
-        newProcessingSet.delete(`${emailId}-${read}`);
+        newProcessingSet.delete(processingKey);
         return {
           processingReadStatus: newProcessingSet,
           error: error instanceof Error ? error.message : "Failed to update email"

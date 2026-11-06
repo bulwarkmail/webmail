@@ -11,6 +11,7 @@ lite-image
 scripts/
 !scripts/lite/
 !scripts/desktop-build-flag.mjs
+!scripts/lite-intl-assets.mjs
 !scripts/build-plugin-sandbox.mjs
 !scripts/build-pst-worker.mjs
 !scripts/build-store-worker.mjs

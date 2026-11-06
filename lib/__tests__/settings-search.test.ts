@@ -135,7 +135,7 @@ describe('settings search: words, word starts and synonyms', () => {
   });
 
   it('finds the app lock for "pin", and nothing that only has "pin" inside a word', () => {
-    expect(everywhere('pin')).toEqual(['general: Lock with a PIN']);
+    expect(everywhere('pin')).toEqual(['privacy: Lock with a PIN']);
   });
 
   it('finds the Privacy page by its name and keywords', () => {
@@ -146,7 +146,7 @@ describe('settings search: words, word starts and synonyms', () => {
 
   it('finds the app lock for "lock", not the clock or blocked senders', () => {
     const found = everywhere('lock');
-    expect(found).toContain('general: App lock');
+    expect(found).toContain('privacy: App lock');
     // "12-hour or 24-hour clock" and "block" in their descriptions.
     expect(found).not.toContain('general: Time format');
     expect(found).not.toContain('privacy: Images & external content');
@@ -233,6 +233,8 @@ describe('settings search: more words people use', () => {
 
 // settings-p2-5 (2026-11-04): in the desktop app the app's own rows were
 // missing from the search; "tray" found an unread count instead.
+// Settings reorg 2026-11-05: the app's rows moved from General to Desktop app, Privacy &
+// security (app lock), About & updates and Troubleshooting; the expected pages follow.
 describe('settings search in the desktop app', () => {
   const inApp = (when: string | undefined, mac = false) => {
     if (when === 'browser') return false;
@@ -250,43 +252,43 @@ describe('settings search in the desktop app', () => {
       .map((r) => `${tab}: ${r.label}`));
 
   it.each([
-    ['tray', 'general: Keep running in the tray when closed'],
+    ['tray', 'desktop: Keep running in the tray when closed'],
     ['quiet hours', 'notifications: Quiet hours'],
     ['do not disturb', 'notifications: Quiet hours'],
-    ['autostart', 'general: Start when you sign in to your computer'],
-    ['start with windows', 'general: Start when you sign in to your computer'],
-    ['startup', 'general: Start when you sign in to your computer'],
-    ['menu bar', 'general: Always show the menu bar'],
+    ['autostart', 'desktop: Start when you sign in to your computer'],
+    ['start with windows', 'desktop: Start when you sign in to your computer'],
+    ['startup', 'desktop: Start when you sign in to your computer'],
+    ['menu bar', 'desktop: Always show the menu bar'],
     ['taskbar', 'notifications: Flash the taskbar on new mail'],
     // settings-p3-7: the row, not its section.
-    ['developer tools', 'general: Developer tools'],
-    ['updates', 'general: Check for updates'],
-    ['quick compose', 'general: Quick compose'],
+    ['developer tools', 'troubleshooting: Developer tools'],
+    ['updates', 'about: Check for updates'],
+    ['quick compose', 'desktop: Quick compose'],
     ['usage', 'privacy: Send usage info'],
     ['crash', 'privacy: Send crash reports'],
-    ['default mail app', 'general: Default mail app'],
+    ['default mail app', 'desktop: Default mail app'],
   ])('finds "%s"', (query, row) => {
     expect(inAppResults(query)).toContain(row);
   });
 
   it('lists "tray" first for the tray row, and the Dock row on a Mac', () => {
-    expect(inAppResults('tray')[0]).toBe('general: Keep running in the tray when closed');
+    expect(inAppResults('tray')[0]).toBe('desktop: Keep running in the tray when closed');
     expect(inAppResults('taskbar', true)).toContain('notifications: Bounce the Dock icon on new mail');
-    expect(inAppResults('menu bar', true)).not.toContain('general: Always show the menu bar');
+    expect(inAppResults('menu bar', true)).not.toContain('desktop: Always show the menu bar');
   });
 
   it('marks developer tools as an advanced row', () => {
-    const devTools = settingsSubResults(en, 'general', 'Bulwark').find((r) => r.label === 'Developer tools');
+    const devTools = settingsSubResults(en, 'troubleshooting', 'Bulwark').find((r) => r.label === 'Developer tools');
     expect(devTools?.advanced).toBe(true);
   });
 
   // settings-p3-7: the results name the row, so the section isn't offered for its words.
   it('names the row for developer tools, not its section', () => {
-    expect(inAppResults('developer tools')).not.toContain('general: Troubleshooting');
+    expect(inAppResults('developer tools')).not.toContain('troubleshooting: Debug mode');
   });
 
-  it('finds quick compose on General, where its switch is, not on Composing', () => {
-    expect(inAppResults('quick compose')).toEqual(['general: Quick compose']);
+  it('finds quick compose on Desktop app, where its switch is, not on Composing', () => {
+    expect(inAppResults('quick compose')).toEqual(['desktop: Quick compose']);
     expect(matchesAllWords(`composing ${tabKeywords.composing}`, 'quick compose')).toBe(false);
   });
 
@@ -296,8 +298,8 @@ describe('settings search in the desktop app', () => {
     ['onedrive', 'files_sync: Show Files as a drive'],
     ['drive letter', 'files_sync: Show Files as a drive'],
     ['pst', 'backup: Import mail'],
-    ['windows hello', 'general: Lock with a PIN'],
-    ['touch id', 'general: Lock with a PIN'],
+    ['windows hello', 'privacy: Lock with a PIN'],
+    ['touch id', 'privacy: Lock with a PIN'],
   ])('finds "%s" on its row', (query, row) => {
     expect(inAppResults(query)).toContain(row);
   });
@@ -311,7 +313,7 @@ describe('settings search in the desktop app', () => {
   });
 
   it('keeps the app rows out of a browser, and the browser push rows out of the app', () => {
-    expect(inBrowser('tray')).not.toContain('general: Keep running in the tray when closed');
+    expect(inBrowser('tray')).not.toContain('desktop: Keep running in the tray when closed');
     expect(inBrowser('quiet hours')).not.toContain('notifications: Quiet hours');
     expect(inAppResults('relay')).toEqual([]);
     expect(inBrowser('relay')).toContain('privacy: Relay for notifications');

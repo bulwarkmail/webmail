@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Organisasjonen din blokkerer eksternt innhold i all e-post, så det lastes heller ikke fra pålitelige avsendere."
   },
+  "trusted_senders_book": {
+    "unavailable": "Ikke tilgjengelig: denne kontoen kan ikke lagre adressebøker på serveren. Listen blir på denne enheten."
+  },
   "date": {
     "today": "I dag",
     "yesterday": "I går",
@@ -1675,7 +1678,7 @@
         "label": "Grensesnittoppsett",
         "description": "Hvor søk, navigasjon og verktøylinjer ligger",
         "default": "Standard",
-        "mountain_view": "Søkefelt øverst, apper til venstre"
+        "mountain_view": "Søkefelt øverst"
       },
       "animations": {
         "label": "Aktiver animasjoner",
@@ -2118,12 +2121,6 @@
         "description": "Velg om et klikk på et filvedlegg skal forhåndsvise det eller laste det ned umiddelbart",
         "preview": "Forhåndsvis når det er mulig",
         "download": "Last ned umiddelbart"
-      },
-      "attachment_position": {
-        "label": "Plassering av vedlegg",
-        "description": "Velg hvor vedlegg skal vises i e-postoverskriften",
-        "below-header": "Under overskriften",
-        "below-message": "Kort under meldingen"
       },
       "emails_per_page": {
         "10": "10 e-poster",
@@ -3596,6 +3593,10 @@
       "sync_on": "De andre enhetene dine bruker de samme innstillingene, så de endres også.",
       "sync_off": "De andre enhetene dine beholder innstillingene sine."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apper og mapper til venstre, søk over listen",
+    "mountain_view_description": "Søk over hele toppen, meldinger åpnes i full bredde"
   },
   "setup": {
     "title": "Oppsett av Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Dato",
     "subject_label": "Emne"
   },
+  "print_styles": {
+    "title": "Utskrift",
+    "description": "Hvordan utskrevne meldinger, kontakter og kalendere ser ut.",
+    "style_label": "Utskriftsstil",
+    "style_description": "Tillegg kan legge til stiler, for eksempel et brevhode med firmaets adresse.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installer appen for rask tilgang.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Nåværende PIN-kode",
     "pin_new": "Ny PIN-kode",
     "pin_repeat": "Gjenta PIN-koden",
-    "pin_hint": "Minst 6 tegn. Bokstaver går også, og en lengre PIN-kode er vanskeligere å gjette.",
+    "pin_hint": "Minst 5 tegn. Bokstaver går også, og en lengre PIN-kode er vanskeligere å gjette.",
+    "pin_hint_policy": "Organisasjonen din krever minst {count, plural, one {# tegn} other {# tegn}}. Bokstaver går også.",
     "pin_obvious": "Den PIN-koden er for lett å gjette. Unngå gjentakelser, rekkefølger og vanlige valg.",
     "pin_mismatch": "De to PIN-kodene er ikke like.",
     "pin_recovery": "Hvis du glemmer den, er eneste utvei å fjerne dataene på denne enheten og logge på igjen. E-posten din på serveren blir værende. Meldinger som fortsatt venter på sending fra denne enheten, går tapt.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minutt} other {# minutter}}",
     "blocked_seconds": "For mange forsøk. Prøv igjen om {count, plural, one {# sekund} other {# sekunder}}.",
     "blocked_minutes": "For mange forsøk. Prøv igjen om {count, plural, one {# minutt} other {# minutter}}."
+  },
+  "appLockHello": {
+    "switch_label": "Lås opp med Windows Hello",
+    "switch_desc": "Bruk ansiktet, fingeravtrykket eller Windows-PIN-koden. Appens PIN-kode virker fortsatt.",
+    "protects": "Når Windows Hello er på, tar Windows vare på en nøkkel for denne appen som bare virker etter at Windows Hello har sjekket at det er deg. Appens nøkkel er også låst med den, så det trengs ansiktet, fingeravtrykket eller Windows-PIN-koden for å låse opp, og et annet program på denne datamaskinen kan ikke bruke nøkkelen uten at Windows spør deg først. Appens PIN-kode virker fortsatt, og du trenger den hvis Windows Hello tilbakestilles eller slås av.",
+    "enable_title": "Slå på Windows Hello",
+    "enable_body": "Skriv inn appens PIN-kode. Deretter ber Windows deg bekrefte med Windows Hello.",
+    "enable_failed": "Windows Hello kunne ikke slås på. Prøv igjen.",
+    "cancelled": "Windows Hello ble avbrutt.",
+    "unsupported": "Windows Hello på denne datamaskinen kan ikke beskytte nøkkelen. PIN-koden din virker fortsatt.",
+    "unavailable": "Windows Hello er ikke tilgjengelig på denne datamaskinen.",
+    "busy": "Windows Hello er opptatt eller låst. Prøv igjen senere.",
+    "off_after_pin_change": "Windows Hello er av nå, fordi det ikke bekreftet etter at PIN-koden ble endret. Slå det på igjen hvis du bruker det.",
+    "prompt": "Bekreft med Windows Hello at det er deg.",
+    "waiting": "Venter på Windows Hello…",
+    "use_hello": "Lås opp med Windows Hello",
+    "use_pin": "Bruk PIN-kode i stedet",
+    "failed": "Windows Hello låste ikke opp appen. Skriv inn PIN-koden.",
+    "gone": "Windows Hello låser ikke lenger opp appen på denne datamaskinen. Skriv inn PIN-koden."
   },
   "uxs_general": {
     "time_zone_common": "Vanlige tidssoner",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID fingeravtrykk ansikt tilgangsnøkkel passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Personvern og sikkerhet",
+      "security": "Passord og pålogging",
+      "about_updates": "Om og oppdateringer",
+      "backup": "Sikkerhetskopi og import"
+    },
+    "sections": {
+      "start": "Start og lukking",
+      "shortcuts": "Hurtigtaster fra andre apper",
+      "mail_links": "E-postlenker og -filer"
+    },
+    "privacy_link_description": "Disse innstillingene finner du på siden Personvern og sikkerhet."
   },
   "desktop_policy": {
     "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",

@@ -87,8 +87,8 @@ describe('General page', () => {
     installBridge();
     render(<GeneralSettings supportsCalendar />);
     await settle();
-    // The app's own "Default mail app" row is there instead.
-    expect(screen.getByText('default_app_label')).toBeTruthy();
+    // The app's own "Default mail app" row is on the Desktop app page instead (settings reorg 2026-11-05).
+    expect(screen.queryByText('default_app_label')).toBeNull();
     expect(screen.queryByText('mailto_label')).toBeNull();
     expect(screen.queryByText('register_mailto')).toBeNull();
     // Usage info and crash reports moved to the Privacy page.

@@ -1,4 +1,5 @@
 import { splitRecipients as splitRecipientString } from "@/lib/email-composer-utils";
+import { linkParamsFrom, type LinkParams } from "@/lib/plugin-link-params";
 
 export interface ParsedMailto {
   to: string[];
@@ -24,6 +25,11 @@ export interface ParsedMailto {
    * opens in a compose window of its own, and the main window stays where it was.
    */
   fromOs?: boolean;
+  /**
+   * The link's `x-<plugin id>-<name>` parameters, for that plugin once the
+   * composer is open (lib/plugin-link-params.ts). Not part of the message.
+   */
+  linkParams?: LinkParams;
 }
 
 const MAX_RECIPIENTS = 200;
@@ -135,12 +141,14 @@ export function parseMailto(raw: string): ParsedMailto | null {
   const remainingAfterCc = Math.max(0, MAX_RECIPIENTS - to.length - cc.length);
   const bcc = splitRecipients(getQueryValue(searchParams, "bcc")).slice(0, remainingAfterCc);
 
+  const linkParams = linkParamsFrom(searchParams.map(({ key, value }) => [key, value] as const));
   return {
     to,
     cc,
     bcc,
     subject: cleanMailtoSubject(getQueryValue(searchParams, "subject")),
     body: cleanMailtoBody(getQueryValue(searchParams, "body")),
+    ...(linkParams ? { linkParams } : {}),
   };
 }
 

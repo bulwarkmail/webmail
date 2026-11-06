@@ -1,6 +1,6 @@
 // The user's own text cut into paragraphs ("segments") for a text checker.
 //
-// A segment is one text block of the user's own text (see composer-edit.ts:
+// A segment is one text block of the user's own text (see composer-own-text.ts:
 // everything above the signature and the quote). Its text has exactly one
 // character per editor position, so an offset into it maps to the document
 // without a table:
@@ -17,7 +17,7 @@
 // never has to track nodes through edits.
 
 import type { Node as PMNode } from '@tiptap/pm/model';
-import { ownRange, plainOwnRange, type OwnTextOptions, type PlainOwnOptions } from '@/lib/plugin-sandbox/composer-edit';
+import { ownRange, plainOwnRange, type OwnTextOptions, type PlainOwnOptions } from '@/lib/plugin-sandbox/composer-own-text';
 
 export const OBJECT_CHAR = '\uFFFC';
 

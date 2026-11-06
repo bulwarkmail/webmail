@@ -15,6 +15,7 @@ import { reopenDiscarded } from '@/lib/popout/discarded-undo';
 import type { MailNotificationContext } from '@/lib/desktop/mail-notifications';
 import { handOffDraft, handOffFiles, handOffNewMessage, kindForFile } from '@/lib/launch-handoff';
 import { parseMailto } from '@/lib/protocol-handlers/mailto';
+import { linkParamsFrom } from '@/lib/plugin-link-params';
 import { openSavedMessageWindow } from '@/lib/popout/open';
 import { notifyPendingMailto, notifyPendingWebcal, savePendingMailto, savePendingWebcal } from '@/lib/protocol-handlers/session';
 import { parseWebcal } from '@/lib/protocol-handlers/webcal';
@@ -218,7 +219,8 @@ async function openMessageFile(file: File): Promise<void> {
 export function handleOsCommand(command: DesktopOsCommand, env: OsCommandEnv): void | Promise<void> {
   switch (command.type) {
     case 'new-message':
-      handOffNewMessage();
+      // bulwark://new?x-<plugin id>-<name>=... : parameters for that plugin.
+      handOffNewMessage(command.params ? linkParamsFrom(Object.entries(command.params).filter((entry): entry is [string, string] => typeof entry[1] === 'string')) : undefined);
       return;
     case 'navigate':
       if (command.target === 'inbox') openMailLink({ kind: 'folder', ref: 'inbox' }, undefined, env.leaveFor);

@@ -6,8 +6,8 @@ import { PHISHING_KEYWORD } from '@/lib/phishing-report';
 // Where a message's attachment gets Edit, on the real components with the real check. Only
 // the organisation's answer is stood in for: whether it has spoken, which needs a server.
 
-vi.mock('@/lib/offline/offline-mode', async (original) => ({
-  ...(await original<typeof import('@/lib/offline/offline-mode')>()),
+vi.mock('@/lib/offline/availability', async (original) => ({
+  ...(await original<typeof import('@/lib/offline/availability')>()),
   scopeDecided: () => true,
 }));
 vi.mock('@/hooks/use-media-query', () => ({

@@ -14,6 +14,8 @@
   "OfflineEnabled": true,
   "AppLockRequired": true,
   "AppLockTimeoutMinutes": 10,
+  "AppLockPinMinLength": 8,
+  "AppLockHelloAllowed": true,
   "TelemetryAllowed": false,
   "CrashReportsAllowed": false,
   "QuickComposeShortcut": "CommandOrControl+Alt+N",

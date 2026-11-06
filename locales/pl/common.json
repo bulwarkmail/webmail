@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Twoja organizacja blokuje treści zdalne we wszystkich wiadomościach, więc nie wczytują się one także od zaufanych nadawców."
   },
+  "trusted_senders_book": {
+    "unavailable": "Niedostępne: to konto nie może przechowywać książek adresowych na serwerze. Lista zostaje na tym urządzeniu."
+  },
   "date": {
     "today": "Dzisiaj",
     "yesterday": "Wczoraj",
@@ -1672,7 +1675,7 @@
         "label": "Układ interfejsu",
         "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
         "default": "Domyślny",
-        "mountain_view": "Wyszukiwanie u góry, aplikacje po lewej"
+        "mountain_view": "Wyszukiwanie u góry"
       },
       "animations": {
         "label": "Włącz animacje",
@@ -2115,12 +2118,6 @@
         "description": "Wybierz, czy kliknięcie załącznika pliku ma pokazać podgląd, czy od razu go pobrać",
         "preview": "Podgląd, gdy to możliwe",
         "download": "Pobierz natychmiast"
-      },
-      "attachment_position": {
-        "label": "Pozycja załączników",
-        "description": "Gdzie wyświetlać załączniki w nagłówku wiadomości e-mail",
-        "below-header": "Pod nagłówkiem",
-        "below-message": "Karty pod wiadomością"
       },
       "emails_per_page": {
         "10": "10 wiadomości",
@@ -3596,6 +3593,10 @@
       "sync_on": "Twoje inne urządzenia używają tych samych ustawień, więc też się zmienią.",
       "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikacje i foldery po lewej, wyszukiwanie nad listą",
+    "mountain_view_description": "Wyszukiwanie u góry, wiadomości otwierają się na całą szerokość"
   },
   "setup": {
     "title": "Konfiguracja Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Temat"
   },
+  "print_styles": {
+    "title": "Drukowanie",
+    "description": "Jak wyglądają wydrukowane wiadomości, kontakty i kalendarze.",
+    "style_label": "Styl wydruku",
+    "style_description": "Dodatki mogą dodawać style, na przykład papier firmowy z adresem Twojej firmy.",
+    "standard": "Standardowy",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Zainstaluj {appName}",
     "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Obecny PIN",
     "pin_new": "Nowy PIN",
     "pin_repeat": "Powtórz PIN",
-    "pin_hint": "Co najmniej 6 znaków. Można też użyć liter, a dłuższy PIN trudniej odgadnąć.",
+    "pin_hint": "Co najmniej 5 znaków. Można też użyć liter, a dłuższy PIN trudniej odgadnąć.",
+    "pin_hint_policy": "Twoja organizacja wymaga co najmniej {count, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}. Można też użyć liter.",
     "pin_obvious": "Ten PIN jest zbyt łatwy do odgadnięcia. Unikaj powtórzeń, ciągów i popularnych wyborów.",
     "pin_mismatch": "Te dwa kody PIN nie są takie same.",
     "pin_recovery": "Jeśli go zapomnisz, jedynym wyjściem jest usunięcie danych z tego urządzenia i ponowne zalogowanie. Twoja poczta na serwerze zostaje. Wiadomości czekające na wysłanie na tym urządzeniu przepadną.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minuta} few {# minuty} many {# minut} other {# minuty}}",
     "blocked_seconds": "Zbyt wiele prób. Spróbuj za {count, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}}.",
     "blocked_minutes": "Zbyt wiele prób. Spróbuj za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}."
+  },
+  "appLockHello": {
+    "switch_label": "Odblokowuj za pomocą Windows Hello",
+    "switch_desc": "Twarzą, odciskiem palca lub kodem PIN systemu Windows. PIN aplikacji nadal działa.",
+    "protects": "Gdy Windows Hello jest włączone, Windows przechowuje dla tej aplikacji klucz, który działa dopiero wtedy, gdy Windows Hello sprawdzi, że to Ty. Klucz aplikacji jest też nim zablokowany, więc do odblokowania potrzebna jest Twoja twarz, odcisk palca lub PIN systemu Windows, a inny program na tym komputerze nie może użyć tego klucza, zanim Windows Cię o to nie zapyta. PIN aplikacji nadal działa i będzie potrzebny, jeśli Windows Hello zostanie zresetowane lub wyłączone.",
+    "enable_title": "Włącz Windows Hello",
+    "enable_body": "Wpisz PIN aplikacji. Potem Windows poprosi o potwierdzenie za pomocą Windows Hello.",
+    "enable_failed": "Nie udało się włączyć Windows Hello. Spróbuj ponownie.",
+    "cancelled": "Windows Hello zostało anulowane.",
+    "unsupported": "Windows Hello na tym komputerze nie może chronić klucza. Twój PIN nadal działa.",
+    "unavailable": "Windows Hello nie jest dostępne na tym komputerze.",
+    "busy": "Windows Hello jest zajęte lub zablokowane. Spróbuj później.",
+    "off_after_pin_change": "Windows Hello jest teraz wyłączone, bo nie potwierdziło po zmianie kodu PIN. Włącz je ponownie, jeśli z niego korzystasz.",
+    "prompt": "Potwierdź za pomocą Windows Hello, że to Ty.",
+    "waiting": "Czekanie na Windows Hello…",
+    "use_hello": "Odblokuj za pomocą Windows Hello",
+    "use_pin": "Użyj kodu PIN",
+    "failed": "Windows Hello nie odblokowało aplikacji. Wpisz PIN.",
+    "gone": "Windows Hello nie odblokowuje już aplikacji na tym komputerze. Wpisz PIN."
   },
   "uxs_general": {
     "time_zone_common": "Popularne strefy czasowe",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID odcisk palca twarz klucz dostępu passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Prywatność i bezpieczeństwo",
+      "security": "Hasło i logowanie",
+      "about_updates": "Informacje i aktualizacje",
+      "backup": "Kopia zapasowa i import"
+    },
+    "sections": {
+      "start": "Uruchamianie i zamykanie",
+      "shortcuts": "Skróty z innych aplikacji",
+      "mail_links": "Linki i pliki poczty"
+    },
+    "privacy_link_description": "Te ustawienia są na stronie Prywatność i bezpieczeństwo."
   },
   "desktop_policy": {
     "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",

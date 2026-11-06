@@ -17,7 +17,8 @@ import type { OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendI
 import { LEGACY_CHOICE } from './scope';
 import { useOfflineStore, writeChoice } from './state';
 
-export const LEGACY_DB_NAME = 'bulwark-offline';
+export { LEGACY_DB_NAME } from './legacy-db-name';
+import { LEGACY_DB_NAME } from './legacy-db-name';
 
 interface Sealed {
   iv: Uint8Array;

@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Teie organisatsioon blokeerib kaugsisu kõigis kirjades, seega ei laadita seda ka usaldusväärsetelt saatjatelt."
   },
+  "trusted_senders_book": {
+    "unavailable": "Pole saadaval: see konto ei saa serverisse aadressiraamatuid salvestada. Loend jääb sellesse seadmesse."
+  },
   "date": {
     "today": "Täna",
     "yesterday": "Eile",
@@ -1675,7 +1678,7 @@
         "label": "Liidese paigutus",
         "description": "Kus asuvad otsing, navigeerimine ja tööriistaribad",
         "default": "Vaikimisi",
-        "mountain_view": "Otsinguriba üleval, rakendused vasakul"
+        "mountain_view": "Otsinguriba üleval"
       },
       "animations": {
         "label": "Luba animatsioonid",
@@ -2118,12 +2121,6 @@
         "description": "Vali, kas manusel klõpsamine kuvab eelvaate või laadib selle kohe alla",
         "preview": "Kuva eelvaade, kui võimalik",
         "download": "Laadi kohe alla"
-      },
-      "attachment_position": {
-        "label": "Manuse asukoht",
-        "description": "Kuhu kuvada manused kirja päises",
-        "below-header": "Päise all",
-        "below-message": "Kaardid kirja all"
       },
       "emails_per_page": {
         "10": "10 kirja",
@@ -3596,6 +3593,10 @@
       "sync_on": "Sinu teised seadmed kasutavad samu seadeid, seega muutuvad ka need.",
       "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
     }
+  },
+  "layout_preview": {
+    "default_description": "Rakendused ja kaustad vasakul, otsing loendi kohal",
+    "mountain_view_description": "Otsing üleval üle kogu laiuse, kirjad avanevad täislaiuses"
   },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",
@@ -6233,6 +6234,14 @@
     "date_label": "Kuupäev",
     "subject_label": "Teema"
   },
+  "print_styles": {
+    "title": "Printimine",
+    "description": "Kuidas prinditud kirjad, kontaktid ja kalendrid välja näevad.",
+    "style_label": "Prindistiil",
+    "style_description": "Lisandmoodulid võivad lisada stiile, näiteks kirjapäise teie ettevõtte aadressiga.",
+    "standard": "Tavaline",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Paigalda {appName}",
     "description": "Paigalda meie rakendus kiireks ligipääsuks.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Praegune PIN-kood",
     "pin_new": "Uus PIN-kood",
     "pin_repeat": "Korrake PIN-koodi",
-    "pin_hint": "Vähemalt 6 märki. Sobivad ka tähed ja pikemat PIN-koodi on raskem ära arvata.",
+    "pin_hint": "Vähemalt 5 märki. Sobivad ka tähed ja pikemat PIN-koodi on raskem ära arvata.",
+    "pin_hint_policy": "Teie organisatsioon nõuab vähemalt {count, plural, one {# märk} other {# märki}}. Sobivad ka tähed.",
     "pin_obvious": "Seda PIN-koodi on liiga lihtne ära arvata. Väldi kordusi, järjestusi ja tavalisi valikuid.",
     "pin_mismatch": "Need kaks PIN-koodi ei ole samad.",
     "pin_recovery": "Kui selle unustate, on ainus võimalus kustutada selle seadme andmed ja uuesti sisse logida. Teie e-post serveris jääb alles. Selles seadmes saatmist ootavad kirjad lähevad kaotsi.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minuti} other {# minuti}}",
     "blocked_seconds": "Liiga palju katseid. Proovige uuesti {count, plural, one {# sekundi} other {# sekundi}} pärast.",
     "blocked_minutes": "Liiga palju katseid. Proovige uuesti {count, plural, one {# minuti} other {# minuti}} pärast."
+  },
+  "appLockHello": {
+    "switch_label": "Ava Windows Helloga",
+    "switch_desc": "Kasutage nägu, sõrmejälge või Windowsi PIN-koodi. Rakenduse PIN-kood töötab edasi.",
+    "protects": "Kui Windows Hello on sees, hoiab Windows selle rakenduse jaoks võtit, mis töötab alles siis, kui Windows Hello on kontrollinud, et see olete teie. Ka rakenduse võti on sellega lukustatud, nii et avamiseks on vaja teie nägu, sõrmejälge või Windowsi PIN-koodi, ja muu programm selles arvutis ei saa seda võtit kasutada, ilma et Windows teilt enne küsiks. Rakenduse PIN-kood töötab edasi ja seda on vaja, kui Windows Hello lähtestatakse või välja lülitatakse.",
+    "enable_title": "Lülita Windows Hello sisse",
+    "enable_body": "Sisestage rakenduse PIN-kood. Seejärel palub Windows teil kinnitada Windows Helloga.",
+    "enable_failed": "Windows Hellot ei õnnestunud sisse lülitada. Proovige uuesti.",
+    "cancelled": "Windows Hello tühistati.",
+    "unsupported": "Windows Hello ei saa selles arvutis võtit kaitsta. Teie PIN-kood töötab edasi.",
+    "unavailable": "Windows Hello pole selles arvutis saadaval.",
+    "busy": "Windows Hello on hõivatud või lukus. Proovige hiljem uuesti.",
+    "off_after_pin_change": "Windows Hello on nüüd väljas, sest see ei kinnitanud pärast PIN-koodi muutmist. Lülitage see uuesti sisse, kui seda kasutate.",
+    "prompt": "Kinnitage Windows Helloga, et see olete teie.",
+    "waiting": "Windows Hello ootamine…",
+    "use_hello": "Ava Windows Helloga",
+    "use_pin": "Kasuta hoopis PIN-koodi",
+    "failed": "Windows Hello ei avanud rakendust. Sisestage PIN-kood.",
+    "gone": "Windows Hello ei ava selles arvutis enam rakendust. Sisestage PIN-kood."
   },
   "uxs_general": {
     "time_zone_common": "Levinud ajavööndid",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID sõrmejälg nägu pääsuvõti passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privaatsus ja turvalisus",
+      "security": "Parool ja sisselogimine",
+      "about_updates": "Teave ja uuendused",
+      "backup": "Varundus ja import"
+    },
+    "sections": {
+      "start": "Käivitamine ja sulgemine",
+      "shortcuts": "Kiirklahvid teistest rakendustest",
+      "mail_links": "E-posti lingid ja failid"
+    },
+    "privacy_link_description": "Need seaded on lehel Privaatsus ja turvalisus."
   },
   "desktop_policy": {
     "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",

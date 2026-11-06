@@ -17,7 +17,7 @@ import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopEditBridge, DesktopEditOpenResult, DesktopEditSession } from '@/lib/desktop/types';
 import { canDownload, canExport } from '@/lib/device-policy';
-import { scopeDecided } from '@/lib/offline/offline-mode';
+import { scopeDecided } from '@/lib/offline/availability';
 import { onDeviceWipe, WipeIncompleteError } from '@/lib/offline/wipe-registry';
 import { onBeforeSignOut, onFullSignOut } from '@/lib/sign-out-cleanup';
 

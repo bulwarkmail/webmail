@@ -10,13 +10,15 @@ export interface ComposerSendExtras {
   labelHeaders?: Record<string, string>;
   localAccountId?: string;
   draftAccountId?: string;
+  /** Keywords plugins set for the Sent copy (lib/outgoing/outgoing-keywords.ts). */
+  keywords?: string[];
 }
 
 /**
  * The options object of useEmailStore.sendEmail for a composer send. Every
  * host of the composer (the mail page, a Pro compose tab) passes it whole,
  * so none drops the read receipt, DSN, REQUIRETLS, priority, plugin headers
- * or the classification label: the Pro tab used to send without them.
+ * and keywords, or the classification label: the Pro tab used to send without them.
  */
 export function composerSendOptions(data: ComposerSendExtras): ComposerSendExtras & { outbox: true } {
   return {
@@ -31,5 +33,6 @@ export function composerSendOptions(data: ComposerSendExtras): ComposerSendExtra
     labelHeaders: data.labelHeaders,
     localAccountId: data.localAccountId,
     draftAccountId: data.draftAccountId,
+    ...(data.keywords?.length ? { keywords: data.keywords } : {}),
   };
 }

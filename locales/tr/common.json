@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Kuruluşunuz tüm e-postalarda uzak içeriği engelliyor, bu yüzden güvenilir gönderenlerde de yüklenmez."
   },
+  "trusted_senders_book": {
+    "unavailable": "Kullanılamıyor: bu hesap sunucuda adres defteri tutamıyor. Liste bu cihazda kalır."
+  },
   "date": {
     "today": "Bugün",
     "yesterday": "Dün",
@@ -1672,7 +1675,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Arama üstte, uygulamalar solda"
+        "mountain_view": "Arama üstte"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -2115,12 +2118,6 @@
         "description": "Bir dosya ekine tıklandığında önizleme mi yoksa anında indirme mi yapılacağını seçin",
         "preview": "Mümkünse önizle",
         "download": "Anında indir"
-      },
-      "attachment_position": {
-        "label": "Ek Konumu",
-        "description": "E-posta başlığında eklerin nerede görüntüleneceği",
-        "below-header": "Başlığın altı",
-        "below-message": "Mesajın altında kartlar"
       },
       "emails_per_page": {
         "10": "10 e-posta",
@@ -3596,6 +3593,10 @@
       "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
       "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
+  },
+  "layout_preview": {
+    "default_description": "Uygulamalar ve klasörler solda, arama listenin üstünde",
+    "mountain_view_description": "Arama en üstte, iletiler tam genişlikte açılır"
   },
   "setup": {
     "title": "Bulwark Webmail kurulumu",
@@ -6233,6 +6234,14 @@
     "date_label": "Tarih",
     "subject_label": "Konu"
   },
+  "print_styles": {
+    "title": "Yazdırma",
+    "description": "Yazdırılan iletilerin, kişilerin ve takvimlerin görünümü.",
+    "style_label": "Yazdırma stili",
+    "style_description": "Eklentiler stil ekleyebilir, örneğin şirketinizin adresini içeren antetli bir sayfa.",
+    "standard": "Standart",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} uygulamasını yükle",
     "description": "Hızlı erişim için uygulamamızı yükleyin.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Geçerli PIN",
     "pin_new": "Yeni PIN",
     "pin_repeat": "PIN'i tekrarlayın",
-    "pin_hint": "En az 6 karakter. Harfler de olur ve daha uzun bir PIN'i tahmin etmek daha zordur.",
+    "pin_hint": "En az 5 karakter. Harfler de olur ve daha uzun bir PIN'i tahmin etmek daha zordur.",
+    "pin_hint_policy": "Kuruluşunuz en az {count, plural, one {# karakter} other {# karakter}} istiyor. Harfler de olur.",
     "pin_obvious": "Bu PIN'i tahmin etmek çok kolay. Tekrarlardan, sıralı dizilerden ve yaygın seçimlerden kaçının.",
     "pin_mismatch": "İki PIN aynı değil.",
     "pin_recovery": "Unutursanız tek çözüm bu cihazdaki verileri kaldırıp yeniden oturum açmaktır. Sunucudaki e-postalarınız kalır. Bu cihazda hâlâ gönderilmeyi bekleyen iletiler kaybolur.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# dakika} other {# dakika}}",
     "blocked_seconds": "Çok fazla deneme. {count, plural, one {# saniye} other {# saniye}} sonra yeniden deneyin.",
     "blocked_minutes": "Çok fazla deneme. {count, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin."
+  },
+  "appLockHello": {
+    "switch_label": "Windows Hello ile kilidi aç",
+    "switch_desc": "Yüzünüzü, parmak izinizi veya Windows PIN'inizi kullanın. Uygulamanın PIN'i çalışmaya devam eder.",
+    "protects": "Windows Hello açıkken Windows bu uygulama için yalnızca Windows Hello sizin olduğunuzu doğruladıktan sonra çalışan bir anahtar saklar. Uygulamanın anahtarı da bununla kilitlenir; bu yüzden kilidi açmak için yüzünüz, parmak iziniz veya Windows PIN'iniz gerekir ve bu bilgisayardaki başka bir program, Windows önce size sormadan bu anahtarı kullanamaz. Uygulamanın PIN'i çalışmaya devam eder ve Windows Hello sıfırlanır veya kapatılırsa ona ihtiyacınız olur.",
+    "enable_title": "Windows Hello'yu aç",
+    "enable_body": "Uygulamanın PIN'ini girin. Ardından Windows, Windows Hello ile onaylamanızı ister.",
+    "enable_failed": "Windows Hello açılamadı. Yeniden deneyin.",
+    "cancelled": "Windows Hello iptal edildi.",
+    "unsupported": "Bu bilgisayardaki Windows Hello anahtarı koruyamıyor. PIN'iniz çalışmaya devam eder.",
+    "unavailable": "Windows Hello bu bilgisayarda kullanılamıyor.",
+    "busy": "Windows Hello meşgul veya kilitli. Daha sonra yeniden deneyin.",
+    "off_after_pin_change": "Windows Hello şimdi kapalı, çünkü PIN değişikliğinden sonra onay vermedi. Kullanıyorsanız yeniden açın.",
+    "prompt": "Windows Hello ile siz olduğunuzu onaylayın.",
+    "waiting": "Windows Hello bekleniyor…",
+    "use_hello": "Windows Hello ile kilidi aç",
+    "use_pin": "Bunun yerine PIN kullan",
+    "failed": "Windows Hello uygulamanın kilidini açmadı. PIN'inizi girin.",
+    "gone": "Windows Hello artık bu bilgisayarda uygulamanın kilidini açmıyor. PIN'inizi girin."
   },
   "uxs_general": {
     "time_zone_common": "Sık kullanılan saat dilimleri",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID parmak izi yüz geçiş anahtarı passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Gizlilik ve güvenlik",
+      "security": "Parola ve oturum açma",
+      "about_updates": "Hakkında ve güncellemeler",
+      "backup": "Yedekleme ve içe aktarma"
+    },
+    "sections": {
+      "start": "Başlatma ve kapatma",
+      "shortcuts": "Diğer uygulamalardan kısayollar",
+      "mail_links": "E-posta bağlantıları ve dosyaları"
+    },
+    "privacy_link_description": "Bu ayarlar Gizlilik ve güvenlik sayfasındadır."
   },
   "desktop_policy": {
     "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",

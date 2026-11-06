@@ -45,6 +45,27 @@ export function classifyWidth(width: number): DeviceClass {
 
 const getMediaQueryServerSnapshot = () => false;
 
+// One MediaQueryList per query for the page's life: `matches` follows the
+// window, and every message row asks on every render. A fresh
+// window.matchMedia() per read showed up at about half a millisecond per row
+// in a search on a slow machine.
+const mediaQueryLists = new Map<string, MediaQueryList>();
+let listsMadeBy: Window["matchMedia"] | null = null;
+
+/** The page's MediaQueryList for `query`, made once (again if matchMedia itself was replaced). */
+export function mediaQueryList(query: string): MediaQueryList {
+  if (listsMadeBy !== window.matchMedia) {
+    mediaQueryLists.clear();
+    listsMadeBy = window.matchMedia;
+  }
+  let list = mediaQueryLists.get(query);
+  if (!list) {
+    list = window.matchMedia(query);
+    mediaQueryLists.set(query, list);
+  }
+  return list;
+}
+
 /**
  * The media query for "narrower than `px`" in rem, as Tailwind writes its own
  * breakpoints (`max-md:` is `width < 48rem`). A rem in a media query is the
@@ -71,7 +92,7 @@ export function atLeast(px: number): string {
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      const mq = window.matchMedia(query);
+      const mq = mediaQueryList(query);
       mq.addEventListener("change", callback);
       return () => mq.removeEventListener("change", callback);
     },
@@ -79,7 +100,7 @@ export function useMediaQuery(query: string): boolean {
   );
 
   const getSnapshot = useCallback(
-    () => window.matchMedia(query).matches,
+    () => mediaQueryList(query).matches,
     [query],
   );
 

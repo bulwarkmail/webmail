@@ -9,6 +9,7 @@
 //   composer.getSelection(id)                   compose:read
 //   composer.replaceSelection(id, content, opts) compose:write
 //   composer.replaceBody(id, content, opts)     compose:write
+//   composer.setSubject(id, subject)            compose:write
 //   composer.attach(id, file)                   email:blob-write
 //
 // `content` is { text } or { html }. HTML goes through the same sanitiser as
@@ -19,7 +20,7 @@ import type { ComposerAttachmentData, ComposerSnapshot, InstalledPlugin } from '
 import { sanitizePluginBodyHtml } from '../email-sanitization';
 import { htmlToPlainText } from '../html-to-text';
 import { captureComposer, composerHandle, type ComposerHandle } from './composer-registry';
-import { textToEditorHtml } from './composer-edit';
+import { textToEditorHtml } from './editor-html';
 import { MAX_PLUGIN_FETCH_BYTES, readBoolean, readId, readObject, readString, withinRate } from './host-api-input';
 
 const MAX_CONTENT = 512 * 1024;
@@ -78,6 +79,38 @@ export function doComposerReplaceBody(plugin: InstalledPlugin, id: unknown, cont
   }
   rateLimited(method, plugin);
   return handle.replaceBody(html, text);
+}
+
+/** What a mail header line may hold (RFC 5322 section 2.1.1), as for a subject from a mailto: link. */
+export const MAX_PLUGIN_SUBJECT = 998;
+
+/**
+ * A subject a plugin hands in, as plain text: control characters (line
+ * breaks, tabs, escapes) become a space, the invisible direction marks that
+ * could disguise it go, the rest stays as written. Refused when longer than
+ * a header line may be.
+ */
+export function cleanPluginSubject(method: string, value: unknown): string {
+  // Read generously, then clean: a stray CR LF in the plugin's text isn't a
+  // reason to refuse it.
+  const raw = readString(value, method, 'subject', MAX_PLUGIN_SUBJECT * 4);
+  const cleaned = raw
+    // eslint-disable-next-line no-control-regex -- removing control characters is the point
+    .replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' ')
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .trim();
+  if (cleaned.length > MAX_PLUGIN_SUBJECT) throw new Error(`${method}: subject must be at most ${MAX_PLUGIN_SUBJECT} characters`);
+  return cleaned;
+}
+
+/** Replace an open draft's subject, as typing it would (one undo step, saved as usual). */
+export function doComposerSetSubject(plugin: InstalledPlugin, id: unknown, subject: unknown): boolean {
+  const method = 'composer.setSubject';
+  const handle = handleFor(method, id);
+  const text = cleanPluginSubject(method, subject);
+  if (!handle.setSubject) throw new Error(`${method}: this composer has no subject`);
+  rateLimited(method, plugin);
+  return handle.setSubject(text);
 }
 
 /** Read a coherent draft snapshot without granting permission to send it. */
