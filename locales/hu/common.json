@@ -356,6 +356,8 @@
     "no_search_results_description": "Próbáld módosítani a keresést vagy a szűrőket",
     "more_results_searching": "További találatok keresése…",
     "resize_plugin_results": "Bővítmények találatainak átméretezése",
+    "compact_plugin_results": "Egy sor találatonként",
+    "plugin_result_score": "5-ből {count}",
     "loading": "E-mailek betöltése...",
     "unread": "olvasatlan",
     "to_me": "Nekem",

@@ -356,6 +356,8 @@
     "no_search_results_description": "Спробуйте налаштувати пошук або фільтри",
     "more_results_searching": "Шукаємо інші результати…",
     "resize_plugin_results": "Змінити розмір результатів плагінів",
+    "compact_plugin_results": "Один рядок на результат",
+    "plugin_result_score": "{count} з 5",
     "loading": "Завантаження електронних листів...",
     "unread": "непрочитаний",
     "to_me": "мені",

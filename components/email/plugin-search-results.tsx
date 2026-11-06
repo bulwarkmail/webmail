@@ -2,13 +2,14 @@
 
 import { type RefObject, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Loader2 } from "@/components/icons";
+import { ChevronDown, ChevronRight, List, Loader2, Rows3 } from "@/components/icons";
 import { SearchSnippetText } from "@/components/email/search-snippet-text";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { runPluginAction } from "@/lib/plugin-sandbox/actions";
 import type { ProvidedSearchResult } from "@/lib/plugin-search-results";
+import { parseSearchSnippet } from "@/lib/search-snippet";
 import type { SearchResultEmail } from "@/lib/plugin-types";
 import type { Email } from "@/lib/jmap/types";
 import { type OpenableEmail, reachableEmail } from "@/lib/plugin-sandbox/open-email";
@@ -99,6 +100,41 @@ function writeShare(share: number | null) {
   } catch { /* storage blocked */ }
 }
 
+const COMPACT_KEY = "pluginSearchResultsCompact";
+
+/** Whether the user chose one line per entry. */
+function readCompact(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem(COMPACT_KEY) === "1"; } catch { return false; }
+}
+
+function writeCompact(compact: boolean) {
+  try {
+    if (compact) localStorage.setItem(COMPACT_KEY, "1");
+    else localStorage.removeItem(COMPACT_KEY);
+  } catch { /* storage blocked */ }
+}
+
+/** The snippet as plain text, for a compact row's tooltip. */
+function snippetText(snippet: string): string {
+  return parseSearchSnippet(snippet).map((segment) => segment.text).join("");
+}
+
+/** An entry's score as five bars, as many filled as it is out of 1. */
+function ScoreBars({ score, label }: { score: number; label: string }) {
+  const filled = Math.round(score * 5);
+  return (
+    <span role="img" aria-label={label} className="inline-flex shrink-0 items-end gap-px">
+      {[1, 2, 3, 4, 5].map((bar) => (
+        <span
+          key={bar}
+          className={cn("h-2.5 w-[3px] rounded-[1px]", bar <= filled ? "bg-foreground/70" : "bg-muted-foreground/30")}
+        />
+      ))}
+    </span>
+  );
+}
+
 /** The block's height and its list's, in px, kept while the block shows. */
 function useBox(ref: RefObject<HTMLDivElement | null>, shown: boolean): { height: number; list: number } {
   const [box, setBox] = useState({ height: 0, list: 0 });
@@ -131,7 +167,9 @@ interface PluginSearchResultsProps {
  * so the list moves once, with its own results, not when a slow plugin
  * answers. Its lower edge drags: the block grows up to MAX_SHARE of the list
  * (never past its entries) and keeps that share for later searches; a double
- * click gives it DEFAULT_SHARE again. A click on an entry naming a message the user reaches opens it; any
+ * click gives it DEFAULT_SHARE again. A toggle at the first heading shows one
+ * line per entry (score, title, from, date; the snippet in its tooltip and
+ * under the entry open in the reader), kept as the share is. A click on an entry naming a message the user reaches opens it; any
  * other goes back to the plugin that gave the entry.
  */
 export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResultsProps) {
@@ -145,6 +183,7 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
   const t = useTranslations('email_list');
   const idPrefix = useId();
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const [compact, setCompact] = useState(readCompact);
   const [share, setShare] = useState<number | null>(readShare);
   // The latest share, for the end of a drag to keep.
   const shareRef = useRef(share);
@@ -189,39 +228,73 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
           const listId = `${idPrefix}-${index}`;
           return (
             <section key={group.id} aria-label={group.heading}>
-              <button
-                type="button"
-                onClick={() => toggle(group.id)}
-                aria-expanded={open}
-                aria-controls={listId}
-                className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              >
-                {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                <span className="truncate">{group.heading}</span>
-                <span className="font-normal">({group.results.length})</span>
-              </button>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => toggle(group.id)}
+                  aria-expanded={open}
+                  aria-controls={listId}
+                  className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  <span className="truncate">{group.heading}</span>
+                  <span className="font-normal">({group.results.length})</span>
+                </button>
+                {index === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCompact((was) => { writeCompact(!was); return !was; })}
+                    aria-pressed={compact}
+                    aria-label={t('compact_plugin_results')}
+                    title={t('compact_plugin_results')}
+                    className={cn(
+                      "me-1.5 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground",
+                      compact && "text-foreground",
+                    )}
+                  >
+                    {compact ? <List className="h-3.5 w-3.5" /> : <Rows3 className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+              </div>
               {open && (
                 <ul id={listId} className="pb-1">
                   {group.results.map((r) => {
                     const current = isOpen(r.email, openEmail);
+                    const bars = !compact || r.score === undefined ? null : (
+                      <ScoreBars score={r.score} label={t('plugin_result_score', { count: Math.round(r.score * 5) })} />
+                    );
+                    const date = compact && r.date ? formatDate(r.date) : "";
+                    const snippet = r.snippet && (
+                      <span className="line-clamp-2 text-xs text-muted-foreground">
+                        <SearchSnippetText snippet={r.snippet} />
+                      </span>
+                    );
                     return (
                       <li key={r.key}>
                         <button
                           type="button"
                           onClick={() => click(r)}
                           aria-current={current ? "true" : undefined}
+                          title={compact && r.snippet ? snippetText(r.snippet) : undefined}
                           className={cn(
-                            "flex w-full flex-col items-start gap-0.5 px-3 py-1.5 text-start",
+                            "flex w-full flex-col items-start text-start",
+                            compact ? "px-3 py-1" : "gap-0.5 px-3 py-1.5",
                             "hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
                             current && "bg-accent",
                           )}
                         >
-                          <span className="w-full truncate text-sm font-medium text-foreground">{r.title}</span>
-                          {r.snippet && (
-                            <span className="line-clamp-2 text-xs text-muted-foreground">
-                              <SearchSnippetText snippet={r.snippet} />
+                          {compact ? (
+                            <span className="flex w-full min-w-0 items-center gap-2 text-sm">
+                              {bars}
+                              <span className="min-w-0 flex-1 truncate font-medium text-foreground">{r.title}</span>
+                              {r.from && <span className="max-w-[35%] shrink-0 truncate text-xs text-muted-foreground">{r.from}</span>}
+                              {date && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{date}</span>}
                             </span>
+                          ) : (
+                            <span className="w-full truncate text-sm font-medium text-foreground">{r.title}</span>
                           )}
+                          {/* A compact row shows its snippet only while its message is open. */}
+                          {(!compact || current) && snippet}
                         </button>
                       </li>
                     );

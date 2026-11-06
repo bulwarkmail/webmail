@@ -356,6 +356,8 @@
     "no_search_results_description": "Prøv å justere søket eller filtera",
     "more_results_searching": "Søkjer etter fleire resultat …",
     "resize_plugin_results": "Endre storleik på resultat frå utvidingar",
+    "compact_plugin_results": "Éi linje per resultat",
+    "plugin_result_score": "{count} av 5",
     "loading": "Lastar inn e-postar...",
     "unread": "ulesen",
     "to_me": "Til meg",

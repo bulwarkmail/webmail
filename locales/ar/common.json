@@ -356,6 +356,8 @@
     "no_search_results_description": "حاول تعديل البحث أو عوامل التصفية",
     "more_results_searching": "جارٍ البحث عن نتائج أخرى…",
     "resize_plugin_results": "تغيير حجم النتائج من الإضافات",
+    "compact_plugin_results": "سطر واحد لكل نتيجة",
+    "plugin_result_score": "{count} من 5",
     "loading": "جارٍ تحميل الرسائل...",
     "unread": "غير مقروءة",
     "to_me": "إليّ",

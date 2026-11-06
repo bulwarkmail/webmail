@@ -356,6 +356,8 @@
     "no_search_results_description": "Хайлт эсвэл шүүлтүүрээ тохируулаад үзээрэй",
     "more_results_searching": "Нэмэлт үр дүн хайж байна…",
     "resize_plugin_results": "Залгаасын үр дүнгийн хэмжээг өөрчлөх",
+    "compact_plugin_results": "Үр дүн бүрт нэг мөр",
+    "plugin_result_score": "5-аас {count}",
     "loading": "Имэйл ачаалж байна...",
     "unread": "уншаагүй",
     "to_me": "Надад",

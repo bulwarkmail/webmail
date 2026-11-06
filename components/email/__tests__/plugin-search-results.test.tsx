@@ -11,7 +11,11 @@ import { usePluginStore } from '@/stores/plugin-store';
 import { DEFAULT_SHARE, MAX_SHARE, MIN_HEIGHT, PENDING_GRACE_MS, PluginSearchResults } from '../plugin-search-results';
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => (key === 'more_results_searching' ? 'Searching for more results…' : key),
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (key === 'more_results_searching') return 'Searching for more results…';
+    if (key === 'plugin_result_score') return `${values?.count} of 5`;
+    return key;
+  },
 }));
 
 // The block above a search's message list with the entries plugins returned
@@ -295,5 +299,60 @@ describe('PluginSearchResults height', () => {
     localStorage.setItem('pluginSearchResultsShare', '0.064');
     const { container } = render(<PluginSearchResults surface="search-results" />);
     expect(block(container).style.maxHeight).toBe(`max(${MIN_HEIGHT}px, 6.4%)`);
+  });
+});
+
+// One line per entry, chosen at the first heading and kept: score, title,
+// from and date in the row (only there), the snippet in its tooltip and
+// under the entry whose message is open.
+describe('PluginSearchResults compact rows', () => {
+  const rich = (key: string, more: Partial<ProvidedSearchResult> = {}): ProvidedSearchResult => ({
+    ...result('crm', key, 'CRM'), from: `Sender ${key}`, date: '2020-02-03T09:12:00Z', score: 0.6, snippet: 'An <mark>order</mark>', ...more,
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    useEmailStore.setState({ searchQuery: 'order', externalSearchResults: [rich('a'), rich('b', { email: { id: 'M2' } })] });
+  });
+
+  const toggleButton = () => screen.getByRole('button', { name: 'compact_plugin_results' });
+
+  it('shows title and snippet in an entry of two lines, as without from, date and score', () => {
+    render(<PluginSearchResults surface="search-results" />);
+    const entry = screen.getByRole('button', { name: /Title a/ });
+    expect(entry).toHaveTextContent('An order');
+    expect(entry).not.toHaveTextContent('Sender a');
+    expect(screen.queryByRole('img', { name: '3 of 5' })).toBeNull();
+    expect(toggleButton()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('shows one line per entry, the snippet in its tooltip, and keeps the choice', () => {
+    const { unmount } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.click(toggleButton());
+
+    const entry = screen.getByRole('button', { name: /Title a/ });
+    expect(entry).toHaveTextContent('Sender a');
+    expect(screen.getAllByRole('img', { name: '3 of 5' })).toHaveLength(2);
+    expect(entry).not.toHaveTextContent('An order');
+    expect(entry).toHaveAttribute('title', 'An order');
+    expect(toggleButton()).toHaveAttribute('aria-pressed', 'true');
+    unmount();
+
+    render(<PluginSearchResults surface="search-results" />);
+    expect(toggleButton()).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows the snippet under the compact entry whose message is open', () => {
+    localStorage.setItem('pluginSearchResultsCompact', '1');
+    useEmailStore.setState({ selectedEmail: { id: 'M2' } as Email });
+    render(<PluginSearchResults surface="search-results" />);
+    expect(screen.getByRole('button', { name: /Title b/ })).toHaveTextContent('An order');
+    expect(screen.getByRole('button', { name: /Title a/ })).not.toHaveTextContent('An order');
+  });
+
+  it('offers the choice once, at the first heading', () => {
+    useEmailStore.setState({ externalSearchResults: [rich('a'), result('chat', 'c')] });
+    render(<PluginSearchResults surface="search-results" />);
+    expect(screen.getAllByRole('button', { name: 'compact_plugin_results' })).toHaveLength(1);
   });
 });

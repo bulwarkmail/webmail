@@ -356,6 +356,8 @@
     "no_search_results_description": "Tente ajustar sua pesquisa ou filtros",
     "more_results_searching": "A procurar mais resultados…",
     "resize_plugin_results": "Redimensionar resultados de plugins",
+    "compact_plugin_results": "Uma linha por resultado",
+    "plugin_result_score": "{count} de 5",
     "loading": "Carregando e-mails...",
     "unread": "não lido",
     "to_me": "Para mim",

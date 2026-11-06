@@ -356,6 +356,8 @@
     "no_search_results_description": "Spróbuj zmienić wyszukiwanie lub filtry",
     "more_results_searching": "Wyszukiwanie kolejnych wyników…",
     "resize_plugin_results": "Zmień rozmiar wyników z wtyczek",
+    "compact_plugin_results": "Jeden wiersz na wynik",
+    "plugin_result_score": "{count} z 5",
     "loading": "Ładowanie wiadomości...",
     "unread": "nieprzeczytane",
     "to_me": "Do mnie",

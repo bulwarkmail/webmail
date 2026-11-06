@@ -356,6 +356,8 @@
     "no_search_results_description": "Mēģiniet mainīt meklēšanas vaicājumu vai filtrus",
     "more_results_searching": "Meklē vēl rezultātus…",
     "resize_plugin_results": "Mainīt spraudņu rezultātu izmēru",
+    "compact_plugin_results": "Viena rinda katram rezultātam",
+    "plugin_result_score": "{count} no 5",
     "loading": "Ielādē vēstules...",
     "unread": "nelasītas",
     "to_me": "Man",

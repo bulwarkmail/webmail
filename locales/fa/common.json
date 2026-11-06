@@ -356,6 +356,8 @@
     "no_search_results_description": "جستجو یا فیلترهای خود را تنظیم کنید",
     "more_results_searching": "در حال جستجوی نتایج بیشتر…",
     "resize_plugin_results": "تغییر اندازه نتایج افزونه‌ها",
+    "compact_plugin_results": "یک خط برای هر نتیجه",
+    "plugin_result_score": "{count} از 5",
     "loading": "در حال بارگذاری ایمیل‌ها...",
     "unread": "خوانده نشده",
     "to_me": "به من",

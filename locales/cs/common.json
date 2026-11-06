@@ -356,6 +356,8 @@
     "no_search_results_description": "Zkuste změnit hledání nebo filtry",
     "more_results_searching": "Hledají se další výsledky…",
     "resize_plugin_results": "Změnit velikost výsledků z doplňků",
+    "compact_plugin_results": "Jeden řádek na výsledek",
+    "plugin_result_score": "{count} z 5",
     "loading": "Načítání zpráv...",
     "unread": "nepřečtené",
     "to_me": "Pro mě",

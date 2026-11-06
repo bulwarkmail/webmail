@@ -356,6 +356,8 @@
     "no_search_results_description": "Prova a modificare la ricerca o i filtri",
     "more_results_searching": "Ricerca di altri risultati…",
     "resize_plugin_results": "Ridimensiona i risultati dei plugin",
+    "compact_plugin_results": "Una riga per risultato",
+    "plugin_result_score": "{count} su 5",
     "loading": "Caricamento messaggi...",
     "unread": "non letto",
     "to_me": "A me",

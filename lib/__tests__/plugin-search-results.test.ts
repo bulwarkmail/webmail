@@ -40,6 +40,30 @@ describe('checkSearchResults', () => {
     expect(checked.every((r) => !('email' in r))).toBe(true);
   });
 
+  it('keeps who an entry is from, when and how well it matches', () => {
+    expect(checkSearchResults('p', [
+      { key: 'a', title: 'A', from: '  Servershop24.de\n ', date: '2020-02-03T09:12:00+01:00', score: 0.8 },
+    ])).toEqual([{
+      pluginId: 'p', key: 'a', title: 'A', snippet: '',
+      from: 'Servershop24.de', date: '2020-02-03T09:12:00+01:00', score: 0.8,
+    }]);
+  });
+
+  it('drops a date Date cannot read and a score that is no number, holds a score within 0 to 1', () => {
+    const checked = checkSearchResults('p', [
+      { key: 'a', title: 'A', date: 'yesterday', score: '0.8', from: 7 },
+      { key: 'b', title: 'B', date: `2020-02-03T09:12:00${'0'.repeat(40)}`, score: Number.NaN },
+      { key: 'c', title: 'C', score: 3 },
+      { key: 'd', title: 'D', score: -1 },
+    ]);
+    expect(checked.map(({ date, score, from }) => ({ date, score, from }))).toEqual([
+      { date: undefined, score: undefined, from: undefined },
+      { date: undefined, score: undefined, from: undefined },
+      { date: undefined, score: 1, from: undefined },
+      { date: undefined, score: 0, from: undefined },
+    ]);
+  });
+
   it('keeps the marks of a snippet and escapes everything else', () => {
     const [entry] = checkSearchResults('p', [
       { key: 'a', title: 'A', snippet: ' The <mark>pixel\n grid</mark> &amp; <b>more</b> <mark></mark>' },

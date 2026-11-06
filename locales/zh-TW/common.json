@@ -356,6 +356,8 @@
     "no_search_results_description": "請調整搜尋條件或篩選器",
     "more_results_searching": "正在搜尋更多結果…",
     "resize_plugin_results": "調整外掛程式結果的大小",
+    "compact_plugin_results": "每個結果一行",
+    "plugin_result_score": "{count}/5",
     "loading": "正在載入郵件…",
     "unread": "未讀",
     "to_me": "寄給我",
