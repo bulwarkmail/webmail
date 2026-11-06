@@ -2,6 +2,7 @@ import { emailIframeCsp, escapeHtml } from "@/lib/email-sanitization";
 import { watermarkForPrint } from "@/lib/watermark";
 import { activePrintTheme } from "@/lib/print/active-print-theme";
 import { printPageMargin, printThemeVarsCss, readPrintThemeVars } from "@/lib/print/print-theme";
+import { openPrintWindow, printPrintWindow } from "@/lib/desktop/print";
 import type { MessagePrintFields } from "./message-print";
 
 export interface MessagePrintWindowOptions {
@@ -54,7 +55,8 @@ export function printMessageInWindow(fields: MessagePrintFields, options: Messag
     printTheme?.css ?? '',
   ].filter(Boolean).join('\n');
 
-  const printWindow = options.openedWindow ?? window.open('', '_blank');
+  // In the desktop app a hidden window, shown in the app's own print preview.
+  const printWindow = options.openedWindow ?? openPrintWindow();
   if (!printWindow) return;
   // A link in the message that navigates the popup itself (no target, a
   // non-web scheme) would hand the sender's page an opener to redirect
@@ -107,6 +109,5 @@ ${printTheme?.header ? `<div class="pr-letterhead-header" data-print-letterhead=
 ${printTheme?.footer ? `<div class="pr-letterhead-footer" data-print-letterhead="footer">${escapeHtml(printTheme.footer)}</div>` : ''}
 </body></html>`);
   printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  void printPrintWindow(printWindow, subjectText);
 }

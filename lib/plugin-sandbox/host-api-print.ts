@@ -18,6 +18,7 @@ import { readObject, readString, withinRate } from './host-api-input';
 import { showPdfToPrint } from './host-api-file-viewer';
 import { canPrintAnywhere, getStrictestDevices, watermarkAddress, watermarkText } from '../device-policy';
 import { watermarkForPrint } from '../watermark';
+import { desktopPrintPreviewAvailable, openPrintWindow, printPrintWindow } from '../desktop/print';
 
 const MAX_TITLE = 200;
 const MAX_HTML = 2 * 1024 * 1024;
@@ -60,6 +61,19 @@ export async function doUiPrint(plugin: InstalledPlugin, input: unknown): Promis
   }
   // A PDF prints from the file preview, through the browser's PDF viewer.
   if (html === null) return showPdfToPrint(plugin, page, title);
+  const watermark = getStrictestDevices().watermark ? watermarkText(watermarkAddress(null)) : null;
+
+  // The desktop app's own print preview shows a hidden print window. The document
+  // carries the reader's strict CSP, so nothing in it runs or loads there either.
+  if (desktopPrintPreviewAvailable()) {
+    const win = openPrintWindow();
+    if (!win) throw new Error(`${method}: the page could not be prepared`);
+    win.opener = null;
+    win.document.write(printDocument(title, html, document.documentElement.dir, watermark));
+    win.document.close();
+    void printPrintWindow(win, title);
+    return true;
+  }
 
   const frame = document.createElement('iframe');
   // Same origin so the host can call print() on it; no allow-scripts, so
@@ -70,7 +84,6 @@ export async function doUiPrint(plugin: InstalledPlugin, input: unknown): Promis
   // Off screen but laid out: some browsers print an empty page from a
   // frame with display: none.
   frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;visibility:hidden;';
-  const watermark = getStrictestDevices().watermark ? watermarkText(watermarkAddress(null)) : null;
   frame.srcdoc = printDocument(title, html, document.documentElement.dir, watermark);
 
   await new Promise<void>((resolve, reject) => {

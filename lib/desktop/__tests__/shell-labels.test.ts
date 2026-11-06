@@ -37,6 +37,18 @@ describe('the labels the desktop shell gets', () => {
     }
   });
 
+  it.each(LOCALES)('%s: the print preview\'s text keeps the page count for the shell to fill in', (locale) => {
+    const { labels } = labelsFor(locale);
+    expect(labels.printPagesMany).toContain('{count}');
+    expect(labels.printPagesInvalid).toContain('{count}');
+    expect(labels.printSystemDialog.endsWith('…')).toBe(true);
+  });
+
+  it('names the print preview in German', () => {
+    expect(labelsFor('de').labels.printTitle).toBe('Drucken');
+    expect(labelsFor('de').labels.printPagesMany).toBe('{count} Seiten');
+  });
+
   it('names File > Unlock, which the menus offer while the app is locked', () => {
     expect(labelsFor('de').labels.menuUnlock).toBe('Entsperren');
     expect(labelsFor('en').labels.menuUnlock).toBe('Unlock');
