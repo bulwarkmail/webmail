@@ -154,6 +154,14 @@ describe('mergeSidebarApps', () => {
     expect(merged[1].managed).toBeUndefined();
   });
 
+  it("drops the managed flag and an image from a user's own app", () => {
+    const forged = { ...userApp, managed: true, iconUrl: 'https://mine.example.com/logo.png' };
+    const [own] = mergeSidebarApps([], [forged]);
+    expect(own.name).toBe('My app');
+    expect(own).not.toHaveProperty('managed');
+    expect(own).not.toHaveProperty('iconUrl');
+  });
+
   it('works with either side missing', () => {
     expect(mergeSidebarApps(undefined, [userApp]).map((a) => a.id)).toEqual(['app-abc']);
     expect(mergeSidebarApps([app()], undefined).map((a) => a.id)).toEqual(['admin-app-1']);
