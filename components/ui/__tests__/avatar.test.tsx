@@ -20,6 +20,42 @@ describe('Avatar', () => {
     expect(container.textContent).toBe('AL');
   });
 
+  describe('Han-character names', () => {
+    // Unspaced Han names carry surname + given name in one string, so the
+    // Western rule would show the surname and half the given name; the
+    // given name itself is what reads naturally.
+    it('shows the given name of a three-character name', () => {
+      const { container } = render(<Avatar name="王阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
+
+    it('shows both characters of a two-character name', () => {
+      const { container } = render(<Avatar name="陈阳" />);
+      expect(container.textContent).toBe('陈阳');
+    });
+
+    it('skips a compound surname', () => {
+      const { container } = render(<Avatar name="司马光" />);
+      expect(container.textContent).toBe('光');
+      const { container: compoundLong } = render(<Avatar name="欧阳阳明" />);
+      expect(compoundLong.textContent).toBe('阳明');
+    });
+
+    it('joins spaced Han segments before taking the given name', () => {
+      const { container } = render(<Avatar name="王 阳明" />);
+      expect(container.textContent).toBe('阳明');
+    });
+
+    it('keeps the Western rule for mixed or non-Han names', () => {
+      const { container } = render(<Avatar name="Zhang San" />);
+      expect(container.textContent).toBe('ZS');
+      // Not every character is Han, so this is not a Han name; the Western
+      // first-letter-of-each-word rule applies (王 has no uppercase).
+      const { container: mixed } = render(<Avatar name="Kevin 王" />);
+      expect(mixed.textContent).toBe('K王');
+    });
+  });
+
   it('renders single letter from email when no name', () => {
     const { container } = render(<Avatar email="bob@example.com" />);
     expect(container.textContent).toBe('B');
