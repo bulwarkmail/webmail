@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Vis Cc",
     "shortcut_show_bcc": "Vis Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Åbn"
+  },
   "confirm_dialog": {
     "confirm": "Bekræft",
     "cancel": "Annuller"

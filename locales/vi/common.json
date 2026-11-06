@@ -1307,6 +1307,9 @@
     "shortcut_show_cc": "Hiện Cc",
     "shortcut_show_bcc": "Hiện Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Mở"
+  },
   "confirm_dialog": {
     "confirm": "Xác nhận",
     "cancel": "Hủy"

@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Afișează Cc",
     "shortcut_show_bcc": "Afișează Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Deschide"
+  },
   "confirm_dialog": {
     "confirm": "Confirmare",
     "cancel": "Anulează"

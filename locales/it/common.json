@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Mostra Cc",
     "shortcut_show_bcc": "Mostra Ccn"
   },
+  "compose_dock": {
+    "open_draft": "Apri"
+  },
   "confirm_dialog": {
     "confirm": "Conferma",
     "cancel": "Annulla"

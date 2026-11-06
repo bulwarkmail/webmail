@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Bilgiyi göster",
     "shortcut_show_bcc": "Gizli bilgiyi göster"
   },
+  "compose_dock": {
+    "open_draft": "Aç"
+  },
   "confirm_dialog": {
     "confirm": "Onayla",
     "cancel": "İptal"

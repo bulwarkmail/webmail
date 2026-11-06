@@ -3208,14 +3208,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   // A draft that's only on this device, opened from the outbox: the server
-  // doesn't list it, so nothing else can open it while online.
+  // doesn't list it, so nothing else can open it while online. Also the
+  // "Draft saved" toast's Open (openKeptDraft); empty ids there mean the
+  // login and account in use.
   const draftToOpen = useOfflineStore((s) => s.draftToOpen);
   useEffect(() => {
     if (!draftToOpen || !client) return;
     useOfflineStore.setState({ draftToOpen: null });
-    const draftClient = useAuthStore.getState().getClientForAccount(draftToOpen.account) ?? client;
-    void draftClient.getEmail(draftToOpen.id, draftToOpen.jmap)
-      .then((draft) => (draft ? handleEditDraft(draft, { accountId: draftToOpen.jmap, localAccountId: draftToOpen.account }) : undefined))
+    const login = draftToOpen.account || undefined;
+    const jmapAccount = draftToOpen.jmap || undefined;
+    const draftClient = (login ? useAuthStore.getState().getClientForAccount(login) : undefined) ?? client;
+    void draftClient.getEmail(draftToOpen.id, jmapAccount)
+      .then((draft) => (draft ? handleEditDraft(draft, { accountId: jmapAccount, localAccountId: login }) : undefined))
       .catch((error) => console.error('Opening a draft kept on this device failed:', error));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the outbox asks, with the handler of that render
   }, [draftToOpen, client]);

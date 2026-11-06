@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Näita koopiat",
     "shortcut_show_bcc": "Näita pimekoopiat"
   },
+  "compose_dock": {
+    "open_draft": "Ava"
+  },
   "confirm_dialog": {
     "confirm": "Kinnita",
     "cancel": "Tühista"

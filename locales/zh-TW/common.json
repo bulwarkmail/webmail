@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "顯示副本",
     "shortcut_show_bcc": "顯示密件副本"
   },
+  "compose_dock": {
+    "open_draft": "開啟"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "取消"

@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Zobraziť kópiu",
     "shortcut_show_bcc": "Zobraziť skrytú kópiu"
   },
+  "compose_dock": {
+    "open_draft": "Otvoriť"
+  },
   "confirm_dialog": {
     "confirm": "Potvrdiť",
     "cancel": "Zrušiť"

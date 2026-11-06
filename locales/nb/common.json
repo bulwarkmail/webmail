@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Vis kopi",
     "shortcut_show_bcc": "Vis blindkopi"
   },
+  "compose_dock": {
+    "open_draft": "Åpne"
+  },
   "confirm_dialog": {
     "confirm": "Bekreft",
     "cancel": "Avbryt"

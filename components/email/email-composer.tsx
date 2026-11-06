@@ -77,7 +77,7 @@ import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
-import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, openKeptDraft, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-markers";
 import {
@@ -690,6 +690,7 @@ export function EmailComposer({
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
   const tUx = useTranslations('compose_ux');
+  const tDock = useTranslations('compose_dock');
   const router = useRouter();
   const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -4740,9 +4741,10 @@ export function EmailComposer({
     setIsSavingAndClosing(false);
   };
 
-  // "Draft saved" with Discard, once the composer closed and kept its draft.
-  // Read before the close resets the refs; the Discard runs after unmount,
-  // through the host's own discard, as the composer's Discard does.
+  // "Draft saved" with Open and Discard, once the composer closed and kept
+  // its draft. Read before the close resets the refs; the Discard runs after
+  // unmount, through the host's own discard, as the composer's Discard does.
+  // Open goes the way of a draft opened from the list (openKeptDraft).
   const announceKeptDraft = () => {
     const draftId = draftIdRef.current;
     if (!draftId) return;
@@ -4756,9 +4758,10 @@ export function EmailComposer({
     showDraftSavedToast(() => discard?.(draftId, where), {
       saved: t('draft_saved'),
       discard: t('discard'),
+      open: tDock('open_draft'),
       discarded: tUx('draft_discarded'),
       undo: tUx('undo'),
-    });
+    }, () => openKeptDraft(draftId, where));
   };
 
   const handleSaveDraftAndClose = async (opts: { fromClose?: boolean } = {}) => {

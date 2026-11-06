@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "显示抄送",
     "shortcut_show_bcc": "显示密送"
   },
+  "compose_dock": {
+    "open_draft": "打开"
+  },
   "confirm_dialog": {
     "confirm": "确认",
     "cancel": "取消"

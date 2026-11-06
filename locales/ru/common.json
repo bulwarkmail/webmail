@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Показать копию",
     "shortcut_show_bcc": "Показать скрытую копию"
   },
+  "compose_dock": {
+    "open_draft": "Открыть"
+  },
   "confirm_dialog": {
     "confirm": "Подтвердить",
     "cancel": "Отмена"

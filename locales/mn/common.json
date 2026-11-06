@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Хуулбар харуулах",
     "shortcut_show_bcc": "Нууц хуулбар харуулах"
   },
+  "compose_dock": {
+    "open_draft": "Нээх"
+  },
   "confirm_dialog": {
     "confirm": "Баталгаажуулах",
     "cancel": "Цуцлах"

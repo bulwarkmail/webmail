@@ -1239,6 +1239,9 @@
     "shortcut_show_cc": "הצגת עותק",
     "shortcut_show_bcc": "הצגת עותק מוסתר"
   },
+  "compose_dock": {
+    "open_draft": "פתיחה"
+  },
   "confirm_dialog": {
     "confirm": "אשר",
     "cancel": "לְבַטֵל"

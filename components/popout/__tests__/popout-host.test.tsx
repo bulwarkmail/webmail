@@ -11,6 +11,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useToastStore } from '@/stores/toast-store';
+import { useOfflineStore } from '@/lib/offline/state';
 import { PopoutHost } from '../popout-host';
 
 // The main window's side of pop-outs. The next-intl mock returns the key.
@@ -342,7 +343,7 @@ describe('PopoutHost', () => {
     expect(noteUndoHold).toHaveBeenCalledWith(client, 'sub-9', releasesAt);
   });
 
-  it('says once that a closed pop-out kept its draft, with Discard', async () => {
+  it('says once that a closed pop-out kept its draft, with Open and Discard', async () => {
     render(<><PopoutHost /><PopoutHost /></>);
     await settle();
     popout.post({ type: 'draft-kept', requestId: 'k1', notice: { draftId: 'd1', localAccountId: 'alice' } });
@@ -351,6 +352,11 @@ describe('PopoutHost', () => {
     expect(toasts).toHaveLength(1);
     expect(toasts[0].title).toBe('email_composer.draft_saved');
     expect(toasts[0].action?.label).toBe('email_composer.discard');
+    expect(toasts[0].secondaryAction?.label).toBe('compose_dock.open_draft');
+    useOfflineStore.setState({ draftToOpen: null });
+    act(() => toasts[0].secondaryAction!.onClick());
+    expect(useOfflineStore.getState().draftToOpen).toEqual({ id: 'd1', jmap: '', account: 'alice' });
+    useOfflineStore.setState({ draftToOpen: null });
   });
 
   // compose-p2-10: the window's bin.

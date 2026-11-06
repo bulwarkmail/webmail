@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Pokaż DW",
     "shortcut_show_bcc": "Pokaż UDW"
   },
+  "compose_dock": {
+    "open_draft": "Otwórz"
+  },
   "confirm_dialog": {
     "confirm": "Potwierdź",
     "cancel": "Anuluj"

@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Másolat megjelenítése",
     "shortcut_show_bcc": "Titkos másolat megjelenítése"
   },
+  "compose_dock": {
+    "open_draft": "Megnyitás"
+  },
   "confirm_dialog": {
     "confirm": "Megerősítés",
     "cancel": "Mégse"

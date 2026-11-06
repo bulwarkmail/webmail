@@ -1,5 +1,6 @@
 import { toast, useToastStore } from "@/stores/toast-store";
 import { UNDO_TOAST_DURATION } from "@/lib/email-action-toast";
+import { useOfflineStore } from "@/lib/offline/state";
 
 export interface DiscardToastLabels {
   discarded: string;
@@ -9,6 +10,8 @@ export interface DiscardToastLabels {
 export interface DraftSavedToastLabels extends DiscardToastLabels {
   saved: string;
   discard: string;
+  /** "Open": the draft back in a composer. Without it the toast has Discard only. */
+  open?: string;
 }
 
 /**
@@ -48,9 +51,23 @@ export function discardWithUndo(discard: () => void, labels: DiscardToastLabels,
   window.addEventListener("pagehide", commit);
 }
 
-/** After a composer closed and kept its draft: "Draft saved", with Discard. */
-export function showDraftSavedToast(discard: () => void, labels: DraftSavedToastLabels): void {
+/**
+ * After a composer closed and kept its draft: "Draft saved", with Open and
+ * Discard. Open brings the draft back in a composer (see openKeptDraft).
+ */
+export function showDraftSavedToast(discard: () => void, labels: DraftSavedToastLabels, open?: () => void): void {
   toast.success(labels.saved, {
     action: { label: labels.discard, onClick: () => discardWithUndo(discard, labels) },
+    secondaryAction: open && labels.open ? { label: labels.open, onClick: open } : undefined,
   });
+}
+
+/**
+ * Open a kept draft in the mail page's composer, the way the outbox and the
+ * draft list do: the mail page fetches it and opens it as an edited draft
+ * (mail-app's draftToOpen). Off the mail page the caller goes there, and
+ * the page opens it once it is up.
+ */
+export function openKeptDraft(draftId: string, where: { accountId?: string; localAccountId?: string } = {}): void {
+  useOfflineStore.setState({ draftToOpen: { id: draftId, jmap: where.accountId ?? "", account: where.localAccountId ?? "" } });
 }

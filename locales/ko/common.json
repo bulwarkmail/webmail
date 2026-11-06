@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "참조 표시",
     "shortcut_show_bcc": "숨은 참조 표시"
   },
+  "compose_dock": {
+    "open_draft": "열기"
+  },
   "confirm_dialog": {
     "confirm": "확인",
     "cancel": "취소"

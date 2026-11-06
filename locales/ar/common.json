@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "إظهار نسخة",
     "shortcut_show_bcc": "إظهار نسخة مخفية"
   },
+  "compose_dock": {
+    "open_draft": "فتح"
+  },
   "confirm_dialog": {
     "confirm": "تأكيد",
     "cancel": "إلغاء"

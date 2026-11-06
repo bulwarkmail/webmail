@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Rādīt kopiju",
     "shortcut_show_bcc": "Rādīt diskrēto kopiju"
   },
+  "compose_dock": {
+    "open_draft": "Atvērt"
+  },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
     "cancel": "Atcelt"

@@ -1295,6 +1295,9 @@
     "shortcut_show_cc": "Показати копію",
     "shortcut_show_bcc": "Показати приховану копію"
   },
+  "compose_dock": {
+    "open_draft": "Відкрити"
+  },
   "confirm_dialog": {
     "confirm": "Підтвердити",
     "cancel": "Скасувати"
