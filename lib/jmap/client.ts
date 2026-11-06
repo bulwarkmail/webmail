@@ -11507,6 +11507,9 @@ export class JMAPClient implements IJMAPClient {
         return;
       }
       this.readSSEStream(response.body, controller);
+      // A reopened stream does not replay missed events. Reuse the guarded,
+      // bounded state poll once per successful connection, without awaiting it.
+      void this.checkForStateChanges();
     }).catch((error) => {
       // Intentional close, not a failure - no polling fallback.
       if (controller.signal.aborted) return;
@@ -11571,8 +11574,22 @@ export class JMAPClient implements IJMAPClient {
     if (eventType === 'state' && dataLines.length > 0) {
       try {
         const change = JSON.parse(dataLines.join('\n')) as StateChange;
-        getOfflineHooks()?.stateChange?.(this, change);
-        this.stateChangeCallback?.(change);
+        const changed: Record<string, Record<string, string>> = {};
+        for (const [accountId, states] of Object.entries(change.changed)) {
+          for (const [type, state] of Object.entries(states)) {
+            if (!state) continue;
+            const key = `${accountId}:${type}`;
+            if (this.pollingStates[key] === state) continue;
+            (changed[accountId] ??= {})[type] = state;
+            this.pollingStates[key] = state;
+          }
+        }
+        // SSE and catch-up can report the same state in either order.
+        if (Object.keys(changed).length > 0) {
+          const update = { ...change, changed };
+          getOfflineHooks()?.stateChange?.(this, update);
+          this.stateChangeCallback?.(update);
+        }
       } catch {
         // Malformed SSE data - ignore
       }
@@ -11705,11 +11722,18 @@ export class JMAPClient implements IJMAPClient {
     if (this.isRateLimited()) {
       return;
     }
+    const pollingStates = this.pollingStates;
+    const previousStates = { ...pollingStates };
     try {
-      for (const [method, result, callId] of await this.fetchPolledStateResponses()) {
+      const responses = await this.fetchPolledStateResponses();
+      if (this.pollingStates !== pollingStates) return;
+      for (const [method, result, callId] of responses) {
         const resolved = this.resolvePolledState(method, callId);
         if (resolved && result?.state) {
-          this.pollingStates[`${resolved.accountId}:${resolved.stateKey}`] = result.state as string;
+          const key = `${resolved.accountId}:${resolved.stateKey}`;
+          // Priming shared-account polling must not undo a live SSE update.
+          if (this.pollingStates[key] !== previousStates[key]) continue;
+          this.pollingStates[key] = result.state as string;
         }
       }
     } catch {
@@ -11728,6 +11752,8 @@ export class JMAPClient implements IJMAPClient {
       return;
     }
     this.stateCheckInFlight = true;
+    const pollingStates = this.pollingStates;
+    const previousStates = { ...pollingStates };
     try {
       // Build a per-account changed map so a background change in a shared
       // (secondary) account is reported under its own accountId — which
@@ -11735,12 +11761,18 @@ export class JMAPClient implements IJMAPClient {
       // full (own + delegated) mailbox list from.
       const changedByAccount: Record<string, Record<string, string>> = {};
 
-      for (const [method, result, callId] of await this.fetchPolledStateResponses()) {
+      const responses = await this.fetchPolledStateResponses();
+      // Push was closed or replaced while this request was in flight.
+      if (this.pollingStates !== pollingStates) return;
+      for (const [method, result, callId] of responses) {
         const resolved = this.resolvePolledState(method, callId);
         const state = result?.state as string | undefined;
         if (!resolved || !state) continue;
         const key = `${resolved.accountId}:${resolved.stateKey}`;
-        if (this.pollingStates[key] && this.pollingStates[key] !== state) {
+        // An SSE event received during the poll already reported this key;
+        // its state may be newer than the response, so do not overwrite it.
+        if (this.pollingStates[key] !== previousStates[key]) continue;
+        if (this.pollingStates[key] !== state) {
           (changedByAccount[resolved.accountId] ??= {})[resolved.stateKey] = state;
         }
         this.pollingStates[key] = state;
