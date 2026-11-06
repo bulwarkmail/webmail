@@ -5485,6 +5485,7 @@
     "shared": "{name} delte {kind} «{object}» med deg",
     "changed": "{name} endra tilgangen din til {kind} «{object}»",
     "revoked": "{name} fjerna tilgangen din til {kind} «{object}»",
+    "summary": "{name} endra tilgangen din til {count, plural, one {# delt element} other {# delte element}}",
     "object": {
       "folder": "mappa",
       "calendar": "kalenderen",
