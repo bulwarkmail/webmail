@@ -15,7 +15,7 @@ import type { CopyTargetAccount } from "@/components/email/email-context-menu";
 import { DOWNLOAD_BLOCKED_EVENT, downloadAllowed } from "@/lib/download-guard";
 import { canCopyBetween, canPrint, deviceSubjectOf, type DeviceSubject } from "@/lib/device-policy";
 import { usePolicyStore } from "@/stores/policy-store";
-import { saveMessagesNatively } from "@/lib/desktop/save-as";
+import { nativeSaveAvailable, saveMessagesNatively } from "@/lib/desktop/save-as";
 
 /** What follows an export, by the "After export" setting. */
 export interface ExportFollowUp {
@@ -56,10 +56,12 @@ export function useSaveEmails(): (emails: Email[], followUp?: ExportFollowUp, so
     // The device policy of each message's account (Organisation > Devices); refused,
     // nothing is saved, and the message is not archived or deleted either.
     if (items.some(({ email }) => !downloadAllowed("export", email))) return;
-    const native = await saveMessagesNatively(items.map(({ email, context }) => ({
+    // Decided before anything is awaited: in a browser the download starts in the click's
+    // own task, as it did before the desktop app's Save dialog existed.
+    const native = nativeSaveAvailable() ? await saveMessagesNatively(items.map(({ email, context }) => ({
       name: exportName(email),
       load: () => context.client!.fetchBlob(email.blobId!, exportName(email), "message/rfc822", context.accountId),
-    }))).catch(() => ({ status: "saved" as const, saved: 0, failed: items.length }));
+    }))).catch(() => ({ status: "saved" as const, saved: 0, failed: items.length })) : null;
     if (native) {
       if (native.status !== "saved") return;
       if (native.failed > 0) {
