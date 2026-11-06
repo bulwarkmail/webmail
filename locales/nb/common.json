@@ -7415,6 +7415,18 @@
     "attach_files": "Legg ved filer…",
     "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Åpne…",
+    "menu_save_as": "Lagre som…",
+    "open_filter": "Meldinger, hendelser og kontakter",
+    "save_filter": "E-postmelding",
+    "folder_title": "Velg en mappe for meldingene",
+    "folder_button": "Lagre her",
+    "saved_many": "{count, plural, one {# melding lagret.} other {# meldinger lagret.}}",
+    "save_failed": "{count, plural, one {# melding kunne ikke lagres.} other {# meldinger kunne ikke lagres.}}",
+    "shortcut_open": "Åpne en lagret melding, hendelse eller kontakt",
+    "shortcut_save_as": "Lagre meldingen som en fil"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",

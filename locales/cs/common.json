@@ -7415,6 +7415,18 @@
     "attach_files": "Přiložit soubory…",
     "shortcut_apps": "Přejít na Poštu, Kalendář, Kontakty nebo Soubory"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Otevřít…",
+    "menu_save_as": "Uložit jako…",
+    "open_filter": "Zprávy, události a kontakty",
+    "save_filter": "E-mailová zpráva",
+    "folder_title": "Vyberte složku pro zprávy",
+    "folder_button": "Uložit sem",
+    "saved_many": "{count, plural, one {# zpráva uložena.} few {# zprávy uloženy.} many {# zprávy uloženo.} other {# zpráv uloženo.}}",
+    "save_failed": "{count, plural, one {# zprávu nebylo možné uložit.} few {# zprávy nebylo možné uložit.} many {# zprávy nebylo možné uložit.} other {# zpráv nebylo možné uložit.}}",
+    "shortcut_open": "Otevřít uloženou zprávu, událost nebo kontakt",
+    "shortcut_save_as": "Uložit zprávu jako soubor"
+  },
   "appLock": {
     "section_title": "Zámek aplikace",
     "section_desc": "Po době nečinnosti žádá o PIN v každém okně a na každé kartě. Dokud je zamčeno, aplikace nemůže číst poštu uloženou v tomto zařízení, dokud někdo nezadá PIN.",

@@ -158,6 +158,20 @@ describe("the reader's ⋮ in groups", () => {
     const labels = result.current.map((entry) => (entry.kind === 'separator' ? '|' : entry.label));
     expect(labels.slice(-7)).toEqual(['|', 'reader_view', '|', 'export_email', 'print', '|', 'other']);
   });
+
+  it('is Save as… in the desktop app, which saves through the OS dialog, and the same action', () => {
+    const onExport = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', saveAs: { begin: vi.fn(), write: vi.fn(), end: vi.fn() } } as never;
+    try {
+      const { result } = renderHook(() => useMessageActionList({ email, onExport }));
+      const entries = result.current.filter((entry) => entry.kind === 'item' && entry.key === 'export');
+      expect(entries.map((entry) => (entry.kind === 'item' ? entry.label : ''))).toEqual(['menu_save_as']);
+      if (entries[0].kind === 'item') entries[0].run?.();
+      expect(onExport).toHaveBeenCalledTimes(1);
+    } finally {
+      delete window.bulwarkDesktop;
+    }
+  });
 });
 
 describe("the reader toolbar's Move and Tag menus", () => {

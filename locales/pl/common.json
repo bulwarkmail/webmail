@@ -7415,6 +7415,18 @@
     "attach_files": "Załącz pliki…",
     "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Otwórz…",
+    "menu_save_as": "Zapisz jako…",
+    "open_filter": "Wiadomości, wydarzenia i kontakty",
+    "save_filter": "Wiadomość e-mail",
+    "folder_title": "Wybierz folder na wiadomości",
+    "folder_button": "Zapisz tutaj",
+    "saved_many": "{count, plural, one {Zapisano # wiadomość.} few {Zapisano # wiadomości.} many {Zapisano # wiadomości.} other {Zapisano # wiadomości.}}",
+    "save_failed": "{count, plural, one {Nie udało się zapisać # wiadomości.} few {Nie udało się zapisać # wiadomości.} many {Nie udało się zapisać # wiadomości.} other {Nie udało się zapisać # wiadomości.}}",
+    "shortcut_open": "Otwórz zapisaną wiadomość, wydarzenie lub kontakt",
+    "shortcut_save_as": "Zapisz wiadomość jako plik"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po pewnym czasie bezczynności, w każdym oknie i na każdej karcie. Gdy jest zablokowana, aplikacja nie może czytać poczty zapisanej na tym urządzeniu, dopóki ktoś nie poda PIN-u.",

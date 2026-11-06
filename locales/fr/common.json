@@ -7415,6 +7415,18 @@
     "attach_files": "Joindre des fichiers…",
     "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Ouvrir…",
+    "menu_save_as": "Enregistrer sous…",
+    "open_filter": "Messages, événements et contacts",
+    "save_filter": "Message électronique",
+    "folder_title": "Choisissez un dossier pour les messages",
+    "folder_button": "Enregistrer ici",
+    "saved_many": "{count, plural, one {# message enregistré.} other {# messages enregistrés.}}",
+    "save_failed": "{count, plural, one {# message n'a pas pu être enregistré.} other {# messages n'ont pas pu être enregistrés.}}",
+    "shortcut_open": "Ouvrir un message, un événement ou un contact enregistré",
+    "shortcut_save_as": "Enregistrer le message dans un fichier"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",

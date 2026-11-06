@@ -7415,6 +7415,18 @@
     "attach_files": "Bestanden bijvoegen…",
     "shortcut_apps": "Naar E-mail, Agenda, Contacten of Bestanden"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Openen…",
+    "menu_save_as": "Opslaan als…",
+    "open_filter": "Berichten, afspraken en contacten",
+    "save_filter": "E-mailbericht",
+    "folder_title": "Kies een map voor de berichten",
+    "folder_button": "Hier opslaan",
+    "saved_many": "{count, plural, one {# bericht opgeslagen.} other {# berichten opgeslagen.}}",
+    "save_failed": "{count, plural, one {# bericht kon niet worden opgeslagen.} other {# berichten konden niet worden opgeslagen.}}",
+    "shortcut_open": "Een opgeslagen bericht, afspraak of contact openen",
+    "shortcut_save_as": "Het bericht opslaan als bestand"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",

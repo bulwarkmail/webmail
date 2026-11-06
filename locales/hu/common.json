@@ -7415,6 +7415,18 @@
     "attach_files": "Fájlok csatolása…",
     "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Megnyitás…",
+    "menu_save_as": "Mentés másként…",
+    "open_filter": "Üzenetek, események és névjegyek",
+    "save_filter": "E-mail üzenet",
+    "folder_title": "Válasszon mappát az üzenetekhez",
+    "folder_button": "Mentés ide",
+    "saved_many": "{count, plural, one {# üzenet mentve.} other {# üzenet mentve.}}",
+    "save_failed": "{count, plural, one {# üzenetet nem sikerült menteni.} other {# üzenetet nem sikerült menteni.}}",
+    "shortcut_open": "Mentett üzenet, esemény vagy névjegy megnyitása",
+    "shortcut_save_as": "Az üzenet mentése fájlként"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
     "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",

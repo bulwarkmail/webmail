@@ -7415,6 +7415,18 @@
     "attach_files": "Anexar arquivos…",
     "shortcut_apps": "Ir para E-mail, Calendário, Contatos ou Arquivos"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Abrir…",
+    "menu_save_as": "Guardar como…",
+    "open_filter": "Mensagens, eventos e contactos",
+    "save_filter": "Mensagem de e-mail",
+    "folder_title": "Escolha uma pasta para as mensagens",
+    "folder_button": "Guardar aqui",
+    "saved_many": "{count, plural, one {# mensagem guardada.} other {# mensagens guardadas.}}",
+    "save_failed": "{count, plural, one {Não foi possível guardar # mensagem.} other {Não foi possível guardar # mensagens.}}",
+    "shortcut_open": "Abrir uma mensagem, evento ou contacto guardado",
+    "shortcut_save_as": "Guardar a mensagem como ficheiro"
+  },
   "appLock": {
     "section_title": "Bloqueio da app",
     "section_desc": "Pede um PIN após algum tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, a aplicação não consegue ler o correio guardado neste dispositivo até alguém introduzir o PIN.",

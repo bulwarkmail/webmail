@@ -7415,6 +7415,18 @@
     "attach_files": "Lisa failid…",
     "shortcut_apps": "Mine e-posti, kalendrisse, kontaktidesse või failidesse"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Ava…",
+    "menu_save_as": "Salvesta nimega…",
+    "open_filter": "Kirjad, sündmused ja kontaktid",
+    "save_filter": "E-kiri",
+    "folder_title": "Vali kirjade jaoks kaust",
+    "folder_button": "Salvesta siia",
+    "saved_many": "{count, plural, one {# kiri salvestatud.} other {# kirja salvestatud.}}",
+    "save_failed": "{count, plural, one {# kirja ei saanud salvestada.} other {# kirja ei saanud salvestada.}}",
+    "shortcut_open": "Ava salvestatud kiri, sündmus või kontakt",
+    "shortcut_save_as": "Salvesta kiri failina"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutuseta aega PIN-koodi igas aknas ja vahekaardil. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",

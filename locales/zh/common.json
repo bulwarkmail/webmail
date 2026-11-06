@@ -7415,6 +7415,18 @@
     "attach_files": "附加文件…",
     "shortcut_apps": "转到邮件、日历、联系人或文件"
   },
+  "desktopSaveOpen": {
+    "menu_open": "打开…",
+    "menu_save_as": "另存为…",
+    "open_filter": "邮件、日程和联系人",
+    "save_filter": "电子邮件",
+    "folder_title": "选择保存邮件的文件夹",
+    "folder_button": "保存到这里",
+    "saved_many": "已保存 {count} 封邮件。",
+    "save_failed": "有 {count} 封邮件无法保存。",
+    "shortcut_open": "打开保存的邮件、日程或联系人",
+    "shortcut_save_as": "将邮件另存为文件"
+  },
   "appLock": {
     "section_title": "应用锁",
     "section_desc": "在一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,在有人输入 PIN 之前,应用无法读取存储在此设备上的邮件。",

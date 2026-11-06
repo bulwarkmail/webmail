@@ -7415,6 +7415,18 @@
     "attach_files": "Pievienot failus…",
     "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Atvērt…",
+    "menu_save_as": "Saglabāt kā…",
+    "open_filter": "Vēstules, notikumi un kontakti",
+    "save_filter": "E-pasta vēstule",
+    "folder_title": "Izvēlieties mapi vēstulēm",
+    "folder_button": "Saglabāt šeit",
+    "saved_many": "{count, plural, zero {Saglabātas # vēstules.} one {Saglabāta # vēstule.} other {Saglabātas # vēstules.}}",
+    "save_failed": "{count, plural, zero {Neizdevās saglabāt # vēstules.} one {Neizdevās saglabāt # vēstuli.} other {Neizdevās saglabāt # vēstules.}}",
+    "shortcut_open": "Atvērt saglabātu vēstuli, notikumu vai kontaktu",
+    "shortcut_save_as": "Saglabāt vēstuli kā failu"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",

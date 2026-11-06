@@ -181,7 +181,8 @@ import { mailTitleContext, mailboxTitleLine } from "@/lib/tab-title";
 import { useOtherAccountsUnread } from "@/hooks/use-all-inboxes-unread";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { canDownload } from "@/lib/device-policy";
+import { canDownload, canExport } from "@/lib/device-policy";
+import { useSaveEmails } from "@/hooks/use-message-file-actions";
 import { consumePendingMailto, mailLinkAccountId, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
 import { setMailLinkOpener } from "@/lib/desktop/mail-links";
@@ -1495,10 +1496,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
+  // File > Save as…: the message on screen, or every one selected, as .eml files. One
+  // message is then archived or deleted as "After export" says, as its ⋮ menu's Save as does.
+  const saveEmails = useSaveEmails();
+  const saveSelection = !desktopTarget ? [] : shortcutsTargetSelection
+    ? (desktopMulti ? starSelection : resolveSelectedEmails(useEmailStore.getState()))
+    : selectedEmail ? [selectedEmail] : [];
+  const canSaveSelection = saveSelection.length > 0 && saveSelection.every((email) => !!email.blobId && canExport(email));
+  const saveSelectionFromMenu = () => {
+    if (!canSaveSelection) return;
+    void saveEmails(saveSelection, saveSelection.length === 1 ? {
+      onArchive: keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
+      onDelete: () => void keyboardHandlers.onDelete?.(),
+      archiveEnabled: archiveActionEnabled,
+    } : undefined);
+  };
   // A shared folder you may only read from: nothing can leave it.
   const desktopMayRemove = mailboxes.find((m) => m.id === selectedMailbox)?.myRights?.mayRemoveItems !== false;
   useDesktopCommands({
     'file.newMessage': keyboardHandlers.onCompose,
+    'file.saveAs': saveSelectionFromMenu,
     'edit.search': keyboardHandlers.onFocusSearch,
     'view.refresh': () => void handleManualRefresh(),
     'view.layout.split': () => useSettingsStore.getState().updateSetting('mailLayout', 'split'),
@@ -1531,6 +1548,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'go.nextUnread': keyboardHandlers.onNextUnread,
   }, {
     'view.refresh': true,
+    'file.saveAs': canSaveSelection,
     // Ctrl+E in the composer belongs to its editor, not to search.
     'edit.search': !showComposer,
     'view.layout.split': { enabled: !layoutFixed, checked: mailLayoutSetting === 'split' },

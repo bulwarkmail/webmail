@@ -7415,6 +7415,18 @@
     "attach_files": "Attach files…",
     "shortcut_apps": "Go to Mail, Calendar, Contacts or Files"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Open…",
+    "menu_save_as": "Save as…",
+    "open_filter": "Messages, events and contacts",
+    "save_filter": "Email message",
+    "folder_title": "Choose a folder for the messages",
+    "folder_button": "Save here",
+    "saved_many": "{count, plural, one {# message saved.} other {# messages saved.}}",
+    "save_failed": "{count, plural, one {# message could not be saved.} other {# messages could not be saved.}}",
+    "shortcut_open": "Open a saved message, event or contact",
+    "shortcut_save_as": "Save the message as a file"
+  },
   "appLock": {
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
