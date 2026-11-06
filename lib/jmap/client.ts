@@ -7993,9 +7993,12 @@ export class JMAPClient implements IJMAPClient {
     // A page at a time: unacknowledged notifications pile up, and a /get of
     // more ids than maxObjectsInGet fails as a whole, so none would ever be
     // shown and acknowledged again.
+    // Capped as listPrincipals is, so a server ignoring `position` cannot
+    // keep the loop going.
+    const MAX_NOTIFICATIONS = 20000;
     const limit = this.getMaxObjectsInGet();
     const notifications: CalendarEventNotification[] = [];
-    for (let position = 0; ; position += limit) {
+    for (let position = 0; position < MAX_NOTIFICATIONS; position += limit) {
       const response = await this.request([
         ["CalendarEventNotification/query", {
           accountId,
@@ -8019,6 +8022,7 @@ export class JMAPClient implements IJMAPClient {
       const ids = (queryResp[1] as { ids?: string[] }).ids ?? [];
       if (ids.length < limit) return notifications;
     }
+    return notifications;
   }
 
   /** Acknowledges (destroys) event notifications that have been shown. */

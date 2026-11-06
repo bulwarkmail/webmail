@@ -421,6 +421,17 @@ describe('JMAP client extensions', () => {
         expect.objectContaining({ position: 2, limit: 2 }),
       ]);
     });
+
+    it('stops paging when a server ignores position and keeps answering full pages', async () => {
+      await setup({ 'urn:ietf:params:jmap:calendars': {} }, { maxObjectsInGet: 5000 });
+      answer(() => ({ methodResponses: [
+        ['CalendarEventNotification/query', { ids: Array.from({ length: 5000 }, (_, i) => `n${i}`), position: 0 }, '0'],
+        ['CalendarEventNotification/get', { list: [] }, '1'],
+      ] }));
+
+      await client.getCalendarEventNotifications();
+      expect(requests).toHaveLength(4);
+    });
   });
 
   describe('participant identities', () => {
