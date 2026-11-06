@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import type { CalendarEvent, ContactCard } from "@/lib/jmap/types";
 import type { DirectoryEntry } from "@/stores/contact-store";
 import { canPrintAnywhere } from "@/lib/device-policy";
+import { desktopPrintPreviewAvailable, previewDesktopPage } from "@/lib/desktop/print";
 
 /**
  * What a Print action asked for. Ctrl+P asks for nothing in particular: the
@@ -93,21 +94,38 @@ async function waitForPrintImages(): Promise<void> {
  * dialog, which gives the same page Ctrl+P would for that view.
  */
 export async function requestPrint(target: PrintTarget): Promise<void> {
-  if (usePrintStore.getState().printing) return;
+  if (usePrintStore.getState().printing || desktopTarget) return;
   // Organisation > Devices > No printing (the buttons are hidden then).
   if (!canPrintAnywhere()) return;
   startPrinting(target);
   await waitForPrintImages();
   if (!usePrintStore.getState().printing) return;
+  if (desktopPrintPreviewAvailable()) {
+    // The desktop app's preview lays the page out for printing at each change and once
+    // more to print, each time with beforeprint and afterprint: the copy of this target
+    // comes back each time, until the preview closes.
+    stopPrinting();
+    desktopTarget = { target };
+    try {
+      await previewDesktopPage();
+    } finally {
+      desktopTarget = null;
+      stopPrinting();
+    }
+    return;
+  }
   window.print();
   // Browsers whose print() returns before the dialog closes reset on afterprint.
 }
+
+/** What the desktop app's open print preview prints, for a Print action's target. */
+let desktopTarget: { target: PrintTarget } | null = null;
 
 let listeners = 0;
 let printQuery: MediaQueryList | null = null;
 
 const handleBeforePrint = () => {
-  if (!usePrintStore.getState().printing) startPrinting(null);
+  if (!usePrintStore.getState().printing) startPrinting(desktopTarget?.target ?? null);
 };
 const handleAfterPrint = () => stopPrinting();
 // Safari has fired beforeprint late or not at all; the print media query

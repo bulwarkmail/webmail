@@ -15,6 +15,7 @@ import type { CopyTargetAccount } from "@/components/email/email-context-menu";
 import { DOWNLOAD_BLOCKED_EVENT, downloadAllowed } from "@/lib/download-guard";
 import { canCopyBetween, canPrint, deviceSubjectOf, type DeviceSubject } from "@/lib/device-policy";
 import { usePolicyStore } from "@/stores/policy-store";
+import { openPrintWindow } from "@/lib/desktop/print";
 import { nativeSaveAvailable, saveMessagesNatively } from "@/lib/desktop/save-as";
 
 /** What follows an export, by the "After export" setting. */
@@ -122,7 +123,8 @@ export const usePrintRequestStore = create<{
 export function requestPrint(key: string, subject?: DeviceSubject): boolean {
   // Not under the device policy "No printing".
   if (!canPrint(subject)) return false;
-  const win = window.open("", "_blank");
+  // In the desktop app a hidden window, shown in the app's own print preview.
+  const win = openPrintWindow();
   if (!win) return false;
   // See the reader's print: no opener for a document the sender shaped.
   win.opener = null;

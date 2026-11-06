@@ -11,6 +11,7 @@ import { runDesktopCommand, setDesktopBaseState } from "@/lib/desktop/commands";
 import { dictionaryDownloadAllowed } from "@/lib/desktop/dictionary-download";
 import { noteComposerLanguage, setDesktopInterfaceLanguage, shellLabels } from "@/lib/desktop/languages";
 import { openLinkFromNativeMenu } from "@/lib/desktop/open-link";
+import { listenForDesktopPrintRequests } from "@/lib/desktop/print";
 import { readDesktopPrefs, setDesktopPref, useDesktopPrefs } from "@/lib/desktop/preferences";
 import { applySystemAccent } from "@/lib/desktop/system-accent";
 import type { DesktopSystemTheme } from "@/lib/desktop/types";
@@ -210,6 +211,9 @@ export function DesktopHost() {
     const ui = activeLocale || uiLocale || document.documentElement.lang;
     if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as Parameters<typeof shellLabels>[0]));
   }, [activeLocale, uiLocale, messages]);
+
+  // File > Print and Ctrl+P: the app's own print preview of this page, in its look.
+  useEffect(() => listenForDesktopPrintRequests(), []);
 
   // What the user writes in, whichever composer asks for it too.
   useEffect(() => {

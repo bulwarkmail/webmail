@@ -8,12 +8,25 @@
  * `url` is a blob: URL of the app's own origin, so the frame's window can be
  * reached. The frame goes after printing, or after a minute when the
  * browser never says printing ended.
+ *
+ * In the desktop app the PDF goes to the app's own print preview instead,
+ * which shows its pages (lib/desktop/print.ts).
  */
+
+import { desktopPrintPreviewAvailable, previewDesktopPdf } from './desktop/print';
 
 const CLEANUP_MS = 60_000;
 const LOAD_TIMEOUT_MS = 15_000;
 
-export function printPdfUrl(url: string): Promise<boolean> {
+export async function printPdfUrl(url: string, title?: string): Promise<boolean> {
+  if (desktopPrintPreviewAvailable()) {
+    const outcome = await previewDesktopPdf(url, title);
+    return outcome !== null && outcome !== 'refused' && outcome !== 'failed';
+  }
+  return printInFrame(url);
+}
+
+function printInFrame(url: string): Promise<boolean> {
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.setAttribute('aria-hidden', 'true');

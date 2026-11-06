@@ -6,6 +6,7 @@
 
 import { getDesktopBridge } from './bridge';
 import { certificateLabels } from './certificate-labels';
+import { printLabels } from './print-labels';
 import { updateLabels } from './update-labels';
 
 let ui = '';
@@ -57,6 +58,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     signInCodeNeeded: t('desktop_browser_sign_in.page_code_needed'),
     signInNoAnswer: t('desktop_browser_sign_in.page_no_answer'),
     ...certificateLabels(t),
+    ...printLabels(t),
     editCancel: t('desktopEdit.cancel'),
     editDiscardTitle: t('desktopEdit.discard_title', { name: '{name}' }),
     editDiscardDetail: t('desktopEdit.discard_detail'),

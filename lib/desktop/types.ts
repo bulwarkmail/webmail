@@ -218,6 +218,29 @@ export interface DesktopDialogsBridge {
   showWindow?: (name: string) => Promise<boolean>;
 }
 
+/**
+ * The shell's print preview (src/main/print-preview.ts in the desktop repo): this page as
+ * its print CSS lays it out, a print window it opened as `window.open('', name)` with a
+ * name `bulwark-print-…` (main keeps it hidden), or a PDF's bytes.
+ */
+export type DesktopPrintPreviewRequest = (
+  | { source: 'page' }
+  | { source: 'window'; name: string }
+  | { source: 'pdf'; data: Uint8Array }
+) & {
+  title?: string;
+  theme?: DesktopDialogWindowTheme;
+};
+
+export type DesktopPrintPreviewOutcome = 'printed' | 'saved' | 'system' | 'cancelled' | 'refused' | 'busy' | 'failed';
+
+export interface DesktopPrintBridge {
+  /** Opens the preview over this window. Resolves when it closes. */
+  preview: (request: DesktopPrintPreviewRequest) => Promise<DesktopPrintPreviewOutcome>;
+  /** File > Print and Ctrl+P ask the page to run its own Print. Returns the unsubscribe. */
+  onRequest: (listener: () => void) => () => void;
+}
+
 /** Plain text throughout: the shell sets textContent only. */
 export interface DesktopDialogWindowRequest {
   /** The page's own name for it, for `cancel`. */
@@ -1286,6 +1309,8 @@ export interface BulwarkDesktopBridge {
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
   dialogs?: DesktopDialogsBridge;
+  /** Absent on older shells. */
+  print?: DesktopPrintBridge;
   spellcheck?: DesktopSpellcheckBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
