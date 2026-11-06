@@ -12,6 +12,7 @@ import {
   addColumnBefore as stockAddColumnBefore,
   isInTable,
   selectedRect,
+  tableNodeTypes,
   TableMap,
 } from "prosemirror-tables";
 
@@ -81,6 +82,50 @@ export const StyledTable = Table.extend({
                 color === null && cell.type.name === "tableHeader" ? "transparent" : color,
               ),
             });
+          }
+          return true;
+        },
+      /**
+       * Toggles the header row like the stock command, but when cells turn
+       * INTO header cells it first drops the look they carry on their own:
+       * the background, text colour and weight on the style attribute, and
+       * the bold mark the Bold extension parsed out of a pasted
+       * font-weight. Pasted tables inline their colours there, and an
+       * inline value wins the cascade over the th defaults the
+       * StyledTableHeader HTMLAttributes add, so without this the toggle
+       * changes the markup but nothing the eye can see, and a bold pasted
+       * row stays bold (and immune to the bold button, which toggles the
+       * mark, not the inline style) after the header is turned off again.
+       * Turning the header row off keeps what the cells have.
+       */
+      toggleHeaderRowStyled: () =>
+        ({ state, tr, dispatch }: CommandProps) => {
+          if (!isInTable(state)) return false;
+          if (!dispatch) return true;
+          const rect = selectedRect(state);
+          const types = tableNodeTypes(state.schema);
+          const headerEverywhere = (left: number, right: number, top: number, bottom: number) =>
+            rect.map
+              .cellsInRect({ left, right, top, bottom })
+              .every((pos) => rect.table.nodeAt(pos)?.type === types.header_cell);
+          const isHeaderRow = headerEverywhere(0, rect.map.width, 0, 1);
+          // Leave the corner cell to the header column, as the stock command does.
+          const left = headerEverywhere(0, 1, 0, rect.map.height) ? 1 : 0;
+          const bold = state.schema.marks.bold;
+          for (const pos of rect.map.cellsInRect({ left, right: rect.map.width, top: 0, bottom: 1 })) {
+            const cell = tr.doc.nodeAt(rect.tableStart + pos);
+            if (!cell) continue;
+            tr.setNodeMarkup(rect.tableStart + pos, isHeaderRow ? types.cell : types.header_cell, {
+              ...cell.attrs,
+              style: isHeaderRow ? cell.attrs.style : stripCellLook(cell.attrs.style),
+            });
+            if (!isHeaderRow && bold) {
+              // The header look is bold by default, so the mark would be
+              // invisible in it; removing it here is what lets turning the
+              // header off restore the normal weight.
+              const from = rect.tableStart + pos + 1;
+              tr.removeMark(from, from + cell.content.size, bold);
+            }
           }
           return true;
         },
@@ -176,6 +221,33 @@ function appendStyle(el: Element, declarations: string) {
   const own = el.getAttribute("style")?.trim();
   // The element's own inline style wins over a class rule, as in CSS.
   el.setAttribute("style", own ? `${declarations}; ${own}` : declarations);
+}
+
+/**
+ * Drops text-align declarations with a value that is not CSS (Excel and
+ * WPS write their "default" alignment as text-align:general). A browser
+ * throws such a declaration away at render time, but the paste pipeline
+ * keeps it as text: it survives into the cell's style attribute, where it
+ * occupies the text-align slot of the attribute-level merge and blocks the
+ * StyledTableHeader default (text-align: left) from filling in. The sent
+ * mail then carries a th with no working alignment, and the recipient's
+ * client falls back to the browser default for th - centred text.
+ */
+function dropInvalidTextAlign(el: Element) {
+  const style = el.getAttribute("style");
+  if (!style || !/text-align\s*:/i.test(style)) return;
+  const kept = style
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .filter((d) => {
+      const colon = d.indexOf(":");
+      if (colon <= 0) return true;
+      if (d.slice(0, colon).trim().toLowerCase() !== "text-align") return true;
+      return /^(left|right|center|justify|start|end)$/i.test(d.slice(colon + 1).trim());
+    });
+  if (kept.length > 0) el.setAttribute("style", kept.join("; "));
+  else el.removeAttribute("style");
 }
 
 /** Legacy presentational attributes the table schema does not parse. */
@@ -333,6 +405,22 @@ function cellBackgroundStyle(style: string | null, color: string | null): string
   if (color) declarations.push(`background-color: ${color}`);
   return declarations.length > 0 ? declarations.join("; ") : null;
 }
+
+/** A style string without the background, text colour and weight
+ *  declarations, which would otherwise sit later in the cascade than the
+ *  th default look and hide it; null when nothing remains. */
+function stripCellLook(style: string | null): string | null {
+  const declarations = (style || "")
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .filter((d) => {
+      const colon = d.indexOf(":");
+      if (colon <= 0) return true;
+      return !/^(?:background-color|background|color|font-weight)$/.test(d.slice(0, colon).trim().toLowerCase());
+    });
+  return declarations.length > 0 ? declarations.join("; ") : null;
+}
 // Font properties WPS puts on the div wrapping a cell's text instead of the
 // cell itself.
 const FONT_PROPERTIES = /^(color|font-weight|font-style|font-size|font-family)$/i;
@@ -475,6 +563,7 @@ export function inlineClipboardStyles(html: string): string {
   applyContentLayout(doc);
   carryFontStyles(doc);
   for (const el of doc.querySelectorAll("table, tr, td, th")) {
+    dropInvalidTextAlign(el);
     mapLegacyAttributes(el);
     // The class did its job (its styles are inline now); the schema drops it anyway.
     el.removeAttribute("class");
@@ -598,6 +687,8 @@ declare module "@tiptap/core" {
     tablePaste: {
       /** Sets/clears the background colour of the selected cells. */
       setCellBackground: (color: string | null) => ReturnType;
+      /** Toggles the header row, clearing pasted cell colours when it turns on. */
+      toggleHeaderRowStyled: () => ReturnType;
     };
   }
 }
