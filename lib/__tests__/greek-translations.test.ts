@@ -1,9 +1,11 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import { createTranslator } from 'next-intl';
 import en from '@/locales/en/common.json';
 import el from '@/locales/el/common.json';
+
+vi.unmock('next-intl');
 
 function leaves(node: unknown, prefix = ''): Array<[string, string]> {
   if (typeof node === 'string') return [[prefix, node]];
@@ -44,6 +46,14 @@ describe('Greek messages', () => {
     expect(failures).toEqual([]);
   });
 
+  it('preserves HTML tags and their attributes', () => {
+    const tags = (text: string) => text.match(/<[^>]+>/g) ?? [];
+    const failures = translated.filter(([key, value]) =>
+      JSON.stringify(tags(value)) !== JSON.stringify(tags(english.get(key)!)),
+    ).map(([key]) => key);
+    expect(failures).toEqual([]);
+  });
+
   const t = createTranslator({ locale: 'el', messages: el, onError: (error) => { throw error; } });
 
   it.each([
@@ -60,5 +70,18 @@ describe('Greek messages', () => {
     expect(t('mail_p2_list.conversations_moved_to', { count: 2, mailbox: 'Εργασία' }))
       .toBe('2 συνομιλίες μετακινήθηκαν στον φάκελο Εργασία');
     expect(t('email_composer.files_picker.attach', { count: 0 })).toBe('Επισύναψη');
+  });
+
+  it('keeps download template tokens as literal text rather than ICU arguments', () => {
+    const description = t('settings.downloads.attachment_template.description');
+    expect(description).toContain('{filename}');
+    expect(description).toContain('{ext}');
+  });
+
+  it('formats destructive-action warnings in singular and plural', () => {
+    expect(t('offline.settings.off_confirm_message', { count: 1 })).toContain('1 μήνυμα στα εξερχόμενα δεν έχει σταλεί.');
+    expect(t('offline.settings.off_confirm_message', { count: 2 })).toContain('2 μηνύματα στα εξερχόμενα δεν έχουν σταλεί.');
+    expect(t('files_sync.mass_delete.local', { count: 2, folder: 'Έγγραφα' }))
+      .toBe('2 στοιχεία διαγράφηκαν από τον φάκελο Έγγραφα σε αυτόν τον υπολογιστή. Να διαγραφούν και από τα Αρχεία;');
   });
 });

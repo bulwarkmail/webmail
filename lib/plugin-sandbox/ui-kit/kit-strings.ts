@@ -8,6 +8,7 @@ type KitKey = 'remove' | 'remove_named' | 'clear' | 'clear_search' | 'open' | 'c
 export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   en: { remove: 'Remove', remove_named: 'Remove {name}', clear: 'Clear', clear_search: 'Clear search', open: 'Open list', close: 'Close list' },
   de: { remove: 'Entfernen', remove_named: '{name} entfernen', clear: 'Leeren', clear_search: 'Suche leeren', open: 'Liste öffnen', close: 'Liste schließen' },
+  el: { remove: 'Αφαίρεση', remove_named: 'Αφαίρεση {name}', clear: 'Εκκαθάριση', clear_search: 'Εκκαθάριση αναζήτησης', open: 'Άνοιγμα λίστας', close: 'Κλείσιμο λίστας' },
   ar: { remove: 'إزالة', remove_named: 'إزالة {name}', clear: 'مسح', clear_search: 'مسح البحث', open: 'فتح القائمة', close: 'إغلاق القائمة' },
   ca: { remove: 'Treu', remove_named: 'Treu {name}', clear: 'Esborra', clear_search: 'Esborra la cerca', open: 'Obre la llista', close: 'Tanca la llista' },
   cs: { remove: 'Odebrat', remove_named: 'Odebrat {name}', clear: 'Vymazat', clear_search: 'Vymazat hledání', open: 'Otevřít seznam', close: 'Zavřít seznam' },
