@@ -10,7 +10,6 @@ import {
   injectThemeSkinCSS,
   removeThemeSkinCSS,
 } from '@/lib/theme-loader';
-import { extractTheme } from '@/lib/plugin-validator';
 import { BUILTIN_THEMES } from '@/lib/builtin-themes';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
@@ -216,6 +215,8 @@ export const useThemeStore = create<ThemeState>()(
       },
 
       installTheme: async (file: File) => {
+        // The package reader (ZIP, manifest checks) loads with the first install, not with the page.
+        const { extractTheme } = await import('@/lib/plugin-validator');
         const result = await extractTheme(file);
         if (!result.valid || !result.manifest) {
           return { success: false, error: result.errors.join('; '), warnings: result.warnings };

@@ -107,6 +107,13 @@ describe('what a cold start imports', () => {
     expect(modules.has('lib/offline/device-wipe.ts')).toBe(true);
   });
 
+  it('leaves reading plugin and theme packages to the first install', () => {
+    expect(reached('node_modules/jszip')).toEqual([]);
+    for (const reader of ['lib/extension-package.ts', 'lib/plugin-validator.ts', 'lib/plugin-secrets/credentials.ts']) {
+      expect(modules.has(reader), reader).toBe(false);
+    }
+  });
+
   it('loads the hosts of background work after the first screen', () => {
     for (const host of [
       'components/mail-transfer/mail-transfer-host.tsx',

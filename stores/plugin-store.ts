@@ -7,15 +7,13 @@ import { create } from 'zustand';
 import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import type { InstalledPlugin, PluginStatus, PluginTier } from '@/lib/plugin-types';
 import { pluginStorage } from '@/lib/plugin-storage';
-import { extractPlugin } from '@/lib/plugin-validator';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { requestConsent } from '@/lib/plugin-sandbox/consent';
 import { keystoreCouldReach } from '@/lib/plugin-sandbox/host-api-keystore';
-import { packageHash, type ValidatedPluginManifest } from '@/lib/extension-package';
-import JSZip from 'jszip';
+import type { ValidatedPluginManifest } from '@/lib/extension-package';
 import { sha256Hex } from '@/lib/plugin-sandbox/bundle-integrity';
 import { downloadManagedBundle } from '@/lib/plugin-sandbox/bundle-fetch';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
@@ -193,6 +191,8 @@ export const usePluginStore = create<PluginStoreState>()(
         if (!policy.isFeatureEnabled('pluginsUploadEnabled')) {
           return { success: false, reason: 'uploads-disabled' };
         }
+        // The package reader (ZIP, manifest checks) loads with the first install, not with the page.
+        const { extractPlugin } = await import('@/lib/plugin-validator');
         const result = await extractPlugin(file);
         if (!result.valid || !result.manifest) {
           return { success: false, reason: 'invalid', error: result.errors.join('; '), warnings: result.warnings };
@@ -217,6 +217,7 @@ export const usePluginStore = create<PluginStoreState>()(
         // Compute bundleHash so the admin-approval gate can pin to this
         // specific bundle (server-side state keys on (id, hash) pairs).
         const bundleHash = await sha256Hex(code).catch(() => undefined);
+        const { packageHash } = await import('@/lib/extension-package');
         const approvalHash = await packageHash(manifest as ValidatedPluginManifest, code);
 
         const plugin: InstalledPlugin = {
@@ -852,6 +853,7 @@ async function submitApprovalRequest(
   try {
     const source = code ?? await pluginStorage.getCode(plugin.id);
     if (!source) return undefined;
+    const { default: JSZip } = await import('jszip');
     const zip = new JSZip();
     zip.file('manifest.json', JSON.stringify(plugin.packageManifest));
     zip.file(String(plugin.packageManifest.entrypoint ?? plugin.entrypoint), source);
