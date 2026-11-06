@@ -355,6 +355,9 @@
     "no_search_results": "Sonuç bulunamadı",
     "no_search_results_description": "Arama teriminizi veya filtrelerinizi değiştirmeyi deneyin",
     "more_results_searching": "Başka sonuçlar aranıyor…",
+    "resize_plugin_results": "Eklenti sonuçlarını yeniden boyutlandır",
+    "compact_plugin_results": "Sonuç başına bir satır",
+    "plugin_result_score": "5 üzerinden {count}",
     "loading": "E-postalar yükleniyor...",
     "unread": "okunmamış",
     "to_me": "Bana",
@@ -5339,7 +5342,8 @@
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
     "updated": "{name} \"{title}\" etkinliğini güncelledi",
     "cancelled": "{name} \"{title}\" etkinliğini iptal etti",
-    "untitled": "Başlıksız etkinlik"
+    "untitled": "Başlıksız etkinlik",
+    "summary": "Katıldığınız etkinliklerdeki değişiklikler: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} ile {end} arası seçildi.",
@@ -5661,10 +5665,10 @@
     "title": "Posta kutunuza hoş geldiniz",
     "tip_compose": "Yeni e-posta oluşturmak için c tuşuna basın",
     "tip_shortcuts": "Tüm klavye kısayollarını görmek için ? tuşuna basın",
-    "tip_sidebar": "Takvim, Kişiler ve Ayarlar soldaki çubukta",
+    "tip_sidebar_apps": "{apps} soldaki çubukta",
     "tip_settings": "Deneyiminizi Ayarlar'dan özelleştirin",
     "tip_compose_touch": "Yeni bir e-posta yazmak için kalem düğmesine dokunun",
-    "tip_sidebar_touch": "Takvim, Kişiler ve Ayarlar alttaki çubukta",
+    "tip_sidebar_apps_touch": "{apps} alttaki çubukta",
     "got_it": "Anladım",
     "settings": "Ayarlar",
     "dismiss": "Kapat",

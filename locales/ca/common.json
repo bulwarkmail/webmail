@@ -355,6 +355,9 @@
     "no_search_results": "No s'ha trobat cap resultat",
     "no_search_results_description": "Proveu d'ajustar la cerca o els filtres",
     "more_results_searching": "S'estan cercant més resultats…",
+    "resize_plugin_results": "Canvia la mida dels resultats dels connectors",
+    "compact_plugin_results": "Una línia per resultat",
+    "plugin_result_score": "{count} de 5",
     "loading": "Carregant els correus...",
     "unread": "no llegit",
     "to_me": "Per a mi",
@@ -5339,7 +5342,8 @@
     "invited": "{name} t'ha convidat a \"{title}\"",
     "updated": "{name} ha actualitzat \"{title}\"",
     "cancelled": "{name} ha cancel·lat \"{title}\"",
-    "untitled": "Esdeveniment sense títol"
+    "untitled": "Esdeveniment sense títol",
+    "summary": "Canvis en esdeveniments en què participes: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Seleccionat de {start} a {end}.",
@@ -5661,10 +5665,10 @@
     "title": "Us donem la benvinguda a la bústia",
     "tip_compose": "Premeu c per redactar un correu nou",
     "tip_shortcuts": "Premeu ? per veure totes les dreceres de teclat",
-    "tip_sidebar": "Calendari, Contactes i Configuració són a la barra de l'esquerra",
+    "tip_sidebar_apps": "{apps} són a la barra de l'esquerra",
     "tip_settings": "Personalitzeu la vostra experiència a la Configuració",
     "tip_compose_touch": "Toca el botó del llapis per escriure un correu nou",
-    "tip_sidebar_touch": "Trobaràs el Calendari, els Contactes i la Configuració a la barra inferior",
+    "tip_sidebar_apps_touch": "Trobaràs {apps} a la barra inferior",
     "got_it": "Entesos",
     "settings": "Configuració",
     "dismiss": "Descarta",

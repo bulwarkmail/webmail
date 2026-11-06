@@ -355,6 +355,9 @@
     "no_search_results": "Aucun résultat trouvé",
     "no_search_results_description": "Essayez de modifier votre recherche ou vos filtres",
     "more_results_searching": "Recherche d'autres résultats…",
+    "resize_plugin_results": "Redimensionner les résultats des plugins",
+    "compact_plugin_results": "Une ligne par résultat",
+    "plugin_result_score": "{count} sur 5",
     "loading": "Chargement des emails...",
     "unread": "non lu",
     "to_me": "À moi",
@@ -5393,10 +5396,10 @@
     "title": "Bienvenue dans votre boite mail",
     "tip_compose": "Appuyez sur c pour composer un nouvel email",
     "tip_shortcuts": "Appuyez sur ? pour voir tous les raccourcis clavier",
-    "tip_sidebar": "Calendrier, Contacts et Paramètres sont dans la barre à gauche",
+    "tip_sidebar_apps": "{apps} sont dans la barre à gauche",
     "tip_settings": "Personnalisez votre experience dans les Parametres",
     "tip_compose_touch": "Touchez le bouton crayon pour écrire un nouvel e-mail",
-    "tip_sidebar_touch": "Agenda, Contacts et Paramètres se trouvent dans la barre du bas",
+    "tip_sidebar_apps_touch": "{apps} se trouvent dans la barre du bas",
     "got_it": "Compris",
     "settings": "Paramètres",
     "dismiss": "Fermer",
@@ -5971,7 +5974,8 @@
     "invited": "{name} vous a invité à « {title} »",
     "updated": "{name} a mis à jour « {title} »",
     "cancelled": "{name} a annulé « {title} »",
-    "untitled": "Événement sans titre"
+    "untitled": "Événement sans titre",
+    "summary": "Modifications d’événements auxquels vous participez : {count}"
   },
   "calendar_month_select": {
     "selected_range": "Du {start} au {end} sélectionné.",

@@ -355,6 +355,9 @@
     "no_search_results": "No results found",
     "no_search_results_description": "Try adjusting your search or filters",
     "more_results_searching": "Searching for more results…",
+    "resize_plugin_results": "Resize results from plugins",
+    "compact_plugin_results": "One line per result",
+    "plugin_result_score": "{count} of 5",
     "loading": "Loading emails...",
     "unread": "unread",
     "to_me": "To me",
@@ -5339,7 +5342,8 @@
     "invited": "{name} invited you to \"{title}\"",
     "updated": "{name} updated \"{title}\"",
     "cancelled": "{name} cancelled \"{title}\"",
-    "untitled": "Untitled event"
+    "untitled": "Untitled event",
+    "summary": "Changes to events you take part in: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} to {end} selected.",
@@ -5661,10 +5665,10 @@
     "title": "Welcome to your mailbox",
     "tip_compose": "Press c to compose a new email",
     "tip_shortcuts": "Press ? to see all keyboard shortcuts",
-    "tip_sidebar": "Calendar, Contacts and Settings are in the bar on the left",
+    "tip_sidebar_apps": "{apps} are in the bar on the left",
     "tip_settings": "Customize your experience in Settings",
     "tip_compose_touch": "Tap the pencil button to write a new email",
-    "tip_sidebar_touch": "Find Calendar, Contacts and Settings in the bar at the bottom",
+    "tip_sidebar_apps_touch": "Find {apps} in the bar at the bottom",
     "got_it": "Got it",
     "settings": "Settings",
     "dismiss": "Dismiss",

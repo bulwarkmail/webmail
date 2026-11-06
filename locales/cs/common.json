@@ -355,6 +355,9 @@
     "no_search_results": "Nenalezeny žádné výsledky",
     "no_search_results_description": "Zkuste změnit hledání nebo filtry",
     "more_results_searching": "Hledají se další výsledky…",
+    "resize_plugin_results": "Změnit velikost výsledků z doplňků",
+    "compact_plugin_results": "Jeden řádek na výsledek",
+    "plugin_result_score": "{count} z 5",
     "loading": "Načítání zpráv...",
     "unread": "nepřečtené",
     "to_me": "Pro mě",
@@ -5393,10 +5396,10 @@
     "title": "Vítejte ve své poštovní schránce",
     "tip_compose": "Stiskněte c pro napsání nové zprávy",
     "tip_shortcuts": "Stiskněte ? pro zobrazení všech klávesových zkratek",
-    "tip_sidebar": "Kalendář, Kontakty a Nastavení najdete na liště vlevo",
+    "tip_sidebar_apps": "{apps} najdete na liště vlevo",
     "tip_settings": "Přizpůsobte si aplikaci v Nastavení",
     "tip_compose_touch": "Klepnutím na tlačítko s tužkou napíšete nový e-mail",
-    "tip_sidebar_touch": "Kalendář, Kontakty a Nastavení najdete na liště dole",
+    "tip_sidebar_apps_touch": "{apps} najdete na liště dole",
     "got_it": "Rozumím",
     "settings": "Nastavení",
     "dismiss": "Zavřít",
@@ -5971,7 +5974,8 @@
     "invited": "{name} vás pozval(a) na „{title}“",
     "updated": "{name} aktualizoval(a) „{title}“",
     "cancelled": "{name} zrušil(a) „{title}“",
-    "untitled": "Událost bez názvu"
+    "untitled": "Událost bez názvu",
+    "summary": "Změny událostí, kterých se účastníte: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Vybráno {start} až {end}.",

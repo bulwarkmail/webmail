@@ -355,6 +355,9 @@
     "no_search_results": "Илэрц олдсонгүй",
     "no_search_results_description": "Хайлт эсвэл шүүлтүүрээ тохируулаад үзээрэй",
     "more_results_searching": "Нэмэлт үр дүн хайж байна…",
+    "resize_plugin_results": "Залгаасын үр дүнгийн хэмжээг өөрчлөх",
+    "compact_plugin_results": "Үр дүн бүрт нэг мөр",
+    "plugin_result_score": "5-аас {count}",
     "loading": "Имэйл ачаалж байна...",
     "unread": "уншаагүй",
     "to_me": "Надад",
@@ -5339,7 +5342,8 @@
     "invited": "{name} таныг \"{title}\"-д урилаа",
     "updated": "{name} \"{title}\"-г шинэчиллээ",
     "cancelled": "{name} \"{title}\"-г цуцаллаа",
-    "untitled": "Нэргүй арга хэмжээ"
+    "untitled": "Нэргүй арга хэмжээ",
+    "summary": "Таны оролцож буй үйл явдлын өөрчлөлт: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start}-с {end} хүртэл сонгосон.",
@@ -5661,10 +5665,10 @@
     "title": "Таны шуудангийн хайрцагт тавтай морил",
     "tip_compose": "Шинэ имэйл бичихийн тулд c товчийг дарна уу",
     "tip_shortcuts": "Дарах уу? бүх гарын товчлолыг харахын тулд",
-    "tip_sidebar": "Хуанли, Харилцагчид, Тохиргоо зүүн талын самбарт байна",
+    "tip_sidebar_apps": "{apps} зүүн талын самбарт байна",
     "tip_settings": "Тохиргооноос өөрийн туршлагаа тохируулна уу",
     "tip_compose_touch": "Шинэ имэйл бичихийн тулд харандаа товчийг дарна уу",
-    "tip_sidebar_touch": "Хуанли, Харилцагчид болон Тохиргоо доод самбарт байна",
+    "tip_sidebar_apps_touch": "{apps} доод самбарт байна",
     "got_it": "Ойлголоо",
     "settings": "Тохиргоо",
     "dismiss": "Хаах",

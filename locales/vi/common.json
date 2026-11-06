@@ -355,6 +355,9 @@
     "no_search_results": "Không tìm thấy kết quả nào",
     "no_search_results_description": "Hãy thử điều chỉnh tìm kiếm hoặc bộ lọc của bạn",
     "more_results_searching": "Đang tìm kiếm thêm kết quả…",
+    "resize_plugin_results": "Thay đổi kích thước kết quả từ plugin",
+    "compact_plugin_results": "Một dòng cho mỗi kết quả",
+    "plugin_result_score": "{count}/5",
     "loading": "Đang tải email...",
     "unread": "Chưa đọc",
     "to_me": "Gửi cho tôi",
@@ -5351,7 +5354,8 @@
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
     "updated": "{name} đã cập nhật \"{title}\"",
     "cancelled": "{name} đã hủy \"{title}\"",
-    "untitled": "Sự kiện không có tiêu đề"
+    "untitled": "Sự kiện không có tiêu đề",
+    "summary": "Thay đổi trong các sự kiện bạn tham gia: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Đã chọn từ {start} đến {end}.",
@@ -5673,10 +5677,10 @@
     "title": "Chào mừng đến với hộp thư của bạn",
     "tip_compose": "Nhấn c để soạn email mới",
     "tip_shortcuts": "Nhấn ? để xem tất cả phím tắt",
-    "tip_sidebar": "Lịch, Danh bạ và Cài đặt nằm ở thanh bên trái",
+    "tip_sidebar_apps": "{apps} nằm ở thanh bên trái",
     "tip_settings": "Tùy chỉnh trải nghiệm của bạn trong Cài đặt",
     "tip_compose_touch": "Nhấn vào nút bút chì để viết email mới",
-    "tip_sidebar_touch": "Tìm Lịch, Danh bạ và Cài đặt ở thanh phía dưới",
+    "tip_sidebar_apps_touch": "Tìm {apps} ở thanh phía dưới",
     "got_it": "Hiểu rồi",
     "settings": "Cài đặt",
     "dismiss": "Đóng",

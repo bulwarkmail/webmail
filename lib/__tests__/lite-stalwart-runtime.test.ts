@@ -91,6 +91,24 @@ describe('Lite on Stalwart: runtime mount and client id', () => {
     expect(tokens.getLiteClientId()).toBe('my-webmail');
   });
 
+  it('has the browser ask again for policy.json and config.json, which Stalwart marks immutable (#1563)', async () => {
+    await loadStalwartModules();
+    const calls: Array<[string, RequestInit | undefined]> = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push([url, init]);
+      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+    }));
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    const { fetchConfig } = await import('@/hooks/use-config');
+    await usePolicyStore.getState().fetchPolicy();
+    await fetchConfig();
+    const policy = calls.find(([url]) => url.includes('/policy.json'));
+    const config = calls.find(([url]) => url.includes('/config.json'));
+    expect(policy?.[0]).toContain('v=1.10.0-abc1234-x1');
+    expect(policy?.[1]?.cache).toBe('no-cache');
+    expect(config?.[1]?.cache).toBe('no-cache');
+  });
+
   it('does not probe /api/auth on its own origin (Stalwart serves the bundle)', async () => {
     const { tokens } = await loadStalwartModules();
     const fetchMock = vi.fn(async () => new Response('{}', { status: 400 }));

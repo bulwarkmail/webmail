@@ -847,6 +847,9 @@
     "no_search_results": "ไม่พบผลการค้นหา",
     "no_search_results_description": "ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ",
     "more_results_searching": "กำลังค้นหาผลลัพธ์เพิ่มเติม…",
+    "resize_plugin_results": "ปรับขนาดผลลัพธ์จากปลั๊กอิน",
+    "compact_plugin_results": "หนึ่งบรรทัดต่อผลลัพธ์",
+    "plugin_result_score": "{count} จาก 5",
     "loading": "กำลังโหลดอีเมล...",
     "unread": "ยังไม่อ่าน",
     "to_me": "ถึงฉัน",
@@ -2248,10 +2251,10 @@
     "title": "ยินดีต้อนรับสู่กล่องจดหมายของคุณ",
     "tip_compose": "กด c เพื่อเขียนอีเมลใหม่",
     "tip_shortcuts": "กด ? เพื่อดูแป้นพิมพ์ลัดทั้งหมด",
-    "tip_sidebar": "ปฏิทิน รายชื่อติดต่อ และการตั้งค่าอยู่ในแถบด้านซ้าย",
+    "tip_sidebar_apps": "{apps} อยู่ในแถบด้านซ้าย",
     "tip_settings": "ปรับแต่งประสบการณ์การใช้งานของคุณได้ที่ การตั้งค่า",
     "tip_compose_touch": "แตะไอคอนดินสอเพื่อเขียนอีเมลใหม่",
-    "tip_sidebar_touch": "เข้าถึง ปฏิทิน ผู้ติดต่อ และการตั้งค่า ได้จากแถบเมนูด้านล่าง",
+    "tip_sidebar_apps_touch": "เข้าถึง {apps} ได้จากแถบเมนูด้านล่าง",
     "got_it": "รับทราบ",
     "settings": "การตั้งค่า",
     "dismiss": "ปิด",
@@ -2909,7 +2912,8 @@
     "invited": "{name} เชิญคุณเข้าร่วม “{title}”",
     "updated": "{name} อัปเดตกิจกรรม “{title}”",
     "cancelled": "{name} ยกเลิกกิจกรรม “{title}”",
-    "untitled": "กิจกรรมที่ไม่มีชื่อ"
+    "untitled": "กิจกรรมที่ไม่มีชื่อ",
+    "summary": "การเปลี่ยนแปลงในกิจกรรมที่คุณเข้าร่วม: {count}"
   },
   "calendar_month_select": {
     "selected_range": "เลือก {start} ถึง {end} แล้ว",

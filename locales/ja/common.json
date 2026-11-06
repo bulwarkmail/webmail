@@ -355,6 +355,9 @@
     "no_search_results": "結果が見つかりません",
     "no_search_results_description": "検索やフィルターを調整してください",
     "more_results_searching": "ほかの結果を検索しています…",
+    "resize_plugin_results": "プラグインの検索結果のサイズを変更",
+    "compact_plugin_results": "結果ごとに1行",
+    "plugin_result_score": "5段階中{count}",
     "loading": "メールを読み込み中...",
     "unread": "未読",
     "to_me": "宛先: 自分",
@@ -5393,10 +5396,10 @@
     "title": "メールボックスへようこそ",
     "tip_compose": "cキーで新しいメールを作成",
     "tip_shortcuts": "?キーですべてのショートカットを表示",
-    "tip_sidebar": "カレンダー、連絡先、設定は左側のバーにあります",
+    "tip_sidebar_apps": "{apps}は左側のバーにあります",
     "tip_settings": "設定でカスタマイズできます",
     "tip_compose_touch": "鉛筆ボタンをタップして新しいメールを作成",
-    "tip_sidebar_touch": "カレンダー、連絡先、設定は下部のバーにあります",
+    "tip_sidebar_apps_touch": "{apps}は下部のバーにあります",
     "got_it": "了解",
     "settings": "設定",
     "dismiss": "閉じる",
@@ -5971,7 +5974,8 @@
     "invited": "{name} さんが「{title}」に招待しました",
     "updated": "{name} さんが「{title}」を更新しました",
     "cancelled": "{name} さんが「{title}」をキャンセルしました",
-    "untitled": "無題の予定"
+    "untitled": "無題の予定",
+    "summary": "参加している予定の変更: {count} 件"
   },
   "calendar_month_select": {
     "selected_range": "{start}から{end}を選択しました。",

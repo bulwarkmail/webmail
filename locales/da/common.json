@@ -355,6 +355,9 @@
     "no_search_results": "Ingen resultater fundet",
     "no_search_results_description": "Prøv at justere din søgning eller filtre",
     "more_results_searching": "Søger efter flere resultater…",
+    "resize_plugin_results": "Tilpas størrelsen på resultater fra plugins",
+    "compact_plugin_results": "Én linje pr. resultat",
+    "plugin_result_score": "{count} af 5",
     "loading": "Indlæser e-mails...",
     "unread": "ulæst",
     "to_me": "Til mig",
@@ -5339,7 +5342,8 @@
     "invited": "{name} har inviteret dig til \"{title}\"",
     "updated": "{name} har opdateret \"{title}\"",
     "cancelled": "{name} har aflyst \"{title}\"",
-    "untitled": "Unavngivet begivenhed"
+    "untitled": "Unavngivet begivenhed",
+    "summary": "Ændringer i begivenheder, du deltager i: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} til {end} valgt.",
@@ -5661,10 +5665,10 @@
     "title": "Velkommen til din postkasse",
     "tip_compose": "Tryk c for at skrive en ny e-mail",
     "tip_shortcuts": "Tryk ? for at se alle tastaturgenveje",
-    "tip_sidebar": "Kalender, Kontakter og Indstillinger findes i bjælken til venstre",
+    "tip_sidebar_apps": "{apps} findes i bjælken til venstre",
     "tip_settings": "Tilpas din oplevelse i Indstillinger",
     "tip_compose_touch": "Tryk på blyantknappen for at skrive en ny e-mail",
-    "tip_sidebar_touch": "Kalender, Kontakter og Indstillinger finder du i bjælken nederst",
+    "tip_sidebar_apps_touch": "{apps} finder du i bjælken nederst",
     "got_it": "Forstået",
     "settings": "Indstillinger",
     "dismiss": "Afvis",

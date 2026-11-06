@@ -355,6 +355,9 @@
     "no_search_results": "Neboli nájdené žiadne výsledky",
     "no_search_results_description": "Skúste zmeniť hľadanie alebo filtre",
     "more_results_searching": "Hľadajú sa ďalšie výsledky…",
+    "resize_plugin_results": "Zmeniť veľkosť výsledkov z doplnkov",
+    "compact_plugin_results": "Jeden riadok na výsledok",
+    "plugin_result_score": "{count} z 5",
     "loading": "Načítavanie e-mailov...",
     "unread": "neprečítané",
     "to_me": "Pre mňa",
@@ -5339,7 +5342,8 @@
     "invited": "{name} vás pozval(a) na „{title}“",
     "updated": "{name} aktualizoval(a) „{title}“",
     "cancelled": "{name} zrušil(a) „{title}“",
-    "untitled": "Udalosť bez názvu"
+    "untitled": "Udalosť bez názvu",
+    "summary": "Zmeny udalostí, ktorých sa zúčastňujete: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Vybraté {start} až {end}.",
@@ -5661,10 +5665,10 @@
     "title": "Vitajte vo svojej poštovej schránke",
     "tip_compose": "Stlačte c na napísanie nového e-mailu",
     "tip_shortcuts": "Stlačte ? na zobrazenie všetkých klávesových skratiek",
-    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete na lište vľavo",
+    "tip_sidebar_apps": "{apps} nájdete na lište vľavo",
     "tip_settings": "Prispôsobte si aplikáciu v Nastaveniach",
     "tip_compose_touch": "Ťuknutím na tlačidlo s ceruzkou napíšete nový e-mail",
-    "tip_sidebar_touch": "Kalendár, Kontakty a Nastavenia nájdete na lište dole",
+    "tip_sidebar_apps_touch": "{apps} nájdete na lište dole",
     "got_it": "Rozumiem",
     "settings": "Nastavenia",
     "dismiss": "Zavrieť",

@@ -355,6 +355,9 @@
     "no_search_results": "Tulemusi ei leitud",
     "no_search_results_description": "Proovi otsingut või filtreid muuta",
     "more_results_searching": "Otsitakse veel tulemusi…",
+    "resize_plugin_results": "Muuda pistikprogrammide tulemuste suurust",
+    "compact_plugin_results": "Üks rida tulemuse kohta",
+    "plugin_result_score": "{count}/5",
     "loading": "Kirjade laadimine...",
     "unread": "lugemata",
     "to_me": "Minule",
@@ -5339,7 +5342,8 @@
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
     "updated": "{name} uuendas sündmust \"{title}\"",
     "cancelled": "{name} tühistas sündmuse \"{title}\"",
-    "untitled": "Nimetu sündmus"
+    "untitled": "Nimetu sündmus",
+    "summary": "Muudatused sündmustes, milles osaled: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Valitud {start} kuni {end}.",
@@ -5661,10 +5665,10 @@
     "title": "Tere tulemast sinu postkasti",
     "tip_compose": "Vajuta c uue e-kirja kirjutamiseks",
     "tip_shortcuts": "Vajuta ? kõigi kiirklahvide nägemiseks",
-    "tip_sidebar": "Kalender, Kontaktid ja Seaded on vasakul ribal",
+    "tip_sidebar_apps": "{apps} on vasakul ribal",
     "tip_settings": "Kohanda oma kogemust seadetes",
     "tip_compose_touch": "Uue kirja kirjutamiseks puuduta pliiatsinuppu",
-    "tip_sidebar_touch": "Kalender, kontaktid ja seaded asuvad alumisel ribal",
+    "tip_sidebar_apps_touch": "{apps} asuvad alumisel ribal",
     "got_it": "Selge",
     "settings": "Seaded",
     "dismiss": "Sulge",

@@ -355,6 +355,9 @@
     "no_search_results": "Nenhum resultado encontrado",
     "no_search_results_description": "Tente ajustar sua pesquisa ou filtros",
     "more_results_searching": "A procurar mais resultados…",
+    "resize_plugin_results": "Redimensionar resultados de plugins",
+    "compact_plugin_results": "Uma linha por resultado",
+    "plugin_result_score": "{count} de 5",
     "loading": "Carregando e-mails...",
     "unread": "não lido",
     "to_me": "Para mim",
@@ -5393,10 +5396,10 @@
     "title": "Bem-vindo à sua caixa de entrada",
     "tip_compose": "Pressione c para escrever um novo e-mail",
     "tip_shortcuts": "Pressione ? para ver todos os atalhos de teclado",
-    "tip_sidebar": "Calendário, Contactos e Definições estão na barra à esquerda",
+    "tip_sidebar_apps": "{apps} estão na barra à esquerda",
     "tip_settings": "Personalize sua experiência nas Configurações",
     "tip_compose_touch": "Toque no botão de lápis para escrever um novo e-mail",
-    "tip_sidebar_touch": "Calendário, Contatos e Configurações ficam na barra inferior",
+    "tip_sidebar_apps_touch": "{apps} ficam na barra inferior",
     "got_it": "Entendi",
     "settings": "Configurações",
     "dismiss": "Fechar",
@@ -5971,7 +5974,8 @@
     "invited": "{name} convidou-o para \"{title}\"",
     "updated": "{name} atualizou \"{title}\"",
     "cancelled": "{name} cancelou \"{title}\"",
-    "untitled": "Evento sem título"
+    "untitled": "Evento sem título",
+    "summary": "Alterações a eventos em que participa: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Selecionado de {start} a {end}.",

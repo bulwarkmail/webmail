@@ -355,6 +355,9 @@
     "no_search_results": "نتیجه‌ای یافت نشد",
     "no_search_results_description": "جستجو یا فیلترهای خود را تنظیم کنید",
     "more_results_searching": "در حال جستجوی نتایج بیشتر…",
+    "resize_plugin_results": "تغییر اندازه نتایج افزونه‌ها",
+    "compact_plugin_results": "یک خط برای هر نتیجه",
+    "plugin_result_score": "{count} از 5",
     "loading": "در حال بارگذاری ایمیل‌ها...",
     "unread": "خوانده نشده",
     "to_me": "به من",
@@ -5339,7 +5342,8 @@
     "invited": "{name} شما را به «{title}» دعوت کرد",
     "updated": "{name} «{title}» را به‌روزرسانی کرد",
     "cancelled": "{name} «{title}» را لغو کرد",
-    "untitled": "رویداد بدون عنوان"
+    "untitled": "رویداد بدون عنوان",
+    "summary": "تغییرات در رویدادهایی که در آن‌ها شرکت دارید: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} تا {end} انتخاب شد.",
@@ -5661,10 +5665,10 @@
     "title": "به صندوق پستی خود خوش آمدید",
     "tip_compose": "کلید c را برای ایمیل جدید فشار دهید",
     "tip_shortcuts": "کلید ? را برای مشاهده میانبرها فشار دهید",
-    "tip_sidebar": "تقویم، مخاطبان و تنظیمات در نوار سمت راست هستند",
+    "tip_sidebar_apps": "{apps} در نوار سمت راست هستند",
     "tip_settings": "تجربه خود را در تنظیمات سفارشی کنید",
     "tip_compose_touch": "برای نوشتن ایمیل جدید روی دکمه مداد بزنید",
-    "tip_sidebar_touch": "تقویم، مخاطبین و تنظیمات در نوار پایین هستند",
+    "tip_sidebar_apps_touch": "{apps} در نوار پایین هستند",
     "got_it": "متوجه شدم",
     "settings": "تنظیمات",
     "dismiss": "رد کردن",

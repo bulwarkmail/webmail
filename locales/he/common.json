@@ -299,6 +299,9 @@
     "no_search_results": "לא נמצאו תוצאות",
     "no_search_results_description": "נסה להתאים את החיפוש או המסננים שלך",
     "more_results_searching": "מחפש תוצאות נוספות…",
+    "resize_plugin_results": "שינוי גודל התוצאות מתוספים",
+    "compact_plugin_results": "שורה אחת לכל תוצאה",
+    "plugin_result_score": "{count} מתוך 5",
     "loading": "טוען אימיילים...",
     "unread": "לא נקרא",
     "to_me": "לִי",
@@ -5266,10 +5269,10 @@
     "title": "ברוך הבא לתיבת הדואר שלך",
     "tip_compose": "הקש c כדי לכתוב דוא\"ל חדש",
     "tip_shortcuts": "לחץ על? כדי לראות את כל קיצורי המקלדת",
-    "tip_sidebar": "לוח השנה, אנשי הקשר וההגדרות נמצאים בסרגל שבצד ימין",
+    "tip_sidebar_apps": "{apps} נמצאים בסרגל שבצד ימין",
     "tip_settings": "התאם אישית את החוויה שלך בהגדרות",
     "tip_compose_touch": "הקישו על כפתור העיפרון כדי לכתוב הודעה חדשה",
-    "tip_sidebar_touch": "יומן, אנשי קשר והגדרות נמצאים בסרגל התחתון",
+    "tip_sidebar_apps_touch": "{apps} נמצאים בסרגל התחתון",
     "got_it": "הבנתי",
     "settings": "הגדרות",
     "dismiss": "לְפַטֵר",
@@ -5790,7 +5793,8 @@
     "invited": "{name} הזמין/ה אותך ל\"{title}\"",
     "updated": "{name} עדכן/ה את \"{title}\"",
     "cancelled": "{name} ביטל/ה את \"{title}\"",
-    "untitled": "אירוע ללא כותרת"
+    "untitled": "אירוע ללא כותרת",
+    "summary": "שינויים באירועים שבהם את/ה משתתף/ת: {count}"
   },
   "calendar_month_select": {
     "selected_range": "נבחרו {start} עד {end}.",

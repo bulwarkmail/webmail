@@ -355,6 +355,9 @@
     "no_search_results": "Keine Ergebnisse gefunden",
     "no_search_results_description": "Passen Sie Ihre Suche oder Filter an",
     "more_results_searching": "Weitere Treffer werden gesucht…",
+    "resize_plugin_results": "Höhe der Treffer aus Plugins ändern",
+    "compact_plugin_results": "Eine Zeile pro Treffer",
+    "plugin_result_score": "{count} von 5",
     "loading": "E-Mails werden geladen...",
     "unread": "ungelesen",
     "to_me": "An mich",
@@ -5393,10 +5396,10 @@
     "title": "Willkommen in Ihrem Postfach",
     "tip_compose": "Drücken Sie c, um eine neue E-Mail zu verfassen",
     "tip_shortcuts": "Drücken Sie ?, um alle Tastaturkürzel anzuzeigen",
-    "tip_sidebar": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste links",
+    "tip_sidebar_apps": "{apps} finden Sie in der Leiste links",
     "tip_settings": "Passen Sie Ihre Erfahrung in den Einstellungen an",
     "tip_compose_touch": "Tippen Sie auf den Stift, um eine neue E-Mail zu schreiben",
-    "tip_sidebar_touch": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste unten",
+    "tip_sidebar_apps_touch": "{apps} finden Sie in der Leiste unten",
     "got_it": "Verstanden",
     "settings": "Einstellungen",
     "dismiss": "Schließen",
@@ -5971,7 +5974,8 @@
     "invited": "{name} hat Sie zu „{title}“ eingeladen",
     "updated": "{name} hat „{title}“ aktualisiert",
     "cancelled": "{name} hat „{title}“ abgesagt",
-    "untitled": "Unbenannter Termin"
+    "untitled": "Unbenannter Termin",
+    "summary": "Änderungen an Terminen, an denen Sie teilnehmen: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} bis {end} ausgewählt.",

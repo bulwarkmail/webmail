@@ -355,6 +355,9 @@
     "no_search_results": "找不到結果",
     "no_search_results_description": "請調整搜尋條件或篩選器",
     "more_results_searching": "正在搜尋更多結果…",
+    "resize_plugin_results": "調整外掛程式結果的大小",
+    "compact_plugin_results": "每個結果一行",
+    "plugin_result_score": "{count}/5",
     "loading": "正在載入郵件…",
     "unread": "未讀",
     "to_me": "寄給我",
@@ -5339,7 +5342,8 @@
     "invited": "{name} 邀請您參加「{title}」",
     "updated": "{name} 更新了「{title}」",
     "cancelled": "{name} 取消了「{title}」",
-    "untitled": "未命名活動"
+    "untitled": "未命名活動",
+    "summary": "你參與的活動有變更：{count} 項"
   },
   "calendar_month_select": {
     "selected_range": "已選取 {start} 至 {end}。",
@@ -5661,10 +5665,10 @@
     "title": "歡迎使用您的信件匣",
     "tip_compose": "按 c 寫新郵件",
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
-    "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
+    "tip_sidebar_apps": "{apps}位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
     "tip_compose_touch": "點按鉛筆按鈕寫新郵件",
-    "tip_sidebar_touch": "行事曆、聯絡人和設定位於底部列",
+    "tip_sidebar_apps_touch": "{apps}位於底部列",
     "got_it": "了解",
     "settings": "設定",
     "dismiss": "關閉",

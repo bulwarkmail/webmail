@@ -355,6 +355,9 @@
     "no_search_results": "No se encontraron resultados",
     "no_search_results_description": "Intente ajustar su búsqueda o filtros",
     "more_results_searching": "Buscando más resultados…",
+    "resize_plugin_results": "Cambiar el tamaño de los resultados de los complementos",
+    "compact_plugin_results": "Una línea por resultado",
+    "plugin_result_score": "{count} de 5",
     "loading": "Cargando correos...",
     "unread": "no leído",
     "to_me": "Para mí",
@@ -5393,10 +5396,10 @@
     "title": "Bienvenido a tu buzón",
     "tip_compose": "Pulsa c para redactar un nuevo correo",
     "tip_shortcuts": "Pulsa ? para ver todos los atajos de teclado",
-    "tip_sidebar": "Calendario, Contactos y Ajustes están en la barra de la izquierda",
+    "tip_sidebar_apps": "{apps} están en la barra de la izquierda",
     "tip_settings": "Personaliza tu experiencia en Ajustes",
     "tip_compose_touch": "Toca el botón del lápiz para escribir un correo nuevo",
-    "tip_sidebar_touch": "Encontrarás Calendario, Contactos y Ajustes en la barra inferior",
+    "tip_sidebar_apps_touch": "Encontrarás {apps} en la barra inferior",
     "got_it": "Entendido",
     "settings": "Ajustes",
     "dismiss": "Cerrar",
@@ -5971,7 +5974,8 @@
     "invited": "{name} te ha invitado a \"{title}\"",
     "updated": "{name} ha actualizado \"{title}\"",
     "cancelled": "{name} ha cancelado \"{title}\"",
-    "untitled": "Evento sin título"
+    "untitled": "Evento sin título",
+    "summary": "Cambios en eventos en los que participas: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Seleccionado del {start} al {end}.",

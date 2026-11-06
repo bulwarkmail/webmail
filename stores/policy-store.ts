@@ -203,9 +203,12 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
       }
     };
     try {
-      // Stalwart serves bundle files immutably: a build-id URL instead of no-store.
+      // Stalwart serves bundle files as immutable for a year, and the build id
+      // in the URL only changes with a new release. An admin who edits
+      // policy.json in the bundle needs every browser to see it on the next
+      // load (#1563), so the browser asks again each time.
       const res = IS_LITE_STALWART
-        ? await apiFetch(withLiteBuildId(LITE_POLICY_PATH))
+        ? await apiFetch(withLiteBuildId(LITE_POLICY_PATH), { cache: 'no-cache' })
         : await apiFetch(IS_LITE ? LITE_POLICY_PATH : '/api/admin/policy', IS_LITE ? { cache: 'no-store' } : undefined);
       if (request !== policyRequest) return;
       if (res.ok) {

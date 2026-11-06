@@ -355,6 +355,9 @@
     "no_search_results": "Ingen resultater funnet",
     "no_search_results_description": "Prøv å justere søket eller filtrene",
     "more_results_searching": "Søker etter flere resultater…",
+    "resize_plugin_results": "Endre størrelse på resultater fra utvidelser",
+    "compact_plugin_results": "Én linje per resultat",
+    "plugin_result_score": "{count} av 5",
     "loading": "Laster inn e-poster...",
     "unread": "ulest",
     "to_me": "Til meg",
@@ -5339,7 +5342,8 @@
     "invited": "{name} har invitert deg til «{title}»",
     "updated": "{name} har oppdatert «{title}»",
     "cancelled": "{name} har avlyst «{title}»",
-    "untitled": "Hendelse uten tittel"
+    "untitled": "Hendelse uten tittel",
+    "summary": "Endringer i hendelser du deltar i: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} til {end} er valgt.",
@@ -5661,10 +5665,10 @@
     "title": "Velkommen til postkassen din",
     "tip_compose": "Trykk c for å skrive en ny e-post",
     "tip_shortcuts": "Trykk på ? for å se alle tastatursnarveier",
-    "tip_sidebar": "Kalender, Kontakter og Innstillinger finner du i feltet til venstre",
+    "tip_sidebar_apps": "{apps} finner du i feltet til venstre",
     "tip_settings": "Tilpass nettposten under Innstillinger",
     "tip_compose_touch": "Trykk på blyantknappen for å skrive en ny e-post",
-    "tip_sidebar_touch": "Kalender, Kontakter og Innstillinger finner du i linjen nederst",
+    "tip_sidebar_apps_touch": "{apps} finner du i linjen nederst",
     "got_it": "Skjønner",
     "settings": "Innstillinger",
     "dismiss": "Lukk",

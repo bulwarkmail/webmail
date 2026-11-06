@@ -215,7 +215,7 @@ describe('Lite configuration compatibility', () => {
     expect(data.appName).toBe('Stalwart Mail');
     expect(data.jmapServerUrl).toBe(window.location.origin);
     expect(data.allowCustomJmapEndpoint).toBe(false);
-    expect(mocks.apiFetch).toHaveBeenCalledExactlyOnceWith('/config.json?v=test-build', undefined);
+    expect(mocks.apiFetch).toHaveBeenCalledExactlyOnceWith('/config.json?v=test-build', { cache: 'no-cache' });
     expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -355,6 +355,9 @@
     "no_search_results": "Nie znaleziono wyników",
     "no_search_results_description": "Spróbuj zmienić wyszukiwanie lub filtry",
     "more_results_searching": "Wyszukiwanie kolejnych wyników…",
+    "resize_plugin_results": "Zmień rozmiar wyników z wtyczek",
+    "compact_plugin_results": "Jeden wiersz na wynik",
+    "plugin_result_score": "{count} z 5",
     "loading": "Ładowanie wiadomości...",
     "unread": "nieprzeczytane",
     "to_me": "Do mnie",
@@ -5393,10 +5396,10 @@
     "title": "Witaj w swojej skrzynce pocztowej",
     "tip_compose": "Naciśnij c, aby napisać nową wiadomość e-mail",
     "tip_shortcuts": "Naciśnij ?, aby zobaczyć wszystkie skróty klawiszowe",
-    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia są na pasku po lewej",
+    "tip_sidebar_apps": "{apps} są na pasku po lewej",
     "tip_settings": "Dostosuj działanie aplikacji w Ustawieniach",
     "tip_compose_touch": "Stuknij przycisk z ołówkiem, aby napisać nowy e-mail",
-    "tip_sidebar_touch": "Kalendarz, Kontakty i Ustawienia znajdziesz na dolnym pasku",
+    "tip_sidebar_apps_touch": "{apps} znajdziesz na dolnym pasku",
     "got_it": "Rozumiem",
     "settings": "Ustawienia",
     "dismiss": "Zamknij",
@@ -5971,7 +5974,8 @@
     "invited": "{name} zaprosił(a) Cię na „{title}”",
     "updated": "{name} zaktualizował(a) „{title}”",
     "cancelled": "{name} odwołał(a) „{title}”",
-    "untitled": "Wydarzenie bez tytułu"
+    "untitled": "Wydarzenie bez tytułu",
+    "summary": "Zmiany w wydarzeniach, w których uczestniczysz: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Wybrano od {start} do {end}.",

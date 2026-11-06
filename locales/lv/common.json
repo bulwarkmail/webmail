@@ -355,6 +355,9 @@
     "no_search_results": "Nekas netika atrasts",
     "no_search_results_description": "Mēģiniet mainīt meklēšanas vaicājumu vai filtrus",
     "more_results_searching": "Meklē vēl rezultātus…",
+    "resize_plugin_results": "Mainīt spraudņu rezultātu izmēru",
+    "compact_plugin_results": "Viena rinda katram rezultātam",
+    "plugin_result_score": "{count} no 5",
     "loading": "Ielādē vēstules...",
     "unread": "nelasītas",
     "to_me": "Man",
@@ -5393,10 +5396,10 @@
     "title": "Laipni lūdzam jūsu pastkastē",
     "tip_compose": "Nospiediet c, lai rakstītu jaunu vēstuli",
     "tip_shortcuts": "Nospiediet ?, lai skatītu visus īsinājumtaustiņus",
-    "tip_sidebar": "Kalendārs, Kontakti un Iestatījumi ir joslā kreisajā pusē",
+    "tip_sidebar_apps": "{apps} ir joslā kreisajā pusē",
     "tip_settings": "Pielāgojiet saskarni sadaļā «Iestatījumi»",
     "tip_compose_touch": "Pieskarieties zīmuļa pogai, lai rakstītu jaunu e-pastu",
-    "tip_sidebar_touch": "Kalendārs, Kontakti un Iestatījumi ir apakšējā joslā",
+    "tip_sidebar_apps_touch": "{apps} ir apakšējā joslā",
     "got_it": "Skaidrs",
     "settings": "Iestatījumi",
     "dismiss": "Aizvērt",
@@ -5971,7 +5974,8 @@
     "invited": "{name} uzaicināja jūs uz “{title}”",
     "updated": "{name} atjaunināja “{title}”",
     "cancelled": "{name} atcēla “{title}”",
-    "untitled": "Notikums bez nosaukuma"
+    "untitled": "Notikums bez nosaukuma",
+    "summary": "Izmaiņas notikumos, kuros piedalāties: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Atlasīts no {start} līdz {end}.",
