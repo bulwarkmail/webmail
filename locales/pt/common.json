@@ -6109,6 +6109,7 @@
     "shared": "{name} partilhou consigo {kind} \"{object}\"",
     "changed": "{name} alterou o seu acesso a {kind} \"{object}\"",
     "revoked": "{name} removeu o seu acesso a {kind} \"{object}\"",
+    "summary": "{name} alterou o seu acesso a {count, plural, one {# item partilhado} other {# itens partilhados}}",
     "object": {
       "folder": "a pasta",
       "calendar": "o calendário",

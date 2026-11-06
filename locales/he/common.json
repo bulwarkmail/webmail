@@ -5928,6 +5928,7 @@
     "shared": "{name} שיתף/ה איתך את {kind} \"{object}\"",
     "changed": "{name} שינה/תה את הגישה שלך ל{kind} \"{object}\"",
     "revoked": "{name} הסיר/ה את הגישה שלך ל{kind} \"{object}\"",
+    "summary": "{name} שינה/תה את הגישה שלך ל{count, plural, one {פריט משותף אחד} two {שני פריטים משותפים} other {# פריטים משותפים}}",
     "object": {
       "folder": "התיקייה",
       "calendar": "היומן",

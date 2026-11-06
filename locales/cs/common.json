@@ -6109,6 +6109,7 @@
     "shared": "{name} s vámi sdílí {kind} „{object}“",
     "changed": "{name} změnil(a) váš přístup k {kind} „{object}“",
     "revoked": "{name} odebral(a) váš přístup k {kind} „{object}“",
+    "summary": "{name} změnil(a) váš přístup k {count, plural, one {# sdílené položce} few {# sdíleným položkám} many {# sdílené položce} other {# sdíleným položkám}}",
     "object": {
       "folder": "složku",
       "calendar": "kalendář",
