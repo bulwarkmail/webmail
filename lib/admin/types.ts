@@ -164,10 +164,24 @@ export interface AdminSidebarApp {
   url: string;
   /** Lucide icon name (e.g. 'Globe'). */
   icon: string;
+  /**
+   * An image drawn in place of `icon` (an app's own logo): https, on the app's
+   * own origin. Only for apps of the policy; `icon` shows when it fails to load.
+   */
+  iconUrl?: string;
   /** Open in a new browser tab, or embedded in an iframe. */
   openMode: 'tab' | 'inline';
   showOnMobile: boolean;
+  /**
+   * Browser features an inline app of the policy may use in its frame
+   * (lib/sidebar-apps.ts, SIDEBAR_APP_FEATURES). Never honoured for a user's
+   * own app.
+   */
+  allow?: SidebarAppFeature[];
 }
+
+/** What an operator may grant an inline sidebar app's frame. */
+export type SidebarAppFeature = 'clipboard-write' | 'microphone' | 'camera' | 'display-capture' | 'fullscreen';
 
 export interface SettingsPolicy {
   restrictions: Record<string, SettingRestriction>;
