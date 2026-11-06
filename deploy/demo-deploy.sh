@@ -33,6 +33,9 @@ STATE=/opt/bulwark-demo-deploy
 # Optional extra environment for the container (e.g. ERROR_REPORTING_DSN),
 # one VAR=value per line. Not in a bind-mounted dir: the app never sees it.
 ENV_FILE=/opt/bulwark-demo-data/demo.env
+# Optional Docker networks the container joins besides the default bridge
+# (e.g. languagetool, for the LanguageTool container), one name per line.
+NETWORKS_FILE=/opt/bulwark-demo-data/demo.networks
 
 log() { echo "[demo-deploy] $*"; }
 
@@ -61,6 +64,13 @@ run_container() {
     -v "$DATA/settings:/app/data/settings" \
     -v "$DATA/telemetry:/app/data/telemetry" \
     "$1" >/dev/null
+  if [ -f "$NETWORKS_FILE" ]; then
+    local net
+    while read -r net; do
+      [[ -z "$net" || "$net" == \#* ]] && continue
+      docker_ network connect "$net" "$NAME" || log "could not join network $net"
+    done < "$NETWORKS_FILE"
+  fi
 }
 
 healthy() {
