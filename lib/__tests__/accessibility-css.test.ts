@@ -193,3 +193,24 @@ describe('reduced transparency', () => {
     expect(css).toMatch(/:root\[data-transparency="reduce"\] body\[data-theme-skin="builtin-aurora-glass"\] :is\(\.bg-card, \.bg-popover, \[role="menu"\], \[role="dialog"\], \[role="listbox"\]\) \{\s*background-color: var\(--color-popover\) !important;/);
   });
 });
+
+describe('more contrast', () => {
+  const globals = readFileSync(path.join(process.cwd(), 'app', 'globals.css'), 'utf8');
+  const brandVars = [...new Set([...globals.matchAll(/var\((--brand-[\w-]+)/g)].map((m) => m[1]))];
+
+  /** The declarations of the rule whose selector is `selector`. */
+  function body(selector: string): string {
+    const at = css.indexOf(`${selector} {`);
+    expect(at).toBeGreaterThan(-1);
+    return css.slice(css.indexOf('{', at) + 1, css.indexOf('}', at));
+  }
+
+  it.each([
+    ['the system setting', ':root:not([data-contrast="normal"])'],
+    ['the More setting', ':root[data-contrast="more"]'],
+  ])('drops the host palette for %s, so its stock colour pairs apply', (_name, selector) => {
+    expect(brandVars.length).toBeGreaterThanOrEqual(8);
+    const rule = body(selector);
+    for (const name of brandVars) expect(rule).toContain(`${name}: initial;`);
+  });
+});

@@ -10,6 +10,7 @@ import { ThemeColorSync } from "@/components/theme-color-sync";
 import { IosViewportHeal } from "@/components/ios-viewport-heal";
 import { configManager } from "@/lib/admin/config-manager";
 import {
+  brandPaletteCss,
   matchDomainBranding,
   parseDomainBranding,
   pickRequestHost,
@@ -71,6 +72,16 @@ async function brandedValue(key: BrandingOverrideKey, fallback: string): Promise
   )[key];
   if (typeof override === "string" && override.length > 0) return override;
   return configManager.get<string>(key, fallback);
+}
+
+/** The requesting host's colour palette (DOMAIN_BRANDING `palette`) as CSS. */
+async function brandPaletteStyle(): Promise<string> {
+  const host = pickRequestHost(await headers());
+  const entry = matchDomainBranding(
+    host,
+    parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
+  );
+  return brandPaletteCss(entry.palette);
 }
 
 /**
@@ -270,6 +281,7 @@ export default async function RootLayout({
   let locale: string;
   let nonce: string | undefined;
   let themeColorConfigured: boolean;
+  let paletteCss = "";
   if (IS_LITE) {
     // Static export: no request, no nonce, no admin config.
     parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
@@ -284,6 +296,7 @@ export default async function RootLayout({
     locale = await resolveRequestLocale();
     nonce = (await headers()).get("x-nonce") ?? "";
     themeColorConfigured = await hasExplicitThemeColor();
+    paletteCss = await brandPaletteStyle();
   }
   const appName = await brandedAppName();
 
@@ -295,6 +308,9 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-title" content={appName} />
         {parentOrigin && (
           <meta name="parent-origin" content={parentOrigin} />
+        )}
+        {paletteCss && (
+          <style id="brand-palette" nonce={nonce} dangerouslySetInnerHTML={{ __html: paletteCss }} />
         )}
         <script
           nonce={nonce}
