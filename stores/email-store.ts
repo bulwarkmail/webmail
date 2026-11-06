@@ -1748,6 +1748,15 @@ function beginEmailListRequest(): () => boolean {
   return captureEmailListRequest();
 }
 
+// captureEmailListQuery drops a page in flight once the search input
+// changes, so whatever changes it has to clear the page's loading flag too.
+function dropPageOnSearchEdit(state: EmailStore, next: Partial<EmailStore>): Partial<EmailStore> {
+  const changed = ('searchQuery' in next && next.searchQuery !== state.searchQuery)
+    || ('searchFilters' in next && next.searchFilters !== state.searchFilters)
+    || ('searchMailboxId' in next && next.searchMailboxId !== state.searchMailboxId);
+  return changed ? { ...next, isLoadingMore: false } : next;
+}
+
 /** Stop a search's deferred loading/response writes when its input is left. */
 function cancelEmailSearch(state: EmailStore): Partial<EmailStore> {
   providedSearchRun = null;
@@ -3766,7 +3775,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setError: (error) => set({ error }),
   // Another search lists other mail: ticks kept from the last list would stay
   // counted in the selection bar, with Delete acting on rows nobody can see.
-  setSearchQuery: (query) => set((state) => ({
+  setSearchQuery: (query) => set((state) => dropPageOnSearchEdit(state, {
     ...cancelEmailSearch(state),
     searchQuery: query,
     ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
@@ -5807,7 +5816,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   setSearchFilters: (filters) => {
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
       ...cancelEmailSearch(state),
       searchFilters: { ...state.searchFilters, ...filters },
       ...NO_SELECTION(state),
@@ -5816,7 +5825,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   setSearchMailboxId: (mailboxId) => {
     // Another scope lists other mail once a search is running (see setSearchQuery).
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
       ...cancelEmailSearch(state),
       searchMailboxId: mailboxId,
       searchScopeFollowsFolder: false,
@@ -5828,11 +5837,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   // every folder of every account (#788, #1082), so it has to name the
   // folder, and keep naming whichever folder is open.
   scopeSearchToOpenFolder: () => {
-    set((state) => ({ ...cancelEmailSearch(state), searchMailboxId: state.selectedMailbox, searchScopeFollowsFolder: true }));
+    set((state) => dropPageOnSearchEdit(state, {
+      ...cancelEmailSearch(state), searchMailboxId: state.selectedMailbox, searchScopeFollowsFolder: true,
+    }));
   },
 
   clearSearchFilters: () => {
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
       ...cancelEmailSearch(state),
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox),

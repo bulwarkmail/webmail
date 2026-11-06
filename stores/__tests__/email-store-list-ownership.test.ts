@@ -297,6 +297,25 @@ describe('pagination and refresh compatibility', () => {
       });
     }
   }
+  // The search box hands over its text on blur and the filter panel writes
+  // filters before any search runs: the page in flight is dropped, and the
+  // list must still be able to load its next page afterwards.
+  const editSearch = {
+    query: () => store.getState().setSearchQuery('invoice'),
+    filters: () => store.getState().setSearchFilters({ isStarred: true }),
+    scope: () => store.getState().setSearchMailboxId('later'),
+    'clear filters': () => store.getState().clearSearchFilters(),
+  };
+  it.each(Object.keys(editSearch) as (keyof typeof editSearch)[])(
+    'editing the search %s without searching does not leave pagination stuck', async edit => {
+      seed();
+      const more = store.getState().loadMoreEmails(a);
+      expect(store.getState().isLoadingMore).toBe(true);
+      editSearch[edit]();
+      reads[0].reply.resolve(page('page-two')); await more;
+      expect(store.getState().isLoadingMore).toBe(false);
+    },
+  );
   it('starting pagination does not invalidate an in-flight refresh', async () => {
     seed();
     const refresh = store.getState().refreshCurrentMailbox(a);
