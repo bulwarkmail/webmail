@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, Lightbulb, Settings, PlayCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { useRouter } from "@/i18n/navigation";
 import { useTour } from "@/components/tour/tour-provider";
 import { useSettingsStore } from "@/stores/settings-store";
+import { usePolicyStore } from "@/stores/policy-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { isDesktopApp } from "@/lib/desktop/bridge";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
@@ -44,6 +45,19 @@ export function welcomeTipsDue(onboardingCompleted: boolean, showOnNewDevices: b
 }
 
 /**
+ * The apps the bar holds, as a list in the interface language: Calendar and
+ * Contacts only when the policy keeps them on (#1562), Settings always.
+ */
+export function sidebarTipApps(locale: string, names: { calendar?: string; contacts?: string; settings: string }): string {
+  const apps = [names.calendar, names.contacts, names.settings].filter((name): name is string => !!name);
+  try {
+    return new Intl.ListFormat(locale, { type: "conjunction" }).format(apps);
+  } catch {
+    return apps.join(", ");
+  }
+}
+
+/**
  * First-run tips. `list` sits above the message list (phones, and layouts
  * without a reading pane beside the list); `pane` is a card in the empty
  * reading pane, so the list keeps its rows (mail-15).
@@ -51,6 +65,10 @@ export function welcomeTipsDue(onboardingCompleted: boolean, showOnNewDevices: b
 export function WelcomeBanner({ variant = "list" }: { variant?: "list" | "pane" }) {
   const t = useTranslations("welcome");
   const tDesktop = useTranslations("uxp2_desktop");
+  const tSidebar = useTranslations("sidebar");
+  const locale = useLocale();
+  const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
+  const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
   const router = useRouter();
   const { startTour } = useTour();
   const onboardingCompleted = useSettingsStore((s) => s.onboardingCompleted);
@@ -118,7 +136,13 @@ export function WelcomeBanner({ variant = "list" }: { variant?: "list" | "pane" 
                 <li>{isMobile ? t("tip_compose_touch") : isDesktopApp() ? tDesktop("tip_compose_keys", { keys: formatShortcutCombo("Mod + N") }) : t("tip_compose")}</li>
                 {!isMobile && isDesktopApp() && <li>{tDesktop("tip_palette_keys", { keys: formatShortcutCombo("Mod + K") })}</li>}
                 {!isMobile && <li>{t("tip_shortcuts")}</li>}
-                <li>{isMobile ? t("tip_sidebar_touch") : t("tip_sidebar")}</li>
+                <li>{t(isMobile ? "tip_sidebar_apps_touch" : "tip_sidebar_apps", {
+                  apps: sidebarTipApps(locale, {
+                    calendar: calendarEnabled ? tSidebar("calendar") : undefined,
+                    contacts: contactsEnabled ? tSidebar("contacts") : undefined,
+                    settings: tSidebar("settings"),
+                  }),
+                })}</li>
                 <li>{t("tip_settings")}</li>
               </ul>
             </div>
