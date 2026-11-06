@@ -119,6 +119,26 @@ describe('what a cold start imports', () => {
     expect(modules.has('lib/plugin-sandbox/host-features.ts')).toBe(false);
   });
 
+  it('leaves what opens only on request to its first open', () => {
+    for (const part of [
+      'components/email/thread-conversation-view.tsx',
+      'components/files/file-preview-modal.tsx',
+      'components/files/wopi-editor.tsx',
+      'components/keyboard-shortcuts-modal.tsx',
+      'components/global-search/global-search-palette.tsx',
+      'components/filters/quick-rule-dialogs.tsx',
+      'components/filters/filter-rule-modal.tsx',
+      'components/layout/sidebar-apps-modal.tsx',
+      'components/email/schedule-send-dialog.tsx',
+      'components/layout/mailbox-share-dialog.tsx',
+      'components/protocol/protocol-account-picker.tsx',
+      'components/accessibility/accessibility-quick-panel-body.tsx',
+      'components/settings/settings-section.tsx',
+      'components/tour/tour-overlay.tsx',
+      'components/account-archive-prompt.tsx',
+    ]) expect(modules.has(part), part).toBe(false);
+  });
+
   it('loads the hosts of background work after the first screen', () => {
     for (const host of [
       'components/mail-transfer/mail-transfer-host.tsx',

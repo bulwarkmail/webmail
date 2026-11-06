@@ -35,6 +35,7 @@ const OfflineHost = dynamic(() => import("@/components/offline/offline-host").th
 const PopoutHost = dynamic(() => import("@/components/popout/popout-host").then((m) => m.PopoutHost), { ssr: false });
 const FileDropHost = dynamic(() => import("@/components/file-drop/file-drop-host").then((m) => m.FileDropHost), { ssr: false });
 const NotificationActionsHost = dynamic(() => import("@/components/providers/notification-actions-host").then((m) => m.NotificationActionsHost), { ssr: false });
+const AccountArchiveRestorePrompt = dynamic(() => import("@/components/account-archive-prompt").then((m) => m.AccountArchiveRestorePrompt), { ssr: false });
 
 /** Renders its children only in the desktop app, after hydration. */
 function DesktopOnly({ name, children }: { name: string; children: React.ReactNode }) {
@@ -127,3 +128,5 @@ export function DeferredOfflineHost() { return <AfterBoot name="OfflineHost"><Of
 export function DeferredPopoutHost() { return <AfterBoot name="PopoutHost"><PopoutHost /></AfterBoot>; }
 export function DeferredFileDropHost() { return <AfterBoot name="FileDropHost"><FileDropHost /></AfterBoot>; }
 export function DeferredNotificationActionsHost() { return <AfterBoot name="NotificationActionsHost"><NotificationActionsHost /></AfterBoot>; }
+/** The offer to bring back a saved account list: it waits for a sign-in and a lookup anyway. */
+export function DeferredAccountArchiveRestorePrompt() { return <AfterBoot name="AccountArchiveRestorePrompt"><AccountArchiveRestorePrompt /></AfterBoot>; }

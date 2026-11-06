@@ -13,7 +13,10 @@ import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useProTabStore } from "@/stores/pro-tab-store";
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { requestAppCommand } from "@/lib/app-commands";
-import { TourOverlay } from "./tour-overlay";
+import { lazyComponent } from "@/lib/lazy-component";
+
+// Drawn only while a tour runs; its code comes with the first run.
+const TourOverlay = lazyComponent(() => import("./tour-overlay").then((m) => m.TourOverlay));
 
 const TOUR_COMPLETED_KEY = "tour_completed";
 const TOUR_CURRENT_STEP_KEY = "tour_current_step";

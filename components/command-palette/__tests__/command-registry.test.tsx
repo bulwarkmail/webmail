@@ -126,17 +126,19 @@ describe('global commands', () => {
 });
 
 describe('the ? key', () => {
-  it('opens the keyboard shortcuts in any app, but not while typing or with a modifier', () => {
+  it('opens the keyboard shortcuts in any app, but not while typing or with a modifier', async () => {
     render(<><input aria-label="field" /><CommandPaletteHost /></>);
     act(() => { fireEvent.keyDown(screen.getByLabelText('field'), { key: '?', code: 'Slash', shiftKey: true }); });
     act(() => { fireEvent.keyDown(document.body, { key: '?', code: 'Slash', shiftKey: true, ctrlKey: true }); });
+    // The help's code comes with its first open: let a wrongly opened one arrive before looking.
+    await act(async () => { await import('@/components/keyboard-shortcuts-modal'); });
     expect(screen.queryByText('shortcuts help')).toBeNull();
 
     const appHandler = vi.fn();
     document.addEventListener('keydown', appHandler);
     act(() => { fireEvent.keyDown(document.body, { key: '?', code: 'Slash', shiftKey: true }); });
     document.removeEventListener('keydown', appHandler);
-    expect(screen.getByText('shortcuts help')).toBeInTheDocument();
+    expect(await screen.findByText('shortcuts help')).toBeInTheDocument();
     // Mail's own handler doesn't open a second copy.
     expect(appHandler).not.toHaveBeenCalled();
   });

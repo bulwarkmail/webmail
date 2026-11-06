@@ -34,7 +34,6 @@ import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
-import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
 import { SessionTimeoutGuard } from "@/components/session/session-timeout-guard";
 import { AccountTemplateSync } from "@/components/templates/account-template-sync";
 import { FreeBusyAutoShare } from "@/components/calendar/free-busy-auto-share";
@@ -42,6 +41,7 @@ import { MainWindowOnly } from "@/components/popout/main-window-only";
 import { WindowSyncHost } from "@/components/popout/window-sync-host";
 import {
   DeferredDesktopHost,
+  DeferredAccountArchiveRestorePrompt,
   DeferredDesktopOsHost,
   DeferredEditedFilesHost,
   DeferredFileDropHost,
@@ -152,7 +152,7 @@ export default async function LocaleLayout({
                   <MainWindowOnly>
                     <PushNotificationPrompt />
                     {/* Lite is a static bundle: no server keeps an archive there. */}
-                    {!IS_LITE && <AccountArchiveRestorePrompt />}
+                    {!IS_LITE && <DeferredAccountArchiveRestorePrompt />}
                   </MainWindowOnly>
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>

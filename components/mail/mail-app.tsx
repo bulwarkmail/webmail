@@ -38,8 +38,22 @@ const EmailComposer = dynamic(
   () => import("@/components/email/email-composer").then((m) => m.EmailComposer),
   { ssr: false }
 );
-import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
-import { ThreadConversationView } from "@/components/email/thread-conversation-view";
+// What only opens on request (a phone's conversation, an attachment preview,
+// the dialogs below) stays out of the first script too, and is warmed with
+// the viewer once the first rows are on screen.
+const ThreadConversationView = lazyComponent(
+  () => import("@/components/email/thread-conversation-view").then((m) => m.ThreadConversationView),
+  // The shape a linked conversation shows while it loads.
+  <div className="flex flex-col h-full bg-background" aria-busy="true">
+    <MailConversationSkeleton />
+  </div>,
+);
+const FilePreviewModal = lazyComponent(() => import("@/components/files/file-preview-modal").then((m) => m.FilePreviewModal));
+const WopiEditor = lazyComponent(() => import("@/components/files/wopi-editor").then((m) => m.WopiEditor));
+const SidebarAppsModal = lazyComponent(() => import("@/components/layout/sidebar-apps-modal").then((m) => m.SidebarAppsModal));
+const ProtocolAccountPicker = lazyComponent(() => import("@/components/protocol/protocol-account-picker").then((m) => m.ProtocolAccountPicker));
+const ScheduleSendDialog = lazyComponent(() => import("@/components/email/schedule-send-dialog").then((m) => m.ScheduleSendDialog));
+const MailboxShareDialog = lazyComponent(() => import("@/components/layout/mailbox-share-dialog").then((m) => m.MailboxShareDialog));
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { ThreadGroup, Email, Mailbox, isUnifiedMailboxId, UNIFIED_MAILBOX_IDS, UNIFIED_ROLE_BY_ID, CROSS_VIEW_BY_ID, CROSS_VIEW_IDS, isCrossViewId } from "@/lib/jmap/types";
 import { useAccountStore, waitForConnectedAccount } from "@/stores/account-store";
@@ -49,7 +63,8 @@ import { isArchiveActionEnabled, useArchiveActionEnabled } from "@/lib/archive-g
 import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
-import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
+import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
+import { lazyComponent } from "@/lib/lazy-component";
 import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt } from "@/stores/email-store";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
@@ -65,7 +80,6 @@ import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
 import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, setSelectionStarredWithUndo, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
-import { MailboxShareDialog } from "@/components/layout/mailbox-share-dialog";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInPlace } from '@/stores/auth-store';
@@ -116,7 +130,6 @@ import {
   ComposerErrorFallback,
 } from "@/components/error";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ScheduleSendDialog } from "@/components/email/schedule-send-dialog";
 import { MailFolderMenu, MailFolderMenuItems } from "@/components/email/mail-list-menus";
 import { emptyFolderPrompt } from "@/lib/empty-folder-text";
 import { ContextMenuItem } from "@/components/ui/context-menu";
@@ -144,7 +157,6 @@ import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
 import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
 import { MvListToolbar } from "@/components/email/mv-list-toolbar";
-import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
@@ -152,8 +164,6 @@ import { useIdentitySync } from "@/hooks/use-identity-sync";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { takeHandedOffComposeDraft, useProTabStore } from "@/stores/pro-tab-store";
 import { useProMultiAccountMailboxes } from "@/hooks/use-pro-multi-account-mailboxes";
-import { FilePreviewModal } from "@/components/files/file-preview-modal";
-import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick-reply";
@@ -6932,7 +6942,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         </div>
 
         {/* Keyboard Shortcuts Modal */}
-        <KeyboardShortcutsModal
+        <LazyKeyboardShortcutsModal
           isOpen={showShortcutsModal}
           onClose={() => setShowShortcutsModal(false)}
         />
@@ -6957,7 +6967,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
 
-        <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
+        {showAppsModal && <SidebarAppsModal isOpen onClose={closeAppsModal} />}
         {pendingMailtoAccountChoice && (
           <ProtocolAccountPicker
             kind="mailto"
