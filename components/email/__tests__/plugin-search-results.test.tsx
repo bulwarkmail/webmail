@@ -8,6 +8,7 @@ import type { Email } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePluginStore } from '@/stores/plugin-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { DEFAULT_SHARE, MAX_SHARE, MIN_HEIGHT, PENDING_GRACE_MS, PluginSearchResults } from '../plugin-search-results';
 
 vi.mock('next-intl', () => ({
@@ -348,6 +349,22 @@ describe('PluginSearchResults compact rows', () => {
     render(<PluginSearchResults surface="search-results" />);
     expect(screen.getByRole('button', { name: /Title b/ })).toHaveTextContent('An order');
     expect(screen.getByRole('button', { name: /Title a/ })).not.toHaveTextContent('An order');
+  });
+
+  it('shows the date as the message list does, in the time format the user chose', () => {
+    localStorage.setItem('pluginSearchResultsCompact', '1');
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 12).toISOString();
+    useEmailStore.setState({ externalSearchResults: [rich('a', { date: today })] });
+
+    useSettingsStore.setState({ timeFormat: '12h' });
+    const { unmount } = render(<PluginSearchResults surface="search-results" />);
+    expect(screen.getByRole('button', { name: /Title a/ })).toHaveTextContent(/03:12\s?PM/);
+    unmount();
+
+    useSettingsStore.setState({ timeFormat: '24h' });
+    render(<PluginSearchResults surface="search-results" />);
+    expect(screen.getByRole('button', { name: /Title a/ })).toHaveTextContent('15:12');
   });
 
   it('offers the choice once, at the first heading', () => {
