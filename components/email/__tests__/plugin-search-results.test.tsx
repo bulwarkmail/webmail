@@ -242,10 +242,12 @@ describe('PluginSearchResults height', () => {
 
   const block = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-plugin-surface]')!;
   const handle = () => screen.getByRole('separator', { name: 'resize_plugin_results' });
+  // The share as kept, never below MIN_HEIGHT whatever the list's height now.
+  const capped = (share: string) => `max(${MIN_HEIGHT}px, ${share})`;
 
   it('takes the default share of the list until its edge is dragged', () => {
     const { container } = render(<PluginSearchResults surface="search-results" />);
-    expect(block(container).style.maxHeight).toBe(`${DEFAULT_SHARE * 100}%`);
+    expect(block(container).style.maxHeight).toBe(capped(`${DEFAULT_SHARE * 100}%`));
     expect(handle()).toHaveAttribute('aria-valuenow', String(BLOCK));
     expect(handle()).toHaveAttribute('aria-valuemin', String(MIN_HEIGHT));
     expect(handle()).toHaveAttribute('aria-valuemax', String(LIST * MAX_SHARE));
@@ -257,34 +259,41 @@ describe('PluginSearchResults height', () => {
     // The handle ends a key's step after it rendered, which is when the share is kept.
     await act(async () => {});
     // 200 px + one step of 10 px, of a list of 1000 px.
-    expect(block(container).style.maxHeight).toBe('21%');
+    expect(block(container).style.maxHeight).toBe(capped('21%'));
     unmount();
 
     const again = render(<PluginSearchResults surface="search-results" />);
-    expect(block(again.container).style.maxHeight).toBe('21%');
+    expect(block(again.container).style.maxHeight).toBe(capped('21%'));
   });
 
   it('follows a drag of its edge, within its limits', () => {
     const { container } = render(<PluginSearchResults surface="search-results" />);
     fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 300 });
     fireEvent.pointerMove(document, { pointerId: 1, clientY: 600, buttons: 1 });
-    expect(block(container).style.maxHeight).toBe('50%');
+    expect(block(container).style.maxHeight).toBe(capped('50%'));
 
     fireEvent.pointerMove(document, { pointerId: 1, clientY: 2000, buttons: 1 });
-    expect(block(container).style.maxHeight).toBe(`${MAX_SHARE * 100}%`);
+    expect(block(container).style.maxHeight).toBe(capped(`${MAX_SHARE * 100}%`));
 
     fireEvent.pointerMove(document, { pointerId: 1, clientY: 0, buttons: 1 });
-    expect(block(container).style.maxHeight).toBe(`${(MIN_HEIGHT / LIST) * 100}%`);
+    expect(block(container).style.maxHeight).toBe(capped(`${(MIN_HEIGHT / LIST) * 100}%`));
     fireEvent.pointerUp(document, { pointerId: 1 });
   });
 
   it('takes the default again on a double click', () => {
     localStorage.setItem('pluginSearchResultsShare', '0.7');
     const { container } = render(<PluginSearchResults surface="search-results" />);
-    expect(block(container).style.maxHeight).toBe('70%');
+    expect(block(container).style.maxHeight).toBe(capped('70%'));
 
     fireEvent.doubleClick(handle());
-    expect(block(container).style.maxHeight).toBe(`${DEFAULT_SHARE * 100}%`);
+    expect(block(container).style.maxHeight).toBe(capped(`${DEFAULT_SHARE * 100}%`));
     expect(localStorage.getItem('pluginSearchResultsShare')).toBeNull();
+  });
+
+  it('keeps its least height when a share kept on a taller list is less on this one', () => {
+    // Dragged to 64 px of a 1000 px list; this list is 500 px.
+    localStorage.setItem('pluginSearchResultsShare', '0.064');
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    expect(block(container).style.maxHeight).toBe(`max(${MIN_HEIGHT}px, 6.4%)`);
   });
 });

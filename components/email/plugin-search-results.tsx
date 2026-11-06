@@ -182,7 +182,7 @@ export function PluginSearchResults({ surface, onOpenEmail }: PluginSearchResult
         ref={blockRef}
         data-plugin-surface={surface}
         className={cn("flex-shrink-0 overflow-y-auto bg-muted/30", held && "h-48")}
-        style={{ maxHeight: `${(share ?? DEFAULT_SHARE) * 100}%` }}
+        style={{ maxHeight: `max(${MIN_HEIGHT}px, ${(share ?? DEFAULT_SHARE) * 100}%)` }}
       >
         {groups.map((group, index) => {
           const open = !collapsed.has(group.id);
