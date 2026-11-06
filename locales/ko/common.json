@@ -6109,6 +6109,7 @@
     "shared": "{name}님이 {kind} \"{object}\"을(를) 공유했습니다",
     "changed": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 변경했습니다",
     "revoked": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 제거했습니다",
+    "summary": "{name}님이 공유 항목 {count, plural, other {#개}}에 대한 접근 권한을 변경했습니다",
     "object": {
       "folder": "폴더",
       "calendar": "캘린더",

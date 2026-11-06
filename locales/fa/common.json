@@ -5477,6 +5477,7 @@
     "shared": "{name} {kind} «{object}» را با شما به اشتراک گذاشت",
     "changed": "{name} دسترسی شما به {kind} «{object}» را تغییر داد",
     "revoked": "{name} دسترسی شما به {kind} «{object}» را حذف کرد",
+    "summary": "{name} دسترسی شما به {count, plural, other {# مورد اشتراکی}} را تغییر داد",
     "object": {
       "folder": "پوشه",
       "calendar": "تقویم",

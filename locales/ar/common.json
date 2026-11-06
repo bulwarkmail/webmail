@@ -5477,6 +5477,7 @@
     "shared": "شارك {name} معك {kind} \"{object}\"",
     "changed": "غيّر {name} صلاحيتك على {kind} \"{object}\"",
     "revoked": "أزال {name} صلاحيتك على {kind} \"{object}\"",
+    "summary": "غيّر {name} صلاحيتك على {count, plural, zero {# عنصر مشترك} one {عنصر مشترك واحد} two {عنصرين مشتركين} few {# عناصر مشتركة} many {# عنصرًا مشتركًا} other {# عنصر مشترك}}",
     "object": {
       "folder": "المجلد",
       "calendar": "التقويم",

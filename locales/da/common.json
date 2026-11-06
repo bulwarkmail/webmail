@@ -5477,6 +5477,7 @@
     "shared": "{name} har delt {kind} \"{object}\" med dig",
     "changed": "{name} har ændret din adgang til {kind} \"{object}\"",
     "revoked": "{name} har fjernet din adgang til {kind} \"{object}\"",
+    "summary": "{name} har ændret din adgang til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",

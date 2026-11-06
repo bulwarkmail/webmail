@@ -6109,6 +6109,7 @@
     "shared": "{name} udostępnił(a) Ci {kind} „{object}”",
     "changed": "{name} zmienił(a) Twój dostęp do {kind} „{object}”",
     "revoked": "{name} odebrał(a) Ci dostęp do {kind} „{object}”",
+    "summary": "{name} zmienił(a) Twój dostęp do {count, plural, one {# udostępnionego elementu} few {# udostępnionych elementów} many {# udostępnionych elementów} other {# udostępnionego elementu}}",
     "object": {
       "folder": "folder",
       "calendar": "kalendarz",

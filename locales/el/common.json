@@ -5489,6 +5489,7 @@
     "shared": "Ο {name} μοιράστηκε το {kind} \"{object}\" μαζί σας",
     "changed": "Ο {name} άλλαξε την πρόσβασή σας στο {kind} \"{object}\"",
     "revoked": "Ο {name} αφαίρεσε την πρόσβασή σας στο {kind} \"{object}\"",
+    "summary": "Ο {name} άλλαξε την πρόσβασή σας σε {count, plural, one {# κοινόχρηστο στοιχείο} other {# κοινόχρηστα στοιχεία}}",
     "object": {
       "folder": "φάκελος",
       "calendar": "ημερολόγιο",
