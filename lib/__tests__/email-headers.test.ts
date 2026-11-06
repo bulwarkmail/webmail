@@ -439,7 +439,7 @@ describe('getSenderVerification', () => {
     expect(getSenderVerification(parseAuthenticationResults('mx.example.net; dkim=pass header.i=@example.org'), from)).toBeNull();
     expect(getSenderVerification(parseAuthenticationResults('mx; dkim=pass header.i=bounce@mail.example.org'), from)).toBeNull();
     expect(getSenderVerification(parseAuthenticationResults('mx; dkim=pass header.i=@other.example'), from))
-      .toEqual({ status: 'unverified', domain: 'example.org' });
+      .toEqual({ status: 'unverified', domain: 'example.org', sentFrom: 'other.example' });
   });
 
   it('does not take a pass for an unrelated domain as verifying the From domain', () => {
@@ -468,6 +468,30 @@ describe('getSenderVerification', () => {
     expect(auth.dkim?.result).toBe('fail');
     expect(auth.dkim?.all).toHaveLength(2);
     expect(getSenderVerification(auth, 'news@shop.example')).toBeNull();
+  });
+
+  it('names the original sender, not the SRS forwarder', () => {
+    // Stalwart's header for mail SendGrid sent on behalf of libraries.io,
+    // forwarded through ik2.com, which rewrote the envelope with SRS.
+    const forwarded = parseAuthenticationResults(
+      'mail1.guise.net.nz;\r\n\tdkim=pass header.d=sendgrid.net header.s=smtpapi header.b=WrL9Wlof;\r\n\tspf=none (mail1.guise.net.nz: no SPF records found for postmaster@s480g.ik2.com) smtp.helo=s480g.ik2.com;\r\n\tspf=pass (mail1.guise.net.nz: domain of SRS0XWhZIZsendgrid.netbounces+8061082-df95-aaronguise.net.nz@ik2.com designates 64.38.239.86 as permitted sender) smtp.mailfrom="SRS0=XWhZ=IZ=sendgrid.net=bounces+8061082-df95-aaron=guise.net.nz@ik2.com";\r\n\tiprev=pass policy.iprev=64.38.239.86;\r\n\tdmarc=none header.from=libraries.io policy.dmarc=none',
+    );
+    expect(getSenderVerification(forwarded, 'notifications@libraries.io')).toEqual({
+      status: 'unverified',
+      domain: 'libraries.io',
+      sentFrom: 'sendgrid.net',
+    });
+
+    // Without a DKIM pass, the SRS envelope itself is decoded (SRS0 and SRS1).
+    const from = 'notifications@libraries.io';
+    expect(getSenderVerification(
+      parseAuthenticationResults('mx; spf=pass smtp.mailfrom="SRS0=XWhZ=IZ=sendgrid.net=bounces+1-aaron=guise.net.nz@ik2.com"; dmarc=none header.from=libraries.io'),
+      from,
+    )?.sentFrom).toBe('sendgrid.net');
+    expect(getSenderVerification(
+      parseAuthenticationResults('mx; spf=pass smtp.mailfrom="SRS1=Ab12=fwd1.example==XWhZ=IZ=sendgrid.net=bounces+1-a=b.example@fwd2.example"; dmarc=none header.from=libraries.io'),
+      from,
+    )?.sentFrom).toBe('sendgrid.net');
   });
 
   it('does not take a HELO pass for a MAIL FROM pass', () => {

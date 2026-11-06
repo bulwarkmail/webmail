@@ -10,6 +10,7 @@ import {
   pickAppFrameOriginsCookie,
 } from "./lib/security/app-frame-origins";
 import { configManager } from "./lib/admin/config-manager";
+import { managedAppOriginsWith } from "./lib/sidebar-apps";
 import { isNoThirdPartyTrafficOn } from "./lib/admin/third-party-mode";
 import { listReachableHosts, noThirdPartyCspSources } from "./lib/admin/reachable-hosts";
 import { getWopiEditorOrigins } from "./lib/wopi/discovery";
@@ -504,9 +505,17 @@ export async function proxy(request: NextRequest) {
   if (isServedOverHttps(request)) {
     response.headers.set("Strict-Transport-Security", "max-age=63072000");
   }
+  // Camera and microphone are off. An inline app the operator granted them
+  // (its policy entry's `allow`) is named here, as no frame's `allow` can
+  // widen this header; a frame gets a feature only while this document has it
+  // too, so `self` comes with it.
+  const mediaAllowlist = (feature: "camera" | "microphone") => {
+    const origins = managedAppOriginsWith(policy.defaultSidebarApps, feature);
+    return origins.length > 0 ? ["self", ...origins.map((origin) => `"${origin}"`)].join(" ") : "";
+  };
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()"
+    `camera=(${mediaAllowlist("camera")}), microphone=(${mediaAllowlist("microphone")}), geolocation=(), payment=()`
   );
   response.headers.set("Content-Security-Policy", csp);
 

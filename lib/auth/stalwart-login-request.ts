@@ -38,6 +38,8 @@ export interface StalwartLoginRequest {
   codeChallenge: string;
   /** Echoed back in 1.0's redirect location. */
   state: string;
+  /** Defaults to STALWART_LOGIN_SCOPE. */
+  scope?: string;
 }
 
 export function stalwartLoginBody(req: StalwartLoginRequest): Record<string, unknown> {
@@ -46,7 +48,7 @@ export function stalwartLoginBody(req: StalwartLoginRequest): Record<string, unk
     client_id: req.clientId,
     redirect_uri: req.redirectUri,
     state: req.state,
-    scope: STALWART_LOGIN_SCOPE,
+    scope: req.scope || STALWART_LOGIN_SCOPE,
     code_challenge: req.codeChallenge,
     code_challenge_method: 'S256',
   });

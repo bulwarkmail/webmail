@@ -6115,6 +6115,7 @@
     "shared": "{name} さんが{kind}「{object}」を共有しました",
     "changed": "{name} さんが{kind}「{object}」へのアクセス権を変更しました",
     "revoked": "{name} さんが{kind}「{object}」へのアクセス権を削除しました",
+    "summary": "{name} さんが共有アイテム {count, plural, other {# 件}}へのアクセス権を変更しました",
     "object": {
       "folder": "フォルダー",
       "calendar": "カレンダー",

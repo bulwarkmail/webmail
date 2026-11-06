@@ -5483,6 +5483,7 @@
     "shared": "{name} танд {kind} \"{object}\"-г хуваалцлаа",
     "changed": "{name} таны {kind} \"{object}\"-д хандах эрхийг өөрчиллөө",
     "revoked": "{name} таны {kind} \"{object}\"-д хандах эрхийг хаслаа",
+    "summary": "{name} таны {count, plural, other {# хуваалцсан зүйлд}} хандах эрхийг өөрчиллөө",
     "object": {
       "folder": "хавтас",
       "calendar": "хуанли",

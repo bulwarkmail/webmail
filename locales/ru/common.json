@@ -6115,6 +6115,7 @@
     "shared": "{name} поделился(ась) с вами {kind} «{object}»",
     "changed": "{name} изменил(а) ваш доступ к {kind} «{object}»",
     "revoked": "{name} отозвал(а) ваш доступ к {kind} «{object}»",
+    "summary": "{name} изменил(а) ваш доступ к {count, plural, one {# общему элементу} few {# общим элементам} many {# общим элементам} other {# общего элемента}}",
     "object": {
       "folder": "папкой",
       "calendar": "календарём",

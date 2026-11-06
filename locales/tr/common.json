@@ -5483,6 +5483,7 @@
     "shared": "{name}, \"{object}\" {kind} sizinle paylaştı",
     "changed": "{name}, \"{object}\" {kind} erişiminizi değiştirdi",
     "revoked": "{name}, \"{object}\" {kind} erişiminizi kaldırdı",
+    "summary": "{name}, {count, plural, other {# paylaşılan öğeye}} erişiminizi değiştirdi",
     "object": {
       "folder": "klasörünü",
       "calendar": "takvimini",

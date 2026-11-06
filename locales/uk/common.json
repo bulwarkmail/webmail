@@ -6115,6 +6115,7 @@
     "shared": "{name} поділився(лася) з вами {kind} «{object}»",
     "changed": "{name} змінив(ла) ваш доступ до {kind} «{object}»",
     "revoked": "{name} скасував(ла) ваш доступ до {kind} «{object}»",
+    "summary": "{name} змінив(ла) ваш доступ до {count, plural, one {# спільного елемента} few {# спільних елементів} many {# спільних елементів} other {# спільного елемента}}",
     "object": {
       "folder": "текою",
       "calendar": "календарем",

@@ -6115,6 +6115,7 @@
     "shared": "{name} 与您共享了{kind}“{object}”",
     "changed": "{name} 更改了您对{kind}“{object}”的访问权限",
     "revoked": "{name} 移除了您对{kind}“{object}”的访问权限",
+    "summary": "{name} 更改了您对 {count, plural, other {# 个共享项目}}的访问权限",
     "object": {
       "folder": "文件夹",
       "calendar": "日历",

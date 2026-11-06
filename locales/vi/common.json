@@ -5495,6 +5495,7 @@
     "shared": "{name} đã chia sẻ {kind} \"{object}\" với bạn",
     "changed": "{name} đã thay đổi quyền truy cập của bạn vào {kind} \"{object}\"",
     "revoked": "{name} đã xóa quyền truy cập của bạn vào {kind} \"{object}\"",
+    "summary": "{name} đã thay đổi quyền truy cập của bạn vào {count, plural, other {# mục được chia sẻ}}",
     "object": {
       "folder": "Thư mục",
       "calendar": "Lịch",

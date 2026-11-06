@@ -5483,6 +5483,7 @@
     "shared": "{name} megosztotta veled a(z) {kind} „{object}” elemet",
     "changed": "{name} módosította a hozzáférésedet a(z) {kind} „{object}” elemhez",
     "revoked": "{name} visszavonta a hozzáférésedet a(z) {kind} „{object}” elemhez",
+    "summary": "{name} módosította a hozzáférésedet {count, plural, other {# megosztott elemhez}}",
     "object": {
       "folder": "mappa",
       "calendar": "naptár",

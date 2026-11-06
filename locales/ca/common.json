@@ -5483,6 +5483,7 @@
     "shared": "{name} ha compartit amb tu {kind} \"{object}\"",
     "changed": "{name} ha canviat el teu accés a {kind} \"{object}\"",
     "revoked": "{name} ha retirat el teu accés a {kind} \"{object}\"",
+    "summary": "{name} ha canviat el teu accés a {count, plural, one {# element compartit} other {# elements compartits}}",
     "object": {
       "folder": "la carpeta",
       "calendar": "el calendari",

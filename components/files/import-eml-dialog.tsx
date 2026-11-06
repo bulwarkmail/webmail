@@ -8,6 +8,7 @@ import { localizeMailboxName } from "@/lib/mailbox-label";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
+import { importKeywords } from "@/lib/file-drop/import-keywords";
 
 /**
  * "Import to a mail folder…" for a message saved in Files (pim-p2-7): the user's own folders
@@ -39,7 +40,7 @@ export function ImportEmlDialog({ file, onClose }: { file: File | null; onClose:
     const folder = localizeMailboxName(mailbox.role, mailbox.name, (key) => tSidebar(`mailboxes.${key}`));
     setBusy(true);
     try {
-      await client.importRawEmail(file, { [mailbox.id]: true }, { $seen: true }, mailbox.accountId);
+      await client.importRawEmail(file, { [mailbox.id]: true }, importKeywords(mailbox.role), mailbox.accountId);
       toast.success(t("imported_to_mail", { folder }));
       onClose();
     } catch (error) {

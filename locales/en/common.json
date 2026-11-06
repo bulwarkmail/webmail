@@ -5483,6 +5483,7 @@
     "shared": "{name} shared the {kind} \"{object}\" with you",
     "changed": "{name} changed your access to the {kind} \"{object}\"",
     "revoked": "{name} removed your access to the {kind} \"{object}\"",
+    "summary": "{name} changed your access to {count, plural, one {# shared item} other {# shared items}}",
     "object": {
       "folder": "folder",
       "calendar": "calendar",

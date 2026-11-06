@@ -1169,6 +1169,7 @@ function refillAfterKeywordChange(get: StoreGet, client: IJMAPClient, changed: I
 }
 
 async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, get: StoreGet, set: StoreSet): Promise<boolean> {
+  const isCurrentView = captureEmailListQuery();
   const s = get();
   const sync = s.emailListSync;
   if (!sync) return false;
@@ -1198,6 +1199,7 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, 
 
   const accountArg = mailbox?.isShared ? mailbox.accountId : undefined;
   const delta = await effectiveClient.getEmailChanges(sync.state, accountArg, EMAIL_DELTA_MAX_CHANGES);
+  if (!isCurrentView()) return true;
   if (!delta || delta.hasMoreChanges) return false;
 
   const listIds = new Set(s.emails.map((e) => e.id));
@@ -1211,11 +1213,13 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, 
   if (candidates.length > EMAIL_DELTA_MAX_CANDIDATES) return false;
   if (candidates.length > 0) {
     const arrived = await effectiveClient.getSomeEmails(candidates, accountArg);
+    if (!isCurrentView()) return true;
     if (arrived.some((e) => e.mailboxIds?.[sync.mailboxId])) return false;
   }
 
   const removed = new Set(destroyedInList);
   const updatedEmails = updatedInList.length > 0 ? await effectiveClient.getSomeEmails(updatedInList, accountArg) : [];
+  if (!isCurrentView()) return true;
   const updatedById = new Map(updatedEmails.map((e) => [e.id, e]));
   // Another client changed the read/star/tag state a keyword order (#718)
   // sorts on: the row may now belong past the loaded part of the list and an
@@ -1237,6 +1241,7 @@ async function applyEmailDeltaNow(client: IJMAPClient, newState: string | null, 
   const replacements = await emailHooks.onEmailsFetched.transform(
     [...updatedById.values()].filter((e) => !removed.has(e.id)),
   );
+  if (!isCurrentView()) return true;
   const replacementById = new Map(
     annotateScheduledEmails(replacements, get().scheduledSubmissionByEmailId).map((e) => [e.id, e]),
   );
@@ -1704,6 +1709,7 @@ function captureEmailListView(): () => boolean {
     const current = useEmailStore.getState();
     return currentStoreEpoch() === epoch
       && useAuthStore.getState().client === authClient
+      && current.viewToken === view.viewToken
       && current.selectedMailbox === view.selectedMailbox
       && current.selectedKeyword === view.selectedKeyword
       && current.viewingAccountId === view.viewingAccountId
@@ -1712,6 +1718,51 @@ function captureEmailListView(): () => boolean {
       && current.crossView === view.crossView
       && useAuthStore.getState().activeAccountId === activeAccountId;
   };
+}
+
+// First-page replacements (including background fetchEmails) take ownership.
+// Pagination, refreshCurrentMailbox and delta sync only capture it, so they
+// can still merge within this list, but never into a newer search/folder request.
+let emailListRequest = 0;
+
+function captureEmailListRequest(): () => boolean {
+  const request = emailListRequest;
+  const isCurrentView = captureEmailListView();
+  return () => request === emailListRequest && isCurrentView();
+}
+
+// Passive reads must still describe the query they dispatched. In particular,
+// quick search writes its query later, after a refresh/page may have started.
+function captureEmailListQuery(): () => boolean {
+  const isCurrentRequest = captureEmailListRequest();
+  const { searchQuery, searchFilters, searchMailboxId } = useEmailStore.getState();
+  return () => {
+    const current = useEmailStore.getState();
+    return isCurrentRequest() && current.searchQuery === searchQuery
+      && current.searchFilters === searchFilters && current.searchMailboxId === searchMailboxId;
+  };
+}
+
+function beginEmailListRequest(): () => boolean {
+  emailListRequest++;
+  return captureEmailListRequest();
+}
+
+// captureEmailListQuery drops a page in flight once the search input
+// changes, so whatever changes it has to clear the page's loading flag too.
+function dropPageOnSearchEdit(state: EmailStore, next: Partial<EmailStore>): Partial<EmailStore> {
+  const changed = ('searchQuery' in next && next.searchQuery !== state.searchQuery)
+    || ('searchFilters' in next && next.searchFilters !== state.searchFilters)
+    || ('searchMailboxId' in next && next.searchMailboxId !== state.searchMailboxId);
+  return changed ? { ...next, isLoadingMore: false } : next;
+}
+
+/** Stop a search's deferred loading/response writes when its input is left. */
+function cancelEmailSearch(state: EmailStore): Partial<EmailStore> {
+  providedSearchRun = null;
+  if (!state.searchAbortController) return {};
+  state.searchAbortController.abort();
+  return { searchAbortController: null, isLoading: false };
 }
 
 // fetchUnifiedEmails/fetchCrossView start a new view generation of their own,
@@ -2250,7 +2301,7 @@ function withSnippetBatches(
 function highlightWhenSnippetsArrive(snippets: Promise<DeferredSnippetBatch[]> | undefined): void {
   if (!snippets) return;
   const { searchQuery, searchFilters, searchMailboxId } = useEmailStore.getState();
-  const isSameView = captureEmailListView();
+  const isSameView = captureEmailListRequest();
   void snippets.then((batches) => {
     const state = useEmailStore.getState();
     if (!isSameView() || state.isLoading) return;
@@ -3391,11 +3442,13 @@ function startProvidedSearchResults(
   store: { get: () => EmailStore; set: (partial: Partial<EmailStore>) => void },
 ): void {
   const run = {};
+  const isCurrentView = captureEmailListRequest();
   providedSearchRun = run;
   const answers = new Map<string, ProvidedSearchResult[]>();
   let asked: string[] = [];
   // Written only when it changes: a search without plugin results renders as before.
   const show = () => {
+    if (providedSearchRun !== run || !isCurrentView()) return;
     const results = asked.flatMap((id) => answers.get(id) ?? []);
     const pending = asked.filter((id) => !answers.has(id));
     const shown = store.get();
@@ -3525,8 +3578,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     accountMailboxes: { ...state.accountMailboxes, [accountId]: mailboxes },
   })),
   clearAccountMailboxes: () => set({ accountMailboxes: {} }),
-  setViewingAccount: (accountId) => set({ viewingAccountId: accountId }),
+  setViewingAccount: (accountId) => set(state => ({
+    viewingAccountId: accountId,
+    ...(accountId !== state.viewingAccountId ? {
+      ...cancelEmailSearch(state), viewToken: state.viewToken + 1,
+    } : {}),
+  })),
   selectAccountMailbox: (accountId, mailboxId) => set(state => ({
+    ...cancelEmailSearch(state),
     viewingAccountId: accountId,
     selectedMailbox: mailboxId,
     // The search panel's folder scope names a folder of the account we are
@@ -3640,6 +3699,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     set({ listHold: { rowKey, keywords } });
   },
   selectKeyword: (keyword, accountId = null) => set(state => ({
+    ...cancelEmailSearch(state),
     selectedKeyword: keyword,
     selectedKeywordAccountId: keyword ? accountId : null,
     isLoadingMore: false,
@@ -3690,6 +3750,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const scopeIsDefault = state.searchMailboxId === currentSearchScopeDefault(mailboxes, state.selectedMailbox);
     const scopeFollows = state.searchScopeFollowsFolder && mailboxes.some(m => m.id === mailboxId);
     return {
+      ...cancelEmailSearch(state),
       selectedMailbox: mailboxId,
       ...(scopeFollows
         ? { searchMailboxId: mailboxId }
@@ -3714,7 +3775,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setError: (error) => set({ error }),
   // Another search lists other mail: ticks kept from the last list would stay
   // counted in the selection bar, with Delete acting on rows nobody can see.
-  setSearchQuery: (query) => set((state) => ({
+  setSearchQuery: (query) => set((state) => dropPageOnSearchEdit(state, {
+    ...cancelEmailSearch(state),
     searchQuery: query,
     ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
     // A new search looks where searches look by default. A scope that only
@@ -3934,14 +3996,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   fetchEmails: async (client, mailboxId, opts) => {
-    const isCurrentView = captureEmailListView();
+    const cancelledSearch = cancelEmailSearch(get());
+    const isCurrentView = beginEmailListRequest();
     // A background refresh (e.g. after an account switch restored a cached list)
     // repopulates the list without showing the loading overlay, so switching to
     // an already-visited account doesn't flash a spinner over the visible mail.
     let background = opts?.background ?? false;
     // Loading a real mailbox is a fresh navigation (leaving any cross view), so
     // drop the unread/starred retain set and the held row.
-    set(background ? { error: null, retainedInViewIds: new Set(), listHold: null } : { isLoading: true, error: null, retainedInViewIds: new Set(), listHold: null }); // Keep previous emails visible during transition
+    set({
+      ...cancelledSearch, isLoading: !background, isLoadingMore: false,
+      error: null, retainedInViewIds: new Set(), listHold: null,
+    }); // Keep previous emails visible during transition
     try {
       const targetMailboxId = mailboxId || get().selectedMailbox;
       if (targetMailboxId === VIRTUAL_SCHEDULED_MAILBOX_ID) {
@@ -3966,6 +4032,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const emailsPerPage = useSettingsStore.getState().emailsPerPage;
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
+        if (!isCurrentView()) return;
         const hasFilters = !isFilterEmpty(searchFilters);
         const result = crossView
           ? (hasFilters
@@ -4128,6 +4195,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         if (!isCurrentView()) return;
         if (upToDate) {
           await showSection();
+          if (!isCurrentView()) return;
           rememberFolderList(listKey, folderListState(get()), emailsPerPage);
           // The boot snapshot carries no conversation sizes.
           if (get().threadEmailCounts.size === 0) void get().fetchThreadEmailCounts(client);
@@ -4175,6 +4243,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       });
       shownFolderList = { key: listKey, mailboxId: targetMailboxId, pageSize: emailsPerPage };
       await showSection();
+      if (!isCurrentView()) return;
       rememberFolderList(listKey, folderListState(get()), emailsPerPage);
       // Only a server that did not answer the chained Thread/get needs a
       // request of its own for the conversation sizes.
@@ -4200,7 +4269,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   loadMoreEmails: async (client) => {
     const { isLoadingMore, hasMoreEmails, emails, selectedMailbox, searchQuery, selectedKeyword, isUnifiedView, unifiedRole, crossView } = get();
-    const isCurrentView = captureEmailListView();
+    const isCurrentView = captureEmailListQuery();
 
     // Don't load if already loading or no more emails
     if (isLoadingMore || !hasMoreEmails) return;
@@ -4320,6 +4389,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
             ? buildJMAPFilter(searchQuery, searchFilters, undefined)
             : textFilter(searchQuery),
         );
+        if (!isCurrentView()) return;
         set({ unifiedErrors: result.errors });
       } else if (searchQuery || hasFilters) {
         // Paginate with the same scope the search itself ran under, not the
@@ -4333,6 +4403,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           result = hasFilters
             ? await advancedSearchAcrossAccounts(built, buildJMAPFilter(searchQuery, searchFilters, undefined), emailsPerPage, positionsByAccount(emails), scope)
             : await searchAcrossAccounts(built, searchQuery, emailsPerPage, positionsByAccount(emails), scope);
+          if (!isCurrentView()) return;
           set({ unifiedErrors: result.errors });
         } else {
           const mailboxes = resolveActionMailboxes();
@@ -4355,6 +4426,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         result = await fetchTagEmails(
           built, `$label:${selectedKeyword}`, emailsPerPage, positionsByAccount(emails), getMessageListOrderFor(null),
         );
+        if (!isCurrentView()) return;
         set({ unifiedErrors: result.errors });
       } else {
         // Load more from mailbox
@@ -4389,6 +4461,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         // A kept row this page reached is back in order, and so is a row
         // of the Unread section that was read since, but for the open
         // conversation's (openSectionRows).
+        if (!isCurrentView()) return;
         const reached = new Set(result.emails.map(e => e.id));
         if (outOfOrder > 0 && [...retained].some(id => reached.has(id))) {
           set({ retainedInViewIds: new Set([...get().retainedInViewIds].filter(id => !reached.has(id))) });
@@ -4709,9 +4782,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   markAsRead: async (client, emailId, read, emailKey): Promise<boolean> => {
     const isTarget = singleEmailMatcher(emailId, emailKey);
+    const processingKey = `${emailKey ?? emailId}-${read}`;
     try {
       // Check if this email is already being processed
-      const processingKey = `${emailKey ?? emailId}-${read}`;
       const currentProcessing = get().processingReadStatus;
       if (currentProcessing.has(processingKey)) {
         return true; // Already being processed
@@ -4722,7 +4795,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (!email) return false;
 
       // Check if already in the desired state
-      const isCurrentlyRead = email.keywords?.$seen;
+      const isCurrentlyRead = email.keywords?.$seen ?? false;
       if (isCurrentlyRead === read) {
         return true; // Already in desired state
       }
@@ -4758,7 +4831,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const emailInState = state.emails.find(isTarget);
         if (!emailInState) return { processingReadStatus: newProcessingSet };
 
-        const wasRead = emailInState.keywords?.$seen;
+        const wasRead = emailInState.keywords?.$seen ?? false;
         if (wasRead === read) {
           return { processingReadStatus: newProcessingSet }; // State unchanged, skip counter update
         }
@@ -4825,7 +4898,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Remove from processing set on error
       set((state) => {
         const newProcessingSet = new Set(state.processingReadStatus);
-        newProcessingSet.delete(`${emailId}-${read}`);
+        newProcessingSet.delete(processingKey);
         return {
           processingReadStatus: newProcessingSet,
           error: error instanceof Error ? error.message : "Failed to update email"
@@ -5482,14 +5555,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
 
     const controller = new AbortController();
+    const isCurrentView = beginEmailListRequest();
+    const isCurrentSearch = () => isCurrentView() && !controller.signal.aborted
+      && get().searchAbortController === controller;
     // The rows on screen stay, dimmed, until the results land, as on a folder
     // switch, instead of being torn down for a skeleton and rebuilt a round
     // trip later. What the mail view renders from is written only once the
     // request is on its way (see afterRequestDispatch); the controller is
     // recorded at once so a superseding search can still cancel this one.
-    set({ searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION(get())) });
+    set({ isLoadingMore: false, searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION(get())) });
     afterRequestDispatch(() => {
-      if (get().searchAbortController === controller) set({ isLoading: true, error: null, searchQuery: typedQuery });
+      if (isCurrentSearch()) set({
+        isLoading: true, error: null, searchQuery: typedQuery,
+        // A page dispatched before this query write still belongs to the old list.
+        ...(get().searchQuery !== typedQuery ? { isLoadingMore: false } : {}),
+      });
     });
     try {
       // The store keeps what the user typed; plugins' changes apply to this run.
@@ -5497,7 +5577,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const search = emailHooks.onSearch.size > 0
         ? await transformSearch(typedQuery, get().searchFilters)
         : { query: typedQuery, filters: get().searchFilters };
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       if (!isFilterEmpty(search.filters)) {
         // A plugin added filters: only the advanced search applies them.
         await get().advancedSearch(client, search);
@@ -5515,12 +5595,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
+        if (!isCurrentSearch()) return;
         result = await searchCrossViewEmails(built, crossView, query, emailsPerPage, 0);
         unifiedErrors = result.errors;
         
       } else if (isUnifiedView && unifiedRole) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
+        if (!isCurrentSearch()) return;
         result = await searchUnifiedEmails(built, unifiedRole, query, emailsPerPage, 0);
         unifiedErrors = result.errors;
 
@@ -5561,33 +5643,38 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Plugins may add messages to the results by id; the messages are
       // fetched from the server, so a plugin can't put made-up rows in the list.
+      if (!isCurrentSearch()) return;
       const extraIds = await pluginSearchResultIds(query, searchFilters, result.emails);
+      if (!isCurrentSearch()) return;
       if (extraIds.length > 0) {
         const newEmails = await resolveActionClient(client).getSomeEmails(extraIds, accountId);
         result.emails.push(...newEmails);
         result.total += newEmails.length;
       }
 
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
+      if (!isCurrentSearch()) return;
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
         totalEmails: result.total,
         // Also here: a fast answer can land before the deferred loading write.
         searchQuery: typedQuery,
+        ...(get().searchQuery !== typedQuery ? { isLoadingMore: false } : {}),
         isLoading: false,
         searchAbortController: null,
         ...(unifiedErrors ? { unifiedErrors } : {})
       });
       highlightWhenSnippetsArrive('snippets' in result ? result.snippets : undefined);
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       // Plugins still answering this search have nothing to add to an error.
       providedSearchRun = null;
       set({
         error: error instanceof Error ? error.message : "Failed to search emails",
         searchQuery: typedQuery,
+        ...(get().searchQuery !== typedQuery ? { isLoadingMore: false } : {}),
         isLoading: false,
         emails: [],
         externalSearchResults: [],
@@ -5608,16 +5695,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     }
 
     const controller = new AbortController();
+    const isCurrentView = beginEmailListRequest();
+    const isCurrentSearch = () => isCurrentView() && !controller.signal.aborted
+      && get().searchAbortController === controller;
     // See searchEmails: the rows stay, the loading state follows the request.
-    set({ searchAbortController: controller });
+    set({ isLoadingMore: false, searchAbortController: controller });
     afterRequestDispatch(() => {
-      if (get().searchAbortController === controller) set({ isLoading: true, error: null });
+      if (isCurrentSearch()) set({ isLoading: true, error: null });
     });
 
     try {
       const { query: searchQuery, filters: searchFilters } = transformed
         ?? (emailHooks.onSearch.size > 0 ? await transformSearch(typedQuery, typedFilters) : { query: typedQuery, filters: typedFilters });
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       // Clearing the filters leaves nothing to search for. Under the
       // all-folders scope that empty search listed every message of the
       // account in place of the open folder (#1430), so load the folder.
@@ -5636,6 +5726,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (isUnifiedView && crossView) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
+        if (!isCurrentSearch()) return;
         // Cross views apply the advanced filter (text + fields) on top of the
         // view membership; an empty filter degrades to a plain membership query.
         result = await advancedSearchCrossViewEmails(
@@ -5646,6 +5737,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       } else if (isUnifiedView && unifiedRole) {
         const includeGroup = useSettingsStore.getState().includeGroupInUnified;
         const built = await buildUnifiedAccountClients({ includeGroup });
+        if (!isCurrentSearch()) return;
         result = await advancedSearchUnifiedEmails(
           built,
           unifiedRole,
@@ -5683,19 +5775,20 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         result = withSnippetBatches(await resolveActionClient(client).advancedSearchEmails(filter, accountId, emailsPerPage, 0, { deferSnippets: true }));
       }
 
-      if (controller.signal.aborted) return;
-
       // Plugins may add messages to the results by id; the messages are
       // fetched from the server, so a plugin can't put made-up rows in the list.
+      if (!isCurrentSearch()) return;
       const extraIds = await pluginSearchResultIds(searchQuery, searchFilters, result.emails);
+      if (!isCurrentSearch()) return;
       if (extraIds.length > 0) {
         const newEmails = await resolveActionClient(client).getSomeEmails(extraIds, accountId);
         result.emails.push(...newEmails);
         result.total += newEmails.length;
       }
 
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       result.emails = await emailHooks.onEmailsFetched.transform(result.emails);
+      if (!isCurrentSearch()) return;
       set({
         emails: annotateScheduledEmails(result.emails, get().scheduledSubmissionByEmailId),
         hasMoreEmails: result.hasMore,
@@ -5706,7 +5799,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       });
       highlightWhenSnippetsArrive('snippets' in result ? result.snippets : undefined);
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if (!isCurrentSearch()) return;
       // Plugins still answering this search have nothing to add to an error.
       providedSearchRun = null;
       set({
@@ -5723,7 +5816,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   setSearchFilters: (filters) => {
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
+      ...cancelEmailSearch(state),
       searchFilters: { ...state.searchFilters, ...filters },
       ...NO_SELECTION(state),
     }));
@@ -5731,7 +5825,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   setSearchMailboxId: (mailboxId) => {
     // Another scope lists other mail once a search is running (see setSearchQuery).
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
+      ...cancelEmailSearch(state),
       searchMailboxId: mailboxId,
       searchScopeFollowsFolder: false,
       ...(mailboxId !== state.searchMailboxId && (state.searchQuery.trim() || !isFilterEmpty(state.searchFilters)) ? NO_SELECTION(state) : {}),
@@ -5742,11 +5837,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   // every folder of every account (#788, #1082), so it has to name the
   // folder, and keep naming whichever folder is open.
   scopeSearchToOpenFolder: () => {
-    set((state) => ({ searchMailboxId: state.selectedMailbox, searchScopeFollowsFolder: true }));
+    set((state) => dropPageOnSearchEdit(state, {
+      ...cancelEmailSearch(state), searchMailboxId: state.selectedMailbox, searchScopeFollowsFolder: true,
+    }));
   },
 
   clearSearchFilters: () => {
-    set((state) => ({
+    set((state) => dropPageOnSearchEdit(state, {
+      ...cancelEmailSearch(state),
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox),
       searchScopeFollowsFolder: false,
@@ -7070,7 +7168,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   refreshCurrentMailbox: (client) => coalesceRefresh(client, 'currentMailbox', async () => {
     const { selectedMailbox, selectedKeyword } = get();
-    const isCurrentView = captureEmailListView();
+    const isCurrentView = captureEmailListQuery();
 
     // Labels span folders and can be selected without a mailbox.
     if (!selectedMailbox && !selectedKeyword) return;
@@ -7414,7 +7512,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           const accountId = effectiveClient2.getAccountId();
           for (const tid of expandedNow) {
             void effectiveClient2.getThreadEmails(tid, accountId).then((fullEmails) => {
-              if (fullEmails.length > 0) {
+              if (isCurrentView() && fullEmails.length > 0) {
                 set((state) => {
                   const c = new Map(state.threadEmailsCache);
                   c.set(tid, fullEmails);
@@ -8125,8 +8223,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   // Unified mailbox operations
   fetchUnifiedEmails: async (accounts, role) => {
+    const cancelledSearch = cancelEmailSearch(get());
     const token = get().viewToken + 1;
     set({
+      ...cancelledSearch,
+      isLoadingMore: false,
       isLoading: true,
       error: null,
       isUnifiedView: true,
@@ -8138,13 +8239,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       listHold: null,
       viewToken: token,
     });
+    const isCurrentView = beginEmailListRequest();
     try {
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       const order = getMessageListOrderFor(role);
       const result = await fetchUnifiedEmails(accounts, role, emailsPerPage, 0, order);
       // The user may have navigated to a different mailbox/keyword/unified view
       // while this was in flight — don't let a stale response overwrite it.
-      if (get().viewToken !== token) return;
+      if (!isCurrentView()) return;
       set({
         emails: result.emails,
         hasMoreEmails: result.hasMore,
@@ -8155,7 +8257,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         unifiedErrors: result.errors,
       });
     } catch (error) {
-      if (get().viewToken !== token) return;
+      if (!isCurrentView()) return;
       console.error('Failed to fetch unified emails:', error);
       set({
         error: error instanceof Error ? error.message : "Failed to fetch unified emails",
@@ -8296,8 +8398,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   fetchCrossView: async (accounts, view) => {
+    const cancelledSearch = cancelEmailSearch(get());
     const token = get().viewToken + 1;
     set({
+      ...cancelledSearch,
+      isLoadingMore: false,
       isLoading: true,
       error: null,
       isUnifiedView: true,
@@ -8309,12 +8414,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       listHold: null,
       viewToken: token,
     });
+    const isCurrentView = beginEmailListRequest();
     try {
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
       const result = await fetchCrossViewEmails(accounts, view, emailsPerPage, 0);
       // The user may have navigated to a different mailbox/keyword/unified view
       // while this was in flight — don't let a stale response overwrite it.
-      if (get().viewToken !== token) return;
+      if (!isCurrentView()) return;
       set({
         emails: result.emails,
         hasMoreEmails: result.hasMore,
@@ -8323,7 +8429,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         unifiedErrors: result.errors,
       });
     } catch (error) {
-      if (get().viewToken !== token) return;
+      if (!isCurrentView()) return;
       console.error('Failed to fetch cross-account view:', error);
       set({
         error: error instanceof Error ? error.message : "Failed to fetch cross-account view",

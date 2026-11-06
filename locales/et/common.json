@@ -5483,6 +5483,7 @@
     "shared": "{name} jagas sinuga {kind} \"{object}\"",
     "changed": "{name} muutis sinu juurdepääsu {kind}-le \"{object}\"",
     "revoked": "{name} eemaldas sinu juurdepääsu {kind}-le \"{object}\"",
+    "summary": "{name} muutis sinu juurdepääsu {count, plural, one {# jagatud üksusele} other {# jagatud üksusele}}",
     "object": {
       "folder": "kaust",
       "calendar": "kalender",

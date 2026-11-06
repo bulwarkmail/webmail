@@ -3053,6 +3053,7 @@
     "shared": "{name} แชร์ {kind} “{object}” กับคุณ",
     "changed": "{name} เปลี่ยนแปลงสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
     "revoked": "{name} ยกเลิกสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
+    "summary": "{name} เปลี่ยนสิทธิ์การเข้าถึงรายการที่แชร์ {count, plural, other {# รายการ}} ของคุณ",
     "object": {
       "folder": "โฟลเดอร์",
       "calendar": "ปฏิทิน",

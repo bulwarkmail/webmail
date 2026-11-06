@@ -5483,6 +5483,7 @@
     "shared": "{name} s vami zdieľa {kind} „{object}“",
     "changed": "{name} zmenil(a) váš prístup k {kind} „{object}“",
     "revoked": "{name} odobral(a) váš prístup k {kind} „{object}“",
+    "summary": "{name} zmenil(a) váš prístup k {count, plural, one {# zdieľanej položke} few {# zdieľaným položkám} many {# zdieľanej položke} other {# zdieľaným položkám}}",
     "object": {
       "folder": "priečinok",
       "calendar": "kalendár",

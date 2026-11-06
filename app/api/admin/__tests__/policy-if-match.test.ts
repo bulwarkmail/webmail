@@ -110,6 +110,27 @@ describe('policy save with If-Match', () => {
     expect(res.headers.get('ETag')).toBe((await load()).etag);
   });
 
+  it('accepts the ETag a compressing proxy changed (#1557)', async () => {
+    const page = await load();
+    const first = page.etag.slice(1, -1);
+    let version = first;
+    for (const etag of [(v: string) => `"${v}-zstd"`, (v: string) => `"${v}-gzip"`, (v: string) => `W/"${v}-br"`]) {
+      const res = await save({ ...page.policy, features: { ...(page.policy.features as object), calendarEnabled: version !== first } }, etag(version));
+      expect(res.status).toBe(200);
+      version = res.headers.get('ETag')!.slice(1, -1);
+    }
+    // Still a conflict when the version under the suffix is an old one.
+    expect((await save({ ...page.policy }, `"${first}-gzip"`)).status).toBe(409);
+  });
+
+  it('accepts the default version behind a compressing proxy (#1557)', async () => {
+    await rm(path.join(dir, 'policy.json'));
+    await configManager.reload();
+    const page = await load();
+    expect(page.etag).toBe('"default"');
+    expect((await save({ ...page.policy }, '"default-zstd"')).status).toBe(200);
+  });
+
   it('replaces the policy without If-Match, as before', async () => {
     await load();
     await configManager.setPolicy({ ...configManager.getPolicy(), forceEnabledPlugins: [] });

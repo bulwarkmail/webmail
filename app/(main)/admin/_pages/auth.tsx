@@ -233,7 +233,7 @@ export function AuthPage() {
               className={cn(inputClass, 'w-full')}
             />
             <p className="text-[0.6875rem] text-muted-foreground mt-1">
-              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
+              Used to register redirect URIs (one per locale: <code>{setupOrigin.trim().replace(/\/+$/, '') || 'https://…'}{(process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '')}/&lt;locale&gt;/auth/callback</code>) on Stalwart.
             </p>
             {!setupOriginValid && setupOrigin.length > 0 && (
               <p className="text-[0.6875rem] text-destructive mt-1">Must be like https://host with no path.</p>

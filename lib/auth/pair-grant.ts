@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { stalwartPasswordLogin, type StalwartPasswordLoginResult } from '@/lib/auth/stalwart-password-login';
+import { getPasswordLoginScope } from '@/lib/oauth/tokens';
 import { registerGrantDisposer, type PairingGrant } from '@/lib/auth/pairing-store';
 import { DEFAULT_CLIENT_ID, getClientSecret, getRequiredConfig } from '@/lib/oauth/token-exchange';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
@@ -160,6 +161,7 @@ export async function mintGrantWithPassword(opts: PasswordGrantOptions): Promise
       trusted: opts.trusted,
       // As the password+TOTP login: Stalwart 1.0 knows no default client.
       registerUnknownClient: configured.isDefault,
+      scope: configured.isDefault ? undefined : getPasswordLoginScope(),
     });
     if (second.ok) {
       return { ok: true, grant: oauthGrant(opts, second, second.clientId, configured.clientSecret !== '' && second.clientId === configured.clientId) };

@@ -6115,6 +6115,7 @@
     "shared": "{name} kopīgoja ar jums {kind} “{object}”",
     "changed": "{name} mainīja jūsu piekļuvi {kind} “{object}”",
     "revoked": "{name} noņēma jūsu piekļuvi {kind} “{object}”",
+    "summary": "{name} mainīja jūsu piekļuvi {count, plural, zero {# kopīgotajiem vienumiem} one {# kopīgotajam vienumam} other {# kopīgotajiem vienumiem}}",
     "object": {
       "folder": "mapi",
       "calendar": "kalendāru",

@@ -6115,6 +6115,7 @@
     "shared": "{name} hat {kind} „{object}“ mit Ihnen geteilt",
     "changed": "{name} hat Ihren Zugriff auf {kind} „{object}“ geändert",
     "revoked": "{name} hat Ihren Zugriff auf {kind} „{object}“ entfernt",
+    "summary": "{name} hat Ihren Zugriff auf {count, plural, one {# freigegebenes Element} other {# freigegebene Elemente}} geändert",
     "object": {
       "folder": "den Ordner",
       "calendar": "den Kalender",

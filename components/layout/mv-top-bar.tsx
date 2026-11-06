@@ -36,6 +36,7 @@ import { openKeyboardShortcuts, parkAppCommand, requestAppCommand } from "@/lib/
 import { useSettingsStore } from "@/stores/settings-store";
 import { useAccountStore } from "@/stores/account-store";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
+import { SidebarAppIcon } from "@/components/layout/sidebar-app-icon";
 import { SearchBox, type ContactSearchField } from "@/components/search/search-box";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginPages, pluginPageHref, isPluginPageActive } from "@/hooks/use-plugin-pages";
@@ -396,7 +397,6 @@ export function MvTopBar({
                   );
                 })}
                 {sidebarApps.map((app) => {
-                  const AppIcon = iconForName(app.icon);
                   return (
                     <button
                       key={app.id}
@@ -417,7 +417,7 @@ export function MvTopBar({
                         activeAppId === app.id && "bg-muted"
                       )}
                     >
-                      {AppIcon ? <AppIcon className="w-6 h-6 text-muted-foreground" /> : null}
+                      <SidebarAppIcon app={app} className="w-6 h-6 text-muted-foreground" />
                       <span className="text-xs truncate max-w-full">{app.name}</span>
                     </button>
                   );

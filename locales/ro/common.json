@@ -5483,6 +5483,7 @@
     "shared": "{name} a partajat cu tine {kind} „{object}”",
     "changed": "{name} ți-a modificat accesul la {kind} „{object}”",
     "revoked": "{name} ți-a retras accesul la {kind} „{object}”",
+    "summary": "{name} ți-a modificat accesul la {count, plural, one {# element partajat} few {# elemente partajate} other {# de elemente partajate}}",
     "object": {
       "folder": "dosarul",
       "calendar": "calendarul",

@@ -6115,6 +6115,7 @@
     "shared": "{name} heeft {kind} \"{object}\" met je gedeeld",
     "changed": "{name} heeft je toegang tot {kind} \"{object}\" gewijzigd",
     "revoked": "{name} heeft je toegang tot {kind} \"{object}\" ingetrokken",
+    "summary": "{name} heeft je toegang tot {count, plural, one {# gedeeld item} other {# gedeelde items}} gewijzigd",
     "object": {
       "folder": "de map",
       "calendar": "de agenda",
