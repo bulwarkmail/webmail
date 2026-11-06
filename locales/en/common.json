@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Show Cc",
     "shortcut_show_bcc": "Show Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Open",
+    "reply_type": "Reply type: {kind}",
+    "resize_reply": "Resize reply",
+    "fields_menu": "More fields"
+  },
   "confirm_dialog": {
     "confirm": "Confirm",
     "cancel": "Cancel"
@@ -5477,6 +5483,7 @@
     "shared": "{name} shared the {kind} \"{object}\" with you",
     "changed": "{name} changed your access to the {kind} \"{object}\"",
     "revoked": "{name} removed your access to the {kind} \"{object}\"",
+    "summary": "{name} changed your access to {count, plural, one {# shared item} other {# shared items}}",
     "object": {
       "folder": "folder",
       "calendar": "calendar",
@@ -7408,6 +7415,18 @@
     "save_draft": "Save draft",
     "attach_files": "Attach files…",
     "shortcut_apps": "Go to Mail, Calendar, Contacts or Files"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Open…",
+    "menu_save_as": "Save as…",
+    "open_filter": "Messages, events and contacts",
+    "save_filter": "Email message",
+    "folder_title": "Choose a folder for the messages",
+    "folder_button": "Save here",
+    "saved_many": "{count, plural, one {# message saved.} other {# messages saved.}}",
+    "save_failed": "{count, plural, one {# message could not be saved.} other {# messages could not be saved.}}",
+    "shortcut_open": "Open a saved message, event or contact",
+    "shortcut_save_as": "Save the message as a file"
   },
   "appLock": {
     "section_title": "App lock",

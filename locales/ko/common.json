@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "참조 표시",
     "shortcut_show_bcc": "숨은 참조 표시"
   },
+  "compose_dock": {
+    "open_draft": "열기",
+    "reply_type": "답장 유형: {kind}",
+    "resize_reply": "답장 크기 조절",
+    "fields_menu": "추가 필드"
+  },
   "confirm_dialog": {
     "confirm": "확인",
     "cancel": "취소"
@@ -6109,6 +6115,7 @@
     "shared": "{name}님이 {kind} \"{object}\"을(를) 공유했습니다",
     "changed": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 변경했습니다",
     "revoked": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 제거했습니다",
+    "summary": "{name}님이 공유 항목 {count, plural, other {#개}}에 대한 접근 권한을 변경했습니다",
     "object": {
       "folder": "폴더",
       "calendar": "캘린더",
@@ -7408,6 +7415,18 @@
     "save_draft": "임시 저장",
     "attach_files": "파일 첨부…",
     "shortcut_apps": "메일, 캘린더, 연락처, 파일로 이동"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "열기…",
+    "menu_save_as": "다른 이름으로 저장…",
+    "open_filter": "메시지, 일정 및 연락처",
+    "save_filter": "이메일 메시지",
+    "folder_title": "메시지를 저장할 폴더 선택",
+    "folder_button": "여기에 저장",
+    "saved_many": "메시지 {count}개를 저장했어요.",
+    "save_failed": "메시지 {count}개를 저장하지 못했어요.",
+    "shortcut_open": "저장된 메시지, 일정 또는 연락처 열기",
+    "shortcut_save_as": "메시지를 파일로 저장"
   },
   "appLock": {
     "section_title": "앱 잠금",

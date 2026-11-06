@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  appFrameRights,
   DEFAULT_SIDEBAR_APP_ID_PREFIX,
+  managedAppOriginsWith,
   MAX_DEFAULT_SIDEBAR_APPS,
   mergeSidebarApps,
   sanitizeDefaultSidebarApps,
@@ -67,6 +69,35 @@ describe('sanitizeDefaultSidebarApps', () => {
     expect(sanitizeDefaultSidebarApps([app({ icon: 'tabler:../x' })])[0].icon).toBe('Globe');
   });
 
+  it("keeps an https image on the app's own origin as its icon", () => {
+    const iconUrl = 'https://intranet.example.com/static/favicon-24x24.png';
+    expect(sanitizeDefaultSidebarApps([app({ iconUrl: ` ${iconUrl} ` })])[0].iconUrl).toBe(iconUrl);
+    expect(sanitizeDefaultSidebarApps([app()])[0]).not.toHaveProperty('iconUrl');
+  });
+
+  it("drops an image that is not https or not on the app's origin, and keeps the app", () => {
+    for (const iconUrl of [
+      'https://cdn.example.com/logo.png',
+      'https://intranet.example.com:8443/logo.png',
+      'http://intranet.example.com/logo.png',
+      'https://user:pw@intranet.example.com/logo.png',
+      'data:image/svg+xml,<svg/>',
+      'javascript:alert(1)',
+      '/logo.png',
+      `https://intranet.example.com/${'a'.repeat(2100)}`,
+      42,
+    ]) {
+      const [kept] = sanitizeDefaultSidebarApps([app({ iconUrl })]);
+      expect(kept.name, String(iconUrl)).toBe('Intranet');
+      expect(kept, String(iconUrl)).not.toHaveProperty('iconUrl');
+    }
+    // An app served over http gets no image either: no https image shares its origin.
+    const [plain] = sanitizeDefaultSidebarApps([
+      app({ url: 'http://intranet.example.com', iconUrl: 'https://intranet.example.com/logo.png' }),
+    ]);
+    expect(plain).not.toHaveProperty('iconUrl');
+  });
+
   it('coerces openMode and showOnMobile', () => {
     const [tab, inline] = sanitizeDefaultSidebarApps([
       app({ id: 'a', openMode: 'popup', showOnMobile: 'yes' }),
@@ -125,6 +156,14 @@ describe('mergeSidebarApps', () => {
     expect(merged[1].managed).toBeUndefined();
   });
 
+  it("drops the managed flag and an image from a user's own app", () => {
+    const forged = { ...userApp, managed: true, iconUrl: 'https://mine.example.com/logo.png' };
+    const [own] = mergeSidebarApps([], [forged]);
+    expect(own.name).toBe('My app');
+    expect(own).not.toHaveProperty('managed');
+    expect(own).not.toHaveProperty('iconUrl');
+  });
+
   it('works with either side missing', () => {
     expect(mergeSidebarApps(undefined, [userApp]).map((a) => a.id)).toEqual(['app-abc']);
     expect(mergeSidebarApps([app()], undefined).map((a) => a.id)).toEqual(['admin-app-1']);
@@ -153,5 +192,65 @@ describe('CSP origins for admin apps', () => {
       app({ id: 'b', url: 'https://newtab.example.com', openMode: 'tab' }),
     ]);
     expect(inlineAppFrameOrigins(apps)).toEqual(['https://framed.example.com']);
+  });
+});
+
+describe('sidebar app frame rights', () => {
+  const chat = app({ id: 'admin-app-chat', url: 'https://chat.example.com/team', openMode: 'inline' });
+  const base = 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox';
+
+  it('keeps the known features of an inline app, in a fixed order, and drops the rest', () => {
+    const [kept] = sanitizeDefaultSidebarApps([
+      { ...chat, allow: ['fullscreen', 'geolocation', 'clipboard-write', 'camera', 'camera', 'allow-top-navigation', 42] },
+    ]);
+    expect(kept.allow).toEqual(['clipboard-write', 'camera', 'fullscreen']);
+  });
+
+  it('keeps no `allow` that is not a list, is empty, or belongs to a tab app', () => {
+    const kept = sanitizeDefaultSidebarApps([
+      { ...chat, id: 'a', allow: 'camera' },
+      { ...chat, id: 'b', allow: ['geolocation'] },
+      { ...chat, id: 'c', openMode: 'tab', allow: ['camera'] },
+    ]);
+    expect(kept.map((a) => a.allow)).toEqual([undefined, undefined, undefined]);
+    expect(kept.every((a) => !('allow' in a))).toBe(true);
+  });
+
+  it('gives an app of the policy downloads, dialogs and its features for its own origin', () => {
+    const managed = sanitizeDefaultSidebarApps([{ ...chat, allow: ['clipboard-write', 'microphone', 'camera', 'display-capture', 'fullscreen'] }]);
+    expect(appFrameRights({ id: 'admin-app-chat', url: 'https://chat.example.com/team' }, managed)).toEqual({
+      sandbox: `${base} allow-downloads allow-modals`,
+      allow: 'clipboard-write https://chat.example.com; microphone https://chat.example.com; camera https://chat.example.com; display-capture https://chat.example.com; fullscreen https://chat.example.com',
+    });
+  });
+
+  it('gives an app of the policy without features downloads and dialogs alone', () => {
+    const managed = sanitizeDefaultSidebarApps([chat]);
+    expect(appFrameRights({ id: 'admin-app-chat', url: 'https://chat.example.com/' }, managed))
+      .toEqual({ sandbox: `${base} allow-downloads allow-modals` });
+  });
+
+  it('leaves downloads out while the device policy forbids them', () => {
+    const managed = sanitizeDefaultSidebarApps([chat]);
+    expect(appFrameRights({ id: 'admin-app-chat', url: chat.url as string }, managed, { downloadsOff: true }).sandbox)
+      .toBe(`${base} allow-modals`);
+  });
+
+  it('gives a user\'s own app the base sandbox alone, also under an operator\'s id', () => {
+    const managed = sanitizeDefaultSidebarApps([{ ...chat, allow: ['camera'] }]);
+    expect(appFrameRights({ id: 'my-app', url: 'https://chat.example.com' }, managed)).toEqual({ sandbox: base });
+    expect(appFrameRights({ id: 'admin-app-chat', url: 'https://evil.example.com' }, managed)).toEqual({ sandbox: base });
+    expect(appFrameRights({ id: 'admin-app-chat', url: 'https://chat.example.com' }, [])).toEqual({ sandbox: base });
+  });
+
+  it('lists the origins granted a feature, once each', () => {
+    const defaults = [
+      { ...chat, allow: ['camera', 'microphone'] },
+      { ...chat, id: 'admin-app-2', url: 'https://chat.example.com/other', allow: ['camera'] },
+      { ...chat, id: 'admin-app-3', url: 'https://talk.example.com', allow: ['microphone'] },
+    ];
+    expect(managedAppOriginsWith(defaults, 'camera')).toEqual(['https://chat.example.com']);
+    expect(managedAppOriginsWith(defaults, 'microphone')).toEqual(['https://chat.example.com', 'https://talk.example.com']);
+    expect(managedAppOriginsWith(undefined, 'camera')).toEqual([]);
   });
 });

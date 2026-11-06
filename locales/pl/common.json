@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Pokaż DW",
     "shortcut_show_bcc": "Pokaż UDW"
   },
+  "compose_dock": {
+    "open_draft": "Otwórz",
+    "reply_type": "Rodzaj odpowiedzi: {kind}",
+    "resize_reply": "Zmień rozmiar odpowiedzi",
+    "fields_menu": "Więcej pól"
+  },
   "confirm_dialog": {
     "confirm": "Potwierdź",
     "cancel": "Anuluj"
@@ -6109,6 +6115,7 @@
     "shared": "{name} udostępnił(a) Ci {kind} „{object}”",
     "changed": "{name} zmienił(a) Twój dostęp do {kind} „{object}”",
     "revoked": "{name} odebrał(a) Ci dostęp do {kind} „{object}”",
+    "summary": "{name} zmienił(a) Twój dostęp do {count, plural, one {# udostępnionego elementu} few {# udostępnionych elementów} many {# udostępnionych elementów} other {# udostępnionego elementu}}",
     "object": {
       "folder": "folder",
       "calendar": "kalendarz",
@@ -7408,6 +7415,18 @@
     "save_draft": "Zapisz wersję roboczą",
     "attach_files": "Załącz pliki…",
     "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Otwórz…",
+    "menu_save_as": "Zapisz jako…",
+    "open_filter": "Wiadomości, wydarzenia i kontakty",
+    "save_filter": "Wiadomość e-mail",
+    "folder_title": "Wybierz folder na wiadomości",
+    "folder_button": "Zapisz tutaj",
+    "saved_many": "{count, plural, one {Zapisano # wiadomość.} few {Zapisano # wiadomości.} many {Zapisano # wiadomości.} other {Zapisano # wiadomości.}}",
+    "save_failed": "{count, plural, one {Nie udało się zapisać # wiadomości.} few {Nie udało się zapisać # wiadomości.} many {Nie udało się zapisać # wiadomości.} other {Nie udało się zapisać # wiadomości.}}",
+    "shortcut_open": "Otwórz zapisaną wiadomość, wydarzenie lub kontakt",
+    "shortcut_save_as": "Zapisz wiadomość jako plik"
   },
   "appLock": {
     "section_title": "Blokada aplikacji",

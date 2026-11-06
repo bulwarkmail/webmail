@@ -1239,6 +1239,12 @@
     "shortcut_show_cc": "הצגת עותק",
     "shortcut_show_bcc": "הצגת עותק מוסתר"
   },
+  "compose_dock": {
+    "open_draft": "פתיחה",
+    "reply_type": "סוג התשובה: {kind}",
+    "resize_reply": "שינוי גודל התשובה",
+    "fields_menu": "שדות נוספים"
+  },
   "confirm_dialog": {
     "confirm": "אשר",
     "cancel": "לְבַטֵל"
@@ -5928,6 +5934,7 @@
     "shared": "{name} שיתף/ה איתך את {kind} \"{object}\"",
     "changed": "{name} שינה/תה את הגישה שלך ל{kind} \"{object}\"",
     "revoked": "{name} הסיר/ה את הגישה שלך ל{kind} \"{object}\"",
+    "summary": "{name} שינה/תה את הגישה שלך ל{count, plural, one {פריט משותף אחד} two {שני פריטים משותפים} other {# פריטים משותפים}}",
     "object": {
       "folder": "התיקייה",
       "calendar": "היומן",
@@ -7409,6 +7416,18 @@
     "save_draft": "שמירת טיוטה",
     "attach_files": "צירוף קבצים…",
     "shortcut_apps": "מעבר לדואר, ליומן, לאנשי הקשר או לקבצים"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "פתיחה…",
+    "menu_save_as": "שמירה בשם…",
+    "open_filter": "הודעות, אירועים ואנשי קשר",
+    "save_filter": "הודעת דוא\"ל",
+    "folder_title": "בחירת תיקייה להודעות",
+    "folder_button": "שמירה כאן",
+    "saved_many": "{count, plural, one {הודעה אחת נשמרה.} other {# הודעות נשמרו.}}",
+    "save_failed": "{count, plural, one {לא ניתן היה לשמור הודעה אחת.} other {לא ניתן היה לשמור # הודעות.}}",
+    "shortcut_open": "פתיחת הודעה, אירוע או איש קשר שנשמרו",
+    "shortcut_save_as": "שמירת ההודעה כקובץ"
   },
   "appLock": {
     "section_title": "נעילת אפליקציה",

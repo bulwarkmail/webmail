@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Afficher Cc",
     "shortcut_show_bcc": "Afficher Cci"
   },
+  "compose_dock": {
+    "open_draft": "Ouvrir",
+    "reply_type": "Type de réponse : {kind}",
+    "resize_reply": "Redimensionner la réponse",
+    "fields_menu": "Plus de champs"
+  },
   "confirm_dialog": {
     "confirm": "Confirmer",
     "cancel": "Annuler"
@@ -6109,6 +6115,7 @@
     "shared": "{name} a partagé {kind} « {object} » avec vous",
     "changed": "{name} a modifié votre accès à {kind} « {object} »",
     "revoked": "{name} a retiré votre accès à {kind} « {object} »",
+    "summary": "{name} a modifié votre accès à {count, plural, one {# élément partagé} other {# éléments partagés}}",
     "object": {
       "folder": "le dossier",
       "calendar": "l'agenda",
@@ -7408,6 +7415,18 @@
     "save_draft": "Enregistrer le brouillon",
     "attach_files": "Joindre des fichiers…",
     "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Ouvrir…",
+    "menu_save_as": "Enregistrer sous…",
+    "open_filter": "Messages, événements et contacts",
+    "save_filter": "Message électronique",
+    "folder_title": "Choisissez un dossier pour les messages",
+    "folder_button": "Enregistrer ici",
+    "saved_many": "{count, plural, one {# message enregistré.} other {# messages enregistrés.}}",
+    "save_failed": "{count, plural, one {# message n'a pas pu être enregistré.} other {# messages n'ont pas pu être enregistrés.}}",
+    "shortcut_open": "Ouvrir un message, un événement ou un contact enregistré",
+    "shortcut_save_as": "Enregistrer le message dans un fichier"
   },
   "appLock": {
     "section_title": "Verrouillage de l'app",

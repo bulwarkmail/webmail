@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -6,6 +6,8 @@ import { EmailComposer } from '../email-composer';
 // mail-p2-2: a reply docked under its message starts compact: no Subject
 // line, no From line when there's only one address to send from, and the
 // formatting bar folded behind its button. Full screen shows them again.
+// inline-reply: no title row either. The kind of reply is a small menu at
+// the start of the To row, and the window buttons and Close end that row.
 
 // ─── Heavy component mocks (mirrors composer-mobile-formatting.test.tsx) ──────
 
@@ -103,6 +105,7 @@ vi.mock('@/stores/settings-store', () => {
     signatureSeparatorEnabled: false,
     requestReadReceiptDefault: false,
     addTrustedSender: () => {},
+    isSenderTrusted: () => false,
     trustedSendersAddressBook: null,
     updateSetting: (...args: unknown[]) => updateSetting(...args),
   };
@@ -169,6 +172,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
 
 vi.mock('@/lib/email-sanitization', () => ({
   sanitizeSignatureHtml: (v: string) => v,
+  escapeHtml: (v: string) => v,
   sanitizeEmailHtml: (v: string) => v,
   parseHtmlSafely: (html: string) => new DOMParser().parseFromString(html, 'text/html'),
 }));
@@ -229,8 +233,90 @@ describe('a reply docked under its message', () => {
     expect(screen.getByTestId('rich-text-editor')).toHaveAttribute('data-toolbar', 'top');
   });
 
+  it('has no title row: the kind of reply, the window buttons and Close are in the To row', () => {
+    const { container } = render(<EmailComposer initialData={DATA} docked />);
+    expect(container.querySelector('[data-composer-header]')).toBeNull();
+    const toRow = screen.getByTestId('composer-to');
+    expect(within(toRow).getByTestId('composer-close')).toBeInTheDocument();
+    expect(within(toRow).getByRole('button', { name: 'maximize' })).toBeInTheDocument();
+    expect(within(toRow).getByTestId('composer-save-status')).toBeInTheDocument();
+    // Full screen brings the title row back, and the To row is only To again.
+    fireEvent.click(within(toRow).getByRole('button', { name: 'maximize' }));
+    expect(container.querySelector('[data-composer-header]')).not.toBeNull();
+    expect(within(screen.getByTestId('composer-to')).queryByTestId('composer-close')).toBeNull();
+  });
+
+  const ORIGINAL = {
+    from: [{ email: 'bob@example.com', name: 'Bob' }],
+    to: [{ email: 'me@example.com', name: 'Me' }],
+    cc: [{ email: 'alice@example.com', name: 'Alice' }],
+    subject: 'Lunch',
+    body: 'Friday?',
+    receivedAt: '2026-11-05T10:00:00Z',
+  };
+  const chips = () => [...document.querySelectorAll('[data-recipient-chip]')].map((el) => el.textContent ?? '');
+
+  it('switches Reply all to Reply and back in place, keeping the text', () => {
+    const onSwitchToForward = vi.fn();
+    render(<EmailComposer mode="replyAll" replyTo={ORIGINAL} docked onSwitchToForward={onSwitchToForward} />);
+    expect(chips().some((c) => c.includes('Alice'))).toBe(true);
+    const menu = screen.getByTestId('composer-reply-type');
+    expect(menu).toHaveAttribute('aria-label', 'reply_type');
+    expect(menu).toHaveAttribute('data-reply-type', 'replyAll');
+
+    fireEvent.click(menu);
+    fireEvent.click(screen.getByTestId('composer-reply-type-reply'));
+    expect(screen.getByTestId('composer-reply-type')).toHaveAttribute('data-reply-type', 'reply');
+    expect(chips().some((c) => c.includes('Alice'))).toBe(false);
+    expect(chips().some((c) => c.includes('Bob'))).toBe(true);
+
+    fireEvent.click(screen.getByTestId('composer-reply-type'));
+    fireEvent.click(screen.getByTestId('composer-reply-type-replyAll'));
+    expect(chips().some((c) => c.includes('Alice'))).toBe(true);
+    expect(chips().filter((c) => c.includes('Bob'))).toHaveLength(1);
+
+    // Forward is the host's: it opens a forward of the same message.
+    fireEvent.click(screen.getByTestId('composer-reply-type'));
+    fireEvent.click(screen.getByTestId('composer-reply-type-forward'));
+    expect(onSwitchToForward).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps From folded behind a button when there are several addresses to send from', async () => {
+    const { useIdentityStore } = await import('@/stores/identity-store');
+    const before = useIdentityStore.getState().identities;
+    useIdentityStore.setState({ identities: [...before, { id: 'id-work', email: 'me@work.example', name: 'Me at work' }] } as never);
+    try {
+      const { container } = render(<EmailComposer initialData={DATA} docked />);
+      const from = container.querySelector('[data-composer-from]');
+      expect(hidden(from)).toBe(true);
+      const button = screen.getByTestId('composer-dock-from');
+      expect(button).toHaveAttribute('aria-pressed', 'false');
+      fireEvent.click(button);
+      expect(hidden(container.querySelector('[data-composer-from]'))).toBe(false);
+    } finally {
+      useIdentityStore.setState({ identities: before } as never);
+    }
+  });
+
+  // The text, the signature and the quote are one page, where the focus shows
+  // (app/accessibility.css), not a box round the typing part alone.
+  it('keeps the editor and the signature in one writing area', () => {
+    const { container } = render(<EmailComposer initialData={DATA} docked />);
+    const page = container.querySelector('[data-composer-writing]');
+    expect(page).not.toBeNull();
+    expect(page!.contains(screen.getByTestId('rich-text-editor'))).toBe(true);
+  });
+
+  // At 900 px the To row is narrow: the typing space beside a chip may get
+  // small before it wraps under it, which made the row two lines high.
+  it('lets the To input get narrow beside its chips', () => {
+    render(<EmailComposer initialData={DATA} docked />);
+    expect(screen.getByRole('combobox', { name: 'to:' }).className).toMatch(/(^|\s)min-w-12(\s|$)/);
+  });
+
   it('keeps every line when not docked', () => {
     const { container } = render(<EmailComposer initialData={DATA} />);
+    expect(screen.getByRole('combobox', { name: 'to:' }).className).not.toMatch(/(^|\s)min-w-12(\s|$)/);
     expect(hidden(container.querySelector('[data-composer-subject]'))).toBe(false);
     expect(hidden(container.querySelector('[data-composer-from]'))).toBe(false);
   });

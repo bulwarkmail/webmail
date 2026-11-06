@@ -106,20 +106,25 @@ describe('folded folder column (default layout)', () => {
     expect(peek()).toBeNull();
   });
 
-  it('floats out after the pointer rests on it, not at once, and not with hover opening off', () => {
+  // The hover shows the names beside the same items; the tree stays All
+  // folders' (sidebar-folded-rail-hover.test.tsx).
+  it('shows the names after the pointer rests on it, not at once, and not with hover opening off', () => {
     vi.useFakeTimers();
     const { container } = render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
+    const labels = () => container.firstElementChild!.hasAttribute('data-folder-rail-labels');
     fireEvent.mouseEnter(container.firstElementChild!);
-    expect(peek()).toBeNull();
+    expect(labels()).toBe(false);
     act(() => { vi.advanceTimersByTime(400); });
-    expect(peek()).not.toBeNull();
-    fireEvent.mouseLeave(container.firstElementChild!);
+    expect(labels()).toBe(true);
     expect(peek()).toBeNull();
+    fireEvent.mouseLeave(container.firstElementChild!);
+    act(() => { vi.advanceTimersByTime(250); });
+    expect(labels()).toBe(false);
 
     useSettingsStore.setState({ openOnHover: false } as never);
     fireEvent.mouseEnter(container.firstElementChild!);
     act(() => { vi.advanceTimersByTime(400); });
-    expect(peek()).toBeNull();
+    expect(labels()).toBe(false);
   });
 });
 

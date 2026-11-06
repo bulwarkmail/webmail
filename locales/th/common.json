@@ -1731,6 +1731,12 @@
     "shortcut_show_cc": "แสดงสำเนา",
     "shortcut_show_bcc": "แสดงสำเนาลับ"
   },
+  "compose_dock": {
+    "open_draft": "เปิด",
+    "reply_type": "ประเภทการตอบกลับ: {kind}",
+    "resize_reply": "ปรับขนาดการตอบกลับ",
+    "fields_menu": "ช่องเพิ่มเติม"
+  },
   "email_viewer": {
     "read_receipt": {
       "prompt": "ผู้ส่งขอรับใบตอบรับการอ่านเมื่อคุณเปิดข้อความนี้",
@@ -3047,6 +3053,7 @@
     "shared": "{name} แชร์ {kind} “{object}” กับคุณ",
     "changed": "{name} เปลี่ยนแปลงสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
     "revoked": "{name} ยกเลิกสิทธิ์การเข้าถึง {kind} “{object}” ของคุณ",
+    "summary": "{name} เปลี่ยนสิทธิ์การเข้าถึงรายการที่แชร์ {count, plural, other {# รายการ}} ของคุณ",
     "object": {
       "folder": "โฟลเดอร์",
       "calendar": "ปฏิทิน",
@@ -7416,6 +7423,18 @@
     "save_draft": "บันทึกฉบับร่าง",
     "attach_files": "แนบไฟล์…",
     "shortcut_apps": "ไปที่อีเมล ปฏิทิน รายชื่อติดต่อ หรือไฟล์"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "เปิด…",
+    "menu_save_as": "บันทึกเป็น…",
+    "open_filter": "ข้อความ กิจกรรม และรายชื่อติดต่อ",
+    "save_filter": "ข้อความอีเมล",
+    "folder_title": "เลือกโฟลเดอร์สำหรับข้อความ",
+    "folder_button": "บันทึกที่นี่",
+    "saved_many": "บันทึกข้อความแล้ว {count} รายการ",
+    "save_failed": "บันทึกข้อความไม่ได้ {count} รายการ",
+    "shortcut_open": "เปิดข้อความ กิจกรรม หรือรายชื่อติดต่อที่บันทึกไว้",
+    "shortcut_save_as": "บันทึกข้อความเป็นไฟล์"
   },
   "appLock": {
     "section_title": "ล็อกแอป",

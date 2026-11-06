@@ -23,6 +23,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import type { ProComposeTabData } from "@/stores/pro-tab-store";
 import { toast } from "@/stores/toast-store";
 import { PopoutNotice, PopoutSkeleton } from "./popout-shell";
+import { importKeywords } from "@/lib/file-drop/import-keywords";
 
 type ComposeData = Omit<ProComposeTabData, "sessionId">;
 
@@ -131,7 +132,7 @@ export function PopoutSavedMessage({ blobId, name, accountId, openCompose, onImp
     try {
       // The file drop overlay's import: the message as it is, marked read.
       const raw = await client.fetchBlob(blobId, name, "message/rfc822");
-      const emailId = await client.importRawEmail(raw, { [mailbox.id]: true }, { $seen: true }, mailbox.accountId);
+      const emailId = await client.importRawEmail(raw, { [mailbox.id]: true }, importKeywords(mailbox.role), mailbox.accountId);
       toast.success(tDrop("import_done", { count: 1, folder }));
       announceMailChanged(login ?? null);
       const own = client.getAccountId?.();

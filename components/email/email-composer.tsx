@@ -48,11 +48,15 @@ import {
   Pencil,
   UserPen,
   ArrowLeftRight,
+  UserPlus,
 } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { ComposerPluginMenuItems, ComposerPluginToolbarButtons, ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { ComposerHeaderPluginActions } from "@/components/email/composer-header-plugin-actions";
 import { ComposerToolbarMenuRadioItem } from "@/components/email/composer-toolbar-menu";
+import { ComposerBarCompactContext } from "@/components/email/composer-bar-labels";
+import { ReplyTypeMenu, type ReplyKind } from "@/components/email/reply-type-menu";
+import { useReplyDock } from "@/components/mail/reply-dock";
 import type { MessagePriority } from "@/lib/message-priority";
 import { registerComposer } from "@/lib/plugin-sandbox/composer-registry";
 import { MAX_PLUGIN_FETCH_BYTES } from "@/lib/plugin-sandbox/host-api-input";
@@ -77,7 +81,7 @@ import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader, userTextEnd } from "@/components/email/reply-quote-collapse";
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { attachmentsForDisplay } from "@/lib/compose/attachment-order";
-import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, openKeptDraft, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-markers";
 import {
@@ -96,7 +100,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { ComposerPanelHead, ComposerPanelToggle, ComposerPluginSidebar, isPanelOpen, useComposerSidebars } from "./composer-plugin-sidebars";
+import { ComposerPanelButton, ComposerPanelHead, ComposerPanelToggle, ComposerPluginSidebar, isPanelOpen, useComposerSidebars } from "./composer-plugin-sidebars";
 import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
@@ -464,8 +468,12 @@ interface EmailComposerProps {
    * Docked under the message it answers (mail-p2-2): the composer starts
    * compact, without the Subject line, the From line when there's nothing to
    * pick, and the formatting bar until asked for. Full screen shows them all.
+   * Its title row goes too: the kind of reply, the window buttons and Close
+   * share the To row (inline-reply).
    */
   docked?: boolean;
+  /** A docked reply's kind menu offers Forward: the host opens a forward of the same message. */
+  onSwitchToForward?: () => void;
   /**
    * This composer is all a window shows (lib/popout). It closes itself once a
    * message has gone. Closing the window with unsaved text hands the draft to
@@ -662,6 +670,7 @@ export function EmailComposer({
   popOut,
   popOutToMainLabel,
   docked = false,
+  onSwitchToForward,
   ownWindow,
   onSubjectChange,
   className,
@@ -690,6 +699,7 @@ export function EmailComposer({
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
   const tUx = useTranslations('compose_ux');
+  const tDock = useTranslations('compose_dock');
   const router = useRouter();
   const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -1305,6 +1315,11 @@ export function EmailComposer({
   const [maximized, setMaximized] = useState(false);
   const canMaximize = !ownWindow && !mvWindow;
   const dockCompact = docked && !maximized;
+  // Reply and Reply all switched in place from a docked reply's kind menu:
+  // only the recipients differ, and the text stays (inline-reply).
+  const [replyKindSwitched, setReplyKindSwitched] = useState<'reply' | 'replyAll' | null>(null);
+  // A docked reply keeps From out of the way until asked for or it isn't the usual one.
+  const [showDockFrom, setShowDockFrom] = useState(false);
   const [showDockFormatting, setShowDockFormatting] = useState(false);
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
@@ -1369,9 +1384,9 @@ export function EmailComposer({
   const composingAccountId = currentIdentityParts.localAccountId ?? composerAccountIdRef.current;
   // What the header calls it. A re-opened draft is in "compose" mode; a reply
   // draft is still a reply (compose-p3-6).
-  const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = mode !== 'compose'
+  const titleMode: 'compose' | 'reply' | 'replyAll' | 'forward' = replyKindSwitched ?? (mode !== 'compose'
     ? mode
-    : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose');
+    : initialData?.kind ?? (initialData?.inReplyTo?.length ? 'reply' : 'compose'));
   // Classification label (enterprise pack): the labels of the account and
   // identity the message goes out from; replies and forwards start with
   // the original's label, re-opened drafts with theirs.
@@ -3001,7 +3016,18 @@ export function EmailComposer({
   ), [addFiles, composerRootEl]);
   // The id plugins know this composer by (registered below, with the handle).
   const [pluginComposerId, setPluginComposerId] = useState<string | null>(null);
-  const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId);
+  // A reply under its message starts with its panels folded, and keeps what
+  // the user does with them to itself (inline-reply).
+  const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId, { inline: docked || mvWindow?.variant === 'inline' });
+  // A docked reply with a panel open takes the reading pane, the message
+  // folded to a bar: beside the reply's few lines the panel's list was cut off.
+  const replyDock = useReplyDock();
+  const sidePanelShown = isPanelOpen(pluginSidebars.modes.left) || isPanelOpen(pluginSidebars.modes.right);
+  useEffect(() => {
+    if (!replyDock) return;
+    replyDock.setWantsRoom(docked && sidePanelShown);
+    return () => replyDock.setWantsRoom(false);
+  }, [replyDock, docked, sidePanelShown]);
   const pluginAttachmentSourceOffers = usePluginSlotOffers('composer-attachment-source');
   const hasAboveBodyOffers = usePluginSlotOffers('composer-above-body').length > 0;
   const hasBelowBodyOffers = usePluginSlotOffers('composer-below-body').length > 0;
@@ -4740,9 +4766,10 @@ export function EmailComposer({
     setIsSavingAndClosing(false);
   };
 
-  // "Draft saved" with Discard, once the composer closed and kept its draft.
-  // Read before the close resets the refs; the Discard runs after unmount,
-  // through the host's own discard, as the composer's Discard does.
+  // "Draft saved" with Open and Discard, once the composer closed and kept
+  // its draft. Read before the close resets the refs; the Discard runs after
+  // unmount, through the host's own discard, as the composer's Discard does.
+  // Open goes the way of a draft opened from the list (openKeptDraft).
   const announceKeptDraft = () => {
     const draftId = draftIdRef.current;
     if (!draftId) return;
@@ -4756,9 +4783,10 @@ export function EmailComposer({
     showDraftSavedToast(() => discard?.(draftId, where), {
       saved: t('draft_saved'),
       discard: t('discard'),
+      open: tDock('open_draft'),
       discarded: tUx('draft_discarded'),
       undo: tUx('undo'),
-    });
+    }, () => openKeptDraft(draftId, where));
   };
 
   const handleSaveDraftAndClose = async (opts: { fromClose?: boolean } = {}) => {
@@ -4987,6 +5015,81 @@ export function EmailComposer({
   );
   // Files dropped on the header attach, as on the rest of the message.
   const headerDropProps = { onDragEnter: handleDragEnter, onDragLeave: handleDragLeave, onDragOver: handleDragOver, onDrop: handleDrop };
+
+  // Reply and Reply all in place, from a docked reply's kind menu. Reply all
+  // adds the others; Reply takes away those Reply all added. What the user
+  // added or took away themselves stays as it is.
+  const switchReplyKind = (next: ReplyKind) => {
+    if (next === 'forward') {
+      onSwitchToForward?.();
+      return;
+    }
+    if (!replyTo) return;
+    const one = buildReplyRecipients(replyTo, 'reply', ownIdentityEmails, sourceAccountEmails);
+    const all = buildReplyRecipients(replyTo, 'replyAll', ownIdentityEmails, sourceAccountEmails);
+    const key = (email?: string) => (email ?? '').trim().toLowerCase();
+    const have = new Set([...to, ...cc, ...bcc].map((r) => key(r.email)));
+    if (next === 'replyAll') {
+      const addTo = all.to.map(toRecipient).filter((r) => !have.has(key(r.email)));
+      addTo.forEach((r) => have.add(key(r.email)));
+      const addCc = all.cc.map(toRecipient).filter((r) => !have.has(key(r.email)));
+      setTo([...to, ...addTo]);
+      if (addCc.length > 0) {
+        setCc([...cc, ...addCc]);
+        setShowCc(true);
+      }
+    } else {
+      const keep = new Set(one.to.map((r) => key(r.email)));
+      const added = new Set([...all.to, ...all.cc].map((r) => key(r.email)).filter((e) => !keep.has(e)));
+      setTo(to.filter((r) => !added.has(key(r.email))));
+      setCc(cc.filter((r) => !added.has(key(r.email))));
+    }
+    autoRecipientsRef.current = null;
+    setReplyKindSwitched(next);
+    markEdited();
+  };
+  const replyKind: ReplyKind | null = titleMode === 'reply' || titleMode === 'replyAll' || titleMode === 'forward' ? titleMode : null;
+  const canSwitchReplyKind = !!replyTo && (mode === 'reply' || mode === 'replyAll');
+  const dockReplyType = dockCompact && replyKind ? (
+    <ReplyTypeMenu
+      kind={replyKind}
+      kinds={canSwitchReplyKind ? (onSwitchToForward ? ['reply', 'replyAll', 'forward'] : ['reply', 'replyAll']) : [replyKind]}
+      onSwitch={canSwitchReplyKind ? switchReplyKind : undefined}
+    />
+  ) : null;
+  // From in a docked reply: folded until asked for, unless it isn't the usual sender.
+  const dockFromShown = showDockFrom || fromOverrideEnabled
+    || (identities.length > 1 && !!currentIdentity && !!primaryIdentity
+      // By address: with several accounts the list's ids carry the account in front.
+      && currentIdentity.email.toLowerCase() !== primaryIdentity.email.toLowerCase());
+  const saveStatusText = saveStatus === 'saving' ? t('saving')
+    : saveStatus === 'saved' ? (savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved'))
+    : saveStatus === 'error' ? t('save_failed') : '';
+  // The end of a docked reply's To row: what the title row held (save state,
+  // plugin buttons, the panels' Show and Hide, Full screen, Pop out, Close).
+  const dockWindowCluster = dockCompact ? (
+    <div className="flex shrink-0 items-center gap-0.5 ms-0.5 ps-1.5 border-s border-border/60" data-dock-window-buttons="">
+      <span
+        className={cn("grid place-items-center", saveStatus === 'idle' ? "w-0 overflow-hidden" : "h-7 w-6")}
+        data-testid="composer-save-status"
+        data-status={saveStatus}
+        title={saveStatusText || undefined}
+      >
+        {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground" aria-hidden="true" />}
+        {saveStatus === 'saved' && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />}
+        {saveStatus === 'error' && <X className="w-3.5 h-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />}
+        {saveStatusText && <span className="sr-only">{saveStatusText}</span>}
+      </span>
+      <ComposerHeaderPluginActions composerId={pluginComposerId} />
+      {pluginSidebars.modes.left && (
+        <ComposerPanelButton side="left" open={isPanelOpen(pluginSidebars.modes.left)} name={pluginSidebars.names.left} shortcut={pluginSidebars.shortcuts.left} onToggle={() => pluginSidebars.toggle('left')} />
+      )}
+      {pluginSidebars.modes.right && (
+        <ComposerPanelButton side="right" open={isPanelOpen(pluginSidebars.modes.right)} name={pluginSidebars.names.right} shortcut={pluginSidebars.shortcuts.right} onToggle={() => pluginSidebars.toggle('right')} />
+      )}
+      {windowButtons}
+    </div>
+  ) : null;
 
   // `keepDraft`: the bin's discard, which deletes the draft once its Undo is
   // over, not here.
@@ -5291,6 +5394,7 @@ export function EmailComposer({
   });
 
   return (
+    <ComposerBarCompactContext.Provider value={dockCompact}>
     <div
       ref={setComposerRootEl}
       data-testid="email-composer"
@@ -5369,7 +5473,7 @@ export function EmailComposer({
           </div>
           {mvWindow.state !== "minimized" && panelHead('right', 'ps-1.5 pe-1.5', mvWindowButtons, 'gap-1')}
         </div>
-      ) : (
+      ) : dockCompact ? null : (
       <div ref={setComposerHeader} className="@container/composer-head flex items-stretch md:h-14 border-b bg-background shrink-0" data-composer-header="" {...headerDropProps}>
         {panelHead('left', 'px-2')}
         <div className="flex-1 min-w-0 flex items-center gap-3 px-4 py-2 md:py-0">
@@ -5479,9 +5583,9 @@ export function EmailComposer({
         ref={composerMainRef}
         className={cn("flex-1 min-h-0 flex flex-col", !pinFields && "overflow-y-auto")}
       >
-      <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
+      <div ref={composerFieldsRef} className={cn("shrink-0 space-y-0 border-b", dockCompact && "@container/dock-fields")}>
           {/* From field */}
-          <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50", dockCompact && identities.length <= 1 && !fromOverrideEnabled && "hidden")} data-composer-from="">
+          <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50", dockCompact && "py-1", dockCompact && !dockFromShown && "hidden")} data-composer-from="">
             <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
             <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
@@ -5621,8 +5725,14 @@ export function EmailComposer({
           )}
 
           {/* To field */}
-          <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
-            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('to')}:</span>
+          <div
+            data-testid="composer-to"
+            data-composer-to-row=""
+            className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1 ps-3 pe-2", shakeField === 'to' && "animate-shake")}
+            {...(dockCompact ? headerDropProps : {})}
+          >
+            {dockReplyType}
+            <span id={fieldLabelId('to')} className={cn("text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap", dockCompact && "min-w-0 md:min-w-0")}>{t('to')}:</span>
             <RecipientChipInput
               labelId={fieldLabelId('to')}
               chips={to}
@@ -5652,8 +5762,42 @@ export function EmailComposer({
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
               onMoveChip={handleMoveChip}
+              narrowInput={dockCompact}
             />
-            <div className="flex gap-0.5 shrink-0">
+            {/* A narrow docked reply: From, Cc, Bcc and the address book in one menu, so the addresses keep their room. */}
+            {dockCompact && (
+              <div className="shrink-0 @[34rem]/dock-fields:hidden" data-dock-fields-menu="">
+                <ComposerToolbarMenu icon={UserPlus} label={tDock('fields_menu')} testId="composer-dock-fields">
+                  {(close) => <>
+                    <ComposerToolbarMenuCheckItem checked={showCc} onToggle={() => setShowCc(!showCc)}>Cc</ComposerToolbarMenuCheckItem>
+                    <ComposerToolbarMenuCheckItem checked={showBcc} onToggle={() => setShowBcc(!showBcc)}>Bcc</ComposerToolbarMenuCheckItem>
+                    {identities.length > 1 && (
+                      <ComposerToolbarMenuCheckItem checked={dockFromShown} onToggle={() => setShowDockFrom((v) => !v)}>{t('from')}</ComposerToolbarMenuCheckItem>
+                    )}
+                    {(hasContacts || activeClient?.supportsPrincipals?.()) && (
+                      <ComposerToolbarMenuItem icon={BookUser} onSelect={() => { close(); setShowDirectoryPicker(true); }}>
+                        {tSend('picker_button')}
+                      </ComposerToolbarMenuItem>
+                    )}
+                  </>}
+                </ComposerToolbarMenu>
+              </div>
+            )}
+            <div className={cn("flex gap-0.5 shrink-0", dockCompact && "hidden @[34rem]/dock-fields:flex")}>
+              {dockCompact && identities.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDockFrom((v) => !v)}
+                  className={cn("text-xs h-7 px-2", dockFromShown && "bg-muted")}
+                  aria-pressed={dockFromShown}
+                  title={currentIdentity?.email ? `${t('from')}: ${currentIdentity.email}` : t('from')}
+                  data-testid="composer-dock-from"
+                >
+                  {t('from')}
+                </Button>
+              )}
               {(hasContacts || activeClient?.supportsPrincipals?.()) && (
                 <Button
                   type="button"
@@ -5719,11 +5863,12 @@ export function EmailComposer({
                 Bcc
               </Button>
             </div>
+            {dockWindowCluster}
           </div>
 
           {/* Cc field */}
           {showCc && (
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
+            <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1")} data-composer-to-row="">
               <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('cc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('cc')}
@@ -5754,7 +5899,7 @@ export function EmailComposer({
 
           {/* Bcc field */}
           {showBcc && (
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
+            <div className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", dockCompact && "py-1")} data-composer-to-row="">
               <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('bcc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('bcc')}
@@ -5817,7 +5962,8 @@ export function EmailComposer({
           </div>
       </div>
 
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace}>
+      {/* The writing area: text, signature and quote read as one page, with the focus shown on it (app/accessibility.css). */}
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace} data-composer-writing="">
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
@@ -6118,6 +6264,8 @@ export function EmailComposer({
           className={cn(
             "@container/composer-bar flex items-center justify-between px-4 py-2.5 max-md:py-1.5 bg-background shrink-0 pb-[calc(0.625rem+env(safe-area-inset-bottom)/2)]",
             mvWindow ? "gap-1" : "border-t",
+            // One row next to Send in a docked reply (labels by ComposerBarCompactContext).
+            dockCompact && "py-1.5 pb-1.5 px-3 gap-2",
           )}
         >
           {/* Left side actions. Plugins add to them: past the room they wrap, not under Discard. */}
@@ -6556,6 +6704,7 @@ export function EmailComposer({
       </div>
       <ComposerSelectionMenu menu={selectionMenu} composerId={pluginComposerId} onClipboard={clipboardFromMenu} />
     </div>
+    </ComposerBarCompactContext.Provider>
   );
 }
 
@@ -6664,6 +6813,7 @@ export function RecipientChipInput({
   validationMessage,
   onTab,
   onMoveChip,
+  narrowInput = false,
 }: {
   /** The id of the field's visible label ("To:"), which names the input and the chip list. */
   labelId: string;
@@ -6691,6 +6841,8 @@ export function RecipientChipInput({
   validationMessage?: string;
   onTab?: () => void;
   onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => void;
+  /** A narrow row (a docked reply's To): the typing space beside the chips may get small before it wraps under them. */
+  narrowInput?: boolean;
 }) {
   const t = useTranslations('email_composer');
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<{ index: number; recipient: Recipient }>();
@@ -7271,7 +7423,7 @@ export function RecipientChipInput({
             // focus-inset: the keyboard focus ring goes inside the box. Drawn
             // outside, the field's own scroller cut it to a line along the top
             // and the end (compose-p2-18, a pop-out focuses To from a key).
-            className="focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+            className={cn("focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"

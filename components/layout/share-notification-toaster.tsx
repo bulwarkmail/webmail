@@ -25,10 +25,68 @@ const OBJECT_KEYS: Record<string, string> = {
   FileNode: "files",
 };
 
+/** From this many notifications by one person, one toast says how many. */
+export const SUMMARY_FROM = 3;
+
+export type ShareToast =
+  | { type: "single"; notification: ShareNotification; object: string }
+  | { type: "summary"; changedBy: ShareNotification["changedBy"]; count: number; revoked: boolean };
+
+/**
+ * The toasts for a batch of notifications: one each, unless one person changed
+ * SUMMARY_FROM or more at once (a sharing script, an admin setting up a team)
+ * or the object's name is unknown. Stalwart sends an empty name, and the bare
+ * object id ("b") means nothing to anyone. Then one toast per person with the
+ * count.
+ */
+export function shareNotificationToasts(
+  notifications: ShareNotification[],
+  nameOf: (n: ShareNotification) => string | undefined,
+): ShareToast[] {
+  const byPerson = new Map<string, ShareNotification[]>();
+  for (const n of notifications) {
+    const key = n.changedBy?.principalId || n.changedBy?.email || n.changedBy?.name || "";
+    byPerson.set(key, [...(byPerson.get(key) ?? []), n]);
+  }
+  const toasts: ShareToast[] = [];
+  for (const group of byPerson.values()) {
+    const named = group.map((n) => ({ notification: n, object: n.name || nameOf(n) || "" }));
+    if (group.length < SUMMARY_FROM && named.every((n) => n.object)) {
+      for (const n of named) toasts.push({ type: "single", ...n });
+      continue;
+    }
+    toasts.push({
+      type: "summary",
+      changedBy: group[0].changedBy,
+      count: group.length,
+      revoked: group.every((n) => shareNotificationKind(n) === "revoked"),
+    });
+  }
+  return toasts;
+}
+
+/** The name of the shared collection as the stores list it, if they do. */
+function storedName(n: ShareNotification): string | undefined {
+  const same = (c: { id: string; originalId?: string; accountId?: string }) =>
+    (c.originalId ?? c.id) === n.objectId && (!c.accountId || c.accountId === n.objectAccountId);
+  switch (n.objectType) {
+    case "Mailbox":
+      return useEmailStore.getState().mailboxes.find(same)?.name;
+    case "Calendar":
+      return useCalendarStore.getState().calendars.find(same)?.name;
+    case "AddressBook":
+      return useContactStore.getState().addressBooks.find(same)?.name;
+    default:
+      return undefined;
+  }
+}
+
 /**
  * Shows pending ShareNotifications as toasts, refreshes the collection list
  * the change belongs to (so a newly shared folder / calendar / address book
- * appears without a reload) and acknowledges them on the server.
+ * appears without a reload) and acknowledges them on the server. A name the
+ * server leaves out is looked up in the lists, before the refresh (a revoked
+ * share is gone after it) and after it (a new share appears only then).
  */
 export function ShareNotificationToaster({ client }: { client: IJMAPClient | null }) {
   const t = useTranslations("share_notifications");
@@ -46,27 +104,40 @@ export function ShareNotificationToaster({ client }: { client: IJMAPClient | nul
     if (!client || pending.length === 0) return;
     const fresh = pending.filter((n) => !handled.current.has(n.id));
     if (fresh.length === 0) return;
-    const touched = new Set<string>();
-    for (const n of fresh) {
-      handled.current.add(n.id);
-      touched.add(n.objectType);
-      const kind = shareNotificationKind(n);
-      const objectKey = OBJECT_KEYS[n.objectType];
-      const message = t(kind, {
-        name: n.changedBy?.name || n.changedBy?.email || t("someone"),
-        object: n.name || n.objectId,
-        kind: objectKey ? t(`object.${objectKey}`) : n.objectType,
-      });
-      if (kind === "revoked") toast.warning(message);
-      else toast.info(message);
-    }
-    if (touched.has("Mailbox")) void useEmailStore.getState().fetchMailboxes(client);
+    for (const n of fresh) handled.current.add(n.id);
+    const touched = new Set(fresh.map((n) => n.objectType));
+    const names = new Map(fresh.map((n) => [n.id, n.name || storedName(n)]));
+    const refreshes: Promise<unknown>[] = [];
+    if (touched.has("Mailbox")) refreshes.push(useEmailStore.getState().fetchMailboxes(client));
     if (touched.has("Calendar") && useCalendarStore.getState().supportsCalendar) {
-      void useCalendarStore.getState().fetchCalendars(client);
+      refreshes.push(useCalendarStore.getState().fetchCalendars(client));
     }
-    if (touched.has("AddressBook")) void useContactStore.getState().fetchAddressBooks(client);
-    if (touched.has("FileNode")) void useFileStore.getState().refresh();
-    void acknowledge(client, fresh.map((n) => n.id));
+    if (touched.has("AddressBook")) refreshes.push(useContactStore.getState().fetchAddressBooks(client));
+    if (touched.has("FileNode")) refreshes.push(useFileStore.getState().refresh());
+    void (async () => {
+      await Promise.allSettled(refreshes);
+      for (const n of fresh) if (!names.get(n.id)) names.set(n.id, storedName(n));
+      for (const item of shareNotificationToasts(fresh, (n) => names.get(n.id))) {
+        if (item.type === "summary") {
+          const name = item.changedBy?.name || item.changedBy?.email || t("someone");
+          const message = t("summary", { name, count: item.count });
+          if (item.revoked) toast.warning(message);
+          else toast.info(message);
+          continue;
+        }
+        const n = item.notification;
+        const kind = shareNotificationKind(n);
+        const objectKey = OBJECT_KEYS[n.objectType];
+        const message = t(kind, {
+          name: n.changedBy?.name || n.changedBy?.email || t("someone"),
+          object: item.object,
+          kind: objectKey ? t(`object.${objectKey}`) : n.objectType,
+        });
+        if (kind === "revoked") toast.warning(message);
+        else toast.info(message);
+      }
+      await acknowledge(client, fresh.map((n) => n.id));
+    })();
   }, [client, pending, acknowledge, t]);
 
   return null;

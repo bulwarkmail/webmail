@@ -10,6 +10,7 @@ import { ThemeColorSync } from "@/components/theme-color-sync";
 import { IosViewportHeal } from "@/components/ios-viewport-heal";
 import { configManager } from "@/lib/admin/config-manager";
 import {
+  brandPaletteCss,
   matchDomainBranding,
   parseDomainBranding,
   pickRequestHost,
@@ -71,6 +72,16 @@ async function brandedValue(key: BrandingOverrideKey, fallback: string): Promise
   )[key];
   if (typeof override === "string" && override.length > 0) return override;
   return configManager.get<string>(key, fallback);
+}
+
+/** The requesting host's colour palette (DOMAIN_BRANDING `palette`) as CSS. */
+async function brandPaletteStyle(): Promise<string> {
+  const host = pickRequestHost(await headers());
+  const entry = matchDomainBranding(
+    host,
+    parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
+  );
+  return brandPaletteCss(entry.palette);
 }
 
 /**
@@ -165,11 +176,6 @@ async function liteMetadata(): Promise<Metadata> {
     applicationName: appName,
     robots: { index: false, follow: false },
     manifest: withBasePath("/manifest.webmanifest"),
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: "black-translucent",
-      title: appName,
-    },
     formatDetection: {
       telephone: false,
     },
@@ -235,11 +241,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: [withBasePath("/api/og-image")],
     },
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: "black-translucent",
-      title: appName,
-    },
     formatDetection: {
       telephone: false,
     },
@@ -280,6 +281,7 @@ export default async function RootLayout({
   let locale: string;
   let nonce: string | undefined;
   let themeColorConfigured: boolean;
+  let paletteCss = "";
   if (IS_LITE) {
     // Static export: no request, no nonce, no admin config.
     parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
@@ -294,6 +296,7 @@ export default async function RootLayout({
     locale = await resolveRequestLocale();
     nonce = (await headers()).get("x-nonce") ?? "";
     themeColorConfigured = await hasExplicitThemeColor();
+    paletteCss = await brandPaletteStyle();
   }
   const appName = await brandedAppName();
 
@@ -303,9 +306,11 @@ export default async function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content={appName} />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {parentOrigin && (
           <meta name="parent-origin" content={parentOrigin} />
+        )}
+        {paletteCss && (
+          <style id="brand-palette" nonce={nonce} dangerouslySetInnerHTML={{ __html: paletteCss }} />
         )}
         <script
           nonce={nonce}

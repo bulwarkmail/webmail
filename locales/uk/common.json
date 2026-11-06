@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Показати копію",
     "shortcut_show_bcc": "Показати приховану копію"
   },
+  "compose_dock": {
+    "open_draft": "Відкрити",
+    "reply_type": "Тип відповіді: {kind}",
+    "resize_reply": "Змінити розмір відповіді",
+    "fields_menu": "Інші поля"
+  },
   "confirm_dialog": {
     "confirm": "Підтвердити",
     "cancel": "Скасувати"
@@ -6109,6 +6115,7 @@
     "shared": "{name} поділився(лася) з вами {kind} «{object}»",
     "changed": "{name} змінив(ла) ваш доступ до {kind} «{object}»",
     "revoked": "{name} скасував(ла) ваш доступ до {kind} «{object}»",
+    "summary": "{name} змінив(ла) ваш доступ до {count, plural, one {# спільного елемента} few {# спільних елементів} many {# спільних елементів} other {# спільного елемента}}",
     "object": {
       "folder": "текою",
       "calendar": "календарем",
@@ -7408,6 +7415,18 @@
     "save_draft": "Зберегти чернетку",
     "attach_files": "Прикріпити файли…",
     "shortcut_apps": "Перейти до Пошти, Календаря, Контактів або Файлів"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Відкрити…",
+    "menu_save_as": "Зберегти як…",
+    "open_filter": "Листи, події та контакти",
+    "save_filter": "Електронний лист",
+    "folder_title": "Виберіть папку для листів",
+    "folder_button": "Зберегти тут",
+    "saved_many": "{count, plural, one {Збережено # лист.} few {Збережено # листи.} many {Збережено # листів.} other {Збережено # листа.}}",
+    "save_failed": "{count, plural, one {Не вдалося зберегти # лист.} few {Не вдалося зберегти # листи.} many {Не вдалося зберегти # листів.} other {Не вдалося зберегти # листа.}}",
+    "shortcut_open": "Відкрити збережений лист, подію або контакт",
+    "shortcut_save_as": "Зберегти лист як файл"
   },
   "appLock": {
     "section_title": "Блокування застосунку",

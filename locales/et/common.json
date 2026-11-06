@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Näita koopiat",
     "shortcut_show_bcc": "Näita pimekoopiat"
   },
+  "compose_dock": {
+    "open_draft": "Ava",
+    "reply_type": "Vastuse liik: {kind}",
+    "resize_reply": "Muuda vastuse suurust",
+    "fields_menu": "Rohkem välju"
+  },
   "confirm_dialog": {
     "confirm": "Kinnita",
     "cancel": "Tühista"
@@ -5477,6 +5483,7 @@
     "shared": "{name} jagas sinuga {kind} \"{object}\"",
     "changed": "{name} muutis sinu juurdepääsu {kind}-le \"{object}\"",
     "revoked": "{name} eemaldas sinu juurdepääsu {kind}-le \"{object}\"",
+    "summary": "{name} muutis sinu juurdepääsu {count, plural, one {# jagatud üksusele} other {# jagatud üksusele}}",
     "object": {
       "folder": "kaust",
       "calendar": "kalender",
@@ -7408,6 +7415,18 @@
     "save_draft": "Salvesta mustand",
     "attach_files": "Lisa failid…",
     "shortcut_apps": "Mine e-posti, kalendrisse, kontaktidesse või failidesse"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Ava…",
+    "menu_save_as": "Salvesta nimega…",
+    "open_filter": "Kirjad, sündmused ja kontaktid",
+    "save_filter": "E-kiri",
+    "folder_title": "Vali kirjade jaoks kaust",
+    "folder_button": "Salvesta siia",
+    "saved_many": "{count, plural, one {# kiri salvestatud.} other {# kirja salvestatud.}}",
+    "save_failed": "{count, plural, one {# kirja ei saanud salvestada.} other {# kirja ei saanud salvestada.}}",
+    "shortcut_open": "Ava salvestatud kiri, sündmus või kontakt",
+    "shortcut_save_as": "Salvesta kiri failina"
   },
   "appLock": {
     "section_title": "Rakenduse lukk",

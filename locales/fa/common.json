@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "نمایش رونوشت",
     "shortcut_show_bcc": "نمایش رونوشت پنهان"
   },
+  "compose_dock": {
+    "open_draft": "باز کردن",
+    "reply_type": "نوع پاسخ: {kind}",
+    "resize_reply": "تغییر اندازهٔ پاسخ",
+    "fields_menu": "فیلدهای بیشتر"
+  },
   "confirm_dialog": {
     "confirm": "تأیید",
     "cancel": "انصراف"
@@ -5477,6 +5483,7 @@
     "shared": "{name} {kind} «{object}» را با شما به اشتراک گذاشت",
     "changed": "{name} دسترسی شما به {kind} «{object}» را تغییر داد",
     "revoked": "{name} دسترسی شما به {kind} «{object}» را حذف کرد",
+    "summary": "{name} دسترسی شما به {count, plural, other {# مورد اشتراکی}} را تغییر داد",
     "object": {
       "folder": "پوشه",
       "calendar": "تقویم",
@@ -7408,6 +7415,18 @@
     "save_draft": "ذخیره پیش‌نویس",
     "attach_files": "پیوست فایل‌ها…",
     "shortcut_apps": "رفتن به ایمیل، تقویم، مخاطبان یا فایل‌ها"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "باز کردن…",
+    "menu_save_as": "ذخیره با نام…",
+    "open_filter": "پیام‌ها، رویدادها و مخاطبان",
+    "save_filter": "پیام ایمیل",
+    "folder_title": "یک پوشه برای پیام‌ها انتخاب کنید",
+    "folder_button": "ذخیره در اینجا",
+    "saved_many": "{count, plural, one {# پیام ذخیره شد.} other {# پیام ذخیره شد.}}",
+    "save_failed": "{count, plural, one {# پیام ذخیره نشد.} other {# پیام ذخیره نشد.}}",
+    "shortcut_open": "باز کردن پیام، رویداد یا مخاطب ذخیره‌شده",
+    "shortcut_save_as": "ذخیرهٔ پیام به‌صورت فایل"
   },
   "appLock": {
     "section_title": "قفل برنامه",

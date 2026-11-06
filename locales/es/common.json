@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Mostrar CC",
     "shortcut_show_bcc": "Mostrar CCO"
   },
+  "compose_dock": {
+    "open_draft": "Abrir",
+    "reply_type": "Tipo de respuesta: {kind}",
+    "resize_reply": "Cambiar el tamaño de la respuesta",
+    "fields_menu": "Más campos"
+  },
   "confirm_dialog": {
     "confirm": "Confirmar",
     "cancel": "Cancelar"
@@ -6109,6 +6115,7 @@
     "shared": "{name} ha compartido contigo {kind} \"{object}\"",
     "changed": "{name} ha cambiado tu acceso a {kind} \"{object}\"",
     "revoked": "{name} ha retirado tu acceso a {kind} \"{object}\"",
+    "summary": "{name} ha cambiado tu acceso a {count, plural, one {# elemento compartido} other {# elementos compartidos}}",
     "object": {
       "folder": "la carpeta",
       "calendar": "el calendario",
@@ -7408,6 +7415,18 @@
     "save_draft": "Guardar borrador",
     "attach_files": "Adjuntar archivos…",
     "shortcut_apps": "Ir a Correo, Calendario, Contactos o Archivos"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Abrir…",
+    "menu_save_as": "Guardar como…",
+    "open_filter": "Mensajes, eventos y contactos",
+    "save_filter": "Mensaje de correo",
+    "folder_title": "Elige una carpeta para los mensajes",
+    "folder_button": "Guardar aquí",
+    "saved_many": "{count, plural, one {# mensaje guardado.} other {# mensajes guardados.}}",
+    "save_failed": "{count, plural, one {No se pudo guardar # mensaje.} other {No se pudieron guardar # mensajes.}}",
+    "shortcut_open": "Abrir un mensaje, evento o contacto guardado",
+    "shortcut_save_as": "Guardar el mensaje como archivo"
   },
   "appLock": {
     "section_title": "Bloqueo de la app",

@@ -1284,6 +1284,22 @@ export interface FilesRescued {
   failed: number;
 }
 
+/**
+ * Saves messages through the OS's dialogs (lib/desktop/save-as.ts): `begin` asks where at
+ * once, the Save dialog for one file and a folder for several, starting in the folder used
+ * last; then each file's bytes go over with `write`, and `end` says how many were saved.
+ * The shell wants a click or a menu pick just before `begin`, writes each as an .eml with a
+ * safe name, never overwrites a file in a picked folder (it numbers the name), and refuses
+ * under the organisation's "no downloads" and the app lock.
+ */
+export interface DesktopSaveAsBridge {
+  begin: (request: { kind: 'message'; names: string[] }) => Promise<
+    { id: string } | { cancelled: true } | { refused: 'gesture' | 'policy' | 'locked' | 'invalid' }
+  >;
+  write: (id: string, index: number, data: Uint8Array) => Promise<boolean>;
+  end: (id: string) => Promise<{ saved: number; failed: number }>;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -1319,6 +1335,8 @@ export interface BulwarkDesktopBridge {
   files?: FilesBridge;
   /** Absent on older shells. */
   recentFiles?: DesktopRecentFilesBridge;
+  /** File > Save as… and the message's own Save as: native dialogs. Absent on older shells. */
+  saveAs?: DesktopSaveAsBridge;
 }
 
 declare global {

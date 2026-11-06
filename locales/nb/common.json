@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Vis kopi",
     "shortcut_show_bcc": "Vis blindkopi"
   },
+  "compose_dock": {
+    "open_draft": "Åpne",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Endre størrelse på svaret",
+    "fields_menu": "Flere felt"
+  },
   "confirm_dialog": {
     "confirm": "Bekreft",
     "cancel": "Avbryt"
@@ -5477,6 +5483,7 @@
     "shared": "{name} har delt {kind} «{object}» med deg",
     "changed": "{name} har endret tilgangen din til {kind} «{object}»",
     "revoked": "{name} har fjernet tilgangen din til {kind} «{object}»",
+    "summary": "{name} har endret tilgangen din til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",
@@ -7408,6 +7415,18 @@
     "save_draft": "Lagre utkast",
     "attach_files": "Legg ved filer…",
     "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Åpne…",
+    "menu_save_as": "Lagre som…",
+    "open_filter": "Meldinger, hendelser og kontakter",
+    "save_filter": "E-postmelding",
+    "folder_title": "Velg en mappe for meldingene",
+    "folder_button": "Lagre her",
+    "saved_many": "{count, plural, one {# melding lagret.} other {# meldinger lagret.}}",
+    "save_failed": "{count, plural, one {# melding kunne ikke lagres.} other {# meldinger kunne ikke lagres.}}",
+    "shortcut_open": "Åpne en lagret melding, hendelse eller kontakt",
+    "shortcut_save_as": "Lagre meldingen som en fil"
   },
   "appLock": {
     "section_title": "Applås",

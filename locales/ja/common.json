@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Cc を表示",
     "shortcut_show_bcc": "Bcc を表示"
   },
+  "compose_dock": {
+    "open_draft": "開く",
+    "reply_type": "返信の種類: {kind}",
+    "resize_reply": "返信のサイズを変更",
+    "fields_menu": "その他の欄"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "キャンセル"
@@ -6109,6 +6115,7 @@
     "shared": "{name} さんが{kind}「{object}」を共有しました",
     "changed": "{name} さんが{kind}「{object}」へのアクセス権を変更しました",
     "revoked": "{name} さんが{kind}「{object}」へのアクセス権を削除しました",
+    "summary": "{name} さんが共有アイテム {count, plural, other {# 件}}へのアクセス権を変更しました",
     "object": {
       "folder": "フォルダー",
       "calendar": "カレンダー",
@@ -7408,6 +7415,18 @@
     "save_draft": "下書きを保存",
     "attach_files": "ファイルを添付…",
     "shortcut_apps": "メール、カレンダー、連絡先、ファイルに移動"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "開く…",
+    "menu_save_as": "名前を付けて保存…",
+    "open_filter": "メッセージ、予定、連絡先",
+    "save_filter": "メールメッセージ",
+    "folder_title": "メッセージの保存先フォルダーを選択",
+    "folder_button": "ここに保存",
+    "saved_many": "{count}件のメッセージを保存しました。",
+    "save_failed": "{count}件のメッセージを保存できませんでした。",
+    "shortcut_open": "保存したメッセージ、予定、連絡先を開く",
+    "shortcut_save_as": "メッセージをファイルとして保存"
   },
   "appLock": {
     "section_title": "アプリのロック",

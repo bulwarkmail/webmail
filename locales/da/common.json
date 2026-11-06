@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Vis Cc",
     "shortcut_show_bcc": "Vis Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Åbn",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Tilpas størrelsen på svaret",
+    "fields_menu": "Flere felter"
+  },
   "confirm_dialog": {
     "confirm": "Bekræft",
     "cancel": "Annuller"
@@ -5477,6 +5483,7 @@
     "shared": "{name} har delt {kind} \"{object}\" med dig",
     "changed": "{name} har ændret din adgang til {kind} \"{object}\"",
     "revoked": "{name} har fjernet din adgang til {kind} \"{object}\"",
+    "summary": "{name} har ændret din adgang til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",
@@ -7408,6 +7415,18 @@
     "save_draft": "Gem kladde",
     "attach_files": "Vedhæft filer…",
     "shortcut_apps": "Gå til Mail, Kalender, Kontakter eller Filer"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Åbn…",
+    "menu_save_as": "Gem som…",
+    "open_filter": "Beskeder, begivenheder og kontakter",
+    "save_filter": "E-mailbesked",
+    "folder_title": "Vælg en mappe til beskederne",
+    "folder_button": "Gem her",
+    "saved_many": "{count, plural, one {# besked gemt.} other {# beskeder gemt.}}",
+    "save_failed": "{count, plural, one {# besked kunne ikke gemmes.} other {# beskeder kunne ikke gemmes.}}",
+    "shortcut_open": "Åbn en gemt besked, begivenhed eller kontakt",
+    "shortcut_save_as": "Gem beskeden som en fil"
   },
   "appLock": {
     "section_title": "Applås",

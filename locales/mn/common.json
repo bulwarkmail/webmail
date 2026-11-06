@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Хуулбар харуулах",
     "shortcut_show_bcc": "Нууц хуулбар харуулах"
   },
+  "compose_dock": {
+    "open_draft": "Нээх",
+    "reply_type": "Хариултын төрөл: {kind}",
+    "resize_reply": "Хариултын хэмжээг өөрчлөх",
+    "fields_menu": "Бусад талбар"
+  },
   "confirm_dialog": {
     "confirm": "Баталгаажуулах",
     "cancel": "Цуцлах"
@@ -5477,6 +5483,7 @@
     "shared": "{name} танд {kind} \"{object}\"-г хуваалцлаа",
     "changed": "{name} таны {kind} \"{object}\"-д хандах эрхийг өөрчиллөө",
     "revoked": "{name} таны {kind} \"{object}\"-д хандах эрхийг хаслаа",
+    "summary": "{name} таны {count, plural, other {# хуваалцсан зүйлд}} хандах эрхийг өөрчиллөө",
     "object": {
       "folder": "хавтас",
       "calendar": "хуанли",
@@ -7408,6 +7415,18 @@
     "save_draft": "Ноорог хадгалах",
     "attach_files": "Файл хавсаргах…",
     "shortcut_apps": "Шуудан, Хуанли, Харилцагчид эсвэл Файлууд руу очих"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Нээх…",
+    "menu_save_as": "Өөрөөр хадгалах…",
+    "open_filter": "Захидал, үйл явдал, харилцагчид",
+    "save_filter": "Имэйл захидал",
+    "folder_title": "Захидлуудад зориулж хавтас сонгоно уу",
+    "folder_button": "Энд хадгалах",
+    "saved_many": "{count, plural, one {# захидал хадгалагдлаа.} other {# захидал хадгалагдлаа.}}",
+    "save_failed": "{count, plural, one {# захидлыг хадгалж чадсангүй.} other {# захидлыг хадгалж чадсангүй.}}",
+    "shortcut_open": "Хадгалсан захидал, үйл явдал эсвэл харилцагчийг нээх",
+    "shortcut_save_as": "Захидлыг файл болгон хадгалах"
   },
   "appLock": {
     "section_title": "Аппын түгжээ",

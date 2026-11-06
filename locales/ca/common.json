@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Mostra Cc",
     "shortcut_show_bcc": "Mostra Cco"
   },
+  "compose_dock": {
+    "open_draft": "Obre",
+    "reply_type": "Tipus de resposta: {kind}",
+    "resize_reply": "Canvia la mida de la resposta",
+    "fields_menu": "Més camps"
+  },
   "confirm_dialog": {
     "confirm": "Confirma",
     "cancel": "Cancel·la"
@@ -5477,6 +5483,7 @@
     "shared": "{name} ha compartit amb tu {kind} \"{object}\"",
     "changed": "{name} ha canviat el teu accés a {kind} \"{object}\"",
     "revoked": "{name} ha retirat el teu accés a {kind} \"{object}\"",
+    "summary": "{name} ha canviat el teu accés a {count, plural, one {# element compartit} other {# elements compartits}}",
     "object": {
       "folder": "la carpeta",
       "calendar": "el calendari",
@@ -7408,6 +7415,18 @@
     "save_draft": "Desa l'esborrany",
     "attach_files": "Adjunta fitxers…",
     "shortcut_apps": "Ves a Correu, Calendari, Contactes o Fitxers"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Obre…",
+    "menu_save_as": "Desa com a…",
+    "open_filter": "Missatges, esdeveniments i contactes",
+    "save_filter": "Missatge de correu",
+    "folder_title": "Tria una carpeta per als missatges",
+    "folder_button": "Desa aquí",
+    "saved_many": "{count, plural, one {S'ha desat # missatge.} other {S'han desat # missatges.}}",
+    "save_failed": "{count, plural, one {No s'ha pogut desar # missatge.} other {No s'han pogut desar # missatges.}}",
+    "shortcut_open": "Obre un missatge, esdeveniment o contacte desat",
+    "shortcut_save_as": "Desa el missatge com a fitxer"
   },
   "appLock": {
     "section_title": "Bloqueig de l'app",

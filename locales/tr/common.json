@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Bilgiyi göster",
     "shortcut_show_bcc": "Gizli bilgiyi göster"
   },
+  "compose_dock": {
+    "open_draft": "Aç",
+    "reply_type": "Yanıt türü: {kind}",
+    "resize_reply": "Yanıtı yeniden boyutlandır",
+    "fields_menu": "Diğer alanlar"
+  },
   "confirm_dialog": {
     "confirm": "Onayla",
     "cancel": "İptal"
@@ -5477,6 +5483,7 @@
     "shared": "{name}, \"{object}\" {kind} sizinle paylaştı",
     "changed": "{name}, \"{object}\" {kind} erişiminizi değiştirdi",
     "revoked": "{name}, \"{object}\" {kind} erişiminizi kaldırdı",
+    "summary": "{name}, {count, plural, other {# paylaşılan öğeye}} erişiminizi değiştirdi",
     "object": {
       "folder": "klasörünü",
       "calendar": "takvimini",
@@ -7408,6 +7415,18 @@
     "save_draft": "Taslağı kaydet",
     "attach_files": "Dosya ekle…",
     "shortcut_apps": "Posta, Takvim, Kişiler veya Dosyalar'a git"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Aç…",
+    "menu_save_as": "Farklı kaydet…",
+    "open_filter": "İletiler, etkinlikler ve kişiler",
+    "save_filter": "E-posta iletisi",
+    "folder_title": "İletiler için bir klasör seçin",
+    "folder_button": "Buraya kaydet",
+    "saved_many": "{count, plural, one {# ileti kaydedildi.} other {# ileti kaydedildi.}}",
+    "save_failed": "{count, plural, one {# ileti kaydedilemedi.} other {# ileti kaydedilemedi.}}",
+    "shortcut_open": "Kaydedilmiş bir ileti, etkinlik veya kişi açın",
+    "shortcut_save_as": "İletiyi dosya olarak kaydedin"
   },
   "appLock": {
     "section_title": "Uygulama kilidi",

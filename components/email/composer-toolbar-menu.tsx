@@ -8,6 +8,7 @@ import { Check, ChevronDown, iconForName, Puzzle, type AppIcon } from "@/compone
 import { usePluginActions } from "@/components/plugins/plugin-actions";
 import { runAction } from "@/lib/plugin-sandbox/actions";
 import { cn } from "@/lib/utils";
+import { useComposerBarLabels } from "./composer-bar-labels";
 
 interface ComposerToolbarMenuProps {
   icon: AppIcon;
@@ -27,6 +28,7 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
   const menu = useContextMenu<null>();
   const open = menu.contextMenu.isOpen;
   const close = menu.closeContextMenu;
+  const bar = useComposerBarLabels();
 
   return (
     <div className="relative">
@@ -50,13 +52,13 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
         <Icon className="w-4 h-4" />
         {/* By the bar's width, not the window's: a composer pane on a wide
             screen has no room for the labels either (#1375). */}
-        <span className="hidden @[40rem]/composer-bar:inline text-sm">{label}</span>
+        <span className={cn(bar.label, "text-sm")}>{label}</span>
         {activeCount > 0 && (
           <span className="min-w-4 h-4 rounded-full bg-primary px-1 text-[0.625rem] font-semibold leading-4 text-primary-foreground">
             {activeCount}
           </span>
         )}
-        <ChevronDown className="hidden @[40rem]/composer-bar:block w-3.5 h-3.5 text-muted-foreground" />
+        <ChevronDown className={cn(bar.chevron, "w-3.5 h-3.5 text-muted-foreground")} />
       </Button>
       <ContextMenu ref={menu.menuRef} isOpen={open} position={menu.contextMenu.position} onClose={close}>
         <div className="min-w-56">{children(close)}</div>

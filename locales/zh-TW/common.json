@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "顯示副本",
     "shortcut_show_bcc": "顯示密件副本"
   },
+  "compose_dock": {
+    "open_draft": "開啟",
+    "reply_type": "回覆類型：{kind}",
+    "resize_reply": "調整回覆大小",
+    "fields_menu": "更多欄位"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "取消"
@@ -5477,6 +5483,7 @@
     "shared": "{name} 與您共用了{kind}「{object}」",
     "changed": "{name} 變更了您對{kind}「{object}」的存取權限",
     "revoked": "{name} 移除了您對{kind}「{object}」的存取權限",
+    "summary": "{name} 變更了您對 {count, plural, other {# 個共用項目}}的存取權限",
     "object": {
       "folder": "資料夾",
       "calendar": "行事曆",
@@ -7408,6 +7415,18 @@
     "save_draft": "儲存草稿",
     "attach_files": "附加檔案…",
     "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "開啟…",
+    "menu_save_as": "另存新檔…",
+    "open_filter": "郵件、行程和聯絡人",
+    "save_filter": "電子郵件",
+    "folder_title": "選擇儲存郵件的資料夾",
+    "folder_button": "儲存到這裡",
+    "saved_many": "已儲存 {count} 封郵件。",
+    "save_failed": "有 {count} 封郵件無法儲存。",
+    "shortcut_open": "開啟已儲存的郵件、行程或聯絡人",
+    "shortcut_save_as": "將郵件另存為檔案"
   },
   "appLock": {
     "section_title": "應用程式鎖定",

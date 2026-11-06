@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "إظهار نسخة",
     "shortcut_show_bcc": "إظهار نسخة مخفية"
   },
+  "compose_dock": {
+    "open_draft": "فتح",
+    "reply_type": "نوع الرد: {kind}",
+    "resize_reply": "تغيير حجم الرد",
+    "fields_menu": "حقول أخرى"
+  },
   "confirm_dialog": {
     "confirm": "تأكيد",
     "cancel": "إلغاء"
@@ -5477,6 +5483,7 @@
     "shared": "شارك {name} معك {kind} \"{object}\"",
     "changed": "غيّر {name} صلاحيتك على {kind} \"{object}\"",
     "revoked": "أزال {name} صلاحيتك على {kind} \"{object}\"",
+    "summary": "غيّر {name} صلاحيتك على {count, plural, zero {# عنصر مشترك} one {عنصر مشترك واحد} two {عنصرين مشتركين} few {# عناصر مشتركة} many {# عنصرًا مشتركًا} other {# عنصر مشترك}}",
     "object": {
       "folder": "المجلد",
       "calendar": "التقويم",
@@ -7408,6 +7415,18 @@
     "save_draft": "حفظ المسودة",
     "attach_files": "إرفاق ملفات…",
     "shortcut_apps": "الانتقال إلى البريد أو التقويم أو جهات الاتصال أو الملفات"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "فتح…",
+    "menu_save_as": "حفظ باسم…",
+    "open_filter": "رسائل ومواعيد وجهات اتصال",
+    "save_filter": "رسالة بريد إلكتروني",
+    "folder_title": "اختر مجلدًا للرسائل",
+    "folder_button": "احفظ هنا",
+    "saved_many": "{count, plural, one {تم حفظ رسالة واحدة.} two {تم حفظ رسالتين.} few {تم حفظ # رسائل.} many {تم حفظ # رسالة.} other {تم حفظ # رسالة.}}",
+    "save_failed": "{count, plural, one {تعذّر حفظ رسالة واحدة.} two {تعذّر حفظ رسالتين.} few {تعذّر حفظ # رسائل.} many {تعذّر حفظ # رسالة.} other {تعذّر حفظ # رسالة.}}",
+    "shortcut_open": "فتح رسالة أو موعد أو جهة اتصال محفوظة",
+    "shortcut_save_as": "حفظ الرسالة كملف"
   },
   "appLock": {
     "section_title": "قفل التطبيق",

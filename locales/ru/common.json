@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Показать копию",
     "shortcut_show_bcc": "Показать скрытую копию"
   },
+  "compose_dock": {
+    "open_draft": "Открыть",
+    "reply_type": "Тип ответа: {kind}",
+    "resize_reply": "Изменить размер ответа",
+    "fields_menu": "Другие поля"
+  },
   "confirm_dialog": {
     "confirm": "Подтвердить",
     "cancel": "Отмена"
@@ -6109,6 +6115,7 @@
     "shared": "{name} поделился(ась) с вами {kind} «{object}»",
     "changed": "{name} изменил(а) ваш доступ к {kind} «{object}»",
     "revoked": "{name} отозвал(а) ваш доступ к {kind} «{object}»",
+    "summary": "{name} изменил(а) ваш доступ к {count, plural, one {# общему элементу} few {# общим элементам} many {# общим элементам} other {# общего элемента}}",
     "object": {
       "folder": "папкой",
       "calendar": "календарём",
@@ -7408,6 +7415,18 @@
     "save_draft": "Сохранить черновик",
     "attach_files": "Прикрепить файлы…",
     "shortcut_apps": "Перейти в Почту, Календарь, Контакты или Файлы"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Открыть…",
+    "menu_save_as": "Сохранить как…",
+    "open_filter": "Письма, события и контакты",
+    "save_filter": "Письмо",
+    "folder_title": "Выберите папку для писем",
+    "folder_button": "Сохранить здесь",
+    "saved_many": "{count, plural, one {Сохранено # письмо.} few {Сохранено # письма.} many {Сохранено # писем.} other {Сохранено # письма.}}",
+    "save_failed": "{count, plural, one {Не удалось сохранить # письмо.} few {Не удалось сохранить # письма.} many {Не удалось сохранить # писем.} other {Не удалось сохранить # письма.}}",
+    "shortcut_open": "Открыть сохранённое письмо, событие или контакт",
+    "shortcut_save_as": "Сохранить письмо как файл"
   },
   "appLock": {
     "section_title": "Блокировка приложения",

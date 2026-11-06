@@ -125,8 +125,14 @@ function readWidth(side: ComposerSidebarSide): number {
  * Layout state of both panels for a composer whose root element is `root`.
  * `composerId` is the id plugins know this composer by; their
  * api.ui.openPanel requests for it are answered here.
+ *
+ * `inline`: a reply under its message (the dock, Mountain View's inline
+ * reply). Its panels start folded and what the user does with them there
+ * lasts for that reply only. The choice used to be one for every composer,
+ * so a panel opened once in a full composer opened in every reply too and
+ * left the reply a sliver to type in (inline-reply).
  */
-export function useComposerSidebars(root: HTMLElement | null, composerId: string | null = null) {
+export function useComposerSidebars(root: HTMLElement | null, composerId: string | null = null, { inline = false }: { inline?: boolean } = {}) {
   const leftOffers = usePluginSlotOffers("composer-sidebar");
   const rightOffers = usePluginSlotOffers("composer-sidebar-right");
   const hasLeft = leftOffers.length > 0;
@@ -134,10 +140,9 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
   const [width, setWidth] = useState(0);
   // The user's choice per side; until they make one, a panel whose plugin
   // asked to start folded (a chat opened on demand) is folded, the rest open.
-  const [chosen, setChosen] = useState<Record<ComposerSidebarSide, boolean | null>>(() => ({
-    left: readCollapsed("left"),
-    right: readCollapsed("right"),
-  }));
+  const [chosen, setChosen] = useState<Record<ComposerSidebarSide, boolean | null>>(() => (inline
+    ? { left: true, right: true }
+    : { left: readCollapsed("left"), right: readCollapsed("right") }));
   const collapsed: Record<ComposerSidebarSide, boolean> = {
     left: chosen.left ?? leftOffers.some((o) => o.startFolded),
     right: chosen.right ?? rightOffers.some((o) => o.startFolded),
@@ -169,6 +174,7 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
 
   const setSideCollapsed = (side: ComposerSidebarSide, value: boolean) => {
     setChosen((prev) => ({ ...prev, [side]: value }));
+    if (inline) return;
     try { localStorage.setItem(storageKey(side), value ? "1" : "0"); } catch { /* storage blocked */ }
   };
 
@@ -245,7 +251,7 @@ export function isPanelOpen(mode: ComposerSidebarMode | null): boolean {
 }
 
 /** The Show or Hide button of one panel. */
-function PanelButton({ side, open, name, shortcut = null, onToggle, className }: {
+export function ComposerPanelButton({ side, open, name, shortcut = null, onToggle, className }: {
   side: ComposerSidebarSide;
   open: boolean;
   name: string | null;
@@ -298,7 +304,7 @@ export function ComposerPanelToggle({
   className?: string;
 }) {
   if (mode !== "folded") return null;
-  return <PanelButton side={side} open={false} name={name} shortcut={shortcut} onToggle={onToggle} className={className} />;
+  return <ComposerPanelButton side={side} open={false} name={name} shortcut={shortcut} onToggle={onToggle} className={className} />;
 }
 
 /**
@@ -331,7 +337,7 @@ export function ComposerPanelHead({
   children?: ReactNode;
 }) {
   if (!isPanelOpen(mode)) return null;
-  const hide = <PanelButton side={side} open name={name} shortcut={shortcut} onToggle={onToggle} />;
+  const hide = <ComposerPanelButton side={side} open name={name} shortcut={shortcut} onToggle={onToggle} />;
   return (
     <div
       className={cn(

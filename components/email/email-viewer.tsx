@@ -5171,8 +5171,8 @@ export function EmailViewer({
 
       <PluginSlot name="reader-header" className="w-full bg-background" extraProps={pluginEmailProps} />
 
-      {/* === SUBJECT BLOCK === */}
-      <div className={cn(
+      {/* === SUBJECT BLOCK === data-reader-subject: a reply that takes the pane covers it and shows the subject in its bar. */}
+      <div data-reader-subject="" className={cn(
         "bg-background",
         !mvViewer && "border-b border-border",
         toolbarPosition === 'below-subject' && "max-desk:sticky max-desk:top-0 max-desk:z-10"

@@ -36,7 +36,8 @@ import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { takeTabReply, useNotificationTabReply } from '@/lib/pwa-notify/tab-reply';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
-import { canDownload } from '@/lib/device-policy';
+import { canDownload, canExport } from '@/lib/device-policy';
+import { useEmailExport } from '@/hooks/use-message-file-actions';
 import { phishingMarkedNow } from '@/hooks/use-phishing-report';
 import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
@@ -546,7 +547,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const seen = !!email?.keywords?.$seen;
   // Message > Move to… in a pop-out: the same folder list the command palette opens.
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  // File > Save as…: this message as an .eml, as its ⋮ menu's Save as does.
+  const exportEmail = useEmailExport();
+  const canSave = !!email?.blobId && canExport(email);
   useDesktopCommands({
+    'file.saveAs': () => {
+      if (email && canSave) void exportEmail(email, { onArchive: () => void handleArchive(), onDelete: () => void handleDelete(), archiveEnabled: archiveActionEnabled }, blobSource.client ? blobSource : undefined);
+    },
     'message.reply': () => handleReply(),
     'message.replyAll': handleReplyAll,
     'message.forward': handleForward,
@@ -557,6 +564,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     'message.delete': () => void handleDelete(),
     'message.move': () => { if (email) setMoveDialogOpen(true); },
   }, {
+    'file.saveAs': canSave,
     'message.reply': !!email,
     'message.replyAll': !!email,
     'message.forward': !!email,

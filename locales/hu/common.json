@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Másolat megjelenítése",
     "shortcut_show_bcc": "Titkos másolat megjelenítése"
   },
+  "compose_dock": {
+    "open_draft": "Megnyitás",
+    "reply_type": "Válasz típusa: {kind}",
+    "resize_reply": "Válasz átméretezése",
+    "fields_menu": "További mezők"
+  },
   "confirm_dialog": {
     "confirm": "Megerősítés",
     "cancel": "Mégse"
@@ -5477,6 +5483,7 @@
     "shared": "{name} megosztotta veled a(z) {kind} „{object}” elemet",
     "changed": "{name} módosította a hozzáférésedet a(z) {kind} „{object}” elemhez",
     "revoked": "{name} visszavonta a hozzáférésedet a(z) {kind} „{object}” elemhez",
+    "summary": "{name} módosította a hozzáférésedet {count, plural, other {# megosztott elemhez}}",
     "object": {
       "folder": "mappa",
       "calendar": "naptár",
@@ -7408,6 +7415,18 @@
     "save_draft": "Piszkozat mentése",
     "attach_files": "Fájlok csatolása…",
     "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Megnyitás…",
+    "menu_save_as": "Mentés másként…",
+    "open_filter": "Üzenetek, események és névjegyek",
+    "save_filter": "E-mail üzenet",
+    "folder_title": "Válasszon mappát az üzenetekhez",
+    "folder_button": "Mentés ide",
+    "saved_many": "{count, plural, one {# üzenet mentve.} other {# üzenet mentve.}}",
+    "save_failed": "{count, plural, one {# üzenetet nem sikerült menteni.} other {# üzenetet nem sikerült menteni.}}",
+    "shortcut_open": "Mentett üzenet, esemény vagy névjegy megnyitása",
+    "shortcut_save_as": "Az üzenet mentése fájlként"
   },
   "appLock": {
     "section_title": "Alkalmazászár",

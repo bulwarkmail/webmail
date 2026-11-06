@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Zobrazit kopii",
     "shortcut_show_bcc": "Zobrazit skrytou kopii"
   },
+  "compose_dock": {
+    "open_draft": "Otevřít",
+    "reply_type": "Typ odpovědi: {kind}",
+    "resize_reply": "Změnit velikost odpovědi",
+    "fields_menu": "Další pole"
+  },
   "confirm_dialog": {
     "confirm": "Potvrdit",
     "cancel": "Zrušit"
@@ -6109,6 +6115,7 @@
     "shared": "{name} s vámi sdílí {kind} „{object}“",
     "changed": "{name} změnil(a) váš přístup k {kind} „{object}“",
     "revoked": "{name} odebral(a) váš přístup k {kind} „{object}“",
+    "summary": "{name} změnil(a) váš přístup k {count, plural, one {# sdílené položce} few {# sdíleným položkám} many {# sdílené položce} other {# sdíleným položkám}}",
     "object": {
       "folder": "složku",
       "calendar": "kalendář",
@@ -7408,6 +7415,18 @@
     "save_draft": "Uložit koncept",
     "attach_files": "Přiložit soubory…",
     "shortcut_apps": "Přejít na Poštu, Kalendář, Kontakty nebo Soubory"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Otevřít…",
+    "menu_save_as": "Uložit jako…",
+    "open_filter": "Zprávy, události a kontakty",
+    "save_filter": "E-mailová zpráva",
+    "folder_title": "Vyberte složku pro zprávy",
+    "folder_button": "Uložit sem",
+    "saved_many": "{count, plural, one {# zpráva uložena.} few {# zprávy uloženy.} many {# zprávy uloženo.} other {# zpráv uloženo.}}",
+    "save_failed": "{count, plural, one {# zprávu nebylo možné uložit.} few {# zprávy nebylo možné uložit.} many {# zprávy nebylo možné uložit.} other {# zpráv nebylo možné uložit.}}",
+    "shortcut_open": "Otevřít uloženou zprávu, událost nebo kontakt",
+    "shortcut_save_as": "Uložit zprávu jako soubor"
   },
   "appLock": {
     "section_title": "Zámek aplikace",

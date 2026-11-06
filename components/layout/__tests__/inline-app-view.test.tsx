@@ -1,6 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { cleanup, render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { InlineAppView } from '../inline-app-view';
+import { usePolicyStore } from '@/stores/policy-store';
 
 // Until an app's frame has loaded it holds the initial about:blank, which a dark
 // theme turns into an opaque white canvas in WebKit (#1517). Each frame stays
@@ -38,5 +39,38 @@ describe('InlineAppView', () => {
     const frame = screen.getByTitle('App A');
     expect(frame).not.toHaveClass('hidden');
     expect(frame).not.toHaveClass('invisible');
+  });
+});
+
+// An app of the operator's policy gets downloads, dialogs and the features
+// listed for it; a user's own app keeps the base sandbox (plan: rights per
+// admin app, never a user's).
+describe('InlineAppView frame rights', () => {
+  const initial = usePolicyStore.getState().policy;
+  afterEach(() => {
+    cleanup();
+    usePolicyStore.setState({ policy: initial });
+  });
+
+  const base = 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox';
+  const chat = {
+    id: 'admin-app-chat', name: 'Chat', url: 'https://chat.example.com/', icon: 'Globe',
+    openMode: 'inline' as const, showOnMobile: false, allow: ['clipboard-write', 'camera'],
+  };
+
+  it('grants an app of the policy what the operator listed', () => {
+    usePolicyStore.setState({ policy: { ...initial, defaultSidebarApps: [chat] as never } });
+    render(<InlineAppView apps={[{ id: chat.id, url: chat.url, name: chat.name }]} activeAppId={chat.id} onClose={vi.fn()} />);
+    const frame = screen.getByTitle('Chat');
+    expect(frame).toHaveAttribute('sandbox', `${base} allow-downloads allow-modals`);
+    expect(frame).toHaveAttribute('allow', 'clipboard-write https://chat.example.com; camera https://chat.example.com');
+  });
+
+  it('keeps a user\'s own app to the base sandbox', () => {
+    usePolicyStore.setState({ policy: { ...initial, defaultSidebarApps: [chat] as never } });
+    render(<InlineAppView apps={[{ id: 'mine', url: chat.url, name: 'Mine' }]} activeAppId="mine" onClose={vi.fn()} />);
+    const frame = screen.getByTitle('Mine');
+    expect(frame).toHaveAttribute('sandbox', base);
+    expect(frame).not.toHaveAttribute('allow');
   });
 });

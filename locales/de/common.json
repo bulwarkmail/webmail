@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Cc anzeigen",
     "shortcut_show_bcc": "Bcc anzeigen"
   },
+  "compose_dock": {
+    "open_draft": "Öffnen",
+    "reply_type": "Antwortart: {kind}",
+    "resize_reply": "Größe der Antwort ändern",
+    "fields_menu": "Weitere Felder"
+  },
   "confirm_dialog": {
     "confirm": "Bestätigen",
     "cancel": "Abbrechen"
@@ -6109,6 +6115,7 @@
     "shared": "{name} hat {kind} „{object}“ mit Ihnen geteilt",
     "changed": "{name} hat Ihren Zugriff auf {kind} „{object}“ geändert",
     "revoked": "{name} hat Ihren Zugriff auf {kind} „{object}“ entfernt",
+    "summary": "{name} hat Ihren Zugriff auf {count, plural, one {# freigegebenes Element} other {# freigegebene Elemente}} geändert",
     "object": {
       "folder": "den Ordner",
       "calendar": "den Kalender",
@@ -7408,6 +7415,18 @@
     "save_draft": "Entwurf speichern",
     "attach_files": "Dateien anhängen…",
     "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Öffnen…",
+    "menu_save_as": "Speichern unter…",
+    "open_filter": "Nachrichten, Termine und Kontakte",
+    "save_filter": "E-Mail-Nachricht",
+    "folder_title": "Ordner für die Nachrichten wählen",
+    "folder_button": "Hier speichern",
+    "saved_many": "{count, plural, one {# Nachricht gespeichert.} other {# Nachrichten gespeichert.}}",
+    "save_failed": "{count, plural, one {# Nachricht konnte nicht gespeichert werden.} other {# Nachrichten konnten nicht gespeichert werden.}}",
+    "shortcut_open": "Gespeicherte Nachricht, Termin oder Kontakt öffnen",
+    "shortcut_save_as": "Nachricht als Datei speichern"
   },
   "appLock": {
     "section_title": "App-Sperre",

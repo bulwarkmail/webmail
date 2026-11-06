@@ -1295,6 +1295,12 @@
     "shortcut_show_cc": "Rādīt kopiju",
     "shortcut_show_bcc": "Rādīt diskrēto kopiju"
   },
+  "compose_dock": {
+    "open_draft": "Atvērt",
+    "reply_type": "Atbildes veids: {kind}",
+    "resize_reply": "Mainīt atbildes izmēru",
+    "fields_menu": "Vairāk lauku"
+  },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
     "cancel": "Atcelt"
@@ -6109,6 +6115,7 @@
     "shared": "{name} kopīgoja ar jums {kind} “{object}”",
     "changed": "{name} mainīja jūsu piekļuvi {kind} “{object}”",
     "revoked": "{name} noņēma jūsu piekļuvi {kind} “{object}”",
+    "summary": "{name} mainīja jūsu piekļuvi {count, plural, zero {# kopīgotajiem vienumiem} one {# kopīgotajam vienumam} other {# kopīgotajiem vienumiem}}",
     "object": {
       "folder": "mapi",
       "calendar": "kalendāru",
@@ -7408,6 +7415,18 @@
     "save_draft": "Saglabāt melnrakstu",
     "attach_files": "Pievienot failus…",
     "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Atvērt…",
+    "menu_save_as": "Saglabāt kā…",
+    "open_filter": "Vēstules, notikumi un kontakti",
+    "save_filter": "E-pasta vēstule",
+    "folder_title": "Izvēlieties mapi vēstulēm",
+    "folder_button": "Saglabāt šeit",
+    "saved_many": "{count, plural, zero {Saglabātas # vēstules.} one {Saglabāta # vēstule.} other {Saglabātas # vēstules.}}",
+    "save_failed": "{count, plural, zero {Neizdevās saglabāt # vēstules.} one {Neizdevās saglabāt # vēstuli.} other {Neizdevās saglabāt # vēstules.}}",
+    "shortcut_open": "Atvērt saglabātu vēstuli, notikumu vai kontaktu",
+    "shortcut_save_as": "Saglabāt vēstuli kā failu"
   },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",

@@ -1307,6 +1307,12 @@
     "shortcut_show_cc": "Hiện Cc",
     "shortcut_show_bcc": "Hiện Bcc"
   },
+  "compose_dock": {
+    "open_draft": "Mở",
+    "reply_type": "Kiểu trả lời: {kind}",
+    "resize_reply": "Đổi kích thước thư trả lời",
+    "fields_menu": "Thêm trường"
+  },
   "confirm_dialog": {
     "confirm": "Xác nhận",
     "cancel": "Hủy"
@@ -5489,6 +5495,7 @@
     "shared": "{name} đã chia sẻ {kind} \"{object}\" với bạn",
     "changed": "{name} đã thay đổi quyền truy cập của bạn vào {kind} \"{object}\"",
     "revoked": "{name} đã xóa quyền truy cập của bạn vào {kind} \"{object}\"",
+    "summary": "{name} đã thay đổi quyền truy cập của bạn vào {count, plural, other {# mục được chia sẻ}}",
     "object": {
       "folder": "Thư mục",
       "calendar": "Lịch",
@@ -7420,6 +7427,18 @@
     "save_draft": "Lưu bản nháp",
     "attach_files": "Đính kèm tệp…",
     "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
+  },
+  "desktopSaveOpen": {
+    "menu_open": "Mở…",
+    "menu_save_as": "Lưu thành…",
+    "open_filter": "Thư, sự kiện và danh bạ",
+    "save_filter": "Thư email",
+    "folder_title": "Chọn thư mục để lưu thư",
+    "folder_button": "Lưu tại đây",
+    "saved_many": "Đã lưu {count} thư.",
+    "save_failed": "Không lưu được {count} thư.",
+    "shortcut_open": "Mở thư, sự kiện hoặc liên hệ đã lưu",
+    "shortcut_save_as": "Lưu thư thành tệp"
   },
   "appLock": {
     "section_title": "Khóa ứng dụng",

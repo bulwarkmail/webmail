@@ -11301,6 +11301,10 @@ export class JMAPClient implements IJMAPClient {
   private pollingInterval: NodeJS.Timeout | null = null;
   private secondaryPollInterval: NodeJS.Timeout | null = null;
   private pollingStates: { [key: string]: string } = {};
+  // States already handed to the callback, which a later SSE event may skip.
+  // A silent baseline prime is not in here: it can read a state before its
+  // push event arrives, and that event still has to be reported.
+  private reportedStates: { [key: string]: string } = {};
   private sseAbortController: AbortController | null = null;
   private sseReconnectTimeout: NodeJS.Timeout | null = null;
   private ssePingTimer: NodeJS.Timeout | null = null;
@@ -11309,7 +11313,7 @@ export class JMAPClient implements IJMAPClient {
   // poll, and the visibility/online handlers all call checkForStateChanges, so
   // under socket pressure they would otherwise pile identical POSTs onto an
   // already-saturated pool and amplify the queueing (#781).
-  private stateCheckInFlight: boolean = false;
+  private stateCheckInFlight: Record<string, string> | null = null;
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
 
@@ -11507,6 +11511,11 @@ export class JMAPClient implements IJMAPClient {
         return;
       }
       this.readSSEStream(response.body, controller);
+      // A reopened stream does not replay missed events. Reuse the guarded,
+      // bounded state poll once per successful connection, without awaiting it.
+      // The first connection of a push session has no baseline yet, so this
+      // only primes it; later reconnects report what changed in between.
+      void this.checkForStateChanges();
     }).catch((error) => {
       // Intentional close, not a failure - no polling fallback.
       if (controller.signal.aborted) return;
@@ -11571,8 +11580,23 @@ export class JMAPClient implements IJMAPClient {
     if (eventType === 'state' && dataLines.length > 0) {
       try {
         const change = JSON.parse(dataLines.join('\n')) as StateChange;
-        getOfflineHooks()?.stateChange?.(this, change);
-        this.stateChangeCallback?.(change);
+        const changed: Record<string, Record<string, string>> = {};
+        for (const [accountId, states] of Object.entries(change.changed)) {
+          for (const [type, state] of Object.entries(states)) {
+            if (!state) continue;
+            const key = `${accountId}:${type}`;
+            if (this.reportedStates[key] === state) continue;
+            (changed[accountId] ??= {})[type] = state;
+            this.pollingStates[key] = state;
+            this.reportedStates[key] = state;
+          }
+        }
+        // SSE and catch-up can report the same state in either order.
+        if (Object.keys(changed).length > 0) {
+          const update = { ...change, changed };
+          getOfflineHooks()?.stateChange?.(this, update);
+          this.stateChangeCallback?.(update);
+        }
       } catch {
         // Malformed SSE data - ignore
       }
@@ -11705,11 +11729,18 @@ export class JMAPClient implements IJMAPClient {
     if (this.isRateLimited()) {
       return;
     }
+    const pollingStates = this.pollingStates;
     try {
-      for (const [method, result, callId] of await this.fetchPolledStateResponses()) {
+      const responses = await this.fetchPolledStateResponses();
+      if (this.pollingStates !== pollingStates) return;
+      for (const [method, result, callId] of responses) {
         const resolved = this.resolvePolledState(method, callId);
         if (resolved && result?.state) {
-          this.pollingStates[`${resolved.accountId}:${resolved.stateKey}`] = result.state as string;
+          const key = `${resolved.accountId}:${resolved.stateKey}`;
+          // Only fill gaps. Overwriting a known state, or one a live SSE event
+          // set meanwhile, would swallow the change the next check reports.
+          if (this.pollingStates[key] !== undefined) continue;
+          this.pollingStates[key] = result.state as string;
         }
       }
     } catch {
@@ -11721,13 +11752,14 @@ export class JMAPClient implements IJMAPClient {
     if (this.isRateLimited()) {
       return;
     }
-    // Coalesce overlapping polls: if one is already awaiting a response, skip
-    // this call rather than issuing a duplicate POST (#781). The next tick
-    // picks up any change once the in-flight one settles.
-    if (this.stateCheckInFlight) {
+    const pollingStates = this.pollingStates;
+    // Coalesce overlapping polls within the same push lifecycle (#781).
+    // A closed lifecycle's check must not block its replacement's catch-up.
+    if (this.stateCheckInFlight === pollingStates) {
       return;
     }
-    this.stateCheckInFlight = true;
+    this.stateCheckInFlight = pollingStates;
+    const previousStates = { ...pollingStates };
     try {
       // Build a per-account changed map so a background change in a shared
       // (secondary) account is reported under its own accountId — which
@@ -11735,13 +11767,23 @@ export class JMAPClient implements IJMAPClient {
       // full (own + delegated) mailbox list from.
       const changedByAccount: Record<string, Record<string, string>> = {};
 
-      for (const [method, result, callId] of await this.fetchPolledStateResponses()) {
+      const responses = await this.fetchPolledStateResponses();
+      // Push was closed or replaced while this request was in flight.
+      if (this.pollingStates !== pollingStates) return;
+      for (const [method, result, callId] of responses) {
         const resolved = this.resolvePolledState(method, callId);
         const state = result?.state as string | undefined;
         if (!resolved || !state) continue;
         const key = `${resolved.accountId}:${resolved.stateKey}`;
-        if (this.pollingStates[key] && this.pollingStates[key] !== state) {
+        // An SSE event received during the poll already reported this key;
+        // its state may be newer than the response, so do not overwrite it.
+        if (this.pollingStates[key] !== previousStates[key]) continue;
+        // No baseline yet: record it silently. Reporting it would refetch
+        // everything the app has just loaded on every new push session.
+        const known = this.pollingStates[key];
+        if (known !== undefined && known !== state) {
           (changedByAccount[resolved.accountId] ??= {})[resolved.stateKey] = state;
+          this.reportedStates[key] = state;
         }
         this.pollingStates[key] = state;
       }
@@ -11753,7 +11795,9 @@ export class JMAPClient implements IJMAPClient {
     } catch {
       // Silently fail - polling will retry
     } finally {
-      this.stateCheckInFlight = false;
+      if (this.stateCheckInFlight === pollingStates) {
+        this.stateCheckInFlight = null;
+      }
     }
   }
 
@@ -11784,6 +11828,7 @@ export class JMAPClient implements IJMAPClient {
     this.cleanupBrowserEventListeners();
     this.stateChangeCallback = null;
     this.pollingStates = {};
+    this.reportedStates = {};
   }
 
   private startSSEPingMonitor(): void {
@@ -11906,9 +11951,16 @@ export class JMAPClient implements IJMAPClient {
     this.rateLimitCallback?.(true, retryAfterMs);
 
     // Pause live updates until the server's rate-limit window expires.
+    // The baseline outlives the pause, so the reconnect afterwards reports what
+    // changed during the window. Fresh objects: a check still in flight from
+    // before belongs to the closed session and is dropped.
     const stateChangeCallback = this.stateChangeCallback;
+    const pollingStates = this.pollingStates;
+    const reportedStates = this.reportedStates;
     this.closePushNotifications();
     this.stateChangeCallback = stateChangeCallback;
+    this.pollingStates = { ...pollingStates };
+    this.reportedStates = { ...reportedStates };
 
     // Schedule clearing the rate-limit flag and notifying listeners.
     this.rateLimitTimeout = setTimeout(() => {
