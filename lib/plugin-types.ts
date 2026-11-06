@@ -1537,6 +1537,16 @@ export interface ExternalSearchResult {
   source?: string;
   /** The message the entry stands for, opened in the reader on a click. */
   email?: SearchResultEmail;
+  /**
+   * The next three are shown only when the user chose one line per entry,
+   * in place of the snippet; the snippet may say the same for the two-line
+   * entry. Who the entry is from, e.g. a message's sender; plain text.
+   */
+  from?: string;
+  /** When, as an ISO 8601 date-time; shown as the message list shows its dates. */
+  date?: string;
+  /** How well the entry matches, from 0 to 1; shown as five bars. */
+  score?: number;
 }
 
 /** A message named by a search result. */
