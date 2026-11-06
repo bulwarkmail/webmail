@@ -5339,7 +5339,8 @@
     "invited": "{name} invited you to \"{title}\"",
     "updated": "{name} updated \"{title}\"",
     "cancelled": "{name} cancelled \"{title}\"",
-    "untitled": "Untitled event"
+    "untitled": "Untitled event",
+    "summary": "Changes to events you take part in: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} to {end} selected.",

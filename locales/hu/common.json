@@ -5339,7 +5339,8 @@
     "invited": "{name} meghívott a(z) „{title}” eseményre",
     "updated": "{name} frissítette a(z) „{title}” eseményt",
     "cancelled": "{name} lemondta a(z) „{title}” eseményt",
-    "untitled": "Névtelen esemény"
+    "untitled": "Névtelen esemény",
+    "summary": "Változások azokban az eseményekben, amelyeken részt veszel: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Kijelölve: {start} – {end}.",

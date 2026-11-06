@@ -5339,7 +5339,8 @@
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
     "updated": "{name} \"{title}\" etkinliğini güncelledi",
     "cancelled": "{name} \"{title}\" etkinliğini iptal etti",
-    "untitled": "Başlıksız etkinlik"
+    "untitled": "Başlıksız etkinlik",
+    "summary": "Katıldığınız etkinliklerdeki değişiklikler: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} ile {end} arası seçildi.",

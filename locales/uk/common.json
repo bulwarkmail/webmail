@@ -5971,7 +5971,8 @@
     "invited": "{name} запросив(ла) вас на «{title}»",
     "updated": "{name} оновив(ла) «{title}»",
     "cancelled": "{name} скасував(ла) «{title}»",
-    "untitled": "Подія без назви"
+    "untitled": "Подія без назви",
+    "summary": "Зміни в подіях, у яких ви берете участь: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Вибрано з {start} по {end}.",

@@ -5339,7 +5339,8 @@
     "invited": "{name} شما را به «{title}» دعوت کرد",
     "updated": "{name} «{title}» را به‌روزرسانی کرد",
     "cancelled": "{name} «{title}» را لغو کرد",
-    "untitled": "رویداد بدون عنوان"
+    "untitled": "رویداد بدون عنوان",
+    "summary": "تغییرات در رویدادهایی که در آن‌ها شرکت دارید: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} تا {end} انتخاب شد.",

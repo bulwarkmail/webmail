@@ -5971,7 +5971,8 @@
     "invited": "{name} さんが「{title}」に招待しました",
     "updated": "{name} さんが「{title}」を更新しました",
     "cancelled": "{name} さんが「{title}」をキャンセルしました",
-    "untitled": "無題の予定"
+    "untitled": "無題の予定",
+    "summary": "参加している予定の変更: {count} 件"
   },
   "calendar_month_select": {
     "selected_range": "{start}から{end}を選択しました。",

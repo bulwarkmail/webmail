@@ -5339,7 +5339,8 @@
     "invited": "{name} t'ha convidat a \"{title}\"",
     "updated": "{name} ha actualitzat \"{title}\"",
     "cancelled": "{name} ha cancel·lat \"{title}\"",
-    "untitled": "Esdeveniment sense títol"
+    "untitled": "Esdeveniment sense títol",
+    "summary": "Canvis en esdeveniments en què participes: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Seleccionat de {start} a {end}.",

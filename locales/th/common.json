@@ -2909,7 +2909,8 @@
     "invited": "{name} เชิญคุณเข้าร่วม “{title}”",
     "updated": "{name} อัปเดตกิจกรรม “{title}”",
     "cancelled": "{name} ยกเลิกกิจกรรม “{title}”",
-    "untitled": "กิจกรรมที่ไม่มีชื่อ"
+    "untitled": "กิจกรรมที่ไม่มีชื่อ",
+    "summary": "การเปลี่ยนแปลงในกิจกรรมที่คุณเข้าร่วม: {count}"
   },
   "calendar_month_select": {
     "selected_range": "เลือก {start} ถึง {end} แล้ว",

@@ -5345,7 +5345,8 @@
     "invited": "Ο {name} σας προσκάλεσε στο \"{title}\"",
     "updated": "Το {name} ενημερώθηκε \"{title}\"",
     "cancelled": "Το {name} ακυρώθηκε \"{title}\"",
-    "untitled": "Συμβάν χωρίς τίτλο"
+    "untitled": "Συμβάν χωρίς τίτλο",
+    "summary": "Αλλαγές σε εκδηλώσεις στις οποίες συμμετέχετε: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Επιλέχτηκε το {start} έως το {end}.",

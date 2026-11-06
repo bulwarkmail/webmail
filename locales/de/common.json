@@ -5971,7 +5971,8 @@
     "invited": "{name} hat Sie zu „{title}“ eingeladen",
     "updated": "{name} hat „{title}“ aktualisiert",
     "cancelled": "{name} hat „{title}“ abgesagt",
-    "untitled": "Unbenannter Termin"
+    "untitled": "Unbenannter Termin",
+    "summary": "Änderungen an Terminen, an denen Sie teilnehmen: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} bis {end} ausgewählt.",

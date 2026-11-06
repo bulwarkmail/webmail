@@ -5971,7 +5971,8 @@
     "invited": "{name}님이 \"{title}\"에 초대했습니다",
     "updated": "{name}님이 \"{title}\"을(를) 업데이트했습니다",
     "cancelled": "{name}님이 \"{title}\"을(를) 취소했습니다",
-    "untitled": "제목 없는 일정"
+    "untitled": "제목 없는 일정",
+    "summary": "참여 중인 일정의 변경 사항: {count}개"
   },
   "calendar_month_select": {
     "selected_range": "{start}부터 {end}까지 선택됨.",

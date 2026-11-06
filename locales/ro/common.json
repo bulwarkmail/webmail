@@ -5339,7 +5339,8 @@
     "invited": "{name} te-a invitat la „{title}”",
     "updated": "{name} a actualizat „{title}”",
     "cancelled": "{name} a anulat „{title}”",
-    "untitled": "Eveniment fără titlu"
+    "untitled": "Eveniment fără titlu",
+    "summary": "Modificări ale evenimentelor la care participi: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Selectat de la {start} la {end}.",

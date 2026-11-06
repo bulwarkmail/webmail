@@ -5971,7 +5971,8 @@
     "invited": "{name} uzaicināja jūs uz “{title}”",
     "updated": "{name} atjaunināja “{title}”",
     "cancelled": "{name} atcēla “{title}”",
-    "untitled": "Notikums bez nosaukuma"
+    "untitled": "Notikums bez nosaukuma",
+    "summary": "Izmaiņas notikumos, kuros piedalāties: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Atlasīts no {start} līdz {end}.",

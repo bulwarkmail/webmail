@@ -5339,7 +5339,8 @@
     "invited": "{name} 邀請您參加「{title}」",
     "updated": "{name} 更新了「{title}」",
     "cancelled": "{name} 取消了「{title}」",
-    "untitled": "未命名活動"
+    "untitled": "未命名活動",
+    "summary": "你參與的活動有變更：{count} 項"
   },
   "calendar_month_select": {
     "selected_range": "已選取 {start} 至 {end}。",

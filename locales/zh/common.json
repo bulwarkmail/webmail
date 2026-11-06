@@ -5971,7 +5971,8 @@
     "invited": "{name} 邀请您参加“{title}”",
     "updated": "{name} 更新了“{title}”",
     "cancelled": "{name} 取消了“{title}”",
-    "untitled": "无标题活动"
+    "untitled": "无标题活动",
+    "summary": "你参与的活动有变更：{count} 项"
   },
   "calendar_month_select": {
     "selected_range": "已选择 {start} 至 {end}。",

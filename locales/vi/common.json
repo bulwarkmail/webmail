@@ -5351,7 +5351,8 @@
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
     "updated": "{name} đã cập nhật \"{title}\"",
     "cancelled": "{name} đã hủy \"{title}\"",
-    "untitled": "Sự kiện không có tiêu đề"
+    "untitled": "Sự kiện không có tiêu đề",
+    "summary": "Thay đổi trong các sự kiện bạn tham gia: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Đã chọn từ {start} đến {end}.",

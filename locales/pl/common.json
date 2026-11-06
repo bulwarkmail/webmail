@@ -5971,7 +5971,8 @@
     "invited": "{name} zaprosił(a) Cię na „{title}”",
     "updated": "{name} zaktualizował(a) „{title}”",
     "cancelled": "{name} odwołał(a) „{title}”",
-    "untitled": "Wydarzenie bez tytułu"
+    "untitled": "Wydarzenie bez tytułu",
+    "summary": "Zmiany w wydarzeniach, w których uczestniczysz: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Wybrano od {start} do {end}.",

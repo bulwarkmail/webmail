@@ -5339,7 +5339,8 @@
     "invited": "{name} vás pozval(a) na „{title}“",
     "updated": "{name} aktualizoval(a) „{title}“",
     "cancelled": "{name} zrušil(a) „{title}“",
-    "untitled": "Udalosť bez názvu"
+    "untitled": "Udalosť bez názvu",
+    "summary": "Zmeny udalostí, ktorých sa zúčastňujete: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Vybraté {start} až {end}.",

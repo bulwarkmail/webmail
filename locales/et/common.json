@@ -5339,7 +5339,8 @@
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
     "updated": "{name} uuendas sündmust \"{title}\"",
     "cancelled": "{name} tühistas sündmuse \"{title}\"",
-    "untitled": "Nimetu sündmus"
+    "untitled": "Nimetu sündmus",
+    "summary": "Muudatused sündmustes, milles osaled: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Valitud {start} kuni {end}.",

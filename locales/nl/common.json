@@ -5971,7 +5971,8 @@
     "invited": "{name} heeft je uitgenodigd voor \"{title}\"",
     "updated": "{name} heeft \"{title}\" bijgewerkt",
     "cancelled": "{name} heeft \"{title}\" geannuleerd",
-    "untitled": "Afspraak zonder titel"
+    "untitled": "Afspraak zonder titel",
+    "summary": "Wijzigingen in afspraken waaraan je deelneemt: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} tot {end} geselecteerd.",

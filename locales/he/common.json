@@ -5790,7 +5790,8 @@
     "invited": "{name} הזמין/ה אותך ל\"{title}\"",
     "updated": "{name} עדכן/ה את \"{title}\"",
     "cancelled": "{name} ביטל/ה את \"{title}\"",
-    "untitled": "אירוע ללא כותרת"
+    "untitled": "אירוע ללא כותרת",
+    "summary": "שינויים באירועים שבהם את/ה משתתף/ת: {count}"
   },
   "calendar_month_select": {
     "selected_range": "נבחרו {start} עד {end}.",

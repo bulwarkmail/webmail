@@ -5341,7 +5341,8 @@
     "invited": "{name} inviterte deg til «{title}»",
     "updated": "{name} oppdaterte «{title}»",
     "cancelled": "{name} avlyste «{title}»",
-    "untitled": "Hending utan tittel"
+    "untitled": "Hending utan tittel",
+    "summary": "Endringar i hendingar du deltek i: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} til {end} er valt.",
