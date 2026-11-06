@@ -5899,6 +5899,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialFiles={composerInitialFiles}
         sessionKey={`inline-${composerSessionId}`}
         docked={composerHost === 'dock'}
+        // The docked reply's kind menu: Forward opens a forward of the message it answers.
+        onSwitchToForward={composerHost === 'dock' && composerSourceEmail ? () => {
+          void (composerSourceEmail.id === selectedEmail?.id ? handleForward() : handleConversationForward(composerSourceEmail));
+        } : undefined}
         sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
           // A composer whose session another one has replaced: its state

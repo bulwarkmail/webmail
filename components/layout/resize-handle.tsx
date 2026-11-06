@@ -18,6 +18,8 @@ interface ResizeHandleProps {
    * ("Resize message list"). Without it the name is a plain "Resize".
    */
   pane?: ResizePane;
+  /** A name of its own, for a pane the list above doesn't have. */
+  label?: string;
   /**
    * The size of the pane it resizes, in px, and the limits of that size. A
    * focusable separator must expose its value (WCAG 4.1.2), so screen
@@ -39,7 +41,7 @@ const PANE_LABEL_KEYS: Record<ResizePane, string> = {
   sidePanel: "resize_side_panel",
 };
 
-export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleClick, orientation = "vertical", className, testId, pane, value, min, max }: ResizeHandleProps) {
+export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleClick, orientation = "vertical", className, testId, pane, label, value, min, max }: ResizeHandleProps) {
   const t = useTranslations("shell");
   const handleRef = useRef<HTMLDivElement>(null);
   // Id of the pointer that started the drag, or null when idle. Only that
@@ -152,7 +154,7 @@ export function ResizeHandle({ onResizeStart, onResize, onResizeEnd, onDoubleCli
       ref={handleRef}
       role="separator"
       aria-orientation={isHorizontal ? "horizontal" : "vertical"}
-      aria-label={t(pane ? PANE_LABEL_KEYS[pane] : "resize")}
+      aria-label={label ?? t(pane ? PANE_LABEL_KEYS[pane] : "resize")}
       aria-valuenow={value === undefined ? undefined : Math.round(value)}
       aria-valuemin={value === undefined ? undefined : min}
       aria-valuemax={value === undefined ? undefined : max}

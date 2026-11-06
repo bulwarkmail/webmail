@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Bcc を表示"
   },
   "compose_dock": {
-    "open_draft": "開く"
+    "open_draft": "開く",
+    "reply_type": "返信の種類: {kind}",
+    "resize_reply": "返信のサイズを変更",
+    "fields_menu": "その他の欄"
   },
   "confirm_dialog": {
     "confirm": "確認",

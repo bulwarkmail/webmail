@@ -1308,7 +1308,10 @@
     "shortcut_show_bcc": "Hiện Bcc"
   },
   "compose_dock": {
-    "open_draft": "Mở"
+    "open_draft": "Mở",
+    "reply_type": "Kiểu trả lời: {kind}",
+    "resize_reply": "Đổi kích thước thư trả lời",
+    "fields_menu": "Thêm trường"
   },
   "confirm_dialog": {
     "confirm": "Xác nhận",

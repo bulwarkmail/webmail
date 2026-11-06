@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Afișează Bcc"
   },
   "compose_dock": {
-    "open_draft": "Deschide"
+    "open_draft": "Deschide",
+    "reply_type": "Tipul răspunsului: {kind}",
+    "resize_reply": "Redimensionează răspunsul",
+    "fields_menu": "Mai multe câmpuri"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",

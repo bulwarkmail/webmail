@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "إظهار نسخة مخفية"
   },
   "compose_dock": {
-    "open_draft": "فتح"
+    "open_draft": "فتح",
+    "reply_type": "نوع الرد: {kind}",
+    "resize_reply": "تغيير حجم الرد",
+    "fields_menu": "حقول أخرى"
   },
   "confirm_dialog": {
     "confirm": "تأكيد",

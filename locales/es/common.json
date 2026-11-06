@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Mostrar CCO"
   },
   "compose_dock": {
-    "open_draft": "Abrir"
+    "open_draft": "Abrir",
+    "reply_type": "Tipo de respuesta: {kind}",
+    "resize_reply": "Cambiar el tamaño de la respuesta",
+    "fields_menu": "Más campos"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",

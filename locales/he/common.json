@@ -1240,7 +1240,10 @@
     "shortcut_show_bcc": "הצגת עותק מוסתר"
   },
   "compose_dock": {
-    "open_draft": "פתיחה"
+    "open_draft": "פתיחה",
+    "reply_type": "סוג התשובה: {kind}",
+    "resize_reply": "שינוי גודל התשובה",
+    "fields_menu": "שדות נוספים"
   },
   "confirm_dialog": {
     "confirm": "אשר",

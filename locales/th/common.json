@@ -1732,7 +1732,10 @@
     "shortcut_show_bcc": "แสดงสำเนาลับ"
   },
   "compose_dock": {
-    "open_draft": "เปิด"
+    "open_draft": "เปิด",
+    "reply_type": "ประเภทการตอบกลับ: {kind}",
+    "resize_reply": "ปรับขนาดการตอบกลับ",
+    "fields_menu": "ช่องเพิ่มเติม"
   },
   "email_viewer": {
     "read_receipt": {

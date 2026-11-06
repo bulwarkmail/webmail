@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "顯示密件副本"
   },
   "compose_dock": {
-    "open_draft": "開啟"
+    "open_draft": "開啟",
+    "reply_type": "回覆類型：{kind}",
+    "resize_reply": "調整回覆大小",
+    "fields_menu": "更多欄位"
   },
   "confirm_dialog": {
     "confirm": "確認",

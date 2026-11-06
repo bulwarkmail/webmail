@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Показати приховану копію"
   },
   "compose_dock": {
-    "open_draft": "Відкрити"
+    "open_draft": "Відкрити",
+    "reply_type": "Тип відповіді: {kind}",
+    "resize_reply": "Змінити розмір відповіді",
+    "fields_menu": "Інші поля"
   },
   "confirm_dialog": {
     "confirm": "Підтвердити",

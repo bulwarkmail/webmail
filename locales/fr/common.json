@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Afficher Cci"
   },
   "compose_dock": {
-    "open_draft": "Ouvrir"
+    "open_draft": "Ouvrir",
+    "reply_type": "Type de réponse : {kind}",
+    "resize_reply": "Redimensionner la réponse",
+    "fields_menu": "Plus de champs"
   },
   "confirm_dialog": {
     "confirm": "Confirmer",

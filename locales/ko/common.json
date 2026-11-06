@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "숨은 참조 표시"
   },
   "compose_dock": {
-    "open_draft": "열기"
+    "open_draft": "열기",
+    "reply_type": "답장 유형: {kind}",
+    "resize_reply": "답장 크기 조절",
+    "fields_menu": "추가 필드"
   },
   "confirm_dialog": {
     "confirm": "확인",

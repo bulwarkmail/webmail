@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Vis Bcc"
   },
   "compose_dock": {
-    "open_draft": "Åbn"
+    "open_draft": "Åbn",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Tilpas størrelsen på svaret",
+    "fields_menu": "Flere felter"
   },
   "confirm_dialog": {
     "confirm": "Bekræft",

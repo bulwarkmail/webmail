@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Show Bcc"
   },
   "compose_dock": {
-    "open_draft": "Open"
+    "open_draft": "Open",
+    "reply_type": "Reply type: {kind}",
+    "resize_reply": "Resize reply",
+    "fields_menu": "More fields"
   },
   "confirm_dialog": {
     "confirm": "Confirm",

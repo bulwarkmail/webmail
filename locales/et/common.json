@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Näita pimekoopiat"
   },
   "compose_dock": {
-    "open_draft": "Ava"
+    "open_draft": "Ava",
+    "reply_type": "Vastuse liik: {kind}",
+    "resize_reply": "Muuda vastuse suurust",
+    "fields_menu": "Rohkem välju"
   },
   "confirm_dialog": {
     "confirm": "Kinnita",

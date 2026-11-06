@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Rādīt diskrēto kopiju"
   },
   "compose_dock": {
-    "open_draft": "Atvērt"
+    "open_draft": "Atvērt",
+    "reply_type": "Atbildes veids: {kind}",
+    "resize_reply": "Mainīt atbildes izmēru",
+    "fields_menu": "Vairāk lauku"
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",

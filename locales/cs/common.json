@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "Zobrazit skrytou kopii"
   },
   "compose_dock": {
-    "open_draft": "Otevřít"
+    "open_draft": "Otevřít",
+    "reply_type": "Typ odpovědi: {kind}",
+    "resize_reply": "Změnit velikost odpovědi",
+    "fields_menu": "Další pole"
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",

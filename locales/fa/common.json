@@ -1296,7 +1296,10 @@
     "shortcut_show_bcc": "نمایش رونوشت پنهان"
   },
   "compose_dock": {
-    "open_draft": "باز کردن"
+    "open_draft": "باز کردن",
+    "reply_type": "نوع پاسخ: {kind}",
+    "resize_reply": "تغییر اندازهٔ پاسخ",
+    "fields_menu": "فیلدهای بیشتر"
   },
   "confirm_dialog": {
     "confirm": "تأیید",
