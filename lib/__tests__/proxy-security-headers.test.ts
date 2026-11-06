@@ -292,3 +292,38 @@ describe('isStaticAssetPath', () => {
     expect(isStaticAssetPath('/plugin-sandbox')).toBe(false);
   });
 });
+
+// Camera and microphone are off, but an inline app the operator granted them
+// needs its origin in the header (and the document itself, through which a
+// frame inherits): no frame's `allow` widens it.
+describe('Permissions-Policy for the operator\'s sidebar apps', () => {
+  afterEach(() => {
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({ features: { pluginsEnabled: false } }) as never);
+  });
+
+  const withApps = (defaultSidebarApps: unknown[]) =>
+    vi.mocked(configManager.getPolicy).mockImplementation(() => ({ features: {}, defaultSidebarApps }) as never);
+  const chat = { id: 'admin-app-chat', name: 'Chat', url: 'https://chat.example.com/team', icon: 'Globe', openMode: 'inline', showOnMobile: false };
+
+  it('turns camera and microphone off without such an app', async () => {
+    withApps([{ ...chat, allow: ['clipboard-write', 'fullscreen'] }]);
+    expect((await load('/en/mail')).headers.get('permissions-policy'))
+      .toBe('camera=(), microphone=(), geolocation=(), payment=()');
+  });
+
+  it('names the app\'s origin, and the document\'s own, for what it was granted', async () => {
+    withApps([
+      { ...chat, allow: ['microphone', 'camera'] },
+      { ...chat, id: 'admin-app-talk', url: 'https://talk.example.com', allow: ['microphone'] },
+    ]);
+    expect((await load('/en/mail')).headers.get('permissions-policy')).toBe(
+      'camera=(self "https://chat.example.com"), microphone=(self "https://chat.example.com" "https://talk.example.com"), geolocation=(), payment=()'
+    );
+  });
+
+  it('never for an app that opens in a tab', async () => {
+    withApps([{ ...chat, openMode: 'tab', allow: ['microphone', 'camera'] }]);
+    expect((await load('/en/mail')).headers.get('permissions-policy'))
+      .toBe('camera=(), microphone=(), geolocation=(), payment=()');
+  });
+});

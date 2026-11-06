@@ -12,7 +12,8 @@
  * rather than trusted: a malformed app is dropped, not rendered.
  */
 
-import type { AdminSidebarApp } from '@/lib/admin/types';
+import type { AdminSidebarApp, SidebarAppFeature } from '@/lib/admin/types';
+import { appUrlToFrameOrigin } from '@/lib/security/app-frame-origins';
 
 /** Cap on how many apps an operator can pin, matching the CSP origin budget. */
 export const MAX_DEFAULT_SIDEBAR_APPS = 20;
@@ -31,6 +32,22 @@ const MAX_APP_URL_LENGTH = 2048;
 const ICON_NAME_RE = /^(?:(?:tabler:)?[a-z0-9]+(?:-[a-z0-9]+){0,7}|[A-Za-z][A-Za-z0-9]{0,63})$/;
 
 const ID_SUFFIX_RE = /[^a-zA-Z0-9_-]/g;
+
+/**
+ * The browser features an operator can grant an inline app's frame, each a
+ * Permissions Policy feature: copy buttons, calls and screen sharing, full
+ * screen. Anything else in a policy's `allow` is dropped.
+ */
+export const SIDEBAR_APP_FEATURES: readonly SidebarAppFeature[] = [
+  'clipboard-write',
+  'microphone',
+  'camera',
+  'display-capture',
+  'fullscreen',
+];
+
+/** What every inline app's frame gets. */
+const BASE_SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox';
 
 /** A sidebar app as rendered: the user's own, or one pinned by the operator. */
 export interface ResolvedSidebarApp extends AdminSidebarApp {
@@ -51,6 +68,11 @@ function sanitizeUrl(raw: unknown): string | null {
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
   if (!parsed.host) return null;
   return url;
+}
+
+function sanitizeAllow(raw: unknown): SidebarAppFeature[] {
+  if (!Array.isArray(raw)) return [];
+  return SIDEBAR_APP_FEATURES.filter((feature) => raw.includes(feature));
 }
 
 /**
@@ -104,14 +126,19 @@ export function sanitizeDefaultSidebarApps(raw: unknown): AdminSidebarApp[] {
     for (let n = 2; seenIds.has(id); n++) id = `${base}-${n}`;
     seenIds.add(id);
 
+    const openMode = app.openMode === 'inline' ? 'inline' : 'tab';
+    // Only a frame can use them, so a tab app keeps none.
+    const allow = openMode === 'inline' ? sanitizeAllow(app.allow) : [];
+
     out.push({
       id,
       name,
       url,
       icon,
       ...(iconUrl ? { iconUrl } : {}),
-      openMode: app.openMode === 'inline' ? 'inline' : 'tab',
+      openMode,
       showOnMobile: app.showOnMobile === true,
+      ...(allow.length > 0 ? { allow } : {}),
     });
     if (out.length >= MAX_DEFAULT_SIDEBAR_APPS) break;
   }
@@ -134,4 +161,49 @@ export function mergeSidebarApps(
   const seen = new Set(managed.map((app) => app.id));
   const own = (Array.isArray(userApps) ? userApps : []).filter((app) => app && !seen.has(app.id));
   return [...managed.map((app) => ({ ...app, managed: true })), ...own];
+}
+
+/** An inline app's frame attributes; `allow` absent when nothing is granted. */
+export interface AppFrameRights {
+  sandbox: string;
+  allow?: string;
+}
+
+/**
+ * What an inline app's frame may do. An app of the policy (matched by id and
+ * origin, so a user's own app can't borrow an operator's id) also gets
+ * downloads and dialogs, as the office editor's frame does, and the features
+ * the operator listed, each for the app's origin only. A user's own app gets
+ * the base sandbox and nothing else. Never `allow-top-navigation`.
+ */
+export function appFrameRights(
+  app: { id: string; url: string },
+  managedApps: readonly AdminSidebarApp[],
+  { downloadsOff = false }: { downloadsOff?: boolean } = {}
+): AppFrameRights {
+  const origin = appUrlToFrameOrigin(app.url);
+  const managed = origin
+    ? managedApps.find((m) => m.id === app.id && m.openMode === 'inline' && appUrlToFrameOrigin(m.url) === origin)
+    : undefined;
+  if (!managed || !origin) return { sandbox: BASE_SANDBOX };
+
+  const sandbox = `${BASE_SANDBOX}${downloadsOff ? '' : ' allow-downloads'} allow-modals`;
+  const features = sanitizeAllow(managed.allow);
+  if (features.length === 0) return { sandbox };
+  return { sandbox, allow: features.map((feature) => `${feature} ${origin}`).join('; ') };
+}
+
+/**
+ * Origins of the policy's inline apps granted a feature. Bulwark's own
+ * `Permissions-Policy` header turns camera and microphone off, which no
+ * frame's `allow` can widen, so the proxy names these origins there.
+ */
+export function managedAppOriginsWith(defaults: unknown, feature: SidebarAppFeature): string[] {
+  const out: string[] = [];
+  for (const app of sanitizeDefaultSidebarApps(defaults)) {
+    if (!app.allow?.includes(feature)) continue;
+    const origin = appUrlToFrameOrigin(app.url);
+    if (origin && !out.includes(origin)) out.push(origin);
+  }
+  return out;
 }
