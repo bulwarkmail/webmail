@@ -4,6 +4,7 @@ import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messagefor
 import { createTranslator } from 'next-intl';
 import en from '@/locales/en/common.json';
 import el from '@/locales/el/common.json';
+import { parseSearchQuery } from '@/lib/global-search/query-parser';
 
 vi.unmock('next-intl');
 
@@ -55,6 +56,21 @@ describe('Greek messages', () => {
   });
 
   const t = createTranslator({ locale: 'el', messages: el, onError: (error) => { throw error; } });
+
+  it('keeps the search hint examples compatible with the query parser', () => {
+    const examples = t('global_search.empty_hint')
+      .match(/\b(?:from:|subject:|has:attachment|after:\d{4}-\d{2}-\d{2})/g) ?? [];
+    expect(examples).toEqual(['from:', 'subject:', 'has:attachment', 'after:2026-01-01']);
+
+    const parsed = parseSearchQuery(`${examples[0]}sender@example.com ${examples[1]}δοκιμή ${examples[2]} ${examples[3]}`);
+    expect(parsed.mail).toMatchObject({
+      from: 'sender@example.com',
+      subject: 'δοκιμή',
+      hasAttachment: true,
+      dateAfter: '2026-01-01',
+    });
+    expect(parsed.text).toBe('');
+  });
 
   it.each([
     [0, '0 μηνύματα'],
