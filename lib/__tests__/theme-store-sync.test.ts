@@ -93,4 +93,19 @@ describe('server theme sync with skins', () => {
 
     expect(useThemeStore.getState().installedThemes.find((t) => t.id === 'ocean')?.css).toContain('blue');
   });
+
+  it('keeps the skin of an unchanged managed theme on the next load (#1561)', async () => {
+    document.getElementById('active-theme-skin')?.remove();
+    // As persisted: the skin is stripped from localStorage and kept in IndexedDB.
+    useThemeStore.setState((s) => ({
+      installedThemes: [...s.installedThemes.filter((t) => t.builtIn), { ...CORP, id: 'ocean', forceEnabled: false, version: '1.0.0', contentHash: 'h1', skin: undefined }],
+      activeThemeId: 'ocean',
+    }));
+    serverThemes.themes = [{ id: 'ocean', name: 'Ocean', version: '1.0.0', author: 'a', description: '', variants: ['light', 'dark'], forceEnabled: false, hasSkin: true, contentHash: 'h1' }];
+    vi.mocked(pluginStorage.getThemeSkin).mockResolvedValueOnce('.message-list{border-radius:8px}');
+
+    await useThemeStore.getState().syncServerThemes();
+
+    await vi.waitFor(() => expect(document.getElementById('active-theme-skin')?.textContent).toContain('border-radius'));
+  });
 });
