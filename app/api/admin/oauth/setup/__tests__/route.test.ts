@@ -165,6 +165,18 @@ describe('POST /api/admin/oauth/setup', () => {
     expect(Object.keys(webmail.redirectUris as object).every((uri) => uri.startsWith('https://webmail.example.org/'))).toBe(true);
   });
 
+  it('registers the callbacks under NEXT_PUBLIC_BASE_PATH (#1551)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BASE_PATH', '/webmail');
+    try {
+      await setup();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+    const uris = Object.keys((setCalls()[0].create as Record<string, Record<string, unknown>>).new.redirectUris as object);
+    expect(uris).toContain('https://webmail.example.org/webmail/en/auth/callback');
+    expect(uris.every((uri) => uri.startsWith('https://webmail.example.org/webmail/'))).toBe(true);
+  });
+
   it('registers a first-party client, which Stalwart 1.0 gives full access', async () => {
     const res = await setup();
     expect(res.status).toBe(200);

@@ -82,10 +82,15 @@ async function getStalwartAccountId(creds: ServerCreds): Promise<string | null> 
     ?? null;
 }
 
+/**
+ * The callback URIs the sign-in sends, one per locale. A build with
+ * NEXT_PUBLIC_BASE_PATH serves them under that path (#1551).
+ */
 function buildRedirectUris(origin: string, localeList: readonly string[]): Record<string, true> {
+  const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
   const out: Record<string, true> = {};
   for (const loc of localeList) {
-    out[`${origin}/${loc}/auth/callback`] = true;
+    out[`${origin}${basePath}/${loc}/auth/callback`] = true;
   }
   return out;
 }
