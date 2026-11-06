@@ -135,6 +135,21 @@
 html:root :is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible:focus-visible:focus-visible:focus-visible {
   outline-offset: calc(var(--focus-ring-width) * -1) !important;
 }
+/* The composer's writing area (data-composer-writing) is one page: the text,
+   the signature and the folded quote. A text field always matches
+   :focus-visible, so the outline boxed in the typing part alone and left the
+   signature outside it, like a form field (inline-reply). The focus shows on
+   the page instead, as a bar along its start edge; forced-colors mode, which
+   drops box-shadows, gets an outline round the whole page (in the
+   forced-colors block below). Padded like the
+   rule above to outweigh the global outline. */
+html:root [data-composer-writing] :is(.tiptap, textarea):focus-visible:focus-visible:focus-visible:focus-visible:focus-visible,
+html:root[data-focus-always="on"] [data-composer-writing] :is(.tiptap, textarea):focus:focus:focus:focus:focus {
+  outline: none !important;
+}
+[data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
+  box-shadow: inset var(--focus-ring-width) 0 0 0 var(--focus-ring-color);
+}
 /* The focused element scrolls clear of sticky headers and the bottom bar,
    in the page and inside the panes, which scroll on their own (scroll
    padding belongs to the scrolling box, so the root's alone did nothing
@@ -407,6 +422,11 @@ html.dark[data-contrast="more"] {
  * because the colour is what it shows.
  */
 @media (forced-colors: active) {
+  /* The composer's writing area: box-shadows are gone here, so an outline round the page. */
+  [data-composer-writing]:has(:is(.tiptap, textarea):focus-visible) {
+    outline: var(--focus-ring-width) solid CanvasText;
+    outline-offset: calc(var(--focus-ring-width) * -1);
+  }
   :focus-visible:not([tabindex="-1"]:not(a[href], button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="link"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="option"], [role="gridcell"], [role="row"], [role="treeitem"], [role="tab"], [role="radio"], [role="checkbox"], [role="switch"], [role="slider"], [role="spinbutton"], [role="columnheader"], [role="rowheader"])) {
     outline-color: Highlight !important;
   }

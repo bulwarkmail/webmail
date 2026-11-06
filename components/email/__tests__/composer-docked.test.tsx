@@ -298,8 +298,25 @@ describe('a reply docked under its message', () => {
     }
   });
 
+  // The text, the signature and the quote are one page, where the focus shows
+  // (app/accessibility.css), not a box round the typing part alone.
+  it('keeps the editor and the signature in one writing area', () => {
+    const { container } = render(<EmailComposer initialData={DATA} docked />);
+    const page = container.querySelector('[data-composer-writing]');
+    expect(page).not.toBeNull();
+    expect(page!.contains(screen.getByTestId('rich-text-editor'))).toBe(true);
+  });
+
+  // At 900 px the To row is narrow: the typing space beside a chip may get
+  // small before it wraps under it, which made the row two lines high.
+  it('lets the To input get narrow beside its chips', () => {
+    render(<EmailComposer initialData={DATA} docked />);
+    expect(screen.getByRole('combobox', { name: 'to:' }).className).toMatch(/(^|\s)min-w-12(\s|$)/);
+  });
+
   it('keeps every line when not docked', () => {
     const { container } = render(<EmailComposer initialData={DATA} />);
+    expect(screen.getByRole('combobox', { name: 'to:' }).className).not.toMatch(/(^|\s)min-w-12(\s|$)/);
     expect(hidden(container.querySelector('[data-composer-subject]'))).toBe(false);
     expect(hidden(container.querySelector('[data-composer-from]'))).toBe(false);
   });

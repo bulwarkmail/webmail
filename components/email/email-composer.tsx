@@ -5762,6 +5762,7 @@ export function EmailComposer({
               validationMessage={t('validation.recipient_required')}
               onTab={focusSubject}
               onMoveChip={handleMoveChip}
+              narrowInput={dockCompact}
             />
             {/* A narrow docked reply: From, Cc, Bcc and the address book in one menu, so the addresses keep their room. */}
             {dockCompact && (
@@ -5961,7 +5962,8 @@ export function EmailComposer({
           </div>
       </div>
 
-      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace}>
+      {/* The writing area: text, signature and quote read as one page, with the focus shown on it (app/accessibility.css). */}
+      <div className={cn("flex-1", pinFields && "min-h-0 overflow-auto")} onMouseDown={focusBodyFromEmptySpace} data-composer-writing="">
         {wantsPluginDraft && (
           <PluginSlot name="composer-above-body" className="w-full" extraProps={pluginDraftProps} />
         )}
@@ -6811,6 +6813,7 @@ export function RecipientChipInput({
   validationMessage,
   onTab,
   onMoveChip,
+  narrowInput = false,
 }: {
   /** The id of the field's visible label ("To:"), which names the input and the chip list. */
   labelId: string;
@@ -6838,6 +6841,8 @@ export function RecipientChipInput({
   validationMessage?: string;
   onTab?: () => void;
   onMoveChip: (recipient: Recipient, fromField: 'to' | 'cc' | 'bcc', toField: 'to' | 'cc' | 'bcc', toIndex?: number) => void;
+  /** A narrow row (a docked reply's To): the typing space beside the chips may get small before it wraps under them. */
+  narrowInput?: boolean;
 }) {
   const t = useTranslations('email_composer');
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<{ index: number; recipient: Recipient }>();
@@ -7418,7 +7423,7 @@ export function RecipientChipInput({
             // focus-inset: the keyboard focus ring goes inside the box. Drawn
             // outside, the field's own scroller cut it to a line along the top
             // and the end (compose-p2-18, a pop-out focuses To from a key).
-            className="focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+            className={cn("focus-inset flex-1 min-w-[120px] border-0 outline-none h-7 text-sm bg-transparent text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none", narrowInput && chips.length > 0 && "min-w-12")}
             role="combobox"
             aria-expanded={activeAutoField === field && autocompleteResults.length > 0}
             aria-autocomplete="list"
