@@ -355,6 +355,7 @@
     "no_search_results": "未找到结果",
     "no_search_results_description": "请调整搜索条件或筛选器",
     "more_results_searching": "正在搜索更多结果…",
+    "resize_plugin_results": "调整插件结果的大小",
     "loading": "正在加载邮件...",
     "unread": "未读",
     "to_me": "发给我",

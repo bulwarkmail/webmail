@@ -355,6 +355,7 @@
     "no_search_results": "結果が見つかりません",
     "no_search_results_description": "検索やフィルターを調整してください",
     "more_results_searching": "ほかの結果を検索しています…",
+    "resize_plugin_results": "プラグインの検索結果のサイズを変更",
     "loading": "メールを読み込み中...",
     "unread": "未読",
     "to_me": "宛先: 自分",

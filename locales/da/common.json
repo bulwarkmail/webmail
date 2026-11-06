@@ -355,6 +355,7 @@
     "no_search_results": "Ingen resultater fundet",
     "no_search_results_description": "Prøv at justere din søgning eller filtre",
     "more_results_searching": "Søger efter flere resultater…",
+    "resize_plugin_results": "Tilpas størrelsen på resultater fra plugins",
     "loading": "Indlæser e-mails...",
     "unread": "ulæst",
     "to_me": "Til mig",

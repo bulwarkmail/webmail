@@ -8,7 +8,7 @@ import type { Email } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePluginStore } from '@/stores/plugin-store';
-import { PENDING_GRACE_MS, PluginSearchResults } from '../plugin-search-results';
+import { DEFAULT_SHARE, MAX_SHARE, MIN_HEIGHT, PENDING_GRACE_MS, PluginSearchResults } from '../plugin-search-results';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => (key === 'more_results_searching' ? 'Searching for more results…' : key),
@@ -221,5 +221,70 @@ describe('PluginSearchResults', () => {
     act(() => useEmailStore.setState({ externalSearchResults: [result('crm', 'c', 'CRM')], externalSearchPending: [] }));
 
     expect(container.querySelector('[data-plugin-surface]')).not.toHaveClass('h-48');
+  });
+});
+
+// The block's lower edge drags (ResizeHandle): its share of the list's height,
+// kept for later searches, the default again on a double click.
+describe('PluginSearchResults height', () => {
+  /** The list the block sits in is LIST px high, the block itself BLOCK px. */
+  const LIST = 1000;
+  const BLOCK = 200;
+
+  beforeEach(() => {
+    localStorage.clear();
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(LIST);
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(BLOCK);
+    useEmailStore.setState({ searchQuery: 'resolution', externalSearchResults: [result('crm', 'a', 'CRM')] });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  const block = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-plugin-surface]')!;
+  const handle = () => screen.getByRole('separator', { name: 'resize_plugin_results' });
+
+  it('takes the default share of the list until its edge is dragged', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    expect(block(container).style.maxHeight).toBe(`${DEFAULT_SHARE * 100}%`);
+    expect(handle()).toHaveAttribute('aria-valuenow', String(BLOCK));
+    expect(handle()).toHaveAttribute('aria-valuemin', String(MIN_HEIGHT));
+    expect(handle()).toHaveAttribute('aria-valuemax', String(LIST * MAX_SHARE));
+  });
+
+  it('grows by the arrow keys from its height now and keeps the share', async () => {
+    const { container, unmount } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    // The handle ends a key's step after it rendered, which is when the share is kept.
+    await act(async () => {});
+    // 200 px + one step of 10 px, of a list of 1000 px.
+    expect(block(container).style.maxHeight).toBe('21%');
+    unmount();
+
+    const again = render(<PluginSearchResults surface="search-results" />);
+    expect(block(again.container).style.maxHeight).toBe('21%');
+  });
+
+  it('follows a drag of its edge, within its limits', () => {
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientY: 300 });
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 600, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe('50%');
+
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 2000, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(`${MAX_SHARE * 100}%`);
+
+    fireEvent.pointerMove(document, { pointerId: 1, clientY: 0, buttons: 1 });
+    expect(block(container).style.maxHeight).toBe(`${(MIN_HEIGHT / LIST) * 100}%`);
+    fireEvent.pointerUp(document, { pointerId: 1 });
+  });
+
+  it('takes the default again on a double click', () => {
+    localStorage.setItem('pluginSearchResultsShare', '0.7');
+    const { container } = render(<PluginSearchResults surface="search-results" />);
+    expect(block(container).style.maxHeight).toBe('70%');
+
+    fireEvent.doubleClick(handle());
+    expect(block(container).style.maxHeight).toBe(`${DEFAULT_SHARE * 100}%`);
+    expect(localStorage.getItem('pluginSearchResultsShare')).toBeNull();
   });
 });
