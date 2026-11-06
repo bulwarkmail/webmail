@@ -25,6 +25,7 @@ export const KIT_STRINGS: Record<string, Record<KitKey, string>> = {
   lv: { remove: 'Noņemt', remove_named: 'Noņemt {name}', clear: 'Notīrīt', clear_search: 'Notīrīt meklēšanu', open: 'Atvērt sarakstu', close: 'Aizvērt sarakstu' },
   mn: { remove: 'Хасах', remove_named: '{name}-г хасах', clear: 'Цэвэрлэх', clear_search: 'Хайлтыг цэвэрлэх', open: 'Жагсаалт нээх', close: 'Жагсаалт хаах' },
   nb: { remove: 'Fjern', remove_named: 'Fjern {name}', clear: 'Tøm', clear_search: 'Tøm søket', open: 'Åpne listen', close: 'Lukk listen' },
+  nn: { remove: 'Fjern', remove_named: 'Fjern {name}', clear: 'Tøm', clear_search: 'Tøm søket', open: 'Opne lista', close: 'Lukk lista' },
   nl: { remove: 'Verwijderen', remove_named: '{name} verwijderen', clear: 'Wissen', clear_search: 'Zoekopdracht wissen', open: 'Lijst openen', close: 'Lijst sluiten' },
   pl: { remove: 'Usuń', remove_named: 'Usuń {name}', clear: 'Wyczyść', clear_search: 'Wyczyść wyszukiwanie', open: 'Otwórz listę', close: 'Zamknij listę' },
   pt: { remove: 'Remover', remove_named: 'Remover {name}', clear: 'Limpar', clear_search: 'Limpar pesquisa', open: 'Abrir lista', close: 'Fechar lista' },

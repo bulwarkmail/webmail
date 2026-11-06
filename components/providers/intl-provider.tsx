@@ -44,6 +44,7 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   mn: () => import('@/locales/mn/common.json').then((m) => withEnglishFallback(m.default)),
   nb: () => import('@/locales/nb/common.json').then((m) => withEnglishFallback(m.default)),
   nl: () => import('@/locales/nl/common.json').then((m) => withEnglishFallback(m.default)),
+  nn: () => import('@/locales/nn/common.json').then((m) => withEnglishFallback(m.default)),
   pl: () => import('@/locales/pl/common.json').then((m) => withEnglishFallback(m.default)),
   pt: () => import('@/locales/pt/common.json').then((m) => withEnglishFallback(m.default)),
   ro: () => import('@/locales/ro/common.json').then((m) => withEnglishFallback(m.default)),
