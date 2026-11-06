@@ -11309,7 +11309,7 @@ export class JMAPClient implements IJMAPClient {
   // poll, and the visibility/online handlers all call checkForStateChanges, so
   // under socket pressure they would otherwise pile identical POSTs onto an
   // already-saturated pool and amplify the queueing (#781).
-  private stateCheckInFlight: boolean = false;
+  private stateCheckInFlight: Record<string, string> | null = null;
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
 
@@ -11745,14 +11745,13 @@ export class JMAPClient implements IJMAPClient {
     if (this.isRateLimited()) {
       return;
     }
-    // Coalesce overlapping polls: if one is already awaiting a response, skip
-    // this call rather than issuing a duplicate POST (#781). The next tick
-    // picks up any change once the in-flight one settles.
-    if (this.stateCheckInFlight) {
+    const pollingStates = this.pollingStates;
+    // Coalesce overlapping polls within the same push lifecycle (#781).
+    // A closed lifecycle's check must not block its replacement's catch-up.
+    if (this.stateCheckInFlight === pollingStates) {
       return;
     }
-    this.stateCheckInFlight = true;
-    const pollingStates = this.pollingStates;
+    this.stateCheckInFlight = pollingStates;
     const previousStates = { ...pollingStates };
     try {
       // Build a per-account changed map so a background change in a shared
@@ -11785,7 +11784,9 @@ export class JMAPClient implements IJMAPClient {
     } catch {
       // Silently fail - polling will retry
     } finally {
-      this.stateCheckInFlight = false;
+      if (this.stateCheckInFlight === pollingStates) {
+        this.stateCheckInFlight = null;
+      }
     }
   }
 

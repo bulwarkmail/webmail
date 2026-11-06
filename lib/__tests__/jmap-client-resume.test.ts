@@ -237,19 +237,43 @@ describe('JMAP resume and SSE catch-up', () => {
     expect(f.callback).toHaveBeenCalledTimes(count);
   });
 
-  it('discards catch-up from a closed push lifecycle', async () => {
+  it('reconciles a reopened push lifecycle without stale results or overlapping checks', async () => {
     const f = await fixture();
-    const release = f.pause();
+    const releaseOld = f.pause();
     f.client.setupPushNotifications();
     await f.settle();
-    f.client.closePushNotifications();
-    f.client.onStateChange(f.callback);
-    release();
-    await f.settle();
-    expect(f.callback).not.toHaveBeenCalled();
-    expect(f.internals.pollingStates).toEqual({});
-    await vi.advanceTimersByTimeAsync(9_000);
-    expect(f.streams).toHaveLength(1);
     expect(f.polls).toHaveLength(1);
+    f.client.closePushNotifications();
+
+    f.states.A = { Mailbox: 'm2', Email: 'new-lifecycle' };
+    const releaseNew = f.pause();
+    f.client.onStateChange(f.callback);
+    f.client.setupPushNotifications();
+    await f.settle();
+    expect(f.streams).toHaveLength(2);
+    expect(f.polls).toHaveLength(2);
+    expect(f.callback).not.toHaveBeenCalled();
+
+    f.event({ A: { Mailbox: 'm2', Email: 'new-lifecycle' } });
+    await f.settle();
+    expect(f.callback).toHaveBeenCalledTimes(1);
+    releaseOld();
+    await f.settle();
+    expect(f.internals.pollingStates).toEqual({ 'A:Mailbox': 'm2', 'A:Email': 'new-lifecycle' });
+    expect(f.callback).toHaveBeenCalledTimes(1);
+
+    // The old finally must not clear the replacement lifecycle's guard.
+    await f.internals.checkForStateChanges();
+    expect(f.polls).toHaveLength(2);
+    releaseNew();
+    await f.settle();
+    await f.internals.checkForStateChanges();
+    expect(f.polls).toHaveLength(3);
+    f.event({ A: { Mailbox: 'm2', Email: 'new-lifecycle' } });
+    await f.settle();
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Mailbox: 'm2', Email: 'new-lifecycle' } } });
+    await vi.advanceTimersByTimeAsync(9_000);
+    expect(f.streams).toHaveLength(2);
+    expect(f.polls).toHaveLength(3);
   });
 });
