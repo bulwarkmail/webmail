@@ -7409,6 +7409,18 @@
     "attach_files": "Dateien anhängen…",
     "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Öffnen…",
+    "menu_save_as": "Speichern unter…",
+    "open_filter": "Nachrichten, Termine und Kontakte",
+    "save_filter": "E-Mail-Nachricht",
+    "folder_title": "Ordner für die Nachrichten wählen",
+    "folder_button": "Hier speichern",
+    "saved_many": "{count, plural, one {# Nachricht gespeichert.} other {# Nachrichten gespeichert.}}",
+    "save_failed": "{count, plural, one {# Nachricht konnte nicht gespeichert werden.} other {# Nachrichten konnten nicht gespeichert werden.}}",
+    "shortcut_open": "Gespeicherte Nachricht, Termin oder Kontakt öffnen",
+    "shortcut_save_as": "Nachricht als Datei speichern"
+  },
   "appLock": {
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",

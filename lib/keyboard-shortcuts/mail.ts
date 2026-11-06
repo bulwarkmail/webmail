@@ -33,6 +33,9 @@ export const MAIL_SHORTCUTS = {
     { key: "/", description: "shortcuts.global.search", desktopPcKey: "Ctrl + E" },
     { key: "Shift + G", description: "shortcuts.global.refresh", desktopPcKey: "F9 / F5" },
     { key: "", description: "desktopMenus.shortcut_apps", desktopPcKey: "Ctrl + 1 / Ctrl + 2 / Ctrl + 3 / Ctrl + 4" },
+    // File > Open… and Save as… in the desktop app. Mod + S is Save draft in the composer.
+    { key: "", description: "desktopSaveOpen.shortcut_open", desktopKey: "Mod + O" },
+    { key: "", description: "desktopSaveOpen.shortcut_save_as", desktopKey: "Mod + S" },
     { key: "Mod + A", description: "shortcuts.global.select_all" },
     { key: "Shift + ↓ / Shift + ↑", description: "shortcuts.global.extend_selection" },
   ],

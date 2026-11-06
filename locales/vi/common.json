@@ -7421,6 +7421,18 @@
     "attach_files": "Đính kèm tệp…",
     "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Mở…",
+    "menu_save_as": "Lưu thành…",
+    "open_filter": "Thư, sự kiện và danh bạ",
+    "save_filter": "Thư email",
+    "folder_title": "Chọn thư mục để lưu thư",
+    "folder_button": "Lưu tại đây",
+    "saved_many": "Đã lưu {count} thư.",
+    "save_failed": "Không lưu được {count} thư.",
+    "shortcut_open": "Mở thư, sự kiện hoặc liên hệ đã lưu",
+    "shortcut_save_as": "Lưu thư thành tệp"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",

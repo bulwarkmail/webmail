@@ -7409,6 +7409,18 @@
     "attach_files": "파일 첨부…",
     "shortcut_apps": "메일, 캘린더, 연락처, 파일로 이동"
   },
+  "desktopSaveOpen": {
+    "menu_open": "열기…",
+    "menu_save_as": "다른 이름으로 저장…",
+    "open_filter": "메시지, 일정 및 연락처",
+    "save_filter": "이메일 메시지",
+    "folder_title": "메시지를 저장할 폴더 선택",
+    "folder_button": "여기에 저장",
+    "saved_many": "메시지 {count}개를 저장했어요.",
+    "save_failed": "메시지 {count}개를 저장하지 못했어요.",
+    "shortcut_open": "저장된 메시지, 일정 또는 연락처 열기",
+    "shortcut_save_as": "메시지를 파일로 저장"
+  },
   "appLock": {
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 앱은 누군가 PIN을 입력할 때까지 이 기기에 저장된 메일을 읽을 수 없습니다.",

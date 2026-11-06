@@ -14,7 +14,7 @@ import { openLinkFromNativeMenu } from "@/lib/desktop/open-link";
 import { readDesktopPrefs, setDesktopPref, useDesktopPrefs } from "@/lib/desktop/preferences";
 import { applySystemAccent } from "@/lib/desktop/system-accent";
 import type { DesktopSystemTheme } from "@/lib/desktop/types";
-import { canDownloadAnywhere, canPrintAnywhere } from "@/lib/device-policy";
+import { canDownloadAnywhere, canExportAnywhere, canPrintAnywhere } from "@/lib/device-policy";
 import { useOfflineStore } from "@/lib/offline/state";
 import { openNewComposerWindow } from "@/lib/popout/open";
 import { onReturnedComposerElsewhere } from "@/lib/popout/return-to-main";
@@ -176,6 +176,8 @@ export function DesktopHost() {
       "mail.searchText": signedIn && !popout,
       "shortcuts.singleKeys": singleKeys,
       "policy.download": canDownloadAnywhere(),
+      // The shell's backstop for Save as… (os-save-open.ts): no exporting mail on any account.
+      "policy.export": canExportAnywhere(),
       "file.print": canPrint,
       "file.savePdf": canPrint,
       "file.newMessage": signedIn,

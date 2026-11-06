@@ -7409,6 +7409,18 @@
     "attach_files": "Atașează fișiere…",
     "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Deschide…",
+    "menu_save_as": "Salvează ca…",
+    "open_filter": "Mesaje, evenimente și contacte",
+    "save_filter": "Mesaj e-mail",
+    "folder_title": "Alegeți un dosar pentru mesaje",
+    "folder_button": "Salvează aici",
+    "saved_many": "{count, plural, one {# mesaj salvat.} few {# mesaje salvate.} other {# de mesaje salvate.}}",
+    "save_failed": "{count, plural, one {# mesaj nu a putut fi salvat.} few {# mesaje nu au putut fi salvate.} other {# de mesaje nu au putut fi salvate.}}",
+    "shortcut_open": "Deschide un mesaj, eveniment sau contact salvat",
+    "shortcut_save_as": "Salvează mesajul ca fișier"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",

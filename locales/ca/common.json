@@ -7409,6 +7409,18 @@
     "attach_files": "Adjunta fitxers…",
     "shortcut_apps": "Ves a Correu, Calendari, Contactes o Fitxers"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Obre…",
+    "menu_save_as": "Desa com a…",
+    "open_filter": "Missatges, esdeveniments i contactes",
+    "save_filter": "Missatge de correu",
+    "folder_title": "Tria una carpeta per als missatges",
+    "folder_button": "Desa aquí",
+    "saved_many": "{count, plural, one {S'ha desat # missatge.} other {S'han desat # missatges.}}",
+    "save_failed": "{count, plural, one {No s'ha pogut desar # missatge.} other {No s'han pogut desar # missatges.}}",
+    "shortcut_open": "Obre un missatge, esdeveniment o contacte desat",
+    "shortcut_save_as": "Desa el missatge com a fitxer"
+  },
   "appLock": {
     "section_title": "Bloqueig de l'app",
     "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",

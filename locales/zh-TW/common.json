@@ -7409,6 +7409,18 @@
     "attach_files": "附加檔案…",
     "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
   },
+  "desktopSaveOpen": {
+    "menu_open": "開啟…",
+    "menu_save_as": "另存新檔…",
+    "open_filter": "郵件、行程和聯絡人",
+    "save_filter": "電子郵件",
+    "folder_title": "選擇儲存郵件的資料夾",
+    "folder_button": "儲存到這裡",
+    "saved_many": "已儲存 {count} 封郵件。",
+    "save_failed": "有 {count} 封郵件無法儲存。",
+    "shortcut_open": "開啟已儲存的郵件、行程或聯絡人",
+    "shortcut_save_as": "將郵件另存為檔案"
+  },
   "appLock": {
     "section_title": "應用程式鎖定",
     "section_desc": "在一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,在有人輸入 PIN 之前,應用程式無法讀取儲存在此裝置上的郵件。",

@@ -7409,6 +7409,18 @@
     "attach_files": "Dosya ekle…",
     "shortcut_apps": "Posta, Takvim, Kişiler veya Dosyalar'a git"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Aç…",
+    "menu_save_as": "Farklı kaydet…",
+    "open_filter": "İletiler, etkinlikler ve kişiler",
+    "save_filter": "E-posta iletisi",
+    "folder_title": "İletiler için bir klasör seçin",
+    "folder_button": "Buraya kaydet",
+    "saved_many": "{count, plural, one {# ileti kaydedildi.} other {# ileti kaydedildi.}}",
+    "save_failed": "{count, plural, one {# ileti kaydedilemedi.} other {# ileti kaydedilemedi.}}",
+    "shortcut_open": "Kaydedilmiş bir ileti, etkinlik veya kişi açın",
+    "shortcut_save_as": "İletiyi dosya olarak kaydedin"
+  },
   "appLock": {
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",

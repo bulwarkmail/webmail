@@ -15,6 +15,7 @@ import type { CopyTargetAccount } from "@/components/email/email-context-menu";
 import { DOWNLOAD_BLOCKED_EVENT, downloadAllowed } from "@/lib/download-guard";
 import { canCopyBetween, canPrint, deviceSubjectOf, type DeviceSubject } from "@/lib/device-policy";
 import { usePolicyStore } from "@/stores/policy-store";
+import { saveMessagesNatively } from "@/lib/desktop/save-as";
 
 /** What follows an export, by the "After export" setting. */
 export interface ExportFollowUp {
@@ -24,36 +25,73 @@ export interface ExportFollowUp {
   archiveEnabled?: boolean;
 }
 
+/** The .eml name of a message, by the user's file name settings. */
+function exportName(email: Email): string {
+  const s = useSettingsStore.getState();
+  return emailExportFilename(email, {
+    template: s.emailDownloadTemplate || DEFAULT_EMAIL_TEMPLATE,
+    spaceReplacement: s.filenameSpaceReplacement,
+    lowercase: s.filenameLowercase,
+    stripDiacritics: s.filenameStripDiacritics,
+    collapseSeparators: s.filenameCollapseSeparators,
+  });
+}
+
+/**
+ * Saves messages as .eml files: in the desktop app through the OS's Save dialog (one
+ * message) or into a folder the user picks (several), each named by the file name
+ * settings; in a browser as downloads. A single message is then archived or deleted as
+ * the "After export" setting says. Nothing is saved when the device policy of any of the
+ * messages' accounts forbids exporting.
+ */
+export function useSaveEmails(): (emails: Email[], followUp?: ExportFollowUp, source?: EmailBlobContext) => Promise<void> {
+  const tNotifications = useTranslations("notifications");
+  const tSave = useTranslations("desktopSaveOpen");
+  return useCallback(async (emails, followUp = {}, source) => {
+    const client = useAuthStore.getState().client;
+    const items = emails
+      .map((email) => ({ email, context: emails.length === 1 && source ? source : resolveEmailBlobContext(email, client) }))
+      .filter(({ email, context }) => !!email.blobId && !!context.client);
+    if (items.length === 0) return;
+    // The device policy of each message's account (Organisation > Devices); refused,
+    // nothing is saved, and the message is not archived or deleted either.
+    if (items.some(({ email }) => !downloadAllowed("export", email))) return;
+    const native = await saveMessagesNatively(items.map(({ email, context }) => ({
+      name: exportName(email),
+      load: () => context.client!.fetchBlob(email.blobId!, exportName(email), "message/rfc822", context.accountId),
+    }))).catch(() => ({ status: "saved" as const, saved: 0, failed: items.length }));
+    if (native) {
+      if (native.status !== "saved") return;
+      if (native.failed > 0) {
+        toast.error(items.length === 1 ? tNotifications("export_email_error") : tSave("save_failed", { count: native.failed }));
+        return;
+      }
+      if (items.length > 1) toast.success(tSave("saved_many", { count: native.saved }));
+    } else {
+      try {
+        for (const { email, context } of items) {
+          await context.client!.downloadBlob(email.blobId!, exportName(email), "message/rfc822", context.accountId, { kind: "export" });
+        }
+      } catch {
+        toast.error(tNotifications("export_email_error"));
+        return;
+      }
+    }
+    if (items.length !== 1) return;
+    const action = useSettingsStore.getState().postExportAction;
+    if (action === "archive" && followUp.archiveEnabled !== false) followUp.onArchive?.();
+    else if (action === "trash") followUp.onDelete?.();
+  }, [tNotifications, tSave]);
+}
+
 /**
  * Saves a message as .eml, from the reader or straight from its row in the
  * list (R6), then archives or deletes it as the "After export" setting says.
+ * In the desktop app this is Save as…, with the OS's Save dialog.
  */
 export function useEmailExport(): (email: Email, followUp?: ExportFollowUp, source?: EmailBlobContext) => Promise<void> {
-  const tNotifications = useTranslations("notifications");
-  return useCallback(async (email, followUp = {}, source) => {
-    const context = source ?? resolveEmailBlobContext(email, useAuthStore.getState().client);
-    if (!email.blobId || !context.client) return;
-    // The device policy of the message's account (Organisation > Devices);
-    // refused, the message is not archived or deleted either.
-    if (!downloadAllowed("export", email)) return;
-    const s = useSettingsStore.getState();
-    const options = {
-      template: s.emailDownloadTemplate || DEFAULT_EMAIL_TEMPLATE,
-      spaceReplacement: s.filenameSpaceReplacement,
-      lowercase: s.filenameLowercase,
-      stripDiacritics: s.filenameStripDiacritics,
-      collapseSeparators: s.filenameCollapseSeparators,
-    };
-    try {
-      await context.client.downloadBlob(email.blobId, emailExportFilename(email, options), "message/rfc822", context.accountId, { kind: "export" });
-    } catch {
-      toast.error(tNotifications("export_email_error"));
-      return;
-    }
-    const action = s.postExportAction;
-    if (action === "archive" && followUp.archiveEnabled !== false) followUp.onArchive?.();
-    else if (action === "trash") followUp.onDelete?.();
-  }, [tNotifications]);
+  const saveEmails = useSaveEmails();
+  return useCallback((email, followUp, source) => saveEmails([email], followUp, source), [saveEmails]);
 }
 
 // ── Print from the list ─────────────────────────────────────────────────

@@ -7409,6 +7409,18 @@
     "attach_files": "Vedhæft filer…",
     "shortcut_apps": "Gå til Mail, Kalender, Kontakter eller Filer"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Åbn…",
+    "menu_save_as": "Gem som…",
+    "open_filter": "Beskeder, begivenheder og kontakter",
+    "save_filter": "E-mailbesked",
+    "folder_title": "Vælg en mappe til beskederne",
+    "folder_button": "Gem her",
+    "saved_many": "{count, plural, one {# besked gemt.} other {# beskeder gemt.}}",
+    "save_failed": "{count, plural, one {# besked kunne ikke gemmes.} other {# beskeder kunne ikke gemmes.}}",
+    "shortcut_open": "Åbn en gemt besked, begivenhed eller kontakt",
+    "shortcut_save_as": "Gem beskeden som en fil"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Beder om en pinkode efter et stykke tid uden brug, i alle vinduer og faner. Mens den er låst, kan appen ikke læse den mail, der er gemt på denne enhed, før nogen indtaster pinkoden.",

@@ -7409,6 +7409,18 @@
     "attach_files": "Allega file…",
     "shortcut_apps": "Vai a Posta, Calendario, Contatti o File"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Apri…",
+    "menu_save_as": "Salva con nome…",
+    "open_filter": "Messaggi, eventi e contatti",
+    "save_filter": "Messaggio email",
+    "folder_title": "Scegli una cartella per i messaggi",
+    "folder_button": "Salva qui",
+    "saved_many": "{count, plural, one {# messaggio salvato.} other {# messaggi salvati.}}",
+    "save_failed": "{count, plural, one {Non è stato possibile salvare # messaggio.} other {Non è stato possibile salvare # messaggi.}}",
+    "shortcut_open": "Apri un messaggio, un evento o un contatto salvato",
+    "shortcut_save_as": "Salva il messaggio come file"
+  },
   "appLock": {
     "section_title": "Blocco dell'app",
     "section_desc": "Chiede un PIN dopo un periodo di inattività, in ogni finestra e scheda. Mentre è bloccata, l'app non può leggere la posta salvata su questo dispositivo finché qualcuno non inserisce il PIN.",

@@ -7409,6 +7409,18 @@
     "attach_files": "Priložiť súbory…",
     "shortcut_apps": "Prejsť na Poštu, Kalendár, Kontakty alebo Súbory"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Otvoriť…",
+    "menu_save_as": "Uložiť ako…",
+    "open_filter": "Správy, udalosti a kontakty",
+    "save_filter": "E-mailová správa",
+    "folder_title": "Vyberte priečinok pre správy",
+    "folder_button": "Uložiť sem",
+    "saved_many": "{count, plural, one {# správa uložená.} few {# správy uložené.} many {# správy uloženej.} other {# správ uložených.}}",
+    "save_failed": "{count, plural, one {# správu sa nepodarilo uložiť.} few {# správy sa nepodarilo uložiť.} many {# správy sa nepodarilo uložiť.} other {# správ sa nepodarilo uložiť.}}",
+    "shortcut_open": "Otvoriť uloženú správu, udalosť alebo kontakt",
+    "shortcut_save_as": "Uložiť správu ako súbor"
+  },
   "appLock": {
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase nečinnosti žiada PIN v každom okne a na každej karte. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",

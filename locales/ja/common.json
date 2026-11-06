@@ -7409,6 +7409,18 @@
     "attach_files": "ファイルを添付…",
     "shortcut_apps": "メール、カレンダー、連絡先、ファイルに移動"
   },
+  "desktopSaveOpen": {
+    "menu_open": "開く…",
+    "menu_save_as": "名前を付けて保存…",
+    "open_filter": "メッセージ、予定、連絡先",
+    "save_filter": "メールメッセージ",
+    "folder_title": "メッセージの保存先フォルダーを選択",
+    "folder_button": "ここに保存",
+    "saved_many": "{count}件のメッセージを保存しました。",
+    "save_failed": "{count}件のメッセージを保存できませんでした。",
+    "shortcut_open": "保存したメッセージ、予定、連絡先を開く",
+    "shortcut_save_as": "メッセージをファイルとして保存"
+  },
   "appLock": {
     "section_title": "アプリのロック",
     "section_desc": "しばらく使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
