@@ -23,10 +23,10 @@ class NoopResizeObserver { observe() {} unobserve() {} disconnect() {} }
 
 const { ProFolderTabBody } = await import('@/components/pro/pro-folder-tab-body');
 
-function deferred() {
-  let resolve!: () => void;
+function deferred<T = void>() {
+  let resolve!: (value: T) => void;
   let reject!: (e: Error) => void;
-  const promise = new Promise<void>((yes, no) => { resolve = yes; reject = no; });
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
   return { promise, resolve, reject };
 }
 function message(id: string, seen: boolean): Email {
@@ -42,7 +42,7 @@ function message(id: string, seen: boolean): Email {
 }
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 let server: Map<string, Email>;
-let request: ReturnType<typeof deferred>;
+let request: ReturnType<typeof deferred<void>>;
 let client: {
   getAccountId: () => string;
   getSieveAccountId: () => null;
@@ -90,7 +90,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   expect(vi.mocked(fetch).mock.calls.every(([url]) => url === '/api/config')).toBe(true);
-  expect(errors.mock.calls.filter(call => call[0] !== 'Mark as read failed:')).toEqual([]);
+  expect(errors.mock.calls.filter(call => call[0] !== 'Mark as read failed:' && call[0] !== 'Failed to load folder tab:')).toEqual([]);
   vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); clearAllHooks();
 });
 const flush = async () => { await act(async () => {}); };
@@ -174,7 +174,7 @@ it('can retry a failure after returning to a retained hidden folder tab', async 
   await open(); rowRead(); expect(client.markAsRead).toHaveBeenCalledTimes(2);
 });
 
-it.each(['failure', 'success'])('does not apply an old %s to replacement rows after refresh', async outcome => {
+it.each(['failure', 'success'])('settles %s on the owned replacement row after same-context refresh', async outcome => {
   await show(); await open();
   server.set('e1', { ...server.get('e1')!, subject: 'Refreshed subject', keywords: { $seen: false, $flagged: false } });
   fireEvent.click(screen.getByRole('button', { name: 'common.refresh' })); await flush();
@@ -183,10 +183,10 @@ it.each(['failure', 'success'])('does not apply an old %s to replacement rows af
   await open(); expect(client.markAsRead).toHaveBeenCalledTimes(1);
   if (outcome === 'failure') await fail();
   else await act(async () => { request.resolve(); });
-  rowUnread();
+  if (outcome === 'failure') rowUnread(); else rowRead();
   expect(within(row()).getByText('Refreshed subject')).toBeInTheDocument();
   expect(row().querySelector('.fill-yellow-400')).toBeNull();
-  await open(); rowRead(); expect(client.markAsRead).toHaveBeenCalledTimes(2);
+  await open(); rowRead(); expect(client.markAsRead).toHaveBeenCalledTimes(outcome === 'failure' ? 2 : 1);
 });
 
 it.each(['failure', 'success'])('settling an unmounted instance with %s cannot alter the new instance', async outcome => {
@@ -245,14 +245,12 @@ it('deduplicates while a before-hook is pending', async () => {
   await act(async () => { request.resolve(); }); rowRead();
 });
 
-it.each(['selection', 'refresh', 'unmount'])('cancels before dispatch when a before-hook finishes after %s', async change => {
+it.each(['selection', 'unmount'])('cancels before dispatch when a before-hook finishes after %s', async change => {
   const gate = deferred();
   emailHooks.onBeforeEmailReadStateChange.register('gate', async () => { await gate.promise; return true; });
   const view = await show(); await open();
   if (change === 'selection') await open('e2');
-  else if (change === 'refresh') {
-    fireEvent.click(screen.getByRole('button', { name: 'common.refresh' })); await flush();
-  } else view.unmount();
+  else view.unmount();
   await act(async () => { gate.resolve(); });
   expect(client.markAsRead).not.toHaveBeenCalled();
   expect(emitted).not.toHaveBeenCalled();
@@ -267,4 +265,147 @@ it('keeps the Never setting and cancels a scheduled read on unmount', async () =
   await open(); view.unmount();
   await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
   expect(client.markAsRead).not.toHaveBeenCalled();
+});
+
+const advance = async (ms: number) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
+const refresh = async () => { fireEvent.click(screen.getByRole('button', { name: 'common.refresh' })); await flush(); };
+const page = () => ({ emails: clone([...server.values()]), total: 2, hasMore: false });
+
+it.each(['before', 'after'])('preserves the original delayed-read deadline when Refresh completes %s it', async completion => {
+  vi.useFakeTimers(); useSettingsStore.setState({ markAsReadDelay: 3000 });
+  await show(); await open(); await advance(1000);
+  const refreshed = deferred<ReturnType<typeof page>>();
+  client.getEmails.mockImplementationOnce(() => refreshed.promise);
+  await refresh();
+  expect(screen.getByText('Body e1')).toBeInTheDocument();
+  expectUnchangedGlobal();
+  server.set('e1', { ...server.get('e1')!, subject: 'Refreshed subject', preview: 'Fresh preview',
+    keywords: { $seen: false, $flagged: false, custom: true } });
+  const response = page();
+  if (completion === 'before') await act(async () => { refreshed.resolve(response); });
+  await advance(1999); expect(client.markAsRead).not.toHaveBeenCalled(); rowUnread();
+  await advance(1);
+  expect(client.markAsRead).toHaveBeenCalledExactlyOnceWith('e1', true, undefined);
+  rowUnread(); expect(emitted).not.toHaveBeenCalled();
+  await act(async () => { request.resolve(); });
+  if (completion === 'after') await act(async () => { refreshed.resolve(response); });
+  rowRead();
+  expect(within(row()).getByText('Refreshed subject')).toBeInTheDocument();
+  expect(within(row()).getByText('Fresh preview')).toBeInTheDocument();
+  expect(row().querySelector('.fill-yellow-400')).toBeNull();
+  await advance(60_000); expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  expectUnchangedGlobal();
+});
+
+it('keeps one original deadline through repeated, failed and superseded Refresh requests', async () => {
+  vi.useFakeTimers(); useSettingsStore.setState({ markAsReadDelay: 3000 });
+  await show(); await open(); await advance(1000);
+  const obsolete = deferred<ReturnType<typeof page>>();
+  const latest = deferred<ReturnType<typeof page>>();
+  client.getEmails.mockImplementationOnce(() => obsolete.promise).mockImplementationOnce(() => latest.promise);
+  await refresh(); await advance(500); await refresh(); await advance(500);
+  await act(async () => { latest.reject(new Error('refresh refused')); });
+  expect(errors).toHaveBeenCalledExactlyOnceWith('Failed to load folder tab:', expect.any(Error));
+  const old = page(); old.emails[0].subject = 'Superseded response';
+  await act(async () => { obsolete.resolve(old); });
+  expect(within(row()).queryByText('Superseded response')).not.toBeInTheDocument();
+  await advance(999); expect(client.markAsRead).not.toHaveBeenCalled();
+  await advance(1); expect(client.markAsRead).toHaveBeenCalledTimes(1); rowUnread();
+  await refresh(); await refresh();
+  expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  await fail(); rowUnread();
+  await advance(60_000); expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  await open(); await advance(2999); expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  await advance(1); expect(client.markAsRead).toHaveBeenCalledTimes(2); rowRead();
+});
+
+it('keeps the deadline through several completed Refresh requests', async () => {
+  vi.useFakeTimers(); useSettingsStore.setState({ markAsReadDelay: 3000 });
+  await show(); await open(); await advance(1000); await refresh();
+  await advance(1000); await refresh(); await refresh();
+  await advance(999); expect(client.markAsRead).not.toHaveBeenCalled();
+  await advance(1); expect(client.markAsRead).toHaveBeenCalledExactlyOnceWith('e1', true, undefined);
+  rowUnread(); await act(async () => { request.resolve(); }); rowRead();
+  await refresh(); await advance(60_000); expect(client.markAsRead).toHaveBeenCalledTimes(1);
+});
+
+it('keeps ownership through Refresh while a before-hook is pending', async () => {
+  const gate = deferred();
+  emailHooks.onBeforeEmailReadStateChange.register('gate', async () => { await gate.promise; return true; });
+  await show(); await open(); await refresh(); await open();
+  expect(client.markAsRead).not.toHaveBeenCalled();
+  await act(async () => { gate.resolve(); });
+  expect(client.markAsRead).toHaveBeenCalledExactlyOnceWith('e1', true, undefined); rowUnread();
+  await act(async () => { request.resolve(); }); rowRead();
+});
+
+it.each(['failure', 'success'])('does not apply an old %s after selection transfers refreshed-row ownership', async outcome => {
+  await show(); await open(); await open('e2'); await refresh();
+  // This new selection owns the replacement. The old pending-id guard still
+  // blocks a concurrent mutation, but cannot transfer its completion here.
+  await open(); expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  if (outcome === 'failure') await fail();
+  else await act(async () => { request.resolve(); });
+  rowUnread(); rowRead('e2'); expectUnchangedGlobal();
+  await open(); rowRead(); expect(client.markAsRead).toHaveBeenCalledTimes(2);
+});
+
+it('does not transfer confirmed read styling to a newer selection while Refresh is in flight', async () => {
+  await show(); await open(); await act(async () => { request.resolve(); }); rowRead();
+  const refreshed = deferred<ReturnType<typeof page>>();
+  client.getEmails.mockImplementationOnce(() => refreshed.promise);
+  const response = page(); response.emails[0].keywords.$seen = false;
+  await refresh(); await open('e2');
+  await act(async () => { refreshed.resolve(response); });
+  rowUnread(); rowRead('e2');
+  expect(screen.getByText('Body e2')).toBeInTheDocument();
+});
+
+it.each(['selection', 'client', 'login', 'account', 'mailbox', 'shared-account', 'unmount'])(
+  'cancels a delayed intent after Refresh and a %s change', async change => {
+    vi.useFakeTimers(); useSettingsStore.setState({ markAsReadDelay: 3000 });
+    const view = await show(); await open(); await advance(1000);
+    const refreshed = deferred<ReturnType<typeof page>>();
+    client.getEmails.mockImplementationOnce(() => refreshed.promise);
+    await refresh();
+    if (change === 'selection') await open('e2');
+    else if (change === 'client') act(() => { useAuthStore.setState({ client: { ...client } as never }); });
+    else if (change === 'login') act(() => { useAuthStore.setState({ activeAccountId: 'other-login' }); });
+    else if (change === 'shared-account') act(() => { useEmailStore.setState({ mailboxes: [
+      { ...mailbox, isShared: true, accountId: 'other-owner' },
+    ] }); });
+    else if (change === 'unmount') view.unmount();
+    else view.rerender(<ProFolderTabBody tabId="audit-folder" data={{ accountId: change === 'account' ? 'other-login' : null,
+      mailboxId: change === 'mailbox' ? 'other-folder' : 'inbox', title: 'Inbox' }} />);
+    await flush();
+    await act(async () => { refreshed.resolve(page()); });
+    await advance(10_000); expect(client.markAsRead).not.toHaveBeenCalled(); expect(emitted).not.toHaveBeenCalled();
+  },
+);
+
+it.each(['success', 'failure'])('ignores local %s from a dispatched read after a client context change', async outcome => {
+  await show(); await open();
+  const otherClient = { ...client, getEmails: vi.fn(async () => page()), markAsRead: vi.fn(async () => {}) };
+  act(() => { useAuthStore.setState({ client: otherClient as never }); }); await flush();
+  if (outcome === 'failure') await fail();
+  else await act(async () => { request.resolve(); });
+  rowUnread(); expectUnchangedGlobal(); expect(otherClient.markAsRead).not.toHaveBeenCalled();
+});
+
+it('allows a later authoritative Refresh to show a newer unread state after confirmed success', async () => {
+  await show(); await open(); await act(async () => { request.resolve(); }); rowRead();
+  server.get('e1')!.keywords.$seen = false;
+  await refresh(); rowUnread();
+  expect(client.markAsRead).toHaveBeenCalledTimes(1);
+  await open(); rowRead(); expect(client.markAsRead).toHaveBeenCalledTimes(2);
+});
+
+it('does not dispatch a queued delayed click after the pending refreshed-row read succeeds', async () => {
+  vi.useFakeTimers(); useSettingsStore.setState({ markAsReadDelay: 3000 });
+  await show(); await open(); await advance(3000);
+  expect(client.markAsRead).toHaveBeenCalledTimes(1); rowUnread();
+  await refresh(); await open();
+  await act(async () => { request.resolve(); }); rowRead();
+  await advance(3000); await refresh(); await advance(60_000);
+  expect(client.markAsRead).toHaveBeenCalledTimes(1);
 });
