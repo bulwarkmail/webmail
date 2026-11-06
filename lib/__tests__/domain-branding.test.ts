@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import path from 'path';
 import {
   brandPaletteCss,
   matchDomainBranding,
@@ -297,5 +299,21 @@ describe('brandPaletteCss', () => {
     });
     expect(css).toMatch(/^:root\{(--brand-(dark-)?[a-z-]+:#[0-9a-f]{6};?){8}\}$/);
     expect(css).not.toContain('--color-');
+  });
+});
+
+describe('app/globals.css', () => {
+  const css = readFileSync(path.join(process.cwd(), 'app', 'globals.css'), 'utf8');
+  function tokens(selector: string): Record<string, string> {
+    const m = new RegExp(`(?:^|\\n)${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`).exec(css);
+    return Object.fromEntries([...(m?.[1] ?? '').matchAll(/(--color-[\w-]+):\s*([^;]+);/g)].map(([, k, v]) => [k, v.trim()]));
+  }
+
+  it('gives the light e-mail area in the dark theme the light palette', () => {
+    const root = tokens(':root');
+    const light = tokens('.email-content-light');
+    const branded = Object.keys(light).filter((k) => root[k]?.startsWith('var(--brand-'));
+    expect(branded).toEqual(['--color-accent', '--color-accent-foreground']);
+    for (const k of branded) expect(light[k]).toBe(root[k]);
   });
 });

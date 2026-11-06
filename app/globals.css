@@ -348,8 +348,8 @@ optgroup {
   --color-popover-foreground: #0f172a;
   --color-secondary: #f8fafc;
   --color-secondary-foreground: #0f172a;
-  --color-accent: #dbeafe;
-  --color-accent-foreground: #1e40af;
+  --color-accent: var(--brand-accent, #dbeafe);
+  --color-accent-foreground: var(--brand-accent-foreground, #1e40af);
   --color-input: #e2e8f0;
 }
 
