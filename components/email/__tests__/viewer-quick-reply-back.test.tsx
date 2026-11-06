@@ -2,6 +2,7 @@ import { render, act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { clearAllHooks } from '@/lib/plugin-hooks';
+import { composerHandle } from '@/lib/plugin-sandbox/composer-registry';
 
 // A quick reply that a pre-send question stopped (Back on the external
 // recipient confirm) must keep the typed text; one that went out clears it.
@@ -39,19 +40,29 @@ const message = {
 
 beforeEach(() => clearAllHooks());
 
-async function typeAndSend(onQuickReply: (body: string) => Promise<boolean | void>) {
+async function typeAndSend(onQuickReply: (body: string, extra?: { composerId?: string }) => Promise<boolean | void>) {
   render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={onQuickReply} />);
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
   const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
   fireEvent.focus(box);
   fireEvent.change(box, { target: { value: 'My answer' } });
   fireEvent.click(screen.getByRole('button', { name: 'send' }));
-  await waitFor(() => expect(onQuickReply).toHaveBeenCalledWith('My answer'));
+  await waitFor(() => expect(onQuickReply).toHaveBeenCalledWith('My answer', { composerId: expect.any(String) }));
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
   return box;
 }
 
 describe('quick reply', () => {
+  it('sends with the id its plugin actions hand out, for the send checks of plugins', async () => {
+    let registered: unknown = null;
+    await typeAndSend(vi.fn(async (_body: string, extra?: { composerId?: string }) => {
+      registered = composerHandle(extra?.composerId);
+      return true;
+    }));
+    // The quick reply's own composer, open while it is focused.
+    expect(registered).not.toBeNull();
+  });
+
   it('keeps the text when nothing was sent', async () => {
     const box = await typeAndSend(vi.fn(async () => false));
     expect(box.value).toBe('My answer');

@@ -15,6 +15,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { fetchConfig, type ConfigData } from '@/hooks/use-config';
 import { productName } from '@/lib/product-name';
 import { IS_LITE } from '@/lib/lite';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import {
   getByPath, settingsSubResults, settingsTabLabelKey, tabKeywords, tabSearchEntries, type SettingsSearchTab,
 } from '@/lib/settings-search';
@@ -45,7 +46,8 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
     try { return policy.isFeatureEnabled(feature); } catch { return true; }
   };
   const stalwart = config?.stalwartFeaturesEnabled ?? true;
-  const pages = new Set<SettingsSearchTab>(['account', 'privacy', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup', 'about']);
+  const pages = new Set<SettingsSearchTab>(['account', 'privacy', 'notifications', 'general', 'appearance', 'message_list', 'reading', 'composing', 'organize', 'backup', 'troubleshooting', 'about']);
+  if (isDesktopApp()) pages.add('desktop');
   if (!IS_LITE) pages.add('offline');
   if (stalwart) pages.add('security');
   if (client?.supportsSieve?.()) pages.add('filters');
@@ -58,7 +60,7 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
 }
 
 function pageName(messages: Messages, tab: SettingsSearchTab): string {
-  const name = getByPath(messages, settingsTabLabelKey(tab));
+  const name = getByPath(messages, settingsTabLabelKey(tab, isDesktopApp()));
   return typeof name === 'string' ? name : tab;
 }
 
@@ -128,7 +130,7 @@ export const SHARED_SETTINGS = [
   'contrast', 'underlineLinks', 'appFont', 'focusRing', 'largeTargets', 'singleKeyShortcuts', 'toastDuration',
   'dateFormat', 'timeFormat', 'firstDayOfWeek', 'timeZone',
   'disableThreading', 'showPreview', 'listColumns', 'emailsPerPage', 'showVerificationCodes',
-  'markAsReadDelay', 'externalContentPolicy', 'attachmentPosition', 'mailAttachmentAction', 'emailAlwaysLightMode', 'returnToListAfterAction', 'plainTextFont',
+  'markAsReadDelay', 'externalContentPolicy', 'mailAttachmentAction', 'emailAlwaysLightMode', 'returnToListAfterAction', 'plainTextFont',
   'deleteAction', 'archiveMode', 'permanentlyDeleteJunk', 'confirmBulkDelete',
   'sendDelaySeconds', 'sendConfirmation', 'defaultReplyMode', 'plainTextMode', 'signaturePosition', 'signatureSeparatorEnabled',
   'signatureNewMailEnabled', 'signatureReplyForwardEnabled',

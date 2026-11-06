@@ -74,8 +74,10 @@ export function SubAddressHelper({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // Its own document: in the desktop app a dialog has a window of its own.
+      const doc = popoverRef.current?.ownerDocument ?? document;
+      doc.addEventListener('mousedown', handleClickOutside);
+      return () => doc.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen]);
 

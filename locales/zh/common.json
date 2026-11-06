@@ -138,8 +138,8 @@
   },
   "sidebar": {
     "close": "关闭",
-    "compose": "撰写邮件",
-    "compose_hint": "撰写邮件 (c)",
+    "compose": "写邮件",
+    "compose_hint": "写邮件 (c)",
     "search_placeholder": "搜索邮件...",
     "search_placeholder_hint": "搜索邮件...（按 /）",
     "storage": "存储空间",
@@ -195,7 +195,7 @@
     "collapse_tooltip": "收起",
     "mobile": {
       "search": "搜索",
-      "compose": "撰写邮件",
+      "compose": "写邮件",
       "go_back": "返回",
       "toggle_menu": "切换菜单"
     },
@@ -508,8 +508,8 @@
     "no_email_description": "从列表中选择一封邮件以在此查看",
     "no_conversation_selected": "未选择会话",
     "no_conversation_description": "从列表中选择会话以在此阅读",
-    "compose": "撰写邮件",
-    "compose_hint": "撰写新邮件",
+    "compose": "写邮件",
+    "compose_hint": "写新邮件",
     "no_subject": "（无主题）",
     "no_body_content": "（无正文内容）",
     "no_preview_available": "无可用预览",
@@ -674,7 +674,7 @@
       "delete": "删除 (# 或 Del)",
       "star": "加星标 (s)",
       "unstar": "取消星标 (s)",
-      "compose": "撰写邮件 (c)",
+      "compose": "写邮件 (c)",
       "previous": "上一封邮件",
       "next": "下一封邮件",
       "edit_draft": "编辑草稿"
@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "你的组织在所有邮件中屏蔽远程内容，因此受信任发件人的远程内容也不会加载。"
   },
+  "trusted_senders_book": {
+    "unavailable": "不可用：此账户无法在服务器上保存通讯录。列表保留在此设备上。"
+  },
   "date": {
     "today": "今天",
     "yesterday": "昨天",
@@ -1672,7 +1675,7 @@
         "label": "界面布局",
         "description": "搜索、导航和工具栏的位置",
         "default": "默认",
-        "mountain_view": "搜索栏在上，应用在左"
+        "mountain_view": "搜索栏在上"
       },
       "animations": {
         "label": "启用动画",
@@ -1694,7 +1697,7 @@
       },
       "sidebar_account_switcher": {
         "label": "侧边栏顶部的账户切换器",
-        "description": "在文件夹上方显示账户切换器，并在邮件列表上显示圆形的“撰写邮件”按钮。关闭后，“撰写邮件”会改为显示在文件夹上方。"
+        "description": "在文件夹上方显示账户切换器，并在邮件列表上显示圆形的“写邮件”按钮。关闭后，“写邮件”会改为显示在文件夹上方。"
       },
       "show_rail_account_list": {
         "label": "在导航导轨上显示账户头像",
@@ -2115,12 +2118,6 @@
         "description": "选择点击附件时是预览还是直接下载",
         "preview": "尽可能预览",
         "download": "立即下载"
-      },
-      "attachment_position": {
-        "label": "附件位置",
-        "description": "在邮件标题中的何处显示附件",
-        "below-header": "标题下方",
-        "below-message": "邮件下方的卡片"
       },
       "emails_per_page": {
         "10": "10 封邮件",
@@ -3597,6 +3594,10 @@
       "sync_off": "你的其他设备保留各自的设置。"
     }
   },
+  "layout_preview": {
+    "default_description": "应用和文件夹在左侧，搜索在列表上方",
+    "mountain_view_description": "搜索栏横跨顶部，邮件以全宽打开"
+  },
   "setup": {
     "title": "Bulwark Webmail 设置",
     "subtitle": "在浏览器中配置你的网页邮箱实例。",
@@ -3990,7 +3991,7 @@
       "undo": "撤销上一个操作"
     },
     "global": {
-      "compose": "撰写新邮件",
+      "compose": "写新邮件",
       "search": "聚焦搜索框",
       "help": "显示快捷方式",
       "refresh": "刷新邮件",
@@ -4033,7 +4034,7 @@
     "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
   "mail_p3_conv": {
-    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“撰写邮件”。关闭后，“撰写邮件”会显示在账户切换器的位置。"
+    "sidebar_account_switcher_description": "在文件夹上方显示账户切换器，下面是“写邮件”。关闭后，“写邮件”会显示在账户切换器的位置。"
   },
   "mail_p2_conv": {
     "show_message": "显示邮件",
@@ -5384,7 +5385,7 @@
   },
   "welcome": {
     "title": "欢迎使用邮箱",
-    "tip_compose": "按 c 撰写新邮件",
+    "tip_compose": "按 c 写新邮件",
     "tip_shortcuts": "按？查看所有键盘快捷键",
     "tip_sidebar": "日历、联系人和设置在左侧栏中",
     "tip_settings": "在\"设置\"中自定义您的体验",
@@ -6233,6 +6234,14 @@
     "date_label": "日期",
     "subject_label": "主题"
   },
+  "print_styles": {
+    "title": "打印",
+    "description": "打印的邮件、联系人和日历的样式。",
+    "style_label": "打印样式",
+    "style_description": "附加组件可以添加样式，例如带有公司地址的信头。",
+    "standard": "标准",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "安装 {appName}",
     "description": "安装我们的应用，以获得快速访问。",
@@ -6993,7 +7002,7 @@
     "no_results": "没有匹配的命令",
     "go_to": "前往{name}",
     "go_to_settings_page": "前往{name}设置",
-    "compose": "撰写邮件",
+    "compose": "写邮件",
     "search": "搜索邮件",
     "theme_dark": "切换到深色主题",
     "theme_light": "切换到浅色主题",
@@ -7414,7 +7423,8 @@
     "pin_current": "当前 PIN",
     "pin_new": "新 PIN",
     "pin_repeat": "重复 PIN",
-    "pin_hint": "至少 6 个字符。也可以使用字母,较长的 PIN 更难猜到。",
+    "pin_hint": "至少 5 个字符。也可以使用字母,较长的 PIN 更难猜到。",
+    "pin_hint_policy": "您的组织要求至少 {count, plural, other {# 个字符}}。也可以使用字母。",
     "pin_obvious": "这个 PIN 太容易被猜到。请避免重复、连续数字和常见组合。",
     "pin_mismatch": "两个 PIN 不一致。",
     "pin_recovery": "如果忘记了,唯一的办法是删除此设备上的数据并重新登录。服务器上的邮件会保留。此设备上仍在等待发送的邮件将丢失。",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, other {# 分钟}}",
     "blocked_seconds": "尝试次数过多。请在 {count, plural, other {# 秒}}后重试。",
     "blocked_minutes": "尝试次数过多。请在 {count, plural, other {# 分钟}}后重试。"
+  },
+  "appLockHello": {
+    "switch_label": "使用 Windows Hello 解锁",
+    "switch_desc": "使用面部、指纹或 Windows PIN。应用的 PIN 仍然可用。",
+    "protects": "开启 Windows Hello 后，Windows 会为此应用保管一个密钥，只有在 Windows Hello 确认是你本人之后才能使用。应用的密钥也会用它锁住，所以解锁需要你的面部、指纹或 Windows PIN，这台电脑上的其他程序不经 Windows 先询问你就无法使用这个密钥。应用的 PIN 仍然可用，如果 Windows Hello 被重置或关闭，你需要用它解锁。",
+    "enable_title": "开启 Windows Hello",
+    "enable_body": "输入应用的 PIN。之后 Windows 会请你用 Windows Hello 确认。",
+    "enable_failed": "无法开启 Windows Hello。请重试。",
+    "cancelled": "Windows Hello 已取消。",
+    "unsupported": "这台电脑上的 Windows Hello 无法保护密钥。你的 PIN 仍然可用。",
+    "unavailable": "这台电脑上没有可用的 Windows Hello。",
+    "busy": "Windows Hello 正忙或已被锁定。请稍后再试。",
+    "off_after_pin_change": "更改 PIN 后 Windows Hello 没有确认，所以它现在已关闭。如果你使用它，请重新开启。",
+    "prompt": "请用 Windows Hello 确认是你本人。",
+    "waiting": "正在等待 Windows Hello…",
+    "use_hello": "使用 Windows Hello 解锁",
+    "use_pin": "改用 PIN",
+    "failed": "Windows Hello 没有解锁应用。请输入 PIN。",
+    "gone": "Windows Hello 在这台电脑上已无法解锁应用。请输入 PIN。"
   },
   "uxs_general": {
     "time_zone_common": "常用时区",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID 指纹 人脸 通行密钥 passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "隐私与安全",
+      "security": "密码与登录",
+      "about_updates": "关于与更新",
+      "backup": "备份与导入"
+    },
+    "sections": {
+      "start": "启动与关闭",
+      "shortcuts": "在其他应用中使用的快捷键",
+      "mail_links": "邮件链接和文件"
+    },
+    "privacy_link_description": "这些设置在“隐私与安全”页面。"
   },
   "desktop_policy": {
     "server_refused": "您的组织不允许在此设备上使用此服务器。",

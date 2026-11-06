@@ -4,7 +4,7 @@ import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCal
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
-import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
 import { htmlToReadableText } from "@/lib/html-to-readable-text";
@@ -17,6 +17,10 @@ import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachment
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
+import { ConversationMessageMenu } from "./conversation-message-menu";
+import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversationMessageId, printConversationMessage, printLabels } from "./conversation-print";
+import { buildMessagePrintFields } from "./message-print-fields";
+import { printMessageInWindow } from "./message-print-window";
 import { useInvitationPrint } from "@/lib/print/invitation-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { ReadingMask } from "./reading-mask";
@@ -53,7 +57,7 @@ import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/p
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
-import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview } from "@/lib/utils";
+import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, cleanPreview, generateUUID } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { planToHide, toolbarHideOrder } from "@/lib/toolbar-overflow";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
@@ -127,7 +131,6 @@ import {
   BookOpen,
   ArrowLeft,
   Pencil,
-  Paperclip,
   Inbox,
 } from "@/components/icons";
 import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
@@ -177,7 +180,6 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { canPickFolder, createUniqueNamer, isPickerCancelled, pickFolder, saveFilesToFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
-import { watermarkForPrint } from "@/lib/watermark";
 import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
@@ -270,7 +272,8 @@ interface EmailViewerProps {
   onSetTag?: (emailId: string, tagId: string | null) => void;
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean, source?: EmailBlobContext) => void;
   /** Resolves false when nothing was sent (the user went back), so the text stays. */
-  onQuickReply?: (body: string) => Promise<boolean | void>;
+  /** `composerId`: the id plugins know the quick reply by, for its send checks. */
+  onQuickReply?: (body: string, extra?: { composerId?: string }) => Promise<boolean | void>;
   /** Keeps the typed quick reply as a draft before an automatic sign-out (lib/compose-flush-registry.ts). */
   onSaveQuickReplyDraft?: (body: string) => Promise<void>;
   onMarkAsSpam?: () => void;
@@ -1002,9 +1005,17 @@ export function MvExpandedConversationCard({
   }, [hasBody, email, onLoadBody]);
   // Unfolding an unread message reads it, as opening it does.
   useMarkReadWhenShown(email, true, onMarkRead ? () => onMarkRead(email) : undefined);
+  // Print in its own ⋮: this message alone, once its body is here.
+  const devices = useDevicePolicy(email);
+  const onPrint = devices.noPrint || !hasBody
+    ? undefined
+    : () => { printConversationMessage(email.id, printLabels(t)); };
+  const showReplies = !!(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled;
 
   return (
-    <div className="border-t border-border" data-mv-conversation-expanded="" data-email-id={email.id}>
+    // Focusable by a click (tabIndex -1), so Ctrl+P and File > Print know
+    // which message of the conversation the user is in.
+    <div className="border-t border-border outline-none" data-mv-conversation-expanded="" data-email-id={email.id} {...{ [CONVERSATION_MESSAGE_ATTR]: email.id }} tabIndex={-1}>
       <div
         role="button"
         tabIndex={0}
@@ -1058,9 +1069,9 @@ export function MvExpandedConversationCard({
             {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
           </button>
         </span>
-        {(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled && (
+        {(showReplies || onPrint) && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
-            {onReply && (
+            {showReplies && onReply && (
               <button
                 type="button"
                 onClick={() => onReply(email)}
@@ -1071,7 +1082,7 @@ export function MvExpandedConversationCard({
                 <Reply className="w-5 h-5" />
               </button>
             )}
-            {onReplyAll && (
+            {showReplies && onReplyAll && (
               <button
                 type="button"
                 onClick={() => onReplyAll(email)}
@@ -1082,7 +1093,7 @@ export function MvExpandedConversationCard({
                 <ReplyAll className="w-5 h-5" />
               </button>
             )}
-            {onForward && (
+            {showReplies && onForward && (
               <button
                 type="button"
                 onClick={() => onForward(email)}
@@ -1093,6 +1104,7 @@ export function MvExpandedConversationCard({
                 <Forward className="w-5 h-5" />
               </button>
             )}
+            <ConversationMessageMenu onPrint={onPrint} />
           </span>
         )}
       </div>
@@ -1557,7 +1569,6 @@ export function EmailViewer({
   );
   const mailAttachmentActionRef = useRef(mailAttachmentAction);
   mailAttachmentActionRef.current = mailAttachmentAction;
-  const attachmentPosition = useSettingsStore((state) => state.attachmentPosition);
   const addTrustedSender = useSettingsStore((state) => state.addTrustedSender);
   const isSenderTrusted = useSettingsStore((state) => state.isSenderTrusted);
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
@@ -1877,6 +1888,12 @@ export function EmailViewer({
       pending: isSendingQuickReply,
     };
   };
+  // The id plugins know the quick reply by: its actions' clicks and its send
+  // checks (OutgoingEmail.composerId) carry the same one. A new one per
+  // message and account, as the actions' key below.
+  const quickReplyKey = email ? JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId]) : '';
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- a new id per message and account
+  const quickReplyComposerId = useMemo(() => generateUUID(), [quickReplyKey]);
   // The quick reply's Send button shows once it is focused or has text.
   useComposingSurface(quickReplyEnabled && (isQuickReplyFocused || quickReplyText.length > 0));
   // An automatic sign-out keeps typed quick-reply text as a draft; text on
@@ -1903,7 +1920,7 @@ export function EmailViewer({
     if (!quickReplyText.trim() || !onQuickReply || isSendingQuickReply) return;
     setIsSendingQuickReply(true);
     try {
-      const sent = await onQuickReply(quickReplyText);
+      const sent = await onQuickReply(quickReplyText, { composerId: quickReplyComposerId });
       // Back on a pre-send question keeps what the user typed.
       if (sent !== false) {
         setQuickReplyText("");
@@ -3444,7 +3461,6 @@ export function EmailViewer({
   }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
 
   // What the attachment bar and the attachment cards share.
-  const attachmentCardsRef = useRef<HTMLDivElement>(null);
   const desktopClipboard = getDesktopBridge()?.clipboard;
   const tDesktopUi = useTranslations('desktopUi.attachment');
   const editAccount = editAccountOf(email);
@@ -4072,29 +4088,16 @@ export function EmailViewer({
   // for the page's print copy (Ctrl+P). Text fields are unescaped.
   const messagePrintFields = (): MessagePrintFields | null => {
     if (!email) return null;
-    const printSender = email.from?.[0];
-    const formatRecipient = (r: { name?: string | null; email: string }) =>
-      r.name ? `${r.name} <${r.email}>` : r.email;
-    // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
-    // <style>. A printout has no iframe isolation, so re-sanitize with the
-    // stricter config that forbids <style> before injecting into the DOM.
-    // A plain-text body is escaped text with its own newlines: it prints its
-    // trailing quote opened instead of behind the collapsed toggle.
-    const plain = !effectiveEmailContent.isHtml;
-    return {
-      subject: email.subject || t('no_subject'),
-      sender: printSender?.name
-        ? `${printSender.name} <${printSender.email}>`
-        : printSender?.email || t('unknown_sender'),
-      to: email.to?.map(formatRecipient).join(', ') || '',
-      cc: email.cc?.map(formatRecipient).join(', ') || '',
-      date: formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-      bodyHtml: plain
-        ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
-        : sanitizeEmailHtml(effectiveEmailContent.html),
-      plain,
+    return buildMessagePrintFields({
+      email,
+      html: effectiveEmailContent.html,
+      isHtml: effectiveEmailContent.isHtml,
+      attachments: effectiveAttachments,
       invitation: invitationPrint,
-    };
+      timeFormat,
+      noSubject: t('no_subject'),
+      unknownSender: t('unknown_sender'),
+    });
   };
 
   // Print only the email content in a new window. A print asked for from
@@ -4107,67 +4110,12 @@ export function EmailViewer({
     }
     const fields = messagePrintFields();
     if (!fields) return;
-    const printWatermark = watermark ? watermarkForPrint(watermark) : null;
-    const date = fields.date;
-    const toList = escapeHtml(fields.to);
-    const ccList = escapeHtml(fields.cc);
-    const subjectText = fields.subject;
-    const senderText = fields.sender;
-    const plainBody = fields.plain;
-    const printableBody = fields.bodyHtml;
-
-    const printWindow = openedWindow ?? window.open('', '_blank');
-    if (!printWindow) return;
-    // A link in the message that navigates the popup itself (no target, a
-    // non-web scheme) would hand the sender's page an opener to redirect
-    // the webmail tab with. We write the document through our own handle.
-    printWindow.opener = null;
-
-    // The popup is an about:blank document of the app, so it carries the
-    // app's CSP (img-src https:), not the message iframe's strict one. Add
-    // the iframe's policy while remote content is blocked; it narrows the
-    // inherited one.
-    printWindow.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(effectiveEmailContent.externalBlocked)}">
-<meta name="referrer" content="no-referrer">
-<title>${escapeHtml(subjectText)}</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; color: #000; }
-  .header { border-bottom: 1px solid #ccc; padding-bottom: 16px; margin-bottom: 16px; }
-  .subject { font-size: 20px; font-weight: bold; margin-bottom: 12px; }
-  .meta { font-size: 13px; color: #555; line-height: 1.6; }
-  .meta strong { color: #000; }
-  .body { font-size: 14px; line-height: 1.6; }
-  /* Plain text keeps its line breaks, as in the reader. */
-  .body.plain { white-space: pre-wrap; word-break: break-word; }
-  .body.plain summary { display: none !important; }
-  /* Only force the cap on images that set no width of their own: an
-     !important 100% also overrides a sender's inline max-width, and an
-     image sized by max-width + max-height + width:100% then grows to
-     the pane width while its max-height still clamps the height - the
-     picture renders stretched. Matches the viewer's own image rule.
-     height stays !important so a fixed inline height cannot squash it. */
-  .body img:not([style*="max-width"]) { max-width: 100% !important; }
-  .body img[style*="max-width"] { max-width: 100%; }
-  .body img { height: auto !important; }
-  @media print { body { margin: 20px; } }
-</style>${printWatermark ? printWatermark.style : ''}</head><body dir="auto">
-${printWatermark ? printWatermark.html : ''}
-<div class="header">
-  <div class="subject">${escapeHtml(subjectText)}</div>
-  <div class="meta">
-    <div><strong>${escapeHtml(t('from'))}:</strong> ${escapeHtml(senderText)}</div>
-    ${toList ? `<div><strong>${escapeHtml(t('to'))}:</strong> ${toList}</div>` : ''}
-    ${ccList ? `<div><strong>${escapeHtml(t('cc'))}:</strong> ${ccList}</div>` : ''}
-    ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
-  </div>
-</div>
-<div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
-</body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    printMessageInWindow(fields, {
+      externalBlocked: effectiveEmailContent.externalBlocked,
+      watermark,
+      openedWindow,
+      labels: printLabels(t),
+    });
   };
 
   // Print from the list's row menu: the window waits for this message's body.
@@ -4193,9 +4141,18 @@ ${printWatermark ? printWatermark.html : ''}
   );
   // An invitation's when and where, from its card.
   const invitationPrint = useInvitationPrint(email?.id);
-  const printCopyFields = printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
-    ? messagePrintFields()
-    : null;
+  // In a conversation, another message that has the focus (a click in it)
+  // when printing starts is printed alone instead, as its ⋮ > Print does.
+  const focusedPrintId = useMemo(
+    () => (printShown ? focusedConversationMessageId(viewerRootEl) : null),
+    [printShown, viewerRootEl],
+  );
+  const focusedPrint = focusedPrintId && focusedPrintId !== email?.id ? conversationPrintSource(focusedPrintId) : null;
+  const printCopyFields = focusedPrint
+    ? (focusedPrint.noPrint ? null : focusedPrint.fields)
+    : printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
+      ? messagePrintFields()
+      : null;
 
   // Detect List-Unsubscribe header for newsletter banners
   const listHeaders = useMemo(() => {
@@ -5519,6 +5476,10 @@ ${printWatermark ? printWatermark.html : ''}
                             <Forward className="w-5 h-5" />
                           </button>
                         )}
+                        {/* This message's own ⋮, as each message of the conversation has. */}
+                        {mvBefore.length + mvAfter.length > 0 && (
+                          <ConversationMessageMenu onPrint={devices.noPrint ? undefined : () => handlePrint()} />
+                        )}
                       </span>
                     )}
                   </div>
@@ -5590,20 +5551,6 @@ ${printWatermark ? printWatermark.html : ''}
 
 
               </div>
-              {/* Cards mode: a paperclip with the count jumps down to the cards. */}
-              {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => attachmentCardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  title={t('attachments')}
-                  aria-label={t('attachments_count', { count: effectiveAttachments.length })}
-                  className="self-start flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                  data-testid="attachments-jump"
-                >
-                  <Paperclip className="w-4 h-4" />
-                  <bdi>{effectiveAttachments.length}</bdi>
-                </button>
-              )}
             </div>
           </div>
       </div>
@@ -6132,6 +6079,50 @@ ${printWatermark ? printWatermark.html : ''}
           );
         })()}
 
+        {/* === SECURITY WARNINGS: right under the header, before the
+            attachments, so the warning is read before a file is opened: a
+            sender the server's checks don't back, a message reported as
+            phishing, and the plugins' banners (S/MIME and PGP verdicts). === */}
+        {senderVerification && (
+          <div className="border-b border-border bg-muted/30 isolate" data-reader-security-warnings="">
+            <div className="px-6 py-1.5">
+              <div className="flex items-start gap-3 py-1" data-testid="sender-check-warning">
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
+                  senderVerification.status === 'failed' ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning",
+                )}>
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[0.6875rem] font-semibold text-muted-foreground">
+                    {senderVerificationLabel}
+                  </div>
+                  <div className="text-sm font-medium text-foreground break-words">
+                    {senderVerificationMessage}
+                  </div>
+                  <div className="text-sm text-muted-foreground break-words">
+                    {t('sender_check.caution')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {phishingMarked && <PhishingMarkBanner />}
+
+        <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
+
+        {/* === ATTACHMENTS: under the header and its security warnings,
+            above the other notices (remote content, invitations, drafts)
+            and the body, in every layout. Inline images stay in the body;
+            a message with only those draws no strip. === */}
+        {effectiveAttachments.length > 0 && (
+          <div className={cn("bg-background border-b border-border px-4 lg:px-6 py-3", mvViewer && "lg:ps-[80px]")} data-reader-attachments-strip="">
+            <ReaderAttachments {...readerAttachmentProps} />
+          </div>
+        )}
+
         {/* Scheduled Banner */}
         {isScheduled && (
           <div className="border-b border-border bg-primary/10">
@@ -6174,8 +6165,6 @@ ${printWatermark ? printWatermark.html : ''}
           </div>
         )}
 
-        {phishingMarked && <PhishingMarkBanner />}
-
         {/* Draft Banner: a scheduled message has its own. */}
         {isDraft && !isScheduled && (
           <div className="border-b border-border bg-warning/10">
@@ -6189,37 +6178,13 @@ ${printWatermark ? printWatermark.html : ''}
         )}
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
-        {(senderVerification ||
-          (!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
+        {((!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
           (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
           <div className="border-b border-border bg-muted/30 isolate">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
-                {/* Sender the server's checks don't back */}
-                {senderVerification && (
-                  <div className="flex items-start gap-3 py-1">
-                    <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
-                      senderVerification.status === 'failed' ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning",
-                    )}>
-                      <ShieldAlert className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[0.6875rem] font-semibold text-muted-foreground">
-                        {senderVerificationLabel}
-                      </div>
-                      <div className="text-sm font-medium text-foreground break-words">
-                        {senderVerificationMessage}
-                      </div>
-                      <div className="text-sm text-muted-foreground break-words">
-                        {t('sender_check.caution')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* External Content Controls */}
                 {/* shouldBlockExternal: gone once trust applies (e.g. the
                     policy finished loading after the first paint). */}
@@ -6312,16 +6277,6 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
           </div>
         )}
-
-        <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
-
-      {/* === ATTACHMENTS: a bar of tiles under the header, unless cards
-          mode draws them after the body. === */}
-      {attachmentPosition !== 'below-message' && effectiveAttachments.length > 0 && (
-        <div className="bg-background border-b border-border px-4 lg:px-6 py-3">
-          <ReaderAttachments {...readerAttachmentProps} layout="bar" />
-        </div>
-      )}
 
       </>)}
 
@@ -6419,13 +6374,6 @@ ${printWatermark ? printWatermark.html : ''}
               />
             )}
           </div>
-
-          {/* === ATTACHMENTS as cards after the body (below-message mode) === */}
-          {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && !mvOpenFolded && !mvAwaitingConversation && (
-            <div ref={attachmentCardsRef} className={cn("bg-background border-t border-border px-4 lg:px-6 py-4 scroll-mt-4", mvViewer && "lg:ps-[60px]")}>
-              <ReaderAttachments {...readerAttachmentProps} layout="cards" />
-            </div>
-          )}
 
           <PluginSlot name="email-footer" extraProps={pluginFooterProps} />
 
@@ -6556,7 +6504,8 @@ ${printWatermark ? printWatermark.html : ''}
                           {tWords('open_full_editor')}
                         </Button>
                         <QuickReplyPluginActions
-                          key={JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId])}
+                          key={quickReplyKey}
+                          composerId={quickReplyComposerId}
                           inputRef={quickReplyRef}
                           readMetadata={quickMetadata}
                           onChange={setQuickReplyText}

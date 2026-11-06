@@ -78,6 +78,15 @@ const email = () => document.getElementById('username') as HTMLInputElement;
 const serverField = () => document.getElementById('jmap-endpoint') as HTMLInputElement | null;
 
 describe('the desktop app, with a server of one\'s own', () => {
+  it('names the window as the sign-in page, not the mail view it came from', async () => {
+    // A fresh profile opens the mail view first, which names the window, and it then
+    // sends the page here. No server is set up yet, and the title must still change.
+    document.title = 'Mail - Bulwark';
+    render(<LoginPage />);
+    await browserButton();
+    expect(document.title).toBe('sign_in - Bulwark');
+  }, 30_000);
+
   it('puts the email address before the browser button', async () => {
     render(<LoginPage />);
     const button = await browserButton();

@@ -207,7 +207,7 @@ test('item 1: a sender trusted in the list stays blocked once the organisation l
   const subject = `Trust list ${RUN}`;
   await policy({}, browser);
   await deliverAndWait({ from: ENT.bob, to: [ENT.alice], subject, html: html('Newsletter') });
-  const alice = await seededPage(browser, ENT.alice, { externalContentPolicy: 'block', trustedSendersAddressBook: false });
+  const alice = await seededPage(browser, ENT.alice, { externalContentPolicy: 'block', trustedSendersAddressBook: false, explicitSettings: ['trustedSendersAddressBook'] });
   const pixel = pixelRequests(alice);
   await openMessage(alice, subject);
   await trustSender(alice);

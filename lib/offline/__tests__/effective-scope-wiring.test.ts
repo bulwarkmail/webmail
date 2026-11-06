@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { DemoJMAPClient } from '@/lib/demo/demo-client';
 import { EMPTY_POLICY_LAYERS, resolvePolicies } from '@/lib/desktop/policy-schema';
 import { getOfflineHooks, setOfflineHooks } from '@/lib/jmap/offline-hooks';
 import { setStoreBackend } from '@/lib/store/client/api';
@@ -425,6 +426,26 @@ describe('the desktop app', () => {
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(useOfflineStore.getState().enabled).toEqual([]);
     expect(useOfflineStore.getState().choices.acc?.on).toBe(false);
+  });
+
+  it('leaves the demo alone: its client has no session to keep a copy of', async () => {
+    asDesktop();
+    const demo = new DemoJMAPClient('work');
+    useAuthStore.setState({ getClientForAccount: (() => demo) as never, getAllConnectedClients: (() => new Map([['acc', demo]])) as never });
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(useOfflineStore.getState().enabled).toEqual([]);
+    expect(notices.filter((n) => n.kind === 'default-on')).toEqual([]);
+  });
+
+  it('starts with a demo account turned on from before without throwing', async () => {
+    asDesktop();
+    const demo = new DemoJMAPClient('work');
+    useAuthStore.setState({ getClientForAccount: (() => demo) as never, getAllConnectedClients: (() => new Map([['acc', demo]])) as never });
+    useOfflineStore.setState({ enabled: ['acc'] });
+    let stop: () => void = () => {};
+    expect(() => { stop = startOfflineMode(); }).not.toThrow();
+    stop();
   });
 
 });

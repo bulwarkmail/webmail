@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { ExternalLink } from "@/components/icons";
+import { ExternalLink, Printer } from "@/components/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { PreviewShell, useBackdropClose, type PreviewNeighbours } from "@/components/files/preview-shell";
 import { IconButton } from "@/components/ui/icon-button";
@@ -26,6 +26,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { printPdfUrl } from "@/lib/print-pdf";
 
 /**
  * An HTML attachment as a document for a fully locked frame (sandbox="",
@@ -83,6 +84,12 @@ interface FilePreviewModalProps {
    * contacts…" for a .csv (pim-p2-7).
    */
   extraAction?: { label: string; onClick: () => void };
+  /**
+   * Bring up the print dialog once the PDF is on screen: a plugin printing a
+   * PDF it made (api.ui.print with `pdf`). Not while the organisation turns
+   * printing off.
+   */
+  autoPrint?: boolean;
 }
 
 function SimpleMarkdown({ content }: { content: string }) {
@@ -176,8 +183,9 @@ function processInline(text: string): React.ReactNode {
   return parts.length === 1 ? parts[0] : <>{parts}</>;
 }
 
-export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction }: FilePreviewModalProps) {
+export function FilePreviewModal({ name, onClose, onDownload, getFileContent, file, neighbours, linksOff, policyAccount, extraAction, autoPrint }: FilePreviewModalProps) {
   const t = useTranslations("files");
+  const tCommon = useTranslations("common");
   // No downloads: no download button, no new tab, no save from the
   // browser's own PDF viewer or media controls. No printing: the PDF goes
   // through pdf.js, which has no print button. The preview itself stays.
@@ -245,6 +253,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
   const fileType = resolvedFileType;
   // The browser's own PDF viewer has Download and Print buttons of its own.
   const pdfViaPdfJs = devices.noDownloads || devices.noPrint;
+  // Print in the header too, the same in every browser and in the desktop
+  // app: through the browser's PDF viewer, from a frame of its own. Not on
+  // phones, which have no PDF viewer to print from, nor where the
+  // organisation turns printing off.
+  const canPrintPdf = fileType === "pdf" && pdfInlineSupported && !devices.noPrint;
 
   useEffect(() => {
     let cancelled = false;
@@ -347,6 +360,14 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
     saveBlobAs(nestedPreview.blob, nestedPreview.name, { kind: "attachment", subject: policyAccount });
   };
 
+  // A plugin's PDF to print: the dialog comes up once, when the file is here.
+  const autoPrinted = useRef(false);
+  useEffect(() => {
+    if (!autoPrint || autoPrinted.current || loading || error || !objectUrl || !canPrintPdf) return;
+    autoPrinted.current = true;
+    void printPdfUrl(objectUrl);
+  }, [autoPrint, loading, error, objectUrl, canPrintPdf]);
+
   // In place of this frame, not on top of it: one frame at a time takes
   // Escape and the arrows. This one keeps its state and its Back entry.
   if (nestedPreview && nestedContent) {
@@ -388,6 +409,11 @@ export function FilePreviewModal({ name, onClose, onDownload, getFileContent, fi
             <Button size="sm" variant="outline" className="me-1" data-testid="preview-extra-action" onClick={extraAction.onClick}>
               {extraAction.label}
             </Button>
+          )}
+          {objectUrl && canPrintPdf && !loading && !error && (
+            <IconButton label={tCommon("print")} onClick={() => { void printPdfUrl(objectUrl); }} data-testid="preview-print">
+              <Printer />
+            </IconButton>
           )}
           {objectUrl && canOpenInNewTab && !downloadsOff && canOpenUrlInNewWindow(objectUrl) && (
             <IconButton label={t("open_in_new_tab")} onClick={() => window.open(objectUrl, "_blank", "noopener,noreferrer")}>

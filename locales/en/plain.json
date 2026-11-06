@@ -320,9 +320,6 @@
         "label": "When you click an attachment",
         "description": "Choose if a click on an attachment shows it or saves it to your device"
       },
-      "attachment_position": {
-        "description": "Where attachments are shown in an open message"
-      },
       "always_light_mode": {
         "description": "Show messages with a light background even when the app is dark. Some messages look wrong when they are made dark."
       },

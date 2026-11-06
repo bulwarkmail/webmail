@@ -1,10 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { ReaderAttachments, splitFileName, type ReaderAttachmentItem } from '../reader-attachments';
 
 // The reader's attachment bar: equal tiles that keep the extension in view,
-// a download button that needs no hover, and a "Show N more" tile once a
-// message carries more files than fit in two rows.
+// a download button that needs no hover, and one row of them: the files that
+// don't fit wait behind a "Show N more" tile, so the body stays in view.
 
 const file = (id: string, name: string, type = 'application/pdf', size = 1000): ReaderAttachmentItem =>
   ({ id, name, type, size, blobId: `blob-${id}` });
@@ -138,35 +138,64 @@ describe('ReaderAttachments bar', () => {
     expect(props.onDownloadAll).toHaveBeenCalledTimes(1);
   });
 
-  it('collapses past six files into a "Show N more" tile and expands in place', () => {
-    const files = Array.from({ length: 8 }, (_, i) => file(String(i), `file-${i}.pdf`));
-    renderBar(files);
-    expect(screen.getAllByTestId('attachment')).toHaveLength(5);
-    const more = screen.getByRole('button', { name: /attachments_show_more/ });
-    expect(more.textContent).toContain('file-5.pdf, file-6.pdf, file-7.pdf');
-    fireEvent.click(more);
-    expect(screen.getAllByTestId('attachment')).toHaveLength(8);
-    fireEvent.click(screen.getByRole('button', { name: /attachments_show_fewer/ }));
-    expect(screen.getAllByTestId('attachment')).toHaveLength(5);
-  });
+  describe('one row of tiles', () => {
+    // jsdom lays nothing out: tiles take rows of `columns`, as the grid would.
+    let columns = 3;
+    beforeEach(() => {
+      columns = 3;
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+        const parent = this.parentElement;
+        const index = parent?.dataset.testid === 'reader-attachments-row' ? Array.from(parent.children).indexOf(this) : 0;
+        return { top: Math.floor(index / columns) * 72, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+      cleanup();
+    });
 
-  it('shows six files without collapsing', () => {
-    renderBar(Array.from({ length: 6 }, (_, i) => file(String(i), `file-${i}.pdf`)));
-    expect(screen.getAllByTestId('attachment')).toHaveLength(6);
-    expect(screen.queryByRole('button', { name: /attachments_show_more/ })).toBeNull();
-  });
+    it('fills the first row and puts the rest behind "Show N more", which expands in place', () => {
+      const files = Array.from({ length: 8 }, (_, i) => file(String(i), `file-${i}.pdf`));
+      renderBar(files);
+      // Two files and the "Show 6 more" tile make the row of three.
+      expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+      const more = screen.getByRole('button', { name: /attachments_show_more/ });
+      expect(more.textContent).toContain('file-2.pdf, file-3.pdf, file-4.pdf');
+      fireEvent.click(more);
+      expect(screen.getAllByTestId('attachment')).toHaveLength(8);
+      fireEvent.click(screen.getByRole('button', { name: /attachments_show_fewer/ }));
+      expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+    });
 
-  it('shows every file as a card, without collapsing, in cards layout', () => {
-    const files = Array.from({ length: 8 }, (_, i) => file(String(i), `file-${i}.pdf`));
-    const props = renderBar(files, { layout: 'cards' });
-    expect(screen.getByTestId('reader-attachments').dataset.layout).toBe('cards');
-    expect(screen.getAllByTestId('attachment')).toHaveLength(8);
-    expect(screen.queryByRole('button', { name: /attachments_show_more/ })).toBeNull();
-    const card = screen.getAllByTestId('attachment')[2];
-    const buttons = within(card).getAllByRole('button');
-    fireEvent.click(buttons[buttons.length - 1]);
-    expect(props.onDownload).toHaveBeenCalledWith(files[2]);
-    expect(props.onOpen).not.toHaveBeenCalled();
+    it('shows a full row without collapsing', () => {
+      renderBar(Array.from({ length: 3 }, (_, i) => file(String(i), `file-${i}.pdf`)));
+      expect(screen.getAllByTestId('attachment')).toHaveLength(3);
+      expect(screen.queryByRole('button', { name: /attachments_show_more/ })).toBeNull();
+    });
+
+    it('keeps one file and "Show N more" under it where a tile fills the width', () => {
+      columns = 1;
+      renderBar(Array.from({ length: 4 }, (_, i) => file(String(i), `file-${i}.pdf`)));
+      expect(screen.getAllByTestId('attachment')).toHaveLength(1);
+      expect(screen.getByRole('button', { name: /attachments_show_more/ })).toBeTruthy();
+    });
+
+    it('shows the last file itself rather than "Show 1 more" in its place', () => {
+      columns = 1;
+      renderBar([file('a', 'one.pdf'), file('b', 'two.pdf')]);
+      expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: /attachments_show_more/ })).toBeNull();
+    });
+
+    it('starts collapsed again for the next message', () => {
+      const first = Array.from({ length: 5 }, (_, i) => file(`a${i}`, `a-${i}.pdf`));
+      const props = { thumbUrls: {}, opensPreview: () => false, onOpen: vi.fn(), onDownload: vi.fn(), onDownloadAll: vi.fn(), downloadingAll: false };
+      const view = render(<ReaderAttachments attachments={first} {...props} />);
+      fireEvent.click(screen.getByRole('button', { name: /attachments_show_more/ }));
+      expect(screen.getAllByTestId('attachment')).toHaveLength(5);
+      view.rerender(<ReaderAttachments attachments={Array.from({ length: 5 }, (_, i) => file(`b${i}`, `b-${i}.pdf`))} {...props} />);
+      expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+    });
   });
 
   it('draws the image itself when there is a thumbnail', () => {

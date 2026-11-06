@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Votre organisation bloque le contenu distant dans tous les e-mails : il ne se charge pas non plus pour les expéditeurs de confiance."
   },
+  "trusted_senders_book": {
+    "unavailable": "Indisponible : ce compte ne peut pas garder de carnets d'adresses sur le serveur. La liste reste sur cet appareil."
+  },
   "date": {
     "today": "Aujourd'hui",
     "yesterday": "Hier",
@@ -1672,7 +1675,7 @@
         "label": "Disposition de l'interface",
         "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
         "default": "Par défaut",
-        "mountain_view": "Recherche en haut, applications à gauche"
+        "mountain_view": "Recherche en haut"
       },
       "animations": {
         "label": "Activer les animations",
@@ -2115,12 +2118,6 @@
         "description": "Choisissez si un clic sur une pièce jointe ouvre un aperçu ou lance immédiatement le téléchargement",
         "preview": "Aperçu si possible",
         "download": "Télécharger immédiatement"
-      },
-      "attachment_position": {
-        "label": "Position des pièces jointes",
-        "description": "Où afficher les pièces jointes dans l'en-tête de l'email",
-        "below-header": "Sous l'en-tête",
-        "below-message": "Cartes sous le message"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3596,6 +3593,10 @@
       "sync_on": "Vos autres appareils utilisent les mêmes paramètres, ils changent donc aussi.",
       "sync_off": "Vos autres appareils gardent leurs paramètres."
     }
+  },
+  "layout_preview": {
+    "default_description": "Applications et dossiers à gauche, recherche au-dessus de la liste",
+    "mountain_view_description": "Recherche en haut, les messages s'ouvrent en pleine largeur"
   },
   "setup": {
     "title": "Configuration de Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Date",
     "subject_label": "Sujet"
   },
+  "print_styles": {
+    "title": "Impression",
+    "description": "L'apparence des messages, contacts et calendriers imprimés.",
+    "style_label": "Style d'impression",
+    "style_description": "Les modules complémentaires peuvent ajouter des styles, par exemple un en-tête avec l'adresse de votre entreprise.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Installer {appName}",
     "description": "Installez notre application pour un accès rapide.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Code PIN actuel",
     "pin_new": "Nouveau code PIN",
     "pin_repeat": "Répéter le code PIN",
-    "pin_hint": "Au moins 6 caractères. Les lettres sont acceptées, et un code plus long est plus difficile à deviner.",
+    "pin_hint": "Au moins 5 caractères. Les lettres sont acceptées, et un code plus long est plus difficile à deviner.",
+    "pin_hint_policy": "Votre organisation exige au moins {count, plural, one {# caractère} other {# caractères}}. Les lettres sont acceptées.",
     "pin_obvious": "Ce code PIN est trop facile à deviner. Évitez les répétitions, les suites et les choix courants.",
     "pin_mismatch": "Les deux codes PIN ne sont pas identiques.",
     "pin_recovery": "Si vous l'oubliez, la seule solution est de supprimer les données de cet appareil et de vous reconnecter. Vos e-mails sur le serveur restent. Les messages encore en attente d'envoi sur cet appareil sont perdus.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minute} other {# minutes}}",
     "blocked_seconds": "Trop d'essais. Réessayez dans {count, plural, one {# seconde} other {# secondes}}.",
     "blocked_minutes": "Trop d'essais. Réessayez dans {count, plural, one {# minute} other {# minutes}}."
+  },
+  "appLockHello": {
+    "switch_label": "Déverrouiller avec Windows Hello",
+    "switch_desc": "Avec votre visage, votre empreinte ou votre code PIN Windows. Le code PIN de l'app continue de fonctionner.",
+    "protects": "Quand Windows Hello est activé, Windows garde pour cette app une clé qui ne fonctionne qu'après que Windows Hello a vérifié que c'est bien vous. La clé de l'app est aussi verrouillée avec elle : pour déverrouiller, il faut votre visage, votre empreinte ou votre code PIN Windows, et un autre programme sur cet ordinateur ne peut pas utiliser cette clé sans que Windows vous le demande d'abord. Le code PIN de l'app continue de fonctionner, et il vous le faut si Windows Hello est réinitialisé ou désactivé.",
+    "enable_title": "Activer Windows Hello",
+    "enable_body": "Saisissez le code PIN de l'app. Windows vous demande ensuite de confirmer avec Windows Hello.",
+    "enable_failed": "Windows Hello n'a pas pu être activé. Réessayez.",
+    "cancelled": "Windows Hello a été annulé.",
+    "unsupported": "Windows Hello ne peut pas protéger la clé sur cet ordinateur. Votre code PIN continue de fonctionner.",
+    "unavailable": "Windows Hello n'est pas disponible sur cet ordinateur.",
+    "busy": "Windows Hello est occupé ou bloqué. Réessayez plus tard.",
+    "off_after_pin_change": "Windows Hello est désactivé, car il n'a pas confirmé après le changement de code PIN. Réactivez-le si vous l'utilisez.",
+    "prompt": "Confirmez que c'est vous avec Windows Hello.",
+    "waiting": "En attente de Windows Hello…",
+    "use_hello": "Déverrouiller avec Windows Hello",
+    "use_pin": "Utiliser plutôt le code PIN",
+    "failed": "Windows Hello n'a pas déverrouillé l'app. Saisissez votre code PIN.",
+    "gone": "Windows Hello ne déverrouille plus l'app sur cet ordinateur. Saisissez votre code PIN."
   },
   "uxs_general": {
     "time_zone_common": "Fuseaux horaires courants",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID empreinte digitale visage clé d'accès passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Confidentialité et sécurité",
+      "security": "Mot de passe et connexion",
+      "about_updates": "À propos et mises à jour",
+      "backup": "Sauvegarde et importation"
+    },
+    "sections": {
+      "start": "Démarrage et fermeture",
+      "shortcuts": "Raccourcis depuis d'autres applications",
+      "mail_links": "Liens et fichiers de messagerie"
+    },
+    "privacy_link_description": "Ces réglages se trouvent sur la page Confidentialité et sécurité."
   },
   "desktop_policy": {
     "server_refused": "Votre organisation n'autorise pas ce serveur sur cet appareil.",

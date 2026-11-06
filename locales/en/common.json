@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Your organisation blocks remote content in all mail, so trusted senders don't load it."
   },
+  "trusted_senders_book": {
+    "unavailable": "Not available: this account can't keep address books on the server. The list stays on this device."
+  },
   "date": {
     "today": "Today",
     "yesterday": "Yesterday",
@@ -1675,7 +1678,7 @@
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
         "default": "Default",
-        "mountain_view": "Search bar on top, apps on the left"
+        "mountain_view": "Search bar on top"
       },
       "animations": {
         "label": "Enable animations",
@@ -2118,12 +2121,6 @@
         "description": "Choose whether clicking a file attachment previews it or downloads it immediately",
         "preview": "Preview when possible",
         "download": "Download immediately"
-      },
-      "attachment_position": {
-        "label": "Attachment position",
-        "description": "Where to display the attachments of an open email",
-        "below-header": "Bar below the header",
-        "below-message": "Cards below the message"
       },
       "emails_per_page": {
         "10": "10 emails",
@@ -3596,6 +3593,10 @@
       "sync_on": "Your other devices use the same settings, so they change too.",
       "sync_off": "Your other devices keep their settings."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps and folders on the left, search above the list",
+    "mountain_view_description": "Search across the top, messages open full width"
   },
   "setup": {
     "title": "Bulwark Webmail setup",
@@ -6233,6 +6234,14 @@
     "date_label": "Date",
     "subject_label": "Subject"
   },
+  "print_styles": {
+    "title": "Printing",
+    "description": "How printed messages, contacts and calendars look.",
+    "style_label": "Print style",
+    "style_description": "Add-ons can add styles, for example a letterhead with your company's address.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Install {appName}",
     "description": "Install our app for quick access.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Current PIN",
     "pin_new": "New PIN",
     "pin_repeat": "Repeat the PIN",
-    "pin_hint": "At least 6 characters. Letters work too, and a longer PIN is harder to guess.",
+    "pin_hint": "At least 5 characters. Letters work too, and a longer PIN is harder to guess.",
+    "pin_hint_policy": "Your organisation requires at least {count, plural, one {# character} other {# characters}}. Letters work too.",
     "pin_obvious": "That PIN is too easy to guess. Avoid repeats, runs and common choices.",
     "pin_mismatch": "The two PINs are not the same.",
     "pin_recovery": "If you forget it, the only way back is to remove the data on this device and sign in again. Your mail on the server stays. Messages still waiting to be sent on this device are lost.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minute} other {# minutes}}",
     "blocked_seconds": "Too many tries. Try again in {count, plural, one {# second} other {# seconds}}.",
     "blocked_minutes": "Too many tries. Try again in {count, plural, one {# minute} other {# minutes}}."
+  },
+  "appLockHello": {
+    "switch_label": "Unlock with Windows Hello",
+    "switch_desc": "Use your face, fingerprint or Windows PIN. The app's PIN keeps working.",
+    "protects": "With Windows Hello on, Windows keeps a key for this app that only works after Windows Hello has checked it's you. The app's key is also locked with it, so unlocking takes your face, fingerprint or Windows PIN, and another program on this computer can't use that key without Windows asking you first. The app's PIN keeps working, and you need it if Windows Hello is reset or turned off.",
+    "enable_title": "Turn on Windows Hello",
+    "enable_body": "Enter the app's PIN. Windows then asks you to confirm with Windows Hello.",
+    "enable_failed": "Windows Hello could not be turned on. Try again.",
+    "cancelled": "Windows Hello was cancelled.",
+    "unsupported": "Windows Hello on this computer can't protect the key. Your PIN keeps working.",
+    "unavailable": "Windows Hello isn't available on this computer.",
+    "busy": "Windows Hello is busy or locked. Try again later.",
+    "off_after_pin_change": "Windows Hello is off now, because it didn't confirm after the PIN change. Turn it on again if you use it.",
+    "prompt": "Confirm it's you with Windows Hello.",
+    "waiting": "Waiting for Windows Hello…",
+    "use_hello": "Unlock with Windows Hello",
+    "use_pin": "Use PIN instead",
+    "failed": "Windows Hello didn't unlock the app. Enter your PIN.",
+    "gone": "Windows Hello no longer unlocks the app on this computer. Enter your PIN."
   },
   "uxs_general": {
     "time_zone_common": "Common time zones",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID fingerprint face passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy & security",
+      "security": "Password & sign-in",
+      "about_updates": "About & updates",
+      "backup": "Backup & import"
+    },
+    "sections": {
+      "start": "Starting and closing",
+      "shortcuts": "Shortcuts from other apps",
+      "mail_links": "Mail links and files"
+    },
+    "privacy_link_description": "These settings are on the Privacy & security page."
   },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",

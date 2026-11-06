@@ -24,6 +24,7 @@ import {
 } from "@/lib/delegation/delegation";
 import { principalDisplay } from "./principal-display";
 import { cn } from "@/lib/utils";
+import { ModalWindow } from "@/components/ui/dialog-surface";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -170,204 +171,206 @@ export function DelegateDialog({
 
   if (typeof document === "undefined") return null;
   return createPortal(
-    <div
-      className="fixed inset-0 z-[100000] flex items-stretch justify-center bg-black/50 backdrop-blur-[1px] sm:items-center sm:p-4"
-      onMouseDown={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}
-      // Keys typed here are the dialog's: the mail shortcuts behind it must not see them.
-      onKeyDown={(e) => e.stopPropagation()}
-      data-testid="delegate-dialog"
-    >
+    <ModalWindow title={changing && principal ? t("dialog_title_change", { name: principalDisplay(principal).name }) : t("dialog_title_add")} onClose={() => { if (!saving) onClose(); }}>
       <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="relative flex h-full w-full flex-col bg-background shadow-xl sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-lg sm:border sm:border-border"
+        data-modal-backdrop="" className="fixed inset-0 z-[100000] flex items-stretch justify-center bg-black/50 backdrop-blur-[1px] sm:items-center sm:p-4"
+        onMouseDown={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}
+        // Keys typed here are the dialog's: the mail shortcuts behind it must not see them.
+        onKeyDown={(e) => e.stopPropagation()}
+        data-testid="delegate-dialog"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
-          <h2 id={titleId} className="truncate text-lg font-semibold">
-            {changing && principal ? t("dialog_title_change", { name: principalDisplay(principal).name }) : t("dialog_title_add")}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-            aria-label={tCommon("close")}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {failures ? (
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-6" role="alert">
-            <p className="text-sm font-medium">{t("partial_title")}</p>
-            <ul className="divide-y divide-border rounded-md border border-border text-sm">
-              {failures.map((f) => (
-                <li key={`${f.change.kind}:${f.change.id}`} className="px-3 py-2">
-                  <span className="font-medium">{f.change.name}</span>
-                  <span className="text-muted-foreground"> · {t(`kind.${f.change.kind}`)}</span>
-                  {f.error && <div className="text-xs text-muted-foreground">{f.error}</div>}
-                </li>
-              ))}
-            </ul>
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className="relative flex h-full w-full flex-col bg-background shadow-xl sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-lg sm:border sm:border-border"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
+            <h2 id={titleId} className="truncate text-lg font-semibold">
+              {changing && principal ? t("dialog_title_change", { name: principalDisplay(principal).name }) : t("dialog_title_add")}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              aria-label={tCommon("close")}
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-        ) : (
-          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-6">
-            <Field label={t("person")}>
-              {principal ? (
-                <div className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
-                  <Avatar name={principal.name} email={principal.email ?? undefined} size="sm" className="shrink-0" />
-                  <PrincipalText principal={principal} />
-                  {!changing && (
-                    <Button variant="ghost" size="sm" onClick={() => { setPrincipal(null); setLookup({ state: "idle" }); }}>
-                      {t("change_person")}
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => { setQuery(e.target.value); setLookup({ state: "idle" }); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void lookUp(); } }}
-                    placeholder={t("search_placeholder")}
-                    aria-label={t("person")}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-                    ref={searchRef}
-                  />
-                  {directory === null ? (
-                    <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />{t("loading")}</p>
-                  ) : (
-                    <ul className="max-h-48 overflow-y-auto rounded-md border border-border" aria-label={t("person")} data-testid="delegate-candidates">
-                      {candidates.length === 0 && !canLookUp && (
-                        <li className="px-3 py-2 text-xs text-muted-foreground">{t("no_match")}</li>
-                      )}
-                      {candidates.map((p) => (
-                        <li key={p.id}>
-                          <button
-                            type="button"
-                            onClick={() => setPrincipal(p)}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-start hover:bg-muted focus:bg-muted focus:outline-none"
-                          >
-                            <Avatar name={p.name} email={p.email ?? undefined} size="sm" className="shrink-0" />
-                            <PrincipalText principal={p} />
-                            {existingIds.has(p.id) && <span className="shrink-0 text-[0.625rem] text-muted-foreground">{t("has_access")}</span>}
-                          </button>
-                        </li>
-                      ))}
-                      {canLookUp && (
-                        <li>
-                          <button
-                            type="button"
-                            onClick={() => void lookUp()}
-                            disabled={lookup.state === "busy"}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted focus:outline-none disabled:opacity-50"
-                          >
-                            {lookup.state === "busy" && <Loader2 className="h-4 w-4 animate-spin" />}
-                            {lookup.state === "busy" ? t("looking_up") : t("use_address", { address: typedAddress })}
-                          </button>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                  {lookup.state === "notFound" && <p className="text-xs text-destructive" role="status">{t("not_found", { address: lookup.address })}</p>}
-                  {lookup.state === "failed" && <p className="text-xs text-destructive" role="status">{t("lookup_failed")}</p>}
-                  {lookup.state === "self" && <p className="text-xs text-destructive" role="status">{t("is_you")}</p>}
-                  {(directoryOff || lookup.state === "directoryOff") && (
-                    <p className="text-xs text-muted-foreground" role="status" data-testid="delegate-directory-off">
-                      {directoryOff ? `${t("known_only")} ` : ""}{t("directory_off_note")}
-                    </p>
-                  )}
-                  {directory?.status === "error" && <p className="text-xs text-muted-foreground">{t("directory_failed")}</p>}
-                </div>
-              )}
-            </Field>
 
-            <fieldset className="space-y-3">
-              <legend className="mb-1 text-sm font-medium">{t("what")}</legend>
-              {has("mailbox") && (
-                <Choice<MailScope>
-                  label={t("mail")}
-                  value={scope.mail}
-                  onChange={(mail) => setScope({ ...scope, mail })}
-                  options={[...keepOption<MailScope>(keep.mail, t("keep")), ["all", t("mail_all")], ["inbox", t("mail_inbox")], ["none", t("none")]]}
-                />
-              )}
-              {has("calendar") && (
-                <Choice<CollectionScope>
-                  label={t("calendars")}
-                  value={scope.calendars}
-                  onChange={(calendars) => setScope({ ...scope, calendars })}
-                  options={[...keepOption<CollectionScope>(keep.calendars, t("keep")), ["default", t("calendars_default")], ["all", t("calendars_all")], ["none", t("none")]]}
-                />
-              )}
-              {has("addressBook") && (
-                <Choice<CollectionScope>
-                  label={t("address_books")}
-                  value={scope.addressBooks}
-                  onChange={(addressBooks) => setScope({ ...scope, addressBooks })}
-                  options={[...keepOption<CollectionScope>(keep.addressBooks, t("keep")), ["default", t("address_books_default")], ["all", t("address_books_all")], ["none", t("none")]]}
-                />
-              )}
-              {!changing && scopeIsEmpty(scope) && <p className="text-xs text-destructive">{t("empty_scope")}</p>}
-              {changing && <p className="text-xs text-muted-foreground">{t("change_note")}</p>}
-            </fieldset>
-
-            <fieldset className="space-y-2" data-testid="delegate-rights">
-              <legend className="mb-1 text-sm font-medium">{t("rights")}</legend>
-              {[...(keep.level ? ["keep" as const] : []), ...levels].map((option) => (
-                <label key={option} className="flex cursor-pointer items-start gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="delegate-level"
-                    value={option}
-                    checked={level === option}
-                    onChange={() => setLevel(option)}
-                    className="mt-1"
-                  />
-                  <span>
-                    <span className="block">{t(`rights_${option}`)}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      {t(option === "read" && seenSetsKeywords ? "rights_read_hint_flags" : `rights_${option}_hint`)}
-                    </span>
-                  </span>
-                </label>
-              ))}
-              {levelsRestricted && <OrgLockedNote />}
-            </fieldset>
-
-            {changing && nothingToDo && <p className="text-xs text-muted-foreground" role="status">{t("nothing_to_change")}</p>}
-
-            <p className="flex gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-              <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{t("send_note")}</span>
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3 sm:px-6 sm:py-4">
           {failures ? (
-            <>
-              <Button variant="outline" onClick={onClose} disabled={saving}>{tCommon("close")}</Button>
-              <Button onClick={retry} disabled={saving}>
-                {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                {t("retry")}
-              </Button>
-            </>
+            <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-6" role="alert">
+              <p className="text-sm font-medium">{t("partial_title")}</p>
+              <ul className="divide-y divide-border rounded-md border border-border text-sm">
+                {failures.map((f) => (
+                  <li key={`${f.change.kind}:${f.change.id}`} className="px-3 py-2">
+                    <span className="font-medium">{f.change.name}</span>
+                    <span className="text-muted-foreground"> · {t(`kind.${f.change.kind}`)}</span>
+                    {f.error && <div className="text-xs text-muted-foreground">{f.error}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : (
-            <>
-              <Button variant="outline" onClick={onClose} disabled={saving}>{tCommon("cancel")}</Button>
-              <Button onClick={submit} disabled={saving || !principal || nothingToDo}>
-                {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                {changing ? t("apply_change") : t("apply_add")}
-              </Button>
-            </>
+            <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 sm:px-6">
+              <Field label={t("person")}>
+                {principal ? (
+                  <div className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
+                    <Avatar name={principal.name} email={principal.email ?? undefined} size="sm" className="shrink-0" />
+                    <PrincipalText principal={principal} />
+                    {!changing && (
+                      <Button variant="ghost" size="sm" onClick={() => { setPrincipal(null); setLookup({ state: "idle" }); }}>
+                        {t("change_person")}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => { setQuery(e.target.value); setLookup({ state: "idle" }); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void lookUp(); } }}
+                      placeholder={t("search_placeholder")}
+                      aria-label={t("person")}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                      ref={searchRef}
+                    />
+                    {directory === null ? (
+                      <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />{t("loading")}</p>
+                    ) : (
+                      <ul className="max-h-48 overflow-y-auto rounded-md border border-border" aria-label={t("person")} data-testid="delegate-candidates">
+                        {candidates.length === 0 && !canLookUp && (
+                          <li className="px-3 py-2 text-xs text-muted-foreground">{t("no_match")}</li>
+                        )}
+                        {candidates.map((p) => (
+                          <li key={p.id}>
+                            <button
+                              type="button"
+                              onClick={() => setPrincipal(p)}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-start hover:bg-muted focus:bg-muted focus:outline-none"
+                            >
+                              <Avatar name={p.name} email={p.email ?? undefined} size="sm" className="shrink-0" />
+                              <PrincipalText principal={p} />
+                              {existingIds.has(p.id) && <span className="shrink-0 text-[0.625rem] text-muted-foreground">{t("has_access")}</span>}
+                            </button>
+                          </li>
+                        ))}
+                        {canLookUp && (
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => void lookUp()}
+                              disabled={lookup.state === "busy"}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted focus:outline-none disabled:opacity-50"
+                            >
+                              {lookup.state === "busy" && <Loader2 className="h-4 w-4 animate-spin" />}
+                              {lookup.state === "busy" ? t("looking_up") : t("use_address", { address: typedAddress })}
+                            </button>
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                    {lookup.state === "notFound" && <p className="text-xs text-destructive" role="status">{t("not_found", { address: lookup.address })}</p>}
+                    {lookup.state === "failed" && <p className="text-xs text-destructive" role="status">{t("lookup_failed")}</p>}
+                    {lookup.state === "self" && <p className="text-xs text-destructive" role="status">{t("is_you")}</p>}
+                    {(directoryOff || lookup.state === "directoryOff") && (
+                      <p className="text-xs text-muted-foreground" role="status" data-testid="delegate-directory-off">
+                        {directoryOff ? `${t("known_only")} ` : ""}{t("directory_off_note")}
+                      </p>
+                    )}
+                    {directory?.status === "error" && <p className="text-xs text-muted-foreground">{t("directory_failed")}</p>}
+                  </div>
+                )}
+              </Field>
+
+              <fieldset className="space-y-3">
+                <legend className="mb-1 text-sm font-medium">{t("what")}</legend>
+                {has("mailbox") && (
+                  <Choice<MailScope>
+                    label={t("mail")}
+                    value={scope.mail}
+                    onChange={(mail) => setScope({ ...scope, mail })}
+                    options={[...keepOption<MailScope>(keep.mail, t("keep")), ["all", t("mail_all")], ["inbox", t("mail_inbox")], ["none", t("none")]]}
+                  />
+                )}
+                {has("calendar") && (
+                  <Choice<CollectionScope>
+                    label={t("calendars")}
+                    value={scope.calendars}
+                    onChange={(calendars) => setScope({ ...scope, calendars })}
+                    options={[...keepOption<CollectionScope>(keep.calendars, t("keep")), ["default", t("calendars_default")], ["all", t("calendars_all")], ["none", t("none")]]}
+                  />
+                )}
+                {has("addressBook") && (
+                  <Choice<CollectionScope>
+                    label={t("address_books")}
+                    value={scope.addressBooks}
+                    onChange={(addressBooks) => setScope({ ...scope, addressBooks })}
+                    options={[...keepOption<CollectionScope>(keep.addressBooks, t("keep")), ["default", t("address_books_default")], ["all", t("address_books_all")], ["none", t("none")]]}
+                  />
+                )}
+                {!changing && scopeIsEmpty(scope) && <p className="text-xs text-destructive">{t("empty_scope")}</p>}
+                {changing && <p className="text-xs text-muted-foreground">{t("change_note")}</p>}
+              </fieldset>
+
+              <fieldset className="space-y-2" data-testid="delegate-rights">
+                <legend className="mb-1 text-sm font-medium">{t("rights")}</legend>
+                {[...(keep.level ? ["keep" as const] : []), ...levels].map((option) => (
+                  <label key={option} className="flex cursor-pointer items-start gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="delegate-level"
+                      value={option}
+                      checked={level === option}
+                      onChange={() => setLevel(option)}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block">{t(`rights_${option}`)}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t(option === "read" && seenSetsKeywords ? "rights_read_hint_flags" : `rights_${option}_hint`)}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                {levelsRestricted && <OrgLockedNote />}
+              </fieldset>
+
+              {changing && nothingToDo && <p className="text-xs text-muted-foreground" role="status">{t("nothing_to_change")}</p>}
+
+              <p className="flex gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{t("send_note")}</span>
+              </p>
+            </div>
           )}
+
+          <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3 sm:px-6 sm:py-4">
+            {failures ? (
+              <>
+                <Button variant="outline" onClick={onClose} disabled={saving}>{tCommon("close")}</Button>
+                <Button onClick={retry} disabled={saving}>
+                  {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  {t("retry")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={onClose} disabled={saving}>{tCommon("cancel")}</Button>
+                <Button onClick={submit} disabled={saving || !principal || nothingToDo}>
+                  {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  {changing ? t("apply_change") : t("apply_add")}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>,
+    </ModalWindow>,
     document.body,
   );
 }

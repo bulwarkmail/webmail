@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getAccountRecord, openAccountKey, rewrapAccountKey, StoreKeyLayerMissingError } from '@/lib/store/client/keys';
 import { importLockKey, keyFromPin, lockLayer, mainProof, open, PBKDF2_ITERATIONS, pinIsObvious, pinLongEnough } from '../crypto';
-import { rotateVaultKey, createVault, deleteVault, FREE_FAILURES, LONGEST_WAIT_MS, openSealedDrafts, openVaultWithPin, PinBlockedError, pinBlockedUntil, readVault, sealDraft, waitAfter, WrongPinError } from '../vault';
+import { addVaultHello, rotateVaultKey, createVault, deleteVault, FREE_FAILURES, LONGEST_WAIT_MS, openSealedDrafts, openVaultWithHello, openVaultWithPin, PinBlockedError, pinBlockedUntil, readVault, removeVaultHello, sealDraft, waitAfter, WrongPinError } from '../vault';
 
 const PIN = 'correct-pin';
 
@@ -52,8 +52,24 @@ describe('the PIN', () => {
   });
 
   it('must be long enough, counted in characters', () => {
-    expect(pinLongEnough('12345')).toBe(false);
-    expect(pinLongEnough('123456')).toBe(true);
+    expect(pinLongEnough('1234')).toBe(false);
+    expect(pinLongEnough('12345')).toBe(true);
+    expect(pinLongEnough('äöüß')).toBe(false);
+    expect(pinLongEnough('äöüßé')).toBe(true);
+  });
+
+  it('a minimum from a policy can raise the length, never lower it', () => {
+    expect(pinLongEnough('5820374', 8)).toBe(false);
+    expect(pinLongEnough('58203749', 8)).toBe(true);
+    expect(pinLongEnough('4829', 3)).toBe(false);
+  });
+
+  it.each(['12345', '54321', '11111', 'abcde', '12121', 'qwert', 'asdfg', '12321'])('refuses the 5-character %s as too easy to guess', (pin) => {
+    expect(pinIsObvious(pin)).toBe(true);
+  });
+
+  it.each(['48291', '73915', 'k8r2m'])('takes the 5-character %s', (pin) => {
+    expect(pinIsObvious(pin)).toBe(false);
   });
 });
 
@@ -323,5 +339,84 @@ describe('the proof for the desktop app', () => {
     expect(hex(proof)).not.toBe(hex(raw));
     expect(hex(await mainProof(raw))).toBe(hex(proof));
     expect(hex(await mainProof(new Uint8Array(32).fill(4)))).not.toBe(hex(proof));
+  });
+});
+
+describe('Windows Hello\'s way in, with a signer standing in for the key credential', () => {
+  /** Deterministic, as a Hello key credential's RSA PKCS#1 v1.5 signature is: the same salt, the same bytes. */
+  async function fakeSigner() {
+    const key = await crypto.subtle.importKey('raw', crypto.getRandomValues(new Uint8Array(32)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return async (salt: Uint8Array) => new Uint8Array(await crypto.subtle.sign('HMAC', key, salt.slice().buffer as ArrayBuffer));
+  }
+  const salt = (seed: number) => new Uint8Array(32).fill(seed);
+
+  it('opens the lock key with the same signature, and with no other', async () => {
+    const sign = await fakeSigner();
+    const raw = await createVault(PIN);
+    await addVaultHello(raw, salt(1), await sign(salt(1)));
+    expect(hex(await openVaultWithHello(await sign(salt(1))))).toBe(hex(raw));
+    await expect(openVaultWithHello(await sign(salt(2)))).rejects.toBeDefined();
+    await expect(openVaultWithHello(await (await fakeSigner())(salt(1)))).rejects.toBeDefined();
+  });
+
+  it('keeps neither the lock key nor the signature, only the salt it was made with', async () => {
+    const sign = await fakeSigner();
+    const raw = await createVault(PIN);
+    const signature = await sign(salt(1));
+    await addVaultHello(raw, salt(1), signature);
+    const stored = (await readVault())!.hello!;
+    expect(hex(stored.salt)).toBe(hex(salt(1)));
+    expect(hex(stored.data)).not.toContain(hex(raw));
+    expect(hex(stored.data)).not.toContain(hex(signature));
+  });
+
+  it('a wrong signature costs no PIN try', async () => {
+    const sign = await fakeSigner();
+    const raw = await createVault(PIN);
+    await addVaultHello(raw, salt(1), await sign(salt(1)));
+    for (let i = 0; i < FREE_FAILURES + 2; i += 1) await openVaultWithHello(await sign(salt(9))).catch(() => {});
+    expect(await pinBlockedUntil()).toBe(0);
+  });
+
+  it('a new PIN takes its wrap away: it holds the old lock key', async () => {
+    const sign = await fakeSigner();
+    const raw = await createVault(PIN);
+    await addVaultHello(raw, salt(1), await sign(salt(1)));
+    await rotateVaultKey('next-pin-5521', raw);
+    expect((await readVault())!.hello).toBeUndefined();
+    await expect(openVaultWithHello(await sign(salt(1)))).rejects.toBeDefined();
+  });
+
+  it('goes when it is turned off, and leaves the PIN as it was', async () => {
+    const sign = await fakeSigner();
+    const raw = await createVault(PIN);
+    await addVaultHello(raw, salt(1), await sign(salt(1)));
+    await removeVaultHello();
+    expect((await readVault())!.hello).toBeUndefined();
+    expect(hex(await openVaultWithPin(PIN))).toBe(hex(raw));
+  });
+
+  it('goes through main\'s safeStorage in the desktop app, as the PIN\'s wrap does', async () => {
+    const sign = await fakeSigner();
+    const unwrap = vi.fn(async (data: Uint8Array) => (data[0] === 9 ? data.slice(1) : null));
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = {
+      version: 1,
+      platform: 'win32',
+      appLock: {
+        status: async () => ({ locked: false, enrolled: false, os: null, osEnrolled: false, wrap: true }),
+        wrap: async (data: Uint8Array) => Uint8Array.from([9, ...data]),
+        unwrap,
+      },
+    };
+    try {
+      const raw = await createVault(PIN);
+      await addVaultHello(raw, salt(1), await sign(salt(1)));
+      expect((await readVault())!.hello!.shell).toBe(true);
+      unwrap.mockClear();
+      expect(hex(await openVaultWithHello(await sign(salt(1))))).toBe(hex(raw));
+      expect(unwrap).toHaveBeenCalledTimes(1);
+    } finally {
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    }
   });
 });

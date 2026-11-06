@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Vaša organizácia blokuje vzdialený obsah vo všetkých správach, takže sa nenačíta ani od dôveryhodných odosielateľov."
   },
+  "trusted_senders_book": {
+    "unavailable": "Nie je k dispozícii: tento účet nemôže ukladať adresáre na server. Zoznam zostane v tomto zariadení."
+  },
   "date": {
     "today": "Dnes",
     "yesterday": "Včera",
@@ -1675,7 +1678,7 @@
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
         "default": "Predvolené",
-        "mountain_view": "Vyhľadávanie hore, aplikácie vľavo"
+        "mountain_view": "Vyhľadávanie hore"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -2118,12 +2121,6 @@
         "description": "Vyberte, či kliknutie na prílohu zobrazí náhľad alebo ju okamžite stiahne",
         "preview": "Náhľad, ak je to možné",
         "download": "Okamžite stiahnuť"
-      },
-      "attachment_position": {
-        "label": "Pozícia príloh",
-        "description": "Kde zobrazovať prílohy v hlavičke e-mailu",
-        "below-header": "Pod hlavičkou",
-        "below-message": "Karty pod správou"
       },
       "emails_per_page": {
         "10": "10 e-mailov",
@@ -3596,6 +3593,10 @@
       "sync_on": "Vaše ďalšie zariadenia používajú rovnaké nastavenia, takže sa zmenia tiež.",
       "sync_off": "Vaše ďalšie zariadenia si nastavenia ponechajú."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplikácie a priečinky vľavo, hľadanie nad zoznamom",
+    "mountain_view_description": "Hľadanie hore, správy sa otvárajú na celú šírku"
   },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Dátum",
     "subject_label": "Predmet"
   },
+  "print_styles": {
+    "title": "Tlač",
+    "description": "Ako vyzerajú vytlačené správy, kontakty a kalendáre.",
+    "style_label": "Štýl tlače",
+    "style_description": "Doplnky môžu pridať štýly, napríklad hlavičkový papier s adresou vašej firmy.",
+    "standard": "Štandardný",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Nainštalovať {appName}",
     "description": "Nainštalujte si našu aplikáciu pre rýchly prístup.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Súčasný PIN",
     "pin_new": "Nový PIN",
     "pin_repeat": "Zopakujte PIN",
-    "pin_hint": "Aspoň 6 znakov. Fungujú aj písmená a dlhší PIN sa ťažšie uhádne.",
+    "pin_hint": "Aspoň 5 znakov. Fungujú aj písmená a dlhší PIN sa ťažšie uhádne.",
+    "pin_hint_policy": "Vaša organizácia vyžaduje aspoň {count, plural, one {# znak} few {# znaky} many {# znaku} other {# znakov}}. Fungujú aj písmená.",
     "pin_obvious": "Tento PIN sa dá príliš ľahko uhádnuť. Vyhnite sa opakovaniu, radám a bežným voľbám.",
     "pin_mismatch": "Oba kódy PIN nie sú rovnaké.",
     "pin_recovery": "Ak ho zabudnete, jedinou cestou je odstrániť údaje z tohto zariadenia a znova sa prihlásiť. Vaša pošta na serveri zostáva. Správy čakajúce na odoslanie na tomto zariadení sa stratia.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minúta} few {# minúty} many {# minúty} other {# minút}}",
     "blocked_seconds": "Príliš veľa pokusov. Skúste to o {count, plural, one {# sekundu} few {# sekundy} many {# sekundy} other {# sekúnd}}.",
     "blocked_minutes": "Príliš veľa pokusov. Skúste to o {count, plural, one {# minútu} few {# minúty} many {# minúty} other {# minút}}."
+  },
+  "appLockHello": {
+    "switch_label": "Odomykať pomocou Windows Hello",
+    "switch_desc": "Tvárou, odtlačkom prsta alebo PIN kódom Windows. PIN aplikácie naďalej funguje.",
+    "protects": "Keď je Windows Hello zapnuté, Windows pre túto aplikáciu uchováva kľúč, ktorý funguje až potom, čo Windows Hello overí, že ste to vy. Kľúč aplikácie je zamknutý aj týmto kľúčom, takže na odomknutie treba vašu tvár, odtlačok prsta alebo PIN Windows, a iný program v tomto počítači nemôže kľúč použiť bez toho, aby sa vás Windows najprv opýtal. PIN aplikácie naďalej funguje a budete ho potrebovať, ak sa Windows Hello obnoví alebo vypne.",
+    "enable_title": "Zapnúť Windows Hello",
+    "enable_body": "Zadajte PIN aplikácie. Windows vás potom požiada o potvrdenie pomocou Windows Hello.",
+    "enable_failed": "Windows Hello sa nepodarilo zapnúť. Skúste to znova.",
+    "cancelled": "Windows Hello sa zrušilo.",
+    "unsupported": "Windows Hello v tomto počítači nemôže kľúč chrániť. Váš PIN naďalej funguje.",
+    "unavailable": "Windows Hello v tomto počítači nie je k dispozícii.",
+    "busy": "Windows Hello je zaneprázdnené alebo zablokované. Skúste to neskôr.",
+    "off_after_pin_change": "Windows Hello je teraz vypnuté, pretože po zmene PIN kódu nepotvrdilo. Ak ho používate, zapnite ho znova.",
+    "prompt": "Potvrďte pomocou Windows Hello, že ste to vy.",
+    "waiting": "Čaká sa na Windows Hello…",
+    "use_hello": "Odomknúť pomocou Windows Hello",
+    "use_pin": "Použiť PIN",
+    "failed": "Windows Hello aplikáciu neodomklo. Zadajte PIN.",
+    "gone": "Windows Hello už v tomto počítači aplikáciu neodomyká. Zadajte PIN."
   },
   "uxs_general": {
     "time_zone_common": "Bežné časové pásma",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID odtlačok prsta tvár prístupový kľúč passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Súkromie a zabezpečenie",
+      "security": "Heslo a prihlásenie",
+      "about_updates": "O aplikácii a aktualizácie",
+      "backup": "Záloha a import"
+    },
+    "sections": {
+      "start": "Spustenie a zatvorenie",
+      "shortcuts": "Skratky z iných aplikácií",
+      "mail_links": "Poštové odkazy a súbory"
+    },
+    "privacy_link_description": "Tieto nastavenia nájdete na stránke Súkromie a zabezpečenie."
   },
   "desktop_policy": {
     "server_refused": "Vaša organizácia tento server na tomto zariadení nepovoľuje.",

@@ -26,6 +26,10 @@ export type SettingsSearchTab =
   | 'offline'
   | 'privacy'
   | 'backup'
+  /** The desktop app's own page: tray, start at sign-in, windows, shortcuts. */
+  | 'desktop'
+  /** Listed only with advanced settings on: logging, developer tools, fixes. */
+  | 'troubleshooting'
   | 'about';
 
 type Tab = SettingsSearchTab;
@@ -99,33 +103,31 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.language_region.time_format.label' },
     { label: 'settings.language_region.time_zone.label', synonyms: syn2('timezone') },
     { label: 'settings.language_region.first_day.label', synonyms: syn2('week_start') },
-    { label: 'appLock.section_title' },
-    // Windows Hello and Touch ID are set up under the PIN lock, once it is on.
-    { label: 'appLock.enable_label', synonyms: [syn('app_lock'), syn3('app_lock_hello')] },
-    { label: 'desktopOs.section_title', when: 'desktop' },
-    { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
-    { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
-    { label: 'desktopOs.show_shortcut_label', when: 'desktop' },
-    // Its switch is here, not on Composing (settings-p3-7).
-    { label: 'desktopQuickCompose.label', when: 'desktop', synonyms: syn3('quick_compose') },
-    { label: 'desktopOs.default_app_label', when: 'desktop', synonyms: syn2('default_app') },
+    // A browser's mail and calendar links; the desktop app sets its own on Desktop app.
     { label: 'protocol_handlers.title', when: 'browser' },
     { label: 'protocol_handlers.mailto_label', when: 'browser' },
     { label: 'protocol_handlers.webcal_label', when: 'browser' },
     { label: 'protocol_handlers.protocol_open_mode_label', advanced: true, when: 'browser' },
+    { label: 'tour.settings_section' },
+    { label: 'tour.restart_title' },
+    { label: 'tour.show_on_new_devices_title', advanced: true },
+  ],
+  // The desktop app's own page (settings reorg 2026-11-05): how it starts,
+  // closes, shows its windows and takes keys, and its mail links.
+  desktop: [
+    { label: 'settings_reorg.sections.start', when: 'desktop' },
+    { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
+    { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
     { label: 'desktopUi.settings.title', when: 'desktop' },
     { label: 'desktopUi.settings.double_click_label', when: 'desktop' },
     { label: 'desktopUi.settings.restore_label', when: 'desktop' },
     { label: 'desktopMenuBar.always_show_label', when: 'desktopMenuBar', synonyms: syn2('menu_bar') },
-    { label: 'tour.settings_section' },
-    { label: 'tour.restart_title' },
-    { label: 'tour.show_on_new_devices_title', advanced: true },
-    // Results name the row, not its section (settings-p3-7).
-    { label: 'desktop_updates.title', when: 'desktop' },
-    { label: 'ux_p3_search.updates_label', when: 'desktop', synonyms: syn2('updates') },
-    { label: 'desktop_updates.channel_label', when: 'desktop' },
-    { label: 'desktopDevTools.section_title', when: 'desktop', advanced: true },
-    { label: 'ux_p3_search.devtools_label', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
+    { label: 'settings_reorg.sections.shortcuts', when: 'desktop' },
+    { label: 'desktopOs.show_shortcut_label', when: 'desktop' },
+    // Its switch is here, not on Composing (settings-p3-7).
+    { label: 'desktopQuickCompose.label', when: 'desktop', synonyms: syn3('quick_compose') },
+    { label: 'settings_reorg.sections.mail_links', when: 'desktop' },
+    { label: 'desktopOs.default_app_label', when: 'desktop', synonyms: syn2('default_app') },
   ],
   notifications: [
     // Do not disturb with quiet hours, at the top of the page (settings-p3-6).
@@ -162,6 +164,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.sections.sidebar' },
     { label: 'settings.appearance.colorful_sidebar_icons.label' },
     { label: 'settings.appearance.show_folder_total_count.label' },
+    { label: 'print_styles.title' },
+    { label: 'print_styles.style_label' },
     { label: 'settings.appearance.sections.experimental', advanced: true },
     { label: 'settings.appearance.pro_interface.label', advanced: true },
     { label: 'settings.appearance.sidebar_account_switcher.label' },
@@ -257,7 +261,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.reading_page.plain_text_font_link.label' },
     { label: 'settings.email_behavior.always_light_mode.label' },
     { label: 'settings.reading_page.sections.attachments' },
-    { label: 'settings.email_behavior.attachment_position.label' },
     { label: 'settings.email_behavior.attachment_click_action.label' },
     { label: 'settings.email_behavior.attachment_image_previews.label' },
     { label: 'settings.email_behavior.hide_inline_image_attachments.label' },
@@ -400,6 +403,9 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'offline.outbox.title', synonyms: syn('outbox') },
   ],
   privacy: [
+    { label: 'appLock.section_title' },
+    // Windows Hello and Touch ID are set up under the PIN lock, once it is on.
+    { label: 'appLock.enable_label', synonyms: [syn('app_lock'), syn3('app_lock_hello')] },
     { label: 'settings.reading_page.sections.images', synonyms: syn('remote_content') },
     { label: 'settings.email_behavior.external_content.label', synonyms: syn2('block_images') },
     { label: 'settings.email_behavior.trusted_senders.label' },
@@ -424,28 +430,48 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'mail_import.section_title' },
     { label: 'mail_import.settings_label', synonyms: syn3('mail_import') },
     { label: 'mail_export.settings_label' },
-    { label: 'settings.advanced.sections.fix' },
-    { label: 'settings.advanced.refresh_cache.label' },
-    { label: 'settings.advanced.reset_settings.label' },
+  ],
+  // The whole page is advanced: it is listed only with the switch on, and a
+  // result shows its row alone.
+  troubleshooting: [
+    { label: 'settings.advanced.sections.fix', advanced: true },
+    { label: 'settings.advanced.refresh_cache.label', advanced: true },
+    { label: 'settings.advanced.reset_settings.label', advanced: true },
     { label: 'settings.advanced.debug_mode.label', advanced: true },
+    { label: 'ux_p3_search.devtools_label', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
   ],
   about: [
     { label: 'uxs_structure.about.title', synonyms: syn('version') },
+    // The desktop app's updates (settings reorg 2026-11-05). Results name the row, not its section (settings-p3-7).
+    { label: 'desktop_updates.title', when: 'desktop' },
+    { label: 'ux_p3_search.updates_label', when: 'desktop', synonyms: syn2('updates') },
+    { label: 'desktop_updates.channel_label', when: 'desktop' },
   ],
 };
 
-/** Pages added after `settings.tabs` keep their names in their own namespace. */
+/** Pages whose own names are in a namespace other than `settings.tabs`. */
 const NEW_TAB_LABELS: Partial<Record<Tab, string>> = {
   offline: 'uxs_structure.tabs.offline',
   files_sync: 'files_sync.title',
-  privacy: 'uxs_structure.tabs.privacy',
+  privacy: 'settings_reorg.tabs.privacy',
+  security: 'settings_reorg.tabs.security',
+  backup: 'settings_reorg.tabs.backup',
+  desktop: 'desktopOs.section_title',
+  troubleshooting: 'desktopDevTools.section_title',
   about: 'uxs_structure.tabs.about',
 };
 
-/** Translation key of a settings page's name. */
-export function settingsTabLabelKey(tab: SettingsSearchTab): string {
+/**
+ * Translation key of a settings page's name. About is "About & updates" in
+ * the desktop app, which has updates to check; a browser has none to offer.
+ */
+export function settingsTabLabelKey(tab: SettingsSearchTab, desktop = false): string {
+  if (tab === 'about' && desktop) return 'settings_reorg.tabs.about_updates';
   return NEW_TAB_LABELS[tab] ?? `settings.tabs.${tab}`;
 }
+
+/** Pages listed in the nav only while "Show advanced settings" is on. Search and links still open them. */
+export const ADVANCED_ONLY_TABS: ReadonlySet<SettingsSearchTab> = new Set(['troubleshooting']);
 
 // Extra English keywords per tab so common search terms hit even when the
 // translation doesn't contain the literal word.
@@ -454,18 +480,18 @@ export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set(['settin
 
 export const tabKeywords: Record<Tab, string> = {
   account: 'profile email user signin signout reorder rearrange drag dropdown switcher multi-account identities from address signature plus addressing unified mailbox shared group',
-  general: 'language locale region timezone date time format mailto webcal links default app protocol handler tour onboarding lock pin passkey windows hello touch id',
+  general: 'language locale region timezone date time format mailto webcal links default app protocol handler tour onboarding',
   notifications: 'sound alert push badge favicon tab icon unread count background relay device',
   appearance: 'theme dark light font size accent color animation density custom theme css skin toolbar sidebar account switcher icons rail layout reading pane',
   accessibility: 'a11y accessible vision blind low vision screen reader contrast motion animation reduce zoom text size font dyslexia spacing keyboard shortcuts focus outline cursor pointer targets colour blind color sound visual alert hearing deaf simple plain language read aloud',
   message_list: 'inbox list preview thread conversation grouping sort order columns archive delete swipe hover favicon avatar tag color',
   reading: 'mark read attachment open monospace mono font plain text dark light download filename template eml save export',
-  // No "quick": Quick compose is on General, in the desktop app (settings-p3-7).
+  // No "quick": Quick compose is on Desktop app, in the desktop app (settings-p3-7).
   composing: 'editor signature plain text reply forward draft compose template snippet mention undo send receipt attachment reminder',
   vacation: 'auto reply away out of office holiday responder',
   filters: 'sieve rules add create new block junk forward',
   organize: 'folders mailbox subscribe roles tags labels keywords colors nested',
-  security: 'password 2fa two-factor passkey app password mfa api key token phone mobile app pair qr thunderbird outlook apple mail imap smtp caldav carddav server settings client encryption pgp smime',
+  security: 'security sign in login password 2fa two-factor passkey app password mfa api key token phone mobile app pair qr thunderbird outlook apple mail imap smtp caldav carddav server settings client encryption pgp smime',
   sharing: 'delegate delegation share access assistant permissions revoke folders calendars contacts colleague',
   recovery: 'recover restore undelete deleted trash emptied lost messages',
   calendar: 'event schedule appointment meeting timezone invitation ics ical webcal subscribe subscription tasks birthday working hours',
@@ -474,9 +500,11 @@ export const tabKeywords: Record<Tab, string> = {
   files_sync: 'sync synchronize folder drive explorer finder computer local disk letter',
   addons: 'apps webview iframe plugins extensions addons sidebar',
   offline: 'offline connection storage device sync outbox local kept',
-  privacy: 'privacy tracking remote images content read receipts favicons pictures telemetry crash reports',
-  backup: 'export import backup reset sync cache debug logs developer console diagnostic',
-  about: 'about version update source code github license',
+  privacy: 'privacy security lock pin passkey windows hello touch id fingerprint certificates smart card tracking remote images content read receipts favicons pictures telemetry crash reports',
+  backup: 'export import backup sync mbox eml',
+  desktop: 'desktop app tray autostart startup login minimized shortcut hotkey keys quick compose default mail app mailto windows double click restore menu bar',
+  troubleshooting: 'troubleshoot problem fix reset cache refresh debug logs logging developer tools devtools console diagnostic',
+  about: 'about version update updates channel beta stable check source code github license',
 };
 
 // Some settings texts name the app with {appName} (#1314). The index keeps

@@ -983,6 +983,24 @@ if (!IS_LITE) {
   });
 }
 
+/**
+ * Resolves once this page started its plugins (initializePlugins ran, so
+ * their hooks are registered), or after `timeoutMs`: whatever waits for
+ * them never waits for ever, also where plugins are off.
+ */
+export function whenPluginsStarted(timeoutMs = 20_000): Promise<void> {
+  if (usePluginStore.getState().initialized) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      off();
+      resolve();
+    };
+    const timer = setTimeout(done, timeoutMs);
+    const off = usePluginStore.subscribe((state) => { if (state.initialized) done(); });
+  });
+}
+
 // The list for code that shouldn't import this store (lib/plugin-sandbox/known-plugins.ts).
 setKnownPlugins(usePluginStore.getState().plugins);
 usePluginStore.subscribe((state) => setKnownPlugins(state.plugins));

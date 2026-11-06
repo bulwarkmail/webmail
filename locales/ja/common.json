@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "組織がすべてのメールでリモートコンテンツをブロックしているため、信頼済みの送信者からも読み込まれません。"
   },
+  "trusted_senders_book": {
+    "unavailable": "利用できません: このアカウントはサーバーにアドレス帳を保存できません。リストはこのデバイスに残ります。"
+  },
   "date": {
     "today": "今日",
     "yesterday": "昨日",
@@ -1672,7 +1675,7 @@
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
         "default": "デフォルト",
-        "mountain_view": "検索バーを上、アプリを左に配置"
+        "mountain_view": "検索バーを上に配置"
       },
       "animations": {
         "label": "アニメーションを有効にする",
@@ -2115,12 +2118,6 @@
         "description": "添付ファイルをクリックしたときに、プレビューを開くかすぐにダウンロードするかを選択します",
         "preview": "可能ならプレビューを開く",
         "download": "すぐにダウンロード"
-      },
-      "attachment_position": {
-        "label": "添付ファイルの位置",
-        "description": "メールヘッダー内での添付ファイルの表示位置",
-        "below-header": "ヘッダーの下",
-        "below-message": "メッセージの下にカードで表示"
       },
       "emails_per_page": {
         "10": "10件",
@@ -3596,6 +3593,10 @@
       "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
       "sync_off": "ほかのデバイスの設定はそのままです。"
     }
+  },
+  "layout_preview": {
+    "default_description": "アプリとフォルダーは左、検索はリストの上",
+    "mountain_view_description": "検索は上部に表示、メッセージは全幅で開きます"
   },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",
@@ -6233,6 +6234,14 @@
     "date_label": "日付",
     "subject_label": "件名"
   },
+  "print_styles": {
+    "title": "印刷",
+    "description": "印刷したメッセージ、連絡先、カレンダーの見た目です。",
+    "style_label": "印刷スタイル",
+    "style_description": "アドオンでスタイルを追加できます。たとえば会社の住所入りのレターヘッドなどです。",
+    "standard": "標準",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} をインストール",
     "description": "素早くアクセスできるよう、アプリをインストールしましょう。",
@@ -7414,7 +7423,8 @@
     "pin_current": "現在の PIN",
     "pin_new": "新しい PIN",
     "pin_repeat": "PIN をもう一度",
-    "pin_hint": "6 文字以上。文字も使えます。長い PIN ほど推測されにくくなります。",
+    "pin_hint": "5 文字以上。文字も使えます。長い PIN ほど推測されにくくなります。",
+    "pin_hint_policy": "組織が {count, plural, other {# 文字}}以上を必須にしています。英字も使えます。",
     "pin_obvious": "この PIN は推測されやすすぎます。繰り返し、連番、よくある組み合わせは避けてください。",
     "pin_mismatch": "2 つの PIN が一致しません。",
     "pin_recovery": "忘れた場合は、このデバイスのデータを削除してサインインし直すしかありません。サーバー上のメールは残ります。このデバイスで送信待ちのメッセージは失われます。",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, other {# 分}}",
     "blocked_seconds": "試行回数が多すぎます。{count, plural, other {# 秒}}後にもう一度お試しください。",
     "blocked_minutes": "試行回数が多すぎます。{count, plural, other {# 分}}後にもう一度お試しください。"
+  },
+  "appLockHello": {
+    "switch_label": "Windows Hello でロックを解除",
+    "switch_desc": "顔、指紋、または Windows の PIN を使います。アプリの PIN も引き続き使えます。",
+    "protects": "Windows Hello をオンにすると、Windows はこのアプリ用の鍵を保管します。この鍵は、Windows Hello で本人確認ができたときにだけ使えます。アプリの鍵はこの鍵でもロックされるため、ロックの解除には顔、指紋、または Windows の PIN が必要になり、このコンピューター上の別のプログラムが Windows の確認なしにこの鍵を使うことはできません。アプリの PIN も引き続き使えます。Windows Hello がリセットまたはオフにされたときは、アプリの PIN が必要です。",
+    "enable_title": "Windows Hello をオンにする",
+    "enable_body": "アプリの PIN を入力してください。そのあと Windows が Windows Hello での確認を求めます。",
+    "enable_failed": "Windows Hello をオンにできませんでした。もう一度お試しください。",
+    "cancelled": "Windows Hello がキャンセルされました。",
+    "unsupported": "このコンピューターの Windows Hello では鍵を保護できません。PIN は引き続き使えます。",
+    "unavailable": "このコンピューターでは Windows Hello を使用できません。",
+    "busy": "Windows Hello が使用中か、ロックされています。しばらくしてからお試しください。",
+    "off_after_pin_change": "PIN の変更後に Windows Hello で確認されなかったため、Windows Hello はオフになりました。使う場合はもう一度オンにしてください。",
+    "prompt": "Windows Hello で本人確認をしてください。",
+    "waiting": "Windows Hello を待っています…",
+    "use_hello": "Windows Hello でロックを解除",
+    "use_pin": "PIN を使う",
+    "failed": "Windows Hello でアプリのロックを解除できませんでした。PIN を入力してください。",
+    "gone": "このコンピューターでは Windows Hello でアプリのロックを解除できなくなりました。PIN を入力してください。"
   },
   "uxs_general": {
     "time_zone_common": "よく使うタイムゾーン",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID 指紋 顔認証 パスキー passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "プライバシーとセキュリティ",
+      "security": "パスワードとサインイン",
+      "about_updates": "情報とアップデート",
+      "backup": "バックアップとインポート"
+    },
+    "sections": {
+      "start": "起動と終了",
+      "shortcuts": "他のアプリからのショートカット",
+      "mail_links": "メールのリンクとファイル"
+    },
+    "privacy_link_description": "これらの設定は「プライバシーとセキュリティ」ページにあります。"
   },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",

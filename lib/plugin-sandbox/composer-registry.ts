@@ -44,6 +44,12 @@ export interface ComposerHandle {
   replaceBody(html: string, text: string): boolean;
   /** Replace the selection (or insert at the caret), or with `below` add after it. */
   replaceSelection(html: string, text: string, opts: { below: boolean }): boolean;
+  /**
+   * Replace the subject (plain text, already cleaned), as the user typing it
+   * would: one undo step, the draft marked changed. Absent where the
+   * composer has no subject (a quick reply).
+   */
+  setSubject?(subject: string): boolean;
   /** Attach a blob the plugin uploaded, through the composer's usual checks. */
   attach(file: ComposerAttachment): Promise<boolean>;
   /**

@@ -249,8 +249,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('returnToListAfterAction', 'reading', `${EB}return_to_list_after_action.label`),
   choice('messageSpacing', 'reading', `${EB}message_spacing.label`, opts(`${EB}message_spacing.`, ['auto', 'always', 'edge'])),
   bool('emailAlwaysLightMode', 'reading', `${EB}always_light_mode.label`),
-  choice('attachmentPosition', 'reading', `${EB}attachment_position.label`,
-    opts(`${EB}attachment_position.`, ['below-header', 'below-message'])),
   choice('mailAttachmentAction', 'reading', `${EB}attachment_click_action.label`,
     opts(`${EB}attachment_click_action.`, ['preview', 'download'])),
   bool('attachmentImagePreviewsEnabled', 'reading', `${EB}attachment_image_previews.label`),
@@ -455,6 +453,8 @@ export const DENIED_SETTINGS: readonly string[] = [
 export const NOT_YET_SETTINGS: readonly string[] = [
   'messageListOrder', 'filesSettings', 'activeThemeId', 'birthdayCalendarColor', 'vacationBlockCalendar',
   'writingLanguage', 'calendarNarrowWeekAllDays',
+  // A plugin's print style: offered only while that plugin runs.
+  'printTheme',
 ];
 
 /** Line breaks, tabs and other control characters. */

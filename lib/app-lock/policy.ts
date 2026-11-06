@@ -6,6 +6,7 @@
 
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { POLICY_SCHEMA } from '@/lib/desktop/policy-schema';
+import { MIN_PIN_LENGTH } from './crypto';
 import { DEFAULT_TIMEOUT_MINUTES } from './state';
 
 const timeoutDefinition = POLICY_SCHEMA.AppLockTimeoutMinutes;
@@ -20,6 +21,8 @@ interface PolicyEntry<T> {
 interface LockPolicies {
   AppLockRequired?: PolicyEntry<boolean>;
   AppLockTimeoutMinutes?: PolicyEntry<number | null>;
+  AppLockPinMinLength?: PolicyEntry<number | null>;
+  AppLockHelloAllowed?: PolicyEntry<boolean>;
 }
 
 interface PolicyBridge {
@@ -43,6 +46,25 @@ function read(): LockPolicies {
 export function appLockRequired(): boolean {
   const entry = read().AppLockRequired;
   return entry?.locked === true && entry.value === true;
+}
+
+/**
+ * Windows Hello as a way to unlock, AppLockHelloAllowed: on unless forced off. Off hides the
+ * switch and drops an existing Hello wrap. Main refuses as well, and deletes the key credential.
+ */
+export function appLockHelloAllowed(): boolean {
+  const entry = read().AppLockHelloAllowed;
+  return !(entry?.locked === true && entry.value === false);
+}
+
+/**
+ * How long a new PIN must be, AppLockPinMinLength: the app's own floor unless a forced policy asks
+ * for more. Only for a new PIN: one set before keeps working.
+ */
+export function pinMinLength(): number {
+  const entry = read().AppLockPinMinLength;
+  const value = entry?.locked === true && typeof entry.value === 'number' ? entry.value : 0;
+  return Math.max(MIN_PIN_LENGTH, value);
 }
 
 export interface EffectiveTimeout {

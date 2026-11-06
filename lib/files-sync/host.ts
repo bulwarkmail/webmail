@@ -23,6 +23,7 @@
  */
 
 import type { DesktopOsNotification, FilesControls, FilesDriveState, FilesDriveStatus, FilesRescued, FilesResult, FilesRoot } from '@/lib/desktop/types';
+import { debug } from '@/lib/debug';
 import type { StorageQuota } from '@/lib/quota';
 import { FetchTransport, type StoreSession } from '@/lib/store/engine/transport';
 import type { ActivityStore } from './activity-store';
@@ -100,8 +101,12 @@ interface QuotaState {
 
 const DEVICE: Record<string, string> = { win32: 'Windows', darwin: 'Mac', linux: 'Linux' };
 
-/** The app's client as a transport: its session and header, read each time, renewed through it. */
+/**
+ * The app's client as a transport: its session and header, read each time, renewed through it.
+ * Null for a client with no JMAP session behind it (the demo's) and a server without Files.
+ */
 export function remoteForClient(client: SessionClient): FilesRemote | null {
+  if (typeof client.getSessionSnapshot !== 'function' || typeof client.getAuthHeader !== 'function') return null;
   if (client.isOfflineOnly?.()) return null;
   const session = client.getSessionSnapshot() as StoreSession | undefined;
   if (!session?.apiUrl || !session.uploadUrl || !session.downloadUrl) return null;
@@ -233,7 +238,14 @@ export class FilesSyncHost {
       }
       const known = this.accounts.get(account.id);
       if (known && known.client === account.client) continue;
-      const remote = (this.deps.remoteFor ?? ((entry: HostAccount) => remoteForClient(entry.client)))(account);
+      let remote: FilesRemote | null;
+      try {
+        remote = (this.deps.remoteFor ?? ((entry: HostAccount) => remoteForClient(entry.client)))(account);
+      } catch (error) {
+        // One client that can't say what its session is doesn't stop the others.
+        debug.error('[files-sync] no Files for this account:', error);
+        remote = null;
+      }
       if (!remote) continue;
       this.accounts.set(account.id, account);
       this.remotes.set(account.id, remote);

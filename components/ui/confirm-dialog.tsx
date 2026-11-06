@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { askInWindow, dialogWindowsAvailable } from "@/lib/desktop/dialog-window";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useDialogSurfaceContext } from "@/components/ui/dialog-surface";
 import { AlertTriangle } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,10 @@ export function useConfirmInWindow({ isOpen, title, message, confirmText, cancel
     handlers.current = { onConfirm, onClose };
   });
   const available = useSyncExternalStore(noChanges, dialogWindowsAvailable, () => false);
-  const asking = isOpen && !refused && available;
+  // Asked from inside a dialog window: the Dialog below opens its window over that one,
+  // where the shell's question window would hang on the page behind.
+  const inSurface = useDialogSurfaceContext() !== null;
+  const asking = isOpen && !refused && available && !inSurface;
 
   useEffect(() => {
     if (!asking) return;

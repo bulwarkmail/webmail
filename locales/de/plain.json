@@ -318,9 +318,6 @@
         "label": "Wenn Sie auf einen Anhang klicken",
         "description": "Wählen Sie, ob ein Klick auf einen Anhang ihn anzeigt oder auf Ihrem Gerät speichert"
       },
-      "attachment_position": {
-        "description": "Wo Anhänge in einer geöffneten E-Mail stehen"
-      },
       "always_light_mode": {
         "description": "E-Mails mit hellem Hintergrund zeigen, auch wenn die App dunkel ist. Manche E-Mails sehen falsch aus, wenn sie dunkel dargestellt werden."
       },

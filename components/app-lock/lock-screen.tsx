@@ -6,8 +6,9 @@ import { Lock } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConfig } from "@/hooks/use-config";
+import { LockBackdrop } from "./lock-backdrop";
 import { NewPinFields, newPinReady } from "./pin-fields";
-import { enableAppLock, forgetEverything, unlockWithOs, unlockWithPasskey, unlockWithPin, type AppLockPhase } from "@/lib/app-lock/controller";
+import { cancelHello, enableAppLock, forgetEverything, helloState, unlockWithHello, unlockWithOs, unlockWithPasskey, unlockWithPin, type AppLockPhase } from "@/lib/app-lock/controller";
 import { passkeysPossible } from "@/lib/app-lock/passkey";
 import { APP_LOCK_CHANNEL, postAppLockMessage, type AppLockMessage } from "@/lib/app-lock/state";
 import { pinBlockedUntil, readVault } from "@/lib/app-lock/vault";
@@ -68,6 +69,13 @@ function useMainWindowThere(): boolean {
   return there;
 }
 
+/**
+ * The whole window: the app's skeleton behind (not in a pop-out, which isn't the mail
+ * page), the window's drag band over the top row, and the card. The band comes before
+ * the card, so the card's fields and buttons cut themselves out of it. It needs its own
+ * element: this overlay, fixed and a dialog, cuts the page's band (body::before) out
+ * everywhere. See app/globals.css.
+ */
 function Frame({ title, body, children }: { title: string; body?: string; children: React.ReactNode }) {
   const titleId = useId();
   return (
@@ -76,17 +84,21 @@ function Frame({ title, body, children }: { title: string; body?: string; childr
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-[100001] flex items-center justify-center overflow-y-auto bg-background p-6 pt-[calc(var(--titlebar-inset,0px)+1.5rem)]"
+      className="fixed inset-0 z-[100001] bg-background"
     >
-      <div className="w-full max-w-sm space-y-5">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground">
-            <Lock className="h-6 w-6" aria-hidden="true" />
-          </span>
-          <h1 id={titleId} className="text-lg font-semibold text-foreground">{title}</h1>
-          {body && <p className="text-sm text-muted-foreground">{body}</p>}
+      {!isPopoutWindow() && <LockBackdrop />}
+      <div aria-hidden="true" data-window-drag-band="" />
+      <div className="absolute inset-0 flex overflow-y-auto p-6 pt-[calc(var(--titlebar-inset,0px)+1.5rem)]">
+        <div data-app-lock-card="" className="relative m-auto w-full max-w-sm space-y-5 rounded-xl border border-border bg-background p-6 shadow-xl">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground">
+              <Lock className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <h1 id={titleId} className="text-lg font-semibold text-foreground">{title}</h1>
+            {body && <p className="text-sm text-muted-foreground">{body}</p>}
+          </div>
+          {children}
         </div>
-        {children}
       </div>
     </div>
   );
@@ -124,6 +136,7 @@ function SetupForm() {
 
 function UnlockForm() {
   const t = useTranslations("appLock");
+  const tHello = useTranslations("appLockHello");
   const appName = productName(useConfig().appName);
   const [forgetting, setForgetting] = useState(false);
   const [pin, setPin] = useState("");
@@ -132,6 +145,12 @@ function UnlockForm() {
   const [blockedUntil, setBlockedUntil] = useBlockedUntil();
   const [hasPasskey, setHasPasskey] = useState(false);
   const [osKind, setOsKind] = useState<DesktopOsUnlockKind | null>(null);
+  // Windows Hello comes first where it's on, with the PIN a click away.
+  const [helloReady, setHelloReady] = useState(false);
+  const [asking, setAsking] = useState<"hello" | "pin">("pin");
+  /** Which Hello try is the current one: a late answer to one the user left for the PIN changes nothing. */
+  const helloTry = useRef(0);
+  const helloAsked = useRef(false);
   const mainThere = useMainWindowThere();
   const inputRef = useRef<HTMLInputElement>(null);
   const pinId = useId();
@@ -139,6 +158,11 @@ function UnlockForm() {
   useEffect(() => {
     void readVault().then((vault) => setHasPasskey(Boolean(vault?.prf) && passkeysPossible())).catch(() => {});
     void getDesktopBridge()?.appLock?.status().then((status) => setOsKind(status.osEnrolled ? status.os : null)).catch(() => {});
+    void helloState().then((state) => {
+      if (!state.on) return;
+      setHelloReady(true);
+      setAsking("hello");
+    }).catch(() => {});
   }, []);
 
   const blocked = blockedUntil > 0;
@@ -163,6 +187,53 @@ function UnlockForm() {
       } else setMessage(t("unlock_failed"));
     }
   }, [blocked, busy, pin, setBlockedUntil, t]);
+
+  const withHello = useCallback(async () => {
+    const attempt = ++helloTry.current;
+    setAsking("hello");
+    setBusy(true);
+    setMessage(null);
+    try {
+      await unlockWithHello();
+    } catch (error) {
+      if (attempt !== helloTry.current) return;
+      const reason = (error as Error & { reason?: string })?.reason;
+      setBusy(false);
+      setAsking("pin");
+      if (reason === "missing" || reason === "policy") setHelloReady(false);
+      setMessage(reason === "cancelled" ? null : reason === "missing" ? tHello("gone") : tHello("failed"));
+    }
+  }, [tHello]);
+
+  const usePin = () => {
+    helloTry.current += 1;
+    cancelHello();
+    setBusy(false);
+    setMessage(null);
+    setAsking("pin");
+  };
+
+  // Once, when the window has the focus: a prompt nobody is there to see would only time out.
+  // Not in a pop-out, which may yet send people to the main window.
+  useEffect(() => {
+    if (!helloReady || helloAsked.current || isPopoutWindow()) return;
+    const ask = () => {
+      if (helloAsked.current) return;
+      helloAsked.current = true;
+      void withHello();
+    };
+    if (document.hasFocus()) {
+      ask();
+      return;
+    }
+    window.addEventListener("focus", ask);
+    return () => window.removeEventListener("focus", ask);
+  }, [helloReady, withHello]);
+
+  // The PIN field wasn't there while Hello asked.
+  useEffect(() => {
+    if (asking === "pin" && helloReady) inputRef.current?.focus();
+  }, [asking, helloReady]);
 
   const withOs = async () => {
     setBusy(true);
@@ -231,6 +302,22 @@ function UnlockForm() {
     );
   }
 
+  if (asking === "hello" && helloReady) {
+    return (
+      <Frame title={t("lock_title", { app: appName })} body={busy ? tHello("waiting") : tHello("prompt")}>
+        <div className="space-y-3" data-testid="app-lock-hello">
+          <div role="status" aria-live="polite" className="min-h-5 text-sm text-destructive" data-testid="app-lock-message">{message}</div>
+          <Button className="w-full" disabled={busy} onClick={() => void withHello()} data-testid="app-lock-hello-again">
+            {tHello("use_hello")}
+          </Button>
+          <Button variant="outline" className="w-full" onClick={usePin} data-testid="app-lock-use-pin">
+            {tHello("use_pin")}
+          </Button>
+        </div>
+      </Frame>
+    );
+  }
+
   return (
     <Frame title={t("lock_title", { app: appName })} body={t("pin_prompt")}>
       <form onSubmit={submit} className="space-y-3" data-testid="app-lock-form">
@@ -255,6 +342,11 @@ function UnlockForm() {
         <Button type="submit" className="w-full" disabled={!pin || busy || blocked} data-testid="app-lock-unlock">
           {busy ? t("unlocking") : t("unlock")}
         </Button>
+        {helloReady && (
+          <Button type="button" variant="outline" className="w-full" disabled={busy} onClick={() => void withHello()} data-testid="app-lock-hello-button">
+            {tHello("use_hello")}
+          </Button>
+        )}
         {osKind && (
           <Button type="button" variant="outline" className="w-full" disabled={busy} onClick={withOs} data-testid="app-lock-os">
             {osKind === "hello" ? t("use_hello") : t("use_touchid")}

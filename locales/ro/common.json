@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Organizația dvs. blochează conținutul la distanță în toate mesajele, așa că nu se încarcă nici de la expeditorii de încredere."
   },
+  "trusted_senders_book": {
+    "unavailable": "Indisponibil: acest cont nu poate păstra agende pe server. Lista rămâne pe acest dispozitiv."
+  },
   "date": {
     "today": "Astăzi",
     "yesterday": "Ieri",
@@ -1675,7 +1678,7 @@
         "label": "Aspectul interfeței",
         "description": "Unde se află căutarea, navigarea și barele de instrumente",
         "default": "Implicit",
-        "mountain_view": "Căutarea sus, aplicațiile în stânga"
+        "mountain_view": "Căutarea sus"
       },
       "animations": {
         "label": "Activați animațiile",
@@ -2118,12 +2121,6 @@
         "description": "Alegeți dacă, la clic pe un fișier atașat, acesta să fie previzualizat sau descărcat imediat",
         "preview": "Previzualizați, dacă este posibil",
         "download": "Descărcați imediat"
-      },
-      "attachment_position": {
-        "label": "Poziția atașamentului",
-        "description": "Unde să afișați atașamentele în antetul e-mailului",
-        "below-header": "Sub antet",
-        "below-message": "Carduri sub mesaj"
       },
       "emails_per_page": {
         "10": "10 e-mailuri",
@@ -3596,6 +3593,10 @@
       "sync_on": "Celelalte dispozitive folosesc aceleași setări, așa că se schimbă și ele.",
       "sync_off": "Celelalte dispozitive își păstrează setările."
     }
+  },
+  "layout_preview": {
+    "default_description": "Aplicații și dosare în stânga, căutare deasupra listei",
+    "mountain_view_description": "Căutare sus, mesajele se deschid pe toată lățimea"
   },
   "setup": {
     "title": "Configurarea Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "Data",
     "subject_label": "Subiect"
   },
+  "print_styles": {
+    "title": "Imprimare",
+    "description": "Cum arată mesajele, contactele și calendarele imprimate.",
+    "style_label": "Stil de imprimare",
+    "style_description": "Suplimentele pot adăuga stiluri, de exemplu un antet cu adresa firmei dvs.",
+    "standard": "Standard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalați {appName}",
     "description": "Instalați aplicația noastră pentru acces rapid.",
@@ -7414,7 +7423,8 @@
     "pin_current": "PIN-ul actual",
     "pin_new": "PIN nou",
     "pin_repeat": "Repetați PIN-ul",
-    "pin_hint": "Cel puțin 6 caractere. Merg și literele, iar un PIN mai lung e mai greu de ghicit.",
+    "pin_hint": "Cel puțin 5 caractere. Merg și literele, iar un PIN mai lung e mai greu de ghicit.",
+    "pin_hint_policy": "Organizația dvs. cere cel puțin {count, plural, one {# caracter} few {# caractere} other {# de caractere}}. Merg și literele.",
     "pin_obvious": "Acest PIN este prea ușor de ghicit. Evitați repetițiile, secvențele și alegerile obișnuite.",
     "pin_mismatch": "Cele două PIN-uri nu sunt la fel.",
     "pin_recovery": "Dacă îl uitați, singura soluție este să eliminați datele de pe acest dispozitiv și să vă conectați din nou. E-mailurile de pe server rămân. Mesajele care încă așteaptă trimiterea pe acest dispozitiv se pierd.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minut} few {# minute} other {# de minute}}",
     "blocked_seconds": "Prea multe încercări. Încercați din nou peste {count, plural, one {# secundă} few {# secunde} other {# de secunde}}.",
     "blocked_minutes": "Prea multe încercări. Încercați din nou peste {count, plural, one {# minut} few {# minute} other {# de minute}}."
+  },
+  "appLockHello": {
+    "switch_label": "Deblocați cu Windows Hello",
+    "switch_desc": "Folosiți fața, amprenta sau PIN-ul Windows. PIN-ul aplicației funcționează în continuare.",
+    "protects": "Cu Windows Hello pornit, Windows păstrează pentru această aplicație o cheie care funcționează doar după ce Windows Hello a verificat că sunteți dvs. Cheia aplicației este blocată și cu ea, așa că pentru deblocare e nevoie de fața, amprenta sau PIN-ul Windows, iar alt program de pe acest computer nu poate folosi cheia fără ca Windows să vă întrebe mai întâi. PIN-ul aplicației funcționează în continuare și aveți nevoie de el dacă Windows Hello este resetat sau oprit.",
+    "enable_title": "Porniți Windows Hello",
+    "enable_body": "Introduceți PIN-ul aplicației. Apoi Windows vă cere să confirmați cu Windows Hello.",
+    "enable_failed": "Windows Hello nu a putut fi pornit. Încercați din nou.",
+    "cancelled": "Windows Hello a fost anulat.",
+    "unsupported": "Windows Hello de pe acest computer nu poate proteja cheia. PIN-ul dvs. funcționează în continuare.",
+    "unavailable": "Windows Hello nu este disponibil pe acest computer.",
+    "busy": "Windows Hello este ocupat sau blocat. Încercați mai târziu.",
+    "off_after_pin_change": "Windows Hello este oprit acum, pentru că nu a confirmat după schimbarea PIN-ului. Porniți-l din nou dacă îl folosiți.",
+    "prompt": "Confirmați cu Windows Hello că sunteți dvs.",
+    "waiting": "Se așteaptă Windows Hello…",
+    "use_hello": "Deblocați cu Windows Hello",
+    "use_pin": "Folosiți PIN-ul",
+    "failed": "Windows Hello nu a deblocat aplicația. Introduceți PIN-ul.",
+    "gone": "Windows Hello nu mai deblochează aplicația pe acest computer. Introduceți PIN-ul."
   },
   "uxs_general": {
     "time_zone_common": "Fusuri orare uzuale",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID amprentă față cheie de acces passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Confidențialitate și securitate",
+      "security": "Parolă și conectare",
+      "about_updates": "Despre și actualizări",
+      "backup": "Copie de rezervă și import"
+    },
+    "sections": {
+      "start": "Pornire și închidere",
+      "shortcuts": "Comenzi rapide din alte aplicații",
+      "mail_links": "Linkuri și fișiere de e-mail"
+    },
+    "privacy_link_description": "Aceste setări sunt pe pagina Confidențialitate și securitate."
   },
   "desktop_policy": {
     "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",

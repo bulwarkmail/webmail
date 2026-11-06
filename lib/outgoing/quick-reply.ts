@@ -54,6 +54,8 @@ export async function prepareQuickReply(input: {
   /** The reply's subject (without a classification prefix) and the original's Message-ID, for plugins. */
   subject?: string;
   inReplyTo?: string;
+  /** The id plugins know this quick reply by (OutgoingEmail.composerId). */
+  composerId?: string;
   questions?: QuickReplyQuestions;
   onSendCheckStopped?: (outcome: Exclude<PluginSendCheckOutcome, 'allowed'>) => void;
 }): Promise<OutgoingBodies | null> {
@@ -125,6 +127,7 @@ export async function prepareQuickReply(input: {
     // The quote isn't part of a quick reply: the typed text is all the user wrote.
     authoredText: body,
     externalRecipients: await externalRecipientsFor(context),
+    ...(input.composerId ? { composerId: input.composerId } : {}),
   }));
   if (outcome !== 'allowed') {
     input.onSendCheckStopped?.(outcome);

@@ -77,6 +77,12 @@ describe('launches', () => {
     stop();
   });
 
+  it("New message from a bulwark://new link carries the link's parameters for plugins", async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    await run({ type: 'new-message', params: { 'x-akte-case': '01/2026', subject: 'not for plugins' } });
+    expect(takeHandoff('compose')?.linkParams).toEqual({ 'x-akte-case': '01/2026' });
+  });
+
   it('a mailto goes through the protocol handler to the mail page', async () => {
     await run({ type: 'mailto', url: 'mailto:bob@example.org?subject=Hi&body=Text' });
     expect(session.savePendingMailto).toHaveBeenCalledTimes(1);

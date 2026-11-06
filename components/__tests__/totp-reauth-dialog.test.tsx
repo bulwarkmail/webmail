@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 // mounted in the locale layout, not inside mail) and is translated.
 
 vi.mock('next-intl/server', () => ({ setRequestLocale: vi.fn() }));
+// The layout reads the request's path to pick the first screen's catalog; a request to the mail view.
+vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-pathname': '/en' }) }));
 
 const { TotpReauthDialog } = await import('../totp-reauth-dialog');
 const { useTotpReauthStore } = await import('@/stores/totp-reauth-store');

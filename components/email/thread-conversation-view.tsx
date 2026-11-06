@@ -54,6 +54,12 @@ import {
 } from "@/components/icons";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { useTranslations } from "next-intl";
+import { useInvitationPrint } from "@/lib/print/invitation-print";
+import { buildMessagePrintFields } from "./message-print-fields";
+import { CONVERSATION_MESSAGE_ATTR, conversationPrintSource, focusedConversationMessageId, printConversationMessage, printLabels, useConversationPrintSource } from "./conversation-print";
+import { ConversationMessageMenu } from "./conversation-message-menu";
+import { MessagePrint } from "./message-print";
+import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { FilePen } from "@/components/icons";
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -69,7 +75,7 @@ import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection } from "./reader-selection-menu";
-import { PluginActions, useMessageActionTarget } from "@/components/plugins/plugin-actions";
+import { PluginActions, targetFilter, useMessageActionTarget, usePluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePluginRenderedBody } from "@/hooks/use-plugin-rendered-body";
@@ -78,6 +84,7 @@ import { AttachmentPluginMenu, ReaderAboveQuoteSlot } from "./reader-plugin-surf
 import { useRemoteContentBlockedByOrg, useRemoteContentChecks } from "@/hooks/use-third-party-mode";
 import { ConversationHeaderActions, type ConversationActions } from "./conversation-header-actions";
 import { PhishingMarkBanner } from "./phishing-mark-banner";
+import { ROW_ITEM_ATTR, ROW_MORE_ATTR, useFirstRowLimit } from "@/hooks/use-first-row-limit";
 import { turnOffLinks } from "@/lib/phishing-links";
 import { usePhishingMarked } from "@/hooks/use-phishing-report";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
@@ -268,6 +275,16 @@ export function ThreadConversationView({
     return () => cancelAnimationFrame(frame);
   }, [ordered, newestId]);
 
+  // Ctrl+P while a message has the focus (a click in it) prints that
+  // message alone, as its ⋮ > Print does. Otherwise the page prints as before.
+  usePrintListener();
+  const printing = usePrinting();
+  const focusedPrintId = useMemo(
+    () => (printing ? focusedConversationMessageId(cardsRef.current) : null),
+    [printing],
+  );
+  const focusedPrint = focusedPrintId ? conversationPrintSource(focusedPrintId) : null;
+
   const toggleExpanded = (emailId: string) => {
     const target = ordered.find((e) => e.id === emailId);
     if (target) emitThreadExpand(target.threadId, [target], !expandedIds.has(emailId));
@@ -344,6 +361,7 @@ export function ThreadConversationView({
           })}
         </div>
       </div>
+      {focusedPrint && !focusedPrint.noPrint && <MessagePrint fields={focusedPrint.fields} />}
     </div>
   );
 }
@@ -430,6 +448,8 @@ function EmailCard({
   const density = useSettingsStore((state) => state.density);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plugin = useConversationPluginProps(email);
+  // The same filter PluginActions uses, so the ⋮ shows only when its menu has a plugin item.
+  const readerActions = usePluginActions("reader-actions", { mailboxRole: mailboxRole ?? null, ...targetFilter(plugin.actionTarget, undefined) });
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
   const formatAddress = useOwnDomainAddress();
@@ -438,10 +458,17 @@ function EmailCard({
 
   // Mark as read when email is expanded
   useMarkReadWhenShown(email, isExpanded, onMarkAsRead);
+  // Print in its own ⋮: this message alone.
+  const devices = useDevicePolicy(email);
+  const onPrint = devices.noPrint
+    ? undefined
+    : () => { printConversationMessage(email.id, printLabels((key) => t(`email_viewer.${key}`))); };
 
   return (
-    <div className={cn(
-      "rounded-lg border border-border overflow-hidden transition-all duration-200",
+    // Unfolded, focusable by a click (tabIndex -1), so Ctrl+P knows which
+    // message the user is in.
+    <div {...(isExpanded ? { [CONVERSATION_MESSAGE_ATTR]: email.id, tabIndex: -1 } : {})} className={cn(
+      "rounded-lg border border-border overflow-hidden transition-all duration-200 outline-none",
       isExpanded ? "bg-background shadow-sm" : "bg-muted/30",
       isUnread && !isExpanded && "start-bar border-s-transparent [--start-bar-width:2px] [--start-bar:var(--color-primary)]"
     )}>
@@ -618,14 +645,21 @@ function EmailCard({
                 {t("email_viewer.forward")}
               </Button>
             )}
-            <PluginActions
-              surface="reader-actions"
-              context={plugin.idProps}
-              target={plugin.actionTarget}
-              mailboxRole={mailboxRole ?? null}
-              overflow
-              className="flex-shrink-0 rounded-md border border-border"
-            />
+            {/* One ⋮ per message: Print and the plugins' reader actions share it. */}
+            <ConversationMessageMenu
+              onPrint={onPrint}
+              hasExtra={readerActions.length > 0}
+              className="w-auto h-8 px-2 flex-shrink-0 rounded-md border border-border"
+              iconClassName="w-4 h-4"
+            >
+              <PluginActions
+                surface="reader-actions"
+                variant="menu"
+                context={plugin.idProps}
+                target={plugin.actionTarget}
+                mailboxRole={mailboxRole ?? null}
+              />
+            </ConversationMessageMenu>
           </div>
         </div>
       )}
@@ -898,6 +932,11 @@ export function ConversationEmailBody({
     const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
     return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));
   }, [email, hideInlineImageAttachments]);
+  const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
+  const attachmentRow = useFirstRowLimit(visibleAttachments.length, !attachmentsExpanded);
+  const attachmentLimit = attachmentsExpanded ? null : attachmentRow.limit;
+  const shownAttachments = attachmentLimit === null ? visibleAttachments : visibleAttachments.slice(0, attachmentLimit);
+  const hiddenAttachments = attachmentLimit === null ? [] : visibleAttachments.slice(attachmentLimit);
 
   // Render the sanitized HTML body inside a sandboxed iframe so a malicious
   // (or accidentally-bypassed) email cannot inject styles/scripts/forms into
@@ -1036,9 +1075,121 @@ export function ConversationEmailBody({
     }
   }, [t, isDark, allowExternal, email.id, selectionMenu.openRef, reading.textFactor, reading.minFontSize, reading.overrideStyles, reading.fitWidth, reading.pauseImages]);
 
+  // Print in the message's ⋮, and Ctrl+P while it has the focus, print this
+  // message alone, as it shows here, in the reader's single-message layout.
+  const printTimeFormat = useSettingsStore((state) => state.timeFormat);
+  const invitationPrint = useInvitationPrint(email.id);
+  useConversationPrintSource(email.id, () => ({
+    fields: buildMessagePrintFields({
+      email,
+      html: emailContent.html,
+      isHtml: emailContent.isHtml,
+      attachments: visibleAttachments,
+      invitation: invitationPrint,
+      timeFormat: printTimeFormat,
+      noSubject: t('email_viewer.no_subject'),
+      unknownSender: t('email_viewer.unknown_sender'),
+    }),
+    externalBlocked: !allowExternal,
+    watermark,
+    noPrint: devices.noPrint,
+  }));
+
   return (
     <div className={className}>
+      {/* A security warning first, so it is read before a file is opened. */}
       {phishingMarked && <PhishingMarkBanner className="px-4" />}
+      {/* Attachments: right under the message's header and its security
+          warning, above the other notices and the body, on one line; the
+          rest behind "Show N more". Inline images stay in the body, so a
+          message with only those has none. */}
+      {visibleAttachments.length > 0 && (
+        <div
+          data-conversation-attachments=""
+          style={bodyStyle ? { paddingTop: '0.25rem', paddingBottom: '0.25rem' } : { paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}
+        >
+          <div ref={attachmentRow.ref} className="flex flex-wrap items-center gap-2">
+            {shownAttachments.map((attachment, idx) => {
+              const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
+              const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
+                || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
+              // Without downloads, whatever can be previewed is, and nothing else opens.
+              const opensPreview = isPreviewable && (mailAttachmentAction === 'preview' || devices.noDownloads);
+              const locked = devices.noDownloads && !opensPreview;
+              return (
+                <span key={idx} {...{ [ROW_ITEM_ATTR]: "" }} className="inline-flex min-w-0 max-w-full items-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (locked) return;
+                    onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type, source);
+                  }}
+                  aria-disabled={locked || undefined}
+                  title={locked ? t('device_policy.downloads_off') : opensPreview ? t('files.preview') : t('email_viewer.download')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
+                >
+                  <Icon className={cn("w-4 h-4", iconClass)} />
+                  {/* The action, for screen readers: the visible name alone
+                      doesn't say whether the button previews or downloads. */}
+                  <span className="sr-only">{opensPreview ? t('files.preview') : t('email_viewer.download')}</span>{' '}
+                  <span className="truncate max-w-[150px]">{attachment.name ? stripBidiControls(attachment.name) : 'Attachment'}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {formatFileSize(attachment.size)}
+                  </span>
+                  {opensPreview ? (
+                    <Eye className="w-4 h-4 text-muted-foreground" />
+                  ) : locked ? null : (
+                    <Download className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
+                  <button
+                    type="button"
+                    title={t('desktopEdit.edit')}
+                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
+                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const { blobId } = attachment;
+                      void editAttachment({
+                        key: `mail:${editAccount}:${email.id}:${blobId}`,
+                        name: attachment.name ?? 'attachment',
+                        type: attachment.type,
+                        account: editAccount,
+                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
+                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
+                      });
+                    }}
+                  >
+                    <FilePen className="h-4 w-4" />
+                  </button>
+                )}
+                <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
+                </span>
+              );
+            })}
+            {hiddenAttachments.length > 0 && (
+              <button
+                type="button"
+                {...{ [ROW_MORE_ATTR]: "" }}
+                onClick={(e) => { e.stopPropagation(); setAttachmentsExpanded(true); }}
+                className="px-3 py-2 rounded-lg text-sm text-primary hover:bg-muted transition-colors"
+              >
+                {t('email_viewer.attachments_show_more', { count: hiddenAttachments.length })}
+              </button>
+            )}
+            {attachmentsExpanded && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setAttachmentsExpanded(false); }}
+                className="px-3 py-2 rounded-lg text-sm text-primary hover:bg-muted transition-colors"
+              >
+                {t('email_viewer.attachments_show_fewer')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* External content warning */}
       {hasBlockedContent && !allowExternal && !pluginBody.blockExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">
@@ -1143,72 +1294,6 @@ export function ConversationEmailBody({
         />
       </div>
 
-      {/* Attachments */}
-      {visibleAttachments.length > 0 && (
-        <div className="px-4 pb-4">
-          <div className="flex flex-wrap gap-2">
-            {visibleAttachments.map((attachment, idx) => {
-              const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
-              const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
-                || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
-              // Without downloads, whatever can be previewed is, and nothing else opens.
-              const opensPreview = isPreviewable && (mailAttachmentAction === 'preview' || devices.noDownloads);
-              const locked = devices.noDownloads && !opensPreview;
-              return (
-                <React.Fragment key={idx}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (locked) return;
-                    onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type, source);
-                  }}
-                  aria-disabled={locked || undefined}
-                  title={locked ? t('device_policy.downloads_off') : opensPreview ? t('files.preview') : t('email_viewer.download')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
-                >
-                  <Icon className={cn("w-4 h-4", iconClass)} />
-                  {/* The action, for screen readers: the visible name alone
-                      doesn't say whether the button previews or downloads. */}
-                  <span className="sr-only">{opensPreview ? t('files.preview') : t('email_viewer.download')}</span>{' '}
-                  <span className="truncate max-w-[150px]">{attachment.name ? stripBidiControls(attachment.name) : 'Attachment'}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {formatFileSize(attachment.size)}
-                  </span>
-                  {opensPreview ? (
-                    <Eye className="w-4 h-4 text-muted-foreground" />
-                  ) : locked ? null : (
-                    <Download className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
-                  <button
-                    type="button"
-                    title={t('desktopEdit.edit')}
-                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
-                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const { blobId } = attachment;
-                      void editAttachment({
-                        key: `mail:${editAccount}:${email.id}:${blobId}`,
-                        name: attachment.name ?? 'attachment',
-                        type: attachment.type,
-                        account: editAccount,
-                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
-                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
-                      });
-                    }}
-                  >
-                    <FilePen className="h-4 w-4" />
-                  </button>
-                )}
-                <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { AppMain, SkipLink } from "@/components/layout/app-landmarks";
-import { LEGACY_TAB_MAP } from "@/lib/settings-tabs";
+import { LEGACY_TAB_MAP, MOVED_SECTIONS } from "@/lib/settings-tabs";
 import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useMessages } from 'next-intl';
@@ -34,7 +34,8 @@ import { CalendarSettings } from '@/components/settings/calendar-settings';
 import { CalendarManagementSettings } from '@/components/settings/calendar-management-settings';
 import { AddressBookManagementSettings } from '@/components/settings/address-book-management-settings';
 import { FilterSettings } from '@/components/settings/filter-settings';
-import { AboutDataSettings, AboutSettings } from '@/components/settings/about-data-settings';
+import { AboutDataSettings, AboutSettings, TroubleshootingSettings } from '@/components/settings/about-data-settings';
+import { DesktopAppSettings } from '@/components/settings/desktop-app-settings';
 import { PrivacySettings } from '@/components/settings/privacy-settings';
 import { OfflineSettings } from '@/components/offline/offline-settings';
 import { IS_LITE } from '@/lib/lite';
@@ -92,6 +93,7 @@ import {
   subResultText,
   tabKeywords,
   tabSearchEntries,
+  ADVANCED_ONLY_TABS,
   ARCHIVE_ACTION_SEARCH_PATHS,
 } from '@/lib/settings-search';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
@@ -165,25 +167,22 @@ interface SettingsTarget {
   section: string | null;
 }
 
-// Sections that moved to a page of their own or to Privacy (2026-11), so a
-// link to `/settings/backup/offline` or `/settings/reading/images` still
-// lands on the section.
-const MOVED_SECTIONS: Record<string, Record<string, string>> = {
-  backup: { offline: 'offline' },
-  reading: { images: 'privacy' },
-  composing: { receipts: 'privacy' },
-  message_list: { senders: 'privacy' },
-};
-
 /**
- * Migrates a legacy tab id to the page and section that hold it now. An
- * explicit section wins over the legacy one.
+ * Migrates a legacy tab id to the page and section that hold it now, and a
+ * section that moved to another page (MOVED_SECTIONS in lib/settings-tabs.ts)
+ * to that page. An explicit section wins over the legacy one.
  */
 function migrateTarget(raw: string, section: string | null = null): { tab: string; section: string | null } {
   const tab = raw in LEGACY_TAB_MAP ? LEGACY_TAB_MAP[raw] : raw;
   const target = section ?? (raw in LEGACY_SECTION_MAP ? LEGACY_SECTION_MAP[raw] : null);
-  const moved = target ? MOVED_SECTIONS[tab]?.[target] : undefined;
-  return { tab: moved ?? tab, section: target };
+  const moved = target ? MOVED_SECTIONS[`${tab}/${target}`] : undefined;
+  return moved ? { tab: moved.tab, section: moved.section } : { tab, section: target };
+}
+
+/** Whether the desktop app's bridge is here; false on the server and in the first render. */
+const subscribeNever = () => () => {};
+function useInDesktopApp(): boolean {
+  return useSyncExternalStore(subscribeNever, () => !!getDesktopBridge(), () => false);
 }
 
 function hasOneShotDeepLink(): boolean {
@@ -365,6 +364,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Admin-pinned apps are searchable too - users can't add them, but they're listed.
   const sidebarAppsList = useResolvedSidebarApps();
   const proInterface = useSettingsStore((s) => s.proInterface);
+  const showAdvancedSettings = useSettingsStore((s) => s.showAdvancedSettings);
 
   // When set, the settings panel is scoped to a shared/group account: a reduced
   // tab list and a "Managing: <name>" header. null = the user's own account.
@@ -738,6 +738,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const supportsFiles = client?.supportsFiles() ?? false;
   // Files on this computer: the desktop app's sync engine runs in this window.
   // Nothing to set when the organisation turned off both the drive and synced folders and none is left (files-p3-18).
+  const inDesktopApp = useInDesktopApp();
   const filesSyncAvailable = useFilesSyncStore((s) => s.available && !(s.folderSyncForcedOff && (!s.drive || s.drive.forcedOff || !s.drive.supported) && s.roots.length === 0));
   // Delegates (Settings > Sharing) needs someone to share with and something to share.
   const supportsSharing = !delegationHidden && !!client?.getShareTargets && (client?.supportsPrincipals() ?? false)
@@ -748,11 +749,13 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const tabs: TabDef[] = [
     // You and the app
     { id: 'account', label: t('tabs.account'), icon: tabIcons.account, group: 'top' },
-    ...(stalwartFeaturesEnabled ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security, group: 'top' as TabGroup }] : []),
+    ...(stalwartFeaturesEnabled ? [{ id: 'security' as Tab, label: tRoot(settingsTabLabelKey('security')), icon: tabIcons.security, group: 'top' as TabGroup }] : []),
     { id: 'privacy', label: tRoot(settingsTabLabelKey('privacy')), icon: tabIcons.privacy, group: 'top' },
     ...(supportsSharing ? [{ id: 'sharing' as Tab, label: tDelegates('tab'), icon: tabIcons.sharing, group: 'top' as TabGroup }] : []),
     { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications, group: 'top' },
     { id: 'general', label: t('tabs.general'), icon: tabIcons.general, group: 'top' },
+    // The desktop app's own page: tray, start at sign-in, windows, shortcuts, mail links.
+    ...(inDesktopApp ? [{ id: 'desktop' as Tab, label: tRoot(settingsTabLabelKey('desktop')), icon: tabIcons.desktop, group: 'top' as TabGroup }] : []),
     // Keeping mail on this device; the static Lite build has no offline mode.
     ...(!IS_LITE ? [{ id: 'offline' as Tab, label: tRoot(settingsTabLabelKey('offline')), icon: tabIcons.offline, group: 'top' as TabGroup }] : []),
     { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance, group: 'top' },
@@ -793,8 +796,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     })),
 
     // After a rule at the end, with no heading.
-    { id: 'backup', label: t('tabs.backup'), icon: tabIcons.backup, group: 'bottom' },
-    { id: 'about', label: tRoot(settingsTabLabelKey('about')), icon: tabIcons.about, group: 'bottom' },
+    { id: 'backup', label: tRoot(settingsTabLabelKey('backup')), icon: tabIcons.backup, group: 'bottom' },
+    // Listed only with advanced settings on (ADVANCED_ONLY_TABS); search and links open it anyway.
+    { id: 'troubleshooting', label: tRoot(settingsTabLabelKey('troubleshooting')), icon: tabIcons.troubleshooting, group: 'bottom' },
+    { id: 'about', label: tRoot(settingsTabLabelKey('about', inDesktopApp)), icon: tabIcons.about, group: 'bottom' },
   ];
 
   // In scoped (shared-account) mode, restrict to the account-relevant tabs the
@@ -813,19 +818,25 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     ? tabs.filter((tab) => scopedTabIds.includes(tab.id as Tab))
     : tabs;
 
+  // Every word of the query starts a word, in any order. A page matches by
+  // its own name and keywords, or when one of its rows has all the words:
+  // words spread over unrelated rows don't make a match.
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+
+  // Troubleshooting is in the list only with "Show advanced settings" on, while
+  // it is open, or when a search finds it: its rows are for when something
+  // goes wrong, and a result or link still opens them.
+  const listedTabs = visibleTabs.filter((tab) => !ADVANCED_ONLY_TABS.has(tab.id as Tab)
+    || showAdvancedSettings || !!trimmedQuery || tab.id === activeTab);
+
   // Group tabs by category. Only Mail and Apps carry a heading.
   const groupedTabs = tabGroupOrder
     .map((group) => ({
       group,
       label: group === 'mail' || group === 'apps' ? t(`tab_groups.${group}`) : null,
-      items: visibleTabs.filter((tab) => tab.group === group),
+      items: listedTabs.filter((tab) => tab.group === group),
     }))
     .filter((g) => g.items.length > 0);
-
-  // Every word of the query starts a word, in any order. A page matches by
-  // its own name and keywords, or when one of its rows has all the words:
-  // words spread over unrelated rows don't make a match.
-  const trimmedQuery = searchQuery.trim().toLowerCase();
   const matchesQuery = (tab: TabDef) => {
     if (!trimmedQuery) return true;
     const pageText = `${tab.label} ${String(tab.id).replace(/_/g, ' ')} ${tabKeywords[tab.id as Tab] ?? ''}`;
@@ -920,7 +931,9 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // (lib/boot-skeleton/hints.ts). Only the account's own list, once its
   // capabilities are known; plugin entries are left out.
   const hintedTabs = client && !managedAccountId
-    ? visibleTabs.filter((tab) => !tab.id.includes(':')).map((tab) => tab.id).join(' ')
+    ? visibleTabs
+        .filter((tab) => !tab.id.includes(':') && (!ADVANCED_ONLY_TABS.has(tab.id as Tab) || showAdvancedSettings))
+        .map((tab) => tab.id).join(' ')
     : null;
   useEffect(() => {
     if (hintedTabs) writeSettingsHints(hintedTabs.split(' '));
@@ -985,6 +998,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       {effectiveActiveTab === 'privacy' && <PrivacySettings />}
       {effectiveActiveTab === 'offline' && <OfflineSettings />}
       {effectiveActiveTab === 'backup' && <AboutDataSettings />}
+      {effectiveActiveTab === 'desktop' && <DesktopAppSettings />}
+      {effectiveActiveTab === 'troubleshooting' && <TroubleshootingSettings />}
       {effectiveActiveTab === 'about' && <AboutSettings />}
       {effectiveActiveTab.startsWith('plugin:') && (
         <PluginIframeSlot

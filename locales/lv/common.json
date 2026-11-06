@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Jūsu organizācija bloķē attālo saturu visās vēstulēs, tāpēc tas netiek ielādēts arī no uzticamiem sūtītājiem."
   },
+  "trusted_senders_book": {
+    "unavailable": "Nav pieejams: šis konts nevar glabāt adrešu grāmatas serverī. Saraksts paliek šajā ierīcē."
+  },
   "date": {
     "today": "Šodien",
     "yesterday": "Vakar",
@@ -1672,7 +1675,7 @@
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
         "default": "Noklusējuma",
-        "mountain_view": "Meklēšana augšā, lietotnes pa kreisi"
+        "mountain_view": "Meklēšana augšā"
       },
       "animations": {
         "label": "Iespējot animācijas",
@@ -2115,12 +2118,6 @@
         "description": "Izvēlieties priekšskatījumu vai tūlītēju lejupielādi",
         "preview": "Priekšskatīt, ja iespējams",
         "download": "Lejupielādēt nekavējoties"
-      },
-      "attachment_position": {
-        "label": "Pielikumu novietojums",
-        "description": "Kur rādīt pielikumus vēstules galvenē",
-        "below-header": "Zem galvenes",
-        "below-message": "Kartītes zem ziņojuma"
       },
       "emails_per_page": {
         "10": "10 vēstules",
@@ -3596,6 +3593,10 @@
       "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
       "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
+  },
+  "layout_preview": {
+    "default_description": "Lietotnes un mapes pa kreisi, meklēšana virs saraksta",
+    "mountain_view_description": "Meklēšana augšā visā platumā, ziņojumi atveras pilnā platumā"
   },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",
@@ -6233,6 +6234,14 @@
     "date_label": "Datums",
     "subject_label": "Tēma"
   },
+  "print_styles": {
+    "title": "Drukāšana",
+    "description": "Kā izskatās izdrukātās vēstules, kontakti un kalendāri.",
+    "style_label": "Drukas stils",
+    "style_description": "Papildinājumi var pievienot stilus, piemēram, veidlapu ar jūsu uzņēmuma adresi.",
+    "standard": "Standarta",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "Instalēt {appName}",
     "description": "Instalējiet mūsu lietotni ātrai piekļuvei.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Pašreizējais PIN kods",
     "pin_new": "Jauns PIN kods",
     "pin_repeat": "Atkārtojiet PIN kodu",
-    "pin_hint": "Vismaz 6 rakstzīmes. Der arī burti, un garāku PIN kodu ir grūtāk uzminēt.",
+    "pin_hint": "Vismaz 5 rakstzīmes. Der arī burti, un garāku PIN kodu ir grūtāk uzminēt.",
+    "pin_hint_policy": "Jūsu organizācija pieprasa vismaz {count, plural, zero {# rakstzīmes} one {# rakstzīmi} other {# rakstzīmes}}. Der arī burti.",
     "pin_obvious": "Šo PIN ir pārāk viegli uzminēt. Izvairieties no atkārtojumiem, secībām un biežām izvēlēm.",
     "pin_mismatch": "Abi PIN kodi nesakrīt.",
     "pin_recovery": "Ja to aizmirsīsit, vienīgā iespēja ir noņemt datus šajā ierīcē un pieteikties vēlreiz. Jūsu e-pasts serverī paliek. Ziņojumi, kas šajā ierīcē vēl gaida sūtīšanu, tiek zaudēti.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, zero {# minūtes} one {# minūtes} other {# minūtēm}}",
     "blocked_seconds": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# sekundēm} one {# sekundes} other {# sekundēm}}.",
     "blocked_minutes": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# minūtēm} one {# minūtes} other {# minūtēm}}."
+  },
+  "appLockHello": {
+    "switch_label": "Atbloķēt ar Windows Hello",
+    "switch_desc": "Izmantojiet seju, pirksta nospiedumu vai Windows PIN kodu. Lietotnes PIN kods joprojām darbojas.",
+    "protects": "Kad Windows Hello ir ieslēgts, Windows glabā šai lietotnei atslēgu, kas darbojas tikai pēc tam, kad Windows Hello ir pārbaudījis, ka tas esat jūs. Ar to ir bloķēta arī lietotnes atslēga, tāpēc atbloķēšanai vajag jūsu seju, pirksta nospiedumu vai Windows PIN kodu, un cita programma šajā datorā nevar izmantot šo atslēgu, Windows vispirms nepajautājot jums. Lietotnes PIN kods joprojām darbojas, un tas būs vajadzīgs, ja Windows Hello tiek atiestatīts vai izslēgts.",
+    "enable_title": "Ieslēgt Windows Hello",
+    "enable_body": "Ievadiet lietotnes PIN kodu. Pēc tam Windows lūgs apstiprināt ar Windows Hello.",
+    "enable_failed": "Windows Hello neizdevās ieslēgt. Mēģiniet vēlreiz.",
+    "cancelled": "Windows Hello tika atcelts.",
+    "unsupported": "Windows Hello šajā datorā nevar aizsargāt atslēgu. Jūsu PIN kods joprojām darbojas.",
+    "unavailable": "Windows Hello šajā datorā nav pieejams.",
+    "busy": "Windows Hello ir aizņemts vai bloķēts. Mēģiniet vēlāk.",
+    "off_after_pin_change": "Windows Hello tagad ir izslēgts, jo pēc PIN koda maiņas tas neapstiprināja. Ieslēdziet to atkal, ja to izmantojat.",
+    "prompt": "Apstipriniet ar Windows Hello, ka tas esat jūs.",
+    "waiting": "Gaida Windows Hello…",
+    "use_hello": "Atbloķēt ar Windows Hello",
+    "use_pin": "Izmantot PIN kodu",
+    "failed": "Windows Hello neatbloķēja lietotni. Ievadiet PIN kodu.",
+    "gone": "Windows Hello šajā datorā vairs neatbloķē lietotni. Ievadiet PIN kodu."
   },
   "uxs_general": {
     "time_zone_common": "Bieži izmantotās laika joslas",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID pirkstu nospiedums seja piekļuves atslēga passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privātums un drošība",
+      "security": "Parole un pierakstīšanās",
+      "about_updates": "Par un atjauninājumi",
+      "backup": "Dublēšana un importēšana"
+    },
+    "sections": {
+      "start": "Palaišana un aizvēršana",
+      "shortcuts": "Īsinājumtaustiņi no citām lietotnēm",
+      "mail_links": "Pasta saites un faili"
+    },
+    "privacy_link_description": "Šie iestatījumi ir lapā Privātums un drošība."
   },
   "desktop_policy": {
     "server_refused": "Jūsu organizācija šajā ierīcē neatļauj šo serveri.",

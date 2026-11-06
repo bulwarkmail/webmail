@@ -3,7 +3,8 @@
 import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
-import { pinIsObvious, pinLongEnough } from "@/lib/app-lock/crypto";
+import { MIN_PIN_LENGTH, pinIsObvious, pinLongEnough } from "@/lib/app-lock/crypto";
+import { pinMinLength } from "@/lib/app-lock/policy";
 
 /** The new PIN, twice. Says what's wrong only once there's something to say. */
 export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
@@ -16,8 +17,9 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
   const pinId = useId();
   const repeatId = useId();
   const hintId = useId();
-  const tooShort = pin.length > 0 && !pinLongEnough(pin);
-  const obvious = pinLongEnough(pin) && pinIsObvious(pin);
+  const minimum = pinMinLength();
+  const tooShort = pin.length > 0 && !pinLongEnough(pin, minimum);
+  const obvious = pinLongEnough(pin, minimum) && pinIsObvious(pin);
   const mismatch = repeat.length > 0 && repeat !== pin;
   return (
     <div className="space-y-3">
@@ -33,7 +35,7 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
           aria-describedby={hintId}
           aria-invalid={tooShort || obvious || undefined}
         />
-        <p id={hintId} className="text-xs text-muted-foreground">{t("pin_hint")}</p>
+        <p id={hintId} className="text-xs text-muted-foreground">{minimum > MIN_PIN_LENGTH ? t("pin_hint_policy", { count: minimum }) : t("pin_hint")}</p>
         {obvious && <p role="alert" className="text-xs text-destructive">{t("pin_obvious")}</p>}
       </div>
       <div className="space-y-1">
@@ -54,7 +56,7 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
 }
 
 export function newPinReady(pin: string, repeat: string): boolean {
-  return pinLongEnough(pin) && !pinIsObvious(pin) && pin === repeat;
+  return pinLongEnough(pin, pinMinLength()) && !pinIsObvious(pin) && pin === repeat;
 }
 
 /** A PIN already set, asked again before something that needs it. */

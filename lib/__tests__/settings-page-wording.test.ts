@@ -14,7 +14,7 @@ const text = (key: string) => getByPath(shown, key) as string;
 describe('settings page wording', () => {
   it('names the colour mode row "Light or dark" and the layouts by what they do', () => {
     expect(text('settings.appearance.theme.label')).toBe('Light or dark');
-    expect(text('settings.appearance.interface_layout.mountain_view')).toBe('Search bar on top, apps on the left');
+    expect(text('settings.appearance.interface_layout.mountain_view')).toBe('Search bar on top');
     expect(text('settings.email_behavior.mail_layout.split_description')).toBe('List and message side by side');
     expect(text('settings.email_behavior.mail_layout.focus_description')).toBe('List, then the message full width');
     expect(text('settings.email_behavior.mail_layout.horizontal_description')).toBe('Message below the list');

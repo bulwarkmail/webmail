@@ -101,6 +101,8 @@ export const HOOK_CATALOG = {
   onBeforeComposeOpenToForward: H('mail-compose', 'transform', 'email:send', 'Email (the original)', 'before a forward is filled in'),
   onBeforeComposeOpenToForwardAsAttachment: H('mail-compose', 'transform', 'email:send', 'Email (the original)', 'before a forward-as-attachment is filled in'),
   onMailtoIntercept: H('mail-compose', 'intercept', 'email:read', 'MailtoContext', 'when a mailto: link is opened; return false to stop the composer'),
+  // Its own parameters only, from a link anyone can write: the composer id is what makes it useful.
+  onComposeFromLink: { ...H('mail-compose', 'observer', 'compose:read', 'ComposeLinkContext', 'when the composer opened from a mailto: or Bulwark link carrying parameters for this plugin (x-<plugin id>-<name>=<value>); only this plugin hears it, with the prefix gone (Bulwark 1.21 and later)'), alsoPermission: 'compose:write' },
 
   // ─── Mail: sending ─────────────────────────────────────────
   onBeforeEmailSend: H('mail-send', 'intercept', 'email:send', 'OutgoingEmail', 'when Send is pressed; a handler that fails or times out stops the send'),

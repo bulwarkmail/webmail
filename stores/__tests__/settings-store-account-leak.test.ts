@@ -65,6 +65,8 @@ beforeEach(async () => {
   });
   useSettingsStore.getState().disableSync();
   useSettingsStore.getState().resetToDefaults();
+  // The reset is the test's clean slate, not a change made on this device.
+  localStorage.removeItem('settings-sync-stamps');
   useTemplateStore.setState({ templates: [], recentTemplateIds: [], deletedTemplateIds: {} });
 });
 

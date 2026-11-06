@@ -19,6 +19,8 @@ import { DebugSettings } from './debug-settings';
 import { MailBackupSettings } from '@/components/mail-transfer/mail-backup-settings';
 import { productName } from '@/lib/product-name';
 import { isDesktopApp } from '@/lib/desktop/bridge';
+import { IS_LITE } from '@/lib/lite';
+import { DesktopUpdateSettings } from './desktop-update-settings';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -129,7 +131,9 @@ export function AboutFooter() {
 /**
  * Settings > About, the last entry of the page list: the About card with the
  * version and the source link. It was in the sidebar's footer, where it took
- * room from the page list on short screens.
+ * room from the page list on short screens. In the desktop app it is "About &
+ * updates": the app's version, update check and channel follow the card
+ * (on General until the settings reorg of 2026-11-05).
  */
 export function AboutSettings() {
   const t = useTranslations('uxs_structure.about');
@@ -141,31 +145,28 @@ export function AboutSettings() {
           <AboutFooter />
         </div>
       </SettingsSection>
+      {!IS_LITE && <DesktopUpdateSettings />}
     </div>
   );
 }
 
 /**
- * The Backup & reset page: keep settings (sync, export, import), bring mail
- * in and save it as files, fix a stale view, start over, and (Advanced, where
- * the admin allows it) debug logging. Offline has a page of its own.
+ * The Backup & import page: keep settings (sync, export, import), bring mail
+ * in and save it as files. Offline has a page of its own; fixing a stale
+ * view, starting over and debug logging are on Troubleshooting (settings
+ * reorg 2026-11-05).
  */
 export function AboutDataSettings() {
   const t = useTranslations('settings.advanced');
   const tSettings = useTranslations('settings');
-  const { settingsSyncDisabled, updateSetting, resetToDefaults, exportSettings, importSettings } =
+  const { settingsSyncDisabled, updateSetting, exportSettings, importSettings } =
     useSettingsStore();
   const { settingsSyncEnabled } = useConfig();
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
-  const tP2 = useTranslations('uxp2_settings');
   const tWords = useTranslations('ux_p3_words');
   // The app has no "other browsers" (settings-p2-4), and its Backup says only what it
   // does: a settings file to export and import (settings-p3-9).
   const [inApp, setInApp] = useState(false);
   useEffect(() => setInApp(isDesktopApp()), []);
-  // A reset keeps the sync choice, so the other devices change only when sync is on (settings-p2-18).
-  const syncOn = settingsSyncEnabled && !settingsSyncDisabled;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isFeatureEnabled } = usePolicyStore();
   const handleExport = () => {
@@ -204,11 +205,6 @@ export function AboutDataSettings() {
     e.target.value = '';
   };
 
-  const handleReset = () => {
-    resetToDefaults();
-    toast.success(t('reset_settings.done'));
-  };
-
   return (
     <div className="space-y-8">
       <SettingsSection id="backup" title={t('sections.backup')} description={inApp ? tWords('backup_app') : t('sections.backup_description')}>
@@ -245,8 +241,35 @@ export function AboutDataSettings() {
       </SettingsSection>
 
       <MailBackupSettings />
+    </div>
+  );
+}
 
-      <SettingsSection id="fix" title={t('sections.fix')} description={t('sections.fix_description')}>
+/**
+ * Settings > Troubleshooting, listed only with "Show advanced settings" on
+ * (settings reorg 2026-11-05): fix a stale view or start over, and debugging
+ * (detailed logging, the desktop app's developer tools). Every section is
+ * advanced, so a search result or link shows its row alone with the switch
+ * off. These were on Backup & reset and General.
+ */
+export function TroubleshootingSettings() {
+  const t = useTranslations('settings.advanced');
+  const { settingsSyncDisabled, resetToDefaults } = useSettingsStore();
+  const { settingsSyncEnabled } = useConfig();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
+  const tP2 = useTranslations('uxp2_settings');
+  // A reset keeps the sync choice, so the other devices change only when sync is on (settings-p2-18).
+  const syncOn = settingsSyncEnabled && !settingsSyncDisabled;
+
+  const handleReset = () => {
+    resetToDefaults();
+    toast.success(t('reset_settings.done'));
+  };
+
+  return (
+    <div className="space-y-8">
+      <SettingsSection id="fix" advanced title={t('sections.fix')} description={t('sections.fix_description')}>
         <SettingItem label={t('refresh_cache.label')} description={t('refresh_cache.description')} term="cache">
           <Button variant="outline" size="sm" onClick={() => setShowRefreshConfirm(true)}>
             {t('refresh_cache.button')}

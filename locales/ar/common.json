@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "تحظر مؤسستك المحتوى الخارجي في كل الرسائل، لذلك لا يُحمَّل حتى من المرسلين الموثوقين."
   },
+  "trusted_senders_book": {
+    "unavailable": "غير متاح: لا يمكن لهذا الحساب حفظ دفاتر العناوين على الخادم. تبقى القائمة على هذا الجهاز."
+  },
   "date": {
     "today": "اليوم",
     "yesterday": "أمس",
@@ -1675,7 +1678,7 @@
         "label": "تخطيط الواجهة",
         "description": "موضع البحث والتنقل وأشرطة الأدوات",
         "default": "افتراضي",
-        "mountain_view": "شريط البحث في الأعلى والتطبيقات على اليسار"
+        "mountain_view": "شريط البحث في الأعلى"
       },
       "animations": {
         "label": "تفعيل الحركات",
@@ -2118,12 +2121,6 @@
         "description": "اختر ما إذا كان النقر على مرفق ملف يعاينه أو يحمّله فورًا",
         "preview": "المعاينة عند الإمكان",
         "download": "التنزيل فورًا"
-      },
-      "attachment_position": {
-        "label": "موضع المرفق",
-        "description": "أين تُعرض المرفقات في ترويسة الرسالة",
-        "below-header": "أسفل الترويسة",
-        "below-message": "بطاقات أسفل الرسالة"
       },
       "emails_per_page": {
         "10": "10 رسائل",
@@ -3596,6 +3593,10 @@
       "sync_on": "تستخدم أجهزتك الأخرى الإعدادات نفسها، لذا ستتغير هي أيضًا.",
       "sync_off": "تحتفظ أجهزتك الأخرى بإعداداتها."
     }
+  },
+  "layout_preview": {
+    "default_description": "التطبيقات والمجلدات على الجانب، والبحث فوق القائمة",
+    "mountain_view_description": "البحث في الأعلى، وتفتح الرسائل بعرض الشاشة"
   },
   "setup": {
     "title": "إعداد Bulwark Webmail",
@@ -6233,6 +6234,14 @@
     "date_label": "التاريخ",
     "subject_label": "الموضوع"
   },
+  "print_styles": {
+    "title": "الطباعة",
+    "description": "شكل الرسائل وجهات الاتصال والتقويمات عند طباعتها.",
+    "style_label": "نمط الطباعة",
+    "style_description": "يمكن للإضافات أن تضيف أنماطًا، مثل ترويسة بعنوان شركتك.",
+    "standard": "قياسي",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "تثبيت {appName}",
     "description": "ثبّت تطبيقنا للوصول السريع.",
@@ -7414,7 +7423,8 @@
     "pin_current": "رمز PIN الحالي",
     "pin_new": "رمز PIN الجديد",
     "pin_repeat": "أعد إدخال رمز PIN",
-    "pin_hint": "6 أحرف على الأقل. يمكن استخدام الحروف أيضًا، والرمز الأطول أصعب في التخمين.",
+    "pin_hint": "5 أحرف على الأقل. يمكن استخدام الحروف أيضًا، والرمز الأطول أصعب في التخمين.",
+    "pin_hint_policy": "تشترط مؤسستك {count, plural, zero {# حرف} one {حرفًا واحدًا} two {حرفين} few {# أحرف} many {# حرفًا} other {# حرف}} على الأقل. يمكن استخدام الحروف أيضًا.",
     "pin_obvious": "من السهل تخمين رمز PIN هذا. تجنّب التكرار والتسلسلات والاختيارات الشائعة.",
     "pin_mismatch": "الرمزان غير متطابقين.",
     "pin_recovery": "إذا نسيته، فالحل الوحيد هو إزالة البيانات من هذا الجهاز وتسجيل الدخول من جديد. يبقى بريدك على الخادم. تُفقد الرسائل التي لا تزال تنتظر الإرسال على هذا الجهاز.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}",
     "blocked_seconds": "محاولات كثيرة جدًا. حاول بعد {count, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتين} few {# ثوانٍ} many {# ثانية} other {# ثانية}}.",
     "blocked_minutes": "محاولات كثيرة جدًا. حاول بعد {count, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}."
+  },
+  "appLockHello": {
+    "switch_label": "فتح القفل باستخدام Windows Hello",
+    "switch_desc": "استخدم وجهك أو بصمتك أو رمز PIN الخاص بـ Windows. يبقى رمز PIN الخاص بالتطبيق صالحًا.",
+    "protects": "عند تشغيل Windows Hello، يحتفظ Windows بمفتاح لهذا التطبيق لا يعمل إلا بعد أن يتحقق Windows Hello من أنك أنت. ويُقفل مفتاح التطبيق به أيضًا، لذا يتطلب فتح القفل وجهك أو بصمتك أو رمز PIN الخاص بـ Windows، ولا يستطيع برنامج آخر على هذا الكمبيوتر استخدام هذا المفتاح دون أن يسألك Windows أولًا. يبقى رمز PIN الخاص بالتطبيق صالحًا، وستحتاج إليه إذا أُعيد ضبط Windows Hello أو أُوقف.",
+    "enable_title": "تشغيل Windows Hello",
+    "enable_body": "أدخل رمز PIN الخاص بالتطبيق. بعد ذلك يطلب منك Windows التأكيد باستخدام Windows Hello.",
+    "enable_failed": "تعذّر تشغيل Windows Hello. حاول مرة أخرى.",
+    "cancelled": "أُلغي Windows Hello.",
+    "unsupported": "لا يستطيع Windows Hello على هذا الكمبيوتر حماية المفتاح. يبقى رمز PIN صالحًا.",
+    "unavailable": "Windows Hello غير متاح على هذا الكمبيوتر.",
+    "busy": "Windows Hello مشغول أو مقفل. حاول لاحقًا.",
+    "off_after_pin_change": "أصبح Windows Hello متوقفًا لأنه لم يؤكد بعد تغيير رمز PIN. شغّله مرة أخرى إن كنت تستخدمه.",
+    "prompt": "أكّد أنك أنت باستخدام Windows Hello.",
+    "waiting": "في انتظار Windows Hello…",
+    "use_hello": "فتح القفل باستخدام Windows Hello",
+    "use_pin": "استخدام رمز PIN بدلًا من ذلك",
+    "failed": "لم يفتح Windows Hello قفل التطبيق. أدخل رمز PIN.",
+    "gone": "لم يعد Windows Hello يفتح قفل التطبيق على هذا الكمبيوتر. أدخل رمز PIN."
   },
   "uxs_general": {
     "time_zone_common": "المناطق الزمنية الشائعة",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID بصمة الإصبع الوجه مفتاح المرور passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "الخصوصية والأمان",
+      "security": "كلمة المرور وتسجيل الدخول",
+      "about_updates": "حول والتحديثات",
+      "backup": "النسخ الاحتياطي والاستيراد"
+    },
+    "sections": {
+      "start": "التشغيل والإغلاق",
+      "shortcuts": "اختصارات من التطبيقات الأخرى",
+      "mail_links": "روابط البريد وملفاته"
+    },
+    "privacy_link_description": "هذه الإعدادات موجودة في صفحة الخصوصية والأمان."
   },
   "desktop_policy": {
     "server_refused": "لا تسمح مؤسستك بهذا الخادم على هذا الجهاز.",

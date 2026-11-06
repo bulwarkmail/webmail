@@ -64,15 +64,17 @@
 .pr-root {
   /* Landscape page area of the smaller of A4 and Letter, 12 mm margins. */
   --pr-page-h: 184mm;
-  --pr-ink: #111;
+  /* A theme may set the --print-* variables (lib/print/print-theme.ts);
+     unset, the copy looks as it always did. */
+  --pr-ink: var(--print-text-color, #111);
   --pr-muted: #555;
   --pr-faint: #8a8a8a;
-  --pr-rule: #bdbdbd;
+  --pr-rule: var(--print-rule-color, #bdbdbd);
   --pr-rule-light: #e2e2e2;
   --pr-shade: #f4f4f4;
   color: var(--pr-ink);
   background: #fff;
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--print-font-family, var(--font-sans, system-ui, sans-serif));
   font-size: 10pt;
   line-height: 1.35;
 }
@@ -114,6 +116,8 @@
 
 .pr-title {
   margin: 0;
+  font-family: var(--print-heading-font-family, var(--print-font-family, var(--font-sans, system-ui, sans-serif)));
+  color: var(--print-heading-color, var(--pr-ink));
   font-size: 15pt;
   font-weight: 600;
   line-height: 1.25;
@@ -758,4 +762,23 @@
 .pr-invitation .pr-message-meta {
   font-size: 10pt;
   color: var(--pr-ink);
+}
+
+/* A plugin print style's letterhead: plain text, its own CSS styles it. */
+.pr-letterhead-header,
+.pr-letterhead-footer {
+  white-space: pre-line;
+  font-size: 9pt;
+  color: var(--pr-muted);
+}
+
+.pr-letterhead-header {
+  margin-bottom: 4mm;
+}
+
+.pr-letterhead-footer {
+  margin-top: 6mm;
+  padding-top: 2mm;
+  border-top: 0.25mm solid var(--pr-rule-light);
+  break-inside: avoid;
 }

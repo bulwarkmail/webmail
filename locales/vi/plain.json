@@ -320,9 +320,6 @@
         "label": "Khi nhấp vào tệp đính kèm",
         "description": "Chọn xem nhấp vào tệp đính kèm sẽ hiển thị tệp hay lưu tệp vào thiết bị"
       },
-      "attachment_position": {
-        "description": "Vị trí hiển thị tệp đính kèm trong thư đang mở"
-      },
       "always_light_mode": {
         "description": "Hiển thị thư trên nền sáng ngay cả khi ứng dụng dùng chế độ tối. Một số thư có thể hiển thị không đúng khi chuyển sang nền tối."
       },

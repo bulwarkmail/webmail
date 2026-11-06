@@ -414,10 +414,10 @@ describe('the settings section', () => {
     const os = bridgeFor(status());
     setBridge(os as never);
     render(<DesktopOsSettings />);
-    expect(await screen.findByText('section_title')).toBeInTheDocument();
+    expect(await screen.findByText('start')).toBeInTheDocument();
     expect(screen.queryByText('start_minimized_label')).toBeNull();
-    // Second in the section, after Close to tray.
-    fireEvent.click(screen.getAllByRole('switch')[1]);
+    // First in the section, before Close to tray.
+    fireEvent.click(screen.getAllByRole('switch')[0]);
     await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: true }));
     expect(await screen.findByText('start_minimized_label')).toBeInTheDocument();
   });
@@ -437,7 +437,7 @@ describe('the settings section', () => {
     setBridge(os as never);
     render(<DesktopOsSettings />);
     expect(await screen.findByText('show_shortcut_label')).toBeInTheDocument();
-    // Close to tray, start with the computer, then this one.
+    // Start with the computer, Close to tray, then this one.
     fireEvent.click(screen.getAllByRole('switch')[2]);
     await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ showShortcut: 'CommandOrControl+Alt+F11' }));
   });

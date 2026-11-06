@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "Je organisatie blokkeert externe inhoud in alle mail, dus die wordt ook bij vertrouwde afzenders niet geladen."
   },
+  "trusted_senders_book": {
+    "unavailable": "Niet beschikbaar: dit account kan geen adresboeken op de server bewaren. De lijst blijft op dit apparaat."
+  },
   "date": {
     "today": "Vandaag",
     "yesterday": "Gisteren",
@@ -1672,7 +1675,7 @@
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
         "default": "Standaard",
-        "mountain_view": "Zoekbalk boven, apps links"
+        "mountain_view": "Zoekbalk boven"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -2115,12 +2118,6 @@
         "description": "Kies of een klik op een bijlage een voorbeeld opent of direct downloadt",
         "preview": "Voorbeeld tonen indien mogelijk",
         "download": "Direct downloaden"
-      },
-      "attachment_position": {
-        "label": "Positie van bijlagen",
-        "description": "Waar bijlagen in de e-mailkop worden weergegeven",
-        "below-header": "Onder de kop",
-        "below-message": "Kaarten onder het bericht"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3596,6 +3593,10 @@
       "sync_on": "Uw andere apparaten gebruiken dezelfde instellingen, dus die veranderen ook.",
       "sync_off": "Uw andere apparaten houden hun instellingen."
     }
+  },
+  "layout_preview": {
+    "default_description": "Apps en mappen links, zoeken boven de lijst",
+    "mountain_view_description": "Zoeken bovenaan, berichten openen over de volle breedte"
   },
   "setup": {
     "title": "Bulwark Webmail instellen",
@@ -6233,6 +6234,14 @@
     "date_label": "Datum",
     "subject_label": "Onderwerp"
   },
+  "print_styles": {
+    "title": "Afdrukken",
+    "description": "Hoe afgedrukte berichten, contacten en agenda's eruitzien.",
+    "style_label": "Afdrukstijl",
+    "style_description": "Add-ons kunnen stijlen toevoegen, bijvoorbeeld briefpapier met het adres van je bedrijf.",
+    "standard": "Standaard",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} installeren",
     "description": "Installeer onze app voor snelle toegang.",
@@ -7414,7 +7423,8 @@
     "pin_current": "Huidige pincode",
     "pin_new": "Nieuwe pincode",
     "pin_repeat": "Herhaal de pincode",
-    "pin_hint": "Minstens 6 tekens. Letters mogen ook, en een langere pincode is moeilijker te raden.",
+    "pin_hint": "Minstens 5 tekens. Letters mogen ook, en een langere pincode is moeilijker te raden.",
+    "pin_hint_policy": "Uw organisatie vereist minstens {count, plural, one {# teken} other {# tekens}}. Letters mogen ook.",
     "pin_obvious": "Deze pincode is te makkelijk te raden. Vermijd herhalingen, reeksen en veelgebruikte keuzes.",
     "pin_mismatch": "De twee pincodes zijn niet gelijk.",
     "pin_recovery": "Als u hem vergeet, kunt u alleen de gegevens op dit apparaat verwijderen en opnieuw inloggen. Uw mail op de server blijft. Berichten die op dit apparaat nog op verzending wachten, gaan verloren.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, one {# minuut} other {# minuten}}",
     "blocked_seconds": "Te veel pogingen. Probeer het over {count, plural, one {# seconde} other {# seconden}} opnieuw.",
     "blocked_minutes": "Te veel pogingen. Probeer het over {count, plural, one {# minuut} other {# minuten}} opnieuw."
+  },
+  "appLockHello": {
+    "switch_label": "Ontgrendelen met Windows Hello",
+    "switch_desc": "Met uw gezicht, vingerafdruk of Windows-pincode. De pincode van de app blijft werken.",
+    "protects": "Met Windows Hello aan bewaart Windows voor deze app een sleutel die pas werkt nadat Windows Hello heeft gecontroleerd dat u het bent. De sleutel van de app wordt daar ook mee vergrendeld. Ontgrendelen vraagt dan om uw gezicht, vingerafdruk of Windows-pincode, en een ander programma op deze computer kan die sleutel niet gebruiken zonder dat Windows het u eerst vraagt. De pincode van de app blijft werken, en die hebt u nodig als Windows Hello wordt hersteld of uitgezet.",
+    "enable_title": "Windows Hello aanzetten",
+    "enable_body": "Voer de pincode van de app in. Daarna vraagt Windows u te bevestigen met Windows Hello.",
+    "enable_failed": "Windows Hello kon niet worden aangezet. Probeer het opnieuw.",
+    "cancelled": "Windows Hello is geannuleerd.",
+    "unsupported": "Windows Hello kan de sleutel op deze computer niet beschermen. Uw pincode blijft werken.",
+    "unavailable": "Windows Hello is niet beschikbaar op deze computer.",
+    "busy": "Windows Hello is bezet of geblokkeerd. Probeer het later opnieuw.",
+    "off_after_pin_change": "Windows Hello staat nu uit, omdat het na het wijzigen van de pincode niet heeft bevestigd. Zet het weer aan als u het gebruikt.",
+    "prompt": "Bevestig met Windows Hello dat u het bent.",
+    "waiting": "Wachten op Windows Hello…",
+    "use_hello": "Ontgrendelen met Windows Hello",
+    "use_pin": "Pincode gebruiken",
+    "failed": "Windows Hello heeft de app niet ontgrendeld. Voer uw pincode in.",
+    "gone": "Windows Hello ontgrendelt de app op deze computer niet meer. Voer uw pincode in."
   },
   "uxs_general": {
     "time_zone_common": "Veelgebruikte tijdzones",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID vingerafdruk gezicht passkey toegangssleutel"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "Privacy en beveiliging",
+      "security": "Wachtwoord en inloggen",
+      "about_updates": "Over en updates",
+      "backup": "Back-up en importeren"
+    },
+    "sections": {
+      "start": "Starten en sluiten",
+      "shortcuts": "Sneltoetsen vanuit andere apps",
+      "mail_links": "Maillinks en -bestanden"
+    },
+    "privacy_link_description": "Deze instellingen staan op de pagina Privacy en beveiliging."
   },
   "desktop_policy": {
     "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",

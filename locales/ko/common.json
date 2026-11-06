@@ -1474,6 +1474,9 @@
   "remote_content_lock": {
     "trusted_senders_note": "조직에서 모든 메일의 원격 콘텐츠를 차단하므로 신뢰할 수 있는 발신자의 메일에서도 불러오지 않습니다."
   },
+  "trusted_senders_book": {
+    "unavailable": "사용할 수 없음: 이 계정은 서버에 주소록을 저장할 수 없습니다. 목록은 이 기기에 남습니다."
+  },
   "date": {
     "today": "오늘",
     "yesterday": "어제",
@@ -1672,7 +1675,7 @@
         "label": "인터페이스 레이아웃",
         "description": "검색, 탐색, 도구 모음의 위치",
         "default": "기본",
-        "mountain_view": "검색창은 위, 앱은 왼쪽"
+        "mountain_view": "검색창은 위"
       },
       "animations": {
         "label": "애니메이션 켜기",
@@ -2115,12 +2118,6 @@
         "description": "파일을 클릭했을 때 미리보기를 할지, 바로 다운로드할지 선택해 주세요",
         "preview": "가능하면 미리보기",
         "download": "즉시 다운로드"
-      },
-      "attachment_position": {
-        "label": "첨부파일 위치",
-        "description": "메일 상단에서 첨부파일을 어디에 표시할지 설정해요",
-        "below-header": "제목 아래",
-        "below-message": "메시지 아래 카드"
       },
       "emails_per_page": {
         "10": "10개",
@@ -3596,6 +3593,10 @@
       "sync_on": "다른 기기도 같은 설정을 사용하므로 함께 바뀌어요.",
       "sync_off": "다른 기기의 설정은 그대로예요."
     }
+  },
+  "layout_preview": {
+    "default_description": "앱과 폴더는 왼쪽, 검색은 목록 위",
+    "mountain_view_description": "검색은 맨 위에, 메시지는 전체 너비로 열림"
   },
   "setup": {
     "title": "Bulwark Webmail 설정",
@@ -6233,6 +6234,14 @@
     "date_label": "날짜",
     "subject_label": "제목"
   },
+  "print_styles": {
+    "title": "인쇄",
+    "description": "인쇄한 메시지, 연락처, 캘린더의 모양입니다.",
+    "style_label": "인쇄 스타일",
+    "style_description": "부가 기능으로 스타일을 추가할 수 있습니다. 예를 들어 회사 주소가 들어간 레터헤드가 있습니다.",
+    "standard": "표준",
+    "from_plugin": "{name} ({plugin})"
+  },
   "pwa_install": {
     "title": "{appName} 설치",
     "description": "빠르게 액세스하려면 앱을 설치하세요.",
@@ -7414,7 +7423,8 @@
     "pin_current": "현재 PIN",
     "pin_new": "새 PIN",
     "pin_repeat": "PIN 다시 입력",
-    "pin_hint": "6자 이상. 문자도 사용할 수 있으며 PIN이 길수록 추측하기 어렵습니다.",
+    "pin_hint": "5자 이상. 문자도 사용할 수 있으며 PIN이 길수록 추측하기 어렵습니다.",
+    "pin_hint_policy": "조직에서 {count, plural, other {#자}} 이상을 요구합니다. 문자도 사용할 수 있습니다.",
     "pin_obvious": "이 PIN은 너무 쉽게 추측할 수 있습니다. 반복, 연속된 숫자, 흔한 조합은 피하세요.",
     "pin_mismatch": "두 PIN이 같지 않습니다.",
     "pin_recovery": "잊어버리면 이 기기의 데이터를 제거하고 다시 로그인하는 방법밖에 없습니다. 서버의 메일은 그대로 남습니다. 이 기기에서 아직 전송을 기다리는 메시지는 사라집니다.",
@@ -7467,6 +7477,25 @@
     "timeout_option": "{count, plural, other {#분}}",
     "blocked_seconds": "시도 횟수가 너무 많습니다. {count, plural, other {#초}} 후에 다시 시도하세요.",
     "blocked_minutes": "시도 횟수가 너무 많습니다. {count, plural, other {#분}} 후에 다시 시도하세요."
+  },
+  "appLockHello": {
+    "switch_label": "Windows Hello로 잠금 해제",
+    "switch_desc": "얼굴, 지문 또는 Windows PIN을 사용합니다. 앱의 PIN도 계속 사용할 수 있습니다.",
+    "protects": "Windows Hello를 켜면 Windows가 이 앱을 위한 키를 보관합니다. 이 키는 Windows Hello가 본인임을 확인한 뒤에만 작동합니다. 앱의 키도 이 키로 잠기므로 잠금을 해제하려면 얼굴, 지문 또는 Windows PIN이 필요하며, 이 컴퓨터의 다른 프로그램은 Windows가 먼저 묻지 않고는 이 키를 사용할 수 없습니다. 앱의 PIN도 계속 사용할 수 있으며, Windows Hello가 재설정되거나 꺼지면 앱의 PIN이 필요합니다.",
+    "enable_title": "Windows Hello 켜기",
+    "enable_body": "앱의 PIN을 입력하세요. 그런 다음 Windows가 Windows Hello로 확인하라고 요청합니다.",
+    "enable_failed": "Windows Hello를 켜지 못했습니다. 다시 시도하세요.",
+    "cancelled": "Windows Hello가 취소되었습니다.",
+    "unsupported": "이 컴퓨터의 Windows Hello로는 키를 보호할 수 없습니다. PIN은 계속 사용할 수 있습니다.",
+    "unavailable": "이 컴퓨터에서는 Windows Hello를 사용할 수 없습니다.",
+    "busy": "Windows Hello가 사용 중이거나 잠겨 있습니다. 나중에 다시 시도하세요.",
+    "off_after_pin_change": "PIN을 변경한 뒤 Windows Hello로 확인하지 않아 Windows Hello가 꺼졌습니다. 사용하려면 다시 켜세요.",
+    "prompt": "Windows Hello로 본인임을 확인하세요.",
+    "waiting": "Windows Hello를 기다리는 중…",
+    "use_hello": "Windows Hello로 잠금 해제",
+    "use_pin": "PIN 사용",
+    "failed": "Windows Hello로 앱 잠금을 해제하지 못했습니다. PIN을 입력하세요.",
+    "gone": "이 컴퓨터에서 더 이상 Windows Hello로 앱 잠금을 해제할 수 없습니다. PIN을 입력하세요."
   },
   "uxs_general": {
     "time_zone_common": "자주 쓰는 시간대",
@@ -8048,6 +8077,20 @@
       "mail_import": "pst ost Outlook mbox eml Thunderbird",
       "app_lock_hello": "Windows Hello Touch ID 지문 얼굴 패스키 passkey"
     }
+  },
+  "settings_reorg": {
+    "tabs": {
+      "privacy": "개인정보 및 보안",
+      "security": "비밀번호 및 로그인",
+      "about_updates": "정보 및 업데이트",
+      "backup": "백업 및 가져오기"
+    },
+    "sections": {
+      "start": "시작 및 닫기",
+      "shortcuts": "다른 앱에서 쓰는 단축키",
+      "mail_links": "메일 링크 및 파일"
+    },
+    "privacy_link_description": "이 설정은 개인정보 및 보안 페이지에 있어요."
   },
   "desktop_policy": {
     "server_refused": "조직에서 이 기기의 이 서버 사용을 허용하지 않습니다.",

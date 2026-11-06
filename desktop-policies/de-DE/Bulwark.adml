@@ -43,6 +43,10 @@
       <string id="AppLockRequired_Explain">Wenn aktiviert, müssen Benutzer die App-Sperre einrichten und können sie nicht ausschalten.</string>
       <string id="AppLockTimeoutMinutes">App sperren nach</string>
       <string id="AppLockTimeoutMinutes_Explain">Wie viele Minuten ohne Nutzung die App entsperrt bleibt. Von 1 bis 1440.</string>
+      <string id="AppLockPinMinLength">Mindestlänge der PIN für die App-Sperre</string>
+      <string id="AppLockPinMinLength_Explain">Wie viele Zeichen eine neue PIN für die App-Sperre mindestens haben muss. Von 5 bis 64. Wenn nicht konfiguriert, sind es 5. Eine zuvor festgelegte PIN funktioniert weiter, bis sie geändert wird.</string>
+      <string id="AppLockHelloAllowed">Entsperren der App mit Windows Hello erlauben</string>
+      <string id="AppLockHelloAllowed_Explain">Wenn aktiviert oder nicht konfiguriert, können Benutzer die App-Sperre außer mit ihrer PIN auch mit Windows Hello aufheben. Wenn deaktiviert, wird die Option ausgeblendet, und Windows Hello entsperrt die App auch dort nicht mehr, wo es eingerichtet war: Dann ist die PIN nötig. Nur unter Windows.</string>
       <string id="TelemetryAllowed">Nutzungsstatistiken zulassen</string>
       <string id="TelemetryAllowed_Explain">Wenn deaktiviert, sendet die App keine Nutzungsstatistiken und fragt nicht danach. Wenn aktiviert oder nicht konfiguriert, fragt sie den Benutzer trotzdem zuerst.</string>
       <string id="CrashReportsAllowed">Absturzberichte zulassen</string>
@@ -86,6 +90,7 @@
       <presentation id="PluginAllowlist"><listBox refId="PluginAllowlist_Value">Plugin-IDs</listBox></presentation>
       <presentation id="AppLockTimeoutMinutes"><decimalTextBox refId="AppLockTimeoutMinutes_Value" defaultValue="10">Minuten</decimalTextBox></presentation>
       <presentation id="AppLockTimeoutMinutes_Recommended"><decimalTextBox refId="AppLockTimeoutMinutes_Recommended_Value" defaultValue="10">Minuten</decimalTextBox></presentation>
+      <presentation id="AppLockPinMinLength"><decimalTextBox refId="AppLockPinMinLength_Value" defaultValue="8">Zeichen</decimalTextBox></presentation>
       <presentation id="QuickComposeShortcut"><textBox refId="QuickComposeShortcut_Value"><label>Tastenkombination</label></textBox></presentation>
       <presentation id="QuickComposeShortcut_Recommended"><textBox refId="QuickComposeShortcut_Recommended_Value"><label>Tastenkombination</label></textBox></presentation>
       <presentation id="AuthServerAllowlist"><textBox refId="AuthServerAllowlist_Value"><label>Server</label></textBox></presentation>

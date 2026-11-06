@@ -310,6 +310,9 @@ describe('composer: what a send check plugin gets', () => {
     expect(email.htmlBody).toContain('DE44');
     // Internal: the identity's own domain. The admin's warning is off.
     expect(email.externalRecipients).toEqual(['carol@partner.test', 'mallory@evil.test']);
+    // Which draft goes: the id the composer's actions and slots hand out.
+    expect(email.composerId).toEqual(expect.any(String));
+    expect(email.composerId).toBe(onSend.mock.calls[0][0].composerId);
   });
 
   it("counts the admin's organisation domains as internal", async () => {

@@ -28,7 +28,7 @@ import { textToEditorHtml } from './editor-html';
 import { ATOM_BOUNDARIES, SIGNATURE_MARKER_ATTR, ownRange, type OwnTextOptions } from './composer-own-text';
 
 export { textToEditorHtml };
-export { ownRange, plainOwnRange, replaceTextareaRange, type OwnRange, type OwnTextOptions, type PlainOwnOptions } from './composer-own-text';
+export { ownRange, plainOwnRange, replaceInputText, replaceTextareaRange, type OwnRange, type OwnTextOptions, type PlainOwnOptions } from './composer-own-text';
 
 // The editor's history merges changes made within half a second of each
 // other into one undo step. A plugin's edit always starts a step of its own,

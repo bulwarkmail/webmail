@@ -32,6 +32,7 @@
 import { stripBidiControls } from '@/lib/bidi';
 import { matchSurface } from '@/lib/deep-links';
 import { cleanMailtoBody, cleanMailtoSubject } from '@/lib/protocol-handlers/mailto';
+import { isLinkParamName, linkParamsFrom, type LinkParams } from '@/lib/plugin-link-params';
 
 export type HandoffKind = 'compose' | 'eml' | 'calendar' | 'contacts';
 
@@ -44,6 +45,8 @@ export interface Handoff {
   body?: string;
   /** From another program through the desktop app (Send to, Open with): a compose window of its own. */
   fromOs?: boolean;
+  /** New message only: parameters for plugins from the link that asked for it (lib/plugin-link-params.ts). */
+  linkParams?: LinkParams;
   createdAt: number;
 }
 
@@ -323,12 +326,12 @@ export function handOffDraft(draft: { subject?: string; body?: string; files?: F
   }, true);
 }
 
-/** Opens an empty new message. */
-export function handOffNewMessage(): void {
+/** Opens an empty new message, with parameters for plugins when the link that asked for it had some. */
+export function handOffNewMessage(linkParams?: LinkParams): void {
   const now = Date.now();
   if (now - lastNewMessageAt < NEW_MESSAGE_REPEAT_MS) return;
   lastNewMessageAt = now;
-  enqueue({ id: newId(), kind: 'compose', files: [], createdAt: now }, false);
+  enqueue({ id: newId(), kind: 'compose', files: [], ...(linkParams ? { linkParams } : {}), createdAt: now }, false);
 }
 
 /**
@@ -525,7 +528,8 @@ export function clearHandoffs(): void {
 }
 
 export type LaunchLanding =
-  | { type: 'new-message' }
+  /** `?compose=1`, with the `x-<plugin id>-<name>` parameters beside it. */
+  | { type: 'new-message'; linkParams?: LinkParams }
   /** The service worker stored what was shared. */
   | { type: 'stored'; id: string; key: string }
   /** It couldn't be stored, or no worker ran: the text came along in the address. */
@@ -535,7 +539,11 @@ const LANDING_HASH_PARAMS = ['share', 'key', 'share_title', 'share_text', 'share
 
 /** What the page's own address asks for, once. See stripLandingParams. */
 export function parseLaunchLanding(search: string, hash: string): LaunchLanding | null {
-  if (new URLSearchParams(search).get('compose') === '1') return { type: 'new-message' };
+  const query = new URLSearchParams(search);
+  if (query.get('compose') === '1') {
+    const linkParams = linkParamsFrom(query.entries());
+    return { type: 'new-message', ...(linkParams ? { linkParams } : {}) };
+  }
   const params = new URLSearchParams(hash.replace(/^#/, ''));
   const share = params.get('share');
   if (!share) return null;
@@ -557,6 +565,10 @@ export function parseLaunchLanding(search: string, hash: string): LaunchLanding 
 /** The address without what parseLaunchLanding read, so a reload doesn't do it again. */
 export function stripLandingParams(search: string, hash: string): { search: string; hash: string } {
   const query = new URLSearchParams(search);
+  // A new message's parameters for plugins go with it.
+  if (query.get('compose') === '1') {
+    for (const name of [...query.keys()]) if (isLinkParamName(name)) query.delete(name);
+  }
   query.delete('compose');
   const rest = query.toString();
   let leftHash = hash;
@@ -567,6 +579,16 @@ export function stripLandingParams(search: string, hash: string): { search: stri
     leftHash = left ? `#${left}` : '';
   }
   return { search: rest ? `?${rest}` : '', hash: leftHash };
+}
+
+/** The parameters for plugins of a launch address that asks for a new message. */
+export function launchLinkParams(targetURL: string, origin: string): LinkParams | undefined {
+  try {
+    const url = new URL(targetURL, origin);
+    return url.origin === origin ? linkParamsFrom(url.searchParams.entries()) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

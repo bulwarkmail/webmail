@@ -26,7 +26,8 @@ vi.mock('@/lib/store/client/api', async (original) => ({
 }));
 
 describe('the store and the OS integration', () => {
-  const client = { isOfflineOnly: () => false, getAccountId: () => 'acc' };
+  // A real login: the demo's client has no session and the store leaves it alone.
+  const client = { isOfflineOnly: () => false, getAccountId: () => 'acc', getSessionSnapshot: () => null };
 
   beforeEach(async () => {
     vi.clearAllMocks();
