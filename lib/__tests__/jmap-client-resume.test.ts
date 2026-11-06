@@ -5,6 +5,7 @@ const SERVER = 'https://mail.example.test';
 type States = Record<string, { Email: string; Mailbox: string }>;
 type Internals = {
   checkForStateChanges(): Promise<void>;
+  fetchCurrentStates(): Promise<void>;
   setupBrowserEventListeners(): void;
   pollingStates: Record<string, string>;
 };
@@ -170,6 +171,21 @@ describe('JMAP resume and SSE catch-up', () => {
     f.event({ A: { Email: 'e1', Mailbox: 'm1' } });
     await f.settle();
     expect(f.callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reports an SSE state that a silent baseline prime read first', async () => {
+    const f = await fixture();
+    f.client.setupPushNotifications();
+    await f.settle();
+    f.callback.mockClear();
+    // A promoted stream re-primes the shared-account poll while SSE is live;
+    // the prime can read new mail before its push event arrives.
+    f.states.A.Email = 'raced';
+    await f.internals.fetchCurrentStates();
+    expect(f.callback).not.toHaveBeenCalled();
+    f.event({ A: { Email: 'raced' } });
+    await f.settle();
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'raced' } } });
   });
 
   it('does not overwrite a newer SSE state with a delayed poll response', async () => {

@@ -11301,6 +11301,10 @@ export class JMAPClient implements IJMAPClient {
   private pollingInterval: NodeJS.Timeout | null = null;
   private secondaryPollInterval: NodeJS.Timeout | null = null;
   private pollingStates: { [key: string]: string } = {};
+  // States already handed to the callback, which a later SSE event may skip.
+  // A silent baseline prime is not in here: it can read a state before its
+  // push event arrives, and that event still has to be reported.
+  private reportedStates: { [key: string]: string } = {};
   private sseAbortController: AbortController | null = null;
   private sseReconnectTimeout: NodeJS.Timeout | null = null;
   private ssePingTimer: NodeJS.Timeout | null = null;
@@ -11579,9 +11583,10 @@ export class JMAPClient implements IJMAPClient {
           for (const [type, state] of Object.entries(states)) {
             if (!state) continue;
             const key = `${accountId}:${type}`;
-            if (this.pollingStates[key] === state) continue;
+            if (this.reportedStates[key] === state) continue;
             (changed[accountId] ??= {})[type] = state;
             this.pollingStates[key] = state;
+            this.reportedStates[key] = state;
           }
         }
         // SSE and catch-up can report the same state in either order.
@@ -11773,6 +11778,7 @@ export class JMAPClient implements IJMAPClient {
         if (this.pollingStates[key] !== previousStates[key]) continue;
         if (this.pollingStates[key] !== state) {
           (changedByAccount[resolved.accountId] ??= {})[resolved.stateKey] = state;
+          this.reportedStates[key] = state;
         }
         this.pollingStates[key] = state;
       }
@@ -11817,6 +11823,7 @@ export class JMAPClient implements IJMAPClient {
     this.cleanupBrowserEventListeners();
     this.stateChangeCallback = null;
     this.pollingStates = {};
+    this.reportedStates = {};
   }
 
   private startSSEPingMonitor(): void {
