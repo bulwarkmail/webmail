@@ -4709,9 +4709,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   markAsRead: async (client, emailId, read, emailKey): Promise<boolean> => {
     const isTarget = singleEmailMatcher(emailId, emailKey);
+    const processingKey = `${emailKey ?? emailId}-${read}`;
     try {
       // Check if this email is already being processed
-      const processingKey = `${emailKey ?? emailId}-${read}`;
       const currentProcessing = get().processingReadStatus;
       if (currentProcessing.has(processingKey)) {
         return true; // Already being processed
@@ -4722,7 +4722,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (!email) return false;
 
       // Check if already in the desired state
-      const isCurrentlyRead = email.keywords?.$seen;
+      const isCurrentlyRead = email.keywords?.$seen ?? false;
       if (isCurrentlyRead === read) {
         return true; // Already in desired state
       }
@@ -4758,7 +4758,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const emailInState = state.emails.find(isTarget);
         if (!emailInState) return { processingReadStatus: newProcessingSet };
 
-        const wasRead = emailInState.keywords?.$seen;
+        const wasRead = emailInState.keywords?.$seen ?? false;
         if (wasRead === read) {
           return { processingReadStatus: newProcessingSet }; // State unchanged, skip counter update
         }
@@ -4825,7 +4825,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Remove from processing set on error
       set((state) => {
         const newProcessingSet = new Set(state.processingReadStatus);
-        newProcessingSet.delete(`${emailId}-${read}`);
+        newProcessingSet.delete(processingKey);
         return {
           processingReadStatus: newProcessingSet,
           error: error instanceof Error ? error.message : "Failed to update email"

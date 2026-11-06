@@ -1,0 +1,103 @@
+// @vitest-environment node
+import { describe, expect, it, vi } from 'vitest';
+import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
+import { createTranslator } from 'next-intl';
+import en from '@/locales/en/common.json';
+import el from '@/locales/el/common.json';
+import { parseSearchQuery } from '@/lib/global-search/query-parser';
+
+vi.unmock('next-intl');
+
+function leaves(node: unknown, prefix = ''): Array<[string, string]> {
+  if (typeof node === 'string') return [[prefix, node]];
+  if (!node || typeof node !== 'object') return [];
+  return Object.entries(node).flatMap(([key, value]) => leaves(value, prefix ? `${prefix}.${key}` : key));
+}
+
+function argumentsOf(message: string): string[] {
+  const args = new Set<string>();
+  const walk = (elements: MessageFormatElement[]) => {
+    for (const element of elements) {
+      if (element.type !== TYPE.literal && 'value' in element) {
+        args.add(`${element.type}:${element.value}`);
+      }
+      if ('options' in element) {
+        for (const option of Object.values(element.options)) walk(option.value);
+      }
+      if ('children' in element) walk(element.children);
+    }
+  };
+  // A few catalog entries contain literal HTML for raw rendering.
+  walk(parse(message, { ignoreTag: true }));
+  return [...args].sort();
+}
+
+describe('Greek messages', () => {
+  const english = new Map(leaves(en));
+  const translated = leaves(el).filter(([key, value]) => english.get(key) !== value);
+
+  it('preserves ICU argument names and types in every translated message', () => {
+    const failures = translated.flatMap(([key, value]) => {
+      try {
+        return JSON.stringify(argumentsOf(value)) === JSON.stringify(argumentsOf(english.get(key)!)) ? [] : [key];
+      } catch (error) {
+        return [`${key}: ${String(error)}`];
+      }
+    });
+    expect(failures).toEqual([]);
+  });
+
+  it('preserves HTML tags and their attributes', () => {
+    const tags = (text: string) => text.match(/<[^>]+>/g) ?? [];
+    const failures = translated.filter(([key, value]) =>
+      JSON.stringify(tags(value)) !== JSON.stringify(tags(english.get(key)!)),
+    ).map(([key]) => key);
+    expect(failures).toEqual([]);
+  });
+
+  const t = createTranslator({ locale: 'el', messages: el, onError: (error) => { throw error; } });
+
+  it('keeps the search hint examples compatible with the query parser', () => {
+    const examples = t('global_search.empty_hint')
+      .match(/\b(?:from:|subject:|has:attachment|after:\d{4}-\d{2}-\d{2})/g) ?? [];
+    expect(examples).toEqual(['from:', 'subject:', 'has:attachment', 'after:2026-01-01']);
+
+    const parsed = parseSearchQuery(`${examples[0]}sender@example.com ${examples[1]}δοκιμή ${examples[2]} ${examples[3]}`);
+    expect(parsed.mail).toMatchObject({
+      from: 'sender@example.com',
+      subject: 'δοκιμή',
+      hasAttachment: true,
+      dateAfter: '2026-01-01',
+    });
+    expect(parsed.text).toBe('');
+  });
+
+  it.each([
+    [0, '0 μηνύματα'],
+    [1, '1 μήνυμα'],
+    [2, '2 μηνύματα'],
+    [21, '21 μηνύματα'],
+  ])('formats %i messages using Greek plural rules', (count, expected) => {
+    expect(t('threads.messages_count', { count })).toBe(expected);
+  });
+
+  it('formats nested selections and plurals without losing their values', () => {
+    expect(t('email_list.pages.position', { more: 'yes', page: 2, pages: 4 })).toBe('Σελίδα 2 από τουλάχιστον 4');
+    expect(t('mail_p2_list.conversations_moved_to', { count: 2, mailbox: 'Εργασία' }))
+      .toBe('2 συνομιλίες μετακινήθηκαν στον φάκελο Εργασία');
+    expect(t('email_composer.files_picker.attach', { count: 0 })).toBe('Επισύναψη');
+  });
+
+  it('keeps download template tokens as literal text rather than ICU arguments', () => {
+    const description = t('settings.downloads.attachment_template.description');
+    expect(description).toContain('{filename}');
+    expect(description).toContain('{ext}');
+  });
+
+  it('formats destructive-action warnings in singular and plural', () => {
+    expect(t('offline.settings.off_confirm_message', { count: 1 })).toContain('1 μήνυμα στα εξερχόμενα δεν έχει σταλεί.');
+    expect(t('offline.settings.off_confirm_message', { count: 2 })).toContain('2 μηνύματα στα εξερχόμενα δεν έχουν σταλεί.');
+    expect(t('files_sync.mass_delete.local', { count: 2, folder: 'Έγγραφα' }))
+      .toBe('2 στοιχεία διαγράφηκαν από τον φάκελο Έγγραφα σε αυτόν τον υπολογιστή. Να διαγραφούν και από τα Αρχεία;');
+  });
+});
