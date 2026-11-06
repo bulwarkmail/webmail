@@ -90,6 +90,35 @@ describe('admin policy defaults (#1248)', () => {
     expect(settings().sendDelaySeconds).toBe(5);
   });
 
+  it('presets the hover actions, a list setting (#1564)', () => {
+    loadPolicy({ defaults: { hoverActions: ['delete', 'star', 'markRead', 'archive', 'tag', 'spam'] } });
+    expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive', 'tag', 'spam']);
+    expect(settings().explicitSettings).toEqual([]);
+  });
+
+  it('keeps hover actions the user chose over the preset', () => {
+    settings().updateSetting('hoverActions', ['delete']);
+    loadPolicy({ defaults: { hoverActions: ['delete', 'spam'] } });
+    expect(settings().hoverActions).toEqual(['delete']);
+  });
+
+  it('skips a hover action preset with an unknown or repeated action, and says so', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    loadPolicy({ defaults: { hoverActions: ['delete', 'launchRockets'] } });
+    expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive']);
+    loadPolicy({ defaults: { hoverActions: ['delete', 'delete'] } });
+    expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive']);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('defaults.hoverActions'));
+    warn.mockRestore();
+  });
+
+  it('puts the built-in hover actions back when the preset goes', () => {
+    loadPolicy({ defaults: { hoverActions: ['spam'] } });
+    expect(settings().hoverActions).toEqual(['spam']);
+    loadPolicy({ defaults: {} });
+    expect(settings().hoverActions).toEqual(['delete', 'star', 'markRead', 'archive']);
+  });
+
   it('respects the allowed values of a restriction', () => {
     loadPolicy({
       defaults: { emailsPerPage: 500 },
