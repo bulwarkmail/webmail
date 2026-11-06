@@ -158,6 +158,11 @@ const SELECT_ALL_LIMIT = 5000;
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
 const BATCH_TOOLBAR_WIDE = 640;
 
+/** Rows drawn beyond each edge of the screen, so scrolling never shows a gap. */
+const LIST_OVERSCAN = 5;
+/** The same for the list's first draw, which waits for every row it draws. */
+const FIRST_DRAW_OVERSCAN = 1;
+
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
 // each time the store changed while a list loaded.
@@ -534,11 +539,26 @@ export function EmailList({
 
   // Each row's place among the rows (headers and notes don't count).
   const rowPosOfItem = useMemo(() => new Map(itemOfThread.map((item, i) => [item, i + 1])), [itemOfThread]);
+  // The rows below the screen come right after the first rows are drawn: the
+  // first screen after sign-in waits only for the rows it shows. Scrolling
+  // never sees the difference, the five extra rows are there by then.
+  const [overscanFull, setOverscanFull] = useState(false);
+  const hasItems = items.length > 0;
+  useEffect(() => {
+    if (overscanFull || !hasItems) return;
+    let timer = 0;
+    // After the frame that shows them.
+    const frame = requestAnimationFrame(() => { timer = window.setTimeout(() => setOverscanFull(true), 0); });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [overscanFull, hasItems]);
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,
     estimateSize,
-    overscan: 5,
+    overscan: overscanFull ? LIST_OVERSCAN : FIRST_DRAW_OVERSCAN,
     getItemKey,
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
