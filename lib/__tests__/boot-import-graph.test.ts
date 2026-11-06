@@ -114,6 +114,11 @@ describe('what a cold start imports', () => {
     }
   });
 
+  it("leaves the plugin assistant's host APIs to the plugin runtime", () => {
+    expect(modules.has('lib/plugin-sandbox/assistant/index.ts')).toBe(false);
+    expect(modules.has('lib/plugin-sandbox/host-features.ts')).toBe(false);
+  });
+
   it('loads the hosts of background work after the first screen', () => {
     for (const host of [
       'components/mail-transfer/mail-transfer-host.tsx',
