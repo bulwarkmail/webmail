@@ -29,6 +29,7 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   cs: () => import('@/locales/cs/common.json').then((m) => withEnglishFallback(m.default)),
   da: () => import('@/locales/da/common.json').then((m) => withEnglishFallback(m.default)),
   de: () => import('@/locales/de/common.json').then((m) => addPlainLanguage('de', m.default)).then(withEnglishFallback),
+  el: () => import('@/locales/el/common.json').then((m) => withEnglishFallback(m.default)),
   en: () => (LITE_ENGLISH ? Promise.resolve(LITE_ENGLISH) : loadEnglishMessages()),
   es: () => import('@/locales/es/common.json').then((m) => withEnglishFallback(m.default)),
   he: () => import('@/locales/he/common.json').then((m) => withEnglishFallback(m.default)),
