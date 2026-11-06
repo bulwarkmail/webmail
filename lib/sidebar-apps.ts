@@ -159,7 +159,14 @@ export function mergeSidebarApps(
 ): ResolvedSidebarApp[] {
   const managed = sanitizeDefaultSidebarApps(defaults);
   const seen = new Set(managed.map((app) => app.id));
-  const own = (Array.isArray(userApps) ? userApps : []).filter((app) => app && !seen.has(app.id));
+  // A user's app comes from their synced or imported settings, so whatever it
+  // carries of an operator's app (the managed flag, an image) is dropped here.
+  const own = (Array.isArray(userApps) ? userApps : [])
+    .filter((app) => app && !seen.has(app.id))
+    .map((app) => {
+      const { managed: _managed, iconUrl: _iconUrl, ...rest } = app as ResolvedSidebarApp;
+      return rest;
+    });
   return [...managed.map((app) => ({ ...app, managed: true })), ...own];
 }
 
