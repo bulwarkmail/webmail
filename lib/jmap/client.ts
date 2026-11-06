@@ -11513,6 +11513,8 @@ export class JMAPClient implements IJMAPClient {
       this.readSSEStream(response.body, controller);
       // A reopened stream does not replay missed events. Reuse the guarded,
       // bounded state poll once per successful connection, without awaiting it.
+      // The first connection of a push session has no baseline yet, so this
+      // only primes it; later reconnects report what changed in between.
       void this.checkForStateChanges();
     }).catch((error) => {
       // Intentional close, not a failure - no polling fallback.
@@ -11728,7 +11730,6 @@ export class JMAPClient implements IJMAPClient {
       return;
     }
     const pollingStates = this.pollingStates;
-    const previousStates = { ...pollingStates };
     try {
       const responses = await this.fetchPolledStateResponses();
       if (this.pollingStates !== pollingStates) return;
@@ -11736,8 +11737,9 @@ export class JMAPClient implements IJMAPClient {
         const resolved = this.resolvePolledState(method, callId);
         if (resolved && result?.state) {
           const key = `${resolved.accountId}:${resolved.stateKey}`;
-          // Priming shared-account polling must not undo a live SSE update.
-          if (this.pollingStates[key] !== previousStates[key]) continue;
+          // Only fill gaps. Overwriting a known state, or one a live SSE event
+          // set meanwhile, would swallow the change the next check reports.
+          if (this.pollingStates[key] !== undefined) continue;
           this.pollingStates[key] = result.state as string;
         }
       }
@@ -11776,7 +11778,10 @@ export class JMAPClient implements IJMAPClient {
         // An SSE event received during the poll already reported this key;
         // its state may be newer than the response, so do not overwrite it.
         if (this.pollingStates[key] !== previousStates[key]) continue;
-        if (this.pollingStates[key] !== state) {
+        // No baseline yet: record it silently. Reporting it would refetch
+        // everything the app has just loaded on every new push session.
+        const known = this.pollingStates[key];
+        if (known !== undefined && known !== state) {
           (changedByAccount[resolved.accountId] ??= {})[resolved.stateKey] = state;
           this.reportedStates[key] = state;
         }
@@ -11946,9 +11951,16 @@ export class JMAPClient implements IJMAPClient {
     this.rateLimitCallback?.(true, retryAfterMs);
 
     // Pause live updates until the server's rate-limit window expires.
+    // The baseline outlives the pause, so the reconnect afterwards reports what
+    // changed during the window. Fresh objects: a check still in flight from
+    // before belongs to the closed session and is dropped.
     const stateChangeCallback = this.stateChangeCallback;
+    const pollingStates = this.pollingStates;
+    const reportedStates = this.reportedStates;
     this.closePushNotifications();
     this.stateChangeCallback = stateChangeCallback;
+    this.pollingStates = { ...pollingStates };
+    this.reportedStates = { ...reportedStates };
 
     // Schedule clearing the rate-limit flag and notifying listeners.
     this.rateLimitTimeout = setTimeout(() => {

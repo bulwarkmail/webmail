@@ -6,6 +6,7 @@ type States = Record<string, { Email: string; Mailbox: string }>;
 type Internals = {
   checkForStateChanges(): Promise<void>;
   fetchCurrentStates(): Promise<void>;
+  setRateLimited(retryAfterMs: number): void;
   setupBrowserEventListeners(): void;
   pollingStates: Record<string, string>;
 };
@@ -78,42 +79,92 @@ async function fixture(accountIds = ['A']) {
     holdPoll = async response => { await gate; return response; };
     return () => { holdPoll = undefined; release(); };
   }
-  return { client, internals, callback, states, streams, polls, settle, event, pause, fail: () => { failPoll = true; } };
+  return { client, internals, callback, states, streams, polls, settle, event, pause, fail: () => { failPoll = true; }, ok: () => { failPoll = false; } };
 }
 
 describe('JMAP resume and SSE catch-up', () => {
-  it('reports an unknown initial state once, then only changed state', async () => {
+  it('records an unknown initial state silently, then reports only changed state', async () => {
     const f = await fixture();
     await f.internals.checkForStateChanges();
-    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Mailbox: 'm1', Email: 'e1' } } });
+    expect(f.callback).not.toHaveBeenCalled();
     await f.internals.checkForStateChanges();
-    expect(f.callback).toHaveBeenCalledTimes(1);
+    expect(f.callback).not.toHaveBeenCalled();
     f.states.A.Email = 'e2';
     await f.internals.checkForStateChanges();
-    expect(f.callback).toHaveBeenLastCalledWith({ '@type': 'StateChange', changed: { A: { Email: 'e2' } } });
-    expect(f.callback).toHaveBeenCalledTimes(2);
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'e2' } } });
   });
 
-  it('reconciles once after initial SSE success, without adding fast polling', async () => {
+  it('primes the baseline once after initial SSE success, without reporting or adding fast polling', async () => {
     const f = await fixture();
     f.client.setupPushNotifications();
     await f.settle();
     expect(f.streams).toHaveLength(1);
     expect(f.polls).toHaveLength(1);
     expect(f.polls[0]).toHaveLength(2);
-    expect(f.callback).toHaveBeenCalledTimes(1);
+    expect(f.callback).not.toHaveBeenCalled();
+    expect(f.internals.pollingStates).toEqual({ 'A:Mailbox': 'm1', 'A:Email': 'e1' });
     await vi.advanceTimersByTimeAsync(9_000);
     expect(f.streams).toHaveLength(1);
     expect(f.polls).toHaveLength(1);
   });
 
-  it('reconciles the first resume with no baseline, and coalesces overlapping focus/online checks', async () => {
+  it('does not report on the first connection of a new push session, only on its reconnects', async () => {
     const f = await fixture();
+    f.client.setupPushNotifications();
+    await f.settle();
+    // An account switch or re-login closes the session and opens a fresh one:
+    // the app loads that account anyway, so its first catch-up only primes.
+    f.client.closePushNotifications();
+    f.states.A = { Mailbox: 'm2', Email: 'e2' };
+    f.client.onStateChange(f.callback);
+    f.client.setupPushNotifications();
+    await f.settle();
+    expect(f.streams).toHaveLength(2);
+    expect(f.polls).toHaveLength(2);
+    expect(f.callback).not.toHaveBeenCalled();
+    f.streams.at(-1)!.close();
+    await f.settle();
+    f.states.A.Email = 'e3';
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(f.streams).toHaveLength(3);
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'e3' } } });
+  });
+
+  it('reports changes made during a rate-limit pause when the session had a baseline', async () => {
+    const f = await fixture();
+    f.client.setupPushNotifications();
+    await f.settle();
+    f.internals.setRateLimited(5_000);
+    f.states.A.Email = 'during-pause';
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(f.streams).toHaveLength(2);
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'during-pause' } } });
+  });
+
+  it('primes silently after a rate-limit pause when the session never had a baseline', async () => {
+    const f = await fixture();
+    f.fail();
+    f.client.setupPushNotifications();
+    await f.settle();
+    expect(f.internals.pollingStates).toEqual({});
+    f.internals.setRateLimited(5_000);
+    f.ok();
+    f.states.A.Email = 'during-pause';
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(f.streams).toHaveLength(2);
+    expect(f.internals.pollingStates).toEqual({ 'A:Mailbox': 'm1', 'A:Email': 'during-pause' });
+    expect(f.callback).not.toHaveBeenCalled();
+  });
+
+  it('reconciles a resume against the baseline, and coalesces overlapping focus/online checks', async () => {
+    const f = await fixture();
+    await f.internals.checkForStateChanges();
+    expect(f.polls).toHaveLength(1);
     f.internals.setupBrowserEventListeners();
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
     document.dispatchEvent(new Event('visibilitychange'));
     await f.settle();
-    expect(f.polls).toHaveLength(0);
+    expect(f.polls).toHaveLength(1);
     const release = f.pause();
     f.states.A.Email = 'background-mail';
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
@@ -121,10 +172,10 @@ describe('JMAP resume and SSE catch-up', () => {
     document.dispatchEvent(new Event('visibilitychange'));
     window.dispatchEvent(new Event('online'));
     await f.settle();
-    expect(f.polls).toHaveLength(1);
+    expect(f.polls).toHaveLength(2);
     release();
     await f.settle();
-    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Mailbox: 'm1', Email: 'background-mail' } } });
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'background-mail' } } });
     document.dispatchEvent(new Event('visibilitychange'));
     await f.settle();
     expect(f.callback).toHaveBeenCalledTimes(1);
@@ -168,24 +219,40 @@ describe('JMAP resume and SSE catch-up', () => {
     const f = await fixture();
     f.client.setupPushNotifications();
     await f.settle();
-    f.event({ A: { Email: 'e1', Mailbox: 'm1' } });
+    f.streams.at(-1)!.close();
     await f.settle();
+    f.states.A.Email = 'e2';
+    await vi.advanceTimersByTimeAsync(3_000);
     expect(f.callback).toHaveBeenCalledTimes(1);
+    f.event({ A: { Email: 'e2' } });
+    await f.settle();
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'e2' } } });
   });
 
   it('still reports an SSE state that a silent baseline prime read first', async () => {
     const f = await fixture();
-    f.client.setupPushNotifications();
-    await f.settle();
-    f.callback.mockClear();
-    // A promoted stream re-primes the shared-account poll while SSE is live;
-    // the prime can read new mail before its push event arrives.
+    // The shared-account prime and the first catch-up record a state without
+    // reporting it; they can read new mail before its push event arrives.
     f.states.A.Email = 'raced';
     await f.internals.fetchCurrentStates();
+    f.client.setupPushNotifications();
+    await f.settle();
     expect(f.callback).not.toHaveBeenCalled();
     f.event({ A: { Email: 'raced' } });
     await f.settle();
     expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'raced' } } });
+  });
+
+  it('does not let a re-prime swallow a change the next check should report', async () => {
+    const f = await fixture();
+    f.client.setupPushNotifications();
+    await f.settle();
+    // A promoted stream re-primes the shared-account poll mid-session.
+    f.states.A.Email = 'since-last-tick';
+    await f.internals.fetchCurrentStates();
+    expect(f.internals.pollingStates['A:Email']).toBe('e1');
+    await f.internals.checkForStateChanges();
+    expect(f.callback).toHaveBeenCalledExactlyOnceWith({ '@type': 'StateChange', changed: { A: { Email: 'since-last-tick' } } });
   });
 
   it('does not overwrite a newer SSE state with a delayed poll response', async () => {
