@@ -2194,20 +2194,34 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Warm the code-split viewer/composer chunks once the browser is idle so the
   // first message open or compose click doesn't wait on a chunk fetch. Only
   // once signed in: a visitor on the way to the login form would otherwise
-  // download and run the whole editor while that form renders.
+  // download and run the whole editor while that form renders. And only once
+  // the first rows are drawn: the wait for the list is idle too, and the
+  // viewer's code landing then held the rows up. An empty folder warms later.
+  const hasRows = emails.length > 0;
   useEffect(() => {
     if (!isAuthenticated) return;
     const warm = () => {
       void import("@/components/email/email-viewer");
       void import("@/components/email/email-composer");
+      void import("@/components/email/thread-conversation-view");
+      void import("@/components/files/file-preview-modal");
     };
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(warm);
-      return () => window.cancelIdleCallback(id);
+    if (!hasRows) {
+      const id = setTimeout(warm, 5000);
+      return () => clearTimeout(id);
     }
-    const id = setTimeout(warm, 1500);
-    return () => clearTimeout(id);
-  }, [isAuthenticated]);
+    let idle = 0;
+    // After the frame that shows the rows.
+    const frame = requestAnimationFrame(() => {
+      if (typeof window.requestIdleCallback === "function") idle = window.requestIdleCallback(warm);
+      else idle = window.setTimeout(warm, 1500);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      else clearTimeout(idle);
+    };
+  }, [isAuthenticated, hasRows]);
 
   // Push notifications: the bindings live at the app level
   // (components/providers/push-bindings-host.tsx) so other pages get changes
