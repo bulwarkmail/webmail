@@ -5,7 +5,7 @@
 
 export const WRITING_LANGUAGES = [
   'ar', 'ca', 'cs', 'da', 'de-DE', 'de-AT', 'de-CH', 'el', 'en-US', 'en-GB', 'en-AU', 'en-CA', 'en-NZ', 'en-ZA',
-  'es', 'et', 'fa', 'fi', 'fr', 'fr-CA', 'fr-CH', 'he', 'hu', 'it', 'ja', 'ko', 'lv', 'mn', 'nb', 'nl', 'nl-BE',
+  'es', 'et', 'fa', 'fi', 'fr', 'fr-CA', 'fr-CH', 'he', 'hu', 'it', 'ja', 'ko', 'lv', 'mn', 'nb', 'nn', 'nl', 'nl-BE',
   'pl', 'pt-PT', 'pt-BR', 'ro', 'ru', 'sk', 'sl', 'sv', 'th', 'tr', 'uk', 'vi', 'zh-CN', 'zh-TW',
 ] as const;
 
