@@ -21,6 +21,8 @@ describe('SidebarAppIcon', () => {
     const img = container.querySelector('img');
     expect(img).toHaveAttribute('src', 'https://chat.example.com/favicon.png');
     expect(img).toHaveAttribute('alt', '');
+    // As the app's frame: the app's server learns nothing of the page.
+    expect(img).toHaveAttribute('referrerpolicy', 'no-referrer');
     expect(img).toHaveClass('w-[18px]', 'h-[18px]', 'object-contain');
     expect(container.querySelector('svg')).toBeNull();
   });

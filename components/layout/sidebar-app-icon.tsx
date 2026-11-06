@@ -17,6 +17,7 @@ export function SidebarAppIcon({ app, className }: { app: ResolvedSidebarApp; cl
       <img
         src={src}
         alt=""
+        referrerPolicy="no-referrer"
         draggable={false}
         className={cn(className, 'object-contain')}
         onError={() => setFailed(src)}
