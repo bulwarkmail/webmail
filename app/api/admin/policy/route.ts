@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { completePolicy, configManager, DEFAULT_POLICY_VERSION, isPolicyConflict } from '@/lib/admin/config-manager';
+import { completePolicy, configManager, isPolicyConflict } from '@/lib/admin/config-manager';
 import { cookies } from 'next/headers';
 import { requireAdminAuth, getClientIP, verifyCurrentAdminSession } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
@@ -17,8 +17,12 @@ function policyETag(version: string): string {
   return `"${version}"`;
 }
 
-/** A policy version: DEFAULT_POLICY_VERSION or what versionOf makes (22 base64url chars). */
-const POLICY_VERSION = new RegExp(`^(?:${DEFAULT_POLICY_VERSION}|[A-Za-z0-9_-]{22})$`);
+/**
+ * A policy version: DEFAULT_POLICY_VERSION ('default') or what versionOf makes
+ * (22 base64url chars). Spelled out, not imported: route tests mock the config
+ * manager with only what they use.
+ */
+const POLICY_VERSION = /^(?:default|[A-Za-z0-9_-]{22})$/;
 
 /**
  * The version an If-Match header names, or undefined for none (or `*`).
