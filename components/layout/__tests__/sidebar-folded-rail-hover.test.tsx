@@ -99,6 +99,20 @@ describe('hovering the folded folder column (default layout)', () => {
     expect(classes).not.toContain('desk:w-12');
   });
 
+  it('opens and folds the names at once, without sliding the icons through a width transition', () => {
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
+    expect(root().className).not.toContain('transition-none');
+    rest(20, 120);
+    expect(root().className.split(/\s+/)).toContain('transition-none');
+    fireEvent.mouseLeave(root());
+    act(() => { vi.advanceTimersByTime(250); });
+    expect(labelsShown()).toBe(false);
+    expect(root().className.split(/\s+/)).toEqual(expect.arrayContaining(['desk:w-12', 'transition-none']));
+    // Unfolding with » keeps its transition.
+    act(() => { useUIStore.setState({ sidebarCollapsed: false } as never); });
+    expect(root().className).not.toContain('transition-none');
+  });
+
   it('keeps each icon where it was and puts the name and count after it', () => {
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     const inbox = () => document.querySelector<HTMLElement>('[data-rail-key="inbox"] > button')!;

@@ -31,6 +31,8 @@ async function signIn(browser: Browser, locale: string, height: number): Promise
   await page.locator('[data-folder-nav] [data-rail-key]').first().waitFor({ timeout: 60000 });
   if (!(await page.locator('[data-folder-rail]').count())) await page.getByTestId('sidebar-collapse').click();
   await page.locator('[data-folder-rail]').waitFor();
+  // Folding with » is a 300 ms width transition: let it end before measuring.
+  await page.waitForTimeout(800);
   return page;
 }
 
@@ -82,16 +84,20 @@ async function check(page: Page, name: string, scroll: number) {
   const under = await railKeyAt(page, px, py);
   const root = page.locator('[data-folder-rail-labels]');
   await expect(root).toHaveCount(1);
+  // At once, not after a width transition that slides the icons on the way.
+  const atOnce = await positions(page);
   await page.waitForTimeout(400);
   await shot(page, `rail-hover-it-${name}`);
 
   // Nothing moved, the same item is under the pointer, the list stayed.
   expect(await railKeyAt(page, px, py)).toBe(under);
   const after = await positions(page);
-  for (const [key, b] of Object.entries(before)) {
-    expect(after[key], `${key} is still there`).toBeTruthy();
-    expect(Math.abs(after[key].x - b.x), `${key} x`).toBeLessThanOrEqual(0.5);
-    expect(Math.abs(after[key].y - b.y), `${key} y`).toBeLessThanOrEqual(0.5);
+  for (const [when, now] of [['at once', atOnce], ['settled', after]] as const) {
+    for (const [key, b] of Object.entries(before)) {
+      expect(now[key], `${key} is still there (${when})`).toBeTruthy();
+      expect(Math.abs(now[key].x - b.x), `${key} x (${when})`).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(now[key].y - b.y), `${key} y (${when})`).toBeLessThanOrEqual(0.5);
+    }
   }
   expect(await nav.evaluate((el) => el.scrollTop)).toBe(scrolled);
   expect(await page.locator('[data-folder-drawer]').count()).toBe(0);
@@ -103,9 +109,14 @@ async function check(page: Page, name: string, scroll: number) {
   expect(open!.width).toBeGreaterThan(column.width + 100);
   expect(await page.locator('[data-pane="list"]').first().boundingBox()).toEqual(list);
 
-  // Off the column: the names fold after a moment.
+  // Off the column: the names fold after a moment, and the icons stay put
+  // as they go.
   await page.mouse.move(900, 400);
   await expect(root).toHaveCount(0);
+  const folded = await positions(page);
+  for (const [key, b] of Object.entries(before)) {
+    expect(Math.abs(folded[key].x - b.x), `${key} x (folding)`).toBeLessThanOrEqual(0.5);
+  }
 }
 
 test.describe('the folded folder column on hover', () => {

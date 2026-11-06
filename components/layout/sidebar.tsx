@@ -1412,6 +1412,21 @@ function SidebarImpl({
   const hoverExpanded = sidebarCollapsed && !isDrawer && (railOpen || (mvShell && railHovered));
   const isCollapsed = sidebarCollapsed && !hoverExpanded && !isDrawer;
   const railLabels = isCollapsed && !mvShell && (railHovered || railFocused);
+  // The names come and go at once, without the width transition: while the
+  // width moved, the folded items centred in the wider rows and the named
+  // ones were padded from a width that wasn't final yet, so the icons slid.
+  // Folding and unfolding with » keep their transition.
+  const [railLabelsBefore, setRailLabelsBefore] = useState(railLabels);
+  const [railSnap, setRailSnap] = useState(false);
+  if (railLabelsBefore !== railLabels) {
+    setRailLabelsBefore(railLabels);
+    setRailSnap(true);
+  }
+  const [collapsedBefore, setCollapsedBefore] = useState(sidebarCollapsed);
+  if (collapsedBefore !== sidebarCollapsed) {
+    setCollapsedBefore(sidebarCollapsed);
+    setRailSnap(false);
+  }
   // Outside Mountain View the tree All folders opens is a drawer, as in
   // Outlook and Thunderbird: from the window's start edge, over the app rail
   // and the folded column, with the page dimmed behind it (the caller draws
@@ -2476,7 +2491,8 @@ function SidebarImpl({
         railLabels ? "desk:w-64" : isCollapsed && !mvShell ? "desk:w-12" : isFolderDrawer ? "desk:w-72" : "desk:w-full",
         // The names shown: over the list from the column's own start edge,
         // so the app rail beside it and the list under it don't move.
-        railLabels && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl duration-150",
+        railLabels && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl",
+        railSnap && "transition-none",
         // Floats out of the rail's own column rather than widening it, so the
         // message list underneath never moves while the pointer passes over.
         // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
