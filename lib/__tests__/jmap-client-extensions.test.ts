@@ -24,9 +24,9 @@ describe('submissionEnvelopeParameters', () => {
  * the response is mapped back.
  */
 
-function makeSession(accountCapabilities: Record<string, unknown> = {}) {
+function makeSession(accountCapabilities: Record<string, unknown> = {}, core: Record<string, unknown> = {}) {
   return {
-    capabilities: { 'urn:ietf:params:jmap:core': {} },
+    capabilities: { 'urn:ietf:params:jmap:core': core },
     accounts: {
       'acct-1': {
         name: 'test',
@@ -56,9 +56,9 @@ describe('JMAP client extensions', () => {
   let client: JMAPClient;
   let requests: RequestBody[];
 
-  async function setup(accountCapabilities: Record<string, unknown> = {}) {
+  async function setup(accountCapabilities: Record<string, unknown> = {}, core: Record<string, unknown> = {}) {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
-    fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession(accountCapabilities)));
+    fetchSpy.mockResolvedValueOnce(jsonResponse(makeSession(accountCapabilities, core)));
     client = new JMAPClient('https://mail.example.com', 'user@test.com', 'pass123');
     await client.connect();
     fetchSpy.mockReset();
@@ -400,6 +400,26 @@ describe('JMAP client extensions', () => {
 
       await client.destroyCalendarEventNotifications(['n1']);
       expect(requests[1].methodCalls[0]).toEqual(['CalendarEventNotification/set', { accountId: 'acct-1', destroy: ['n1'] }, '0']);
+    });
+
+    it('pages through more notifications than the server gets at once', async () => {
+      await setup({ 'urn:ietf:params:jmap:calendars': {} }, { maxObjectsInGet: 2 });
+      const all = ['n1', 'n2', 'n3'];
+      answer((body) => {
+        const { position = 0, limit } = body.methodCalls[0][1] as { position?: number; limit: number };
+        const ids = all.slice(position, position + limit);
+        return { methodResponses: [
+          ['CalendarEventNotification/query', { ids, position, total: all.length }, '0'],
+          ['CalendarEventNotification/get', { list: ids.map((id) => ({ id, created: '2026-08-29T10:00:00Z', type: 'created', calendarEventId: 'e1', isDraft: false })) }, '1'],
+        ] };
+      });
+
+      const list = await client.getCalendarEventNotifications();
+      expect(list.map((n) => n.id)).toEqual(all);
+      expect(requests.map((r) => r.methodCalls[0][1])).toEqual([
+        expect.objectContaining({ position: 0, limit: 2 }),
+        expect.objectContaining({ position: 2, limit: 2 }),
+      ]);
     });
   });
 

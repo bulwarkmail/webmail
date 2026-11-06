@@ -7990,23 +7990,35 @@ export class JMAPClient implements IJMAPClient {
   async getCalendarEventNotifications(): Promise<CalendarEventNotification[]> {
     if (!this.supportsCalendars()) return [];
     const accountId = this.getCalendarsAccountId();
-    const response = await this.request([
-      ["CalendarEventNotification/query", {
-        accountId,
-        sort: [{ property: "created", isAscending: true }],
-      }, "0"],
-      ["CalendarEventNotification/get", {
-        accountId,
-        "#ids": { resultOf: "0", name: "CalendarEventNotification/query", path: "/ids" },
-        properties: ["id", "created", "changedBy", "comment", "type", "calendarEventId", "isDraft", "event"],
-      }, "1"],
-    ], this.calendarUsing());
-    const getResp = response.methodResponses?.find((r) => r[0] === "CalendarEventNotification/get");
-    if (!getResp) {
-      const error = response.methodResponses?.find((r) => r[0] === "error")?.[1] as { description?: string } | undefined;
-      throw new Error(error?.description || "Failed to load calendar event notifications");
+    // A page at a time: unacknowledged notifications pile up, and a /get of
+    // more ids than maxObjectsInGet fails as a whole, so none would ever be
+    // shown and acknowledged again.
+    const limit = this.getMaxObjectsInGet();
+    const notifications: CalendarEventNotification[] = [];
+    for (let position = 0; ; position += limit) {
+      const response = await this.request([
+        ["CalendarEventNotification/query", {
+          accountId,
+          sort: [{ property: "created", isAscending: true }],
+          position,
+          limit,
+        }, "0"],
+        ["CalendarEventNotification/get", {
+          accountId,
+          "#ids": { resultOf: "0", name: "CalendarEventNotification/query", path: "/ids" },
+          properties: ["id", "created", "changedBy", "comment", "type", "calendarEventId", "isDraft", "event"],
+        }, "1"],
+      ], this.calendarUsing());
+      const queryResp = response.methodResponses?.find((r) => r[0] === "CalendarEventNotification/query");
+      const getResp = response.methodResponses?.find((r) => r[0] === "CalendarEventNotification/get");
+      if (!queryResp || !getResp) {
+        const error = response.methodResponses?.find((r) => r[0] === "error")?.[1] as { description?: string } | undefined;
+        throw new Error(error?.description || "Failed to load calendar event notifications");
+      }
+      notifications.push(...((getResp[1] as { list?: CalendarEventNotification[] }).list ?? []));
+      const ids = (queryResp[1] as { ids?: string[] }).ids ?? [];
+      if (ids.length < limit) return notifications;
     }
-    return ((getResp[1] as { list?: CalendarEventNotification[] }).list ?? []);
   }
 
   /** Acknowledges (destroys) event notifications that have been shown. */
