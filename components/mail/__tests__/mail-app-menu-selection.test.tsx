@@ -228,6 +228,7 @@ describe('File > Save as…', () => {
     await waitFor(() => expect(begin).toHaveBeenCalledTimes(1));
     expect((begin.mock.calls[0] as unknown as [{ names: string[] }])[0].names).toHaveLength(1);
     cleanup();
+    reported = {};
     useEmailStore.setState({ emails: [a, b, c], selectedEmail: a, selectedEmailKeys: new Set() } as never);
     render(<MailApp />);
     await waitFor(() => expect(reported['message.reply']).toBe(true));
