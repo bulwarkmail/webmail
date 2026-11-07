@@ -128,6 +128,7 @@ Thank you for your donations:
 - **Mail list**: Switching folders, searching and scrolling large folders redraws less, so search answers about 10-20 ms sooner
 - **Reader**: Opening an HTML mail lays it out and sanitizes it once instead of twice
 - **Composer**: Replies to large HTML mails open faster; the quote is no longer turned into text on every keystroke
+- **Offline**: Searching kept mail answers about a third sooner and pages deep in a large folder open without slowing down, and opening the device's copy or checking for new mail no longer rewrites what didn't change
 
 ### Fixes
 
