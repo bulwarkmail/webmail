@@ -1800,6 +1800,11 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (serverUrl, typedUsername, password, totp, rememberMe) => {
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
+        // The email store, at hand by the time the first mail requests go out
+        // (below), so they're asked for in the same task as the rest.
+        let emailStore: typeof import('@/stores/email-store') | null = null;
+        const emailStoreLoad = import('@/stores/email-store').then((m) => (emailStore = m));
+        emailStoreLoad.catch(() => {});
 
         // Sign in with the ASCII (punycode) form of an IDN domain, the form
         // Stalwart stores and reports back in the session and identities, so
@@ -1946,12 +1951,24 @@ export const useAuthStore = create<AuthState>()(
           ]);
 
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
-          initializeFeatureStores(client);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           // Store client in multi-account map
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
+
+          // Mailboxes, quota and the folder's first page first: the first
+          // rows wait for them, and nothing else here does. Asked for before
+          // the other stores' first requests and before the sign-in flips the
+          // app to signed in (below, in this same task, so the auth and
+          // account stores never disagree). The email store comes by dynamic
+          // import (no static circular dep), loaded since login() started.
+          const prefetch = (m: typeof import('@/stores/email-store')) => m.useEmailStore.getState().prefetchInitialData(client).catch((err) => {
+            debug.error('Initial data prefetch failed:', err);
+          });
+          if (emailStore) void prefetch(emailStore);
+          else emailStoreLoad.then(prefetch).catch(() => {});
+          initializeFeatureStores(client);
 
           accountStore.addAccount({
             label: primaryIdentity?.name || username,
@@ -2005,15 +2022,6 @@ export const useAuthStore = create<AuthState>()(
             error: null,
             activeAccountId: accountId,
           });
-
-          // Kick off mailbox/quota/email fetches now so they overlap with the
-          // soft-nav + home-page hydration that follows login. Dynamic import
-          // avoids a static circular dep with email-store.
-          import('@/stores/email-store').then(({ useEmailStore }) => {
-            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
-              debug.error('Initial data prefetch failed:', err);
-            });
-          }).catch(() => {});
 
           // Schedule token refresh for TOTP-upgraded sessions
           if (upgradedToOAuth && oauthExpiresIn > 0) {

@@ -19,6 +19,7 @@ import { isServedOverHttps } from "./lib/security/request-protocol";
 import { bootGateResponse } from "./lib/shared-store/boot-gate";
 import { IS_DESKTOP_BUILD } from "./lib/desktop/flag";
 import { isDesktopBlockedRoute } from "./lib/desktop/blocked-routes";
+import { signedOutStartTarget, START_COOKIE } from "./lib/signed-out-start";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -201,6 +202,45 @@ function isSetupPath(pathname: string): boolean {
  */
 function redirectTo(request: NextRequest, pathname: string, search: string): NextResponse {
   return NextResponse.redirect(new URL(`${request.nextUrl.basePath}${pathname}${search}`, request.url));
+}
+
+/** The redirect of a signed-out first visit to the sign-in page, or null (lib/signed-out-start.ts). */
+function signedOutStartRedirect(
+  request: NextRequest,
+  pathname: string,
+  intlResponse: NextResponse | null,
+  locales: readonly string[],
+): NextResponse | null {
+  const basePath = request.nextUrl.basePath;
+  let intlRedirect: string | null = null;
+  const location = intlResponse?.headers.get("location");
+  if (location) {
+    const path = routePathOf(new URL(location, request.url).pathname);
+    intlRedirect = basePath && path.startsWith(basePath) ? path.slice(basePath.length) || "/" : path;
+  }
+  const target = signedOutStartTarget({
+    method: request.method,
+    pathname,
+    search: request.nextUrl.search,
+    header: (name) => request.headers.get(name),
+    cookieNames: request.cookies.getAll().map((cookie) => cookie.name),
+    locales,
+    intlRedirect,
+    demoMode: configManager.get<boolean>("demoMode", false) === true,
+  });
+  if (!target) return null;
+  const response = redirectTo(request, target, "");
+  // It depends on this browser's cookies: no cache may keep it for another.
+  response.headers.set("Cache-Control", "private, no-store");
+  // Whatever the locale middleware set (its locale cookie) still applies.
+  for (const cookie of intlResponse?.cookies.getAll() ?? []) response.cookies.set(cookie);
+  response.cookies.set(START_COOKIE, "1", {
+    maxAge: 60,
+    path: basePath || "/",
+    sameSite: "lax",
+    secure: isServedOverHttps(request),
+  });
+  return response;
 }
 
 export async function proxy(request: NextRequest) {
@@ -476,7 +516,10 @@ export async function proxy(request: NextRequest) {
       console.error('Locale middleware error:', error);
     }
   }
-  const response = intlResponse ?? NextResponse.next();
+  // A first visit (no session cookie, no kept accounts) goes straight to the
+  // sign-in page instead of starting the mail view (lib/signed-out-start.ts).
+  const startRedirect = IS_DESKTOP_BUILD ? null : signedOutStartRedirect(request, pathname, intlResponse, locales);
+  const response = startRedirect ?? intlResponse ?? NextResponse.next();
 
   // Expose the nonce AND the request pathname to server components as request
   // headers. The root (main)/layout renders <html> ABOVE the [locale] segment,

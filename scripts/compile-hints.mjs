@@ -12,11 +12,72 @@
 // The code split off for later, the reader and the editor among it, is
 // compiled as it runs, so nothing is compiled ahead that may never run.
 //
-// Webpack builds only (the Docker image, the desktop app): next.config.ts
-// adds the plugin to the client build.
+// Webpack builds (the Docker image, the desktop app): next.config.ts adds the
+// plugin to the client build. Turbopack has no such hook, so Lite's static
+// export gets the comment afterwards (hintPageScripts, from
+// scripts/lite/postbuild.mjs): on every script an exported page names.
+
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /** The comment, on a line of its own. */
 export const COMPILE_HINTS_COMMENT = '//# allFunctionsCalledOnLoad\n';
+
+/** The local scripts a page's HTML loads at its start (not the nomodule polyfills). */
+export function pageScriptPaths(html) {
+  const out = [];
+  for (const tag of html.match(/<script\b[^>]*>/gi) ?? []) {
+    if (/\bnomodule\b/i.test(tag)) continue;
+    const src = /\bsrc="([^"]+\.js)"/i.exec(tag)?.[1];
+    if (!src || /^[a-z]+:|^\/\//i.test(src)) continue;
+    const at = src.indexOf('/_next/');
+    if (at !== -1) out.push(decodeURIComponent(src.slice(at + 1).split('?')[0]));
+  }
+  return out;
+}
+
+function htmlFiles(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) {
+      if (name !== '_next') htmlFiles(p, out);
+    } else if (name.endsWith('.html')) out.push(p);
+  }
+  return out;
+}
+
+/**
+ * Puts the comment on the first line of every script an exported page under
+ * `outDir` starts with, once. A source map next to a script gets an empty
+ * first line, so it still points at the right lines. Returns the scripts it
+ * marked.
+ */
+export function hintPageScripts(outDir) {
+  const scripts = new Set();
+  for (const file of htmlFiles(outDir)) for (const s of pageScriptPaths(readFileSync(file, 'utf8'))) scripts.add(s);
+  const marked = [];
+  for (const rel of scripts) {
+    const path = join(outDir, rel);
+    if (!existsSync(path)) continue;
+    const code = readFileSync(path, 'utf8');
+    if (code.startsWith(COMPILE_HINTS_COMMENT)) continue;
+    writeFileSync(path, COMPILE_HINTS_COMMENT + code);
+    const map = `${path}.map`;
+    if (existsSync(map)) {
+      const parsed = JSON.parse(readFileSync(map, 'utf8'));
+      if (typeof parsed.mappings === 'string') {
+        parsed.mappings = `;${parsed.mappings}`;
+        writeFileSync(map, JSON.stringify(parsed));
+      } else if (Array.isArray(parsed.sections)) {
+        // An index map (Turbopack writes these): every section moves down a line.
+        for (const section of parsed.sections) if (section?.offset) section.offset.line += 1;
+        writeFileSync(map, JSON.stringify(parsed));
+      }
+    }
+    marked.push(rel);
+  }
+  return marked;
+}
 
 export class CompileHintsPlugin {
   /** @param {{ Compilation: { PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE: number }, sources: { ConcatSource: new (...parts: unknown[]) => unknown } }} webpack */

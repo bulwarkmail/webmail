@@ -37,6 +37,23 @@ describe('the first screen catalog', () => {
     }
   });
 
+  it("has the sign-in page's notices, which draw on its first screen", async () => {
+    // Why the session ended, a wipe, mail the outbox lost (app/(main)/[locale]/login/page.tsx).
+    // The sign-in page holds the rest of the catalog back (lib/sign-in-hold.ts): a notice
+    // left out of this part would stay blank there for seconds.
+    const notices = [
+      'session_limits.reason_idle', 'session_limits.reason_max', 'session_limits.drafts_not_saved',
+      'offlineWipe.note', 'offlineWipe.note_unsent', 'offlineWipe.note_unknown',
+      'offlineWipe.session_waiting', 'offlineWipe.session_waiting_unknown', 'offlineWipe.refused_waiting', 'offlineWipe.refused_waiting_unknown',
+      'offline.signout.lost', 'offline.outbox.no_subject',
+    ];
+    for (const locale of ['en', 'de']) {
+      const first = await loadFirstScreenCatalog(locale, '/en/login');
+      const have = new Set(leaves(first));
+      for (const key of notices) expect([...have].some((leaf) => leaf === key || leaf.startsWith(`${key}.`)), `${locale} ${key}`).toBe(true);
+    }
+  });
+
   it('names only paths the catalog has', async () => {
     const en = await loadCatalog('en');
     const all = new Set(leaves(en));

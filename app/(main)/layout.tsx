@@ -27,6 +27,7 @@ import "../print.css";
 import "../desktop.css";
 import { desktopBootScript } from "@/lib/desktop/boot";
 import { appLockBootScript } from "@/lib/app-lock/state";
+import { signedOutStartScript } from "@/lib/signed-out-start";
 import "../app-lock.css";
 
 // This layout renders <html> and sits ABOVE the [locale] segment, so
@@ -320,6 +321,7 @@ export default async function RootLayout({
               (function() {${IS_LITE ? liteLocaleBootstrap() : ""}
                 ${desktopBootScript()}
                 ${IS_LITE ? "" : appLockBootScript()}
+                ${IS_LITE ? "" : signedOutStartScript(process.env.NEXT_PUBLIC_BASE_PATH ?? "")}
                 try {
                   const stored = localStorage.getItem('theme-storage');
                   const theme = stored ? JSON.parse(stored).state.theme : 'system';

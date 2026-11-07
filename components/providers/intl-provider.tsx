@@ -14,6 +14,7 @@ import { addPlainLanguage } from '@/i18n/plain-language';
 import { loadEnglishMessages, withEnglishFallback } from '@/i18n/english-catalog';
 import { LITE_ENGLISH, LiteRouteSkeleton } from './lite-intl-assets';
 import { fillIn } from '@/i18n/first-screen';
+import { afterSignInPage } from '@/lib/sign-in-hold';
 
 type Messages = Record<string, unknown>;
 
@@ -132,10 +133,16 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
       });
     };
     const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
-    const idle = w.requestIdleCallback ? w.requestIdleCallback(fetchRest, { timeout: REST_OF_CATALOG_MS }) : undefined;
-    const timer = idle === undefined ? setTimeout(fetchRest, 200) : undefined;
+    let idle: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // The sign-in page draws all of its text from the first screen's part (lib/sign-in-hold.ts).
+    const release = afterSignInPage(() => {
+      idle = w.requestIdleCallback ? w.requestIdleCallback(fetchRest, { timeout: REST_OF_CATALOG_MS }) : undefined;
+      timer = idle === undefined ? setTimeout(fetchRest, 200) : undefined;
+    });
     return () => {
       cancelled = true;
+      release();
       if (idle !== undefined) w.cancelIdleCallback?.(idle);
       clearTimeout(timer);
       clearTimeout(retry);

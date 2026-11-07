@@ -314,3 +314,13 @@ export function useConfig(): AppConfig {
 
   return config;
 }
+
+// The sign-in form and the app's first screen wait for the config. Asked for
+// as soon as this module runs, it is on its way while the page's other
+// modules run and the page hydrates, instead of from the first effect after
+// that. Not in tests, which set up fetch per case.
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  void fetchConfig().catch(() => {
+    // useConfig asks again.
+  });
+}
