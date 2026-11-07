@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/browser-navigation';
 import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { IS_LITE } from '@/lib/lite';
+import type { ManagementCapability } from '@/lib/stalwart/management-capability';
 
 export type JmapMethodCall = [string, Record<string, unknown>, string];
 export type JmapMethodResponse = [string, Record<string, unknown>, string];
@@ -27,6 +28,8 @@ export interface StalwartJmapOptions {
    * background multi-account restore.
    */
   slot?: number;
+  /** Account capability detected by the caller. Supply its captured cookie slot alongside it. */
+  management?: { accountId: string; capability: ManagementCapability };
 }
 
 /**
@@ -43,13 +46,24 @@ export async function stalwartJmap(
     // like a deployment with the passthrough switched off (#904).
     throw buildError('Stalwart management passthrough is not available in the static build', 404);
   }
+  if (options.management && (
+    typeof options.slot !== 'number' ||
+    methodCalls.some(([, args]) => args.accountId !== options.management!.accountId)
+  )) {
+    throw buildError('Account management requests must use the captured account and cookie slot', 400);
+  }
   const slotHeaders = typeof options.slot === 'number'
     ? { 'X-JMAP-Cookie-Slot': String(options.slot) }
     : getActiveAccountSlotHeaders();
   const response = await apiFetch('/api/account/stalwart/jmap', {
     method: 'POST',
     headers: { ...slotHeaders, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ using: STALWART_JMAP_USING, methodCalls }),
+    body: JSON.stringify({
+      using: options.management
+        ? ['urn:ietf:params:jmap:core', options.management.capability]
+        : STALWART_JMAP_USING,
+      methodCalls,
+    }),
   });
 
   if (!response.ok) {
