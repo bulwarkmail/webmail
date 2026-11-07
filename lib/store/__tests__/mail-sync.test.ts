@@ -10,6 +10,7 @@ import { answerRequest, buildMethodTable } from '../engine/responder';
 import type { SqlValue } from '../storage';
 import { TransportError, type MethodCall } from '../engine/transport';
 import { mailArea } from '../mail';
+import { deleteEmail } from '../mail/records';
 import { FAKE_SESSION, FakeJmap, JMAP_ACCOUNT } from './helpers/fake-jmap';
 import { openFileStore, openMemoryStore } from './helpers/node-adapter';
 
@@ -49,6 +50,27 @@ describe('full sync', () => {
     expect(count(db, 'email_body')).toBe(1234);
     expect(count(db, 'thread')).toBe(1234);
     expect(count(db, 'email_mailbox')).toBe(1234);
+  });
+
+  it('leaves out a body whose message was deleted while it was on the way', async () => {
+    const server = new FakeJmap();
+    for (let i = 0; i < 10; i += 1) server.addEmail();
+    const db = openMemoryStore();
+    const request = server.request.bind(server);
+    let gone: string | null = null;
+    server.request = async (calls) => {
+      const response = await request(calls);
+      if (calls[0][1].fetchAllBodyValues && !gone) {
+        gone = (calls[0][1].ids as string[])[0];
+        deleteEmail(db, JMAP_ACCOUNT, gone);
+      }
+      return response;
+    };
+    await engineFor(server, db).requestSync();
+    expect(gone).not.toBeNull();
+    expect(count(db, 'email')).toBe(9);
+    expect(count(db, 'email_body')).toBe(9);
+    expect(count(db, 'email_part')).toBe(9);
   });
 
   it('captures the state before paging, so a message landing mid-sync is not lost', async () => {

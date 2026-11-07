@@ -1,5 +1,165 @@
 # Changelog
 
+## 1.21.0 (2026-11-07)
+
+1.21.0 can keep mail, calendars, contacts and files in an encrypted database on the device, so Bulwark opens at once and you can read, search, write and file mail with no connection. The new Bulwark desktop app for Windows, macOS and Linux is built on this release and is out as a public beta. The reading pane shows whole conversations, menus are the same everywhere, and files can be dropped onto any screen. Undo send is on by default, and an app lock with a PIN, a passkey or Windows Hello locks the app and the mail kept on the device. Admins can set the login page's background and layout, cap what devices keep offline and wipe a lost device. Push notifications open the right message and show sender and subject after the browser was closed. A first visit opens the sign-in page about 0.45 s sooner, and Greek and Norwegian Nynorsk are new languages.
+
+### Desktop app beta
+
+Download the beta from [github.com/bulwarkmail/desktop/releases](https://github.com/bulwarkmail/desktop/releases): an installer or MSI for Windows, a DMG for macOS, and an AppImage, deb or rpm for Linux, each for x64 and arm64. Windows builds are signed by Rath & Blume GbR, and macOS builds are signed and notarized.
+
+- **Two ways to connect**: Straight to your own JMAP server, such as Stalwart, without running a Bulwark server, or to your organisation's Bulwark, which needs 1.21.0 or later for the desktop features
+- **Sign-in**: You sign in through your browser, so your password manager, passkeys and your organisation's single sign-on work
+- **Offline**: Mail is kept on the computer by default, so the app opens at once and works with no connection
+- **Windows**: A tray icon with unread mail and the next event, notifications with Reply, Archive, Mark as read and Delete, a taskbar badge and a jump list. Bulwark can be the default mail app for mail links and .eml, .ics and .vcf files, and adds "Send to > Bulwark". Files shows in File Explorer as "Bulwark Files" and downloads a file when you open it
+- **Windows security**: Unlock with Windows Hello, sign in with Kerberos or NTLM to servers your organisation lists, and sign or decrypt S/MIME mail with certificates from the system store and smart cards
+- **Windows and menus**: Messages and composers open in their own windows and come back after a restart. Quick compose opens from any app with Ctrl+Alt+Enter (Cmd+Opt+N on a Mac, Ctrl+Alt+N on Linux). Alt shows a menu bar, the keyboard shortcuts follow Outlook's, and the app has its own print preview and save dialog
+- **Files and attachments**: Open an attachment in its usual program, edit it and put the saved version back on the draft, a reply or in Files. Sync any folder on the computer with a Files folder, and attach recently used files from the Attach menu
+- **Import**: Bulwark finds Thunderbird profiles and Outlook PST files on the computer and imports the mail and address books you pick
+- **Organisation**: Group Policy (ADMX), Intune, MSI switches, a macOS profile or `/etc/bulwark/policies.json` can set or force the server, plugins, offline mail, updates, the app lock and the Files options
+- **Updates**: Installed with the Windows installer, on macOS or as an AppImage, the app updates itself and saves your drafts first. MSI, deb and rpm installs show when an update is out
+
+This is a beta: new betas come out often, and some parts will change before 1.0. Please report what breaks at [github.com/bulwarkmail/desktop/issues](https://github.com/bulwarkmail/desktop/issues).
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@systemflair](https://github.com/systemflair)
+- Anonymous
+- [@bultester](https://github.com/bultester)
+
+**Monthly**
+
+- [@comexos](https://github.com/comexos)
+- [@Monarobase](https://github.com/Monarobase)
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Security
+
+- **Build**: Standalone builds and the Docker image no longer copy `.env` files or private folders from the build checkout, in any letter case and through links
+- **Lite**: Signing in again to an account that is already signed in revokes the refresh token it replaces, instead of leaving the old grant open on the server (#1571, thanks @radialmonster)
+- **Push**: A push preview renews only the login the push is for, refuses cross-site requests, and a sign-out can no longer be undone by a preview that was renewing its token (#1509, thanks @ASOwnerYT)
+
+### Changes
+
+- **Offline**: Offline mode moved to the new encrypted database. Your choice carries over and mail downloads again once
+- **Mail**: Attachments always show right under the message header, after any security warning and before the remote-content notice and the text, on one row with "Show N more". The Attachment position setting is gone
+- **Mail**: Compose sits at the top of the folder list on desktops, with one account switcher and one list menu. A half-screen window or 150 % zoom keeps the desktop layout; the phone layout starts below 600 px, and in a narrow window the sidebars open as drawers
+- **Compose**: Undo send is on by default, with 5 seconds
+- **Privacy**: Trusted senders are kept in their own address book by default, so the list is the same on every device. Senders saved on one device move into it once; servers without address books keep the list on the device
+- **Settings**: Every setting sits on the page people look for it first, and links to the old places open the new page. The plain wording is the only wording in English, German and Vietnamese
+- **Login page**: Without a background picture the sign-in page sits on the sidebar colour with a faint wash of the brand colour, the card looks like the app's dialogs, and fields and buttons have the app's usual sizes
+- **Admin**: Plugins the admin installs are on for everyone, and users can turn them off unless they are forced. An update that adds a permission asks first. User features and settings sit with the organisation pages under Users and can apply to one domain or group
+
+### Features
+
+- **Offline**: Mail, calendars, tasks, contacts and files are kept in an encrypted database on the device, in the browser, the installed app and the desktop app. Bulwark opens from the local copy at once, and you can read, search, write, file, delete and answer invitations with no connection. Changes go out when the server is back, a send that lost its connection goes out once, and changes that clash with another device are listed for review
+- **Offline**: Search kept mail with no connection, including word starts, exact phrases, words inside German compounds and both umlaut spellings. Online searches also show matches from kept mail, without duplicates
+- **Offline**: Drafts and their attachments save on the device while offline and reach the server once. Attachments and inline images of kept mail stay readable within the sizes you choose, and the composer says when it is offline and keeps the message if Send can't go out
+- **Offline**: Choose per account how far back mail is kept and how large attachments may be, see what it takes, clear an account, and follow the first sync with the time left. Bulwark says when the browser removed kept mail and downloads it again
+- **Offline**: Export the mail kept on this device to mbox or an EML zip, also with no connection
+- **App lock**: Lock the app and the mail on the device with a PIN, a passkey or Windows Hello after the time you choose, or in the desktop app only when the screen locks or at sign-out. PINs have at least 5 characters, and a policy can ask for longer ones or turn Windows Hello off (`AppLockHelloAllowed`)
+- **Calendar**: Reminders come from the local copy, once across tabs and restarts and also offline. Reminders missed while the computer slept come as one summary, and recurring events remind on every occurrence
+- **Notifications**: New mail notifications have Archive, Mark as read and Reply where the browser supports them, also with no tab open, and show sender and subject after the browser was closed when you signed in with "remember me"
+- **Installed app**: Open .eml, .ics and .vcf files, share files and links into a new draft, open messages and drafts in their own windows, start a new message, Calendar or Contacts from the app icon's menu, and save all attachments to a folder
+- **Organisation**: Admins can cap how many days, how large attachments and how much in total devices keep offline, forbid attachments, and wipe a lost device or all of a user's devices from the devices page
+- **Organisation**: A refused login or an idle sign-out hides the account's mail on the device until the user signs in again, for at most 30 days, and the sign-in page says how many unsent messages wait. Organisations can ask for deletion at once instead
+- **Mail**: The reading pane shows the whole conversation, older messages folded to a line and the newest open, with Reply, Reply all and Forward on each message. The list shows one row per conversation, and one message of a conversation prints from its own menu or with Ctrl+P
+- **Mail**: Right-click and ⋮ menus are the same short menu everywhere, with key hints in your language and the rest under More actions. Move to lists folders in mail-client order with recent folders and a filter, and other accounts in named submenus. Right-click an address in a message to copy it, write to it, add it to contacts or find its mail
+- **Mail**: Several selected messages can be starred, moved and marked at once, and one click selects every loaded conversation and offers the rest of the folder
+- **Mail**: Drag files onto any screen to attach them, put pictures into the text, upload them to Files, or add .ics, .vcf and .eml files to the calendar, contacts or a folder
+- **Mail**: The next message opens after Archive or Delete when the list is beside the reader, a click on a draft opens it in the composer, and Reply picks up a reply you already started
+- **Mail**: Folded folders show their unread mail and float out the whole tree on hover, the search box suggests senders of the mail on screen, out of office can be turned off from the banner in the sidebar, and a forwarded message's header lists To and Cc
+- **Mail**: The unified "All Trash" has a menu that empties the trash of every account (#1540, thanks @guisea)
+- **Compose**: Undo send counts down. One question before sending lists everything that's missing, and a message can go out without text. Closing keeps the draft with "Draft saved · Open · Discard", a reply you didn't touch leaves no draft, and replies open under their message
+- **Compose**: Full screen, Open in new window from a browser tab, Ctrl+K for a link, Ctrl+S to save and Ctrl+Shift+C or B for Cc and Bcc. The schedule dialog opens from Send's arrow, Insert link asks for the text and the address, and pictures dropped on the composer go into the text
+- **Compose**: The formatting toolbar stays on one row with the rest under More formatting, the recipient picker lists your contacts with the directory on its own tab, and a message saves as a template with just a name
+- **Calendar**: Tasks in task lists show and are on by default, and every signed-in account's calendars show together. Events keep their own time zone, picked by city. Drag across days in the month view to create an all-day event, and drag an event to move it by the distance dragged
+- **Calendar**: Unanswered invitations are marked in the grid and can be answered there. Calendars can be renamed from their menu, Week view shows three days in a narrow window, a quick event without a title saves as "(No title)", and tasks have a right-click menu and Del with Undo
+- **Contacts**: Import CSV from Outlook and Google with a column-matching step, merge duplicates with Undo, and act on all ticked contacts, Send email included. Saving no longer rewrites fields you didn't touch
+- **Files**: A double-click opens the preview, files dropped on the Files screen upload straight away, and uploading a name that exists asks Replace, Keep both or Skip. Saved messages open from Files
+- **Printing**: Printouts use the theme's print colours and the print styles add-ons offer
+- **Settings**: Offline, Privacy and About have their own pages, and search finds everyday words. Layouts show a preview, Out of office starts with real text and can't go out blank, signatures use the composer's editor and can be edited per address on the Composing page, a new rule can also run on the Inbox's existing mail, and the server settings for other mail apps are listed
+- **Settings**: An option keeps the account switcher at the top of the sidebar, on by default
+- **Sign-in**: Bulwark asks for your email address first and finds your mail server. Gmail, Outlook.com and iCloud addresses get a plain explanation
+- **Login page**: A language picker next to the theme button, and the Accessibility panel adds font, underline links, focus outline and large targets. The password field says when Caps Lock is on, and choices made here carry over after sign-in
+- **Login page**: Admins set a background picture for light and dark mode, its dim and blur, and whether the form sits in a card or a side panel, under Admin > Branding, also per domain, or with `LOGIN_LAYOUT`, `LOGIN_BACKGROUND_LIGHT_URL`, `LOGIN_BACKGROUND_DARK_URL`, `LOGIN_BACKGROUND_DIM` and `LOGIN_BACKGROUND_BLUR`
+- **Branding**: A `DOMAIN_BRANDING` entry can carry a colour palette for light and dark mode (#1549, thanks @ghozty)
+- **Sign-in**: With `OAUTH_ONLY`, `OAUTH_PASSWORD_FALLBACK_ENABLED=true` keeps a "Sign in with a password" link on the SSO card, so SSO and password accounts work side by side (#1520, thanks @ibayue)
+- **Settings**: `ACCOUNT_MANAGEMENT_URL` and `ACCOUNT_MANAGEMENT_LABEL` add a link to the mail server's account page under Settings > Account (#1570, thanks @radialmonster)
+- **Admin**: policy.json can preset list settings such as the hover actions, and the log names defaults it skips (#1564, thanks @radialmonster)
+- **Admin**: An admin's inline sidebar apps can download files, open dialogs and use the browser features listed for them, such as the clipboard, camera or microphone, and can have an image as their icon (#1544, #1545, thanks @HOLOEYE-JZ)
+- **Admin**: A quick install from the marketplace shows the plugin's publisher and permissions first
+- **Docker**: The image runs as any user id in group 0, for rootless and OpenShift-style deployments (#1569, thanks @mmomjian)
+- **Plugins**: Calendar hooks `onCreatingEvent`, `onUpdatingEvent`, `onBeforeFetchEvents` and `onFetchingEvents` (#1504, thanks @paulhenry46)
+- **Plugins**: Row badges can be icon-only and show row actions (#1512), and plugin search results take one line each with sender, date and score in a block whose height users can drag (#1565, #1566) (thanks @HOLOEYE-JZ)
+- **Plugins**: Plugins can put buttons in the composer's top bar, set the subject of an open draft, get their own parameters from mailto: and new-message links, learn which draft was sent and put keywords on its Sent copy, and show a PDF or image in the file preview and print a PDF they made
+- **Plugins**: In the desktop app, privileged plugins can sign and decrypt S/MIME with certificates from the system store (optional `keystore` permission)
+- **i18n**: Greek (#1554, thanks @spapas) and Norwegian Nynorsk (#1560, thanks @gaupe75)
+
+### Performance
+
+- **Sign-in**: A first visit opens the sign-in page straight away, about 0.45 s sooner, without starting the mail view first
+- **Startup**: The mail view's code loads while the sign-in form waits (not on Save-Data or 2G), the first mail requests go out sooner, the first list comes in one request, and the settings are asked for while the page starts. Chrome compiles the start-up scripts while they download, Bulwark Lite's included
+- **Mail list**: Switching folders, searching and scrolling large folders redraws less, so search answers about 10-20 ms sooner
+- **Reader**: Opening an HTML mail lays it out and sanitizes it once instead of twice
+- **Composer**: Replies to large HTML mails open faster; the quote is no longer turned into text on every keystroke
+- **Offline**: Searching kept mail answers about a third sooner and pages deep in a large folder open without slowing down, and opening the device's copy or checking for new mail no longer rewrites what didn't change
+
+### Fixes
+
+- **Push**: Tapping a notification opens the new message, however much older mail is unread; it opens the inbox only when the notification stands for several new messages
+- **Push**: Signing out, removing an account and wiping a device end push notifications for that account, and "Email notifications" off and do not disturb keep push notifications off the screen, per account
+- **Push**: Push comes back by itself when the browser replaces its subscription, with no tab open, and when the push service gave up on it. Turning push off and on again right away no longer ends in a time-out, and two tabs setting it up at once no longer get in each other's way
+- **Push**: When two signed-in accounts could both be the one a push is for, you get a plain "New mail" instead of a preview from the wrong account. Notifications open in the app window, errors say what went wrong in your language, and an expired token no longer brings an audible "New mail" with no new mail (#1509, thanks @ASOwnerYT)
+- **Push**: After the push connection comes back, changes missed in between are fetched (#1553, thanks @StefanSa), and a new push session no longer refetches everything
+- **Accounts**: Losing the connection to the token server no longer signs you out or deletes kept mail. Stalwart's IP block or a gateway's 403 no longer cuts off an account, and an account the server refuses stops sending requests (#1539, thanks @Lenart12)
+- **Sign-in**: On Stalwart 1.0.3, single sign-on and the password and TOTP sign-in ask for the scopes Settings > Security and the admin console need, and OAuth auto-setup gives the client full access (#1527, thanks @chodid; #1550, thanks @denclade). Auto-setup registers callbacks under the base path (#1551, thanks @VijayakumarRavi), and the RFC 8707 resource indicator goes on token and refresh requests too (#1524, thanks @Oktopus-IT-GmbH)
+- **Admin**: The admin console button shows when any signed-in account is a Stalwart admin, also in Pro after a browser restart, and goes away when that account signs out (#1532, thanks @crowbait)
+- **Admin**: The policy saves behind a proxy that changes the ETag when it compresses, such as Caddy's encode (#1557, thanks @Lenart12), and an admin theme keeps its skin after a reload (#1561, thanks @napolimaniax)
+- **Admin**: Admin pages say when they couldn't load instead of an endless skeleton, audit entries show what changed and filter by plugin and theme actions, and the overview no longer offers an older version as an update
+- **Admin**: The amd64 and arm64 images of one build carry the same build id, so mixed pods don't announce a new version (#1531, thanks @xnilsit), and the Docker build fits in Node's default heap (#1510, thanks @alyyousuf7)
+- **Lite**: Lite on Stalwart picks up an edited policy.json and config.json on the next load (#1563, thanks @radialmonster)
+- **Mail**: An .eml imported into Drafts is a draft you can edit and send (#1535, thanks @PoltoS), and the unverified sender notice names the original sender, not the SRS forwarder (#1542, thanks @guisea)
+- **Mail**: Ticked messages are dropped when the search, the folder, a category tab or a filter chip changes, so Delete can't act on mail that is no longer listed. A folder no longer says it is empty while a filter chip or category tab hides its mail
+- **Mail**: Security warnings show above the attachments, before any other notice, and settings changed just before a reload, a closed window or while offline are kept
+- **Pro**: Reply and forward from a tab of another account use that account (#1511, thanks @AaronKokal). Archive works from folder tabs (#1572), reads that wait survive a refresh (#1568), rows stay unread when an automatic read fails (#1555, #1556), late list answers no longer replace newer ones (#1547), and tags keep to the room the row has (#1500) (thanks @VasilisNtovolos)
+- **Pro**: Mail keys work in message and folder tabs and no longer act on the hidden mail tab, Calendar and Contacts tabs answer c, n and /, the list stays where it was when you come back, Ctrl+P prints only the tab in front, and tabs move or split wherever they are dropped, in right-to-left languages too
+- **Composer**: A draft opened while another composer was open no longer gets that composer's text after a layout change (#1529), and abandoned send waits are cancelled (#1528) (thanks @VasilisNtovolos). Text typed while the Mountain View composer moves between window, card and pane is kept, and a recipient's closing bracket survives Backspace
+- **Contacts**: A phone's custom type such as car shows in the editor and stays on save (#1515, thanks @rajil)
+- **Calendar**: Calendar notifications page through and many come as one toast, and share toasts name the shared collection (#1567, #1552, thanks @HOLOEYE-JZ)
+- **Files**: Office editing comes back after sign-in when the first status check was refused (#1518, thanks @MGTromp84)
+- **Plugins**: Plugins load when the webmail is framed by an allowed portal (#1533, thanks @DodoLeDev). Escape closes only the plugin dialog, Enter no longer confirms a destructive plugin question while the focus is on Cancel, a plugin turned off during its first start stays off, and Tab skips plugin frames that show nothing
+- **Welcome**: The welcome tips name only the apps that are turned on (#1562, thanks @rubypirate)
+- **Phone and narrow windows**: About 150 layout fixes from 320 px phones to wide screens, at large text sizes and in right-to-left languages: the tab bar, drawers, reader and composer toolbars, Mountain View's search and compose window, month and week views, settings, filters, the marketplace and plugin dialogs no longer cut off, overlap or slide off the screen. Focus rings show on all four sides inside list rows, tabs, menus and the composer
+- **Phone**: iOS picks the status bar style of the installed app (#1543), and search keeps to the safe areas (#1530) (thanks @8398a7)
+- **Sidebar apps**: An inline app's frame stays hidden until it has loaded, so a dark theme doesn't flash white (#1526, thanks @oguzyilmaznet)
+- **Look**: The Compose button has pill corners and a shorter Chinese label (#1548, thanks @ibayue), and Nynorsk country names are recognised in the address format (#1573, thanks @gaupe75)
+
 ## 1.20.0 (2026-11-03)
 
 1.20.0 can keep recent mail on the device, so mail can be read, sorted and written without a connection and goes out once the server answers again. Mail comes in from mbox, Outlook PST, EML and ZIP files and goes out as mbox or ZIP, and proofreading plugins underline mistakes while you write. With the AI Assistant plugin 2.2 the assistant reads attachments and whole conversations, takes actions such as answering invitations or filing many messages at once, works with Files and sits next to every app. Admins can turn on phishing reports, classification labels, device policies such as no downloads or printing, announcements, company calendars and out-of-office templates. Bulwark can run as several instances that share one Valkey or Redis store, with Kubernetes manifests, Prometheus metrics, OpenTelemetry traces and error reporting. Every page shows its shape in your theme while the app loads instead of a blank screen, and attachments show as a bar of tiles under the message header. Vietnamese is a new language.
