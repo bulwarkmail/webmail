@@ -306,6 +306,63 @@ export async function revokeLiteSlot(slot: number, revoke = true): Promise<void>
   if (entry && revoke) await revokeRefreshToken(entry);
 }
 
+/**
+ * Stalwart's own token rather than one from an external provider it hands the
+ * sign-in to. Stalwart's endpoints are moved onto the server's origin when
+ * they are discovered (lib/auth/lite-oauth.ts), and a password sign-in stores
+ * no endpoint at all.
+ */
+function isStalwartToken(entry: StoredRefreshToken): boolean {
+  if (!entry.tokenEndpoint) return true;
+  try {
+    return new URL(entry.tokenEndpoint).origin === new URL(trimUrl(entry.serverUrl)).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Revokes a refresh token no account will use again, so it doesn't stay on
+ * the server as one more connected app until it expires (#1571). Only
+ * Stalwart's own tokens: there every sign-in is a grant of its own, and while
+ * one is left the next sign-in needs no consent. An external provider may tie
+ * the old and the new token to one session and end both.
+ */
+function retireRefreshToken(entry: StoredRefreshToken | null, revoke: boolean, keep?: string): Promise<void> {
+  if (!entry || !revoke || entry.refreshToken === keep || !isStalwartToken(entry)) return Promise.resolve();
+  return revokeRefreshToken(entry);
+}
+
+/**
+ * {@link saveLiteRefreshToken} for a new sign-in: the token the slot held
+ * before (the same account signing in again) is revoked. `revoke` is
+ * config.json `oauthRevokeOnSignOut`.
+ */
+export function replaceLiteRefreshToken(
+  slot: number,
+  entry: StoredRefreshToken,
+  persistent: boolean,
+  revoke: boolean,
+): Promise<void> {
+  const previous = readLiteRefreshToken(slot);
+  saveLiteRefreshToken(slot, entry, persistent);
+  return retireRefreshToken(previous, revoke, entry.refreshToken);
+}
+
+/** {@link clearLiteRefreshToken}, revoking the token it forgets. */
+export function retireLiteRefreshToken(slot: number, revoke: boolean): Promise<void> {
+  const previous = readLiteRefreshToken(slot);
+  clearLiteRefreshToken(slot);
+  return retireRefreshToken(previous, revoke);
+}
+
+/** {@link clearLiteSlot} for a slot no account holds any more, revoking its token. */
+export function retireLiteSlot(slot: number, revoke: boolean): Promise<void> {
+  const previous = readLiteRefreshToken(slot);
+  clearLiteSlot(slot);
+  return retireRefreshToken(previous, revoke);
+}
+
 /** {@link revokeLiteSlot} for every slot. */
 export async function revokeAllLiteSessions(revoke = true): Promise<void> {
   const entries: StoredRefreshToken[] = [];

@@ -12,7 +12,10 @@ import {
   revokeLiteSlot,
   readLiteBasicSession,
   readLiteRefreshToken,
+  replaceLiteRefreshToken,
   resetLiteProbeCache,
+  retireLiteRefreshToken,
+  retireLiteSlot,
   resetLiteRegisteredClients,
   saveLiteAccessToken,
   saveLiteBasicSession,
@@ -416,5 +419,70 @@ describe('lite sign-out revocation (#1388)', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(readLiteRefreshToken(0)).toBeNull();
     expect(readLiteRefreshToken(1)).toBeNull();
+  });
+});
+
+describe('lite tokens replaced by a new sign-in (#1571)', () => {
+  const REVOKE = `${SERVER}/auth/revoke`;
+  const fetchMock = vi.fn(async (_input: FetchInput, _init?: FetchInit) => new Response(null, { status: 200 }));
+  const revoked = () => fetchMock.mock.calls.map(([, init]) => new URLSearchParams(String(init?.body)).get('token'));
+
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    fetchMock.mockClear();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('revokes the token the slot held before and keeps the new one', async () => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'old', revocationEndpoint: REVOKE }, true);
+
+    await replaceLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'new', revocationEndpoint: REVOKE }, true, true);
+
+    expect(revoked()).toEqual(['old']);
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('new');
+  });
+
+  it('revokes a Stalwart OAuth token, whose endpoints are on the server origin', async () => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'old', tokenEndpoint: `${SERVER}/auth/token`, revocationEndpoint: REVOKE }, true);
+
+    await replaceLiteRefreshToken(0, { serverUrl: SERVER, username: '', refreshToken: 'new' }, true, true);
+
+    expect(revoked()).toEqual(['old']);
+  });
+
+  it('revokes nothing for the same token, with revocation off, or for an external provider', async () => {
+    saveLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'same', revocationEndpoint: REVOKE }, true);
+    await replaceLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'same', revocationEndpoint: REVOKE }, true, true);
+
+    await replaceLiteRefreshToken(0, { serverUrl: SERVER, username: 'a', refreshToken: 'next', revocationEndpoint: REVOKE }, true, false);
+
+    saveLiteRefreshToken(1, {
+      serverUrl: SERVER, username: 'b', refreshToken: 'sso',
+      tokenEndpoint: 'https://id.example.org/token', revocationEndpoint: 'https://id.example.org/revoke',
+    }, true);
+    await replaceLiteRefreshToken(1, { serverUrl: SERVER, username: 'b', refreshToken: 'sso-2' }, true, true);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(readLiteRefreshToken(0)?.refreshToken).toBe('next');
+    expect(readLiteRefreshToken(1)?.refreshToken).toBe('sso-2');
+  });
+
+  it('retiring a slot forgets and revokes its token', async () => {
+    saveLiteRefreshToken(2, { serverUrl: SERVER, username: 'c', refreshToken: 'r2', revocationEndpoint: REVOKE }, false);
+    saveLiteBasicSession(2, { serverUrl: SERVER, username: 'c', password: 'p' });
+    saveLiteRefreshToken(3, { serverUrl: SERVER, username: 'd', refreshToken: 'r3', revocationEndpoint: REVOKE }, true);
+
+    await retireLiteSlot(2, true);
+    await retireLiteRefreshToken(3, true);
+
+    expect(revoked()).toEqual(['r2', 'r3']);
+    expect(readLiteRefreshToken(2)).toBeNull();
+    expect(readLiteBasicSession(2)).toBeNull();
+    expect(readLiteRefreshToken(3)).toBeNull();
   });
 });

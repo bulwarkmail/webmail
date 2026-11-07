@@ -50,7 +50,6 @@ import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
 import {
   LiteLoginError,
-  clearLiteRefreshToken,
   getLiteClientId,
   liteExchangeAuthorizationCode,
   liteRefreshTokens,
@@ -58,13 +57,18 @@ import {
   nameLiteRefreshToken,
   readLiteAccessToken,
   readLiteBasicSession,
+  replaceLiteRefreshToken,
+  retireLiteRefreshToken,
+  retireLiteSlot,
   revokeAllLiteSessions,
   revokeLiteSlot,
   saveLiteAccessToken,
   saveLiteBasicSession,
-  saveLiteRefreshToken,
 } from '@/lib/auth/lite-tokens';
 import { clearLiteOAuthFlow, readLiteOAuthFlow } from '@/lib/auth/lite-oauth';
+
+/** config.json `oauthRevokeOnSignOut`: whether Lite revokes refresh tokens it lets go of. */
+const liteRevokesTokens = () => getCachedConfig()?.oauthRevokeOnSignOut !== false;
 
 /** Logins restored at once after the one on screen: enough to overlap round trips, few enough not to crowd the server. */
 const RESTORE_CONCURRENCY = 4;
@@ -496,10 +500,11 @@ async function exchangePasswordForTokens(params: {
     const tokens = await liteTokenLogin({ serverUrl, username, password, totp, redirectUri });
     // "Remember me" keeps the refresh token across browser restarts
     // (localStorage); otherwise it lives with the tab (sessionStorage).
+    // Signing in again to an account replaces its slot's token: that one is revoked (#1571).
     if (tokens.refreshToken) {
-      saveLiteRefreshToken(slot, { serverUrl, username, refreshToken: tokens.refreshToken, clientId: tokens.clientId ?? getLiteClientId() }, rememberMe);
+      void replaceLiteRefreshToken(slot, { serverUrl, username, refreshToken: tokens.refreshToken, clientId: tokens.clientId ?? getLiteClientId() }, rememberMe, liteRevokesTokens());
     } else {
-      clearLiteRefreshToken(slot);
+      void retireLiteRefreshToken(slot, liteRevokesTokens());
     }
     saveLiteAccessToken(slot, tokens.accessToken, tokens.expiresIn, rememberMe);
     return jsonResponse({ access_token: tokens.accessToken, expires_in: tokens.expiresIn, has_refresh_token: !!tokens.refreshToken });
@@ -553,16 +558,16 @@ async function exchangeOAuthCode(params: {
     // The username is filled in once the session names the account
     // (nameLiteRefreshToken in loginWithOAuth).
     if (tokens.refreshToken) {
-      saveLiteRefreshToken(slot, {
+      void replaceLiteRefreshToken(slot, {
         serverUrl,
         username: '',
         refreshToken: tokens.refreshToken,
         clientId: flow.clientId,
         tokenEndpoint: flow.tokenEndpoint,
         revocationEndpoint: flow.revocationEndpoint,
-      }, flow.persistent);
+      }, flow.persistent, liteRevokesTokens());
     } else {
-      clearLiteRefreshToken(slot);
+      void retireLiteRefreshToken(slot, liteRevokesTokens());
     }
     saveLiteAccessToken(slot, tokens.accessToken, tokens.expiresIn, flow.persistent);
     return jsonResponse({ access_token: tokens.accessToken, expires_in: tokens.expiresIn });
@@ -2320,6 +2325,10 @@ export const useAuthStore = create<AuthState>()(
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
 
+          // The slot of an account Lite already had, before it moves to `slot`.
+          const priorSlot = accountStore.hasAccount(username, serverUrl)
+            ? accountStore.getAccountById(accountId)?.cookieSlot
+            : undefined;
           accountStore.addAccount({
             label: primaryIdentity?.name || username,
             serverUrl,
@@ -2340,6 +2349,13 @@ export const useAuthStore = create<AuthState>()(
           // mid-flow). Either way, the cookie's slot is the source of truth.
           accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: true });
           accountStore.setActiveAccount(accountId);
+          // Signed in again to an account Lite already had: its old slot is
+          // no one's now, so its refresh token is revoked rather than left
+          // behind as one more grant on the server (#1571).
+          if (IS_LITE && priorSlot !== undefined && priorSlot !== slot
+            && !useAccountStore.getState().accounts.some((a) => a.cookieSlot === priorSlot)) {
+            void retireLiteSlot(priorSlot, liteRevokesTokens());
+          }
 
           await syncStalwartAuthContext(serverUrl, username, client.getAuthHeader(), slot);
           void syncAccountDisplayName(accountId, client, primaryIdentity?.name);
@@ -2392,7 +2408,7 @@ export const useAuthStore = create<AuthState>()(
           debug.error('OAuth login error:', error);
           // The code was redeemed but the session never came up: nothing owns
           // the refresh token the exchange stored.
-          if (unnamedLiteSlot !== null) clearLiteRefreshToken(unnamedLiteSlot);
+          if (unnamedLiteSlot !== null) void retireLiteRefreshToken(unnamedLiteSlot, liteRevokesTokens());
           const errorMsg = error instanceof Error ? error.message : 'generic';
           notifyParent('sso:auth-failure', { error: errorMsg });
           set({
