@@ -146,11 +146,13 @@ describe('Masked Addresses Security UI', () => {
     expect(screen.queryByRole('button', { name: 'create' })).not.toBeInTheDocument();
     expect(requests()).toHaveLength(1);
   });
-  it('shows unavailable when the edition does not implement the method', async () => {
+  it('stays hidden when the edition does not implement the method', async () => {
     fetchMock.mockResolvedValue(reply('error', { type: 'unknownMethod' }));
-    render(<MaskedAddressesSection />);
-    await screen.findByText('unavailable');
-    expect(screen.queryByRole('button', { name: 'create' })).not.toBeInTheDocument();
+    const { container } = render(<MaskedAddressesSection />);
+    expect(container).toBeEmptyDOMElement();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await act(async () => {});
+    expect(container).toBeEmptyDOMElement();
   });
   it('renders nothing without an account management capability', () => {
     state.client = client('unsupported');
@@ -164,11 +166,10 @@ describe('Masked Addresses Security UI', () => {
       const [method] = JSON.parse(String(init?.body)).methodCalls[0];
       return method.endsWith('/query') ? reply(method, { ids: [] }) : reply('error', { type: 'unknownMethod' });
     });
-    render(<MaskedAddressesSection />);
-    await screen.findByText('unavailable');
-    expect(screen.queryByRole('button', { name: 'create' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /enable|disable|save/ })).not.toBeInTheDocument();
-    expect(requests().map(([method]) => method)).toEqual(['x:MaskedEmail/query', 'x:MaskedEmail/get']);
+    const { container } = render(<MaskedAddressesSection />);
+    await waitFor(() => expect(requests().map(([method]) => method)).toEqual(['x:MaskedEmail/query', 'x:MaskedEmail/get']));
+    await act(async () => {});
+    expect(container).toBeEmptyDOMElement();
     expect(requests()[1][1].ids).toEqual([]);
   });
   it('clears private rows and draft fields on account switch and ignores the old response', async () => {

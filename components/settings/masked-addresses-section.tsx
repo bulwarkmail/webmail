@@ -81,6 +81,10 @@ export function MaskedAddressesSection() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const context = useMemo(() => createMaskedEmailManager(), [client, activeAccountId, slot, epoch]);
   const [view, setView] = useState<View>({ context: null, status: 'loading', addresses: [] });
+  // The account whose server answered the first read with anything but
+  // "not supported". Until then the section stays hidden: most servers
+  // (Stalwart Community) have no masked addresses.
+  const [shownFor, setShownFor] = useState<MaskedEmailManager | null>(null);
   const [busy, setBusy] = useState(false);
   const operation = useRef<MaskedEmailManager | null>(null);
   const confirming = useRef<MaskedEmailManager | null>(null);
@@ -103,16 +107,20 @@ export function MaskedAddressesSection() {
     setBusy(false); setCanCreate(true); setCanUpdate(true); setCanDelete(true); setDeleteNeedsRefresh(false);
     setExpandedId(null); setPage(0); setNotice(null); setDescription(''); setWebsite('');
     if (context) context.list().then(addresses => {
-      if (!cancelled && context.isCurrent()) setView({ context, status: 'ready', addresses });
+      if (!cancelled && context.isCurrent()) { setView({ context, status: 'ready', addresses }); setShownFor(context); }
     }).catch(error => {
-      if (!cancelled && context.isCurrent()) setView({ context, addresses: [], status:
-        maskedEmailUnavailable(error) ? 'unavailable' : maskedEmailErrorType(error) === 'forbidden' ? 'forbidden' : 'error' });
+      if (!cancelled && context.isCurrent()) {
+        setView({ context, addresses: [], status:
+          maskedEmailUnavailable(error) ? 'unavailable' : maskedEmailErrorType(error) === 'forbidden' ? 'forbidden' : 'error' });
+        if (!maskedEmailUnavailable(error)) setShownFor(context);
+      }
     });
     return () => { cancelled = true; };
   }, [context, closeConfirmation]);
 
   if (!context) return null;
   const current = view.context === context ? view : { context, status: 'loading', addresses: [] } as View;
+  if (shownFor !== context) return null;
   const pageCount = Math.max(1, Math.ceil(current.addresses.length / PAGE_SIZE));
   const visiblePage = Math.min(page, pageCount - 1);
   const addressesOnPage = current.addresses.slice(visiblePage * PAGE_SIZE, (visiblePage + 1) * PAGE_SIZE);
@@ -128,7 +136,7 @@ export function MaskedAddressesSection() {
     try {
       const addresses = await context.list();
       if (!context.isCurrent()) return false;
-      setView({ context, status: 'ready', addresses });
+      setView({ context, status: 'ready', addresses }); setShownFor(context);
       setPage(previous => Math.min(previous, Math.max(0, Math.ceil(addresses.length / PAGE_SIZE) - 1)));
       setExpandedId(previous => addresses.some(address => address.id === previous) ? previous : null);
       setDeleteNeedsRefresh(false); return true;
