@@ -17,6 +17,7 @@ import {
   type BrandingOverrideKey,
 } from "@/lib/admin/domain-branding";
 import { withBasePath } from "@/lib/browser-navigation";
+import { loginBackdropAttributes, loginBackdropCss, resolveLoginBackdrop, type LoginBackdrop } from "@/lib/login-backdrop";
 import { locales, defaultLocale } from "@/i18n/routing";
 import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import { accessibilityBootScript } from "@/lib/accessibility-settings";
@@ -29,6 +30,7 @@ import { desktopBootScript } from "@/lib/desktop/boot";
 import { appLockBootScript } from "@/lib/app-lock/state";
 import { signedOutStartScript } from "@/lib/signed-out-start";
 import "../app-lock.css";
+import "../login.css";
 
 // This layout renders <html> and sits ABOVE the [locale] segment, so
 // next-intl's getLocale() returns the default locale here - emitting
@@ -83,6 +85,21 @@ async function brandPaletteStyle(): Promise<string> {
     parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
   );
   return brandPaletteCss(entry.palette);
+}
+
+/** The login page's layout and background for the requesting host. */
+async function loginBackdrop(): Promise<LoginBackdrop> {
+  const host = pickRequestHost(await headers());
+  const entry = matchDomainBranding(
+    host,
+    parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
+  );
+  return resolveLoginBackdrop((key) => {
+    const override = entry[key as BrandingOverrideKey];
+    if (typeof override === "string" && override.length > 0) return override;
+    const value = configManager.get<unknown>(key, "");
+    return typeof value === "string" ? value : "";
+  });
 }
 
 /**
@@ -283,6 +300,8 @@ export default async function RootLayout({
   let nonce: string | undefined;
   let themeColorConfigured: boolean;
   let paletteCss = "";
+  let backdropCss = "";
+  let backdropAttrs: Record<string, string> = {};
   if (IS_LITE) {
     // Static export: no request, no nonce, no admin config.
     parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
@@ -298,11 +317,14 @@ export default async function RootLayout({
     nonce = (await headers()).get("x-nonce") ?? "";
     themeColorConfigured = await hasExplicitThemeColor();
     paletteCss = await brandPaletteStyle();
+    const backdrop = await loginBackdrop();
+    backdropCss = loginBackdropCss(backdrop, withBasePath);
+    backdropAttrs = loginBackdropAttributes(backdrop);
   }
   const appName = await brandedAppName();
 
   return (
-    <html lang={locale} dir={getLocaleDirection(locale)} suppressHydrationWarning>
+    <html lang={locale} dir={getLocaleDirection(locale)} {...backdropAttrs} suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -312,6 +334,9 @@ export default async function RootLayout({
         )}
         {paletteCss && (
           <style id="brand-palette" nonce={nonce} dangerouslySetInnerHTML={{ __html: paletteCss }} />
+        )}
+        {backdropCss && (
+          <style id="login-backdrop" nonce={nonce} dangerouslySetInnerHTML={{ __html: backdropCss }} />
         )}
         <script
           nonce={nonce}

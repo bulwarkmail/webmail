@@ -94,7 +94,7 @@ describe('login page while the config loads', () => {
       const { container } = render(<LoginPage />);
       expect(container.querySelector('[data-boot-skeleton]')).toBeNull();
       expect(container.querySelector('.animate-spin')).toBeNull();
-      expect(container.querySelector('.sk-shape.h-11')).not.toBeNull();
+      expect(container.querySelector('.sk-shape.h-10')).not.toBeNull();
     } finally {
       config.oauthOnly = false;
     }

@@ -54,6 +54,7 @@ import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider
 import { loginHintFrom, serverOfSignedInDomain } from "@/lib/auth/login-hint";
 import { askAndChangeConnection, changeConnectionAvailable } from "@/lib/desktop/change-connection";
 import { HelpLinks } from "@/components/layout/help-links";
+import { LoginFrame } from "@/components/auth/login-frame";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
 import { consumeSessionEnd, type SessionEndReason } from "@/lib/session-policy/sign-out-reason";
@@ -922,37 +923,29 @@ function LoginPageContent() {
 
   if (configError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
-        <div className="w-full max-w-md mx-auto px-4 text-center">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl p-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
-              <AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-            <h1 className="text-xl font-semibold text-foreground mb-2">{t("config_error.title")}</h1>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {t("config_error.fetch_failed")}
-            </p>
-          </div>
+      <LoginFrame cardClassName="p-8 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
+          <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
-      </div>
+        <h1 className="text-xl font-semibold text-foreground mb-2">{t("config_error.title")}</h1>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {t("config_error.fetch_failed")}
+        </p>
+      </LoginFrame>
     );
   }
 
   if (!serverUrl && !demoMode && !allowCustomJmapEndpoint) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
-        <div className="w-full max-w-md mx-auto px-4 text-center">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl p-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
-              <AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-            <h1 className="text-xl font-semibold text-foreground mb-2">{t("config_error.title")}</h1>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {t("config_error.server_not_configured")}
-            </p>
-          </div>
+      <LoginFrame cardClassName="p-8 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-5">
+          <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
-      </div>
+        <h1 className="text-xl font-semibold text-foreground mb-2">{t("config_error.title")}</h1>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {t("config_error.server_not_configured")}
+        </p>
+      </LoginFrame>
     );
   }
 
@@ -1488,6 +1481,82 @@ function LoginPageContent() {
   const brandedAppName = appName && appName !== "Webmail" ? appName : "";
   const CurrentThemeIcon = currentThemeOption.icon;
 
+  // The theme menu in the corner, hidden while the theme policy locks the mode (#1280).
+  const themeToggle = (
+    <div data-window-beside-controls="" className="absolute top-5 end-5 z-10" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+      <button
+        type="button"
+        ref={themeButtonRef}
+        onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
+        className={cn(
+          "flex items-center justify-center w-9 h-9 rounded-md border border-border transition-colors",
+          showThemeMenu
+            ? "bg-accent text-accent-foreground"
+            : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
+        )}
+        aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+        title={tLogin("theme_button")}
+        aria-expanded={showThemeMenu}
+        aria-haspopup="menu"
+        data-testid="login-theme-button"
+      >
+        <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
+      </button>
+
+      <ContextMenu
+        ref={themeMenu.menuRef}
+        isOpen={showThemeMenu}
+        position={themeMenu.contextMenu.position}
+        onClose={themeMenu.closeContextMenu}
+        label={tTheme("label")}
+      >
+        {THEME_OPTIONS.map((option) => (
+          <ContextMenuCheckItem
+            key={option.value}
+            kind="radio"
+            icon={option.icon}
+            checked={theme === option.value}
+            label={tTheme(option.label)}
+            onClick={() => handleThemeSelect(option.value)}
+          />
+        ))}
+      </ContextMenu>
+    </div>
+  );
+
+  // Under the card: the company, its links, help and the version.
+  const footerLinkClass = "text-xs text-muted-foreground hover:text-foreground hover:underline underline-offset-2 transition-colors";
+  const loginFooter = (
+    <>
+      {loginCompanyName && (
+        <p className="text-center text-xs text-muted-foreground font-medium">
+          {loginCompanyName}
+        </p>
+      )}
+      {(loginImprintUrl || loginPrivacyPolicyUrl || loginWebsiteUrl) && (
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          {loginWebsiteUrl && (
+            <a href={loginWebsiteUrl} target="_blank" rel="noopener noreferrer" className={footerLinkClass}>
+              {t("website")}
+            </a>
+          )}
+          {loginImprintUrl && (
+            <a href={loginImprintUrl} target="_blank" rel="noopener noreferrer" className={footerLinkClass}>
+              {t("imprint")}
+            </a>
+          )}
+          {loginPrivacyPolicyUrl && (
+            <a href={loginPrivacyPolicyUrl} target="_blank" rel="noopener noreferrer" className={footerLinkClass}>
+              {t("privacy_policy")}
+            </a>
+          )}
+        </div>
+      )}
+      <HelpLinks listClassName="justify-center" />
+      {loginShowVersion && <VersionBadge />}
+    </>
+  );
+
   // Server picker (when admin has configured a server list). Rendered by both
   // the password form and the OAuth-only branch - with several servers the user
   // has to pick which one SSO targets before the button starts the flow, since
@@ -1499,9 +1568,7 @@ function LoginPageContent() {
       <Button
         type="button"
         variant={browserSignInPrimary ? undefined : "outline"}
-        className={browserSignInPrimary
-          ? "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
-          : "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"}
+        className="w-full"
         onClick={handleBrowserSignIn}
         disabled={desktopWaiting || isLoading}
         data-testid="desktop-browser-sign-in"
@@ -1525,13 +1592,10 @@ function LoginPageContent() {
           </button>
         </p>
       )}
-      <div className="relative py-1">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border/60" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-background/80 px-3 text-muted-foreground">{tBrowser("or_here")}</span>
-        </div>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground py-1">
+        <span aria-hidden="true" className="h-px flex-1 bg-border" />
+        <span>{tBrowser("or_here")}</span>
+        <span aria-hidden="true" className="h-px flex-1 bg-border" />
       </div>
     </div>
   );
@@ -1559,7 +1623,7 @@ function LoginPageContent() {
         value={selectedServer?.id ?? ""}
         onChange={(e) => setSelectedServerId(e.target.value)}
         disabled={domainAutoLocked || oauthLoading}
-        className="h-11 w-full px-3.5 bg-muted/40 border border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 text-sm text-foreground disabled:opacity-70 disabled:cursor-not-allowed"
+        className="h-10 w-full px-3 bg-background border border-input rounded-md transition-colors text-sm text-foreground disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {jmapServers.map((s) => (
           <option key={s.id} value={s.id}>{s.label}</option>
@@ -1585,7 +1649,7 @@ function LoginPageContent() {
       key={s.id}
       type="button"
       variant="outline"
-      className="w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+      className="w-full"
       onClick={() => handleOAuthLogin(s)}
       disabled={oauthLoading || isLoading}
     >
@@ -1603,7 +1667,7 @@ function LoginPageContent() {
           onChange={(e) => setRememberMe(e.target.checked)}
           className="peer sr-only"
         />
-        <span className="flex items-center justify-center w-[18px] h-[18px] rounded-[5px] border border-border/80 bg-muted/40 peer-checked:bg-primary peer-checked:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus-ring-color)] transition-all duration-200">
+        <span className="flex items-center justify-center w-[18px] h-[18px] rounded-[5px] border border-input bg-background peer-checked:bg-primary peer-checked:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus-ring-color)] transition-all duration-200">
           {rememberMe && (
             <Check className="w-3 h-3 text-primary-foreground" stroke={3} aria-hidden="true" />
           )}
@@ -1618,325 +1682,244 @@ function LoginPageContent() {
   // Demo-only mode: show only a large demo login button
   if (demoMode && !isAddAccountMode) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
-        {/* Theme toggle, hidden while the theme policy locks the mode (#1280) */}
-        <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
-          <button
+      <LoginFrame size="wide" before={themeToggle} footer={loginFooter}>
+        {/* Header with logo */}
+        <div className="px-8 pt-12 pb-4 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
+            <img
+              src={withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl)}
+              alt={appName}
+              className="max-w-20 max-h-20 object-contain"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            {appName}
+          </h1>
+          <p className="text-base text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
+            {t("demo_tagline")}
+          </p>
+        </div>
+
+        {/* Large demo button */}
+        <div className="px-8 pb-10 pt-4">
+          {error && (
+            <div role="alert" className={cn(
+              "mb-5 p-3 rounded-md border border-destructive/20 bg-destructive/5 flex items-start gap-3",
+              shakeError && "animate-shake"
+            )}>
+              <div className="w-10 h-10 rounded-full bg-destructive/15 text-destructive flex items-center justify-center flex-shrink-0 shadow-sm">
+                <AlertCircle className="w-5 h-5" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0 self-center">
+                <p className="text-sm text-destructive leading-relaxed">
+                  {t(`error.${error}`) || t("error.generic")}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <Button
             type="button"
-            ref={themeButtonRef}
-            onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
-            className={cn(
-              "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
-              showThemeMenu
-                ? "bg-secondary border-border text-foreground shadow-md"
-                : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
-            )}
-            aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
-            title={tLogin("theme_button")}
-            aria-expanded={showThemeMenu}
-            aria-haspopup="menu"
-            data-testid="login-theme-button"
+            className="w-full h-12 text-base font-semibold"
+            onClick={handleDemoLogin}
+            disabled={demoLoading || isLoading}
           >
-            <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
-          </button>
-
-          <ContextMenu
-            ref={themeMenu.menuRef}
-            isOpen={showThemeMenu}
-            position={themeMenu.contextMenu.position}
-            onClose={themeMenu.closeContextMenu}
-            label={tTheme("label")}
-          >
-            {THEME_OPTIONS.map((option) => (
-              <ContextMenuCheckItem
-                key={option.value}
-                kind="radio"
-                icon={option.icon}
-                checked={theme === option.value}
-                label={tTheme(option.label)}
-                onClick={() => handleThemeSelect(option.value)}
-              />
-            ))}
-          </ContextMenu>
-        </div>
-
-        <div className="w-full max-w-[440px] mx-auto">
-          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
-            {/* Header with logo */}
-            <div className="px-8 pt-12 pb-4 text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
-                <img
-                  src={withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl)}
-                  alt={appName}
-                  className="max-w-20 max-h-20 object-contain"
-                />
+            {demoLoading ? (
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {t("demo_launching")}
               </div>
-              <h1 className="text-3xl font-bold text-foreground tracking-tight">
-                {appName}
-              </h1>
-              <p className="text-base text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
-                {t("demo_tagline")}
-              </p>
-            </div>
-
-            {/* Large demo button */}
-            <div className="px-8 pb-10 pt-4">
-              {error && (
-                <div role="alert" className={cn(
-                  "mb-5 p-3 rounded-xl border border-destructive/20 bg-destructive/5 flex items-start gap-3",
-                  shakeError && "animate-shake"
-                )}>
-                  <div className="w-10 h-10 rounded-full bg-destructive/15 text-destructive flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <AlertCircle className="w-5 h-5" aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0 self-center">
-                    <p className="text-sm text-destructive leading-relaxed">
-                      {t(`error.${error}`) || t("error.generic")}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <Button
-                type="button"
-                className="w-full h-14 font-semibold text-lg bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
-                onClick={handleDemoLogin}
-                disabled={demoLoading || isLoading}
-              >
-                {demoLoading ? (
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {t("demo_launching")}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <Play className="w-5 h-5" />
-                    {t("demo_login_button")}
-                  </div>
-                )}
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground mt-4 leading-relaxed">
-                {t("demo_no_signup")}
-              </p>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-6 flex flex-col items-center gap-2">
-            {loginCompanyName && (
-              <p className="text-center text-xs text-muted-foreground font-medium">
-                {loginCompanyName}
-              </p>
-            )}
-            {(loginImprintUrl || loginPrivacyPolicyUrl || loginWebsiteUrl) && (
-              <div className="flex items-center gap-3 flex-wrap justify-center">
-                {loginWebsiteUrl && (
-                  <a href={loginWebsiteUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors">
-                    {t("website")}
-                  </a>
-                )}
-                {loginImprintUrl && (
-                  <a href={loginImprintUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors">
-                    {t("imprint")}
-                  </a>
-                )}
-                {loginPrivacyPolicyUrl && (
-                  <a href={loginPrivacyPolicyUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors">
-                    {t("privacy_policy")}
-                  </a>
-                )}
+            ) : (
+              <div className="flex items-center gap-3">
+                <Play className="w-5 h-5" />
+                {t("demo_login_button")}
               </div>
             )}
-            <HelpLinks listClassName="justify-center" />
-            {loginShowVersion && <VersionBadge />}
-          </div>
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground mt-4 leading-relaxed">
+            {t("demo_no_signup")}
+          </p>
         </div>
-      </div>
+      </LoginFrame>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
-      <MobileHandoffConsent
-        url={pendingHandoff?.url ?? null}
-        resolveUrl={pendingHandoff?.resolveUrl ?? null}
-        username={pendingHandoff?.username ?? ""}
-        desktopPort={isDesktopHandoff ? desktopHandoffPort(desktopTarget) : undefined}
-        onCancel={() => {
-          setPendingHandoff(null);
-          // Ends the flow at the app, which isn't left waiting. Nothing was parked.
-          if (isDesktopHandoff) window.location.replace(desktopHandoffDeclineUrl(desktopTarget, mobileState));
-          else router.push('/');
-        }}
-        onError={() => {
-          setPendingHandoff(null);
-          // The desktop's answer has said what went wrong, on the form.
-          if (!isDesktopHandoff) setHandoffError("server_error");
-        }}
-      />
-      {/* Theme toggle - top right, dropdown style; hidden while the theme policy locks the mode (#1280) */}
-      <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
-        <button
-          type="button"
-          ref={themeButtonRef}
-          onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
-          className={cn(
-            "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
-            showThemeMenu
-              ? "bg-secondary border-border text-foreground shadow-md"
-              : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
-          )}
-          aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
-          title={tLogin("theme_button")}
-          aria-expanded={showThemeMenu}
-          aria-haspopup="menu"
-          data-testid="login-theme-button"
-        >
-          <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
-        </button>
-
-        <ContextMenu
-          ref={themeMenu.menuRef}
-          isOpen={showThemeMenu}
-          position={themeMenu.contextMenu.position}
-          onClose={themeMenu.closeContextMenu}
-          label={tTheme("label")}
-        >
-          {THEME_OPTIONS.map((option) => (
-            <ContextMenuCheckItem
-              key={option.value}
-              kind="radio"
-              icon={option.icon}
-              checked={theme === option.value}
-              label={tTheme(option.label)}
-              onClick={() => handleThemeSelect(option.value)}
+    <LoginFrame
+      before={
+        <>
+          <MobileHandoffConsent
+            url={pendingHandoff?.url ?? null}
+            resolveUrl={pendingHandoff?.resolveUrl ?? null}
+            username={pendingHandoff?.username ?? ""}
+            desktopPort={isDesktopHandoff ? desktopHandoffPort(desktopTarget) : undefined}
+            onCancel={() => {
+              setPendingHandoff(null);
+              // Ends the flow at the app, which isn't left waiting. Nothing was parked.
+              if (isDesktopHandoff) window.location.replace(desktopHandoffDeclineUrl(desktopTarget, mobileState));
+              else router.push('/');
+            }}
+            onError={() => {
+              setPendingHandoff(null);
+              // The desktop's answer has said what went wrong, on the form.
+              if (!isDesktopHandoff) setHandoffError("server_error");
+            }}
+          />
+          {themeToggle}
+        </>
+      }
+      footer={loginFooter}
+    >
+        {/* Header section with logo */}
+        <div className="px-8 pt-10 pb-6 text-center">
+          <div className={cn("inline-flex items-center justify-center mb-5", !hasLogoSize && "w-16 h-16")}>
+            <img
+              src={withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl)}
+              alt={appName}
+              className={cn("object-contain", !hasLogoSize && "max-w-16 max-h-16")}
+              style={loginLogoStyle}
             />
-          ))}
-        </ContextMenu>
-      </div>
-
-      <div className="w-full max-w-[400px] mx-auto">
-        {/* Card container */}
-        <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
-          {/* Header section with logo */}
-          <div className="px-8 pt-10 pb-6 text-center">
-            <div className={cn("inline-flex items-center justify-center mb-5", !hasLogoSize && "w-16 h-16")}>
-              <img
-                src={withBasePath(resolvedTheme === 'dark' ? loginLogoDarkUrl : loginLogoLightUrl)}
-                alt={appName}
-                className={cn("object-contain", !hasLogoSize && "max-w-16 max-h-16")}
-                style={loginLogoStyle}
-              />
-            </div>
-            {loginShowHeading && (
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                {isAddAccountMode ? t("add_account_title") : brandedAppName || t("sign_in")}
-              </h1>
-            )}
-            {/* Under a heading that already says "Sign in" the subtitle would say it twice. */}
-            {loginShowSubtitle && (isAddAccountMode || brandedAppName || !loginShowHeading) && (
-              <p className="text-sm text-muted-foreground mt-1.5">
-                {isAddAccountMode ? t("add_account_subtitle") : t("subtitle")}
-              </p>
-            )}
           </div>
+          {loginShowHeading && (
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              {isAddAccountMode ? t("add_account_title") : brandedAppName || t("sign_in")}
+            </h1>
+          )}
+          {/* Under a heading that already says "Sign in" the subtitle would say it twice. */}
+          {loginShowSubtitle && (isAddAccountMode || brandedAppName || !loginShowHeading) && (
+            <p className="text-sm text-muted-foreground mt-1.5">
+              {isAddAccountMode ? t("add_account_subtitle") : t("subtitle")}
+            </p>
+          )}
+        </div>
 
-          {/* Form section */}
-          <div className="px-8 pb-8">
-            {wipeLost !== null && (
-              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="device-wipe-note">
-                {wipeNoteText(wipeLost, tOfflineWipe)}
+        {/* Form section */}
+        <div className="px-8 pb-8">
+          {wipeLost !== null && (
+            <div className="mb-5 p-3 rounded-md border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="device-wipe-note">
+              {wipeNoteText(wipeLost, tOfflineWipe)}
+            </div>
+          )}
+          {refusedWaiting.map((wait) => {
+            const date = new Date(wait.until).toLocaleDateString(String(params?.locale ?? "en"), { dateStyle: "medium" });
+            const prefix = wait.kind === "session" ? "session_waiting" : "refused_waiting";
+            return (
+              <div key={wait.until} className="mb-5 p-3 rounded-md border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="login-refused-waiting">
+                {wait.unsent === null ? tOfflineWipe(`${prefix}_unknown`, { date }) : tOfflineWipe(prefix, { count: wait.unsent, date })}
               </div>
-            )}
-            {refusedWaiting.map((wait) => {
-              const date = new Date(wait.until).toLocaleDateString(String(params?.locale ?? "en"), { dateStyle: "medium" });
-              const prefix = wait.kind === "session" ? "session_waiting" : "refused_waiting";
-              return (
-                <div key={wait.until} className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="login-refused-waiting">
-                  {wait.unsent === null ? tOfflineWipe(`${prefix}_unknown`, { date }) : tOfflineWipe(prefix, { count: wait.unsent, date })}
-                </div>
-              );
-            })}
-            {outboxLost.length > 0 && (
-              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
-                {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}
-              </div>
-            )}
+            );
+          })}
+          {outboxLost.length > 0 && (
+            <div className="mb-5 p-3 rounded-md border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
+              {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}
+            </div>
+          )}
 
-            {/* Session Expired Banner */}
-            {sessionExpired && (
-              <div
-                className="mb-5 p-3 rounded-xl border border-info/20 bg-info/5 flex items-start gap-3"
-                role="status"
-                aria-live="polite"
+          {/* Session Expired Banner */}
+          {sessionExpired && (
+            <div
+              className="mb-5 p-3 rounded-md border border-info/20 bg-info/5 flex items-start gap-3"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Info className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0 self-center flex items-center gap-2">
+                <p className="text-sm text-info flex-1 leading-relaxed" data-testid="session-expired-reason">
+                  {sessionEnd?.kind === "idle"
+                    ? tSessionLimits("reason_idle", { minutes: sessionEnd.minutes })
+                    : sessionEnd?.kind === "max"
+                      ? tSessionLimits("reason_max", { hours: sessionEnd.hours })
+                      : t("session_expired")}
+                  {(sessionEnd?.draftsUnsaved || expiredDraftsUnsaved) && (
+                    <span className="block mt-1" data-testid="session-drafts-not-saved">{tSessionLimits("drafts_not_saved")}</span>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSessionExpired(false)}
+                  className="p-1 rounded-md text-info hover:bg-info/10 transition-colors flex-shrink-0"
+                  aria-label={t("dismiss")}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message. Asking for the code is the next step of a
+              sign-in that worked so far, not a failure (#1422). */}
+          {shownError && (
+            <div
+              className={cn(
+                "mb-5 p-3 rounded-md border flex items-start gap-3",
+                shownError === 'totp_required' ? "border-info/20 bg-info/5" : "border-destructive/20 bg-destructive/5",
+                shakeError && "animate-shake"
+              )}
+              data-testid="login-error"
+              role={shownError === 'totp_required' ? "status" : "alert"}
+            >
+              <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
+                shownError === 'totp_required' ? "bg-info/15 text-info" : "bg-destructive/15 text-destructive"
+              )}>
+                {shownError === 'totp_required' ? <Info className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
+              </div>
+              <div className="flex-1 min-w-0 self-center">
+                <p id={errorId} className={cn("text-sm leading-relaxed", shownError === 'totp_required' ? "text-info" : "text-destructive")}>
+                  {shownError === 'invalid_credentials' && showTotpField && totpCode
+                    ? t('error.totp_invalid')
+                    : t(`error.${shownError}`) || t("error.generic")}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {desktopHandoffBanner}
+
+          {/* Dev Mode: One-click login */}
+          {devMode ? (
+            <div className="space-y-4">
+              <Button
+                type="button"
+                className="w-full"
+                onClick={handleDevLogin}
+                disabled={isLoading}
               >
-                <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <Info className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0 self-center flex items-center gap-2">
-                  <p className="text-sm text-info flex-1 leading-relaxed" data-testid="session-expired-reason">
-                    {sessionEnd?.kind === "idle"
-                      ? tSessionLimits("reason_idle", { minutes: sessionEnd.minutes })
-                      : sessionEnd?.kind === "max"
-                        ? tSessionLimits("reason_max", { hours: sessionEnd.hours })
-                        : t("session_expired")}
-                    {(sessionEnd?.draftsUnsaved || expiredDraftsUnsaved) && (
-                      <span className="block mt-1" data-testid="session-drafts-not-saved">{tSessionLimits("drafts_not_saved")}</span>
-                    )}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setSessionExpired(false)}
-                    className="p-1 rounded-md text-info hover:bg-info/10 transition-colors flex-shrink-0"
-                    aria-label={t("dismiss")}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Error Message. Asking for the code is the next step of a
-                sign-in that worked so far, not a failure (#1422). */}
-            {shownError && (
-              <div
-                className={cn(
-                  "mb-5 p-3 rounded-xl border flex items-start gap-3",
-                  shownError === 'totp_required' ? "border-info/20 bg-info/5" : "border-destructive/20 bg-destructive/5",
-                  shakeError && "animate-shake"
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("signing_in")}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <LogIn className="w-4 h-4" />
+                    {t("sign_in")}
+                  </div>
                 )}
-                data-testid="login-error"
-                role={shownError === 'totp_required' ? "status" : "alert"}
-              >
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
-                  shownError === 'totp_required' ? "bg-info/15 text-info" : "bg-destructive/15 text-destructive"
-                )}>
-                  {shownError === 'totp_required' ? <Info className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
-                </div>
-                <div className="flex-1 min-w-0 self-center">
-                  <p id={errorId} className={cn("text-sm leading-relaxed", shownError === 'totp_required' ? "text-info" : "text-destructive")}>
-                    {shownError === 'invalid_credentials' && showTotpField && totpCode
-                      ? t('error.totp_invalid')
-                      : t(`error.${shownError}`) || t("error.generic")}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {desktopHandoffBanner}
-
-            {/* Dev Mode: One-click login */}
-            {devMode ? (
-              <div className="space-y-4">
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Dev mode - logging in as dev@localhost
+              </p>
+            </div>
+          ) : oauthOnly && !passwordFallbackMode ? (
+            /* OAuth-only mode: server picker (if any) plus the SSO button */
+            <div className="space-y-4">
+              {serverPicker}
+              {desktopPolicyAlert}
+              {oauthMetadata && showRememberMe && rememberMeBox}
+              {browserSignInOption}
+              {oauthMetadata ? (
                 <Button
                   type="button"
-                  className="w-full h-12 font-medium text-base bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-lg shadow-primary/20"
-                  onClick={handleDevLogin}
-                  disabled={isLoading}
+                  variant={browserSignInShown ? "outline" : undefined}
+                  className="w-full"
+                  onClick={() => handleOAuthLogin()}
+                  disabled={oauthLoading}
                 >
-                  {isLoading ? (
+                  {oauthLoading ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       {t("signing_in")}
@@ -1944,522 +1927,436 @@ function LoginPageContent() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <LogIn className="w-4 h-4" />
-                      {t("sign_in")}
+                      {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
                     </div>
                   )}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Dev mode - logging in as dev@localhost
-                </p>
-              </div>
-            ) : oauthOnly && !passwordFallbackMode ? (
-              /* OAuth-only mode: server picker (if any) plus the SSO button */
-              <div className="space-y-4">
-                {serverPicker}
-                {desktopPolicyAlert}
-                {oauthMetadata && showRememberMe && rememberMeBox}
-                {browserSignInOption}
-                {oauthMetadata ? (
-                  <Button
-                    type="button"
-                    variant={browserSignInShown ? "outline" : undefined}
-                    className={browserSignInShown
-                      ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
-                      : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
-                    onClick={() => handleOAuthLogin()}
-                    disabled={oauthLoading}
-                  >
-                    {oauthLoading ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {t("signing_in")}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <LogIn className="w-4 h-4" />
-                        {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
-                      </div>
-                    )}
-                  </Button>
-                ) : oauthDiscoveryDone ? (
-                  <div className="p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <AlertCircle className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0 self-center">
-                      <p className="text-sm text-warning leading-relaxed">
-                        {t("error.oauth_discovery_failed")}
-                      </p>
-                    </div>
+              ) : oauthDiscoveryDone ? (
+                <div className="p-3 rounded-md border border-warning/20 bg-warning/5 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <AlertCircle className="w-5 h-5" />
                   </div>
-                ) : (
-                  // Where the sign-in button goes once the provider answers.
-                  <Block className="w-full h-11 rounded-xl" />
+                  <div className="flex-1 min-w-0 self-center">
+                    <p className="text-sm text-warning leading-relaxed">
+                      {t("error.oauth_discovery_failed")}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // Where the sign-in button goes once the provider answers.
+                <Block className="w-full h-10 rounded-md" />
+              )}
+              {desktopNotice && (
+                <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                  {desktopNotice}
+                </p>
+              )}
+              {passwordFallbackAvailable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearError();
+                    setPasswordFallbackMode(true);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  }}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  {t("password_toggle")}
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Login Form */
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <fieldset disabled={isLoading} className="space-y-4">
+                {serverPicker}
+
+                {!customServerMode && browserSignInOption}
+
+                {/* Username field. The access token names the account, so
+                    token sign-in has none. */}
+                <div className={cn("space-y-1.5", signInWithToken && "hidden")}>
+                  <label htmlFor="username" className="block text-sm font-medium text-foreground">
+                    {t("username_label")}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      ref={inputRef}
+                      id="username"
+                      type="text"
+                      value={formData.username}
+                      onChange={handleUsernameChange}
+                      onFocus={handleUsernameFocus}
+                      onKeyDown={handleKeyDown}
+                      placeholder={loginUsernamePlaceholder || t("username_placeholder")}
+                      required={!signInWithToken}
+                      // Password managers fill and save the pair by this (WCAG 3.3.8).
+                      autoComplete="username"
+                      // With the address handed over, the password is what's missing.
+                      autoFocus={!loginHint}
+                      // The recent accounts are a combobox's list: the arrow
+                      // keys move through them while the focus stays here.
+                      role={savedUsernames.length > 0 ? "combobox" : undefined}
+                      aria-autocomplete={savedUsernames.length > 0 ? "list" : undefined}
+                      aria-expanded={savedUsernames.length > 0 ? suggestionsOpen : undefined}
+                      aria-controls={suggestionsOpen ? suggestionsId : undefined}
+                      aria-activedescendant={suggestionsOpen && selectedSuggestionIndex >= 0 ? suggestionId(selectedSuggestionIndex) : undefined}
+                      aria-invalid={credentialsBlamed || undefined}
+                      aria-describedby={[credentialsBlamed ? errorId : null, suggestionsOpen ? suggestionsHintId : null].filter(Boolean).join(" ") || undefined}
+                    />
+
+                    {/* Recent accounts on this device */}
+                    {suggestionsOpen && (
+                      <>
+                        <span id={suggestionsHintId} className="sr-only">{t("recent_accounts_hint")}</span>
+                        <ul
+                          ref={suggestionsRef}
+                          id={suggestionsId}
+                          role="listbox"
+                          aria-label={t("recent_accounts")}
+                          className="absolute top-full mt-1.5 w-full bg-background border border-border rounded-md shadow-lg z-50 overflow-hidden"
+                        >
+                          {filteredSuggestions.map((username, index) => (
+                            <li
+                              key={username}
+                              id={suggestionId(index)}
+                              role="option"
+                              aria-selected={index === selectedSuggestionIndex}
+                              aria-label={username}
+                              className={cn(
+                                "px-3.5 py-2.5 flex items-center justify-between hover:bg-muted cursor-pointer transition-colors",
+                                index === selectedSuggestionIndex && "bg-muted"
+                              )}
+                              // Keep the focus (and the caret) in the field.
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => selectSuggestion(username)}
+                            >
+                              <span className="text-sm text-foreground">{username}</span>
+                              {/* Out of the tab order: from the keyboard, Delete
+                                  removes the highlighted account. Named, so
+                                  voice control can still press it. */}
+                              <button
+                                type="button"
+                                tabIndex={-1}
+                                onClick={(e) => removeUsername(username, e)}
+                                className="p-1 hover:bg-secondary rounded-md transition-colors"
+                                aria-label={t("remove_account_from_list", { username })}
+                                title={t("remove_from_history")}
+                              >
+                                <X className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                  {emailNeeded && (
+                    <p role="alert" data-testid="login-email-needed" className="text-xs text-destructive leading-snug">
+                      {tLogin("email_needed")}
+                    </p>
+                  )}
+                </div>
+
+                {customServerMode && (
+                  <LoginServerField
+                    ref={serverInputRef}
+                    lookup={canLookUpServer ? lookupForAddress?.status ?? "idle" : "idle"}
+                    server={autoServer}
+                    editing={serverFieldOpen}
+                    value={jmapEndpoint}
+                    onChange={(value) => {
+                      setJmapEndpoint(value);
+                      setServerEditing(true);
+                      setServerError(null);
+                    }}
+                    onEdit={() => {
+                      setJmapEndpoint(autoServer ? serverHostLabel(autoServer) : "");
+                      setServerEditing(true);
+                      setServerChanging(true);
+                      setServerFocusRequest((n) => n + 1);
+                    }}
+                    changing={serverChanging}
+                    provider={unsupportedMailProvider}
+                    error={serverError}
+                    showTrouble={!IS_DESKTOP_BUILD}
+                  />
                 )}
-                {desktopNotice && (
-                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
-                    {desktopNotice}
-                  </p>
+
+                {customServerMode && browserSignInOption}
+
+                {/* Password field. Hidden for an account that signs in at an
+                    external provider (Lite on Stalwart): the submit button is
+                    the SSO button then. */}
+                <div className={cn("space-y-1.5", (liteSsoRequired || signInWithToken) && "hidden")}>
+                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                    {t("password_label")}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      ref={passwordInputRef}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="pe-10 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+                      placeholder={t("password_placeholder")}
+                      required={!liteSsoRequired && !signInWithToken}
+                      autoComplete="current-password"
+                      autoFocus={!!loginHint}
+                      {...errorProps(credentialsBlamed)}
+                    />
+                    {/* In the tab order, so keyboard users can check what
+                        they typed. One name, the state in aria-pressed. */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={t("show_password")}
+                      aria-pressed={showPassword}
+                      aria-controls="password"
+                      title={showPassword ? t("hide_password") : t("show_password")}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <Eye className="w-4 h-4" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {signInWithToken && (
+                  <div className="space-y-1.5">
+                    <label htmlFor="access-token" className="block text-sm font-medium text-foreground">
+                      {t("token_label")}
+                    </label>
+                    <Input
+                      ref={tokenInputRef}
+                      id="access-token"
+                      type="password"
+                      value={accessToken}
+                      onChange={(e) => setAccessToken(e.target.value)}
+                      className="font-mono"
+                      placeholder={t("token_placeholder")}
+                      required
+                      autoComplete="off"
+                      spellCheck={false}
+                      data-lpignore="true"
+                      {...errorProps(tokenBlamed)}
+                    />
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      {t("token_hint")}
+                    </p>
+                  </div>
                 )}
-                {passwordFallbackAvailable && (
+
+                {/* 2FA toggle / field. The manual toggle can be hidden via
+                    LOGIN_SHOW_TOTP (loginShowTotp) for deployments whose mail
+                    server has no per-account TOTP (auth delegated to an
+                    external directory); server-required TOTP still shows. */}
+                {liteSsoRequired || signInWithToken ? null : !showTotpField ? (
+                  loginShowTotp ? (
                   <button
                     type="button"
                     onClick={() => {
-                      clearError();
-                      setPasswordFallbackMode(true);
-                      setTimeout(() => inputRef.current?.focus(), 50);
+                      setShowTotpField(true);
+                      setTimeout(() => totpInputRef.current?.focus(), 50);
                     }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <KeyRound className="w-3.5 h-3.5" />
-                    {t("password_toggle")}
+                    <Shield className="w-3.5 h-3.5" />
+                    {t("totp_toggle")}
                   </button>
-                )}
-              </div>
-            ) : (
-              /* Login Form */
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <fieldset disabled={isLoading} className="space-y-4">
-                  {serverPicker}
-
-                  {!customServerMode && browserSignInOption}
-
-                  {/* Username field. The access token names the account, so
-                      token sign-in has none. */}
-                  <div className={cn("space-y-1.5", signInWithToken && "hidden")}>
-                    <label htmlFor="username" className="block text-sm font-medium text-foreground">
-                      {t("username_label")}
+                  ) : null
+                ) : (
+                  <div className="space-y-1.5">
+                    <label htmlFor="totp" className="block text-sm font-medium text-foreground">
+                      {t("totp_label")}
                     </label>
-                    <div className="relative">
-                      <Input
-                        ref={inputRef}
-                        id="username"
-                        type="text"
-                        value={formData.username}
-                        onChange={handleUsernameChange}
-                        onFocus={handleUsernameFocus}
-                        onKeyDown={handleKeyDown}
-                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
-                        placeholder={loginUsernamePlaceholder || t("username_placeholder")}
-                        required={!signInWithToken}
-                        // Password managers fill and save the pair by this (WCAG 3.3.8).
-                        autoComplete="username"
-                        // With the address handed over, the password is what's missing.
-                        autoFocus={!loginHint}
-                        // The recent accounts are a combobox's list: the arrow
-                        // keys move through them while the focus stays here.
-                        role={savedUsernames.length > 0 ? "combobox" : undefined}
-                        aria-autocomplete={savedUsernames.length > 0 ? "list" : undefined}
-                        aria-expanded={savedUsernames.length > 0 ? suggestionsOpen : undefined}
-                        aria-controls={suggestionsOpen ? suggestionsId : undefined}
-                        aria-activedescendant={suggestionsOpen && selectedSuggestionIndex >= 0 ? suggestionId(selectedSuggestionIndex) : undefined}
-                        aria-invalid={credentialsBlamed || undefined}
-                        aria-describedby={[credentialsBlamed ? errorId : null, suggestionsOpen ? suggestionsHintId : null].filter(Boolean).join(" ") || undefined}
-                      />
-
-                      {/* Recent accounts on this device */}
-                      {suggestionsOpen && (
-                        <>
-                          <span id={suggestionsHintId} className="sr-only">{t("recent_accounts_hint")}</span>
-                          <ul
-                            ref={suggestionsRef}
-                            id={suggestionsId}
-                            role="listbox"
-                            aria-label={t("recent_accounts")}
-                            className="absolute top-full mt-1.5 w-full bg-background border border-border rounded-xl shadow-lg z-50 overflow-hidden"
-                          >
-                            {filteredSuggestions.map((username, index) => (
-                              <li
-                                key={username}
-                                id={suggestionId(index)}
-                                role="option"
-                                aria-selected={index === selectedSuggestionIndex}
-                                aria-label={username}
-                                className={cn(
-                                  "px-3.5 py-2.5 flex items-center justify-between hover:bg-muted cursor-pointer transition-colors",
-                                  index === selectedSuggestionIndex && "bg-muted"
-                                )}
-                                // Keep the focus (and the caret) in the field.
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => selectSuggestion(username)}
-                              >
-                                <span className="text-sm text-foreground">{username}</span>
-                                {/* Out of the tab order: from the keyboard, Delete
-                                    removes the highlighted account. Named, so
-                                    voice control can still press it. */}
-                                <button
-                                  type="button"
-                                  tabIndex={-1}
-                                  onClick={(e) => removeUsername(username, e)}
-                                  className="p-1 hover:bg-secondary rounded-md transition-colors"
-                                  aria-label={t("remove_account_from_list", { username })}
-                                  title={t("remove_from_history")}
-                                >
-                                  <X className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
+                    <Input
+                      ref={totpInputRef}
+                      id="totp"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                      className={cn(
+                        "text-center font-mono tracking-widest",
+                        error === 'totp_required' && "border-primary ring-2 ring-primary/30"
                       )}
-                    </div>
-                    {emailNeeded && (
-                      <p role="alert" data-testid="login-email-needed" className="text-xs text-destructive leading-snug">
-                        {tLogin("email_needed")}
-                      </p>
-                    )}
-                  </div>
-
-                  {customServerMode && (
-                    <LoginServerField
-                      ref={serverInputRef}
-                      lookup={canLookUpServer ? lookupForAddress?.status ?? "idle" : "idle"}
-                      server={autoServer}
-                      editing={serverFieldOpen}
-                      value={jmapEndpoint}
-                      onChange={(value) => {
-                        setJmapEndpoint(value);
-                        setServerEditing(true);
-                        setServerError(null);
-                      }}
-                      onEdit={() => {
-                        setJmapEndpoint(autoServer ? serverHostLabel(autoServer) : "");
-                        setServerEditing(true);
-                        setServerChanging(true);
-                        setServerFocusRequest((n) => n + 1);
-                      }}
-                      changing={serverChanging}
-                      provider={unsupportedMailProvider}
-                      error={serverError}
-                      showTrouble={!IS_DESKTOP_BUILD}
+                      placeholder={t("totp_placeholder")}
+                      autoComplete="one-time-code"
+                      {...errorProps(totpBlamed)}
                     />
-                  )}
-
-                  {customServerMode && browserSignInOption}
-
-                  {/* Password field. Hidden for an account that signs in at an
-                      external provider (Lite on Stalwart): the submit button is
-                      the SSO button then. */}
-                  <div className={cn("space-y-1.5", (liteSsoRequired || signInWithToken) && "hidden")}>
-                    <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                      {t("password_label")}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        ref={passwordInputRef}
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
-                        placeholder={t("password_placeholder")}
-                        required={!liteSsoRequired && !signInWithToken}
-                        autoComplete="current-password"
-                        autoFocus={!!loginHint}
-                        {...errorProps(credentialsBlamed)}
-                      />
-                      {/* In the tab order, so keyboard users can check what
-                          they typed. One name, the state in aria-pressed. */}
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute end-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label={t("show_password")}
-                        aria-pressed={showPassword}
-                        aria-controls="password"
-                        title={showPassword ? t("hide_password") : t("show_password")}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" aria-hidden="true" />
-                        ) : (
-                          <Eye className="w-4 h-4" aria-hidden="true" />
-                        )}
-                      </button>
-                    </div>
                   </div>
+                )}
 
-                  {signInWithToken && (
-                    <div className="space-y-1.5">
-                      <label htmlFor="access-token" className="block text-sm font-medium text-foreground">
-                        {t("token_label")}
-                      </label>
-                      <Input
-                        ref={tokenInputRef}
-                        id="access-token"
-                        type="password"
-                        value={accessToken}
-                        onChange={(e) => setAccessToken(e.target.value)}
-                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 font-mono"
-                        placeholder={t("token_placeholder")}
-                        required
-                        autoComplete="off"
-                        spellCheck={false}
-                        data-lpignore="true"
-                        {...errorProps(tokenBlamed)}
-                      />
-                      <p className="text-xs text-muted-foreground leading-snug">
-                        {t("token_hint")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* 2FA toggle / field. The manual toggle can be hidden via
-                      LOGIN_SHOW_TOTP (loginShowTotp) for deployments whose mail
-                      server has no per-account TOTP (auth delegated to an
-                      external directory); server-required TOTP still shows. */}
-                  {liteSsoRequired || signInWithToken ? null : !showTotpField ? (
-                    loginShowTotp ? (
+                {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (() => {
+                  const tokenToggle = (
                     <button
                       type="button"
+                      data-testid="login-token-toggle"
                       onClick={() => {
-                        setShowTotpField(true);
-                        setTimeout(() => totpInputRef.current?.focus(), 50);
+                        clearError();
+                        setTokenMode(!signInWithToken);
+                        setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
                       }}
                       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Shield className="w-3.5 h-3.5" />
-                      {t("totp_toggle")}
+                      <KeyRound className="w-3.5 h-3.5" />
+                      {signInWithToken ? t("password_toggle") : t("token_toggle")}
                     </button>
-                    ) : null
-                  ) : (
-                    <div className="space-y-1.5">
-                      <label htmlFor="totp" className="block text-sm font-medium text-foreground">
-                        {t("totp_label")}
-                      </label>
-                      <Input
-                        ref={totpInputRef}
-                        id="totp"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={totpCode}
-                        onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                        className={cn(
-                          "h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 text-center font-mono tracking-widest",
-                          error === 'totp_required' && "border-primary ring-2 ring-primary/30"
-                        )}
-                        placeholder={t("totp_placeholder")}
-                        autoComplete="one-time-code"
-                        {...errorProps(totpBlamed)}
-                      />
-                    </div>
-                  )}
+                  );
+                  // Few people have a token: the way back to the password stays in sight,
+                  // the way to a token waits behind "Other ways to sign in".
+                  return signInWithToken ? tokenToggle : (
+                    <details className="text-xs text-muted-foreground" data-testid="login-other-ways">
+                      <summary className="cursor-pointer hover:text-foreground w-fit">{tLogin("other_ways")}</summary>
+                      <div className="mt-2 ps-1">{tokenToggle}</div>
+                    </details>
+                  );
+                })()}
 
-                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (() => {
-                    const tokenToggle = (
-                      <button
-                        type="button"
-                        data-testid="login-token-toggle"
-                        onClick={() => {
-                          clearError();
-                          setTokenMode(!signInWithToken);
-                          setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
-                        }}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <KeyRound className="w-3.5 h-3.5" />
-                        {signInWithToken ? t("password_toggle") : t("token_toggle")}
-                      </button>
-                    );
-                    // Few people have a token: the way back to the password stays in sight,
-                    // the way to a token waits behind "Other ways to sign in".
-                    return signInWithToken ? tokenToggle : (
-                      <details className="text-xs text-muted-foreground" data-testid="login-other-ways">
-                        <summary className="cursor-pointer hover:text-foreground w-fit">{tLogin("other_ways")}</summary>
-                        <div className="mt-2 ps-1">{tokenToggle}</div>
-                      </details>
-                    );
-                  })()}
+                {/* Remember me, for the password and the SSO buttons below */}
+                {showRememberMe && rememberMeBox}
+              </fieldset>
 
-                  {/* Remember me, for the password and the SSO buttons below */}
-                  {showRememberMe && rememberMeBox}
-                </fieldset>
-
-                <Button
-                  type="submit"
-                  data-testid="login-submit"
-                  variant={browserSignInPrimary ? "outline" : undefined}
-                  className={browserSignInPrimary
-                    ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
-                    : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
-                  disabled={isLoading || (liteSsoRequired && oauthLoading)}
-                >
-                  {isLoading || (liteSsoRequired && oauthLoading) ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {t("signing_in")}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <LogIn className="w-4 h-4" />
-                      {liteSsoRequired ? t("sign_in_sso") : t("sign_in")}
-                    </div>
-                  )}
-                </Button>
-
-                {(oauthMetadata || liteSsoOffered || otherOauthButtons.length > 0) && (
-                  <>
-                    <div className="relative my-2">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-border/60" />
-                      </div>
-                      <div className="relative flex justify-center text-xs">
-                        <span className="bg-background/80 px-3 text-muted-foreground">{t("or")}</span>
-                      </div>
-                    </div>
-
-                    {(oauthMetadata || liteSsoOffered) && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
-                        onClick={() => handleOAuthLogin()}
-                        disabled={oauthLoading || isLoading}
-                      >
-                        {oauthLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin me-2" />
-                        ) : (
-                          <LogIn className="w-4 h-4 me-2" />
-                        )}
-                        {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
-                      </Button>
-                    )}
-                    {otherOauthButtons}
-                  </>
-                )}
-
-                {desktopPolicyAlert}
-                {desktopNotice && (
-                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
-                    {desktopNotice}
-                  </p>
-                )}
-                {((serverOauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
-                  <div className="mt-2 p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <AlertCircle className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0 self-center">
-                      <p className="text-sm text-warning leading-relaxed">
-                        {t("error.oauth_discovery_failed")}
-                      </p>
-                    </div>
+              <Button
+                type="submit"
+                data-testid="login-submit"
+                variant={browserSignInPrimary ? "outline" : undefined}
+                className="w-full"
+                disabled={isLoading || (liteSsoRequired && oauthLoading)}
+              >
+                {isLoading || (liteSsoRequired && oauthLoading) ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("signing_in")}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <LogIn className="w-4 h-4" />
+                    {liteSsoRequired ? t("sign_in_sso") : t("sign_in")}
                   </div>
                 )}
-              </form>
-            )}
+              </Button>
 
-            {/* The desktop app on its own, first sign-in: the way back to "My organisation
-                gave me a Bulwark web address" (settings-p3-1). It asks before the restart. */}
-            {IS_DESKTOP_BUILD && customServerMode && !isAddAccountMode && orgLinkOffered && (
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                <button
-                  type="button"
-                  data-testid="login-use-organisation"
-                  className="underline hover:text-foreground"
-                  onClick={() => {
-                    void askAndChangeConnection({
-                      title: tP3("connection.title"),
-                      message: tP3("connection.message"),
-                      confirm: tP3("connection.confirm"),
-                      cancel: tCommonP3("cancel"),
-                    });
-                  }}
-                >
-                  {tP3("connection.org_link")}
-                </button>
-              </p>
-            )}
+              {(oauthMetadata || liteSsoOffered || otherOauthButtons.length > 0) && (
+                <>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground my-2">
+                    <span aria-hidden="true" className="h-px flex-1 bg-border" />
+                    <span>{t("or")}</span>
+                    <span aria-hidden="true" className="h-px flex-1 bg-border" />
+                  </div>
 
-            {isAddAccountMode && (
-              <div className="mt-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full h-10 text-sm text-muted-foreground hover:text-foreground"
-                  onClick={() => router.push('/')}
-                >
-                  {t("cancel")}
-                </Button>
-              </div>
-            )}
-
-            {/* Demo Mode Button */}
-            {demoMode && !isAddAccountMode && (
-              <div className="mt-4 pt-4 border-t border-border/40">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
-                  onClick={handleDemoLogin}
-                  disabled={demoLoading || isLoading}
-                >
-                  {demoLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {t("demo_launching")}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Play className="w-4 h-4" />
-                      {t("try_demo")}
-                    </div>
+                  {(oauthMetadata || liteSsoOffered) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleOAuthLogin()}
+                      disabled={oauthLoading || isLoading}
+                    >
+                      {oauthLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin me-2" />
+                      ) : (
+                        <LogIn className="w-4 h-4 me-2" />
+                      )}
+                      {selectedServer?.oauth?.buttonLabel || t("sign_in_sso")}
+                    </Button>
                   )}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground mt-2">
-                  {t("demo_description")}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+                  {otherOauthButtons}
+                </>
+              )}
 
-        {/* Company name & links - below card */}
-        <div className="mt-6 flex flex-col items-center gap-2">
-          {loginCompanyName && (
-            <p className="text-center text-xs text-muted-foreground font-medium">
-              {loginCompanyName}
+              {desktopPolicyAlert}
+              {desktopNotice && (
+                <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                  {desktopNotice}
+                </p>
+              )}
+              {((serverOauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
+                <div className="mt-2 p-3 rounded-md border border-warning/20 bg-warning/5 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0 self-center">
+                    <p className="text-sm text-warning leading-relaxed">
+                      {t("error.oauth_discovery_failed")}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </form>
+          )}
+
+          {/* The desktop app on its own, first sign-in: the way back to "My organisation
+              gave me a Bulwark web address" (settings-p3-1). It asks before the restart. */}
+          {IS_DESKTOP_BUILD && customServerMode && !isAddAccountMode && orgLinkOffered && (
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              <button
+                type="button"
+                data-testid="login-use-organisation"
+                className="underline hover:text-foreground"
+                onClick={() => {
+                  void askAndChangeConnection({
+                    title: tP3("connection.title"),
+                    message: tP3("connection.message"),
+                    confirm: tP3("connection.confirm"),
+                    cancel: tCommonP3("cancel"),
+                  });
+                }}
+              >
+                {tP3("connection.org_link")}
+              </button>
             </p>
           )}
-          {(loginImprintUrl || loginPrivacyPolicyUrl || loginWebsiteUrl) && (
-            <div className="flex items-center gap-3 flex-wrap justify-center">
-              {loginWebsiteUrl && (
-                <a
-                  href={loginWebsiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
-                >
-                  {t("website")}
-                </a>
-              )}
-              {loginImprintUrl && (
-                <a
-                  href={loginImprintUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
-                >
-                  {t("imprint")}
-                </a>
-              )}
-              {loginPrivacyPolicyUrl && (
-                <a
-                  href={loginPrivacyPolicyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
-                >
-                  {t("privacy_policy")}
-                </a>
-              )}
+
+          {isAddAccountMode && (
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full h-10 text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => router.push('/')}
+              >
+                {t("cancel")}
+              </Button>
             </div>
           )}
-          <HelpLinks listClassName="justify-center" />
-          {loginShowVersion && <VersionBadge />}
+
+          {/* Demo Mode Button */}
+          {demoMode && !isAddAccountMode && (
+            <div className="mt-4 pt-4 border-t border-border/40">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleDemoLogin}
+                disabled={demoLoading || isLoading}
+              >
+                {demoLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("demo_launching")}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Play className="w-4 h-4" />
+                    {t("try_demo")}
+                  </div>
+                )}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                {t("demo_description")}
+              </p>
+            </div>
+          )}
         </div>
-      </div>
-    </div>
+    </LoginFrame>
   );
 }
 

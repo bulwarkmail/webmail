@@ -305,6 +305,15 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // reads as the brand (e.g. a wordmark) and they'd be redundant.
   loginLogoMaxHeight: { envVar: 'LOGIN_LOGO_MAX_HEIGHT', type: 'string', defaultValue: '' },
   loginLogoMaxWidth: { envVar: 'LOGIN_LOGO_MAX_WIDTH', type: 'string', defaultValue: '' },
+  // The login page's layout and background (lib/login-backdrop.ts): the form
+  // in a card in the middle, or in a panel at the side with the background
+  // filling the rest. The dark image falls back to the light one. Dim is a
+  // percentage (0-80), blur a radius in px (0-24).
+  loginLayout: { envVar: 'LOGIN_LAYOUT', type: 'enum', defaultValue: 'centered', enumValues: ['centered', 'split'] },
+  loginBackgroundLightUrl: { envVar: 'LOGIN_BACKGROUND_LIGHT_URL', type: 'url', defaultValue: '' },
+  loginBackgroundDarkUrl: { envVar: 'LOGIN_BACKGROUND_DARK_URL', type: 'url', defaultValue: '' },
+  loginBackgroundDim: { envVar: 'LOGIN_BACKGROUND_DIM', type: 'string', defaultValue: '' },
+  loginBackgroundBlur: { envVar: 'LOGIN_BACKGROUND_BLUR', type: 'string', defaultValue: '' },
   loginShowHeading: { envVar: 'LOGIN_SHOW_HEADING', type: 'boolean', defaultValue: true },
   loginShowSubtitle: { envVar: 'LOGIN_SHOW_SUBTITLE', type: 'boolean', defaultValue: true },
   // Hide the manual "I have a 2FA code" toggle on the login form. Deployments
