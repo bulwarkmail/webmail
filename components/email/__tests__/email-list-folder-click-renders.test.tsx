@@ -38,6 +38,7 @@ vi.mock('@/stores/account-store', () => {
 
 const { EmailList } = await import('../email-list');
 const { useEmailStore } = await import('@/stores/email-store');
+const { useSettingsStore } = await import('@/stores/settings-store');
 
 const folder = (id: string, role: string) =>
   ({ id, name: id, role, unreadEmails: 0, totalEmails: 1 }) as unknown as Mailbox;
@@ -148,5 +149,22 @@ describe('rows during a folder switch', () => {
     act(() => { rerender(tree(more)); });
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     expect(commits).toBe(1);
+  });
+
+  it('places the first list at the real row height, so measuring the rows moves nothing', () => {
+    useSettingsStore.setState({ density: 'regular', showPreview: true } as never);
+    const firstDraw = (rowHeight: number) => {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+        const height = this.hasAttribute('data-index') ? rowHeight : 600;
+        return { x: 0, y: 0, width: 600, height, top: 0, left: 0, right: 600, bottom: height, toJSON: () => ({}) } as DOMRect;
+      });
+      let commits = 0;
+      const { unmount } = render(<Profiler id="list" onRender={() => { commits++; }}><List emails={INBOX} /></Profiler>);
+      unmount();
+      return commits;
+    };
+    // A regular row with a preview line is 95.75px in Chromium; a guess that
+    // is off costs a draw more when the rows are measured.
+    expect(firstDraw(95.75)).toBeLessThan(firstDraw(90));
   });
 });

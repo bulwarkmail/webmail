@@ -539,15 +539,17 @@ export function EmailList({
     // Rows the list has not measured yet are placed by this guess, and each
     // one it gets wrong shifts the list when it is measured on the way back
     // up after a jump down (scrollbar drag, End). So guess per row.
-    let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    if (showPreview && density !== 'extra-compact') {
-      // A mail without a preview draws a one-line "No preview available",
-      // a line (23px) shorter than a real one. Only comfortable rows show a
-      // second preview line (mail-15).
-      size += shape?.emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
+    // The rows' heights as Chromium lays them out (line heights, so the same
+    // at any zoom): a guess off by a pixel moved every row when it was measured
+    // and drew the first list a second time.
+    let size = { 'extra-compact': 53, compact: 57, regular: 73, comfortable: 81 }[density];
+    if (showPreview && (density === 'regular' || density === 'comfortable')) {
+      // A preview line; comfortable rows show a second one (mail-15). A mail
+      // without a preview draws one line, "No preview available".
+      size += density === 'comfortable' && !shape?.emptyPreview ? 45.5 : 22.75;
     }
-    // The chip row (attachments, verification code): a 22px chip plus 6px margin.
-    if (shape?.chips) size += 28;
+    // The chip row (attachments, verification code).
+    if (shape?.chips) size += 24;
     return size;
   }, [density, isFocusedMailLayout, showPreview, items, rowShapeOf]);
 
