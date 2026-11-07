@@ -10,7 +10,7 @@ import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import { RetentionNotice } from "@/components/email/retention-notice";
 import { useAuthStore } from "@/stores/auth-store";
-import { captureListedArchive, findArchiveMailbox, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
+import { captureListedArchive, ensureArchiveMailbox, findArchiveMailbox, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
 import { getMessageListOrderFor, useSettingsStore } from "@/stores/settings-store";
 import { useProTabStore, type ProFolderTabData } from "@/stores/pro-tab-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
@@ -260,13 +260,29 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     const intent = rowReads.selected;
     if (!client || !mailbox || !intent || intent.email.id !== email.id
       || rowReads.archiving.has(email.id) || !isArchiveActionEnabled()) return;
-    const archive = findArchiveMailbox(folderMailboxes, mailbox.id, jmapAccountId);
-    if (!archive || mailbox.myRights?.mayRemoveItems === false || archive.myRights?.mayAddItems === false) return;
+    const existing = findArchiveMailbox(folderMailboxes, mailbox.id, jmapAccountId);
+    if (mailbox.myRights?.mayRemoveItems === false || existing?.myRights?.mayAddItems === false) return;
     const isCurrent = () => rowReads.active && rowReads.selected === intent
       && (!data.accountId || useAuthStore.getState().getClientForAccount(data.accountId) === client);
+    const readFolders = () => {
+      const state = useEmailStore.getState();
+      return data.accountId ? state.accountMailboxes[data.accountId] ?? [] : state.mailboxes;
+    };
     rowReads.archiving.add(email.id);
     try {
       if (!(await confirmMailRemoval('archive', 1, confirm, tRemove)) || !isCurrent()) return;
+      // Like Mail, make the Archive when the account has none yet (#578).
+      const archive = existing ?? await ensureArchiveMailbox({
+        client, mailboxes: folderMailboxes, selectedMailboxId: mailbox.id, accountId: jmapAccountId,
+        refresh: async () => {
+          const store = useEmailStore.getState();
+          if (data.accountId) await store.fetchAccountMailboxes(client, data.accountId);
+          else await store.fetchMailboxes(client);
+          return readFolders();
+        },
+      });
+      if (!archive || archive.myRights?.mayAddItems === false || !isCurrent()) return;
+      const mode = useSettingsStore.getState().archiveMode;
       const accountId = jmapAccountId ?? client.getAccountId();
       const prefix = `${accountId}:`;
       const restore: EmailRestoreBatch[] = [{ client, accountId, points: [{
@@ -276,9 +292,26 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
         seen: !!email.keywords?.$seen,
       }] }];
       const move = { emailIds: [email.id], fromMailboxId: mailbox.id, toMailboxId: archive.id };
-      if (!(await allowEmailMove(move, folderMailboxes)) || !isCurrent() || !isArchiveActionEnabled()) return;
-      const completeListedArchive = captureListedArchive(email.id, { client, clientAccountId: clientLogin, accountId }, archive.id);
-      await client.moveEmail(email.id, archive.originalId || archive.id, accountId);
+      // A just-made Archive isn't in the folder list this render saw.
+      const hookMailboxes = [...folderMailboxes.filter((m) => m.id !== archive.id), archive];
+      if (!(await allowEmailMove(move, hookMailboxes)) || !isCurrent() || !isArchiveActionEnabled()) return;
+      // A year or month folder isn't known yet, so only the plain Archive's
+      // counter is bumped here; the folder refresh below settles the rest.
+      const completeListedArchive = captureListedArchive(email.id, { client, clientAccountId: clientLogin, accountId }, mode === 'single' ? archive.id : '');
+      if (mode === 'single') {
+        await client.moveEmail(email.id, archive.originalId || archive.id, accountId);
+      } else {
+        // archiveMode files into year or year/month folders, made as needed.
+        // batchArchiveEmails finds them by the server's ids, not the store's
+        // namespaced ones (see archiveAggregateSelection).
+        const serverFolders = readFolders().map((m) => (m.originalId && m.accountId ? {
+          ...m, id: m.originalId,
+          parentId: m.parentId?.startsWith(`${m.accountId}:`) ? m.parentId.slice(m.accountId.length + 1) : m.parentId,
+        } : m));
+        await client.batchArchiveEmails([{ id: email.id, receivedAt: email.receivedAt }], archive.originalId || archive.id, mode, serverFolders, accountId);
+        const store = useEmailStore.getState();
+        void (data.accountId ? store.fetchAccountMailboxes(client, data.accountId) : store.fetchMailboxes(client));
+      }
       completeListedArchive();
       if (isCurrent()) {
         // Revoke the intent as well as the timer: a before-read hook may
@@ -294,7 +327,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
       }
       // A confirmed server change still has its hooks and Undo if the user
       // selected another row or folder while it was in flight.
-      emitEmailMove(move, folderMailboxes);
+      emitEmailMove(move, hookMailboxes);
       await offerMoveUndo('archive', client, restore, t, false);
     } catch (error) {
       console.error('Archive failed:', error);

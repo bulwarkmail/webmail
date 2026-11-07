@@ -98,7 +98,7 @@ beforeEach(() => {
   usePolicyStore.setState(usePolicyStore.getInitialState(), true);
   useEmailStore.setState(useEmailStore.getInitialState(), true);
   useEmailStore.setState({ mailboxes: clone(folders), selectedMailbox: 'inbox' });
-  useSettingsStore.setState({ markAsReadDelay: 3000, confirmArchive: false, singleKeyShortcuts: false });
+  useSettingsStore.setState({ markAsReadDelay: 3000, confirmArchive: false, singleKeyShortcuts: false, archiveMode: 'single' });
   server = new Map([['e1', message('e1')], ['e2', message('e2')]]);
   removal = deferred(); read = deferred(); client = makeClient();
   useAuthStore.setState({ client: client as never, activeAccountId: 'login',
@@ -418,4 +418,32 @@ it.each(['other-login', 'shared'])('preserves matching %s global membership comp
   expect(updated[0]).toMatchObject({ totalEmails: 1, unreadEmails: 0 });
   expect(updated[1]).toMatchObject({ totalEmails: 3, unreadEmails: 2 });
   expect(moved).toHaveBeenCalledTimes(1); expect(archived).toHaveBeenCalledTimes(1); expect(undoHistory()).toHaveLength(1);
+});
+
+it('makes the Archive folder when the account has none, then archives into it', async () => {
+  const noArchive = clone(folders).filter(m => m.id !== 'archive');
+  useEmailStore.setState({ mailboxes: noArchive });
+  let serverFolders = clone(noArchive);
+  const created = { ...clone(folders[1]), id: 'new-archive', name: 'Archive', totalEmails: 0, totalThreads: 0, unreadEmails: 0, unreadThreads: 0 };
+  Object.assign(client, {
+    getAllMailboxes: vi.fn(async () => clone(serverFolders)),
+    createMailbox: vi.fn(async () => { serverFolders = [...serverFolders, created]; return clone(created); }),
+  });
+  await show(); await open(); await archive();
+  expect((client as unknown as { createMailbox: ReturnType<typeof vi.fn> }).createMailbox)
+    .toHaveBeenCalledExactlyOnceWith('Archive', undefined, undefined, { role: 'archive' });
+  expect(client.moveEmail).toHaveBeenCalledExactlyOnceWith('e1', 'new-archive', 'owner');
+  await act(async () => removal.resolve()); closed(); expect(undoHistory()).toHaveLength(1);
+});
+it.each(['year', 'month'] as const)('files into %s folders when archiveMode asks for it', async mode => {
+  useSettingsStore.setState({ archiveMode: mode });
+  const batchArchiveEmails = vi.fn(async (emails: Array<{ id: string }>) => {
+    await removal.promise; for (const e of emails) server.get(e.id)!.mailboxIds = { 'archive-2026': true };
+  });
+  Object.assign(client, { batchArchiveEmails });
+  await show(); await open(); await archive();
+  expect(batchArchiveEmails).toHaveBeenCalledExactlyOnceWith(
+    [{ id: 'e1', receivedAt: '2026-11-07T00:00:00Z' }], 'archive', mode, expect.any(Array), 'owner');
+  expect(client.moveEmail).not.toHaveBeenCalled(); stillOpen();
+  await act(async () => removal.resolve()); closed(); expect(undoHistory()).toHaveLength(1);
 });
