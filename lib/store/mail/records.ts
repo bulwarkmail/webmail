@@ -276,9 +276,7 @@ function fileParts(body: Record<string, unknown>): MimePart[] {
   return [...listed('attachments'), ...shown];
 }
 
-function rememberParts(db: StorageAdapter, rowid: number, list: Record<string, unknown>, body: Record<string, unknown>): void {
-  const row = db.get<{ jmap: string; received_at: number }>('SELECT jmap, received_at FROM email WHERE rowid = ?', [rowid]);
-  if (!row) return;
+function rememberParts(db: StorageAdapter, rowid: number, row: { jmap: string; received_at: number }, list: Record<string, unknown>, body: Record<string, unknown>): void {
   const remember = (blobId: string, size: unknown, type: unknown, name: unknown, raw: number) => db.run(
     `INSERT INTO email_part (jmap, blob_id, email_rowid, received_at, size, type, name, raw) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (jmap, blob_id, email_rowid) DO NOTHING`,
@@ -290,12 +288,15 @@ function rememberParts(db: StorageAdapter, rowid: number, list: Record<string, u
   if (typeof list.blobId === 'string') remember(list.blobId, list.size, 'message/rfc822', 'message.eml', 1);
 }
 
-export function storeBody(db: StorageAdapter, rowid: number, listJson: string, full: Record<string, unknown>): void {
+/** False when the message is gone, for instance deleted while its body was on the way. */
+export function storeBody(db: StorageAdapter, rowid: number, listJson: string, full: Record<string, unknown>): boolean {
+  const row = db.get<{ jmap: string; received_at: number; body_state: number }>('SELECT jmap, received_at, body_state FROM email WHERE rowid = ?', [rowid]);
+  if (!row) return false;
   const list = JSON.parse(listJson) as Record<string, unknown>;
   const body: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(full)) if (!(key in list)) body[key] = value;
-  const hadBody = Number(db.get<{ body_state: number }>('SELECT body_state FROM email WHERE rowid = ?', [rowid])?.body_state) === 1;
-  rememberParts(db, rowid, list, body);
+  const hadBody = Number(row.body_state) === 1;
+  rememberParts(db, rowid, row, list, body);
   db.run('INSERT INTO email_body (email_rowid, json) VALUES (?, ?) ON CONFLICT (email_rowid) DO UPDATE SET json = excluded.json', [rowid, JSON.stringify(body)]);
   db.run('UPDATE email SET body_state = 1 WHERE rowid = ?', [rowid]);
   // A first body is one insert. Only a body stored again has an old row to replace.
@@ -306,4 +307,5 @@ export function storeBody(db: StorageAdapter, rowid: number, listJson: string, f
     deleteHeadIndex(db, rowid);
     indexHead(db, rowid, { ...list, ...body });
   }
+  return true;
 }

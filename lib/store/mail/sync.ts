@@ -340,6 +340,7 @@ async function backfillBodies(ctx: SyncContext, jmap: string): Promise<void> {
     ctx.db.transaction(() => {
       for (const row of asked) {
         const full = fetched.get(String(row.id));
+        // A message deleted while its body was on the way is left out.
         if (full) storeBody(ctx.db, Number(row.rowid), String(row.json), full);
         else ctx.db.run('UPDATE email SET body_state = 2 WHERE rowid = ?', [row.rowid]);
       }
