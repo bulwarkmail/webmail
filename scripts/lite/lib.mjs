@@ -150,6 +150,9 @@ export const LITE_API_STRING_ALLOWLIST = [
   // Step F1: Xenaxio Agent Flows (workspace/flows page); step F1.1: the Flows section.
   "/api/admin/flows",
   "/api/flows",
+  // Step 118: projects with boards (lib/xenaxio/projects.ts) and the admin's "who creates projects".
+  "/api/objects",
+  "/api/admin/projects",
   // Step 86: transcripts of audio files (lib/xenaxio/transcripts.ts).
   "/api/files/transcripts",
   // Step 108, part C3: the admin's switch for the automatic check of chat pictures (components/xenaxio/chat/image-check-admin.tsx).

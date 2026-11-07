@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
   Share2,
+  LayoutGrid,
   SlidersHorizontal,
   Video,
   iconForName,
@@ -44,6 +45,7 @@ import { XENAXIO_BFF } from "@/lib/xenaxio/bff";
 import { useChatNavItem } from "@/lib/xenaxio/chat/nav";
 import { useMeetNavItem } from "@/lib/xenaxio/meet-nav";
 import { useFlowsNavItem } from "@/lib/xenaxio/flows-nav";
+import { useProjectsNavItem } from "@/lib/xenaxio/projects-nav";
 import { WorkspaceNavLink } from "@/components/xenaxio/workspace-nav-link";
 
 /** The top bar is not about any one item: plugin clicks carry no context. */
@@ -158,6 +160,7 @@ export function MvTopBar({
   const chatNav = useChatNavItem();
   const meetNav = useMeetNavItem();
   const flowsNav = useFlowsNavItem();
+  const projectsNav = useProjectsNavItem();
   const apps: Array<{ id: string; icon: AppIconType; label: string; href: string }> = [
     { id: "mail", icon: Mail, label: t("mail"), href: "/" },
     ...(supportsCalendar && calendarEnabled
@@ -172,6 +175,7 @@ export function MvTopBar({
     // xenaxio (step 43): the team chat, when the company has it on.
     ...(chatNav.visible ? [{ id: "chat", icon: MessagesSquare, label: chatNav.label, href: "/chat" }] : []),
     ...(meetNav.visible ? [{ id: "meetings", icon: Video, label: meetNav.label, href: "/meetings" }] : []),
+    ...(projectsNav.visible ? [{ id: "projects", icon: LayoutGrid, label: projectsNav.label, href: "/projects" }] : []),
     ...(flowsNav.visible ? [{ id: "flows", icon: Share2, label: flowsNav.label, href: "/flows" }] : []),
     { id: "settings", icon: Settings, label: t("settings"), href: "/settings" },
   ];

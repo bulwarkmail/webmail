@@ -1,0 +1,793 @@
+"use client";
+
+// xenaxio step 118, parts C and D: one project — its board (tasks in its own
+// columns), the overview drawn from the type's card (status, due date, owner,
+// people, description, sub-projects) and what is linked to it (emails, files,
+// the chat channel, events). People of the project change it; its owners
+// manage people, who sees it and the archive.
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale } from "next-intl";
+import { Archive, ArrowLeft, Calendar, FileText, Folder, Link as LinkIcon, Mail, MessagesSquare, MoreHorizontal, Plus, Trash, X } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { MarkdownView } from "@/components/xenaxio/markdown-view";
+import { Notice } from "@/components/xenaxio/ui";
+import { Link } from "@/i18n/navigation";
+import { buildFileNodePath } from "@/lib/deep-links";
+import { cn } from "@/lib/utils";
+import { errorText, XenaxioApiError } from "@/lib/xenaxio/api";
+import { useChatStore } from "@/lib/xenaxio/chat/store";
+import { useXT } from "@/lib/xenaxio/i18n";
+import { useXenaxioMe } from "@/lib/xenaxio/me-store";
+import { usePeopleStore } from "@/lib/xenaxio/people";
+import {
+  type BoardColumn,
+  dayText,
+  filterTasks,
+  isOverdue,
+  local,
+  type ObjectDetail,
+  type ObjectLink,
+  type ObjectType,
+  projectsApi,
+  type TaskFilter,
+  type TaskSummary,
+} from "@/lib/xenaxio/projects";
+import { toast } from "@/stores/toast-store";
+import { Board } from "./board";
+import { Modal, PeoplePicker, PersonBadge, selectClass, StatusChip } from "./bits";
+import { NewProjectDialog } from "./project-list";
+import { TaskPanel } from "./task-panel";
+
+type Tab = "board" | "overview" | "linked";
+
+/** Where a linked thing opens in the app. */
+export function linkHref(l: Pick<ObjectLink, "kind" | "ref" | "account">): string | null {
+  if (l.kind === "email") return `/mail/message/${encodeURIComponent(l.ref)}${l.account ? `?account=${encodeURIComponent(l.account)}` : ""}`;
+  if (l.kind === "file") return buildFileNodePath(l.ref, l.account);
+  if (l.kind === "channel") return `/chat?room=${encodeURIComponent(l.ref)}`;
+  if (l.kind === "event") return "/calendar";
+  if (l.kind === "object") return `/projects?id=${encodeURIComponent(l.ref)}`;
+  return null;
+}
+
+const LINK_ICONS = { email: Mail, file: FileText, channel: MessagesSquare, event: Calendar, flow_run: Folder, object: LinkIcon } as const;
+
+function TaskCard({ task, locale, onOpen }: { task: TaskSummary; locale: string; onOpen: () => void }) {
+  const t = useXT();
+  return (
+    <button type="button" onClick={onOpen} className={cn("block w-full rounded-md border border-border bg-background p-2.5 text-left shadow-sm hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", task.done && "opacity-70")}>
+      {task.labels.length > 0 && (
+        <div className="mb-1 flex flex-wrap gap-1">
+          {task.labels.map((l) => (
+            <span key={l} className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary">
+              {l}
+            </span>
+          ))}
+        </div>
+      )}
+      <p className={cn("text-sm", task.done && "line-through")}>{task.title}</p>
+      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+        {task.priority === "high" && <span className="font-medium text-destructive">{t("projects.priority.high")}</span>}
+        {task.dueOn && <span className={cn(isOverdue(task.dueOn, task.done) && "font-medium text-destructive")}>{dayText(task.dueOn, locale)}</span>}
+        {task.comments > 0 && <span>💬 {task.comments}</span>}
+        <span className="ml-auto">{task.assignee && <PersonBadge name={task.assignee.name} email={task.assignee.email} />}</span>
+      </div>
+    </button>
+  );
+}
+
+function AddTask({ onAdd }: { onAdd: (title: string) => Promise<void> }) {
+  const t = useXT();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    await onAdd(title.trim());
+    setTitle("");
+  };
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-background hover:text-foreground">
+        <Plus className="h-4 w-4" />
+        {t("projects.task_add")}
+      </button>
+    );
+  return (
+    <form onSubmit={submit} className="space-y-1.5">
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("projects.task_title")} aria-label={t("projects.task_title")} maxLength={200} autoFocus onKeyDown={(e) => e.key === "Escape" && setOpen(false)} />
+      <div className="flex gap-1">
+        <Button type="submit" size="sm" disabled={!title.trim()}>
+          {t("projects.task_add_short")}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+          {t("common.cancel")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function ColumnMenu({ column, columns, onChanged, canEdit }: { column: BoardColumn; columns: BoardColumn[]; onChanged: (c: BoardColumn[]) => void; canEdit: boolean; }) {
+  const t = useXT();
+  const [open, setOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [moveTo, setMoveTo] = useState("");
+  const objectId = useProjectId();
+  if (!canEdit) return null;
+  const run = async (fn: () => Promise<{ columns: BoardColumn[] }>) => {
+    try {
+      onChanged((await fn()).columns);
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+  const index = columns.findIndex((c) => c.id === column.id);
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="rounded p-0.5 text-muted-foreground hover:bg-background" aria-label={t("projects.column_menu")} aria-expanded={open}>
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-6 z-20 w-52 rounded-md border border-border bg-background py-1 text-sm shadow-lg" onMouseLeave={() => setOpen(false)}>
+          <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setOpen(false), setRenaming(true))}>
+            {t("projects.column_rename")}
+          </button>
+          <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setOpen(false), void run(() => projectsApi.updateColumn(objectId, column.id, { done: !column.done })))}>
+            {column.done ? t("projects.column_not_done") : t("projects.column_done")}
+          </button>
+          {index > 0 && (
+            <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setOpen(false), void run(() => projectsApi.updateColumn(objectId, column.id, { index: index - 1 })))}>
+              {t("projects.column_left")}
+            </button>
+          )}
+          {index < columns.length - 1 && (
+            <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setOpen(false), void run(() => projectsApi.updateColumn(objectId, column.id, { index: index + 1 })))}>
+              {t("projects.column_right")}
+            </button>
+          )}
+          {columns.length > 1 && (
+            <button type="button" className="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted" onClick={() => (setOpen(false), setMoveTo(columns.find((c) => c.id !== column.id)?.id ?? ""), setRemoving(true))}>
+              {t("projects.column_delete")}
+            </button>
+          )}
+        </div>
+      )}
+      <PromptDialog isOpen={renaming} onClose={() => setRenaming(false)} title={t("projects.column_rename")} defaultValue={column.name} onSubmit={(name) => (setRenaming(false), name.trim() && void run(() => projectsApi.updateColumn(objectId, column.id, { name: name.trim() })))} />
+      <Modal open={removing} onClose={() => setRemoving(false)} title={t("projects.column_delete")}>
+        <p className="mb-2 text-sm">{t("projects.column_delete_text", { name: column.name })}</p>
+        <select className={selectClass} value={moveTo} onChange={(e) => setMoveTo(e.target.value)} aria-label={t("projects.column_move_to")}>
+          {columns
+            .filter((c) => c.id !== column.id)
+            .map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+        </select>
+        <div className="mt-3 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setRemoving(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button variant="destructive" onClick={() => (setRemoving(false), void run(() => projectsApi.removeColumn(objectId, column.id, moveTo || undefined)))}>
+            {t("projects.column_delete")}
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// The open project's id for the small menus (one project per page).
+let currentProjectId = "";
+function useProjectId(): string {
+  return currentProjectId;
+}
+
+function TaskBoard({ project, onOpenTask, reloadKey }: { project: ObjectDetail; onOpenTask: (id: string) => void; reloadKey: number }) {
+  const t = useXT();
+  const locale = useLocale();
+  const [columns, setColumns] = useState<BoardColumn[]>(project.columns);
+  const [tasks, setTasks] = useState<TaskSummary[] | null>(null);
+  const [mode, setMode] = useState<"board" | "list">("board");
+  const [filter, setFilter] = useState<TaskFilter>({});
+  const [addingColumn, setAddingColumn] = useState(false);
+  const canEdit = project.can.edit;
+
+  const load = useCallback(() => {
+    projectsApi
+      .tasks(project.id)
+      .then((r) => {
+        setColumns(r.columns);
+        setTasks(r.tasks);
+      })
+      .catch((err: unknown) => toast.error(errorText(t, err)));
+  }, [project.id, t]);
+
+  useEffect(load, [load, reloadKey]);
+  // Colleagues' changes: read again when the tab comes back (no live updates yet, C1).
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [load]);
+
+  const shown = useMemo(() => filterTasks(tasks ?? [], filter), [tasks, filter]);
+  const byId = useMemo(() => new Map((tasks ?? []).map((x) => [x.id, x])), [tasks]);
+  const labels = useMemo(() => [...new Set((tasks ?? []).flatMap((x) => x.labels))].sort(), [tasks]);
+  const filtering = !!(filter.assignee || filter.due || filter.label || filter.text);
+
+  const move = async (id: string, columnId: string, index: number) => {
+    try {
+      const moved = await projectsApi.moveTask(project.id, id, columnId, index);
+      setTasks((cur) => cur?.map((x) => (x.id === id ? moved : x)) ?? cur);
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+    load();
+  };
+
+  const add = async (columnId: string, title: string) => {
+    try {
+      await projectsApi.createTask(project.id, { title, columnId });
+      load();
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  if (!tasks) return <p className="p-4 text-sm text-muted-foreground">{t("common.loading")}</p>;
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2 sm:px-4">
+        <div className="flex rounded-md border border-border p-0.5 text-sm">
+          {(["board", "list"] as const).map((m) => (
+            <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("rounded px-2 py-0.5", mode === m ? "bg-muted font-medium" : "text-muted-foreground")}>
+              {t(`projects.view.${m}`)}
+            </button>
+          ))}
+        </div>
+        <Input className="h-8 w-full min-w-0 sm:w-48" value={filter.text ?? ""} onChange={(e) => setFilter((f) => ({ ...f, text: e.target.value }))} placeholder={t("projects.filter_text")} aria-label={t("projects.filter_text")} />
+        <select className={cn(selectClass, "h-8 w-auto")} value={filter.assignee ?? ""} onChange={(e) => setFilter((f) => ({ ...f, assignee: e.target.value || null }))} aria-label={t("projects.filter_assignee")}>
+          <option value="">{t("projects.filter_anyone")}</option>
+          <option value="none">{t("projects.filter_nobody")}</option>
+          {project.people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <select className={cn(selectClass, "h-8 w-auto")} value={filter.due ?? ""} onChange={(e) => setFilter((f) => ({ ...f, due: (e.target.value || null) as TaskFilter["due"] }))} aria-label={t("projects.filter_due")}>
+          <option value="">{t("projects.filter_any_due")}</option>
+          <option value="overdue">{t("projects.filter_overdue")}</option>
+          <option value="week">{t("projects.filter_week")}</option>
+        </select>
+        {labels.length > 0 && (
+          <select className={cn(selectClass, "h-8 w-auto")} value={filter.label ?? ""} onChange={(e) => setFilter((f) => ({ ...f, label: e.target.value || null }))} aria-label={t("projects.filter_label")}>
+            <option value="">{t("projects.filter_any_label")}</option>
+            {labels.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+        )}
+        {filtering && (
+          <button type="button" className="text-sm text-primary hover:underline" onClick={() => setFilter({})}>
+            {t("projects.filter_clear")}
+          </button>
+        )}
+      </div>
+
+      {mode === "board" ? (
+        <Board
+          label={t("projects.view.board")}
+          lanes={columns.map((c) => ({
+            id: c.id,
+            title: c.name,
+            done: c.done,
+            header: <ColumnMenu column={c} columns={columns} canEdit={canEdit} onChanged={(next) => (setColumns(next), load())} />,
+            ...(canEdit ? { footer: <AddTask onAdd={(title) => add(c.id, title)} /> } : {}),
+          }))}
+          items={shown.map((x) => ({ id: x.id, laneId: x.columnId }))}
+          // Moving while filtered would place cards among hidden ones: only without filters.
+          disabled={!canEdit || filtering}
+          emptyText={t("projects.lane_empty_tasks")}
+          onMove={(id, lane, index) => void move(id, lane, index)}
+          render={(id) => {
+            const task = byId.get(id);
+            return task ? <TaskCard task={task} locale={locale} onOpen={() => onOpenTask(task.id)} /> : null;
+          }}
+          after={
+            canEdit && columns.length < 20 ? (
+              <button type="button" onClick={() => setAddingColumn(true)} className="flex h-10 w-48 shrink-0 items-center gap-1 rounded-lg border border-dashed border-border px-3 text-sm text-muted-foreground hover:text-foreground">
+                <Plus className="h-4 w-4" />
+                {t("projects.column_add")}
+              </button>
+            ) : null
+          }
+        />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead className="sticky top-0 bg-background text-left text-xs text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="px-4 py-2 font-medium">{t("projects.task")}</th>
+                <th className="px-2 py-2 font-medium">{t("projects.column")}</th>
+                <th className="px-2 py-2 font-medium">{t("projects.assignee")}</th>
+                <th className="px-2 py-2 font-medium">{t("projects.field.due")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((x) => (
+                <tr key={x.id} className="cursor-pointer border-b border-border hover:bg-muted/50" onClick={() => onOpenTask(x.id)}>
+                  <td className={cn("px-4 py-2", x.done && "text-muted-foreground line-through")}>
+                    <button type="button" className="text-left hover:underline" onClick={() => onOpenTask(x.id)}>
+                      {x.title}
+                    </button>
+                  </td>
+                  <td className="px-2 py-2">{columns.find((c) => c.id === x.columnId)?.name}</td>
+                  <td className="px-2 py-2">{x.assignee?.name ?? "—"}</td>
+                  <td className={cn("px-2 py-2", isOverdue(x.dueOn, x.done) && "font-medium text-destructive")}>{x.dueOn ? dayText(x.dueOn, locale) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {shown.length === 0 && <p className="px-4 py-6 text-sm text-muted-foreground">{t("projects.tasks_none")}</p>}
+        </div>
+      )}
+      <PromptDialog
+        isOpen={addingColumn}
+        onClose={() => setAddingColumn(false)}
+        title={t("projects.column_add")}
+        onSubmit={(name) => {
+          setAddingColumn(false);
+          if (!name.trim()) return;
+          projectsApi
+            .addColumn(project.id, { name: name.trim() })
+            .then((r) => setColumns(r.columns))
+            .catch((err: unknown) => toast.error(errorText(t, err)));
+        }}
+      />
+    </div>
+  );
+}
+
+function Overview({ project, type, onChanged, onOpenProject }: { project: ObjectDetail; type: ObjectType | undefined; onChanged: (p: ObjectDetail) => void; onOpenProject: (id: string) => void }) {
+  const t = useXT();
+  const locale = useLocale();
+  const [editing, setEditing] = useState(false);
+  const [description, setDescription] = useState(project.description);
+  const [adding, setAdding] = useState(false);
+  const [newPeople, setNewPeople] = useState<string[]>([]);
+  const [creatingSub, setCreatingSub] = useState(false);
+  const canEdit = project.can.edit;
+  const canManage = project.can.manage;
+
+  const save = async (body: Parameters<typeof projectsApi.update>[1]) => {
+    try {
+      onChanged(await projectsApi.update(project.id, body));
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+  const people = async (fn: () => Promise<ObjectDetail | Record<string, never>>) => {
+    try {
+      const r = await fn();
+      if ("id" in r) onChanged(r as ObjectDetail);
+      else onChanged(await projectsApi.get(project.id));
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  // The card follows the type: its order of fields (status, due, owner, members, description).
+  const blocks: Record<string, React.ReactNode> = {
+    status: (
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs text-muted-foreground">{t("projects.field.status")}</span>
+        <select className={selectClass} value={project.status} disabled={!canEdit} onChange={(e) => void save({ status: e.target.value })}>
+          {(type?.statuses ?? []).map((s) => (
+            <option key={s.key} value={s.key}>
+              {local(s.name, locale)}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+    due: (
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs text-muted-foreground">{t("projects.field.due")}</span>
+        <Input type="date" value={project.dueOn ?? ""} disabled={!canEdit} onChange={(e) => void save({ dueOn: e.target.value || null })} />
+      </label>
+    ),
+    owner: (
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs text-muted-foreground">{t("projects.field.owner")}</span>
+        <select className={selectClass} value={project.owner?.id ?? ""} disabled={!canEdit} onChange={(e) => void save({ ownerId: e.target.value || null })}>
+          <option value="">—</option>
+          {project.people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    ),
+    members: (
+      <div className="space-y-1.5 text-sm sm:col-span-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t("projects.field.people")}</span>
+          {canEdit && (
+            <button type="button" className="text-xs text-primary hover:underline" onClick={() => (setNewPeople([]), setAdding(true))}>
+              {t("projects.people_add")}
+            </button>
+          )}
+        </div>
+        <ul className="divide-y divide-border rounded-md border border-border">
+          {project.people.map((p) => (
+            <li key={p.id} className="flex items-center gap-2 px-2 py-1.5">
+              <PersonBadge name={p.name} email={p.email} />
+              <span className="min-w-0 flex-1 truncate">{p.name}</span>
+              {canManage ? (
+                <select className="h-7 rounded border border-input bg-background px-1 text-xs" value={p.role} onChange={(e) => void people(() => projectsApi.setPerson(project.id, p.id, e.target.value as "owner" | "member"))} aria-label={t("projects.role")}>
+                  <option value="owner">{t("projects.role_owner")}</option>
+                  <option value="member">{t("projects.role_member")}</option>
+                </select>
+              ) : (
+                <span className="text-xs text-muted-foreground">{p.role === "owner" ? t("projects.role_owner") : t("projects.role_member")}</span>
+              )}
+              {canManage && (
+                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => void people(() => projectsApi.removePerson(project.id, p.id))} aria-label={t("projects.people_remove", { name: p.name })}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {canManage && (
+          <label className="flex items-center gap-2 pt-1 text-sm">
+            <input type="checkbox" checked={project.visibility === "company"} onChange={(e) => void save({ visibility: e.target.checked ? "company" : "members" })} />
+            {t("projects.visibility.company_toggle")}
+          </label>
+        )}
+      </div>
+    ),
+    description: (
+      <div className="space-y-1.5 text-sm sm:col-span-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t("projects.field.description")}</span>
+          {canEdit && !editing && (
+            <button type="button" className="text-xs text-primary hover:underline" onClick={() => (setDescription(project.description), setEditing(true))}>
+              {t("projects.edit")}
+            </button>
+          )}
+        </div>
+        {editing ? (
+          <div className="space-y-2">
+            <textarea className="min-h-40 w-full rounded-md border border-input bg-background p-2 font-mono text-sm" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={20000} aria-label={t("projects.field.description")} />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => (setEditing(false), void save({ description }))}>
+                {t("common.save")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : project.description ? (
+          <MarkdownView source={project.description} className="rounded-md border border-border p-3" />
+        ) : (
+          <p className="text-muted-foreground">{t("projects.description_none")}</p>
+        )}
+      </div>
+    ),
+  };
+
+  return (
+    <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-4">
+      <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
+        {(type?.card ?? Object.keys(blocks)).map((key) => (blocks[key] ? <div key={key} className={cn(["members", "description"].includes(key) && "sm:col-span-2")}>{blocks[key]}</div> : null))}
+        <div className="space-y-1.5 text-sm sm:col-span-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t("projects.sub")}</span>
+            {canEdit && (
+              <button type="button" className="text-xs text-primary hover:underline" onClick={() => setCreatingSub(true)}>
+                {t("projects.new_sub")}
+              </button>
+            )}
+          </div>
+          {project.parent && (
+            <p>
+              {t("projects.parent")}:{" "}
+              <button type="button" className="text-primary hover:underline" onClick={() => onOpenProject(project.parent!.id)}>
+                {project.parent.ref} {project.parent.title}
+              </button>
+            </p>
+          )}
+          {project.children.length > 0 ? (
+            <ul className="space-y-1">
+              {project.children.map((c) => (
+                <li key={c.id}>
+                  <button type="button" className="text-primary hover:underline" onClick={() => onOpenProject(c.id)}>
+                    {c.ref} {c.title}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            !project.parent && <p className="text-muted-foreground">{t("projects.sub_none")}</p>
+          )}
+        </div>
+      </div>
+      <Modal open={adding} onClose={() => setAdding(false)} title={t("projects.people_add")}>
+        <PeoplePicker selected={newPeople} onChange={setNewPeople} exclude={project.people.map((p) => p.id)} />
+        <div className="mt-3 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setAdding(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            disabled={newPeople.length === 0}
+            onClick={async () => {
+              setAdding(false);
+              let last: ObjectDetail | null = null;
+              for (const id of newPeople) {
+                try {
+                  last = await projectsApi.setPerson(project.id, id);
+                } catch (err) {
+                  toast.error(errorText(t, err));
+                }
+              }
+              if (last) onChanged(last);
+            }}
+          >
+            {t("projects.people_add")}
+          </Button>
+        </div>
+      </Modal>
+      <NewProjectDialog open={creatingSub} onClose={() => setCreatingSub(false)} parentId={project.id} onCreated={(id) => (setCreatingSub(false), onOpenProject(id))} />
+    </div>
+  );
+}
+
+function Linked({ project, onChanged }: { project: ObjectDetail; onChanged: (p: ObjectDetail) => void }) {
+  const t = useXT();
+  const canEdit = project.can.edit;
+  const [creating, setCreating] = useState(false);
+  const channel = project.links.find((l) => l.kind === "channel");
+
+  const remove = async (l: ObjectLink) => {
+    try {
+      await projectsApi.removeLink(project.id, l.id);
+      onChanged(await projectsApi.get(project.id));
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  // D4: a Rooms channel for the project; its people are invited.
+  const createChannel = async () => {
+    setCreating(true);
+    try {
+      await useChatStore.getState().connect();
+      const client = useChatStore.getState().client;
+      if (!client) throw new XenaxioApiError(409, "chat_unavailable");
+      await usePeopleStore.getState().load();
+      const all = usePeopleStore.getState().people;
+      const invite = project.people.map((p) => all.get(p.email.toLowerCase())?.chatAddress).filter((a): a is string => !!a);
+      const name = project.title.slice(0, 80);
+      const roomId = await client.createChannel({ name, topic: `${project.ref} · ${project.title}`, isPublic: false, invite });
+      await projectsApi.addLink(project.id, { kind: "channel", ref: roomId, title: name });
+      onChanged(await projectsApi.get(project.id));
+    } catch (err) {
+      toast.error(errorText(t, err));
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-4">
+      <div className="max-w-3xl space-y-3">
+        <p className="text-sm text-muted-foreground">{t("projects.linked_intro")}</p>
+        {canEdit && !channel && (
+          <Button size="sm" variant="outline" onClick={() => void createChannel()} disabled={creating}>
+            <MessagesSquare className="mr-1 h-4 w-4" />
+            {t("projects.channel_create")}
+          </Button>
+        )}
+        {project.links.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("projects.linked_none")}</p>
+        ) : (
+          <ul className="divide-y divide-border rounded-md border border-border">
+            {project.links.map((l) => {
+              const Icon = LINK_ICONS[l.kind] ?? LinkIcon;
+              const href = linkHref(l);
+              return (
+                <li key={l.id} className="flex items-center gap-2 px-3 py-2 text-sm">
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{t(`projects.link_kind.${l.kind}`)}</span>
+                  {href ? (
+                    <Link href={href} className="min-w-0 flex-1 truncate text-primary hover:underline">
+                      {l.title || l.ref}
+                    </Link>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate">{l.title || l.ref}</span>
+                  )}
+                  {canEdit && (
+                    <button type="button" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => void remove(l)} aria-label={t("projects.link_remove")}>
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ProjectView({ id, taskId, onOpenTask, onOpenProject, onBack }: { id: string; taskId: string | null; onOpenTask: (task: string | null) => void; onOpenProject: (id: string) => void; onBack: () => void }) {
+  const t = useXT();
+  const locale = useLocale();
+  const [project, setProject] = useState<ObjectDetail | null>(null);
+  const [type, setType] = useState<ObjectType | undefined>();
+  const [tab, setTab] = useState<Tab>("board");
+  const [error, setError] = useState<string | null>(null);
+  const [menu, setMenu] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [confirm, setConfirm] = useState<null | "delete" | "leave">(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const myId = useXenaxioMe()?.user.id ?? null;
+  currentProjectId = id;
+
+  const load = useCallback(() => {
+    projectsApi
+      .get(id)
+      .then(setProject)
+      .catch((err: unknown) => setError(err instanceof XenaxioApiError && err.status === 404 ? t("projects.not_found") : errorText(t, err)));
+  }, [id, t]);
+
+  useEffect(load, [load]);
+  useEffect(() => {
+    projectsApi
+      .types()
+      .then((r) => setType(r.types.find((x) => x.key === "project")))
+      .catch(() => undefined);
+  }, []);
+
+  if (error)
+    return (
+      <div className="flex-1 space-y-3 p-4">
+        <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-primary hover:underline">
+          <ArrowLeft className="h-4 w-4" />
+          {t("projects.back")}
+        </button>
+        <Notice kind="error">{error}</Notice>
+      </div>
+    );
+  if (!project) return <p className="p-4 text-sm text-muted-foreground">{t("common.loading")}</p>;
+
+  const status = type?.statuses.find((s) => s.key === project.status);
+
+  const act = async (fn: () => Promise<unknown>, after?: () => void) => {
+    try {
+      await fn();
+      if (after) after();
+      else load();
+    } catch (err) {
+      toast.error(errorText(t, err));
+    }
+  };
+
+  return (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <header className="border-b border-border px-3 pt-2 sm:px-4">
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onBack} className="rounded p-1 text-muted-foreground hover:bg-muted" aria-label={t("projects.back")}>
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <span className="text-xs text-muted-foreground">{project.ref}</span>
+          {status && <StatusChip text={local(status.name, locale)} color={status.color} />}
+          {project.archivedAt && <StatusChip text={t("projects.archived")} />}
+          <div className="relative ml-auto flex items-center gap-1">
+            {project.can.join && (
+              <Button size="sm" variant="outline" onClick={() => void act(() => projectsApi.join(project.id))}>
+                {t("projects.join")}
+              </Button>
+            )}
+            <button type="button" onClick={() => setMenu((m) => !m)} className="rounded p-1 text-muted-foreground hover:bg-muted" aria-label={t("projects.menu")} aria-expanded={menu}>
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {menu && (
+              <div className="absolute right-0 top-8 z-30 w-56 rounded-md border border-border bg-background py-1 text-sm shadow-lg" onMouseLeave={() => setMenu(false)}>
+                {project.can.edit && (
+                  <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setMenu(false), setRenaming(true))}>
+                    {t("projects.rename")}
+                  </button>
+                )}
+                {project.can.manage && (
+                  <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setMenu(false), void act(() => projectsApi.archive(project.id, !project.archivedAt)))}>
+                    <Archive className="h-4 w-4" />
+                    {project.archivedAt ? t("projects.restore") : t("projects.to_archive")}
+                  </button>
+                )}
+                {project.can.manage && project.archivedAt && (
+                  <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-destructive hover:bg-muted" onClick={() => (setMenu(false), setConfirm("delete"))}>
+                    <Trash className="h-4 w-4" />
+                    {t("projects.delete")}
+                  </button>
+                )}
+                {project.myRole && (
+                  <button type="button" className="block w-full px-3 py-1.5 text-left hover:bg-muted" onClick={() => (setMenu(false), setConfirm("leave"))}>
+                    {t("projects.leave")}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <h1 className="mt-1 truncate text-lg font-semibold">{project.title}</h1>
+        <nav role="tablist" aria-label={project.title} className="mt-1 flex gap-4 text-sm">
+          {(["board", "overview", "linked"] as const).map((k) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={cn("-mb-px border-b-2 px-0.5 py-2", tab === k ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
+              {t(`projects.tab.${k}`)}
+              {k === "linked" && project.links.length > 0 ? ` (${project.links.length})` : ""}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {tab === "board" && <TaskBoard project={project} onOpenTask={(task) => onOpenTask(task)} reloadKey={reloadKey} />}
+      {tab === "overview" && <Overview project={project} type={type} onChanged={setProject} onOpenProject={onOpenProject} />}
+      {tab === "linked" && <Linked project={project} onChanged={setProject} />}
+
+      {taskId && (
+        <TaskPanel
+          project={project}
+          taskId={taskId}
+          onClose={() => onOpenTask(null)}
+          onChanged={() => {
+            setReloadKey((k) => k + 1);
+            load();
+          }}
+        />
+      )}
+
+      <PromptDialog
+        isOpen={renaming}
+        onClose={() => setRenaming(false)}
+        title={t("projects.rename")}
+        defaultValue={project.title}
+        onSubmit={(title) => {
+          setRenaming(false);
+          if (title.trim()) void act(() => projectsApi.update(project.id, { title: title.trim() }));
+        }}
+      />
+      <ConfirmDialog
+        isOpen={confirm !== null}
+        onClose={() => setConfirm(null)}
+        title={confirm === "delete" ? t("projects.delete") : t("projects.leave")}
+        message={confirm === "delete" ? t("projects.delete_text", { title: project.title }) : t("projects.leave_text", { title: project.title })}
+        variant={confirm === "delete" ? "destructive" : "default"}
+        confirmText={confirm === "delete" ? t("projects.delete") : t("projects.leave")}
+        onConfirm={() => {
+          const what = confirm;
+          setConfirm(null);
+          if (what === "delete") void act(() => projectsApi.remove(project.id), onBack);
+          if (what === "leave")
+            void act(async () => {
+              if (myId) await projectsApi.removePerson(project.id, myId);
+            }, onBack);
+        }}
+      />
+    </div>
+  );
+}
