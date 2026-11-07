@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 import { IS_LITE } from "@/lib/lite";
-import { adoptWaitingWorker, announceBuildToServiceWorker, serviceWorkerUrl, SW_SCOPE } from "@/lib/app-update";
+import { announceBuildToServiceWorker } from "@/lib/app-update";
+import { registerServiceWorker } from "@/lib/sw-register";
+import { useOfflineStore } from "@/lib/offline/state";
+import { LOCAL_COOKIE } from "@/lib/signed-out-start";
 
 /** How long after the page's start a first worker install waits at least. */
 export const FIRST_INSTALL_DELAY_MS = 4000;
@@ -37,6 +40,20 @@ function afterFirstScreen(fn: () => void): () => void {
   };
 }
 
+/**
+ * Whether this browser keeps something a worker serves: accounts (the marker
+ * lib/signed-out-start.ts keeps) or mail kept for offline use. Then the worker
+ * is registered at once, as before; only a first visit waits.
+ */
+function keepsAccounts(): boolean {
+  if (useOfflineStore.getState().enabled.length > 0) return true;
+  try {
+    return (" " + document.cookie).includes(` ${LOCAL_COOKIE}=`);
+  } catch {
+    return false;
+  }
+}
+
 export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
@@ -65,27 +82,18 @@ export function ServiceWorkerRegistration() {
 
     // With this build's id in the URL, a deploy installs a new worker, which
     // keeps its caches apart from the old build's (public/sw.js).
-    const register = () => {
-      navigator.serviceWorker
-        .register(serviceWorkerUrl(), { scope: SW_SCOPE })
-        .then((registration) => {
-          console.log("Service Worker registered successfully:", registration);
-          announceBuildToServiceWorker();
-          adoptWaitingWorker(registration);
-        })
-        .catch((error) => {
-          console.error("Service Worker registration failed:", error);
-        });
-    };
+    const register = () => void registerServiceWorker();
     // A worker that takes over later (after a deploy) learns this tab's build too.
     const onControllerChange = () => announceBuildToServiceWorker();
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
     const cleanup = () => navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
     // A page a worker already serves registers at once (that's the update
-    // check). Without one, a first visit, installing it waits until the first
-    // screen is up: once it takes over, every request of the page goes
-    // through it, and its own download and start compete with the page's.
-    if (navigator.serviceWorker.controller) {
+    // check), and so does a browser that keeps accounts or offline mail. A
+    // first visit waits until the first screen is up: once it takes over,
+    // every request of the page goes through it, and its own download and
+    // start compete with the page's. Turning offline mode on registers it
+    // at once all the same (lib/offline/shell.ts).
+    if (navigator.serviceWorker.controller || keepsAccounts()) {
       register();
       return cleanup;
     }
