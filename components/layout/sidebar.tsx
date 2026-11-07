@@ -1934,9 +1934,10 @@ function SidebarImpl({
 
   // With nesting off every tag is its own root, so the same rows render through
   // one path whether or not the ids describe a hierarchy.
-  const tagTree: KeywordNode[] = nestedTags
+  // Kept while the tags are the same: the tag rows are memoised on their nodes.
+  const tagTree: KeywordNode[] = useMemo(() => (nestedTags
     ? buildKeywordTree(emailKeywords)
-    : emailKeywords.map((kw) => ({ ...kw, children: [], depth: 0 }));
+    : emailKeywords.map((kw) => ({ ...kw, children: [], depth: 0 }))), [nestedTags, emailKeywords]);
 
   // Counts arrive from a separate JMAP round trip, one batch per group of tags;
   // a tag with no count yet is treated as visible rather than blanking it and
