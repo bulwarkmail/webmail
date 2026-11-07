@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { replaceWindowLocation } from '@/lib/browser-navigation';
 import { IMPERSONATION_MARKER_COOKIE } from '@/lib/impersonation/marker-cookie';
 import { dropPersistedAccountState, sendAccountRegistry } from '@/lib/impersonation/return-client';
+import { useAccountStore } from '@/stores/account-store';
 
 /**
  * After a master-user impersonation handoff (`GET /api/auth/impersonate`), the
@@ -48,6 +49,12 @@ export function ImpersonationReconciler() {
 
     sendAccountRegistry();
     dropPersistedAccountState();
+    // The page's sign-in check runs on this same load, after this effect.
+    // With the old list still in memory it would evict an account signed in
+    // without "Remember me", and signing out of its slot 0 revokes the
+    // impersonation that was just opened. With none, it picks up the
+    // handoff's session cookie, as the reload will.
+    useAccountStore.setState({ accounts: [], activeAccountId: null, defaultAccountId: null });
 
     // Reload to a clean URL (drop the marker) so the now-empty persisted stores
     // rehydrate and the app reconnects + re-derives the impersonated account
