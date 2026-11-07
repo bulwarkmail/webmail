@@ -142,7 +142,8 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
   // answer cached and takes it in the first render, so it mounts at its full
   // height instead of growing a frame later and making the list correct
   // the scroll position under the reader.
-  const [loaded, setLoaded] = useState<{ id: string; attachments: Attachment[] } | null>(() => {
+  // `attachments: null` is "asked, no answer yet".
+  const [loaded, setLoaded] = useState<{ id: string; attachments: Attachment[] | null } | null>(() => {
     const cached = needsLoad ? load?.peek?.(email) : undefined;
     return cached ? { id: email.id, attachments: cached } : null;
   });
@@ -158,7 +159,7 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
     // The peek ran during render, before the list's owner had caught up with
     // a view change, so it may have read another account's entry for the
     // same id. The loader's answer is the real one; without one yet, wait.
-    if (!answered) setLoaded(null);
+    if (!answered) setLoaded({ id, attachments: null });
     return cancel;
     // The row's email object is replaced on every keyword change; only a
     // different message needs a different answer.
@@ -166,7 +167,12 @@ export function useListAttachments(email: Email, load?: LoadListAttachments): At
   }, [needsLoad, load, email.id]);
 
   if (email.attachments) return email.attachments;
-  return loaded?.id === email.id ? loaded.attachments : undefined;
+  if (loaded?.id === email.id) return loaded.attachments ?? undefined;
+  // A row the list keeps for another message (see useRowSlots) starts with
+  // the last one's state: read the cache for this one, as a new row does in
+  // its first render, or the paperclip showed for a frame on a message
+  // whose parts are all inline.
+  return (needsLoad ? load?.peek?.(email) : undefined) ?? undefined;
 }
 
 /**
