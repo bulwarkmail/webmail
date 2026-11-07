@@ -34,6 +34,10 @@ const EmailViewer = dynamic(
   () => import("@/components/email/email-viewer").then((m) => m.EmailViewer),
   { ssr: false }
 );
+// The rail and the pane handles get new inline handlers on every render of
+// this page; these draw again only when something else they get changes.
+const StableNavigationRail = withStableHandlers(NavigationRail);
+const StableResizeHandle = withStableHandlers(ResizeHandle);
 const EmailComposer = dynamic(
   () => import("@/components/email/email-composer").then((m) => m.EmailComposer),
   { ssr: false }
@@ -88,7 +92,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useDrawnMailLayout } from "@/hooks/use-effective-mail-layout";
 import { isOfflineNow, useOfflineStore } from "@/lib/offline/state";
 import { useConnectionState } from "@/hooks/use-connection-state";
-import { ReaderOpenFailure } from "@/components/email/reader-open-failure";
+import { StableEmailViewer } from "@/components/mail/stable-email-viewer";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
@@ -184,6 +188,7 @@ import { MoveToDialog, MoveToDialogHost, useMoveDialogStore } from "@/components
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
+import { withStableHandlers } from "@/components/ui/with-stable-handlers";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
@@ -211,6 +216,9 @@ import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { afterRequestDispatch } from "@/lib/after-request-dispatch";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
+// Resets that run on every open, folder switch and search (cursorOnly, openFailure, the
+// conversation and reply draft) used to draw the whole page once more for nothing.
+import { useQuietState } from "@/hooks/use-quiet-state";
 import { prefetchEmailContent, requestEmailContent } from "@/lib/email-prefetch";
 import { createMailboxWithHooks } from "@/lib/plugin-mail-hooks";
 import { emailToReadView } from "@/lib/plugin-projection";
@@ -326,7 +334,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
   // Phones present search full-screen from the header field rather than
   // giving it a permanent second bar under the header.
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useQuietState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
@@ -380,7 +388,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   // A message that couldn't be fetched: the reader says so, with Retry (mail-p2-7).
-  const [openFailure, setOpenFailure] = useState<{ target: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>; offline: boolean } | null>(null);
+  const [openFailure, setOpenFailure] = useQuietState<{ target: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>; offline: boolean } | null>(null);
   const tP2Desk = useTranslations('mail_p2_desk');
   // The message the palette's "Move to…" was picked for.
   const [moveDialogEmail, setMoveDialogEmail] = useState<Email | null>(null);
@@ -404,12 +412,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [showComposer]);
   const handleMvPopOut = useCallback(() => setMvReplyPoppedOut(true), []);
   // Mountain View: the open message's whole conversation, light properties only.
-  const [mvConversationResult, setMvConversationResult] = useState<{
+  const [mvConversationResult, setMvConversationResult] = useQuietState<{
     emails: Email[]; source: EmailBlobContext; threadId: string;
   } | null>(null);
   // The thread whose conversation is being fetched, so the viewer waits for it
   // instead of showing the message alone first. (#1223)
-  const [mvConversationLoading, setMvConversationLoading] = useState<string | null>(null);
+  const [mvConversationLoading, setMvConversationLoading] = useQuietState<string | null>(null);
   const mvConversationLoadRef = useRef<{
     client: NonNullable<EmailBlobContext['client']>; accountId?: string;
     threadId: string; emailId: string; startedAt: number; promise: Promise<Email[] | null>;
@@ -426,7 +434,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // shows it under the message, and Reply opens it again. The conversation
   // fetch notes the thread's drafts; a scan reads them fresh after a composer
   // closed or a draft went.
-  const [replyDraft, setReplyDraft] = useState<{ emailId: string; draft: Email; source: DraftSource } | null>(null);
+  const [replyDraft, setReplyDraft] = useQuietState<{ emailId: string; draft: Email; source: DraftSource } | null>(null);
   const [replyDraftScan, setReplyDraftScan] = useState<{ emailId: string; n: number } | null>(null);
   // Drafts the composer's bin discarded while their Undo is offered. They are
   // still on the server, but neither the card nor Reply offers them; the card
@@ -529,7 +537,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
    * "open" as the same thing, so Mountain View keeps the selection (every
    * action already targets it) and records that it is only a cursor.
    */
-  const [cursorOnly, setCursorOnly] = useState(false);
+  const [cursorOnly, setCursorOnly] = useQuietState(false);
   // Desktop lifts search into a global header. Mobile keeps its native
   // one-pane flow, with Mountain View's own app chrome.
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isEmbedded;
@@ -1409,7 +1417,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     [keyboardHandlers],
   );
   // Another folder: the line about the message that didn't open goes.
-  useEffect(() => setOpenFailure(null), [selectedMailbox]);
+  useEffect(() => setOpenFailure(null), [selectedMailbox, setOpenFailure]);
   useKeyboardShortcuts({
     enabled: isAuthenticated && !showComposer && mailShortcutsApply,
     singleKeyShortcuts,
@@ -2593,7 +2601,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (mvShell || !cursorOnly) return;
     setCursorOnly(false);
     selectEmail(null);
-  }, [mvShell, cursorOnly, selectEmail]);
+  }, [mvShell, cursorOnly, selectEmail, setCursorOnly]);
 
   // Auto-fetch full email content when an email is auto-selected (e.g. after delete/archive)
   useEffect(() => {
@@ -6108,7 +6116,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isEmbedded && !mvShell && (
           <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-            <NavigationRail
+            <StableNavigationRail
               collapsed
               quota={quota}
               isPushConnected={isPushConnected}
@@ -6220,7 +6228,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Sidebar resize handle (desktop only, hidden when collapsed, and
             absent under Mountain View, whose navigation has a fixed width) */}
         {!isMobile && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
-          <ResizeHandle
+          <StableResizeHandle
             pane="sidebar"
             value={sidebarWidth}
             min={SIDEBAR_MIN}
@@ -6654,7 +6662,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
           {/* Email list resize handle (desktop only) */}
           {!isMobile && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
-            <ResizeHandle
+            <StableResizeHandle
               pane="messageList"
               value={emailListWidth}
               min={EMAIL_LIST_MIN}
@@ -6666,7 +6674,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           )}
           {!isMobile && isHorizontalMailLayout && !shouldHideHorizontalViewerPane && !fullscreenReading && (
-            <ResizeHandle
+            <StableResizeHandle
               orientation="horizontal"
               pane="messageList"
               value={emailListHeight}
@@ -6819,7 +6827,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             ) : (
               <>
                 <ErrorBoundary fallback={EmailViewerErrorFallback}>
-                  <EmailViewer
+                  <StableEmailViewer
+                    viewer={EmailViewer}
                     email={selectionTakesReader ? null : selectedEmail}
                     blobSource={resolveEmailBlobContext(selectedEmail, client)}
                     isLoading={!selectionTakesReader && (isLoadingEmail || deepLinkPane !== null)}
@@ -6931,12 +6940,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         announceRescheduled(result, delayedUntil);
                       }
                     }}
-                    emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
-                      ? <div ref={setSelectionPaneHost} className="m-auto w-full p-8" />
+                    emptyPane={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
+                      ? { kind: 'selection', hostRef: setSelectionPaneHost }
                       : openFailure && !isLoadingEmail
-                        ? <ReaderOpenFailure offline={openFailure.offline} onRetry={() => void handleEmailSelect(openFailure.target)} />
-                        : undefined}
-                    emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
+                        ? { kind: 'failure', offline: openFailure.offline, onRetry: () => void handleEmailSelect(openFailure.target) }
+                        : null}
+                    welcomeFooter={emptyPaneBesideList}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { PublicJmapServerEntry } from '@/lib/admin/jmap-servers';
@@ -164,6 +164,72 @@ export async function fetchConfig(): Promise<ConfigData> {
 }
 
 /**
+ * The hook's state for fetched config: one object per config, shared by
+ * every component that reads it. Each one used to build its own copy in an
+ * effect after mounting, which drew it a second time (every avatar of every
+ * list row, right after the rows came).
+ */
+const configStates = new WeakMap<ConfigData, AppConfig>();
+function configState(data: ConfigData): AppConfig {
+  let state = configStates.get(data);
+  if (!state) {
+    state = {
+      appName: data.appName,
+      jmapServerUrl: data.jmapServerUrl,
+      oauthEnabled: data.oauthEnabled,
+      oauthOnly: data.oauthOnly,
+      oauthPasswordFallbackEnabled: data.oauthPasswordFallbackEnabled,
+      oauthClientId: data.oauthClientId,
+      oauthIssuerUrl: data.oauthIssuerUrl,
+      oauthScopes: data.oauthScopes,
+      oauthResource: data.oauthResource,
+      rememberMeEnabled: data.rememberMeEnabled,
+      settingsSyncEnabled: data.settingsSyncEnabled,
+      stalwartFeaturesEnabled: data.stalwartFeaturesEnabled,
+      stalwartJmapPassthroughEnabled: data.stalwartJmapPassthroughEnabled,
+      devMode: data.devMode,
+      faviconUrl: data.faviconUrl,
+      appLogoLightUrl: data.appLogoLightUrl,
+      appLogoDarkUrl: data.appLogoDarkUrl,
+      loginLogoLightUrl: data.loginLogoLightUrl,
+      loginLogoDarkUrl: data.loginLogoDarkUrl,
+      loginCompanyName: data.loginCompanyName,
+      loginImprintUrl: data.loginImprintUrl,
+      loginPrivacyPolicyUrl: data.loginPrivacyPolicyUrl,
+      loginWebsiteUrl: data.loginWebsiteUrl,
+      loginUsernamePlaceholder: data.loginUsernamePlaceholder,
+      loginLogoMaxHeight: data.loginLogoMaxHeight,
+      loginLogoMaxWidth: data.loginLogoMaxWidth,
+      loginShowHeading: data.loginShowHeading,
+      loginShowSubtitle: data.loginShowSubtitle,
+      loginShowTotp: data.loginShowTotp,
+      loginShowTokenLogin: data.loginShowTokenLogin,
+      desktopBrowserSignIn: data.desktopBrowserSignIn,
+      loginShowRememberMe: data.loginShowRememberMe,
+      loginShowVersion: data.loginShowVersion,
+      demoMode: data.demoMode,
+      autoSsoEnabled: data.autoSsoEnabled,
+      allowCustomJmapEndpoint: data.allowCustomJmapEndpoint,
+      jmapServers: data.jmapServers || [],
+      jmapServerAutoPickByDomain: data.jmapServerAutoPickByDomain || false,
+      embeddedMode: data.embeddedMode,
+      parentOrigin: data.parentOrigin,
+      sourceCodeUrl: data.sourceCodeUrl,
+      accessibilityStatementUrl: data.accessibilityStatementUrl,
+      accessibilityFeedbackUrl: data.accessibilityFeedbackUrl,
+      helpUrl: data.helpUrl,
+      easyReadUrl: data.easyReadUrl,
+      signLanguageUrl: data.signLanguageUrl,
+      noThirdPartyTraffic: data.noThirdPartyTraffic,
+      isLoading: false,
+      error: null,
+    };
+    configStates.set(data, state);
+  }
+  return state;
+}
+
+/**
  * Hook to fetch runtime configuration
  *
  * Fetches app configuration from /api/config endpoint, which reads
@@ -172,7 +238,9 @@ export async function fetchConfig(): Promise<ConfigData> {
  * The config is cached after first fetch to avoid unnecessary requests.
  */
 export function useConfig(): AppConfig {
-  const [config, setConfig] = useState<AppConfig>({
+  // Already fetched: its state from the first render, and nothing to set after mounting.
+  const fromCache = useRef(configCache);
+  const [config, setConfig] = useState<AppConfig>(() => fromCache.current ? configState(fromCache.current) : {
     appName: configCache?.appName || 'Webmail',
     jmapServerUrl: configCache?.jmapServerUrl || '',
     oauthEnabled: configCache?.oauthEnabled || false,
@@ -227,113 +295,13 @@ export function useConfig(): AppConfig {
   useEffect(() => {
     // If already cached, no need to fetch
     if (configCache) {
-      setConfig({
-        appName: configCache.appName,
-        jmapServerUrl: configCache.jmapServerUrl,
-        oauthEnabled: configCache.oauthEnabled,
-        oauthOnly: configCache.oauthOnly,
-        oauthPasswordFallbackEnabled: configCache.oauthPasswordFallbackEnabled,
-        oauthClientId: configCache.oauthClientId,
-        oauthIssuerUrl: configCache.oauthIssuerUrl,
-        oauthScopes: configCache.oauthScopes,
-        oauthResource: configCache.oauthResource,
-        rememberMeEnabled: configCache.rememberMeEnabled,
-        settingsSyncEnabled: configCache.settingsSyncEnabled,
-        stalwartFeaturesEnabled: configCache.stalwartFeaturesEnabled,
-        stalwartJmapPassthroughEnabled: configCache.stalwartJmapPassthroughEnabled,
-        devMode: configCache.devMode,
-        faviconUrl: configCache.faviconUrl,
-        appLogoLightUrl: configCache.appLogoLightUrl,
-        appLogoDarkUrl: configCache.appLogoDarkUrl,
-        loginLogoLightUrl: configCache.loginLogoLightUrl,
-        loginLogoDarkUrl: configCache.loginLogoDarkUrl,
-        loginCompanyName: configCache.loginCompanyName,
-        loginImprintUrl: configCache.loginImprintUrl,
-        loginPrivacyPolicyUrl: configCache.loginPrivacyPolicyUrl,
-        loginWebsiteUrl: configCache.loginWebsiteUrl,
-        loginUsernamePlaceholder: configCache.loginUsernamePlaceholder,
-        loginLogoMaxHeight: configCache.loginLogoMaxHeight,
-        loginLogoMaxWidth: configCache.loginLogoMaxWidth,
-        loginShowHeading: configCache.loginShowHeading,
-        loginShowSubtitle: configCache.loginShowSubtitle,
-        loginShowTotp: configCache.loginShowTotp,
-        loginShowTokenLogin: configCache.loginShowTokenLogin,
-        desktopBrowserSignIn: configCache.desktopBrowserSignIn,
-        loginShowRememberMe: configCache.loginShowRememberMe,
-        loginShowVersion: configCache.loginShowVersion,
-        demoMode: configCache.demoMode,
-        autoSsoEnabled: configCache.autoSsoEnabled,
-        allowCustomJmapEndpoint: configCache.allowCustomJmapEndpoint,
-        jmapServers: configCache.jmapServers || [],
-        jmapServerAutoPickByDomain: configCache.jmapServerAutoPickByDomain || false,
-        embeddedMode: configCache.embeddedMode,
-        parentOrigin: configCache.parentOrigin,
-        sourceCodeUrl: configCache.sourceCodeUrl,
-        accessibilityStatementUrl: configCache.accessibilityStatementUrl,
-        accessibilityFeedbackUrl: configCache.accessibilityFeedbackUrl,
-        helpUrl: configCache.helpUrl,
-        easyReadUrl: configCache.easyReadUrl,
-        signLanguageUrl: configCache.signLanguageUrl,
-        noThirdPartyTraffic: configCache.noThirdPartyTraffic,
-        isLoading: false,
-        error: null,
-      });
+      if (fromCache.current !== configCache) setConfig(configState(configCache));
       return;
     }
 
     fetchConfig()
       .then((data) => {
-        setConfig({
-          appName: data.appName,
-          jmapServerUrl: data.jmapServerUrl,
-          oauthEnabled: data.oauthEnabled,
-          oauthOnly: data.oauthOnly,
-          oauthPasswordFallbackEnabled: data.oauthPasswordFallbackEnabled,
-          oauthClientId: data.oauthClientId,
-          oauthIssuerUrl: data.oauthIssuerUrl,
-          oauthScopes: data.oauthScopes,
-          oauthResource: data.oauthResource,
-          rememberMeEnabled: data.rememberMeEnabled,
-          settingsSyncEnabled: data.settingsSyncEnabled,
-          stalwartFeaturesEnabled: data.stalwartFeaturesEnabled,
-          stalwartJmapPassthroughEnabled: data.stalwartJmapPassthroughEnabled,
-          devMode: data.devMode,
-          faviconUrl: data.faviconUrl,
-          appLogoLightUrl: data.appLogoLightUrl,
-          appLogoDarkUrl: data.appLogoDarkUrl,
-          loginLogoLightUrl: data.loginLogoLightUrl,
-          loginLogoDarkUrl: data.loginLogoDarkUrl,
-          loginCompanyName: data.loginCompanyName,
-          loginImprintUrl: data.loginImprintUrl,
-          loginPrivacyPolicyUrl: data.loginPrivacyPolicyUrl,
-          loginWebsiteUrl: data.loginWebsiteUrl,
-          loginUsernamePlaceholder: data.loginUsernamePlaceholder,
-          loginLogoMaxHeight: data.loginLogoMaxHeight,
-          loginLogoMaxWidth: data.loginLogoMaxWidth,
-          loginShowHeading: data.loginShowHeading,
-          loginShowSubtitle: data.loginShowSubtitle,
-          loginShowTotp: data.loginShowTotp,
-          loginShowTokenLogin: data.loginShowTokenLogin,
-          desktopBrowserSignIn: data.desktopBrowserSignIn,
-          loginShowRememberMe: data.loginShowRememberMe,
-          loginShowVersion: data.loginShowVersion,
-          demoMode: data.demoMode,
-          autoSsoEnabled: data.autoSsoEnabled,
-          allowCustomJmapEndpoint: data.allowCustomJmapEndpoint,
-          jmapServers: data.jmapServers || [],
-          jmapServerAutoPickByDomain: data.jmapServerAutoPickByDomain || false,
-          embeddedMode: data.embeddedMode,
-          parentOrigin: data.parentOrigin,
-          sourceCodeUrl: data.sourceCodeUrl,
-          accessibilityStatementUrl: data.accessibilityStatementUrl,
-          accessibilityFeedbackUrl: data.accessibilityFeedbackUrl,
-          helpUrl: data.helpUrl,
-          easyReadUrl: data.easyReadUrl,
-          signLanguageUrl: data.signLanguageUrl,
-          noThirdPartyTraffic: data.noThirdPartyTraffic,
-          isLoading: false,
-          error: null,
-        });
+        setConfig(configState(data));
       })
       .catch((err) => {
         setConfig((prev) => ({

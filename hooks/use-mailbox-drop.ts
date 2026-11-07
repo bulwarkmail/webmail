@@ -63,10 +63,11 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
   const tRoot = useTranslations();
   const [isOver, setIsOver] = useState(false);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
-  const { moveEmailsToMailbox, crossAccountMoveEmails, selectedEmailKeys, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore(useShallow((state) => ({
+  // The selection is read when something is dropped, not subscribed to: a new
+  // selection (every folder switch makes one) drew every folder row again.
+  const { moveEmailsToMailbox, crossAccountMoveEmails, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore(useShallow((state) => ({
     moveEmailsToMailbox: state.moveEmailsToMailbox,
     crossAccountMoveEmails: state.crossAccountMoveEmails,
-    selectedEmailKeys: state.selectedEmailKeys,
     clearSelection: state.clearSelection,
     refreshCurrentMailbox: state.refreshCurrentMailbox,
     mailboxes: state.mailboxes,
@@ -220,6 +221,7 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
 
       // Clear selection if any selected emails were moved. The selection is
       // keyed by owning account, so compare the dragged emails, not their ids.
+      const { selectedEmailKeys } = useEmailStore.getState();
       if (draggedEmails.some(em => selectedEmailKeys.has(emailKeyFor(em)))) {
         clearSelection();
       }
@@ -261,7 +263,7 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
     } finally {
       endDrag();
     }
-  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, tListExtra, tRoot]);
+  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, tListExtra, tRoot]);
 
   const valid = isValidTarget();
 

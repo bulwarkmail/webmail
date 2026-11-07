@@ -42,13 +42,38 @@ export function getQuoteBodies(
   const textValue = textPart ? email.bodyValues?.[textPart.partId]?.value : undefined;
   const htmlValue = htmlPart ? email.bodyValues?.[htmlPart.partId]?.value : undefined;
 
+  // The mail view asks again on each of its renders while a reply is open;
+  // for an HTML-only mail each answer parsed the whole mail.
+  const cached = quoteBodiesCache.get(email);
+  if (cached && cached.textPart === textPart && cached.htmlPart === htmlPart
+    && cached.textValue === textValue && cached.htmlValue === htmlValue && cached.preview === email.preview) {
+    return { ...cached.result };
+  }
+  const result = quoteBodiesOf(textPart, htmlPart, textValue, htmlValue, email.preview);
+  quoteBodiesCache.set(email, { textPart, htmlPart, textValue, htmlValue, preview: email.preview, result });
+  return { ...result };
+}
+
+type BodyPart = NonNullable<Email["textBody"]>[number];
+const quoteBodiesCache = new WeakMap<object, {
+  textPart?: BodyPart; htmlPart?: BodyPart; textValue?: string; htmlValue?: string; preview?: string;
+  result: { body: string; htmlBody?: string };
+}>();
+
+function quoteBodiesOf(
+  textPart: BodyPart | undefined,
+  htmlPart: BodyPart | undefined,
+  textValue: string | undefined,
+  htmlValue: string | undefined,
+  preview: string | undefined,
+): { body: string; htmlBody?: string } {
   const textPartIsHtml = textPart?.type?.toLowerCase() === "text/html";
   // A missing type is treated as HTML, matching the viewer's rendering path.
   const htmlPartIsHtml = !htmlPart?.type || htmlPart.type.toLowerCase() === "text/html";
 
   const body = textValue
     ? (textPartIsHtml ? htmlToPlainText(textValue, { paragraphSpacing: true }) : textValue)
-    : (email.preview || "");
+    : (preview || "");
   // Like the viewer (getRenderableHtmlBody): an HTML part that is only a bare
   // wrapper around the text, next to a real text part, often has no <br>, so
   // quoting it would run every line together. Quote the text part instead.

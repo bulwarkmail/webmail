@@ -133,7 +133,10 @@ export function filterKeywordTree(
   for (const node of nodes) {
     const children = filterKeywordTree(node.children, isVisible);
     if (children.length > 0 || isVisible(node)) {
-      kept.push({ ...node, children });
+      // A node that keeps all its children stays the same object, so rows
+      // memoised on it (the sidebar's tag rows) are not drawn again.
+      const same = children.length === node.children.length && children.every((child, i) => child === node.children[i]);
+      kept.push(same ? node : { ...node, children });
     }
   }
   return kept;
