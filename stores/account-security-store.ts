@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { debug } from '@/lib/debug';
 import { useAuthStore } from '@/stores/auth-store';
-import { stalwartJmap, requireResult, type JmapMethodResponse } from '@/lib/stalwart/jmap-passthrough';
+import { stalwartJmap, requireResult, type JmapMethodCall, type JmapMethodResponse } from '@/lib/stalwart/jmap-passthrough';
 import { isStalwartJmapPassthroughEnabled } from '@/lib/stalwart/principal';
+import { getManagementCapability } from '@/lib/stalwart/management-capability';
+import { getActiveAccountSlot } from '@/lib/auth/active-account-slot';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { accountSecurityHooks } from '@/lib/plugin-hooks';
 
@@ -115,10 +117,28 @@ interface AccountSecurityState {
   clearState: () => void;
 }
 
-function getPrimaryAccountId(): string {
+/** Keep follow-up requests on the same account even if the active account changes while awaiting a response. */
+function getManagementContext() {
   const client = useAuthStore.getState().client;
   if (!client) throw new Error('Not authenticated');
-  return client.getAccountId();
+  const accountId = client.getAccountId();
+  const capability = getManagementCapability(client, accountId);
+  if (!capability) throw new Error('Account management is not supported by this account');
+  // An account without a stored slot uses the legacy primary session (slot 0).
+  const slot = getActiveAccountSlot() ?? 0;
+  const epoch = currentStoreEpoch();
+  const options = { slot, management: { accountId, capability } };
+  return {
+    accountId,
+    request: (calls: JmapMethodCall[]) => {
+      // A cleared account's cookie slot may already belong to a new session.
+      if (currentStoreEpoch() !== epoch) throw new Error('Account management context changed');
+      return stalwartJmap(calls, options);
+    },
+    isCurrent: () => currentStoreEpoch() === epoch &&
+      useAuthStore.getState().client?.getAccountId() === accountId &&
+      (getActiveAccountSlot() ?? 0) === slot,
+  };
 }
 
 /**
@@ -148,7 +168,7 @@ function credentialFromResult(raw: Record<string, unknown>): AppPasswordInfo {
   };
 }
 
-function publicKeyFromResult(raw: Record<string, unknown>): PublicKeyInfo {
+function publicKeyFromResult(raw: Record<string, unknown>, accountId: string): PublicKeyInfo {
   const emailAddresses = raw.emailAddresses && typeof raw.emailAddresses === 'object'
     ? Object.keys(raw.emailAddresses as Record<string, unknown>)
     : Array.isArray(raw.emailAddresses)
@@ -157,7 +177,7 @@ function publicKeyFromResult(raw: Record<string, unknown>): PublicKeyInfo {
 
   return {
     id: String(raw.id ?? ''),
-    accountId: raw.accountId ? String(raw.accountId) : getPrimaryAccountId(),
+    accountId: raw.accountId ? String(raw.accountId) : accountId,
     description: typeof raw.description === 'string' ? raw.description : '',
     key: typeof raw.key === 'string' ? raw.key : '',
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : null,
@@ -199,9 +219,9 @@ async function createCredential(
 ): Promise<{ id: string; secret: string }> {
   set({ isSaving: true, error: null });
   try {
-    const accountId = getPrimaryAccountId();
+    const { accountId, request } = getManagementContext();
     const tmpId = 'new';
-    const responses = await stalwartJmap([
+    const responses = await request([
       [method, { accountId, create: { [tmpId]: buildCreateBody(input) } }, '0'],
     ]);
     const result = requireResult<{
@@ -248,8 +268,8 @@ async function removeCredential(
 ): Promise<void> {
   set({ isSaving: true, error: null });
   try {
-    const accountId = getPrimaryAccountId();
-    const responses = await stalwartJmap([
+    const { accountId, request } = getManagementContext();
+    const responses = await request([
       [method, { accountId, destroy: [id] }, '0'],
     ]);
     if (onRemoved && wasDestroyed(responses, method, id)) onRemoved();
@@ -348,7 +368,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
       // Every management call below goes through the server-side passthrough;
       // when the operator switched it off, behave like a non-Stalwart server. (#904)
       const isStalwart =
-        !!client.hasAccountCapability?.('urn:stalwart:jmap') &&
+        getManagementCapability(client) !== null &&
         (await isStalwartJmapPassthroughEnabled());
       set({ isStalwart, isProbing: false });
       return isStalwart;
@@ -363,8 +383,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     const set = setWhileCurrent();
     set({ isLoadingAuth: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const responses = await request([
         ['x:AccountPassword/get', { accountId, ids: ['singleton'] }, '0'],
         ['x:AppPassword/query', { accountId }, '1'],
         ['x:ApiKey/query', { accountId }, '2'],
@@ -391,7 +411,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
       let appPasswords: AppPasswordInfo[] = [];
       let apiKeys: ApiKeyInfo[] = [];
       if (followUps.length) {
-        const followUpResponses = await stalwartJmap(followUps);
+        const followUpResponses = await request(followUps);
         if (appPwQuery.ids?.length) {
           const r = requireResult<{ list: Array<Record<string, unknown>> }>(followUpResponses, 'x:AppPassword/get');
           appPasswords = (r.list ?? []).map(credentialFromResult);
@@ -416,8 +436,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     const set = setWhileCurrent();
     set({ isLoadingCrypto: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const responses = await request([
         [
           'x:AccountSettings/get',
           {
@@ -463,7 +483,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   updateEncryptionAtRest: async ({ type, publicKeyId, encryptOnAppend = false, allowSpamTraining = false }) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
+      const { accountId, request } = getManagementContext();
       let encryptionAtRestPayload: Record<string, unknown>;
 
       if (type === 'Disabled') {
@@ -482,7 +502,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         };
       }
 
-      const responses = await stalwartJmap([
+      const responses = await request([
         [
           'x:AccountSettings/set',
           {
@@ -533,11 +553,11 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         set({ isLoadingPrincipal: false });
         return;
       }
-      const accountId = getPrimaryAccountId();
+      const { accountId, request } = getManagementContext();
       // The name comes from x:AccountSettings, which every user can read.
       // x:Account/get (aliases, quota, roles) is admin-only; its "forbidden"
       // arrives as the second response and leaves those fields unknown.
-      const responses = await stalwartJmap([
+      const responses = await request([
         ['x:AccountSettings/get', { accountId, ids: ['singleton'] }, 's'],
         ['x:Account/get', { accountId, ids: [accountId] }, '0'],
       ]);
@@ -601,8 +621,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   changePassword: async (currentPassword, newPassword, otpCode) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request, isCurrent } = getManagementContext();
+      const responses = await request([
         [
           'x:AccountPassword/set',
           {
@@ -623,7 +643,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
       // The session still authenticates with the old password; switch it over
       // so the next request does not bounce the user to the login page.
       try {
-        await useAuthStore.getState().updateBasicPassword(newPassword);
+        if (isCurrent()) await useAuthStore.getState().updateBasicPassword(newPassword);
       } catch (error) {
         debug.warn('auth', 'Password changed, but the session could not switch to it:', error);
       }
@@ -640,8 +660,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   updateDisplayName: async (displayName) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const responses = await request([
         [
           'x:AccountSettings/set',
           { accountId, update: { singleton: { description: displayName } } },
@@ -666,8 +686,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   enableTotp: async (currentPassword, otpUrl, otpCode) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const responses = await request([
         [
           'x:AccountPassword/set',
           {
@@ -697,8 +717,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   disableTotp: async (currentPassword, otpCode) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const responses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const responses = await request([
         [
           'x:AccountPassword/set',
           {
@@ -747,8 +767,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
     const set = setWhileCurrent();
     set({ isLoadingPublicKeys: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      const queryResponses = await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      const queryResponses = await request([
         ['x:PublicKey/query', { accountId }, '0'],
       ]);
 
@@ -759,12 +779,12 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         return;
       }
 
-      const getResponses = await stalwartJmap([
+      const getResponses = await request([
         ['x:PublicKey/get', {accountId, ids: queryResult.ids }, '0'],
       ]);
       const getResult = requireResult<{ list: Array<Record<string, unknown>> }>(getResponses, 'x:PublicKey/get');
 
-      const publicKeys = (getResult.list ?? []).map(publicKeyFromResult);
+      const publicKeys = (getResult.list ?? []).map((key) => publicKeyFromResult(key, accountId));
       set({ publicKeys, isLoadingPublicKeys: false });
     } catch (error) {
       debug.error('Failed to fetch public keys:', error);
@@ -778,7 +798,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   createPublicKey: async (input) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
+      const { accountId, request } = getManagementContext();
       const tmpId = 'new1';
 
       const createPayload: Record<string, unknown> = {
@@ -791,7 +811,7 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
         createPayload.expiresAt = input.expiresAt;
       }
 
-      const responses = await stalwartJmap([
+      const responses = await request([
         [
           'x:PublicKey/set',
           {
@@ -834,8 +854,8 @@ export const useAccountSecurityStore = create<AccountSecurityState>()((set, get)
   removePublicKey: async (id) => {
     set({ isSaving: true, error: null });
     try {
-      const accountId = getPrimaryAccountId();
-      await stalwartJmap([
+      const { accountId, request } = getManagementContext();
+      await request([
         [
           'x:PublicKey/set',
           {
