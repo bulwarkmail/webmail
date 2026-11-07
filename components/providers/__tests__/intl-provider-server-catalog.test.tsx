@@ -89,4 +89,22 @@ describe('IntlProvider with the first screen catalog', () => {
     await waitFor(() => expect(screen.getByTestId('rest').textContent).toBe(full.settings.email_behavior.hover_actions.archive), { timeout: 8000 });
     vi.unstubAllGlobals();
   });
+
+  it('fetches the rest on the sign-in page only once it is left', async () => {
+    const { loadFirstScreenCatalog } = await import('@/i18n/catalog');
+    const first = await loadFirstScreenCatalog('en');
+    window.history.replaceState(null, '', '/en/login');
+    vi.stubGlobal('requestIdleCallback', undefined);
+    try {
+      render(<IntlProvider locale="en" messages={first} partial><Both /></IntlProvider>);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(english.loads).toBe(0);
+      expect(screen.getByTestId('rest').textContent).toBe('');
+      window.history.pushState(null, '', '/en');
+      await waitFor(() => expect(screen.getByTestId('rest').textContent).not.toBe(''), { timeout: 8000 });
+    } finally {
+      vi.unstubAllGlobals();
+      window.history.replaceState(null, '', '/');
+    }
+  });
 });

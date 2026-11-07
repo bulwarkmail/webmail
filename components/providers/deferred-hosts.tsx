@@ -7,6 +7,7 @@ import { LEGACY_DB_NAME } from "@/lib/offline/legacy-db-name";
 import { OFFLINE_EVICTED_KEY, useOfflineStore } from "@/lib/offline/state";
 import { STORE_DB_NAME, STORE_OPENED_KEY } from "@/lib/store/client/keys";
 import { HostBoundary } from "@/components/providers/host-boundary";
+import { afterSignInPage } from "@/lib/sign-in-hold";
 
 /**
  * The page-wide hosts the first screen doesn't need, out of the first script.
@@ -57,8 +58,11 @@ function scheduleBoot(): void {
     booted = true;
     for (const listener of bootListeners) listener();
   };
-  if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(done, { timeout: IDLE_TIMEOUT_MS });
-  else window.setTimeout(done, 200);
+  // None of them is for the sign-in page (lib/sign-in-hold.ts).
+  afterSignInPage(() => {
+    if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(done, { timeout: IDLE_TIMEOUT_MS });
+    else window.setTimeout(done, 200);
+  });
 }
 
 function subscribeBoot(listener: () => void): () => void {
