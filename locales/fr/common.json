@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Suivi",
     "unstarred": "Suivi retiré"
+  },
+  "impersonation": {
+    "return_notice": "Vous avez ouvert {mailbox} par usurpation d'identité.",
+    "return_button": "Revenir à mon compte"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Одоор тэмдэглэсэн",
     "unstarred": "Од хассан"
+  },
+  "impersonation": {
+    "return_notice": "Та {mailbox}-г өөр хэрэглэгчийн нэрээр нээсэн байна.",
+    "return_button": "Миний бүртгэл рүү буцах"
   }
 }

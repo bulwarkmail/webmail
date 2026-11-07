@@ -17,7 +17,8 @@ import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { readImpersonationConfig } from '@/lib/impersonation/master-config';
-import { revokeImpersonationCredential } from '@/lib/impersonation/app-password';
+import { revokeImpersonationGrant } from '@/lib/impersonation/revoke-grant';
+import { discardRestore } from '@/lib/impersonation/restore';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { revokeWopiTokens } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
@@ -49,29 +50,6 @@ function sessionCookieOptions(remember = true) {
 function holdsMasterPassword(credentials: SessionCredentials): boolean {
   const config = readImpersonationConfig();
   return !!config && credentials.password === config.masterPassword;
-}
-
-async function revokeImpersonationGrant(
-  cookieStore: Awaited<ReturnType<typeof cookies>>,
-): Promise<void> {
-  const grant = openImpersonationGrant(cookieStore.get(IMPERSONATION_GRANT_COOKIE)?.value);
-  cookieStore.delete(IMPERSONATION_GRANT_COOKIE);
-  const config = readImpersonationConfig();
-  if (!grant || !config) return;
-  try {
-    await revokeImpersonationCredential({
-      serverUrl: grant.serverUrl,
-      mailbox: grant.mailbox,
-      masterUser: config.masterUser,
-      masterPassword: config.masterPassword,
-      id: grant.credentialId,
-    });
-  } catch (error) {
-    // The app password still expires on its own; sign-out must not fail.
-    logger.warn('Impersonation credential revocation failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
 }
 
 /**
@@ -370,6 +348,7 @@ export async function DELETE(request: NextRequest) {
         clearStalwartAuthContextInStore(cookieStore, i);
       }
       await revokeImpersonationGrant(cookieStore);
+      await discardRestore(cookieStore);
       // A phone that already paired keeps its own sign-in; a QR still on
       // screen stops working.
       await clearPairReauthInStore(cookieStore);
@@ -377,7 +356,11 @@ export async function DELETE(request: NextRequest) {
       const slot = getSlot(request);
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
-      if (slot === 0) await revokeImpersonationGrant(cookieStore);
+      if (slot === 0) {
+        await revokeImpersonationGrant(cookieStore);
+        // Signing out of the impersonation gives up the way back too.
+        await discardRestore(cookieStore);
+      }
       await clearPairReauthInStore(cookieStore, slot);
     }
 

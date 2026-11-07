@@ -114,6 +114,8 @@ export type PayloadPurpose =
   | 'wopi-token'
   /** The app password an impersonation handoff minted, kept for revocation. */
   | 'impersonation-grant'
+  /** A session parked by an impersonation handoff for "Return to my account" (lib/impersonation/restore.ts). */
+  | 'impersonation-restore'
   /** A user's plugin credentials (lib/plugin-secrets/vault.ts). */
   | 'plugin-secrets'
   /** When a token sign-in happened, for the maximum session length (lib/auth/session-age.ts). */
@@ -145,6 +147,7 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'pair-refresh': () => false,
   'wopi-token': (p) => p.t === 'wopi',
   'impersonation-grant': () => false,
+  'impersonation-restore': () => false,
   'plugin-secrets': () => false,
   'session-age': () => false,
   'pairing-store': () => false,

@@ -8266,5 +8266,9 @@
   "selectionView": {
     "starred": "ติดดาวแล้ว",
     "unstarred": "นำดาวออกแล้ว"
+  },
+  "impersonation": {
+    "return_notice": "คุณเปิด {mailbox} ผ่านการสวมสิทธิ์ผู้ใช้",
+    "return_button": "กลับไปที่บัญชีของฉัน"
   }
 }

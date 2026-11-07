@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Tärniga märgitud",
     "unstarred": "Tärn eemaldatud"
+  },
+  "impersonation": {
+    "return_notice": "Avasid postkasti {mailbox} kasutaja asendamise kaudu.",
+    "return_button": "Tagasi minu kontole"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Aggiunto a Speciali",
     "unstarred": "Stella rimossa"
+  },
+  "impersonation": {
+    "return_notice": "Hai aperto {mailbox} tramite impersonificazione.",
+    "return_button": "Torna al mio account"
   }
 }

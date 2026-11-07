@@ -8259,5 +8259,9 @@
   "selectionView": {
     "starred": "סומן בכוכב",
     "unstarred": "הכוכב הוסר"
+  },
+  "impersonation": {
+    "return_notice": "פתחת את {mailbox} באמצעות התחזות.",
+    "return_button": "חזרה לחשבון שלי"
   }
 }

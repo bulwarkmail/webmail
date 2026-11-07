@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Destacado",
     "unstarred": "Estrella quitada"
+  },
+  "impersonation": {
+    "return_notice": "Has abierto {mailbox} mediante suplantación.",
+    "return_button": "Volver a mi cuenta"
   }
 }

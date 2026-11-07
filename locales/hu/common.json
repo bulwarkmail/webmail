@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Csillagozva",
     "unstarred": "Csillag eltávolítva"
+  },
+  "impersonation": {
+    "return_notice": "A(z) {mailbox} postafiókot megszemélyesítéssel nyitotta meg.",
+    "return_button": "Vissza a saját fiókomhoz"
   }
 }

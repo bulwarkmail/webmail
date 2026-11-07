@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Oznaczono gwiazdką",
     "unstarred": "Usunięto gwiazdkę"
+  },
+  "impersonation": {
+    "return_notice": "Skrzynka {mailbox} została otwarta przez podszywanie się.",
+    "return_button": "Wróć do mojego konta"
   }
 }

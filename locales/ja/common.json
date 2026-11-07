@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "スターを付けました",
     "unstarred": "スターを外しました"
+  },
+  "impersonation": {
+    "return_notice": "なりすましで {mailbox} を開いています。",
+    "return_button": "自分のアカウントに戻る"
   }
 }

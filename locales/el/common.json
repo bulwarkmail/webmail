@@ -8270,5 +8270,9 @@
   "selectionView": {
     "starred": "Με αστέρι",
     "unstarred": "Αφαιρέθηκε το αστέρι"
+  },
+  "impersonation": {
+    "return_notice": "Ανοίξατε το {mailbox} μέσω πλαστοπροσωπίας.",
+    "return_button": "Επιστροφή στον λογαριασμό μου"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Stjernemarkeret",
     "unstarred": "Stjerne fjernet"
+  },
+  "impersonation": {
+    "return_notice": "Du har åbnet {mailbox} via impersonering.",
+    "return_button": "Tilbage til min konto"
   }
 }

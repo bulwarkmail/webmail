@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Com estrela",
     "unstarred": "Estrela removida"
+  },
+  "impersonation": {
+    "return_notice": "Abriu {mailbox} através de representação.",
+    "return_button": "Voltar à minha conta"
   }
 }

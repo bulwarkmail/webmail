@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Помечено звёздочкой",
     "unstarred": "Звёздочка снята"
+  },
+  "impersonation": {
+    "return_notice": "Вы открыли {mailbox} через вход от имени пользователя.",
+    "return_button": "Вернуться в мою учётную запись"
   }
 }

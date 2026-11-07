@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "별표를 추가했습니다",
     "unstarred": "별표를 삭제했습니다"
+  },
+  "impersonation": {
+    "return_notice": "사용자 가장으로 {mailbox}을(를) 열었습니다.",
+    "return_button": "내 계정으로 돌아가기"
   }
 }

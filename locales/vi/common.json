@@ -8270,5 +8270,9 @@
   "selectionView": {
     "starred": "Đã gắn dấu sao",
     "unstarred": "Đã bỏ dấu sao"
+  },
+  "impersonation": {
+    "return_notice": "Bạn đã mở {mailbox} bằng cách mạo danh.",
+    "return_button": "Quay lại tài khoản của tôi"
   }
 }

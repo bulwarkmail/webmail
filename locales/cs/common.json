@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Označeno hvězdičkou",
     "unstarred": "Hvězdička odebrána"
+  },
+  "impersonation": {
+    "return_notice": "Schránku {mailbox} jste otevřeli přes zosobnění.",
+    "return_button": "Zpět na můj účet"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "已加星标",
     "unstarred": "已取消星标"
+  },
+  "impersonation": {
+    "return_notice": "你通过模拟登录打开了 {mailbox}。",
+    "return_button": "返回我的账户"
   }
 }

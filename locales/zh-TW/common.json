@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "已加星號",
     "unstarred": "已移除星號"
+  },
+  "impersonation": {
+    "return_notice": "你透過模擬登入開啟了 {mailbox}。",
+    "return_button": "返回我的帳戶"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Marcat amb estrella",
     "unstarred": "Estrella eliminada"
+  },
+  "impersonation": {
+    "return_notice": "Has obert {mailbox} mitjançant una suplantació.",
+    "return_button": "Torna al meu compte"
   }
 }

@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Atzīmēts ar zvaigznīti",
     "unstarred": "Zvaigznīte noņemta"
+  },
+  "impersonation": {
+    "return_notice": "Jūs atvērāt {mailbox}, uzdodoties par lietotāju.",
+    "return_button": "Atgriezties manā kontā"
   }
 }

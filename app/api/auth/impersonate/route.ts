@@ -16,6 +16,7 @@ import {
 import { IMPERSONATION_DESCRIPTION_PREFIX, mintImpersonationCredential } from '@/lib/impersonation/app-password';
 import { IMPERSONATION_GRANT_COOKIE, sealImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { IMPERSONATION_MARKER_COOKIE, IMPERSONATION_MARKER_MAX_AGE_SECONDS } from '@/lib/impersonation/marker-cookie';
+import { IMPERSONATION_RESTORE_COOKIE, parkOwnSession } from '@/lib/impersonation/restore';
 
 export const runtime = 'nodejs';
 
@@ -127,6 +128,18 @@ export async function GET(request: NextRequest) {
   }
 
   const cookieStore = await cookies();
+  // Park the browser's own session before the target's cookies replace it,
+  // for "Return to my account" (lib/impersonation/restore.ts). Without it
+  // the handoff goes ahead as before, and the way back is signing in again.
+  let restoreHandle: string | null = null;
+  try {
+    restoreHandle = await parkOwnSession(cookieStore, credential.id);
+  } catch (err) {
+    logger.warn('Impersonation restore handle not created', {
+      jti: claims.jti,
+      error: err instanceof Error ? err.message : 'Unknown',
+    });
+  }
   const sessionToken = encryptSession(normalizedServerUrl, claims.mailbox, credential.secret);
   cookieStore.set(sessionCookieName(IMPERSONATION_SLOT), sessionToken, impersonationCookieOptions());
   setStalwartAuthContextInStore(cookieStore, IMPERSONATION_SLOT, {
@@ -143,6 +156,8 @@ export async function GET(request: NextRequest) {
     }),
     impersonationCookieOptions(),
   );
+  if (restoreHandle) cookieStore.set(IMPERSONATION_RESTORE_COOKIE, restoreHandle, impersonationCookieOptions());
+  else cookieStore.delete(IMPERSONATION_RESTORE_COOKIE);
   // Lets ImpersonationReconciler tell this handoff from any link to /?impersonated=1.
   cookieStore.set(IMPERSONATION_MARKER_COOKIE, '1', {
     ...getCookieOptions(),
@@ -159,6 +174,7 @@ export async function GET(request: NextRequest) {
     actor_user_id: claims.actor_user_id,
     iss: claims.iss,
     expires_at: credential.expiresAt,
+    restorable: !!restoreHandle,
     ip:
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||

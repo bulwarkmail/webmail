@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Starred",
     "unstarred": "Star removed"
+  },
+  "impersonation": {
+    "return_notice": "You opened {mailbox} through impersonation.",
+    "return_button": "Return to my account"
   }
 }

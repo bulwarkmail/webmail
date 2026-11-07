@@ -8266,5 +8266,9 @@
   "selectionView": {
     "starred": "Stjernemerka",
     "unstarred": "Stjerna fjerna"
+  },
+  "impersonation": {
+    "return_notice": "Du opna {mailbox} via imitering.",
+    "return_button": "Tilbake til kontoen min"
   }
 }

@@ -13,6 +13,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
 import { EmbeddedContext } from "@/hooks/use-is-embedded";
 import { OrgAnnouncement } from "@/components/org/org-announcement";
+import { ImpersonationReturnBar } from "@/components/impersonation/impersonation-return-bar";
 import { PaneSizeContext } from "@/hooks/use-pane-size";
 import { PaneIdContext, ProTabFocusContext } from "@/hooks/use-pane-context";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
@@ -552,6 +553,7 @@ export default function ProHome() {
       <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[var(--app-top-inset)]">
         {/* Once for the whole shell: email and folder tabs have no app strip, and split panes would show it twice. */}
         <OrgAnnouncement />
+        <ImpersonationReturnBar />
         <div className="flex flex-1 overflow-hidden">
           {/* Leftmost Navigation Rail - identical to the standard layout */}
           <div

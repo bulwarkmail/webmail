@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Yıldız eklendi",
     "unstarred": "Yıldız kaldırıldı"
+  },
+  "impersonation": {
+    "return_notice": "{mailbox} posta kutusunu kimliğe bürünerek açtınız.",
+    "return_button": "Hesabıma dön"
   }
 }

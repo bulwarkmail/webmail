@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Mit Stern markiert",
     "unstarred": "Stern entfernt"
+  },
+  "impersonation": {
+    "return_notice": "Sie haben {mailbox} per Impersonation geöffnet.",
+    "return_button": "Zurück zu meinem Konto"
   }
 }

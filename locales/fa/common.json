@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "ستاره‌دار شد",
     "unstarred": "ستاره برداشته شد"
+  },
+  "impersonation": {
+    "return_notice": "شما {mailbox} را از طریق جعل هویت باز کرده‌اید.",
+    "return_button": "بازگشت به حساب من"
   }
 }

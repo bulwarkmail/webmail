@@ -2,15 +2,9 @@
 
 import { useEffect } from 'react';
 
-import { evictAll } from '@/lib/account-state-manager';
 import { replaceWindowLocation } from '@/lib/browser-navigation';
 import { IMPERSONATION_MARKER_COOKIE } from '@/lib/impersonation/marker-cookie';
-import { useAccountStore } from '@/stores/account-store';
-import { useAuthStore } from '@/stores/auth-store';
-import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
-import { useCalendarStore } from '@/stores/calendar-store';
-import { useContactStore } from '@/stores/contact-store';
-import { useIdentityStore } from '@/stores/identity-store';
+import { dropPersistedAccountState, sendAccountRegistry } from '@/lib/impersonation/return-client';
 
 /**
  * After a master-user impersonation handoff (`GET /api/auth/impersonate`), the
@@ -33,17 +27,10 @@ import { useIdentityStore } from '@/stores/identity-store';
  * swapped for one that keeps nothing before it is cleared. The marker only
  * counts together with the short-lived cookie the impersonate route sets, so a
  * link to `?impersonated=1` from anywhere else does nothing.
+ *
+ * The account list goes to the server first, which holds it with the session
+ * the handoff parked, so "Return to my account" can bring both back (#1538).
  */
-const PERSISTED_STORES = [
-  useAccountStore,
-  useAuthStore,
-  useIdentityStore,
-  useContactStore,
-  useCalendarStore,
-  useCalendarNotificationStore,
-];
-
-const DISCARD = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 
 /** Reads and expires the marker cookie; true when it was there. */
 function takeMarkerCookie(): boolean {
@@ -59,19 +46,8 @@ export function ImpersonationReconciler() {
     if (params.get('impersonated') !== '1') return;
     if (!takeMarkerCookie()) return;
 
-    try {
-      evictAll();
-    } catch {
-      /* in-memory snapshots are best-effort */
-    }
-    for (const store of PERSISTED_STORES) {
-      try {
-        store.persist.clearStorage();
-        store.persist.setOptions({ storage: DISCARD });
-      } catch {
-        /* ignore storage access errors */
-      }
-    }
+    sendAccountRegistry();
+    dropPersistedAccountState();
 
     // Reload to a clean URL (drop the marker) so the now-empty persisted stores
     // rehydrate and the app reconnects + re-derives the impersonated account

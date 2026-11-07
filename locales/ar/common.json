@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "تمت إضافة النجمة",
     "unstarred": "تمت إزالة النجمة"
+  },
+  "impersonation": {
+    "return_notice": "لقد فتحت {mailbox} عبر انتحال الهوية.",
+    "return_button": "العودة إلى حسابي"
   }
 }

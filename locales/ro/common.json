@@ -8258,5 +8258,9 @@
   "selectionView": {
     "starred": "Marcat cu stea",
     "unstarred": "Stea eliminată"
+  },
+  "impersonation": {
+    "return_notice": "Ați deschis {mailbox} prin impersonare.",
+    "return_button": "Înapoi la contul meu"
   }
 }

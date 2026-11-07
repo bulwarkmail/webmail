@@ -3,6 +3,7 @@
 import { PluginSlot } from '@/components/plugins/plugin-slot';
 import { OrgAnnouncement } from '@/components/org/org-announcement';
 import { OfflineBanner } from '@/components/offline/offline-banner';
+import { ImpersonationReturnBar } from '@/components/impersonation/impersonation-return-bar';
 import { useIsEmbedded } from '@/hooks/use-is-embedded';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -15,6 +16,7 @@ import { useAuthStore } from '@/stores/auth-store';
  * everywhere, not just on the mail page. The organisation's announcement
  * (Organisation > Notices) shows here too, above the plugins' banners,
  * except inside the Pro shell, which shows it once across all its panes.
+ * The same goes for the way back from an impersonation (#1538).
  */
 export function AppTopBannerSlot() {
   const username = useAuthStore((s) => s.username);
@@ -27,6 +29,7 @@ export function AppTopBannerSlot() {
     <>
       {!embedded && <OrgAnnouncement />}
       {!embedded && <OfflineBanner />}
+      {!embedded && <ImpersonationReturnBar />}
       <PluginSlot name="app-top-banner" extraProps={{ username, serverUrl, impersonated }} />
     </>
   );
