@@ -245,8 +245,8 @@ export function NavigationRail({
   // The phone tab bar: toasts sit above it.
   const tabBarRef = useBottomControls(orientation === "horizontal");
   const pathname = usePathname();
-  // Not while the page starts (see the hook).
-  const prefetchLinks = usePrefetchAfterStart() ? undefined : false;
+  // Not while the page starts on "/" (see the hook).
+  const prefetchLinks = usePrefetchAfterStart(pathname) ? undefined : false;
   // Each app draws its own tab bar, so its scroll position starts over: bring
   // the current entry back into view when it lies past the edge of a full bar.
   const tabBarScrollRef = useRef<HTMLDivElement>(null);

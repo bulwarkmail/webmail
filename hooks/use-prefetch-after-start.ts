@@ -2,52 +2,32 @@
 
 import { useEffect, useState } from "react";
 
-/** The longest the app's links wait for an idle moment before they prefetch anyway. */
-export const START_PREFETCH_TIMEOUT_MS = 3000;
+/** How long links on the bare app root wait for the mail view's address before they prefetch anyway. */
+export const START_PREFETCH_TIMEOUT_MS = 5000;
 
 let ready = false;
-let scheduled = false;
-const waiting = new Set<() => void>();
-
-function markReady(): void {
-  ready = true;
-  for (const wake of waiting) wake();
-  waiting.clear();
-}
-
-function scheduleReady(): void {
-  if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(markReady, { timeout: START_PREFETCH_TIMEOUT_MS });
-  } else {
-    setTimeout(markReady, 0);
-  }
-}
 
 /**
  * Whether the app's own links (the rail's Calendar, Contacts, Files, Settings)
- * may prefetch their routes yet. Not while the page starts: the mail view
- * rewrites "/" to its folder's address as it comes up, and Next prefetches
- * every visible link again when the address changes, so links that prefetched
- * before that sent each request twice, both while the first rows were still
- * on their way. From the first idle moment on they prefetch as before, and a
- * rail mounted later (another page) prefetches at once.
+ * may prefetch their routes yet. Not on the bare app root while the page
+ * starts: the mail view rewrites "/" to its folder's address as it comes up,
+ * and Next prefetches every visible link again when the address changes, so
+ * links that prefetched before that sent each request twice, while the first
+ * rows were still on their way. Once the address has moved on (or after
+ * START_PREFETCH_TIMEOUT_MS on "/") they prefetch as before, and so does any
+ * rail mounted later.
  */
-export function usePrefetchAfterStart(): boolean {
-  const [on, setOn] = useState(ready);
+export function usePrefetchAfterStart(pathname: string): boolean {
+  const atRoot = pathname === "/";
+  const [timedOut, setTimedOut] = useState(false);
+  if (!atRoot) ready = true;
   useEffect(() => {
-    if (ready) {
-      setOn(true);
-      return;
-    }
-    const wake = () => setOn(true);
-    waiting.add(wake);
-    if (!scheduled) {
-      scheduled = true;
-      scheduleReady();
-    }
-    return () => {
-      waiting.delete(wake);
-    };
-  }, []);
-  return on;
+    if (ready || !atRoot) return;
+    const timer = setTimeout(() => {
+      ready = true;
+      setTimedOut(true);
+    }, START_PREFETCH_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [atRoot]);
+  return ready || timedOut || !atRoot;
 }
