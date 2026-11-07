@@ -3,6 +3,7 @@
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { MemoizedThreadListItem, type ListFolder } from "./thread-list-item";
+import { useRowSlots } from "./list-row-slots";
 import { ListColumnsHeader } from "./list-columns";
 import { useListboxFocus } from "./list-a11y";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
@@ -1079,6 +1080,8 @@ export function EmailList({
   // Debounce to prevent rapid cascade when thread grouping reduces item
   // count below the viewport size (e.g. 2400 emails → fewer thread groups).
   const virtualItems = virtualizer.getVirtualItems();
+  // See useRowSlots: new messages update the rows on screen instead of replacing them.
+  const rowSlots = useRowSlots(virtualItems.map((item) => ({ index: item.index, key: String(item.key) })));
   const lastVirtualItemIndex = virtualItems[virtualItems.length - 1]?.index;
   const loadMoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1524,7 +1527,7 @@ export function EmailList({
                 const thread = listItem?.kind === 'row' ? listItem.thread : null;
                 return (
                   <div
-                    key={virtualItem.key}
+                    key={rowSlots.get(String(virtualItem.key)) ?? virtualItem.key}
                     data-index={virtualItem.index}
                     role="presentation"
                     data-pos={thread ? rowPosOfItem.get(virtualItem.index) : undefined}

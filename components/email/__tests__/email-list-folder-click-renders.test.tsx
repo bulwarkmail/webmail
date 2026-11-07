@@ -113,4 +113,27 @@ describe('rows during a folder switch', () => {
     // The same ticks in a new set draw nothing.
     expect(useEmailDrag.mock.calls.length).toBe(afterFirst);
   });
+
+  it('a new view updates the rows on screen instead of replacing them', async () => {
+    const { container, rerender } = render(<List emails={INBOX} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    const firstRow = container.querySelector('[data-index="0"] [data-testid="email-list-item"]');
+    expect(firstRow?.getAttribute('data-email-id')).toBe('a');
+    act(() => { useEmailStore.setState({ selectedMailbox: 'sent' }); });
+    rerender(<List emails={SENT} />);
+    const after = container.querySelector('[data-index="0"] [data-testid="email-list-item"]');
+    expect(after?.getAttribute('data-email-id')).toBe('c');
+    expect(after).toBe(firstRow);
+    expect(await screen.findByText('Recipient c')).toBeInTheDocument();
+  });
+
+  it('within a view, a new message at the top leaves the other rows as they are', async () => {
+    const { container, rerender } = render(<List emails={INBOX} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    const rowA = container.querySelector('[data-email-id="a"]');
+    const newest = { ...makeEmail('z', 'inbox'), receivedAt: '2026-10-01T10:00:00Z' };
+    rerender(<List emails={[newest, ...INBOX]} />);
+    expect(container.querySelector('[data-email-id="a"]')).toBe(rowA);
+    expect(container.querySelector('[data-email-id="z"]')).not.toBe(rowA);
+  });
 });

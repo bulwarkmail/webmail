@@ -808,6 +808,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             <AvatarGutter onToggle={handleCheckboxClick}>
               <div className="relative flex flex-shrink-0">
                 <SelectableAvatar
+                  // Its image state is about the sender: a row that shows another message (useRowSlots) starts it afresh.
+                  key={`${sender?.email ?? ''}|${sender?.name ?? ''}`}
                   name={sender?.name}
                   email={sender?.email}
                   size={oneLineRow ? "sm" : "md"}
@@ -882,7 +884,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}>
                       <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                     </span>
-                    <PluginRowBadges email={email} className={mvRow ? "ms-2" : undefined} />
+                    <PluginRowBadges key={emailKeyFor(email)} email={email} className={mvRow ? "ms-2" : undefined} />
                     {(previewSnippet || inlinePreview) && (
                       <span dir="auto" className="min-w-0 flex-1 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
@@ -926,7 +928,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
               </div>
               {mvRow && (
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mvRow />
+                <RowChips key={emailKeyFor(email)} email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mvRow />
               )}
               </>
             ) : (
@@ -1027,7 +1029,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   )}>
                     <bdi>{subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || tNoSubject)}</bdi>
                   </span>
-                  <PluginRowBadges email={email} />
+                  <PluginRowBadges key={emailKeyFor(email)} email={email} />
                 </div>
 
                 {showPreview && density !== 'extra-compact' && density !== 'compact' && (
@@ -1050,7 +1052,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}
                   </div>
                 )}
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mountainView={mvMobileRow} />
+                <RowChips key={emailKeyFor(email)} email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mountainView={mvMobileRow} />
               </>
             )}
           </div>
@@ -1061,6 +1063,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           // A cell of its own: a row holds cells, not buttons (SR-01).
           <div role="gridcell">
           <EmailHoverActions
+            key={emailKeyFor(email)}
             email={email}
             backgroundClassName={resolvedRowTint ? resolvedRowTint : mvRow ? mvHoverBackground(isChecked, isUnread, selected) : ((selected || isChecked) ? "bg-accent" : "bg-muted")}
             onToggleStar={onToggleStar}
@@ -1091,7 +1094,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
   function ThreadListItemRow(props, ref) {
     const { thread } = props;
-    if (thread.emailCount !== 1) return <ConversationRow {...props} ref={ref} />;
+    // A conversation row holds state about its conversation: it is built
+    // afresh for another one (see useRowSlots).
+    if (thread.emailCount !== 1) return <ConversationRow key={thread.threadKey} {...props} ref={ref} />;
     const { latestEmail } = thread;
     const { onEmailSelect, onEmailDoubleClick, onPrefetch, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment } = props;
     return (
