@@ -152,8 +152,9 @@ export async function fetchConfig(): Promise<ConfigData> {
       setNoThirdPartyTraffic(data.noThirdPartyTraffic === true);
       // Lite configures error reporting from policy.json instead.
       if (!IS_LITE) configureErrorReporting(data.errorReporting ?? null);
-      // Fetch admin policy alongside config (non-blocking)
-      usePolicyStore.getState().fetchPolicy();
+      // The admin policy alongside the config (non-blocking): the request the
+      // policy store started at load, or a first one.
+      void usePolicyStore.getState().fetchStartupPolicy();
       return data;
     })
     .finally(() => {

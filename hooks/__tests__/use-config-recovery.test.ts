@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/browser-navigation', () => ({ apiFetch: mocks.apiFetch }));
 vi.mock('@/stores/policy-store', () => ({
-  usePolicyStore: { getState: () => ({ fetchPolicy: mocks.fetchPolicy }) },
+  usePolicyStore: { getState: () => ({ fetchPolicy: mocks.fetchPolicy, fetchStartupPolicy: mocks.fetchPolicy }) },
 }));
 
 const config = createConfig();
