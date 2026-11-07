@@ -12,8 +12,10 @@ import { useCallback, useRef, useState, type SetStateAction } from "react";
  */
 export function useQuietState<T>(initial: T | (() => T)): [T, (next: SetStateAction<T>) => void] {
   const [value, setValue] = useState(initial);
+  // The value last set, not the last one drawn: while a transition holds a
+  // set back, a render still shows the old value, and comparing with that
+  // dropped a set back to it, so the held-back value won.
   const latest = useRef(value);
-  latest.current = value;
   const set = useCallback((next: SetStateAction<T>) => {
     const resolved = typeof next === "function" ? (next as (previous: T) => T)(latest.current) : next;
     if (Object.is(resolved, latest.current)) return;
