@@ -37,6 +37,7 @@ import { NotificationBell } from "@/components/notifications/notification-center
 import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 import { writeRailHints, type RailHint } from "@/lib/boot-skeleton/hints";
+import { usePrefetchAfterStart } from "@/hooks/use-prefetch-after-start";
 
 interface NavItem {
   id: string;
@@ -244,6 +245,8 @@ export function NavigationRail({
   // The phone tab bar: toasts sit above it.
   const tabBarRef = useBottomControls(orientation === "horizontal");
   const pathname = usePathname();
+  // Not while the page starts (see the hook).
+  const prefetchLinks = usePrefetchAfterStart() ? undefined : false;
   // Each app draws its own tab bar, so its scroll position starts over: bring
   // the current entry back into view when it lies past the edge of a full bar.
   const tabBarScrollRef = useRef<HTMLDivElement>(null);
@@ -406,6 +409,7 @@ export function NavigationRail({
           const Icon = item.icon;
           return (
             <Link
+              prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
@@ -447,6 +451,7 @@ export function NavigationRail({
           const PageIcon = iconForName(page.icon) ?? Puzzle;
           return (
             <Link
+              prefetch={prefetchLinks}
               key={`plugin-page:${page.pluginId}:${page.id}`}
               href={pluginPageHref(page)}
               onClick={(e) => { if (interceptLeave(e)) return; if (activeAppId) onCloseInlineApp?.(); }}
@@ -544,6 +549,7 @@ export function NavigationRail({
 
         {/* Settings */}
         <Link
+          prefetch={prefetchLinks}
           href="/settings"
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
@@ -625,6 +631,7 @@ export function NavigationRail({
           const Icon = item.icon;
           return (
             <Link
+              prefetch={prefetchLinks}
               key={item.id}
               href={item.href}
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
@@ -669,6 +676,7 @@ export function NavigationRail({
           const PageIcon = iconForName(page.icon) ?? Puzzle;
           return (
             <Link
+              prefetch={prefetchLinks}
               key={`plugin-page:${page.pluginId}:${page.id}`}
               href={pluginPageHref(page)}
               onClick={(e) => { if (interceptLeave(e)) return; if (activeAppId) onCloseInlineApp?.(); }}
@@ -803,6 +811,8 @@ export function NavigationRail({
         )}
 
         <Link
+
+          prefetch={prefetchLinks}
           href="/settings"
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
