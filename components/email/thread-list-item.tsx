@@ -144,6 +144,9 @@ function useArmOnPointerOver(messageKey = ''): [boolean, () => void] {
   const keyRef = React.useRef(messageKey);
   keyRef.current = messageKey;
   const arm = React.useCallback(() => setArmedFor((prev) => (prev === keyRef.current ? prev : keyRef.current)), []);
+  // Forgotten as soon as the row shows another message, so coming back to
+  // this one (back to the folder) finds it unarmed too, as a new row would.
+  if (armedFor !== null && armedFor !== messageKey) setArmedFor(null);
   return [armedFor === messageKey, arm];
 }
 

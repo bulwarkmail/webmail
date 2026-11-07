@@ -39,5 +39,9 @@ describe('hover actions on a kept row', () => {
     rerender(row(mail('b')));
     expect(container.querySelector('[data-email-id="b"]')).not.toBeNull();
     expect(container.querySelector('[data-testid^="hover-action-"]')).toBeNull();
+    // Back to the first message (back to its folder): unarmed, as a new row.
+    rerender(row(mail('a')));
+    expect(container.querySelector('[data-email-id="a"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid^="hover-action-"]')).toBeNull();
   });
 });
