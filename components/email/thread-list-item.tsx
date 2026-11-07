@@ -133,11 +133,18 @@ function useSwipeRows(): boolean {
   return isMobile || touchCompact;
 }
 
-/** Hover actions mount on the first pointerover or keyboard focus in the row. */
-function useArmOnPointerOver(): [boolean, () => void] {
-  const [armed, setArmed] = React.useState(false);
-  const arm = React.useCallback(() => setArmed(true), []);
-  return [armed, arm];
+/**
+ * Hover actions mount on the first pointerover or keyboard focus in the row,
+ * for the message it shows: a row the list keeps for the next message (see
+ * useRowSlots) starts unarmed again, as a new row did, instead of carrying
+ * the last message's hidden hover actions along.
+ */
+function useArmOnPointerOver(messageKey = ''): [boolean, () => void] {
+  const [armedFor, setArmedFor] = React.useState<string | null>(null);
+  const keyRef = React.useRef(messageKey);
+  keyRef.current = messageKey;
+  const arm = React.useCallback(() => setArmedFor((prev) => (prev === keyRef.current ? prev : keyRef.current)), []);
+  return [armedFor === messageKey, arm];
 }
 
 function UnreadDot({ besideAvatar }: { besideAvatar: boolean }) {
@@ -573,7 +580,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       sourceMailboxId: selectedMailbox,
     });
 
-    const [hoverActionsArmed, armHoverActions] = useArmOnPointerOver();
+    const [hoverActionsArmed, armHoverActions] = useArmOnPointerOver(emailKeyFor(email));
     const { onTouchStart, onTouchEnd, onTouchMove, onTouchCancel, isPressed } = useLongPress(
       useCallback((pos) => {
         onContextMenu?.(
