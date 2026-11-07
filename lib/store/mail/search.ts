@@ -29,7 +29,7 @@
  */
 
 import { MethodError, type MethodHandler } from '../area';
-import type { SqlValue } from '../storage';
+import type { SqlValue, StorageAdapter } from '../storage';
 import { bodyText, INDEX_BODY_CHARS } from './records';
 
 export const TEXT_FIELDS = ['text', 'subject', 'from', 'to', 'cc', 'bcc', 'body'] as const;
@@ -132,8 +132,21 @@ function quote(term: string): string {
   return `"${term.replace(/"/g, '""')}"`;
 }
 
-/** SQL for a text condition, as a condition on `e.rowid`. Every term has to match. */
-export function textCondition(field: TextField, input: string): { sql: string; params: SqlValue[] } {
+/** One FTS5 lookup of a term: the index table and its MATCH value. */
+export interface TermLookup { table: string; match: string }
+
+/**
+ * Where a query keeps the messages each term matched, so a page and its total
+ * read the index once between them, not once each. Returns the SQL that tests
+ * `rowid` against the term's matches.
+ */
+export type TermSets = (lookups: readonly TermLookup[], rowid: string) => string;
+
+/**
+ * SQL for a text condition on `rowid` (the message's or its folder row's).
+ * Every term has to match. Without `sets`, each term is a subquery of its own.
+ */
+export function textCondition(field: TextField, input: string, rowid = 'e.rowid', sets?: TermSets): { sql: string; params: SqlValue[] } {
   const terms = parseTerms(input);
   if (terms.length === 0) return { sql: '0', params: [] };
   const column = HEAD_COLUMNS[field];
@@ -142,17 +155,48 @@ export function textCondition(field: TextField, input: string): { sql: string; p
   const conditions: string[] = [];
   const params: SqlValue[] = [];
   for (const term of terms) {
-    const selects: string[] = [];
+    const lookups: TermLookup[] = [];
     for (const probe of probesFor(term)) {
       for (const pair of tables) {
-        const table = pair[probe.index];
-        selects.push(`SELECT rowid FROM ${table} WHERE ${table} MATCH ?`);
-        params.push(`${scope}${quote(probe.text)}${probe.prefix ? '*' : ''}`);
+        lookups.push({ table: pair[probe.index], match: `${scope}${quote(probe.text)}${probe.prefix ? '*' : ''}` });
       }
     }
-    conditions.push(`e.rowid IN (${selects.join(' UNION ')})`);
+    if (sets) {
+      conditions.push(sets(lookups, rowid));
+      continue;
+    }
+    conditions.push(`${rowid} IN (${lookups.map(({ table }) => `SELECT rowid FROM ${table} WHERE ${table} MATCH ?`).join(' UNION ')})`);
+    params.push(...lookups.map(({ match }) => match));
   }
   return { sql: conditions.join(' AND '), params };
+}
+
+/**
+ * Term sets in an in-memory temp table (temp_store is MEMORY, so nothing of it
+ * reaches the disk), filled once per query. A test is then a seek in that
+ * table, for only the rows the query visits. `clear` empties it after the query.
+ */
+export function tempTermSets(db: StorageAdapter): { sets: TermSets; clear(): void } {
+  let next = 0;
+  let created = false;
+  return {
+    sets: (lookups, rowid) => {
+      if (!created) {
+        db.exec('CREATE TEMP TABLE IF NOT EXISTS search_hit (term INTEGER NOT NULL, email_rowid INTEGER NOT NULL, PRIMARY KEY (term, email_rowid)) WITHOUT ROWID');
+        db.run('DELETE FROM temp.search_hit');
+        created = true;
+      }
+      const term = next;
+      next += 1;
+      for (const { table, match } of lookups) {
+        db.run(`INSERT OR IGNORE INTO temp.search_hit (term, email_rowid) SELECT ${term}, rowid FROM ${table} WHERE ${table} MATCH ?`, [match]);
+      }
+      return `EXISTS (SELECT 1 FROM temp.search_hit h WHERE h.term = ${term} AND h.email_rowid = ${rowid})`;
+    },
+    clear: () => {
+      if (created) db.run('DELETE FROM temp.search_hit');
+    },
+  };
 }
 
 // ---- Limiting a whole filter ----

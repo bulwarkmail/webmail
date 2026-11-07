@@ -15,7 +15,10 @@ function spying(db: StorageAdapter) {
   const seen: Array<{ sql: string; params: readonly SqlValue[] }> = [];
   const spied: StorageAdapter = {
     exec: (sql) => db.exec(sql),
-    run: (sql, params) => db.run(sql, params),
+    run: (sql, params) => {
+      seen.push({ sql, params: params ?? [] });
+      return db.run(sql, params);
+    },
     all: <T extends object>(sql: string, params?: readonly SqlValue[]) => {
       seen.push({ sql, params: params ?? [] });
       return db.all<T>(sql, params);
@@ -172,6 +175,30 @@ describe('calculateTotal', () => {
       calculateTotal: true,
     }, 'q']]);
     expect(answer?.methodResponses[0][1].total).toBe(1);
+    const count = t.seen.find(({ sql }) => sql.startsWith('SELECT COUNT'))!;
+    const plan = t.raw.all<{ detail: string }>(`EXPLAIN QUERY PLAN ${count.sql}`, count.params).map((row) => row.detail).join('; ');
+    expect(plan).toContain('email_mailbox_list');
+    expect(plan).not.toMatch(/\bSCAN e\b|SEARCH e\b/);
+  });
+
+  it('reads each search term off the index once for the page and its total, and counts no message', async () => {
+    const t = setup([
+      { id: 'a', subject: 'Rechnung' } as never,
+      { id: 'b', subject: 'Termin' } as never,
+      { id: 'c', subject: 'Zahlungserinnerung zur Rechnung' } as never,
+    ]);
+    await t.engine.requestSync();
+    t.seen.length = 0;
+    const answer = await t.engine.answer([['Email/query', {
+      filter: { operator: 'AND', conditions: [IN_INBOX, { text: 'rechnung' }] },
+      sort: [NEWEST],
+      limit: 1,
+      calculateTotal: true,
+    }, 'q']]);
+    expect(answer?.methodResponses[0][1]).toMatchObject({ ids: ['c'], total: 2 });
+    // Word and trigram index, head and body: four lookups, each read once.
+    const lookups = t.seen.reduce((n, { sql }) => n + (sql.match(/\bMATCH\b/g)?.length ?? 0), 0);
+    expect(lookups).toBe(4);
     const count = t.seen.find(({ sql }) => sql.startsWith('SELECT COUNT'))!;
     const plan = t.raw.all<{ detail: string }>(`EXPLAIN QUERY PLAN ${count.sql}`, count.params).map((row) => row.detail).join('; ');
     expect(plan).toContain('email_mailbox_list');

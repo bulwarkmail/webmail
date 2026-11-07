@@ -9,7 +9,7 @@ import { listObjects } from '../engine/core-schema';
 import type { SqlValue } from '../storage';
 import { headerValue, parseHeaderProperty, type RawHeader } from './headers';
 import { keywordKey } from './records';
-import { limitTextConditions, searchSnippetGet, textCondition, TEXT_FIELDS, type TextField } from './search';
+import { limitTextConditions, searchSnippetGet, tempTermSets, textCondition, TEXT_FIELDS, type TermSets, type TextField } from './search';
 
 type Filter = Record<string, unknown>;
 
@@ -33,12 +33,12 @@ function likeTerm(value: unknown): string {
  * (`d`) at hand, conditions read it instead of the message's own row, which
  * saves reading the message at all when nothing else needs it.
  */
-function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null, folderRow = drivenBy !== null): Sql {
+function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null, folderRow = drivenBy !== null, sets?: TermSets): Sql {
   const rowid = folderRow ? 'd.email_rowid' : 'e.rowid';
   const receivedAt = folderRow ? 'd.received_at' : 'e.received_at';
   if (typeof filter.operator === 'string') {
     const conditions = Array.isArray(filter.conditions) ? filter.conditions as Filter[] : [];
-    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null, folderRow));
+    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null, folderRow, sets));
     const params = parts.flatMap((p) => p.params);
     const joined = (joiner: string) => parts.map((p) => `(${p.sql})`).join(joiner);
     if (filter.operator === 'AND') return { sql: parts.length ? joined(' AND ') : '1', params };
@@ -104,7 +104,7 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null,
       }
       default:
         if ((TEXT_FIELDS as readonly string[]).includes(key)) {
-          const text = textCondition(key as TextField, String(value));
+          const text = textCondition(key as TextField, String(value), rowid, sets);
           conditions.push(text.sql);
           params.push(...text.params);
           break;
@@ -286,11 +286,21 @@ function keywordOrderedPage(
 }
 
 const emailQuery: MethodHandler = (ctx, args) => {
+  const terms = tempTermSets(ctx.db);
+  try {
+    return queryEmails(ctx, args, terms.sets);
+  } finally {
+    terms.clear();
+  }
+};
+
+function queryEmails(ctx: MethodContext, args: Record<string, unknown>, sets: TermSets): MethodResult {
   const jmap = jmapOf(ctx, args);
   const filter = limitTextConditions((args.filter ?? undefined) as Filter | undefined);
   if (args.anchor !== undefined) throw new MethodError('unsupportedFilter', 'anchor needs the server');
   const box = drivingMailbox(filter);
-  const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
+  // Each text term is read off the index once, for the page and its total.
+  const where = filter ? filterSql(filter, jmap, box, box !== null, sets) : { sql: '1', params: [] };
   const sort = (args.sort as Comparator[]) ?? [];
   const collapse = Boolean(args.collapseThreads);
   const levels = collapse ? null : keywordLevels(ctx, sort);
@@ -338,7 +348,7 @@ const emailQuery: MethodHandler = (ctx, args) => {
     )?.n ?? 0);
   }
   return result;
-};
+}
 
 /** What only the stored body has, past what the list keeps. */
 const BODY_PROPERTIES = new Set(['bodyValues', 'textBody', 'htmlBody', 'bodyStructure', 'headers', 'attachments', 'bcc', 'replyTo', 'messageId', 'inReplyTo', 'references', 'sender']);
