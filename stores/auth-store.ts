@@ -1946,12 +1946,24 @@ export const useAuthStore = create<AuthState>()(
           ]);
 
           const { identities, primaryIdentity } = loadIdentities(rawIdentities, username);
-          initializeFeatureStores(client);
 
           await checkStoreOwner(accountId, client.getAccountId(), serverUrl);
           // Store client in multi-account map
           holdClient(accountId, client);
           bindClientStatusHandlers(client, set, get, accountId);
+
+          // Mailboxes, quota and the folder's first page first: the first
+          // rows wait for them, and nothing else here does. Asked for before
+          // the sign-in flips the app to signed in (below), and with a task
+          // in between, so the requests leave before that render instead of
+          // after it. Dynamic import avoids a static circular dep with
+          // email-store.
+          import('@/stores/email-store').then(({ useEmailStore }) => {
+            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
+              debug.error('Initial data prefetch failed:', err);
+            });
+          }).catch(() => {});
+          initializeFeatureStores(client);
 
           accountStore.addAccount({
             label: primaryIdentity?.name || username,
@@ -1988,6 +2000,8 @@ export const useAuthStore = create<AuthState>()(
             accountStore.updateAccount(accountId, { serverIdentifiers });
           }
 
+          // The requests asked for above leave when this task ends.
+          await new Promise((resolve) => setTimeout(resolve, 0));
           set({
             isAuthenticated: true,
             isLoading: false,
@@ -2005,15 +2019,6 @@ export const useAuthStore = create<AuthState>()(
             error: null,
             activeAccountId: accountId,
           });
-
-          // Kick off mailbox/quota/email fetches now so they overlap with the
-          // soft-nav + home-page hydration that follows login. Dynamic import
-          // avoids a static circular dep with email-store.
-          import('@/stores/email-store').then(({ useEmailStore }) => {
-            useEmailStore.getState().prefetchInitialData(client).catch((err) => {
-              debug.error('Initial data prefetch failed:', err);
-            });
-          }).catch(() => {});
 
           // Schedule token refresh for TOTP-upgraded sessions
           if (upgradedToOAuth && oauthExpiresIn > 0) {
