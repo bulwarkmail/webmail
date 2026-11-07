@@ -2,7 +2,8 @@
 
 import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
-import { MemoizedThreadListItem, listMailboxRole } from "./thread-list-item";
+import { MemoizedThreadListItem, type ListFolder } from "./thread-list-item";
+import { useRowSlots } from "./list-row-slots";
 import { ListColumnsHeader } from "./list-columns";
 import { useListboxFocus } from "./list-a11y";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
@@ -62,7 +63,7 @@ import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionStarredWithUndo, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { measureVisibleRow } from "@/lib/virtual-row-measure";
-import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
+import { TagDisplaySourceContext, useMeasuredTagDisplaySource } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
 import { getRuleAccountAddresses, resolveQuickRuleTarget } from "@/lib/filters/quick-rule-target";
@@ -305,6 +306,20 @@ export function EmailList({
   // Spam is pointless on your own outgoing mail, as in the context menu.
   const spamApplicable = spamApplicableIn(effectiveMailboxRole);
 
+  // The folder the rows on screen were fetched for, taken when the rows
+  // change. A click on another folder changes the selection at once while
+  // the old rows stay until the new ones come: with the selected folder the
+  // rows re-rendered then, in the click's own render pass, and drew their
+  // senders as the new folder's recipients (or the other way round).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- taken with the rows, on purpose
+  const rowsView = useMemo(() => ({ mailboxId: selectedMailbox, isUnifiedView, unifiedRole }), [emails]);
+  const rowsRole = mailboxes.find((m) => m.id === rowsView.mailboxId)?.role
+    ?? (rowsView.isUnifiedView ? (rowsView.unifiedRole ?? undefined) : undefined);
+  // By value: rowsView is a new object with every page of rows, and a new
+  // folder object drew every row on screen again for each page loaded while
+  // scrolling a large folder.
+  const listFolder = useMemo<ListFolder>(() => ({ mailboxId: rowsView.mailboxId, role: rowsRole }), [rowsView.mailboxId, rowsRole]);
+
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread
   // grouping mirrors the server order instead of re-sorting the page by date.
@@ -469,15 +484,14 @@ export function EmailList({
     return () => observer.disconnect();
   }, []);
   // One tag treatment for the whole list, measured from the scroll container.
-  const tagDisplay = useMeasuredTagDisplay(parentRef);
+  const tagDisplay = useMeasuredTagDisplaySource(parentRef);
   const density = useSettingsStore((state) => state.density);
+  // Row heights follow the font size too (see measuredRowHeights).
+  const fontSize = useSettingsStore((state) => state.fontSize);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
   const { oneLine: isFocusedMailLayout, columns: listColumns } = useListRowShape();
-  const showRecipientColumn = useEmailStore((state) => {
-    const role = listMailboxRole(state);
-    return role === 'sent' || role === 'drafts';
-  });
+  const showRecipientColumn = listFolder.role === 'sent' || listFolder.role === 'drafts';
   const footerHasMore = hasMore ?? hasMoreEmails;
   const footerIsLoadingMore = isLoadingMoreItems ?? isLoadingMore;
   const isMobile = useUIStore((state) => state.isMobile);
@@ -501,29 +515,57 @@ export function EmailList({
 
   // The virtualizer's guesses follow the rows' shape (see useListRowShape).
 
+  // What kind of row an item is, as far as its height goes; null for the
+  // section headers and notes.
+  const rowShapeOf = useCallback((index: number): { key: string; emptyPreview: boolean; chips: boolean } | null => {
+    const item = items[index];
+    if (item?.kind !== 'row') return null;
+    const latest = item.thread.latestEmail;
+    const emptyPreview = !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
+    const hasCode = showVerificationCodes && !!listVerificationCode(latest);
+    const chips = hasCode || (!!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
+    return { key: `${isFocusedMailLayout}|${density}|${fontSize}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
+  }, [density, fontSize, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  // The height rows of each kind measured at last. A new list (another
+  // folder, a search) is placed with them, so its rows need no correction
+  // when they are measured: a guess a pixel off moved every row and drew
+  // the list a second time after each folder switch.
+  const measuredRowHeights = useRef(new Map<string, number>());
+
   const estimateSize = useCallback((index: number) => {
     const item = items[index];
     if (item?.kind === 'header' || item?.kind === 'unread-empty') return 48;
+    const shape = rowShapeOf(index);
+    const measured = shape ? measuredRowHeights.current.get(shape.key) : undefined;
+    if (measured !== undefined) return measured;
     if (isFocusedMailLayout) {
       return { 'extra-compact': 28, compact: 40, regular: 56, comfortable: 64 }[density];
     }
     // Rows the list has not measured yet are placed by this guess, and each
     // one it gets wrong shifts the list when it is measured on the way back
     // up after a jump down (scrollbar drag, End). So guess per row.
-    const latest = item?.kind === 'row' ? item.thread.latestEmail : undefined;
-    let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    if (showPreview && density !== 'extra-compact') {
-      // A mail without a preview draws a one-line "No preview available",
-      // a line (23px) shorter than a real one. Only comfortable rows show a
-      // second preview line (mail-15).
-      const emptyPreview = !!latest && !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
-      size += emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
+    // The rows' heights as Chromium lays them out (line heights, so the same
+    // at any zoom): a guess off by a pixel moved every row when it was measured
+    // and drew the first list a second time.
+    let size = { 'extra-compact': 53, compact: 57, regular: 73, comfortable: 81 }[density];
+    if (showPreview && (density === 'regular' || density === 'comfortable')) {
+      // A preview line; comfortable rows show a second one (mail-15). A mail
+      // without a preview draws one line, "No preview available".
+      size += density === 'comfortable' && !shape?.emptyPreview ? 45.5 : 22.75;
     }
-    // The chip row (attachments, verification code): a 22px chip plus 6px margin.
-    const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
-    if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
+    // The chip row (attachments, verification code).
+    if (shape?.chips) size += 24;
     return size;
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  }, [density, isFocusedMailLayout, showPreview, items, rowShapeOf]);
+
+  const measureRow = useCallback((element: HTMLDivElement, entry: ResizeObserverEntry | undefined, instance: Parameters<typeof measureVisibleRow<HTMLDivElement>>[2]) => {
+    const size = measureVisibleRow(element, entry, instance);
+    if (size > 0) {
+      const shape = rowShapeOf(instance.indexFromElement(element));
+      if (shape) measuredRowHeights.current.set(shape.key, size);
+    }
+    return size;
+  }, [rowShapeOf]);
 
   // Stable per list, so the virtualizer does not rebuild every row's
   // measurement on each scroll render.
@@ -563,7 +605,7 @@ export function EmailList({
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
     // over that row's divider (at 125% or 150% display scaling).
-    measureElement: measureVisibleRow,
+    measureElement: measureRow,
   });
 
 
@@ -1071,6 +1113,27 @@ export function EmailList({
   // Debounce to prevent rapid cascade when thread grouping reduces item
   // count below the viewport size (e.g. 2400 emails → fewer thread groups).
   const virtualItems = virtualizer.getVirtualItems();
+  // See useRowSlots: new messages update the rows on screen instead of replacing them.
+  const rowSlots = useRowSlots(virtualItems.map((item) => ({ index: item.index, key: String(item.key) })));
+  // A ref per row key: a kept row that now shows another message gets a new
+  // ref, so the virtualizer measures it for that message. With one shared
+  // ref React never called it again, and a row that came out taller than
+  // the guess (no preview line, a larger font, another browser) kept the
+  // old height while the rows below overlapped it.
+  const measureRefs = useRef(new Map<string, (node: HTMLDivElement | null) => void>());
+  const measureRefFor = (key: string) => {
+    const refs = measureRefs.current;
+    let ref = refs.get(key);
+    if (!ref) {
+      ref = (node) => virtualizer.measureElement(node);
+      refs.set(key, ref);
+      if (refs.size > 4 * virtualItems.length + 200) {
+        const shown = new Set(virtualItems.map((item) => String(item.key)));
+        for (const k of refs.keys()) if (!shown.has(k) && k !== key) refs.delete(k);
+      }
+    }
+    return ref;
+  };
   const lastVirtualItemIndex = virtualItems[virtualItems.length - 1]?.index;
   const loadMoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1179,6 +1242,7 @@ export function EmailList({
           onUndoSpam={rowHandlers.onUndoSpam}
           onOpenAttachment={rowHandlers.onOpenAttachment}
           loadAttachments={loadAttachments}
+          listFolder={listFolder}
         />}
       </>
     );
@@ -1235,7 +1299,7 @@ export function EmailList({
 
   return (
     <RowTranslatorsProvider>
-    <TagDisplayContext.Provider value={tagDisplay}>
+    <TagDisplaySourceContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
       {/* Batch Actions Toolbar */}
       <div
@@ -1515,11 +1579,11 @@ export function EmailList({
                 const thread = listItem?.kind === 'row' ? listItem.thread : null;
                 return (
                   <div
-                    key={virtualItem.key}
+                    key={rowSlots.get(String(virtualItem.key)) ?? virtualItem.key}
                     data-index={virtualItem.index}
                     role="presentation"
                     data-pos={thread ? rowPosOfItem.get(virtualItem.index) : undefined}
-                    ref={virtualizer.measureElement}
+                    ref={measureRefFor(String(virtualItem.key))}
                     style={{
                       position: 'absolute',
                       // `top`, not translateY: layout snaps it to device
@@ -1704,7 +1768,7 @@ export function EmailList({
         );
       })()}
     </div>
-    </TagDisplayContext.Provider>
+    </TagDisplaySourceContext.Provider>
     </RowTranslatorsProvider>
   );
 }

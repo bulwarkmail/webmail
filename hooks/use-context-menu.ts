@@ -65,6 +65,9 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
   });
 
   const menuRef = useRef<HTMLDivElement | null>(null);
+  // Whether it is open, as last asked for: closing a closed menu sets nothing.
+  const openRef = useRef(contextMenu.isOpen);
+  openRef.current = contextMenu.isOpen;
 
   const openContextMenu = useCallback((e: React.MouseEvent, data: T) => {
     e.preventDefault();
@@ -80,6 +83,7 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
     // The row it's for stays marked while it's open (a ⋮ inside the row counts as the row).
     if (target) position.opener = target.closest<HTMLElement>("[data-menu-row]") ?? target;
 
+    openRef.current = true;
     setContextMenu({
       isOpen: true,
       position,
@@ -92,14 +96,16 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
     // Focus goes back to it, and the row it's in stays marked while the menu is open.
     position.trigger = focusReturnTarget(element);
     position.opener = element.closest<HTMLElement>("[data-menu-row]") ?? element;
+    openRef.current = true;
     setContextMenu({ isOpen: true, position, data });
   }, []);
 
+  // A menu already closed is left alone: a new state, even an equal one,
+  // draws the component again (the reader closes its menus on every open).
   const closeContextMenu = useCallback(() => {
-    setContextMenu((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    if (!openRef.current) return;
+    openRef.current = false;
+    setContextMenu((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
   }, []);
 
   // Close on escape key, click outside, and scroll. (ContextMenu answers

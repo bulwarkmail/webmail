@@ -67,4 +67,29 @@ describe('useShortenedText', () => {
     stubMeasurement(40);
     expect(renderProbe(CANDIDATES)).toBe('Work/.../Sales');
   });
+
+  it('draws a name that fits once, not again for each measurement', () => {
+    stubMeasurement(230);
+    let renders = 0;
+    function Counted() {
+      renders++;
+      const [ref, text] = useShortenedText(CANDIDATES);
+      return <span ref={ref}>{text}</span>;
+    }
+    render(<Counted />);
+    expect(renders).toBe(1);
+  });
+
+  it('draws again when the space changes which candidate fits', () => {
+    stubMeasurement(40);
+    let renders = 0;
+    function Counted() {
+      renders++;
+      const [ref, text] = useShortenedText(CANDIDATES);
+      return <span ref={ref} data-testid="counted">{text}</span>;
+    }
+    render(<Counted />);
+    expect(screen.getByTestId('counted').textContent).toBe('Work/.../Sales');
+    expect(renders).toBe(2);
+  });
 });

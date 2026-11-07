@@ -74,7 +74,7 @@ const dateFormatters = new Map<string, Intl.DateTimeFormat>();
  * field: then toLocaleString, toLocaleDateString and toLocaleTimeString all
  * format exactly as the formatter does.
  */
-function cachedDateFormat(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+function cachedDateFormat(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
   const key = `${locale}|${JSON.stringify(options)}`;
   let formatter = dateFormatters.get(key);
   if (!formatter) {
@@ -289,7 +289,12 @@ export function formatDateTime(
     if (options?.timeZoneName) localeOptions.timeZoneName = options.timeZoneName;
   }
 
-  return d.toLocaleString(effectiveLocale, localeOptions);
+  // A field is always named here but for a bare dateOnly call, which keeps
+  // toLocaleString's own defaults (a formatter would drop the time).
+  const namesAField = !!(localeOptions.weekday || localeOptions.year || localeOptions.month || localeOptions.day || localeOptions.hour);
+  return namesAField
+    ? cachedDateFormat(effectiveLocale, localeOptions).format(d)
+    : d.toLocaleString(effectiveLocale, localeOptions);
 }
 
 /**

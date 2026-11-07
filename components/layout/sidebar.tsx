@@ -2,6 +2,7 @@
 
 import { hoverOpens } from "@/lib/open-on-hover";
 import { memo, createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, useId, Fragment, ReactNode } from "react";
+import { useStableHandlers } from "@/hooks/use-stable-handlers";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -860,21 +861,31 @@ function useMutedMailbox(node: MailboxNode | null): boolean {
   });
 }
 
-function MailboxTreeItem({
-  node,
-  selectedMailbox,
-  expandedFolders,
-  onMailboxSelect,
-  onToggleExpand,
-  isCollapsed,
-  colorful,
-  onContextMenu,
-  dragAccountId = null,
-  pickOnly = false,
-  sharedAccountName,
-  renderAfterChild,
-  initials = false,
-}: {
+/** The selected folder when it is this node or below it, else ''. */
+function selectionWithin(node: MailboxNode, selected: string): string {
+  if (!selected) return '';
+  if (node.id === selected) return selected;
+  return node.children.some((child) => selectionWithin(child, selected) !== '') ? selected : '';
+}
+
+/**
+ * A folder row draws again only when something it shows changed. The
+ * selected folder matters to a row only when it is the row or one of the
+ * folders under it: every folder click drew the whole folder list again.
+ */
+function sameTreeItemProps(a: MailboxTreeItemProps, b: MailboxTreeItemProps): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof MailboxTreeItemProps>;
+  for (const key of keys) {
+    if (key === 'selectedMailbox') {
+      if (selectionWithin(a.node, a.selectedMailbox) !== selectionWithin(b.node, b.selectedMailbox)) return false;
+    } else if (!Object.is(a[key], b[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+interface MailboxTreeItemProps {
   node: MailboxNode;
   selectedMailbox: string;
   expandedFolders: Set<string>;
@@ -900,7 +911,25 @@ function MailboxTreeItem({
   /** Folded: several folders of one's own are listed, so each carries its
    *  first letter. One alone is a plain folder. */
   initials?: boolean;
-}) {
+}
+
+const MailboxTreeItem = memo(MailboxTreeItemRow, sameTreeItemProps);
+
+function MailboxTreeItemRow({
+  node,
+  selectedMailbox,
+  expandedFolders,
+  onMailboxSelect,
+  onToggleExpand,
+  isCollapsed,
+  colorful,
+  onContextMenu,
+  dragAccountId = null,
+  pickOnly = false,
+  sharedAccountName,
+  renderAfterChild,
+  initials = false,
+}: MailboxTreeItemProps) {
   const tNotifications = useTranslations('notifications');
   const tListExtra = useTranslations('mail_list_extra');
   const tRoot = useTranslations();
@@ -1035,16 +1064,27 @@ function ShowAllTagsRow({
   );
 }
 
-function TagItem({
-  node,
-  selectedKeyword,
-  expandedTags,
-  isCollapsed,
-  onTagSelect,
-  onToggleExpand,
-  tagCounts,
-  colorful,
-}: {
+/** The selected tag when it is this node or below it, else null. */
+function tagSelectionWithin(node: KeywordNode, selected: string | null): string | null {
+  if (!selected) return null;
+  if (node.id === selected) return selected;
+  return node.children.some((child) => tagSelectionWithin(child, selected) !== null) ? selected : null;
+}
+
+/** See sameTreeItemProps: the selected tag matters only to its own branch. */
+function sameTagItemProps(a: TagItemProps, b: TagItemProps): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof TagItemProps>;
+  for (const key of keys) {
+    if (key === 'selectedKeyword') {
+      if (tagSelectionWithin(a.node, a.selectedKeyword) !== tagSelectionWithin(b.node, b.selectedKeyword)) return false;
+    } else if (!Object.is(a[key], b[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+interface TagItemProps {
   node: KeywordNode;
   selectedKeyword: string | null;
   expandedTags: Set<string>;
@@ -1053,7 +1093,20 @@ function TagItem({
   onToggleExpand: (keywordId: string) => void;
   tagCounts: Record<string, { total: number; unread: number }>;
   colorful: boolean;
-}) {
+}
+
+const TagItem = memo(TagItemRow, sameTagItemProps);
+
+function TagItemRow({
+  node,
+  selectedKeyword,
+  expandedTags,
+  isCollapsed,
+  onTagSelect,
+  onToggleExpand,
+  tagCounts,
+  colorful,
+}: TagItemProps) {
   const t = useTranslations('notifications');
   const { tagNameCandidates, tagColor } = useKeywordFormat();
   const palette = tagColor(node.id);
@@ -1840,7 +1893,8 @@ function SidebarImpl({
   // so it does not appear twice. (#495)
   const isServerScheduledNode = (n: MailboxNode) => showScheduledMailbox && n.role === 'scheduled';
 
-  const mailboxTree = buildMailboxTree(mailboxes);
+  // Kept while the folders are the same: the folder rows are memoised on their nodes.
+  const mailboxTree = useMemo(() => buildMailboxTree(mailboxes), [mailboxes]);
   const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
   const hiddenSharedIds = hiddenSharedMailIds(hiddenSharedMailAccounts, activeAccountId);
   const sharedAccounts = mailboxTree.filter(n =>
@@ -1880,9 +1934,10 @@ function SidebarImpl({
 
   // With nesting off every tag is its own root, so the same rows render through
   // one path whether or not the ids describe a hierarchy.
-  const tagTree: KeywordNode[] = nestedTags
+  // Kept while the tags are the same: the tag rows are memoised on their nodes.
+  const tagTree: KeywordNode[] = useMemo(() => (nestedTags
     ? buildKeywordTree(emailKeywords)
-    : emailKeywords.map((kw) => ({ ...kw, children: [], depth: 0 }));
+    : emailKeywords.map((kw) => ({ ...kw, children: [], depth: 0 }))), [nestedTags, emailKeywords]);
 
   // Counts arrive from a separate JMAP round trip, one batch per group of tags;
   // a tag with no count yet is treated as visible rather than blanking it and
@@ -1999,10 +2054,10 @@ function SidebarImpl({
             selectedMailbox={selected}
             expandedFolders={expandedFolders}
             onMailboxSelect={onSelect}
-            onToggleExpand={handleToggleExpand}
+            onToggleExpand={treeHandlers.onToggleExpand}
             isCollapsed={isCollapsed}
             colorful={colorfulSidebarIcons}
-            onContextMenu={active ? handleMailboxContextMenu : undefined}
+            onContextMenu={active ? treeHandlers.onMailboxContextMenu : undefined}
             dragAccountId={dragAccountId}
             initials={tree.length > 1}
           />
@@ -2072,7 +2127,7 @@ function SidebarImpl({
                       selectedMailbox={selected}
                       expandedFolders={expandedFolders}
                       onMailboxSelect={onSelect}
-                      onToggleExpand={handleToggleExpand}
+                      onToggleExpand={treeHandlers.onToggleExpand}
                       isCollapsed={isCollapsed}
                       colorful={colorfulSidebarIcons}
                       onContextMenu={active ? (e, node) => handleCompactSharedContextMenu(e, node, compact.id, menuAccountId, inboxHasSubfolders) : undefined}
@@ -2087,7 +2142,7 @@ function SidebarImpl({
                         selectedKeyword={selectedKeywordAccountId === menuAccountId ? selectedKeyword : null}
                         expandedTags={expandedTags}
                         onTagSelect={onTagSelect}
-                        onToggleExpand={handleToggleTagExpand}
+                        onToggleExpand={treeHandlers.onToggleTagExpand}
                         colorful={colorfulSidebarIcons}
                       />
                     )}
@@ -2143,10 +2198,10 @@ function SidebarImpl({
                             selectedMailbox={selected}
                             expandedFolders={expandedFolders}
                             onMailboxSelect={onSelect}
-                            onToggleExpand={handleToggleExpand}
+                            onToggleExpand={treeHandlers.onToggleExpand}
                             isCollapsed={isCollapsed}
                             colorful={colorfulSidebarIcons}
-                            onContextMenu={active ? handleMailboxContextMenu : undefined}
+                            onContextMenu={active ? treeHandlers.onMailboxContextMenu : undefined}
                             pickOnly={!active}
                           />
                           {active && child.role === 'drafts' && menuAccountId
@@ -2162,7 +2217,7 @@ function SidebarImpl({
                           selectedKeyword={selectedKeywordAccountId === menuAccountId ? selectedKeyword : null}
                           expandedTags={expandedTags}
                           onTagSelect={onTagSelect}
-                          onToggleExpand={handleToggleTagExpand}
+                          onToggleExpand={treeHandlers.onToggleTagExpand}
                           colorful={colorfulSidebarIcons}
                         />
                       )}
@@ -2205,7 +2260,7 @@ function SidebarImpl({
                 expandedTags={expandedTags}
                 isCollapsed={isCollapsed}
                 onTagSelect={onTagSelect}
-                onToggleExpand={handleToggleTagExpand}
+                onToggleExpand={treeHandlers.onToggleTagExpand}
                 tagCounts={tagCounts}
                 colorful={colorfulSidebarIcons}
               />
@@ -2414,6 +2469,14 @@ function SidebarImpl({
       resetFolderSettings: (accountId) => save(resetMailboxMutes(notificationMutes, accountOf(accountId))),
     };
   }, [authClient, notificationMutes]);
+
+  // The folder and tag rows are memoised (MailboxTreeItem, TagItem): they get
+  // handlers that keep their identity.
+  const treeHandlers = useStableHandlers({
+    onToggleExpand: handleToggleExpand,
+    onToggleTagExpand: handleToggleTagExpand,
+    onMailboxContextMenu: handleMailboxContextMenu,
+  });
 
   return (
     <div
@@ -2749,10 +2812,10 @@ function SidebarImpl({
                               onMailboxSelect={(mailboxId) =>
                                 onAccountMailboxSelect?.(isActive ? null : account.id, mailboxId)
                               }
-                              onToggleExpand={handleToggleExpand}
+                              onToggleExpand={treeHandlers.onToggleExpand}
                               isCollapsed={isCollapsed}
                               colorful={colorfulSidebarIcons}
-                              onContextMenu={isActive ? handleMailboxContextMenu : undefined}
+                              onContextMenu={isActive ? treeHandlers.onMailboxContextMenu : undefined}
                               dragAccountId={isActive ? null : account.id}
                             />
                             {isActive && node.role === 'drafts' && renderScheduledRow(`scheduled-${account.id}`)}
@@ -2815,10 +2878,10 @@ function SidebarImpl({
                           selectedMailbox={selectedKeyword ? "" : selectedMailbox}
                           expandedFolders={expandedFolders}
                           onMailboxSelect={onMailboxSelect}
-                          onToggleExpand={handleToggleExpand}
+                          onToggleExpand={treeHandlers.onToggleExpand}
                           isCollapsed={isCollapsed}
                           colorful={colorfulSidebarIcons}
-                          onContextMenu={handleMailboxContextMenu}
+                          onContextMenu={treeHandlers.onMailboxContextMenu}
                         />
                         {node.role === 'drafts' && renderScheduledRow('scheduled')}
                         {/* Mountain View lists Starred right under the Inbox. */}
@@ -2857,10 +2920,10 @@ function SidebarImpl({
                         selectedMailbox={selectedKeyword ? "" : selectedMailbox}
                         expandedFolders={expandedFolders}
                         onMailboxSelect={onMailboxSelect}
-                        onToggleExpand={handleToggleExpand}
+                        onToggleExpand={treeHandlers.onToggleExpand}
                         isCollapsed={isCollapsed}
                         colorful={colorfulSidebarIcons}
-                        onContextMenu={handleMailboxContextMenu}
+                        onContextMenu={treeHandlers.onMailboxContextMenu}
                       />
                     ))}
                   </>
@@ -2898,10 +2961,10 @@ function SidebarImpl({
                 selectedMailbox={selectedKeyword ? "" : selectedMailbox}
                 expandedFolders={expandedFolders}
                 onMailboxSelect={onMailboxSelect}
-                onToggleExpand={handleToggleExpand}
+                onToggleExpand={treeHandlers.onToggleExpand}
                 isCollapsed={isCollapsed}
                 colorful={colorfulSidebarIcons}
-                onContextMenu={handleMailboxContextMenu}
+                onContextMenu={treeHandlers.onMailboxContextMenu}
               />
             ))}
           </div>

@@ -151,6 +151,15 @@ describe("buildKeywordTree", () => {
 describe("filterKeywordTree", () => {
   const tree = buildKeywordTree(KEYWORDS);
 
+  it("hands back the same nodes where nothing under them was dropped", () => {
+    const all = filterKeywordTree(tree, () => true);
+    expect(all[0]).toBe(tree[0]);
+    const some = filterKeywordTree(tree, (node) => node.id !== "work/personal");
+    // Work lost a child, so it is a new node; Clients and Acme are the same.
+    expect(some[0]).not.toBe(tree[0]);
+    expect(some[0].children[0]).toBe(tree[0].children[0]);
+  });
+
   it("drops the nodes the predicate rejects", () => {
     const kept = filterKeywordTree(tree, (node) => node.id !== "work/personal");
     const [work] = kept;
