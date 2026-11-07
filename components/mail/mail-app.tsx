@@ -191,7 +191,8 @@ import { mailTitleContext, mailboxTitleLine } from "@/lib/tab-title";
 import { useOtherAccountsUnread } from "@/hooks/use-all-inboxes-unread";
 import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { canDownload } from "@/lib/device-policy";
+import { canDownload, canExport } from "@/lib/device-policy";
+import { useSaveEmails } from "@/hooks/use-message-file-actions";
 import { consumePendingMailto, mailLinkAccountId, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
 import { setMailLinkOpener } from "@/lib/desktop/mail-links";
@@ -1505,10 +1506,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
+  // File > Save as…: the message on screen, or every one selected, as .eml files. One
+  // message is then archived or deleted as "After export" says, as its ⋮ menu's Save as does.
+  const saveEmails = useSaveEmails();
+  const saveSelection = !desktopTarget ? [] : shortcutsTargetSelection
+    ? (desktopMulti ? starSelection : resolveSelectedEmails(useEmailStore.getState()))
+    : selectedEmail ? [selectedEmail] : [];
+  const canSaveSelection = saveSelection.length > 0 && saveSelection.every((email) => !!email.blobId && canExport(email));
+  const saveSelectionFromMenu = () => {
+    if (!canSaveSelection) return;
+    void saveEmails(saveSelection, saveSelection.length === 1 ? {
+      onArchive: keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
+      onDelete: () => void keyboardHandlers.onDelete?.(),
+      archiveEnabled: archiveActionEnabled,
+    } : undefined);
+  };
   // A shared folder you may only read from: nothing can leave it.
   const desktopMayRemove = mailboxes.find((m) => m.id === selectedMailbox)?.myRights?.mayRemoveItems !== false;
   useDesktopCommands({
     'file.newMessage': keyboardHandlers.onCompose,
+    'file.saveAs': saveSelectionFromMenu,
     'edit.search': keyboardHandlers.onFocusSearch,
     'view.refresh': () => void handleManualRefresh(),
     'view.layout.split': () => useSettingsStore.getState().updateSetting('mailLayout', 'split'),
@@ -1541,6 +1558,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'go.nextUnread': keyboardHandlers.onNextUnread,
   }, {
     'view.refresh': true,
+    'file.saveAs': canSaveSelection,
     // Ctrl+E in the composer belongs to its editor, not to search.
     'edit.search': !showComposer,
     'view.layout.split': { enabled: !layoutFixed, checked: mailLayoutSetting === 'split' },
@@ -3232,14 +3250,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   // A draft that's only on this device, opened from the outbox: the server
-  // doesn't list it, so nothing else can open it while online.
+  // doesn't list it, so nothing else can open it while online. Also the
+  // "Draft saved" toast's Open (openKeptDraft); empty ids there mean the
+  // login and account in use.
   const draftToOpen = useOfflineStore((s) => s.draftToOpen);
   useEffect(() => {
     if (!draftToOpen || !client) return;
     useOfflineStore.setState({ draftToOpen: null });
-    const draftClient = useAuthStore.getState().getClientForAccount(draftToOpen.account) ?? client;
-    void draftClient.getEmail(draftToOpen.id, draftToOpen.jmap)
-      .then((draft) => (draft ? handleEditDraft(draft, { accountId: draftToOpen.jmap, localAccountId: draftToOpen.account }) : undefined))
+    const login = draftToOpen.account || undefined;
+    const jmapAccount = draftToOpen.jmap || undefined;
+    const draftClient = (login ? useAuthStore.getState().getClientForAccount(login) : undefined) ?? client;
+    void draftClient.getEmail(draftToOpen.id, jmapAccount)
+      .then((draft) => (draft ? handleEditDraft(draft, { accountId: jmapAccount, localAccountId: login }) : undefined))
       .catch((error) => console.error('Opening a draft kept on this device failed:', error));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the outbox asks, with the handler of that render
   }, [draftToOpen, client]);
@@ -5919,6 +5941,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialFiles={composerInitialFiles}
         sessionKey={`inline-${composerSessionId}`}
         docked={composerHost === 'dock'}
+        // The docked reply's kind menu: Forward opens a forward of the message it answers.
+        onSwitchToForward={composerHost === 'dock' && composerSourceEmail ? () => {
+          void (composerSourceEmail.id === selectedEmail?.id ? handleForward() : handleConversationForward(composerSourceEmail));
+        } : undefined}
         sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
           // A composer whose session another one has replaced: its state

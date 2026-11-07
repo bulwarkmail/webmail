@@ -355,6 +355,9 @@
     "no_search_results": "Ingen resultater funnet",
     "no_search_results_description": "Prøv å justere søket eller filtrene",
     "more_results_searching": "Søker etter flere resultater…",
+    "resize_plugin_results": "Endre størrelse på resultater fra utvidelser",
+    "compact_plugin_results": "Én linje per resultat",
+    "plugin_result_score": "{count} av 5",
     "loading": "Laster inn e-poster...",
     "unread": "ulest",
     "to_me": "Til meg",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Lagre utkast",
     "shortcut_show_cc": "Vis kopi",
     "shortcut_show_bcc": "Vis blindkopi"
+  },
+  "compose_dock": {
+    "open_draft": "Åpne",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Endre størrelse på svaret",
+    "fields_menu": "Flere felt"
   },
   "confirm_dialog": {
     "confirm": "Bekreft",
@@ -5333,7 +5342,8 @@
     "invited": "{name} har invitert deg til «{title}»",
     "updated": "{name} har oppdatert «{title}»",
     "cancelled": "{name} har avlyst «{title}»",
-    "untitled": "Hendelse uten tittel"
+    "untitled": "Hendelse uten tittel",
+    "summary": "Endringer i hendelser du deltar i: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} til {end} er valgt.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} har delt {kind} «{object}» med deg",
     "changed": "{name} har endret tilgangen din til {kind} «{object}»",
     "revoked": "{name} har fjernet tilgangen din til {kind} «{object}»",
+    "summary": "{name} har endret tilgangen din til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",
@@ -5654,10 +5665,10 @@
     "title": "Velkommen til postkassen din",
     "tip_compose": "Trykk c for å skrive en ny e-post",
     "tip_shortcuts": "Trykk på ? for å se alle tastatursnarveier",
-    "tip_sidebar": "Kalender, Kontakter og Innstillinger finner du i feltet til venstre",
+    "tip_sidebar_apps": "{apps} finner du i feltet til venstre",
     "tip_settings": "Tilpass nettposten under Innstillinger",
     "tip_compose_touch": "Trykk på blyantknappen for å skrive en ny e-post",
-    "tip_sidebar_touch": "Kalender, Kontakter og Innstillinger finner du i linjen nederst",
+    "tip_sidebar_apps_touch": "{apps} finner du i linjen nederst",
     "got_it": "Skjønner",
     "settings": "Innstillinger",
     "dismiss": "Lukk",
@@ -7409,6 +7420,18 @@
     "attach_files": "Legg ved filer…",
     "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Åpne…",
+    "menu_save_as": "Lagre som…",
+    "open_filter": "Meldinger, hendelser og kontakter",
+    "save_filter": "E-postmelding",
+    "folder_title": "Velg en mappe for meldingene",
+    "folder_button": "Lagre her",
+    "saved_many": "{count, plural, one {# melding lagret.} other {# meldinger lagret.}}",
+    "save_failed": "{count, plural, one {# melding kunne ikke lagres.} other {# meldinger kunne ikke lagres.}}",
+    "shortcut_open": "Åpne en lagret melding, hendelse eller kontakt",
+    "shortcut_save_as": "Lagre meldingen som en fil"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, kan ikke appen lese e-posten som er lagret på denne enheten, før noen skriver inn PIN-koden.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Slett",
     "signout_changed": "Ikke lagt ved eller lagret ennå, og slettet nå: {names}.",
     "signout_held": "Fortsatt åpne i et annet program, så de slettes først når du lukker dem der: {names}."
+  },
+  "desktopPrint": {
+    "title": "Skriv ut",
+    "pages_one": "1 side",
+    "pages_many": "{count} sider",
+    "preparing": "Forbereder forhåndsvisning…",
+    "preview_failed": "Forhåndsvisningen kunne ikke lages.",
+    "preview_label": "Forhåndsvisning",
+    "destination": "Mål",
+    "save_as_pdf": "Lagre som PDF",
+    "pages": "Sider",
+    "pages_all": "Alle",
+    "pages_custom": "Egendefinert",
+    "pages_example": "f.eks. 1-3, 5",
+    "pages_invalid": "Skriv inn sider mellom 1 og {count}, for eksempel 1-3, 5.",
+    "copies": "Kopier",
+    "layout": "Oppsett",
+    "portrait": "Stående",
+    "landscape": "Liggende",
+    "color": "Farge",
+    "color_color": "Farge",
+    "color_mono": "Svart-hvitt",
+    "more": "Flere innstillinger",
+    "paper": "Papirstørrelse",
+    "paper_printer": "Skriverens standard",
+    "margins": "Marger",
+    "margins_default": "Standard",
+    "margins_none": "Ingen",
+    "margins_minimum": "Minimum",
+    "scale": "Skala (%)",
+    "options": "Alternativer",
+    "header_footer": "Topp- og bunntekst",
+    "background": "Bakgrunnsgrafikk",
+    "print": "Skriv ut",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "system_dialog": "Skriv ut med systemdialogen…",
+    "failed_title": "Kunne ikke skrive ut",
+    "failed_detail": "Skriveren tok ikke imot jobben. Sjekk at den er slått på, og prøv igjen."
   },
   "files_sync": {
     "title": "Filer på denne datamaskinen",

@@ -80,12 +80,13 @@ let configPromise: Promise<ConfigData> | null = null;
  * (custom endpoint allowed) so an unedited download still lets people sign in.
  */
 async function fetchLiteConfig(): Promise<ConfigData> {
-  // On Stalwart the bundle is read-only and served from the JMAP origin:
-  // config.json ships inside the zip (build-id URL, immutable cache) and an
-  // empty server URL means "this origin".
+  // On Stalwart the bundle is served from the JMAP origin: config.json ships
+  // inside the zip and an empty server URL means "this origin". Stalwart
+  // marks the file immutable, so the browser is told to ask again: an admin
+  // may edit the zip without a new build id (#1563).
   const defaults = IS_LITE_STALWART ? liteStalwartDefaults() : undefined;
   try {
-    const res = await apiFetch(withLiteBuildId(LITE_CONFIG_PATH), IS_LITE_STALWART ? undefined : { cache: 'no-store' });
+    const res = await apiFetch(withLiteBuildId(LITE_CONFIG_PATH), { cache: IS_LITE_STALWART ? 'no-cache' : 'no-store' });
     if (!res.ok) throw new Error(`config.json answered ${res.status}`);
     return applyLiteConfig(await res.json(), defaults);
   } catch (err) {

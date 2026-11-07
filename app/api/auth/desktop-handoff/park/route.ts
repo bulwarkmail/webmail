@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
+import { getPasswordLoginScope } from '@/lib/oauth/tokens';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { resolveDesktopHandoffServer } from '@/lib/auth/desktop-handoff-server';
 import { isHandoffCodeChallenge, reserveDesktopHandoffPark, stashHandoff } from '@/lib/auth/handoff-store';
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
       trusted,
       clientIp,
       registerUnknownClient: !configuredClientId,
+      scope: configuredClientId ? getPasswordLoginScope() : undefined,
     });
 
     let parked: Parameters<typeof stashHandoff>[0];

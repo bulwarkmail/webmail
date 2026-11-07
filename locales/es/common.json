@@ -355,6 +355,9 @@
     "no_search_results": "No se encontraron resultados",
     "no_search_results_description": "Intente ajustar su búsqueda o filtros",
     "more_results_searching": "Buscando más resultados…",
+    "resize_plugin_results": "Cambiar el tamaño de los resultados de los complementos",
+    "compact_plugin_results": "Una línea por resultado",
+    "plugin_result_score": "{count} de 5",
     "loading": "Cargando correos...",
     "unread": "no leído",
     "to_me": "Para mí",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Guardar borrador",
     "shortcut_show_cc": "Mostrar CC",
     "shortcut_show_bcc": "Mostrar CCO"
+  },
+  "compose_dock": {
+    "open_draft": "Abrir",
+    "reply_type": "Tipo de respuesta: {kind}",
+    "resize_reply": "Cambiar el tamaño de la respuesta",
+    "fields_menu": "Más campos"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",
@@ -5387,10 +5396,10 @@
     "title": "Bienvenido a tu buzón",
     "tip_compose": "Pulsa c para redactar un nuevo correo",
     "tip_shortcuts": "Pulsa ? para ver todos los atajos de teclado",
-    "tip_sidebar": "Calendario, Contactos y Ajustes están en la barra de la izquierda",
+    "tip_sidebar_apps": "{apps} están en la barra de la izquierda",
     "tip_settings": "Personaliza tu experiencia en Ajustes",
     "tip_compose_touch": "Toca el botón del lápiz para escribir un correo nuevo",
-    "tip_sidebar_touch": "Encontrarás Calendario, Contactos y Ajustes en la barra inferior",
+    "tip_sidebar_apps_touch": "Encontrarás {apps} en la barra inferior",
     "got_it": "Entendido",
     "settings": "Ajustes",
     "dismiss": "Cerrar",
@@ -5965,7 +5974,8 @@
     "invited": "{name} te ha invitado a \"{title}\"",
     "updated": "{name} ha actualizado \"{title}\"",
     "cancelled": "{name} ha cancelado \"{title}\"",
-    "untitled": "Evento sin título"
+    "untitled": "Evento sin título",
+    "summary": "Cambios en eventos en los que participas: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Seleccionado del {start} al {end}.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} ha compartido contigo {kind} \"{object}\"",
     "changed": "{name} ha cambiado tu acceso a {kind} \"{object}\"",
     "revoked": "{name} ha retirado tu acceso a {kind} \"{object}\"",
+    "summary": "{name} ha cambiado tu acceso a {count, plural, one {# elemento compartido} other {# elementos compartidos}}",
     "object": {
       "folder": "la carpeta",
       "calendar": "el calendario",
@@ -7409,6 +7420,18 @@
     "attach_files": "Adjuntar archivos…",
     "shortcut_apps": "Ir a Correo, Calendario, Contactos o Archivos"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Abrir…",
+    "menu_save_as": "Guardar como…",
+    "open_filter": "Mensajes, eventos y contactos",
+    "save_filter": "Mensaje de correo",
+    "folder_title": "Elige una carpeta para los mensajes",
+    "folder_button": "Guardar aquí",
+    "saved_many": "{count, plural, one {# mensaje guardado.} other {# mensajes guardados.}}",
+    "save_failed": "{count, plural, one {No se pudo guardar # mensaje.} other {No se pudieron guardar # mensajes.}}",
+    "shortcut_open": "Abrir un mensaje, evento o contacto guardado",
+    "shortcut_save_as": "Guardar el mensaje como archivo"
+  },
   "appLock": {
     "section_title": "Bloqueo de la app",
     "section_desc": "Pide un PIN tras un tiempo sin uso, en cada ventana y pestaña. Mientras está bloqueada, la aplicación no puede leer el correo guardado en este dispositivo hasta que alguien introduzca el PIN.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Eliminar",
     "signout_changed": "Aún sin adjuntar ni guardar, y eliminados ahora: {names}.",
     "signout_held": "Siguen abiertos en otro programa, así que no se eliminan hasta que los cierre allí: {names}."
+  },
+  "desktopPrint": {
+    "title": "Imprimir",
+    "pages_one": "1 página",
+    "pages_many": "{count} páginas",
+    "preparing": "Preparando la vista previa…",
+    "preview_failed": "No se pudo crear la vista previa.",
+    "preview_label": "Vista previa",
+    "destination": "Destino",
+    "save_as_pdf": "Guardar como PDF",
+    "pages": "Páginas",
+    "pages_all": "Todas",
+    "pages_custom": "Personalizado",
+    "pages_example": "p. ej. 1-3, 5",
+    "pages_invalid": "Escribe páginas entre 1 y {count}, como 1-3, 5.",
+    "copies": "Copias",
+    "layout": "Diseño",
+    "portrait": "Vertical",
+    "landscape": "Horizontal",
+    "color": "Color",
+    "color_color": "Color",
+    "color_mono": "Blanco y negro",
+    "more": "Más ajustes",
+    "paper": "Tamaño del papel",
+    "paper_printer": "Predeterminado de la impresora",
+    "margins": "Márgenes",
+    "margins_default": "Predeterminados",
+    "margins_none": "Ninguno",
+    "margins_minimum": "Mínimos",
+    "scale": "Escala (%)",
+    "options": "Opciones",
+    "header_footer": "Encabezados y pies de página",
+    "background": "Gráficos de fondo",
+    "print": "Imprimir",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "system_dialog": "Imprimir con el diálogo del sistema…",
+    "failed_title": "No se pudo imprimir",
+    "failed_detail": "La impresora no aceptó el trabajo. Comprueba que esté encendida y vuelve a intentarlo."
   },
   "files_sync": {
     "title": "Archivos en este ordenador",

@@ -218,6 +218,29 @@ export interface DesktopDialogsBridge {
   showWindow?: (name: string) => Promise<boolean>;
 }
 
+/**
+ * The shell's print preview (src/main/print-preview.ts in the desktop repo): this page as
+ * its print CSS lays it out, a print window it opened as `window.open('', name)` with a
+ * name `bulwark-print-…` (main keeps it hidden), or a PDF's bytes.
+ */
+export type DesktopPrintPreviewRequest = (
+  | { source: 'page' }
+  | { source: 'window'; name: string }
+  | { source: 'pdf'; data: Uint8Array }
+) & {
+  title?: string;
+  theme?: DesktopDialogWindowTheme;
+};
+
+export type DesktopPrintPreviewOutcome = 'printed' | 'saved' | 'system' | 'cancelled' | 'refused' | 'busy' | 'failed';
+
+export interface DesktopPrintBridge {
+  /** Opens the preview over this window. Resolves when it closes. */
+  preview: (request: DesktopPrintPreviewRequest) => Promise<DesktopPrintPreviewOutcome>;
+  /** File > Print and Ctrl+P ask the page to run its own Print. Returns the unsubscribe. */
+  onRequest: (listener: () => void) => () => void;
+}
+
 /** Plain text throughout: the shell sets textContent only. */
 export interface DesktopDialogWindowRequest {
   /** The page's own name for it, for `cancel`. */
@@ -1261,6 +1284,22 @@ export interface FilesRescued {
   failed: number;
 }
 
+/**
+ * Saves messages through the OS's dialogs (lib/desktop/save-as.ts): `begin` asks where at
+ * once, the Save dialog for one file and a folder for several, starting in the folder used
+ * last; then each file's bytes go over with `write`, and `end` says how many were saved.
+ * The shell wants a click or a menu pick just before `begin`, writes each as an .eml with a
+ * safe name, never overwrites a file in a picked folder (it numbers the name), and refuses
+ * under the organisation's "no downloads" and the app lock.
+ */
+export interface DesktopSaveAsBridge {
+  begin: (request: { kind: 'message'; names: string[] }) => Promise<
+    { id: string } | { cancelled: true } | { refused: 'gesture' | 'policy' | 'locked' | 'invalid' }
+  >;
+  write: (id: string, index: number, data: Uint8Array) => Promise<boolean>;
+  end: (id: string) => Promise<{ saved: number; failed: number }>;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -1270,6 +1309,8 @@ export interface BulwarkDesktopBridge {
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
   dialogs?: DesktopDialogsBridge;
+  /** Absent on older shells. */
+  print?: DesktopPrintBridge;
   spellcheck?: DesktopSpellcheckBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
@@ -1294,6 +1335,8 @@ export interface BulwarkDesktopBridge {
   files?: FilesBridge;
   /** Absent on older shells. */
   recentFiles?: DesktopRecentFilesBridge;
+  /** File > Save as… and the message's own Save as: native dialogs. Absent on older shells. */
+  saveAs?: DesktopSaveAsBridge;
 }
 
 declare global {

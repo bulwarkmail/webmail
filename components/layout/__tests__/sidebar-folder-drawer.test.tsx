@@ -158,18 +158,21 @@ describe('the folded column\'s drawer (default layout)', () => {
     expect(document.activeElement).toBe(screen.getByTestId('folded-all-folders'));
   });
 
-  it('does not float out while the pointer is on the header\'s buttons', () => {
+  // A hover shows the names beside the folded items and never opens the
+  // drawer (sidebar-folded-rail-hover.test.tsx).
+  it('does not show the names while the pointer is on the header\'s buttons, nor open the drawer on the folders', () => {
     vi.useFakeTimers();
     const { container } = render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     const root = container.firstElementChild!;
     fireEvent.mouseEnter(root);
     fireEvent.mouseMove(screen.getByTestId('sidebar-collapse'));
     act(() => { vi.advanceTimersByTime(400); });
-    expect(drawer()).toBeNull();
-    // On the folders it does.
+    expect(root.hasAttribute('data-folder-rail-labels')).toBe(false);
+    // On the folders it shows them, in the column.
     fireEvent.mouseMove(document.querySelector('[data-mailbox-id="inbox"]')!);
     act(() => { vi.advanceTimersByTime(400); });
-    expect(drawer()).not.toBeNull();
+    expect(root.hasAttribute('data-folder-rail-labels')).toBe(true);
+    expect(drawer()).toBeNull();
   });
 
   it('keeps Mountain View\'s peek beside its rail', () => {

@@ -602,7 +602,9 @@ function applyCustomThemeCSS(theme: InstalledTheme, resolvedTheme: 'light' | 'da
   // copy was stripped from localStorage on persist.
   if (theme.skin) {
     injectThemeSkinCSS(theme.skin, theme.id);
-  } else if (theme.apiVersion === 2) {
+  } else if (theme.apiVersion === 2 || theme.managed) {
+    // Server-synced themes carry no apiVersion, but their skin is kept in
+    // IndexedDB too (#1561).
     pluginStorage.getThemeSkin(theme.id).then((skin) => {
       // Bail out if the user switched themes mid-flight.
       if (useThemeStore.getState().activeThemeId !== theme.id) return;

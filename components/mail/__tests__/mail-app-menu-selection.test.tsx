@@ -201,6 +201,41 @@ describe('the Message menu with three messages selected', () => {
   });
 });
 
+describe('File > Save as…', () => {
+  const withBlob = (email: Email) => ({ ...email, blobId: `blob-${email.id}` }) as Email;
+  const shell = () => {
+    const begin = vi.fn(async () => ({ cancelled: true }));
+    (window as unknown as { bulwarkDesktop: { saveAs: unknown } }).bulwarkDesktop.saveAs = { begin, write: vi.fn(), end: vi.fn() };
+    return begin;
+  };
+
+  it('saves all three selected messages, into a folder the shell asks for', async () => {
+    useEmailStore.setState({ emails: [a, b, c].map(withBlob), selectedEmail: withBlob(a) } as never);
+    const begin = shell();
+    render(<MailApp />);
+    await waitFor(() => expect(reported['file.saveAs']).toBe(true));
+    act(() => { runDesktopCommand('file.saveAs'); });
+    await waitFor(() => expect(begin).toHaveBeenCalledTimes(1));
+    expect((begin.mock.calls[0] as unknown as [{ names: string[] }])[0].names).toHaveLength(3);
+  });
+
+  it('saves the open message when none is selected, and is off for a message with nothing to save', async () => {
+    useEmailStore.setState({ emails: [withBlob(a), b, c], selectedEmail: withBlob(a), selectedEmailKeys: new Set() } as never);
+    const begin = shell();
+    render(<MailApp />);
+    await waitFor(() => expect(reported['file.saveAs']).toBe(true));
+    act(() => { runDesktopCommand('file.saveAs'); });
+    await waitFor(() => expect(begin).toHaveBeenCalledTimes(1));
+    expect((begin.mock.calls[0] as unknown as [{ names: string[] }])[0].names).toHaveLength(1);
+    cleanup();
+    reported = {};
+    useEmailStore.setState({ emails: [a, b, c], selectedEmail: a, selectedEmailKeys: new Set() } as never);
+    render(<MailApp />);
+    await waitFor(() => expect(reported['message.reply']).toBe(true));
+    expect(reported['file.saveAs']).toBe(false);
+  });
+});
+
 describe('the Window menu name of the main window', () => {
   it('is the folder, not the message open in it, so it never reads like the window of that message', async () => {
     useEmailStore.setState({ selectedEmailKeys: new Set() } as never);

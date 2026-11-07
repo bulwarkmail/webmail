@@ -355,6 +355,9 @@
     "no_search_results": "Neboli nájdené žiadne výsledky",
     "no_search_results_description": "Skúste zmeniť hľadanie alebo filtre",
     "more_results_searching": "Hľadajú sa ďalšie výsledky…",
+    "resize_plugin_results": "Zmeniť veľkosť výsledkov z doplnkov",
+    "compact_plugin_results": "Jeden riadok na výsledok",
+    "plugin_result_score": "{count} z 5",
     "loading": "Načítavanie e-mailov...",
     "unread": "neprečítané",
     "to_me": "Pre mňa",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Uložiť koncept",
     "shortcut_show_cc": "Zobraziť kópiu",
     "shortcut_show_bcc": "Zobraziť skrytú kópiu"
+  },
+  "compose_dock": {
+    "open_draft": "Otvoriť",
+    "reply_type": "Typ odpovede: {kind}",
+    "resize_reply": "Zmeniť veľkosť odpovede",
+    "fields_menu": "Ďalšie polia"
   },
   "confirm_dialog": {
     "confirm": "Potvrdiť",
@@ -5333,7 +5342,8 @@
     "invited": "{name} vás pozval(a) na „{title}“",
     "updated": "{name} aktualizoval(a) „{title}“",
     "cancelled": "{name} zrušil(a) „{title}“",
-    "untitled": "Udalosť bez názvu"
+    "untitled": "Udalosť bez názvu",
+    "summary": "Zmeny udalostí, ktorých sa zúčastňujete: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Vybraté {start} až {end}.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} s vami zdieľa {kind} „{object}“",
     "changed": "{name} zmenil(a) váš prístup k {kind} „{object}“",
     "revoked": "{name} odobral(a) váš prístup k {kind} „{object}“",
+    "summary": "{name} zmenil(a) váš prístup k {count, plural, one {# zdieľanej položke} few {# zdieľaným položkám} many {# zdieľanej položke} other {# zdieľaným položkám}}",
     "object": {
       "folder": "priečinok",
       "calendar": "kalendár",
@@ -5654,10 +5665,10 @@
     "title": "Vitajte vo svojej poštovej schránke",
     "tip_compose": "Stlačte c na napísanie nového e-mailu",
     "tip_shortcuts": "Stlačte ? na zobrazenie všetkých klávesových skratiek",
-    "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete na lište vľavo",
+    "tip_sidebar_apps": "{apps} nájdete na lište vľavo",
     "tip_settings": "Prispôsobte si aplikáciu v Nastaveniach",
     "tip_compose_touch": "Ťuknutím na tlačidlo s ceruzkou napíšete nový e-mail",
-    "tip_sidebar_touch": "Kalendár, Kontakty a Nastavenia nájdete na lište dole",
+    "tip_sidebar_apps_touch": "{apps} nájdete na lište dole",
     "got_it": "Rozumiem",
     "settings": "Nastavenia",
     "dismiss": "Zavrieť",
@@ -7409,6 +7420,18 @@
     "attach_files": "Priložiť súbory…",
     "shortcut_apps": "Prejsť na Poštu, Kalendár, Kontakty alebo Súbory"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Otvoriť…",
+    "menu_save_as": "Uložiť ako…",
+    "open_filter": "Správy, udalosti a kontakty",
+    "save_filter": "E-mailová správa",
+    "folder_title": "Vyberte priečinok pre správy",
+    "folder_button": "Uložiť sem",
+    "saved_many": "{count, plural, one {# správa uložená.} few {# správy uložené.} many {# správy uloženej.} other {# správ uložených.}}",
+    "save_failed": "{count, plural, one {# správu sa nepodarilo uložiť.} few {# správy sa nepodarilo uložiť.} many {# správy sa nepodarilo uložiť.} other {# správ sa nepodarilo uložiť.}}",
+    "shortcut_open": "Otvoriť uloženú správu, udalosť alebo kontakt",
+    "shortcut_save_as": "Uložiť správu ako súbor"
+  },
   "appLock": {
     "section_title": "Zámok aplikácie",
     "section_desc": "Po čase nečinnosti žiada PIN v každom okne a na každej karte. Kým je zamknuté, aplikácia nemôže čítať poštu uloženú v tomto zariadení, kým niekto nezadá PIN.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Odstrániť",
     "signout_changed": "Zatiaľ nepripojené ani neuložené, a teraz odstránené: {names}.",
     "signout_held": "Stále otvorené v inom programe, takže sa odstránia až po zatvorení: {names}."
+  },
+  "desktopPrint": {
+    "title": "Tlač",
+    "pages_one": "1 strana",
+    "pages_many": "Počet strán: {count}",
+    "preparing": "Pripravuje sa ukážka…",
+    "preview_failed": "Ukážku sa nepodarilo vytvoriť.",
+    "preview_label": "Ukážka",
+    "destination": "Cieľ",
+    "save_as_pdf": "Uložiť ako PDF",
+    "pages": "Strany",
+    "pages_all": "Všetky",
+    "pages_custom": "Vlastné",
+    "pages_example": "napr. 1-3, 5",
+    "pages_invalid": "Zadajte strany od 1 do {count}, napríklad 1-3, 5.",
+    "copies": "Kópie",
+    "layout": "Rozloženie",
+    "portrait": "Na výšku",
+    "landscape": "Na šírku",
+    "color": "Farba",
+    "color_color": "Farebne",
+    "color_mono": "Čiernobielo",
+    "more": "Ďalšie nastavenia",
+    "paper": "Veľkosť papiera",
+    "paper_printer": "Predvolené nastavenie tlačiarne",
+    "margins": "Okraje",
+    "margins_default": "Predvolené",
+    "margins_none": "Žiadne",
+    "margins_minimum": "Minimálne",
+    "scale": "Mierka (%)",
+    "options": "Možnosti",
+    "header_footer": "Hlavičky a päty",
+    "background": "Grafika pozadia",
+    "print": "Tlačiť",
+    "save": "Uložiť",
+    "cancel": "Zrušiť",
+    "system_dialog": "Tlačiť pomocou systémového dialógu…",
+    "failed_title": "Tlač sa nepodarila",
+    "failed_detail": "Tlačiareň úlohu neprijala. Skontrolujte, či je zapnutá, a skúste to znova."
   },
   "files_sync": {
     "title": "Súbory v tomto počítači",

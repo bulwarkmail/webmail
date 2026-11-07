@@ -355,6 +355,9 @@
     "no_search_results": "Tulemusi ei leitud",
     "no_search_results_description": "Proovi otsingut või filtreid muuta",
     "more_results_searching": "Otsitakse veel tulemusi…",
+    "resize_plugin_results": "Muuda pistikprogrammide tulemuste suurust",
+    "compact_plugin_results": "Üks rida tulemuse kohta",
+    "plugin_result_score": "{count}/5",
     "loading": "Kirjade laadimine...",
     "unread": "lugemata",
     "to_me": "Minule",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Salvesta mustand",
     "shortcut_show_cc": "Näita koopiat",
     "shortcut_show_bcc": "Näita pimekoopiat"
+  },
+  "compose_dock": {
+    "open_draft": "Ava",
+    "reply_type": "Vastuse liik: {kind}",
+    "resize_reply": "Muuda vastuse suurust",
+    "fields_menu": "Rohkem välju"
   },
   "confirm_dialog": {
     "confirm": "Kinnita",
@@ -5333,7 +5342,8 @@
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
     "updated": "{name} uuendas sündmust \"{title}\"",
     "cancelled": "{name} tühistas sündmuse \"{title}\"",
-    "untitled": "Nimetu sündmus"
+    "untitled": "Nimetu sündmus",
+    "summary": "Muudatused sündmustes, milles osaled: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Valitud {start} kuni {end}.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} jagas sinuga {kind} \"{object}\"",
     "changed": "{name} muutis sinu juurdepääsu {kind}-le \"{object}\"",
     "revoked": "{name} eemaldas sinu juurdepääsu {kind}-le \"{object}\"",
+    "summary": "{name} muutis sinu juurdepääsu {count, plural, one {# jagatud üksusele} other {# jagatud üksusele}}",
     "object": {
       "folder": "kaust",
       "calendar": "kalender",
@@ -5654,10 +5665,10 @@
     "title": "Tere tulemast sinu postkasti",
     "tip_compose": "Vajuta c uue e-kirja kirjutamiseks",
     "tip_shortcuts": "Vajuta ? kõigi kiirklahvide nägemiseks",
-    "tip_sidebar": "Kalender, Kontaktid ja Seaded on vasakul ribal",
+    "tip_sidebar_apps": "{apps} on vasakul ribal",
     "tip_settings": "Kohanda oma kogemust seadetes",
     "tip_compose_touch": "Uue kirja kirjutamiseks puuduta pliiatsinuppu",
-    "tip_sidebar_touch": "Kalender, kontaktid ja seaded asuvad alumisel ribal",
+    "tip_sidebar_apps_touch": "{apps} asuvad alumisel ribal",
     "got_it": "Selge",
     "settings": "Seaded",
     "dismiss": "Sulge",
@@ -7409,6 +7420,18 @@
     "attach_files": "Lisa failid…",
     "shortcut_apps": "Mine e-posti, kalendrisse, kontaktidesse või failidesse"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Ava…",
+    "menu_save_as": "Salvesta nimega…",
+    "open_filter": "Kirjad, sündmused ja kontaktid",
+    "save_filter": "E-kiri",
+    "folder_title": "Vali kirjade jaoks kaust",
+    "folder_button": "Salvesta siia",
+    "saved_many": "{count, plural, one {# kiri salvestatud.} other {# kirja salvestatud.}}",
+    "save_failed": "{count, plural, one {# kirja ei saanud salvestada.} other {# kirja ei saanud salvestada.}}",
+    "shortcut_open": "Ava salvestatud kiri, sündmus või kontakt",
+    "shortcut_save_as": "Salvesta kiri failina"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutuseta aega PIN-koodi igas aknas ja vahekaardil. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Kustuta",
     "signout_changed": "Veel lisamata ja salvestamata ning nüüd kustutatud: {names}.",
     "signout_held": "Endiselt teises programmis avatud, seega kustutatakse alles pärast sulgemist: {names}."
+  },
+  "desktopPrint": {
+    "title": "Prindi",
+    "pages_one": "1 lehekülg",
+    "pages_many": "{count} lehekülge",
+    "preparing": "Eelvaadet valmistatakse…",
+    "preview_failed": "Eelvaadet ei õnnestunud luua.",
+    "preview_label": "Eelvaade",
+    "destination": "Sihtkoht",
+    "save_as_pdf": "Salvesta PDF-ina",
+    "pages": "Leheküljed",
+    "pages_all": "Kõik",
+    "pages_custom": "Kohandatud",
+    "pages_example": "nt 1-3, 5",
+    "pages_invalid": "Sisestage leheküljed vahemikus 1 kuni {count}, nt 1-3, 5.",
+    "copies": "Koopiad",
+    "layout": "Paigutus",
+    "portrait": "Püstpaigutus",
+    "landscape": "Rõhtpaigutus",
+    "color": "Värv",
+    "color_color": "Värviline",
+    "color_mono": "Mustvalge",
+    "more": "Rohkem seadeid",
+    "paper": "Paberi suurus",
+    "paper_printer": "Printeri vaikimisi",
+    "margins": "Veerised",
+    "margins_default": "Vaikimisi",
+    "margins_none": "Puuduvad",
+    "margins_minimum": "Minimaalsed",
+    "scale": "Mastaap (%)",
+    "options": "Valikud",
+    "header_footer": "Päised ja jalused",
+    "background": "Taustagraafika",
+    "print": "Prindi",
+    "save": "Salvesta",
+    "cancel": "Tühista",
+    "system_dialog": "Prindi süsteemi dialoogiga…",
+    "failed_title": "Printimine ebaõnnestus",
+    "failed_detail": "Printer ei võtnud tööd vastu. Kontrollige, kas see on sisse lülitatud, ja proovige uuesti."
   },
   "files_sync": {
     "title": "Failid selles arvutis",

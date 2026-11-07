@@ -19,6 +19,11 @@ import type { Email, Mailbox } from "@/lib/jmap/types";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
 
+interface RowReadIntent {
+  email: Email;
+  confirmedThroughFetch: number;
+}
+
 interface ProFolderTabBodyProps {
   tabId: string;
   data: ProFolderTabData;
@@ -76,6 +81,23 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const fetchSeqRef = useRef(0);
+  const cancelRowReadRef = useRef<(() => void) | null>(null);
+  // Reads belong to this client/folder, even if another folder has the same ids.
+  const rowReads = useMemo(() => ({
+    active: false,
+    pending: new Set<string>(),
+    selected: null as RowReadIntent | null,
+    // A context change starts a fresh scope even though its values are not stored here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [client, clientLogin, data.accountId, data.mailboxId, jmapMailboxId, jmapAccountId]);
+
+  useEffect(() => {
+    rowReads.active = true;
+    return () => {
+      rowReads.active = false;
+      cancelRowReadRef.current?.();
+    };
+  }, [rowReads]);
 
   const folderLabel = mailbox
     ? localizeMailboxName(mailbox.role, mailbox.name, (k) => tSidebar(`mailboxes.${k}`))
@@ -93,12 +115,27 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const loadPage = useCallback(async (position: number) => {
     if (!client) return;
     const seq = ++fetchSeqRef.current;
-    if (position === 0) setIsLoading(true); else setIsLoadingMore(true);
+    if (position === 0) {
+      setIsLoading(true);
+    } else setIsLoadingMore(true);
     try {
       const result = await client.getEmails(jmapMailboxId, jmapAccountId, emailsPerPage, position, undefined, true, undefined, getMessageListOrderFor(mailboxRole));
-      if (seq !== fetchSeqRef.current) return;
-      setEmails((prev) => {
-        if (position === 0) return result.emails;
+      if (seq !== fetchSeqRef.current || !rowReads.active) return;
+      if (position === 0) {
+        // Refresh keeps the selected read intent and its original timer. Let
+        // that intent follow the replacement row, including when the request
+        // succeeded while this (possibly older, unread) response was in flight.
+        // Later refreshes remain authoritative, e.g. after an explicit Unread.
+        const selected = rowReads.selected;
+        setEmails(result.emails.map((email) => {
+          if (!selected || email.id !== selected.email.id) return email;
+          const current = selected.confirmedThroughFetch >= seq
+            ? { ...email, keywords: { ...email.keywords, $seen: true } }
+            : email;
+          selected.email = current;
+          return current;
+        }));
+      } else setEmails((prev) => {
         const known = new Set(prev.map((e) => e.id));
         return [...prev, ...result.emails.filter((e) => !known.has(e.id))];
       });
@@ -112,12 +149,14 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
         if (position === 0) setIsLoading(false); else setIsLoadingMore(false);
       }
     }
-  }, [client, jmapMailboxId, jmapAccountId, emailsPerPage, mailboxRole]);
+  }, [client, jmapMailboxId, jmapAccountId, emailsPerPage, mailboxRole, rowReads]);
 
   useEffect(() => {
+    cancelRowReadRef.current?.();
+    rowReads.selected = null;
     setSelectedEmailId(null);
     void loadPage(0);
-  }, [loadPage]);
+  }, [loadPage, rowReads]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (!hasMore || isLoadingMore || isLoading) return;
@@ -127,25 +166,37 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     }
   }, [hasMore, isLoadingMore, isLoading, loadPage, emails.length]);
 
-  const markRowAsRead = useCallback(async (email: Email) => {
-    if (!client || email.keywords?.$seen) return;
-    // Straight to the client: the store's markAsRead only serves emails in
-    // its own (global) list, which this tab's rows are not part of. So the
-    // plugin hooks the store action fires are fired here.
-    if (emailHooks.onBeforeEmailReadStateChange.size > 0
-      && !(await emailHooks.onBeforeEmailReadStateChange.intercept({ emailIds: [email.id], read: true }))) {
-      return;
-    }
-    setEmails((prev) => prev.map((e) => e.id === email.id
-      ? { ...e, keywords: { ...e.keywords, $seen: true } }
-      : e));
+  const markRowAsRead = useCallback(async (intent: RowReadIntent) => {
+    const email = intent.email;
+    if (!client || email.keywords?.$seen || !rowReads.active || rowReads.pending.has(email.id)) return;
+    // Deduplicate before awaiting plugins too. A refused attempt is released in
+    // finally; only a later row selection retries it, never a render/effect.
+    rowReads.pending.add(email.id);
     try {
+      // This tab owns its rows, so it calls the client and plugin hooks directly.
+      if (emailHooks.onBeforeEmailReadStateChange.size > 0
+        && !(await emailHooks.onBeforeEmailReadStateChange.intercept({ emailIds: [email.id], read: true }))) {
+        return;
+      }
+      // Selection/context/unmount may have cancelled while a plugin was waiting.
+      if (!rowReads.active || rowReads.selected !== intent) return;
       await client.markAsRead(email.id, true, jmapAccountId);
+      if (rowReads.active) {
+        // Only this intent can receive success. Same-context Refresh may have
+        // transferred it to a new row; a different selection owns its own copy.
+        intent.confirmedThroughFetch = fetchSeqRef.current;
+        const current = intent.email;
+        const confirmed = { ...current, keywords: { ...current.keywords, $seen: true } };
+        intent.email = confirmed;
+        setEmails((prev) => prev.map((e) => e === current ? confirmed : e));
+      }
       void emailHooks.onEmailReadStateChange.emit({ emailIds: [email.id], read: true });
     } catch (err) {
       console.error('Mark as read failed:', err);
+    } finally {
+      rowReads.pending.delete(email.id);
     }
-  }, [client, jmapAccountId]);
+  }, [client, jmapAccountId, rowReads]);
 
   const openAsEmailTab = useCallback((email: Email, reuseReader: boolean) => {
     useProTabStore.getState().openEmailTab(
@@ -163,14 +214,15 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   // Opening a row marks it read on the user's markAsReadDelay, like the
   // reading pane does; a pending delayed mark is dropped when another row is
   // opened or the tab goes away.
-  const cancelRowReadRef = useRef<(() => void) | null>(null);
-  useEffect(() => () => cancelRowReadRef.current?.(), []);
-
   const handleRowClick = useCallback((email: Email) => {
     cancelRowReadRef.current?.();
+    const intent = rowReads.selected?.email === email
+      ? rowReads.selected
+      : { email, confirmedThroughFetch: 0 };
+    rowReads.selected = intent;
     cancelRowReadRef.current = scheduleAutoMarkAsRead(
       useSettingsStore.getState().markAsReadDelay,
-      () => void markRowAsRead(email),
+      () => void markRowAsRead(intent),
     );
     if (isMobile) {
       // No room for a reading pane - promote to a dedicated email tab.
@@ -178,7 +230,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
       return;
     }
     setSelectedEmailId(email.id);
-  }, [markRowAsRead, isMobile, openAsEmailTab]);
+  }, [markRowAsRead, isMobile, openAsEmailTab, rowReads]);
 
   // The selected message left the folder (deleted / archived / moved /
   // reopened as a draft): drop its row and clear the reading pane.

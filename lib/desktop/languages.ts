@@ -6,6 +6,7 @@
 
 import { getDesktopBridge } from './bridge';
 import { certificateLabels } from './certificate-labels';
+import { printLabels } from './print-labels';
 import { updateLabels } from './update-labels';
 
 let ui = '';
@@ -57,6 +58,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     signInCodeNeeded: t('desktop_browser_sign_in.page_code_needed'),
     signInNoAnswer: t('desktop_browser_sign_in.page_no_answer'),
     ...certificateLabels(t),
+    ...printLabels(t),
     editCancel: t('desktopEdit.cancel'),
     editDiscardTitle: t('desktopEdit.discard_title', { name: '{name}' }),
     editDiscardDetail: t('desktopEdit.discard_detail'),
@@ -80,6 +82,12 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuNewWindow: t('desktopUi.menu.new_window'),
     menuPrint: t('desktopUi.menu.print'),
     menuSavePdf: t('desktopUi.menu.save_pdf'),
+    menuOpen: t('desktopSaveOpen.menu_open'),
+    menuOpenFilter: t('desktopSaveOpen.open_filter'),
+    menuSaveAs: t('desktopSaveOpen.menu_save_as'),
+    menuSaveAsFilter: t('desktopSaveOpen.save_filter'),
+    menuSaveAsFolderTitle: t('desktopSaveOpen.folder_title'),
+    menuSaveAsFolderButton: t('desktopSaveOpen.folder_button'),
     menuSwitchMode: t('desktopUi.menu.switch_connection'),
     menuAddAccount: t('ux_p3_settings.connection.add_account'),
     menuSwitchModeTitle: t('ux_p3_settings.connection.title'),

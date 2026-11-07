@@ -18,7 +18,10 @@ function block(css: string, selector: string): Tokens {
   const m = new RegExp(`(?:^|\\n)${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`).exec(css);
   const out: Tokens = {};
   if (!m) return out;
-  for (const [, k, v] of m[1].matchAll(/--color-([\w-]+):\s*([^;]+);/g)) out[k] = v.trim();
+  // A host palette's `var(--brand-*, <default>)`: check the default.
+  for (const [, k, v] of m[1].matchAll(/--color-([\w-]+):\s*([^;]+);/g)) {
+    out[k] = v.trim().replace(/^var\(--brand-[\w-]+,\s*(.+)\)$/, '$1');
+  }
   return out;
 }
 

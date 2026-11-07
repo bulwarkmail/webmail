@@ -13,6 +13,7 @@ import { isAppLocked } from "@/lib/desktop/app-lock-state";
 import { pasteTarget, visibleComposer } from "@/lib/desktop/window-files";
 import { runFileDropZone, type FileDropEnv } from "@/lib/file-drop/actions";
 import { listenForFileChoices, type FileChoiceRequest } from "@/lib/file-drop/choice";
+import { importKeywords } from "@/lib/file-drop/import-keywords";
 import { startDragWatch } from "@/lib/file-drop/drag-watch";
 import { filesDropTarget } from "@/lib/file-drop/files-target";
 import { readDroppedFiles, type DroppedFiles } from "@/lib/file-drop/read";
@@ -45,12 +46,12 @@ const FLUSH_BEFORE_LEAVING_MS = 5000;
 const NAMES_SHOWN = 3;
 
 /** Where a dropped .eml could go: the real folder in view on the mail screen, if new mail may go in. */
-function importFolder(pathname: string, translate: (key: string) => string): { id: string; name: string; accountId?: string } | null {
+function importFolder(pathname: string, translate: (key: string) => string): { id: string; name: string; accountId?: string; role?: string | null } | null {
   if (matchSurface(pathname)?.surface !== "mail") return null;
   const { selectedMailbox, mailboxes } = useEmailStore.getState();
   const mailbox = mailboxes.find((entry) => entry.id === selectedMailbox);
   if (!mailbox || mailbox.isShared || mailbox.myRights?.mayAddItems === false) return null;
-  return { id: mailbox.id, name: localizeMailboxName(mailbox.role, mailbox.name, translate), accountId: mailbox.accountId };
+  return { id: mailbox.id, name: localizeMailboxName(mailbox.role, mailbox.name, translate), accountId: mailbox.accountId, role: mailbox.role };
 }
 
 /** Whatever would stop a drop now. A dialog of its own (an import, a picker) keeps its own drop zone. */
@@ -150,7 +151,7 @@ export function FileDropHost() {
       let done = 0;
       for (const file of files) {
         try {
-          await client.importRawEmail(file, { [folder.id]: true }, { $seen: true }, folder.accountId);
+          await client.importRawEmail(file, { [folder.id]: true }, importKeywords(folder.role), folder.accountId);
           done += 1;
         } catch (error) {
           console.error("Importing a dropped message failed:", error);

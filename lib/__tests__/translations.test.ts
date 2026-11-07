@@ -173,9 +173,13 @@ describe('mail terms are not mistranslated', () => {
     uk: /композитор/i,
   };
 
+  // The desktop print preview is about real printers: "yazıcı" is the right word there.
+  const ABOUT_PRINTERS = /^desktopPrint\./;
+
   it.each(Object.keys(WRONG_WORDS))('%s does not call the composer a music composer or a printer', (locale) => {
     const table = loadLocale(locale);
     const wrong = getLeafKeys(table)
+      .filter((key) => !ABOUT_PRINTERS.test(key))
       .map((key) => [key, resolveKey(table, key)] as const)
       .filter(([, value]) => typeof value === 'string' && WRONG_WORDS[locale].test(value));
     expect(wrong).toEqual([]);

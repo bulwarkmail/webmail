@@ -355,6 +355,9 @@
     "no_search_results": "Geen resultaten gevonden",
     "no_search_results_description": "Pas je zoekopdracht of filters aan",
     "more_results_searching": "Meer resultaten zoeken…",
+    "resize_plugin_results": "Formaat van resultaten uit plug-ins wijzigen",
+    "compact_plugin_results": "Eén regel per resultaat",
+    "plugin_result_score": "{count} van 5",
     "loading": "E-mails laden...",
     "unread": "ongelezen",
     "to_me": "Aan mij",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Concept opslaan",
     "shortcut_show_cc": "Cc tonen",
     "shortcut_show_bcc": "Bcc tonen"
+  },
+  "compose_dock": {
+    "open_draft": "Openen",
+    "reply_type": "Soort antwoord: {kind}",
+    "resize_reply": "Grootte van antwoord aanpassen",
+    "fields_menu": "Meer velden"
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",
@@ -5387,10 +5396,10 @@
     "title": "Welkom bij uw mailbox",
     "tip_compose": "Druk op c om een nieuwe e-mail te schrijven",
     "tip_shortcuts": "Druk op ? om alle sneltoetsen te bekijken",
-    "tip_sidebar": "Agenda, Contacten en Instellingen staan in de balk links",
+    "tip_sidebar_apps": "{apps} staan in de balk links",
     "tip_settings": "Pas uw ervaring aan in Instellingen",
     "tip_compose_touch": "Tik op de potloodknop om een nieuwe e-mail te schrijven",
-    "tip_sidebar_touch": "Agenda, Contacten en Instellingen vind je in de balk onderaan",
+    "tip_sidebar_apps_touch": "{apps} vind je in de balk onderaan",
     "got_it": "Begrepen",
     "settings": "Instellingen",
     "dismiss": "Sluiten",
@@ -5965,7 +5974,8 @@
     "invited": "{name} heeft je uitgenodigd voor \"{title}\"",
     "updated": "{name} heeft \"{title}\" bijgewerkt",
     "cancelled": "{name} heeft \"{title}\" geannuleerd",
-    "untitled": "Afspraak zonder titel"
+    "untitled": "Afspraak zonder titel",
+    "summary": "Wijzigingen in afspraken waaraan je deelneemt: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} tot {end} geselecteerd.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} heeft {kind} \"{object}\" met je gedeeld",
     "changed": "{name} heeft je toegang tot {kind} \"{object}\" gewijzigd",
     "revoked": "{name} heeft je toegang tot {kind} \"{object}\" ingetrokken",
+    "summary": "{name} heeft je toegang tot {count, plural, one {# gedeeld item} other {# gedeelde items}} gewijzigd",
     "object": {
       "folder": "de map",
       "calendar": "de agenda",
@@ -7409,6 +7420,18 @@
     "attach_files": "Bestanden bijvoegen…",
     "shortcut_apps": "Naar E-mail, Agenda, Contacten of Bestanden"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Openen…",
+    "menu_save_as": "Opslaan als…",
+    "open_filter": "Berichten, afspraken en contacten",
+    "save_filter": "E-mailbericht",
+    "folder_title": "Kies een map voor de berichten",
+    "folder_button": "Hier opslaan",
+    "saved_many": "{count, plural, one {# bericht opgeslagen.} other {# berichten opgeslagen.}}",
+    "save_failed": "{count, plural, one {# bericht kon niet worden opgeslagen.} other {# berichten konden niet worden opgeslagen.}}",
+    "shortcut_open": "Een opgeslagen bericht, afspraak of contact openen",
+    "shortcut_save_as": "Het bericht opslaan als bestand"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Verwijderen",
     "signout_changed": "Nog niet bijgevoegd of opgeslagen, en nu verwijderd: {names}.",
     "signout_held": "Nog geopend in een ander programma, dus pas verwijderd als u ze daar sluit: {names}."
+  },
+  "desktopPrint": {
+    "title": "Afdrukken",
+    "pages_one": "1 pagina",
+    "pages_many": "{count} pagina’s",
+    "preparing": "Voorbeeld voorbereiden…",
+    "preview_failed": "Het voorbeeld kon niet worden gemaakt.",
+    "preview_label": "Voorbeeld",
+    "destination": "Bestemming",
+    "save_as_pdf": "Opslaan als pdf",
+    "pages": "Pagina’s",
+    "pages_all": "Alle",
+    "pages_custom": "Aangepast",
+    "pages_example": "bijv. 1-3, 5",
+    "pages_invalid": "Voer pagina’s in tussen 1 en {count}, zoals 1-3, 5.",
+    "copies": "Exemplaren",
+    "layout": "Indeling",
+    "portrait": "Staand",
+    "landscape": "Liggend",
+    "color": "Kleur",
+    "color_color": "Kleur",
+    "color_mono": "Zwart-wit",
+    "more": "Meer instellingen",
+    "paper": "Papierformaat",
+    "paper_printer": "Standaard van de printer",
+    "margins": "Marges",
+    "margins_default": "Standaard",
+    "margins_none": "Geen",
+    "margins_minimum": "Minimaal",
+    "scale": "Schaal (%)",
+    "options": "Opties",
+    "header_footer": "Kop- en voetteksten",
+    "background": "Achtergrondafbeeldingen",
+    "print": "Afdrukken",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "system_dialog": "Afdrukken via systeemdialoogvenster…",
+    "failed_title": "Afdrukken mislukt",
+    "failed_detail": "De printer heeft de taak niet aangenomen. Controleer of hij aanstaat en probeer het opnieuw."
   },
   "files_sync": {
     "title": "Bestanden op deze computer",

@@ -355,6 +355,9 @@
     "no_search_results": "Nekas netika atrasts",
     "no_search_results_description": "Mēģiniet mainīt meklēšanas vaicājumu vai filtrus",
     "more_results_searching": "Meklē vēl rezultātus…",
+    "resize_plugin_results": "Mainīt spraudņu rezultātu izmēru",
+    "compact_plugin_results": "Viena rinda katram rezultātam",
+    "plugin_result_score": "{count} no 5",
     "loading": "Ielādē vēstules...",
     "unread": "nelasītas",
     "to_me": "Man",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Saglabāt melnrakstu",
     "shortcut_show_cc": "Rādīt kopiju",
     "shortcut_show_bcc": "Rādīt diskrēto kopiju"
+  },
+  "compose_dock": {
+    "open_draft": "Atvērt",
+    "reply_type": "Atbildes veids: {kind}",
+    "resize_reply": "Mainīt atbildes izmēru",
+    "fields_menu": "Vairāk lauku"
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
@@ -5387,10 +5396,10 @@
     "title": "Laipni lūdzam jūsu pastkastē",
     "tip_compose": "Nospiediet c, lai rakstītu jaunu vēstuli",
     "tip_shortcuts": "Nospiediet ?, lai skatītu visus īsinājumtaustiņus",
-    "tip_sidebar": "Kalendārs, Kontakti un Iestatījumi ir joslā kreisajā pusē",
+    "tip_sidebar_apps": "{apps} ir joslā kreisajā pusē",
     "tip_settings": "Pielāgojiet saskarni sadaļā «Iestatījumi»",
     "tip_compose_touch": "Pieskarieties zīmuļa pogai, lai rakstītu jaunu e-pastu",
-    "tip_sidebar_touch": "Kalendārs, Kontakti un Iestatījumi ir apakšējā joslā",
+    "tip_sidebar_apps_touch": "{apps} ir apakšējā joslā",
     "got_it": "Skaidrs",
     "settings": "Iestatījumi",
     "dismiss": "Aizvērt",
@@ -5965,7 +5974,8 @@
     "invited": "{name} uzaicināja jūs uz “{title}”",
     "updated": "{name} atjaunināja “{title}”",
     "cancelled": "{name} atcēla “{title}”",
-    "untitled": "Notikums bez nosaukuma"
+    "untitled": "Notikums bez nosaukuma",
+    "summary": "Izmaiņas notikumos, kuros piedalāties: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Atlasīts no {start} līdz {end}.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} kopīgoja ar jums {kind} “{object}”",
     "changed": "{name} mainīja jūsu piekļuvi {kind} “{object}”",
     "revoked": "{name} noņēma jūsu piekļuvi {kind} “{object}”",
+    "summary": "{name} mainīja jūsu piekļuvi {count, plural, zero {# kopīgotajiem vienumiem} one {# kopīgotajam vienumam} other {# kopīgotajiem vienumiem}}",
     "object": {
       "folder": "mapi",
       "calendar": "kalendāru",
@@ -7409,6 +7420,18 @@
     "attach_files": "Pievienot failus…",
     "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Atvērt…",
+    "menu_save_as": "Saglabāt kā…",
+    "open_filter": "Vēstules, notikumi un kontakti",
+    "save_filter": "E-pasta vēstule",
+    "folder_title": "Izvēlieties mapi vēstulēm",
+    "folder_button": "Saglabāt šeit",
+    "saved_many": "{count, plural, zero {Saglabātas # vēstules.} one {Saglabāta # vēstule.} other {Saglabātas # vēstules.}}",
+    "save_failed": "{count, plural, zero {Neizdevās saglabāt # vēstules.} one {Neizdevās saglabāt # vēstuli.} other {Neizdevās saglabāt # vēstules.}}",
+    "shortcut_open": "Atvērt saglabātu vēstuli, notikumu vai kontaktu",
+    "shortcut_save_as": "Saglabāt vēstuli kā failu"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Dzēst",
     "signout_changed": "Vēl nav pievienoti vai saglabāti, un tagad izdzēsti: {names}.",
     "signout_held": "Joprojām atvērti citā programmā, tāpēc tiks izdzēsti tikai pēc aizvēršanas: {names}."
+  },
+  "desktopPrint": {
+    "title": "Drukāt",
+    "pages_one": "1 lappuse",
+    "pages_many": "Lappuses: {count}",
+    "preparing": "Gatavo priekšskatījumu…",
+    "preview_failed": "Priekšskatījumu neizdevās izveidot.",
+    "preview_label": "Priekšskatījums",
+    "destination": "Galamērķis",
+    "save_as_pdf": "Saglabāt kā PDF",
+    "pages": "Lappuses",
+    "pages_all": "Visas",
+    "pages_custom": "Pielāgotas",
+    "pages_example": "piem., 1-3, 5",
+    "pages_invalid": "Ievadiet lappuses no 1 līdz {count}, piemēram, 1-3, 5.",
+    "copies": "Kopijas",
+    "layout": "Izkārtojums",
+    "portrait": "Portrets",
+    "landscape": "Ainava",
+    "color": "Krāsa",
+    "color_color": "Krāsains",
+    "color_mono": "Melnbalts",
+    "more": "Vairāk iestatījumu",
+    "paper": "Papīra izmērs",
+    "paper_printer": "Printera noklusējums",
+    "margins": "Piemales",
+    "margins_default": "Noklusējuma",
+    "margins_none": "Nav",
+    "margins_minimum": "Minimālas",
+    "scale": "Mērogs (%)",
+    "options": "Opcijas",
+    "header_footer": "Galvenes un kājenes",
+    "background": "Fona grafika",
+    "print": "Drukāt",
+    "save": "Saglabāt",
+    "cancel": "Atcelt",
+    "system_dialog": "Drukāt ar sistēmas dialoglodziņu…",
+    "failed_title": "Neizdevās izdrukāt",
+    "failed_detail": "Printeris nepieņēma darbu. Pārbaudiet, vai tas ir ieslēgts, un mēģiniet vēlreiz."
   },
   "files_sync": {
     "title": "Faili šajā datorā",

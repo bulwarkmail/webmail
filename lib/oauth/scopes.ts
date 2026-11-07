@@ -23,6 +23,11 @@ export const STALWART_SCOPE_SETTINGS = 'urn:stalwart:oauth:scope:settings';
 
 const STALWART_SCOPES = [STALWART_SCOPE_FULL, STALWART_SCOPE_SECURITY, STALWART_SCOPE_SETTINGS];
 
+/** The Stalwart scopes `list` names. */
+export function stalwartScopesIn(list: string): string[] {
+  return [...new Set(list.split(/\s+/).filter((s) => STALWART_SCOPES.includes(s)))];
+}
+
 /**
  * `list` asking for exactly the Stalwart scopes in `granted`: any other one
  * it names would fail the sign-in with `invalid_scope`.

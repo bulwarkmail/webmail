@@ -355,6 +355,9 @@
     "no_search_results": "검색 결과가 없어요",
     "no_search_results_description": "검색어나 필터를 변경해 보세요",
     "more_results_searching": "추가 결과를 검색하는 중…",
+    "resize_plugin_results": "플러그인 결과 크기 조정",
+    "compact_plugin_results": "결과당 한 줄",
+    "plugin_result_score": "5점 중 {count}",
     "loading": "메일을 불러오는 중...",
     "unread": "읽지 않음",
     "to_me": "나에게",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "임시 저장",
     "shortcut_show_cc": "참조 표시",
     "shortcut_show_bcc": "숨은 참조 표시"
+  },
+  "compose_dock": {
+    "open_draft": "열기",
+    "reply_type": "답장 유형: {kind}",
+    "resize_reply": "답장 크기 조절",
+    "fields_menu": "추가 필드"
   },
   "confirm_dialog": {
     "confirm": "확인",
@@ -5387,10 +5396,10 @@
     "title": "웹메일에 오신 것을 환영해요!",
     "tip_compose": "c 키를 누르면 바로 새 메일을 쓸 수 있어요",
     "tip_shortcuts": "? 키를 누르면 모든 단축키를 확인할 수 있어요",
-    "tip_sidebar": "캘린더, 연락처, 설정은 왼쪽 막대에 있습니다",
+    "tip_sidebar_apps": "{apps}은(는) 왼쪽 막대에 있습니다",
     "tip_settings": "설정에서 나만의 스타일로 꾸며보세요",
     "tip_compose_touch": "연필 버튼을 눌러 새 메일을 작성하세요",
-    "tip_sidebar_touch": "캘린더, 연락처, 설정은 하단 막대에 있습니다",
+    "tip_sidebar_apps_touch": "{apps}은(는) 하단 막대에 있습니다",
     "got_it": "확인했어요",
     "settings": "설정",
     "dismiss": "닫기",
@@ -5965,7 +5974,8 @@
     "invited": "{name}님이 \"{title}\"에 초대했습니다",
     "updated": "{name}님이 \"{title}\"을(를) 업데이트했습니다",
     "cancelled": "{name}님이 \"{title}\"을(를) 취소했습니다",
-    "untitled": "제목 없는 일정"
+    "untitled": "제목 없는 일정",
+    "summary": "참여 중인 일정의 변경 사항: {count}개"
   },
   "calendar_month_select": {
     "selected_range": "{start}부터 {end}까지 선택됨.",
@@ -6109,6 +6119,7 @@
     "shared": "{name}님이 {kind} \"{object}\"을(를) 공유했습니다",
     "changed": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 변경했습니다",
     "revoked": "{name}님이 {kind} \"{object}\"에 대한 접근 권한을 제거했습니다",
+    "summary": "{name}님이 공유 항목 {count, plural, other {#개}}에 대한 접근 권한을 변경했습니다",
     "object": {
       "folder": "폴더",
       "calendar": "캘린더",
@@ -7409,6 +7420,18 @@
     "attach_files": "파일 첨부…",
     "shortcut_apps": "메일, 캘린더, 연락처, 파일로 이동"
   },
+  "desktopSaveOpen": {
+    "menu_open": "열기…",
+    "menu_save_as": "다른 이름으로 저장…",
+    "open_filter": "메시지, 일정 및 연락처",
+    "save_filter": "이메일 메시지",
+    "folder_title": "메시지를 저장할 폴더 선택",
+    "folder_button": "여기에 저장",
+    "saved_many": "메시지 {count}개를 저장했어요.",
+    "save_failed": "메시지 {count}개를 저장하지 못했어요.",
+    "shortcut_open": "저장된 메시지, 일정 또는 연락처 열기",
+    "shortcut_save_as": "메시지를 파일로 저장"
+  },
   "appLock": {
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 앱은 누군가 PIN을 입력할 때까지 이 기기에 저장된 메일을 읽을 수 없습니다.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "삭제",
     "signout_changed": "아직 첨부하거나 저장하지 않았으며 지금 삭제됩니다: {names}.",
     "signout_held": "아직 다른 프로그램에서 열려 있어 그곳에서 닫아야 삭제됩니다: {names}."
+  },
+  "desktopPrint": {
+    "title": "인쇄",
+    "pages_one": "1페이지",
+    "pages_many": "{count}페이지",
+    "preparing": "미리보기 준비 중…",
+    "preview_failed": "미리보기를 만들 수 없습니다.",
+    "preview_label": "미리보기",
+    "destination": "대상",
+    "save_as_pdf": "PDF로 저장",
+    "pages": "페이지",
+    "pages_all": "모두",
+    "pages_custom": "사용자 지정",
+    "pages_example": "예: 1-3, 5",
+    "pages_invalid": "1에서 {count} 사이의 페이지를 입력하세요(예: 1-3, 5).",
+    "copies": "매수",
+    "layout": "레이아웃",
+    "portrait": "세로",
+    "landscape": "가로",
+    "color": "색상",
+    "color_color": "컬러",
+    "color_mono": "흑백",
+    "more": "설정 더보기",
+    "paper": "용지 크기",
+    "paper_printer": "프린터 기본값",
+    "margins": "여백",
+    "margins_default": "기본값",
+    "margins_none": "없음",
+    "margins_minimum": "최소",
+    "scale": "배율(%)",
+    "options": "옵션",
+    "header_footer": "머리글 및 바닥글",
+    "background": "배경 그래픽",
+    "print": "인쇄",
+    "save": "저장",
+    "cancel": "취소",
+    "system_dialog": "시스템 대화상자로 인쇄…",
+    "failed_title": "인쇄할 수 없음",
+    "failed_detail": "프린터가 작업을 받지 않았습니다. 프린터가 켜져 있는지 확인한 후 다시 시도하세요."
   },
   "files_sync": {
     "title": "이 컴퓨터의 파일",

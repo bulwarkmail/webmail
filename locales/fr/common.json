@@ -355,6 +355,9 @@
     "no_search_results": "Aucun résultat trouvé",
     "no_search_results_description": "Essayez de modifier votre recherche ou vos filtres",
     "more_results_searching": "Recherche d'autres résultats…",
+    "resize_plugin_results": "Redimensionner les résultats des plugins",
+    "compact_plugin_results": "Une ligne par résultat",
+    "plugin_result_score": "{count} sur 5",
     "loading": "Chargement des emails...",
     "unread": "non lu",
     "to_me": "À moi",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Enregistrer le brouillon",
     "shortcut_show_cc": "Afficher Cc",
     "shortcut_show_bcc": "Afficher Cci"
+  },
+  "compose_dock": {
+    "open_draft": "Ouvrir",
+    "reply_type": "Type de réponse : {kind}",
+    "resize_reply": "Redimensionner la réponse",
+    "fields_menu": "Plus de champs"
   },
   "confirm_dialog": {
     "confirm": "Confirmer",
@@ -5387,10 +5396,10 @@
     "title": "Bienvenue dans votre boite mail",
     "tip_compose": "Appuyez sur c pour composer un nouvel email",
     "tip_shortcuts": "Appuyez sur ? pour voir tous les raccourcis clavier",
-    "tip_sidebar": "Calendrier, Contacts et Paramètres sont dans la barre à gauche",
+    "tip_sidebar_apps": "{apps} sont dans la barre à gauche",
     "tip_settings": "Personnalisez votre experience dans les Parametres",
     "tip_compose_touch": "Touchez le bouton crayon pour écrire un nouvel e-mail",
-    "tip_sidebar_touch": "Agenda, Contacts et Paramètres se trouvent dans la barre du bas",
+    "tip_sidebar_apps_touch": "{apps} se trouvent dans la barre du bas",
     "got_it": "Compris",
     "settings": "Paramètres",
     "dismiss": "Fermer",
@@ -5965,7 +5974,8 @@
     "invited": "{name} vous a invité à « {title} »",
     "updated": "{name} a mis à jour « {title} »",
     "cancelled": "{name} a annulé « {title} »",
-    "untitled": "Événement sans titre"
+    "untitled": "Événement sans titre",
+    "summary": "Modifications d’événements auxquels vous participez : {count}"
   },
   "calendar_month_select": {
     "selected_range": "Du {start} au {end} sélectionné.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} a partagé {kind} « {object} » avec vous",
     "changed": "{name} a modifié votre accès à {kind} « {object} »",
     "revoked": "{name} a retiré votre accès à {kind} « {object} »",
+    "summary": "{name} a modifié votre accès à {count, plural, one {# élément partagé} other {# éléments partagés}}",
     "object": {
       "folder": "le dossier",
       "calendar": "l'agenda",
@@ -7409,6 +7420,18 @@
     "attach_files": "Joindre des fichiers…",
     "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Ouvrir…",
+    "menu_save_as": "Enregistrer sous…",
+    "open_filter": "Messages, événements et contacts",
+    "save_filter": "Message électronique",
+    "folder_title": "Choisissez un dossier pour les messages",
+    "folder_button": "Enregistrer ici",
+    "saved_many": "{count, plural, one {# message enregistré.} other {# messages enregistrés.}}",
+    "save_failed": "{count, plural, one {# message n'a pas pu être enregistré.} other {# messages n'ont pas pu être enregistrés.}}",
+    "shortcut_open": "Ouvrir un message, un événement ou un contact enregistré",
+    "shortcut_save_as": "Enregistrer le message dans un fichier"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Supprimer",
     "signout_changed": "Pas encore jointes ni enregistrées, et supprimées maintenant : {names}.",
     "signout_held": "Encore ouvertes dans un autre programme, donc supprimées seulement une fois fermées : {names}."
+  },
+  "desktopPrint": {
+    "title": "Imprimer",
+    "pages_one": "1 page",
+    "pages_many": "{count} pages",
+    "preparing": "Préparation de l’aperçu…",
+    "preview_failed": "Impossible de créer l’aperçu.",
+    "preview_label": "Aperçu",
+    "destination": "Destination",
+    "save_as_pdf": "Enregistrer au format PDF",
+    "pages": "Pages",
+    "pages_all": "Toutes",
+    "pages_custom": "Personnalisées",
+    "pages_example": "ex. 1-3, 5",
+    "pages_invalid": "Saisissez des pages entre 1 et {count}, par exemple 1-3, 5.",
+    "copies": "Copies",
+    "layout": "Mise en page",
+    "portrait": "Portrait",
+    "landscape": "Paysage",
+    "color": "Couleur",
+    "color_color": "Couleur",
+    "color_mono": "Noir et blanc",
+    "more": "Plus de paramètres",
+    "paper": "Format du papier",
+    "paper_printer": "Par défaut de l’imprimante",
+    "margins": "Marges",
+    "margins_default": "Par défaut",
+    "margins_none": "Aucune",
+    "margins_minimum": "Minimales",
+    "scale": "Échelle (%)",
+    "options": "Options",
+    "header_footer": "En-têtes et pieds de page",
+    "background": "Graphiques d’arrière-plan",
+    "print": "Imprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "system_dialog": "Imprimer avec la boîte de dialogue du système…",
+    "failed_title": "Impossible d’imprimer",
+    "failed_detail": "L’imprimante n’a pas accepté la tâche. Vérifiez qu’elle est allumée et réessayez."
   },
   "files_sync": {
     "title": "Fichiers sur cet ordinateur",

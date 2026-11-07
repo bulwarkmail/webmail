@@ -26,7 +26,7 @@ vi.mock('next-intl', () => ({
 
 const canPrint = vi.fn(() => true);
 const canDownload = vi.fn(() => true);
-vi.mock('@/lib/device-policy', () => ({ canPrintAnywhere: () => canPrint(), canDownloadAnywhere: () => canDownload() }));
+vi.mock('@/lib/device-policy', () => ({ canPrintAnywhere: () => canPrint(), canDownloadAnywhere: () => canDownload(), canExportAnywhere: () => true }));
 vi.mock('@/hooks/use-device-policy', () => ({ useStrictestDevices: () => strictest.current }));
 const strictest = vi.hoisted(() => ({ current: {} as object }));
 

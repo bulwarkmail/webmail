@@ -355,6 +355,9 @@
     "no_search_results": "Nessun risultato trovato",
     "no_search_results_description": "Prova a modificare la ricerca o i filtri",
     "more_results_searching": "Ricerca di altri risultati…",
+    "resize_plugin_results": "Ridimensiona i risultati dei plugin",
+    "compact_plugin_results": "Una riga per risultato",
+    "plugin_result_score": "{count} su 5",
     "loading": "Caricamento messaggi...",
     "unread": "non letto",
     "to_me": "A me",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Salva bozza",
     "shortcut_show_cc": "Mostra Cc",
     "shortcut_show_bcc": "Mostra Ccn"
+  },
+  "compose_dock": {
+    "open_draft": "Apri",
+    "reply_type": "Tipo di risposta: {kind}",
+    "resize_reply": "Ridimensiona la risposta",
+    "fields_menu": "Altri campi"
   },
   "confirm_dialog": {
     "confirm": "Conferma",
@@ -5387,10 +5396,10 @@
     "title": "Benvenuto nella tua casella di posta",
     "tip_compose": "Premi c per scrivere una nuova email",
     "tip_shortcuts": "Premi ? per vedere tutte le scorciatoie da tastiera",
-    "tip_sidebar": "Calendario, Contatti e Impostazioni sono nella barra a sinistra",
+    "tip_sidebar_apps": "{apps} sono nella barra a sinistra",
     "tip_settings": "Personalizza la tua esperienza nelle Impostazioni",
     "tip_compose_touch": "Tocca il pulsante a matita per scrivere una nuova email",
-    "tip_sidebar_touch": "Calendario, Contatti e Impostazioni sono nella barra in basso",
+    "tip_sidebar_apps_touch": "{apps} sono nella barra in basso",
     "got_it": "Ho capito",
     "settings": "Impostazioni",
     "dismiss": "Chiudi",
@@ -5965,7 +5974,8 @@
     "invited": "{name} ti ha invitato a \"{title}\"",
     "updated": "{name} ha aggiornato \"{title}\"",
     "cancelled": "{name} ha annullato \"{title}\"",
-    "untitled": "Evento senza titolo"
+    "untitled": "Evento senza titolo",
+    "summary": "Modifiche agli eventi a cui partecipi: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Selezionato dal {start} al {end}.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} ha condiviso con te {kind} \"{object}\"",
     "changed": "{name} ha modificato il tuo accesso a {kind} \"{object}\"",
     "revoked": "{name} ha rimosso il tuo accesso a {kind} \"{object}\"",
+    "summary": "{name} ha modificato il tuo accesso a {count, plural, one {# elemento condiviso} other {# elementi condivisi}}",
     "object": {
       "folder": "la cartella",
       "calendar": "il calendario",
@@ -7409,6 +7420,18 @@
     "attach_files": "Allega file…",
     "shortcut_apps": "Vai a Posta, Calendario, Contatti o File"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Apri…",
+    "menu_save_as": "Salva con nome…",
+    "open_filter": "Messaggi, eventi e contatti",
+    "save_filter": "Messaggio email",
+    "folder_title": "Scegli una cartella per i messaggi",
+    "folder_button": "Salva qui",
+    "saved_many": "{count, plural, one {# messaggio salvato.} other {# messaggi salvati.}}",
+    "save_failed": "{count, plural, one {Non è stato possibile salvare # messaggio.} other {Non è stato possibile salvare # messaggi.}}",
+    "shortcut_open": "Apri un messaggio, un evento o un contatto salvato",
+    "shortcut_save_as": "Salva il messaggio come file"
+  },
   "appLock": {
     "section_title": "Blocco dell'app",
     "section_desc": "Chiede un PIN dopo un periodo di inattività, in ogni finestra e scheda. Mentre è bloccata, l'app non può leggere la posta salvata su questo dispositivo finché qualcuno non inserisce il PIN.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Elimina",
     "signout_changed": "Non ancora allegati o salvati, ed eliminati ora: {names}.",
     "signout_held": "Ancora aperti in un altro programma, quindi eliminati solo quando li chiudi lì: {names}."
+  },
+  "desktopPrint": {
+    "title": "Stampa",
+    "pages_one": "1 pagina",
+    "pages_many": "{count} pagine",
+    "preparing": "Preparazione dell’anteprima…",
+    "preview_failed": "Impossibile creare l’anteprima.",
+    "preview_label": "Anteprima",
+    "destination": "Destinazione",
+    "save_as_pdf": "Salva come PDF",
+    "pages": "Pagine",
+    "pages_all": "Tutte",
+    "pages_custom": "Personalizzate",
+    "pages_example": "ad es. 1-3, 5",
+    "pages_invalid": "Inserisci pagine tra 1 e {count}, ad esempio 1-3, 5.",
+    "copies": "Copie",
+    "layout": "Layout",
+    "portrait": "Verticale",
+    "landscape": "Orizzontale",
+    "color": "Colore",
+    "color_color": "Colore",
+    "color_mono": "Bianco e nero",
+    "more": "Altre impostazioni",
+    "paper": "Formato carta",
+    "paper_printer": "Predefinito della stampante",
+    "margins": "Margini",
+    "margins_default": "Predefiniti",
+    "margins_none": "Nessuno",
+    "margins_minimum": "Minimi",
+    "scale": "Scala (%)",
+    "options": "Opzioni",
+    "header_footer": "Intestazioni e piè di pagina",
+    "background": "Grafica di sfondo",
+    "print": "Stampa",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "system_dialog": "Stampa con la finestra di sistema…",
+    "failed_title": "Impossibile stampare",
+    "failed_detail": "La stampante non ha accettato il lavoro. Controlla che sia accesa e riprova."
   },
   "files_sync": {
     "title": "File su questo computer",

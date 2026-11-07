@@ -355,6 +355,9 @@
     "no_search_results": "Ingen resultater fundet",
     "no_search_results_description": "Prøv at justere din søgning eller filtre",
     "more_results_searching": "Søger efter flere resultater…",
+    "resize_plugin_results": "Tilpas størrelsen på resultater fra plugins",
+    "compact_plugin_results": "Én linje pr. resultat",
+    "plugin_result_score": "{count} af 5",
     "loading": "Indlæser e-mails...",
     "unread": "ulæst",
     "to_me": "Til mig",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Gem kladde",
     "shortcut_show_cc": "Vis Cc",
     "shortcut_show_bcc": "Vis Bcc"
+  },
+  "compose_dock": {
+    "open_draft": "Åbn",
+    "reply_type": "Svartype: {kind}",
+    "resize_reply": "Tilpas størrelsen på svaret",
+    "fields_menu": "Flere felter"
   },
   "confirm_dialog": {
     "confirm": "Bekræft",
@@ -5333,7 +5342,8 @@
     "invited": "{name} har inviteret dig til \"{title}\"",
     "updated": "{name} har opdateret \"{title}\"",
     "cancelled": "{name} har aflyst \"{title}\"",
-    "untitled": "Unavngivet begivenhed"
+    "untitled": "Unavngivet begivenhed",
+    "summary": "Ændringer i begivenheder, du deltager i: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} til {end} valgt.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} har delt {kind} \"{object}\" med dig",
     "changed": "{name} har ændret din adgang til {kind} \"{object}\"",
     "revoked": "{name} har fjernet din adgang til {kind} \"{object}\"",
+    "summary": "{name} har ændret din adgang til {count, plural, one {# delt element} other {# delte elementer}}",
     "object": {
       "folder": "mappen",
       "calendar": "kalenderen",
@@ -5654,10 +5665,10 @@
     "title": "Velkommen til din postkasse",
     "tip_compose": "Tryk c for at skrive en ny e-mail",
     "tip_shortcuts": "Tryk ? for at se alle tastaturgenveje",
-    "tip_sidebar": "Kalender, Kontakter og Indstillinger findes i bjælken til venstre",
+    "tip_sidebar_apps": "{apps} findes i bjælken til venstre",
     "tip_settings": "Tilpas din oplevelse i Indstillinger",
     "tip_compose_touch": "Tryk på blyantknappen for at skrive en ny e-mail",
-    "tip_sidebar_touch": "Kalender, Kontakter og Indstillinger finder du i bjælken nederst",
+    "tip_sidebar_apps_touch": "{apps} finder du i bjælken nederst",
     "got_it": "Forstået",
     "settings": "Indstillinger",
     "dismiss": "Afvis",
@@ -7409,6 +7420,18 @@
     "attach_files": "Vedhæft filer…",
     "shortcut_apps": "Gå til Mail, Kalender, Kontakter eller Filer"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Åbn…",
+    "menu_save_as": "Gem som…",
+    "open_filter": "Beskeder, begivenheder og kontakter",
+    "save_filter": "E-mailbesked",
+    "folder_title": "Vælg en mappe til beskederne",
+    "folder_button": "Gem her",
+    "saved_many": "{count, plural, one {# besked gemt.} other {# beskeder gemt.}}",
+    "save_failed": "{count, plural, one {# besked kunne ikke gemmes.} other {# beskeder kunne ikke gemmes.}}",
+    "shortcut_open": "Åbn en gemt besked, begivenhed eller kontakt",
+    "shortcut_save_as": "Gem beskeden som en fil"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Beder om en pinkode efter et stykke tid uden brug, i alle vinduer og faner. Mens den er låst, kan appen ikke læse den mail, der er gemt på denne enhed, før nogen indtaster pinkoden.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Slet",
     "signout_changed": "Endnu ikke vedhæftet eller gemt, og slettet nu: {names}.",
     "signout_held": "Stadig åbne i et andet program, så de slettes først, når du lukker dem der: {names}."
+  },
+  "desktopPrint": {
+    "title": "Udskriv",
+    "pages_one": "1 side",
+    "pages_many": "{count} sider",
+    "preparing": "Forbereder eksempel…",
+    "preview_failed": "Eksemplet kunne ikke laves.",
+    "preview_label": "Eksempel",
+    "destination": "Destination",
+    "save_as_pdf": "Gem som PDF",
+    "pages": "Sider",
+    "pages_all": "Alle",
+    "pages_custom": "Tilpasset",
+    "pages_example": "f.eks. 1-3, 5",
+    "pages_invalid": "Angiv sider mellem 1 og {count}, f.eks. 1-3, 5.",
+    "copies": "Kopier",
+    "layout": "Layout",
+    "portrait": "Stående",
+    "landscape": "Liggende",
+    "color": "Farve",
+    "color_color": "Farve",
+    "color_mono": "Sort/hvid",
+    "more": "Flere indstillinger",
+    "paper": "Papirstørrelse",
+    "paper_printer": "Printerens standard",
+    "margins": "Margener",
+    "margins_default": "Standard",
+    "margins_none": "Ingen",
+    "margins_minimum": "Minimum",
+    "scale": "Skalering (%)",
+    "options": "Indstillinger",
+    "header_footer": "Sidehoveder og sidefødder",
+    "background": "Baggrundsgrafik",
+    "print": "Udskriv",
+    "save": "Gem",
+    "cancel": "Annuller",
+    "system_dialog": "Udskriv via systemdialogen…",
+    "failed_title": "Kunne ikke udskrive",
+    "failed_detail": "Printeren tog ikke imod jobbet. Tjek, at den er tændt, og prøv igen."
   },
   "files_sync": {
     "title": "Filer på denne computer",

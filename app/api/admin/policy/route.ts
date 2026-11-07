@@ -18,13 +18,28 @@ function policyETag(version: string): string {
 }
 
 /**
+ * A policy version: DEFAULT_POLICY_VERSION ('default') or what versionOf makes
+ * (22 base64url chars). Spelled out, not imported: route tests mock the config
+ * manager with only what they use.
+ */
+const POLICY_VERSION = /^(?:default|[A-Za-z0-9_-]{22})$/;
+
+/**
  * The version an If-Match header names, or undefined for none (or `*`).
  * The admin pages send the ETag of the policy they loaded.
+ *
+ * A proxy that compresses the response may change the ETag: nginx makes it
+ * weak (`W/"v"`), Caddy and Apache append the encoding (`"v-zstd"`,
+ * `"v-gzip"`). The page sends that back unchanged, so both are undone here
+ * (#1557). The suffix is only dropped when what is left is a version.
  */
 function ifMatchVersion(request: NextRequest): string | undefined {
   const raw = request.headers.get('if-match')?.trim();
   if (!raw || raw === '*') return undefined;
-  return raw.split(',')[0].trim().replace(/^W\//, '').replace(/^"(.*)"$/, '$1');
+  const tag = raw.split(',')[0].trim().replace(/^W\//, '').replace(/^"(.*)"$/, '$1');
+  const encoded = /^(.+)-(?:gzip|br|zstd|deflate|compress)$/.exec(tag);
+  if (encoded && !POLICY_VERSION.test(tag) && POLICY_VERSION.test(encoded[1])) return encoded[1];
+  return tag;
 }
 
 /**

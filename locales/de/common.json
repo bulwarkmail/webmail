@@ -355,6 +355,9 @@
     "no_search_results": "Keine Ergebnisse gefunden",
     "no_search_results_description": "Passen Sie Ihre Suche oder Filter an",
     "more_results_searching": "Weitere Treffer werden gesucht…",
+    "resize_plugin_results": "Höhe der Treffer aus Plugins ändern",
+    "compact_plugin_results": "Eine Zeile pro Treffer",
+    "plugin_result_score": "{count} von 5",
     "loading": "E-Mails werden geladen...",
     "unread": "ungelesen",
     "to_me": "An mich",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Entwurf speichern",
     "shortcut_show_cc": "Cc anzeigen",
     "shortcut_show_bcc": "Bcc anzeigen"
+  },
+  "compose_dock": {
+    "open_draft": "Öffnen",
+    "reply_type": "Antwortart: {kind}",
+    "resize_reply": "Größe der Antwort ändern",
+    "fields_menu": "Weitere Felder"
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -5387,10 +5396,10 @@
     "title": "Willkommen in Ihrem Postfach",
     "tip_compose": "Drücken Sie c, um eine neue E-Mail zu verfassen",
     "tip_shortcuts": "Drücken Sie ?, um alle Tastaturkürzel anzuzeigen",
-    "tip_sidebar": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste links",
+    "tip_sidebar_apps": "{apps} finden Sie in der Leiste links",
     "tip_settings": "Passen Sie Ihre Erfahrung in den Einstellungen an",
     "tip_compose_touch": "Tippen Sie auf den Stift, um eine neue E-Mail zu schreiben",
-    "tip_sidebar_touch": "Kalender, Kontakte und Einstellungen finden Sie in der Leiste unten",
+    "tip_sidebar_apps_touch": "{apps} finden Sie in der Leiste unten",
     "got_it": "Verstanden",
     "settings": "Einstellungen",
     "dismiss": "Schließen",
@@ -5965,7 +5974,8 @@
     "invited": "{name} hat Sie zu „{title}“ eingeladen",
     "updated": "{name} hat „{title}“ aktualisiert",
     "cancelled": "{name} hat „{title}“ abgesagt",
-    "untitled": "Unbenannter Termin"
+    "untitled": "Unbenannter Termin",
+    "summary": "Änderungen an Terminen, an denen Sie teilnehmen: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} bis {end} ausgewählt.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} hat {kind} „{object}“ mit Ihnen geteilt",
     "changed": "{name} hat Ihren Zugriff auf {kind} „{object}“ geändert",
     "revoked": "{name} hat Ihren Zugriff auf {kind} „{object}“ entfernt",
+    "summary": "{name} hat Ihren Zugriff auf {count, plural, one {# freigegebenes Element} other {# freigegebene Elemente}} geändert",
     "object": {
       "folder": "den Ordner",
       "calendar": "den Kalender",
@@ -7409,6 +7420,18 @@
     "attach_files": "Dateien anhängen…",
     "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Öffnen…",
+    "menu_save_as": "Speichern unter…",
+    "open_filter": "Nachrichten, Termine und Kontakte",
+    "save_filter": "E-Mail-Nachricht",
+    "folder_title": "Ordner für die Nachrichten wählen",
+    "folder_button": "Hier speichern",
+    "saved_many": "{count, plural, one {# Nachricht gespeichert.} other {# Nachrichten gespeichert.}}",
+    "save_failed": "{count, plural, one {# Nachricht konnte nicht gespeichert werden.} other {# Nachrichten konnten nicht gespeichert werden.}}",
+    "shortcut_open": "Gespeicherte Nachricht, Termin oder Kontakt öffnen",
+    "shortcut_save_as": "Nachricht als Datei speichern"
+  },
   "appLock": {
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Löschen",
     "signout_changed": "Noch nicht angehängt oder gespeichert, und jetzt gelöscht: {names}.",
     "signout_held": "Noch in einem anderen Programm geöffnet, daher erst gelöscht, wenn Sie sie dort schließen: {names}."
+  },
+  "desktopPrint": {
+    "title": "Drucken",
+    "pages_one": "1 Seite",
+    "pages_many": "{count} Seiten",
+    "preparing": "Vorschau wird erstellt…",
+    "preview_failed": "Die Vorschau konnte nicht erstellt werden.",
+    "preview_label": "Vorschau",
+    "destination": "Ziel",
+    "save_as_pdf": "Als PDF speichern",
+    "pages": "Seiten",
+    "pages_all": "Alle",
+    "pages_custom": "Benutzerdefiniert",
+    "pages_example": "z. B. 1-3, 5",
+    "pages_invalid": "Geben Sie Seiten zwischen 1 und {count} ein, etwa 1-3, 5.",
+    "copies": "Kopien",
+    "layout": "Layout",
+    "portrait": "Hochformat",
+    "landscape": "Querformat",
+    "color": "Farbe",
+    "color_color": "Farbe",
+    "color_mono": "Schwarzweiß",
+    "more": "Weitere Einstellungen",
+    "paper": "Papierformat",
+    "paper_printer": "Standard des Druckers",
+    "margins": "Ränder",
+    "margins_default": "Standard",
+    "margins_none": "Keine",
+    "margins_minimum": "Minimal",
+    "scale": "Skalierung (%)",
+    "options": "Optionen",
+    "header_footer": "Kopf- und Fußzeilen",
+    "background": "Hintergrundgrafiken",
+    "print": "Drucken",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "system_dialog": "Mit dem Systemdialog drucken…",
+    "failed_title": "Drucken nicht möglich",
+    "failed_detail": "Der Drucker hat den Auftrag nicht angenommen. Prüfen Sie, ob er eingeschaltet ist, und versuchen Sie es noch einmal."
   },
   "files_sync": {
     "title": "Dateien auf diesem Computer",

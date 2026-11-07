@@ -1318,12 +1318,27 @@ const hasOwn = (obj: object, key: string) => Object.prototype.hasOwnProperty.cal
 const builtInDefault = (key: string) => (DEFAULT_SETTINGS as Record<string, unknown>)[key];
 
 /**
- * Settings an admin policy may set (#1248): plain values (boolean, number,
- * string). Lists and maps (tags, folder icons, per-account maps) stay the
+ * The list settings a policy may set too (#1564), with the entries each may
+ * hold. Other lists and maps (tags, folder icons, per-account maps) stay the
  * user's own.
+ */
+const POLICY_LIST_SETTINGS: Record<string, readonly string[]> = {
+  hoverActions: ALL_HOVER_ACTIONS.map((action) => action.id),
+};
+
+/** Equal values, lists compared entry by entry. */
+function sameSettingValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((entry, i) => entry === b[i]);
+}
+
+/**
+ * Settings an admin policy may set (#1248): plain values (boolean, number,
+ * string), and the lists in POLICY_LIST_SETTINGS.
  */
 function isPolicySettingKey(key: string): boolean {
   if (key === 'explicitSettings' || !hasOwn(DEFAULT_SETTINGS, key)) return false;
+  if (hasOwn(POLICY_LIST_SETTINGS, key)) return true;
   const type = typeof builtInDefault(key);
   return type === 'boolean' || type === 'number' || type === 'string';
 }
@@ -1334,7 +1349,13 @@ function isPolicySettingKey(key: string): boolean {
  * the restriction's allowed values and bounds.
  */
 function isAllowedPolicyValue(key: string, value: unknown, restriction?: SettingRestriction): boolean {
-  if (!isPolicySettingKey(key) || typeof value !== typeof builtInDefault(key)) return false;
+  if (!isPolicySettingKey(key)) return false;
+  if (hasOwn(POLICY_LIST_SETTINGS, key)) {
+    // Known entries only, each once; an empty list is a choice too.
+    const known = POLICY_LIST_SETTINGS[key];
+    return Array.isArray(value) && value.every((entry) => known.includes(entry)) && new Set(value).size === value.length;
+  }
+  if (typeof value !== typeof builtInDefault(key)) return false;
   if (typeof value === 'number' && !Number.isFinite(value)) return false;
   if (key === 'sendDelaySeconds' && !isSendDelaySeconds(value)) return false;
   if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(value as string)) return false;
@@ -1378,8 +1399,20 @@ function withLegacyPolicyKeys<T>(record: Record<string, T>): Record<string, T> {
  */
 export function legacyExplicitSettings(source: Record<string, unknown>): string[] {
   return Object.keys(source).filter(
-    (key) => isPolicySettingKey(key) && source[key] !== builtInDefault(key),
+    (key) => isPolicySettingKey(key) && !sameSettingValue(source[key], builtInDefault(key)),
   );
+}
+
+const warnedDefaults = new Set<string>();
+
+/**
+ * Say once per key why a policy default had no effect (#1564): policy.json
+ * is written by hand, and a skipped key otherwise just looks ignored.
+ */
+function warnSkippedDefault(key: string): void {
+  if (warnedDefaults.has(key)) return;
+  warnedDefaults.add(key);
+  console.warn(`[policy] defaults.${key} skipped: not a setting a policy may set, or a value it can't take`);
 }
 
 /**
@@ -1398,8 +1431,12 @@ export function adminPolicyPatch(
   const restrictionFor = (key: string) => (hasOwn(restrictions, key) ? restrictions[key] : undefined);
   const patch: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(defaults)) {
-    if (explicit.has(key) || !isAllowedPolicyValue(key, value, restrictionFor(key))) continue;
-    if (state[key] !== value) patch[key] = value;
+    if (explicit.has(key)) continue;
+    if (!isAllowedPolicyValue(key, value, restrictionFor(key))) {
+      warnSkippedDefault(key);
+      continue;
+    }
+    if (!sameSettingValue(state[key], value)) patch[key] = value;
   }
   for (const [key, restriction] of Object.entries(restrictions)) {
     if (!isPlainRecord(restriction) || restriction.locked !== true) continue;
@@ -1408,7 +1445,7 @@ export function adminPolicyPatch(
     // Text size, contrast, motion and the other reading aids can't be
     // locked: a lock on one of them works as a default the user may change.
     if (UNLOCKABLE_SETTING_KEYS.has(key) && explicit.has(key)) continue;
-    if (state[key] !== value) patch[key] = value;
+    if (!sameSettingValue(state[key], value)) patch[key] = value;
     else delete patch[key];
   }
   return patch;
@@ -1443,7 +1480,7 @@ export function adminPolicyReleasePatch(
   const patch: Record<string, unknown> = {};
   for (const [key, value] of before) {
     if (after.has(key) || explicit.has(key) || !isPolicySettingKey(key)) continue;
-    if (state[key] === value && value !== builtInDefault(key)) patch[key] = builtInDefault(key);
+    if (sameSettingValue(state[key], value) && !sameSettingValue(value, builtInDefault(key))) patch[key] = builtInDefault(key);
   }
   return patch;
 }

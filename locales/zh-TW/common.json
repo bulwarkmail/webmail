@@ -355,6 +355,9 @@
     "no_search_results": "找不到結果",
     "no_search_results_description": "請調整搜尋條件或篩選器",
     "more_results_searching": "正在搜尋更多結果…",
+    "resize_plugin_results": "調整外掛程式結果的大小",
+    "compact_plugin_results": "每個結果一行",
+    "plugin_result_score": "{count}/5",
     "loading": "正在載入郵件…",
     "unread": "未讀",
     "to_me": "寄給我",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "儲存草稿",
     "shortcut_show_cc": "顯示副本",
     "shortcut_show_bcc": "顯示密件副本"
+  },
+  "compose_dock": {
+    "open_draft": "開啟",
+    "reply_type": "回覆類型：{kind}",
+    "resize_reply": "調整回覆大小",
+    "fields_menu": "更多欄位"
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -5333,7 +5342,8 @@
     "invited": "{name} 邀請您參加「{title}」",
     "updated": "{name} 更新了「{title}」",
     "cancelled": "{name} 取消了「{title}」",
-    "untitled": "未命名活動"
+    "untitled": "未命名活動",
+    "summary": "你參與的活動有變更：{count} 項"
   },
   "calendar_month_select": {
     "selected_range": "已選取 {start} 至 {end}。",
@@ -5477,6 +5487,7 @@
     "shared": "{name} 與您共用了{kind}「{object}」",
     "changed": "{name} 變更了您對{kind}「{object}」的存取權限",
     "revoked": "{name} 移除了您對{kind}「{object}」的存取權限",
+    "summary": "{name} 變更了您對 {count, plural, other {# 個共用項目}}的存取權限",
     "object": {
       "folder": "資料夾",
       "calendar": "行事曆",
@@ -5654,10 +5665,10 @@
     "title": "歡迎使用您的信件匣",
     "tip_compose": "按 c 寫新郵件",
     "tip_shortcuts": "按 ? 檢視所有鍵盤快速鍵",
-    "tip_sidebar": "行事曆、聯絡人和設定位於左側欄",
+    "tip_sidebar_apps": "{apps}位於左側欄",
     "tip_settings": "在「設定」中自訂您的使用體驗",
     "tip_compose_touch": "點按鉛筆按鈕寫新郵件",
-    "tip_sidebar_touch": "行事曆、聯絡人和設定位於底部列",
+    "tip_sidebar_apps_touch": "{apps}位於底部列",
     "got_it": "了解",
     "settings": "設定",
     "dismiss": "關閉",
@@ -7409,6 +7420,18 @@
     "attach_files": "附加檔案…",
     "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
   },
+  "desktopSaveOpen": {
+    "menu_open": "開啟…",
+    "menu_save_as": "另存新檔…",
+    "open_filter": "郵件、行程和聯絡人",
+    "save_filter": "電子郵件",
+    "folder_title": "選擇儲存郵件的資料夾",
+    "folder_button": "儲存到這裡",
+    "saved_many": "已儲存 {count} 封郵件。",
+    "save_failed": "有 {count} 封郵件無法儲存。",
+    "shortcut_open": "開啟已儲存的郵件、行程或聯絡人",
+    "shortcut_save_as": "將郵件另存為檔案"
+  },
   "appLock": {
     "section_title": "應用程式鎖定",
     "section_desc": "在一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,在有人輸入 PIN 之前,應用程式無法讀取儲存在此裝置上的郵件。",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "刪除",
     "signout_changed": "尚未附加或儲存,現在將刪除:{names}。",
     "signout_held": "仍在其他程式中開啟,因此要在那裡關閉後才會刪除:{names}。"
+  },
+  "desktopPrint": {
+    "title": "列印",
+    "pages_one": "1 頁",
+    "pages_many": "{count} 頁",
+    "preparing": "正在準備預覽…",
+    "preview_failed": "無法產生預覽。",
+    "preview_label": "預覽",
+    "destination": "目的地",
+    "save_as_pdf": "另存為 PDF",
+    "pages": "頁面",
+    "pages_all": "全部",
+    "pages_custom": "自訂",
+    "pages_example": "例如 1-3, 5",
+    "pages_invalid": "請輸入 1 到 {count} 之間的頁面，例如 1-3, 5。",
+    "copies": "份數",
+    "layout": "版面配置",
+    "portrait": "直向",
+    "landscape": "橫向",
+    "color": "色彩",
+    "color_color": "彩色",
+    "color_mono": "黑白",
+    "more": "更多設定",
+    "paper": "紙張大小",
+    "paper_printer": "印表機預設值",
+    "margins": "邊界",
+    "margins_default": "預設",
+    "margins_none": "無",
+    "margins_minimum": "最小",
+    "scale": "縮放比例 (%)",
+    "options": "選項",
+    "header_footer": "頁首和頁尾",
+    "background": "背景圖形",
+    "print": "列印",
+    "save": "儲存",
+    "cancel": "取消",
+    "system_dialog": "使用系統對話方塊列印…",
+    "failed_title": "無法列印",
+    "failed_detail": "印表機未接受這項工作。請確認印表機已開啟，然後再試一次。"
   },
   "files_sync": {
     "title": "這部電腦上的檔案",

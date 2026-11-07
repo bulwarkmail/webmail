@@ -195,21 +195,24 @@ describe('the folded folder column with many folders', () => {
       set: (v: number) => { scrollTop = v; },
     });
 
-    it('puts the hovered item back under the pointer, and the column back where it was', () => {
+    // A hover no longer opens the drawer: the names show beside the same
+    // items in the same list, so its offset stays as it is.
+    it('keeps the scrolled column where it is while the hover shows the names', () => {
       vi.useFakeTimers();
       const { container } = render(<Sidebar mailboxes={own} selectedMailbox="inbox" />);
       trackScroll();
       scrollTop = 200;
       const news = row('news');
       document.elementFromPoint = vi.fn(() => news.querySelector('button'));
-      // At 400 on screen in the column: 100 + 500 - 200.
       fireEvent.mouseEnter(container.firstElementChild!, { clientX: 20, clientY: 410 });
       act(() => { vi.advanceTimersByTime(400); });
-      expect(drawer()).not.toBeNull();
-      // In the drawer it is 900 down the list: scrolled so it is at 400 again.
-      expect(scrollTop).toBe(600);
-      fireEvent.mouseLeave(container.firstElementChild!);
+      expect(container.firstElementChild!.hasAttribute('data-folder-rail-labels')).toBe(true);
       expect(drawer()).toBeNull();
+      expect(scrollTop).toBe(200);
+      expect(row('news')).toBe(news);
+      fireEvent.mouseLeave(container.firstElementChild!);
+      act(() => { vi.advanceTimersByTime(250); });
+      expect(container.firstElementChild!.hasAttribute('data-folder-rail-labels')).toBe(false);
       expect(scrollTop).toBe(200);
     });
 

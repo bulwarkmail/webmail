@@ -8,6 +8,9 @@ import type { Mailbox } from '@/lib/jmap/types';
 // column back closed the menu; from All folders, the focus moving into the
 // menu closed the drawer; a hover that floated the tree out under a menu
 // opened on the column closed the menu too.
+// A hover now shows the names beside the folded items instead of floating
+// the tree out (sidebar-folded-rail-hover.test.tsx); the menu holds them
+// the same way.
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({
@@ -54,6 +57,7 @@ const mailboxes = [
 const root = () => document.querySelector<HTMLElement>('[data-folder-nav]')!.parentElement!;
 const nav = () => document.querySelector<HTMLElement>('[data-folder-nav]')!;
 const drawer = () => document.querySelector<HTMLElement>('[data-folder-drawer]');
+const labels = () => root().hasAttribute('data-folder-rail-labels');
 const item = (key: string) => document.querySelector<HTMLElement>(`[data-rail-key="${key}"] > button`)!;
 const menu = () => document.querySelector<HTMLElement>('body > [role="menu"]');
 const submenu = () => document.querySelector<HTMLElement>('[data-submenu-panel]');
@@ -103,24 +107,24 @@ describe('a folder menu from the folded column', () => {
     useUIStore.setState({ sidebarCollapsed: false } as never);
   });
 
-  it('keeps the hovered tree and its menu open while the pointer crosses the page into the menu and Rules', () => {
+  it('keeps the names a hover showed and the menu open while the pointer crosses the page into the menu and Rules', () => {
     vi.useFakeTimers();
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     trackScroll();
     scrollTop = 120;
     fireEvent.mouseEnter(root(), { clientX: 20, clientY: 80 });
     act(() => { vi.advanceTimersByTime(400); });
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
 
     rightClick(item('travel'), 60, 80);
     act(() => { vi.advanceTimersByTime(10); });
     expect(menu()).not.toBeNull();
 
-    // Out of the tree, over the page, into the menu.
+    // Out of the column, over the page, into the menu.
     fireEvent.mouseLeave(root());
     pointerAt(500, 300);
     act(() => { vi.advanceTimersByTime(400); });
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
     expect(menu()).not.toBeNull();
 
     // Rules › opens on hover; into its panel, across the gap beside it.
@@ -131,10 +135,11 @@ describe('a folder menu from the folded column', () => {
     act(() => { vi.advanceTimersByTime(400); });
     expect(menu()).not.toBeNull();
     expect(submenu()).not.toBeNull();
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
+    expect(scrollTop).toBe(120);
   });
 
-  it('closes on Escape, gives the focus back to the folder, and folds the tree the pointer has left', () => {
+  it('closes on Escape, gives the focus back to the folder, and folds the names the pointer has left', () => {
     vi.useFakeTimers();
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     fireEvent.mouseEnter(root(), { clientX: 20, clientY: 80 });
@@ -145,54 +150,37 @@ describe('a folder menu from the folded column', () => {
     fireEvent.mouseLeave(root());
     pointerAt(500, 300);
     expect(menu()!.contains(document.activeElement)).toBe(true);
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
 
     key('Escape');
     act(() => { vi.advanceTimersByTime(10); });
     expect(menu()).toBeNull();
-    expect(drawer()).toBeNull();
-    expect(document.activeElement).toBe(item('travel'));
+    expect(labels()).toBe(false);
+    // The same item: the names come and go around the items, which stay.
+    expect(item('travel')).toBe(travel);
+    expect(document.activeElement).toBe(travel);
   });
 
-  it('gives the focus to the parent folder in the column when a subfolder\'s menu closes', () => {
-    vi.useFakeTimers();
-    render(<Sidebar mailboxes={[...mailboxes, box('trips', 'Trips', null, { parentId: 'travel' })]} selectedMailbox="inbox" />);
-    fireEvent.mouseEnter(root(), { clientX: 20, clientY: 80 });
-    act(() => { vi.advanceTimersByTime(400); });
-    rightClick(item('trips'), 60, 120);
-    act(() => { vi.advanceTimersByTime(10); });
-    fireEvent.mouseLeave(root());
-    pointerAt(500, 300);
-    expect(drawer()).not.toBeNull();
-
-    key('Escape');
-    act(() => { vi.advanceTimersByTime(50); });
-    expect(menu()).toBeNull();
-    expect(drawer()).toBeNull();
-    expect(document.querySelector('[data-rail-key="trips"]')).toBeNull();
-    expect(document.activeElement).toBe(item('travel'));
-  });
-
-  it('keeps the tree open after the menu closes when the pointer is back on it', () => {
+  it('keeps the names after the menu closes when the pointer is back on the column', () => {
     vi.useFakeTimers();
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
     fireEvent.mouseEnter(root(), { clientX: 20, clientY: 80 });
     act(() => { vi.advanceTimersByTime(400); });
     rightClick(item('travel'), 60, 80);
     act(() => { vi.advanceTimersByTime(10); });
-    const rect = { left: 0, top: 0, right: 288, bottom: 700, width: 288, height: 700, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+    const rect = { left: 0, top: 0, right: 256, bottom: 700, width: 256, height: 700, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
     vi.spyOn(root(), 'getBoundingClientRect').mockReturnValue(rect);
     fireEvent.mouseLeave(root());
     pointerAt(500, 300);
-    // Back over the tree, which doesn't float out anew under the menu.
+    // Back over the column.
     fireEvent.mouseEnter(root(), { clientX: 100, clientY: 120 });
     pointerAt(100, 120);
     act(() => { vi.advanceTimersByTime(400); });
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
     key('Escape');
     act(() => { vi.advanceTimersByTime(10); });
     expect(menu()).toBeNull();
-    expect(drawer()).not.toBeNull();
+    expect(labels()).toBe(true);
     expect(document.activeElement).toBe(item('travel'));
   });
 
@@ -247,6 +235,7 @@ describe('a folder menu from the folded column', () => {
     fireEvent.mouseMove(root(), { clientX: 22, clientY: 82 });
     act(() => { vi.advanceTimersByTime(800); });
     expect(drawer()).toBeNull();
+    expect(labels()).toBe(false);
     expect(menu()).not.toBeNull();
 
     downToRules();

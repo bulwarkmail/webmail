@@ -355,6 +355,9 @@
     "no_search_results": "Nie znaleziono wyników",
     "no_search_results_description": "Spróbuj zmienić wyszukiwanie lub filtry",
     "more_results_searching": "Wyszukiwanie kolejnych wyników…",
+    "resize_plugin_results": "Zmień rozmiar wyników z wtyczek",
+    "compact_plugin_results": "Jeden wiersz na wynik",
+    "plugin_result_score": "{count} z 5",
     "loading": "Ładowanie wiadomości...",
     "unread": "nieprzeczytane",
     "to_me": "Do mnie",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Zapisz wersję roboczą",
     "shortcut_show_cc": "Pokaż DW",
     "shortcut_show_bcc": "Pokaż UDW"
+  },
+  "compose_dock": {
+    "open_draft": "Otwórz",
+    "reply_type": "Rodzaj odpowiedzi: {kind}",
+    "resize_reply": "Zmień rozmiar odpowiedzi",
+    "fields_menu": "Więcej pól"
   },
   "confirm_dialog": {
     "confirm": "Potwierdź",
@@ -5387,10 +5396,10 @@
     "title": "Witaj w swojej skrzynce pocztowej",
     "tip_compose": "Naciśnij c, aby napisać nową wiadomość e-mail",
     "tip_shortcuts": "Naciśnij ?, aby zobaczyć wszystkie skróty klawiszowe",
-    "tip_sidebar": "Kalendarz, Kontakty i Ustawienia są na pasku po lewej",
+    "tip_sidebar_apps": "{apps} są na pasku po lewej",
     "tip_settings": "Dostosuj działanie aplikacji w Ustawieniach",
     "tip_compose_touch": "Stuknij przycisk z ołówkiem, aby napisać nowy e-mail",
-    "tip_sidebar_touch": "Kalendarz, Kontakty i Ustawienia znajdziesz na dolnym pasku",
+    "tip_sidebar_apps_touch": "{apps} znajdziesz na dolnym pasku",
     "got_it": "Rozumiem",
     "settings": "Ustawienia",
     "dismiss": "Zamknij",
@@ -5965,7 +5974,8 @@
     "invited": "{name} zaprosił(a) Cię na „{title}”",
     "updated": "{name} zaktualizował(a) „{title}”",
     "cancelled": "{name} odwołał(a) „{title}”",
-    "untitled": "Wydarzenie bez tytułu"
+    "untitled": "Wydarzenie bez tytułu",
+    "summary": "Zmiany w wydarzeniach, w których uczestniczysz: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Wybrano od {start} do {end}.",
@@ -6109,6 +6119,7 @@
     "shared": "{name} udostępnił(a) Ci {kind} „{object}”",
     "changed": "{name} zmienił(a) Twój dostęp do {kind} „{object}”",
     "revoked": "{name} odebrał(a) Ci dostęp do {kind} „{object}”",
+    "summary": "{name} zmienił(a) Twój dostęp do {count, plural, one {# udostępnionego elementu} few {# udostępnionych elementów} many {# udostępnionych elementów} other {# udostępnionego elementu}}",
     "object": {
       "folder": "folder",
       "calendar": "kalendarz",
@@ -7409,6 +7420,18 @@
     "attach_files": "Załącz pliki…",
     "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Otwórz…",
+    "menu_save_as": "Zapisz jako…",
+    "open_filter": "Wiadomości, wydarzenia i kontakty",
+    "save_filter": "Wiadomość e-mail",
+    "folder_title": "Wybierz folder na wiadomości",
+    "folder_button": "Zapisz tutaj",
+    "saved_many": "{count, plural, one {Zapisano # wiadomość.} few {Zapisano # wiadomości.} many {Zapisano # wiadomości.} other {Zapisano # wiadomości.}}",
+    "save_failed": "{count, plural, one {Nie udało się zapisać # wiadomości.} few {Nie udało się zapisać # wiadomości.} many {Nie udało się zapisać # wiadomości.} other {Nie udało się zapisać # wiadomości.}}",
+    "shortcut_open": "Otwórz zapisaną wiadomość, wydarzenie lub kontakt",
+    "shortcut_save_as": "Zapisz wiadomość jako plik"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po pewnym czasie bezczynności, w każdym oknie i na każdej karcie. Gdy jest zablokowana, aplikacja nie może czytać poczty zapisanej na tym urządzeniu, dopóki ktoś nie poda PIN-u.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Usuń",
     "signout_changed": "Jeszcze niedołączone ani niezapisane, a teraz usunięte: {names}.",
     "signout_held": "Nadal otwarte w innym programie, więc zostaną usunięte dopiero po zamknięciu: {names}."
+  },
+  "desktopPrint": {
+    "title": "Drukuj",
+    "pages_one": "1 strona",
+    "pages_many": "Strony: {count}",
+    "preparing": "Przygotowywanie podglądu…",
+    "preview_failed": "Nie udało się utworzyć podglądu.",
+    "preview_label": "Podgląd",
+    "destination": "Miejsce docelowe",
+    "save_as_pdf": "Zapisz jako PDF",
+    "pages": "Strony",
+    "pages_all": "Wszystkie",
+    "pages_custom": "Niestandardowe",
+    "pages_example": "np. 1-3, 5",
+    "pages_invalid": "Wpisz strony od 1 do {count}, na przykład 1-3, 5.",
+    "copies": "Kopie",
+    "layout": "Układ",
+    "portrait": "Pionowy",
+    "landscape": "Poziomy",
+    "color": "Kolor",
+    "color_color": "Kolor",
+    "color_mono": "Czarno-biały",
+    "more": "Więcej ustawień",
+    "paper": "Rozmiar papieru",
+    "paper_printer": "Domyślny drukarki",
+    "margins": "Marginesy",
+    "margins_default": "Domyślne",
+    "margins_none": "Brak",
+    "margins_minimum": "Minimalne",
+    "scale": "Skala (%)",
+    "options": "Opcje",
+    "header_footer": "Nagłówki i stopki",
+    "background": "Grafika tła",
+    "print": "Drukuj",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "system_dialog": "Drukuj za pomocą okna systemowego…",
+    "failed_title": "Nie można wydrukować",
+    "failed_detail": "Drukarka nie przyjęła zadania. Sprawdź, czy jest włączona, i spróbuj ponownie."
   },
   "files_sync": {
     "title": "Pliki na tym komputerze",

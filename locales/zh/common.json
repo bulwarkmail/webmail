@@ -355,6 +355,9 @@
     "no_search_results": "未找到结果",
     "no_search_results_description": "请调整搜索条件或筛选器",
     "more_results_searching": "正在搜索更多结果…",
+    "resize_plugin_results": "调整插件结果的大小",
+    "compact_plugin_results": "每个结果一行",
+    "plugin_result_score": "{count}/5",
     "loading": "正在加载邮件...",
     "unread": "未读",
     "to_me": "发给我",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "保存草稿",
     "shortcut_show_cc": "显示抄送",
     "shortcut_show_bcc": "显示密送"
+  },
+  "compose_dock": {
+    "open_draft": "打开",
+    "reply_type": "回复类型：{kind}",
+    "resize_reply": "调整回复大小",
+    "fields_menu": "更多字段"
   },
   "confirm_dialog": {
     "confirm": "确认",
@@ -5387,10 +5396,10 @@
     "title": "欢迎使用邮箱",
     "tip_compose": "按 c 写新邮件",
     "tip_shortcuts": "按？查看所有键盘快捷键",
-    "tip_sidebar": "日历、联系人和设置在左侧栏中",
+    "tip_sidebar_apps": "{apps}在左侧栏中",
     "tip_settings": "在\"设置\"中自定义您的体验",
     "tip_compose_touch": "点按铅笔按钮写新邮件",
-    "tip_sidebar_touch": "日历、联系人和设置位于底部栏",
+    "tip_sidebar_apps_touch": "{apps}位于底部栏",
     "got_it": "知道了",
     "settings": "设置",
     "dismiss": "关闭",
@@ -5965,7 +5974,8 @@
     "invited": "{name} 邀请您参加“{title}”",
     "updated": "{name} 更新了“{title}”",
     "cancelled": "{name} 取消了“{title}”",
-    "untitled": "无标题活动"
+    "untitled": "无标题活动",
+    "summary": "你参与的活动有变更：{count} 项"
   },
   "calendar_month_select": {
     "selected_range": "已选择 {start} 至 {end}。",
@@ -6109,6 +6119,7 @@
     "shared": "{name} 与您共享了{kind}“{object}”",
     "changed": "{name} 更改了您对{kind}“{object}”的访问权限",
     "revoked": "{name} 移除了您对{kind}“{object}”的访问权限",
+    "summary": "{name} 更改了您对 {count, plural, other {# 个共享项目}}的访问权限",
     "object": {
       "folder": "文件夹",
       "calendar": "日历",
@@ -7409,6 +7420,18 @@
     "attach_files": "附加文件…",
     "shortcut_apps": "转到邮件、日历、联系人或文件"
   },
+  "desktopSaveOpen": {
+    "menu_open": "打开…",
+    "menu_save_as": "另存为…",
+    "open_filter": "邮件、日程和联系人",
+    "save_filter": "电子邮件",
+    "folder_title": "选择保存邮件的文件夹",
+    "folder_button": "保存到这里",
+    "saved_many": "已保存 {count} 封邮件。",
+    "save_failed": "有 {count} 封邮件无法保存。",
+    "shortcut_open": "打开保存的邮件、日程或联系人",
+    "shortcut_save_as": "将邮件另存为文件"
+  },
   "appLock": {
     "section_title": "应用锁",
     "section_desc": "在一段时间未使用后,在每个窗口和标签页中要求输入 PIN。锁定期间,在有人输入 PIN 之前,应用无法读取存储在此设备上的邮件。",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "删除",
     "signout_changed": "尚未附加或保存,现在将删除:{names}。",
     "signout_held": "仍在其他程序中打开,因此要在那里关闭后才会删除:{names}。"
+  },
+  "desktopPrint": {
+    "title": "打印",
+    "pages_one": "1 页",
+    "pages_many": "{count} 页",
+    "preparing": "正在准备预览…",
+    "preview_failed": "无法生成预览。",
+    "preview_label": "预览",
+    "destination": "目标打印机",
+    "save_as_pdf": "另存为 PDF",
+    "pages": "页面",
+    "pages_all": "全部",
+    "pages_custom": "自定义",
+    "pages_example": "例如 1-3, 5",
+    "pages_invalid": "请输入 1 到 {count} 之间的页面，例如 1-3, 5。",
+    "copies": "份数",
+    "layout": "布局",
+    "portrait": "纵向",
+    "landscape": "横向",
+    "color": "颜色",
+    "color_color": "彩色",
+    "color_mono": "黑白",
+    "more": "更多设置",
+    "paper": "纸张尺寸",
+    "paper_printer": "打印机默认值",
+    "margins": "边距",
+    "margins_default": "默认",
+    "margins_none": "无",
+    "margins_minimum": "最小",
+    "scale": "缩放 (%)",
+    "options": "选项",
+    "header_footer": "页眉和页脚",
+    "background": "背景图形",
+    "print": "打印",
+    "save": "保存",
+    "cancel": "取消",
+    "system_dialog": "使用系统对话框打印…",
+    "failed_title": "无法打印",
+    "failed_detail": "打印机未接受该任务。请检查打印机是否已开启，然后重试。"
   },
   "files_sync": {
     "title": "此电脑上的文件",

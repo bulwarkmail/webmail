@@ -2,13 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
-import { discardWithUndo, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
+import { discardWithUndo, openKeptDraft, showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { keepDiscarded, notifyDiscarded, reopenDiscarded, trashDiscardedDraft } from "@/lib/popout/discarded-undo";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
@@ -77,6 +78,12 @@ export function PopoutHost() {
   const t = useTranslations();
   const tRef = useRef(t);
   tRef.current = t;
+  // "Open" on a closed pop-out's "Draft saved" goes to the mail page when
+  // this window shows something else; the mail page then opens the draft.
+  const router = useRouter();
+  const pathname = usePathname();
+  const navRef = useRef({ router, pathname });
+  navRef.current = { router, pathname };
 
   useEffect(() => {
     if (!available) return;
@@ -226,8 +233,15 @@ export function PopoutHost() {
             const labels = {
               saved: tr("email_composer.draft_saved"),
               discard: tr("email_composer.discard"),
+              open: tr("compose_dock.open_draft"),
               discarded: tr("compose_ux.draft_discarded"),
               undo: tr("compose_ux.undo"),
+            };
+            const open = () => {
+              if (!draftId) return;
+              openKeptDraft(draftId, { accountId, localAccountId });
+              const { router: nav, pathname: path } = navRef.current;
+              if (!(path === "/" || path.startsWith("/mail") || path.startsWith("/pro"))) nav.push("/");
             };
             // The desktop app's window, quick compose above all, is used with this one in
             // the tray: Undo comes from the OS, and opens that window again with what was
@@ -248,7 +262,7 @@ export function PopoutHost() {
             // The window's bin: Undo leaves the draft in Drafts.
             if (discarded) {
               if (draftId) discardWithUndo(discard, labels);
-            } else showDraftSavedToast(discard, labels);
+            } else showDraftSavedToast(discard, labels, draftId ? open : undefined);
           });
           break;
         }

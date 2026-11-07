@@ -10,6 +10,7 @@ import { buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import type { Email } from "@/lib/jmap/types";
+import { nativeSaveAvailable } from "@/lib/desktop/save-as";
 import {
   Reply,
   ReplyAll,
@@ -38,6 +39,7 @@ import {
   Pencil,
   Filter,
   Download,
+  Save,
   Printer,
   Code,
   Fish,
@@ -168,6 +170,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tRecover = useTranslations("recover_deleted");
   const tActions = useTranslations("reader_actions");
   const tP3 = useTranslations("mail_p3_actions");
+  const tSave = useTranslations("desktopSaveOpen");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -296,7 +299,10 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
     // How the host shows it, then Download/Export, Print, View source, at the end.
     const views = o.views ?? [];
     const file = [
-      ...(o.onExport ? [item("export", Download, tViewer("export_email"), o.onExport, { disabled: !email.blobId, testId: "ctx-export" })] : []),
+      // The desktop app saves through the OS's Save dialog (lib/desktop/save-as.ts): Save as…, as File > Save as….
+      ...(o.onExport ? [nativeSaveAvailable()
+        ? item("export", Save, tSave("menu_save_as"), o.onExport, { disabled: !email.blobId, testId: "ctx-export" })
+        : item("export", Download, tViewer("export_email"), o.onExport, { disabled: !email.blobId, testId: "ctx-export" })] : []),
       ...(o.onPrint ? [item("print", Printer, tViewer("print"), o.onPrint, { testId: "ctx-print" })] : []),
       ...(o.onViewSource ? [item("view_source", Code, tViewer("view_source"), o.onViewSource, { disabled: !email.blobId, testId: "ctx-view-source" })] : []),
     ];

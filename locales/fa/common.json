@@ -355,6 +355,9 @@
     "no_search_results": "نتیجه‌ای یافت نشد",
     "no_search_results_description": "جستجو یا فیلترهای خود را تنظیم کنید",
     "more_results_searching": "در حال جستجوی نتایج بیشتر…",
+    "resize_plugin_results": "تغییر اندازه نتایج افزونه‌ها",
+    "compact_plugin_results": "یک خط برای هر نتیجه",
+    "plugin_result_score": "{count} از 5",
     "loading": "در حال بارگذاری ایمیل‌ها...",
     "unread": "خوانده نشده",
     "to_me": "به من",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "ذخیرهٔ پیش‌نویس",
     "shortcut_show_cc": "نمایش رونوشت",
     "shortcut_show_bcc": "نمایش رونوشت پنهان"
+  },
+  "compose_dock": {
+    "open_draft": "باز کردن",
+    "reply_type": "نوع پاسخ: {kind}",
+    "resize_reply": "تغییر اندازهٔ پاسخ",
+    "fields_menu": "فیلدهای بیشتر"
   },
   "confirm_dialog": {
     "confirm": "تأیید",
@@ -5333,7 +5342,8 @@
     "invited": "{name} شما را به «{title}» دعوت کرد",
     "updated": "{name} «{title}» را به‌روزرسانی کرد",
     "cancelled": "{name} «{title}» را لغو کرد",
-    "untitled": "رویداد بدون عنوان"
+    "untitled": "رویداد بدون عنوان",
+    "summary": "تغییرات در رویدادهایی که در آن‌ها شرکت دارید: {count}"
   },
   "calendar_month_select": {
     "selected_range": "{start} تا {end} انتخاب شد.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} {kind} «{object}» را با شما به اشتراک گذاشت",
     "changed": "{name} دسترسی شما به {kind} «{object}» را تغییر داد",
     "revoked": "{name} دسترسی شما به {kind} «{object}» را حذف کرد",
+    "summary": "{name} دسترسی شما به {count, plural, other {# مورد اشتراکی}} را تغییر داد",
     "object": {
       "folder": "پوشه",
       "calendar": "تقویم",
@@ -5654,10 +5665,10 @@
     "title": "به صندوق پستی خود خوش آمدید",
     "tip_compose": "کلید c را برای ایمیل جدید فشار دهید",
     "tip_shortcuts": "کلید ? را برای مشاهده میانبرها فشار دهید",
-    "tip_sidebar": "تقویم، مخاطبان و تنظیمات در نوار سمت راست هستند",
+    "tip_sidebar_apps": "{apps} در نوار سمت راست هستند",
     "tip_settings": "تجربه خود را در تنظیمات سفارشی کنید",
     "tip_compose_touch": "برای نوشتن ایمیل جدید روی دکمه مداد بزنید",
-    "tip_sidebar_touch": "تقویم، مخاطبین و تنظیمات در نوار پایین هستند",
+    "tip_sidebar_apps_touch": "{apps} در نوار پایین هستند",
     "got_it": "متوجه شدم",
     "settings": "تنظیمات",
     "dismiss": "رد کردن",
@@ -7409,6 +7420,18 @@
     "attach_files": "پیوست فایل‌ها…",
     "shortcut_apps": "رفتن به ایمیل، تقویم، مخاطبان یا فایل‌ها"
   },
+  "desktopSaveOpen": {
+    "menu_open": "باز کردن…",
+    "menu_save_as": "ذخیره با نام…",
+    "open_filter": "پیام‌ها، رویدادها و مخاطبان",
+    "save_filter": "پیام ایمیل",
+    "folder_title": "یک پوشه برای پیام‌ها انتخاب کنید",
+    "folder_button": "ذخیره در اینجا",
+    "saved_many": "{count, plural, one {# پیام ذخیره شد.} other {# پیام ذخیره شد.}}",
+    "save_failed": "{count, plural, one {# پیام ذخیره نشد.} other {# پیام ذخیره نشد.}}",
+    "shortcut_open": "باز کردن پیام، رویداد یا مخاطب ذخیره‌شده",
+    "shortcut_save_as": "ذخیرهٔ پیام به‌صورت فایل"
+  },
   "appLock": {
     "section_title": "قفل برنامه",
     "section_desc": "پس از مدتی استفاده نکردن، در هر پنجره و زبانه پین می‌خواهد. تا وقتی قفل است، برنامه نمی‌تواند نامه‌های ذخیره‌شده در این دستگاه را بخواند تا کسی پین را وارد کند.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "حذف",
     "signout_changed": "هنوز پیوست یا ذخیره نشده و اکنون حذف می‌شود: {names}.",
     "signout_held": "هنوز در برنامه دیگری باز است، پس فقط پس از بستن در همان‌جا حذف می‌شود: {names}."
+  },
+  "desktopPrint": {
+    "title": "چاپ",
+    "pages_one": "1 صفحه",
+    "pages_many": "تعداد صفحه‌ها: {count}",
+    "preparing": "در حال آماده‌سازی پیش‌نمایش…",
+    "preview_failed": "پیش‌نمایش ساخته نشد.",
+    "preview_label": "پیش‌نمایش",
+    "destination": "مقصد",
+    "save_as_pdf": "ذخیره به‌صورت PDF",
+    "pages": "صفحه‌ها",
+    "pages_all": "همه",
+    "pages_custom": "سفارشی",
+    "pages_example": "مثلاً 1-3, 5",
+    "pages_invalid": "صفحه‌هایی بین 1 و {count} وارد کنید، مثل 1-3, 5.",
+    "copies": "تعداد نسخه",
+    "layout": "طرح‌بندی",
+    "portrait": "عمودی",
+    "landscape": "افقی",
+    "color": "رنگ",
+    "color_color": "رنگی",
+    "color_mono": "سیاه و سفید",
+    "more": "تنظیمات بیشتر",
+    "paper": "اندازه کاغذ",
+    "paper_printer": "پیش‌فرض چاپگر",
+    "margins": "حاشیه‌ها",
+    "margins_default": "پیش‌فرض",
+    "margins_none": "هیچ",
+    "margins_minimum": "حداقل",
+    "scale": "مقیاس (%)",
+    "options": "گزینه‌ها",
+    "header_footer": "سرصفحه و پاصفحه",
+    "background": "گرافیک پس‌زمینه",
+    "print": "چاپ",
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "system_dialog": "چاپ با پنجره سیستم…",
+    "failed_title": "چاپ انجام نشد",
+    "failed_detail": "چاپگر کار را نپذیرفت. بررسی کنید روشن باشد و دوباره امتحان کنید."
   },
   "files_sync": {
     "title": "فایل‌ها روی این رایانه",

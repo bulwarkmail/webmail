@@ -355,6 +355,9 @@
     "no_search_results": "Nu s-au găsit rezultate",
     "no_search_results_description": "Încercați să modificați criteriile de căutare sau filtrele",
     "more_results_searching": "Se caută mai multe rezultate…",
+    "resize_plugin_results": "Redimensionează rezultatele din pluginuri",
+    "compact_plugin_results": "Un rând pe rezultat",
+    "plugin_result_score": "{count} din 5",
     "loading": "Se încarcă e-mailurile...",
     "unread": "necitit",
     "to_me": "Pentru mine",
@@ -1294,6 +1297,12 @@
     "shortcut_save_draft": "Salvează ciorna",
     "shortcut_show_cc": "Afișează Cc",
     "shortcut_show_bcc": "Afișează Bcc"
+  },
+  "compose_dock": {
+    "open_draft": "Deschide",
+    "reply_type": "Tipul răspunsului: {kind}",
+    "resize_reply": "Redimensionează răspunsul",
+    "fields_menu": "Mai multe câmpuri"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
@@ -5333,7 +5342,8 @@
     "invited": "{name} te-a invitat la „{title}”",
     "updated": "{name} a actualizat „{title}”",
     "cancelled": "{name} a anulat „{title}”",
-    "untitled": "Eveniment fără titlu"
+    "untitled": "Eveniment fără titlu",
+    "summary": "Modificări ale evenimentelor la care participi: {count}"
   },
   "calendar_month_select": {
     "selected_range": "Selectat de la {start} la {end}.",
@@ -5477,6 +5487,7 @@
     "shared": "{name} a partajat cu tine {kind} „{object}”",
     "changed": "{name} ți-a modificat accesul la {kind} „{object}”",
     "revoked": "{name} ți-a retras accesul la {kind} „{object}”",
+    "summary": "{name} ți-a modificat accesul la {count, plural, one {# element partajat} few {# elemente partajate} other {# de elemente partajate}}",
     "object": {
       "folder": "dosarul",
       "calendar": "calendarul",
@@ -5654,10 +5665,10 @@
     "title": "Bine ați venit în căsuța dvs. poștală",
     "tip_compose": "Apăsați tasta c pentru a redacta un e-mail nou",
     "tip_shortcuts": "Apăsați tasta „?” pentru a vedea toate comenzile rapide de la tastatură",
-    "tip_sidebar": "Calendarul, Contactele și Setările sunt în bara din stânga",
+    "tip_sidebar_apps": "{apps} sunt în bara din stânga",
     "tip_settings": "Personalizați-vă experiența în Setări",
     "tip_compose_touch": "Atinge butonul cu creion pentru a scrie un e-mail nou",
-    "tip_sidebar_touch": "Calendarul, Contactele și Setările sunt în bara de jos",
+    "tip_sidebar_apps_touch": "{apps} sunt în bara de jos",
     "got_it": "Am înțeles",
     "settings": "Setări",
     "dismiss": "Ignoră",
@@ -7409,6 +7420,18 @@
     "attach_files": "Atașează fișiere…",
     "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
   },
+  "desktopSaveOpen": {
+    "menu_open": "Deschide…",
+    "menu_save_as": "Salvează ca…",
+    "open_filter": "Mesaje, evenimente și contacte",
+    "save_filter": "Mesaj e-mail",
+    "folder_title": "Alegeți un dosar pentru mesaje",
+    "folder_button": "Salvează aici",
+    "saved_many": "{count, plural, one {# mesaj salvat.} few {# mesaje salvate.} other {# de mesaje salvate.}}",
+    "save_failed": "{count, plural, one {# mesaj nu a putut fi salvat.} few {# mesaje nu au putut fi salvate.} other {# de mesaje nu au putut fi salvate.}}",
+    "shortcut_open": "Deschide un mesaj, eveniment sau contact salvat",
+    "shortcut_save_as": "Salvează mesajul ca fișier"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după o perioadă fără utilizare, în fiecare fereastră și filă. Cât timp este blocată, aplicația nu poate citi mesajele stocate pe acest dispozitiv până când cineva introduce PIN-ul.",
@@ -7783,6 +7806,45 @@
     "clear_confirm": "Șterge",
     "signout_changed": "Încă neatașate sau nesalvate, și șterse acum: {names}.",
     "signout_held": "Încă deschise în alt program, așa că se șterg doar după ce le închideți acolo: {names}."
+  },
+  "desktopPrint": {
+    "title": "Imprimă",
+    "pages_one": "1 pagină",
+    "pages_many": "Pagini: {count}",
+    "preparing": "Se pregătește previzualizarea…",
+    "preview_failed": "Previzualizarea nu a putut fi creată.",
+    "preview_label": "Previzualizare",
+    "destination": "Destinație",
+    "save_as_pdf": "Salvează ca PDF",
+    "pages": "Pagini",
+    "pages_all": "Toate",
+    "pages_custom": "Personalizat",
+    "pages_example": "de ex. 1-3, 5",
+    "pages_invalid": "Introduceți pagini între 1 și {count}, de exemplu 1-3, 5.",
+    "copies": "Copii",
+    "layout": "Aspect",
+    "portrait": "Portret",
+    "landscape": "Peisaj",
+    "color": "Culoare",
+    "color_color": "Color",
+    "color_mono": "Alb-negru",
+    "more": "Mai multe setări",
+    "paper": "Dimensiunea hârtiei",
+    "paper_printer": "Implicit pentru imprimantă",
+    "margins": "Margini",
+    "margins_default": "Implicite",
+    "margins_none": "Fără",
+    "margins_minimum": "Minime",
+    "scale": "Scară (%)",
+    "options": "Opțiuni",
+    "header_footer": "Antete și subsoluri",
+    "background": "Grafică de fundal",
+    "print": "Imprimă",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "system_dialog": "Imprimă cu dialogul sistemului…",
+    "failed_title": "Imprimarea nu a reușit",
+    "failed_detail": "Imprimanta nu a acceptat lucrarea. Verificați dacă este pornită și încercați din nou."
   },
   "files_sync": {
     "title": "Fișiere pe acest computer",

@@ -135,7 +135,7 @@ vi.mock('@/stores/toast-store', () => ({
   toast: { info: () => {}, error: () => {}, success: () => {} },
 }));
 
-const draftToast = vi.hoisted(() => ({ showDraftSavedToast: vi.fn() }));
+const draftToast = vi.hoisted(() => ({ showDraftSavedToast: vi.fn(), openKeptDraft: vi.fn() }));
 vi.mock('@/lib/compose/draft-close-toast', () => draftToast);
 
 vi.mock('@/lib/plugin-hooks', () => ({
@@ -431,7 +431,7 @@ describe('composer close guard with a follow-up', () => {
     expect(screen.queryByText('close_draft_title')).not.toBeInTheDocument();
   });
 
-  it('says the draft was kept, with a Discard that deletes it through the host', async () => {
+  it('says the draft was kept, with Open, and a Discard that deletes it through the host', async () => {
     savingClient();
     draftToast.showDraftSavedToast.mockClear();
     const onDiscardDraft = vi.fn();
@@ -441,10 +441,14 @@ describe('composer close guard with a follow-up', () => {
 
     await waitFor(() => expect(afterClose).toHaveBeenCalledTimes(1));
     expect(draftToast.showDraftSavedToast).toHaveBeenCalledTimes(1);
-    const [discard, labels] = draftToast.showDraftSavedToast.mock.calls[0];
-    expect(labels).toMatchObject({ saved: 'draft_saved', discard: 'discard' });
+    const [discard, labels, open] = draftToast.showDraftSavedToast.mock.calls[0];
+    expect(labels).toMatchObject({ saved: 'draft_saved', discard: 'discard', open: 'open_draft' });
     discard();
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-9', expect.anything());
+    // Open brings the same draft back, the way a draft opened from the list comes.
+    expect(draftToast.openKeptDraft).not.toHaveBeenCalled();
+    open();
+    expect(draftToast.openKeptDraft).toHaveBeenCalledWith('draft-9', expect.anything());
   });
 
   // compose-19: the keys people bring from other mail apps.
