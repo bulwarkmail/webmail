@@ -30,8 +30,8 @@ import { useThemeStore } from "@/stores/theme-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePluginActions } from "@/components/plugins/plugin-actions";
 import { usePluginPages, pluginPageHref } from "@/hooks/use-plugin-pages";
-import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { GlobalSearchPalette } from "@/components/global-search/global-search-palette";
+import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
+import { lazyComponent } from "@/lib/lazy-component";
 import { isContextMenuOpen } from "@/components/ui/context-menu";
 import { runAction } from "@/lib/plugin-sandbox/actions";
 import { COMMAND_PALETTE_OPEN_EVENT, KEYBOARD_SHORTCUTS_OPEN_EVENT, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
@@ -44,6 +44,9 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
+
+// "Search everything" draws nothing until it opens; its code comes with the first open.
+const GlobalSearchPalette = lazyComponent(() => import("@/components/global-search/global-search-palette").then((m) => m.GlobalSearchPalette));
 
 interface PaletteCommand {
   id: string;
@@ -75,6 +78,7 @@ export function CommandPaletteHost() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const searchOpen = useGlobalSearchStore((s) => s.isOpen);
   const proShell = isProShell(pathname);
   const enabled = isAuthenticated && !proShell;
 
@@ -132,8 +136,8 @@ export function CommandPaletteHost() {
     <>
       {open && <CommandPalette onClose={() => setOpen(false)} onShowShortcuts={() => setShowShortcuts(true)} />}
       {/* "Search everything" in the standard shell; the Pro shell mounts its own. */}
-      {enabled && <GlobalSearchPalette proShell={false} />}
-      <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      {enabled && searchOpen && <GlobalSearchPalette proShell={false} />}
+      <LazyKeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </>
   );
 }

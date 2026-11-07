@@ -27,7 +27,7 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { useStalwartAdmin } from "@/hooks/use-stalwart-admin";
-import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
+import { LazyKeyboardShortcutsModal } from "@/components/lazy-keyboard-shortcuts-modal";
 import { getPathPrefix, withBasePath } from "@/lib/browser-navigation";
 import { interceptLeave } from "@/lib/leave-guard";
 import { Avatar } from "@/components/ui/avatar";
@@ -840,7 +840,7 @@ export function NavigationRail({
             >
               <Keyboard className="w-[18px] h-[18px]" />
             </button>
-            <KeyboardShortcutsModal
+            <LazyKeyboardShortcutsModal
               isOpen={showShortcutsModal}
               onClose={() => setShowShortcutsModal(false)}
             />

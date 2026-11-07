@@ -25,13 +25,14 @@ beforeEach(() => {
   useAuthStore.setState({ isAuthenticated: true } as never);
 });
 
+// The panel's code comes with its first open, so it shows a moment after the key.
 describe('accessibility quick panel', () => {
-  it('opens with Alt+Shift+A, also with single-key shortcuts off', () => {
+  it('opens with Alt+Shift+A, also with single-key shortcuts off', async () => {
     useSettingsStore.getState().updateSetting('singleKeyShortcuts', false);
     render(<AccessibilityQuickPanelHost />);
     expect(screen.queryByTestId('accessibility-panel')).toBeNull();
     pressAltShiftA();
-    expect(screen.getByTestId('accessibility-panel')).toBeTruthy();
+    expect(await screen.findByTestId('accessibility-panel')).toBeTruthy();
   });
 
   it('matches the physical key, not the character a layout produces', () => {
@@ -40,20 +41,20 @@ describe('accessibility quick panel', () => {
     expect(isAccessibilityPanelShortcut(new KeyboardEvent('keydown', { key: 'A', code: 'KeyA', altKey: true, shiftKey: true, ctrlKey: true }))).toBe(false);
   });
 
-  it('changes text size from the panel', () => {
+  it('changes text size from the panel', async () => {
     render(<AccessibilityQuickPanelHost />);
     act(() => openAccessibilityPanel());
-    const select = screen.getByTestId('accessibility-panel').querySelector('select') as HTMLSelectElement;
+    const select = (await screen.findByTestId('accessibility-panel')).querySelector('select') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'x-large' } });
     expect(useSettingsStore.getState().fontSize).toBe('x-large');
   });
 
-  it('shows a button on the sign-in page with text size, contrast and motion only', () => {
+  it('shows a button on the sign-in page with text size, contrast and motion only', async () => {
     useAuthStore.setState({ isAuthenticated: false } as never);
     pathname.value = '/login';
     render(<AccessibilityQuickPanelHost />);
     fireEvent.click(screen.getByTestId('login-accessibility-button'));
-    const panel = screen.getByTestId('accessibility-panel');
+    const panel = await screen.findByTestId('accessibility-panel');
     expect(panel.textContent).toContain('settings.accessibility.text_size.label');
     expect(panel.textContent).toContain('settings.accessibility.contrast.label');
     expect(panel.textContent).not.toContain('settings.accessibility.presets.title');
@@ -65,10 +66,10 @@ describe('accessibility quick panel', () => {
     expect(screen.queryByTestId('login-accessibility-button')).toBeNull();
   });
 
-  it('goes to the settings page through the app router', () => {
+  it('goes to the settings page through the app router', async () => {
     render(<AccessibilityQuickPanelHost />);
     act(() => openAccessibilityPanel());
-    fireEvent.click(screen.getByRole('button', { name: 'accessibility_panel.all_settings' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'accessibility_panel.all_settings' }));
     expect(push).toHaveBeenCalledWith('/settings/accessibility');
   });
 });

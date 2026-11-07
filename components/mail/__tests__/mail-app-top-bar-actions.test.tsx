@@ -122,11 +122,17 @@ describe('command palette commands on the mail page', () => {
 });
 
 describe('code warm-up once signed in', () => {
-  it('fetches the viewer and editor code when the browser is idle', async () => {
+  it('fetches the viewer and editor code when the browser is idle after the first rows', async () => {
     const idle = vi.fn(() => 1);
     vi.stubGlobal('requestIdleCallback', idle);
     vi.stubGlobal('cancelIdleCallback', vi.fn());
+    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => { run(0); return 1; });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
     const { unmount } = render(<MailApp />);
+    await act(async () => {});
+    // The wait for the list is idle time too: the viewer's code doesn't take it.
+    expect(idle).not.toHaveBeenCalled();
+    act(() => { useEmailStore.setState({ emails: [{ id: 'm1', threadId: 't1', keywords: {}, mailboxIds: { inbox: true } }] } as never); });
     await act(async () => {});
     expect(idle).toHaveBeenCalled();
     unmount();

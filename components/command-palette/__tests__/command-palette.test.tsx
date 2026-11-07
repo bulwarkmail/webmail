@@ -219,7 +219,7 @@ describe('command palette', () => {
     expect(appCommands.peekParkedAppCommand()).toBe('compose');
   });
 
-  it('switches the theme and shows the keyboard shortcuts', () => {
+  it('switches the theme and shows the keyboard shortcuts', async () => {
     useThemeStore.setState({ resolvedTheme: 'light' } as never);
     const setTheme = vi.fn();
     useThemeStore.setState({ setTheme } as never);
@@ -230,7 +230,8 @@ describe('command palette', () => {
 
     pressCtrlK();
     act(() => { fireEvent.click(screen.getByRole('option', { name: 'shortcuts' })); });
-    expect(screen.getByText('shortcuts help')).toBeInTheDocument();
+    // The help's code comes with its first open.
+    expect(await screen.findByText('shortcuts help')).toBeInTheDocument();
   });
 
   it('offers no theme switch while the theme policy locks the color mode (#1280)', () => {
