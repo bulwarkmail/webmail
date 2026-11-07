@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // Where the auth store meets wipes: the check at a start comes before any local
 // data, a refused login fires the hook on every path and only ever hides the data,
@@ -108,6 +109,7 @@ beforeEach(async () => {
     const url = String(input);
     const given = answer(url, init?.method ?? 'GET');
     if (given) return given;
+    if (url.includes('/api/config')) return json(200, createConfig());
     if (url.includes('/api/auth/session') && init?.method === 'PUT') return json(200, { serverUrl: 'https://mail.example.test', username: 'alice', password: 'p' });
     if (url.includes('/api/auth/token') && init?.method === 'PUT') return json(200, { access_token: 't', expires_in: 3600 });
     return json(200, {});

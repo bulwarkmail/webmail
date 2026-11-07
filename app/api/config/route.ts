@@ -94,6 +94,8 @@ export async function GET(request: NextRequest) {
       loginShowTokenLogin: configManager.get<boolean>('loginShowTokenLogin', false),
       desktopBrowserSignIn: configManager.get<boolean>('desktopBrowserSignIn', true),
       loginShowRememberMe: configManager.get<boolean>('loginShowRememberMe', false),
+      // Session cookies hold the unticked sign-in, sealed like a remembered one.
+      browserSessionSignIn: configManager.get<boolean>('browserSessionSignIn', false) && hasSessionSecret(),
       loginShowVersion: configManager.get<boolean>('loginShowVersion', true),
       demoMode: configManager.get<boolean>('demoMode', false),
       allowCustomJmapEndpoint: configManager.get<boolean>('allowCustomJmapEndpoint', false),

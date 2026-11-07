@@ -26,6 +26,7 @@ import { TermInfo } from '@/components/ui/term';
 import { IconButton } from '@/components/ui/icon-button';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { MailAppsSetup } from './mail-apps-setup';
+import { MaskedAddressesSection } from './masked-addresses-section';
 
 /** Ids that tie a visible label to its field: labelFor("key"). */
 function useLabelIds() {
@@ -1534,6 +1535,8 @@ export function AccountSecuritySettings() {
           </AdvancedOnly>
         </div>
       </SettingsSection>
+
+      <MaskedAddressesSection />
 
       <SettingsSection id="encryption" title={t('sections.encryption')} advanced>
         <PublicKeysSection />
