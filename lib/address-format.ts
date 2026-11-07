@@ -44,7 +44,7 @@ export function styleForCountryCode(code: string | undefined | null): AddressSty
 
 // Country names as people type them: each known code's name in these
 // languages, plus a few short forms.
-const NAME_LOCALES = ["en", "de", "fr", "es", "it", "nl", "pt", "pl", "sv", "da", "nb", "fi", "cs", "sk", "hu", "tr", "ru", "uk", "ro", "el", "hr", "sl", "et", "lv", "lt", "ca"];
+const NAME_LOCALES = ["en", "de", "fr", "es", "it", "nl", "pt", "pl", "sv", "da", "nb", "nn", "fi", "cs", "sk", "hu", "tr", "ru", "uk", "ro", "el", "hr", "sl", "et", "lv", "lt", "ca"];
 const ALIASES: Record<string, string> = {
   usa: "US", "u.s.a.": "US", "u.s.": "US", "united states of america": "US", america: "US",
   uk: "GB", "u.k.": "GB", england: "GB", scotland: "GB", wales: "GB", "great britain": "GB", "northern ireland": "GB",
