@@ -44,7 +44,7 @@ import {
   type LiteOAuthDiscovery,
 } from "@/lib/auth/lite-oauth";
 import { toAsciiDomain } from "@/lib/idn";
-import { usePrefetchMailView } from "@/hooks/use-prefetch-mail-view";
+import { usePrefetchMailView, warmMailView } from "@/hooks/use-prefetch-mail-view";
 import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
 import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
@@ -1383,6 +1383,8 @@ function LoginPageContent() {
         return;
       }
     }
+    // The mail view's code runs while the server checks the sign-in.
+    if (!isMobileHandoff) warmMailView();
     if (signInWithToken) {
       if (await loginWithToken(effectiveServerUrl, accessToken, persistSession)) {
         router.push('/');
