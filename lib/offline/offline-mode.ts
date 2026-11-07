@@ -879,8 +879,10 @@ export async function enableOffline(account: string): Promise<void> {
   // the settings page shows, with a way to ask again.
   void requestPersistence();
   await getStore().ensureOpen(account).catch(() => {});
-  await tellServiceWorker(true);
   scheduleSync(account, 0);
+  // Done once the worker has the app shell too: a reload without a network
+  // right after this still starts (lib/offline/shell.ts).
+  await tellServiceWorker(true);
 }
 
 /** Switches offline mode off for an account (the user confirmed losing unsent mail) and removes everything it kept here. */
