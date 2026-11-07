@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   resumeSchedule: vi.fn(async () => ({})),
   runSchedule: vi.fn(async () => ({ started: true, conversationId: "c1" })),
   deleteSchedule: vi.fn(async () => ({ ok: true })),
+  scheduleRuns: vi.fn(),
 }));
 const push = vi.hoisted(() => vi.fn());
 
@@ -21,7 +22,7 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/lib/xenaxio/api", async (orig) => ({ ...(await orig<typeof import("@/lib/xenaxio/api")>()), xenaxio: api }));
 
 const { formatRun, ScheduleCard, scheduleCardKind } = await import("../schedule-card");
-const { ScheduleList, scheduleState } = await import("../schedule-list");
+const { runLine, ScheduleList, scheduleState } = await import("../schedule-list");
 
 const proposal = (tool: string, summary: ProposalSummary, state = "pending") => ({ id: "p1", tool, summary, state });
 
@@ -115,6 +116,24 @@ describe("ScheduleList (step 49)", () => {
     vi.spyOn(window, "confirm").mockReturnValueOnce(true);
     await act(async () => fireEvent.click(screen.getAllByText("Löschen")[1]!));
     expect(api.deleteSchedule).toHaveBeenCalledWith("s2");
+  });
+
+  it("step 100: shows what the last runs did, and what waits for the person", async () => {
+    api.scheduleRuns.mockResolvedValue({
+      runs: [
+        { startedAt: "2026-11-07T07:00:00Z", endedAt: null, status: "waiting", waitingFor: "create_event", tools: ["search_mail", "create_draft"], confirmed: 0, declined: 0, inputTokens: 300, outputTokens: 20 },
+        { startedAt: "2026-11-06T07:00:00Z", endedAt: "2026-11-06T07:01:00Z", status: "done", tools: ["search_mail"], confirmed: 1, declined: 1, inputTokens: 200, outputTokens: 10 },
+      ],
+    });
+    render(<ScheduleList />);
+    await screen.findByText("Geplante Aufgaben (1 von 20 aktiv)");
+    await act(async () => fireEvent.click(screen.getAllByText("Verlauf")[0]!));
+    expect(api.scheduleRuns).toHaveBeenCalledWith("s1");
+    expect(await screen.findByText(/wartet auf Sie · Wartet auf Ihre Bestätigung: create_event · Werkzeuge: search_mail, create_draft/)).toBeTruthy();
+    expect(screen.getByText(/erledigt · Werkzeuge: search_mail · 1 bestätigt · 1 nicht ausgeführt/)).toBeTruthy();
+    expect(screen.getByText("Verlauf ausblenden")).toBeTruthy();
+    const t = (key: string, values?: Record<string, string | number>) => `${key}${values ? JSON.stringify(values) : ""}`;
+    expect(runLine({ startedAt: "2026-11-06T07:00:00Z", endedAt: null, status: "failed", tools: [], confirmed: 0, declined: 0, inputTokens: 0, outputTokens: 0 }, t, "de")).toMatch(/· schedules\.run_status_failed$/);
   });
 
   it("step 50: says what the company set and why a task is paused; off, nothing can be resumed or run", async () => {
