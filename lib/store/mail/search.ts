@@ -140,7 +140,7 @@ export interface TermLookup { table: string; match: string }
  * read the index once between them, not once each. Returns the SQL that tests
  * `rowid` against the term's matches.
  */
-export type TermSets = (lookups: readonly TermLookup[], rowid: string) => string;
+export type TermSets = (lookups: readonly TermLookup[], rowid: string) => { sql: string; params: SqlValue[] };
 
 /**
  * SQL for a text condition on `rowid` (the message's or its folder row's).
@@ -162,7 +162,9 @@ export function textCondition(field: TextField, input: string, rowid = 'e.rowid'
       }
     }
     if (sets) {
-      conditions.push(sets(lookups, rowid));
+      const kept = sets(lookups, rowid);
+      conditions.push(kept.sql);
+      params.push(...kept.params);
       continue;
     }
     conditions.push(`${rowid} IN (${lookups.map(({ table }) => `SELECT rowid FROM ${table} WHERE ${table} MATCH ?`).join(' UNION ')})`);
@@ -189,9 +191,10 @@ export function tempTermSets(db: StorageAdapter): { sets: TermSets; clear(): voi
       const term = next;
       next += 1;
       for (const { table, match } of lookups) {
-        db.run(`INSERT OR IGNORE INTO temp.search_hit (term, email_rowid) SELECT ${term}, rowid FROM ${table} WHERE ${table} MATCH ?`, [match]);
+        db.run(`INSERT OR IGNORE INTO temp.search_hit (term, email_rowid) SELECT ?, rowid FROM ${table} WHERE ${table} MATCH ?`, [term, match]);
       }
-      return `EXISTS (SELECT 1 FROM temp.search_hit h WHERE h.term = ${term} AND h.email_rowid = ${rowid})`;
+      // The number is bound, so a cached statement serves every term.
+      return { sql: `EXISTS (SELECT 1 FROM temp.search_hit h WHERE h.term = ? AND h.email_rowid = ${rowid})`, params: [term] };
     },
     clear: () => {
       if (created) db.run('DELETE FROM temp.search_hit');
