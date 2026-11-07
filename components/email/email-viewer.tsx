@@ -149,6 +149,7 @@ import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { AssistantEmailButtons } from "@/components/xenaxio/assistant-email-buttons";
 import { DeliveryStatus } from "@/components/xenaxio/delivery-status";
 import { ShareToChatButton } from "@/components/xenaxio/chat/share-email";
+import { AddEmailToProjectButton } from "@/components/xenaxio/projects/add-to-project";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = 'move' | 'tag' | 'rules';
@@ -3769,6 +3770,7 @@ export function EmailViewer({
         {/* xenaxio: AI summary and reply draft for this conversation (I3). */}
         <AssistantEmailButtons threadId={email.threadId} subject={email.subject} mailboxIds={email.mailboxIds} />
         <ShareToChatButton email={email} />
+        <AddEmailToProjectButton email={email} />
         <Button
           variant="ghost"
           size="sm"

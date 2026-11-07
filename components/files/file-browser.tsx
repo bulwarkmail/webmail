@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info,
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
-  RefreshCw, Star, StarOff, Plus, CheckSquare, NotebookPen, Link as LinkIcon,
+  RefreshCw, Star, StarOff, Plus, CheckSquare, NotebookPen, Link as LinkIcon, LayoutGrid,
 } from "@/components/icons";
 import { useIsDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -39,6 +39,7 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { useXT } from "@/lib/xenaxio/i18n";
 import { useCopyFileLink } from "@/components/xenaxio/use-copy-file-link";
+import { useAddFileToProject } from "@/components/xenaxio/projects/add-to-project";
 import { defaultNoteName } from "@/lib/xenaxio/notes";
 
 interface ClipboardState {
@@ -190,6 +191,8 @@ export function FileBrowser({
   const t = useTranslations("files");
   const xt = useXT();
   const copyFileLink = useCopyFileLink();
+  // xenaxio step 118: "Zu Projekt hinzufügen".
+  const [addToProject, addToProjectDialog] = useAddFileToProject();
   const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
   const validateFileName = useCallback((name: string) => {
     const problem = fileNameProblem(name, fileNameRules);
@@ -840,6 +843,9 @@ export function FileBrowser({
           <ContextMenuItem icon={Share2} label={t("share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
         )}
         <ContextMenuItem icon={LinkIcon} label={xt("file_link.copy")} onClick={() => { closeMenu(); copyFileLink(resource); }} />
+        {addToProject && !resource.isDirectory && (
+          <ContextMenuItem icon={LayoutGrid} label={xt("projects.add_to")} onClick={() => { closeMenu(); addToProject(resource); }} />
+        )}
         {resource.isDirectory && !resource.isShared && (
           <ContextMenuItem
             icon={starred ? StarOff : Star}
@@ -1254,6 +1260,7 @@ export function FileBrowser({
           </>
         )}
       </ContextMenu>
+      {addToProjectDialog}
 
       {showNewFolder && (
         <NewFolderDialog
