@@ -533,6 +533,19 @@ export interface ScheduleSettingsInfo extends ScheduleSettings {
   paused: number;
 }
 
+/** Step 100: what one run of a task did (companies on Xenacore): outcome, tools, counts; no content. */
+export interface ScheduleRun {
+  startedAt: string;
+  endedAt: string | null;
+  status: "running" | "waiting" | "done" | "failed";
+  waitingFor?: string;
+  tools: string[];
+  confirmed: number;
+  declined: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 /** GET /api/ai/schedules: the user's tasks and the company's limits (step 50). */
 export interface ScheduleList {
   timeZone: string;
@@ -1210,6 +1223,8 @@ export const xenaxio = {
   pauseSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/pause`),
   resumeSchedule: (id: string) => request<{ schedule: ScheduleInfo }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/resume`),
   runSchedule: (id: string) => request<{ started: true; conversationId: string }>("POST", `/api/ai/schedules/${encodeURIComponent(id)}/run`),
+  /** Step 100: the last runs of a task. */
+  scheduleRuns: (id: string) => request<{ runs: ScheduleRun[] }>("GET", `/api/ai/schedules/${encodeURIComponent(id)}/runs`),
   deleteSchedule: (id: string) => request<{ ok: true }>("DELETE", `/api/ai/schedules/${encodeURIComponent(id)}`),
   // Step 85: per-tool permissions of the AI, and the company's ceiling.
   toolPermissions: () => request<ToolPermissionPage>("GET", "/api/ai/permissions"),
