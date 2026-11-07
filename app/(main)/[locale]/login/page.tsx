@@ -27,7 +27,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { apiFetch, getPathPrefix, toRouterPath, withBasePath } from "@/lib/browser-navigation";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy, KeyRound } from "@/components/icons";
+import { AlertCircle, ArrowBigUpDash, Loader2, X, Info, Eye, EyeOff, LogIn, Sun, Moon, Monitor, Check, Shield, Play, Copy, KeyRound } from "@/components/icons";
 import { type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { DEFAULT_OAUTH_SCOPES, withProviderDataScopes } from "@/lib/oauth/scopes";
@@ -55,6 +55,7 @@ import { loginHintFrom, serverOfSignedInDomain } from "@/lib/auth/login-hint";
 import { askAndChangeConnection, changeConnectionAvailable } from "@/lib/desktop/change-connection";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginFrame } from "@/components/auth/login-frame";
+import { LoginLanguagePicker } from "@/components/auth/login-language-picker";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
 import { consumeSessionEnd, type SessionEndReason } from "@/lib/session-policy/sign-out-reason";
@@ -215,6 +216,7 @@ function LoginPageContent() {
   const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
   const tLogin = useTranslations("uxs_login");
+  const tLoginA11y = useTranslations("login_a11y");
   const tP3 = useTranslations("ux_p3_settings");
   const tCommonP3 = useTranslations("common");
   // Read after mount: the bridge isn't there during the server render.
@@ -387,6 +389,8 @@ function LoginPageContent() {
   }, []);
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // Caps Lock, read from the keys typed into the password field.
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const [shakeError, setShakeError] = useState(false);
   // The theme menu: the app's menu, as everywhere else.
   const themeMenu = useContextMenu<null>();
@@ -409,6 +413,7 @@ function LoginPageContent() {
   const errorId = `${formId}-error`;
   const suggestionsId = `${formId}-suggestions`;
   const suggestionsHintId = `${formId}-suggestions-hint`;
+  const capsLockId = `${formId}-caps-lock`;
   const suggestionId = (index: number) => `${formId}-suggestion-${index}`;
   // Which field the error is about. A wrong code with a code typed blames
   // the code; the server and network errors blame no field.
@@ -1481,46 +1486,50 @@ function LoginPageContent() {
   const brandedAppName = appName && appName !== "Webmail" ? appName : "";
   const CurrentThemeIcon = currentThemeOption.icon;
 
-  // The theme menu in the corner, hidden while the theme policy locks the mode (#1280).
-  const themeToggle = (
-    <div data-window-beside-controls="" className="absolute top-5 end-5 z-10" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
-      <button
-        type="button"
-        ref={themeButtonRef}
-        onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
-        className={cn(
-          "flex items-center justify-center w-9 h-9 rounded-md border border-border transition-colors",
-          showThemeMenu
-            ? "bg-accent text-accent-foreground"
-            : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
-        )}
-        aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
-        title={tLogin("theme_button")}
-        aria-expanded={showThemeMenu}
-        aria-haspopup="menu"
-        data-testid="login-theme-button"
-      >
-        <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
-      </button>
+  // The corner: the language, and the theme menu, hidden while the theme
+  // policy locks the mode (#1280).
+  const cornerControls = (
+    <div data-window-beside-controls="" className="absolute top-5 end-5 z-10 flex items-center gap-2">
+      <LoginLanguagePicker />
+      <div className="relative" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+        <button
+          type="button"
+          ref={themeButtonRef}
+          onClick={(e) => (showThemeMenu ? themeMenu.closeContextMenu() : themeMenu.openContextMenuFrom(e.currentTarget, null, "end"))}
+          className={cn(
+            "flex items-center justify-center w-9 h-9 rounded-md border border-border transition-colors",
+            showThemeMenu
+              ? "bg-accent text-accent-foreground"
+              : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
+          )}
+          aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+          title={tLogin("theme_button")}
+          aria-expanded={showThemeMenu}
+          aria-haspopup="menu"
+          data-testid="login-theme-button"
+        >
+          <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
+        </button>
 
-      <ContextMenu
-        ref={themeMenu.menuRef}
-        isOpen={showThemeMenu}
-        position={themeMenu.contextMenu.position}
-        onClose={themeMenu.closeContextMenu}
-        label={tTheme("label")}
-      >
-        {THEME_OPTIONS.map((option) => (
-          <ContextMenuCheckItem
-            key={option.value}
-            kind="radio"
-            icon={option.icon}
-            checked={theme === option.value}
-            label={tTheme(option.label)}
-            onClick={() => handleThemeSelect(option.value)}
-          />
-        ))}
-      </ContextMenu>
+        <ContextMenu
+          ref={themeMenu.menuRef}
+          isOpen={showThemeMenu}
+          position={themeMenu.contextMenu.position}
+          onClose={themeMenu.closeContextMenu}
+          label={tTheme("label")}
+        >
+          {THEME_OPTIONS.map((option) => (
+            <ContextMenuCheckItem
+              key={option.value}
+              kind="radio"
+              icon={option.icon}
+              checked={theme === option.value}
+              label={tTheme(option.label)}
+              onClick={() => handleThemeSelect(option.value)}
+            />
+          ))}
+        </ContextMenu>
+      </div>
     </div>
   );
 
@@ -1682,7 +1691,7 @@ function LoginPageContent() {
   // Demo-only mode: show only a large demo login button
   if (demoMode && !isAddAccountMode) {
     return (
-      <LoginFrame size="wide" before={themeToggle} footer={loginFooter}>
+      <LoginFrame size="wide" before={cornerControls} footer={loginFooter}>
         {/* Header with logo */}
         <div className="px-8 pt-12 pb-4 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 mb-6">
@@ -1766,7 +1775,7 @@ function LoginPageContent() {
               if (!isDesktopHandoff) setHandoffError("server_error");
             }}
           />
-          {themeToggle}
+          {cornerControls}
         </>
       }
       footer={loginFooter}
@@ -2106,6 +2115,10 @@ function LoginPageContent() {
                       autoComplete="current-password"
                       autoFocus={!!loginHint}
                       {...errorProps(credentialsBlamed)}
+                      aria-describedby={[credentialsBlamed ? errorId : null, capsLockOn ? capsLockId : null].filter(Boolean).join(" ") || undefined}
+                      onKeyDown={(e) => setCapsLockOn(e.getModifierState("CapsLock"))}
+                      onKeyUp={(e) => setCapsLockOn(e.getModifierState("CapsLock"))}
+                      onBlur={() => setCapsLockOn(false)}
                     />
                     {/* In the tab order, so keyboard users can check what
                         they typed. One name, the state in aria-pressed. */}
@@ -2125,6 +2138,20 @@ function LoginPageContent() {
                       )}
                     </button>
                   </div>
+                  {/* Always in the page, so a screen reader hears it when it fills. */}
+                  <p
+                    id={capsLockId}
+                    role="status"
+                    data-testid="login-caps-lock"
+                    className={capsLockOn ? "flex items-center gap-1.5 text-xs text-foreground" : "sr-only"}
+                  >
+                    {capsLockOn && (
+                      <>
+                        <ArrowBigUpDash className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
+                        {tLoginA11y("caps_lock_on")}
+                      </>
+                    )}
+                  </p>
                 </div>
 
                 {signInWithToken && (

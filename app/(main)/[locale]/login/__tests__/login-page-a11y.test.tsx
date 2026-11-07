@@ -38,6 +38,8 @@ vi.mock('@/hooks/use-config', () => ({
 
 const { default: LoginPage } = await import('../page');
 const { useAuthStore } = await import('@/stores/auth-store');
+const { useLocaleStore } = await import('@/stores/locale-store');
+const { signedOutChoices } = await import('@/lib/signed-out-choices');
 
 async function renderForm() {
   render(<LoginPage />);
@@ -142,5 +144,38 @@ describe('login form accessibility', () => {
     await renderForm();
     expect((await screen.findByTestId('session-outbox-lost')).textContent).toContain('signout.lost');
     expect(sessionStorage.getItem('bulwark-offline-lost')).toBeNull();
+  }, 30_000);
+
+  // Typed with Caps Lock on, a password fails for no reason the user can see.
+  it('says Caps Lock is on while typing the password, and ties it to the field', async () => {
+    await renderForm();
+    const password = screen.getByLabelText('password_label');
+    const note = screen.getByTestId('login-caps-lock');
+    // In the page from the start, so a screen reader hears it fill.
+    expect(note).toHaveAttribute('role', 'status');
+    expect(note.textContent).toBe('');
+
+    fireEvent.keyDown(password, { key: 'A', modifierCapsLock: true });
+    expect(note.textContent).toBe('caps_lock_on');
+    expect(password.getAttribute('aria-describedby')).toContain(note.id);
+
+    fireEvent.keyUp(password, { key: 'CapsLock', modifierCapsLock: false });
+    expect(note.textContent).toBe('');
+    expect(password).not.toHaveAttribute('aria-describedby');
+
+    fireEvent.keyDown(password, { key: 'A', modifierCapsLock: true });
+    fireEvent.blur(password);
+    expect(note.textContent).toBe('');
+  }, 30_000);
+
+  it('offers the languages before the sign-in and keeps the choice for after it', async () => {
+    useLocaleStore.setState({ locale: '' });
+    // jsdom has no layout to scroll the list in.
+    Element.prototype.scrollIntoView = vi.fn();
+    await renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'login_a11y.language_button' }));
+    fireEvent.click(await screen.findByRole('option', { name: /Deutsch/ }));
+    expect(useLocaleStore.getState().locale).toBe('de');
+    expect(signedOutChoices()).toContain('locale');
   }, 30_000);
 });

@@ -7618,6 +7618,10 @@
     "trouble_cors": "메일 서버가 이 웹사이트에서의 로그인을 허용해야 해요. 로그인이 안 되면 메일 서버 관리자에게 허용해 달라고 요청하세요.",
     "provider_unsupported": "{provider}은(는) Bulwark가 메일 서버와 통신하는 방식인 JMAP을 제공하지 않아서, Bulwark가 아직 직접 연결할 수 없어요."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock이 켜져 있습니다",
+    "language_button": "언어: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Bulwark 연결 방법을 바꿀까요?",

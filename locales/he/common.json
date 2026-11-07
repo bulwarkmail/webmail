@@ -7619,6 +7619,10 @@
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock פועל",
+    "language_button": "שפה: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "לשנות את אופן החיבור של Bulwark?",

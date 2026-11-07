@@ -7618,6 +7618,10 @@
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock がオンです",
+    "language_button": "言語: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Bulwark の接続方法を変更しますか？",

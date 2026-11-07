@@ -54,6 +54,38 @@ html[data-login-bg] .login-backdrop::after {
   background: rgb(0 0 0 / var(--login-bg-dim, 0));
 }
 
+/*
+ * More contrast (Settings > Accessibility, or the system's when that is left
+ * on System) and Windows high contrast: no picture and no tint behind the
+ * form, only the plain surface.
+ */
+:root[data-contrast="more"] .login-backdrop {
+  background: var(--color-sidebar);
+}
+
+:root[data-contrast="more"] .login-backdrop::before,
+:root[data-contrast="more"] .login-backdrop::after {
+  display: none;
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) .login-backdrop {
+    background: var(--color-sidebar);
+  }
+
+  :root:not([data-contrast="normal"]) .login-backdrop::before,
+  :root:not([data-contrast="normal"]) .login-backdrop::after {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .login-backdrop::before,
+  .login-backdrop::after {
+    display: none;
+  }
+}
+
 .login-stage {
   flex: 1;
   display: flex;

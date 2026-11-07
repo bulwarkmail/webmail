@@ -7618,6 +7618,10 @@
     "trouble_cors": "Din mailserver skal tillade login fra dette websted. Hvis login mislykkes, så bed den, der driver din mailserver, om at tillade det.",
     "provider_unsupported": "{provider} tilbyder ikke JMAP, den måde Bulwark taler med mailservere på, så Bulwark kan endnu ikke forbinde direkte til det."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock er slået til",
+    "language_button": "Sprog: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Vil du ændre, hvordan Bulwark forbinder?",

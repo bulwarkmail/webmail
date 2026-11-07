@@ -7618,6 +7618,10 @@
     "trouble_cors": "Váš poštový server musí povoliť prihlasovanie z tejto webovej stránky. Ak prihlásenie zlyhá, požiadajte správcu poštového servera, aby to povolil.",
     "provider_unsupported": "{provider} neponúka JMAP, spôsob, akým Bulwark komunikuje s poštovými servermi, takže sa k nemu Bulwark zatiaľ nemôže pripojiť priamo."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock je zapnutý",
+    "language_button": "Jazyk: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Zmeniť, ako sa Bulwark pripája?",

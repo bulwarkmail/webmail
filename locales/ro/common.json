@@ -7618,6 +7618,10 @@
     "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock este activat",
+    "language_button": "Limbă: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Schimbați modul în care se conectează Bulwark?",

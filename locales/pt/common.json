@@ -7618,6 +7618,10 @@
     "trouble_cors": "O seu servidor de e-mail tem de permitir inícios de sessão a partir deste site. Se não conseguir entrar, peça a quem gere o servidor de e-mail que o permita.",
     "provider_unsupported": "{provider} não oferece JMAP, a forma como o Bulwark fala com os servidores de e-mail, por isso o Bulwark ainda não se consegue ligar diretamente."
   },
+  "login_a11y": {
+    "caps_lock_on": "O Caps Lock está ativado",
+    "language_button": "Idioma: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Alterar a forma como o Bulwark se liga?",

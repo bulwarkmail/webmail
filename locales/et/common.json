@@ -7618,6 +7618,10 @@
     "trouble_cors": "Sinu meiliserver peab lubama sisselogimist sellelt veebisaidilt. Kui sisselogimine ei õnnestu, palu meiliserveri haldajal see lubada.",
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock on sees",
+    "language_button": "Keel: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Kas muuta, kuidas Bulwark ühendub?",

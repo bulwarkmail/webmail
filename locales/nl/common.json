@@ -7618,6 +7618,10 @@
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock staat aan",
+    "language_button": "Taal: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Wijzigen hoe Bulwark verbinding maakt?",

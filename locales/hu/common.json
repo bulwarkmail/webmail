@@ -7618,6 +7618,10 @@
     "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."
   },
+  "login_a11y": {
+    "caps_lock_on": "A Caps Lock be van kapcsolva",
+    "language_button": "Nyelv: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Módosítja, hogyan csatlakozik a Bulwark?",

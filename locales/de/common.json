@@ -7618,6 +7618,10 @@
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."
   },
+  "login_a11y": {
+    "caps_lock_on": "Die Feststelltaste ist aktiviert",
+    "language_button": "Sprache: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Ändern, wie Bulwark sich verbindet?",

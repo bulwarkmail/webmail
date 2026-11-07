@@ -7618,6 +7618,10 @@
     "trouble_cors": "يجب أن يسمح خادم بريدك بتسجيل الدخول من هذا الموقع. إذا فشل تسجيل الدخول، فاطلب من مسؤول خادم بريدك السماح بذلك.",
     "provider_unsupported": "لا يوفّر {provider} بروتوكول JMAP الذي يتواصل به Bulwark مع خوادم البريد، لذلك لا يستطيع Bulwark الاتصال به مباشرة بعد."
   },
+  "login_a11y": {
+    "caps_lock_on": "مفتاح Caps Lock مفعّل",
+    "language_button": "اللغة: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "تغيير طريقة اتصال Bulwark؟",

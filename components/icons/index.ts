@@ -21,6 +21,7 @@ export {
   IconAlignLeft as AlignLeft,
   IconAlignRight as AlignRight,
   IconArchive as Archive,
+  IconArrowBigUpLine as ArrowBigUpDash,
   IconArrowDown as ArrowDown,
   IconSortAZ as ArrowDownAZ,
   IconArrowLeft as ArrowLeft,

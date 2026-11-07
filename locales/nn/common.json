@@ -7626,6 +7626,10 @@
     "trouble_cors": "Tenaren din må tillate påloggingar frå dette nettstaden. Dersom pålogginga mislykkast, må du be den som styrer tenaren din om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikkje JMAP, slik Bulwark snakkar med tenarar, så Bulwark kan ikkje kople seg til det direkte enno."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock er på",
+    "language_button": "Språk: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Endre korleis Bulwark koplar til?",

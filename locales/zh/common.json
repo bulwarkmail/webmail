@@ -7618,6 +7618,10 @@
     "trouble_cors": "你的邮件服务器需要允许从这个网站登录。如果登录失败，请让管理邮件服务器的人允许。",
     "provider_unsupported": "{provider} 不支持 JMAP（Bulwark 与邮件服务器通信的方式），所以 Bulwark 暂时无法直接连接它。"
   },
+  "login_a11y": {
+    "caps_lock_on": "大写锁定已开启",
+    "language_button": "语言：{language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "要更改 Bulwark 的连接方式吗？",

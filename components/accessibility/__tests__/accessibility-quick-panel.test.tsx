@@ -14,6 +14,7 @@ vi.mock('@/i18n/navigation', () => ({
 import { AccessibilityQuickPanelHost, isAccessibilityPanelShortcut, openAccessibilityPanel } from '../accessibility-quick-panel';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { forgetSignedOutChoices, signedOutChoices } from '@/lib/signed-out-choices';
 
 const pressAltShiftA = () =>
   fireEvent.keyDown(window, { key: 'A', code: 'KeyA', altKey: true, shiftKey: true });
@@ -21,6 +22,7 @@ const pressAltShiftA = () =>
 beforeEach(() => {
   pathname.value = '/mail';
   push.mockReset();
+  forgetSignedOutChoices();
   useSettingsStore.getState().resetToDefaults();
   useAuthStore.setState({ isAuthenticated: true } as never);
 });
@@ -49,16 +51,38 @@ describe('accessibility quick panel', () => {
     expect(useSettingsStore.getState().fontSize).toBe('x-large');
   });
 
-  it('shows a button on the sign-in page with text size, contrast and motion only', async () => {
+  it('shows a button on the sign-in page with the options that change how a page reads and works', async () => {
     useAuthStore.setState({ isAuthenticated: false } as never);
     pathname.value = '/login';
     render(<AccessibilityQuickPanelHost />);
     fireEvent.click(screen.getByTestId('login-accessibility-button'));
     const panel = await screen.findByTestId('accessibility-panel');
-    expect(panel.textContent).toContain('settings.accessibility.text_size.label');
-    expect(panel.textContent).toContain('settings.accessibility.contrast.label');
+    for (const option of ['text_size', 'font', 'contrast', 'underline_links', 'focus_ring', 'large_targets', 'reduce_motion']) {
+      expect(panel.textContent).toContain(`settings.accessibility.${option}.label`);
+    }
+    // The mail ones and the presets, which are mostly about mail, wait for the app.
+    expect(panel.textContent).not.toContain('settings.accessibility.single_key_shortcuts.label');
     expect(panel.textContent).not.toContain('settings.accessibility.presets.title');
     expect(panel.textContent).not.toContain('accessibility_panel.all_settings');
+  });
+
+  it('remembers what was changed on the sign-in page for after the sign-in', async () => {
+    useAuthStore.setState({ isAuthenticated: false } as never);
+    pathname.value = '/login';
+    render(<AccessibilityQuickPanelHost />);
+    fireEvent.click(screen.getByTestId('login-accessibility-button'));
+    const panel = await screen.findByTestId('accessibility-panel');
+    fireEvent.change(panel.querySelector('select') as HTMLSelectElement, { target: { value: 'xx-large' } });
+    expect(useSettingsStore.getState().fontSize).toBe('xx-large');
+    expect(signedOutChoices()).toEqual(['fontSize']);
+  });
+
+  it('notes nothing when the change is made in the app', async () => {
+    render(<AccessibilityQuickPanelHost />);
+    act(() => openAccessibilityPanel());
+    const select = (await screen.findByTestId('accessibility-panel')).querySelector('select') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'large' } });
+    expect(signedOutChoices()).toEqual([]);
   });
 
   it('has no sign-in button inside the app', () => {

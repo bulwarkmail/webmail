@@ -7618,6 +7618,10 @@
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock is on",
+    "language_button": "Language: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Change how Bulwark connects?",

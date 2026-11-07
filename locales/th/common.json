@@ -7626,6 +7626,10 @@
     "trouble_cors": "เซิร์ฟเวอร์อีเมลของคุณต้องอนุญาตให้ลงชื่อเข้าใช้จากเว็บไซต์นี้ หากลงชื่อเข้าใช้ไม่ได้ ให้ขอผู้ดูแลเซิร์ฟเวอร์อีเมลอนุญาต",
     "provider_unsupported": "{provider} ไม่รองรับ JMAP ซึ่งเป็นวิธีที่ Bulwark ใช้คุยกับเซิร์ฟเวอร์อีเมล Bulwark จึงยังเชื่อมต่อโดยตรงไม่ได้"
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock เปิดอยู่",
+    "language_button": "ภาษา: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "เปลี่ยนวิธีที่ Bulwark เชื่อมต่อไหม",

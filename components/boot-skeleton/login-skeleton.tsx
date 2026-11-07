@@ -61,8 +61,13 @@ export function LoginSkeleton({ label, accessibilityButton = false, className }:
       <LoginFrame
         before={
           <>
-            {/* The theme menu button in the corner. */}
-            <div aria-hidden="true" data-window-beside-controls="" className="absolute top-5 end-5">
+            {/* The corner: the language picker (its name from sm up) and the theme menu button. */}
+            <div aria-hidden="true" data-window-beside-controls="" className="absolute top-5 end-5 flex items-center gap-2">
+              <span className="flex items-center gap-2 h-9 px-2.5 sm:px-3 rounded-md border border-border bg-background">
+                <Block className="w-4 h-4 rounded" />
+                <TextLine className="hidden sm:block text-sm w-12" w="100%" />
+                <Block className="w-3.5 h-3.5 rounded" />
+              </span>
               <span className="flex items-center justify-center w-9 h-9 rounded-md border border-border bg-background">
                 <Block className="w-4 h-4 rounded" />
               </span>

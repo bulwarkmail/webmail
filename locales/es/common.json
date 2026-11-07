@@ -7618,6 +7618,10 @@
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."
   },
+  "login_a11y": {
+    "caps_lock_on": "Bloq Mayús está activado",
+    "language_button": "Idioma: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "¿Cambiar cómo se conecta Bulwark?",

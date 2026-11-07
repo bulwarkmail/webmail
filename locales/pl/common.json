@@ -7618,6 +7618,10 @@
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
   },
+  "login_a11y": {
+    "caps_lock_on": "Caps Lock jest włączony",
+    "language_button": "Język: {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Zmienić sposób łączenia Bulwark?",

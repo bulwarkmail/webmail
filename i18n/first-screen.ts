@@ -18,7 +18,7 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'accessibility_panel', 'advanced_search', 'app_update', 'command_palette', 'common', 'compose_ux',
   'confirm_dialog', 'context_menu', 'desktopReminders', 'email_list', 'fileDrop', 'login',
   'mail_list_extra', 'mail_p2_list', 'notification_center', 'protocol_handlers', 'pwaNotify', 'shell',
-  'shortcuts', 'sidebar', 'sidebar_apps', 'threads', 'top_bar', 'totp_reauth', 'uxs_login', 'welcome',
+  'shortcuts', 'sidebar', 'sidebar_apps', 'threads', 'top_bar', 'totp_reauth', 'uxs_login', 'login_a11y', 'welcome',
   // The sign-in page's notices: why the session ended, a wipe, mail the outbox lost.
   'offlineWipe', 'session_limits',
   // The keys the first screen draws from the big ones.
@@ -31,6 +31,7 @@ export const FIRST_SCREEN_MESSAGES: readonly string[] = [
   'notifications.undo', 'notifications.undo_done', 'notifications.undo_failed', 'notifications.undo_hint', 'notifications.undone',
   'proofreading.shortcuts',
   'settings.appearance.theme',
+  'sharing.no_match',
   'tour.take_a_tour',
 ];
 

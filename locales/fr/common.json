@@ -7618,6 +7618,10 @@
     "trouble_cors": "Votre serveur de messagerie doit autoriser les connexions depuis ce site. Si la connexion échoue, demandez à la personne qui gère votre serveur de l'autoriser.",
     "provider_unsupported": "{provider} ne propose pas JMAP, la façon dont Bulwark communique avec les serveurs de messagerie, donc Bulwark ne peut pas encore s'y connecter directement."
   },
+  "login_a11y": {
+    "caps_lock_on": "Verr. Maj est activé",
+    "language_button": "Langue : {language}"
+  },
   "ux_p3_settings": {
     "connection": {
       "title": "Changer la façon dont Bulwark se connecte ?",
