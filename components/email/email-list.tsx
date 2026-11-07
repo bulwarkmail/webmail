@@ -1125,7 +1125,17 @@ export function EmailList({
     const refs = measureRefs.current;
     let ref = refs.get(key);
     if (!ref) {
-      ref = (node) => virtualizer.measureElement(node);
+      ref = (node) => {
+        // The virtualizer still files a kept row under the message it showed
+        // before. Drawn again in another row, that message would make it stop
+        // watching this one, which then kept its height while its content
+        // grew (a code chip) and the row below covered it.
+        const filed = virtualizer.elementsCache;
+        if (node && filed) {
+          filed.forEach((el, k) => { if (el === node && String(k) !== key) filed.delete(k); });
+        }
+        virtualizer.measureElement(node);
+      };
       refs.set(key, ref);
       if (refs.size > 4 * virtualItems.length + 200) {
         const shown = new Set(virtualItems.map((item) => String(item.key)));
