@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Measures text the way the browser will, using the font the element actually
@@ -36,41 +36,60 @@ function measureText(text: string, font: string): number {
  * this returns the first candidate, so the text is complete rather than
  * arbitrarily shortened.
  */
+interface Box {
+  width: number;
+  font: string;
+}
+
+/** The first of the candidates (joined by newlines) that fits `box`. */
+function pick(key: string, box: Box | null): string {
+  const options = key.split("\n");
+  if (!box || box.width === 0) return options[0];
+  return (
+    options.find((option) => measureText(option, box.font) <= box.width)
+    ?? options[options.length - 1]
+  );
+}
+
 export function useShortenedText(
   candidates: string[],
 ): [(node: HTMLElement | null) => void, string] {
-  const [element, setElement] = useState<HTMLElement | null>(null);
-  const [box, setBox] = useState<{ width: number; font: string } | null>(null);
-
-  useEffect(() => {
-    if (!element || typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const style = window.getComputedStyle(element);
-      setBox({
-        width: entry.contentRect.width,
-        font: `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
-      });
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [element]);
-
   // Candidates are rebuilt on every render, so key the choice on their content.
   // They must not contain a newline, which keeps this join unambiguous.
   const key = candidates.join("\n");
+  const keyRef = useRef(key);
+  keyRef.current = key;
+  // The measured box, and a copy in state that changes only when it changes
+  // the text shown: the sidebar has a dozen of these, and setting state for
+  // each measurement (first the element, then its size) drew every folder
+  // row twice more after it mounted, though nearly every name fits.
+  const latestBox = useRef<Box | null>(null);
+  const [box, setBox] = useState<Box | null>(null);
+  const shown = useRef("");
+  const observer = useRef<ResizeObserver | null>(null);
+  useEffect(() => () => observer.current?.disconnect(), []);
 
-  return [
-    setElement,
-    useMemo(() => {
-      const options = key.split("\n");
-      if (!box || box.width === 0) return options[0];
-      return (
-        options.find((option) => measureText(option, box.font) <= box.width)
-        ?? options[options.length - 1]
-      );
-    }, [key, box]),
-  ];
+  const ref = useCallback((element: HTMLElement | null) => {
+    observer.current?.disconnect();
+    observer.current = null;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const next = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const style = window.getComputedStyle(element);
+      const measured = {
+        width: entry.contentRect.width,
+        font: `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      };
+      latestBox.current = measured;
+      if (pick(keyRef.current, measured) !== shown.current) setBox(measured);
+    });
+    observer.current = next;
+    next.observe(element);
+  }, []);
+
+  // `box` only says the choice changed; the latest measurement is the one to use.
+  const text = useMemo(() => pick(key, latestBox.current ?? box), [key, box]);
+  shown.current = text;
+  return [ref, text];
 }
