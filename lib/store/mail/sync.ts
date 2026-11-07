@@ -402,6 +402,12 @@ export const quotaSyncer: Syncer = {
   async run(ctx, jmap) {
     const response = await ctx.transport.request([['Quota/get', { accountId: jmap, ids: null }, 'q']], QUOTA_USING);
     const [, result] = responseFor(response, 'q');
+    const list = result.list as Array<{ id: string }>;
+    const kept = ctx.db.all<{ id: string; json: string }>("SELECT id, json FROM object WHERE jmap = ? AND type = 'Quota' ORDER BY id", [jmap]);
+    const same = kept.length === list.length
+      && [...list].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).every((quota, i) => kept[i].id === quota.id && kept[i].json === JSON.stringify(quota));
+    // Asked every pass, and it rarely moves: the same answer again writes nothing.
+    if (same && ctx.syncState(jmap, 'Quota').state === (typeof result.state === 'string' ? result.state : null)) return;
     ctx.db.transaction(() => {
       ctx.db.run("DELETE FROM object WHERE jmap = ? AND type = 'Quota'", [jmap]);
       for (const quota of result.list as Array<{ id: string }>) putObject(ctx.db, jmap, 'Quota', quota.id, quota);
