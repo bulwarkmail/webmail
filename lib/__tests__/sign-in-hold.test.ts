@@ -4,18 +4,29 @@
  * after it showed.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { afterSignInPage, onSignInPage, SIGN_IN_HOLD_MS } from '@/lib/sign-in-hold';
+import { afterSignInPage, endSignInHold, onSignInPage, resetSignInHold, SIGN_IN_HOLD_MS } from '@/lib/sign-in-hold';
 
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  resetSignInHold();
+});
 afterEach(() => {
   vi.useRealTimers();
   window.history.replaceState(null, '', '/');
 });
 
 describe('onSignInPage', () => {
-  it('knows the sign-in page in every spelling', () => {
-    for (const path of ['/login', '/de/login', '/webmail/en/login/', '/login/']) expect(onSignInPage(path), path).toBe(true);
-    for (const path of ['/', '/en', '/mail/folder/login-help', '/admin/login/x', '/settings']) expect(onSignInPage(path), path).toBe(false);
+  it('knows the sign-in page with and without a locale or base path', () => {
+    for (const path of ['/login', '/de/login', '/login/', '/zh-TW/login']) expect(onSignInPage(path, ''), path).toBe(true);
+    for (const path of ['/webmail/login', '/webmail/en/login/']) expect(onSignInPage(path, '/webmail'), path).toBe(true);
+  });
+
+  it('is not fooled by other pages that end in login', () => {
+    for (const path of ['/', '/en', '/admin/login', '/en/admin/login', '/mail/folder/login', '/en/mail/folder/x/login', '/xx/login', '/mail/folder/inbox']) {
+      expect(onSignInPage(path, ''), path).toBe(false);
+    }
+    expect(onSignInPage('/login', '/webmail')).toBe(false);
+    expect(onSignInPage('/webmail/admin/login', '/webmail')).toBe(false);
   });
 });
 
@@ -55,5 +66,19 @@ describe('afterSignInPage', () => {
     afterSignInPage(fn)();
     vi.advanceTimersByTime(SIGN_IN_HOLD_MS * 2);
     expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('stops waiting once the sign-in leaves the page', () => {
+    window.history.replaceState(null, '', '/en/login');
+    const fn = vi.fn();
+    afterSignInPage(fn);
+    vi.advanceTimersByTime(300);
+    expect(fn).not.toHaveBeenCalled();
+    endSignInHold();
+    vi.advanceTimersByTime(150);
+    expect(fn).toHaveBeenCalledTimes(1);
+    const later = vi.fn();
+    afterSignInPage(later);
+    expect(later).toHaveBeenCalledTimes(1);
   });
 });
