@@ -10,7 +10,7 @@ import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import { RetentionNotice } from "@/components/email/retention-notice";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore } from "@/stores/email-store";
+import { captureListedArchive, findArchiveMailbox, useEmailStore, type EmailRestoreBatch } from "@/stores/email-store";
 import { getMessageListOrderFor, useSettingsStore } from "@/stores/settings-store";
 import { useProTabStore, type ProFolderTabData } from "@/stores/pro-tab-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
@@ -18,6 +18,13 @@ import { usePaneId } from "@/hooks/use-pane-context";
 import type { Email, Mailbox } from "@/lib/jmap/types";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
+import { isArchiveActionEnabled } from "@/lib/archive-gate";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
+import { allowEmailMove, emitEmailMove } from "@/lib/plugin-mail-hooks";
+import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
+import { offerMoveUndo } from "@/lib/popout/moved-undo";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface RowReadIntent {
   email: Email;
@@ -43,6 +50,8 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const t = useTranslations();
   const tList = useTranslations('email_list');
   const tSidebar = useTranslations('sidebar');
+  const tRemove = useTranslations('email_list.confirm_remove');
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const activeClient = useAuthStore((s) => s.client);
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
@@ -67,10 +76,11 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   // The folder's metadata, resolved from whichever account's mailbox list it
   // was dragged from. Shared folders are namespaced in the store, so JMAP
   // calls need originalId + the owner accountId (mirrors fetchEmails).
-  const mailbox: Mailbox | undefined = useMemo(() => {
-    const list = data.accountId ? accountMailboxes[data.accountId] ?? [] : activeMailboxes;
-    return list.find((m) => m.id === data.mailboxId);
-  }, [data.accountId, data.mailboxId, accountMailboxes, activeMailboxes]);
+  const folderMailboxes = useMemo(
+    () => data.accountId ? accountMailboxes[data.accountId] ?? [] : activeMailboxes,
+    [data.accountId, accountMailboxes, activeMailboxes],
+  );
+  const mailbox: Mailbox | undefined = folderMailboxes.find((m) => m.id === data.mailboxId);
   const jmapMailboxId = mailbox?.originalId || data.mailboxId;
   const jmapAccountId = mailbox?.isShared ? mailbox.accountId : undefined;
 
@@ -86,6 +96,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   const rowReads = useMemo(() => ({
     active: false,
     pending: new Set<string>(),
+    archiving: new Set<string>(),
     selected: null as RowReadIntent | null,
     // A context change starts a fresh scope even though its values are not stored here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,6 +252,57 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
     });
   }, []);
 
+  // The folder owns these rows. The list-based moveToMailbox deliberately
+  // refuses a message absent from the global list, and may name another
+  // login's colliding id there. Keep this Archive bound to the reader and
+  // this folder's client/account, using the same move/archive plugin gates.
+  const handleArchiveEmail = useCallback(async (email: Email) => {
+    const intent = rowReads.selected;
+    if (!client || !mailbox || !intent || intent.email.id !== email.id
+      || rowReads.archiving.has(email.id) || !isArchiveActionEnabled()) return;
+    const archive = findArchiveMailbox(folderMailboxes, mailbox.id, jmapAccountId);
+    if (!archive || mailbox.myRights?.mayRemoveItems === false || archive.myRights?.mayAddItems === false) return;
+    const isCurrent = () => rowReads.active && rowReads.selected === intent
+      && (!data.accountId || useAuthStore.getState().getClientForAccount(data.accountId) === client);
+    rowReads.archiving.add(email.id);
+    try {
+      if (!(await confirmMailRemoval('archive', 1, confirm, tRemove)) || !isCurrent()) return;
+      const accountId = jmapAccountId ?? client.getAccountId();
+      const prefix = `${accountId}:`;
+      const restore: EmailRestoreBatch[] = [{ client, accountId, points: [{
+        id: email.id,
+        mailboxIds: Object.fromEntries(Object.entries(email.mailboxIds).filter(([, inIt]) => inIt)
+          .map(([id]) => [id.startsWith(prefix) ? id.slice(prefix.length) : id, true])),
+        seen: !!email.keywords?.$seen,
+      }] }];
+      const move = { emailIds: [email.id], fromMailboxId: mailbox.id, toMailboxId: archive.id };
+      if (!(await allowEmailMove(move, folderMailboxes)) || !isCurrent() || !isArchiveActionEnabled()) return;
+      const completeListedArchive = captureListedArchive(email.id, { client, clientAccountId: clientLogin, accountId }, archive.id);
+      await client.moveEmail(email.id, archive.originalId || archive.id, accountId);
+      completeListedArchive();
+      if (isCurrent()) {
+        // Revoke the intent as well as the timer: a before-read hook may
+        // already be waiting. A read sent to the server is left alone.
+        cancelRowReadRef.current?.();
+        rowReads.selected = null;
+        // An older in-flight Refresh must not reinsert the archived row.
+        ++fetchSeqRef.current;
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setEmails((prev) => prev.filter((e) => e.id !== email.id));
+        setSelectedEmailId(null);
+      }
+      // A confirmed server change still has its hooks and Undo if the user
+      // selected another row or folder while it was in flight.
+      emitEmailMove(move, folderMailboxes);
+      await offerMoveUndo('archive', client, restore, t, false);
+    } catch (error) {
+      console.error('Archive failed:', error);
+    } finally {
+      rowReads.archiving.delete(email.id);
+    }
+  }, [client, clientLogin, mailbox, folderMailboxes, jmapAccountId, rowReads, data.accountId, confirm, tRemove, t]);
+
   // Sent/Drafts show the recipient - the sender is always "me" there.
   const showRecipient = mailbox?.role === 'sent' || mailbox?.role === 'drafts';
 
@@ -348,6 +410,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
   return (
     <div className="flex h-full w-full bg-background">
       {list}
+      <ConfirmDialog {...dialogProps} />
       {selectedEmailId ? (
         <ProEmailView
           key={selectedEmailId}
@@ -356,6 +419,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
           clientAccountId={clientLogin}
           accountId={jmapAccountId}
           onClose={handleViewerClose}
+          onArchiveEmail={archiveInboxTarget(folderMailboxes, mailbox?.id) ? undefined : handleArchiveEmail}
           className="min-w-0 flex-1"
         />
       ) : (
