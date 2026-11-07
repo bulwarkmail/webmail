@@ -437,7 +437,8 @@ interface SingleEmailItemProps {
   onDoubleClick?: () => void;
   onPrefetch?: () => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
-  showPreview: boolean;
+  /** Given by a conversation row; a row of its own reads the setting. */
+  showPreview?: boolean;
   rowTint: string | null;
   onToggleStar?: () => void;
   onMarkAsRead?: (read: boolean) => void;
@@ -462,10 +463,12 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; b
 };
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
-  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments, listFolder }, ref) {
+  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onPrefetch, onContextMenu, showPreview: showPreviewProp, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments, listFolder }, ref) {
     const { viewer: t, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tUnknown = t('unknown_sender');
     const tNoSubject = t('no_subject');
+    const showPreviewSetting = useSettingsStore((state) => state.showPreview);
+    const showPreview = showPreviewProp ?? showPreviewSetting;
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
     const isPinned = email.keywords?.['$pinned'] === true;
@@ -1072,8 +1075,46 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
   }
 );
 
+/**
+ * A list row. A conversation of one message is that message's row, drawn by
+ * SingleEmailItem alone: the conversation row's hooks (swipe, long press,
+ * drag, tags, sender check, a dozen store subscriptions) ran for it too,
+ * only to hand everything to SingleEmailItem, which works it out again.
+ */
 const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
-  function ThreadListItemRow({
+  function ThreadListItemRow(props, ref) {
+    const { thread } = props;
+    if (thread.emailCount !== 1) return <ConversationRow {...props} ref={ref} />;
+    const { latestEmail } = thread;
+    const { onEmailSelect, onEmailDoubleClick, onPrefetch, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment } = props;
+    return (
+      <SingleEmailItem
+        ref={ref}
+        email={latestEmail}
+        selected={props.selectedEmailKey === emailKeyFor(latestEmail)}
+        onClick={() => onEmailSelect(latestEmail)}
+        onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
+        onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
+        onContextMenu={props.onContextMenu}
+        // SingleEmailItem tints the row the same way (account, then tag).
+        rowTint={null}
+        onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+        onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
+        onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
+        onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
+        onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}
+        onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
+        onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
+        onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+        loadAttachments={props.loadAttachments}
+        listFolder={props.listFolder}
+      />
+    );
+  }
+);
+
+const ConversationRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
+  function ConversationRow({
     onOpenAttachment,
     loadAttachments,
     thread,
@@ -1251,32 +1292,6 @@ const ThreadListItemRow = React.forwardRef<HTMLDivElement, ThreadListItemProps>(
 
     const announceRowPreview = useSettingsStore((state) => state.announceRowPreview);
     const showRowActionButton = useSettingsStore((state) => state.showRowActionButton);
-
-    if (emailCount === 1) {
-      return (
-        <SingleEmailItem
-          ref={ref}
-          email={latestEmail}
-          selected={selectedEmailKey === emailKeyFor(latestEmail)}
-          onClick={() => onEmailSelect(latestEmail)}
-          onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
-          onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
-          onContextMenu={onContextMenu}
-          showPreview={showPreview}
-          rowTint={rowTint}
-          onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
-          onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
-          onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
-          onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
-          onSetTag={onSetTag ? (color) => onSetTag(latestEmail.id, color, emailKeyFor(latestEmail)) : undefined}
-          onMarkAsSpam={onMarkAsSpam ? () => onMarkAsSpam(latestEmail) : undefined}
-          onUndoSpam={onUndoSpam ? () => onUndoSpam(latestEmail) : undefined}
-          onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
-          loadAttachments={loadAttachments}
-          listFolder={listFolder}
-        />
-      );
-    }
 
     const emailsToShow = expandedEmails || thread.emails;
 

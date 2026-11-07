@@ -106,10 +106,9 @@ describe('rows during a folder switch', () => {
     const drawn = useEmailDrag.mock.calls.length;
     act(() => { useEmailStore.setState({ selectedEmailKeys: new Set(['a']) }); });
     // Row a is ticked; the list enters selection mode, so both rows change
-    // how a click acts and draw once (a row is two components here, each
-    // calling the drag hook).
+    // how a click acts and draw once.
     const afterFirst = useEmailDrag.mock.calls.length;
-    expect(afterFirst - drawn).toBeLessThanOrEqual(4);
+    expect(afterFirst - drawn).toBeLessThanOrEqual(2);
     act(() => { useEmailStore.setState({ selectedEmailKeys: new Set(['a']) }); });
     // The same ticks in a new set draw nothing.
     expect(useEmailDrag.mock.calls.length).toBe(afterFirst);

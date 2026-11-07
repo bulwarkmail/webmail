@@ -44,4 +44,14 @@ describe('message row store subscription', () => {
     expect(useEmailDrag.mock.calls.length).toBeGreaterThan(mounted);
     expect(screen.getByText('Me')).toBeInTheDocument();
   });
+
+  it('draws a one-message row once, not as a conversation row around it', () => {
+    useEmailStore.setState({ selectedMailbox: 'sent', isUnifiedView: false, unifiedRole: null, mailboxes: [folder('inbox', 'inbox'), folder('sent', 'sent')] });
+    const [thread] = groupEmailsByThread([email]);
+    useEmailDrag.mockClear();
+    render(<ThreadListItem thread={thread} isExpanded={false} onToggleExpand={() => {}} onEmailSelect={() => {}} />);
+    // One component drags it: the conversation row's hooks don't run for one message.
+    expect(useEmailDrag).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+  });
 });
