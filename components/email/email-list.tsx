@@ -483,6 +483,8 @@ export function EmailList({
   // One tag treatment for the whole list, measured from the scroll container.
   const tagDisplay = useMeasuredTagDisplaySource(parentRef);
   const density = useSettingsStore((state) => state.density);
+  // Row heights follow the font size too (see measuredRowHeights).
+  const fontSize = useSettingsStore((state) => state.fontSize);
   const showPreview = useSettingsStore((state) => state.showPreview);
   const showVerificationCodes = useSettingsStore((state) => state.showVerificationCodes);
   const { oneLine: isFocusedMailLayout, columns: listColumns } = useListRowShape();
@@ -519,8 +521,8 @@ export function EmailList({
     const emptyPreview = !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
     const hasCode = showVerificationCodes && !!listVerificationCode(latest);
     const chips = hasCode || (!!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
-    return { key: `${isFocusedMailLayout}|${density}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+    return { key: `${isFocusedMailLayout}|${density}|${fontSize}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
+  }, [density, fontSize, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
   // The height rows of each kind measured at last. A new list (another
   // folder, a search) is placed with them, so its rows need no correction
   // when they are measured: a guess a pixel off moved every row and drew
@@ -1110,6 +1112,25 @@ export function EmailList({
   const virtualItems = virtualizer.getVirtualItems();
   // See useRowSlots: new messages update the rows on screen instead of replacing them.
   const rowSlots = useRowSlots(virtualItems.map((item) => ({ index: item.index, key: String(item.key) })));
+  // A ref per row key: a kept row that now shows another message gets a new
+  // ref, so the virtualizer measures it for that message. With one shared
+  // ref React never called it again, and a row that came out taller than
+  // the guess (no preview line, a larger font, another browser) kept the
+  // old height while the rows below overlapped it.
+  const measureRefs = useRef(new Map<string, (node: HTMLDivElement | null) => void>());
+  const measureRefFor = (key: string) => {
+    const refs = measureRefs.current;
+    let ref = refs.get(key);
+    if (!ref) {
+      ref = (node) => virtualizer.measureElement(node);
+      refs.set(key, ref);
+      if (refs.size > 4 * virtualItems.length + 200) {
+        const shown = new Set(virtualItems.map((item) => String(item.key)));
+        for (const k of refs.keys()) if (!shown.has(k) && k !== key) refs.delete(k);
+      }
+    }
+    return ref;
+  };
   const lastVirtualItemIndex = virtualItems[virtualItems.length - 1]?.index;
   const loadMoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1559,7 +1580,7 @@ export function EmailList({
                     data-index={virtualItem.index}
                     role="presentation"
                     data-pos={thread ? rowPosOfItem.get(virtualItem.index) : undefined}
-                    ref={virtualizer.measureElement}
+                    ref={measureRefFor(String(virtualItem.key))}
                     style={{
                       position: 'absolute',
                       // `top`, not translateY: layout snaps it to device

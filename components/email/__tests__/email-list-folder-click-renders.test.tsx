@@ -168,3 +168,25 @@ describe('rows during a folder switch', () => {
     expect(firstDraw(95.75)).toBeLessThan(firstDraw(90));
   });
 });
+
+describe('rows drawn again for another folder', () => {
+  // A row on screen is kept for the next folder's message at its place, so
+  // it has to be measured again for that message: a row without a preview
+  // line can be another height than the one that showed before (a larger
+  // font, Firefox). Kept at the old height, the rows below overlapped it.
+  it('are measured for the message they show now', async () => {
+    useSettingsStore.setState({ density: 'regular', showPreview: true } as never);
+    const withPreview = (id: string) => ({ ...makeEmail(id, 'inbox'), preview: `A preview of ${id}` });
+    const { rerender, container } = render(<List emails={[withPreview('a'), withPreview('b'), withPreview('c')]} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 400)); });
+    const tops = () => [...container.querySelectorAll<HTMLElement>('[data-index]')]
+      .sort((x, y) => Number(x.dataset.index) - Number(y.dataset.index))
+      .map((el) => parseFloat(el.style.top));
+    expect(tops()).toEqual([0, 100, 200]);
+    // Sent: no previews, so a shape the list hasn't measured yet.
+    act(() => { rerender(<List emails={[makeEmail('d', 'sent'), makeEmail('e', 'sent'), makeEmail('f', 'sent')]} />); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    expect(screen.getByText('Mail d')).toBeInTheDocument();
+    expect(tops()).toEqual([0, 100, 200]);
+  });
+});
