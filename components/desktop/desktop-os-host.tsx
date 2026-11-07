@@ -24,6 +24,7 @@ export function DesktopOsHost() {
   const t = useTranslations("desktopOs");
   const tNotify = useTranslations("notifications");
   const tPush = useTranslations("pwaNotify");
+  const tCode = useTranslations("email_viewer.verification_code");
   const locale = useLocale();
   const archiveEnabled = useArchiveActionEnabled();
   const clientKey = useAccountStore((s) => s.accounts.map((a) => a.id).join("\n"));
@@ -45,6 +46,7 @@ export function DesktopOsHost() {
     delete: t("action_delete"),
     reply: tPush("action_reply"),
     replyPlaceholder: tPush("reply_placeholder"),
+    copyCode: (code) => tCode("copy", { code }),
   };
   const labelsRef = useRef(labels);
   labelsRef.current = labels;
