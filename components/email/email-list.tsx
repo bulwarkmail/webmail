@@ -315,7 +315,10 @@ export function EmailList({
   const rowsView = useMemo(() => ({ mailboxId: selectedMailbox, isUnifiedView, unifiedRole }), [emails]);
   const rowsRole = mailboxes.find((m) => m.id === rowsView.mailboxId)?.role
     ?? (rowsView.isUnifiedView ? (rowsView.unifiedRole ?? undefined) : undefined);
-  const listFolder = useMemo<ListFolder>(() => ({ mailboxId: rowsView.mailboxId, role: rowsRole }), [rowsView, rowsRole]);
+  // By value: rowsView is a new object with every page of rows, and a new
+  // folder object drew every row on screen again for each page loaded while
+  // scrolling a large folder.
+  const listFolder = useMemo<ListFolder>(() => ({ mailboxId: rowsView.mailboxId, role: rowsRole }), [rowsView.mailboxId, rowsRole]);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread

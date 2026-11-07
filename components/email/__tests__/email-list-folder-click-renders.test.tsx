@@ -128,6 +128,19 @@ describe('rows during a folder switch', () => {
     expect(await screen.findByText('Recipient c')).toBeInTheDocument();
   });
 
+  it('a page loaded below leaves the rows on screen undrawn', async () => {
+    // Scrolling a large folder loads page after page; each one drew every
+    // row on screen again when the rows' folder object was new with it.
+    const { rerender } = render(<List emails={INBOX} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 400)); });
+    useEmailDrag.mockClear();
+    const older = { ...makeEmail('y', 'inbox'), receivedAt: '2026-09-01T10:00:00Z' };
+    act(() => { rerender(<List emails={[...INBOX, older]} />); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    const drawn = useEmailDrag.mock.calls.map((call) => (call as unknown as [{ email: Email }])[0].email.id);
+    expect(drawn.filter((id) => id === 'a' || id === 'b')).toEqual([]);
+  });
+
   it('within a view, a new message at the top leaves the other rows as they are', async () => {
     const { container, rerender } = render(<List emails={INBOX} />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
