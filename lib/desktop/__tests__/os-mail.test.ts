@@ -69,6 +69,7 @@ const labels = {
   delete: 'delete',
   reply: 'reply',
   replyPlaceholder: 'placeholder',
+  copyCode: (code: string) => `copy ${code}`,
 };
 
 function setBridge(bridge: Partial<BulwarkDesktopBridge> | undefined) {
@@ -241,6 +242,31 @@ describe('what the notification says', () => {
       emailId: 'a',
       threadId: 't-a',
     });
+  });
+
+  it('a sign-in mail gets a button that copies its code, first; with codes off in Settings, none', async () => {
+    const { buildMailNotification } = await import('../mail-notifications');
+    const { useSettingsStore } = await import('@/stores/settings-store');
+    const signIn = one('a', { subject: 'Your verification code is 177945' });
+    const notification = await buildMailNotification([signIn], labels);
+    expect(notification.actions?.[0]).toEqual({ id: 'copy:177945', label: 'copy 177945' });
+    expect(notification.actions?.map((a) => a.id)).toEqual(['copy:177945', 'archive', 'mark-read', 'delete']);
+
+    useSettingsStore.setState({ showVerificationCodes: false });
+    try {
+      expect((await buildMailNotification([signIn], labels)).actions?.map((a) => a.id)).toEqual(['archive', 'mark-read', 'delete']);
+    } finally {
+      useSettingsStore.setState({ showVerificationCodes: true });
+    }
+  });
+
+  it('no copy button on mail without a code, or while locked', async () => {
+    const { buildMailNotification } = await import('../mail-notifications');
+    const { setAppLockCheck } = await import('../app-lock-state');
+    expect((await buildMailNotification([one('a', { subject: 'Invoice 177945' })], labels)).actions?.map((a) => a.id)).toEqual(['archive', 'mark-read', 'delete']);
+    setAppLockCheck(() => true);
+    const locked = await buildMailNotification([one('a', { subject: 'Your verification code is 177945' })], labels);
+    expect(JSON.stringify(locked)).not.toContain('177945');
   });
 
   it('no Archive button where the organisation has it off', async () => {

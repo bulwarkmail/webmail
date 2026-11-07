@@ -23,6 +23,7 @@ import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { listVerificationCode } from '@/lib/verification-code';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
 export const MAIL_BATCH_MS = 3000;
@@ -36,6 +37,8 @@ export interface MailNotificationLabels {
   delete: string;
   reply: string;
   replyPlaceholder: string;
+  /** The button that copies the code from a sign-in mail. */
+  copyCode: (code: string) => string;
 }
 
 /** What a toast's button hands back, possibly after the app restarted. */
@@ -139,12 +142,15 @@ export async function buildMailNotification(batch: readonly NewMail[], labels: M
   if (hidden) {
     return { ...base, title: labels.newMail, body: '', context: JSON.stringify(full) };
   }
+  // Main copies it without opening the window: toastCopyText in the desktop app's os-rules.ts.
+  const code = useSettingsStore.getState().showVerificationCodes ? listVerificationCode(newest.email) : null;
   return {
     ...base,
     title: `${senderName(newest) || labels.newMail}${suffix}`,
     body: newest.email.subject || newest.email.preview || labels.noSubject,
     context: JSON.stringify(full),
     actions: [
+      ...(code ? [{ id: `copy:${code}`, label: labels.copyCode(code) }] : []),
       ...(labels.archive ? [{ id: 'archive', label: labels.archive }] : []),
       { id: 'mark-read', label: labels.markRead },
       { id: 'delete', label: labels.delete },
