@@ -319,8 +319,19 @@ function queryEmails(ctx: MethodContext, args: Record<string, unknown>, sets: Te
   const position = Math.max(0, Number(args.position ?? 0));
   const limit = typeof args.limit === 'number' && args.limit > 0 ? args.limit : -1;
   const group = collapse ? 'GROUP BY COALESCE(e.thread_id, e.id)' : '';
+  // Newest first in a folder, with nothing that needs the message: the page is
+  // picked off the folder's index alone, and only its rows are read. A join
+  // would read every message it skips on the way to a deep position.
+  const folderOnly = box !== null && !collapse && !levels && isNewestFirst(sort) && !/\be\./.test(where.sql);
   const ids = levels
     ? keywordOrderedPage(ctx, jmap, box, where, levels, position, limit)
+    : folderOnly
+    ? ctx.db.all<{ id: string }>(
+      `SELECT e.id FROM (SELECT d.email_rowid AS r, d.received_at AS t FROM email_mailbox d INDEXED BY email_mailbox_list
+         WHERE ${base.sql} AND (${where.sql}) ORDER BY d.received_at DESC, d.email_rowid DESC LIMIT ? OFFSET ?) p
+       CROSS JOIN email e ON e.rowid = p.r ORDER BY p.t DESC, p.r DESC`,
+      [...base.params, ...where.params, limit, position],
+    ).map((row) => String(row.id))
     : ctx.db.all<{ id: string }>(
       `SELECT e.id FROM ${from} WHERE ${base.sql} AND (${where.sql}) ${group} ORDER BY ${order.sql} LIMIT ? OFFSET ?`,
       [...base.params, ...where.params, ...order.params, limit, position],

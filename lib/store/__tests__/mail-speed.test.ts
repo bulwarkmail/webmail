@@ -163,6 +163,24 @@ describe('pinned and unread first', () => {
   });
 });
 
+describe('a page deep in a folder', () => {
+  it('is picked off the folder index, and reads only its own messages', async () => {
+    const t = setup(Array.from({ length: 30 }, (_, i) => ({ id: `m${String(i).padStart(2, '0')}` })));
+    await t.engine.requestSync();
+    t.seen.length = 0;
+    const answer = await t.engine.answer([['Email/query', { filter: IN_INBOX, sort: [NEWEST], position: 20, limit: 3 }, 'q']]);
+    // Newest first: m29 is first, so position 20 is m09.
+    expect(answer?.methodResponses[0][1].ids).toEqual(['m09', 'm08', 'm07']);
+    const page = t.seen.find(({ sql }) => sql.startsWith('SELECT e.id'))!;
+    const rows = t.raw.all<{ id: number; parent: number; detail: string }>(`EXPLAIN QUERY PLAN ${page.sql}`, page.params);
+    const folder = rows.find((row) => /SEARCH d USING COVERING INDEX email_mailbox_list/.test(row.detail))!;
+    const message = rows.find((row) => /SEARCH e USING INTEGER PRIMARY KEY/.test(row.detail))!;
+    // The folder's index is walked inside the subquery; the message table only after it, at the top.
+    expect(folder.parent).not.toBe(0);
+    expect(message.parent).toBe(0);
+  });
+});
+
 describe('calculateTotal', () => {
   it('counts folder conditions off the index and the keyword rows, reading no message', async () => {
     const t = setup([{ id: 'a' }, { id: 'b', keywords: { $seen: true } }]);
