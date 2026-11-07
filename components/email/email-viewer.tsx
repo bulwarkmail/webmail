@@ -40,6 +40,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Avatar } from "@/components/ui/avatar";
 import { ContextMenu, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-menu";
+import { useQuietState } from "@/hooks/use-quiet-state";
 import { EmailContextMenu } from "./email-context-menu";
 import { rememberedTrashOrigin } from "@/lib/trash-origin";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
@@ -242,6 +243,10 @@ const TOOLBAR_COMPACT_ATTRIBUTE = 'data-toolbar-compact';
 type ToolbarCompact = false | 'secondary' | 'all';
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
 const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
+// No blob URLs: one object, so resetting to none on every open is no change
+// (a new {} each time drew the whole reader once more after its body came).
+// The resets on a new message go through useQuietState for the same reason.
+const NO_URLS: Record<string, string> = {};
 /** What a message from a file can't do: it is in no folder and has no address in the app. */
 const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
   'edit_draft', 'forward_as_attachment', 'restore', 'archive', 'delete', 'remove_from_folder',
@@ -1664,7 +1669,7 @@ export function EmailViewer({
   mvExpandedIdsRef.current = mvExpandedIds;
   const mvExpandedThreadRef = useRef<string | null>(null);
   // The open message folds too, but only inside a conversation.
-  const [mvOpenCollapsed, setMvOpenCollapsed] = useState(false);
+  const [mvOpenCollapsed, setMvOpenCollapsed] = useQuietState(false);
   useEffect(() => setMvOpenCollapsed(false), [email?.id]);
   // The newest message to unfold and scroll to once the conversation is drawn.
   const [mvNewestToShow, setMvNewestToShow] = useState<string | null>(null);
@@ -1840,10 +1845,10 @@ export function EmailViewer({
   const showFullHeaders = details.open && details.emailId === shownEmailId;
   const setShowFullHeaders = (open: boolean) => setDetails({ emailId: shownEmailId, open });
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
-  const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
+  const [imageThumbUrls, setImageThumbUrls] = useQuietState<Record<string, string>>(NO_URLS);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
-  const [cidBlobUrls, setCidBlobUrls] = useState<Record<string, string>>({});
+  const [cidBlobUrls, setCidBlobUrls] = useQuietState<Record<string, string>>(NO_URLS);
   // blob: URL -> the cid: part behind it, so a click on a link the body points
   // at a part can be routed through the attachment preview/download gate
   // instead of window.open() (GHSA-xvjh-v9c6-qcvc). A ref because the iframe
@@ -1935,7 +1940,7 @@ export function EmailViewer({
     }
   };
   const [showSourceModal, setShowSourceModal] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useQuietState(false);
   // "Save to Files" for an attachment: where the Files app is on and the
   // message is in the login's own account, whose files hold the blob too.
   const [saveToFilesTarget, setSaveToFilesTarget] = useState<SaveableAttachment | null>(null);
@@ -2911,13 +2916,13 @@ export function EmailViewer({
     }
 
     if (!blobClient || !email?.attachments) {
-      setCidBlobUrls({});
+      setCidBlobUrls(NO_URLS);
       return;
     }
 
     const cidAttachments = email.attachments.filter(att => att.cid && att.blobId);
     if (cidAttachments.length === 0) {
-      setCidBlobUrls({});
+      setCidBlobUrls(NO_URLS);
       return;
     }
 
@@ -3518,7 +3523,7 @@ export function EmailViewer({
     const createdUrls: string[] = [];
 
     if (!attachmentImagePreviewsEnabled) {
-      setImageThumbUrls({});
+      setImageThumbUrls(NO_URLS);
       return;
     }
 
@@ -3527,7 +3532,7 @@ export function EmailViewer({
     );
 
     if (imageAttachments.length === 0) {
-      setImageThumbUrls({});
+      setImageThumbUrls(NO_URLS);
       return;
     }
 
