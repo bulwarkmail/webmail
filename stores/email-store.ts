@@ -3023,11 +3023,11 @@ function movedEmailState(
 }
 
 /**
- * Preserve Archive's existing global-list completion only for a message
+ * Preserve the existing global-list move completion only for a message
  * already listed in this login and owner account. This never dispatches a
  * mutation or hooks; the folder owns those, and its Undo, exactly once.
  */
-export function captureListedArchive(
+export function captureListedMove(
   emailId: string,
   source: { client: IJMAPClient; clientAccountId?: string; accountId: string },
   destinationMailboxId: string,

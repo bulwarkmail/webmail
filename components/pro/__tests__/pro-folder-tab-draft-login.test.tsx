@@ -33,7 +33,7 @@ function selectorStore<T extends object>(state: T) {
 }
 
 const row = { id: 'eaaaaab', threadId: 't', subject: 'Draft', receivedAt: '2026-09-26T10:00:00Z', keywords: { $draft: true, $seen: true }, mailboxIds: { d: true } };
-const makeClient = () => ({ getEmails: vi.fn().mockResolvedValue({ emails: [row], total: 1, hasMore: false }), markAsRead: vi.fn() });
+const makeClient = () => ({ getAccountId: () => 'e', getEmails: vi.fn().mockResolvedValue({ emails: [row], total: 1, hasMore: false }), markAsRead: vi.fn() });
 const clients = vi.hoisted(() => ({ v016: null as unknown, v10: null as unknown }));
 
 vi.mock('@/stores/auth-store', () => ({
