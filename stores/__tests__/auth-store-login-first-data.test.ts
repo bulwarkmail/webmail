@@ -2,9 +2,10 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // The first rows wait for the mailboxes and the folder's first page, and the
-// sign-in used to ask for them only after it had flipped the app to signed in.
-// That render ran first, in the same task, so the requests left after it.
-// login() now asks for them first, with a task in between.
+// sign-in used to ask for them only after it had flipped the app to signed in
+// and its render had run. login() now asks for them first, then flips the app
+// to signed in within the same task: the auth and account stores never show
+// a moment in which they disagree.
 vi.mock('@/lib/jmap/client', () => {
   class JMAPClient {
     constructor(public serverUrl: string, public username: string, public password: string) {}
@@ -51,7 +52,7 @@ beforeEach(() => {
   }));
 });
 
-it('asks for the first mail data a task before it shows the app as signed in', async () => {
+it('asks for the first mail data before it shows the app as signed in, in the same task', async () => {
   const seen: { signedIn: boolean; tick: number }[] = [];
   let tick = 0;
   const timer = setInterval(() => { tick++; }, 0);
@@ -66,8 +67,8 @@ it('asks for the first mail data a task before it shows the app as signed in', a
     expect(ok).toBe(true);
     expect(prefetch).toHaveBeenCalledTimes(1);
     expect(seen[0].signedIn).toBe(false);
-    // A task ran in between: the requests went out before the signed-in render.
-    expect(signedInAt).toBeGreaterThan(seen[0].tick);
+    // No task in between: the account and auth stores change together.
+    expect(signedInAt).toBe(seen[0].tick);
   } finally {
     unsubscribe();
     clearInterval(timer);
