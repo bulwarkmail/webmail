@@ -43,6 +43,8 @@ export interface ConfigData {
   loginShowTokenLogin: boolean;
   desktopBrowserSignIn: boolean;
   loginShowRememberMe: boolean;
+  /** An unticked "Remember me" lasts until the browser closes (BROWSER_SESSION_SIGN_IN, with SESSION_SECRET). */
+  browserSessionSignIn: boolean;
   loginShowVersion: boolean;
   demoMode: boolean;
   autoSsoEnabled: boolean;
@@ -209,6 +211,7 @@ function configState(data: ConfigData): AppConfig {
       loginShowTokenLogin: data.loginShowTokenLogin,
       desktopBrowserSignIn: data.desktopBrowserSignIn,
       loginShowRememberMe: data.loginShowRememberMe,
+      browserSessionSignIn: data.browserSessionSignIn,
       loginShowVersion: data.loginShowVersion,
       demoMode: data.demoMode,
       autoSsoEnabled: data.autoSsoEnabled,
@@ -278,6 +281,7 @@ export function useConfig(): AppConfig {
     loginShowTokenLogin: configCache?.loginShowTokenLogin ?? false,
     desktopBrowserSignIn: configCache?.desktopBrowserSignIn ?? true,
     loginShowRememberMe: configCache?.loginShowRememberMe ?? false,
+    browserSessionSignIn: configCache?.browserSessionSignIn ?? false,
     loginShowVersion: configCache?.loginShowVersion ?? true,
     demoMode: configCache?.demoMode || false,
     autoSsoEnabled: configCache?.autoSsoEnabled || false,

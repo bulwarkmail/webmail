@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-channel';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // A pop-out starts on the main window's session. It must not evict an account
 // (a login without "remember me" has nothing to restore, which checkAuth
@@ -102,6 +103,7 @@ beforeEach(() => {
   useAccountStore.setState({ accounts: [account('alice', 0)], activeAccountId: 'alice', defaultAccountId: 'alice' });
   useAuthStore.setState({ isAuthenticated: false, client: null, activeAccountId: null });
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+    if (String(url).includes('/api/config')) return new Response(JSON.stringify(createConfig()), { status: 200 });
     fetched.push({ url: String(url), method: init?.method });
     if (String(url).includes('/api/auth/token')) {
       return tokenAnswers.shift() ?? new Response(JSON.stringify({ access_token: 'cookie-token', expires_in: 3600 }), { status: 200 });

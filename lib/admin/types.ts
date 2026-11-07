@@ -336,6 +336,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // Show the "Remember me" box on the login form. Off (the default) remembers
   // every sign-in, as long as a SESSION_SECRET makes that possible.
   loginShowRememberMe: { envVar: 'LOGIN_SHOW_REMEMBER_ME', type: 'boolean', defaultValue: false },
+  // A sign-in made with "Remember me" unticked lasts until the browser closes
+  // (session cookies) instead of ending at the next reload or new tab. Needs
+  // SESSION_SECRET, like remembering does.
+  browserSessionSignIn: { envVar: 'BROWSER_SESSION_SIGN_IN', type: 'boolean', defaultValue: false },
   // Show the build version in the login footer. Off keeps the exact version
   // from being disclosed to unauthenticated visitors.
   loginShowVersion: { envVar: 'LOGIN_SHOW_VERSION', type: 'boolean', defaultValue: true },

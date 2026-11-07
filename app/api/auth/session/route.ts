@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { encryptSession, decryptSession, sessionAuthHeader, type SessionCredentials } from '@/lib/auth/crypto';
 import { SESSION_COOKIE_MAX_AGE, sessionCookieName } from '@/lib/auth/session-cookie';
-import { getCookieOptions } from '@/lib/oauth/cookie-config';
+import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
@@ -27,7 +27,13 @@ import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-u
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
 import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
-function sessionCookieOptions() {
+/**
+ * A remembered session keeps its cookie for 30 days. One signed in with
+ * "Remember me" unticked (BROWSER_SESSION_SIGN_IN) gets no expiry, so the
+ * browser drops it when its session ends.
+ */
+function sessionCookieOptions(remember = true) {
+  if (!remember) return getSignInCookieOptions(false);
   return {
     ...getCookieOptions(),
     maxAge: SESSION_COOKIE_MAX_AGE,
@@ -138,7 +144,9 @@ export async function POST(request: NextRequest) {
 
     // A password signs in with Basic auth, an access token (token login) with
     // Bearer: exactly one of them.
-    const { serverUrl, username, password, token: accessToken, slot: bodySlot } = await request.json();
+    // `remember: false` asks for a cookie that ends with the browser session;
+    // clients that send no flag get the 30-day cookie.
+    const { serverUrl, username, password, token: accessToken, slot: bodySlot, remember } = await request.json();
     if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -214,11 +222,11 @@ export async function POST(request: NextRequest) {
       throw error;
     }
     await refund();
-    // A remembered sign-in starts the maximum session length.
+    // A sign-in kept here starts the maximum session length.
     const signedInAt = Date.now();
     const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
     const cookieStore = await cookies();
-    cookieStore.set(cookieName, token, sessionCookieOptions());
+    cookieStore.set(cookieName, token, sessionCookieOptions(remember !== false));
     setStalwartAuthContextInStore(cookieStore, slot, {
       serverUrl: normalizedServerUrl,
       username,

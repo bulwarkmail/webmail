@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createConfig } from '@/lib/__tests__/fixtures/config';
 
 // What an automatic sign-out does to the mail on this device. A real refusal of
 // the login wipes it, like a sign-out. An outage, or a refusal that says nothing
@@ -31,7 +32,10 @@ function answer(status: number, body: unknown = {}): Response {
 }
 
 function tokenAnswers(next: () => Response): void {
-  vi.stubGlobal('fetch', vi.fn(async (input: unknown) => (String(input).includes('/api/auth/token') ? next() : answer(200))));
+  vi.stubGlobal('fetch', vi.fn(async (input: unknown) => {
+    if (String(input).includes('/api/config')) return answer(200, createConfig());
+    return String(input).includes('/api/auth/token') ? next() : answer(200);
+  }));
 }
 
 /** `times`: as often as the retry timer would run it. */

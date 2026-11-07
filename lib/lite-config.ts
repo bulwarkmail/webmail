@@ -92,6 +92,8 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     loginShowTokenLogin: bool(input.loginShowTokenLogin, false),
     desktopBrowserSignIn: false,
     loginShowRememberMe: bool(input.loginShowRememberMe, false),
+    // Lite keeps an unticked sign-in in the tab's sessionStorage instead.
+    browserSessionSignIn: false,
     loginShowVersion: bool(input.loginShowVersion, true),
     demoMode: bool(input.demoMode, false),
     allowCustomJmapEndpoint: bool(input.allowCustomJmapEndpoint, jmapServerUrl === '' && jmapServers.length === 0),
