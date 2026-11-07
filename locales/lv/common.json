@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Vienotā pierakstīšanās (OAuth/OIDC)",
       "auth_method_basic": "Parole",
       "auth_method_token": "Piekļuves marķieris",
+      "account_management_link": "Pārvaldīt konta drošību (2FA, lietotņu paroles)",
       "demo_account": "Demo konts",
       "email": {
         "label": "E-pasta adrese",

@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Autentificare unică (OAuth /OIDC)",
       "auth_method_basic": "Parolă",
       "auth_method_token": "Token de acces",
+      "account_management_link": "Gestionează securitatea contului (2FA, parole pentru aplicații)",
       "demo_account": "Cont demo",
       "email": {
         "label": "Adresă de e-mail",

@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "シングルサインオン (OAuth/OIDC)",
       "auth_method_basic": "パスワード",
       "auth_method_token": "アクセストークン",
+      "account_management_link": "アカウントのセキュリティを管理（2要素認証、アプリパスワード）",
       "demo_account": "デモアカウント",
       "email": {
         "label": "メールアドレス",

@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Login único (OAuth/OIDC)",
       "auth_method_basic": "Senha",
       "auth_method_token": "Token de acesso",
+      "account_management_link": "Gerir a segurança da conta (2FA, palavras-passe de aplicações)",
       "demo_account": "Conta de demonstração",
       "email": {
         "label": "Endereço de E-mail",

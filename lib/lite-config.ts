@@ -1,7 +1,7 @@
 import type { ConfigData } from '@/hooks/use-config';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
-import { httpOrMailtoOrEmpty, httpUrlOrEmpty } from '@/lib/config-validation';
+import { httpOrMailtoOrEmpty, httpUrlOrEmpty, httpUrlOrPathOrEmpty } from '@/lib/config-validation';
 import { parseNoThirdPartyValue } from '@/lib/third-party-mode';
 import { sanitizeOrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { sanitizeRestrictions, sanitizeScopes } from '@/lib/admin/policy-scopes';
@@ -105,6 +105,9 @@ export function applyLiteConfig(raw: unknown, defaults?: { jmapServerUrl?: strin
     helpUrl: httpUrlOrEmpty(input.helpUrl),
     easyReadUrl: httpUrlOrEmpty(input.easyReadUrl),
     signLanguageUrl: httpUrlOrEmpty(input.signLanguageUrl),
+    // Lite has no Security tab: this links to the server's own page for it (#1570).
+    accountManagementUrl: httpUrlOrPathOrEmpty(input.accountManagementUrl),
+    accountManagementLabel: str(input.accountManagementLabel, ''),
     // Same browser-side switches as the server build (lib/outgoing-hosts.ts).
     noThirdPartyTraffic: parseNoThirdPartyValue(input.noThirdPartyTraffic),
     oauthRevokeOnSignOut: bool(input.oauthRevokeOnSignOut, true),

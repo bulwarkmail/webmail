@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Egyszeri bejelentkezés (OAuth/OIDC)",
       "auth_method_basic": "Jelszó",
       "auth_method_token": "Hozzáférési token",
+      "account_management_link": "Fiókbiztonság kezelése (2FA, alkalmazásjelszavak)",
       "demo_account": "Demó fiók",
       "email": {
         "label": "E-mail cím",

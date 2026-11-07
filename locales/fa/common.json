@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "SSO",
       "auth_method_basic": "رمز عبور",
       "auth_method_token": "توکن دسترسی",
+      "account_management_link": "مدیریت امنیت حساب (2FA، رمزهای عبور برنامه)",
       "demo_account": "حساب آزمایشی",
       "email": {
         "label": "آدرس ایمیل",

@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Единый вход (OAuth/OIDC)",
       "auth_method_basic": "Пароль",
       "auth_method_token": "Токен доступа",
+      "account_management_link": "Управление безопасностью аккаунта (2FA, пароли приложений)",
       "demo_account": "Демо-аккаунт",
       "email": {
         "label": "Email-адрес",

@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Heslo",
       "auth_method_token": "Prístupový token",
+      "account_management_link": "Spravovať zabezpečenie účtu (2FA, heslá aplikácií)",
       "demo_account": "Demo účet",
       "email": {
         "label": "E-mailová adresa",

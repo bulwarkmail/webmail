@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "تسجيل الدخول الموحّد (OAuth/OIDC)",
       "auth_method_basic": "كلمة المرور",
       "auth_method_token": "رمز الوصول",
+      "account_management_link": "إدارة أمان الحساب (المصادقة الثنائية، كلمات مرور التطبيقات)",
       "demo_account": "حساب تجريبي",
       "email": {
         "label": "عنوان البريد الإلكتروني",

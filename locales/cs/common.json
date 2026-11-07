@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Jednotné přihlášení (OAuth/OIDC)",
       "auth_method_basic": "Heslo",
       "auth_method_token": "Přístupový token",
+      "account_management_link": "Spravovat zabezpečení účtu (2FA, hesla aplikací)",
       "demo_account": "Demo účet",
       "email": {
         "label": "E-mailová adresa",

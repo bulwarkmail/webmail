@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "单点登录 (OAuth/OIDC)",
       "auth_method_basic": "密码",
       "auth_method_token": "访问令牌",
+      "account_management_link": "管理账户安全（双重验证、应用密码）",
       "demo_account": "演示账户",
       "email": {
         "label": "邮件",

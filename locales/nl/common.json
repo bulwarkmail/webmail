@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Wachtwoord",
       "auth_method_token": "Toegangstoken",
+      "account_management_link": "Accountbeveiliging beheren (2FA, app-wachtwoorden)",
       "demo_account": "Demoaccount",
       "email": {
         "label": "E-mailadres",

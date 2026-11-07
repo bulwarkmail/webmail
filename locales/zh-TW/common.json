@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "單一登入（OAuth/OIDC）",
       "auth_method_basic": "密碼",
       "auth_method_token": "存取權杖",
+      "account_management_link": "管理帳號安全性（雙重驗證、應用程式密碼）",
       "demo_account": "示範帳號",
       "email": {
         "label": "電子郵件地址",

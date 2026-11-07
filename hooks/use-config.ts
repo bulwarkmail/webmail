@@ -58,6 +58,9 @@ export interface ConfigData {
   helpUrl: string;
   easyReadUrl: string;
   signLanguageUrl: string;
+  /** The mail server's own account page (2FA, app passwords) and its link text (#1570); '' hides it. */
+  accountManagementUrl: string;
+  accountManagementLabel: string;
   /** Stay off every built-in outside host (#903; lib/outgoing-hosts.ts). */
   noThirdPartyTraffic: boolean;
   /** Lite only: whether sign-out revokes the refresh token (#1388). The server build decides in its token route. */
@@ -220,6 +223,8 @@ function configState(data: ConfigData): AppConfig {
       helpUrl: data.helpUrl,
       easyReadUrl: data.easyReadUrl,
       signLanguageUrl: data.signLanguageUrl,
+      accountManagementUrl: data.accountManagementUrl,
+      accountManagementLabel: data.accountManagementLabel,
       noThirdPartyTraffic: data.noThirdPartyTraffic,
       isLoading: false,
       error: null,
@@ -287,6 +292,8 @@ export function useConfig(): AppConfig {
     helpUrl: configCache?.helpUrl || '',
     easyReadUrl: configCache?.easyReadUrl || '',
     signLanguageUrl: configCache?.signLanguageUrl || '',
+    accountManagementUrl: configCache?.accountManagementUrl || '',
+    accountManagementLabel: configCache?.accountManagementLabel || '',
     noThirdPartyTraffic: configCache?.noThirdPartyTraffic ?? false,
     isLoading: !configCache,
     error: null,

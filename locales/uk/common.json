@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Єдиний вхід (OAuth/OIDC)",
       "auth_method_basic": "Пароль",
       "auth_method_token": "Токен доступу",
+      "account_management_link": "Керувати безпекою облікового запису (2FA, паролі застосунків)",
       "demo_account": "Демо-рахунок",
       "email": {
         "label": "Адреса електронної пошти",

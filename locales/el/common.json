@@ -2300,6 +2300,7 @@
       "auth_method_oauth": "Ενιαία σύνδεση (OAuth/OIDC)",
       "auth_method_basic": "Κωδικός πρόσβασης",
       "auth_method_token": "Διακριτικό πρόσβασης",
+      "account_management_link": "Διαχείριση ασφάλειας λογαριασμού (2FA, κωδικοί εφαρμογών)",
       "demo_account": "Επίδειξη λογαριασμού",
       "email": {
         "label": "Διεύθυνση email",

@@ -2300,6 +2300,7 @@
       "auth_method_oauth": "Đăng nhập một lần (OAuth/OIDC)",
       "auth_method_basic": "Mật khẩu",
       "auth_method_token": "Mã truy cập",
+      "account_management_link": "Quản lý bảo mật tài khoản (2FA, mật khẩu ứng dụng)",
       "demo_account": "Tài khoản dùng thử",
       "email": {
         "label": "Địa chỉ email",
