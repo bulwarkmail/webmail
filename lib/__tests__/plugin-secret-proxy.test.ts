@@ -119,6 +119,17 @@ describe('credential specs in the manifest', () => {
       .toMatch(/inject is invalid/);
   });
 
+  it('takes appPassword only on a user credential with basic auth', () => {
+    const user = { label: 'Stalwart', scope: 'user', inject: { type: 'basic' } };
+    expect(checkCredentials({ stalwart: { ...user, appPassword: true } }, undefined))
+      .toEqual({ credentials: { stalwart: { ...user, appPassword: true } }, errors: [] });
+    expect(checkCredentials({ stalwart: { ...user, inject: { type: 'bearer' }, appPassword: true } }, undefined).errors.join())
+      .toMatch(/needs inject "basic"/);
+    expect(checkCredentials({ stalwart: { ...user, appPassword: 'yes' } }, undefined).errors.join()).toMatch(/must be true/);
+    expect(checkCredentials({ ai: { label: 'AI', scope: 'admin', inject: { type: 'basic' }, secretKey: 'key', origin: 'https://a.example', appPassword: true } },
+      { key: { type: 'secret' } }).errors.join()).toMatch(/only for scope "user"/);
+  });
+
   it('builds the auth header', () => {
     expect(authHeaderFor({ type: 'basic' }, 'pw', 'alice')).toEqual(['authorization', `Basic ${Buffer.from('alice:pw').toString('base64')}`]);
     expect(authHeaderFor({ type: 'header', name: 'x-api-key' }, 'k', undefined)).toEqual(['x-api-key', 'k']);
@@ -142,6 +153,16 @@ describe('vault', () => {
     await connect('app-pw');
 
     expect(await getUserCredential(OTHER, 'nextcloud', 'cloud')).toBeNull();
+  });
+
+  it('says what it removed, with the app password the server made', async () => {
+    await putUserCredential(USER, 'nextcloud', 'cloud', {
+      origin, inject: { type: 'basic' }, label: 'Nextcloud', username: 'alice', secret: 'made', appPasswordId: 'ap1',
+    });
+
+    expect(await deleteUserCredentials(USER, 'nextcloud', 'other')).toEqual([]);
+    expect(await deleteUserCredentials(USER, 'nextcloud')).toEqual([expect.objectContaining({ appPasswordId: 'ap1', secret: 'made' })]);
+    expect(await getUserCredential(USER, 'nextcloud', 'cloud')).toBeNull();
   });
 
   it('drops the secret when the server address changes', async () => {
@@ -231,6 +252,17 @@ describe('proxy', () => {
     expect(body).toEqual({ server: origin, captured: true });
     const stored = await getUserCredential(USER, 'nextcloud', 'cloud');
     expect(stored).toMatchObject({ secret: 'app-pw-123', username: 'alice' });
+  });
+
+  it('keeps an app password the server made from being replaced by a captured one', async () => {
+    await putUserCredential(USER, 'nextcloud', 'cloud', {
+      origin, inject: { type: 'basic' }, label: 'Nextcloud', username: 'alice', secret: 'made', appPasswordId: 'ap1',
+    });
+
+    const res = await call({ method: 'POST', url: `${origin}/login/poll`, capture: { secret: 'appPassword', username: 'loginName' } });
+
+    expect(await res.json()).toEqual({ server: origin, captured: false });
+    expect(await getUserCredential(USER, 'nextcloud', 'cloud')).toMatchObject({ secret: 'made', appPasswordId: 'ap1' });
   });
 
   it('limits requests per minute', async () => {

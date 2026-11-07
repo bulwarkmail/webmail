@@ -6908,6 +6908,7 @@
       "intro_password": "{name} vol utilitzar el vostre compte de {label}. {appName} desa la contrasenya al seu servidor i només l'envia a {host}. El connector no la veu mai.",
       "intro_password_any": "{name} vol utilitzar el vostre compte de {label}. {appName} desa la contrasenya al seu servidor i només l'envia al servidor que introduïu aquí. El connector no la veu mai.",
       "intro_signin": "{name} vol iniciar la sessió al vostre compte de {label}. Introduïu aquí el servidor i després inicieu la sessió a la seva pròpia pàgina. {appName} desa al seu servidor l'accés que obté; el connector no el veu mai.",
+      "intro_app_password": "{name} vol utilitzar el vostre compte {account}. {appName} crea per a això la contrasenya d'aplicació «{description}» al vostre servidor de correu i la desa al seu propi servidor; el connector no la veu mai. La podeu suprimir en qualsevol moment a Configuració → Seguretat.",
       "server": "Adreça del servidor",
       "server_hint": "cloud.example.com",
       "username": "Nom d'usuari",

@@ -6908,6 +6908,7 @@
       "intro_password": "{name}, {label} hesabınızı kullanmak istiyor. {appName} parolayı kendi sunucusunda saklar ve yalnızca {host} adresine gönderir. Eklenti parolayı hiçbir zaman görmez.",
       "intro_password_any": "{name}, {label} hesabınızı kullanmak istiyor. {appName} parolayı kendi sunucusunda saklar ve yalnızca burada girdiğiniz sunucuya gönderir. Eklenti parolayı hiçbir zaman görmez.",
       "intro_signin": "{name}, {label} hesabınıza giriş yapmak istiyor. Sunucuyu buraya girin, ardından sunucunun kendi sayfasında giriş yapın. {appName} aldığı erişimi kendi sunucusunda saklar; eklenti bunu hiçbir zaman görmez.",
+      "intro_app_password": "{name}, {account} hesabınızı kullanmak istiyor. {appName} bunun için posta sunucunuzda “{description}” uygulama parolasını oluşturur ve kendi sunucusunda saklar; eklenti onu hiçbir zaman görmez. Ayarlar → Güvenlik altından istediğiniz zaman silebilirsiniz.",
       "server": "Sunucu adresi",
       "server_hint": "cloud.example.com",
       "username": "Kullanıcı adı",

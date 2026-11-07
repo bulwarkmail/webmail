@@ -18,6 +18,9 @@
 // read from an admin config field (`originKey`).
 // scope "user": the user connects their own account in a dialog the host
 // shows; the origin is fixed in the manifest or chosen by the user there.
+// With `appPassword: true` (and `inject: { type: "basic" }`) the account is
+// the one the user is signed in to: the server makes an app password on it
+// and stores it with the login name, so the user types nothing.
 
 export type CredentialInject =
   | { type: 'none' }
@@ -45,6 +48,11 @@ export interface UserCredentialSpec {
   inject: CredentialInject;
   /** Fixed origin; when absent the user enters the server address. */
   origin?: string;
+  /**
+   * The server makes the secret: an app password on the mail server the user
+   * is signed in to, which is then also the origin. Only with `basic`.
+   */
+  appPassword?: true;
 }
 
 export type CredentialSpec = AdminCredentialSpec | UserCredentialSpec;
@@ -149,10 +157,17 @@ export function checkCredentials(
       fixedOrigin = origin;
     }
     if (c.scope === 'user') {
-      out[id] = { label: c.label, scope: 'user', inject, ...(fixedOrigin ? { origin: fixedOrigin } : {}) };
+      if (c.appPassword !== undefined && c.appPassword !== true) { errors.push(`${where}.appPassword must be true`); continue; }
+      if (c.appPassword && inject.type !== 'basic') { errors.push(`${where}.appPassword needs inject "basic"`); continue; }
+      out[id] = {
+        label: c.label, scope: 'user', inject,
+        ...(fixedOrigin ? { origin: fixedOrigin } : {}),
+        ...(c.appPassword ? { appPassword: true as const } : {}),
+      };
       continue;
     }
     if (c.scope !== 'admin') { errors.push(`${where}.scope must be "admin" or "user"`); continue; }
+    if (c.appPassword !== undefined) { errors.push(`${where}.appPassword is only for scope "user"`); continue; }
     const field = (key: unknown, name: string, type?: string): string | null => {
       if (typeof key !== 'string' || !configSchema?.[key]) {
         errors.push(`${where}.${name} must name a configSchema field`);
@@ -179,6 +194,11 @@ export function checkCredentials(
     };
   }
   return { credentials: errors.length ? undefined : out, errors };
+}
+
+/** The name of the app password the server makes for a plugin: the user sees it in their security settings. */
+export function appPasswordDescription(pluginName: string): string {
+  return `Plugin: ${pluginName.trim().slice(0, 80)}`;
 }
 
 /** The header to add for a secret, or null when the credential adds none. */

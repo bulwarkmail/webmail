@@ -6908,6 +6908,7 @@
       "intro_password": "{name} quiere usar tu cuenta de {label}. {appName} guarda la contraseña en su servidor y solo la envía a {host}. El complemento nunca la ve.",
       "intro_password_any": "{name} quiere usar tu cuenta de {label}. {appName} guarda la contraseña en su servidor y solo la envía al servidor que indiques aquí. El complemento nunca la ve.",
       "intro_signin": "{name} quiere iniciar sesión en tu cuenta de {label}. Indica aquí el servidor y luego inicia sesión en su propia página. {appName} guarda en su servidor el acceso que obtiene; el complemento nunca lo ve.",
+      "intro_app_password": "{name} quiere usar tu cuenta {account}. {appName} crea para ello la contraseña de aplicación «{description}» en tu servidor de correo y la guarda en su propio servidor; el complemento nunca la ve. Puedes eliminarla en cualquier momento en Configuración → Seguridad.",
       "server": "Dirección del servidor",
       "server_hint": "cloud.example.com",
       "username": "Nombre de usuario",

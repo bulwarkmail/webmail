@@ -6908,6 +6908,7 @@
       "intro_password": "{name} 想使用您的 {label} 账户。{appName} 将密码保存在自己的服务器上，只会发送给 {host}。插件永远看不到密码。",
       "intro_password_any": "{name} 想使用您的 {label} 账户。{appName} 将密码保存在自己的服务器上，只会发送给您在此处输入的服务器。插件永远看不到密码。",
       "intro_signin": "{name} 想登录您的 {label} 账户。请在此处输入服务器，然后在该服务器自己的页面上登录。{appName} 将获得的访问权限保存在自己的服务器上；插件永远看不到它。",
+      "intro_app_password": "{name} 想使用您的账户 {account}。{appName} 会为此在您的邮件服务器上创建应用密码“{description}”，并保存在自己的服务器上；插件永远看不到它。您可以随时在 设置 → 安全 中删除它。",
       "server": "服务器地址",
       "server_hint": "cloud.example.com",
       "username": "用户名",

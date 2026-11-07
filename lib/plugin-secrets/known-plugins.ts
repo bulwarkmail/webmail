@@ -15,14 +15,19 @@ import type { CredentialSpec, UserCredentialSpec } from './credentials';
  * manifest fixes, when it fixes one.
  */
 export async function declaredUserCredential(pluginId: string, credentialId: string): Promise<UserCredentialSpec | null> {
+  return (await declaringPlugin(pluginId, credentialId))?.spec ?? null;
+}
+
+/** {@link declaredUserCredential} with the name of the plugin that declares it. */
+export async function declaringPlugin(pluginId: string, credentialId: string): Promise<{ name: string; spec: UserCredentialSpec } | null> {
   const plugin = await getPlugin(pluginId);
   const fromRegistry = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials?.[credentialId];
-  if (plugin && plugin.enabled && fromRegistry?.scope === 'user') return fromRegistry;
+  if (plugin && plugin.enabled && fromRegistry?.scope === 'user') return { name: plugin.name, spec: fromRegistry };
   if (plugin) return null;
   for (const entry of await listApprovals()) {
     if (entry.pluginId !== pluginId || entry.status !== 'approved') continue;
     const spec = entry.manifest.credentials?.[credentialId];
-    if (spec?.scope === 'user') return spec;
+    if (spec?.scope === 'user') return { name: entry.manifest.name ?? pluginId, spec };
   }
   return null;
 }

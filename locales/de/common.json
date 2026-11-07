@@ -6908,6 +6908,7 @@
       "intro_password": "{name} möchte Ihr Konto bei {label} verwenden. {appName} speichert das Passwort auf seinem Server und sendet es nur an {host}. Das Plugin sieht es nie.",
       "intro_password_any": "{name} möchte Ihr Konto bei {label} verwenden. {appName} speichert das Passwort auf seinem Server und sendet es nur an den Server, den Sie hier eingeben. Das Plugin sieht es nie.",
       "intro_signin": "{name} möchte sich bei Ihrem Konto bei {label} anmelden. Geben Sie hier den Server ein und melden Sie sich dann auf dessen eigener Seite an. {appName} speichert den erhaltenen Zugang auf seinem Server; das Plugin sieht ihn nie.",
+      "intro_app_password": "{name} möchte Ihr Konto {account} verwenden. {appName} legt dafür auf Ihrem Mailserver das App-Passwort „{description}“ an und speichert es auf seinem eigenen Server; das Plugin sieht es nie. Sie können es jederzeit unter Einstellungen → Sicherheit löschen.",
       "server": "Serveradresse",
       "server_hint": "cloud.example.com",
       "username": "Benutzername",

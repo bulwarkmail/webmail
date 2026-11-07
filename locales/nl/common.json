@@ -6908,6 +6908,7 @@
       "intro_password": "{name} wil je account bij {label} gebruiken. {appName} bewaart het wachtwoord op zijn eigen server en stuurt het alleen naar {host}. De plug-in ziet het nooit.",
       "intro_password_any": "{name} wil je account bij {label} gebruiken. {appName} bewaart het wachtwoord op zijn eigen server en stuurt het alleen naar de server die je hier invult. De plug-in ziet het nooit.",
       "intro_signin": "{name} wil inloggen op je account bij {label}. Vul hier de server in en log daarna in op de eigen pagina van die server. {appName} bewaart de toegang die het krijgt op zijn eigen server; de plug-in ziet die nooit.",
+      "intro_app_password": "{name} wil je account {account} gebruiken. {appName} maakt daarvoor op je mailserver het app-wachtwoord ‘{description}’ aan en bewaart het op zijn eigen server; de plug-in ziet het nooit. Je kunt het altijd verwijderen via Instellingen → Beveiliging.",
       "server": "Serveradres",
       "server_hint": "cloud.example.com",
       "username": "Gebruikersnaam",

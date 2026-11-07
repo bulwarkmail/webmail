@@ -6908,6 +6908,7 @@
       "intro_password": "{name} soovib kasutada sinu kontot {label}. {appName} hoiab parooli oma serveris ja saadab selle ainult hostile {host}. Pistikprogramm ei näe seda kunagi.",
       "intro_password_any": "{name} soovib kasutada sinu kontot {label}. {appName} hoiab parooli oma serveris ja saadab selle ainult serverisse, mille siia sisestad. Pistikprogramm ei näe seda kunagi.",
       "intro_signin": "{name} soovib sinu kontole {label} sisse logida. Sisesta siia server ja logi siis sisse selle enda lehel. {appName} hoiab saadud juurdepääsu oma serveris; pistikprogramm ei näe seda kunagi.",
+      "intro_app_password": "{name} soovib kasutada sinu kontot {account}. {appName} loob selleks sinu meiliserveris rakenduse parooli „{description}“ ja hoiab seda oma serveris; plugin ei näe seda kunagi. Saad selle igal ajal kustutada jaotises Seaded → Turvalisus.",
       "server": "Serveri aadress",
       "server_hint": "cloud.example.com",
       "username": "Kasutajanimi",
