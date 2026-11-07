@@ -3926,7 +3926,13 @@ export function EmailViewer({
           const height = Math.ceil(measureEmailFrameHeight(doc) * scale);
           iframe.style.height = height + 'px';
           lastBodyHeightRef.current = height;
-          measured = sizes();
+          // Reading the sizes again right after the height write laid the whole
+          // mail out a second time (its viewport just changed), which on a
+          // large newsletter was most of the open. The height write leaves the
+          // scroll sizes as they were; if a released table changed them, the
+          // next poll finds that and measures again, by then for free. A fit
+          // (phones) changes them itself, so it is read back.
+          measured = fitBodyToWidthRef.current.enabled !== false ? sizes() : now;
         };
         const resizeObserver = new ResizeObserver(() => applyHeight());
         resizeObserver.observe(doc.body);
