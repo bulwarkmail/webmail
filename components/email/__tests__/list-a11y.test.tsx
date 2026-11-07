@@ -161,3 +161,33 @@ describe('message list as one widget', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 });
+
+// The list keeps a row on screen for the next folder's message at its place.
+function SlotList({ ids }: { ids: string[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useListboxFocus(ref, undefined, ids.join());
+  return (
+    <div ref={ref} tabIndex={-1} data-testid="scroller">
+      <div role="treegrid" aria-label="Messages" data-setsize="3">
+        {ids.map((id, slot) => <Row key={`row-${slot}`} id={id} />)}
+      </div>
+    </div>
+  );
+}
+
+describe('a focused row that shows another message', () => {
+  it("hands the focus on to the list's Tab stop, as a new row did", () => {
+    const spy = mockRowTops({ a: 0, b: 60, c: 120, d: 0, e: 60, f: 120 });
+    const { rerender } = render(<SlotList ids={['a', 'b', 'c']} />);
+    option('row b').focus();
+    expect(document.activeElement).toBe(option('row b'));
+    const focused: string[] = [];
+    const scroller = screen.getByTestId('scroller');
+    scroller.addEventListener('focusin', (e) => { focused.push((e.target as HTMLElement).getAttribute('aria-label') ?? (e.target as HTMLElement).dataset.testid ?? ''); });
+    act(() => { rerender(<SlotList ids={['d', 'e', 'f']} />); });
+    // Through the list to the Tab stop: a focus move a screen reader announces.
+    expect(focused).toContain('scroller');
+    expect(document.activeElement).toBe(option('row d'));
+    spy.mockRestore();
+  });
+});

@@ -168,6 +168,18 @@ export function useListboxFocus(listRef: RefObject<HTMLElement | null>, activeKe
   // to go to that selection's row once the list draws it.
   const followedKey = useRef(activeKey);
   const follow = useRef(false);
+  // The row that had the focus, and the message it showed then.
+  const focusedRow = useRef<{ row: HTMLElement; key: string | null } | null>(null);
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const row = e.target instanceof HTMLElement && e.target.getAttribute("role") === "row" ? e.target : null;
+      focusedRow.current = row ? { row, key: row.getAttribute(ROW_KEY_ATTR) } : null;
+    };
+    list.addEventListener("focusin", onFocusIn);
+    return () => list.removeEventListener("focusin", onFocusIn);
+  }, [listRef]);
 
   // The single Tab stop, and the focus following the selection.
   useEffect(() => {
@@ -189,6 +201,17 @@ export function useListboxFocus(listRef: RefObject<HTMLElement | null>, activeKe
     });
     if (!target) return;
     target.setAttribute("tabindex", "0");
+    // The list keeps a row on screen for the next message at its place (a
+    // folder switch, a search; see useRowSlots). A focused row that now shows
+    // another message hands the focus on through the list to its Tab stop,
+    // as a row taken down and built new did, so the move is announced
+    // instead of the focus sitting on a row that changed under it.
+    const held = focusedRow.current;
+    if (held && document.activeElement === held.row && held.row.getAttribute(ROW_KEY_ATTR) !== held.key) {
+      focusedRow.current = null;
+      list.focus({ preventScroll: true });
+      return;
+    }
     if (!follow.current || !row) return;
     follow.current = false;
     const active = document.activeElement;
