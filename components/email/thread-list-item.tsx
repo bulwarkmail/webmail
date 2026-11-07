@@ -467,7 +467,24 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const { viewer: t, batch: tBatch, hover: tHover, list: tStatus } = useRowTranslators()!;
     const tUnknown = t('unknown_sender');
     const tNoSubject = t('no_subject');
-    const showPreviewSetting = useSettingsStore((state) => state.showPreview);
+    // One subscription for the row's settings instead of one per setting: a
+    // list draws fourteen or so of these rows at a time.
+    const {
+      showPreview: showPreviewSetting, tintListRowsByTag, tintListRowsByAccount, density, timeFormat, showAvatarsInJunk,
+      interfaceLayout, announceRowPreview, showRowActionButton, swipeRightAction, swipeLeftAction,
+    } = useSettingsStore(useShallow((state) => ({
+      showPreview: state.showPreview,
+      tintListRowsByTag: state.tintListRowsByTag,
+      tintListRowsByAccount: state.tintListRowsByAccount,
+      density: state.density,
+      timeFormat: state.timeFormat,
+      showAvatarsInJunk: state.showAvatarsInJunk,
+      interfaceLayout: state.interfaceLayout,
+      announceRowPreview: state.announceRowPreview,
+      showRowActionButton: state.showRowActionButton,
+      swipeRightAction: state.swipeRightAction,
+      swipeLeftAction: state.swipeLeftAction,
+    })));
     const showPreview = showPreviewProp ?? showPreviewSetting;
     const isUnread = !email.keywords?.$seen;
     const isStarred = email.keywords?.$flagged;
@@ -502,14 +519,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
     const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
-    const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
-    const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
     const showAccountDot = useShowAccountDot(tintListRowsByAccount);
-    const density = useSettingsStore((state) => state.density);
-    const timeFormat = useSettingsStore((state) => state.timeFormat);
-    const showAvatarsInJunk = useSettingsStore((state) => state.showAvatarsInJunk);
-    const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
     const hideJunkAvatarImages = currentMailboxRole === 'junk' && !showAvatarsInJunk;
     const senderWarning = useSenderWarning(showRecipient ? undefined : email);
     // Show the originating folder in the aggregate "All …" views.
@@ -518,8 +529,6 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const account = email.accountId ? getAccountById(email.accountId) : undefined;
     const accountColor = account?.avatarColor;
     const accountDescription = describeAccount(email.accountLabel, account);
-    const announceRowPreview = useSettingsStore((state) => state.announceRowPreview);
-    const showRowActionButton = useSettingsStore((state) => state.showRowActionButton);
     const isMobile = useUIStore((state) => state.isMobile);
     const swipeRows = useSwipeRows();
     // One line per row where the list has the full width; stacked on phones.
@@ -577,8 +586,6 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 
     // Mobile swipe actions (Gmail-style): drag a row left/right to fire the
     // configured action. Desktop keeps hover actions + context menu.
-    const swipeRightAction = useSettingsStore((state) => state.swipeRightAction);
-    const swipeLeftAction = useSettingsStore((state) => state.swipeLeftAction);
     const runSwipeAction = useCallback((action: SwipeAction) => {
       switch (action) {
         case 'archive': onArchive?.(); break;
