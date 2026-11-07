@@ -15,6 +15,7 @@ import {
   buildStalwartAppManifest, buildStalwartEntry, buildStalwartManifest,buildStalwartReadme, buildZip, collectZipEntries, discoverBuiltLocales, discoverShellDirs, findSegmentPrefetchDirs, isMainModule, makeBuildId, normalizeBasePath, parseLiteTarget, resolveRepoRoot,
   withScriptHashCsp,
 } from "./lib.mjs";
+import { hintPageScripts } from "../compile-hints.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
 
@@ -61,6 +62,10 @@ export function runPostbuild({ root = repoRoot, env = process.env, log = console
     log(`[lite] pinned the inline scripts of ${pages} pages with a <meta> CSP`);
   }
   log(`[lite] wrote ${Object.keys(files).length} files into out/ (${target} target, ${locales.length} locales, base path ${target === "stalwart" ? "runtime" : basePath || "/"})`);
+  // Turbopack has no hook for Chrome's compile hint (scripts/compile-hints.mjs):
+  // the scripts the pages start with get it here, before anything is packed.
+  const hinted = hintPageScripts(outDir);
+  log(`[lite] marked ${hinted.length} start-up scripts for Chrome to compile while they download`);
 
   let zipPath = null;
   if (target === "stalwart") {
