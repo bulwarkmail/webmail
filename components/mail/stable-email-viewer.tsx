@@ -1,9 +1,10 @@
 "use client";
 
-import { memo, useLayoutEffect, useMemo, useRef, type ComponentType } from "react";
+import { memo, useMemo, useRef, type ComponentType } from "react";
 import type { EmailViewerProps } from "@/components/email/email-viewer";
 import { ReaderOpenFailure } from "@/components/email/reader-open-failure";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
+import { useStableEach } from "@/hooks/use-stable-each";
 import { useStableHandlers } from "@/hooks/use-stable-handlers";
 
 /** What the empty reading pane shows instead of a message. */
@@ -38,30 +39,6 @@ function shallowEqual(a: object | null | undefined, b: object | null | undefined
   const ka = Object.keys(a);
   if (ka.length !== Object.keys(b).length) return false;
   return ka.every((k) => Object.is((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
-}
-
-/**
- * Handlers that keep their identity one by one and forward to the latest
- * ones. useStableHandlers hands out a whole new set whenever one handler
- * comes or goes (next and previous at the ends of the list), which would
- * draw the viewer again each time.
- */
-function useStableEach(handlers: Record<string, Handler>): Record<string, Handler> {
-  const latest = useRef(handlers);
-  useLayoutEffect(() => {
-    latest.current = handlers;
-  });
-  const forwarders = useRef(new Map<string, Handler>()).current;
-  const stable: Record<string, Handler> = {};
-  for (const key of Object.keys(handlers)) {
-    let forward = forwarders.get(key);
-    if (!forward) {
-      forward = ((...args: never[]) => latest.current[key]?.(...args)) as Handler;
-      forwarders.set(key, forward);
-    }
-    stable[key] = forward;
-  }
-  return stable;
 }
 
 /** `next`, or the value kept from before while it holds the same fields. */

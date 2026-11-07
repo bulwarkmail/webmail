@@ -34,6 +34,10 @@ const EmailViewer = dynamic(
   () => import("@/components/email/email-viewer").then((m) => m.EmailViewer),
   { ssr: false }
 );
+// The rail and the pane handles get new inline handlers on every render of
+// this page; these draw again only when something else they get changes.
+const StableNavigationRail = withStableHandlers(NavigationRail);
+const StableResizeHandle = withStableHandlers(ResizeHandle);
 const EmailComposer = dynamic(
   () => import("@/components/email/email-composer").then((m) => m.EmailComposer),
   { ssr: false }
@@ -184,6 +188,7 @@ import { MoveToDialog, MoveToDialogHost, useMoveDialogStore } from "@/components
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
+import { withStableHandlers } from "@/components/ui/with-stable-handlers";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
@@ -6108,7 +6113,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isEmbedded && !mvShell && (
           <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-            <NavigationRail
+            <StableNavigationRail
               collapsed
               quota={quota}
               isPushConnected={isPushConnected}
@@ -6220,7 +6225,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Sidebar resize handle (desktop only, hidden when collapsed, and
             absent under Mountain View, whose navigation has a fixed width) */}
         {!isMobile && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
-          <ResizeHandle
+          <StableResizeHandle
             pane="sidebar"
             value={sidebarWidth}
             min={SIDEBAR_MIN}
@@ -6654,7 +6659,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
           {/* Email list resize handle (desktop only) */}
           {!isMobile && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
-            <ResizeHandle
+            <StableResizeHandle
               pane="messageList"
               value={emailListWidth}
               min={EMAIL_LIST_MIN}
@@ -6666,7 +6671,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           )}
           {!isMobile && isHorizontalMailLayout && !shouldHideHorizontalViewerPane && !fullscreenReading && (
-            <ResizeHandle
+            <StableResizeHandle
               orientation="horizontal"
               pane="messageList"
               value={emailListHeight}
