@@ -372,6 +372,8 @@ export interface ComposerPopOut {
 }
 
 interface EmailComposerProps {
+  /** The body editor is drawn in the composer's first render (client-only hosts: see RichTextEditor). */
+  editorRendersAtOnce?: boolean;
   /**
    * Submits the message. Resolves `false` when the host sent nothing (it has
    * no connection): a draft version that only goes once the message is out
@@ -682,7 +684,8 @@ export function EmailComposer({
   sourceEmailId,
   mode = 'compose',
   composeFromAccountEmail,
-  replyTo
+  replyTo,
+  editorRendersAtOnce = false,
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
   const tMenu = useTranslations('menuAudit');
@@ -6013,6 +6016,7 @@ export function EmailComposer({
         ) : (
           <div ref={editorContainerRef} onContextMenu={onBodyContextMenu} onMouseDownCapture={selectionMenu.onMouseDown}>
             <RichTextEditor
+              renderAtOnce={editorRendersAtOnce}
               content={body}
               onChange={(html) => {
                 setBody(html);
