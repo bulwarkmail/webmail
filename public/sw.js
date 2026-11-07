@@ -517,12 +517,21 @@ self.addEventListener("message", (event) => {
     // fetched without holding the event open: a worker busy with an event
     // can't hand over to a new build's worker, and the fetch is tried again
     // whenever a tab asks.
+    // A tab that passed a port hears when the shell is kept (lib/offline/shell.ts).
+    const port = event.ports && event.ports[0];
+    const reply = () => {
+      try {
+        if (port) port.postMessage({ type: "offline-shell-kept" });
+      } catch (_) {
+        // The tab went.
+      }
+    };
     if (data.on !== true) {
-      event.waitUntil(setOfflineShell(false));
+      event.waitUntil(setOfflineShell(false).then(reply, reply));
       return;
     }
     event.waitUntil(writeOfflineShell(true));
-    setOfflineShell(true, data.urls, data.buildId).catch(() => {});
+    setOfflineShell(true, data.urls, data.buildId).catch(() => {}).then(reply);
     return;
   }
   if (data.type === "skip-waiting") {

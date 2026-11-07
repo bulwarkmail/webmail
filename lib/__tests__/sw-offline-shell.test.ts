@@ -258,4 +258,20 @@ describe('service worker with offline mode on', () => {
     const state = await caches.open('bulwark-sw-state-v1');
     expect(await (await state.match('/__bulwark/offline-shell'))?.json()).toEqual({ on: true });
   });
+
+  it('tells the tab once the shell is kept, so turning offline mode on can wait for it', async () => {
+    const caches = new FakeCaches();
+    let release: () => void = () => {};
+    const fetched = new Promise<void>((resolve) => { release = resolve; });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: async () => { await fetched; return sameOrigin('x', 'text/javascript'); } });
+    const replies: unknown[] = [];
+    const port = { postMessage: (m: unknown) => replies.push(m) };
+    await worker.dispatch('message', { data: { type: 'offline-shell', on: true, urls: ['/_next/static/chunks/a.js'], buildId: 'a' }, ports: [port] });
+    await settle();
+    expect(replies).toEqual([]);
+    release();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(replies).toEqual([{ type: 'offline-shell-kept' }]);
+    expect(await (await caches.open('bulwark-shell-a')).match(`${ORIGIN}/_next/static/chunks/a.js`)).toBeTruthy();
+  });
 });

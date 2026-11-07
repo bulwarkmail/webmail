@@ -16,7 +16,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('app shell pages', () => {
   it('includes the protocol handler pages', async () => {
-    const postMessage = vi.fn();
+    // The worker says when it has kept the shell (lib/offline/shell.ts waits for it).
+    const postMessage = vi.fn((_message: { urls: string[] }, ports?: MessagePort[]) => ports?.[0]?.postMessage({ type: 'offline-shell-kept' }));
     vi.stubGlobal('navigator', { serviceWorker: { getRegistration: async () => ({ active: { postMessage } }) } });
 
     await tellServiceWorker(true);
