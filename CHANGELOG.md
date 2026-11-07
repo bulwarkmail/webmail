@@ -2,7 +2,7 @@
 
 ## 1.21.0 (2026-11-07)
 
-1.21.0 can keep mail, calendars, contacts and files in an encrypted database on the device, so Bulwark opens at once and you can read, search, write and file mail with no connection. The new Bulwark desktop app for Windows, macOS and Linux is built on this release and is out as a public beta. The reading pane shows whole conversations, menus are the same everywhere, and files can be dropped onto any screen. Undo send is on by default, and an app lock with a PIN, a passkey or Windows Hello locks the app and the mail kept on the device. Admins can set the login page's background and layout, cap what devices keep offline and wipe a lost device. Push notifications open the right message and show sender and subject after the browser was closed. A first visit opens the sign-in page about 0.45 s sooner, and Greek and Norwegian Nynorsk are new languages.
+1.21.0 can keep mail, calendars, contacts and files in an encrypted database on the device, so Bulwark opens at once and you can read, search, write and file mail with no connection. The new Bulwark desktop app for Windows, macOS and Linux is built on this release and is out as a [public beta](https://github.com/bulwarkmail/desktop/releases). The reading pane shows whole conversations, menus are the same everywhere, and files can be dropped onto any screen. Undo send is on by default, and an app lock with a PIN, a passkey or Windows Hello locks the app and the mail kept on the device. Admins can set the login page's background and layout, cap what devices keep offline and wipe a lost device. Push notifications open the right message and show sender and subject after the browser was closed. A first visit opens the sign-in page about 0.45 s sooner, and Greek and Norwegian Nynorsk are new languages.
 
 ### Desktop app beta
 
@@ -11,7 +11,7 @@ Download the beta from [github.com/bulwarkmail/desktop/releases](https://github.
 - **Two ways to connect**: Straight to your own JMAP server, such as Stalwart, without running a Bulwark server, or to your organisation's Bulwark, which needs 1.21.0 or later for the desktop features
 - **Sign-in**: You sign in through your browser, so your password manager, passkeys and your organisation's single sign-on work
 - **Offline**: Mail is kept on the computer by default, so the app opens at once and works with no connection
-- **Windows**: A tray icon with unread mail and the next event, notifications with Reply, Archive, Mark as read and Delete, a taskbar badge and a jump list. Bulwark can be the default mail app for mail links and .eml, .ics and .vcf files, and adds "Send to > Bulwark". Files shows in File Explorer as "Bulwark Files" and downloads a file when you open it
+- **Windows**: A tray icon with unread mail and the next event, notifications with Reply, Archive, Mark as read and Delete, plus Copy code on sign-in mail without opening the window, a taskbar badge and a jump list. Bulwark can be the default mail app for mail links and .eml, .ics and .vcf files, and adds "Send to > Bulwark". Files shows in File Explorer as "Bulwark Files" and downloads a file when you open it
 - **Windows security**: Unlock with Windows Hello, sign in with Kerberos or NTLM to servers your organisation lists, and sign or decrypt S/MIME mail with certificates from the system store and smart cards
 - **Windows and menus**: Messages and composers open in their own windows and come back after a restart. Quick compose opens from any app with Ctrl+Alt+Enter (Cmd+Opt+N on a Mac, Ctrl+Alt+N on Linux). Alt shows a menu bar, the keyboard shortcuts follow Outlook's, and the app has its own print preview and save dialog
 - **Files and attachments**: Open an attachment in its usual program, edit it and put the saved version back on the draft, a reply or in Files. Sync any folder on the computer with a Files folder, and attach recently used files from the Attach menu
@@ -67,7 +67,7 @@ Thank you for your donations:
 ### Changes
 
 - **Offline**: Offline mode moved to the new encrypted database. Your choice carries over and mail downloads again once
-- **Mail**: Attachments always show right under the message header, after any security warning and before the remote-content notice and the text, on one row with "Show N more". The Attachment position setting is gone
+- **Mail**: Attachments always show right under the message header, after any security warning and before the remote-content notice and the text, on one row with "Show N more". The tiles are slimmer with the type on the preview and one download button, Save to Files and the other file actions show on hover, and Download all and Save all to folder sit together at the end of the summary line. The Attachment position setting is gone
 - **Mail**: Compose sits at the top of the folder list on desktops, with one account switcher and one list menu. A half-screen window or 150 % zoom keeps the desktop layout; the phone layout starts below 600 px, and in a narrow window the sidebars open as drawers
 - **Compose**: Undo send is on by default, with 5 seconds
 - **Privacy**: Trusted senders are kept in their own address book by default, so the list is the same on every device. Senders saved on one device move into it once; servers without address books keep the list on the device
