@@ -66,6 +66,11 @@ const CASES: Case[] = [
 ];
 
 async function seedStorage(context: BrowserContext, items: Seed) {
+  // A browser that keeps a sign-in carries the marker the page script sets
+  // (lib/signed-out-start.ts); without it the root sends a first visit to /login.
+  if (items["auth-storage"] || items["account-registry"]) {
+    await context.addCookies([{ name: "bulwark_local", value: "1", url: String(test.info().project.use.baseURL) }]);
+  }
   await context.addInitScript((seed) => {
     if (sessionStorage.getItem("__boot_guard_seeded")) return;
     localStorage.clear();
