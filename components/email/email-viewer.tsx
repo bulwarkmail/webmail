@@ -3786,10 +3786,13 @@ export function EmailViewer({
   }, [plainBodyEl, hasDetailSidebar, email?.id, onBodySelection]);
   // One object per body: React writes innerHTML again whenever this object
   // changes, which would drop what was mounted in the body and fold the quote
-  // back up on every render.
+  // back up on every render. Only a plain-text body is drawn from it: an HTML
+  // one goes to the frame, and sanitizing it a second time here cost a whole
+  // DOMPurify pass over the mail (hundreds of KB for a newsletter) per open.
+  const plainBodyIsShown = !effectiveEmailContent.isHtml;
   const plainBodyHtml = useMemo(
-    () => ({ __html: sanitizePlainTextRenderedHtml(effectiveEmailContent.html) }),
-    [effectiveEmailContent.html],
+    () => ({ __html: plainBodyIsShown ? sanitizePlainTextRenderedHtml(effectiveEmailContent.html) : '' }),
+    [effectiveEmailContent.html, plainBodyIsShown],
   );
   // Tracks which parsed document we've already wired up, so setup runs exactly
   // once per srcDoc even though both the readiness poll below and the iframe
