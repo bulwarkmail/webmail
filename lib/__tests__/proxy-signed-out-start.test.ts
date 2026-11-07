@@ -60,6 +60,8 @@ describe('proxy: a signed-out first visit goes straight to the sign-in page', ()
     expect(start?.value).toBe('1');
     expect(start?.maxAge).toBe(60);
     expect(start?.httpOnly).toBeFalsy();
+    // It depends on this browser's cookies: no shared cache may keep it.
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
     // Still a page of the app's: the security headers are on the redirect too.
     expect(response.headers.get('content-security-policy')).toContain("default-src 'self'");
   });
@@ -87,6 +89,9 @@ describe('proxy: a signed-out first visit goes straight to the sign-in page', ()
     expect((await load('https://mail.example.com/mail/message/abc')).headers.get('location')).toBeNull();
     expect((await load('https://mail.example.com/?mailto=a%40b.c')).headers.get('location')).toBeNull();
     expect((await load('https://mail.example.com/', { 'sec-fetch-dest': 'iframe' })).headers.get('location')).toBeNull();
+    // Safari before 16.4 sends no Sec-Fetch-Dest: a portal's frame can't be told from a page.
+    const safari = await proxy(new NextRequest('https://mail.example.com/', { headers: { accept: 'text/html,application/xhtml+xml' } }));
+    expect(safari.headers.get('location')).toBeNull();
     demoMode = true;
     expect((await load('https://mail.example.com/')).headers.get('location')).toBeNull();
   });

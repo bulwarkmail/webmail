@@ -230,6 +230,8 @@ function signedOutStartRedirect(
   });
   if (!target) return null;
   const response = redirectTo(request, target, "");
+  // It depends on this browser's cookies: no cache may keep it for another.
+  response.headers.set("Cache-Control", "private, no-store");
   // Whatever the locale middleware set (its locale cookie) still applies.
   for (const cookie of intlResponse?.cookies.getAll() ?? []) response.cookies.set(cookie);
   response.cookies.set(START_COOKIE, "1", {

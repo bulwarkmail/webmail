@@ -20,6 +20,8 @@
  * which then starts the mail view as before.
  */
 
+import { locales } from '@/i18n/routing';
+
 /** Set by the page script while the browser keeps accounts a start could restore. */
 export const LOCAL_COOKIE = 'bulwark_local';
 /** Set by the redirect for the sign-in page's script to check (see above). */
@@ -47,10 +49,10 @@ function isPageLoad(r: StartRequest): boolean {
   if (r.method !== 'GET') return false;
   // The router's own requests (RSC, prefetches) and the app lock's probe aren't page loads.
   if (r.header('rsc') !== null || r.header('next-router-prefetch') !== null || r.header('x-bulwark-reload-probe') !== null) return false;
-  const dest = r.header('sec-fetch-dest');
   // Only a top-level page: a portal's frame may sign in through its bridge.
-  if (dest !== null) return dest === 'document';
-  return (r.header('accept') ?? '').includes('text/html');
+  // A browser that doesn't say (Safari before 16.4) can't be told from a
+  // frame by its Accept header, so it starts the mail view as before.
+  return r.header('sec-fetch-dest') === 'document';
 }
 
 /** `/<locale>` (with or without a trailing slash) gives the locale, anything else null. */
@@ -81,6 +83,7 @@ export interface StartScriptConfig {
   start: string;
   clear: string;
   path: string;
+  locales: readonly string[];
 }
 
 /**
@@ -110,20 +113,27 @@ export function applySignedOutStart(w: Window, d: Document, cfg: StartScriptConf
   var put = function (name: string, value: string, age: number) {
     d.cookie = name + '=' + value + ';Path=' + cfg.path + ';Max-Age=' + age + ';SameSite=Lax' + secure;
   };
-  var onLogin = /\/login\/?$/.test(w.location.pathname);
+  // The sign-in page: /login or /<locale>/login under the base path.
+  var base = cfg.path === '/' ? '' : cfg.path;
+  var path = w.location.pathname;
+  var inBase = !base || path === base || path.indexOf(base + '/') === 0;
+  if (base && inBase) path = path.slice(base.length) || '/';
+  var m = inBase ? /^\/(?:([^/]+)\/)?login\/?$/.exec(path) : null;
+  var onLogin = !!m && (!m[1] || cfg.locales.indexOf(m[1]) !== -1);
   if (local) {
-    if (!has(cfg.local)) put(cfg.local, '1', 34560000);
+    // Written again on every page: Safari keeps a cookie a script wrote for 7 days only.
+    put(cfg.local, '1', 34560000);
   } else if (onLogin && has(cfg.local)) {
     put(cfg.local, '', 0);
   }
   if (has(cfg.start)) {
     put(cfg.start, '', 0);
-    if (local && onLogin) w.location.replace(w.location.pathname.replace(/\/login\/?$/, '') || '/');
+    if (local && onLogin && m) w.location.replace(base + (m[1] ? '/' + m[1] : '') || '/');
   }
 }
 
 /** The inline script for the (main) layout's <head>. `basePath` without a trailing slash. */
 export function signedOutStartScript(basePath: string): string {
-  const cfg: StartScriptConfig = { local: LOCAL_COOKIE, start: START_COOKIE, clear: COOKIES_TO_CLEAR_KEY, path: basePath || '/' };
+  const cfg: StartScriptConfig = { local: LOCAL_COOKIE, start: START_COOKIE, clear: COOKIES_TO_CLEAR_KEY, path: basePath || '/', locales };
   return `try{(${applySignedOutStart.toString()})(window,document,${JSON.stringify(cfg)});}catch(e){}`;
 }

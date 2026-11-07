@@ -69,6 +69,11 @@ describe('signedOutStartTarget', () => {
     expect(signedOutStartTarget(req({ headers: { 'sec-fetch-dest': 'empty' } }))).toBeNull();
   });
 
+  it('leaves a browser that does not say where the page goes alone, as a frame may be one (Safari before 16.4)', () => {
+    const headers: Record<string, string> = { accept: 'text/html,application/xhtml+xml' };
+    expect(signedOutStartTarget(req({ header: (name) => headers[name] ?? null }))).toBeNull();
+  });
+
   it('never redirects in demo mode', () => {
     expect(signedOutStartTarget(req({ demoMode: true }))).toBeNull();
   });
@@ -79,16 +84,19 @@ interface Fake {
   d: Document;
   cookies: Map<string, string>;
   replaced: string[];
+  writes: string[];
 }
 
 function fakePage(path: string, storage: Record<string, string>, cookies: Record<string, string> = {}, extra: Record<string, unknown> = {}): Fake {
   const jar = new Map(Object.entries(cookies));
   const replaced: string[] = [];
+  const writes: string[] = [];
   const d = {
     get cookie() {
       return [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
     },
     set cookie(line: string) {
+      writes.push(line);
       const [pair, ...attrs] = line.split(';');
       const [name, value] = pair.split('=');
       if (attrs.some((a) => a.trim() === 'Max-Age=0')) jar.delete(name);
@@ -100,10 +108,10 @@ function fakePage(path: string, storage: Record<string, string>, cookies: Record
     location: { pathname: path, protocol: 'https:', replace: (to: string) => replaced.push(to) },
     ...extra,
   } as unknown as Window;
-  return { w, d, cookies: jar, replaced };
+  return { w, d, cookies: jar, replaced, writes };
 }
 
-const CFG: StartScriptConfig = { local: LOCAL_COOKIE, start: START_COOKIE, clear: COOKIES_TO_CLEAR_KEY, path: '/' };
+const CFG: StartScriptConfig = { local: LOCAL_COOKIE, start: START_COOKIE, clear: COOKIES_TO_CLEAR_KEY, path: '/', locales: ['de', 'en', 'zh-TW'] };
 const ACCOUNTS = { 'account-registry': JSON.stringify({ state: { accounts: [{ id: 'a' }] } }) };
 
 describe('applySignedOutStart', () => {
@@ -165,5 +173,35 @@ describe('applySignedOutStart', () => {
     const page = fakePage('/webmail', ACCOUNTS);
     new Function('window', 'document', script)(page.w, page.d);
     expect(page.cookies.get(LOCAL_COOKIE)).toBe('1');
+  });
+
+  it('writes the marker again on every page, as Safari keeps a script-written cookie for 7 days', () => {
+    const page = fakePage('/settings', ACCOUNTS, { [LOCAL_COOKIE]: '1' });
+    applySignedOutStart(page.w, page.d, CFG);
+    expect(page.writes.filter((line) => line.startsWith(`${LOCAL_COOKIE}=1;`) && line.includes('Max-Age=34560000'))).toHaveLength(1);
+  });
+
+  it('takes only the sign-in page for the sign-in page, not /admin/login or a folder named login', () => {
+    for (const path of ['/admin/login', '/mail/folder/login', '/en/mail/folder/x/login', '/xx/login']) {
+      const page = fakePage(path, ACCOUNTS, { [START_COOKIE]: '1' });
+      applySignedOutStart(page.w, page.d, CFG);
+      expect(page.replaced, path).toEqual([]);
+      const empty = fakePage(path, {}, { [LOCAL_COOKIE]: '1' });
+      applySignedOutStart(empty.w, empty.d, CFG);
+      expect(empty.cookies.has(LOCAL_COOKIE), path).toBe(true);
+    }
+  });
+
+  it('goes back to the root under the base path', () => {
+    const cfg = { ...CFG, path: '/webmail' };
+    const page = fakePage('/webmail/de/login', ACCOUNTS, { [START_COOKIE]: '1' });
+    applySignedOutStart(page.w, page.d, cfg);
+    expect(page.replaced).toEqual(['/webmail/de']);
+    const bare = fakePage('/webmail/login', ACCOUNTS, { [START_COOKIE]: '1' });
+    applySignedOutStart(bare.w, bare.d, cfg);
+    expect(bare.replaced).toEqual(['/webmail']);
+    const outside = fakePage('/login', ACCOUNTS, { [START_COOKIE]: '1' });
+    applySignedOutStart(outside.w, outside.d, cfg);
+    expect(outside.replaced).toEqual([]);
   });
 });
