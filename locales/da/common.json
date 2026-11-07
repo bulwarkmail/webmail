@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Adgangskode",
       "auth_method_token": "Adgangstoken",
+      "account_management_link": "Administrer kontosikkerhed (2FA, app-adgangskoder)",
       "demo_account": "Demo-konto",
       "email": {
         "label": "E-mailadresse",

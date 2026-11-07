@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Inicio de sesión único (OAuth/OIDC)",
       "auth_method_basic": "Contraseña",
       "auth_method_token": "Token de acceso",
+      "account_management_link": "Gestionar la seguridad de la cuenta (2FA, contraseñas de aplicación)",
       "demo_account": "Cuenta de demostración",
       "email": {
         "label": "Dirección de Correo",

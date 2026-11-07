@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "SSO (OAuth/OIDC)",
       "auth_method_basic": "비밀번호",
       "auth_method_token": "액세스 토큰",
+      "account_management_link": "계정 보안 관리(2단계 인증, 앱 비밀번호)",
       "demo_account": "데모 계정",
       "email": {
         "label": "이메일 주소",

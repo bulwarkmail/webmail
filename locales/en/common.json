@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Password",
       "auth_method_token": "Access token",
+      "account_management_link": "Manage account security (2FA, app passwords)",
       "demo_account": "Demo account",
       "email": {
         "label": "Email address",

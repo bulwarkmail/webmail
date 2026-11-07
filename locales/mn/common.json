@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Нэг удаа нэвтрэх (OAuth/OIDC)",
       "auth_method_basic": "Нууц үг",
       "auth_method_token": "Хандалтын токен",
+      "account_management_link": "Бүртгэлийн аюулгүй байдлыг удирдах (2FA, аппын нууц үг)",
       "demo_account": "Демо данс",
       "email": {
         "label": "Имэйл хаяг",

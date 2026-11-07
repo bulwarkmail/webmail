@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Inici de sessió únic (OAuth/OIDC)",
       "auth_method_basic": "Contrasenya",
       "auth_method_token": "Token d'accés",
+      "account_management_link": "Gestiona la seguretat del compte (2FA, contrasenyes d'aplicació)",
       "demo_account": "Compte de demostració",
       "email": {
         "label": "Adreça electrònica",

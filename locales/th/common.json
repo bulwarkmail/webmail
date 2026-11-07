@@ -5526,6 +5526,7 @@
       "auth_method_oauth": "การลงชื่อเข้าใช้ครั้งเดียว (OAuth/OIDC)",
       "auth_method_basic": "รหัสผ่าน",
       "auth_method_token": "โทเค็นการเข้าถึง",
+      "account_management_link": "จัดการความปลอดภัยของบัญชี (2FA, รหัสผ่านแอป)",
       "demo_account": "บัญชีทดลองใช้",
       "email": {
         "label": "ที่อยู่อีเมล",

@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Tekil Oturum Açma (OAuth/OIDC)",
       "auth_method_basic": "Parola",
       "auth_method_token": "Erişim belirteci",
+      "account_management_link": "Hesap güvenliğini yönet (2FA, uygulama parolaları)",
       "demo_account": "Demo Hesabı",
       "email": {
         "label": "E-posta Adresi",

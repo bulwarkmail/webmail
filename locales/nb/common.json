@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Enkel pålogging (OAuth/OIDC)",
       "auth_method_basic": "Passord",
       "auth_method_token": "Tilgangstoken",
+      "account_management_link": "Administrer kontosikkerhet (2FA, app-passord)",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-postadresse",

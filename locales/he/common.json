@@ -2229,6 +2229,7 @@
       "auth_method_oauth": "כניסה יחידה (OAuth/OIDC)",
       "auth_method_basic": "סִיסמָה",
       "auth_method_token": "אסימון גישה",
+      "account_management_link": "ניהול אבטחת החשבון (2FA, סיסמאות לאפליקציות)",
       "demo_account": "חשבון הדגמה",
       "email": {
         "label": "כתובת אימייל",

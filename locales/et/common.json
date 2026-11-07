@@ -2288,6 +2288,7 @@
       "auth_method_oauth": "Ühekordne sisselogimine (OAuth/OIDC)",
       "auth_method_basic": "Parool",
       "auth_method_token": "Juurdepääsuluba",
+      "account_management_link": "Halda konto turvalisust (2FA, rakenduste paroolid)",
       "demo_account": "Demokonto",
       "email": {
         "label": "E-posti aadress",

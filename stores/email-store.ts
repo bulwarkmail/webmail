@@ -2983,6 +2983,85 @@ function applyMailboxCounterUpdate(
   return { mailboxes: state.mailboxes.map(adjust) };
 }
 
+/** The existing listed-row completion, shared by Move and Pro folder Archive. */
+function movedEmailState(
+  state: EmailStore,
+  email: Email,
+  destinationMailboxId: string,
+  isTarget: (email: Email) => boolean,
+): Partial<EmailStore> {
+  const isUnread = !email.keywords?.$seen;
+  // Counter changes go to the email's own account list; source and
+  // destination live in the same account. (#281)
+  const mailboxPatch = applyMailboxCounterUpdate(state, email, (mailbox) => {
+    if (emailInMailbox(email, mailbox)) {
+      return {
+        ...mailbox,
+        totalEmails: Math.max(0, mailbox.totalEmails - 1),
+        unreadEmails: isUnread ? Math.max(0, mailbox.unreadEmails - 1) : mailbox.unreadEmails,
+        totalThreads: Math.max(0, mailbox.totalThreads - 1),
+        unreadThreads: isUnread ? Math.max(0, mailbox.unreadThreads - 1) : mailbox.unreadThreads,
+      };
+    }
+    if (mailbox.id === destinationMailboxId) {
+      return {
+        ...mailbox,
+        totalEmails: mailbox.totalEmails + 1,
+        unreadEmails: isUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
+        totalThreads: mailbox.totalThreads + 1,
+        unreadThreads: isUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
+      };
+    }
+    return mailbox;
+  });
+
+  return {
+    emails: state.emails.filter(e => !isTarget(e)),
+    selectedEmail: getNextSelectedEmailAfterRemovingRow(state, isTarget),
+    ...mailboxPatch,
+  };
+}
+
+/**
+ * Preserve Archive's existing global-list completion only for a message
+ * already listed in this login and owner account. This never dispatches a
+ * mutation or hooks; the folder owns those, and its Undo, exactly once.
+ */
+export function captureListedArchive(
+  emailId: string,
+  source: { client: IJMAPClient; clientAccountId?: string; accountId: string },
+  destinationMailboxId: string,
+): () => void {
+  const isCurrentView = captureEmailListView();
+  const matchesSource = (email: Email) => {
+    if (email.id !== emailId || !source.clientAccountId) return false;
+    const state = useEmailStore.getState();
+    const login = email.sourceClientAccountId ?? state.viewingAccountId ?? useAuthStore.getState().activeAccountId;
+    if (login !== source.clientAccountId) return false;
+    try {
+      const context = resolveEmailActionContext(email, source.client);
+      return context.client === source.client
+        && (!email.sourceAccountId || email.sourceAccountId === source.accountId)
+        && (context.accountId ?? context.client.getAccountId()) === source.accountId;
+    } catch {
+      return false;
+    }
+  };
+  const listed = useEmailStore.getState().emails.find(matchesSource);
+  if (!listed) return () => {};
+  const key = emailKeyFor(listed);
+  const isTarget = (email: Email) => emailKeyFor(email) === key && matchesSource(email);
+  return () => {
+    if (!isCurrentView()) return;
+    useEmailStore.setState((state) => {
+      const current = state.emails.find(isTarget);
+      if (!current) return state;
+      // Use current fields/counters after any same-view refresh or read.
+      return movedEmailState(state, { ...current, sourceClientAccountId: source.clientAccountId }, destinationMailboxId, isTarget);
+    });
+  };
+}
+
 // Batch variant of applyMailboxCounterUpdate: a set of emails may span accounts,
 // so group them by the list that holds them and run `mapMailbox` per list using
 // only that group's emails. Each account's counters are adjusted in its own list
@@ -4976,8 +5055,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const email = get().emails.find(isTarget);
       if (!email) return false;
 
-      const isUnread = !email.keywords?.$seen;
-
       // In unified view route to the email's own account (client + that
       // account's mailbox list, where the destination id lives); otherwise the
       // active/viewing context. (#281)
@@ -4991,37 +5068,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       await actionClient.moveEmail(emailId, jmapDestId, accountId);
 
-      set((state) => {
-        // Counter changes go to the email's own account list; source and
-        // destination live in the same account. (#281)
-        const mailboxPatch = applyMailboxCounterUpdate(state, email, (mailbox) => {
-          if (emailInMailbox(email, mailbox)) {
-            return {
-              ...mailbox,
-              totalEmails: Math.max(0, mailbox.totalEmails - 1),
-              unreadEmails: isUnread ? Math.max(0, mailbox.unreadEmails - 1) : mailbox.unreadEmails,
-              totalThreads: Math.max(0, mailbox.totalThreads - 1),
-              unreadThreads: isUnread ? Math.max(0, mailbox.unreadThreads - 1) : mailbox.unreadThreads,
-            };
-          }
-          if (mailbox.id === destinationMailboxId) {
-            return {
-              ...mailbox,
-              totalEmails: mailbox.totalEmails + 1,
-              unreadEmails: isUnread ? mailbox.unreadEmails + 1 : mailbox.unreadEmails,
-              totalThreads: mailbox.totalThreads + 1,
-              unreadThreads: isUnread ? mailbox.unreadThreads + 1 : mailbox.unreadThreads,
-            };
-          }
-          return mailbox;
-        });
-
-        return {
-          emails: state.emails.filter(e => !isTarget(e)),
-          selectedEmail: getNextSelectedEmailAfterRemovingRow(state, isTarget),
-          ...mailboxPatch,
-        };
-      });
+      set((state) => movedEmailState(state, email, destinationMailboxId, isTarget));
       emitEmailMove(move, mailboxes);
     } catch (error) {
       set({

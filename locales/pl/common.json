@@ -2285,6 +2285,7 @@
       "auth_method_oauth": "Single Sign-On (OAuth/OIDC)",
       "auth_method_basic": "Hasło",
       "auth_method_token": "Token dostępu",
+      "account_management_link": "Zarządzaj bezpieczeństwem konta (2FA, hasła aplikacji)",
       "demo_account": "Konto demo",
       "email": {
         "label": "Adres e-mail",
