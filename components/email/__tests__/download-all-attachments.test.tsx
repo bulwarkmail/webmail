@@ -362,10 +362,10 @@ describe('Save all attachments to a folder', () => {
     await openViewer();
     const save = saveButton();
     expect(save.getAttribute('aria-label')).toBe(en.pwaWindows.save_all_to_folder);
-    expect(save.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(save.querySelector('span')?.className).toContain('hidden @md:inline');
     const download = screen.getAllByTitle('Download all')[0];
     expect(download.getAttribute('aria-label')).toBe('Download all');
-    expect(download.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(download.querySelector('span')?.className).toContain('hidden @md:inline');
     expect(screen.getAllByTestId('reader-attachments')[0].className).toContain('@container');
   });
 

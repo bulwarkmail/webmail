@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip, Eye, Pencil } from "@/components/icons";
+import { ChevronDown, ChevronUp, CloudUpload, Copy, Download, FolderInput, Loader2, Paperclip, Eye, Pencil } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -92,10 +92,11 @@ const NO_DRAG: AttachmentDragProps = {
 
 /**
  * The attachments of an open message, drawn right under its header: a
- * summary line with "Download all", then one row of equal tiles (preview,
- * name, type, size and a download button that is always there). Files that
- * don't fit on that row wait behind a "Show N more" tile, so the first
- * lines of the body stay in view.
+ * summary line with the bulk actions grouped at its end, then one row of
+ * equal tiles (preview with the file type, name, size and a download button
+ * that is always there; the other actions show on hover or focus, and always
+ * on touch screens). Files that don't fit on that row wait behind a
+ * "Show N more" tile, so the first lines of the body stay in view.
  */
 export function ReaderAttachments<T extends ReaderAttachmentItem>({
   attachments,
@@ -157,7 +158,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
         onPointerEnter={drag.onPointerEnter}
         onDragStart={drag.onDragStart}
         onDragEnd={drag.onDragEnd}
-        className="group relative flex h-16 min-w-0 items-center gap-3 rounded-lg border border-border bg-card ps-2 pe-1 transition-colors hover:bg-muted/50"
+        className="group relative flex h-14 min-w-0 items-center gap-2.5 rounded-lg border border-border bg-card ps-2 pe-1 transition-colors hover:bg-muted/50"
       >
         <AttachmentThumb attachment={attachment} url={thumbUrls[attachment.id]} label={kind} />
         {/* The button covers the whole tile, so a click on the preview opens the file too. */}
@@ -172,29 +173,31 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             <span className="truncate">{stem}</span>
             {ext && <span className="shrink-0">{ext}</span>}
           </span>
+          {/* The type is on the preview already. */}
           <span className="truncate text-xs text-muted-foreground">
-            {kind && <>{kind} · </>}
             <bdi>{formatFileSize(attachment.size)}</bdi>
           </span>
         </button>
         <div className="relative z-10 flex shrink-0 items-center">
-          {onSaveToFiles && attachment.blobId && (
-            <IconButton label={t("save_to_files.title")} onClick={() => onSaveToFiles(attachment)}>
-              <FolderInput className="h-4 w-4" />
-            </IconButton>
-          )}
-          {pluginMenu?.(attachment)}
-          {!downloadsOff && drag.onCopyAsFile && <CopyAsFileButton copy={drag.onCopyAsFile} />}
+          {/* The less common actions wait for hover or focus, so a tile reads as one file with one download button. */}
+          <div className="flex items-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+            {onSaveToFiles && attachment.blobId && (
+              <IconButton label={t("save_to_files.title")} className="text-muted-foreground hover:text-foreground" onClick={() => onSaveToFiles(attachment)}>
+                <CloudUpload className="h-4 w-4" />
+              </IconButton>
+            )}
+            {pluginMenu?.(attachment)}
+            {!downloadsOff && drag.onCopyAsFile && <CopyAsFileButton copy={drag.onCopyAsFile} />}
+          </div>
           {!downloadsOff && (
-          <IconButton
-            label={t("download_named", { name })}
-            title={t("download")}
-            size="icon"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => onDownload(attachment)}
-          >
-            <Download className="h-4 w-4" />
-          </IconButton>
+            <IconButton
+              label={t("download_named", { name })}
+              title={t("download")}
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => onDownload(attachment)}
+            >
+              <Download className="h-4 w-4" />
+            </IconButton>
           )}
         </div>
       </div>
@@ -203,8 +206,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
 
   return (
     <section aria-label={t("attachments")} className={cn("@container flex flex-col gap-3", className)} data-testid="reader-attachments" {...noMediaSavingProps(downloadsOff)}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex min-h-8 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
           <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">
             <span className="font-medium text-foreground">{t("attachments_count", { count: attachments.length })}</span>
@@ -216,6 +219,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           <span className="text-xs text-muted-foreground" data-testid="attachments-downloads-off">{tDevice("downloads_off")}</span>
         )}
         {attachments.length > 1 && !downloadsOff && (
+          <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -227,10 +231,9 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           >
             {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {/* Just the icon in a narrow pane, so the row stays one row. */}
-            <span className={onSaveAllToFolder ? "hidden @xl:inline" : undefined}>{t("download_all")}</span>
+            <span className={onSaveAllToFolder ? "hidden @md:inline" : undefined}>{t("download_all")}</span>
           </Button>
-        )}
-        {attachments.length > 1 && !downloadsOff && onSaveAllToFolder && (
+          {onSaveAllToFolder && (
           <Button
             variant="ghost"
             size="sm"
@@ -242,12 +245,14 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             data-testid="attachments-save-to-folder"
           >
             <FolderInput className="h-4 w-4" />
-            <span className="hidden @xl:inline">{tWindows("save_all_to_folder")}</span>
+            <span className="hidden @md:inline">{tWindows("save_all_to_folder")}</span>
           </Button>
+          )}
+          </div>
         )}
       </div>
 
-      <div ref={row.ref} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-2" data-testid="reader-attachments-row">
+      <div ref={row.ref} className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-2" data-testid="reader-attachments-row">
         {shown.map((attachment) => (
           <div key={attachment.id} {...{ [ROW_ITEM_ATTR]: "" }} className="flex min-w-0 flex-col gap-1" onContextMenu={desktopMenu ? (event) => menu.openContextMenu(event, attachment) : undefined}>
             {renderItem
@@ -260,7 +265,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             type="button"
             {...{ [ROW_MORE_ATTR]: "" }}
             onClick={() => setExpandedFor(listKey)}
-            className="flex h-16 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start transition-colors hover:bg-muted/50"
+            className="flex h-14 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start transition-colors hover:bg-muted/50"
           >
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="text-sm text-foreground">{t("attachments_show_more", { count: hidden.length })}</span>
@@ -275,7 +280,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           <button
             type="button"
             onClick={() => setExpandedFor(null)}
-            className="flex h-16 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start text-sm text-foreground transition-colors hover:bg-muted/50"
+            className="flex h-14 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start text-sm text-foreground transition-colors hover:bg-muted/50"
           >
             {t("attachments_show_fewer")}
             <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -327,14 +332,14 @@ function CopyAsFileButton({ copy }: { copy: () => Promise<boolean> }) {
 
 function AttachmentThumb({ attachment, url, label }: { attachment: ReaderAttachmentItem; url?: string; label: string }) {
   if (url) {
-    return <img src={url} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-md bg-muted object-cover" />;
+    return <img src={url} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-md bg-muted object-cover" />;
   }
   const { icon: Icon, className } = attachmentIcon(attachment.type, attachment.name);
   return (
-    <div aria-hidden="true" className="flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md bg-muted">
-      <Icon className={cn("h-5 w-5", className)} />
+    <div aria-hidden="true" className="flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md bg-muted">
+      <Icon className={cn("h-4 w-4", className)} />
       {label && label.length <= 5 && (
-        <span className={cn("text-[0.625rem] font-semibold leading-none", className)}>{label}</span>
+        <span className={cn("text-[0.5625rem] font-semibold leading-none", className)}>{label}</span>
       )}
     </div>
   );

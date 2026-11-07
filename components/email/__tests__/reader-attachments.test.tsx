@@ -108,11 +108,20 @@ describe('ReaderAttachments bar', () => {
     expect(ext.className).not.toContain('truncate');
   });
 
-  it('shows type and size under the name', () => {
+  it('shows the type once, on the preview, and the size under the name', () => {
     renderBar([file('a', 'Invoice-2026-089.pdf', 'application/pdf', 51200)]);
     const tile = screen.getByTestId('attachment');
-    expect(tile.textContent).toContain('PDF · ');
-    expect(tile.textContent).toContain('50 KB');
+    expect(within(tile).getAllByText('PDF')).toHaveLength(1);
+    expect(within(tile).getByText('50 KB').parentElement!.textContent).toBe('50 KB');
+  });
+
+  it('keeps Download all and Save all to folder together at the end of the summary line', () => {
+    renderBar([file('a', 'one.pdf'), file('b', 'two.pdf')], { onSaveAllToFolder: vi.fn() });
+    const all = screen.getByTitle('download_all');
+    const folder = screen.getByTestId('attachments-save-to-folder');
+    expect(all.parentElement).toBe(folder.parentElement);
+    // Their own group, so the row can't spread them out across the summary line.
+    expect(all.parentElement!.textContent).not.toContain('attachments_count');
   });
 
   it('opens the file from the tile and downloads it from its own button', () => {
