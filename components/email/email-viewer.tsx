@@ -1670,7 +1670,7 @@ export function EmailViewer({
   const mvExpandedThreadRef = useRef<string | null>(null);
   // The open message folds too, but only inside a conversation.
   const [mvOpenCollapsed, setMvOpenCollapsed] = useQuietState(false);
-  useEffect(() => setMvOpenCollapsed(false), [email?.id]);
+  useEffect(() => setMvOpenCollapsed(false), [email?.id, setMvOpenCollapsed]);
   // The newest message to unfold and scroll to once the conversation is drawn.
   const [mvNewestToShow, setMvNewestToShow] = useState<string | null>(null);
   useEffect(() => {
@@ -1685,7 +1685,7 @@ export function EmailViewer({
     setMvExpandedIds(new Set(plan.expanded));
     if (plan.foldOpen) setMvOpenCollapsed(true);
     setMvNewestToShow(plan.newestId);
-  }, [mvConversation, email]);
+  }, [mvConversation, email, setMvOpenCollapsed]);
   useEffect(() => {
     if (!mvNewestToShow) return;
     const target = mvNewestToShow;
@@ -1847,7 +1847,7 @@ export function EmailViewer({
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [imageThumbUrls, setImageThumbUrls] = useQuietState<Record<string, string>>(NO_URLS);
   const [allowExternalContent, setAllowExternalContent] = useState(false);
-  const [hasBlockedContent, setHasBlockedContent] = useState(false);
+  const [hasBlockedContent, setHasBlockedContent] = useQuietState(false);
   const [cidBlobUrls, setCidBlobUrls] = useQuietState<Record<string, string>>(NO_URLS);
   // blob: URL -> the cid: part behind it, so a click on a link the body points
   // at a part can be routed through the attachment preview/download gate
@@ -1868,7 +1868,7 @@ export function EmailViewer({
   }, [inAppPreview]);
   const [quickReplyText, setQuickReplyText] = useState("");
   const quickReplyRef = useRef<HTMLTextAreaElement>(null);
-  const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
+  const [isQuickReplyFocused, setIsQuickReplyFocused] = useQuietState(false);
   const quickReplyBoxRef = useRef<HTMLDivElement>(null);
   // Focused, the box grows by its buttons: bring them up, they'd sit below the fold.
   useEffect(() => {
@@ -1939,7 +1939,7 @@ export function EmailViewer({
       setIsSendingQuickReply(false);
     }
   };
-  const [showSourceModal, setShowSourceModal] = useState(false);
+  const [showSourceModal, setShowSourceModal] = useQuietState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useQuietState(false);
   // "Save to Files" for an attachment: where the Files app is on and the
   // message is in the login's own account, whose files hold the blob too.
@@ -1980,7 +1980,7 @@ export function EmailViewer({
   // per-instance for aria-controls to point at the right one.
   const moreMenuId = useId();
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const closeMoreMenu = useCallback(() => { setMoreMenuOpen(false); setMoreMenuSub(null); }, []);
+  const closeMoreMenu = useCallback(() => { setMoreMenuOpen(false); setMoreMenuSub(null); }, [setMoreMenuOpen]);
   // The phone panel renders away from its trigger (an off-canvas panel), so
   // focus has to be driven explicitly (#720).
   const { menuRef: mobileMoreRef, onKeyDown: onMobileMoreKeyDown } = useMenuNavigation<HTMLDivElement>({
@@ -2055,12 +2055,12 @@ export function EmailViewer({
   // Crypto-plugin rendered body (S/MIME, PGP, …) — populated by the generic
   // onRenderEmailBody hook. Verification/decryption status UI is provided by the
   // crypto plugin's own email-banner slot, so the host keeps no S/MIME state.
-  const [pluginRenderedHtml, setPluginRenderedHtml] = useState<string | null>(null);
-  const [pluginRenderedText, setPluginRenderedText] = useState<string | null>(null);
+  const [pluginRenderedHtml, setPluginRenderedHtml] = useQuietState<string | null>(null);
+  const [pluginRenderedText, setPluginRenderedText] = useQuietState<string | null>(null);
   const [pluginRenderedAttachments, setPluginRenderedAttachments] = useState<PostalMimeAttachment[]>(NO_POSTAL_ATTACHMENTS);
   // The plugin can't vouch for its body (mail with no integrity protection): external
   // content stays off, whatever the settings or a trusted sender allow.
-  const [pluginBlocksExternal, setPluginBlocksExternal] = useState(false);
+  const [pluginBlocksExternal, setPluginBlocksExternal] = useQuietState(false);
   // Bumped when a plugin calls `api.ui.rerenderEmail` (e.g. the S/MIME plugin
   // after the user unlocks a key from the banner) to force the onRenderEmailBody
   // hook to run again for the open message so the body re-decrypts.
@@ -2072,13 +2072,13 @@ export function EmailViewer({
   }, []);
 
   // TNEF (winmail.dat) support
-  const [tnefHtml, setTnefHtml] = useState<string | null>(null);
-  const [tnefText, setTnefText] = useState<string | null>(null);
+  const [tnefHtml, setTnefHtml] = useQuietState<string | null>(null);
+  const [tnefText, setTnefText] = useQuietState<string | null>(null);
   const [tnefAttachments, setTnefAttachments] = useState<TnefAttachment[]>(NO_TNEF_ATTACHMENTS);
 
   // Embedded message/rfc822 unwrapping (Outlook forward-as-attachment)
-  const [embeddedEmailHtml, setEmbeddedEmailHtml] = useState<string | null>(null);
-  const [embeddedEmailText, setEmbeddedEmailText] = useState<string | null>(null);
+  const [embeddedEmailHtml, setEmbeddedEmailHtml] = useQuietState<string | null>(null);
+  const [embeddedEmailText, setEmbeddedEmailText] = useQuietState<string | null>(null);
   const [embeddedEmailAttachments, setEmbeddedEmailAttachments] = useState<PostalMimeAttachment[]>(NO_POSTAL_ATTACHMENTS);
 
   // Plugin detail sidebar state. Collapsed/width persist across opens and
@@ -2264,7 +2264,7 @@ export function EmailViewer({
       document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('blur', handleWindowBlur);
     };
-  }, [moreMenuOpen, mobileMoreRef]);
+  }, [moreMenuOpen, mobileMoreRef, setMoreMenuOpen]);
 
   // Close dropdowns when email changes
   const closeMoveMenu = moveMenu.closeContextMenu;
@@ -2275,7 +2275,7 @@ export function EmailViewer({
     closeTagMenu();
     closeMoveMenu();
     closeReaderMenu();
-  }, [email?.id, closeTagMenu, closeMoveMenu, closeReaderMenu]);
+  }, [email?.id, closeTagMenu, closeMoveMenu, closeReaderMenu, setMoreMenuOpen]);
 
   // Dynamically detect which toolbar items overflow and should move to the More menu
   useEffect(() => {
@@ -2456,7 +2456,7 @@ export function EmailViewer({
   ]);
 
   // Contact sidebar state
-  const [contactSidebarEmail, setContactSidebarEmail] = useState<string | null>(null);
+  const [contactSidebarEmail, setContactSidebarEmail] = useQuietState<string | null>(null);
   const contacts = useContactStore((s) => s.contacts);
   const { isMobile: isMobileDevice } = useDeviceDetection();
   const router = useRouter();
@@ -2505,14 +2505,14 @@ export function EmailViewer({
   // Close contact sidebar when email changes
   useEffect(() => {
     setContactSidebarEmail(null);
-  }, [email?.id]);
+  }, [email?.id, setContactSidebarEmail]);
 
   // An @mention clicked in the message body: the card for that person, as
   // for a name in the header, instead of starting a new message.
-  const [bodyMention, setBodyMention] = useState<{ email: string; anchor: CardAnchor } | null>(null);
+  const [bodyMention, setBodyMention] = useQuietState<{ email: string; anchor: CardAnchor } | null>(null);
   useEffect(() => {
     setBodyMention(null);
-  }, [email?.id]);
+  }, [email?.id, setBodyMention]);
 
   const [dismissedUnsubBanners, setDismissedUnsubBanners] = useState<Set<string>>(
     () => {
@@ -2595,6 +2595,8 @@ export function EmailViewer({
     setEmbeddedEmailHtml(null);
     setEmbeddedEmailText(null);
     setEmbeddedEmailAttachments(NO_POSTAL_ATTACHMENTS);
+    // The setters keep their identity (useQuietState); three are declared further down.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.id, externalContentPolicy]);
 
   // Undo send on a quick reply puts its text back here, where it was
@@ -2612,7 +2614,7 @@ export function EmailViewer({
       box.focus();
       box.setSelectionRange(box.value.length, box.value.length);
     });
-  }, [quickReplyRestoreWaiting, email]);
+  }, [quickReplyRestoreWaiting, email, setIsQuickReplyFocused]);
 
   // Crypto-plugin body takeover (S/MIME, PGP, …). A privileged crypto plugin
   // can fetch the raw message via api.jmap.fetchBlob, decrypt/verify it, and
@@ -2800,7 +2802,7 @@ export function EmailViewer({
     processTnef();
 
     return () => { cancelled = true; };
-  }, [email, client, blobClient, blobAccountId]);
+  }, [email, client, blobClient, blobAccountId, setTnefHtml, setTnefText]);
 
   // Embedded message/rfc822 unwrapping
   // When Outlook forwards an email as an attachment, the outer email body is
@@ -2877,7 +2879,7 @@ export function EmailViewer({
     unwrapEmbedded();
 
     return () => { cancelled = true; };
-  }, [email, client, blobClient, blobAccountId]);
+  }, [email, client, blobClient, blobAccountId, setEmbeddedEmailHtml, setEmbeddedEmailText]);
 
   // Fetch inline CID images with authentication to prevent browser auth dialogs
   useEffect(() => {
@@ -2963,7 +2965,7 @@ export function EmailViewer({
         cidBlobParts.delete(url);
       });
     };
-  }, [client, blobClient, blobAccountId, email?.id, pluginRenderedAttachments, email?.attachments]);
+  }, [client, blobClient, blobAccountId, email?.id, pluginRenderedAttachments, email?.attachments, setCidBlobUrls]);
 
   const effectiveAttachments = useMemo<EffectiveAttachment[]>(() => {
     if (pluginRenderedAttachments.length > 0) {
@@ -3217,7 +3219,7 @@ export function EmailViewer({
   // it has one, otherwise a readable conversion that keeps link targets and
   // image alt text.
   const mailViewMode = useSettingsStore((state) => state.mailViewMode);
-  const [plainViewOverride, setPlainViewOverride] = useState<boolean | null>(null);
+  const [plainViewOverride, setPlainViewOverride] = useQuietState<boolean | null>(null);
   const plainView = plainViewOverride ?? mailViewMode === 'plain';
   const hasHtmlBody = decodedEmailContent.isHtml;
   // The decoded body as plain text: the text part, else the HTML converted.
@@ -3241,7 +3243,7 @@ export function EmailViewer({
     return phishingMarked ? { ...shown, html: turnOffLinks(shown.html, { title: tPhishing('link_off'), note: tPhishing('link_off_note') }) } : shown;
   }, [plainView, decodedEmailContent, readableText, t, phishingMarked, tPhishing]);
   // Reader view: the message full screen in the app's own look.
-  const [readerViewOpen, setReaderViewOpen] = useState(false);
+  const [readerViewOpen, setReaderViewOpen] = useQuietState(false);
   // Reading mask: dims the body except a band that follows pointer and caret.
   const readingMaskOn = useSettingsStore((state) => state.readingMask);
   const bodyWrapRef = useRef<HTMLDivElement>(null);
@@ -3573,7 +3575,7 @@ export function EmailViewer({
       cancelled = true;
       createdUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [effectiveAttachments, client, blobClient, blobAccountId, attachmentImagePreviewsEnabled]);
+  }, [effectiveAttachments, client, blobClient, blobAccountId, attachmentImagePreviewsEnabled, setImageThumbUrls]);
 
   // Iframe for rendering HTML emails true-to-life
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -3599,7 +3601,7 @@ export function EmailViewer({
   const readingRef = useRef(reading);
   readingRef.current = reading;
   fitBodyToWidthRef.current = mailFitOptions(isMobile, reading.fitWidth);
-  const [emailViewDarkOverride, setEmailViewDarkOverride] = useState<boolean | null>(null);
+  const [emailViewDarkOverride, setEmailViewDarkOverride] = useQuietState<boolean | null>(null);
   const isDark = emailViewDarkOverride !== null
     ? emailViewDarkOverride
     : (emailAlwaysLightMode ? false : resolvedTheme === 'dark');
@@ -4059,7 +4061,7 @@ export function EmailViewer({
     } catch {
       // Cross-origin restrictions - iframe will still display content
     }
-  }, [recolorDark, effectiveEmailContent.externalBlocked, email?.id, t, openCidPartLink, onBodySelection, selectionMenu.openRef]);
+  }, [recolorDark, effectiveEmailContent.externalBlocked, email?.id, t, openCidPartLink, onBodySelection, selectionMenu.openRef, setBodyMention]);
 
   // Wire up the iframe as soon as its sandboxed document has parsed, rather than
   // waiting for the iframe 'load' event. 'load' also waits on every subresource,
@@ -4209,8 +4211,8 @@ export function EmailViewer({
   }, [identities, email?.to, email?.cc]);
 
   const mdnAlreadyHandled = email?.keywords?.['$mdnsent'] === true;
-  const [mdnHandledLocally, setMdnHandledLocally] = useState(false);
-  useEffect(() => { setMdnHandledLocally(false); }, [email?.id]);
+  const [mdnHandledLocally, setMdnHandledLocally] = useQuietState(false);
+  useEffect(() => { setMdnHandledLocally(false); }, [email?.id, setMdnHandledLocally]);
 
   // Only offer the receipt for mail you're actually reading in a "received"
   // location. Suppress your own copies (sent/drafts), discarded mail (trash),
@@ -4262,7 +4264,7 @@ export function EmailViewer({
       console.error('Read receipt sent, but setting $MDNSent failed:', err);
       setMdnHandledLocally(true);
     }
-  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer]);
+  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer, setMdnHandledLocally]);
 
   const ignoreReadReceipt = useCallback(async () => {
     setMdnHandledLocally(true);
@@ -4271,7 +4273,7 @@ export function EmailViewer({
       // request is suppressed everywhere - not just locally.
       try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', blobSource ?? emailWriteSource(email, client)); } catch { /* best effort */ }
     }
-  }, [client, email, blobSource]);
+  }, [client, email, blobSource, setMdnHandledLocally]);
 
   // "always" mode: auto-send the MDN once when the message is opened. A
   // failure is not retried while the message stays open: the attempt itself
@@ -4510,7 +4512,7 @@ export function EmailViewer({
     });
     return hidden;
   };
-  const toggleViewMode = () => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev);
+  const toggleViewMode = () => setEmailViewDarkOverride(emailViewDarkOverride === null ? !(resolvedTheme === 'dark') : !emailViewDarkOverride);
   // How the reader shows the message, a group of the ⋮ menu of its own. Import
   // and the keyboard shortcuts are no message's: Import is in the folder's menu,
   // Settings and the command palette, the shortcuts behind ?, the rail and Help.
@@ -4925,7 +4927,7 @@ export function EmailViewer({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
+          onClick={() => setEmailViewDarkOverride(emailViewDarkOverride === null ? !(resolvedTheme === 'dark') : !emailViewDarkOverride)}
           data-overflow-item
           data-overflow-priority="11"
           className={cn("hidden sm:inline-flex h-8 gap-1.5", mvViewer && "order-8")}
