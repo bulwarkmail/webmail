@@ -288,11 +288,17 @@ function rememberParts(db: StorageAdapter, rowid: number, row: { jmap: string; r
   if (typeof list.blobId === 'string') remember(list.blobId, list.size, 'message/rfc822', 'message.eml', 1);
 }
 
-/** False when the message is gone, for instance deleted while its body was on the way. */
+/**
+ * False when the message is gone, for instance deleted while its body was on
+ * the way. The id is checked too: SQLite gives a deleted message's rowid to
+ * the next new row, so the rowid alone could name another message by then.
+ */
 export function storeBody(db: StorageAdapter, rowid: number, listJson: string, full: Record<string, unknown>): boolean {
-  const row = db.get<{ jmap: string; received_at: number; body_state: number }>('SELECT jmap, received_at, body_state FROM email WHERE rowid = ?', [rowid]);
-  if (!row) return false;
   const list = JSON.parse(listJson) as Record<string, unknown>;
+  const row = typeof list.id === 'string'
+    ? db.get<{ jmap: string; received_at: number; body_state: number }>('SELECT jmap, received_at, body_state FROM email WHERE rowid = ? AND id = ?', [rowid, list.id])
+    : db.get<{ jmap: string; received_at: number; body_state: number }>('SELECT jmap, received_at, body_state FROM email WHERE rowid = ?', [rowid]);
+  if (!row) return false;
   const body: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(full)) if (!(key in list)) body[key] = value;
   const hadBody = Number(row.body_state) === 1;
