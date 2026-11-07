@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import React from 'react';
+import React, { Profiler } from 'react';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 
 // A click on another folder changes the selection at once, while the old
@@ -135,5 +135,17 @@ describe('rows during a folder switch', () => {
     rerender(<List emails={[newest, ...INBOX]} />);
     expect(container.querySelector('[data-email-id="a"]')).toBe(rowA);
     expect(container.querySelector('[data-email-id="z"]')).not.toBe(rowA);
+  });
+
+  it('places a new list with the row height it measured, so it is drawn once', async () => {
+    let commits = 0;
+    const tree = (emails: Email[]) => <Profiler id="list" onRender={() => { commits++; }}><List emails={emails} /></Profiler>;
+    const { rerender } = render(tree(INBOX));
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    const more = [makeEmail('d', 'sent'), makeEmail('e', 'sent'), makeEmail('f', 'sent')];
+    commits = 0;
+    act(() => { rerender(tree(more)); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    expect(commits).toBe(1);
   });
 });

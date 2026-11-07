@@ -510,29 +510,55 @@ export function EmailList({
 
   // The virtualizer's guesses follow the rows' shape (see useListRowShape).
 
+  // What kind of row an item is, as far as its height goes; null for the
+  // section headers and notes.
+  const rowShapeOf = useCallback((index: number): { key: string; emptyPreview: boolean; chips: boolean } | null => {
+    const item = items[index];
+    if (item?.kind !== 'row') return null;
+    const latest = item.thread.latestEmail;
+    const emptyPreview = !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
+    const hasCode = showVerificationCodes && !!listVerificationCode(latest);
+    const chips = hasCode || (!!onOpenAttachment && listRowShowsChips(latest, loadAttachments));
+    return { key: `${isFocusedMailLayout}|${density}|${showPreview}|${emptyPreview}|${chips}`, emptyPreview, chips };
+  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  // The height rows of each kind measured at last. A new list (another
+  // folder, a search) is placed with them, so its rows need no correction
+  // when they are measured: a guess a pixel off moved every row and drew
+  // the list a second time after each folder switch.
+  const measuredRowHeights = useRef(new Map<string, number>());
+
   const estimateSize = useCallback((index: number) => {
     const item = items[index];
     if (item?.kind === 'header' || item?.kind === 'unread-empty') return 48;
+    const shape = rowShapeOf(index);
+    const measured = shape ? measuredRowHeights.current.get(shape.key) : undefined;
+    if (measured !== undefined) return measured;
     if (isFocusedMailLayout) {
       return { 'extra-compact': 28, compact: 40, regular: 56, comfortable: 64 }[density];
     }
     // Rows the list has not measured yet are placed by this guess, and each
     // one it gets wrong shifts the list when it is measured on the way back
     // up after a jump down (scrollbar drag, End). So guess per row.
-    const latest = item?.kind === 'row' ? item.thread.latestEmail : undefined;
     let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
     if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
       // a line (23px) shorter than a real one. Only comfortable rows show a
       // second preview line (mail-15).
-      const emptyPreview = !!latest && !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
-      size += emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
+      size += shape?.emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
     }
     // The chip row (attachments, verification code): a 22px chip plus 6px margin.
-    const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
-    if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
+    if (shape?.chips) size += 28;
     return size;
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  }, [density, isFocusedMailLayout, showPreview, items, rowShapeOf]);
+
+  const measureRow = useCallback((element: HTMLDivElement, entry: ResizeObserverEntry | undefined, instance: Parameters<typeof measureVisibleRow<HTMLDivElement>>[2]) => {
+    const size = measureVisibleRow(element, entry, instance);
+    if (size > 0) {
+      const shape = rowShapeOf(instance.indexFromElement(element));
+      if (shape) measuredRowHeights.current.set(shape.key, size);
+    }
+    return size;
+  }, [rowShapeOf]);
 
   // Stable per list, so the virtualizer does not rebuild every row's
   // measurement on each scroll render.
@@ -572,7 +598,7 @@ export function EmailList({
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
     // over that row's divider (at 125% or 150% display scaling).
-    measureElement: measureVisibleRow,
+    measureElement: measureRow,
   });
 
 
