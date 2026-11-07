@@ -88,7 +88,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useDrawnMailLayout } from "@/hooks/use-effective-mail-layout";
 import { isOfflineNow, useOfflineStore } from "@/lib/offline/state";
 import { useConnectionState } from "@/hooks/use-connection-state";
-import { ReaderOpenFailure } from "@/components/email/reader-open-failure";
+import { StableEmailViewer } from "@/components/mail/stable-email-viewer";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
@@ -6819,7 +6819,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             ) : (
               <>
                 <ErrorBoundary fallback={EmailViewerErrorFallback}>
-                  <EmailViewer
+                  <StableEmailViewer
+                    viewer={EmailViewer}
                     email={selectionTakesReader ? null : selectedEmail}
                     blobSource={resolveEmailBlobContext(selectedEmail, client)}
                     isLoading={!selectionTakesReader && (isLoadingEmail || deepLinkPane !== null)}
@@ -6931,12 +6932,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         announceRescheduled(result, delayedUntil);
                       }
                     }}
-                    emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
-                      ? <div ref={setSelectionPaneHost} className="m-auto w-full p-8" />
+                    emptyPane={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
+                      ? { kind: 'selection', hostRef: setSelectionPaneHost }
                       : openFailure && !isLoadingEmail
-                        ? <ReaderOpenFailure offline={openFailure.offline} onRetry={() => void handleEmailSelect(openFailure.target)} />
-                        : undefined}
-                    emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
+                        ? { kind: 'failure', offline: openFailure.offline, onRetry: () => void handleEmailSelect(openFailure.target) }
+                        : null}
+                    welcomeFooter={emptyPaneBesideList}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}

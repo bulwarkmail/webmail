@@ -252,7 +252,7 @@ const SAVED_FILE_OMIT: readonly MessageActionKey[] = [
 /** Whatever a sub-view offers to act on, in the order it is read out. */
 const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
 
-interface EmailViewerProps {
+export interface EmailViewerProps {
   email: Email | null;
   /** Captured message routing supplied by the standard mail UI. */
   blobSource?: EmailBlobContext;
