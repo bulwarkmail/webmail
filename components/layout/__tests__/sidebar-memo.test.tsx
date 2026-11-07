@@ -13,9 +13,9 @@ vi.mock('@/components/tour/tour-provider', () => ({
 vi.mock('@/contexts/drag-drop-context', () => ({
   useDragDropContext: () => ({ isDragging: false }),
 }));
-vi.mock('@/hooks/use-mailbox-drop', () => ({
-  useMailboxDrop: () => ({ dropHandlers: {}, isValidDropTarget: false, isInvalidDropTarget: false }),
-}));
+// Called once per render of a folder row: the row render counter.
+const useMailboxDrop = vi.fn((opts: { mailbox: { id: string } }) => { void opts; return { dropHandlers: {}, isValidDropTarget: false, isInvalidDropTarget: false }; });
+vi.mock('@/hooks/use-mailbox-drop', () => ({ useMailboxDrop }));
 vi.mock('@/hooks/use-tag-drop', () => ({
   useTagDrop: () => ({ dropHandlers: {}, isValidDropTarget: false }),
 }));
@@ -30,6 +30,8 @@ const { useSettingsStore } = await import('@/stores/settings-store');
 const mailboxes = [
   { id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, totalEmails: 0, unreadEmails: 0, myRights: { mayAddItems: true } },
   { id: 'sent', name: 'Sent', role: 'sent', parentId: null, totalEmails: 0, unreadEmails: 0, myRights: { mayAddItems: true } },
+  { id: 'drafts', name: 'Drafts', role: 'drafts', parentId: null, totalEmails: 0, unreadEmails: 0, myRights: { mayAddItems: true } },
+  { id: 'archive', name: 'Archive', role: 'archive', parentId: null, totalEmails: 0, unreadEmails: 0, myRights: { mayAddItems: true } },
 ] as unknown as Mailbox[];
 const onMailboxSelect = () => {};
 
@@ -58,5 +60,19 @@ describe('Sidebar re-renders', () => {
 
     act(() => selectFolder('sent'));
     expect(useRouter.mock.calls.length).toBeGreaterThan(rendersAfterMount);
+  });
+
+  it('draws only the folder rows a click changes', () => {
+    let selectFolder!: (id: string) => void;
+    function Parent() {
+      const [selected, setSelected] = useState('inbox');
+      selectFolder = setSelected;
+      return <Sidebar mailboxes={mailboxes} selectedMailbox={selected} onMailboxSelect={onMailboxSelect} />;
+    }
+    render(<Parent />);
+    useMailboxDrop.mockClear();
+    act(() => selectFolder('sent'));
+    // The folder left and the folder opened; Drafts and Archive stay as drawn.
+    expect(useMailboxDrop.mock.calls.map((c) => c[0].mailbox.id).sort()).toEqual(['inbox', 'sent']);
   });
 });
