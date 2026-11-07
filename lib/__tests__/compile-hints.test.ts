@@ -1,4 +1,8 @@
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { check, collect } from '../../scripts/sourcemaps.mjs';
 import { COMPILE_HINTS_COMMENT, CompileHintsPlugin } from '../../scripts/compile-hints.mjs';
 import config from '../../next.config';
 
@@ -65,6 +69,42 @@ describe('compile hints in the client build', () => {
     expect(plugins(false, false)).toBe(1);
     expect(plugins(true, false)).toBe(0);
     expect(plugins(false, true)).toBe(0);
+  });
+
+  it('is still the first line of a chunk after the image build injects debug IDs and moves the maps out', () => {
+    // An initial chunk as `sentry-cli sourcemaps inject` (3.8.2) leaves it in a
+    // release image (BULWARK_SOURCE_MAPS=1), copied from one built on the rig:
+    // the hint stays on line 1, a blank line and the debug-ID snippet follow,
+    // and its map gained the two empty lines. Then the Dockerfile's
+    // `sourcemaps.mjs collect` moves the map out and drops its comment.
+    const root = mkdtempSync(path.join(tmpdir(), 'hints-'));
+    try {
+      const chunks = path.join(root, 'static', 'chunks');
+      mkdirSync(chunks, { recursive: true });
+      const file = path.join(chunks, 'webpack-d85ebc21902c97ae.js');
+      writeFileSync(file, [
+        '//# allFunctionsCalledOnLoad',
+        '',
+        '!function(){try{var e="undefined"!=typeof window?window:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="da99bed0-bb57-509b-81b3-2c9e6df62ee4")}catch(e){}}();',
+        '(()=>{"use strict";var e={};self.webpackChunk_N_E=self.webpackChunk_N_E||[]})();',
+        '//# sourceMappingURL=webpack-d85ebc21902c97ae.js.map',
+        '//# debugId=da99bed0-bb57-509b-81b3-2c9e6df62ee4',
+        '',
+      ].join('\n'));
+      writeFileSync(`${file}.map`, JSON.stringify({ version: 3, sources: ['webpack/bootstrap'], names: [], mappings: ';;;AAAA' }));
+
+      collect([path.join(root, 'static')], path.join(root, 'maps'));
+
+      const shipped = readFileSync(file, 'utf8');
+      expect(shipped.split('\n')[0]).toBe('//# allFunctionsCalledOnLoad');
+      expect(shipped).not.toContain('sourceMappingURL');
+      expect(check(path.join(root, 'static'))).toEqual([]);
+      // The uploaded copy keeps the lines its map counts: code on the fourth.
+      const uploaded = readFileSync(path.join(root, 'maps', '0', 'chunks', 'webpack-d85ebc21902c97ae.js'), 'utf8');
+      expect(uploaded.split('\n')[3]).toMatch(/^\(\(\)=>/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('runs after the minifier, which would drop the comment, and before source maps and hashes', () => {
