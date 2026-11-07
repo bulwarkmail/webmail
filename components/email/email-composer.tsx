@@ -3888,8 +3888,11 @@ export function EmailComposer({
   // Groups expand here so validation and every outgoing payload see the
   // actual member addresses.
   const toAddresses = expandRecipients(withInput(to, toInput));
-  const bodyPlainText = plainTextMode ? body.trim() : htmlToPlainText(body).trim();
-  const hasContent = bodyPlainText || attachments.some(att => att.blobId && !att.uploading);
+  // Read when Send is pressed. Worked out on every render, it turned the
+  // whole body (a reply's quote with it) into text each time the composer
+  // drew, three or four times while a reply opened.
+  const hasContent = () => !!(plainTextMode ? body.trim() : htmlToPlainText(body).trim())
+    || attachments.some(att => att.blobId && !att.uploading);
   // A missing subject no longer blocks Send (#684) - users hit the disabled
   // button without understanding why. It is confirmed in a dialog instead,
   // and so is a message with no text and no file.
@@ -4165,7 +4168,7 @@ export function EmailComposer({
         warnings.push({ kind: 'subject' });
       }
       // No text and no file: Send stays enabled and asks instead.
-      if (!emptyTextConfirmedRef.current && !hasContent) {
+      if (!emptyTextConfirmedRef.current && !hasContent()) {
         warnings.push({ kind: 'text' });
       }
 
