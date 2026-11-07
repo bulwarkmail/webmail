@@ -34,8 +34,9 @@ export function SettingsPage() {
     fetchConfig();
   }, []);
 
+  // Only the first load shows the skeleton: swapping the page out after a
+  // save would throw away the scroll position.
   async function fetchConfig() {
-    setLoading(true);
     try {
       const res = await apiFetch('/api/admin/config');
       if (!res.ok) throw new Error();
