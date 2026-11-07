@@ -423,7 +423,9 @@ const emailGet: MethodHandler = (ctx, args) => {
   if (!Array.isArray(args.ids)) throw new MethodError('requestTooLarge', 'ids: null needs the server');
   const properties = args.properties as string[] | undefined;
   const wantsValues = Boolean(args.fetchTextBodyValues || args.fetchHTMLBodyValues || args.fetchAllBodyValues) || Boolean(properties?.includes('bodyValues'));
-  const wantsBody = wantsValues || !properties || properties.some((p) => BODY_PROPERTIES.has(p) || p.startsWith('header:'));
+  // What only the body may hold. The list keeps some of it already, such as the
+  // Authentication-Results header the list asks for: then the body isn't read.
+  const fromBody = properties ? properties.filter((p) => BODY_PROPERTIES.has(p) || p.startsWith('header:')) : null;
   const list: Record<string, unknown>[] = [];
   const notFound: string[] = [];
   for (const id of args.ids as string[]) {
@@ -436,7 +438,7 @@ const emailGet: MethodHandler = (ctx, args) => {
       continue;
     }
     const email = JSON.parse(row.json) as Record<string, unknown>;
-    if (!wantsBody) {
+    if (!wantsValues && fromBody && fromBody.every((p) => p in email)) {
       list.push(shapeEmail(email, null, args));
       continue;
     }

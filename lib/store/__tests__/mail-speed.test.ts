@@ -163,6 +163,24 @@ describe('pinned and unread first', () => {
   });
 });
 
+describe('a list page', () => {
+  it('takes the header the list asks for from the list row, without reading the body', async () => {
+    const auth = { 'header:Authentication-Results:all': ['mx.example; dkim=pass'] };
+    const t = setup([{ id: 'a', ...auth } as never, { id: 'b' }]);
+    await t.engine.requestSync();
+    t.seen.length = 0;
+    const answer = await t.engine.answer([['Email/get', {
+      ids: ['a'],
+      properties: ['id', 'subject', 'keywords', 'header:Authentication-Results:all'],
+    }, 'g']]);
+    expect(answer?.methodResponses[0][1].list).toEqual([{ id: 'a', subject: 'Subject 1', keywords: {}, ...auth }]);
+    expect(t.seen.filter(({ sql }) => sql.includes('FROM email_body'))).toEqual([]);
+    // Without it in the row, the body's raw headers still answer.
+    await t.engine.answer([['Email/get', { ids: ['b'], properties: ['id', 'header:Authentication-Results:all'] }, 'g']]);
+    expect(t.seen.filter(({ sql }) => sql.includes('FROM email_body'))).toHaveLength(1);
+  });
+});
+
 describe('a page deep in a folder', () => {
   it('is picked off the folder index, and reads only its own messages', async () => {
     const t = setup(Array.from({ length: 30 }, (_, i) => ({ id: `m${String(i).padStart(2, '0')}` })));
