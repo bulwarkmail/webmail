@@ -66,6 +66,11 @@ const CASES: Case[] = [
 ];
 
 async function seedStorage(context: BrowserContext, items: Seed) {
+  // A browser that keeps a sign-in carries the marker the page script sets
+  // (lib/signed-out-start.ts); without it the root sends a first visit to /login.
+  if (items["auth-storage"] || items["account-registry"]) {
+    await context.addCookies([{ name: "bulwark_local", value: "1", url: String(test.info().project.use.baseURL) }]);
+  }
   await context.addInitScript((seed) => {
     if (sessionStorage.getItem("__boot_guard_seeded")) return;
     localStorage.clear();
@@ -242,6 +247,38 @@ test("the first screen's catalog has every key the sign-in page and the mail vie
       expect(await misses(login), `${path} @${viewport.width}`).toEqual([]);
     }
     await signedOut.close();
+  }
+});
+
+// The sign-in page's notices are on its first screen too: why the session ended,
+// a wipe of this device, mail the outbox lost. They draw from the first screen's
+// part of the catalog on the first render, with the rest of it held back.
+test("the sign-in page draws its notices from the first screen's catalog", async ({ browser }) => {
+  const reasons = [
+    { kind: "idle", minutes: 15, draftsUnsaved: true },
+    { kind: "max", hours: 8, draftsUnsaved: true },
+  ];
+  for (const reason of reasons) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await context.addInitScript((r) => {
+      (window as unknown as { __holdCatalogRest: boolean }).__holdCatalogRest = true;
+      if (sessionStorage.getItem("__notices_seeded")) return;
+      sessionStorage.setItem("__notices_seeded", "1");
+      sessionStorage.setItem("session_end_reason", JSON.stringify(r));
+      sessionStorage.setItem("bulwark-offline-lost", JSON.stringify(["", "Quarterly report"]));
+      localStorage.setItem("bulwark-wipe-note", JSON.stringify({ unsent: 2 }));
+    }, reason);
+    const page = await context.newPage();
+    await page.goto("/en/login");
+    await page.getByRole("button", { name: /^sign in$/i }).first().waitFor({ timeout: 60_000 });
+    for (const id of ["session-expired-reason", "session-drafts-not-saved", "session-outbox-lost", "device-wipe-note"]) {
+      const text = (await page.getByTestId(id).first().innerText()).trim();
+      expect(text, `${reason.kind}: ${id}`).not.toBe("");
+    }
+    expect(await page.getByTestId("session-outbox-lost").innerText()).toContain("Quarterly report");
+    const misses = await page.evaluate(() => (window as unknown as { __bulwarkCatalogMisses?: string[] }).__bulwarkCatalogMisses ?? []);
+    expect(misses, reason.kind).toEqual([]);
+    await context.close();
   }
 });
 

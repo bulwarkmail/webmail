@@ -15,3 +15,53 @@ export function usePrefetchMailView(enabled: boolean): void {
     router.prefetch("/");
   }, [enabled, router]);
 }
+
+let warming: Promise<unknown> | null = null;
+
+/** How long the form waits for the browser to go idle before the mail view's code runs anyway. */
+export const WARM_IDLE_TIMEOUT_MS = 1_000;
+
+/**
+ * Whether the browser says data is dear: Save-Data on, or a 2G-class link.
+ * Then the mail view's code (about 230 KB) waits for the sign-in instead of
+ * loading while the form waits for input. navigator.connection is
+ * Chromium's; elsewhere this is false.
+ */
+export function dataIsDear(nav: Navigator = navigator): boolean {
+  const connection = (nav as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (!connection) return false;
+  return connection.saveData === true || connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g';
+}
+
+/**
+ * Runs the mail view's code once the sign-in form is drawn (`formShown`) and
+ * the browser is idle. A first visit opens the sign-in page without the mail
+ * view (lib/signed-out-start.ts); run after the sign-in, its code held up the
+ * way to the first rows, and run while the sign-in request was out it held
+ * up each step of it. While the user types, it costs nothing. Not when
+ * data is dear (dataIsDear): then the sign-in starts it.
+ */
+export function useWarmMailViewWhenIdle(formShown: boolean): void {
+  useEffect(() => {
+    if (!formShown || warming || dataIsDear()) return;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (!w.requestIdleCallback) {
+      const timer = setTimeout(warmMailView, 200);
+      return () => clearTimeout(timer);
+    }
+    const id = w.requestIdleCallback(warmMailView, { timeout: WARM_IDLE_TIMEOUT_MS });
+    return () => w.cancelIdleCallback?.(id);
+  }, [formShown]);
+}
+
+/**
+ * Loads and runs the mail view's code now, once (see
+ * useWarmMailViewWhenIdle). The sign-in calls it too, for a form sent before
+ * the browser went idle.
+ */
+export function warmMailView(): void {
+  if (warming) return;
+  warming = import("@/components/mail/mail-app").catch(() => {
+    warming = null;
+  });
+}
