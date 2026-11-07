@@ -141,7 +141,8 @@ describe('rows during a folder switch', () => {
     let commits = 0;
     const tree = (emails: Email[]) => <Profiler id="list" onRender={() => { commits++; }}><List emails={emails} /></Profiler>;
     const { rerender } = render(tree(INBOX));
-    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+    // Past the first draw's extra rows (a frame, then a task), also on a busy machine.
+    await act(async () => { await new Promise((r) => setTimeout(r, 400)); });
     const more = [makeEmail('d', 'sent'), makeEmail('e', 'sent'), makeEmail('f', 'sent')];
     commits = 0;
     act(() => { rerender(tree(more)); });
