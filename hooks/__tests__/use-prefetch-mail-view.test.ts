@@ -46,4 +46,19 @@ describe('the mail view warm-up', () => {
     renderHook(() => useWarmMailViewWhenIdle(true));
     expect(idle).toHaveLength(0);
   });
+
+  it('leaves it to the sign-in when the browser asks to save data or the link is 2G', async () => {
+    const { useWarmMailViewWhenIdle } = await import('../use-prefetch-mail-view');
+    for (const connection of [{ saveData: true, effectiveType: '4g' }, { effectiveType: '2g' }, { effectiveType: 'slow-2g' }]) {
+      Object.defineProperty(navigator, 'connection', { configurable: true, value: connection });
+      idle = [];
+      const { unmount } = renderHook(() => useWarmMailViewWhenIdle(true));
+      expect(idle, JSON.stringify(connection)).toHaveLength(0);
+      unmount();
+    }
+    Object.defineProperty(navigator, 'connection', { configurable: true, value: { saveData: false, effectiveType: '4g' } });
+    renderHook(() => useWarmMailViewWhenIdle(true));
+    expect(idle).toHaveLength(1);
+    delete (navigator as unknown as { connection?: unknown }).connection;
+  });
 });

@@ -22,15 +22,28 @@ let warming: Promise<unknown> | null = null;
 export const WARM_IDLE_TIMEOUT_MS = 1_000;
 
 /**
+ * Whether the browser says data is dear: Save-Data on, or a 2G-class link.
+ * Then the mail view's code (about 230 KB) waits for the sign-in instead of
+ * loading while the form waits for input. navigator.connection is
+ * Chromium's; elsewhere this is false.
+ */
+export function dataIsDear(nav: Navigator = navigator): boolean {
+  const connection = (nav as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (!connection) return false;
+  return connection.saveData === true || connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g';
+}
+
+/**
  * Runs the mail view's code once the sign-in form is drawn (`formShown`) and
  * the browser is idle. A first visit opens the sign-in page without the mail
  * view (lib/signed-out-start.ts); run after the sign-in, its code held up the
  * way to the first rows, and run while the sign-in request was out it held
- * up each step of it. While the user types, it costs nothing.
+ * up each step of it. While the user types, it costs nothing. Not when
+ * data is dear (dataIsDear): then the sign-in starts it.
  */
 export function useWarmMailViewWhenIdle(formShown: boolean): void {
   useEffect(() => {
-    if (!formShown || warming) return;
+    if (!formShown || warming || dataIsDear()) return;
     const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     if (!w.requestIdleCallback) {
       const timer = setTimeout(warmMailView, 200);
