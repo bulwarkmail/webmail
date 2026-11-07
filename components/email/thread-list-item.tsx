@@ -43,7 +43,6 @@ import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { brandIndicatorDomain } from "@/lib/email-headers";
 import { RowTranslatorsProvider, useRowTranslators } from "@/components/email/row-translators";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { useThemeStore } from "@/stores/theme-store";
 
 /**
  * Unread bullet in the row gutter.
@@ -687,8 +686,6 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       }
     };
 
-    const activeThemeId = useThemeStore((s) => s.activeThemeId);
-
     return (
       <div
         ref={ref}
@@ -724,13 +721,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
               ? "bg-accent"
               : mvRow && !isUnread
                 ? "bg-muted/60"
-                : activeThemeId === "builtin-aurora-glass" ? "bg-accent/30" : "bg-background"
+                : "bg-background"
           ),
           selected && !resolvedRowTint && "shadow-sm",
           !resolvedRowTint && !selected && !isChecked && "hover:bg-muted hover:shadow-sm",
           !resolvedRowTint && (selected || isChecked) && "hover:bg-accent hover:shadow-sm",
           resolvedRowTint && "hover:brightness-95 dark:hover:brightness-110",
-          isUnread && !resolvedRowTint && !mvRow && !mvMobileRow && (activeThemeId === "builtin-aurora-glass" ? "bg-background" : "bg-accent/30"),
+          isUnread && !resolvedRowTint && !mvRow && !mvMobileRow && "bg-accent/30",
           isChecked && "ring-2 ring-primary/20",
           isChecked && !resolvedRowTint && "bg-accent/40",
           isDragging && "opacity-50 scale-[0.98] ring-2 ring-primary/30",
