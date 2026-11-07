@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { createPortal } from 'react-dom';
 import type { BulwarkDesktopBridge, DesktopPrintPreviewRequest } from '../types';
 
 /**
@@ -133,65 +134,111 @@ describe('a PDF', () => {
 });
 
 describe('File > Print and Ctrl+P', () => {
-  it('the page previews itself when the shell asks', async () => {
-    const preview = vi.fn<Preview>(async () => 'cancelled');
+  it('the shell asks the page, which runs the print it was given', async () => {
     let asked: (() => void) | null = null;
     const unsubscribe = vi.fn();
-    setBridge(preview, (listener) => {
+    setBridge(vi.fn<Preview>(async () => 'cancelled'), (listener) => {
       asked = listener;
       return unsubscribe;
     });
-    document.title = 'Inbox';
+    const print = vi.fn();
     const { listenForDesktopPrintRequests } = await import('../print');
-    const stop = listenForDesktopPrintRequests();
-    expect(asked).not.toBeNull();
+    const stop = listenForDesktopPrintRequests(print);
     asked!();
-    expect(preview).toHaveBeenCalledOnce();
-    expect(preview.mock.calls[0][0]).toMatchObject({ source: 'page', title: 'Inbox' });
+    expect(print).toHaveBeenCalledOnce();
     stop();
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
   it('nothing listens without the desktop app', async () => {
     const { listenForDesktopPrintRequests } = await import('../print');
-    expect(() => listenForDesktopPrintRequests()()).not.toThrow();
+    expect(() => listenForDesktopPrintRequests(() => {})()).not.toThrow();
   });
 });
 
-describe('a Print button with a print copy (calendar, contacts)', () => {
-  it('shows the asked-for copy in each of the preview\'s layouts, and no browser dialog', async () => {
-    const { listenForPrinting, requestPrint, usePrintStore } = await import('@/stores/print-store');
+/**
+ * The page's print copies go to a hidden print window: the preview lays out that window,
+ * never the page. Laying out the page at the sheet's width folded the sidebar and unfolded it
+ * on screen at every change in the preview (the width breakpoints matched for a moment).
+ */
+describe('a print copy (mail, calendar, contacts) in the desktop app', () => {
+  async function mountCopyPage() {
+    // jsdom has no image decoding: the copy's picture is ready at once.
+    if (!HTMLImageElement.prototype.decode) HTMLImageElement.prototype.decode = () => Promise.resolve();
+    const store = await import('@/stores/print-store');
     function Page() {
-      const printing = usePrintStore((s) => s.printing);
-      const target = usePrintStore((s) => s.target);
-      return printing ? <div data-print-root="">{target?.kind ?? 'default'}</div> : null;
+      const printing = store.usePrintStore((s) => s.printing);
+      const target = store.usePrintStore((s) => s.target);
+      // A child of <body>, as PrintRoot portals it.
+      // A message's body is drawn in a shadow root (MessagePrint).
+      const body = (host: HTMLDivElement | null) => {
+        if (host && !host.shadowRoot) host.attachShadow({ mode: 'open' }).innerHTML = '<p>Body text</p>';
+      };
+      return printing ? createPortal(<div data-print-root=""><img src="/avatars/ana.png" alt="" /><span>{target?.kind ?? 'default'}</span><div data-body="" ref={body} /></div>, document.body) : null;
     }
-    const copy = () => document.querySelector('[data-print-root]')?.textContent ?? null;
-    render(<Page />);
-    const stop = listenForPrinting();
-    const seen: (string | null)[] = [];
-    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
-    // The shell lays the page out once per preview and once to print: beforeprint, afterprint each time.
-    const preview = vi.fn<Preview>(async () => {
-      for (let i = 0; i < 2; i += 1) {
-        window.dispatchEvent(new Event('beforeprint'));
-        seen.push(copy());
-        window.dispatchEvent(new Event('afterprint'));
-        seen.push(usePrintStore.getState().printing ? 'printing' : 'done');
-      }
-      return 'printed';
-    });
+    const view = render(<Page />);
+    const sheet = document.createElement('link');
+    sheet.rel = 'stylesheet';
+    sheet.href = '/_next/static/css/app.css';
+    document.head.append(sheet);
+    const laidOut = vi.fn();
+    window.addEventListener('beforeprint', laidOut);
+    const cleanup = () => {
+      view.unmount();
+      sheet.remove();
+      window.removeEventListener('beforeprint', laidOut);
+    };
+    return { store, laidOut, cleanup };
+  }
+
+  it('a Print button writes the asked-for copy into a print window, and the page is never laid out for printing', async () => {
+    const preview = vi.fn<Preview>(async () => 'printed');
     setBridge(preview);
-    await requestPrint({ kind: 'calendar-view' });
+    const { store, laidOut, cleanup } = await mountCopyPage();
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+    await store.requestPrint({ kind: 'calendar-view' });
     expect(preview).toHaveBeenCalledOnce();
-    expect(preview.mock.calls[0][0]).toMatchObject({ source: 'page' });
-    expect(seen).toEqual(['calendar-view', 'done', 'calendar-view', 'done']);
+    expect(preview.mock.calls[0][0]).toMatchObject({ source: 'window', name: opened[0].name });
+    expect(preview.mock.calls.some(([request]) => request.source === 'page')).toBe(false);
+    const doc = opened[0].win.document;
+    expect(doc.querySelector('[data-print-root] span')?.textContent).toBe('calendar-view');
+    // The body's shadow root came along.
+    expect(doc.querySelector('[data-print-root] [data-body]')?.shadowRoot?.innerHTML).toBe('<p>Body text</p>');
+    expect(doc.querySelector('[data-print-shadow]')).toBeNull();
+    expect(doc.querySelector('link[rel="stylesheet"]')?.getAttribute('href')).toBe(`${location.origin}/_next/static/css/app.css`);
+    expect(doc.querySelector('img')?.getAttribute('src')).toBe(`${location.origin}/avatars/ana.png`);
+    expect(doc.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content')).toContain("script-src 'none'");
+    expect(laidOut).not.toHaveBeenCalled();
     expect(print).not.toHaveBeenCalled();
-    // Closed: Ctrl+P prints the page's own copy again.
-    window.dispatchEvent(new Event('beforeprint'));
-    expect(copy()).toBe('default');
-    window.dispatchEvent(new Event('afterprint'));
-    stop();
+    // The copy is gone from the page again.
+    expect(store.usePrintStore.getState().printing).toBe(false);
+    cleanup();
+  });
+
+  it('Ctrl+P writes the page\'s own copy', async () => {
+    const preview = vi.fn<Preview>(async () => 'cancelled');
+    setBridge(preview);
+    const { store, laidOut, cleanup } = await mountCopyPage();
+    await store.printCopyInDesktop(null);
+    expect(preview.mock.calls[0][0]).toMatchObject({ source: 'window' });
+    expect(opened[0].win.document.querySelector('[data-print-root] span')?.textContent).toBe('default');
+    expect(laidOut).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it('a page without a copy goes over as a still picture, without its scripts', async () => {
+    setBridge(vi.fn<Preview>(async () => 'cancelled'));
+    const app = document.body.appendChild(document.createElement('main'));
+    app.textContent = 'Settings';
+    const script = document.body.appendChild(document.createElement('script'));
+    const { writePrintCopy } = await import('../print');
+    const win = fakeWindow('bulwark-print-x');
+    writePrintCopy(win, 'Settings');
+    expect(win.document.body.textContent).toContain('Settings');
+    expect(win.document.querySelector('script')).toBeNull();
+    expect(win.document.title).toBe('Settings');
+    app.remove();
+    script.remove();
   });
 });
 

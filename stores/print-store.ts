@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import type { CalendarEvent, ContactCard } from "@/lib/jmap/types";
 import type { DirectoryEntry } from "@/stores/contact-store";
 import { canPrintAnywhere } from "@/lib/device-policy";
-import { desktopPrintPreviewAvailable, previewDesktopPage } from "@/lib/desktop/print";
+import { desktopPrintPreviewAvailable, openPrintWindow, printPrintWindow, writePrintCopy } from "@/lib/desktop/print";
 
 /**
  * What a Print action asked for. Ctrl+P asks for nothing in particular: the
@@ -94,38 +94,53 @@ async function waitForPrintImages(): Promise<void> {
  * dialog, which gives the same page Ctrl+P would for that view.
  */
 export async function requestPrint(target: PrintTarget): Promise<void> {
-  if (usePrintStore.getState().printing || desktopTarget) return;
+  if (usePrintStore.getState().printing || desktopCopying) return;
   // Organisation > Devices > No printing (the buttons are hidden then).
   if (!canPrintAnywhere()) return;
+  if (desktopPrintPreviewAvailable()) {
+    await printCopyInDesktop(target);
+    return;
+  }
   startPrinting(target);
   await waitForPrintImages();
   if (!usePrintStore.getState().printing) return;
-  if (desktopPrintPreviewAvailable()) {
-    // The desktop app's preview lays the page out for printing at each change and once
-    // more to print, each time with beforeprint and afterprint: the copy of this target
-    // comes back each time, until the preview closes.
-    stopPrinting();
-    desktopTarget = { target };
-    try {
-      await previewDesktopPage();
-    } finally {
-      desktopTarget = null;
-      stopPrinting();
-    }
-    return;
-  }
   window.print();
   // Browsers whose print() returns before the dialog closes reset on afterprint.
 }
 
-/** What the desktop app's open print preview prints, for a Print action's target. */
-let desktopTarget: { target: PrintTarget } | null = null;
+let desktopCopying = false;
+
+/**
+ * The desktop app: the copy of `target` (null: what the page shows, as Ctrl+P prints)
+ * goes into a hidden print window, and the app's print preview shows that window. The
+ * copy is in this page only while it is written out, hidden on screen as always. The page
+ * itself is never laid out for printing: the preview did that at every change, at the
+ * sheet's width, and the width breakpoints folded the sidebar and unfolded it on screen.
+ */
+export async function printCopyInDesktop(target: PrintTarget | null): Promise<void> {
+  if (usePrintStore.getState().printing || desktopCopying || !canPrintAnywhere()) return;
+  desktopCopying = true;
+  try {
+    const win = openPrintWindow();
+    if (!win) return;
+    startPrinting(target);
+    await waitForPrintImages();
+    // The copy names the document while it is there (PrintRoot).
+    const title = document.title;
+    writePrintCopy(win, title);
+    stopPrinting();
+    await printPrintWindow(win, title);
+  } finally {
+    desktopCopying = false;
+    stopPrinting();
+  }
+}
 
 let listeners = 0;
 let printQuery: MediaQueryList | null = null;
 
 const handleBeforePrint = () => {
-  if (!usePrintStore.getState().printing) startPrinting(desktopTarget?.target ?? null);
+  if (!usePrintStore.getState().printing) startPrinting(null);
 };
 const handleAfterPrint = () => stopPrinting();
 // Safari has fired beforeprint late or not at all; the print media query
